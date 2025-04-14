@@ -3,9 +3,9 @@
 
   lib, stdenv,
 
-  cmake, pkg-config, ninja, wrapQtAppsHook, deployQtWinPluginsHook,
+  cmake, pkg-config, ninja, wrapQtAppsHook, deployQtWinPluginsHook, audit,
 
-  qtbase, qtcharts, qt5compat, assimp, boost184, cgal_5, eigen, nlohmann_json, gmp, mpfr,
+  qtbase, qtcharts, qt5compat, assimp, boost182, cgal_5, eigen, nlohmann_json, gmp, mpfr,
   hdf5, vtk-qt, kuba-zip, clipper, psimpl, sockets
 }:
 
@@ -19,7 +19,7 @@ stdenv.mkDerivation rec {
     qtcharts
     qt5compat
     assimp
-    boost184
+    boost182
     cgal_5
     eigen
     nlohmann_json
@@ -50,9 +50,11 @@ stdenv.mkDerivation rec {
 
   dontWrapQtApps = stdenv.hostPlatform.isMinGW;
 
-  qtWrapperArgs = lib.optionals stdenv.isLinux [
-    "--suffix LD_FALLBACK_PATH : /usr/lib/x86_64-linux-gnu"
-  ];
+  qtWrapperArgs = lib.optionals stdenv.hostPlatform.isLinux (
+    lib.mapAttrsToList (
+      name: value: "--suffix ${name} : ${value}"
+    ) audit.env
+  );
 
   meta = {
     description = "An advanced object slicer for toolpathing by ORNL";

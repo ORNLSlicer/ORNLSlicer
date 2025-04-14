@@ -54,6 +54,29 @@
         "type": "github"
       }
     },
+    "lasm": {
+      "inputs": {
+        "flake-utils": [
+          "utils"
+        ],
+        "nixpkgs": [
+          "nixpkgs"
+        ]
+      },
+      "locked": {
+        "lastModified": 1739277656,
+        "narHash": "sha256-4CzF3SdUpJpNBEYc3klSM02B9cEsESdW0U6r/WrMvjg=",
+        "owner": "DDoSolitary",
+        "repo": "ld-audit-search-mod",
+        "rev": "2ebc6f5c213d17acf620cbee6159c0db1e409560",
+        "type": "github"
+      },
+      "original": {
+        "owner": "DDoSolitary",
+        "repo": "ld-audit-search-mod",
+        "type": "github"
+      }
+    },
     "nixpkgs": {
       "locked": {
         "lastModified": 1725103162,
@@ -73,17 +96,17 @@
     "nixpkgs_2": {
       "locked": {
         "host": "code.ornl.gov",
-        "lastModified": 1743115647,
-        "narHash": "sha256-gsHX7CAochvFVI/L+JLhkWCV9qOQclSScj5dkwT0PLY=",
+        "lastModified": 1744659243,
+        "narHash": "sha256-Cy3CYUt1tDPMU5tTLAFXeb5727x/qitfzkD2otoFN0I=",
         "owner": "mdf",
         "repo": "nixpkgs",
-        "rev": "d0b955ff33af1c2ae6e002d06fc6968791ababfe",
+        "rev": "1bd32785a4924f72211cda4be6919cb29ae07f06",
         "type": "gitlab"
       },
       "original": {
         "host": "code.ornl.gov",
         "owner": "mdf",
-        "ref": "slicer2",
+        "ref": "nofallback",
         "repo": "nixpkgs",
         "type": "gitlab"
       }
@@ -91,6 +114,7 @@
     "root": {
       "inputs": {
         "appimage": "appimage",
+        "lasm": "lasm",
         "nixpkgs": "nixpkgs_2",
         "utils": "utils"
       }

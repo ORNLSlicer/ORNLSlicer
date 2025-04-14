@@ -2,10 +2,15 @@
   description = "ORNL Slicer 2 - An advanced object slicer";
 
   inputs = {
-    nixpkgs.url  = gitlab:mdf/nixpkgs/slicer2?host=code.ornl.gov;
+    nixpkgs.url  = gitlab:mdf/nixpkgs/nofallback?host=code.ornl.gov;
     utils.url    = github:numtide/flake-utils;
-    appimage = {
-      url = github:ralismark/nix-appimage;
+    appimage.url = github:ralismark/nix-appimage;
+    lasm = {
+      url = github:DDoSolitary/ld-audit-search-mod;
+      inputs = {
+        nixpkgs.follows = "nixpkgs";
+        flake-utils.follows = "utils";
+      };
     };
   };
 
@@ -13,7 +18,11 @@
     config = rec {
       pkgs = import inputs.nixpkgs {
         inherit system;
-        inherit (import ./nix/nixpkgs/config.nix {}) overlays config;
+        inherit (import ./nix/nixpkgs/config.nix {
+          inputOverlays = with inputs; [
+            lasm.overlays.default
+          ];
+        }) overlays config;
       };
 
       stdenv = llvm.stdenv;
@@ -26,7 +35,7 @@
           lldb = packages.lldb;
           clang-tools = packages.clang-tools;
           clang-tools-libcxx = clang-tools.override {
-              enableLibcxx = true;
+            enableLibcxx = true;
           };
         };
       };
@@ -35,9 +44,11 @@
     inherit config;
 
     lib = rec {
-      fetchVersion = version_file: let
-        inherit (lib.pipe version_file [ builtins.readFile builtins.fromJSON ]) major minor patch suffix;
-        suffixShort = builtins.substring 0 1 suffix;
+      fetchVersion = versionFile: let
+        inherit (lib.pipe versionFile [
+          builtins.readFile
+          builtins.fromJSON
+        ]) major minor patch suffix;
 
         version      = "${major}.${minor}.${patch}+${suffix}";
         revisionHash = self.shortRev or self.dirtyShortRev;
@@ -46,6 +57,16 @@
 
       mkPackages = { pkgs, stdenv ? pkgs.stdenv }: rec {
         nixpkgs = pkgs;
+
+        audit = rec {
+          package = pkgs.ld-audit-search-mod;
+          config  = import ./nix/nixpkgs/audit.nix {};
+
+          env = {
+            LD_AUDIT = "${package}/lib/libld-audit-search-mod.so";
+            LD_AUDIT_SEARCH_MOD_CONFIG = builtins.toString config;
+          };
+        };
 
         ornl = rec {
           libraries = rec {
@@ -61,14 +82,14 @@
             version = (lib.fetchVersion ./version.json);
 
             inherit (libraries) sockets kuba-zip clipper psimpl;
-            inherit stdenv;
+            inherit audit stdenv;
           };
         };
       };
     } // config.pkgs.lib;
 
     legacyPackages = {
-      inherit (lib.mkPackages { inherit pkgs stdenv; } ) ornl nixpkgs;
+      inherit (lib.mkPackages { inherit pkgs stdenv; } ) nixpkgs audit ornl;
       windows = (lib.mkPackages { pkgs = pkgs.pkgsCross.mingwW64; });
     };
 
@@ -116,7 +137,9 @@
           legacyPackages.ornl.slicer2
         ];
 
-        LD_FALLBACK_PATH = "/usr/lib/x86_64-linux-gnu";
+        env = {
+          # NOP
+        } // legacyPackages.audit.env;
       };
     };
   });
