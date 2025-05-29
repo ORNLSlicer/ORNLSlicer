@@ -154,10 +154,13 @@ namespace ORNL
 
             //For issue #239: combine infill for every X layers
             int combineXLayers = setting<int>(Constants::ProfileSettings::Infill::kCombineXLayers);
+            int combineLayerShift = setting<int>(Constants::ProfileSettings::Infill::kCombineLayerShift);
             if(combineXLayers > 1)
             {
                 //layer_number is 0 based, while Layer::m_layer_nr is 1 based
-                if((layer_number + 1) % combineXLayers != 0)
+                if((combineLayerShift >= layer_number + 1) ||
+                    (((layer_number + 1 - combineLayerShift) > 0) &&
+                     ((layer_number + 1 - combineLayerShift) % combineXLayers != 0)))
                     setSetting(Constants::ProfileSettings::Infill::kEnable, false);
                 else
                     infill_angle = infill_angle + infill_angle_rotation * (layer_number / combineXLayers);
