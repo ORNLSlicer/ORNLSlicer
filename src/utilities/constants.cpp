@@ -632,7 +632,6 @@ const QString Constants::ProfileSettings::Infill::kLineSpacing = "infill_line_sp
 const QString Constants::ProfileSettings::Infill::kDensity = "infill_density";
 const QString Constants::ProfileSettings::Infill::kManualLineSpacing = "infill_manual_spacing";
 const QString Constants::ProfileSettings::Infill::kPattern = "infill_pattern";
-const QString Constants::ProfileSettings::Infill::kPrintInfillEveryXLayers = "infill_every_x_layers";
 const QString Constants::ProfileSettings::Infill::kBasedOnPrinter = "infill_based_on_printer";
 const QString Constants::ProfileSettings::Infill::kAngle = "infill_angle";
 const QString Constants::ProfileSettings::Infill::kAngleRotation = "infill_angle_rotation";

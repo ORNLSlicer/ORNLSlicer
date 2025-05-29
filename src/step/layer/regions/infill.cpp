@@ -32,46 +32,41 @@ QString Infill::writeGCode(QSharedPointer<WriterBase> writer) {
 void Infill::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     m_layer_num = layer_num;
 
-    // Retrieve relevant settings
-    int layerSkip = m_sb->setting<int>(Constants::ProfileSettings::Infill::kPrintInfillEveryXLayers);
+    m_paths.clear();
 
-    if (layer_num % layerSkip == 0) {
-        m_paths.clear();
+    // keep around unaltered m_geometry for later connections for travels
+    m_geometry_copy = m_geometry.offset(m_sb->setting<Distance>(Constants::ProfileSettings::Infill::kOverlap));
 
-        // keep around unaltered m_geometry for later connections for travels
-        m_geometry_copy = m_geometry.offset(m_sb->setting<Distance>(Constants::ProfileSettings::Infill::kOverlap));
+    setMaterialNumber(m_sb->setting<int>(Constants::MaterialSettings::MultiMaterial::kInfillNum));
 
-        setMaterialNumber(m_sb->setting<int>(Constants::MaterialSettings::MultiMaterial::kInfillNum));
+    QVector<SettingsPolygon> settings_holes_to_fill;
 
-        QVector<SettingsPolygon> settings_holes_to_fill;
-
-        // Every settings polygon will become a hole in the base polygon(s)
-        for (auto settings_poly : m_settings_polygons) {
-            if (!settingsSame(m_sb, settings_poly.getSettings())) {
-                settings_holes_to_fill.push_back(settings_poly);
-                m_geometry_copy -= settings_poly;
-            }
+    // Every settings polygon will become a hole in the base polygon(s)
+    for (auto settings_poly : m_settings_polygons) {
+        if (!settingsSame(m_sb, settings_poly.getSettings())) {
+            settings_holes_to_fill.push_back(settings_poly);
+            m_geometry_copy -= settings_poly;
         }
-
-        // Fill with base geometry and default settings
-        fillGeometry(m_geometry_copy, m_sb);
-
-        // Fill any regions with different settings
-        for (auto settings_polygon : settings_holes_to_fill) {
-            if (settings_polygon.getSettings()->setting<bool>(Constants::ProfileSettings::Infill::kEnable)) {
-                PolygonList geometry;
-                geometry += (m_geometry & settings_polygon);
-                QSharedPointer<SettingsBase> region_settings = QSharedPointer<SettingsBase>::create(*m_sb);
-                region_settings->setSetting(Constants::ProfileSettings::Infill::kLineSpacing,
-                                            settings_polygon.getSettings()->setting<Distance>(
-                                                Constants::ProfileSettings::Infill::kLineSpacing));
-
-                fillGeometry(geometry, region_settings);
-            }
-        }
-
-        m_geometry.clear();
     }
+
+    // Fill with base geometry and default settings
+    fillGeometry(m_geometry_copy, m_sb);
+
+    // Fill any regions with different settings
+    for (auto settings_polygon : settings_holes_to_fill) {
+        if (settings_polygon.getSettings()->setting<bool>(Constants::ProfileSettings::Infill::kEnable)) {
+            PolygonList geometry;
+            geometry += (m_geometry & settings_polygon);
+            QSharedPointer<SettingsBase> region_settings = QSharedPointer<SettingsBase>::create(*m_sb);
+            region_settings->setSetting(Constants::ProfileSettings::Infill::kLineSpacing,
+                                        settings_polygon.getSettings()->setting<Distance>(
+                                            Constants::ProfileSettings::Infill::kLineSpacing));
+
+            fillGeometry(geometry, region_settings);
+        }
+    }
+
+    m_geometry.clear();
 }
 
 void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBase>& sb) {
