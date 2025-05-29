@@ -708,6 +708,7 @@ class Constants {
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
             static const QString kCombineXLayers;
+            static const QString kCombineLayerShift;
             static const QString kMinPathLength;
             static const QString kPrestart;
             static const QString kPrestartDistance;

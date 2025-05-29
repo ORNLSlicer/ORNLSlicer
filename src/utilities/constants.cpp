@@ -641,6 +641,7 @@ const QString Constants::ProfileSettings::Infill::kSpeed = "infill_speed";
 const QString Constants::ProfileSettings::Infill::kExtruderSpeed = "infill_extruder_speed";
 const QString Constants::ProfileSettings::Infill::kExtrusionMultiplier = "infill_extrusion_multiplier";
 const QString Constants::ProfileSettings::Infill::kCombineXLayers = "infill_combine_every_x_layers";
+const QString Constants::ProfileSettings::Infill::kCombineLayerShift = "infill_combine_layer_shift";
 const QString Constants::ProfileSettings::Infill::kMinPathLength = "infill_minimum_path_length";
 const QString Constants::ProfileSettings::Infill::kPrestart = "infill_prestart";
 const QString Constants::ProfileSettings::Infill::kPrestartDistance = "infill_prestart_distance";
