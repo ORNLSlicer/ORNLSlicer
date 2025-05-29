@@ -83,8 +83,16 @@ void GCodeSandiaSaver::run()
             QString aval = QString::number(GSM->getGlobal()->setting<Angle>(Constants::PrinterSettings::MachineSetup::kAxisA)());
             QString bval = QString::number(GSM->getGlobal()->setting<Angle>(Constants::PrinterSettings::MachineSetup::kAxisB)());
             QString cval = QString::number(GSM->getGlobal()->setting<Angle>(Constants::PrinterSettings::MachineSetup::kAxisC)());
-            out << "LIN {X " % xval % ", Y " % yval % ", Z " % zval % ", A " % aval % ", B " % bval % ", C " % cval %
-                       ", E1 0.000, E2 0.000, E3 0.000, E4 0.000, E5 0.000, E6 0.000 } C_DIS" %newline;
+            if (GSM->getGlobal()->setting<int>(Constants::ExperimentalSettings::FileOutput::kSandiaCVEL))
+            {
+                out << "LIN {X " % xval % ", Y " % yval % ", Z " % zval % ", A " % aval % ", B " % bval % ", C " % cval %
+                           ", E1 0.000, E2 0.000, E3 0.000, E4 0.000, E5 0.000, E6 0.000 } C_VEL" %newline;
+            }
+            else
+            {
+                out << "LIN {X " % xval % ", Y " % yval % ", Z " % zval % ", A " % aval % ", B " % bval % ", C " % cval %
+                           ", E1 0.000, E2 0.000, E3 0.000, E4 0.000, E5 0.000, E6 0.000 } C_DIS" %newline;
+            }
         }
         else if(line.startsWith(G1))
         {
@@ -126,8 +134,16 @@ void GCodeSandiaSaver::run()
             QString aval = QString::number(GSM->getGlobal()->setting<Angle>(Constants::PrinterSettings::MachineSetup::kAxisA)());
             QString bval = QString::number(GSM->getGlobal()->setting<Angle>(Constants::PrinterSettings::MachineSetup::kAxisB)());
             QString cval = QString::number(GSM->getGlobal()->setting<Angle>(Constants::PrinterSettings::MachineSetup::kAxisC)());
-            out << "LIN {X " % xval % ", Y " % yval % ", Z " % zval % ", A " % aval % ", B " % bval % ", C " % cval %
-                       ", E1 0.000, E2 0.000, E3 0.000, E4 0.000, E5 0.000, E6 0.000 } C_DIS" %newline;
+            if (GSM->getGlobal()->setting<int>(Constants::ExperimentalSettings::FileOutput::kSandiaCVEL))
+            {
+                out << "LIN {X " % xval % ", Y " % yval % ", Z " % zval % ", A " % aval % ", B " % bval % ", C " % cval %
+                           ", E1 0.000, E2 0.000, E3 0.000, E4 0.000, E5 0.000, E6 0.000 } C_VEL" %newline;
+            }
+            else
+            {
+                out << "LIN {X " % xval % ", Y " % yval % ", Z " % zval % ", A " % aval % ", B " % bval % ", C " % cval %
+                           ", E1 0.000, E2 0.000, E3 0.000, E4 0.000, E5 0.000, E6 0.000 } C_DIS" %newline;
+            }
         }
         else if(line.startsWith(M3))
         {
