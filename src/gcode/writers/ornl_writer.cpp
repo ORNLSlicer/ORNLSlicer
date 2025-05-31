@@ -21,6 +21,7 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
                                       int num_layers) {
     m_current_z = m_sb->setting<Distance>(Constants::PrinterSettings::Dimensions::kZOffset);
     m_current_rpm = 0;
+	m_current_robot = 1;
     m_machine_type = m_sb->setting<MachineType>(Constants::PrinterSettings::MachineSetup::kMachineType);
     for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
         m_extruders_on[ext] = false;
@@ -100,26 +101,32 @@ QString ORNLWriter::writeBeforeRegion(RegionType type, int pathSize) {
         if (type == RegionType::kPerimeter)
         {
             rv += "M1001" % commentSpaceLine("ROBOT 1 - MIG");
+			m_current_robot = 1;
         }
         else if (type == RegionType::kInset)
         {
             rv += "M1001" % commentSpaceLine("ROBOT 1 - MIG");
+			m_current_robot = 1;
         }
         else if (type == RegionType::kSkeleton)
         {
             rv += "M1001" % commentSpaceLine("ROBOT 1 - MIG");
+			m_current_robot = 1;
         }
         else if (type == RegionType::kSkin)
         {
             rv += "M1002" % commentSpaceLine("ROBOT 2 - ELECTRO-SLAG");
+			m_current_robot = 2;
         }
         else if (type == RegionType::kInfill)
         {
             rv += "M1002" % commentSpaceLine("ROBOT 2 - ELECTRO-SLAG");
+			m_current_robot = 2;
         }
         else if (type == RegionType::kSupport)
         {
             rv += "M1001" % commentSpaceLine("ROBOT 1 - MIG");
+			m_current_robot = 1;
         }
         else {}
     }
@@ -192,7 +199,7 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
         Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
 
-        rv += m_G0 % writeCoordinates(lift_destination) % " RX180 RY0 RZ0 PA0 PC0" % commentSpaceLine("TRAVEL LIFT Z");
+        rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(Constants::PrinterSettings::MachineSpeed::kZSpeed));
     }
 
@@ -205,7 +212,7 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
     else if (travel_lift_required)
         travel_destination = travel_destination + travel_lift; // travel destination is above the target point
 
-    rv += m_G0 % writeCoordinates(travel_destination) % " RX180 RY0 RZ0 PA0 PC0" % commentSpaceLine("TRAVEL");
+    rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(Constants::ProfileSettings::Travel::kSpeed));
 
     if (m_first_travel)         // if this is the first travel
@@ -213,7 +220,7 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        rv += m_G0 % writeCoordinates(target_location) % " RX180 RY0 RZ0 PA0 PC0" % commentSpaceLine("TRAVEL LOWER Z");
+        rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         setFeedrate(m_sb->setting<Velocity>(Constants::PrinterSettings::MachineSpeed::kZSpeed));
     }
 
@@ -269,7 +276,7 @@ QString ORNLWriter::writeLine(const Point& start_point, const Point& target_poin
     }
 
     // writes XYZ to destination
-    rv += writeCoordinates(target_point) % " RX180 RY0 RZ0 PA0 PC0";
+	rv += writeCoordinates(target_point);
 
     // add comment for gcode parser
     if (path_modifiers != PathModifiers::kNone)
@@ -566,6 +573,16 @@ QString ORNLWriter::writeCoordinates(Point destination) {
             m_last_z = target_z;
         }
     }
+	
+	if (m_machine_type == MachineType::kWire_Arc && m_current_robot == 1)
+	{
+		rv += " RX-180 RY0 RZ-135 PA0 PC0";
+	}
+	else if(m_machine_type == MachineType::kWire_Arc && m_current_robot == 2)
+	{
+		rv += " RX180 RY0 RZ90 PA0 PC0";
+	}
+	
     return rv;
 }
 } // namespace ORNL

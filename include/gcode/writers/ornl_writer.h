@@ -89,6 +89,7 @@ class ORNLWriter : public WriterBase {
     //! \brief State variables
     AngularVelocity m_current_rpm;
     int m_current_recipe;
+	int m_current_robot;
 
     //! \brief True if first travel, false for subsequent travels
     bool m_first_travel;
