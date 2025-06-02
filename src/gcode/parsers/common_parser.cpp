@@ -345,7 +345,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
             }
             continue;
         }
-        else if (m_upper_lines[m_current_line].contains("RZ") && m_upper_lines[m_current_line].contains("PC")) {
+        else if (m_upper_lines[m_current_line].contains("Z_R") && m_upper_lines[m_current_line].contains("C_P")) {
             newCurrentLine = removeRotations(m_upper_lines[m_current_line]);
         }
         else {
