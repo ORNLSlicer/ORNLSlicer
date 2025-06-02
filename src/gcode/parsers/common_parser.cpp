@@ -1890,8 +1890,10 @@ QString CommonParser::removeRotations(QString currentLine){
 
     if(currentLine.startsWith(G0) || currentLine.startsWith(G1))
     {
-        temp = currentLine.mid(0, currentLine.indexOf(getCommentStartDelimiter()));
-        comment = currentLine.mid(currentLine.indexOf(getCommentStartDelimiter()), currentLine.indexOf(newline));
+		if(currentLine.contains('='))
+			temp = currentLine.remove('=');
+        temp = temp.mid(0, temp.indexOf(getCommentStartDelimiter()));
+        comment = temp.mid(temp.indexOf(getCommentStartDelimiter()), temp.indexOf(newline));
     }
     else
     {
