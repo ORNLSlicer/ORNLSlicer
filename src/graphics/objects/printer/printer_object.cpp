@@ -55,11 +55,9 @@ namespace ORNL {
 
         if (islandOrder == IslandOrderOptimization::kCustomPoint)
         {
-            QVector3D translation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomIslandXLocation)
-                                  - m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kXOffset),
+            QVector3D translation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomIslandXLocation),
 
-                                    m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomIslandYLocation)
-                                  - m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kYOffset),
+                                    m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomIslandYLocation),
 
                                     .0f);
 
@@ -75,11 +73,9 @@ namespace ORNL {
 
         if (pathOrder == PathOrderOptimization::kCustomPoint)
         {
-            QVector3D translation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPathXLocation)
-                                  + m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kXOffset),
+            QVector3D translation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPathXLocation),
 
-                                    m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPathYLocation)
-                                  + m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kYOffset),
+                                    m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPathYLocation),
 
                                    .0f);
 
@@ -95,11 +91,9 @@ namespace ORNL {
 
         if(pointOrder == PointOrderOptimization::kCustomPoint)
         {
-            QVector3D translation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointXLocation)
-                                  + m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kXOffset),
+            QVector3D translation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointXLocation),
 
-                                    m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointYLocation)
-                                  + m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kYOffset),
+                                    m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointYLocation),
 
                                    .0f);
 
@@ -110,11 +104,9 @@ namespace ORNL {
 
             if (secondPointEnabled)
             {
-                QVector3D secondTranslation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointSecondXLocation)
-                                            - m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kXOffset),
+                QVector3D secondTranslation(  m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointSecondXLocation),
 
-                                              m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointSecondYLocation)
-                                            - m_sb->setting<double>(Constants::PrinterSettings::Dimensions::kYOffset),
+                                              m_sb->setting<double>(Constants::ProfileSettings::Optimizations::kCustomPointSecondYLocation),
 
                                               .0f);
 
