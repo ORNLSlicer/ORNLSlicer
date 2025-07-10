@@ -1884,16 +1884,14 @@ void CommonParser::AdjustFeedrate(double modifier) {
 
 QString CommonParser::removeRotations(QString currentLine){
     QChar space(' '), x('X'), y('Y'), z('Z'), f('F'), s('S'), zero('0'), newline('\n');
-    QString RX("RX"), RY("RY"), RZ("RZ"), PA("PA"), PC("PC");
+    QString RX("X_R"), RY("Y_R"), RZ("Z_R"), PA("A_P"), PC("C_P");
     QString G0("G0"), G1("G1");
     QString xval, yval, zval, velocity, feedrate, newLine, temp, comment;
 
     if(currentLine.startsWith(G0) || currentLine.startsWith(G1))
     {
-		if(currentLine.contains('='))
-			temp = currentLine.remove('=');
-        temp = temp.mid(0, temp.indexOf(getCommentStartDelimiter()));
-        comment = temp.mid(temp.indexOf(getCommentStartDelimiter()), temp.indexOf(newline));
+        temp = currentLine.mid(0, currentLine.indexOf(getCommentStartDelimiter()));
+        comment = currentLine.mid(currentLine.indexOf(getCommentStartDelimiter()), currentLine.indexOf(newline));
     }
     else
     {
@@ -1920,6 +1918,11 @@ QString CommonParser::removeRotations(QString currentLine){
         if(params[i].startsWith(RX) || params[i].startsWith(RY) || params[i].startsWith(RZ)
             || params[i].startsWith(PA) || params[i].startsWith(PC))
             continue;
+        else if((params[i].startsWith(x) || params[i].startsWith(y) || params[i].startsWith(z)) && params[i].contains('='))
+        {
+            params[i] = params[i].remove('=');
+            newLine += params[i] % space;
+        }
         else
             newLine += params[i] % space;
     }

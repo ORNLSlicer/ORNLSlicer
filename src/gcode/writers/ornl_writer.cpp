@@ -192,7 +192,7 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
     if (start_location.distance(target_location) <
         m_sb->setting<Distance>(Constants::ProfileSettings::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
-    }   
+    }
 
     // write the lift
     if (travel_lift_required && !m_first_travel &&
@@ -542,8 +542,8 @@ QString ORNLWriter::writeExtruderOff(int extruder_number) {
 
 QString ORNLWriter::writeCoordinates(Point destination) {
     QString rv;
-	
-	if (m_machine_type == MachineType::kWire_Arc)
+
+    if (m_machine_type == MachineType::kWire_Arc)
 	{
 		m_x = " X=";
 		m_y = " Y=";
@@ -562,42 +562,42 @@ QString ORNLWriter::writeCoordinates(Point destination) {
 			m_current_z = target_z;
 			m_last_z = target_z;
 		}*/
-		
+
 		rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
         m_last_z = target_z;
-		
-		if (m_current_robot == 1)
-		{
-			rv += " X_R=-180 Y_R=0 Z_R=-135 A_P=0 C_P=0";
-		}
-		else if(m_current_robot == 2)
-		{
-			rv += " X_R=180 Y_R=0 Z_R=90 A_P=0 C_P=0";
-		}
+
+        if (m_current_robot == 1)
+        {
+            rv += " X_R=-180 Y_R=0 Z_R=-135 A_P=0 C_P=0";
+        }
+        else if(m_current_robot == 2)
+        {
+            rv += " X_R=180 Y_R=0 Z_R=90 A_P=0 C_P=0";
+        }
 	}
-	else{
-		// always specify X and Y
-		rv += m_x % QString::number(Distance(destination.x()).to(m_meta.m_distance_unit), 'f', 4) % m_y %
-			  QString::number(Distance(destination.y()).to(m_meta.m_distance_unit), 'f', 4);
+    else{
+        // always specify X and Y
+        rv += m_x % QString::number(Distance(destination.x()).to(m_meta.m_distance_unit), 'f', 4) % m_y %
+            QString::number(Distance(destination.y()).to(m_meta.m_distance_unit), 'f', 4);
 
-		// write vertical coordinate along the correct axis (Z or W) according to printer settings
-		// only output Z/W coordinate if there was a change in Z/W
-		Distance z_offset = m_sb->setting<Distance>(Constants::PrinterSettings::Dimensions::kZOffset);
+        // write vertical coordinate along the correct axis (Z or W) according to printer settings
+        // only output Z/W coordinate if there was a change in Z/W
+        Distance z_offset = m_sb->setting<Distance>(Constants::PrinterSettings::Dimensions::kZOffset);
 
-		Distance target_z = destination.z() + z_offset;
-		/*if (qAbs(target_z - m_last_z) > 10) {
-			rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
-			m_current_z = target_z;
-			m_last_z = target_z;
-		}*/
-		if (qAbs(target_z - m_last_z) > 10) {
+        Distance target_z = destination.z() + z_offset;
+        /*if (qAbs(target_z - m_last_z) > 10) {
+            rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
+            m_current_z = target_z;
+            m_last_z = target_z;
+        }*/
+        if (qAbs(target_z - m_last_z) > 10) {
             rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
             m_current_z = target_z;
             m_last_z = target_z;
         }
-	}
-	
+    }
+
     return rv;
 }
 } // namespace ORNL
