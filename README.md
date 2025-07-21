@@ -1,5 +1,3 @@
-![ORNL Slicer 2 for next-gen additive manufacturing](doc/Slicer2.gif)
-
 - [Support](#support)
   - [Report Bugs](https://github.com/ORNLSlicer/Slicer-2/issues)
   - [Releases](https://github.com/ORNLSlicer/Slicer-2/wiki/Previous%20Releases)
