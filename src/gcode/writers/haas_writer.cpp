@@ -203,9 +203,9 @@ namespace ORNL
         if (m_layer_start)
         {
             setFeedrate(speed);
-            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
+            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4);
 
-            rv += m_s % QString::number(output_rpm);
+            rv += m_s % QString::number(output_rpm, 'f', 4);
             m_current_rpm = rpm;
 
             m_layer_start = false;
@@ -215,12 +215,12 @@ namespace ORNL
         if (getFeedrate() != speed)
         {
             setFeedrate(speed);
-            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
+            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4);
         }
 
         if (rpm != m_current_rpm)
         {
-            rv += m_s % QString::number(output_rpm);
+            rv += m_s % QString::number(output_rpm, 'f', 4);
             m_current_rpm = rpm;
         }
 
@@ -265,11 +265,11 @@ namespace ORNL
         if (getFeedrate() != speed)
         {
             setFeedrate(speed);
-            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
+            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4);
         }
         if (rpm != m_current_rpm)
         {
-            rv += m_s % QString::number(output_rpm);
+            rv += m_s % QString::number(output_rpm, 'f', 4);
             m_current_rpm = rpm;
         }
 
@@ -406,7 +406,7 @@ namespace ORNL
                  m_sb->setting< int >(Constants::MaterialSettings::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate))
                 m_current_rpm = m_sb->setting< int >(Constants::MaterialSettings::Extruder::kInitialSpeed);
 
-            rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
+            rv += m_M3 % m_s % QString::number(output_rpm, 'f', 4) % commentSpaceLine("TURN EXTRUDER ON");
 
             if (type == RegionType::kInset)
             {
@@ -437,7 +437,7 @@ namespace ORNL
         else
         {
             output_rpm = m_sb->setting< float >(Constants::PrinterSettings::MachineSpeed::kGearRatio) * rpm;
-            rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
+            rv += m_M3 % m_s % QString::number(output_rpm, 'f', 4) % commentSpaceLine("TURN EXTRUDER ON");
             // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S parameter
             // from being issued during the first G1 motion of the path and thus the extruder rate won't properly scale
             if(!(m_sb->setting< int >(Constants::MaterialSettings::Cooling::kForceMinLayerTime) &&
