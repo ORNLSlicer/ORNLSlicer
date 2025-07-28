@@ -305,6 +305,7 @@ const QString Constants::PrinterSettings::GCode::kEnableStartupCode = "enable_de
 const QString Constants::PrinterSettings::GCode::kEnableMaterialLoad = "enable_material_load";
 const QString Constants::PrinterSettings::GCode::kEnableWaitForUser = "enable_wait_for_user";
 const QString Constants::PrinterSettings::GCode::kEnableBoundingBox = "enable_bounding_box";
+const QString Constants::PrinterSettings::GCode::kEnableSettingsFooter = "enable_settings_footer";
 const QString Constants::PrinterSettings::GCode::kStartCode = "start_code";
 const QString Constants::PrinterSettings::GCode::kLayerCodeChange = "layer_change_code";
 const QString Constants::PrinterSettings::GCode::kEndCode = "end_code";

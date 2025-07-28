@@ -254,12 +254,15 @@ QString WriterBase::writeLayerChange(uint layer_number) {
 
 QString WriterBase::writeSettingsFooter() {
     QString rv;
-    rv += m_newline % commentLine("Settings Footer");
-    for (auto& el : m_sb->json().items()) {
-        rv += commentLine(QString::fromStdString(el.key()) % m_space % QString::fromStdString(el.value().dump()));
+    if (m_sb->setting<int>(Constants::PrinterSettings::GCode::kEnableSettingsFooter))
+    {
+        rv += m_newline % commentLine("Settings Footer");
+        for (auto& el : m_sb->json().items()) {
+            rv += commentLine(QString::fromStdString(el.key()) % m_space % QString::fromStdString(el.value().dump()));
+        }
+        // Remove empty line from end of file that comes from the commentLine creating a new line
+        rv.chop(1);
     }
-    // Remove empty line from end of file that comes from the commentLine creating a new line
-    rv.chop(1);
     return rv;
 }
 
