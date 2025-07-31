@@ -21,12 +21,16 @@ namespace ORNL
         m_layer_start = true;
         m_min_z = 0.0f;
         m_material_number = -1;
+        m_tool_number = m_sb->setting< int >(Constants::PrinterSettings::MachineSetup::kToolNumber);
+        Distance tool_offset = 100000;
         QString rv;
         if (m_sb->setting< int >(Constants::PrinterSettings::GCode::kEnableStartupCode))
         {
-            rv += "M06 T2" % m_newline %
-                    "G90G00G54X0.Y0." % m_newline %
-                    "G43H2Z100." % m_newline;
+            rv += "M06 T" % QString::number(m_tool_number) % m_newline %
+                    "G90G00G54X0.Y0." % m_newline;
+            //rv += "G43H2Z100." % m_newline;
+            rv += "G43H" % QString::number(m_tool_number) % "Z" %
+                QString::number(tool_offset.to(m_meta.m_distance_unit), 'f', 4);
         }
 
         if(m_sb->setting< int >(Constants::PrinterSettings::GCode::kEnableBoundingBox))

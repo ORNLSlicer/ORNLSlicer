@@ -236,6 +236,7 @@ const QString Constants::PrinterSettings::MachineSetup::kSyntax = "syntax";
 const QString Constants::PrinterSettings::MachineSetup::kMachineType = "machine_type";
 const QString Constants::PrinterSettings::MachineSetup::kForceG1 = "force_G1";
 const QString Constants::PrinterSettings::MachineSetup::kSupportG3 = "supports_G2_3";
+const QString Constants::PrinterSettings::MachineSetup::kToolNumber = "tool_number";
 const QString Constants::PrinterSettings::MachineSetup::kAxisA = "axis_a";
 const QString Constants::PrinterSettings::MachineSetup::kAxisB = "axis_b";
 const QString Constants::PrinterSettings::MachineSetup::kAxisC = "axis_c";

@@ -99,8 +99,9 @@ namespace ORNL
         //! \brief true is first print motion of the layer
         bool m_layer_start;
 
-        //! \brief preallocated prefixs commonly used in this syntax
+        //! \brief preallocated prefixes commonly used in this syntax
         int m_material_number;
+        int m_tool_number;
 
     };  // class HaasWriter
 }  // namespace ORNL
