@@ -18,6 +18,10 @@
 #include "windows/main_window.h"
 
 int main(int argc, char* argv[]) {
+#ifdef Q_OS_WINDOWS
+    qputenv("QT_QPA_PLATFORM", "windows:darkmode=0");
+#endif
+
     QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
 
     // Register the meta type so we can use queued signals/slots.
