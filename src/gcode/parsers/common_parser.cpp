@@ -27,11 +27,14 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     MotionEstimation::Init();
 
-    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta)
+    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta){
         m_g4_prefix = "G4 S";
-
-    if (meta == GcodeMetaList::MVPMeta) {
+    }
+    else if (meta == GcodeMetaList::MVPMeta) {
         m_negate_z_value = true;
+        m_g4_prefix = "G4 F";
+    }
+    else if (meta == GcodeMetaList::IngersollMeta) {
         m_g4_prefix = "G4 F";
     }
 
@@ -341,6 +344,16 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
                 if (m_extruders_active[i])
                     m_extruders_on[i] = true;
             }
+
+            int first = m_upper_lines[m_current_line].indexOf("(") + 1;
+            int second = m_upper_lines[m_current_line].indexOf(")");
+            QString spindleString = m_upper_lines[m_current_line].mid(first, second - first);
+            double spindleSpeed = spindleString.toDouble(&no_error);
+            if (!no_error){
+                throwFloatConversionErrorException();
+            }
+            setSpindleSpeed(spindleSpeed * m_angular_velocity_unit());
+
             continue;
         }
         else if (m_upper_lines[m_current_line].contains("Z_R") && m_upper_lines[m_current_line].contains("C_P")) {

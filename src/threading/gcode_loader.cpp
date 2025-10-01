@@ -13,7 +13,6 @@
 #include "gcode/parsers/beam_parser.h"
 #include "gcode/parsers/cincinnati_parser.h"
 #include "gcode/parsers/common_parser.h"
-#include "gcode/parsers/ingersoll_parser.h"
 #include "gcode/parsers/marlin_parser.h"
 #include "gcode/parsers/mazak_parser.h"
 #include "gcode/parsers/mvp_parser.h"
@@ -530,7 +529,7 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
                 m_selected_meta = GcodeMetaList::HurcoMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kIngersoll).toUpper())) {
-                m_parser.reset(new IngersollParser(GcodeMetaList::IngersollMeta, m_adjust_file, originalLines, lines));
+                m_parser.reset(new CommonParser(GcodeMetaList::IngersollMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::IngersollMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kKraussMaffei).toUpper())) {
