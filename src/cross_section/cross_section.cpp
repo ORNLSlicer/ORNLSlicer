@@ -32,7 +32,8 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
      * If so, generate a segment at the intersection
      */
     CrossSectionObject cs(sb);
-    int totalNormals = 0;
+    int num_intersections = 0;
+    QVector3D normal_accumulator(0, 0, 0);
     for (int m = 0, end = faces.size(); m < end; ++m) {
         const MeshFace& face = faces[m];
 
@@ -138,8 +139,8 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
         }
 
         if (intersection) {
-            ++totalNormals;
-            averageNormal += face.normal;
+            ++num_intersections;
+            normal_accumulator += face.normal;
         }
         /*
          * Polygon operations that follow cross sectioning are done in 2 dimensions.
@@ -164,7 +165,12 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
         cs.addSegment(segment);
     }
 
-    averageNormal /= totalNormals;
+    // Only set average normal if there was at least one intersection
+    if (num_intersections > 0) {
+        averageNormal = normal_accumulator / static_cast<float>(num_intersections);
+        averageNormal.normalize();
+    }
+
     return cs.makePolygons();
 }
 
