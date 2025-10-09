@@ -933,7 +933,7 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
         // move in Z only
         Distance target_z = destination.z() + z_offset;
 
-         //If sequential mode && target Z is less than current Z, adjust Z. This is for completing one object and moving to the next.
+        //If sequential mode && target Z is less than current Z, adjust Z. This is for completing one object and moving to the next.
         if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_z < m_last_z)) {
             target_z = m_last_z + m_sb->setting<Distance>(PS::Travel::kLiftHeight);
@@ -961,6 +961,19 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
     else if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kW_only)) {
         // move in W only
         Distance target_w = destination.z() * -1.0;
+
+        //If sequential mode && target W is greater than current W, adjust W. This is for completing one object and moving to the next.
+        if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+            m_is_lift == true && (target_w > m_last_w)) {
+            target_w = m_last_w - m_sb->setting<Distance>(PS::Travel::kLiftHeight);
+            m_is_lift = false;
+        }
+        else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+            m_is_travel == true && (target_w > m_last_w)) {
+            target_w = m_last_w;
+            m_is_travel = false;
+        }
+
         if (qAbs(target_w - m_last_w) > 10 && !m_first_travel) {
             rv += m_w % QString::number(Distance(target_w).to(m_meta.m_distance_unit), 'f', 4);
             m_current_w = target_w;
