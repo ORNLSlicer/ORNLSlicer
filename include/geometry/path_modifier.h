@@ -21,7 +21,19 @@ class PathModifierGenerator {
      * @param outerPath: The enclosing path that "path" will try to connect to.
      */
     static void GeneratePreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
-                                 AngularVelocity prestartExtruderSpeed, QVector<Path>& outerPath);
+                                             AngularVelocity prestartExtruderSpeed, QVector<Path>& outerPath);
+
+    /**
+     * @brief GenerateOpenLoopPreStart generates a pre-start path for open loop paths.
+     * @param path: The path to modify.
+     * @param prestartDistance: The pre-start distance.
+     * @param prestartSpeed: The pre-start speed.
+     * @param prestartExtruderSpeed: The pre-start extruder speed.
+     * @param enableWidthHeight: Whether to enable width and height mode.
+     * @param areaMultiplier: The area multiplier.
+     */
+    static void GenerateOpenLoopPreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
+                                 AngularVelocity prestartExtruderSpeed, bool enableWidthHeight, double areaMultiplier);
 
     /**
      * @brief GenerateFlyingStart generates a flying start path which begins motion before enabling extrusion.

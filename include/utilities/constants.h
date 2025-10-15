@@ -664,6 +664,11 @@ class Constants {
             static const QString kSkeletonAdaptMaxWidth;
             static const QString kSkeletonAdaptMaxWidthFilter;
             static const QString kMinPathLength;
+            static const QString kPrestartEnable;
+            static const QString kPrestartDistance;
+            static const QString kPrestartSpeed;
+            static const QString kPrestartExtruderSpeed;
+            static const QString kPrestartAreaModifier;
             static const QString kUseSkinMcode;
         };
 

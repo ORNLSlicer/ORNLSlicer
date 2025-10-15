@@ -604,6 +604,11 @@ const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMinWidthFilter
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidth = "skeleton_adapt_max_width";
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidthFilter = "skeleton_adapt_max_width_filter";
 const QString Constants::ProfileSettings::Skeleton::kMinPathLength = "skeleton_minimum_path_length";
+const QString Constants::ProfileSettings::Skeleton::kPrestartEnable = "skeleton_prestart";
+const QString Constants::ProfileSettings::Skeleton::kPrestartDistance = "skeleton_prestart_distance";
+const QString Constants::ProfileSettings::Skeleton::kPrestartSpeed = "skeleton_prestart_speed";
+const QString Constants::ProfileSettings::Skeleton::kPrestartExtruderSpeed = "skeleton_prestart_extruder_speed";
+const QString Constants::ProfileSettings::Skeleton::kPrestartAreaModifier = "skeleton_prestart_area_modifier";
 const QString Constants::ProfileSettings::Skeleton::kUseSkinMcode = "skeleton_skin_mcode";
 
 // Skin

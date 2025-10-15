@@ -177,6 +177,38 @@ void PathModifierGenerator::GeneratePreStart(Path& path, Distance prestartDistan
     }
 }
 
+void PathModifierGenerator::GenerateOpenLoopPreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
+                                 AngularVelocity prestartExtruderSpeed, bool enableWidthHeight, double areaMultiplier){
+    Point firstPoint = path[0]->start();
+    Point secondPoint = path[0]->end();
+    Distance length = secondPoint.distance(firstPoint);
+    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * prestartDistance();
+    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * prestartDistance();
+    Distance Z = firstPoint.z();
+    Point newStart = Point(X, Y, Z);
+
+    QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
+
+    segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth));
+    segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight));
+    segment->getSb()->setSetting(SS::kSpeed, prestartSpeed);
+    segment->getSb()->setSetting(SS::kAccel, path[0]->getSb()->setting<Acceleration>(SS::kAccel));
+    segment->getSb()->setSetting(SS::kExtruderSpeed, prestartExtruderSpeed);
+    segment->getSb()->setSetting(SS::kRegionType, path[0]->getSb()->setting<RegionType>(SS::kRegionType));
+    segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kPrestart);
+
+    // Update Width and Height if using Width and Height mode
+    if (enableWidthHeight) {
+        areaMultiplier = qSqrt(areaMultiplier / 100.0);
+        segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth) *
+                                                        areaMultiplier);
+        segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight) *
+                                                        areaMultiplier);
+    }
+
+    path.insert(0, segment);
+}
+
 void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStartDistance, Velocity flyingStartSpeed) {
     // Start with last segment in the path
     int currentIndex = path.size() - 1;
