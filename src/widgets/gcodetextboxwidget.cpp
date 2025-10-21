@@ -1,5 +1,6 @@
 #include "widgets/gcodetextboxwidget.h"
 
+#include "managers/preferences_manager.h"
 #include "qpainter.h"
 #include "qscrollbar.h"
 #include "qtextdocumentfragment.h"
@@ -70,7 +71,7 @@ void GcodeTextBoxWidget::highlightLine(QList<int> linesToAdd, QList<int> linesTo
             manipulate_cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, total);
 
         QTextBlockFormat format;
-        format.setBackground(QColor(Qt::yellow));
+        format.setBackground(QBrush(PreferencesManager::getInstance()->getTheme().getGcodeTextboxHighlightLineColor()));
         manipulate_cursor.setBlockFormat(format);
         setTextCursor(manipulate_cursor);
         if (shouldCenter)
@@ -89,7 +90,7 @@ void GcodeTextBoxWidget::highlightLine(QList<int> linesToAdd, QList<int> linesTo
             manipulate_cursor.movePosition(QTextCursor::Down, QTextCursor::MoveAnchor, total);
 
         QTextBlockFormat format;
-        format.setBackground(QColor(Qt::white));
+        format.setBackground(QBrush(PreferencesManager::getInstance()->getTheme().getGcodeTextboxBaseLineColor()));
         manipulate_cursor.setBlockFormat(format);
         setTextCursor(manipulate_cursor);
         m_selected_blocks.remove(line_num);
