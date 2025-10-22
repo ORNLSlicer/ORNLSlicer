@@ -13,17 +13,6 @@ class PathModifierGenerator {
     static void GenerateTravel(Path& path, Point current_location, Velocity velocity);
 
     /**
-     * @brief GeneratePreStart generates a pre-start path.
-     * @param path: The path to modify.
-     * @param prestartDistance: The pre-start distance.
-     * @param prestartSpeed: The pre-start speed.
-     * @param prestartExtruderSpeed: The pre-start extruder speed.
-     * @param outerPath: The enclosing path that "path" will try to connect to.
-     */
-    static void GeneratePreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
-                                             AngularVelocity prestartExtruderSpeed, QVector<Path>& outerPath);
-
-    /**
      * @brief GenerateOpenLoopPreStart generates a pre-start path for open loop paths.
      * @param path: The path to modify.
      * @param prestartDistance: The pre-start distance.

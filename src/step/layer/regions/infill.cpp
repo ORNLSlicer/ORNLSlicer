@@ -352,15 +352,6 @@ void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& inne
                 m_sb->setting<double>(MS::Startup::kStartUpAreaModifier));
         }
     }
-    if (m_sb->setting<bool>(PS::Infill::kPrestart) &&
-        (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) {
-        if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kLines) {
-            PathModifierGenerator::GeneratePreStart(path, m_sb->setting<Distance>(PS::Infill::kPrestartDistance),
-                                                    m_sb->setting<Velocity>(PS::Infill::kPrestartSpeed),
-                                                    m_sb->setting<AngularVelocity>(PS::Infill::kPrestartExtruderSpeed),
-                                                    innerMostClosedContour);
-        }
-    }
 }
 
 bool Infill::settingsSame(QSharedPointer<SettingsBase> a, QSharedPointer<SettingsBase> b) {
