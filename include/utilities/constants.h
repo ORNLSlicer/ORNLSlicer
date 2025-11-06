@@ -664,6 +664,11 @@ class Constants {
             static const QString kSkeletonAdaptMaxWidth;
             static const QString kSkeletonAdaptMaxWidthFilter;
             static const QString kMinPathLength;
+            static const QString kPrestartEnable;
+            static const QString kPrestartDistance;
+            static const QString kPrestartSpeed;
+            static const QString kPrestartExtruderSpeed;
+            static const QString kPrestartAreaModifier;
             static const QString kUseSkinMcode;
         };
 
@@ -681,10 +686,6 @@ class Constants {
             static const QString kExtrusionMultiplier;
             static const QString kOverlap;
             static const QString kMinPathLength;
-            static const QString kPrestart;
-            static const QString kPrestartDistance;
-            static const QString kPrestartSpeed;
-            static const QString kPrestartExtruderSpeed;
             static const QString kInfillEnable;
             static const QString kInfillSteps;
             static const QString kInfillPattern;
@@ -710,10 +711,6 @@ class Constants {
             static const QString kCombineXLayers;
             static const QString kCombineLayerShift;
             static const QString kMinPathLength;
-            static const QString kPrestart;
-            static const QString kPrestartDistance;
-            static const QString kPrestartSpeed;
-            static const QString kPrestartExtruderSpeed;
             static const QString kSectorCount;
             static const QString kPower;
             static const QString kFocus;

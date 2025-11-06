@@ -105,6 +105,10 @@ class CincinnatiWriter : public WriterBase {
 
     //! \brief true if first travel, false for subsequent travels
     bool m_first_travel;
+    //! \brief true if current motion is a lift move
+    bool m_is_lift;
+    //! \brief true if travel move that isn't classified as lift or lower
+    bool m_is_travel;
     //! \brief true if the travel contains a Z coordinate
     bool m_z_travel;
     //! \brief true if the travel contains a W coordinate

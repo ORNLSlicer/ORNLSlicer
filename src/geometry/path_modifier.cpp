@@ -48,133 +48,36 @@ void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, V
     path.prepend(travel_segment);
 }
 
-void PathModifierGenerator::GeneratePreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
-                                             AngularVelocity prestartExtruderSpeed, QVector<Path>& outerPath) {
-    Point closest;
-    double distance = std::numeric_limits<double>::max();
-    int pathIndex, segmentIndex, firstNonTravelSegment = 0;
-    Point firstPoint = path[firstNonTravelSegment]->start();
+void PathModifierGenerator::GenerateOpenLoopPreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
+                                 AngularVelocity prestartExtruderSpeed, bool enableWidthHeight, double areaMultiplier){
+    Point firstPoint = path[0]->start();
+    Point secondPoint = path[0]->end();
+    Distance length = secondPoint.distance(firstPoint);
+    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * prestartDistance();
+    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * prestartDistance();
+    Distance Z = firstPoint.z();
+    Point newStart = Point(X, Y, Z);
 
-    for (int i = 0, totalContours = outerPath.size(); i < totalContours; ++i) {
-        for (int j = 0, totalSegments = outerPath[i].size(); j < totalSegments; ++j) {
-            if (!dynamic_cast<TravelSegment*>(outerPath[i][j].data())) {
-                auto [temp_closest, temp_distance] =
-                    MathUtils::nearestPointOnSegment(outerPath[i][j]->start(), outerPath[i][j]->end(), firstPoint);
+    QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
 
-                if (temp_distance < distance) {
-                    closest = temp_closest;
-                    distance = temp_distance;
-                    pathIndex = i;
-                    segmentIndex = j;
-                }
-            }
-        }
-    }
-
-    // move to segment
-    QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(closest, firstPoint);
-
-    segment->getSb()->setSetting(SS::kWidth, path[firstNonTravelSegment]->getSb()->setting<Distance>(SS::kWidth));
-    segment->getSb()->setSetting(SS::kHeight, path[firstNonTravelSegment]->getSb()->setting<Distance>(SS::kHeight));
+    segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth));
+    segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight));
     segment->getSb()->setSetting(SS::kSpeed, prestartSpeed);
-    segment->getSb()->setSetting(SS::kAccel, path[firstNonTravelSegment]->getSb()->setting<Acceleration>(SS::kAccel));
+    segment->getSb()->setSetting(SS::kAccel, path[0]->getSb()->setting<Acceleration>(SS::kAccel));
     segment->getSb()->setSetting(SS::kExtruderSpeed, prestartExtruderSpeed);
-    segment->getSb()->setSetting(SS::kRegionType,
-                                 path[firstNonTravelSegment]->getSb()->setting<RegionType>(SS::kRegionType));
+    segment->getSb()->setSetting(SS::kRegionType, path[0]->getSb()->setting<RegionType>(SS::kRegionType));
     segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kPrestart);
 
-    path.insert(1, segment);
-
-    Distance nextSegmentDistStart = outerPath[pathIndex][segmentIndex]->end().distance(closest);
-    Distance nextSegmentDistEnd = outerPath[pathIndex][segmentIndex]->start().distance(closest);
-
-    prestartDistance -= firstPoint.distance(closest);
-
-    bool forward = nextSegmentDistEnd > nextSegmentDistStart ? true : false;
-    if (forward) {
-        if (outerPath[pathIndex][segmentIndex]->end() == closest)
-            ++segmentIndex;
-
-        while (prestartDistance > 0) {
-            if (!dynamic_cast<TravelSegment*>(outerPath[pathIndex][segmentIndex].data())) {
-                Distance nextSegmentDist = closest.distance(outerPath[pathIndex][segmentIndex]->end());
-                prestartDistance -= nextSegmentDist;
-
-                Point end;
-                if (prestartDistance >= 0) {
-                    end = outerPath[pathIndex][segmentIndex]->end();
-                }
-                else {
-                    float percentage = 1 - (-prestartDistance() / nextSegmentDist());
-                    end = Point((1.0 - percentage) * outerPath[pathIndex][segmentIndex]->start().x() +
-                                    percentage * outerPath[pathIndex][segmentIndex]->end().x(),
-                                (1.0 - percentage) * outerPath[pathIndex][segmentIndex]->start().y() +
-                                    percentage * outerPath[pathIndex][segmentIndex]->end().y());
-                }
-
-                QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, closest);
-
-                segment->getSb()->setSetting(SS::kWidth,
-                                             path[firstNonTravelSegment]->getSb()->setting<Distance>(SS::kWidth));
-                segment->getSb()->setSetting(SS::kHeight,
-                                             path[firstNonTravelSegment]->getSb()->setting<Distance>(SS::kHeight));
-                segment->getSb()->setSetting(SS::kSpeed, prestartSpeed);
-                segment->getSb()->setSetting(SS::kAccel,
-                                             path[firstNonTravelSegment]->getSb()->setting<Acceleration>(SS::kAccel));
-                segment->getSb()->setSetting(SS::kExtruderSpeed, prestartExtruderSpeed);
-                segment->getSb()->setSetting(
-                    SS::kRegionType, path[firstNonTravelSegment]->getSb()->setting<RegionType>(SS::kRegionType));
-                segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kPrestart);
-
-                path.insert(1, segment);
-                closest = end;
-            }
-            segmentIndex = (segmentIndex + 1) % outerPath[pathIndex].size();
-        }
-        path[0]->setEnd(Point(closest.x(), closest.y(), closest.z()));
+    // Update Width and Height if using Width and Height mode
+    if (enableWidthHeight) {
+        areaMultiplier = qSqrt(areaMultiplier / 100.0);
+        segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth) *
+                                                        areaMultiplier);
+        segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight) *
+                                                        areaMultiplier);
     }
-    else {
-        while (prestartDistance > 0) {
-            if (!dynamic_cast<TravelSegment*>(outerPath[pathIndex][segmentIndex].data())) {
-                Distance nextSegmentDist = closest.distance(outerPath[pathIndex][segmentIndex]->start());
-                prestartDistance -= nextSegmentDist;
 
-                Point end;
-                if (prestartDistance >= 0) {
-                    end = outerPath[pathIndex][segmentIndex]->start();
-                }
-                else {
-                    float percentage = 1 - (-prestartDistance() / nextSegmentDist());
-                    end = Point((1.0 - percentage) * outerPath[pathIndex][segmentIndex]->end().x() +
-                                    percentage * outerPath[pathIndex][segmentIndex]->start().x(),
-                                (1.0 - percentage) * outerPath[pathIndex][segmentIndex]->end().y() +
-                                    percentage * outerPath[pathIndex][segmentIndex]->start().y());
-                }
-
-                QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, closest);
-
-                segment->getSb()->setSetting(SS::kWidth,
-                                             path[firstNonTravelSegment]->getSb()->setting<Distance>(SS::kWidth));
-                segment->getSb()->setSetting(SS::kHeight,
-                                             path[firstNonTravelSegment]->getSb()->setting<Distance>(SS::kHeight));
-                segment->getSb()->setSetting(SS::kSpeed, prestartSpeed);
-                segment->getSb()->setSetting(SS::kAccel,
-                                             path[firstNonTravelSegment]->getSb()->setting<Acceleration>(SS::kAccel));
-                segment->getSb()->setSetting(SS::kExtruderSpeed, prestartExtruderSpeed);
-                segment->getSb()->setSetting(
-                    SS::kRegionType, path[firstNonTravelSegment]->getSb()->setting<RegionType>(SS::kRegionType));
-                segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kPrestart);
-
-                path.insert(1, segment);
-                closest = end;
-            }
-
-            segmentIndex -= 1;
-            if (segmentIndex < 0)
-                segmentIndex = outerPath[pathIndex].size() - 1;
-        }
-        path[0]->setEnd(Point(closest.x(), closest.y(), closest.z()));
-    }
+    path.insert(0, segment);
 }
 
 void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStartDistance, Velocity flyingStartSpeed) {

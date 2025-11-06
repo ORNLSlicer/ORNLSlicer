@@ -604,6 +604,11 @@ const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMinWidthFilter
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidth = "skeleton_adapt_max_width";
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidthFilter = "skeleton_adapt_max_width_filter";
 const QString Constants::ProfileSettings::Skeleton::kMinPathLength = "skeleton_minimum_path_length";
+const QString Constants::ProfileSettings::Skeleton::kPrestartEnable = "skeleton_prestart";
+const QString Constants::ProfileSettings::Skeleton::kPrestartDistance = "skeleton_prestart_distance";
+const QString Constants::ProfileSettings::Skeleton::kPrestartSpeed = "skeleton_prestart_speed";
+const QString Constants::ProfileSettings::Skeleton::kPrestartExtruderSpeed = "skeleton_prestart_extruder_speed";
+const QString Constants::ProfileSettings::Skeleton::kPrestartAreaModifier = "skeleton_prestart_area_modifier";
 const QString Constants::ProfileSettings::Skeleton::kUseSkinMcode = "skeleton_skin_mcode";
 
 // Skin
@@ -619,10 +624,6 @@ const QString Constants::ProfileSettings::Skin::kExtruderSpeed = "skin_extruder_
 const QString Constants::ProfileSettings::Skin::kExtrusionMultiplier = "skin_extrusion_multiplier";
 const QString Constants::ProfileSettings::Skin::kOverlap = "skin_exterior_overlap";
 const QString Constants::ProfileSettings::Skin::kMinPathLength = "skin_minimum_path_length";
-const QString Constants::ProfileSettings::Skin::kPrestart = "skin_prestart";
-const QString Constants::ProfileSettings::Skin::kPrestartDistance = "skin_prestart_distance";
-const QString Constants::ProfileSettings::Skin::kPrestartSpeed = "skin_prestart_speed";
-const QString Constants::ProfileSettings::Skin::kPrestartExtruderSpeed = "skin_prestart_extruder_speed";
 const QString Constants::ProfileSettings::Skin::kInfillEnable = "skin_gradual_infill";
 const QString Constants::ProfileSettings::Skin::kInfillSteps = "skin_gradual_infill_steps";
 const QString Constants::ProfileSettings::Skin::kInfillPattern = "skin_gradual_infill_pattern";
@@ -646,10 +647,6 @@ const QString Constants::ProfileSettings::Infill::kExtrusionMultiplier = "infill
 const QString Constants::ProfileSettings::Infill::kCombineXLayers = "infill_combine_every_x_layers";
 const QString Constants::ProfileSettings::Infill::kCombineLayerShift = "infill_combine_layer_shift";
 const QString Constants::ProfileSettings::Infill::kMinPathLength = "infill_minimum_path_length";
-const QString Constants::ProfileSettings::Infill::kPrestart = "infill_prestart";
-const QString Constants::ProfileSettings::Infill::kPrestartDistance = "infill_prestart_distance";
-const QString Constants::ProfileSettings::Infill::kPrestartSpeed = "infill_prestart_speed";
-const QString Constants::ProfileSettings::Infill::kPrestartExtruderSpeed = "infill_prestart_extruder_speed";
 const QString Constants::ProfileSettings::Infill::kSectorCount = "infill_sector_count";
 const QString Constants::ProfileSettings::Infill::kPower = "infill_power";
 const QString Constants::ProfileSettings::Infill::kFocus = "infill_focus";

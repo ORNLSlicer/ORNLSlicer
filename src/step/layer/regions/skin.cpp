@@ -394,13 +394,5 @@ void Skin::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerM
                 m_sb->setting<double>(MS::Startup::kStartUpAreaModifier));
         }
     }
-    if (m_sb->setting<bool>(PS::Skin::kPrestart)) {
-        if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kLines) {
-            PathModifierGenerator::GeneratePreStart(path, m_sb->setting<Distance>(PS::Skin::kPrestartDistance),
-                                                    m_sb->setting<Velocity>(PS::Skin::kPrestartSpeed),
-                                                    m_sb->setting<AngularVelocity>(PS::Skin::kPrestartExtruderSpeed),
-                                                    innerMostClosedContour);
-        }
-    }
 }
 } // namespace ORNL
