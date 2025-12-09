@@ -178,6 +178,6 @@ if(WIN32)
     install(TARGETS ${PROJECT_NAME}_cli)
 endif()
 
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/doc/slicer2_user_guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${CMAKE_CURRENT_LIST_DIR}/doc/slicer-2_user_guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
 

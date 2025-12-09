@@ -1,45 +1,91 @@
+# Slicer-2
+
+<img align="left" width="100" height="100" src="doc/assets/slicer-2_logo.png" alt="Slicer-2 Logo" />
+
+Slicer-2 is an open‑source toolpath planning and slicing framework developed at Oak Ridge National Laboratory (ORNL) for additive manufacturing processes. It provides advanced algorithms for generating efficient, reliable toolpaths for technologies such as Fused Deposition Modeling (FDM) and Directed Energy Deposition (DED), with an emphasis on print quality, process optimization, and extensibility.
+
+## Contents
+
+- [Features](#features)
 - [Support](#support)
-  - [Report Bugs](https://github.com/ORNLSlicer/Slicer-2/issues)
-  - [Releases](https://github.com/ORNLSlicer/Slicer-2/wiki/Previous%20Releases)
-  - [Getting Started as a Developer](https://github.com/ORNLSlicer/Slicer-2/wiki/Getting-Started-as-a-Developer)
-  - [Documentation](https://github.com/ORNLSlicer/Slicer-2/wiki/Slicer%202%20Documentation)
-- [License and Copyright](#license-and-copyright)
+- [Documentation](#documentation)
+- [Getting Started](#getting-started)
+- [License](#license)
 - [Sponsors](#sponsors)
-- [Contributors and Thanks](#contributors-and-thanks)
-- [Engagement](#Engagement)
+- [Community & Events](#community--events)
+- [Contributors](#contributors)
 - [Contact](#contact)
 - [Share](#share)
 
+---
+
+## Features
+
+Core capabilities include:
+- Multi‑process toolpath generation (FDM, DED, and research workflows)
+- Advanced slicing and geometric processing algorithms
+- Path optimization and modification utilities
+- Configurable templates and settings system (`templates/`, `resources/configs/`)
+- Extensible architecture for new algorithms and exporters
+- Developer documentation via Doxygen & wiki
+
+---
+
 ## Support
 
-If you need to report a bug :bug:, please check the [Issues page](https://github.com/ORNLSlicer/Slicer-2/issues) to see if it is known or not. If not, please feel free to submit it using the template found there.
+- Report bugs or request enhancements: [Issues](https://github.com/ORNLSlicer/Slicer-2/issues)
+- View historical releases: [Releases](https://github.com/ORNLSlicer/Slicer-2/releases)
+- Follow contribution guidelines: [Contributing](CONTRIBUTING.md)
 
-If you need to reference documentation, both Doxygen/GraphViz class documentation and the user guide can be found [here](https://github.com/ORNLSlicer/Slicer-2/wiki/Slicer%202%20Documentation).
+Before opening a new issue, please search existing ones to avoid duplicates.
 
-Help getting starting with developing can be found [here](https://github.com/ORNLSlicer/Slicer-2/wiki/Getting-Started-as-a-Developer).
+---
 
-## License and Copyright
+## Documentation
 
-License information can be found in the license file included as part of the project. For reference, that information as well as the licenses used by the various third-party libraries can be found in the [License](https://github.com/ORNLSlicer/Slicer-2/wiki/Slicer%202%20License%20and%20Library%20Licenses) section of our wiki.
-Information regarding DOE [Citation and Copyright](https://github.com/ORNLSlicer/Slicer-2/wiki/Slicer%202%20Citation%20and%20Copyright%20Information) can also be found on the wiki.
+### User Guide
+
+Slicer-2 includes a comprehensive [user guide](https://github.com/ORNLSlicer/Slicer-2/blob/master/doc/assets/slicer-2_user_guide.pdf) This guide details the operation of Slicer-2 as well as explanations of every setting and its impact on the slicing process. The user guide also describes the command line mode and includes examples.
+
+<!-- TODO(Liam White, 2025-11-21): API Documentation -->
+
+---
+
+## Getting Started
+
+- Developer onboarding: [Getting Started](https://github.com/ORNLSlicer/Slicer-2/wiki/Getting-Started)
+- Configuration examples: see the `.s2c` templates in `templates/`
+
+---
+
+## License
+
+See `LICENSE.md` for core license terms. Third‑party library licenses and citation guidance are documented in the wiki:
+- [License & Library Licenses](https://github.com/ORNLSlicer/Slicer-2/wiki/Slicer%202%20License%20and%20Library%20Licenses)
+- [Citation & Copyright Information](https://github.com/ORNLSlicer/Slicer-2/wiki/Slicer%202%20Citation%20and%20Copyright%20Information)
+
+---
 
 ## Sponsors
 
 This work has been sponsored by work supported by the U.S. Department of Energy, Office of Energy Efficiency and Renewable Energy, Office of Advanced Manufacturing, under contract number DE-AC05-00OR22725.
 
-## Contributors and Thanks
+---
 
-This work has also benefitied from cooperative research agreements with numerous partners without which ORNL Slicer 2 would not have evolved to its current state. A special mention should also be made for the many interns that have contributed to the project.
+## Contributors
 
-## Engagement
+Development has benefited from numerous research partners and many interns whose efforts helped Slicer-2 reach its current state. Thanks to all contributors—past and present.
 
-If expanding on this work is of interest, please feel free to contact us. We are always on the lookout for new partners! We also strongly believe in developing the toolpathing community. We hold a yearly workshop for all things toolpath planning related where we bring together members of the community to discuss broader issues with toolpathing for additive manufacturing. This seminar is known as the **SL**icing **U**sers **G**roup (SLUG) and is normally held in late spring. Archived recordings can be found on the wiki.
+---
 
 ## Contact
 
-Questions regarding ORNL Slicer 2 can be directed to slicer@ornl.gov.
+General inquiries: `slicer@ornl.gov`
+
+---
 
 ## Share
-Need an easy way to share/connect to the repo? Use our QR code! A copy can be found in the docs folder of the repo.
 
-![Share/Connect](doc/Slicer2QR.png)
+Use the QR code below to quickly share or access the repository (also available in `doc/assets/`).
+
+![Share/Connect](doc/assets/slicer-2_qr.png)

@@ -66,7 +66,7 @@ Section "${HUMAN_APPLICATION}"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "HelpLink"             "https://github.com/ORNLSlicer/Slicer-2"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLInfoAbout"         "https://github.com/ORNLSlicer/Slicer-2"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLUpdateInfo"        "https://github.com/ORNLSlicer/Slicer-2/releases"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Readme"               "$INSTDIR\share\doc\slicer2\slicer2_user_guide.pdf"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Readme"               "$INSTDIR\share\doc\slicer2\slicer-2_user_guide.pdf"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Comments"             "An advanced object slicer by ORNL"
 
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "UninstallString"      "$\"$INSTDIR\uninstall.exe$\""
