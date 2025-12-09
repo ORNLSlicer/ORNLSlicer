@@ -6,18 +6,23 @@
 #include "geometry/polygon_list.h"
 
 namespace ORNL {
+
 class CrossSectionSegment;
 
 //! \brief provides access to functions that cross section meshes
 namespace CrossSection {
-//! \brief Computes the cross-section for a mesh and a plane.
-//! \todo Although the external interface to cross section has been simplified, the internals still need some cleanup.
-//! \param QSharedPointer<Mesh> pointer to the mesh to be cross-sectioned
-//! \param Plane* the plane used to generate a cross-section
-//! \param Point* layers must be shifted before rotated, used to return the shift amount to the layer
-//! \param QVector3D* the average normal for the cross-section given the faces that are intersected
-PolygonList doCrossSection(QSharedPointer<MeshBase> mesh, Plane& slicing_plane, Point& shift, QVector3D& averageNormal,
-                           QSharedPointer<SettingsBase> sb);
+
+//! @brief Computes the cross-section for a mesh and a plane.
+//! @param mesh the mesh to cross-section
+//! @param slicing_plane the plane to cross-section with
+//! @param shift the shift applied to the mesh before cross-sectioning (modified by function)
+//! @param average_normal the average normal of all cross-sectioned faces (output)
+//! @param sb the settings to use for cross-sectioning
+//! @param preserve_input_shift if true, the incoming shift is used (not recomputed) so multiple meshes share the same
+//! flattening transform when slicing with an angled plane.
+//! @return the resulting cross-section polygons
+PolygonList doCrossSection(QSharedPointer<MeshBase> mesh, Plane& slicing_plane, Point& shift, QVector3D& average_normal,
+                           QSharedPointer<SettingsBase> sb, bool preserve_input_shift = false);
 
 //! \brief finds the center of the slicing plane within the bounding box
 //! \param mesh the mesh
@@ -31,5 +36,7 @@ Point findSlicingPlaneMidPoint(QSharedPointer<MeshBase> mesh, Plane& slicing_pla
 //! \param slicing_plane the plane
 //! \return the intersection point
 Point findIntersection(Point& vertex0, Point& vertex1, Plane& slicing_plane);
+
 } // namespace CrossSection
+
 } // namespace ORNL

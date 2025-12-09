@@ -55,6 +55,8 @@ QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
 }
 
 void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+    m_layer_num = layer_num;
+
     m_paths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kSkeletonNum));
@@ -62,7 +64,7 @@ void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     incorporateLostGeometry();
 
     if (!m_geometry.isEmpty()) {
-        simplifyInputGeometry(layer_num);
+        simplifyInputGeometry();
 
         const SkeletonInput& input = static_cast<SkeletonInput>(m_sb->setting<int>(PS::Skeleton::kSkeletonInput));
         switch (input) {
@@ -89,7 +91,7 @@ void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
             }
         }
         else {
-            qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << layer_num;
+            qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << m_layer_num;
         }
     }
     else {
@@ -234,7 +236,7 @@ void Skeleton::incorporateLostGeometry() {
     }
 }
 
-void Skeleton::simplifyInputGeometry(const uint& layer_num) {
+void Skeleton::simplifyInputGeometry() {
     const Distance& cleaning_dist = m_sb->setting<Distance>(PS::Skeleton::kSkeletonInputCleaningDistance);
 
     //! Too large of a cleaning distance may decimate inner/outer polygons such that they
@@ -259,7 +261,7 @@ void Skeleton::simplifyInputGeometry(const uint& layer_num) {
         m_geometry = m_geometry.cleanPolygons(cleaning_dist);
     }
     else {
-        qDebug() << "Layer " << layer_num << " Skeleton input geometry cleaning distance too large.";
+        qDebug() << "Layer " << m_layer_num << " Skeleton input geometry cleaning distance too large.";
     }
 
     //! Chamfer long axis corner of triangles
@@ -578,14 +580,14 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
     m_computed_geometry.append(path);
 }
 
-void Skeleton::inspectSkeleton(const uint& layer_num) {
+void Skeleton::inspectSkeleton() {
     static QMutex lock;
     QMutexLocker locker(&lock);
 
 #define precision_qDebug() qDebug() << Qt::fixed << qSetRealNumberPrecision(1)
 
     //! Print input geometry
-    qDebug() << "Layer " << layer_num << "Input Geometry:";
+    qDebug() << "Layer " << m_layer_num << "Input Geometry:";
     for (Polygon& poly : m_geometry) {
         for (uint i = 0, max = poly.size() - 1; i < max; ++i) {
             precision_qDebug() << "polygon((" << poly[i].x() << "," << poly[i].y() << "),(" << poly[i + 1].x() << ","
@@ -596,7 +598,7 @@ void Skeleton::inspectSkeleton(const uint& layer_num) {
     }
 
     //! Print skeleton geometry
-    qDebug() << "Layer " << layer_num << "Skeleton Geometry";
+    qDebug() << "Layer " << m_layer_num << "Skeleton Geometry";
     for (Polyline& seg : m_computed_geometry) {
         for (uint i = 0, max = seg.size() - 1; i < max; ++i) {
             precision_qDebug() << "polygon((" << seg[i].x() << "," << seg[i].y() << "),(" << seg[i + 1].x() << ","
@@ -612,7 +614,7 @@ void Skeleton::inspectSkeletonGraph() {
 #define precision_qDebug() qDebug() << Qt::fixed << qSetRealNumberPrecision(1)
 
     //! Print input geometry
-    qDebug() << "Input Geometry";
+    qDebug() << "Layer " << m_layer_num << "Input Geometry:";
     for (Polygon& poly : m_geometry) {
         for (uint i = 0, max = poly.size() - 1; i < max; ++i) {
             precision_qDebug() << "polygon((" << poly[i].x() << "," << poly[i].y() << "),(" << poly[i + 1].x() << ","

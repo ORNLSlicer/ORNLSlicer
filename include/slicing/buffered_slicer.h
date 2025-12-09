@@ -8,9 +8,8 @@
 namespace ORNL {
 //! \class BufferedSlicer
 //! \brief Provides a stateful cross-sectional slicer that can buffer. This class performs and tracks cross-sectioning
-//! for
-//!        a certain number of future and past slices. Depending on the future buffer size, when processNextSlice() is
-//!        called, it actually computes the Nth next slice, however returns whatever the front of the buffer is.
+//! for a certain number of future and past slices. Depending on the future buffer size, when processNextSlice() is
+//! called, it actually computes the Nth next slice, however returns whatever the front of the buffer is.
 //! \note when the previous or future buffers cannot be filled with valid slices, they are instead filled with nullptr
 class BufferedSlicer {
   public:
@@ -73,9 +72,10 @@ class BufferedSlicer {
     //! \return a cross-section (SliceMeta) object
     QSharedPointer<BufferedSlicer::SliceMeta> processSingleSlice();
 
-    //! \brief computes cross-sections for settings parts and extracts their geometry
+    //! \brief computes cross-sections for settings parts and extracts their geometry, aligned to a base shift
     //! \param settings_polygons a vector to fill with settings polygons
-    void computeSettingsPolygons(QVector<SettingsPolygon>& settings_polygons);
+    //! \param base_shift the shift used by the primary mesh cross-section so settings geometry aligns in 2D space
+    void computeSettingsPolygons(QVector<SettingsPolygon>& settings_polygons, const Point& base_shift);
 
     //! \brief the mesh this slicer is slicing
     QSharedPointer<MeshBase> m_mesh;

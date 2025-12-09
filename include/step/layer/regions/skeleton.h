@@ -55,7 +55,7 @@ class Skeleton : public RegionBase {
     void incorporateLostGeometry();
 
     //! \brief Cleans input geometry using ClipperLib2's cleanPolygons function
-    void simplifyInputGeometry(const uint& layer_num);
+    void simplifyInputGeometry();
 
     //! \brief Cleans output geometry according to ClipperLib2's cleanPolygons function
     void simplifyOutputGeometry();
@@ -116,7 +116,7 @@ class Skeleton : public RegionBase {
      *      Additionally, you may find it easier to inspect the skeleton by reversing the contrast of the application.
      *      On the right-hand side of the application select the wrench icon and then select Reverse Contrast.
      */
-    void inspectSkeleton(const uint& layer_num);
+    void inspectSkeleton();
 
     /*!
      * \brief Used for internal inspection of m_skeleton_graph.
@@ -205,5 +205,8 @@ class Skeleton : public RegionBase {
 
     //! \brief Precomputed paths for wire feed at anchors
     QVector<Polyline> m_computed_anchor_lines;
+
+    //! @brief The current layer number being processed
+    uint m_layer_num;
 };
 } // namespace ORNL

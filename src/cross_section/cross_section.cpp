@@ -5,11 +5,13 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+
 PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& slicing_plane, Point& shift,
-                                         QVector3D& averageNormal, QSharedPointer<SettingsBase> sb) {
+                                         QVector3D& average_normal, QSharedPointer<SettingsBase> sb,
+                                         bool preserve_input_shift) {
     //! \brief Helper for doCrossSection(). Exists as lamda to simplfy external interface (i.e. not show helpers).
     // given a point, a rotation, and a shift_amount: does **negative** shift of point and then rotation
-    auto rotatePoint = [](Point point_to_rotate, QQuaternion rotation, Point& shift_amount) {
+    auto rotatePoint = [](Point point_to_rotate, const QQuaternion& rotation, const Point& shift_amount) {
         // shift to rotate around origin
         point_to_rotate = point_to_rotate - shift_amount;
 
@@ -20,6 +22,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
         // reapply translate to account for origin offset
         result.setX(result.x() + shift_amount.x());
         result.setY(result.y() + shift_amount.y());
+        result.setZ(result.z() + shift_amount.z()); // restore original z offset (needed for consistent inverse)
 
         return Point(result); // will un-rotate and un-shift later, just before gcode writing
     };
@@ -34,12 +37,21 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
     CrossSectionObject cs(sb);
     int num_intersections = 0;
     QVector3D normal_accumulator(0, 0, 0);
+    // Compute shift once (unless caller wants to preserve provided shift reference)
+    if (!preserve_input_shift) {
+        shift = findSlicingPlaneMidPoint(mesh, slicing_plane);
+    }
+
+    // Precompute rotation once
+    QQuaternion rotation = MathUtils::CreateQuaternion(slicing_plane.normal(), QVector3D(0, 0, 1));
+
     for (int m = 0, end = faces.size(); m < end; ++m) {
         const MeshFace& face = faces[m];
 
         // Skip ignored faces
-        if (face.ignore)
+        if (face.ignore) {
             continue;
+        }
 
         const MeshVertex& v0 = vertices[face.vertex_index[0]];
         const MeshVertex& v1 = vertices[face.vertex_index[1]];
@@ -148,11 +160,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
          * Polymer_slicer save shift and rotation amount to layer so that this is un-done before gcode writing
          */
 
-        // modify shift parameter so that it can be saved to layer outside of this function
-        shift = findSlicingPlaneMidPoint(mesh, slicing_plane);
-
-        // define rotation using the direction of the slicing plane
-        QQuaternion rotation = MathUtils::CreateQuaternion(slicing_plane.normal(), QVector3D(0, 0, 1));
+        // Rotate into 2D frame using precomputed shift & rotation
         segment.start = rotatePoint(segment.start, rotation, shift);
         segment.end = rotatePoint(segment.end, rotation, shift);
 
@@ -167,8 +175,8 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
 
     // Only set average normal if there was at least one intersection
     if (num_intersections > 0) {
-        averageNormal = normal_accumulator / static_cast<float>(num_intersections);
-        averageNormal.normalize();
+        average_normal = normal_accumulator / static_cast<float>(num_intersections);
+        average_normal.normalize();
     }
 
     return cs.makePolygons();
