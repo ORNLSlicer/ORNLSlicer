@@ -938,6 +938,7 @@ class Constants {
             static const QString kMarlinOutput;
             static const QString kMarlinTravels;
             static const QString kSimulationOutput;
+            static const QString kAMCMOutput;
         };
 
         class RotationOrigin {

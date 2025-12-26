@@ -573,8 +573,8 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
                 m_selected_meta = GcodeMetaList::ORNLMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kORNL).toUpper())) {
-                m_parser.reset(new CommonParser(GcodeMetaList::ORNLMetricMeta, m_adjust_file, originalLines, lines));
-                m_selected_meta = GcodeMetaList::ORNLMetricMeta;
+                m_parser.reset(new CommonParser(GcodeMetaList::ORNLMeta, m_adjust_file, originalLines, lines));
+                m_selected_meta = GcodeMetaList::ORNLMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kRomiFanuc).toUpper())) {
                 m_parser.reset(new CommonParser(GcodeMetaList::RomiFanucMeta, m_adjust_file, originalLines, lines));

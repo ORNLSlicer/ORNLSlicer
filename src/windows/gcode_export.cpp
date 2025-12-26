@@ -11,6 +11,7 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "threading/gcode_adamantine_saver.h"
+#include "threading/gcode_amcm_saver.h"
 #include "threading/gcode_aml3d_saver.h"
 #include "threading/gcode_marlin_saver.h"
 #include "threading/gcode_meld_saver.h"
@@ -309,6 +310,15 @@ void GcodeExport::exportGcode() {
                 new GCodeMarlinSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
             connect(saver, &GCodeMarlinSaver::finished, saver, &GCodeMarlinSaver::deleteLater);
             connect(saver, &GCodeMarlinSaver::finished, this,
+                    [this, filepath, partName]() { showComplete(filepath, partName); });
+            saver->start();
+        }
+        else if (m_most_recent_meta == GcodeMetaList::ORNLMeta &&
+                 GSM->getGlobal()->setting<bool>(ES::FileOutput::kAMCMOutput)) {
+            GCodeAMCMSaver* saver =
+                new GCodeAMCMSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
+            connect(saver, &GCodeAMCMSaver::finished, saver, &GCodeAMCMSaver::deleteLater);
+            connect(saver, &GCodeAMCMSaver::finished, this,
                     [this, filepath, partName]() { showComplete(filepath, partName); });
             saver->start();
         }
