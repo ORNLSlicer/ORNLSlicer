@@ -226,7 +226,7 @@ static GcodeMeta AeroBasicMeta = {GcodeSyntax::kAeroBasic,
                                   rev / s,      // angular velocity
                                   ".gcode"};
 
-static GcodeMeta ORNLMeta = {GcodeSyntax::kCincinnati,
+static GcodeMeta ORNLMeta = {GcodeSyntax::kORNL,
                              QString("("), // starting_delim
                              QString(")"), // ending_delim
                              in,
@@ -237,7 +237,7 @@ static GcodeMeta ORNLMeta = {GcodeSyntax::kCincinnati,
                              in / s / s,
                              rev / minute,
                              ".gcode"};
-static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kCincinnati,
+static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kORNL,
                                    QString("("), // starting_delim
                                    QString(")"), // ending_delim
                                    mm,

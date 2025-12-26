@@ -854,6 +854,7 @@ const QString Constants::ExperimentalSettings::FileOutput::kSandiaCVEL = "sandia
 const QString Constants::ExperimentalSettings::FileOutput::kMarlinOutput = "marlin_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels = "marlin_include_travels";
 const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput = "simulation_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput = "amcm_file_output";
 
 // Rotation Origin
 const QString Constants::ExperimentalSettings::RotationOrigin::kXOffset = "rotation_origin_offset_x";
