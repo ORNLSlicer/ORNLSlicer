@@ -237,7 +237,7 @@ static GcodeMeta ORNLMeta = {GcodeSyntax::kORNL,
                              in / s / s,
                              rev / minute,
                              ".gcode"};
-static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kORNL,
+static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kORNLMetric,
                                    QString("("), // starting_delim
                                    QString(")"), // ending_delim
                                    mm,
@@ -340,6 +340,7 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kORNL, ORNLMeta);
     result.insert((int)GcodeSyntax::kTormach, TormachMeta);
     result.insert((int)GcodeSyntax::kAdamantine, AdamantineMeta);
+    result.insert((int)GcodeSyntax::kORNLMetric, ORNLMetricMeta);
     return result;
 }
 
