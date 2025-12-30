@@ -167,6 +167,10 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             m_base =
                 QSharedPointer<AdamantineWriter>(new AdamantineWriter(GcodeMetaList::AdamantineMeta, GSM->getGlobal()));
             break;
+        case GcodeSyntax::kORNLMetric:
+            m_base =
+                QSharedPointer<ORNLWriter>(new ORNLWriter(GcodeMetaList::ORNLMetricMeta, GSM->getGlobal()));
+            break;
         default:
             m_base =
                 QSharedPointer<CincinnatiWriter>(new CincinnatiWriter(GcodeMetaList::CincinnatiMeta, GSM->getGlobal()));

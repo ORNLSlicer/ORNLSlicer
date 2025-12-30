@@ -185,6 +185,7 @@ QString Constants::PrinterSettings::SyntaxString::kRepRap = "RepRap";
 QString Constants::PrinterSettings::SyntaxString::kMach4 = "Mach4";
 QString Constants::PrinterSettings::SyntaxString::kAeroBasic = "AeroBasic";
 QString Constants::PrinterSettings::SyntaxString::kAdamantine = "Adamantine";
+QString Constants::PrinterSettings::SyntaxString::kORNLMetric = "ORNL-Metric";
 
 //================================================================================
 // Optimizations

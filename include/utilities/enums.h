@@ -157,7 +157,8 @@ enum class GcodeSyntax : uint8_t {
     kSandia,
     k5AxisMarlin,
     kMeltio,
-    kAdamantine
+    kAdamantine,
+    kORNLMetric
 };
 
 inline QString toString(GcodeSyntax syntax) {
@@ -228,6 +229,8 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kAeroBasic;
         case GcodeSyntax::kAdamantine:
             return PRS::SyntaxString::kAdamantine;
+        case GcodeSyntax::kORNLMetric:
+            return PRS::SyntaxString::kORNLMetric;
         default:
             return PRS::SyntaxString::kCommon;
     }

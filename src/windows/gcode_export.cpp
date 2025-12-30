@@ -313,7 +313,7 @@ void GcodeExport::exportGcode() {
                     [this, filepath, partName]() { showComplete(filepath, partName); });
             saver->start();
         }
-        else if (m_most_recent_meta == GcodeMetaList::ORNLMeta &&
+        else if ((m_most_recent_meta == GcodeMetaList::ORNLMeta || m_most_recent_meta == GcodeMetaList::ORNLMetricMeta) &&
                  GSM->getGlobal()->setting<bool>(ES::FileOutput::kAMCMOutput)) {
             GCodeAMCMSaver* saver =
                 new GCodeAMCMSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
