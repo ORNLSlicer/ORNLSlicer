@@ -45,7 +45,7 @@ Before opening a new issue, please search existing ones to avoid duplicates.
 
 ### User Guide
 
-Slicer-2 includes a comprehensive [user guide](https://github.com/ORNLSlicer/Slicer-2/blob/master/doc/assets/slicer-2_user_guide.pdf) This guide details the operation of Slicer-2 as well as explanations of every setting and its impact on the slicing process. The user guide also describes the command line mode and includes examples.
+Slicer-2 includes a comprehensive [User Guide](https://github.com/ORNLSlicer/Slicer-2/blob/Master/doc/slicer-2_user_guide.pdf). This guide details the operation of Slicer-2 as well as explanations of every setting and its impact on the slicing process. The user guide also describes the command line mode and includes examples.
 
 <!-- TODO(Liam White, 2025-11-21): API Documentation -->
 
@@ -80,12 +80,12 @@ Development has benefited from numerous research partners and many interns whose
 
 ## Contact
 
-General inquiries: `slicer@ornl.gov`
+General inquiries: [slicer@ornl.gov](mailto:slicer@ornl.gov)
 
 ---
 
 ## Share
 
-Use the QR code below to quickly share or access the repository (also available in `resources/icons/`).
+Use the QR code below to quickly share or access the repository.
 
 ![Share/Connect](resources/icons/slicer-2_qr.png)
