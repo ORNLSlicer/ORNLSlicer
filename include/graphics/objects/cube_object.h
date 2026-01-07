@@ -10,7 +10,7 @@ namespace ORNL {
  *
  * \note
  *  QVector<QImage> text = {
- *      QImage(":/icons/slicer2.png"),
+ *      QImage(":/icons/slicer-2_logo.png"),
  *      QImage(":/icons/3d_chart.png"),
  *      QImage(":/icons/3d_graph.png"),
  *      QImage(":/icons/arrow.png"),

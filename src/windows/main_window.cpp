@@ -155,7 +155,7 @@ void MainWindow::setupWindows() {
     this->resize(Constants::UI::MainWindow::kWindowSize);
 
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer2.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/slicer-2_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     this->setWindowIcon(icon);
 
     // Preferences Window
@@ -428,7 +428,7 @@ void MainWindow::setupActions() {
     m_actions["manual"] = {"User's Manual", ":/icons/help_black.png", false, QKeySequence(), nullptr};
     m_actions["repo"] = {"Open Website/Repository", ":/icons/web_black.png", false, QKeySequence(), nullptr};
     m_actions["bug"] = {"Report Bug", ":/icons/bug_black.png", false, QKeySequence(), nullptr};
-    m_actions["about_s2"] = {"About ORNL Slicer 2", ":/icons/slicer2.png", false, QKeySequence(), nullptr};
+    m_actions["about_s2"] = {"About ORNL Slicer 2", ":/icons/slicer-2_logo.png", false, QKeySequence(), nullptr};
     m_actions["about_qt"] = {"About Qt", ":/icons/qt.png", false, QKeySequence(), nullptr};
 
     // Menu Debug

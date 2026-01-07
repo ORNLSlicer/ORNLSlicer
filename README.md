@@ -1,6 +1,6 @@
 # Slicer-2
 
-<img align="left" width="100" height="100" src="doc/assets/slicer-2_logo.png" alt="Slicer-2 Logo" />
+<img align="left" width="100" height="100" src="resources/icons/slicer-2_logo.png" alt="Slicer-2 Logo" />
 
 Slicer-2 is an open‑source toolpath planning and slicing framework developed at Oak Ridge National Laboratory (ORNL) for additive manufacturing processes. It provides advanced algorithms for generating efficient, reliable toolpaths for technologies such as Fused Deposition Modeling (FDM) and Directed Energy Deposition (DED), with an emphasis on print quality, process optimization, and extensibility.
 
@@ -86,6 +86,6 @@ General inquiries: `slicer@ornl.gov`
 
 ## Share
 
-Use the QR code below to quickly share or access the repository (also available in `doc/assets/`).
+Use the QR code below to quickly share or access the repository (also available in `resources/icons/`).
 
-![Share/Connect](doc/assets/slicer-2_qr.png)
+![Share/Connect](resources/icons/slicer-2_qr.png)

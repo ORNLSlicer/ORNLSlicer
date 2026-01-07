@@ -17,7 +17,7 @@ AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
     setWindowModality(Qt::ApplicationModal);
 
     setWindowTitle("About ORNL Slicer 2");
-    setWindowIcon(QIcon(":/icons/slicer2.png"));
+    setWindowIcon(QIcon(":/icons/slicer-2_logo.png"));
 
     QGridLayout* layout = new QGridLayout();
 
