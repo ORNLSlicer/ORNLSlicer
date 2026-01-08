@@ -15,7 +15,7 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
     QString dt = QDateTime::currentDateTime().toString();
     fifojson new_format;
-    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedBy] = "ORNL Slicer 2";
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedBy] = "ORNL Slicer-2";
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedOn] = dt.toStdString();
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = version;

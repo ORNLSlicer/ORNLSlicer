@@ -711,7 +711,7 @@ inline QString VisualizationColorsName(VisualizationColors color) {
 
         default:
             QMessageBox::critical(
-                Q_NULLPTR, "ORNL Slicer 2",
+                Q_NULLPTR, "ORNL Slicer-2",
                 "Unimplemented corosponding visualization colors string.\n"
                 "With a new enum entry for color, a corrosponding name (in VisualizationColorsName) and\n"
                 "default color value (in VisualizationColorsDefaults) needs to be created.",
@@ -779,7 +779,7 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
 
         default:
             QMessageBox::critical(
-                Q_NULLPTR, "ORNL Slicer 2",
+                Q_NULLPTR, "ORNL Slicer-2",
                 "Unimplemented corosponding visualization default color.\n"
                 "With a new enum entry for color, a corrosponding name (in VisualizationColorsName) and\n"
                 "default color value (in VisualizationColorsDefaults) needs to be created.",

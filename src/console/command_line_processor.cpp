@@ -21,7 +21,7 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
 
     // custom options needed for loading/slicing
     parser.addOption({Constants::ConsoleOptionStrings::kInputProjectFile,
-                      "Run Slicer 2 using project file at <directory>.", "directory", ""});
+                      "Run Slicer-2 using project file at <directory>.", "directory", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kInputStlFiles,
                       "List of STLs to load for slicing. Parameter can be specified multiple times.", "file-list", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kInputSupportStlFiles,
@@ -107,7 +107,7 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
                       "List of layer numbers to slice in lieu of slicing the entire object. Mutually exclusive to "
                       "single_slice_height. Parameter can be specified multiple times.",
                       "layer-list", ""});
-    parser.addOption({Constants::ConsoleOptionStrings::kVersion, "Current Slicer 2 Version"});
+    parser.addOption({Constants::ConsoleOptionStrings::kVersion, "Current Slicer-2 Version"});
 }
 
 bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSharedPointer<SettingsBase> options) {

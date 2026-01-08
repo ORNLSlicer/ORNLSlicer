@@ -10,7 +10,7 @@ Unicode true
 !define APPLICATION "slicer2"
 
 !define HUMAN_ORG "ORNL"
-!define HUMAN_APPLICATION "ORNL Slicer 2"
+!define HUMAN_APPLICATION "ORNL Slicer-2"
 
 ;!tempfile VER_TEMP
 ;!system 'echo "!define VERSION_MAJOR  $(jq -j .major  ../version.json)" >> ${VER_TEMP}'
@@ -23,10 +23,10 @@ Unicode true
 ;!define VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}+${VERSION_SUFFIX}"
 !system "echo ${APPLICATION} version: ${VERSION}"
 
-!define ICON "../resources/icons/slicer2.ico"
+!define ICON "../resources/icons/slicer-2_logo.ico"
 
 ; Info
-Name "ORNL Slicer 2"
+Name "ORNL Slicer-2"
 LicenseData "../LICENSE.md"
 Icon "${ICON}"
 UninstallIcon "${ICON}"
@@ -58,7 +58,7 @@ Section "${HUMAN_APPLICATION}"
 
     ; Generate uninstaller
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayName"          "${HUMAN_APPLICATION}"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayIcon"          "$INSTDIR\slicer2.ico"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayIcon"          "$INSTDIR\slicer-2_logo.ico"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Publisher"            "Oak Ridge National Lab"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "InstallLocation"      "$INSTDIR"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayVersion"       "${VERSION}"
@@ -82,8 +82,8 @@ Section "Start Menu Shortcuts"
     SetShellVarContext all
 
     CreateDirectory "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}"
-    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\Uninstall.lnk"            "$INSTDIR\uninstall.exe"          "" "$INSTDIR\slicer2.ico" 0
-    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\${HUMAN_APPLICATION}.lnk" "$INSTDIR\bin\${APPLICATION}.exe" "" "$INSTDIR\slicer2.ico" 0
+    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\Uninstall.lnk"            "$INSTDIR\uninstall.exe"          "" "$INSTDIR\slicer-2_logo.ico" 0
+    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\${HUMAN_APPLICATION}.lnk" "$INSTDIR\bin\${APPLICATION}.exe" "" "$INSTDIR\slicer-2_logo.ico" 0
 SectionEnd
 
 Section "Uninstall"
