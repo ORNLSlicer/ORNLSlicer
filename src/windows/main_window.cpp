@@ -684,7 +684,7 @@ void MainWindow::setupEvents() {
 
     connect(m_actions["manual"].action, &QAction::triggered, this, [this] {
         QDesktopServices::openUrl(
-            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/slicer2/slicer2_user_guide.pdf"));
+            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/slicer2/slicer-2_user_guide.pdf"));
     });
     connect(m_actions["repo"].action, &QAction::triggered, this,
             [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/Slicer-2")); });
