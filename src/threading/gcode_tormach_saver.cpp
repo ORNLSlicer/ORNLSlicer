@@ -44,7 +44,7 @@ void GCodeTormachSaver::run() {
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
 
-    out << "$$ ORNL SLICER 2" % newline;
+    out << "$$ ORNL SLICER-2" % newline;
     out << "$$*" % newline;
     out << "$$ -> MFGNO" % newline;
     out << "PARTNO / CF HY-80 3 x 1 1 1 CF HY-80 3 x 1" % newline;

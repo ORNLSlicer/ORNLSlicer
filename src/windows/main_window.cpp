@@ -428,7 +428,7 @@ void MainWindow::setupActions() {
     m_actions["manual"] = {"User's Manual", ":/icons/help_black.png", false, QKeySequence(), nullptr};
     m_actions["repo"] = {"Open Website/Repository", ":/icons/web_black.png", false, QKeySequence(), nullptr};
     m_actions["bug"] = {"Report Bug", ":/icons/bug_black.png", false, QKeySequence(), nullptr};
-    m_actions["about_s2"] = {"About ORNL Slicer 2", ":/icons/slicer-2_logo.png", false, QKeySequence(), nullptr};
+    m_actions["about_s2"] = {"About ORNL Slicer-2", ":/icons/slicer-2_logo.png", false, QKeySequence(), nullptr};
     m_actions["about_qt"] = {"About Qt", ":/icons/qt.png", false, QKeySequence(), nullptr};
 
     // Menu Debug
@@ -924,7 +924,7 @@ void MainWindow::removeHiddenSetting(QMenu* menu, QString panel, QString setting
 }
 
 void MainWindow::retranslateUi() {
-    this->setWindowTitle(QApplication::translate("MainWindow", "ORNL Slicer 2", nullptr));
+    this->setWindowTitle(QApplication::translate("MainWindow", "ORNL Slicer-2", nullptr));
 
     // Iterate through the actions and retranslate them.
     for (menu_info curr_act : m_actions) {
@@ -1108,7 +1108,7 @@ void MainWindow::saveSession() {
     save_dialog.setWindowTitle("Save project");
     save_dialog.setDirectory(CSM->getMostRecentProjectLocation());
     save_dialog.setAcceptMode(QFileDialog::AcceptSave);
-    save_dialog.setNameFilters(QStringList() << "Slicer 2 Project File (*.s2p)" << "Any Files (*)");
+    save_dialog.setNameFilters(QStringList() << "Slicer-2 Project File (*.s2p)" << "Any Files (*)");
     save_dialog.setDefaultSuffix("s2p");
     if (!save_dialog.exec())
         return;
@@ -1130,7 +1130,7 @@ void MainWindow::loadSession() {
     load_dialog.setWindowTitle("Load project");
     load_dialog.setDirectory(CSM->getMostRecentProjectLocation());
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    load_dialog.setNameFilters(QStringList() << "Slicer 2 Project File (*.s2p)" << "Any Files (*)");
+    load_dialog.setNameFilters(QStringList() << "Slicer-2 Project File (*.s2p)" << "Any Files (*)");
     load_dialog.setDefaultSuffix("s2p");
     if (!load_dialog.exec())
         return;
@@ -1215,7 +1215,7 @@ void MainWindow::loadTemplate() {
     QFileDialog load_dialog;
     load_dialog.setWindowTitle("Load Template");
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    load_dialog.setNameFilters(QStringList() << "Slicer 2 Configuration/Template File (*.s2c)"
+    load_dialog.setNameFilters(QStringList() << "Slicer-2 Configuration/Template File (*.s2c)"
                                              << "Any Files (*)");
     load_dialog.setDefaultSuffix("s2c");
     if (!load_dialog.exec())
@@ -1296,7 +1296,7 @@ void MainWindow::setLock(bool lock) {
     m_gcodebar->setDisabled(lock);
 }
 
-void MainWindow::setTitleInfo(const QString& str) { this->setWindowTitle("ORNL Slicer 2 - " + str); }
+void MainWindow::setTitleInfo(const QString& str) { this->setWindowTitle("ORNL Slicer-2 - " + str); }
 
 void MainWindow::enableSelectionMenu(bool partSelected) {
     m_actions["reload"].action->setEnabled(partSelected);

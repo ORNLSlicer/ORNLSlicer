@@ -10,7 +10,7 @@ Unicode true
 !define APPLICATION "slicer2"
 
 !define HUMAN_ORG "ORNL"
-!define HUMAN_APPLICATION "ORNL Slicer 2"
+!define HUMAN_APPLICATION "ORNL Slicer-2"
 
 ;!tempfile VER_TEMP
 ;!system 'echo "!define VERSION_MAJOR  $(jq -j .major  ../version.json)" >> ${VER_TEMP}'
@@ -26,7 +26,7 @@ Unicode true
 !define ICON "../resources/icons/slicer-2_logo.ico"
 
 ; Info
-Name "ORNL Slicer 2"
+Name "ORNL Slicer-2"
 LicenseData "../LICENSE.md"
 Icon "${ICON}"
 UninstallIcon "${ICON}"

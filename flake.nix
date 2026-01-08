@@ -1,5 +1,5 @@
 {
-  description = "ORNL Slicer 2 - An advanced object slicer";
+  description = "ORNL Slicer-2 -  An advanced slicing application for Additive Manufacturing";
 
   inputs = {
     nixpkgs.url  = gitlab:mdf/nixpkgs/slicer2?host=code.ornl.gov;

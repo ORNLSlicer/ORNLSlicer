@@ -134,7 +134,7 @@ void TemplateSaveDialog::fileDialog() {
     QFileDialog save_dialog;
     save_dialog.setWindowTitle("Save Template Location");
     save_dialog.setAcceptMode(QFileDialog::AcceptSave);
-    save_dialog.setNameFilters(QStringList() << "Slicer 2 Configuration/Template File (*.s2c)" << "Any Files (*)");
+    save_dialog.setNameFilters(QStringList() << "Slicer-2 Configuration/Template File (*.s2c)" << "Any Files (*)");
     save_dialog.setDirectory(m_filename);
     save_dialog.setDefaultSuffix("s2c");
 

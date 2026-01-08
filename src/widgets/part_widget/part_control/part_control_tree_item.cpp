@@ -67,7 +67,7 @@ void PartControlTreeItem::updateToolTip() {
 
     if (!m_is_mesh_closed)
         tooltip.append(
-            "\nThis model contains errors and is not a closed volume. Some Slicer 2 features may be unavailable.");
+            "\nThis model contains errors and is not a closed volume. Some Slicer-2 features may be unavailable.");
 
     if (!m_is_mesh_inside_volume)
         tooltip.append("\nThis model is outside the print volume.");
@@ -95,7 +95,7 @@ PartControlTreeItem::Container::Container(QString name, bool closed, QWidget* pa
     auto error_label = new QLabel(this);
     error_label->setAttribute(Qt::WA_TranslucentBackground);
     error_label->setToolTip(
-        "This model contains errors is not a closed volume. Some Slicer 2 features may be unavailable.");
+        "This model contains errors is not a closed volume. Some Slicer-2 features may be unavailable.");
     error_label->setPixmap(error_icon.pixmap(QSize(20, 20)));
     layout->addWidget(error_label);
 
