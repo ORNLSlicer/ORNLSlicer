@@ -107,10 +107,19 @@ void GcodeExport::exportGcode() {
 
     if (filepath != QString()) {
         QFileInfo info(filepath);
-        QString partName = info.baseName();
+        QString partName;
+        QString fullName = info.fileName();
         filepath = info.absolutePath();
 
         CSM->setMostRecentGcodeLocation(info.absolutePath());
+
+        // remove file suffix from part name if it exists - keeps periods in the file name intact
+        if(fullName.endsWith(m_most_recent_meta.m_file_suffix)) {
+            partName = fullName.left(fullName.length() - m_most_recent_meta.m_file_suffix.length());
+        }
+        else {
+            partName = fullName;
+        }
 
         // if bundling files, create folder based on name
         if (m_bundle_files_checkbox->isChecked()) {
