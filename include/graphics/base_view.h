@@ -4,6 +4,7 @@
 #include "QOpenGLFunctions_3_3_Core"
 #include "QOpenGLShaderProgram"
 #include "QOpenGLWidget"
+#include <QQuaternion>
 #include "graphics/graphics_object.h"
 #include "graphics/support/camera_manager.h"
 

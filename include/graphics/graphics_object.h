@@ -5,6 +5,7 @@
 #include "QOpenGLTexture"
 #include "QOpenGLVertexArrayObject"
 #include "QQueue"
+#include <QQuaternion>
 
 // Forward
 class QOpenGLShaderProgram;

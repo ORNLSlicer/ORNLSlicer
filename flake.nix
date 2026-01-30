@@ -2,127 +2,160 @@
   description = "ORNL Slicer 2 - An advanced object slicer";
 
   inputs = {
-    nixpkgs.url  = gitlab:mdf/nixpkgs/slicer2?host=code.ornl.gov;
-    utils.url    = github:numtide/flake-utils;
+    nixpkgs = {
+      type = "github";
+      owner = "NixOS";
+      repo = "nixpkgs";
+      ref = "master";
+    };
+
+    parts = {
+      type = "github";
+      owner = "hercules-ci";
+      repo = "flake-parts";
+    };
+
+    ornlpkgs = {
+      type = "gitlab";
+      host = "code.ornl.gov";
+      owner = "nix";
+      repo = "ornlpkgs";
+      inputs.nixpkgs.follows = "nixpkgs";
+    };
+
     appimage = {
-      url = github:ralismark/nix-appimage;
+      type = "github";
+      owner = "ralismark";
+      repo = "nix-appimage";
     };
   };
 
-  outputs = inputs @ { self, utils, ... }: utils.lib.eachDefaultSystem (system: let
-    config = rec {
-      pkgs = import inputs.nixpkgs {
-        inherit system;
-        inherit (import ./nix/nixpkgs/config.nix {}) overlays config;
-      };
+  outputs = inputs @ { self, parts, ... }: (
+    parts.lib.mkFlake { inherit inputs; } {
+      systems = [
+        "x86_64-linux"
+        "aarch64-linux"
+        "x86_64-darwin"
+        "aarch64-darwin"
+      ];
 
-      stdenv = llvm.stdenv;
+      imports = [
+        ./nix/modules/nixpkgs.nix
+        ./nix/modules/dev.nix
+        ./nix/modules/packages.nix
+      ];
+    }
+  );
 
-      llvm = rec {
-        packages = pkgs.llvmPackages_18;
-        stdenv   = packages.stdenv;
+  #outputs = inputs @ { self, utils, ... }: utils.lib.eachDefaultSystem (system: let
+  #  config = rec {
+  #    pkgs = import inputs.nixpkgs {
+  #      inherit system;
+  #      inherit (import ./nix/nixpkgs/config.nix {}) overlays config;
+  #    };
 
-        tooling = rec {
-          lldb = packages.lldb;
-          clang-tools = packages.clang-tools;
-          clang-tools-libcxx = clang-tools.override {
-              enableLibcxx = true;
-          };
-        };
-      };
-    };
-  in with config; rec {
-    inherit config;
+  #    stdenv = llvm.stdenv;
 
-    lib = rec {
-      fetchVersion = version_file: let
-        inherit (lib.pipe version_file [ builtins.readFile builtins.fromJSON ]) major minor patch suffix;
-        suffixShort = builtins.substring 0 1 suffix;
+  #    llvm = rec {
+  #      packages = pkgs.llvmPackages_18;
+  #      stdenv   = packages.stdenv;
 
-        version      = "${major}.${minor}.${patch}+${suffix}";
-        revisionHash = self.shortRev or self.dirtyShortRev;
-        fullVersion  = "${version}-${revisionHash}";
-      in fullVersion;
+  #      tooling = rec {
+  #        lldb = packages.lldb;
+  #        clang-tools = packages.clang-tools;
+  #        clang-tools-libcxx = clang-tools.override {
+  #            enableLibcxx = true;
+  #        };
+  #      };
+  #    };
+  #  };
+  #in with config; rec {
+  #  inherit config;
 
-      mkPackages = { pkgs, stdenv ? pkgs.stdenv }: rec {
-        nixpkgs = pkgs;
+  #  lib = rec {
+  #    fetchVersion = version_file: let
+  #      inherit (lib.pipe version_file [ builtins.readFile builtins.fromJSON ]) major minor patch suffix;
+  #      suffixShort = builtins.substring 0 1 suffix;
 
-        ornl = rec {
-          libraries = rec {
-            sockets  = pkgs.qt6.callPackage ./nix/packages/sockets {};
+  #      version      = "${major}.${minor}.${patch}+${suffix}";
+  #      revisionHash = self.shortRev or self.dirtyShortRev;
+  #      fullVersion  = "${version}-${revisionHash}";
+  #    in fullVersion;
 
-            clipper  = pkgs.callPackage ./nix/packages/clipper  {};
-            kuba-zip = pkgs.callPackage ./nix/packages/kuba-zip {};
-            psimpl   = pkgs.callPackage ./nix/packages/psimpl   {};
-          };
+  #    mkPackages = { pkgs, stdenv ? pkgs.stdenv }: rec {
+  #      nixpkgs = pkgs;
 
-          slicer2 = pkgs.qt6.callPackage ./nix/slicer2 {
-            src     = self;
-            version = (lib.fetchVersion ./version.json);
+  #      ornl = rec {
+  #        libraries = rec {
+  #          sockets  = pkgs.qt6.callPackage ./nix/packages/sockets {};
 
-            inherit (libraries) sockets kuba-zip clipper psimpl;
-            inherit stdenv;
-          };
-        };
-      };
-    } // config.pkgs.lib;
+  #          clipper  = pkgs.callPackage ./nix/packages/clipper  {};
+  #          kuba-zip = pkgs.callPackage ./nix/packages/kuba-zip {};
+  #          psimpl   = pkgs.callPackage ./nix/packages/psimpl   {};
+  #        };
 
-    legacyPackages = {
-      inherit (lib.mkPackages { inherit pkgs stdenv; } ) ornl nixpkgs;
-      windows = (lib.mkPackages { pkgs = pkgs.pkgsCross.mingwW64; });
-    };
+  #        slicer2 = pkgs.qt6.callPackage ./nix/slicer2 {
+  #          src     = self;
+  #          version = (lib.fetchVersion ./version.json);
 
-    packages = rec {
-      default = slicer2;
-      slicer2 = legacyPackages.ornl.slicer2;
-    };
+  #          inherit (libraries) sockets kuba-zip clipper psimpl;
+  #          inherit stdenv;
+  #        };
+  #      };
+  #    };
+  #  } // config.pkgs.lib;
 
-    bundlers = rec {
-      default = appimage;
+  #  legacyPackages = {
+  #    inherit (lib.mkPackages { inherit pkgs stdenv; } ) ornl nixpkgs;
+  #    windows = (lib.mkPackages { pkgs = pkgs.pkgsCross.mingwW64; });
+  #  };
 
-      appimage = inputs.appimage.bundlers.${system}.default;
-    };
+  #  packages = rec {
+  #    default = slicer2;
+  #    slicer2 = legacyPackages.ornl.slicer2;
+  #  };
 
-    devShells = rec {
-      default = s2Dev;
+  #  bundlers = rec {
+  #    default = appimage;
 
-      # Main developer shell.
-      s2Dev = pkgs.mkShell.override { inherit stdenv; } rec {
-        name = "s2-dev";
+  #    appimage = inputs.appimage.bundlers.${system}.default;
+  #  };
 
-        packages = [
-          pkgs.git
-          pkgs.jq
+  #  devShells = rec {
+  #    default = s2Dev;
 
-          pkgs.doxygen
-          pkgs.graphviz
+  #    # Main developer shell.
+  #    s2Dev = pkgs.mkShell.override { inherit stdenv; } rec {
+  #      name = "s2-dev";
 
-          llvm.tooling.lldb
-          llvm.tooling.clang-tools
+  #      packages = [
+  #        pkgs.git
+  #        pkgs.jq
 
-          (
-            pkgs.python3.withPackages (py: [
-              py.pandas
-              py.odfpy
-            ])
-          )
-        ] ++ lib.optionals stdenv.isLinux [
-          pkgs.nsis
-          pkgs.cntr
-          pkgs.clazy
-        ];
+  #        pkgs.doxygen
+  #        pkgs.graphviz
 
-        inputsFrom = [
-          legacyPackages.ornl.slicer2
-        ];
+  #        llvm.tooling.lldb
+  #        llvm.tooling.clang-tools
 
-        LD_FALLBACK_PATH = "/usr/lib/x86_64-linux-gnu";
-      };
-    };
-  });
+  #        (
+  #          pkgs.python3.withPackages (py: [
+  #            py.pandas
+  #            py.odfpy
+  #          ])
+  #        )
+  #      ] ++ lib.optionals stdenv.isLinux [
+  #        pkgs.nsis
+  #        pkgs.cntr
+  #        pkgs.clazy
+  #      ];
 
-  nixConfig = {
-    extra-substituters = [ "https://mdfbaam.cachix.org" ];
-    extra-trusted-public-keys = [ "mdfbaam.cachix.org-1:WCQinXaMJP7Ny4sMlKdisNUyhcO2MHnPoobUef5aTmQ=" ];
-  };
+  #      inputsFrom = [
+  #        legacyPackages.ornl.slicer2
+  #      ];
+
+  #      LD_FALLBACK_PATH = "/usr/lib/x86_64-linux-gnu";
+  #    };
+  #  };
+  #});
 }
