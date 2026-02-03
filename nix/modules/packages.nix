@@ -15,12 +15,27 @@ let
     fullVersion
   );
 in {
-  perSystem = { pkgs, self', ... }: {
+  perSystem = { pkgs, self', ... }: let
+    callPackage' = targetPkgs: extraArgs: targetPkgs.callPackage ../packages/slicer2/package.nix {
+      version = fetchVersion ../../version.json;
+      src = self;
+    } // extraArgs;
+
+  in {
     packages = {
-      slicer2 = pkgs.callPackage ../packages/slicer2/package.nix {
-        version = fetchVersion ../../version.json;
-        src = self;
+      slicer2-gcc = callPackage' pkgs {};
+
+      slicer2-llvm = callPackage' pkgs {
+        stdenv = pkgs.llvmPackages.stdenv;
+        openmp = pkgs.llvmPackages.openmp;
       };
+
+      slicer2-win = callPackage' pkgs.pkgsCross.mingwW64 {
+        stdenv = pkgs.pkgsCross.mingwW64.stdenv;
+      };
+
+      slicer2 = self'.packages.slicer2-llvm;
+
       default = self'.packages.slicer2;
     };
   };

@@ -6,11 +6,13 @@
   cmake, pkg-config, ninja,
 
   qt6, assimp, boost, cgal_5, eigen, nlohmann_json, gmp, mpfr,
-  hdf5, vtkWithQt6, kubazip, ornl-clipper, psimpl, ornl-sockets
+  hdf5, vtkWithQt6, kubazip, ornl-clipper, psimpl, ornl-sockets,
+
+  openmp ? null
 }:
 
 let
-  # Upstream drv's find_package() cmake config is broken without this
+  # Upstream drv's find_package() cmake config is broken with a split dev/out
   kubazip' = kubazip.overrideAttrs {
     outputs = [ "out" ];
   };
@@ -36,6 +38,7 @@ in stdenv.mkDerivation rec {
     ornl-sockets
     gmp
     mpfr
+    openmp
   ];
 
   cmakeFlags = [
