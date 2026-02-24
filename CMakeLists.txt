@@ -112,7 +112,7 @@ target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_obj)
 
 if(WIN32)
     message(STATUS "Windows detected, generating Windows targets.")
-    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-mwindows")
+    set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-mwindows -Wl,--nxcompat -Wl,--dynamicbase -Wl,--high-entropy-va")
 
     add_executable(${PROJECT_NAME}_cli)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
