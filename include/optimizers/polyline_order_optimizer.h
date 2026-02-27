@@ -1,11 +1,9 @@
 #pragma once
 
-#include "configs/settings_base.h"
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
-#include "optimizers/point_order_optimizer.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -103,10 +101,6 @@ class PolylineOrderOptimizer {
     //! \brief Links single Polyline in line infill
     //! \return Next Polyline linked via travel
     Polyline linkNextInfillLines(QVector<Polyline>& polylines);
-
-    //! \brief Links a travel in line infill
-    //! \return Next Polyline linked via travel
-    // Polyline linkNextInfillTravel(QVector<Polyline>& polylines);
 
     //! \brief Links single Polyline in concentric infill
     //! \return Next Polyline linked via travel
