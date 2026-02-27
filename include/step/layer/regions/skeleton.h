@@ -79,50 +79,16 @@ class Skeleton : public RegionBase {
     //! m_computed_geometry
     void extractPath(QVector<SkeletonEdge> path);
 
-    /*!
-     * \brief Used for internal inspection of skeleton structure contained in m_computed_geometry.
-     * Due to the underlyting nature of Voronoi Diagrams, small skeleton segments may be generated
-     * that will not be visible in the UI. To properly inspect these segments and their source geometry,
-     * follow these instructions:
-     *
-     * 1.   Call inspectSkeleton() after cleanOutputGeometry() is called within compute().
-     *
-     * 2.   The ouput will appear as:
-     *
-     *      Input Geometry
-     *      polygon((x1,y1),(x2,y2))
-     *      ...
-     *      Skeleton Geometry
-     *      polygon((x1,y1),(x2,y2))
-     *      ...
-     *
-     *      Copy this entire output including the "Input Geometry" and "Skeleton Geometry" text.
-     *      It will help you later identify which a segment belongs to.
-     *
-     * 3.   Go to desmos.com/calculator
-     *
-     * 4.   On the left-hand side of the application you will see an area to input data.
-     *      Select the first input row and paste the output from inspectSkeleton() using ctrl + v.
-     *
-     * 5.   You will see that the input has been entered but not initialized.
-     *      To initialize the input, scroll all the way to the top input row and select it.
-     *      Now hold down the tab button until you have iterated through all input rows.
-     *      The input should now be initialized.
-     *
-     * 6.   The graph will be centered at (0,0) however the input will most likely be at a much grater scale.
-     *      Continue to zoom out until the input becomes visible. Once visible, you can then zoom in on the
-     *      skeleton structure to inspect it in detail.
-     *
-     *      Additionally, you may find it easier to inspect the skeleton by reversing the contrast of the application.
-     *      On the right-hand side of the application select the wrench icon and then select Reverse Contrast.
-     */
+    /// @brief Used for internal inspection of skeleton geometry. To be used after compute and before optimize.
+    /// @details Prints the input geometry and computed skeleton geometry to Qt's debug output in a Desmos-compatible
+    /// format. Each line segment is printed as a separate polygon in the format "polygon((x1,y1),(x2,y2))". Polylines
+    /// with fewer than 2 points will not be printed.
     void inspectSkeleton();
 
-    /*!
-     * \brief Used for internal inspection of m_skeleton_graph.
-     * To be used after generateSkeletonGraph is called and before skeleton extraction is complete.
-     * Follows same instructions listed above.
-     */
+    /// @brief Used for internal inspection of skeleton graph. To be used after generateSkeletonGraph and before
+    /// optimize.
+    /// @details Prints the input geometry and skeleton graph edges to Qt's debug output in a Desmos-compatible format.
+    /// Each edge is printed as a separate polygon in the format "polygon((x1,y1),(x2,y2))".
     void inspectSkeletonGraph();
 
     //! \brief Optimizes the region.
