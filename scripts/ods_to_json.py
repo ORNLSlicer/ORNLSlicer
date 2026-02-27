@@ -28,7 +28,6 @@ types = {
     'major': 'string',
     'namespace': 'string',
     'symbol': 'string',
-    'dependency_group': 'string',
     'local': 'bool'
 }
 
