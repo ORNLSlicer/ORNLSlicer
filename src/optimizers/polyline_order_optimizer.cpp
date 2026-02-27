@@ -23,11 +23,13 @@ void PolylineOrderOptimizer::setGeometryToEvaluate(QVector<Polyline> polylines, 
 }
 
 void PolylineOrderOptimizer::setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry,
-                                                 Distance minInfillPathDistance, Distance minTravelDistance) {
+                                                 Distance minInfillPathDistance, Distance minTravelDistance,
+                                                 bool enable_partitioned_linking) {
     m_pattern = infillPattern;
     m_border_geometry = border_geometry;
     m_min_distance = minInfillPathDistance;
     m_min_travel_distance = minTravelDistance;
+    m_enable_partitioned_linking = enable_partitioned_linking;
 }
 
 void PolylineOrderOptimizer::setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
@@ -111,9 +113,22 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
     PolygonList empty_polygon_list;
 
     Point temp_current_location = m_current_location;
+
     // first motion will always be a travel, so add it regardless
     if (m_polylines.size() > 0) {
-        const auto& [index, start] = closestOpenPolyline(m_polylines, temp_current_location);
+        int index;
+        bool start;
+
+        if (m_enable_partitioned_linking) {
+            std::tie(index, start) = closestOpenPolyline(m_polylines, temp_current_location);
+        }
+        else {
+            // Monotonic linking
+            int endpoint_index;
+            std::tie(endpoint_index, start) =
+                closestOpenPolyline({m_polylines.front(), m_polylines.back()}, temp_current_location);
+            index = (endpoint_index == 0) ? 0 : (m_polylines.size() - 1);
+        }
 
         // if false, indicates index is closest if you start at the end point, so reverse
         if (start == false) {
@@ -220,25 +235,31 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
 bool PolylineOrderOptimizer::linkIntersects(Point link_start, Point link_end, QVector<Polyline> infill_geometry,
                                             PolygonList border_geometry) {
     //! Check for possible intersections with infill geometry
-    for (Polyline polyline : infill_geometry)
+    for (Polyline polyline : infill_geometry) {
         for (int i = 0, end = polyline.size() - 1; i < end; ++i) {
             Point startPt = polyline[i];
             Point endPt = polyline[(i + 1) % polyline.size()];
 
-            if (link_start != endPt && link_end != startPt)
-                if (MathUtils::intersect(link_start, link_end, startPt, endPt))
+            if (link_start != startPt && link_start != endPt && link_end != startPt && link_end != endPt) {
+                if (MathUtils::intersect(link_start, link_end, startPt, endPt)) {
                     return true;
+                }
+            }
         }
+    }
 
     //! Check for possible intersections with border geometry
     for (Polygon poly : border_geometry) {
-        for (int i = 0, end = poly.size() - 1; i < end; ++i)
-            if (MathUtils::intersect(link_start, link_end, poly[i], poly[i + 1]))
+        for (int i = 0, end = poly.size() - 1; i < end; ++i) {
+            if (MathUtils::intersect(link_start, link_end, poly[i], poly[i + 1])) {
                 return true;
+            }
+        }
 
         //! Check last line of polygon
-        if (MathUtils::intersect(link_start, link_end, poly.last(), poly.first()))
+        if (MathUtils::intersect(link_start, link_end, poly.last(), poly.first())) {
             return true;
+        }
     }
 
     return false;
@@ -250,15 +271,7 @@ QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> p
     int index = 0;
     bool start;
 
-    Point queryPoint;
-    // 7/13/24 - Setting queryPoint to always use currentLocation.
-    // When m_override_location is used, infill lines become disconnected
-    // because all infill lines print in the same direction causing very long travels.
-    /*if(m_override_used)
-        queryPoint = m_override_location;
-    else
-        queryPoint = currentLocation;*/
-    queryPoint = currentLocation;
+    Point queryPoint = currentLocation;
 
     for (int i = 0, end = polylines.size(); i < end; ++i) {
         if (queryPoint.distance(polylines[i].front()) < shortest) {
