@@ -237,6 +237,7 @@ class Constants {
           public:
             static const QString kMinXYSpeed;
             static const QString kMaxXYSpeed;
+            static const QString kMinExtruderSpeed;
             static const QString kMaxExtruderSpeed;
             static const QString kWTableSpeed;
             static const QString kZSpeed;

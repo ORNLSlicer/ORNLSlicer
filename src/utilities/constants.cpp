@@ -286,6 +286,7 @@ const QString Constants::PrinterSettings::Auxiliary::kGKNWireSpeed = "gkn_wire_s
 // Machine Speed
 const QString Constants::PrinterSettings::MachineSpeed::kMinXYSpeed = "min_xy_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kMaxXYSpeed = "max_xy_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kMinExtruderSpeed = "min_extruder_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kMaxExtruderSpeed = "max_extruder_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed = "w_table_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kZSpeed = "z_speed";
