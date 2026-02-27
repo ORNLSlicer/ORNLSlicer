@@ -113,11 +113,12 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
     Point temp_current_location = m_current_location;
     // first motion will always be a travel, so add it regardless
     if (m_polylines.size() > 0) {
-        QPair<int, bool> indexAndStart = closestOpenPolyline(m_polylines, temp_current_location);
-        int index = indexAndStart.first;
+        const auto& [index, start] = closestOpenPolyline(m_polylines, temp_current_location);
+
         // if false, indicates index is closest if you start at the end point, so reverse
-        if (indexAndStart.second == false)
+        if (start == false) {
             m_polylines[index] = m_polylines[index].reverse();
+        }
 
         new_polyline += m_polylines[index];
         temp_current_location = new_polyline.back();
@@ -127,11 +128,12 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
     // add as many motions without a travel as possible into one polyline
     for (int i = 0, end = m_polylines.size(); i < end; ++i) {
         if (m_polylines.size() > 0) {
-            QPair<int, bool> indexAndStart = closestOpenPolyline(m_polylines, temp_current_location);
-            int index = indexAndStart.first;
+            const auto& [index, start] = closestOpenPolyline(m_polylines, temp_current_location);
+
             // if false, indicates index is closest if you start at the end point, so reverse
-            if (indexAndStart.second == false)
+            if (start == false) {
                 m_polylines[index] = m_polylines[index].reverse();
+            }
 
             Point link_start = temp_current_location;
             Point link_end = m_polylines[index].front();
@@ -174,14 +176,12 @@ Polyline PolylineOrderOptimizer::linkNextInfillConcentric() {
 Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
     Polyline new_polyline;
     if (!m_polylines.isEmpty()) {
-        QPair<int, bool> location = closestOpenPolyline(m_polylines, m_current_location);
-        int index = location.first;
-        bool start = location.second;
+        const auto& [index, start] = closestOpenPolyline(m_polylines, m_current_location);
 
         new_polyline = m_polylines[index];
-        if (!start)
+        if (!start) {
             new_polyline = new_polyline.reverse();
-
+        }
         m_polylines.remove(index);
     }
 
