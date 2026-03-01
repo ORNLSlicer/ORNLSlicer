@@ -702,6 +702,7 @@ class Constants {
             static const QString kDensity;
             static const QString kManualLineSpacing;
             static const QString kPattern;
+            static const QString kLinesPartitionedLinking;
             static const QString kBasedOnPrinter;
             static const QString kAngle;
             static const QString kAngleRotation;

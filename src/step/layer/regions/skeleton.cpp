@@ -2,6 +2,7 @@
 
 #include "boost/graph/undirected_dfs.hpp"
 #include "boost/polygon/voronoi.hpp"
+#include "geometry/geometry_debug.h"
 #include "geometry/path_modifier.h"
 #include "geometry/segments/line.h"
 #include "optimizers/polyline_order_optimizer.h"
@@ -581,60 +582,27 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
 }
 
 void Skeleton::inspectSkeleton() {
-    static QMutex lock;
-    QMutexLocker locker(&lock);
-
-#define precision_qDebug() qDebug() << Qt::fixed << qSetRealNumberPrecision(1)
-
-    //! Print input geometry
-    qDebug() << "Layer " << m_layer_num << "Input Geometry:";
-    for (Polygon& poly : m_geometry) {
-        for (uint i = 0, max = poly.size() - 1; i < max; ++i) {
-            precision_qDebug() << "polygon((" << poly[i].x() << "," << poly[i].y() << "),(" << poly[i + 1].x() << ","
-                               << poly[i + 1].y() << "))";
-        }
-        precision_qDebug() << "polygon((" << poly.first().x() << "," << poly.first().y() << "),(" << poly.last().x()
-                           << "," << poly.last().y() << "))";
-    }
-
-    //! Print skeleton geometry
-    qDebug() << "Layer " << m_layer_num << "Skeleton Geometry";
-    for (Polyline& seg : m_computed_geometry) {
-        for (uint i = 0, max = seg.size() - 1; i < max; ++i) {
-            precision_qDebug() << "polygon((" << seg[i].x() << "," << seg[i].y() << "),(" << seg[i + 1].x() << ","
-                               << seg[i + 1].y() << "))";
-        }
-    }
+    GeometryDebug::printDesmos(m_geometry, "Layer " + QString::number(m_layer_num) + " Skeleton Input Geometry");
+    GeometryDebug::printDesmos(m_computed_geometry,
+                               "Layer " + QString::number(m_layer_num) + " Skeleton Output Geometry");
 }
 
 void Skeleton::inspectSkeletonGraph() {
-    static QMutex lock;
-    QMutexLocker locker(&lock);
+    GeometryDebug::printDesmos(m_geometry, "Layer " + QString::number(m_layer_num) + " Skeleton Input Geometry");
 
-#define precision_qDebug() qDebug() << Qt::fixed << qSetRealNumberPrecision(1)
+    GeometryDebug::EdgeList edge_list;
+    edge_list.reserve(boost::num_edges(m_skeleton_graph));
 
-    //! Print input geometry
-    qDebug() << "Layer " << m_layer_num << "Input Geometry:";
-    for (Polygon& poly : m_geometry) {
-        for (uint i = 0, max = poly.size() - 1; i < max; ++i) {
-            precision_qDebug() << "polygon((" << poly[i].x() << "," << poly[i].y() << "),(" << poly[i + 1].x() << ","
-                               << poly[i + 1].y() << "))";
-        }
-        precision_qDebug() << "polygon((" << poly.first().x() << "," << poly.first().y() << "),(" << poly.last().x()
-                           << "," << poly.last().y() << "))";
-    }
-
-    //! Print skeleton graph
-    qDebug() << "Skeleton Graph";
     boost::graph_traits<SkeletonGraph>::edge_iterator edge_iter, edge_iter_end;
     boost::tie(edge_iter, edge_iter_end) = edges(m_skeleton_graph);
     while (edge_iter != edge_iter_end) {
-        precision_qDebug() << "polygon((" << m_skeleton_graph[edge_iter->m_source].x() << ","
-                           << m_skeleton_graph[edge_iter->m_source].y() << "),("
-                           << m_skeleton_graph[edge_iter->m_target].x() << ","
-                           << m_skeleton_graph[edge_iter->m_target].y() << "))";
-        edge_iter++;
+        const SkeletonVertex source = boost::source(*edge_iter, m_skeleton_graph);
+        const SkeletonVertex target = boost::target(*edge_iter, m_skeleton_graph);
+        edge_list.append(QPair<Point, Point>(m_skeleton_graph[source], m_skeleton_graph[target]));
+        ++edge_iter;
     }
+
+    GeometryDebug::printDesmos(edge_list, "Layer " + QString::number(m_layer_num) + " Skeleton Graph");
 }
 
 void Skeleton::populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
