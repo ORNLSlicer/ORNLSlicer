@@ -34,9 +34,8 @@ class Skeleton : public RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
     Skeleton(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-             const SingleExternalGridInfo& gridInfo, bool iswireFed = false);
+             bool iswireFed = false);
 
     //! \brief Writes the gcode for the skeleton
     //! \param writer is the instance of the Writer Base to be used for writing skeleton region GCode

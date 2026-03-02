@@ -16,9 +16,8 @@ Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
 
 namespace ORNL {
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
-                     const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo,
-                     PolygonList uncut_geometry)
-    : RegionBase(sb, index, settings_polygons, gridInfo, uncut_geometry) {}
+                     const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
+    : RegionBase(sb, index, settings_polygons, uncut_geometry) {}
 
 QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;

@@ -166,7 +166,6 @@ void MainWindow::setupWindows() {
     m_layertimebar = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
     m_about_window = new AboutWindow(this);
-    m_external_file_window = new ExternalFileWindow(this);
 }
 
 void MainWindow::setupWidgets() {
@@ -261,12 +260,6 @@ void MainWindow::setupDocks() {
     m_layertimesdock->setObjectName(QStringLiteral("m_layertimesdock"));
     //        m_layertimesdock->setFeatures(QDockWidget::AllDockWidgetFeatures);
     m_layertimesdock->setMinimumWidth(Constants::UI::MainWindow::SideDock::kLayerTimesWidth);
-
-    // external file dock
-    m_external_file_dock = new QDockWidget(this);
-    m_external_file_dock->setObjectName(QStringLiteral("m_external_file_dock"));
-    //        m_external_file_dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    m_external_file_dock->setMinimumWidth(Constants::UI::MainWindow::SideDock::kExternalFileWidth);
 
     // CmdDock
     m_cmddock = new QDockWidget(this);
@@ -576,7 +569,6 @@ void MainWindow::setupInsert() {
     m_settingdock->setWidget(m_settingbar);
     m_gcodedock->setWidget(m_gcodebar);
     m_layertimesdock->setWidget(m_layertimebar);
-    m_external_file_dock->setWidget(m_external_file_window);
     m_statusbar->addPermanentWidget(m_progressbar);
 
     m_tab_widget->addTab(m_part_widget, "Object View");
@@ -587,13 +579,11 @@ void MainWindow::setupInsert() {
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_gcodedock);
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_settingdock);
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_layertimesdock);
-    this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_external_file_dock);
 
     m_cmddock->setMaximumHeight(Constants::UI::MainWindow::kStatusBarMaxHeight);
 
     this->tabifyDockWidget(m_settingdock, m_gcodedock);
     this->tabifyDockWidget(m_gcodedock, m_layertimesdock);
-    this->tabifyDockWidget(m_layertimesdock, m_external_file_dock);
     this->setTabPosition(static_cast<Qt::DockWidgetArea>(2), QTabWidget::West);
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_cmddock);
     m_settingdock->raise();
@@ -800,8 +790,6 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::tabHidden, this, &MainWindow::addHiddenSetting);
     connect(GSM.get(), &SettingsManager::globalLoaded, this, &MainWindow::updateSettings);
 
-    connect(m_external_file_window, &ExternalFileWindow::forwardGridInfo, CSM.get(), &SessionManager::setExternalInfo);
-
     // Toolbar -> MainWindow
     connect(m_main_toolbar, &MainToolbar::viewChanged, this, &MainWindow::switchViews);
     connect(m_main_toolbar, &MainToolbar::loadModel, this, &MainWindow::loadModel);
@@ -953,7 +941,6 @@ void MainWindow::retranslateUi() {
     m_settingdock->setWindowTitle(QApplication::translate("MainWindow", "Settings", nullptr));
     m_gcodedock->setWindowTitle(QApplication::translate("MainWindow", "G-Code Editor", nullptr));
     m_layertimesdock->setWindowTitle(QApplication::translate("MainWindow", "Layer Times", nullptr));
-    m_external_file_dock->setWindowTitle(QApplication::translate("MainWindow", "External File Input", nullptr));
     m_cmddock->setWindowTitle(QApplication::translate("MainWindow", "Status", nullptr));
 }
 

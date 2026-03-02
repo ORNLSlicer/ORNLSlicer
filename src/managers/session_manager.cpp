@@ -523,12 +523,6 @@ void SessionManager::forwardDialogUpdate(StatusUpdateStepType type, int complete
 
 void SessionManager::cancelSlice() { m_ast->setCancel(); }
 
-void SessionManager::setExternalInfo(ExternalGridInfo gridInfo) {
-    m_grid_info = gridInfo;
-    if (m_ast != nullptr)
-        m_ast->setExternalData(m_grid_info);
-}
-
 void SessionManager::setCopiedPart(QSharedPointer<Part> part) { m_copied_part = part; }
 
 void SessionManager::pastePart() {
@@ -551,12 +545,6 @@ void SessionManager::pastePart() {
     m_parts.insert(name, new_copy);
     emit partAdded(new_copy);
     m_load_mutex.unlock();
-}
-
-void SessionManager::clearExternalInfo() {
-    m_grid_info = ExternalGridInfo();
-    if (m_ast != nullptr)
-        m_ast->setExternalData(m_grid_info);
 }
 
 void SessionManager::setupTCPServer() {
@@ -678,7 +666,6 @@ bool SessionManager::changeSlicer(SlicerType type) {
             break;
     }
 
-    m_ast->setExternalData(m_grid_info);
     m_slicer_type = type;
 
     // Reset part steps

@@ -9,9 +9,7 @@ class Infill : public RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
-    Infill(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-           const SingleExternalGridInfo& gridInfo);
+    Infill(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Writes the gcode for the perimeter.
     //! \param writer Writer type to use for gcode output

@@ -5,7 +5,6 @@
 #include "configs/settings_base.h"
 #include "console/command_line_processor.h"
 #include "console/main_control.h"
-#include "external_files/external_grid.h"
 #include "gcode/gcode_command.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
@@ -43,7 +42,6 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<ORNL::GcodeCommand>("GcodeCommand");
     qRegisterMetaType<ORNL::GcodeMeta>("GcodeMeta");
     qRegisterMetaType<fifojson>("fifojson");
-    qRegisterMetaType<ORNL::ExternalGridInfo>("ExternalGridInfo");
     qRegisterMetaType<QList<QList<ORNL::Time>>>("QList<QList<Time>>");
     qRegisterMetaType<nlohmann::json>("nlohmann::json");
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");

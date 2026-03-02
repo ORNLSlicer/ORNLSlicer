@@ -24,7 +24,6 @@ class BufferedSlicer {
         QVector3D average_normal;
         Point shift_amount;
         Point additional_shift;
-        SingleExternalGridInfo single_grid;
         QVector<Polyline> opt_polylines;
     };
 
