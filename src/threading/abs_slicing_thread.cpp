@@ -33,7 +33,6 @@
 #include "gcode/writers/thermwood_writer.h"
 #include "gcode/writers/tormach_writer.h"
 #include "managers/session_manager.h"
-#include "slicing/slicing_utilities.h"
 
 namespace ORNL {
 AbstractSlicingThread::AbstractSlicingThread(QString outputLocation, bool skipGcode)
@@ -197,18 +196,9 @@ bool AbstractSlicingThread::shouldCancel() {
     return false;
 }
 
-ExternalGridInfo AbstractSlicingThread::getExternalGridInfo() { return m_grid_info; }
-
 void AbstractSlicingThread::setMaxSteps(int steps) { m_max_steps = steps; }
 
 int AbstractSlicingThread::getMaxSteps() { return m_max_steps; }
-
-void AbstractSlicingThread::setExternalData(ExternalGridInfo gridInfo) {
-    m_grid_info = gridInfo;
-    auto build_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
-    for (QSharedPointer<Part> curr_part : build_parts)
-        curr_part->setStepsDirty();
-}
 
 void AbstractSlicingThread::setCommunicate(bool communicate) { m_should_communicate = communicate; }
 

@@ -4,7 +4,6 @@
 #include "QThread"
 #include "data_stream.h"
 #include "external_files/exporters/rpbf_exporter.h"
-#include "external_files/external_grid.h"
 #include "gcode/gcode_parser.h"
 #include "tcp_connection.h"
 #include "threading/abs_slicing_thread.h"

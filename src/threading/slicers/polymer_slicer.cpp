@@ -96,8 +96,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
                 for (const PolygonList& island_geometry : split_geometry) {
                     // Polymer builds use polymer islands.
                     QSharedPointer<WireFeedIsland> poly_isl = QSharedPointer<WireFeedIsland>::create(
-                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons,
-                        next_layer_meta->single_grid);
+                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
                     new_layer->addIsland(IslandType::kWireFeed, poly_isl);
                 }
             }
@@ -106,8 +105,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
                 for (const PolygonList& island_geometry : split_geometry) {
                     // Polymer builds use polymer islands.
                     QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
-                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons,
-                        next_layer_meta->single_grid);
+                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
                     new_layer->addIsland(IslandType::kPolymer, poly_isl);
                 }
             }
@@ -194,8 +192,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
                     for (const PolygonList& island_geometry : split_geometry) {
                         // Polymer builds use polymer islands.
                         QSharedPointer<WireFeedIsland> poly_isl = QSharedPointer<WireFeedIsland>::create(
-                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons,
-                            next_layer_meta->single_grid);
+                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
                         newIslands.append(poly_isl);
                     }
                     newLayer->updateIslands(IslandType::kWireFeed, newIslands);
@@ -205,8 +202,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
                     for (const PolygonList& island_geometry : split_geometry) {
                         // Polymer builds use polymer islands.
                         QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
-                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons,
-                            next_layer_meta->single_grid);
+                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
                         newIslands.append(poly_isl);
                     }
                     newLayer->updateIslands(IslandType::kPolymer, newIslands);

@@ -10,9 +10,8 @@ Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
 #endif
 
 namespace ORNL {
-Inset::Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-             const SingleExternalGridInfo& gridInfo)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+Inset::Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons) {
     // NOP
 }
 

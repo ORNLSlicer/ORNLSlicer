@@ -6,10 +6,9 @@
 
 namespace ORNL {
 WireFeedIsland::WireFeedIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
-                               const QVector<SettingsPolygon>& settings_polygons,
-                               const SingleExternalGridInfo& gridInfo)
-    : IslandBase(geometry, sb, settings_polygons, gridInfo) {
-    this->addRegion(QSharedPointer<Skeleton>::create(sb, 0, settings_polygons, gridInfo, true));
+                               const QVector<SettingsPolygon>& settings_polygons)
+    : IslandBase(geometry, sb, settings_polygons) {
+    this->addRegion(QSharedPointer<Skeleton>::create(sb, 0, settings_polygons, true));
     m_island_type = IslandType::kWireFeed;
 }
 

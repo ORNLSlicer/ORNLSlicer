@@ -202,14 +202,14 @@ void LayerAdditions::createWireFeedIslands(QSharedPointer<Layer> layer,
     base_sb->setSetting(PS::Skeleton::kEnable, false);
 
     QSharedPointer<PolymerIsland> base_isl = QSharedPointer<PolymerIsland>::create(
-        base, base_sb, next_layer_meta->settings_polygons, next_layer_meta->single_grid, next_layer_meta->geometry);
+        base, base_sb, next_layer_meta->settings_polygons, next_layer_meta->geometry);
 
     QSharedPointer<PolymerIsland> surface_isl = QSharedPointer<PolymerIsland>::create(
-        surface, next_layer_meta->settings, next_layer_meta->settings_polygons, next_layer_meta->single_grid);
+        surface, next_layer_meta->settings, next_layer_meta->settings_polygons);
 
     QSharedPointer<WireFeedIsland> wire_feed_isl =
         QSharedPointer<WireFeedIsland>::create(next_layer_meta->setting_bounded_geometry, next_layer_meta->settings,
-                                               next_layer_meta->settings_polygons, next_layer_meta->single_grid);
+                                               next_layer_meta->settings_polygons);
     if (new_islands) {
         layer->addIsland(IslandType::kPolymer, base_isl);
         layer->addIsland(IslandType::kPolymer, surface_isl);

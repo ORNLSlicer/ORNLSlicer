@@ -5,7 +5,6 @@
 #include "QQueue"
 #include "QStandardPaths"
 #include "data_stream.h"
-#include "external_files/external_grid.h"
 #include "part/part.h"
 #include "tcp_server.h"
 #include "utilities/qt_json_conversion.h"
@@ -198,14 +197,6 @@ class SessionManager : public QObject {
     //! \brief Set slicing thread cancel flag
     void cancelSlice();
 
-    //! \brief Set external file information that was processed
-    //! \param gridInfo: Structure calculated from external files.
-    //! Holds grid and relevant dimensional information
-    void setExternalInfo(ExternalGridInfo gridInfo);
-
-    //! \brief Clear external file information from slicer
-    void clearExternalInfo();
-
     //! \brief Set pointer to part to potentially copy
     //! \param part: part to copy
     void setCopiedPart(QSharedPointer<Part> part);
@@ -312,10 +303,6 @@ class SessionManager : public QObject {
 
     //! \brief default slicer is polymer
     SlicerType m_slicer_type = SlicerType::kPolymerSlice;
-
-    //! \brief grid info from external files.  Copy must be saved in case
-    //! slicer type is changed.
-    ExternalGridInfo m_grid_info;
 
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.
