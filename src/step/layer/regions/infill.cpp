@@ -58,6 +58,8 @@ void Infill::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
             QSharedPointer<SettingsBase> region_settings = QSharedPointer<SettingsBase>::create(*m_sb);
             region_settings->setSetting(PS::Infill::kLineSpacing,
                                         settings_polygon.getSettings()->setting<Distance>(PS::Infill::kLineSpacing));
+            region_settings->setSetting(PS::Infill::kAngle,
+                                        settings_polygon.getSettings()->setting<Angle>(PS::Infill::kAngle));
 
             fillGeometry(geometry, region_settings);
         }
