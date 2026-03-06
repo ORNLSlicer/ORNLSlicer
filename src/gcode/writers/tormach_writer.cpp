@@ -38,7 +38,7 @@ QString TormachWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
         rv += "G90" % commentSpaceLine("USE ABSOLUTE POSITIONING");
         rv += "G54" % commentSpaceLine("WORK COORDINATE SYSTEM");
         rv += "T1 G43 H1" % commentSpaceLine("SET TOOL HEIGHT OF TORCH");
-        rv += "M64 P1" % commentSpaceLine("ROBOT READY HIGH - WAIT FOR INPUT HIGH*****");
+        //rv += "M64 P1" % commentSpaceLine("ROBOT READY HIGH - WAIT FOR INPUT HIGH*****");
     }
 
     if (m_sb->setting<int>(PRS::GCode::kEnableBoundingBox)) {
@@ -326,7 +326,7 @@ QString TormachWriter::writeAfterLayer() {
 QString TormachWriter::writeShutdown() {
     QString rv;
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M65 P1" %
-          commentSpaceLine("ROBOT READY LOW *****") % "M30" % commentSpaceLine("END OF G-CODE");
+          commentSpaceLine("ROBOT READY LOW *****");
     return rv;
 }
 

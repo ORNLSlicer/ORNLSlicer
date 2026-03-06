@@ -19,7 +19,7 @@ void GCodeTormachSaver::run() {
     QChar comma(','), newline('\n'), space(' '), x('X'), y('Y'), z('Z'), f('F'), s('S'), zero('0');
     qint16 layerNum = 0;
     QStringList lines = m_text.split(newline);
-    QString G0("G0"), G1("G1"), M3("M3"), M5("M5"), commaSpace(", ");
+    QString G0("G0"), G1("G1"), M3("M3"), M5("M5"), M64("M64"), M65("M65"), commaSpace(", ");
     QString xval, yval, zval, velocity, feedrate;
     QString maxVelocity = QString::number(
         GSM->getGlobal()->setting<Velocity>(PRS::MachineSpeed::kMaxXYSpeed).to(m_selected_meta.m_velocity_unit), 'f',
@@ -59,19 +59,19 @@ void GCodeTormachSaver::run() {
            "0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000, 0.0000000000" %
                newline;
     out << "MULTAX/ ON" % newline;
-    out << "PPRINT/ --- files_x\toolChange_comment.txt --- " % newline;
+    out << "PPRINT/ --- files_x\\toolChange_comment.txt --- " % newline;
     out << "PPRINT/ - T1 R    2.25000 L   12.25000     0.00000 TORCH 1  *" % newline;
     out << "PPRINT/ OPERATION 2 " % newline;
     out << "PPRINT/" % newline;
     out << "PPRINT/ CF HY-80 3 x 1" % newline;
-    out << "PPRINT/ T1 Additive Manufacturing" % newline;
+    out << "PPRINT/ T2 Additive Manufacturing" % newline;
     out << "PPRINT/ --- " % newline;
     out << "$$ ()" % newline;
     out << "$$ ( -------------------- additive_toolchange.txt --- )" % newline;
     out << "$$ LASER TOOL CHANGE" % newline;
     out << "$$ ( -------------------- )" % newline;
     out << "$$ ()" % newline;
-    out << "LOADTL/1" % newline;
+    out << "LOADTL/2" % newline;
 
     if (GSM->getGlobal()->setting<int>(ES::FileOutput::kTormachMode) == static_cast<int>(TormachMode::kMode21)) {
         out << "wirefeed speed" % newline;
@@ -101,10 +101,11 @@ void GCodeTormachSaver::run() {
     out << "PPRINT/ OPERATION 2" % newline;
     out << "PPRINT/" % newline;
     out << "PPRINT/ CF HY-80 3 x 1" % newline;
-    out << "PPRINT/ T1 Additive Manufacturing" % newline;
+    out << "PPRINT/ T2 Additive Manufacturing" % newline;
     out << "CALSUB/START_JOB" % newline;
     out << "SEQUENCE/ BEGIN,toolpath" % newline;
     out << "PPRINT/ ---" % newline;
+    out << "FEDRAT/ MMPM, 300 "% newline;
 
     for (QString line : lines) {
         if (line.startsWith(G0)) {
@@ -145,15 +146,17 @@ void GCodeTormachSaver::run() {
             out << "GOTO / " % xval % commaSpace % yval % commaSpace % zval % commaSpace % "0.0000, 0.0000, 0.0000" %
                        newline;
         }
-        else if (line.startsWith(M3)) {
+        else if (line.startsWith(M3) || line.startsWith(M64)) {
             out << "$$ ( -------------------- additiveDevice_on.txt --- )" % newline;
             out << "CALSUB/START_DEPO" % newline;
+            out << "$$ ( -------------------- )" % newline;
         }
-        else if (line.startsWith(M5)) {
+        else if (line.startsWith(M5) || line.startsWith(M65)) {
             out << "$$ ( -------------------- additiveDevice_off.txt --- )" % newline;
             out << "CALSUB/STOP_DEPO" % newline;
+            out << "$$ ( -------------------- )" % newline;
         }
-        else if (line.startsWith("(BEGINNING LAYER:")) {
+        else if (line.startsWith("(BEGINNING LAYER:") || line.startsWith(";BEGINNING LAYER:")) {
             layerNum++;
             out << "$$ Layer: " << layerNum << "\n";
         }
