@@ -47,23 +47,23 @@ void GCodeTormachSaver::run() {
     out << "$$ ORNL SLICER-2" % newline;
     out << "$$*" % newline;
     out << "$$ -> MFGNO" % newline;
-    out << "PARTNO / CF HY-80 3 x 1 1 1 CF HY-80 3 x 1" % newline;
+    out << "PARTNO / ADDITIVE" % newline;
     out << "MACHIN / MILL, 01" % newline;
     out << "$$ -> CUTCOM_GEOMETRY_TYPE /" % newline;
     out << "UNITS / MM" % newline;
     out << "CALSUB/START_PROG" % newline;
-    out << "PARTNO/1 1 CF HY-80 3 x 1" % newline;
+    out << "PARTNO/1 1 Additive_Basic" % newline;
     out << "PPRINT/ --- TOOLLIST BEGIN ---" % newline;
     out << "PPRINT/ --- TOOLLIST END --- " % newline;
-    out << "$$-> CSYS / 1.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000, "
-           "0.0000000000, 0.0000000000, 0.0000000000, 0.0000000000, 1.0000000000, 0.0000000000" %
-               newline;
+    out << "$$-> CSYS / 1.0000000000, 0.0000000000, 0.0000000000, 0.0000000000,  $" % newline;
+    out << "            0.0000000000, 1.0000000000, 0.0000000000, 0.0000000000,  $" % newline;
+    out << "            0.0000000000, 0.0000000000, 1.0000000000, 0.0000000000" % newline;
     out << "MULTAX/ ON" % newline;
     out << "PPRINT/ --- files_x\\toolChange_comment.txt --- " % newline;
-    out << "PPRINT/ - T1 R    2.25000 L   12.25000     0.00000 TORCH 1  *" % newline;
+    out << "PPRINT/ - T2 R    4.00000 L   16.05000     0.00000 ADDITIVE DEVICE  *" % newline;
     out << "PPRINT/ OPERATION 2 " % newline;
     out << "PPRINT/" % newline;
-    out << "PPRINT/ CF HY-80 3 x 1" % newline;
+    out << "PPRINT/ ADDITIVE" % newline;
     out << "PPRINT/ T2 Additive Manufacturing" % newline;
     out << "PPRINT/ --- " % newline;
     out << "$$ ()" % newline;
@@ -73,7 +73,7 @@ void GCodeTormachSaver::run() {
     out << "$$ ()" % newline;
     out << "LOADTL/2" % newline;
 
-    if (GSM->getGlobal()->setting<int>(ES::FileOutput::kTormachMode) == static_cast<int>(TormachMode::kMode21)) {
+    /*if (GSM->getGlobal()->setting<int>(ES::FileOutput::kTormachMode) == static_cast<int>(TormachMode::kMode21)) {
         out << "wirefeed speed" % newline;
         out << "voltage" % newline;
     }
@@ -95,17 +95,22 @@ void GCodeTormachSaver::run() {
         out << "wirefeed speed" % newline;
         out << "trim" % newline;
         out << "ultimarc" % newline;
-    }
+    }*/
 
     out << "PPRINT/ --- files_x\\job_start.txt ---" % newline;
     out << "PPRINT/ OPERATION 2" % newline;
     out << "PPRINT/" % newline;
-    out << "PPRINT/ CF HY-80 3 x 1" % newline;
+    out << "PPRINT/ ADDITIVE BUILD" % newline;
     out << "PPRINT/ T2 Additive Manufacturing" % newline;
     out << "CALSUB/START_JOB" % newline;
     out << "SEQUENCE/ BEGIN,toolpath" % newline;
     out << "PPRINT/ ---" % newline;
-    out << "FEDRAT/ MMPM, 300 "% newline;
+    out << "FEDRAT/ MMPM, 200 " % newline;
+    out << "$$ ( -------------------- additive_technology_peripheral.txt --- )" % newline;
+    out << "$$ ADDITIVE TECHNOLOGY PHERIPHERAL" % newline;
+    out << "SPINDL/OFF" % newline;
+    out << "$$ ( -------------------- additive_technology_peripheral.txt --- )" % newline;
+    out << "$$ ( -------------------- additive_layer.txt --- )" % newline;
 
     for (QString line : lines) {
         if (line.startsWith(G0)) {
@@ -164,6 +169,14 @@ void GCodeTormachSaver::run() {
             out << "$$ Set New Welder Voltage\n";
         }
     }
+
+    out << "PPRINT/  files_x\\job_end.txt" % newline;
+    out << "SEQUENCE/ END" % newline;
+    out << "CALSUB/END_JOB" % newline;
+    out << "SPINDL/OFF" % newline;
+    out << "CALSUB/END_PROG" % newline;
+    out << "FINI" % newline;
+
     file.close();
 }
 
