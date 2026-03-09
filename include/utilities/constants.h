@@ -1288,6 +1288,7 @@ class Constants {
         static const QString kShiftPartsOnLoad;
         static const QString kAlignParts;
         static const QString kUseImplicitTransforms;
+        static const QString kAlwaysDropParts;
 
         static const QString kOverwriteOutputFile;
         static const QString kIncludeAuxiliaryFiles;

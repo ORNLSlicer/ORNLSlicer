@@ -55,7 +55,9 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
          "Specifies whether or not to use implicit transforms.  Default is false. Typically used in conjunction with "
          "center parts. Turn off center parts and turn this on to load parts in coordinate system as exported.",
          "bool", "false"});
-
+    parser.addOption(
+        {Constants::ConsoleOptionStrings::kAlwaysDropParts,
+         "Specifies whether or not to drop the part to the build region. Default is false.", "bool", "false"});
     // control options for gcode export
     parser.addOption({Constants::ConsoleOptionStrings::kOverwriteOutputFile,
                       "Specifies whether output will overwrite existing files.  Default is true."});
@@ -264,6 +266,13 @@ bool CommandLineConverter::checkOptionalPartSettingsAndPreferences(QCommandLineP
             QVariant(parser.value(Constants::ConsoleOptionStrings::kUseImplicitTransforms)).toBool());
     else
         options->setSetting<bool>(Constants::ConsoleOptionStrings::kUseImplicitTransforms, false);
+
+    if (parser.isSet(Constants::ConsoleOptionStrings::kAlwaysDropParts))
+        options->setSetting<bool>(
+            Constants::ConsoleOptionStrings::kAlwaysDropParts,
+            QVariant(parser.value(Constants::ConsoleOptionStrings::kAlwaysDropParts)).toBool());
+    else
+        options->setSetting<bool>(Constants::ConsoleOptionStrings::kAlwaysDropParts, false);
 
     return true;
 }

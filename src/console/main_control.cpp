@@ -46,6 +46,10 @@ void MainControl::run() {
         PreferencesManager::getInstance()->setUseImplicitTransforms(
             m_options->setting<bool>(Constants::ConsoleOptionStrings::kUseImplicitTransforms));
     }
+    if (m_options->contains(Constants::ConsoleOptionStrings::kAlwaysDropParts)) {
+        PreferencesManager::getInstance()->setShouldAlwaysDrop(
+            m_options->setting<bool>(Constants::ConsoleOptionStrings::kAlwaysDropParts));
+    }
 
     if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) ==
         SlicerType::kImageSlice)

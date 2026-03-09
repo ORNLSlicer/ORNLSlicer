@@ -1197,6 +1197,7 @@ const QString Constants::ConsoleOptionStrings::kOutputLocation = "output_locatio
 const QString Constants::ConsoleOptionStrings::kShiftPartsOnLoad = "shift_parts_on_load";
 const QString Constants::ConsoleOptionStrings::kAlignParts = "align_parts";
 const QString Constants::ConsoleOptionStrings::kUseImplicitTransforms = "use_implicit_transforms";
+const QString Constants::ConsoleOptionStrings::kAlwaysDropParts = "always_drop_parts";
 
 const QString Constants::ConsoleOptionStrings::kOverwriteOutputFile = "overwrite_output_file";
 const QString Constants::ConsoleOptionStrings::kIncludeAuxiliaryFiles = "include_auxiliary_files";
