@@ -1001,7 +1001,6 @@ const int Constants::UI::MainWindow::kStatusBarMaxHeight = 200;
 const int Constants::UI::MainWindow::SideDock::kSettingsWidth = 500;
 const int Constants::UI::MainWindow::SideDock::kGCodeWidth = 500;
 const int Constants::UI::MainWindow::SideDock::kLayerTimesWidth = 500;
-const int Constants::UI::MainWindow::SideDock::kExternalFileWidth = 500;
 
 // MainWindow: Margins
 const int Constants::UI::MainWindow::Margins::kMainLayoutSpacing = 6;

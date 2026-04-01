@@ -15,8 +15,8 @@
 
 namespace ORNL {
 IslandBase::IslandBase(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
-                       const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo)
-    : m_geometry(geometry), m_sb(sb), m_settings_polygons(settings_polygons), m_grid_info(gridInfo) {
+                       const QVector<SettingsPolygon>& settings_polygons)
+    : m_geometry(geometry), m_sb(sb), m_settings_polygons(settings_polygons) {
     // NOP
 }
 

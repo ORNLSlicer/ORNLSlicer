@@ -154,8 +154,6 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         QVector<SettingsPolygon> settings_polygons;
         computeSettingsPolygons(settings_polygons, shift_amount);
 
-        SingleExternalGridInfo single_grid;
-
         PolygonList settings_modified_geometry;
         if (m_settings_remaining_build_mesh != nullptr) {
             Point aux_shift = shift_amount; // preserve base
@@ -183,7 +181,6 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
             average_normal,
             shift_amount,
             m_additional_shift,
-            single_grid,
             opt_polylines,
         };
 

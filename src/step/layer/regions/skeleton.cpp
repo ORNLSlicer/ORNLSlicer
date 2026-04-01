@@ -35,9 +35,8 @@ template <> struct boost::polygon::segment_traits<ORNL::Polyline> {
 
 namespace ORNL {
 Skeleton::Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
-                   const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo,
-                   bool isWireFed)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+                   const QVector<SettingsPolygon>& settings_polygons, bool isWireFed)
+    : RegionBase(sb, index, settings_polygons) {
     m_wire_region = isWireFed;
 }
 

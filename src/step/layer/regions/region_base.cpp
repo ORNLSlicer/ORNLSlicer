@@ -5,16 +5,13 @@
 
 namespace ORNL {
 RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
-                       const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo,
-                       PolygonList uncut_geometry)
-    : m_sb(sb), m_index(index), m_settings_polygons(settings_polygons), m_grid_info(gridInfo),
-      m_uncut_geometry(uncut_geometry) {
+                       const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
+    : m_sb(sb), m_index(index), m_settings_polygons(settings_polygons), m_uncut_geometry(uncut_geometry) {
     // NOP
 }
 
-RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons,
-                       const SingleExternalGridInfo& gridInfo)
-    : m_sb(sb), m_settings_polygons(settings_polygons), m_grid_info(gridInfo) {
+RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
+    : m_sb(sb), m_settings_polygons(settings_polygons) {
     // NOP
 }
 

@@ -1131,7 +1131,6 @@ class Constants {
                 static const int kSettingsWidth;
                 static const int kGCodeWidth;
                 static const int kLayerTimesWidth;
-                static const int kExternalFileWidth;
             };
 
             class Margins {

@@ -62,7 +62,7 @@ void RealTimePolymerSlicer::initialSetup() {
             // Polymer builds use polymer islands.
             QSharedPointer<PolymerIsland> poly_isl =
                 QSharedPointer<PolymerIsland>::create(island_geometry, next_layer_meta->settings,
-                                                      next_layer_meta->settings_polygons, next_layer_meta->single_grid);
+                                                      next_layer_meta->settings_polygons);
             layer->addIsland(IslandType::kPolymer, poly_isl);
         }
 

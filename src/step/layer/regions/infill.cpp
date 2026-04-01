@@ -8,8 +8,8 @@
 
 namespace ORNL {
 Infill::Infill(const QSharedPointer<SettingsBase>& sb, const int index,
-               const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+               const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons) {
     // NOP
 }
 
@@ -58,6 +58,8 @@ void Infill::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
             QSharedPointer<SettingsBase> region_settings = QSharedPointer<SettingsBase>::create(*m_sb);
             region_settings->setSetting(PS::Infill::kLineSpacing,
                                         settings_polygon.getSettings()->setting<Distance>(PS::Infill::kLineSpacing));
+            region_settings->setSetting(PS::Infill::kAngle,
+                                        settings_polygon.getSettings()->setting<Angle>(PS::Infill::kAngle));
 
             fillGeometry(geometry, region_settings);
         }

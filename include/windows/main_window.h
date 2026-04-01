@@ -19,7 +19,6 @@
 #include "widgets/part_widget/part_widget.h"
 #include "widgets/settings/setting_bar.h"
 #include "windows/about.h"
-#include "windows/external_file_window.h"
 #include "windows/flowratecalc.h"
 #include "windows/gcode_export.h"
 #include "windows/layer_times_window.h"
@@ -300,7 +299,6 @@ class MainWindow : public QMainWindow {
     QDockWidget* m_settingdock;
     QDockWidget* m_gcodedock;
     QDockWidget* m_layertimesdock;
-    QDockWidget* m_external_file_dock;
 
     QTabWidget* m_tab_widget;
 
@@ -313,7 +311,6 @@ class MainWindow : public QMainWindow {
     GcodeBar* m_gcodebar;
     CmdWidget* m_cmdbar;
     QScopedPointer<SliceDialog> m_slice_dialog;
-    ExternalFileWindow* m_external_file_window;
 
     //! \brief All other widgets
     QWidget* m_main_widget;

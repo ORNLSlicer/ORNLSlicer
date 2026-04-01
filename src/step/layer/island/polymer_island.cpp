@@ -9,9 +9,8 @@
 
 namespace ORNL {
 PolymerIsland::PolymerIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
-                             const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo,
-                             const PolygonList& uncut_geometry)
-    : IslandBase(geometry, sb, settings_polygons, gridInfo) {
+                             const QVector<SettingsPolygon>& settings_polygons, const PolygonList& uncut_geometry)
+    : IslandBase(geometry, sb, settings_polygons) {
     bool enable_perimeter = this->getSb()->setting<bool>(PS::Perimeter::kEnable);
     bool enable_inset = this->getSb()->setting<bool>(PS::Inset::kEnable);
     bool enable_skin = this->getSb()->setting<bool>(PS::Skin::kEnable);
@@ -34,19 +33,19 @@ PolymerIsland::PolymerIsland(const PolygonList& geometry, const QSharedPointer<S
 
     if (enable_perimeter)
         this->addRegion(QSharedPointer<Perimeter>::create(sb, regionOrder.indexOf(RegionType::kPerimeter),
-                                                          settings_polygons, gridInfo, uncut_geometry));
+                                                          settings_polygons, uncut_geometry));
     if (enable_inset)
         this->addRegion(
-            QSharedPointer<Inset>::create(sb, regionOrder.indexOf(RegionType::kInset), settings_polygons, gridInfo));
+            QSharedPointer<Inset>::create(sb, regionOrder.indexOf(RegionType::kInset), settings_polygons));
     if (enable_skin)
         this->addRegion(
-            QSharedPointer<Skin>::create(sb, regionOrder.indexOf(RegionType::kSkin), settings_polygons, gridInfo));
+            QSharedPointer<Skin>::create(sb, regionOrder.indexOf(RegionType::kSkin), settings_polygons));
     if (enable_infill)
         this->addRegion(
-            QSharedPointer<Infill>::create(sb, regionOrder.indexOf(RegionType::kInfill), settings_polygons, gridInfo));
+            QSharedPointer<Infill>::create(sb, regionOrder.indexOf(RegionType::kInfill), settings_polygons));
     if (enable_skeleton)
         this->addRegion(QSharedPointer<Skeleton>::create(sb, regionOrder.indexOf(RegionType::kSkeleton),
-                                                         settings_polygons, gridInfo));
+                                                         settings_polygons));
 
     m_island_type = IslandType::kPolymer;
 }

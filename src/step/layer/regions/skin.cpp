@@ -5,9 +5,8 @@
 #include "geometry/segments/line.h"
 
 namespace ORNL {
-Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-           const SingleExternalGridInfo& gridInfo)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons) {
     // NOP
 }
 
