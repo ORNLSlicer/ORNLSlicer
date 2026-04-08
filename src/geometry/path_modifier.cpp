@@ -48,13 +48,13 @@ void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, V
     path.prepend(travel_segment);
 }
 
-void PathModifierGenerator::GenerateOpenLoopPreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
-                                 AngularVelocity prestartExtruderSpeed, bool enableWidthHeight, double areaMultiplier){
+void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDistance, Velocity leadInSpeed,
+                                 AngularVelocity leadInExtruderSpeed, bool enableWidthHeight, double areaMultiplier){
     Point firstPoint = path[0]->start();
     Point secondPoint = path[0]->end();
     Distance length = secondPoint.distance(firstPoint);
-    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * prestartDistance();
-    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * prestartDistance();
+    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * leadInDistance();
+    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * leadInDistance();
     Distance Z = firstPoint.z();
     Point newStart = Point(X, Y, Z);
 
@@ -62,11 +62,11 @@ void PathModifierGenerator::GenerateOpenLoopPreStart(Path& path, Distance presta
 
     segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth));
     segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight));
-    segment->getSb()->setSetting(SS::kSpeed, prestartSpeed);
+    segment->getSb()->setSetting(SS::kSpeed, leadInSpeed);
     segment->getSb()->setSetting(SS::kAccel, path[0]->getSb()->setting<Acceleration>(SS::kAccel));
-    segment->getSb()->setSetting(SS::kExtruderSpeed, prestartExtruderSpeed);
+    segment->getSb()->setSetting(SS::kExtruderSpeed, leadInExtruderSpeed);
     segment->getSb()->setSetting(SS::kRegionType, path[0]->getSb()->setting<RegionType>(SS::kRegionType));
-    segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kPrestart);
+    segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kLeadIn);
 
     // Update Width and Height if using Width and Height mode
     if (enableWidthHeight) {

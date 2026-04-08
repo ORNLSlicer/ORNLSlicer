@@ -968,16 +968,15 @@ void Skeleton::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& in
         }
     }
 
-    // Prestart
-    if (m_sb->setting<bool>(PS::Skeleton::kPrestartEnable)) {
-        const auto& ps_distance = m_sb->setting<Distance>(PS::Skeleton::kPrestartDistance);
-        const auto& ps_speed = m_sb->setting<Velocity>(PS::Skeleton::kPrestartSpeed);
-        const auto& ps_extruder_speed = m_sb->setting<AngularVelocity>(PS::Skeleton::kPrestartExtruderSpeed);
-        const auto& ps_enable_width_height = m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight);
-        const auto& ps_area_modifier = m_sb->setting<double>(PS::Skeleton::kPrestartAreaModifier);
-
-        PathModifierGenerator::GenerateOpenLoopPreStart(path, ps_distance, ps_speed, ps_extruder_speed,
-                                                        ps_enable_width_height, ps_area_modifier);
+    // Lead In
+    if (m_sb->setting<bool>(PS::Skeleton::kLeadInEnable)) {
+        const auto& li_distance = m_sb->setting<Distance>(PS::Skeleton::kLeadInDistance);
+        const auto& li_speed = m_sb->setting<Velocity>(PS::Skeleton::kLeadInSpeed);
+        const auto& li_extruder_speed = m_sb->setting<AngularVelocity>(PS::Skeleton::kLeadInExtruderSpeed);
+        const auto& li_enable_width_height = m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight);
+        const auto& li_area_modifier = m_sb->setting<double>(PS::Skeleton::kLeadInAreaModifier);
+        PathModifierGenerator::GenerateOpenLoopLeadIn(path, li_distance, li_speed, li_extruder_speed,
+                                                        li_enable_width_height, li_area_modifier);
     }
 }
 } // namespace ORNL
