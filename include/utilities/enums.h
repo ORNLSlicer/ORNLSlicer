@@ -479,6 +479,15 @@ inline QString toString(PathModifiers modifier_type) {
 }
 
 /*!
+ * \enum  SmoothingType
+ * \brief The Smoothing Type enum
+ */
+enum class SmoothingType : uint8_t {
+    kDouglasPeucker = 0,
+    kRadialDistance = 1
+};
+
+/*!
  * \enum  IslandOrderOptimization
  * \brief The Path/ Island OrderOptimization enum
  */
