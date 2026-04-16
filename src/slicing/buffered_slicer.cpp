@@ -18,13 +18,10 @@ BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QShar
     m_use_cgal_cross_section = use_cgal_cross_section;
 
     auto closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get());
-    if (closed_mesh != nullptr)
-        m_skeleton = QSharedPointer<MeshSkeleton>::create(QSharedPointer<ClosedMesh>::create(*closed_mesh));
     m_previous_buffer_size = previous_buffer;
     m_future_buffer_size = future_buffer;
 
-    std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) =
-        SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh, m_skeleton);
+    std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh);
 
     if (m_settings->setting<bool>(ES::WireFeed::kSettingsRegionMeshSplit)) {
         QSharedPointer<ClosedMesh> single_setting_mesh = QSharedPointer<ClosedMesh>::create();
@@ -117,7 +114,7 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         layer_specific_settings->makeLocalAdjustments(m_slice_count);
 
         // Shift along slicing axis or skeleton
-        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, m_slicing_plane, m_last_layer_height, m_skeleton);
+        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, m_slicing_plane, m_last_layer_height);
         m_last_layer_height = layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight);
 
         // If the slicing plane is beyond the max_point of the part, stop

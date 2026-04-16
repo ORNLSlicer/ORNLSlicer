@@ -1,7 +1,6 @@
 #pragma once
 
 #include "configs/settings_base.h"
-#include "geometry/mesh/advanced/mesh_skeleton.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "part/part.h"
 #include "step/global_layer.h"
@@ -62,22 +61,18 @@ class SlicingUtilities {
      * \brief determines the default slicing axis given certain settings, as well as the mesh's min and max points
      * \param sb: the settings to use
      * \param mesh: the mesh to analyze
-     * \param skeleton: a pointer to a skeleton. Will only be used if auto rotate is enabled
      * \return a tuple containing: the plane, mesh min, and mesh max
      */
     static std::tuple<Plane, Point, Point> GetDefaultSlicingAxis(QSharedPointer<SettingsBase> sb,
-                                                                 QSharedPointer<MeshBase> mesh,
-                                                                 QSharedPointer<MeshSkeleton> skeleton);
+                                                                 QSharedPointer<MeshBase> mesh);
 
     /*!
      * \brief shift the slicing plane along a normal or skeleton
      * \param sb: the settings to use
      * \param slicing_plane: the slicing plane to shift
      * \param last_height: height of last layer
-     * \param skeleton: a pointer to the skeleton. Only used if auto rotate is enabled.
      */
-    static void ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height,
-                                  QSharedPointer<MeshSkeleton> skeleton);
+    static void ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height);
 
     /*!
      * \brief determines if two parts overlap

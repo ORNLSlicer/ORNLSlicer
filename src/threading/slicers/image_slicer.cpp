@@ -63,8 +63,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
 
         currentMesh.m_mesh = mesh;
 
-        std::tie(slicing_plane, mesh_min, mesh_max) =
-            SlicingUtilities::GetDefaultSlicingAxis(GSM->getGlobal(), mesh, nullptr);
+        std::tie(slicing_plane, mesh_min, mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(GSM->getGlobal(), mesh);
 
         if (slicing_plane.point().z() < lowestSlicingPlane.point().z())
             lowestSlicingPlane = slicing_plane;
@@ -134,7 +133,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
         slicing_planes.reserve(maxSlices);
 
     for (int i = 0; i < maxSlices; ++i) {
-        SlicingUtilities::ShiftSlicingPlane(GSM->getGlobal(), lowestSlicingPlane, layerHeight, nullptr);
+        SlicingUtilities::ShiftSlicingPlane(GSM->getGlobal(), lowestSlicingPlane, layerHeight);
         Plane next_plane = lowestSlicingPlane;
         if (layers.size() > 0) {
             if (i == layers[0]) {
