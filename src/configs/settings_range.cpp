@@ -1,5 +1,10 @@
 #include "configs/settings_range.h"
 
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+
 namespace ORNL {
 SettingsRange::SettingsRange(int low, int high, QString group_name, QSharedPointer<SettingsBase> sb) {
     m_low = low;

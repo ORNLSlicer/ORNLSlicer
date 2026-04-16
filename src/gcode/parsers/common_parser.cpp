@@ -1,16 +1,36 @@
 #include "gcode/parsers/common_parser.h"
 
-#include "QRegExp"
-#include "QString"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
-#include "QVector"
-#include "QtMath"
+#include <algorithm>
+#include <functional>
+#include <limits>
+
+#include <QRegExp>
+#include <QString>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <QVector>
+#include <QtMath>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlatin1stringview.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qnumeric.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qstringmatcher.h>
+#include <qtmetamacros.h>
+
 #include "exceptions/exceptions.h"
+#include "gcode/gcode_command.h"
+#include "gcode/gcode_meta.h"
 #include "gcode/gcode_motion_estimate.h"
+#include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
 #include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
@@ -27,7 +47,7 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     MotionEstimation::Init();
 
-    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta){
+    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta) {
         m_g4_prefix = "G4 S";
     }
     else if (meta == GcodeMetaList::MVPMeta) {
@@ -349,7 +369,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
             int second = m_upper_lines[m_current_line].indexOf(")");
             QString spindleString = m_upper_lines[m_current_line].mid(first, second - first);
             double spindleSpeed = spindleString.toDouble(&no_error);
-            if (!no_error){
+            if (!no_error) {
                 throwFloatConversionErrorException();
             }
             setSpindleSpeed(spindleSpeed * m_angular_velocity_unit());
@@ -1811,18 +1831,22 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
                 if (modifier < 1) {
                     extruderModifier = 1 / extruderModifier;
-					if (value > 0 && value * modifier * extruderModifier < sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)){
-                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) / (value * modifier * extruderModifier));
+                    if (value > 0 && value * modifier * extruderModifier <
+                                         sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
                     }
-
-				}
-				else {
-					if (value > 0 && value * modifier * extruderModifier > sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)){
-                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) / (value * modifier * extruderModifier));
+                }
+                else {
+                    if (value > 0 && value * modifier * extruderModifier >
+                                         sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
                     }
-				}
+                }
                 line = line.left(myMatch.capturedStart()) % m_q_parameter %
-                       QString::number(value * tempModifier * extruderModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
+                       QString::number(value * tempModifier * extruderModifier, 'f', 4) %
+                       line.mid(myMatch.capturedEnd());
                 current_layer_motion_end->addParameter(m_q_parameter.toLatin1(),
                                                        parameters[m_q_parameter.toLatin1()] * tempModifier);
             }
@@ -1835,18 +1859,22 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
                 if (modifier < 1) {
                     extruderModifier = 1 / extruderModifier;
-					if (value > 0 && value * modifier * extruderModifier < sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)){
-                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) / (value * modifier * extruderModifier));
+                    if (value > 0 && value * modifier * extruderModifier <
+                                         sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
                     }
-
-				}
-				else {
-					if (value > 0 && value * modifier * extruderModifier > sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)){
-                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) / (value * modifier * extruderModifier));
+                }
+                else {
+                    if (value > 0 && value * modifier * extruderModifier >
+                                         sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
                     }
-				}
+                }
                 line = line.left(myMatch.capturedStart()) % m_s_parameter %
-                       QString::number(value * tempModifier * extruderModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
+                       QString::number(value * tempModifier * extruderModifier, 'f', 4) %
+                       line.mid(myMatch.capturedEnd());
                 current_layer_motion_end->addParameter(m_s_parameter.toLatin1(),
                                                        parameters[m_s_parameter.toLatin1()] * tempModifier);
             }
@@ -1865,17 +1893,22 @@ void CommonParser::AdjustFeedrate(double modifier) {
                             // If slowing down, the multiplier for the extruder should be the inverse of the scale
                             // factor
                             if (modifier < 1) {
-								extruderModifier = 1 / extruderModifier;
-								if (value > 0 && value * modifier * extruderModifier < sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)){
-			                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) / (value * modifier * extruderModifier));
-			                    }
-
-							}
-							else {
-								if (value > 0 && value * modifier * extruderModifier > sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)){
-			                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) / (value * modifier * extruderModifier));
-			                    }
-							}
+                                extruderModifier = 1 / extruderModifier;
+                                if (value > 0 && value * modifier * extruderModifier <
+                                                     sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                                    tempModifier =
+                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                    (value * modifier * extruderModifier));
+                                }
+                            }
+                            else {
+                                if (value > 0 && value * modifier * extruderModifier >
+                                                     sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                                    tempModifier =
+                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                    (value * modifier * extruderModifier));
+                                }
+                            }
 
                             line = line.left(myMatch.capturedStart()) % m_s_parameter %
                                    QString::number(value * tempModifier * extruderModifier, 'f', 4) %
@@ -1890,8 +1923,8 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 QString& line = m_lines[current_layer_motion_end->getLineNumber()];
                 QRegularExpressionMatch myMatch = m_f_param_and_value.match(line);
                 double value = myMatch.captured().mid(1).toDouble();
-                line = line.left(myMatch.capturedStart()) % m_f_parameter % QString::number(value * tempModifier, 'f', 4) %
-                       line.mid(myMatch.capturedEnd());
+                line = line.left(myMatch.capturedStart()) % m_f_parameter %
+                       QString::number(value * tempModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
                 current_layer_motion_end->addParameter(m_f_parameter.toLatin1(),
                                                        parameters[m_f_parameter.toLatin1()] * tempModifier);
             }

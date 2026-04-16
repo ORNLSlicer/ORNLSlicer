@@ -1,7 +1,24 @@
 
 #include "geometry/polygon_list.h"
 
-#include "QPolygon"
+#include <algorithm>
+#include <cfloat>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+
+#include <QPolygon>
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qmath.h>
+#include <qminmax.h>
+#include <qpoint.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

@@ -1,8 +1,21 @@
 #include "optimizers/polyline_order_optimizer.h"
 
-#include "QRandomGenerator"
+#include <algorithm>
+#include <cfloat>
+#include <limits>
+#include <tuple>
+
+#include <QRandomGenerator>
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
 #include "optimizers/point_order_optimizer.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

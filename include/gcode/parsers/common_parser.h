@@ -1,11 +1,21 @@
 #pragma once
 
-#include "QScopedPointer"
-#include "QVector"
+#include <QScopedPointer>
+#include <QVector>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qregularexpression.h>
+#include <qset.h>
+#include <qtmetamacros.h>
+
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
 #include "geometry/point.h"
 #include "parser_base.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /*!

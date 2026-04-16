@@ -1,18 +1,26 @@
 #pragma once
 
-#include "QCheckBox"
-#include "QComboBox"
-#include "QDoubleSpinBox"
-#include "QFocusEvent"
-#include "QFrame"
-#include "QHBoxLayout"
-#include "QKeyEvent"
-#include "QLabel"
-#include "QMouseEvent"
-#include "QPropertyAnimation"
-#include "QToolButton"
-#include "QWheelEvent"
-#include "QWidget"
+#include <QCheckBox>
+#include <QComboBox>
+#include <QDoubleSpinBox>
+#include <QFocusEvent>
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QKeyEvent>
+#include <QLabel>
+#include <QMouseEvent>
+#include <QPropertyAnimation>
+#include <QToolButton>
+#include <QWheelEvent>
+#include <QWidget>
+#include <qhashfunctions.h>
+#include <qnamespace.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

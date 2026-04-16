@@ -1,7 +1,27 @@
 #include "slicing/buffered_slicer.h"
 
+#include <tuple>
+
+#include <qcontainerfwd.h>
+#include <qmap.h>
+#include <qqueue.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "configs/settings_range.h"
 #include "cross_section/cross_section.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
+#include "part/part.h"
 #include "slicing/slicing_utilities.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 

@@ -1,6 +1,18 @@
 #include "step/step.h"
 
-#include "QFileInfo"
+#include <QFileInfo>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "managers/sync/sync_manager.h"
+#include "step/layer/island/island_base.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 Step::Step(const QSharedPointer<SettingsBase>& sb) : m_sb(sb), m_dirty_bit(true) {

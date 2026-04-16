@@ -1,6 +1,16 @@
 #include "geometry/segments/scan.h"
 
+#include <limits>
+
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "geometry/segment_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 ScanSegment::ScanSegment(Point start, Point end) : SegmentBase(start, end) {

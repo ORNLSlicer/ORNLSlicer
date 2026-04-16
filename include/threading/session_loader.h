@@ -1,8 +1,13 @@
 #pragma once
 
-#include "QThread"
+#include <string>
+
+#include <QThread>
+#include <qobject.h>
+#include <qtmetamacros.h>
+#include <zip/zip.h>
+
 #include "utilities/qt_json_conversion.h"
-#include "zip/zip.h"
 
 namespace ORNL {
 /*!

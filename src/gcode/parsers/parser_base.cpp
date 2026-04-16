@@ -1,11 +1,20 @@
 #include "gcode/parsers/parser_base.h"
 
-#include "QDebug"
-#include "QRegularExpressionMatch"
-#include "QString"
-#include "QStringList"
-#include "QTextStream"
+#include <algorithm>
+#include <functional>
+#include <string>
+
+#include <QDebug>
+#include <QRegularExpressionMatch>
+#include <QString>
+#include <QStringList>
+#include <QTextStream>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qnamespace.h>
+
 #include "exceptions/exceptions.h"
+#include "gcode/gcode_command.h"
 
 namespace ORNL {
 ParserBase::ParserBase() {

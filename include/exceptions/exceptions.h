@@ -1,6 +1,9 @@
 #pragma once
 
-#include "QString"
+#include <exception>
+#include <string>
+
+#include <QString>
 
 #define NEW_EX(name)                                                                                                   \
     class name : public ORNL::ExceptionBase {                                                                          \

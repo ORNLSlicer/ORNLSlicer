@@ -1,17 +1,24 @@
 #pragma once
 
-#include "QComboBox"
-#include "QFile"
-#include "QFont"
-#include "QFrame"
-#include "QGraphicsDropShadowEffect"
-#include "QGridLayout"
-#include "QIcon"
-#include "QLabel"
-#include "QMouseEvent"
-#include "QPixmap"
-#include "QPushButton"
-#include "QWidget"
+#include <QComboBox>
+#include <QFile>
+#include <QFont>
+#include <QFrame>
+#include <QGraphicsDropShadowEffect>
+#include <QGridLayout>
+#include <QIcon>
+#include <QLabel>
+#include <QMouseEvent>
+#include <QPixmap>
+#include <QPushButton>
+#include <QWidget>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
 #include "geometry/segment_base.h"
 
 namespace ORNL {

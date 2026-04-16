@@ -1,7 +1,22 @@
 #include "console/command_line_processor.h"
 
-#include "QHostAddress"
-#include "boost/preprocessor.hpp"
+#include <vector>
+
+#include <CGAL/property_map.h>
+#include <QHostAddress>
+#include <boost/preprocessor.hpp>
+#include <qabstractsocket.h>
+#include <qcommandlineparser.h>
+#include <qcontainerfwd.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qlogging.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 

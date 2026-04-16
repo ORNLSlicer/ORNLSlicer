@@ -1,8 +1,10 @@
 #pragma once
 
-#include "configs/settings_base.h"
+#include <qtypes.h>
+
 #include "geometry/point.h"
 #include "geometry/polyline.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

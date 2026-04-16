@@ -1,7 +1,13 @@
 #include "configs/settings_base.h"
 
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "geometry/point.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 SettingsBase::SettingsBase() { //: m_json(nlohmann::json::object()){

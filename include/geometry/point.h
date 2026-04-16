@@ -1,19 +1,27 @@
 #pragma once
 
-#include "QMatrix4x4"
-#include "QPoint"
-#include "QPointF"
-#include "QVector2D"
-#include "QVector3D"
-#include "QVector4D"
-#include "clipper.hpp"
+#include <cstddef>
+#include <functional>
+
+#include <QMatrix4x4>
+#include <QPoint>
+#include <QPointF>
+#include <QVector2D>
+#include <QVector3D>
+#include <QVector4D>
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "configs/settings_base.h"
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "units/derivative_units.h"
+#include "units/unit.h"
 
 // Single Path Lib
 #ifdef HAVE_SINGLE_PATH
-    #include "single_path/geometry/point.h"
+    #include <single_path/geometry/point.h>
 #endif
 
 namespace ORNL {

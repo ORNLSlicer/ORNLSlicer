@@ -1,19 +1,52 @@
 #include "threading/slicers/image_slicer.h"
 
-#include "QtCore/QDir"
-#include "QtCore/QSharedPointer"
+#include <algorithm>
+#include <cmath>
+#include <tuple>
+
+#include <QtCore/QDir>
+#include <QtCore/QSharedPointer>
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qhashfunctions.h>
+#include <qmatrix4x4.h>
+#include <qnumeric.h>
+#include <qstringliteral.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+#include <vtkCellArray.h>
+#include <vtkNew.h>
+#include <vtkPoints.h>
+#include <vtkType.h>
+
 #include "cross_section/cross_section.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/open_mesh.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 #include "slicing/slicing_utilities.h"
+#include "threading/traditional_ast.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 
 #undef emit
-#include "vtkImageData.h"
-#include "vtkImageStencilToImage.h"
-#include "vtkLine.h"
-#include "vtkPNGWriter.h"
-#include "vtkPolyData.h"
-#include "vtkPolyDataToImageStencil.h"
+#include <vtkImageData.h>
+#include <vtkImageStencilToImage.h>
+#include <vtkLine.h>
+#include <vtkPNGWriter.h>
+#include <vtkPolyData.h>
+#include <vtkPolyDataToImageStencil.h>
 #define emit
 
 #include <atomic>

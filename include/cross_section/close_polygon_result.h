@@ -1,5 +1,7 @@
 #pragma once
 
+#include <qtypes.h>
+
 #include "geometry/point.h"
 
 namespace ORNL {

@@ -1,7 +1,7 @@
 #pragma once
 
-#include "QObject"
-#include "QWidget"
+#include <QObject>
+#include <QWidget>
 
 namespace ORNL {
 class GcodeTextBoxWidget;

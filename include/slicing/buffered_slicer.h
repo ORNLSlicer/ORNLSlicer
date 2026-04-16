@@ -1,9 +1,24 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qqueue.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "configs/settings_range.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
 #include "part/part.h"
+#include "units/unit.h"
 
 namespace ORNL {
 //! \class BufferedSlicer

@@ -1,10 +1,14 @@
 #pragma once
 
-#include "QHash"
-#include "QRegularExpression"
-#include "QString"
-#include "QStringList"
-#include "functional"
+#include <functional>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qobject.h>
+#include <qregularexpression.h>
+#include <qstringmatcher.h>
+#include <qtmetamacros.h>
+
 #include "gcode/gcode_command.h"
 
 namespace ORNL {

@@ -1,7 +1,16 @@
 #include "graphics/objects/printer/printer_object.h"
 
+#include <math.h>
+
+#include <qmath.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "graphics/objects/sphere/seam_object.h"
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 void PrinterObject::updateFromSettings(QSharedPointer<SettingsBase> sb) {

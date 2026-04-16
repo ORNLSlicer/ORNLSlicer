@@ -1,22 +1,43 @@
 
 #include "threading/slicers/polymer_slicer.h"
 
-#include "QtCore/QDir"
-#include "QtCore/QSharedPointer"
+#include <QtCore/QDir>
+#include <QtCore/QSharedPointer>
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qdebug.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qminmax.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/polygon_list.h"
+#include "geometry/settings_polygon.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "optimizers/layer_order_optimizer.h"
 #include "optimizers/multi_nozzle_optimizer.h"
+#include "part/part.h"
 #include "slicing/buffered_slicer.h"
 #include "slicing/layer_additions.h"
 #include "slicing/preprocessor.h"
 #include "slicing/slicing_utilities.h"
+#include "step/layer/island/island_base.h"
 #include "step/layer/island/polymer_island.h"
 #include "step/layer/island/support_island.h"
 #include "step/layer/island/wire_feed_island.h"
+#include "step/layer/layer.h"
 #include "step/layer/regions/infill.h"
 #include "step/layer/regions/perimeter.h"
+#include "step/layer/regions/region_base.h"
 #include "step/layer/regions/skin.h"
+#include "threading/traditional_ast.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 

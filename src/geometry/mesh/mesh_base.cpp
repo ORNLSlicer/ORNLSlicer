@@ -1,5 +1,25 @@
 #include "geometry/mesh/mesh_base.h"
 
+#include <algorithm>
+#include <limits>
+#include <tuple>
+#include <utility>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "units/derivative_units.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

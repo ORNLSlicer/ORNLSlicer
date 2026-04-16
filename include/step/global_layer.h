@@ -1,8 +1,20 @@
 ﻿#pragma once
 
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <quuid.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
 #include "part/part.h"
 #include "step/layer/island/island_base.h"
+#include "step/layer/regions/region_base.h"
 #include "step/layer/scan_layer.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!

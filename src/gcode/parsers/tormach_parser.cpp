@@ -1,5 +1,12 @@
 #include "gcode/parsers/tormach_parser.h"
 
+#include <functional>
+
+#include <qcontainerfwd.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
+
 namespace ORNL {
 TormachParser::TormachParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
     : CommonParser(meta, allowLayerAlter, lines, upperLines) {

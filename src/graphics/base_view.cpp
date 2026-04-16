@@ -1,10 +1,25 @@
 
 #include "graphics/base_view.h"
 
-#include "QFileDialog"
-#include "QMouseEvent"
+#include <GL/gl.h>
+
+#include <QFileDialog>
+#include <QMouseEvent>
+#include <qmatrix4x4.h>
+#include <qnamespace.h>
+#include <qopenglshaderprogram.h>
+#include <qopenglwidget.h>
+#include <qpoint.h>
+#include <qqueue.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/objects/axes_object.h"
+#include "graphics/support/camera_manager.h"
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 BaseView::BaseView(QWidget* parent) : QOpenGLWidget(parent) {

@@ -1,6 +1,19 @@
 #include "widgets/settings/setting_check_box.h"
 
-#include "QToolTip"
+#include <QToolTip>
+#include <qcheckbox.h>
+#include <qgridlayout.h>
+#include <qhashfunctions.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 

@@ -1,15 +1,54 @@
 #include "geometry/mesh/closed_mesh.h"
 
-#include "CGAL/Optimal_bounding_box/oriented_bounding_box.h"
-#include "CGAL/Polygon_mesh_processing/clip.h"
-#include "CGAL/Polygon_mesh_processing/corefinement.h"
-#include "CGAL/Polygon_mesh_processing/measure.h"
-#include "CGAL/Polygon_mesh_processing/repair.h"
-#include "CGAL/Polygon_mesh_processing/transform.h"
-#include "CGAL/Polygon_mesh_processing/triangulate_hole.h"
-#include "CGAL/Polygon_mesh_slicer.h"
-#include "CGAL/boost/graph/Face_filtered_graph.h"
-#include "CGAL/boost/graph/helpers.h"
+#include <array>
+#include <cstddef>
+#include <iterator>
+#include <list>
+#include <utility>
+#include <vector>
+
+#include <CGAL/Aff_transformation_3.h>
+#include <CGAL/Named_function_parameters.h>
+#include <CGAL/Object.h>
+#include <CGAL/Optimal_bounding_box/oriented_bounding_box.h>
+#include <CGAL/Origin.h>
+#include <CGAL/Polygon_mesh_processing/clip.h>
+#include <CGAL/Polygon_mesh_processing/compute_normal.h>
+#include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/measure.h>
+#include <CGAL/Polygon_mesh_processing/repair.h>
+#include <CGAL/Polygon_mesh_processing/repair_degeneracies.h>
+#include <CGAL/Polygon_mesh_processing/repair_self_intersections.h>
+#include <CGAL/Polygon_mesh_processing/transform.h>
+#include <CGAL/Polygon_mesh_processing/triangulate_hole.h>
+#include <CGAL/Polygon_mesh_slicer.h>
+#include <CGAL/Polyhedron_items_with_id_3.h>
+#include <CGAL/aff_transformation_tags.h>
+#include <CGAL/boost/graph/Face_filtered_graph.h>
+#include <CGAL/boost/graph/copy_face_graph.h>
+#include <CGAL/boost/graph/graph_traits_Polyhedron_3.h>
+#include <CGAL/boost/graph/graph_traits_Surface_mesh.h>
+#include <CGAL/boost/graph/helpers.h>
+#include <CGAL/boost/graph/iterator.h>
+#include <CGAL/boost/graph/properties.h>
+#include <CGAL/boost/graph/properties_Polyhedron_3.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
+#include "geometry/mesh/open_mesh.h"
+#include "geometry/path.h"
+#include "geometry/plane.h"
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "geometry/segments/line.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 ClosedMesh::ClosedMesh() : MeshBase() { m_is_closed = true; }

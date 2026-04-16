@@ -1,11 +1,26 @@
 #pragma once
 
-#include "QApplication"
-#include "QObject"
-#include "QPair"
-#include "QStyle"
+#include <list>
+#include <map>
+#include <string>
+#include <unordered_map>
+
+#include <QApplication>
+#include <QObject>
+#include <QPair>
+#include <QStyle>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qlist.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+
 #include "units/unit.h"
 #include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 #include "utilities/theme_tool.h"
 
 namespace ORNL {

@@ -1,5 +1,12 @@
 #include "utilities/qt_json_conversion.h"
 
+#include <string>
+
+#include <qhashfunctions.h>
+#include <qmatrix4x4.h>
+#include <qquaternion.h>
+#include <qvectornd.h>
+
 void to_json(fifojson& j, const QString& s) { j = s.toStdString(); }
 
 void from_json(const fifojson& j, QString& s) { s = j.get<std::string>().c_str(); }

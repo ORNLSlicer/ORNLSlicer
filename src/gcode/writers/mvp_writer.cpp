@@ -1,6 +1,17 @@
 #include "gcode/writers/mvp_writer.h"
 
-#include "QStringBuilder"
+#include <QStringBuilder>
+#include <qhashfunctions.h>
+#include <qnumeric.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "gcode/gcode_meta.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

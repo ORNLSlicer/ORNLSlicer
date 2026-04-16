@@ -1,7 +1,19 @@
 #include "cross_section/cross_section.h"
 
+#include <qcontainerfwd.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "cross_section/cross_section_object.h"
 #include "cross_section/cross_section_segment.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "units/unit.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

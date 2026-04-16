@@ -1,5 +1,12 @@
 #include "cross_section/terminus_tracking_map.h"
 
+#include <cstddef>
+
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+
+#include "cross_section/terminus.h"
+
 namespace ORNL {
 // Second constructor argument was missing, was causing out of bounds range.
 TerminusTrackingMap::TerminusTrackingMap(Terminus::Index end_idx)

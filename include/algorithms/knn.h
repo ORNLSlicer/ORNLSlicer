@@ -1,8 +1,13 @@
 #pragma once
 
-#include "QVector"
+#include <cstdint>
+
+#include <QVector>
+#include <qcontainerfwd.h>
+
 #include "algorithm_base.h"
 #include "geometry/point.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!

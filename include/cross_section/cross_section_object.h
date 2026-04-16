@@ -1,12 +1,20 @@
 #pragma once
 
-#include "QSharedPointer"
-#include "QVector"
-#include "configs/settings_base.h"
-#include "geometry/polygon_list.h"
-#include "terminus.h"
-
+#include <cstdint>
 #include <queue>
+
+#include <QSharedPointer>
+#include <QVector>
+#include <qcontainerfwd.h>
+#include <qmap.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "terminus.h"
+#include "units/unit.h"
 
 namespace ORNL {
 class CrossSectionSegment;

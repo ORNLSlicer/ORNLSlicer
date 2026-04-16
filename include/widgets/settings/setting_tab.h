@@ -1,9 +1,20 @@
 #pragma once
 
-#include "QFrame"
-#include "QGridLayout"
-#include "QWidget"
+#include <functional>
+
+#include <QFrame>
+#include <QGridLayout>
+#include <QWidget>
+#include <qboxlayout.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "configs/settings_base.h"
 #include "setting_header.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {

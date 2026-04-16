@@ -1,6 +1,19 @@
 #include "widgets/settings/double_spin_subtypes/setting_accel_spin_box.h"
 
+#include <qgridlayout.h>
+#include <qhashfunctions.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
 #include "managers/preferences_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_double_spin_box.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 

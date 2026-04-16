@@ -1,5 +1,10 @@
 #pragma once
 
+#include <GL/gl.h>
+
+#include <qcolor.h>
+#include <qtypes.h>
+
 #include "graphics/graphics_object.h"
 
 namespace ORNL {

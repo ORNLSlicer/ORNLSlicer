@@ -1,5 +1,21 @@
 #include "widgets/layerdot.h"
 
+#include <qbrush.h>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qcoreevent.h>
+#include <qevent.h>
+#include <qhashfunctions.h>
+#include <qnamespace.h>
+#include <qpainter.h>
+#include <qpoint.h>
+#include <qpropertyanimation.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
+#include "widgets/layerbar.h"
+
 namespace ORNL {
 LayerDot::LayerDot(QWidget* parent, int new_layer, QVector<QColor> m_colors, bool from_template)
     : QWidget(parent), m_layer(new_layer), m_range(nullptr), m_group(nullptr) {

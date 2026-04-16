@@ -1,11 +1,13 @@
 #pragma once
 
-#include "QGridLayout"
-#include "QLineEdit"
-#include "QScrollBar"
-#include "QTextEdit"
-#include "QToolButton"
-#include "QWidget"
+#include <QGridLayout>
+#include <QLineEdit>
+#include <QScrollBar>
+#include <QTextEdit>
+#include <QToolButton>
+#include <QWidget>
+#include <qobject.h>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 /*!

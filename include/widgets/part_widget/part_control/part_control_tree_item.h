@@ -1,9 +1,14 @@
 #pragma once
 
-#include "QHBoxLayout"
-#include "QLabel"
-#include "QTreeWidget"
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QTreeWidget>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qwidget.h>
+
 #include "part/part.h"
+#include "utilities/enums.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {

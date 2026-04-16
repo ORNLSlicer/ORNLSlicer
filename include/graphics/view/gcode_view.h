@@ -1,11 +1,22 @@
 #pragma once
 
-#include "QVector"
+#include <QVector>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
 #include "geometry/segment_base.h"
 #include "graphics/base_view.h"
 #include "graphics/objects/gcode_object.h"
+#include "utilities/enums.h"
 #include "widgets/gcode_info_control.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {

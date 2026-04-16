@@ -1,13 +1,19 @@
 #pragma once
 
-#include "QDir"
-#include "QMap"
-#include "QObject"
-#include "QSharedPointer"
-#include "QVector"
+#include <QDir>
+#include <QMap>
+#include <QObject>
+#include <QSharedPointer>
+#include <QVector>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
 #include "configs/settings_range.h"
 #include "part/part.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 class SettingsBase;

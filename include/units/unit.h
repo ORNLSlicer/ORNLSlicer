@@ -1,14 +1,18 @@
 #pragma once
 
-#include "QMetaType"
-#include "QString"
-#include "QtMath"
-#include "nlohmann/json.hpp"
-#include "utilities/qt_json_conversion.h"
+#include <math.h>
 
+#include <limits>
 #include <ostream>
 #include <sstream>
 #include <string>
+#include <type_traits>
+
+#include <QMetaType>
+#include <QString>
+#include <QtMath>
+
+#include "utilities/qt_json_conversion.h"
 
 using json = fifojson;
 

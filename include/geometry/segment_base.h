@@ -1,5 +1,15 @@
 #pragma once
 
+#include <cmath>
+#include <vector>
+
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "geometry/point.h"
 #include "units/unit.h"
 #include "utilities/enums.h"

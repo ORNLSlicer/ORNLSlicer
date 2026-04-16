@@ -1,12 +1,33 @@
 #include "widgets/part_widget/part_widget.h"
 
-#include "QFileDialog"
-#include "QMessageBox"
+#include <QFileDialog>
+#include <QMessageBox>
+#include <qboxlayout.h>
+#include <qevent.h>
+#include <qimage.h>
+#include <qlist.h>
+#include <qmatrix4x4.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qsurfaceformat.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
 #include "graphics/view/part_view.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/mathutils.h"
+#include "widgets/part_widget/part_control/part_control.h"
+#include "widgets/part_widget/part_toolbar.h"
+#include "widgets/view_controls_toolbar.h"
 
 namespace ORNL {
 PartWidget::PartWidget(QWidget* parent) : QWidget(parent) { this->setupWidget(); }

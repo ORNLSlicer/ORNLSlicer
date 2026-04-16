@@ -1,5 +1,10 @@
 #include "threading/step_thread.h"
 
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "step/step.h"
+
 namespace ORNL {
 StepThread::StepThread() {
     this->moveToThread(&m_internal_thread);

@@ -1,7 +1,11 @@
 #pragma once
 
-#include "QDialog"
-#include "QProgressBar"
+#include <QDialog>
+#include <QProgressBar>
+#include <qlist.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "utilities/enums.h"
 
 namespace ORNL {

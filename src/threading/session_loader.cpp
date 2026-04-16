@@ -1,8 +1,24 @@
 #include "threading/session_loader.h"
 
+#include <cstddef>
+#include <cstdlib>
+#include <string>
+
+#include <CGAL/property_map.h>
+#include <qcontainerfwd.h>
+#include <qfileinfo.h>
+#include <qmap.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <zip/zip.h>
+
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 SessionLoader::SessionLoader(QString filename, bool save) : m_filename(filename), m_save(save) {

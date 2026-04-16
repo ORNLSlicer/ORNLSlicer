@@ -1,8 +1,18 @@
 #include "gcode/writers/writer_base.h"
 
-#include "QStringBuilder"
-#include "boost/preprocessor.hpp"
+#include <CGAL/property_map.h>
+#include <QStringBuilder>
+#include <boost/preprocessor.hpp>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "gcode/gcode_meta.h"
+#include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : m_sb(sb) {

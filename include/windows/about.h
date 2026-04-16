@@ -1,6 +1,7 @@
 #pragma once
 
-#include "QWidget"
+#include <QWidget>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 /*!

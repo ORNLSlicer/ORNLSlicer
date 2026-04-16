@@ -1,7 +1,9 @@
 #pragma once
 
-#include "QVector"
-#include "QVector3D"
+#include <QVector3D>
+#include <QVector>
+#include <qcontainerfwd.h>
+
 #include "geometry/mesh/advanced/mesh_types.h"
 
 namespace ORNL {

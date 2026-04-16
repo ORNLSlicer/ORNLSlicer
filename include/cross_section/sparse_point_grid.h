@@ -1,5 +1,10 @@
 #pragma once
 
+#include <cstddef>
+
+#include <qtypes.h>
+
+#include "geometry/point.h"
 #include "sparse_grid.h"
 
 namespace ORNL {

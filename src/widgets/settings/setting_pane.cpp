@@ -1,6 +1,19 @@
 #include "widgets/settings/setting_pane.h"
 
+#include <qboxlayout.h>
+#include <qcontainerfwd.h>
+#include <qicon.h>
+#include <qinputdialog.h>
+#include <qminmax.h>
+#include <qnamespace.h>
+#include <qscrollarea.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "managers/settings/settings_manager.h"
+#include "widgets/settings/setting_row_base.h"
+#include "widgets/settings/setting_tab.h"
 
 namespace ORNL {
 SettingPane::SettingPane(int idx, QWidget* parent, QString pane, int warnings)

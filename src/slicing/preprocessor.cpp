@@ -1,11 +1,25 @@
 #include "slicing/preprocessor.h"
 
+#include <limits>
+
+#include <qcontainerfwd.h>
+#include <qnumeric.h>
+#include <qpair.h>
+#include <qsharedpointer.h>
+
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/open_mesh.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
+#include "slicing/buffered_slicer.h"
 #include "slicing/slicing_utilities.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

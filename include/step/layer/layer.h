@@ -1,6 +1,13 @@
 #pragma once
 
-#include "QLinkedList"
+#include <QLinkedList>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "step/layer/regions/region_base.h"

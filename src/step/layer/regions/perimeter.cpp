@@ -1,17 +1,38 @@
 #include "step/layer/regions/perimeter.h"
 
+#include <algorithm>
+#include <cstddef>
+
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "algorithms/knn.h"
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 #ifdef HAVE_SINGLE_PATH
-    #include "single_path/single_path.h"
+    #include <single_path/single_path.h>
 Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
 #endif
 
 #ifdef HAVE_WIRE_FEED
-    #include "wire_feed/wire_feed.h"
+    #include <wire_feed/wire_feed.h>
 #endif
 
 namespace ORNL {

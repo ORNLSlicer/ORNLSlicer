@@ -1,5 +1,8 @@
 #pragma once
 
+#include <qhash.h>
+
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

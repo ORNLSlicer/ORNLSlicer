@@ -1,10 +1,59 @@
 #include "widgets/layerbar.h"
 
+#include <algorithm>
+#include <tuple>
+
+#include <qabstractbutton.h>
+#include <qaction.h>
+#include <qalgorithms.h>
+#include <qbrush.h>
+#include <qbuttongroup.h>
+#include <qcontainerfwd.h>
+#include <qdialog.h>
+#include <qdialogbuttonbox.h>
+#include <qevent.h>
+#include <qformlayout.h>
+#include <qgridlayout.h>
+#include <qgroupbox.h>
+#include <qguiapplication.h>
+#include <qinputdialog.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qlist.h>
+#include <qmenu.h>
+#include <qmessagebox.h>
+#include <qminmax.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qobjectdefs.h>
+#include <qoverload.h>
+#include <qpainter.h>
+#include <qpair.h>
+#include <qpoint.h>
+#include <qpropertyanimation.h>
+#include <qquaternion.h>
+#include <qradiobutton.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qspinbox.h>
+#include <qtmetamacros.h>
+#include <qtooltip.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
+#include "configs/settings_range.h"
 #include "geometry/plane.h"
+#include "geometry/point.h"
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 #include "widgets/layerdot.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+#include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {
 LayerBar::LayerBar(QSharedPointer<PartMetaModel> pm, QWidget* parent) : QWidget(parent) {

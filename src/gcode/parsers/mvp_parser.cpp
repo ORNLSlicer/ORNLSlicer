@@ -1,9 +1,15 @@
 #include "gcode/parsers/mvp_parser.h"
 
-#include "QString"
-#include "QStringList"
-#include "QTextStream"
-#include "QVector"
+#include <functional>
+
+#include <QString>
+#include <QStringList>
+#include <QTextStream>
+#include <QVector>
+#include <qcontainerfwd.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
 
 namespace ORNL {
 MVPParser::MVPParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

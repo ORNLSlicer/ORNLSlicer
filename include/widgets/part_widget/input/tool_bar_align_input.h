@@ -1,11 +1,13 @@
 ﻿#pragma once
 
-#include "QFrame"
-#include "QHBoxLayout"
-#include "QPropertyAnimation"
-#include "QToolButton"
-#include "QVector3D"
-#include "QWidget"
+#include <QFrame>
+#include <QHBoxLayout>
+#include <QPropertyAnimation>
+#include <QToolButton>
+#include <QVector3D>
+#include <QWidget>
+#include <qpoint.h>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 /*!

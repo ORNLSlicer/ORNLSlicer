@@ -1,5 +1,10 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
 #include "part/part.h"
 #include "step/global_layer.h"
 

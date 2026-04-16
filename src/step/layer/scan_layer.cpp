@@ -1,8 +1,28 @@
 #include "step/layer/scan_layer.h"
 
+#include <limits>
+
+#include <qcontainerfwd.h>
+#include <qdebug.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qhashfunctions.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/path_order_optimizer.h"
 #include "step/layer/island/island_base.h"
+#include "step/layer/regions/region_base.h"
+#include "step/step.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

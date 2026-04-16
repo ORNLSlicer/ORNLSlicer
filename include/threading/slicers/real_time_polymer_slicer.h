@@ -1,9 +1,17 @@
 #pragma once
 
-#include "optimizers/layer_order_optimizer.h"
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/point.h"
 #include "slicing/preprocessor.h"
-#include "step/layer/layer.h"
+#include "step/global_layer.h"
+#include "step/layer/regions/region_base.h"
 #include "threading/real_time_ast.h"
+#include "units/unit.h"
 
 namespace ORNL {
 

@@ -1,9 +1,22 @@
 #include "widgets/part_widget/right_click_menu.h"
 
-#include "QFileDialog"
-#include "QLabel"
-#include "QWidgetAction"
+#include <QFileDialog>
+#include <QLabel>
+#include <QWidgetAction>
+#include <qaction.h>
+#include <qicon.h>
+#include <qlist.h>
+#include <qmenu.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qslider.h>
+#include <qwidget.h>
+
 #include "managers/session_manager.h"
+#include "utilities/enums.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
 RightClickMenu::RightClickMenu(QWidget* parent) : QMenu(("Context menu"), parent) {

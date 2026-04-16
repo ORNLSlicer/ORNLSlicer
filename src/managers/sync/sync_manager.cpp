@@ -1,5 +1,11 @@
 #include "managers/sync/sync_manager.h"
 
+#include <qassert.h>
+#include <qsharedpointer.h>
+
+#include "managers/sync/link.h"
+#include "utilities/enums.h"
+
 namespace ORNL {
 SyncManager::SyncManager() {}
 

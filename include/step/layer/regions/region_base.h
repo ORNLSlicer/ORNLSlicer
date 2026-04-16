@@ -1,12 +1,16 @@
 #pragma once
 
-#include "QObject"
+#include <QObject>
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "managers/sync/sync_manager.h"
+#include "units/unit.h"
 
 namespace ORNL {
 class PathOrderOptimizer;
@@ -22,8 +26,7 @@ class RegionBase {
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
     RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
-               const QVector<SettingsPolygon>& settings_polygons,
-               PolygonList uncut_geometry = PolygonList());
+               const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry = PolygonList());
 
     //! \brief Constructor
     //! \param sb: the settings

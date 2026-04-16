@@ -1,7 +1,14 @@
 #pragma once
 
-#include "QMenu"
-#include "qslider.h"
+#include <QMenu>
+#include <qaction.h>
+#include <qlist.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qslider.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {

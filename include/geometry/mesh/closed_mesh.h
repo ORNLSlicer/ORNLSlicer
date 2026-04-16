@@ -1,12 +1,25 @@
 #pragma once
 
+#include <utility>
+
+#include <CGAL/Modifier_base.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
 #include "geometry/mesh/open_mesh.h"
+#include "geometry/path.h"
 #include "geometry/plane.h"
 #include "geometry/polygon.h"
 #include "geometry/polyline.h"
 #include "geometry/segments/line.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 //! \class ClosedMesh

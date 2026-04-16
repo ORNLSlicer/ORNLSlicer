@@ -1,5 +1,9 @@
 #pragma once
 
+#include <vector>
+
+#include <qcolor.h>
+
 #include "graphics/graphics_object.h"
 #include "utilities/constants.h"
 

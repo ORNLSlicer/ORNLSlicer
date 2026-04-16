@@ -1,9 +1,17 @@
 #include "windows/dialogs/slice_dialog.h"
 
-#include "QApplication"
-#include "QGridLayout"
-#include "QLabel"
-#include "QPushButton"
+#include <QApplication>
+#include <QGridLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <qdialog.h>
+#include <qfont.h>
+#include <qnamespace.h>
+#include <qprogressbar.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
+#include "utilities/enums.h"
 
 namespace ORNL {
 SliceDialog::SliceDialog(QWidget* parent) : QDialog(parent) { this->setupUi(); }

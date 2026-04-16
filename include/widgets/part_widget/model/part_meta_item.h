@@ -1,8 +1,16 @@
 #pragma once
 
-#include "QObject"
+#include <GL/gl.h>
+
+#include <QObject>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
 #include "graphics/objects/part_object.h"
 #include "part/part.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 // Forward

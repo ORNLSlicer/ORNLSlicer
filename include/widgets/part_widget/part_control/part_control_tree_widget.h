@@ -1,6 +1,9 @@
 #pragma once
 
-#include "QTreeWidget"
+#include <QTreeWidget>
+#include <qitemselectionmodel.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
 
 namespace ORNL {
 /*!

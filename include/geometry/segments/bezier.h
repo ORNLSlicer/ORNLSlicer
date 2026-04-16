@@ -1,7 +1,16 @@
 #pragma once
 
+#include <vector>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+
 #include "geometry/path.h"
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
+#include "units/unit.h"
 
 namespace ORNL {
 //! \class BezierSegment

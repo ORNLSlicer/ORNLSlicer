@@ -1,10 +1,33 @@
 #include "widgets/gcodebar.h"
 
-#include "QDir"
-#include "QPushButton"
-#include "QStandardPaths"
-#include "QTextDocumentWriter"
+#include <QDir>
+#include <QPushButton>
+#include <QStandardPaths>
+#include <QTextDocumentWriter>
+#include <qcheckbox.h>
+#include <qcombobox.h>
+#include <qframe.h>
+#include <qgridlayout.h>
+#include <qhash.h>
+#include <qhashfunctions.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qoverload.h>
+#include <qplaintextedit.h>
+#include <qset.h>
+#include <qslider.h>
+#include <qspinbox.h>
+#include <qtextformat.h>
+#include <qtimer.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
+#include "utilities/enums.h"
+#include "widgets/gcodetextboxwidget.h"
 
 namespace ORNL {
 GcodeBar::GcodeBar(QWidget* parent) : QWidget(parent) {

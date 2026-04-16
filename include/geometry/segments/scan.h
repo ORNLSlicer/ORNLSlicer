@@ -1,6 +1,10 @@
 #pragma once
 
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
 
 namespace ORNL {

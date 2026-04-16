@@ -1,7 +1,14 @@
 #include "widgets/part_widget/part_control/part_control_tree_widget.h"
 
-#include "QStack"
-#include "QtGlobal"
+#include <QStack>
+#include <QtGlobal>
+#include <qabstractitemmodel.h>
+#include <qitemselectionmodel.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qtmetamacros.h>
+#include <qtreewidget.h>
+#include <qwidget.h>
 
 namespace ORNL {
 

@@ -1,14 +1,21 @@
 #pragma once
 
-#include "QLinkedList"
+#include <QLinkedList>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "optimizers/path_order_optimizer.h"
+#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
+#include "utilities/enums.h"
 
 #ifdef HAVE_SINGLE_PATH
-    #include "single_path/single_path.h"
+    #include <single_path/single_path.h>
 Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
 #endif
 

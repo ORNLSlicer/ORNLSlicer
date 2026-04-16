@@ -1,5 +1,19 @@
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
 
+#include <qboxlayout.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtreewidget.h>
+#include <qwidget.h>
+
+#include "part/part.h"
+#include "utilities/enums.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+
 namespace ORNL {
 PartControlTreeItem::PartControlTreeItem(QSharedPointer<PartMetaItem> pm) {
     m_part = pm->part();

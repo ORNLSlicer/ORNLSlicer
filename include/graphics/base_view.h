@@ -1,9 +1,18 @@
 #pragma once
 
-#include "QOpenGLFunctions"
-#include "QOpenGLFunctions_3_3_Core"
-#include "QOpenGLShaderProgram"
-#include "QOpenGLWidget"
+#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLWidget>
+#include <qlist.h>
+#include <qmatrix4x4.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
 #include "graphics/graphics_object.h"
 #include "graphics/support/camera_manager.h"
 

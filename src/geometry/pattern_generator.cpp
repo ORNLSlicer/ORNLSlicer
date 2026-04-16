@@ -1,5 +1,15 @@
 #include "geometry/pattern_generator.h"
 
+#include <cmath>
+
+#include <qcontainerfwd.h>
+
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
+
 namespace ORNL {
 
 QVector<Polyline> PatternGenerator::GenerateLines(PolygonList geometry, Distance lineSpacing, Angle rotation,

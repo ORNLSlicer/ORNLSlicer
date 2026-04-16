@@ -1,14 +1,21 @@
 #pragma once
 
-#include "QDoubleSpinBox"
-#include "QHBoxLayout"
-#include "QLabel"
-#include "QListWidget"
-#include "QPropertyAnimation"
-#include "QResizeEvent"
-#include "QTabWidget"
-#include "QToolButton"
-#include "QWidget"
+#include <QDoubleSpinBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QListWidget>
+#include <QPropertyAnimation>
+#include <QResizeEvent>
+#include <QTabWidget>
+#include <QToolButton>
+#include <QWidget>
+#include <qlist.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+
 #include "graphics/view/part_view.h"
 #include "part/part.h"
 #include "widgets/part_widget/model/part_meta_model.h"

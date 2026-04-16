@@ -1,5 +1,7 @@
 #pragma once
 
+#include <qcolor.h>
+
 #include "graphics/graphics_object.h"
 
 namespace ORNL {

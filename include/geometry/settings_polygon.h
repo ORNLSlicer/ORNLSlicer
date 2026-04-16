@@ -1,6 +1,10 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
 #include "configs/settings_base.h"
+#include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 
 namespace ORNL {

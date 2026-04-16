@@ -1,9 +1,18 @@
 #pragma once
 
-#include "QObject"
-#include "QUuid"
+#include <QObject>
+#include <QUuid>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
 #include "configs/settings_range.h"
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
 #include "managers/sync/sync_manager.h"
 #include "step/layer/layer.h"
 #include "step/layer/scan_layer.h"

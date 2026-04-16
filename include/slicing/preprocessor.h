@@ -1,7 +1,17 @@
 #pragma once
 
+#include <functional>
+
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
 #include "slicing/buffered_slicer.h"
+#include "units/unit.h"
 
 namespace ORNL {
 //!

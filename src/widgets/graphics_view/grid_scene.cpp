@@ -1,7 +1,12 @@
 #include "widgets/graphics_view/grid_scene.h"
 
-#include "QDebug"
-#include "QPainter"
+#include <QDebug>
+#include <QPainter>
+#include <qcolor.h>
+#include <qgraphicsscene.h>
+#include <qnamespace.h>
+#include <qobject.h>
+
 #include "utilities/mathutils.h"
 
 namespace ORNL {

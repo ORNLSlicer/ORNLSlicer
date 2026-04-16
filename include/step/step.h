@@ -1,13 +1,18 @@
 #pragma once
 
-#include "QDir"
-#include "QObject"
+#include <QDir>
+#include <QObject>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/plane.h"
 #include "geometry/polygon_list.h"
 #include "managers/sync/sync_manager.h"
 #include "step/layer/island/island_base.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /*!

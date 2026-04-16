@@ -1,6 +1,14 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/settings_polygon.h"
 #include "step/layer/island/island_base.h"
+#include "step/layer/regions/region_base.h"
 
 namespace ORNL {
 /*!
@@ -14,8 +22,7 @@ class PolymerIsland : public IslandBase {
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
     PolymerIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
-                  const QVector<SettingsPolygon>& settings_polygons,
-                  const PolygonList& uncut_geometry = PolygonList());
+                  const QVector<SettingsPolygon>& settings_polygons, const PolygonList& uncut_geometry = PolygonList());
 
     //! \brief Override from base. Filters down to individual regions to add
     //! travels and apply path modifiers

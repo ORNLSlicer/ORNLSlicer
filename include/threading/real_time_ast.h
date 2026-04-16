@@ -1,11 +1,16 @@
 #pragma once
 
-#include "QQueue"
-#include "QThread"
-#include "data_stream.h"
+#include <QQueue>
+#include <QThread>
+#include <data_stream.h>
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <tcp_connection.h>
+
 #include "external_files/exporters/rpbf_exporter.h"
-#include "gcode/gcode_parser.h"
-#include "tcp_connection.h"
 #include "threading/abs_slicing_thread.h"
 #include "threading/step_thread.h"
 #include "utilities/enums.h"

@@ -1,18 +1,16 @@
 #pragma once
 
-#include "QMatrix4x4"
-#include "QQuaternion"
-#include "QString"
-#include "QVector"
-#include "QVector3D"
-#include "nlohmann/json.hpp"
-
-#include <string>
+#include <QMatrix4x4>
+#include <QQuaternion>
+#include <QString>
+#include <QVector3D>
+#include <QVector>
+#include <nlohmann/json.hpp>
 
 // Needed for cross compile - includes defintions that qt is looking
 // for from internal forward declarations (e.g. tagMSG).
 #ifdef Q_OS_WIN
-    #include "QtCore/qt_windows.h"
+    #include <QtCore/qt_windows.h>
 #endif
 
 // using json = nlohmann::json;

@@ -1,8 +1,19 @@
 #pragma once
 
-#include "QElapsedTimer"
+#include <QElapsedTimer>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qpoint.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
 #include "graphics/base_view.h"
+#include "graphics/graphics_object.h"
 #include "part/part.h"
 
 namespace ORNL {

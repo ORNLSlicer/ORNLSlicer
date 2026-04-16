@@ -1,6 +1,21 @@
 #include "windows/flowratecalc.h"
 
-#include "QApplication"
+#include <math.h>
+
+#include <QApplication>
+#include <qcombobox.h>
+#include <qcontainerfwd.h>
+#include <qfont.h>
+#include <qframe.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qoverload.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qwidget.h>
+
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

@@ -1,8 +1,15 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /*!
