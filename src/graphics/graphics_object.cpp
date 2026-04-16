@@ -14,6 +14,9 @@ GraphicsObject::GraphicsObject(BaseView* view, const std::vector<float>& vertice
 }
 
 GraphicsObject::~GraphicsObject() {
+    if (m_view.isNull() || m_view->context() == nullptr)
+        return;
+
     m_view->makeCurrent();
 
     m_vao->destroy();
@@ -78,7 +81,7 @@ void GraphicsObject::configureUniforms() {
     m_view->shaderProgram()->setUniformValue(m_shader_locs.renderingPartObject, false);
 }
 
-BaseView* GraphicsObject::view() { return m_view; }
+BaseView* GraphicsObject::view() { return m_view.data(); }
 
 QVector<QVector3D> GraphicsObject::minimumBoundingBox() { return m_transformed_mbb; }
 

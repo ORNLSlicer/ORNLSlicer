@@ -697,7 +697,7 @@ SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack) {
     return loader;
 }
 
-void SessionManager::loadSession(bool shouldDelete, QString path) {
+SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path) {
     // Clear out old data if necessary.
     if (shouldDelete) {
         for (model_data file : m_models)
@@ -724,9 +724,12 @@ void SessionManager::loadSession(bool shouldDelete, QString path) {
     if (result >= 0) {
         connect(loader, &SessionLoader::finished, loader, &SessionLoader::deleteLater);
         loader->start();
+        m_file = path;
+        return loader;
     }
 
-    m_file = path;
+    delete loader;
+    return nullptr;
 }
 
 QHash<QString, QString> SessionManager::getMostRecentSettingHistory() { return m_most_recent_setting_history; }

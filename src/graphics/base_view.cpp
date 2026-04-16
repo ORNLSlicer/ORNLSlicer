@@ -26,6 +26,12 @@ BaseView::~BaseView() {
     // Qt5 QOpenGLWidget documentation page, section
     //"Resource Initialization and Cleanup"
     this->makeCurrent();
+
+    // Release render-owned GL objects while the widget and its context are still valid.
+    m_render_objects.clear();
+    m_focus.reset();
+
+    this->doneCurrent();
 }
 
 void BaseView::mousePressEvent(QMouseEvent* e) {

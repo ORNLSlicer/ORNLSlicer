@@ -173,6 +173,7 @@ void SessionLoader::loadSession() {
     }
 
     zip_close(zip);
+    emit loadSucceeded();
 }
 
 std::string SessionLoader::loadStringFromZip(struct zip_t* zip, const std::string& key) {

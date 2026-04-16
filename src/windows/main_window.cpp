@@ -2,6 +2,7 @@
 
 #include "QFile"
 #include "QFileDialog"
+#include "QFileInfo"
 #include "QSettings"
 #include "QStatusBar"
 #include "QTimer"
@@ -1108,7 +1109,7 @@ void MainWindow::saveSession() {
     CSM->saveSession(filename);
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
 
-    this->setTitleInfo(filename.split("/").back());
+    this->setTitleInfo(QFileInfo(filename).fileName());
     m_statusbar->showMessage("Session saved");
     m_cmdbar->append("Session saved: " + filename);
 }
@@ -1127,16 +1128,20 @@ void MainWindow::loadSession() {
     if (filename.isEmpty())
         return;
 
-    loadASession(filename);
+    SessionLoader* loader = loadASession(filename);
+    if (loader != nullptr) {
+        connect(loader, &SessionLoader::loadSucceeded, this,
+                [this, title = QFileInfo(filename).fileName()] { this->setTitleInfo(title); });
+    }
     m_statusbar->showMessage("Session loaded");
     m_cmdbar->append("Session loaded: " + filename);
 
     CSM->setMostRecentProjectLocation(QFileInfo(filename).absolutePath());
 }
 
-void MainWindow::loadASession(const QString& filename) {
+SessionLoader* MainWindow::loadASession(const QString& filename) {
     m_part_widget->clear();
-    CSM->loadSession(true, filename);
+    return CSM->loadSession(true, filename);
 }
 
 void MainWindow::updateSettings(const QString& name) {
