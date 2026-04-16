@@ -1,7 +1,7 @@
 #pragma once
 
 #include "configs/settings_range.h"
-#include "geometry/mesh/advanced/mesh_skeleton.h"
+#include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
 
@@ -109,9 +109,6 @@ class BufferedSlicer {
 
     //! \brief the height of the last layer
     Distance m_last_layer_height;
-
-    //! \brief the mesh skeleton that may be used for this slicer
-    QSharedPointer<MeshSkeleton> m_skeleton = nullptr;
 
     //! \brief running total of shifts
     QList<Point> m_running_shifts;

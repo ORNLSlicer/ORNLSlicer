@@ -50,8 +50,7 @@ int SlicingUtilities::GetPartStart(QSharedPointer<Part> part, int current_steps)
 }
 
 std::tuple<Plane, Point, Point> SlicingUtilities::GetDefaultSlicingAxis(QSharedPointer<SettingsBase> sb,
-                                                                        QSharedPointer<MeshBase> mesh,
-                                                                        QSharedPointer<MeshSkeleton> skeleton) {
+                                                                        QSharedPointer<MeshBase> mesh) {
     // Retrieve the slicing plane normal
     QVector3D slicing_vector = {sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
                                 sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
@@ -67,8 +66,7 @@ std::tuple<Plane, Point, Point> SlicingUtilities::GetDefaultSlicingAxis(QSharedP
     return {slicing_plane, min, max};
 }
 
-void SlicingUtilities::ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height,
-                                         QSharedPointer<MeshSkeleton> skeleton) {
+void SlicingUtilities::ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height) {
     // Retrieve the layer height
     const Distance& layer_height = sb->setting<Distance>(PS::Layer::kLayerHeight);
 
