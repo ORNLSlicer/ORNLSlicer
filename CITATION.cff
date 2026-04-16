@@ -43,7 +43,7 @@ authors:
     affiliation: Oak Ridge National Laboratory
     orcid: 'https://orcid.org/0000-0001-6003-4593'
     email: adkinscv@ornl.gov
-repository-code: 'https://github.com/ORNLSlicer/Slicer-2'
+repository-code: 'https://github.com/ORNLSlicer/ORNLSlicer'
 url: 'https://www.osti.gov/doecode/biblio/97742'
 abstract: >-
   ORNL Slicer 2 is a slicing program for additive

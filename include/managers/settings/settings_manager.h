@@ -183,7 +183,7 @@ class SettingsManager : public QObject {
     //! \brief Valid file suffixes for layer bar settings files
     QVector<QString> m_validLayerSuffixes;
 
-    //! \brief Current master version as pulled from Slicer 2 config
+    //! \brief Current master version as pulled from ORNLSlicer config
     double m_current_master_version;
 
     //! \brief Tracking for if user requests all settings be rolled forward

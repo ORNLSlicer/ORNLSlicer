@@ -15,7 +15,7 @@ MeshSkeleton::MeshSkeleton(QSharedPointer<ClosedMesh> mesh) : m_mesh(mesh) {}
 MeshSkeleton::MeshSkeleton(MeshTypes::Polyhedron mesh) { CGAL::copy_face_graph(mesh, m_polyhedron); }
 
 void MeshSkeleton::compute() {
-    // Convert to CGAL Type if we have a Slicer 2 type
+    // Convert to CGAL Type if we have an ORNLSlicer type
     if (m_mesh != nullptr)
         CGAL::copy_face_graph(m_mesh->polyhedron(), m_polyhedron);
 

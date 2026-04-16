@@ -1,5 +1,6 @@
 #include "windows/flowratecalc.h"
 
+#include "QApplication"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -13,7 +14,7 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     m_density_metric_to_is = m_density_metric() / IS_unit_chosen(); // around 0.036127292
 
     // setFixedSize(420,260);
-    setWindowTitle("Slicer-2: Flowrate Calculator");
+    setWindowTitle(QApplication::applicationDisplayName() + ": Flowrate Calculator");
     QIcon icon;
     icon.addFile(QStringLiteral(":/icons/slicer-2_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);

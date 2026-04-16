@@ -11,7 +11,7 @@ project(
     LANGUAGES CXX C
     VERSION ${TARGET_VERSION}
     DESCRIPTION "Advanced object slicer by ORNL"
-    HOMEPAGE_URL "https://github.com/ORNLSlicer/Slicer-2"
+    HOMEPAGE_URL "https://github.com/ORNLSlicer/ORNLSlicer"
 )
 
 set(CMAKE_CXX_STANDARD 23)
@@ -147,7 +147,7 @@ function(CreateDocTarget)
     if(SLICER2_BUILD_DOC)
         find_package(Doxygen)
         if(DOXYGEN_FOUND)
-            set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
+            set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
             set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
             configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
@@ -178,6 +178,5 @@ if(WIN32)
     install(TARGETS ${PROJECT_NAME}_cli)
 endif()
 
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/doc/slicer-2_user_guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
-

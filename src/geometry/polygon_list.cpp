@@ -195,7 +195,7 @@ PolygonList PolygonList::getOutsidePolygons() const {
         if (polygonId == 0)
             polygons.append(p);
         else {
-            // this should not happen in Slicer-2 as a PolyhonList only contains a polygon and some interior polygons
+            // this should not happen in ORNLSlicer as a PolyhonList only contains a polygon and some interior polygons
             if (!polygons.first().inside(p.boundingRectCenter())) {
                 polygons.append(p);
             }

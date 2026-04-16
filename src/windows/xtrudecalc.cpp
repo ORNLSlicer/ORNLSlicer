@@ -1,5 +1,6 @@
 #include "windows/xtrudecalc.h"
 
+#include "QApplication"
 #include "managers/preferences_manager.h"
 #include "utilities/enums.h"
 
@@ -26,7 +27,7 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_fpr_text = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "/rev):";
 
     // setFixedSize(420,260);
-    setWindowTitle("Slicer-2: Xtrude Calculator");
+    setWindowTitle(QApplication::applicationDisplayName() + ": Xtrude Calculator");
     QIcon icon;
     icon.addFile(QStringLiteral(":/icons/slicer-2_logo.ico"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);

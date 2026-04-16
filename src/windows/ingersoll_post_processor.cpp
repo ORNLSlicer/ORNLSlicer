@@ -15,7 +15,7 @@ namespace ORNL
 
       //resizing makes no point for this tool
       setFixedSize(360,130);
-      setWindowTitle("Slicer-2: Ingersoll Post Processor");
+      setWindowTitle("ORNLSlicer-" BOOST_PP_STRINGIZE(SLICER2_VERSION) ": Ingersoll Post Processor");
       QIcon icon;
       icon.addFile(QStringLiteral(":/icons/ornl.png"), QSize(), QIcon::Normal, QIcon::Off);
       setWindowIcon(icon);

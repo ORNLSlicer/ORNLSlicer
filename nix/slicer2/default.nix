@@ -56,7 +56,7 @@ stdenv.mkDerivation rec {
 
   meta = {
     description = "An advanced object slicer for toolpathing by ORNL";
-    homepage = "https://github.com/ORNLSlicer/Slicer-2/";
+    homepage = "https://github.com/ORNLSlicer/ORNLSlicer/";
     license = lib.licenses.gpl3;
     maintainers = with lib.maintainers; [
       cadkin

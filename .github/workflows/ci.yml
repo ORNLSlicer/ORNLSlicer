@@ -61,7 +61,7 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: Setup Environment
         run: |
-          echo "install_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-installer.exe" >> $GITHUB_ENV
+          echo "install_artifact=ornlslicer-installer.exe" >> $GITHUB_ENV
           echo "package_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-portable" >> $GITHUB_ENV
           echo "version=$(nix eval --raw .#${{ env.ci_derivation }}.version)" >> $GITHUB_ENV
       - name: Compile Windows Build
@@ -84,4 +84,3 @@ jobs:
         with:
           name: ${{ env.install_artifact }}
           path: ${{ env.install_artifact }}
-
