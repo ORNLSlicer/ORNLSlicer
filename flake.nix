@@ -1,5 +1,5 @@
 {
-  description = "ORNL Slicer-2 -  An advanced slicing application for Additive Manufacturing";
+  description = "ORNLSlicer - An advanced slicing application for additive manufacturing";
 
   inputs = {
     nixpkgs.url  = gitlab:mdf/nixpkgs/slicer2?host=code.ornl.gov;
@@ -37,12 +37,8 @@
     lib = rec {
       fetchVersion = version_file: let
         inherit (lib.pipe version_file [ builtins.readFile builtins.fromJSON ]) major minor patch suffix;
-        suffixShort = builtins.substring 0 1 suffix;
-
-        version      = "${major}.${minor}.${patch}+${suffix}";
-        revisionHash = self.shortRev or self.dirtyShortRev;
-        fullVersion  = "${version}-${revisionHash}";
-      in fullVersion;
+        version = "${major}.${minor}.${patch}";
+      in if suffix == "" then version else "${version}+${suffix}";
 
       mkPackages = { pkgs, stdenv ? pkgs.stdenv }: rec {
         nixpkgs = pkgs;

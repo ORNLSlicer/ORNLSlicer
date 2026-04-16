@@ -1,5 +1,6 @@
 #include "windows/gcode_export.h"
 
+#include "QApplication"
 #include "QDir"
 #include "QDirIterator"
 #include "QFileDialog"
@@ -23,7 +24,7 @@
 namespace ORNL {
 
 GcodeExport::GcodeExport(QWidget* parent) {
-    setWindowTitle("Slicer-2: G-Code/Project Export");
+    setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
 
     QIcon icon;
     icon.addFile(QStringLiteral(":/icons/slicer-2_logo.png"), QSize(), QIcon::Normal, QIcon::Off);

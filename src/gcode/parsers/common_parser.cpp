@@ -139,10 +139,10 @@ QHash<QString, double> CommonParser::parseFooter() {
             break;
     }
 
-    // convert force minimum layer time setting from Slicer-1 to Slicer-2 if needed
+    // convert force minimum layer time setting from Slicer-1 to ORNLSlicer if needed
     // Slicer-1
     //   force_minimum_layer_time: enum, 0=DISABLED, 1=Dwell time, 2=Modify feedrate
-    // Slicer-2
+    // ORNLSlicer
     //   force_minimum_layer_time: bool
     //   minimum_layer_time_method: enum, 0=Dwell time, 1=Modify feedrate
     if (foundForcedMinLayerTime && !foundForcedMinLayerTimeMethod) {

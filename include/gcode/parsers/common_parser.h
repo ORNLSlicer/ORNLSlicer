@@ -35,7 +35,7 @@ class CommonParser : public ParserBase {
     //! \param upperLines Uppercase lines of the original used for ease of parsing/comparison
     CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines);
 
-    //! \brief Parse header lines and identify Slicer 1 or Slicer 2.
+    //! \brief Parse header lines and identify Slicer 1 or ORNLSlicer.
     void parseHeader();
 
     //! \brief Parse footer lines extracting necessary settings for parsing time,

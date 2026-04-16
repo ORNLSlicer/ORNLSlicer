@@ -37,7 +37,7 @@ class BufferedSlicer {
     //! \param ranges the ranges the apply settings along
     //! \param previous_buffer the number of past slices to track
     //! \param future_buffer the numer of future slices to buffer
-    //! \param use_cgal_cross_section use cgal cross-sectioning in place of ORNL Slicer-2's
+    //! \param use_cgal_cross_section use cgal cross-sectioning in place of ORNLSlicer's
     BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
                    QVector<QSharedPointer<Part>> settings_parts,
                    QMap<uint, QSharedPointer<SettingsRange>> ranges = QMap<uint, QSharedPointer<SettingsRange>>(),

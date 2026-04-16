@@ -304,10 +304,10 @@ class PreferencesManager : public QObject {
     //! \brief Sets the unit used for angle
     void setAngleUnit(Angle a);
 
-    //! \brief Sets the theme of Slicer 2
+    //! \brief Sets the theme of ORNLSlicer
     void setTheme(QString theme);
 
-    //! \brief Sets the theme of Slicer 2
+    //! \brief Sets the theme of ORNLSlicer
     void setTheme(ThemeName theme);
 
     //! \brief Sets the unit used for time

@@ -57,6 +57,9 @@ int main(int argc, char* argv[]) {
 
     if (argc > 1) {
         QCoreApplication ca(argc, argv);
+        QCoreApplication::setApplicationName("slicer2");
+        QCoreApplication::setOrganizationName("ornl");
+        QCoreApplication::setApplicationVersion(BOOST_PP_STRINGIZE(SLICER2_VERSION));
 
         QSharedPointer<ORNL::SettingsBase> options = QSharedPointer<ORNL::SettingsBase>::create();
         ORNL::CommandLineConverter clc;
@@ -85,13 +88,7 @@ int main(int argc, char* argv[]) {
         QApplication::setApplicationName("slicer2");
         QApplication::setOrganizationName("ornl");
         QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(SLICER2_VERSION));
-        // #ifdef WIN32
-        //         HWND consoleWnd = GetConsoleWindow();
-        //         DWORD dwProcessId;
-        //         GetWindowThreadProcessId(consoleWnd, &dwProcessId);
-        //         if (GetCurrentProcessId() == dwProcessId)
-        //             ::ShowWindow(::GetConsoleWindow(), SW_HIDE);
-        // #endif
+        QApplication::setApplicationDisplayName("ORNLSlicer-" BOOST_PP_STRINGIZE(SLICER2_VERSION));
 
         Q_INIT_RESOURCE(icons);
         Q_INIT_RESOURCE(shaders);

@@ -1,7 +1,7 @@
 Unicode true
 
 ; Defined on command line.
-;!define OUTFILE "slicer2-installer.exe"
+;!define OUTFILE "ornlslicer-installer.exe"
 
 ; Defined on command line.
 ;!define EXE_SOURCES "slicer2"
@@ -10,7 +10,7 @@ Unicode true
 !define APPLICATION "slicer2"
 
 !define HUMAN_ORG "ORNL"
-!define HUMAN_APPLICATION "ORNL Slicer-2"
+!define HUMAN_APPLICATION "ORNLSlicer"
 
 ;!tempfile VER_TEMP
 ;!system 'echo "!define VERSION_MAJOR  $(jq -j .major  ../version.json)" >> ${VER_TEMP}'
@@ -26,7 +26,7 @@ Unicode true
 !define ICON "../resources/icons/slicer-2_logo.ico"
 
 ; Info
-Name "ORNL Slicer-2"
+Name "ORNLSlicer"
 LicenseData "../LICENSE.md"
 Icon "${ICON}"
 UninstallIcon "${ICON}"
@@ -63,10 +63,10 @@ Section "${HUMAN_APPLICATION}"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "InstallLocation"      "$INSTDIR"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayVersion"       "${VERSION}"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Contact"              "slicer@ornl.gov"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "HelpLink"             "https://github.com/ORNLSlicer/Slicer-2"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLInfoAbout"         "https://github.com/ORNLSlicer/Slicer-2"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLUpdateInfo"        "https://github.com/ORNLSlicer/Slicer-2/releases"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Readme"               "$INSTDIR\share\doc\slicer2\slicer-2_user_guide.pdf"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "HelpLink"             "https://github.com/ORNLSlicer/ORNLSlicer"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLInfoAbout"         "https://github.com/ORNLSlicer/ORNLSlicer"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLUpdateInfo"        "https://github.com/ORNLSlicer/ORNLSlicer/releases"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Readme"               "$INSTDIR\share\doc\slicer2\ornlslicer-user-guide.pdf"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Comments"             "An advanced object slicer by ORNL"
 
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "UninstallString"      "$\"$INSTDIR\uninstall.exe$\""

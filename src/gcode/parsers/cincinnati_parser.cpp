@@ -254,7 +254,7 @@ void CincinnatiParser::M66Handler(QVector<QString> params) {
                     Distance mToMM, mToMicron, mmToInch;
                     mToMM.from(1, mm);
                     mToMicron.from(1, m);
-                    // Slicer 2 is micron internally.  So, instead of 1 to go from inch->mm,
+                    // ORNLSlicer is micron internally. So, instead of 1 to go from inch->mm,
                     //.001 to go from inch->micron
                     mmToInch.from(.001, inch);
                     // the raw form of the equation below is:
