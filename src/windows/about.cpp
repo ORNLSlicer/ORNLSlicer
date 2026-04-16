@@ -16,7 +16,7 @@ AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
     setWindowModality(Qt::ApplicationModal);
 
     setWindowTitle("About " + QApplication::applicationDisplayName());
-    setWindowIcon(QIcon(":/icons/slicer-2_logo.png"));
+    setWindowIcon(QIcon(":/icons/ornlslicer_logo.png"));
 
     QGridLayout* layout = new QGridLayout();
 

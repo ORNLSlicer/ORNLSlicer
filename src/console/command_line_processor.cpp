@@ -112,7 +112,7 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
 
 bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSharedPointer<SettingsBase> options) {
     if (parser.isSet(Constants::ConsoleOptionStrings::kVersion)) {
-        qInfo() << BOOST_PP_STRINGIZE(SLICER2_VERSION);
+        qInfo() << BOOST_PP_STRINGIZE(ORNLSLICER_VERSION);
         return false;
     }
 

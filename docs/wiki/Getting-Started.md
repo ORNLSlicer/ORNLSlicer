@@ -182,7 +182,7 @@ Nix is used to provide reproducible development environments.
      - Select the option for direnv: Reset and reload environment
      - When that is complete, select the blue restart button at the bottom right
    - In the **CMake** tab under **Project Outline**:
-     - Right-click an executable (e.g., `slicer2`).
+     - Right-click an executable (e.g., `ornlslicer`).
      - Select **Set as Build Target** and **Set as Launch/Debug Target**.
    - Go to **Run > Start Debugging**.
 

@@ -2,6 +2,7 @@
   description = "ORNLSlicer - An advanced slicing application for additive manufacturing";
 
   inputs = {
+    # Upstream still publishes this ref as `slicer2`; no `ornlslicer` ref exists yet.
     nixpkgs.url  = gitlab:mdf/nixpkgs/slicer2?host=code.ornl.gov;
     utils.url    = github:numtide/flake-utils;
     appimage = {
@@ -52,7 +53,7 @@
             psimpl   = pkgs.callPackage ./nix/packages/psimpl   {};
           };
 
-          slicer2 = pkgs.qt6.callPackage ./nix/slicer2 {
+          ornlslicer = pkgs.qt6.callPackage ./nix/ornlslicer {
             src     = self;
             version = (lib.fetchVersion ./version.json);
 
@@ -69,8 +70,8 @@
     };
 
     packages = rec {
-      default = slicer2;
-      slicer2 = legacyPackages.ornl.slicer2;
+      default = ornlslicer;
+      ornlslicer = legacyPackages.ornl.ornlslicer;
     };
 
     bundlers = rec {
@@ -80,11 +81,11 @@
     };
 
     devShells = rec {
-      default = s2Dev;
+      default = ornlslicerDev;
 
       # Main developer shell.
-      s2Dev = pkgs.mkShell.override { inherit stdenv; } rec {
-        name = "s2-dev";
+      ornlslicerDev = pkgs.mkShell.override { inherit stdenv; } rec {
+        name = "ornlslicer-dev";
 
         packages = [
           pkgs.git
@@ -109,7 +110,7 @@
         ];
 
         inputsFrom = [
-          legacyPackages.ornl.slicer2
+          legacyPackages.ornl.ornlslicer
         ];
 
         LD_FALLBACK_PATH = "/usr/lib/x86_64-linux-gnu";

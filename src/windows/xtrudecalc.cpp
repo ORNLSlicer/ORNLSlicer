@@ -29,7 +29,7 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     // setFixedSize(420,260);
     setWindowTitle(QApplication::applicationDisplayName() + ": Xtrude Calculator");
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer-2_logo.ico"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.ico"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     // Printing Parameter Section

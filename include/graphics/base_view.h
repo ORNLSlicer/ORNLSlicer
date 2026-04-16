@@ -12,7 +12,7 @@ namespace ORNL {
 class AxesObject;
 class GCodeObject;
 
-/*! \brief Base class for all OpenGL views in Slicer2.
+/*! \brief Base class for all OpenGL views in ORNLSlicer.
  *
  *  This base class is responsible only for the rendering of objects. Derived classes are responsible for the
  *  management and manipulation of parts and other objects. See PartView for an example of this.

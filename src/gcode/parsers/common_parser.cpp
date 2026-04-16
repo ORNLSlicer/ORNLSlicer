@@ -106,7 +106,7 @@ QHash<QString, double> CommonParser::parseFooter() {
                             m_file_settings.insert(it.value(), v.from(value, mm / s));
                         }
                         else {
-                            // material type is 0 based in slicer 2
+                            // material type is 0 based in ORNLSlicer
                             if (key == Constants::GcodeFileVariables::kPlasticType)
                                 m_file_settings.insert(key.toLower(), value - 1);
                             else

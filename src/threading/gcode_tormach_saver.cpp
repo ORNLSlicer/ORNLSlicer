@@ -44,7 +44,7 @@ void GCodeTormachSaver::run() {
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
 
-    out << "$$ ORNL SLICER-2" % newline;
+    out << "$$ ORNLSLICER" % newline;
     out << "$$*" % newline;
     out << "$$ -> MFGNO" % newline;
     out << "PARTNO / ADDITIVE" % newline;

@@ -94,7 +94,7 @@ typedef boost::optional<SurfaceMesh_AABB_Tree::Intersection_and_primitive_id<Seg
 typedef boost::optional<SurfaceMesh_AABB_Tree::Intersection_and_primitive_id<Plane_3>::Type>
     SurfaceMesh_Plane_intersection;
 
-//! \brief a namespace for inexact cartesian sapce. This used to be the default kernal in slicer 2, however is now used
+//! \brief a namespace for inexact cartesian sapce. This used to be the default kernal in ORNLSlicer, however is now used
 //! when a package does not support the exact kernal above
 namespace SimpleCartesian {
 //! \brief CGAL 3D Space Type

@@ -20,8 +20,8 @@ jobs:
 
   linux:
     env:
-      ci_derivation: ornl.slicer2
-      out_link: slicer2.appimage
+      ci_derivation: ornl.ornlslicer
+      out_link: ornlslicer.appimage
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -47,8 +47,8 @@ jobs:
 
   windows:
     env:
-      ci_derivation: windows.ornl.slicer2
-      out_link: slicer2
+      ci_derivation: windows.ornl.ornlslicer
+      out_link: ornlslicer
       nsis_script: scripts/installer.nsi
     runs-on: ubuntu-latest
     defaults:
