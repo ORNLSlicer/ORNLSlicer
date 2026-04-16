@@ -38,6 +38,3 @@ This directory is the canonical documentation source for ORNLSlicer.
 The rename intentionally keeps several legacy technical identifiers in place for compatibility:
 
 - `.s2p` and `.s2c` file extensions
-- `slicer2` binary, package, and build identifiers
-- Installed data paths under `share/slicer2` and `share/doc/slicer2`
-- Internal resource filenames such as `slicer-2_logo.png` and `slicer-2_qr.png`

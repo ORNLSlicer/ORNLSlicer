@@ -17,9 +17,9 @@ class PartMetaItem;
 class RightClickMenu;
 
 /*!
- * \brief The main part manipulation view in Slicer2.
+ * \brief The main part manipulation view in ORNLSlicer.
  *
- * The part view is the main view in Slicer2. It is responsible for the manipulation of
+ * The part view is the main view in ORNLSlicer. It is responsible for the manipulation of
  * added geometry in the build volume.
  *
  * This view makes use of the PartMetaModel class, which is intended to allow for easy

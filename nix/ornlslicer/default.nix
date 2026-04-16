@@ -10,7 +10,7 @@
 }:
 
 stdenv.mkDerivation rec {
-  pname = "slicer2";
+  pname = "ornlslicer";
   inherit version;
   inherit src;
 
@@ -37,7 +37,7 @@ stdenv.mkDerivation rec {
   ];
 
   cmakeFlags = [
-    "-DSLICER2_AUTO_GENERATE_MASTER_CONFIG=OFF"
+    "-DORNLSLICER_AUTO_GENERATE_MASTER_CONFIG=OFF"
   ];
 
   nativeBuildInputs = [

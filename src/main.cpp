@@ -57,9 +57,9 @@ int main(int argc, char* argv[]) {
 
     if (argc > 1) {
         QCoreApplication ca(argc, argv);
-        QCoreApplication::setApplicationName("slicer2");
+        QCoreApplication::setApplicationName("ornlslicer");
         QCoreApplication::setOrganizationName("ornl");
-        QCoreApplication::setApplicationVersion(BOOST_PP_STRINGIZE(SLICER2_VERSION));
+        QCoreApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
 
         QSharedPointer<ORNL::SettingsBase> options = QSharedPointer<ORNL::SettingsBase>::create();
         ORNL::CommandLineConverter clc;
@@ -85,10 +85,10 @@ int main(int argc, char* argv[]) {
         QApplication a(argc, argv);
         QApplication::setStyle(QStyleFactory::create("fusion"));
 
-        QApplication::setApplicationName("slicer2");
+        QApplication::setApplicationName("ornlslicer");
         QApplication::setOrganizationName("ornl");
-        QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(SLICER2_VERSION));
-        QApplication::setApplicationDisplayName("ORNLSlicer-" BOOST_PP_STRINGIZE(SLICER2_VERSION));
+        QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
+        QApplication::setApplicationDisplayName("ORNLSlicer-" BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
 
         Q_INIT_RESOURCE(icons);
         Q_INIT_RESOURCE(shaders);

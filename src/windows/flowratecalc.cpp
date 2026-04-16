@@ -16,7 +16,7 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     // setFixedSize(420,260);
     setWindowTitle(QApplication::applicationDisplayName() + ": Flowrate Calculator");
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer-2_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     m_layout = new QGridLayout();

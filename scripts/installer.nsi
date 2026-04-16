@@ -4,10 +4,10 @@ Unicode true
 ;!define OUTFILE "ornlslicer-installer.exe"
 
 ; Defined on command line.
-;!define EXE_SOURCES "slicer2"
+;!define EXE_SOURCES "ornlslicer"
 
 !define ORG "ornl"
-!define APPLICATION "slicer2"
+!define APPLICATION "ornlslicer"
 
 !define HUMAN_ORG "ORNL"
 !define HUMAN_APPLICATION "ORNLSlicer"
@@ -23,7 +23,7 @@ Unicode true
 ;!define VERSION "${VERSION_MAJOR}.${VERSION_MINOR}.${VERSION_PATCH}+${VERSION_SUFFIX}"
 !system "echo ${APPLICATION} version: ${VERSION}"
 
-!define ICON "../resources/icons/slicer-2_logo.ico"
+!define ICON "../resources/icons/ornlslicer_logo.ico"
 
 ; Info
 Name "ORNLSlicer"
@@ -58,7 +58,7 @@ Section "${HUMAN_APPLICATION}"
 
     ; Generate uninstaller
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayName"          "${HUMAN_APPLICATION}"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayIcon"          "$INSTDIR\slicer-2_logo.ico"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayIcon"          "$INSTDIR\ornlslicer_logo.ico"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Publisher"            "Oak Ridge National Lab"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "InstallLocation"      "$INSTDIR"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "DisplayVersion"       "${VERSION}"
@@ -66,7 +66,7 @@ Section "${HUMAN_APPLICATION}"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "HelpLink"             "https://github.com/ORNLSlicer/ORNLSlicer"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLInfoAbout"         "https://github.com/ORNLSlicer/ORNLSlicer"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "URLUpdateInfo"        "https://github.com/ORNLSlicer/ORNLSlicer/releases"
-    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Readme"               "$INSTDIR\share\doc\slicer2\ornlslicer-user-guide.pdf"
+    WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Readme"               "$INSTDIR\share\doc\ornlslicer\ornlslicer-user-guide.pdf"
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "Comments"             "An advanced object slicer by ORNL"
 
     WriteRegStr   HKLM "Software\Microsoft\Windows\CurrentVersion\Uninstall\${APPLICATION}" "UninstallString"      "$\"$INSTDIR\uninstall.exe$\""
@@ -82,8 +82,8 @@ Section "Start Menu Shortcuts"
     SetShellVarContext all
 
     CreateDirectory "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}"
-    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\Uninstall.lnk"            "$INSTDIR\uninstall.exe"          "" "$INSTDIR\slicer-2_logo.ico" 0
-    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\${HUMAN_APPLICATION}.lnk" "$INSTDIR\bin\${APPLICATION}.exe" "" "$INSTDIR\slicer-2_logo.ico" 0
+    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\Uninstall.lnk"            "$INSTDIR\uninstall.exe"          "" "$INSTDIR\ornlslicer_logo.ico" 0
+    CreateShortcut  "$SMPROGRAMS\${HUMAN_ORG}\${HUMAN_APPLICATION}\${HUMAN_APPLICATION}.lnk" "$INSTDIR\bin\${APPLICATION}.exe" "" "$INSTDIR\ornlslicer_logo.ico" 0
 SectionEnd
 
 Section "Uninstall"

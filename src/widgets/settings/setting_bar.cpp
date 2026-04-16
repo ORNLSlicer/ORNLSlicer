@@ -52,7 +52,7 @@ void SettingBar::barTabWarning(int count, QString pane) {
 SettingTab* SettingBar::getTab(QString major, QString minor) {
     SettingTab* tab = this->getPane(major)->getTab(minor);
     if (tab == nullptr)
-        tab = this->getPane(major)->newTab(minor, QIcon(":/icons/slicer-2_logo.png"),
+        tab = this->getPane(major)->newTab(minor, QIcon(":/icons/ornlslicer_logo.png"),
                                            PreferencesManager::getInstance()->isSettingHidden(major, minor));
 
     return tab;

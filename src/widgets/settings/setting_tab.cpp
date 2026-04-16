@@ -122,7 +122,7 @@ void SettingTab::headerWarning(int count) {
         m_header->setIcon(QIcon(":/icons/warning.png"));
     }
     else {
-        m_header->setIcon(QIcon(":/icons/slicer-2_logo.png"));
+        m_header->setIcon(QIcon(":/icons/ornlslicer_logo.png"));
     }
 }
 

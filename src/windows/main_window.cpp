@@ -31,7 +31,7 @@ void MainWindow::continueStartup() {
     QString app_path = qApp->applicationDirPath();
 
     QStringList template_paths = {app_path + "/templates/", app_path + "/../../../templates/",
-                                  app_path + "/../share/slicer2/templates/"};
+                                  app_path + "/../share/ornlslicer/templates/"};
 
     QString templates;
 
@@ -155,7 +155,7 @@ void MainWindow::setupWindows() {
     this->resize(Constants::UI::MainWindow::kWindowSize);
 
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer-2_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     this->setWindowIcon(icon);
 
     // Preferences Window
@@ -422,7 +422,7 @@ void MainWindow::setupActions() {
     m_actions["repo"] = {"Open Website/Repository", ":/icons/web_black.png", false, QKeySequence(), nullptr};
     m_actions["bug"] = {"Report Bug", ":/icons/bug_black.png", false, QKeySequence(), nullptr};
     m_actions["about_s2"] = {QString("About %1").arg(QApplication::applicationDisplayName()),
-                             ":/icons/slicer-2_logo.png", false, QKeySequence(), nullptr};
+                             ":/icons/ornlslicer_logo.png", false, QKeySequence(), nullptr};
     m_actions["about_qt"] = {"About Qt", ":/icons/qt.png", false, QKeySequence(), nullptr};
 
     // Menu Debug
@@ -675,7 +675,7 @@ void MainWindow::setupEvents() {
 
     connect(m_actions["manual"].action, &QAction::triggered, this, [this] {
         QDesktopServices::openUrl(
-            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/slicer2/ornlslicer-user-guide.pdf"));
+            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/ornlslicer/ornlslicer-user-guide.pdf"));
     });
     connect(m_actions["repo"].action, &QAction::triggered, this,
             [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/ORNLSlicer")); });

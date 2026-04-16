@@ -8,7 +8,7 @@
 namespace ORNL {
 LayerTimesWindow::LayerTimesWindow(QWidget* parent) {
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer-2_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     m_layout = new QGridLayout();

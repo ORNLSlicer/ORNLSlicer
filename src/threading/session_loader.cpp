@@ -89,7 +89,8 @@ void SessionLoader::saveSession() {
     }
 
     zip_entry_open(zip, "Version.txt");
-    std::string version = "This is an ORNLSlicer project file.\nVersion: " + std::string(BOOST_PP_STRINGIZE(SLICER2_VERSION)) + "\n";
+    std::string version =
+        "This is an ORNLSlicer project file.\nVersion: " + std::string(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION)) + "\n";
     zip_entry_write(zip, version.c_str(), version.length());
     zip_entry_close(zip);
 

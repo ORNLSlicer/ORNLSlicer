@@ -1,6 +1,6 @@
 # ORNLSlicer
 
-<img align="left" width="100" height="100" src="resources/icons/slicer-2_logo.png" alt="ORNLSlicer logo" />
+<img align="left" width="100" height="100" src="resources/icons/ornlslicer_logo.png" alt="ORNLSlicer logo" />
 
 ORNLSlicer is an open-source toolpath planning and slicing framework developed at Oak Ridge National Laboratory (ORNL) for additive manufacturing processes. It provides advanced algorithms for generating efficient, reliable toolpaths for technologies such as Fused Deposition Modeling (FDM) and Directed Energy Deposition (DED), with an emphasis on print quality, process optimization, and extensibility.
 

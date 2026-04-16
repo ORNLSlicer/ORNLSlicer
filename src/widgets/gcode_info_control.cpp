@@ -183,7 +183,7 @@ void GCodeInfoControl::setupHeaderWidget() {
     hlayout->setContentsMargins(0, 0, 0, 0);
 
     QLabel* picture = new QLabel;
-    picture->setPixmap((new QIcon(":/icons/slicer-2_logo.png"))->pixmap(QSize(28, 28), QIcon::Normal, QIcon::On));
+    picture->setPixmap((new QIcon(":/icons/ornlslicer_logo.png"))->pixmap(QSize(28, 28), QIcon::Normal, QIcon::On));
 
     QFrame* line = new QFrame;
     line->setFrameShape(QFrame::VLine);

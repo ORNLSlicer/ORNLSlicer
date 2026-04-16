@@ -49,7 +49,7 @@ struct Triangle {
  *
  * Note that all graphics objects have their own set of buffers. In OpenGL, switching
  * buffers is one of the more expensive operations. While this is fine
- * for most cases in Slicer2, having more than a few hundred objects shown at once
+ * for most cases in ORNLSlicer, having more than a few hundred objects shown at once
  * can start to incur slowdown. In these cases, it is recommended to use the GraphicsObject
  * as a sort of container object. See GCodeObject for an example of this.
  *
