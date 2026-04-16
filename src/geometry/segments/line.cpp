@@ -1,6 +1,13 @@
 #include "geometry/segments/line.h"
 
+#include <vector>
+
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "geometry/segment_base.h"
 #include "graphics/support/shape_factory.h"
 
 namespace ORNL {

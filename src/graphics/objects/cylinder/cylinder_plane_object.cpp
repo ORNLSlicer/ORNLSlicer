@@ -1,5 +1,11 @@
 #include "graphics/objects/cylinder/cylinder_plane_object.h"
 
+#include <qcolor.h>
+#include <qvectornd.h>
+
+#include "graphics/graphics_object.h"
+#include "graphics/objects/cylinder_object.h"
+
 namespace ORNL {
 CylinderPlaneObject::CylinderPlaneObject(BaseView* view, float radius, QColor color)
     : CylinderPlaneObject(view, radius, 0, color) {

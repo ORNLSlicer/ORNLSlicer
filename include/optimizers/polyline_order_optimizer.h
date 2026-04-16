@@ -1,9 +1,14 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

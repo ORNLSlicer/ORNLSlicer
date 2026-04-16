@@ -1,5 +1,13 @@
 #include "geometry/segments/travel.h"
 
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "geometry/segment_base.h"
+#include "utilities/enums.h"
+
 namespace ORNL {
 TravelSegment::TravelSegment(Point start, Point end, TravelLiftType liftType)
     : m_lift_type(liftType), SegmentBase(start, end) {

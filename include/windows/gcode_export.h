@@ -1,11 +1,15 @@
 #pragma once
 
-#include "QCheckBox"
-#include "QLayout"
-#include "QLineEdit"
-#include "QPushButton"
-#include "QTextEdit"
-#include "QWidget"
+#include <QCheckBox>
+#include <QLayout>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QTextEdit>
+#include <QWidget>
+#include <qboxlayout.h>
+#include <qhashfunctions.h>
+#include <qtmetamacros.h>
+
 #include "gcode/gcode_meta.h"
 
 namespace ORNL {

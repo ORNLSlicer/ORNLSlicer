@@ -1,5 +1,11 @@
 #include "widgets/gcodehighlighter.h"
 
+#include <qhash.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qsyntaxhighlighter.h>
+#include <qtextformat.h>
+
 namespace ORNL {
 GcodeHighlighter::GcodeHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {}
 

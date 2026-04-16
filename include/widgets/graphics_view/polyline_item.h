@@ -1,6 +1,11 @@
 #pragma once
 
-#include "QGraphicsItem"
+#include <cstdint>
+
+#include <QGraphicsItem>
+#include <qcolor.h>
+#include <qobject.h>
+
 #include "geometry/polyline.h"
 
 namespace ORNL {

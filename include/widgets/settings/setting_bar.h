@@ -1,17 +1,26 @@
 #pragma once
 
-#include "QComboBox"
-#include "QIcon"
-#include "QLineEdit"
-#include "QMap"
-#include "QMessageBox"
-#include "QScrollArea"
-#include "QString"
-#include "QStringList"
-#include "QTabWidget"
-#include "QVBoxLayout"
-#include "QWidget"
+#include <QComboBox>
+#include <QIcon>
+#include <QLineEdit>
+#include <QMap>
+#include <QMessageBox>
+#include <QScrollArea>
+#include <QString>
+#include <QStringList>
+#include <QTabWidget>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "configs/settings_base.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_pane.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 class SettingTab;

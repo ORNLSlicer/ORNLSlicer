@@ -1,6 +1,7 @@
 #pragma once
 
-#include "QMetaType"
+#include <QMetaType>
+
 #include "units/unit.h"
 
 namespace ORNL {

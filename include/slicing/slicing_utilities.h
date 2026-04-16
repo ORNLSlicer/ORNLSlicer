@@ -1,10 +1,21 @@
 #pragma once
 
+#include <tuple>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+
 #include "configs/settings_base.h"
 #include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
 #include "part/part.h"
-#include "step/global_layer.h"
 #include "threading/abs_slicing_thread.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /*!

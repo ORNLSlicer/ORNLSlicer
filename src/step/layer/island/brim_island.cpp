@@ -1,7 +1,17 @@
 #include "step/layer/island/brim_island.h"
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/settings_polygon.h"
 #include "managers/settings/settings_manager.h"
+#include "step/layer/island/island_base.h"
 #include "step/layer/regions/brim.h"
+#include "step/layer/regions/region_base.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 BrimIsland::BrimIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,

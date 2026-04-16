@@ -1,8 +1,30 @@
 #include "graphics/view/part_view.h"
 
-#include "QMessageBox"
-#include "QStack"
-#include "QToolTip"
+#include <math.h>
+
+#include <algorithm>
+#include <cmath>
+
+#include <QMessageBox>
+#include <QStack>
+#include <QToolTip>
+#include <qcolor.h>
+#include <qcursor.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qmath.h>
+#include <qmatrix4x4.h>
+#include <qnamespace.h>
+#include <qnumeric.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "graphics/graphics_object.h"
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cube/plane_object.h"
@@ -18,6 +40,9 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "part/part.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 #include "widgets/part_widget/right_click_menu.h"

@@ -1,7 +1,14 @@
 #pragma once
 
-#include "configs/settings_base.h"
+#include <vector>
+
+#include <qhashfunctions.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!

@@ -1,9 +1,23 @@
 #include "widgets/settings/setting_row_base.h"
 
-#include "QCheckBox"
-#include "QComboBox"
-#include "QSpinBox"
+#include <QCheckBox>
+#include <QComboBox>
+#include <QSpinBox>
+#include <qgridlayout.h>
+#include <qhashfunctions.h>
+#include <qlabel.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qnamespace.h>
+#include <qpicture.h>
+#include <qsharedpointer.h>
+#include <qwidget.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 

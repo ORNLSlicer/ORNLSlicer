@@ -1,5 +1,21 @@
 #include "geometry/point.h"
 
+#include <cmath>
+
+#include <clipper.hpp>
+#include <qassert.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmath.h>
+#include <qmatrix4x4.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/mesh/advanced/mesh_types.h"
+#include "units/derivative_units.h"
+#include "units/unit.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

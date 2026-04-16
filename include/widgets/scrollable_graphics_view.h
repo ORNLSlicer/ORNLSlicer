@@ -1,6 +1,8 @@
 #pragma once
 
-#include "QGraphicsView"
+#include <QGraphicsView>
+#include <qtmetamacros.h>
+#include <qwidget.h>
 
 class QLabel;
 

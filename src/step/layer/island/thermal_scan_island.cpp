@@ -1,6 +1,17 @@
 #include "step/layer/island/thermal_scan_island.h"
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/settings_polygon.h"
+#include "step/layer/island/island_base.h"
+#include "step/layer/regions/region_base.h"
 #include "step/layer/regions/thermal_scan.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 ThermalScanIsland::ThermalScanIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,

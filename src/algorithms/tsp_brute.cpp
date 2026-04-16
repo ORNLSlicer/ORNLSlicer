@@ -1,6 +1,17 @@
 #include "algorithms/tsp_brute.h"
 
+#include <cstdlib>
+#include <limits>
+
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "algorithms/algorithm_base.h"
 #include "algorithms/knn.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "step/layer/island/island_base.h"
+#include "units/unit.h"
 
 namespace ORNL {
 

@@ -1,14 +1,36 @@
 
 #include "managers/session_manager.h"
 
-#include "QCoreApplication"
-#include "QStandardPaths"
-#include "QUuid"
+#include <cstdlib>
+
+#include <QCoreApplication>
+#include <QStandardPaths>
+#include <QUuid>
+#include <data_stream.h>
+#include <qcontainerfwd.h>
+#include <qdatetime.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qhash.h>
+#include <qlogging.h>
+#include <qmatrix4x4.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <tcp_connection.h>
+#include <tcp_server.h>
+
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/mesh_factory.h"
+#include "geometry/mesh/open_mesh.h"
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
 #include "threading/slicers/image_slicer.h"
@@ -16,7 +38,12 @@
 #include "threading/slicers/real_time_polymer_slicer.h"
 #include "threading/slicers/real_time_rpbf_slicer.h"
 #include "threading/slicers/rpbf_slicer.h"
+#include "units/derivative_units.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
 QSharedPointer<SessionManager> SessionManager::m_singleton = QSharedPointer<SessionManager>();

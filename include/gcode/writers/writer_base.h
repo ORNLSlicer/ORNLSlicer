@@ -1,12 +1,19 @@
 #pragma once
 
-#include "QDate"
-#include "QFile"
-#include "QStringBuilder"
-#include "QTextStream"
-#include "QVector3D"
+#include <QDate>
+#include <QFile>
+#include <QStringBuilder>
+#include <QTextStream>
+#include <QVector3D>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "gcode/gcode_meta.h"
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

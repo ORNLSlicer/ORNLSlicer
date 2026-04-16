@@ -1,5 +1,22 @@
 #include "slicing/layer_additions.h"
 
+#include <algorithm>
+#include <limits>
+
+#include <qcontainerfwd.h>
+#include <qdir.h>
+#include <qlist.h>
+#include <qmath.h>
+#include <qminmax.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/settings_polygon.h"
+#include "part/part.h"
+#include "slicing/buffered_slicer.h"
 #include "step/layer/island/brim_island.h"
 #include "step/layer/island/laser_scan_island.h"
 #include "step/layer/island/polymer_island.h"
@@ -7,10 +24,15 @@
 #include "step/layer/island/skirt_island.h"
 #include "step/layer/island/thermal_scan_island.h"
 #include "step/layer/island/wire_feed_island.h"
+#include "step/layer/layer.h"
 #include "step/layer/scan_layer.h"
+#include "step/step.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 #if HAVE_WIRE_FEED
-    #include "wire_feed/wire_feed.h"
+    #include <wire_feed/wire_feed.h>
 #endif
 
 namespace ORNL {
@@ -204,12 +226,11 @@ void LayerAdditions::createWireFeedIslands(QSharedPointer<Layer> layer,
     QSharedPointer<PolymerIsland> base_isl = QSharedPointer<PolymerIsland>::create(
         base, base_sb, next_layer_meta->settings_polygons, next_layer_meta->geometry);
 
-    QSharedPointer<PolymerIsland> surface_isl = QSharedPointer<PolymerIsland>::create(
-        surface, next_layer_meta->settings, next_layer_meta->settings_polygons);
+    QSharedPointer<PolymerIsland> surface_isl =
+        QSharedPointer<PolymerIsland>::create(surface, next_layer_meta->settings, next_layer_meta->settings_polygons);
 
-    QSharedPointer<WireFeedIsland> wire_feed_isl =
-        QSharedPointer<WireFeedIsland>::create(next_layer_meta->setting_bounded_geometry, next_layer_meta->settings,
-                                               next_layer_meta->settings_polygons);
+    QSharedPointer<WireFeedIsland> wire_feed_isl = QSharedPointer<WireFeedIsland>::create(
+        next_layer_meta->setting_bounded_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
     if (new_islands) {
         layer->addIsland(IslandType::kPolymer, base_isl);
         layer->addIsland(IslandType::kPolymer, surface_isl);

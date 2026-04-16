@@ -1,10 +1,15 @@
 #include "geometry/geometry_debug.h"
 
-#include "geometry/point.h"
-
 #include <QDebug>
 #include <QMutex>
 #include <QMutexLocker>
+#include <qcontainerfwd.h>
+#include <qlogging.h>
+
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
 
 namespace {
 QMutex& desmosOutputMutex() {

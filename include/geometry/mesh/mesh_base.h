@@ -1,5 +1,18 @@
 #pragma once
 
+#include <utility>
+#include <vector>
+
+#include <CGAL/boost/graph/graph_traits_Polyhedron_3.h>
+#include <CGAL/property_map.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmatrix4x4.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/mesh/mesh_face.h"
 #include "geometry/mesh/mesh_vertex.h"
@@ -7,7 +20,6 @@
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polyline.h"
-#include "geometry/segments/line.h"
 #include "units/derivative_units.h"
 #include "units/unit.h"
 #include "utilities/enums.h"

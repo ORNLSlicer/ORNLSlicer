@@ -1,6 +1,17 @@
 #include "graphics/objects/text_object.h"
 
-#include "QPainter"
+#include <GL/gl.h>
+
+#include <vector>
+
+#include <QPainter>
+#include <qhashfunctions.h>
+#include <qimage.h>
+#include <qmatrix4x4.h>
+#include <qstringview.h>
+#include <qtypes.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/support/shape_factory.h"
 #include "utilities/constants.h"
 

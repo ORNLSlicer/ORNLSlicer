@@ -1,5 +1,13 @@
 #include "widgets/visualization_color_picker.h"
 
+#include <qcolor.h>
+#include <qcolordialog.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qobject.h>
+#include <qpushbutton.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
 
 namespace ORNL {

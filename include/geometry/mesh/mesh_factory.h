@@ -1,6 +1,8 @@
 #pragma once
 
 #include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/open_mesh.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!

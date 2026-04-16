@@ -1,6 +1,18 @@
 #pragma once
 
+#include <functional>
+
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/path.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
 #include "threading/traditional_ast.h"
 
 namespace ORNL {

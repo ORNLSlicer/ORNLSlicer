@@ -1,5 +1,12 @@
 #pragma once
 
+#include <vector>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
 
 namespace ORNL {

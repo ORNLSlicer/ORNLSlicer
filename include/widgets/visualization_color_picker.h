@@ -1,10 +1,13 @@
 #pragma once
 
-#include "QColorDialog"
-#include "QGridLayout"
-#include "QLabel"
-#include "QPushButton"
-#include "QWidget"
+#include <QColorDialog>
+#include <QGridLayout>
+#include <QLabel>
+#include <QPushButton>
+#include <QWidget>
+#include <qcolor.h>
+#include <qobject.h>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 class VisualizationColorPicker : public QWidget {

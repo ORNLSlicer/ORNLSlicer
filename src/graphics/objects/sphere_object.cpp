@@ -1,5 +1,12 @@
 #include "graphics/objects/sphere_object.h"
 
+#include <vector>
+
+#include <qcolor.h>
+#include <qmatrix4x4.h>
+#include <qtypes.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/support/shape_factory.h"
 
 namespace ORNL {

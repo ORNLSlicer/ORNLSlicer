@@ -1,8 +1,21 @@
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 
+#include <GL/gl.h>
+
+#include <cstdlib>
+#include <vector>
+
+#include <qlist.h>
+#include <qmath.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/segment_base.h"
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cylinder/cylinder_plane_object.h"
 #include "graphics/objects/part_object.h"
+#include "graphics/objects/printer/printer_object.h"
 #include "graphics/support/shape_factory.h"
 #include "utilities/constants.h"
 #include "utilities/mathutils.h"
@@ -68,33 +81,6 @@ QList<QSharedPointer<PartObject>> CylindricalPrinterObject::externalParts() {
             (!MathUtils::glEquals(partMax.z(), printerMaxZ) && partMax.z() > printerMaxZ))
             ret.append(gop);
     }
-
-    /* More accurate but slower.
-    for(auto& child : this->allChildren()) {
-        auto gop = child.dynamicCast<PartObject>();
-        if (gop.isNull()) continue;
-
-        for(Triangle tri : gop->triangles()) {
-            for (uint i = 0; i < 3; i++) {
-                QVector3D pt = tri[i];
-
-                float dist = qPow(pt.x() - origin.x(), 2) + qPow(pt.y() - origin.y(), 2);
-                float z = pt.z();
-
-                if (dist > radiusSquared ||
-                   (!MathUtils::glEquals(z, printerMinZ) && z < printerMinZ) ||
-                   (!MathUtils::glEquals(z, printerMaxZ) && z > printerMaxZ)) {
-
-                   ret.append(gop);
-                   // A goto in its natural habitat.
-                   goto next_child;
-                }
-            }
-        }
-
-        next_child:;
-    }
-    */
 
     return ret;
 }

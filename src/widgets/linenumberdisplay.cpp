@@ -1,6 +1,7 @@
 #include "widgets/linenumberdisplay.h"
 
-#include "QSize"
+#include <QSize>
+
 #include "widgets/gcodetextboxwidget.h"
 
 namespace ORNL {

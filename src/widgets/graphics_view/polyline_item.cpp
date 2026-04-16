@@ -1,7 +1,14 @@
 #include "widgets/graphics_view/polyline_item.h"
 
-#include "QPainter"
+#include <cstdint>
+
+#include <QPainter>
+#include <qgraphicsitem.h>
+#include <qnamespace.h>
+#include <qobject.h>
+
 #include "geometry/point.h"
+#include "geometry/polyline.h"
 
 namespace ORNL {
 PolylineGraphicsItem::PolylineGraphicsItem(QGraphicsItem* parent) : QGraphicsItem(parent) { m_color = Qt::green; }

@@ -1,9 +1,15 @@
 #pragma once
 
-#include "QMenu"
-#include "QTreeWidget"
-#include "QVBoxLayout"
-#include "QWidget"
+#include <QMenu>
+#include <QTreeWidget>
+#include <QVBoxLayout>
+#include <QWidget>
+#include <qmap.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 #include "widgets/part_widget/part_control/part_control_tree_widget.h"
 #include "widgets/part_widget/right_click_menu.h"

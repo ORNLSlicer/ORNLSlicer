@@ -1,13 +1,27 @@
 #include "widgets/gcodetextboxwidget.h"
 
-#include "managers/preferences_manager.h"
-#include "qpainter.h"
-#include "qscrollbar.h"
-#include "qtextdocumentfragment.h"
-#include "widgets/linenumberdisplay.h"
-
 #include <algorithm>
 #include <cmath>
+
+#include <qcontainerfwd.h>
+#include <qevent.h>
+#include <qguiapplication.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qnumeric.h>
+#include <qobject.h>
+#include <qpainter.h>
+#include <qplaintextedit.h>
+#include <qscrollbar.h>
+#include <qset.h>
+#include <qtextdocumentfragment.h>
+#include <qtextformat.h>
+#include <qtextobject.h>
+#include <qtmetamacros.h>
+
+#include "managers/preferences_manager.h"
+#include "widgets/linenumberdisplay.h"
 
 namespace ORNL {
 GcodeTextBoxWidget::GcodeTextBoxWidget(QWidget* parent)

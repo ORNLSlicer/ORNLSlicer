@@ -1,15 +1,23 @@
 #pragma once
 
-#include "QCheckBox"
-#include "QComboBox"
-#include "QFrame"
-#include "QGridLayout"
-#include "QLabel"
-#include "QLineEdit"
-#include "QSpinBox"
-#include "QTimer"
-#include "QToolButton"
-#include "QWidget"
+#include <QCheckBox>
+#include <QComboBox>
+#include <QFrame>
+#include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QSpinBox>
+#include <QTimer>
+#include <QToolButton>
+#include <QWidget>
+#include <qhash.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qset.h>
+#include <qslider.h>
+#include <qtextformat.h>
+#include <qtmetamacros.h>
+
 #include "utilities/enums.h"
 #include "widgets/gcodetextboxwidget.h"
 

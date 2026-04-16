@@ -1,8 +1,12 @@
 #pragma once
 
-#include "QDialog"
-#include "QMap"
-#include "QSet"
+#include <QDialog>
+#include <QMap>
+#include <QSet>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "part/part.h"
 
 // Forward

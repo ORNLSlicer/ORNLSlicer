@@ -1,7 +1,14 @@
 #include "graphics/support/camera_manager.h"
 
-#include "QtMath"
+#include <cmath>
+
+#include <QtMath>
+#include <qmatrix4x4.h>
+#include <qpoint.h>
+#include <qvectornd.h>
+
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

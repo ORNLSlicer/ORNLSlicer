@@ -1,7 +1,22 @@
 #include "widgets/settings/setting_combo_box.h"
 
-#include "QToolTip"
-#include "QWheelEvent"
+#include <QToolTip>
+#include <QWheelEvent>
+#include <qcombobox.h>
+#include <qcontainerfwd.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 SettingComboBox::SettingComboBox(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key, fifojson json,

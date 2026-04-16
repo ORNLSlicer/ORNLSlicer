@@ -1,5 +1,7 @@
 #include "cross_section/terminus.h"
 
+#include <qtypes.h>
+
 namespace ORNL {
 const Terminus Terminus::INVALID_TERMINUS {~static_cast<Index>(0U)};
 

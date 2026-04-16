@@ -1,5 +1,15 @@
 #pragma once
 
+#include <utility>
+#include <vector>
+
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "geometry/segment_base.h"
 #include "graphics/graphics_object.h"
 #include "utilities/enums.h"

@@ -1,11 +1,14 @@
 #include "threading/gcode_adamantine_saver.h"
 
-#include "QDir"
-#include "QFile"
-#include "QRegularExpression"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
+#include <QDir>
+#include <QFile>
+#include <QRegularExpression>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <qcontainerfwd.h>
+
+#include "gcode/gcode_meta.h"
 
 namespace ORNL {
 GCodeAdamantineSaver::GCodeAdamantineSaver(QString tempLocation, QString path, QString filename, QString text,

@@ -1,6 +1,11 @@
 #pragma once
 
-#include "QObject"
+#include <QObject>
+#include <qlist.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {

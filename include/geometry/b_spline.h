@@ -1,7 +1,9 @@
 #pragma once
 
-#include "geometry/path.h"
-#include "geometry/segment_base.h"
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "geometry/point.h"
 #include "geometry/segments/bezier.h"
 
 namespace ORNL {

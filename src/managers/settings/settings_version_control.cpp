@@ -1,8 +1,15 @@
 #include "managers/settings/settings_version_control.h"
 
-#include "QDateTime"
-#include "QRegularExpression"
+#include <list>
+#include <string>
+#include <utility>
+
+#include <QDateTime>
+#include <QRegularExpression>
+#include <qhashfunctions.h>
+
 #include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 void SettingsVersionControl::rollSettingsForward(double& version, fifojson& settings) {

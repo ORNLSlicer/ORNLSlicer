@@ -1,8 +1,12 @@
 #pragma once
 
-#include "QVector"
-#include "QVector3D"
-#include "clipper.hpp"
+#include <vector>
+
+#include <QVector3D>
+#include <QVector>
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "units/unit.h"
 

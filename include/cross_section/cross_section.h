@@ -1,5 +1,8 @@
 #pragma once
 
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/plane.h"

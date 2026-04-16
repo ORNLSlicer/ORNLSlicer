@@ -1,6 +1,9 @@
 #pragma once
 
-#include "QMatrix4x4"
+#include <QMatrix4x4>
+#include <qpoint.h>
+#include <qvectornd.h>
+
 #include "utilities/constants.h"
 
 namespace ORNL {

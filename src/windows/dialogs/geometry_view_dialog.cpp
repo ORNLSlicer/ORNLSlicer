@@ -1,8 +1,18 @@
 #include "windows/dialogs/geometry_view_dialog.h"
 
+#include <qboxlayout.h>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qdialog.h>
+#include <qgraphicsscene.h>
+#include <qpolygon.h>
+#include <qwidget.h>
+
 #include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
 #include "widgets/graphics_view/grid_scene.h"
 #include "widgets/graphics_view/polyline_item.h"
+#include "widgets/scrollable_graphics_view.h"
 
 namespace ORNL {
 

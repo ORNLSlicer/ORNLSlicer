@@ -1,6 +1,20 @@
 #include "gcode/writers/cincinnati_writer.h"
 
-#include "QStringBuilder"
+#include <cmath>
+#include <limits>
+
+#include <QStringBuilder>
+#include <qcontainerfwd.h>
+#include <qnumeric.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "gcode/gcode_meta.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -933,14 +947,15 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
         // move in Z only
         Distance target_z = destination.z() + z_offset;
 
-        //If sequential mode && target Z is less than current Z, adjust Z. This is for completing one object and moving to the next.
+        // If sequential mode && target Z is less than current Z, adjust Z. This is for completing one object and moving
+        // to the next.
         if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_z < m_last_z)) {
             target_z = m_last_z + m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
         else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
-            m_is_travel == true && (target_z < m_last_z)) {
+                 m_is_travel == true && (target_z < m_last_z)) {
             target_z = m_last_z;
             m_is_travel = false;
         }
@@ -962,14 +977,15 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
         // move in W only
         Distance target_w = destination.z() * -1.0;
 
-        //If sequential mode && target W is greater than current W, adjust W. This is for completing one object and moving to the next.
+        // If sequential mode && target W is greater than current W, adjust W. This is for completing one object and
+        // moving to the next.
         if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_w > m_last_w)) {
             target_w = m_last_w - m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
         else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
-            m_is_travel == true && (target_w > m_last_w)) {
+                 m_is_travel == true && (target_w > m_last_w)) {
             target_w = m_last_w;
             m_is_travel = false;
         }

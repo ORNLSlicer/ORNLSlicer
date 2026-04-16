@@ -1,8 +1,12 @@
 #include "utilities/constants.h"
 
-#include "units/unit.h"
-
 #include <limits>
+#include <string>
+
+#include <qcontainerfwd.h>
+#include <qhash.h>
+
+#include "units/unit.h"
 
 namespace ORNL {
 //================================================================================

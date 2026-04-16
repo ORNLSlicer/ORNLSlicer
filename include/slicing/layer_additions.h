@@ -1,7 +1,10 @@
 #pragma once
 
+#include <qdir.h>
+#include <qsharedpointer.h>
+
 #include "part/part.h"
-#include "preprocessor.h"
+#include "slicing/buffered_slicer.h"
 #include "step/layer/layer.h"
 
 namespace ORNL {

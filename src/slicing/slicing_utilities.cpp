@@ -1,6 +1,25 @@
 #include "slicing/slicing_utilities.h"
 
+#include <tuple>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "cross_section/cross_section.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "part/part.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 

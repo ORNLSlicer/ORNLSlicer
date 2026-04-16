@@ -1,6 +1,9 @@
 #pragma once
 
-#include "QCommandLineParser"
+#include <QCommandLineParser>
+#include <qdir.h>
+#include <qsharedpointer.h>
+
 #include "managers/settings/settings_manager.h"
 
 namespace ORNL {

@@ -1,5 +1,14 @@
 #include "gcode/gcode_motion_estimate.h"
 
+#include <math.h>
+
+#include <qcontainerfwd.h>
+#include <qmath.h>
+#include <qminmax.h>
+#include <qnumeric.h>
+
+#include "units/unit.h"
+
 namespace ORNL {
 void MotionEstimation::Init() {
     // values in Slicer-1 GCodes.cs are in mm/s2, convert to micron/s2

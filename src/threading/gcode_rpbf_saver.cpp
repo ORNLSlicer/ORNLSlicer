@@ -1,13 +1,24 @@
 ﻿#include "threading/gcode_rpbf_saver.h"
 
-#include "QDir"
-#include "QFile"
-#include "QRegularExpression"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
+#include <math.h>
+
+#include <QDir>
+#include <QFile>
+#include <QRegularExpression>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <qcontainerfwd.h>
+#include <qlatin1stringview.h>
+#include <qobject.h>
+#include <qstringliteral.h>
+#include <qstringmatcher.h>
+
+#include "gcode/gcode_meta.h"
 #include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 GCodeRPBFSaver::GCodeRPBFSaver(QString tempLocation, QString path, QString filename, QString text, GcodeMeta meta,

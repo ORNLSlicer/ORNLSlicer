@@ -1,7 +1,8 @@
 ﻿#pragma once
 
-#include "QQuaternion"
-#include "QVector3D"
+#include <QQuaternion>
+#include <QVector3D>
+
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "point.h"
 

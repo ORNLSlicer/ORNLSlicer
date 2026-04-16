@@ -1,5 +1,18 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 
 namespace ORNL {

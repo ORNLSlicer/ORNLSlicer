@@ -1,14 +1,31 @@
 #include "managers/settings/settings_manager.h"
 
-#include "QCoreApplication"
-#include "QDirIterator"
-#include "QFile"
-#include "QMessageBox"
-#include "QRegularExpression"
-#include "QStandardPaths"
+#include <iostream>
+#include <string>
+
+#include <QCoreApplication>
+#include <QDirIterator>
+#include <QFile>
+#include <QMessageBox>
+#include <QRegularExpression>
+#include <QStandardPaths>
+#include <nlohmann/json.hpp>
+#include <qcontainerfwd.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qhash.h>
+#include <qlogging.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "configs/settings_range.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_version_control.h"
-#include "nlohmann/json.hpp"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 QSharedPointer<SettingsManager> SettingsManager::m_singleton = QSharedPointer<SettingsManager>();

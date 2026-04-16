@@ -1,12 +1,22 @@
 #include "threading/gcode_simulation_output.h"
 
-#include "QDir"
-#include "QFile"
-#include "QRegularExpression"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
+#include <cstddef>
+
+#include <QDir>
+#include <QFile>
+#include <QRegularExpression>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <qcontainerfwd.h>
+#include <qfileinfo.h>
+#include <qobject.h>
+#include <qtypes.h>
+
+#include "gcode/gcode_meta.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 GCodeSimulationOutput::GCodeSimulationOutput(const QString& temp_location, const QString& path, const QString& filename,

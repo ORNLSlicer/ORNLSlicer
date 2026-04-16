@@ -1,6 +1,15 @@
 #include "gcode/parsers/rpbf_parser.h"
 
-#include "QStringBuilder"
+#include <functional>
+
+#include <QStringBuilder>
+#include <qcontainerfwd.h>
+#include <qlatin1stringview.h>
+#include <qstringmatcher.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 RPBFParser::RPBFParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

@@ -1,8 +1,21 @@
 #include "windows/layer_times_window.h"
 
-#include "QIcon"
-#include "QLabel"
-#include "QStringBuilder"
+#include <climits>
+
+#include <QIcon>
+#include <QLabel>
+#include <QStringBuilder>
+#include <qgridlayout.h>
+#include <qlineedit.h>
+#include <qlist.h>
+#include <qminmax.h>
+#include <qobject.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qtextedit.h>
+#include <qwidget.h>
+
+#include "units/unit.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

@@ -1,6 +1,15 @@
 #include "optimizers/point_order_optimizer.h"
 
-#include "QRandomGenerator"
+#include <cfloat>
+
+#include <QRandomGenerator>
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+
+#include "geometry/point.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 int PointOrderOptimizer::linkToPoint(Point current_location, Polyline polyline, uint layer_number,

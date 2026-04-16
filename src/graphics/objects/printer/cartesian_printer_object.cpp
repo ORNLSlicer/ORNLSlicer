@@ -1,8 +1,22 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 
+#include <GL/gl.h>
+
+#include <cmath>
+#include <cstdlib>
+#include <vector>
+
+#include <qlist.h>
+#include <qmath.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/segment_base.h"
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cube/plane_object.h"
 #include "graphics/objects/part_object.h"
+#include "graphics/objects/printer/printer_object.h"
 #include "graphics/support/shape_factory.h"
 #include "utilities/constants.h"
 #include "utilities/mathutils.h"
@@ -69,33 +83,6 @@ QList<QSharedPointer<PartObject>> CartesianPrinterObject::externalParts() {
             (!MathUtils::glEquals(partMax.z(), printerMax.z()) && partMax.z() > printerMax.z()))
             ret.append(gop);
     }
-
-    /* More accurate but slower.
-    for(auto& child : this->allChildren()) {
-        auto gop = child.dynamicCast<PartObject>();
-        if (gop.isNull()) continue;
-
-        for(Triangle tri : gop->triangles()) {
-            for (uint i = 0; i < 3; i++) {
-                QVector3D pt = tri[i];
-
-                if ((!MathUtils::glEquals(pt.x(), printerMin.x()) && pt.x() < printerMin.x()) ||
-                    (!MathUtils::glEquals(pt.y(), printerMin.y()) && pt.y() < printerMin.y()) ||
-                    (!MathUtils::glEquals(pt.z(), printerMin.z()) && pt.z() < printerMin.z()) ||
-                    (!MathUtils::glEquals(pt.x(), printerMax.x()) && pt.x() > printerMax.x()) ||
-                    (!MathUtils::glEquals(pt.y(), printerMax.y()) && pt.y() > printerMax.y()) ||
-                    (!MathUtils::glEquals(pt.z(), printerMax.z()) && pt.z() > printerMax.z())) {
-
-                    ret.append(gop);
-                    // A goto in its natural habitat.
-                    goto next_child;
-                }
-            }
-        }
-
-        next_child:;
-    }
-    */
 
     return ret;
 }

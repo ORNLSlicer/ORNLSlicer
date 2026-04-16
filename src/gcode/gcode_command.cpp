@@ -1,7 +1,10 @@
 #include "gcode/gcode_command.h"
 
-#include "QMap"
-#include "QString"
+#include <QMap>
+#include <QString>
+#include <qcontainerfwd.h>
+
+#include "geometry/point.h"
 
 namespace ORNL {
 GcodeCommand::GcodeCommand()

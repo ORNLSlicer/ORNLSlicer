@@ -1,5 +1,7 @@
 #include "geometry/mesh/mesh_face.h"
 
+#include <qvectornd.h>
+
 namespace ORNL {
 MeshFace::MeshFace() {
     for (int i = 0; i < 3; i++) {

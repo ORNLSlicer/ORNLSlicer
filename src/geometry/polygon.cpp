@@ -1,8 +1,19 @@
 #include "geometry/polygon.h"
 
+#include <cstddef>
+#include <cstdint>
+#include <limits>
+
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "units/unit.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

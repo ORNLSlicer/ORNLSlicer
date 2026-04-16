@@ -1,6 +1,10 @@
 #pragma once
 
-#include "QVector"
+#include <cstddef>
+
+#include <QVector>
+#include <qcontainerfwd.h>
+
 #include "terminus.h"
 
 namespace ORNL {

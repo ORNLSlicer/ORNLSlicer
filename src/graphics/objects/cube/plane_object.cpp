@@ -1,5 +1,12 @@
 #include "graphics/objects/cube/plane_object.h"
 
+#include <qcolor.h>
+#include <qquaternion.h>
+#include <qvectornd.h>
+
+#include "graphics/graphics_object.h"
+#include "graphics/objects/cube_object.h"
+
 namespace ORNL {
 PlaneObject::PlaneObject(BaseView* view, float length, float width, QColor color)
     : CubeObject(view, length, width, 0.01, color) {

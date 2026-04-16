@@ -1,6 +1,19 @@
 #include "threading/abs_slicing_thread.h"
 
-#include "QApplication"
+#include <algorithm>
+#include <climits>
+#include <limits>
+
+#include <QApplication>
+#include <qdebug.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qhashfunctions.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/adamantine_writer.h"
 #include "gcode/writers/aerobasic_writer.h"
@@ -33,6 +46,10 @@
 #include "gcode/writers/thermwood_writer.h"
 #include "gcode/writers/tormach_writer.h"
 #include "managers/session_manager.h"
+#include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 AbstractSlicingThread::AbstractSlicingThread(QString outputLocation, bool skipGcode)
@@ -167,8 +184,7 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
                 QSharedPointer<AdamantineWriter>(new AdamantineWriter(GcodeMetaList::AdamantineMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kORNLMetric:
-            m_base =
-                QSharedPointer<ORNLWriter>(new ORNLWriter(GcodeMetaList::ORNLMetricMeta, GSM->getGlobal()));
+            m_base = QSharedPointer<ORNLWriter>(new ORNLWriter(GcodeMetaList::ORNLMetricMeta, GSM->getGlobal()));
             break;
         default:
             m_base =

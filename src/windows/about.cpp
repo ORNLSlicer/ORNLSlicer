@@ -1,13 +1,18 @@
 #include "windows/about.h"
 
-#include "QApplication"
-#include "QDesktopServices"
-#include "QFile"
-#include "QGridLayout"
-#include "QIcon"
-#include "QLabel"
-#include "QUrl"
-#include "qdatetime.h"
+#include <QApplication>
+#include <QDesktopServices>
+#include <QFile>
+#include <QGridLayout>
+#include <QIcon>
+#include <QLabel>
+#include <QUrl>
+#include <qdatetime.h>
+#include <qfont.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qpixmap.h>
+#include <qwidget.h>
 
 namespace ORNL {
 AboutWindow::AboutWindow(QWidget* parent) : QWidget() {

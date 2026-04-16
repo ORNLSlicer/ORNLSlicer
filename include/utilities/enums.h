@@ -1,10 +1,16 @@
 #pragma once
 
-#include "QCoreApplication"
-#include "QMessageBox"
+#include <cstdint>
+#include <stdexcept>
+
+#include <QCoreApplication>
+#include <QMessageBox>
+#include <qcolor.h>
+#include <qtcoreexports.h>
+
 #include "constants.h"
 #include "exceptions/exceptions.h"
-#include "nlohmann/json.hpp"
+#include "units/unit.h"
 #include "utilities/qt_json_conversion.h"
 
 using json = fifojson;

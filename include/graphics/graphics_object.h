@@ -1,11 +1,23 @@
 #pragma once
 
-#include "QMatrix4x4"
-#include "QOpenGLBuffer"
-#include "QOpenGLTexture"
-#include "QOpenGLVertexArrayObject"
-#include "QPointer"
-#include "QQueue"
+#include <GL/gl.h>
+
+#include <vector>
+
+#include <QMatrix4x4>
+#include <QOpenGLBuffer>
+#include <QOpenGLTexture>
+#include <QOpenGLVertexArrayObject>
+#include <QPointer>
+#include <QQueue>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qimage.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
 
 // Forward
 class QOpenGLShaderProgram;

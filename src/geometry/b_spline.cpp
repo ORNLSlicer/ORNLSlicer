@@ -1,5 +1,13 @@
 #include "geometry/b_spline.h"
 
+#include <cassert>
+#include <cmath>
+
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "geometry/point.h"
+#include "geometry/segments/bezier.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

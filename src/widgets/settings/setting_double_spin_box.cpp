@@ -1,7 +1,21 @@
 #include "widgets/settings/setting_double_spin_box.h"
 
-#include "QToolTip"
-#include "QWheelEvent"
+#include <QToolTip>
+#include <QWheelEvent>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qsharedpointer.h>
+#include <qspinbox.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,

@@ -1,9 +1,18 @@
 #include "widgets/view_controls_toolbar.h"
 
-#include "QFile"
-#include "QGraphicsDropShadowEffect"
-#include "QLayout"
-#include "QToolButton"
+#include <QFile>
+#include <QGraphicsDropShadowEffect>
+#include <QLayout>
+#include <QToolButton>
+#include <qfiledevice.h>
+#include <qicon.h>
+#include <qnamespace.h>
+#include <qsharedpointer.h>
+#include <qsizepolicy.h>
+#include <qtmetamacros.h>
+#include <qtoolbar.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
 

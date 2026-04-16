@@ -1,16 +1,25 @@
 
 #include "graphics/support/shape_factory.h"
 
-#include "QMatrix4x4"
-#include "QtMath"
-#include "geometry/segments/bezier.h"
-#include "managers/settings/settings_manager.h"
-#include "utilities/constants.h"
-#include "utilities/mathutils.h"
+#include <math.h>
 
+#include <array>
+#include <cmath>
+#include <limits>
 #include <vector>
 
-#include <math.h>
+#include <QMatrix4x4>
+#include <QtMath>
+#include <qcolor.h>
+#include <qquaternion.h>
+#include <qvectornd.h>
+
+#include "geometry/point.h"
+#include "geometry/segments/bezier.h"
+#include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/mathutils.h"
 
 namespace ORNL {
 ShapeFactory::ShapeFactory() {}

@@ -1,18 +1,72 @@
 #include "windows/main_window.h"
 
-#include "QFile"
-#include "QFileDialog"
-#include "QFileInfo"
-#include "QSettings"
-#include "QStatusBar"
-#include "QTimer"
+#include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QSettings>
+#include <QStatusBar>
+#include <QTimer>
+#include <qaction.h>
+#include <qapplication.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qdesktopservices.h>
+#include <qdockwidget.h>
+#include <qevent.h>
+#include <qgridlayout.h>
+#include <qicon.h>
+#include <qkeysequence.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qmainwindow.h>
+#include <qmap.h>
+#include <qmenu.h>
+#include <qmenubar.h>
+#include <qminmax.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qobjectdefs.h>
+#include <qoverload.h>
+#include <qpaintdevice.h>
+#include <qprogressbar.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qsizepolicy.h>
+#include <qstandardpaths.h>
+#include <qstringliteral.h>
+#include <qtabbar.h>
+#include <qtabwidget.h>
+#include <qurl.h>
+#include <qwidget.h>
+
+#include "geometry/mesh/open_mesh.h"
+#include "geometry/segment_base.h"
+#include "graphics/view/gcode_view.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 #include "threading/gcode_loader.h"
 #include "threading/session_loader.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "widgets/cmd_widget.h"
+#include "widgets/gcode_widget.h"
+#include "widgets/gcodebar.h"
+#include "widgets/layerbar.h"
+#include "widgets/main_toolbar.h"
+#include "widgets/part_widget/part_widget.h"
+#include "widgets/settings/setting_bar.h"
+#include "windows/about.h"
 #include "windows/dialogs/cs_dbg.h"
+#include "windows/dialogs/slice_dialog.h"
 #include "windows/dialogs/template_save.h"
+#include "windows/flowratecalc.h"
+#include "windows/gcode_export.h"
+#include "windows/layer_times_window.h"
+#include "windows/preferences_window.h"
+#include "windows/xtrudecalc.h"
 
 namespace ORNL {
 
@@ -1289,9 +1343,7 @@ void MainWindow::setLock(bool lock) {
     m_gcodebar->setDisabled(lock);
 }
 
-void MainWindow::setTitleInfo(const QString& str) {
-    this->setWindowTitle(str);
-}
+void MainWindow::setTitleInfo(const QString& str) { this->setWindowTitle(str); }
 
 void MainWindow::enableSelectionMenu(bool partSelected) {
     m_actions["reload"].action->setEnabled(partSelected);

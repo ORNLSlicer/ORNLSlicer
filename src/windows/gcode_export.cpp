@@ -1,14 +1,27 @@
 #include "windows/gcode_export.h"
 
-#include "QApplication"
-#include "QDir"
-#include "QDirIterator"
-#include "QFileDialog"
-#include "QGroupBox"
-#include "QInputDialog"
-#include "QLabel"
-#include "QMessageBox"
-#include "QStringBuilder"
+#include <QApplication>
+#include <QDir>
+#include <QDirIterator>
+#include <QFileDialog>
+#include <QGroupBox>
+#include <QInputDialog>
+#include <QLabel>
+#include <QMessageBox>
+#include <QStringBuilder>
+#include <qboxlayout.h>
+#include <qdebug.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qgridlayout.h>
+#include <qlineedit.h>
+#include <qpushbutton.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qtextedit.h>
+#include <qwidget.h>
+
+#include "gcode/gcode_meta.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "threading/gcode_adamantine_saver.h"
@@ -20,6 +33,8 @@
 #include "threading/gcode_sandia_saver.h"
 #include "threading/gcode_simulation_output.h"
 #include "threading/gcode_tormach_saver.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 
@@ -115,7 +130,7 @@ void GcodeExport::exportGcode() {
         CSM->setMostRecentGcodeLocation(info.absolutePath());
 
         // remove file suffix from part name if it exists - keeps periods in the file name intact
-        if(fullName.endsWith(m_most_recent_meta.m_file_suffix)) {
+        if (fullName.endsWith(m_most_recent_meta.m_file_suffix)) {
             partName = fullName.left(fullName.length() - m_most_recent_meta.m_file_suffix.length());
         }
         else {
@@ -323,10 +338,10 @@ void GcodeExport::exportGcode() {
                     [this, filepath, partName]() { showComplete(filepath, partName); });
             saver->start();
         }
-        else if ((m_most_recent_meta == GcodeMetaList::ORNLMeta || m_most_recent_meta == GcodeMetaList::ORNLMetricMeta) &&
+        else if ((m_most_recent_meta == GcodeMetaList::ORNLMeta ||
+                  m_most_recent_meta == GcodeMetaList::ORNLMetricMeta) &&
                  GSM->getGlobal()->setting<bool>(ES::FileOutput::kAMCMOutput)) {
-            GCodeAMCMSaver* saver =
-                new GCodeAMCMSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
+            GCodeAMCMSaver* saver = new GCodeAMCMSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
             connect(saver, &GCodeAMCMSaver::finished, saver, &GCodeAMCMSaver::deleteLater);
             connect(saver, &GCodeAMCMSaver::finished, this,
                     [this, filepath, partName]() { showComplete(filepath, partName); });

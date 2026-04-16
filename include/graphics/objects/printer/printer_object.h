@@ -1,7 +1,10 @@
 #pragma once
 
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
-#include "geometry/point.h"
 #include "graphics/graphics_object.h"
 
 namespace ORNL {

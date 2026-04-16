@@ -1,6 +1,9 @@
 #include "geometry/mesh/mesh_vertex.h"
 
-#include "QMatrix4x4"
+#include <QMatrix4x4>
+#include <qvectornd.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
 
 namespace ORNL {
 MeshVertex::MeshVertex(const QVector3D& location, const QVector3D& normal) : location(location), normal(normal) {

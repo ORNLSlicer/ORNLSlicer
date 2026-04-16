@@ -1,13 +1,30 @@
 #pragma once
 
-#include "QDir"
-#include "QFile"
-#include "QQueue"
-#include "QStandardPaths"
-#include "data_stream.h"
+#include <cstddef>
+#include <cstdint>
+
+#include <QDir>
+#include <QFile>
+#include <QQueue>
+#include <QStandardPaths>
+#include <data_stream.h>
+#include <qcontainerfwd.h>
+#include <qdatetime.h>
+#include <qhash.h>
+#include <qmap.h>
+#include <qmatrix4x4.h>
+#include <qmutex.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <tcp_server.h>
+
+#include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
-#include "tcp_server.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {

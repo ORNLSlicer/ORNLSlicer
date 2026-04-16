@@ -1,16 +1,35 @@
 #include "widgets/main_toolbar.h"
 
-#include "QComboBox"
-#include "QFile"
-#include "QGraphicsDropShadowEffect"
-#include "QInputDialog"
-#include "QLayout"
-#include "QMenu"
+#include <algorithm>
+
+#include <QComboBox>
+#include <QFile>
+#include <QGraphicsDropShadowEffect>
+#include <QInputDialog>
+#include <QLayout>
+#include <QMenu>
+#include <qaction.h>
+#include <qfiledevice.h>
+#include <qicon.h>
+#include <qmath.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qsizepolicy.h>
+#include <qtabbar.h>
+#include <qtmetamacros.h>
+#include <qtoolbar.h>
+#include <qwidget.h>
+
+#include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_factory.h"
+#include "geometry/mesh/open_mesh.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 MainToolbar::MainToolbar(QWidget* parent) : m_parent(parent), QToolBar(parent) {

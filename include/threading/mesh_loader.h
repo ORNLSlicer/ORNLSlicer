@@ -1,15 +1,24 @@
 #pragma once
 
-#include "QFileInfo"
-#include "QThread"
-#include "assimp/Importer.hpp"
-#include "assimp/postprocess.h"
-#include "assimp/scene.h"
-#include "geometry/mesh/closed_mesh.h"
-#include "utilities/enums.h"
+#include <cstddef>
+#include <utility>
 
-struct aiMesh;
-struct aiScene;
+#include <CGAL/Modifier_base.h>
+#include <CGAL/Polyhedron_incremental_builder_3.h>
+#include <QFileInfo>
+#include <QThread>
+#include <assimp/mesh.h>
+#include <assimp/scene.h>
+#include <qcontainerfwd.h>
+#include <qmatrix4x4.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
+#include "geometry/mesh/mesh_base.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 class Mesh;
