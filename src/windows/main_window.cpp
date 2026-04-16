@@ -1285,7 +1285,7 @@ void MainWindow::setLock(bool lock) {
 }
 
 void MainWindow::setTitleInfo(const QString& str) {
-    this->setWindowTitle(QApplication::applicationDisplayName() + " - " + str);
+    this->setWindowTitle(str);
 }
 
 void MainWindow::enableSelectionMenu(bool partSelected) {
