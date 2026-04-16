@@ -4,6 +4,7 @@
 #include "QOpenGLBuffer"
 #include "QOpenGLTexture"
 #include "QOpenGLVertexArrayObject"
+#include "QPointer"
 #include "QQueue"
 
 // Forward
@@ -286,8 +287,8 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
 
     } m_state;
 
-    //! \brief View that we draw to. Raw pointer to prevent double free.
-    BaseView* m_view;
+    //! \brief View that we draw to. Guarded so shutdown can null this before lingering shared refs release.
+    QPointer<BaseView> m_view;
 
     //! \brief GL mesh information.
     std::vector<float> m_vertices;

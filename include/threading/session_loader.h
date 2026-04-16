@@ -33,6 +33,9 @@ class SessionLoader : public QThread {
     //! \brief Signal that an error has occured.
     void error(QString error);
 
+    //! \brief Signal that a session file has been loaded successfully.
+    void loadSucceeded();
+
   private:
     //! \brief Saves a session.
     void saveSession();

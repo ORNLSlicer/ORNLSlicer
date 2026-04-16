@@ -28,6 +28,7 @@
 namespace ORNL {
 
 class PolymerSlicer;
+class SessionLoader;
 
 //! \brief Define for quick access to this singleton.
 #define MWIN MainWindow::getInstance()
@@ -118,7 +119,7 @@ class MainWindow : public QMainWindow {
 
     //! \brief Load a session from a file.
     void loadSession();
-    void loadASession(const QString& fileName);
+    SessionLoader* loadASession(const QString& fileName);
 
     //! \brief Auto save the current session.
     void autoSave();
