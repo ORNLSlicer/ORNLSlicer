@@ -13,33 +13,17 @@ ContinuationIndentWidth: '4'
 Cpp11BracedListStyle: 'true'
 FixNamespaceComments: 'true'
 IncludeBlocks: 'Regroup'
+IncludeIsMainRegex: '$'
 IncludeCategories:
-  - Regex: '^<openvdb/.*>' # Ensure OpenVDB includes come first
-    Priority: -1
-  - Regex: '^".*"' # Local includes
+  - Regex: '^<((GL/gl|aio|arpa/inet|assert|complex|ctype|dirent|dlfcn|errno|fcntl|fenv|float|fmtmsg|fnmatch|ftw|getopt|glob|grp|iconv|inttypes|langinfo|libgen|limits|locale|math|monetary|mqueue|ndbm|net/if|netdb|netinet/in|netinet/tcp|nl_types|poll|pthread|pwd|regex|sched|search|semaphore|setjmp|signal|spawn|stdalign|stdarg|stdatomic|stdbool|stddef|stdint|stdio|stdlib|string|strings|stropts|sys/ioctl|sys/ipc|sys/mman|sys/msg|sys/resource|sys/select|sys/sem|sys/shm|sys/socket|sys/stat|sys/statvfs|sys/time|sys/times|sys/types|sys/uio|sys/un|sys/utsname|sys/wait|syslog|tar|termios|tgmath|threads|time|uchar|unistd|utime|utmpx|wchar|wctype|wordexp)\.h)>$' # C, POSIX, and platform system headers only
     Priority: 1
-  - Regex: '^<([a-zA-Z0-9_]+)>$' # Standard library headers (e.g., <vector>, <iostream>)
+  - Regex: '^<[a-z][a-z0-9_]*>$' # C++ standard library headers without extension
     Priority: 2
-  - Regex: '^<assimp/.*>' # Assimp
+    CaseSensitive: true
+  - Regex: '^<.*>$' # Other libraries
     Priority: 3
-  - Regex: '^<boost/.*>' # Boost
+  - Regex: '^".*"' # Project headers
     Priority: 4
-  - Regex: '^<CGAL/.*>' # CGAL
-    Priority: 5
-  - Regex: '^<fmt/.*>' # FMT
-    Priority: 6
-  - Regex: '^<opencascade/.*>' # OpenCascade
-    Priority: 7
-  - Regex: '^<Qt.*/.*>' # Qt
-    Priority: 8
-  - Regex: '^<range/v3/.*>' # Range-v3
-    Priority: 9
-  - Regex: '^<spdlog/.*>' # spdlog
-    Priority: 10
-  - Regex: '<taskflow/.*>' # Taskflow
-    Priority: 11
-  - Regex: '^<vtk/.*>'  # VTK
-    Priority: 12
 IndentCaseLabels: 'true'
 IndentPPDirectives: BeforeHash
 IndentWidth: '4'
