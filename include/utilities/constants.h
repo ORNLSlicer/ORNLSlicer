@@ -785,6 +785,7 @@ class Constants {
             static const QString kCustomPathXLocation;
             static const QString kCustomPathYLocation;
             static const QString kPointOrder;
+            static const QString kEnablePointOrderSegmentBreaking;
             static const QString kLocalRandomnessEnable;
             static const QString kLocalRandomnessRadius;
             static const QString kMinDistanceEnabled;
