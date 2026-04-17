@@ -712,6 +712,8 @@ const QString Constants::ProfileSettings::Optimizations::kCustomIslandYLocation 
 const QString Constants::ProfileSettings::Optimizations::kCustomPathXLocation = "custom_path_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPathYLocation = "custom_path_order_y_location";
 const QString Constants::ProfileSettings::Optimizations::kPointOrder = "point_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kEnablePointOrderSegmentBreaking =
+    "enable_point_order_segment_breaking";
 const QString Constants::ProfileSettings::Optimizations::kLocalRandomnessEnable = "local_randomness_enable";
 const QString Constants::ProfileSettings::Optimizations::kLocalRandomnessRadius = "local_randomness_radius";
 const QString Constants::ProfileSettings::Optimizations::kMinDistanceEnabled = "enable_min_distance";
