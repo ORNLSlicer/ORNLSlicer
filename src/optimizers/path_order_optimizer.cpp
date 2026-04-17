@@ -397,7 +397,8 @@ Path PathOrderOptimizer::linkTo() {
                                          m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                                          m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                                          m_sb->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                                         m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                                         m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius))
+            .rotation_index;
 
     addTravel(pointIndex, nextPath);
 
@@ -542,8 +543,10 @@ Path PathOrderOptimizer::linkSpiralPath2D(bool last_spiral) {
     for (QSharedPointer<SegmentBase> seg : newPath)
         line.append(seg->start());
 
-    int pointIndex = PointOrderOptimizer::linkToPoint(m_current_location, line, m_layer_num,
-                                                      PointOrderOptimization::kNextClosest, false, 0, 0, false, 0);
+    int pointIndex =
+        PointOrderOptimizer::linkToPoint(m_current_location, line, m_layer_num, PointOrderOptimization::kNextClosest,
+                                         false, 0, 0, false, 0)
+            .rotation_index;
 
     for (int i = 0; i < pointIndex; ++i)
         newPath.move(0, newPath.size() - 1);

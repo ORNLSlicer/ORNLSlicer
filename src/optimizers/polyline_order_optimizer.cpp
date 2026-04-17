@@ -47,13 +47,15 @@ void PolylineOrderOptimizer::setInfillParameters(InfillPatterns infillPattern, P
 
 void PolylineOrderOptimizer::setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
                                                 Distance minDistanceThreshold, Distance consecutiveThreshold,
-                                                bool randomnessEnable, Distance randomnessRadius) {
+                                                bool randomnessEnable, Distance randomnessRadius,
+                                                bool enableSegmentBreaking) {
     m_point_optimization = pointOptimization;
     m_min_point_distance_enable = minDistanceEnable;
     m_min_point_distance = minDistanceThreshold;
     m_consecutive_threshold = consecutiveThreshold;
     m_randomness_enable = randomnessEnable;
     m_randomness_radius = randomnessRadius;
+    m_segment_breaking_enable = enableSegmentBreaking;
 }
 
 void PolylineOrderOptimizer::setStartOverride(Point pt) {
@@ -224,14 +226,12 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
         // Remove last element because it is a duplicate of the first. It will be re-added after re-ordering the vector.
         new_polyline.removeLast();
 
-        // Find index of the point that needs to be first.
-        int pointIndex = PointOrderOptimizer::linkToPoint(
+        auto pointSelection = PointOrderOptimizer::linkToPoint(
             queryPoint, new_polyline, m_layer_num, m_point_optimization, m_min_point_distance_enable,
-            m_min_point_distance, m_consecutive_threshold, m_randomness_enable, m_randomness_radius);
+            m_min_point_distance, m_consecutive_threshold, m_randomness_enable, m_randomness_radius,
+            m_segment_breaking_enable);
 
-        // Rotate the order of points to get the proper point at the start of the path
-        for (int i = 0; i < pointIndex; ++i)
-            new_polyline.move(0, new_polyline.size() - 1);
+        applyPointOrderSelection(new_polyline, pointSelection);
 
         // Re-add the first point to the end to close the loop.
         new_polyline.push_back(new_polyline.front());
@@ -302,6 +302,33 @@ QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> p
     return QPair<int, bool>(index, start);
 }
 
+void PolylineOrderOptimizer::applyPointOrderSelection(
+    Polyline& polyline, const PointOrderOptimizer::PointOrderSelection& selection) const {
+    if (polyline.isEmpty())
+        return;
+
+    int rotation_index = selection.rotation_index;
+
+    if (selection.insert_split_point) {
+        int insertion_index = selection.insertion_index;
+        int previous_index = (insertion_index == 0) ? polyline.size() - 1 : insertion_index - 1;
+        int next_index = insertion_index % polyline.size();
+
+        if (selection.split_point == polyline[previous_index]) {
+            rotation_index = previous_index;
+        }
+        else if (selection.split_point == polyline[next_index]) {
+            rotation_index = next_index;
+        }
+        else {
+            polyline.insert(insertion_index, selection.split_point);
+        }
+    }
+
+    for (int i = 0; i < rotation_index; ++i)
+        polyline.move(0, polyline.size() - 1);
+}
+
 Polyline PolylineOrderOptimizer::linkTo() {
     int polylineIndex;
     switch (m_optimization) {
@@ -334,12 +361,11 @@ Polyline PolylineOrderOptimizer::linkTo() {
     else
         queryPoint = m_current_location;
 
-    int pointIndex = PointOrderOptimizer::linkToPoint(
+    auto pointSelection = PointOrderOptimizer::linkToPoint(
         queryPoint, nextPolyline, m_layer_num, m_point_optimization, m_min_point_distance_enable, m_min_point_distance,
-        m_consecutive_threshold, m_randomness_enable, m_randomness_radius);
+        m_consecutive_threshold, m_randomness_enable, m_randomness_radius, m_segment_breaking_enable);
 
-    for (int i = 0; i < pointIndex; ++i)
-        nextPolyline.move(0, nextPolyline.size() - 1);
+    applyPointOrderSelection(nextPolyline, pointSelection);
 
     return nextPolyline;
 }
@@ -357,9 +383,13 @@ int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
         closest = Distance(DBL_MAX);
 
     for (int i = 0, end = m_polylines.size(); i < end; ++i) {
-        for (int j = 0, end2 = m_polylines[i].size() - 1; j < end2; ++j) {
+        if (m_polylines[i].size() < 2)
+            continue;
+
+        for (int j = 0, end2 = m_polylines[i].size(); j < end2; ++j) {
+            int next_index = (j + 1) % m_polylines[i].size();
             Distance closestSegment =
-                MathUtils::distanceFromLineSegSqrd(queryPoint, m_polylines[i][j], m_polylines[i][j + 1]);
+                MathUtils::distanceFromLineSegSqrd(queryPoint, m_polylines[i][j], m_polylines[i][next_index]);
             if (shortest) {
                 if (closestSegment < closest) {
                     closest = closestSegment;
@@ -470,24 +500,24 @@ Polyline PolylineOrderOptimizer::linkSpiralPolyline2D(bool last_spiral, Distance
     int polylineIndex = findShortestOrLongestDistance();
     Polyline newPolyline = m_polylines[polylineIndex];
     m_polylines.removeAt(polylineIndex);
-    int pointIndex = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num,
-                                                      PointOrderOptimization::kNextClosest, false, 0, 0, false, 0);
+    auto pointSelection = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num,
+                                                           PointOrderOptimization::kNextClosest, false, 0, 0, false,
+                                                           0, m_segment_breaking_enable);
 
     // Define which point to start layer one - all other layers must use next closest
     if (m_layer_num == 0) {
         if (pointOrder == PointOrderOptimization::kCustomPoint) {
             Point startOverride = m_point_override_location;
-            pointIndex = PointOrderOptimizer::linkToPoint(startOverride, newPolyline, m_layer_num, pointOrder, false, 0,
-                                                          0, false, 0);
+            pointSelection = PointOrderOptimizer::linkToPoint(startOverride, newPolyline, m_layer_num, pointOrder,
+                                                              false, 0, 0, false, 0, m_segment_breaking_enable);
         }
         else {
-            pointIndex = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num, pointOrder,
-                                                          false, 0, 0, false, 0);
+            pointSelection = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num, pointOrder,
+                                                              false, 0, 0, false, 0, m_segment_breaking_enable);
         }
     }
 
-    for (int i = 0; i < pointIndex; ++i)
-        newPolyline.move(0, newPolyline.size() - 1);
+    applyPointOrderSelection(newPolyline, pointSelection);
 
     newPolyline.push_back(newPolyline.first());
     Distance polylineLength = newPolyline.length();
