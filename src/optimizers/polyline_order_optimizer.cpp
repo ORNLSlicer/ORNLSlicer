@@ -383,9 +383,13 @@ int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
         closest = Distance(DBL_MAX);
 
     for (int i = 0, end = m_polylines.size(); i < end; ++i) {
-        for (int j = 0, end2 = m_polylines[i].size() - 1; j < end2; ++j) {
+        if (m_polylines[i].size() < 2)
+            continue;
+
+        for (int j = 0, end2 = m_polylines[i].size(); j < end2; ++j) {
+            int next_index = (j + 1) % m_polylines[i].size();
             Distance closestSegment =
-                MathUtils::distanceFromLineSegSqrd(queryPoint, m_polylines[i][j], m_polylines[i][j + 1]);
+                MathUtils::distanceFromLineSegSqrd(queryPoint, m_polylines[i][j], m_polylines[i][next_index]);
             if (shortest) {
                 if (closestSegment < closest) {
                     closest = closestSegment;
