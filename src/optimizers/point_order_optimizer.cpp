@@ -1,6 +1,8 @@
 #include "optimizers/point_order_optimizer.h"
 
+#include <algorithm>
 #include <cfloat>
+#include <limits>
 
 #include <QRandomGenerator>
 #include <qcontainerfwd.h>
@@ -10,45 +12,60 @@
 #include "geometry/polyline.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
+#include "utilities/mathutils.h"
 
 namespace ORNL {
 
-int PointOrderOptimizer::linkToPoint(Point current_location, Polyline polyline, uint layer_number,
-                                     PointOrderOptimization pointOptimization, bool min_dist_enabled,
-                                     Distance min_dist_threshold, Distance consecutive_dist_threshold,
-                                     bool local_randomness_enable, Distance randomness_radius) {
-    int result;
+PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::linkToPoint(
+    const Point& current_location, const Polyline& polyline, uint layer_number,
+    PointOrderOptimization pointOptimization, bool min_dist_enabled, Distance min_dist_threshold,
+    Distance consecutive_dist_threshold, bool local_randomness_enable, Distance randomness_radius,
+    bool allow_segment_breaking) {
+    PointOrderSelection result;
+
+    bool use_segment_breaking =
+        allow_segment_breaking && polyline.size() > 1 && !min_dist_enabled && !local_randomness_enable &&
+        (pointOptimization == PointOrderOptimization::kNextClosest ||
+         pointOptimization == PointOrderOptimization::kCustomPoint);
+
+    if (use_segment_breaking) {
+        result = findClosestPointOnClosedLoop(polyline, current_location);
+        return result;
+    }
 
     switch (pointOptimization) {
         case PointOrderOptimization::kNextClosest:
-            result = findShortestOrLongestDistance(polyline, current_location, min_dist_enabled, min_dist_threshold);
+            result = selectionFromIndex(
+                findShortestOrLongestDistance(polyline, current_location, min_dist_enabled, min_dist_threshold));
             break;
         case PointOrderOptimization::kNextFarthest:
-            result =
-                findShortestOrLongestDistance(polyline, current_location, min_dist_enabled, min_dist_threshold, false);
+            result = selectionFromIndex(
+                findShortestOrLongestDistance(polyline, current_location, min_dist_enabled, min_dist_threshold, false));
             break;
         case PointOrderOptimization::kRandom:
-            result = linkToRandom(polyline);
+            result = selectionFromIndex(linkToRandom(polyline));
             break;
         case PointOrderOptimization::kConsecutive:
-            result = linkToConsecutive(polyline, layer_number, consecutive_dist_threshold);
+            result = selectionFromIndex(linkToConsecutive(polyline, layer_number, consecutive_dist_threshold));
+            break;
+        case PointOrderOptimization::kCustomPoint:
+            result = selectionFromIndex(findShortestOrLongestDistance(polyline, current_location, false, Distance(0)));
             break;
         default:
-            result = findShortestOrLongestDistance(polyline, current_location, false, Distance(0));
+            result = selectionFromIndex(findShortestOrLongestDistance(polyline, current_location, false, Distance(0)));
             break;
     }
 
     if (local_randomness_enable)
-        result = computePerturbation(polyline, polyline[result], randomness_radius);
+        result = selectionFromIndex(computePerturbation(polyline, polyline[result.rotation_index], randomness_radius));
 
     return result;
 }
 
-bool PointOrderOptimizer::findSkeletonPointOrder(Point current_location, Polyline polyline,
+bool PointOrderOptimizer::findSkeletonPointOrder(const Point& current_location, const Polyline& polyline,
                                                  PointOrderOptimization pointOptimization, bool min_dist_enabled,
                                                  Distance min_dist_threshold) {
     bool result = false;
-    int index;
 
     switch (pointOptimization) {
         case PointOrderOptimization::kNextClosest:
@@ -81,8 +98,8 @@ bool PointOrderOptimizer::findSkeletonPointOrder(Point current_location, Polylin
     return result;
 }
 
-int PointOrderOptimizer::findShortestOrLongestDistance(Polyline polyline, Point startPoint, bool minThresholdEnable,
-                                                       Distance minThreshold, bool shortest) {
+int PointOrderOptimizer::findShortestOrLongestDistance(const Polyline& polyline, const Point& startPoint,
+                                                       bool minThresholdEnable, Distance minThreshold, bool shortest) {
     int pointIndex = -1;
     Distance closest;
     if (shortest)
@@ -113,7 +130,46 @@ int PointOrderOptimizer::findShortestOrLongestDistance(Polyline polyline, Point 
     return pointIndex;
 }
 
-int PointOrderOptimizer::findClosestEnd(Polyline polyline, Point currentPoint, bool minThresholdEnable,
+PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::findClosestPointOnClosedLoop(const Polyline& polyline,
+                                                                                           const Point& queryPoint) {
+    PointOrderSelection result;
+    if (polyline.isEmpty())
+        return result;
+
+    double closest_distance = std::numeric_limits<double>::max();
+
+    for (int i = 0, end = polyline.size(); i < end; ++i) {
+        int next_index = (i + 1) % polyline.size();
+        auto [closest_point, distance] = MathUtils::nearestPointOnSegment(polyline[i], polyline[next_index], queryPoint);
+
+        if (distance < closest_distance) {
+            closest_distance = distance;
+
+            if (closest_point == polyline[i]) {
+                result = selectionFromIndex(i);
+            }
+            else if (closest_point == polyline[next_index]) {
+                result = selectionFromIndex(next_index);
+            }
+            else {
+                result.rotation_index = next_index;
+                result.insert_split_point = true;
+                result.split_point = closest_point;
+                result.insertion_index = next_index;
+            }
+        }
+    }
+
+    return result;
+}
+
+PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::selectionFromIndex(int pointIndex) {
+    PointOrderSelection result;
+    result.rotation_index = std::max(pointIndex, 0);
+    return result;
+}
+
+int PointOrderOptimizer::findClosestEnd(const Polyline& polyline, const Point& currentPoint, bool minThresholdEnable,
                                         Distance minThreshold) {
     // Check which end is closer. Return 0 for front and non-zero for back.
     // Both could be closer than the minimum distance, but ultimately one has to be chosen.
@@ -134,11 +190,9 @@ int PointOrderOptimizer::findClosestEnd(Polyline polyline, Point currentPoint, b
     }
 }
 
-int PointOrderOptimizer::linkToRandom(Polyline polyline) {
-    return QRandomGenerator::global()->bounded(polyline.size());
-}
+int PointOrderOptimizer::linkToRandom(const Polyline& polyline) { return QRandomGenerator::global()->bounded(polyline.size()); }
 
-int PointOrderOptimizer::linkToConsecutive(Polyline polyline, uint layer_number, Distance minDist) {
+int PointOrderOptimizer::linkToConsecutive(const Polyline& polyline, uint layer_number, Distance minDist) {
     int startIndex = layer_number - 2;
     if (startIndex < 0)
         startIndex += polyline.size();
@@ -162,7 +216,7 @@ int PointOrderOptimizer::linkToConsecutive(Polyline polyline, uint layer_number,
     return startIndex;
 }
 
-int PointOrderOptimizer::computePerturbation(Polyline polyline, Point current_start, Distance radius) {
+int PointOrderOptimizer::computePerturbation(const Polyline& polyline, const Point& current_start, Distance radius) {
     QVector<int> candidates;
 
     for (int i = 0; i < polyline.size(); ++i) {

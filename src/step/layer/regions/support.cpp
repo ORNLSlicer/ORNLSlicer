@@ -159,7 +159,8 @@ void Support::optimize(int layerNumber, Point& current_location, QVector<Path>& 
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
 
     m_paths.clear();
 
