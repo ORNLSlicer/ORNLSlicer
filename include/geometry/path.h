@@ -1,7 +1,12 @@
 #pragma once
 
-#include "QList"
+#include <QList>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
+#include "units/unit.h"
 
 namespace ORNL {
 class Polygon;

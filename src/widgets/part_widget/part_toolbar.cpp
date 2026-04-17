@@ -1,13 +1,29 @@
 #include "widgets/part_widget/part_toolbar.h"
 
-#include "QComboBox"
-#include "QFile"
-#include "QGraphicsDropShadowEffect"
-#include "QInputDialog"
-#include "QLayout"
-#include "QMenu"
+#include <QComboBox>
+#include <QFile>
+#include <QGraphicsDropShadowEffect>
+#include <QInputDialog>
+#include <QLayout>
+#include <QMenu>
+#include <qcontainerfwd.h>
+#include <qevent.h>
+#include <qicon.h>
+#include <qnamespace.h>
+#include <qsharedpointer.h>
+#include <qsizepolicy.h>
+#include <qtmetamacros.h>
+#include <qtoolbar.h>
+#include <qtoolbutton.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "widgets/part_widget/input/tool_bar_align_input.h"
+#include "widgets/part_widget/input/tool_bar_input.h"
 
 namespace ORNL {
 PartToolbar::PartToolbar(QSharedPointer<PartMetaModel> model, QWidget* parent)

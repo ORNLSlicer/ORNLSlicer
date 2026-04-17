@@ -1,7 +1,20 @@
 #include "geometry/segments/bezier.h"
 
+#include <vector>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmath.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "geometry/b_spline.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/segment_base.h"
 #include "graphics/support/shape_factory.h"
+#include "units/unit.h"
 
 namespace ORNL {
 BezierSegment::BezierSegment() : SegmentBase(Point(0, 0, 0), Point(0, 0, 0)) {}

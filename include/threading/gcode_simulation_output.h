@@ -1,7 +1,11 @@
 #pragma once
 
-#include "QThread"
+#include <QThread>
+#include <qobject.h>
+#include <qtmetamacros.h>
+
 #include "gcode/gcode_meta.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!

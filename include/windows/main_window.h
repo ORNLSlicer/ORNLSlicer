@@ -1,16 +1,35 @@
 #pragma once
 
-#include "QApplication"
-#include "QDesktopServices"
-#include "QDockWidget"
-#include "QFile"
-#include "QLabel"
-#include "QMainWindow"
-#include "QMenuBar"
-#include "QTextEdit"
-#include "QToolBar"
-#include "QUdpSocket"
+#include <QApplication>
+#include <QDesktopServices>
+#include <QDockWidget>
+#include <QFile>
+#include <QLabel>
+#include <QMainWindow>
+#include <QMenuBar>
+#include <QTextEdit>
+#include <QToolBar>
+#include <QUdpSocket>
+#include <qboxlayout.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qevent.h>
+#include <qgridlayout.h>
+#include <qhash.h>
+#include <qkeysequence.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qprogressbar.h>
+#include <qscopedpointer.h>
+#include <qsharedpointer.h>
+#include <qtabwidget.h>
+#include <qtimer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qwidget.h>
+
 #include "dialogs/slice_dialog.h"
+#include "utilities/enums.h"
 #include "widgets/cmd_widget.h"
 #include "widgets/gcode_widget.h"
 #include "widgets/gcodebar.h"
@@ -19,7 +38,6 @@
 #include "widgets/part_widget/part_widget.h"
 #include "widgets/settings/setting_bar.h"
 #include "windows/about.h"
-#include "windows/external_file_window.h"
 #include "windows/flowratecalc.h"
 #include "windows/gcode_export.h"
 #include "windows/layer_times_window.h"
@@ -29,6 +47,7 @@
 namespace ORNL {
 
 class PolymerSlicer;
+class SessionLoader;
 
 //! \brief Define for quick access to this singleton.
 #define MWIN MainWindow::getInstance()
@@ -119,7 +138,7 @@ class MainWindow : public QMainWindow {
 
     //! \brief Load a session from a file.
     void loadSession();
-    void loadASession(const QString& fileName);
+    SessionLoader* loadASession(const QString& fileName);
 
     //! \brief Auto save the current session.
     void autoSave();
@@ -300,7 +319,6 @@ class MainWindow : public QMainWindow {
     QDockWidget* m_settingdock;
     QDockWidget* m_gcodedock;
     QDockWidget* m_layertimesdock;
-    QDockWidget* m_external_file_dock;
 
     QTabWidget* m_tab_widget;
 
@@ -313,7 +331,6 @@ class MainWindow : public QMainWindow {
     GcodeBar* m_gcodebar;
     CmdWidget* m_cmdbar;
     QScopedPointer<SliceDialog> m_slice_dialog;
-    ExternalFileWindow* m_external_file_window;
 
     //! \brief All other widgets
     QWidget* m_main_widget;

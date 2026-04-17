@@ -1,5 +1,12 @@
 #include "geometry/plane.h"
 
+#include <qnumeric.h>
+#include <qquaternion.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
+#include "geometry/point.h"
+
 namespace ORNL {
 
 Plane::Plane() {}

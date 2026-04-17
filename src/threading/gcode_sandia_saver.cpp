@@ -1,12 +1,20 @@
 #include "threading/gcode_sandia_saver.h"
 
-#include "QDir"
-#include "QFile"
-#include "QRegularExpression"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
+#include <QDir>
+#include <QFile>
+#include <QRegularExpression>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <qcontainerfwd.h>
+#include <qfileinfo.h>
+#include <qobject.h>
+#include <qtypes.h>
+
+#include "gcode/gcode_meta.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 GCodeSandiaSaver::GCodeSandiaSaver(QString tempLocation, QString path, QString filename, QString text, GcodeMeta meta)

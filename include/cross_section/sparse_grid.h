@@ -1,10 +1,17 @@
 #pragma once
 
-#include "QVector"
+#include <cstddef>
+#include <functional>
+#include <unordered_map>
+#include <utility>
+
+#include <QVector>
+#include <qassert.h>
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+
 #include "geometry/point.h"
 #include "units/unit.h"
-
-#include <unordered_map>
 
 namespace ORNL {
 /*!

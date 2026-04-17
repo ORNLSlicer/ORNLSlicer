@@ -1,6 +1,14 @@
 #pragma once
 
-#include "QLineEdit"
+#include <QLineEdit>
+#include <qgridlayout.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_row_base.h"
 #include "widgets/settings/setting_tab.h"
 

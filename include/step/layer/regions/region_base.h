@@ -1,13 +1,16 @@
 #pragma once
 
-#include "QObject"
+#include <QObject>
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
-#include "external_files/external_grid.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "managers/sync/sync_manager.h"
+#include "units/unit.h"
 
 namespace ORNL {
 class PathOrderOptimizer;
@@ -22,18 +25,13 @@ class RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
     RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
-               const QVector<SettingsPolygon>& settings_polygons,
-               const SingleExternalGridInfo& gridInfo = SingleExternalGridInfo(),
-               PolygonList uncut_geometry = PolygonList());
+               const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry = PolygonList());
 
     //! \brief Constructor
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
-    RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons,
-               const SingleExternalGridInfo& gridInfo = SingleExternalGridInfo());
+    RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Destructor
     virtual ~RegionBase() = default;
@@ -144,9 +142,6 @@ class RegionBase {
 
     //! \brief The material used for the region.
     int m_material_number;
-
-    //! \brief External grid information
-    SingleExternalGridInfo m_grid_info;
 
     //! \brief Index for order
     int m_index;

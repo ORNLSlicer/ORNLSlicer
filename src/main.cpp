@@ -1,15 +1,31 @@
-#include "QApplication"
-#include "QCommandLineParser"
-#include "QStyleFactory"
-#include "boost/preprocessor.hpp"
+#include <QApplication>
+#include <QCommandLineParser>
+#include <QStyleFactory>
+#include <boost/preprocessor.hpp>
+#include <nlohmann/json_fwd.hpp>
+#include <qabstractsocket.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qdeadlinetimer.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtextformat.h>
+#include <qtresource.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
 #include "console/command_line_processor.h"
 #include "console/main_control.h"
-#include "external_files/external_grid.h"
 #include "gcode/gcode_command.h"
+#include "gcode/gcode_meta.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/open_mesh.h"
+#include "geometry/segment_base.h"
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "units/unit.h"
@@ -43,7 +59,6 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<ORNL::GcodeCommand>("GcodeCommand");
     qRegisterMetaType<ORNL::GcodeMeta>("GcodeMeta");
     qRegisterMetaType<fifojson>("fifojson");
-    qRegisterMetaType<ORNL::ExternalGridInfo>("ExternalGridInfo");
     qRegisterMetaType<QList<QList<ORNL::Time>>>("QList<QList<Time>>");
     qRegisterMetaType<nlohmann::json>("nlohmann::json");
     qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
@@ -59,6 +74,9 @@ int main(int argc, char* argv[]) {
 
     if (argc > 1) {
         QCoreApplication ca(argc, argv);
+        QCoreApplication::setApplicationName("ornlslicer");
+        QCoreApplication::setOrganizationName("ornl");
+        QCoreApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
 
         QSharedPointer<ORNL::SettingsBase> options = QSharedPointer<ORNL::SettingsBase>::create();
         ORNL::CommandLineConverter clc;
@@ -84,16 +102,10 @@ int main(int argc, char* argv[]) {
         QApplication a(argc, argv);
         QApplication::setStyle(QStyleFactory::create("fusion"));
 
-        QApplication::setApplicationName("slicer2");
+        QApplication::setApplicationName("ornlslicer");
         QApplication::setOrganizationName("ornl");
-        QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(SLICER2_VERSION));
-        // #ifdef WIN32
-        //         HWND consoleWnd = GetConsoleWindow();
-        //         DWORD dwProcessId;
-        //         GetWindowThreadProcessId(consoleWnd, &dwProcessId);
-        //         if (GetCurrentProcessId() == dwProcessId)
-        //             ::ShowWindow(::GetConsoleWindow(), SW_HIDE);
-        // #endif
+        QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
+        QApplication::setApplicationDisplayName("ORNLSlicer-" BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
 
         Q_INIT_RESOURCE(icons);
         Q_INIT_RESOURCE(shaders);

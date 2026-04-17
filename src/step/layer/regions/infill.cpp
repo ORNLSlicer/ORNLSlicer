@@ -1,15 +1,31 @@
 #include "step/layer/regions/infill.h"
 
+#include <qcontainerfwd.h>
+#include <qnumeric.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
 #include "geometry/pattern_generator.h"
+#include "geometry/point.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
 Infill::Infill(const QSharedPointer<SettingsBase>& sb, const int index,
-               const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+               const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons) {
     // NOP
 }
 
@@ -58,6 +74,8 @@ void Infill::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
             QSharedPointer<SettingsBase> region_settings = QSharedPointer<SettingsBase>::create(*m_sb);
             region_settings->setSetting(PS::Infill::kLineSpacing,
                                         settings_polygon.getSettings()->setting<Distance>(PS::Infill::kLineSpacing));
+            region_settings->setSetting(PS::Infill::kAngle,
+                                        settings_polygon.getSettings()->setting<Angle>(PS::Infill::kAngle));
 
             fillGeometry(geometry, region_settings);
         }
@@ -166,7 +184,8 @@ void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& i
     }
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)), m_geometry_copy,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength));
+                            getSb()->setting<Distance>(PS::Travel::kMinLength),
+                            getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking));
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
@@ -350,15 +369,6 @@ void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& inne
                 m_sb->setting<AngularVelocity>(MS::Startup::kInfillExtruderSpeed),
                 m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
                 m_sb->setting<double>(MS::Startup::kStartUpAreaModifier));
-        }
-    }
-    if (m_sb->setting<bool>(PS::Infill::kPrestart) &&
-        (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) {
-        if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kLines) {
-            PathModifierGenerator::GeneratePreStart(path, m_sb->setting<Distance>(PS::Infill::kPrestartDistance),
-                                                    m_sb->setting<Velocity>(PS::Infill::kPrestartSpeed),
-                                                    m_sb->setting<AngularVelocity>(PS::Infill::kPrestartExtruderSpeed),
-                                                    innerMostClosedContour);
         }
     }
 }

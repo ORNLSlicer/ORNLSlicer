@@ -1,5 +1,8 @@
 #pragma once
 
+#include <qhash.h>
+
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -226,7 +229,7 @@ static GcodeMeta AeroBasicMeta = {GcodeSyntax::kAeroBasic,
                                   rev / s,      // angular velocity
                                   ".gcode"};
 
-static GcodeMeta ORNLMeta = {GcodeSyntax::kCincinnati,
+static GcodeMeta ORNLMeta = {GcodeSyntax::kORNL,
                              QString("("), // starting_delim
                              QString(")"), // ending_delim
                              in,
@@ -237,7 +240,7 @@ static GcodeMeta ORNLMeta = {GcodeSyntax::kCincinnati,
                              in / s / s,
                              rev / minute,
                              ".gcode"};
-static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kCincinnati,
+static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kORNLMetric,
                                    QString("("), // starting_delim
                                    QString(")"), // ending_delim
                                    mm,
@@ -340,6 +343,7 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kORNL, ORNLMeta);
     result.insert((int)GcodeSyntax::kTormach, TormachMeta);
     result.insert((int)GcodeSyntax::kAdamantine, AdamantineMeta);
+    result.insert((int)GcodeSyntax::kORNLMetric, ORNLMetricMeta);
     return result;
 }
 

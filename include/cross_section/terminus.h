@@ -1,8 +1,8 @@
 #pragma once
 
-#include "qtypes.h"
-
 #include <cstddef>
+
+#include <qtypes.h>
 
 namespace ORNL {
 /*!

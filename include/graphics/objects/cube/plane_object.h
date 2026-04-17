@@ -1,8 +1,10 @@
 #pragma once
 
-#include "QColor"
+#include <QColor>
+#include <qquaternion.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/objects/cube_object.h"
-#include "units/unit.h"
 
 namespace ORNL {
 /*!

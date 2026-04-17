@@ -1,8 +1,13 @@
 #pragma once
 
-#include "QTabBar"
-#include "QToolBar"
-#include "QToolButton"
+#include <QTabBar>
+#include <QToolBar>
+#include <QToolButton>
+#include <qobject.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "utilities/enums.h"
 
 namespace ORNL {

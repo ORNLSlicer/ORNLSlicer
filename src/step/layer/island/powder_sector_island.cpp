@@ -1,8 +1,20 @@
 #include "step/layer/island/powder_sector_island.h"
 
+#include <algorithm>
+
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+
+#include "geometry/point.h"
+#include "geometry/settings_polygon.h"
 #include "managers/settings/settings_manager.h"
+#include "step/layer/island/island_base.h"
 #include "step/layer/regions/infill_sector.h"
 #include "step/layer/regions/perimeter_sector.h"
+#include "step/layer/regions/region_base.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 PowderSectorIsland::PowderSectorIsland(SectorInformation si, const QSharedPointer<SettingsBase>& sb,

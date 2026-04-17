@@ -1,5 +1,16 @@
 #include "graphics/objects/arrow_object.h"
 
+#include <GL/gl.h>
+
+#include <vector>
+
+#include <qcolor.h>
+#include <qmatrix4x4.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/support/shape_factory.h"
 
 namespace ORNL {

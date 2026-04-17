@@ -1,7 +1,13 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
 #include "geometry/path.h"
-#include "geometry/segments/travel.h"
+#include "geometry/point.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /**
@@ -13,15 +19,17 @@ class PathModifierGenerator {
     static void GenerateTravel(Path& path, Point current_location, Velocity velocity);
 
     /**
-     * @brief GeneratePreStart generates a pre-start path.
+     * @brief GenerateOpenLoopLeadIn generates a lead-in path for open loop paths.
      * @param path: The path to modify.
-     * @param prestartDistance: The pre-start distance.
-     * @param prestartSpeed: The pre-start speed.
-     * @param prestartExtruderSpeed: The pre-start extruder speed.
-     * @param outerPath: The enclosing path that "path" will try to connect to.
+     * @param leadInDistance: The lead-in distance.
+     * @param leadInSpeed: The lead-in speed.
+     * @param leadInExtruderSpeed: The lead-in extruder speed.
+     * @param enableWidthHeight: Whether to enable width and height mode.
+     * @param areaMultiplier: The area multiplier.
      */
-    static void GeneratePreStart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
-                                 AngularVelocity prestartExtruderSpeed, QVector<Path>& outerPath);
+    static void GenerateOpenLoopLeadIn(Path& path, Distance leadInDistance, Velocity leadInSpeed,
+                                       AngularVelocity leadInExtruderSpeed, bool enableWidthHeight,
+                                       double areaMultiplier);
 
     /**
      * @brief GenerateFlyingStart generates a flying start path which begins motion before enabling extrusion.

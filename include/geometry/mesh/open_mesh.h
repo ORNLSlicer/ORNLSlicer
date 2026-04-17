@@ -1,7 +1,24 @@
 #pragma once
 
+#include <array>
+#include <cstddef>
+#include <utility>
+
+#include <CGAL/boost/graph/graph_traits_Surface_mesh.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 //! \class OpenMesh

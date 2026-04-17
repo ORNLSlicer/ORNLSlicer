@@ -1,7 +1,27 @@
 #include "slicing/buffered_slicer.h"
 
+#include <tuple>
+
+#include <qcontainerfwd.h>
+#include <qmap.h>
+#include <qqueue.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "configs/settings_range.h"
 #include "cross_section/cross_section.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
+#include "part/part.h"
 #include "slicing/slicing_utilities.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 
@@ -18,13 +38,10 @@ BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QShar
     m_use_cgal_cross_section = use_cgal_cross_section;
 
     auto closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get());
-    if (closed_mesh != nullptr)
-        m_skeleton = QSharedPointer<MeshSkeleton>::create(QSharedPointer<ClosedMesh>::create(*closed_mesh));
     m_previous_buffer_size = previous_buffer;
     m_future_buffer_size = future_buffer;
 
-    std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) =
-        SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh, m_skeleton);
+    std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh);
 
     if (m_settings->setting<bool>(ES::WireFeed::kSettingsRegionMeshSplit)) {
         QSharedPointer<ClosedMesh> single_setting_mesh = QSharedPointer<ClosedMesh>::create();
@@ -117,14 +134,14 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         layer_specific_settings->makeLocalAdjustments(m_slice_count);
 
         // Shift along slicing axis or skeleton
-        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, m_slicing_plane, m_last_layer_height, m_skeleton);
+        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, m_slicing_plane, m_last_layer_height);
         m_last_layer_height = layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight);
 
         // If the slicing plane is beyond the max_point of the part, stop
         if (m_slicing_plane.evaluatePoint(m_mesh_max) < 0)
             return nullptr;
 
-        Point shift_amount = Point(0, 0, 0); // cross sectioning will add data
+        Point shift_amount = Point(0, 0, 0); // cross sectioning will add data (primary mesh)
         QVector3D average_normal;
 
         PolygonList geometry;
@@ -134,8 +151,8 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
             auto result = m_mesh->intersect(m_slicing_plane);
             opt_polylines = result.first;
 
-            for (auto polygon : result.second) // Extract polygons
-            {
+            // Extract polygons
+            for (auto polygon : result.second) {
                 geometry += polygon;
             }
 
@@ -143,7 +160,7 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         }
         else {
             geometry = CrossSection::doCrossSection(m_mesh, m_slicing_plane, shift_amount, average_normal,
-                                                    layer_specific_settings);
+                                                    layer_specific_settings, false);
         }
 
         if (layer_specific_settings->setting<bool>(PS::SpecialModes::kEnableOversize) && geometry.size() > 0) {
@@ -152,20 +169,23 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
 
         // Settings regions
         QVector<SettingsPolygon> settings_polygons;
-        computeSettingsPolygons(settings_polygons);
-
-        SingleExternalGridInfo single_grid;
+        computeSettingsPolygons(settings_polygons, shift_amount);
 
         PolygonList settings_modified_geometry;
-        if (m_settings_remaining_build_mesh != nullptr)
-            settings_modified_geometry =
-                CrossSection::doCrossSection(m_settings_remaining_build_mesh, m_slicing_plane, shift_amount,
-                                             average_normal, layer_specific_settings);
+        if (m_settings_remaining_build_mesh != nullptr) {
+            Point aux_shift = shift_amount; // preserve base
+            QVector3D aux_normal;
+            settings_modified_geometry = CrossSection::doCrossSection(
+                m_settings_remaining_build_mesh, m_slicing_plane, aux_shift, aux_normal, layer_specific_settings, true);
+        }
 
         PolygonList settings_bounded_geometry;
-        if (m_settings_bounded_mesh != nullptr)
+        if (m_settings_bounded_mesh != nullptr) {
+            Point aux_shift = shift_amount;
+            QVector3D aux_normal;
             settings_bounded_geometry = CrossSection::doCrossSection(
-                m_settings_bounded_mesh, m_slicing_plane, shift_amount, average_normal, layer_specific_settings);
+                m_settings_bounded_mesh, m_slicing_plane, aux_shift, aux_normal, layer_specific_settings, true);
+        }
 
         SliceMeta meta = {
             m_slice_count,
@@ -178,7 +198,6 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
             average_normal,
             shift_amount,
             m_additional_shift,
-            single_grid,
             opt_polylines,
         };
 
@@ -190,18 +209,28 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
     return slice_meta;
 }
 
-void BufferedSlicer::computeSettingsPolygons(QVector<SettingsPolygon>& settings_polygons) {
-    // Create settings polygons
+void BufferedSlicer::computeSettingsPolygons(QVector<SettingsPolygon>& settings_polygons, const Point& base_shift) {
     for (const auto& settings_part : m_settings_parts) {
-        // Add a settings polys for each island.
-        Point tmp_point;
+        Point part_shift = base_shift; // preserve base shift
         QVector3D tmp_vec;
-
-        PolygonList geometry = CrossSection::doCrossSection(settings_part->rootMesh(), m_slicing_plane, tmp_point,
-                                                            tmp_vec, settings_part->getSb());
-
-        auto settings = settings_part->getSb();
-        settings_polygons.push_back(SettingsPolygon(geometry, settings));
+        PolygonList geometry = CrossSection::doCrossSection(settings_part->rootMesh(), m_slicing_plane, part_shift,
+                                                            tmp_vec, settings_part->getSb(), true);
+        // If cross-section altered shift (it should not with preserve flag), translate to match base
+        if (part_shift != base_shift) {
+            Point delta = base_shift - part_shift;
+            for (Polygon& poly : geometry) {
+                for (Point& p : poly) {
+                    p = p + delta;
+                }
+            }
+        }
+        QVector<Polygon> geom_vec;
+        geom_vec.reserve(geometry.size());
+        for (const Polygon& poly : geometry) {
+            geom_vec.push_back(poly);
+        }
+        auto sb = settings_part->getSb();
+        settings_polygons.push_back(SettingsPolygon(geom_vec, sb));
     }
 }
 } // namespace ORNL

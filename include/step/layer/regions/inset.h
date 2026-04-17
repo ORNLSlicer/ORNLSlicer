@@ -1,5 +1,17 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 
 namespace ORNL {
@@ -9,9 +21,7 @@ class Inset : public RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
-    Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-          const SingleExternalGridInfo& gridInfo);
+    Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Writes the gcode for the inset.
     //! \param writer Writer type to use for gcode output

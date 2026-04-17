@@ -1,11 +1,14 @@
 #pragma once
 
-#include "configs/settings_base.h"
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
-#include "optimizers/point_order_optimizer.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -41,12 +44,14 @@ class PolylineOrderOptimizer {
     //! \param Polylines: Copy of Polylines to evaluate
     void setGeometryToEvaluate(QVector<Polyline> geometry, RegionType type, PathOrderOptimization optimization);
 
-    //! \brief Set parameters (when computing infill)
-    //! \param infillPattern: Pattern to evaluate
-    //! \param border_geometry: Geometry to consider for intersection testing
-    //! \param minDistance: minimum distance of resulting polyline
+    /// @brief Set parameters (when computing infill)
+    /// @param infillPattern: Pattern to evaluate
+    /// @param border_geometry: Geometry to consider for intersection testing
+    /// @param minDistance: minimum distance of resulting polyline
+    /// @param minTravelDistance: minimum distance for travel to be used instead of link
+    /// @param enable_partitioned_linking: whether to enable partitioned linking of line infill
     void setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry, Distance minInfillPathDistance,
-                             Distance minTravelDistance);
+                             Distance minTravelDistance, bool enable_partitioned_linking = false);
 
     void setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
                             Distance minDistanceThreshold, Distance consecutiveThreshold, bool randomnessEnable,
@@ -103,10 +108,6 @@ class PolylineOrderOptimizer {
     //! \brief Links single Polyline in line infill
     //! \return Next Polyline linked via travel
     Polyline linkNextInfillLines(QVector<Polyline>& polylines);
-
-    //! \brief Links a travel in line infill
-    //! \return Next Polyline linked via travel
-    // Polyline linkNextInfillTravel(QVector<Polyline>& polylines);
 
     //! \brief Links single Polyline in concentric infill
     //! \return Next Polyline linked via travel
@@ -199,5 +200,9 @@ class PolylineOrderOptimizer {
     //! \brief Whether or not heirarchy has been computed. Must only be computed once and can simply be queried for each
     //! subsequent Polyline.
     bool m_has_computed_heirarchy;
+
+    /// @brief Whether to enable partitioned linking of line infill, which links lines in the same partition before
+    /// linking between partitions
+    bool m_enable_partitioned_linking = false;
 };
 } // namespace ORNL

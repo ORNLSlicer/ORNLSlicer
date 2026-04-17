@@ -1,9 +1,18 @@
 #include "widgets/part_widget/model/part_meta_model.h"
 
-#include "QStack"
+#include <QStack>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
 #include "graphics/objects/part_object.h"
 #include "managers/session_manager.h"
 #include "part/part.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
 
 namespace ORNL {

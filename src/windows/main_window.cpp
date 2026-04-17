@@ -1,17 +1,72 @@
 #include "windows/main_window.h"
 
-#include "QFile"
-#include "QFileDialog"
-#include "QSettings"
-#include "QStatusBar"
-#include "QTimer"
+#include <QFile>
+#include <QFileDialog>
+#include <QFileInfo>
+#include <QSettings>
+#include <QStatusBar>
+#include <QTimer>
+#include <qaction.h>
+#include <qapplication.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qdesktopservices.h>
+#include <qdockwidget.h>
+#include <qevent.h>
+#include <qgridlayout.h>
+#include <qicon.h>
+#include <qkeysequence.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qmainwindow.h>
+#include <qmap.h>
+#include <qmenu.h>
+#include <qmenubar.h>
+#include <qminmax.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qobjectdefs.h>
+#include <qoverload.h>
+#include <qpaintdevice.h>
+#include <qprogressbar.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qsizepolicy.h>
+#include <qstandardpaths.h>
+#include <qstringliteral.h>
+#include <qtabbar.h>
+#include <qtabwidget.h>
+#include <qurl.h>
+#include <qwidget.h>
+
+#include "geometry/mesh/open_mesh.h"
+#include "geometry/segment_base.h"
+#include "graphics/view/gcode_view.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 #include "threading/gcode_loader.h"
 #include "threading/session_loader.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "widgets/cmd_widget.h"
+#include "widgets/gcode_widget.h"
+#include "widgets/gcodebar.h"
+#include "widgets/layerbar.h"
+#include "widgets/main_toolbar.h"
+#include "widgets/part_widget/part_widget.h"
+#include "widgets/settings/setting_bar.h"
+#include "windows/about.h"
 #include "windows/dialogs/cs_dbg.h"
+#include "windows/dialogs/slice_dialog.h"
 #include "windows/dialogs/template_save.h"
+#include "windows/flowratecalc.h"
+#include "windows/gcode_export.h"
+#include "windows/layer_times_window.h"
+#include "windows/preferences_window.h"
+#include "windows/xtrudecalc.h"
 
 namespace ORNL {
 
@@ -31,7 +86,7 @@ void MainWindow::continueStartup() {
     QString app_path = qApp->applicationDirPath();
 
     QStringList template_paths = {app_path + "/templates/", app_path + "/../../../templates/",
-                                  app_path + "/../share/slicer2/templates/"};
+                                  app_path + "/../share/ornlslicer/templates/"};
 
     QString templates;
 
@@ -155,7 +210,7 @@ void MainWindow::setupWindows() {
     this->resize(Constants::UI::MainWindow::kWindowSize);
 
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer2.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     this->setWindowIcon(icon);
 
     // Preferences Window
@@ -166,7 +221,6 @@ void MainWindow::setupWindows() {
     m_layertimebar = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
     m_about_window = new AboutWindow(this);
-    m_external_file_window = new ExternalFileWindow(this);
 }
 
 void MainWindow::setupWidgets() {
@@ -261,12 +315,6 @@ void MainWindow::setupDocks() {
     m_layertimesdock->setObjectName(QStringLiteral("m_layertimesdock"));
     //        m_layertimesdock->setFeatures(QDockWidget::AllDockWidgetFeatures);
     m_layertimesdock->setMinimumWidth(Constants::UI::MainWindow::SideDock::kLayerTimesWidth);
-
-    // external file dock
-    m_external_file_dock = new QDockWidget(this);
-    m_external_file_dock->setObjectName(QStringLiteral("m_external_file_dock"));
-    //        m_external_file_dock->setFeatures(QDockWidget::NoDockWidgetFeatures);
-    m_external_file_dock->setMinimumWidth(Constants::UI::MainWindow::SideDock::kExternalFileWidth);
 
     // CmdDock
     m_cmddock = new QDockWidget(this);
@@ -428,7 +476,8 @@ void MainWindow::setupActions() {
     m_actions["manual"] = {"User's Manual", ":/icons/help_black.png", false, QKeySequence(), nullptr};
     m_actions["repo"] = {"Open Website/Repository", ":/icons/web_black.png", false, QKeySequence(), nullptr};
     m_actions["bug"] = {"Report Bug", ":/icons/bug_black.png", false, QKeySequence(), nullptr};
-    m_actions["about_s2"] = {"About ORNL Slicer 2", ":/icons/slicer2.png", false, QKeySequence(), nullptr};
+    m_actions["about_s2"] = {QString("About %1").arg(QApplication::applicationDisplayName()),
+                             ":/icons/ornlslicer_logo.png", false, QKeySequence(), nullptr};
     m_actions["about_qt"] = {"About Qt", ":/icons/qt.png", false, QKeySequence(), nullptr};
 
     // Menu Debug
@@ -576,7 +625,6 @@ void MainWindow::setupInsert() {
     m_settingdock->setWidget(m_settingbar);
     m_gcodedock->setWidget(m_gcodebar);
     m_layertimesdock->setWidget(m_layertimebar);
-    m_external_file_dock->setWidget(m_external_file_window);
     m_statusbar->addPermanentWidget(m_progressbar);
 
     m_tab_widget->addTab(m_part_widget, "Object View");
@@ -587,13 +635,11 @@ void MainWindow::setupInsert() {
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_gcodedock);
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_settingdock);
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_layertimesdock);
-    this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_external_file_dock);
 
     m_cmddock->setMaximumHeight(Constants::UI::MainWindow::kStatusBarMaxHeight);
 
     this->tabifyDockWidget(m_settingdock, m_gcodedock);
     this->tabifyDockWidget(m_gcodedock, m_layertimesdock);
-    this->tabifyDockWidget(m_layertimesdock, m_external_file_dock);
     this->setTabPosition(static_cast<Qt::DockWidgetArea>(2), QTabWidget::West);
     this->addDockWidget(static_cast<Qt::DockWidgetArea>(2), m_cmddock);
     m_settingdock->raise();
@@ -684,12 +730,12 @@ void MainWindow::setupEvents() {
 
     connect(m_actions["manual"].action, &QAction::triggered, this, [this] {
         QDesktopServices::openUrl(
-            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/slicer2/slicer2_user_guide.pdf"));
+            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/ornlslicer/ornlslicer-user-guide.pdf"));
     });
     connect(m_actions["repo"].action, &QAction::triggered, this,
-            [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/Slicer-2")); });
+            [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/ORNLSlicer")); });
     connect(m_actions["bug"].action, &QAction::triggered, this,
-            [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/Slicer-2/issues")); });
+            [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/ORNLSlicer/issues")); });
     connect(m_actions["about_s2"].action, &QAction::triggered, m_about_window, [this] {
         m_about_window->raise();
         m_about_window->showNormal();
@@ -799,8 +845,6 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::tabHidden, this, &MainWindow::addHiddenSetting);
     connect(GSM.get(), &SettingsManager::globalLoaded, this, &MainWindow::updateSettings);
-
-    connect(m_external_file_window, &ExternalFileWindow::forwardGridInfo, CSM.get(), &SessionManager::setExternalInfo);
 
     // Toolbar -> MainWindow
     connect(m_main_toolbar, &MainToolbar::viewChanged, this, &MainWindow::switchViews);
@@ -924,7 +968,7 @@ void MainWindow::removeHiddenSetting(QMenu* menu, QString panel, QString setting
 }
 
 void MainWindow::retranslateUi() {
-    this->setWindowTitle(QApplication::translate("MainWindow", "ORNL Slicer 2", nullptr));
+    this->setWindowTitle(QApplication::applicationDisplayName());
 
     // Iterate through the actions and retranslate them.
     for (menu_info curr_act : m_actions) {
@@ -953,7 +997,6 @@ void MainWindow::retranslateUi() {
     m_settingdock->setWindowTitle(QApplication::translate("MainWindow", "Settings", nullptr));
     m_gcodedock->setWindowTitle(QApplication::translate("MainWindow", "G-Code Editor", nullptr));
     m_layertimesdock->setWindowTitle(QApplication::translate("MainWindow", "Layer Times", nullptr));
-    m_external_file_dock->setWindowTitle(QApplication::translate("MainWindow", "External File Input", nullptr));
     m_cmddock->setWindowTitle(QApplication::translate("MainWindow", "Status", nullptr));
 }
 
@@ -1108,7 +1151,7 @@ void MainWindow::saveSession() {
     save_dialog.setWindowTitle("Save project");
     save_dialog.setDirectory(CSM->getMostRecentProjectLocation());
     save_dialog.setAcceptMode(QFileDialog::AcceptSave);
-    save_dialog.setNameFilters(QStringList() << "Slicer 2 Project File (*.s2p)" << "Any Files (*)");
+    save_dialog.setNameFilters(QStringList() << "ORNLSlicer Project File (*.s2p)" << "Any Files (*)");
     save_dialog.setDefaultSuffix("s2p");
     if (!save_dialog.exec())
         return;
@@ -1120,7 +1163,7 @@ void MainWindow::saveSession() {
     CSM->saveSession(filename);
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
 
-    this->setTitleInfo(filename.split("/").back());
+    this->setTitleInfo(QFileInfo(filename).fileName());
     m_statusbar->showMessage("Session saved");
     m_cmdbar->append("Session saved: " + filename);
 }
@@ -1130,7 +1173,7 @@ void MainWindow::loadSession() {
     load_dialog.setWindowTitle("Load project");
     load_dialog.setDirectory(CSM->getMostRecentProjectLocation());
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    load_dialog.setNameFilters(QStringList() << "Slicer 2 Project File (*.s2p)" << "Any Files (*)");
+    load_dialog.setNameFilters(QStringList() << "ORNLSlicer Project File (*.s2p)" << "Any Files (*)");
     load_dialog.setDefaultSuffix("s2p");
     if (!load_dialog.exec())
         return;
@@ -1139,16 +1182,20 @@ void MainWindow::loadSession() {
     if (filename.isEmpty())
         return;
 
-    loadASession(filename);
+    SessionLoader* loader = loadASession(filename);
+    if (loader != nullptr) {
+        connect(loader, &SessionLoader::loadSucceeded, this,
+                [this, title = QFileInfo(filename).fileName()] { this->setTitleInfo(title); });
+    }
     m_statusbar->showMessage("Session loaded");
     m_cmdbar->append("Session loaded: " + filename);
 
     CSM->setMostRecentProjectLocation(QFileInfo(filename).absolutePath());
 }
 
-void MainWindow::loadASession(const QString& filename) {
+SessionLoader* MainWindow::loadASession(const QString& filename) {
     m_part_widget->clear();
-    CSM->loadSession(true, filename);
+    return CSM->loadSession(true, filename);
 }
 
 void MainWindow::updateSettings(const QString& name) {
@@ -1215,7 +1262,7 @@ void MainWindow::loadTemplate() {
     QFileDialog load_dialog;
     load_dialog.setWindowTitle("Load Template");
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
-    load_dialog.setNameFilters(QStringList() << "Slicer 2 Configuration/Template File (*.s2c)"
+    load_dialog.setNameFilters(QStringList() << "ORNLSlicer Configuration/Template File (*.s2c)"
                                              << "Any Files (*)");
     load_dialog.setDefaultSuffix("s2c");
     if (!load_dialog.exec())
@@ -1296,7 +1343,7 @@ void MainWindow::setLock(bool lock) {
     m_gcodebar->setDisabled(lock);
 }
 
-void MainWindow::setTitleInfo(const QString& str) { this->setWindowTitle("ORNL Slicer 2 - " + str); }
+void MainWindow::setTitleInfo(const QString& str) { this->setWindowTitle(str); }
 
 void MainWindow::enableSelectionMenu(bool partSelected) {
     m_actions["reload"].action->setEnabled(partSelected);

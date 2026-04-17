@@ -1,7 +1,24 @@
 #include "geometry/segments/arc.h"
 
+#include <math.h>
+
+#include <cassert>
+#include <vector>
+
+#include <qhashfunctions.h>
+#include <qmath.h>
+#include <qnumeric.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "geometry/segment_base.h"
 #include "graphics/support/shape_factory.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

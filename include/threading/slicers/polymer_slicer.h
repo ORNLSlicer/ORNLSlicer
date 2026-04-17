@@ -1,5 +1,14 @@
 #pragma once
 
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "part/part.h"
 #include "step/global_layer.h"
 #include "threading/traditional_ast.h"
 

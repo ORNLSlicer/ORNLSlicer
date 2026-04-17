@@ -1,6 +1,13 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qqueue.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
 #include "threading/abs_slicing_thread.h"
+#include "threading/step_thread.h"
 
 namespace ORNL {
 /*!

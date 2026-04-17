@@ -1,16 +1,34 @@
 #include "cross_section/cross_section_object.h"
 
+#include <algorithm>
+#include <cstddef>
+#include <cstdint>
+#include <deque>
+#include <iterator>
+#include <limits>
+#include <queue>
+#include <utility>
+#include <vector>
+
+#include <psimpl.h>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "algorithms/knn.h"
 #include "cross_section/close_polygon_result.h"
 #include "cross_section/cross_section_segment.h"
 #include "cross_section/gap_closer_result.h"
 #include "cross_section/possible_stitch.h"
 #include "cross_section/sparse_point_grid.h"
+#include "cross_section/terminus.h"
 #include "cross_section/terminus_tracking_map.h"
 #include "geometry/mesh/mesh_vertex.h"
 #include "geometry/polyline.h"
 #include "managers/settings/settings_manager.h"
-#include "psimpl.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
 
 namespace ORNL {
@@ -139,29 +157,6 @@ PolygonList CrossSectionObject::makePolygons() {
         m_closeable_polygons = smoothed_polygons;
     }
     m_polygons.addAll(m_closeable_polygons);
-#if 0
-        if (m_mesh->setting< bool >(
-                Constants::PrintSettings::FixModel::kStitch))
-        {
-            stitch();
-        }
-
-        if (m_mesh->setting< bool >(
-                Constants::PrintSettings::FixModel::kExtensiveStitch))
-        {
-            stitch_extensive();
-        }
-#endif
-
-    // Comment out until unit scaling is implemented
-    //  Remove all tiny polygons or polygons that are not closed
-    //        Distance snap_distance = 1 * in;
-    //        auto it                = std::remove_if(m_polygons.begin(),
-    //                                 m_polygons.end(),
-    //                                 [snap_distance](Polygon polygon) {
-    //                                     return polygon.shorterThan(snap_distance);
-    //                                 });
-    //        m_polygons.erase(it, m_polygons.end());
 
     m_polygons.removeDegenerateVertices(); // Remove vertices connected to
                                            // overlapping line segments

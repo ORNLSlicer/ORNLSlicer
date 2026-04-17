@@ -1,7 +1,22 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 class Skin : public RegionBase {
@@ -10,9 +25,7 @@ class Skin : public RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
-    Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-         const SingleExternalGridInfo& gridInfo);
+    Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Writes the gcode for the skin.
     //! \param writer Writer type to use for gcode output

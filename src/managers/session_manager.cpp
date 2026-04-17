@@ -1,14 +1,36 @@
 
 #include "managers/session_manager.h"
 
-#include "QCoreApplication"
-#include "QStandardPaths"
-#include "QUuid"
+#include <cstdlib>
+
+#include <QCoreApplication>
+#include <QStandardPaths>
+#include <QUuid>
+#include <data_stream.h>
+#include <qcontainerfwd.h>
+#include <qdatetime.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qhash.h>
+#include <qlogging.h>
+#include <qmatrix4x4.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <tcp_connection.h>
+#include <tcp_server.h>
+
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/mesh_factory.h"
+#include "geometry/mesh/open_mesh.h"
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
 #include "threading/slicers/image_slicer.h"
@@ -16,7 +38,12 @@
 #include "threading/slicers/real_time_polymer_slicer.h"
 #include "threading/slicers/real_time_rpbf_slicer.h"
 #include "threading/slicers/rpbf_slicer.h"
+#include "units/derivative_units.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
 QSharedPointer<SessionManager> SessionManager::m_singleton = QSharedPointer<SessionManager>();
@@ -523,12 +550,6 @@ void SessionManager::forwardDialogUpdate(StatusUpdateStepType type, int complete
 
 void SessionManager::cancelSlice() { m_ast->setCancel(); }
 
-void SessionManager::setExternalInfo(ExternalGridInfo gridInfo) {
-    m_grid_info = gridInfo;
-    if (m_ast != nullptr)
-        m_ast->setExternalData(m_grid_info);
-}
-
 void SessionManager::setCopiedPart(QSharedPointer<Part> part) { m_copied_part = part; }
 
 void SessionManager::pastePart() {
@@ -551,12 +572,6 @@ void SessionManager::pastePart() {
     m_parts.insert(name, new_copy);
     emit partAdded(new_copy);
     m_load_mutex.unlock();
-}
-
-void SessionManager::clearExternalInfo() {
-    m_grid_info = ExternalGridInfo();
-    if (m_ast != nullptr)
-        m_ast->setExternalData(m_grid_info);
 }
 
 void SessionManager::setupTCPServer() {
@@ -678,7 +693,6 @@ bool SessionManager::changeSlicer(SlicerType type) {
             break;
     }
 
-    m_ast->setExternalData(m_grid_info);
     m_slicer_type = type;
 
     // Reset part steps
@@ -710,7 +724,7 @@ SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack) {
     return loader;
 }
 
-void SessionManager::loadSession(bool shouldDelete, QString path) {
+SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path) {
     // Clear out old data if necessary.
     if (shouldDelete) {
         for (model_data file : m_models)
@@ -737,9 +751,12 @@ void SessionManager::loadSession(bool shouldDelete, QString path) {
     if (result >= 0) {
         connect(loader, &SessionLoader::finished, loader, &SessionLoader::deleteLater);
         loader->start();
+        m_file = path;
+        return loader;
     }
 
-    m_file = path;
+    delete loader;
+    return nullptr;
 }
 
 QHash<QString, QString> SessionManager::getMostRecentSettingHistory() { return m_most_recent_setting_history; }

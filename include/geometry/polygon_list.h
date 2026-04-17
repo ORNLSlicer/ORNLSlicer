@@ -1,15 +1,21 @@
 #pragma once
 
-#include "QVector"
-#include "clipper.hpp"
+#include <cstdint>
+
+#include <QVector>
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qpolygon.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "geometry/polygon.h"
 #include "geometry/polyline.h"
-
-#include <queue>
+#include "units/unit.h"
 
 // Single Path Lib
 #ifdef HAVE_SINGLE_PATH
-    #include "single_path/geometry/polygon_list.h"
+    #include <single_path/geometry/polygon_list.h>
 #endif
 
 namespace ORNL {

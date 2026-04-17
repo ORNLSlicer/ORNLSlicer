@@ -1,6 +1,21 @@
 #include "gcode/writers/gkn_writer.h"
 
-#include "QStringBuilder"
+#include <math.h>
+
+#include <cmath>
+
+#include <QStringBuilder>
+#include <qcontainerfwd.h>
+#include <qmath.h>
+#include <qnumeric.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "gcode/gcode_meta.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
@@ -63,8 +78,6 @@ QString GKNWriter::writeSettingsHeader(GcodeSyntax syntax) {
     else {
         text += commentLine(QString("Perimeter Count: %0").arg(m_sb->setting<int>(PS::Perimeter::kCount)));
         text += commentLine(QString("Inset Count: %0").arg(m_sb->setting<int>(PS::Inset::kCount)));
-        // TODO: This doesn't output the layer time, need to change the setting <int> to Time and convert the setting
-        // value to a time... somehow
         if (m_sb->setting<int>(MS::Cooling::kForceMinLayerTime))
             text += commentLine(QString("Forced Minimum / Maximum Layer Time: %0 %1 seconds")
                                     .arg(m_sb->setting<Time>(MS::Cooling::kMinLayerTime)())
@@ -125,16 +138,6 @@ QString GKNWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Dis
              commentLine("Start Build");
     }
 
-    // Borish
-    // Laser Scanner
-    // IR camera
-    /* if (use scale)
-     * M233 (RAISE WEIGH STATION)
-     * writeDwell(3)
-     * G104 P1000 (SCALE CONNECT)
-     * G104 P5000 (SCALE TARE)
-     */
-
     if (m_sb->setting<bool>(PS::LaserScanner::kLaserScanner)) {
         Distance scannerZOffset = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerHeight) -
                                   m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerHeightOffset);
@@ -174,21 +177,7 @@ QString GKNWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase
     return {};
 }
 
-QString GKNWriter::writeBeforePart(QVector3D normal) {
-    //        if(m_can_tilt)
-    //        {
-    //            QVector3D productVec = normal * m_z_axis;
-    //            float val = qAcos((productVec.x() + productVec.y() + productVec.z()) / (normal.length() *
-    //            m_z_axis.length()));
-
-    //            if(normal.length() == 0)
-    //                m_E1 = 0.0;
-    //            else
-    //                m_E1 = M_PI_2 - qAcos((productVec.x() + productVec.y() + productVec.z()) / (normal.length() *
-    //                m_z_axis.length()));
-    //        }
-    return QString();
-}
+QString GKNWriter::writeBeforePart(QVector3D normal) { return QString(); }
 
 QString GKNWriter::writeBeforeIsland() {
     QString rv;

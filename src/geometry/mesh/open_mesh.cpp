@@ -1,15 +1,49 @@
 #include "geometry/mesh/open_mesh.h"
 
-#include "CGAL/Advancing_front_surface_reconstruction.h"
-#include "CGAL/IO/read_points.h"
-#include "CGAL/Optimal_bounding_box/oriented_bounding_box.h"
-#include "CGAL/Polygon_mesh_processing/compute_normal.h"
-#include "CGAL/Polygon_mesh_processing/measure.h"
-#include "CGAL/Polygon_mesh_processing/transform.h"
-#include "CGAL/Polygon_mesh_slicer.h"
-#include "CGAL/boost/graph/Face_filtered_graph.h"
-#include "CGAL/disable_warnings.h"
-#include "QFileInfo"
+#include <array>
+#include <cstddef>
+#include <iterator>
+#include <utility>
+#include <vector>
+
+#include <CGAL/Advancing_front_surface_reconstruction.h>
+#include <CGAL/Aff_transformation_3.h>
+#include <CGAL/IO/read_points.h>
+#include <CGAL/Named_function_parameters.h>
+#include <CGAL/Optimal_bounding_box/oriented_bounding_box.h>
+#include <CGAL/Origin.h>
+#include <CGAL/Polygon_mesh_processing/compute_normal.h>
+#include <CGAL/Polygon_mesh_processing/measure.h>
+#include <CGAL/Polygon_mesh_processing/transform.h>
+#include <CGAL/Polygon_mesh_slicer.h>
+#include <CGAL/Polyhedron_items_with_id_3.h>
+#include <CGAL/aff_transformation_tags.h>
+#include <CGAL/boost/graph/Face_filtered_graph.h>
+#include <CGAL/boost/graph/copy_face_graph.h>
+#include <CGAL/boost/graph/graph_traits_Polyhedron_3.h>
+#include <CGAL/boost/graph/graph_traits_Surface_mesh.h>
+#include <CGAL/boost/graph/iterator.h>
+#include <CGAL/disable_warnings.h>
+#include <QFileInfo>
+#include <qcontainerfwd.h>
+#include <qfiledevice.h>
+#include <qhashfunctions.h>
+#include <qlogging.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qstringview.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
+#include "geometry/plane.h"
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 OpenMesh::OpenMesh() : MeshBase() {}

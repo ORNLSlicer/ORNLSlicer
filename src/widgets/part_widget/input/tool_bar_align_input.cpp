@@ -1,7 +1,20 @@
 #include "widgets/part_widget/input/tool_bar_align_input.h"
 
-#include "QFile"
-#include "QGraphicsDropShadowEffect"
+#include <QFile>
+#include <QGraphicsDropShadowEffect>
+#include <qboxlayout.h>
+#include <qeasingcurve.h>
+#include <qfiledevice.h>
+#include <qframe.h>
+#include <qicon.h>
+#include <qpoint.h>
+#include <qpropertyanimation.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtoolbutton.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
 

@@ -1,11 +1,17 @@
 #pragma once
 
-#include "QElapsedTimer"
-#include "QQueue"
-#include "QThread"
-#include "external_files/external_grid.h"
-#include "gcode/gcode_parser.h"
-#include "threading/step_thread.h"
+#include <QElapsedTimer>
+#include <QQueue>
+#include <QThread>
+#include <nlohmann/json_fwd.hpp>
+#include <qdir.h>
+#include <qhashfunctions.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
+#include "gcode/writers/writer_base.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -37,10 +43,6 @@ class AbstractSlicingThread : public QObject {
 
     //! \brief Sets cancel flag
     void setCancel();
-
-    //! \brief Sets external data for use in child slicers
-    //! \param grid: Grid structure that holds external data
-    void setExternalData(ExternalGridInfo gridInfo);
 
     //! \brief Sets whether or not to communicate via tcp server
     //! \param communicate: whether or not to transmit
@@ -122,10 +124,6 @@ class AbstractSlicingThread : public QObject {
     //! \brief Accessor for child slicers to see if cancel flag has been set
     bool shouldCancel();
 
-    //! \brief gets external grid info
-    //! \return external grid info
-    ExternalGridInfo getExternalGridInfo();
-
     //! \brief whether or not to communicate results after processing step on tcp server
     //! \return whether or not to communicate
     bool shouldCommunicate();
@@ -166,9 +164,6 @@ class AbstractSlicingThread : public QObject {
 
     //! \brief Cancel flag set by session manager if user clicks on cancel button
     bool m_should_cancel;
-
-    //! \brief Grid structure processed from external files
-    ExternalGridInfo m_grid_info;
 
     //! \brief whether or not to send processing step output to manager for transmission on tcp server
     bool m_should_communicate;

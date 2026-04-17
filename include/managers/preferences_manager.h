@@ -1,11 +1,26 @@
 #pragma once
 
-#include "QApplication"
-#include "QObject"
-#include "QPair"
-#include "QStyle"
+#include <list>
+#include <map>
+#include <string>
+#include <unordered_map>
+
+#include <QApplication>
+#include <QObject>
+#include <QPair>
+#include <QStyle>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qlist.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+
 #include "units/unit.h"
 #include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 #include "utilities/theme_tool.h"
 
 namespace ORNL {
@@ -304,10 +319,10 @@ class PreferencesManager : public QObject {
     //! \brief Sets the unit used for angle
     void setAngleUnit(Angle a);
 
-    //! \brief Sets the theme of Slicer 2
+    //! \brief Sets the theme of ORNLSlicer
     void setTheme(QString theme);
 
-    //! \brief Sets the theme of Slicer 2
+    //! \brief Sets the theme of ORNLSlicer
     void setTheme(ThemeName theme);
 
     //! \brief Sets the unit used for time

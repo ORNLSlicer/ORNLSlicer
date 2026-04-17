@@ -1,6 +1,13 @@
 #include "gcode/parsers/adamantine_parser.h"
 
-#include "QString"
+#include <functional>
+
+#include <QString>
+#include <qcontainerfwd.h>
+#include <qlatin1stringview.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
 
 namespace ORNL {
 AdamantineParser::AdamantineParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

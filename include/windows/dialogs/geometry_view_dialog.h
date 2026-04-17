@@ -1,8 +1,11 @@
 #pragma once
 
-#include "QDialog"
-#include "QGraphicsView"
-#include "QHBoxLayout"
+#include <QDialog>
+#include <QGraphicsView>
+#include <QHBoxLayout>
+#include <qcolor.h>
+#include <qwidget.h>
+
 #include "geometry/polyline.h"
 #include "widgets/scrollable_graphics_view.h"
 

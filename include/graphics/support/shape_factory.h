@@ -1,11 +1,12 @@
 #pragma once
 
-#include "QColor"
-#include "QMatrix4x4"
-#include "geometry/point.h"
-#include "units/unit.h"
-
 #include <vector>
+
+#include <QColor>
+#include <QMatrix4x4>
+#include <qvectornd.h>
+
+#include "geometry/point.h"
 
 namespace ORNL {
 //! \brief "Class" for creating various geometries. Input vectors are appended to so shapes can be built additively.

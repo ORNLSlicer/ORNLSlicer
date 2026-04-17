@@ -1,6 +1,25 @@
 #include "slicing/slicing_utilities.h"
 
+#include <tuple>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "cross_section/cross_section.h"
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "part/part.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 
@@ -50,8 +69,7 @@ int SlicingUtilities::GetPartStart(QSharedPointer<Part> part, int current_steps)
 }
 
 std::tuple<Plane, Point, Point> SlicingUtilities::GetDefaultSlicingAxis(QSharedPointer<SettingsBase> sb,
-                                                                        QSharedPointer<MeshBase> mesh,
-                                                                        QSharedPointer<MeshSkeleton> skeleton) {
+                                                                        QSharedPointer<MeshBase> mesh) {
     // Retrieve the slicing plane normal
     QVector3D slicing_vector = {sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
                                 sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
@@ -67,8 +85,7 @@ std::tuple<Plane, Point, Point> SlicingUtilities::GetDefaultSlicingAxis(QSharedP
     return {slicing_plane, min, max};
 }
 
-void SlicingUtilities::ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height,
-                                         QSharedPointer<MeshSkeleton> skeleton) {
+void SlicingUtilities::ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height) {
     // Retrieve the layer height
     const Distance& layer_height = sb->setting<Distance>(PS::Layer::kLayerHeight);
 

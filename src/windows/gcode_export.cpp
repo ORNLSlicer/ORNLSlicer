@@ -1,16 +1,31 @@
 #include "windows/gcode_export.h"
 
-#include "QDir"
-#include "QDirIterator"
-#include "QFileDialog"
-#include "QGroupBox"
-#include "QInputDialog"
-#include "QLabel"
-#include "QMessageBox"
-#include "QStringBuilder"
+#include <QApplication>
+#include <QDir>
+#include <QDirIterator>
+#include <QFileDialog>
+#include <QGroupBox>
+#include <QInputDialog>
+#include <QLabel>
+#include <QMessageBox>
+#include <QStringBuilder>
+#include <qboxlayout.h>
+#include <qdebug.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qgridlayout.h>
+#include <qlineedit.h>
+#include <qpushbutton.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qtextedit.h>
+#include <qwidget.h>
+
+#include "gcode/gcode_meta.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "threading/gcode_adamantine_saver.h"
+#include "threading/gcode_amcm_saver.h"
 #include "threading/gcode_aml3d_saver.h"
 #include "threading/gcode_marlin_saver.h"
 #include "threading/gcode_meld_saver.h"
@@ -18,14 +33,16 @@
 #include "threading/gcode_sandia_saver.h"
 #include "threading/gcode_simulation_output.h"
 #include "threading/gcode_tormach_saver.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 
 GcodeExport::GcodeExport(QWidget* parent) {
-    setWindowTitle("Slicer 2: G-Code/Project Export");
+    setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
 
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer2.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     m_layout = new QVBoxLayout();
@@ -106,10 +123,19 @@ void GcodeExport::exportGcode() {
 
     if (filepath != QString()) {
         QFileInfo info(filepath);
-        QString partName = info.baseName();
+        QString partName;
+        QString fullName = info.fileName();
         filepath = info.absolutePath();
 
         CSM->setMostRecentGcodeLocation(info.absolutePath());
+
+        // remove file suffix from part name if it exists - keeps periods in the file name intact
+        if (fullName.endsWith(m_most_recent_meta.m_file_suffix)) {
+            partName = fullName.left(fullName.length() - m_most_recent_meta.m_file_suffix.length());
+        }
+        else {
+            partName = fullName;
+        }
 
         // if bundling files, create folder based on name
         if (m_bundle_files_checkbox->isChecked()) {
@@ -309,6 +335,15 @@ void GcodeExport::exportGcode() {
                 new GCodeMarlinSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
             connect(saver, &GCodeMarlinSaver::finished, saver, &GCodeMarlinSaver::deleteLater);
             connect(saver, &GCodeMarlinSaver::finished, this,
+                    [this, filepath, partName]() { showComplete(filepath, partName); });
+            saver->start();
+        }
+        else if ((m_most_recent_meta == GcodeMetaList::ORNLMeta ||
+                  m_most_recent_meta == GcodeMetaList::ORNLMetricMeta) &&
+                 GSM->getGlobal()->setting<bool>(ES::FileOutput::kAMCMOutput)) {
+            GCodeAMCMSaver* saver = new GCodeAMCMSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
+            connect(saver, &GCodeAMCMSaver::finished, saver, &GCodeAMCMSaver::deleteLater);
+            connect(saver, &GCodeAMCMSaver::finished, this,
                     [this, filepath, partName]() { showComplete(filepath, partName); });
             saver->start();
         }

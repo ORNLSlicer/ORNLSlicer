@@ -1,7 +1,21 @@
 #include "widgets/settings/setting_header.h"
 
-#include "QFile"
-#include "QHBoxLayout"
+#include <QFile>
+#include <QHBoxLayout>
+#include <qframe.h>
+#include <qhashfunctions.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qlayoutitem.h>
+#include <qnamespace.h>
+#include <qpicture.h>
+#include <qpixmap.h>
+#include <qpushbutton.h>
+#include <qsharedpointer.h>
+#include <qsizepolicy.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
 
 namespace ORNL {

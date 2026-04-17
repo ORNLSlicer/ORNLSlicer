@@ -1,6 +1,11 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qlatin1stringview.h>
+
 #include "common_parser.h"
+#include "gcode/gcode_meta.h"
 
 namespace ORNL {
 /*!

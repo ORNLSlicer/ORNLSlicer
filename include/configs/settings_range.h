@@ -1,5 +1,8 @@
 #pragma once
 
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
 #include "configs/settings_base.h"
 
 namespace ORNL {

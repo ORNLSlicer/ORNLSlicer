@@ -1,13 +1,30 @@
 #include "step/layer/regions/skin.h"
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
 #include "geometry/pattern_generator.h"
+#include "geometry/point.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
+#include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
-Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-           const SingleExternalGridInfo& gridInfo)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons) {
     // NOP
 }
 
@@ -392,14 +409,6 @@ void Skin::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerM
                 m_sb->setting<AngularVelocity>(MS::Startup::kSkinExtruderSpeed),
                 m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
                 m_sb->setting<double>(MS::Startup::kStartUpAreaModifier));
-        }
-    }
-    if (m_sb->setting<bool>(PS::Skin::kPrestart)) {
-        if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kLines) {
-            PathModifierGenerator::GeneratePreStart(path, m_sb->setting<Distance>(PS::Skin::kPrestartDistance),
-                                                    m_sb->setting<Velocity>(PS::Skin::kPrestartSpeed),
-                                                    m_sb->setting<AngularVelocity>(PS::Skin::kPrestartExtruderSpeed),
-                                                    innerMostClosedContour);
         }
     }
 }

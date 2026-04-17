@@ -1,6 +1,25 @@
 #include "widgets/gcode_info_control.h"
 
+#include <qboxlayout.h>
+#include <qcombobox.h>
+#include <qcontainerfwd.h>
+#include <qfiledevice.h>
+#include <qframe.h>
+#include <qgraphicseffect.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qlayoutitem.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qsharedpointer.h>
+#include <qsizepolicy.h>
+#include <qtypes.h>
+#include <qwidget.h>
+
+#include "geometry/segment_base.h"
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 GCodeInfoControl::GCodeInfoControl(QWidget* parent) : QWidget(parent) { setupWidget(); }
@@ -183,7 +202,7 @@ void GCodeInfoControl::setupHeaderWidget() {
     hlayout->setContentsMargins(0, 0, 0, 0);
 
     QLabel* picture = new QLabel;
-    picture->setPixmap((new QIcon(":/icons/slicer2.png"))->pixmap(QSize(28, 28), QIcon::Normal, QIcon::On));
+    picture->setPixmap((new QIcon(":/icons/ornlslicer_logo.png"))->pixmap(QSize(28, 28), QIcon::Normal, QIcon::On));
 
     QFrame* line = new QFrame;
     line->setFrameShape(QFrame::VLine);

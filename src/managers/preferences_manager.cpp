@@ -1,9 +1,31 @@
 #include "managers/preferences_manager.h"
 
-#include "QDir"
-#include "QStandardPaths"
+#include <algorithm>
+#include <list>
+#include <map>
+#include <string>
+#include <unordered_map>
+#include <vector>
+
+#include <QDir>
+#include <QStandardPaths>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qcoreapplication.h>
+#include <qfiledevice.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+
 #include "exceptions/exceptions.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "utilities/theme_tool.h"
 
 namespace ORNL {
 QSharedPointer<PreferencesManager> PreferencesManager::m_singleton = QSharedPointer<PreferencesManager>();

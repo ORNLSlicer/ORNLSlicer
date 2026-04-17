@@ -1,12 +1,17 @@
 #pragma once
 
-#include "QColor"
-#include "QContextMenuEvent"
-#include "QMenu"
-#include "QPainter"
-#include "QPropertyAnimation"
-#include "QString"
-#include "QWidget"
+#include <QColor>
+#include <QContextMenuEvent>
+#include <QMenu>
+#include <QPainter>
+#include <QPropertyAnimation>
+#include <QString>
+#include <QWidget>
+#include <qcontainerfwd.h>
+#include <qcoreevent.h>
+#include <qnamespace.h>
+#include <qtmetamacros.h>
+
 #include "widgets/layerbar.h"
 
 namespace ORNL {

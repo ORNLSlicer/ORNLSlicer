@@ -1,9 +1,28 @@
 #include "step/global_layer.h"
 
+#include <limits>
+
+#include <qassert.h>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <quuid.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
+#include "geometry/point.h"
 #include "optimizers/island_order_optimizer.h"
+#include "part/part.h"
 #include "step/layer/layer.h"
+#include "step/layer/regions/region_base.h"
 #include "step/layer/scan_layer.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 

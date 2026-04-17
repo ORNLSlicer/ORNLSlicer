@@ -1,8 +1,12 @@
 #include "utilities/constants.h"
 
-#include "units/unit.h"
-
 #include <limits>
+#include <string>
+
+#include <qcontainerfwd.h>
+#include <qhash.h>
+
+#include "units/unit.h"
 
 namespace ORNL {
 //================================================================================
@@ -185,6 +189,7 @@ QString Constants::PrinterSettings::SyntaxString::kRepRap = "RepRap";
 QString Constants::PrinterSettings::SyntaxString::kMach4 = "Mach4";
 QString Constants::PrinterSettings::SyntaxString::kAeroBasic = "AeroBasic";
 QString Constants::PrinterSettings::SyntaxString::kAdamantine = "Adamantine";
+QString Constants::PrinterSettings::SyntaxString::kORNLMetric = "ORNL-Metric";
 
 //================================================================================
 // Optimizations
@@ -285,6 +290,7 @@ const QString Constants::PrinterSettings::Auxiliary::kGKNWireSpeed = "gkn_wire_s
 // Machine Speed
 const QString Constants::PrinterSettings::MachineSpeed::kMinXYSpeed = "min_xy_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kMaxXYSpeed = "max_xy_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kMinExtruderSpeed = "min_extruder_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kMaxExtruderSpeed = "max_extruder_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed = "w_table_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kZSpeed = "z_speed";
@@ -604,6 +610,11 @@ const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMinWidthFilter
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidth = "skeleton_adapt_max_width";
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidthFilter = "skeleton_adapt_max_width_filter";
 const QString Constants::ProfileSettings::Skeleton::kMinPathLength = "skeleton_minimum_path_length";
+const QString Constants::ProfileSettings::Skeleton::kLeadInEnable = "skeleton_lead_in";
+const QString Constants::ProfileSettings::Skeleton::kLeadInDistance = "skeleton_lead_in_distance";
+const QString Constants::ProfileSettings::Skeleton::kLeadInSpeed = "skeleton_lead_in_speed";
+const QString Constants::ProfileSettings::Skeleton::kLeadInExtruderSpeed = "skeleton_lead_in_extruder_speed";
+const QString Constants::ProfileSettings::Skeleton::kLeadInAreaModifier = "skeleton_lead_in_area_modifier";
 const QString Constants::ProfileSettings::Skeleton::kUseSkinMcode = "skeleton_skin_mcode";
 
 // Skin
@@ -619,10 +630,6 @@ const QString Constants::ProfileSettings::Skin::kExtruderSpeed = "skin_extruder_
 const QString Constants::ProfileSettings::Skin::kExtrusionMultiplier = "skin_extrusion_multiplier";
 const QString Constants::ProfileSettings::Skin::kOverlap = "skin_exterior_overlap";
 const QString Constants::ProfileSettings::Skin::kMinPathLength = "skin_minimum_path_length";
-const QString Constants::ProfileSettings::Skin::kPrestart = "skin_prestart";
-const QString Constants::ProfileSettings::Skin::kPrestartDistance = "skin_prestart_distance";
-const QString Constants::ProfileSettings::Skin::kPrestartSpeed = "skin_prestart_speed";
-const QString Constants::ProfileSettings::Skin::kPrestartExtruderSpeed = "skin_prestart_extruder_speed";
 const QString Constants::ProfileSettings::Skin::kInfillEnable = "skin_gradual_infill";
 const QString Constants::ProfileSettings::Skin::kInfillSteps = "skin_gradual_infill_steps";
 const QString Constants::ProfileSettings::Skin::kInfillPattern = "skin_gradual_infill_pattern";
@@ -635,6 +642,7 @@ const QString Constants::ProfileSettings::Infill::kLineSpacing = "infill_line_sp
 const QString Constants::ProfileSettings::Infill::kDensity = "infill_density";
 const QString Constants::ProfileSettings::Infill::kManualLineSpacing = "infill_manual_spacing";
 const QString Constants::ProfileSettings::Infill::kPattern = "infill_pattern";
+const QString Constants::ProfileSettings::Infill::kLinesPartitionedLinking = "infill_lines_partitioned_linking";
 const QString Constants::ProfileSettings::Infill::kBasedOnPrinter = "infill_based_on_printer";
 const QString Constants::ProfileSettings::Infill::kAngle = "infill_angle";
 const QString Constants::ProfileSettings::Infill::kAngleRotation = "infill_angle_rotation";
@@ -646,10 +654,6 @@ const QString Constants::ProfileSettings::Infill::kExtrusionMultiplier = "infill
 const QString Constants::ProfileSettings::Infill::kCombineXLayers = "infill_combine_every_x_layers";
 const QString Constants::ProfileSettings::Infill::kCombineLayerShift = "infill_combine_layer_shift";
 const QString Constants::ProfileSettings::Infill::kMinPathLength = "infill_minimum_path_length";
-const QString Constants::ProfileSettings::Infill::kPrestart = "infill_prestart";
-const QString Constants::ProfileSettings::Infill::kPrestartDistance = "infill_prestart_distance";
-const QString Constants::ProfileSettings::Infill::kPrestartSpeed = "infill_prestart_speed";
-const QString Constants::ProfileSettings::Infill::kPrestartExtruderSpeed = "infill_prestart_extruder_speed";
 const QString Constants::ProfileSettings::Infill::kSectorCount = "infill_sector_count";
 const QString Constants::ProfileSettings::Infill::kPower = "infill_power";
 const QString Constants::ProfileSettings::Infill::kFocus = "infill_focus";
@@ -857,6 +861,7 @@ const QString Constants::ExperimentalSettings::FileOutput::kSandiaCVEL = "sandia
 const QString Constants::ExperimentalSettings::FileOutput::kMarlinOutput = "marlin_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels = "marlin_include_travels";
 const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput = "simulation_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput = "amcm_file_output";
 
 // Rotation Origin
 const QString Constants::ExperimentalSettings::RotationOrigin::kXOffset = "rotation_origin_offset_x";
@@ -1000,7 +1005,6 @@ const int Constants::UI::MainWindow::kStatusBarMaxHeight = 200;
 const int Constants::UI::MainWindow::SideDock::kSettingsWidth = 500;
 const int Constants::UI::MainWindow::SideDock::kGCodeWidth = 500;
 const int Constants::UI::MainWindow::SideDock::kLayerTimesWidth = 500;
-const int Constants::UI::MainWindow::SideDock::kExternalFileWidth = 500;
 
 // MainWindow: Margins
 const int Constants::UI::MainWindow::Margins::kMainLayoutSpacing = 6;
@@ -1105,9 +1109,9 @@ const QString Constants::GcodeFileVariables::kPlasticType = "PLASTICTYPE";
 const QString Constants::GcodeFileVariables::kManualDensity = "MANUALDENSITY";
 // actualdensity?
 
-// Slicer 1 and Slicer 2 keys that are necessary for gcode parsing
-// Slicer 1 keys are converted to Slicer 2 counterparts
-// Slicer 2 keys are inserted as is
+// Slicer 1 and ORNLSlicer keys that are necessary for gcode parsing
+// Slicer 1 keys are converted to ORNLSlicer counterparts
+// ORNLSlicer keys are inserted as is
 const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables = QHash<QString, QString>({
     {Constants::GcodeFileVariables::kPrinterBaseOffset, Constants::PrinterSettings::Dimensions::kZOffset},
     {Constants::GcodeFileVariables::kExtrusionWidth, Constants::ProfileSettings::Layer::kBeadWidth},
@@ -1168,7 +1172,7 @@ const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables
 
 });
 
-// specific Slicer 1 keys must be converted to new base in Slicer 2, this lists those keys
+// specific Slicer 1 keys must be converted to the new ORNLSlicer base; this lists those keys
 const QHash<QString, QString> Constants::GcodeFileVariables::kRequiredConversion = QHash<QString, QString>(
     {{Constants::GcodeFileVariables::kLiftSpeed, Constants::PrinterSettings::MachineSpeed::kZSpeed},
      {Constants::GcodeFileVariables::kTravelSpeedMin, Constants::PrinterSettings::MachineSpeed::kMinXYSpeed},

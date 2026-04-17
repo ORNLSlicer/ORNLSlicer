@@ -1,10 +1,39 @@
 #include "step/layer/regions/skeleton.h"
 
-#include "boost/graph/undirected_dfs.hpp"
-#include "boost/polygon/voronoi.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <map>
+#include <tuple>
+
+#include <boost/graph/undirected_dfs.hpp>
+#include <boost/polygon/voronoi.hpp>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qlogging.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qstack.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/geometry_debug.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 template <> struct boost::polygon::geometry_concept<ORNL::Point> {
@@ -34,9 +63,8 @@ template <> struct boost::polygon::segment_traits<ORNL::Polyline> {
 
 namespace ORNL {
 Skeleton::Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
-                   const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo,
-                   bool isWireFed)
-    : RegionBase(sb, index, settings_polygons, gridInfo) {
+                   const QVector<SettingsPolygon>& settings_polygons, bool isWireFed)
+    : RegionBase(sb, index, settings_polygons) {
     m_wire_region = isWireFed;
 }
 
@@ -55,6 +83,8 @@ QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
 }
 
 void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+    m_layer_num = layer_num;
+
     m_paths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kSkeletonNum));
@@ -62,7 +92,7 @@ void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     incorporateLostGeometry();
 
     if (!m_geometry.isEmpty()) {
-        simplifyInputGeometry(layer_num);
+        simplifyInputGeometry();
 
         const SkeletonInput& input = static_cast<SkeletonInput>(m_sb->setting<int>(PS::Skeleton::kSkeletonInput));
         switch (input) {
@@ -89,7 +119,7 @@ void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
             }
         }
         else {
-            qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << layer_num;
+            qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << m_layer_num;
         }
     }
     else {
@@ -234,7 +264,7 @@ void Skeleton::incorporateLostGeometry() {
     }
 }
 
-void Skeleton::simplifyInputGeometry(const uint& layer_num) {
+void Skeleton::simplifyInputGeometry() {
     const Distance& cleaning_dist = m_sb->setting<Distance>(PS::Skeleton::kSkeletonInputCleaningDistance);
 
     //! Too large of a cleaning distance may decimate inner/outer polygons such that they
@@ -259,7 +289,7 @@ void Skeleton::simplifyInputGeometry(const uint& layer_num) {
         m_geometry = m_geometry.cleanPolygons(cleaning_dist);
     }
     else {
-        qDebug() << "Layer " << layer_num << " Skeleton input geometry cleaning distance too large.";
+        qDebug() << "Layer " << m_layer_num << " Skeleton input geometry cleaning distance too large.";
     }
 
     //! Chamfer long axis corner of triangles
@@ -578,61 +608,28 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
     m_computed_geometry.append(path);
 }
 
-void Skeleton::inspectSkeleton(const uint& layer_num) {
-    static QMutex lock;
-    QMutexLocker locker(&lock);
-
-#define precision_qDebug() qDebug() << Qt::fixed << qSetRealNumberPrecision(1)
-
-    //! Print input geometry
-    qDebug() << "Layer " << layer_num << "Input Geometry:";
-    for (Polygon& poly : m_geometry) {
-        for (uint i = 0, max = poly.size() - 1; i < max; ++i) {
-            precision_qDebug() << "polygon((" << poly[i].x() << "," << poly[i].y() << "),(" << poly[i + 1].x() << ","
-                               << poly[i + 1].y() << "))";
-        }
-        precision_qDebug() << "polygon((" << poly.first().x() << "," << poly.first().y() << "),(" << poly.last().x()
-                           << "," << poly.last().y() << "))";
-    }
-
-    //! Print skeleton geometry
-    qDebug() << "Layer " << layer_num << "Skeleton Geometry";
-    for (Polyline& seg : m_computed_geometry) {
-        for (uint i = 0, max = seg.size() - 1; i < max; ++i) {
-            precision_qDebug() << "polygon((" << seg[i].x() << "," << seg[i].y() << "),(" << seg[i + 1].x() << ","
-                               << seg[i + 1].y() << "))";
-        }
-    }
+void Skeleton::inspectSkeleton() {
+    GeometryDebug::printDesmos(m_geometry, "Layer " + QString::number(m_layer_num) + " Skeleton Input Geometry");
+    GeometryDebug::printDesmos(m_computed_geometry,
+                               "Layer " + QString::number(m_layer_num) + " Skeleton Output Geometry");
 }
 
 void Skeleton::inspectSkeletonGraph() {
-    static QMutex lock;
-    QMutexLocker locker(&lock);
+    GeometryDebug::printDesmos(m_geometry, "Layer " + QString::number(m_layer_num) + " Skeleton Input Geometry");
 
-#define precision_qDebug() qDebug() << Qt::fixed << qSetRealNumberPrecision(1)
+    GeometryDebug::EdgeList edge_list;
+    edge_list.reserve(boost::num_edges(m_skeleton_graph));
 
-    //! Print input geometry
-    qDebug() << "Input Geometry";
-    for (Polygon& poly : m_geometry) {
-        for (uint i = 0, max = poly.size() - 1; i < max; ++i) {
-            precision_qDebug() << "polygon((" << poly[i].x() << "," << poly[i].y() << "),(" << poly[i + 1].x() << ","
-                               << poly[i + 1].y() << "))";
-        }
-        precision_qDebug() << "polygon((" << poly.first().x() << "," << poly.first().y() << "),(" << poly.last().x()
-                           << "," << poly.last().y() << "))";
-    }
-
-    //! Print skeleton graph
-    qDebug() << "Skeleton Graph";
     boost::graph_traits<SkeletonGraph>::edge_iterator edge_iter, edge_iter_end;
     boost::tie(edge_iter, edge_iter_end) = edges(m_skeleton_graph);
     while (edge_iter != edge_iter_end) {
-        precision_qDebug() << "polygon((" << m_skeleton_graph[edge_iter->m_source].x() << ","
-                           << m_skeleton_graph[edge_iter->m_source].y() << "),("
-                           << m_skeleton_graph[edge_iter->m_target].x() << ","
-                           << m_skeleton_graph[edge_iter->m_target].y() << "))";
-        edge_iter++;
+        const SkeletonVertex source = boost::source(*edge_iter, m_skeleton_graph);
+        const SkeletonVertex target = boost::target(*edge_iter, m_skeleton_graph);
+        edge_list.append(QPair<Point, Point>(m_skeleton_graph[source], m_skeleton_graph[target]));
+        ++edge_iter;
     }
+
+    GeometryDebug::printDesmos(edge_list, "Layer " + QString::number(m_layer_num) + " Skeleton Graph");
 }
 
 void Skeleton::populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
@@ -997,6 +994,17 @@ void Skeleton::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& in
             PathModifierGenerator::GenerateInitialStartup(path, su_distance, su_speed, su_extruder_speed,
                                                           sm_enable_width_height, su_area_modifier);
         }
+    }
+
+    // Lead In
+    if (m_sb->setting<bool>(PS::Skeleton::kLeadInEnable)) {
+        const auto& li_distance = m_sb->setting<Distance>(PS::Skeleton::kLeadInDistance);
+        const auto& li_speed = m_sb->setting<Velocity>(PS::Skeleton::kLeadInSpeed);
+        const auto& li_extruder_speed = m_sb->setting<AngularVelocity>(PS::Skeleton::kLeadInExtruderSpeed);
+        const auto& li_enable_width_height = m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight);
+        const auto& li_area_modifier = m_sb->setting<double>(PS::Skeleton::kLeadInAreaModifier);
+        PathModifierGenerator::GenerateOpenLoopLeadIn(path, li_distance, li_speed, li_extruder_speed,
+                                                      li_enable_width_height, li_area_modifier);
     }
 }
 } // namespace ORNL

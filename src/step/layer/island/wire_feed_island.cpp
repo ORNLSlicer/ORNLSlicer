@@ -1,15 +1,29 @@
 #include "step/layer/island/wire_feed_island.h"
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
+#include "geometry/segments/travel.h"
+#include "geometry/settings_polygon.h"
 #include "managers/settings/settings_manager.h"
+#include "step/layer/island/island_base.h"
+#include "step/layer/regions/region_base.h"
 #include "step/layer/regions/skeleton.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 WireFeedIsland::WireFeedIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
-                               const QVector<SettingsPolygon>& settings_polygons,
-                               const SingleExternalGridInfo& gridInfo)
-    : IslandBase(geometry, sb, settings_polygons, gridInfo) {
-    this->addRegion(QSharedPointer<Skeleton>::create(sb, 0, settings_polygons, gridInfo, true));
+                               const QVector<SettingsPolygon>& settings_polygons)
+    : IslandBase(geometry, sb, settings_polygons) {
+    this->addRegion(QSharedPointer<Skeleton>::create(sb, 0, settings_polygons, true));
     m_island_type = IslandType::kWireFeed;
 }
 

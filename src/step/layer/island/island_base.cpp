@@ -1,5 +1,20 @@
 #include "step/layer/island/island_base.h"
 
+#include <limits>
+#include <utility>
+
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/anchor.h"
 #include "step/layer/regions/brim.h"
 #include "step/layer/regions/infill.h"
@@ -7,16 +22,20 @@
 #include "step/layer/regions/laser_scan.h"
 #include "step/layer/regions/perimeter.h"
 #include "step/layer/regions/raft.h"
+#include "step/layer/regions/region_base.h"
 #include "step/layer/regions/skeleton.h"
 #include "step/layer/regions/skin.h"
 #include "step/layer/regions/skirt.h"
 #include "step/layer/regions/support.h"
 #include "step/layer/regions/thermal_scan.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 IslandBase::IslandBase(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
-                       const QVector<SettingsPolygon>& settings_polygons, const SingleExternalGridInfo& gridInfo)
-    : m_geometry(geometry), m_sb(sb), m_settings_polygons(settings_polygons), m_grid_info(gridInfo) {
+                       const QVector<SettingsPolygon>& settings_polygons)
+    : m_geometry(geometry), m_sb(sb), m_settings_polygons(settings_polygons) {
     // NOP
 }
 

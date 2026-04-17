@@ -1,5 +1,12 @@
 #pragma once
 
+#include <vector>
+
+#include <qcolor.h>
+#include <qmatrix4x4.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "graphics/graphics_object.h"
 #include "utilities/constants.h"
 

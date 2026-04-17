@@ -1,8 +1,22 @@
 #include "geometry/polyline.h"
 
+#include <cmath>
+#include <deque>
+#include <iterator>
+#include <limits>
+#include <vector>
+
+#include <clipper.hpp>
+#include <psimpl.h>
+#include <qcontainerfwd.h>
+#include <qmatrix4x4.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
-#include "psimpl.h"
+#include "units/unit.h"
 
 namespace ORNL {
 Polyline::Polyline(const QVector<Point>& path) { QVector<Point>::operator+=(path); }

@@ -1,8 +1,24 @@
 #include "widgets/gcode_widget.h"
 
-#include "QResizeEvent"
+#include <QResizeEvent>
+#include <qboxlayout.h>
+#include <qcontainerfwd.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qsurfaceformat.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
+#include "geometry/segment_base.h"
+#include "graphics/view/gcode_view.h"
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "widgets/gcode_info_control.h"
+#include "widgets/part_widget/model/part_meta_model.h"
+#include "widgets/view_controls_toolbar.h"
 
 namespace ORNL {
 GCodeWidget::GCodeWidget(QWidget* parent) : QWidget(parent) { this->setupWidget(); }

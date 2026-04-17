@@ -1,5 +1,12 @@
 #pragma once
 
+#include <GL/gl.h>
+
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qimage.h>
+#include <qtypes.h>
+
 #include "graphics/graphics_object.h"
 
 namespace ORNL {
@@ -10,7 +17,7 @@ namespace ORNL {
  *
  * \note
  *  QVector<QImage> text = {
- *      QImage(":/icons/slicer2.png"),
+ *      QImage(":/icons/ornlslicer_logo.png"),
  *      QImage(":/icons/3d_chart.png"),
  *      QImage(":/icons/3d_graph.png"),
  *      QImage(":/icons/arrow.png"),

@@ -1,6 +1,13 @@
 #include "gcode/parsers/mazak_parser.h"
 
-#include "QStringBuilder"
+#include <functional>
+
+#include <QStringBuilder>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
 
 namespace ORNL {
 MazakParser::MazakParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

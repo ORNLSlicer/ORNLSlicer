@@ -1,19 +1,26 @@
 #pragma once
 
-#include "QDialog"
-#include "QDialogButtonBox"
-#include "QFileDialog"
-#include "QGridLayout"
-#include "QHBoxLayout"
-#include "QHeaderView"
-#include "QLabel"
-#include "QLineEdit"
-#include "QMap"
-#include "QPushButton"
-#include "QTableWidget"
-#include "QTableWidgetItem"
-#include "QToolButton"
-#include "units/unit.h"
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QFileDialog>
+#include <QGridLayout>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMap>
+#include <QPushButton>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QToolButton>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "widgets/programmatic_check_box.h"
 
 namespace ORNL {

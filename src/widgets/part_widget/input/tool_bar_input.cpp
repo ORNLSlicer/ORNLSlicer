@@ -1,8 +1,32 @@
 #include "widgets/part_widget/input/tool_bar_input.h"
 
-#include "QFile"
-#include "QGraphicsDropShadowEffect"
+#include <QFile>
+#include <QGraphicsDropShadowEffect>
+#include <qboxlayout.h>
+#include <qcheckbox.h>
+#include <qcombobox.h>
+#include <qevent.h>
+#include <qframe.h>
+#include <qhashfunctions.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qpoint.h>
+#include <qpropertyanimation.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qsizepolicy.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {

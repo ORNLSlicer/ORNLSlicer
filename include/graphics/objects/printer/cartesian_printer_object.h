@@ -1,8 +1,12 @@
 #pragma once
 
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "graphics/graphics_object.h"
 #include "graphics/objects/printer/printer_object.h"
-#include "units/unit.h"
 
 namespace ORNL {
 // Forward

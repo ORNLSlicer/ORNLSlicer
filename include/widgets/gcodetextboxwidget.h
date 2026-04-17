@@ -1,7 +1,15 @@
 #pragma once
 
-#include "QObject"
-#include "QPlainTextEdit"
+#include <QObject>
+#include <QPlainTextEdit>
+#include <qevent.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qset.h>
+#include <qtextformat.h>
+#include <qtextobject.h>
+#include <qtmetamacros.h>
+
 #include "gcodehighlighter.h"
 
 class QPaintEvent;

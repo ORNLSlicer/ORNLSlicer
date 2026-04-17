@@ -1,6 +1,10 @@
 #pragma once
 
-#include "QSyntaxHighlighter"
+#include <QSyntaxHighlighter>
+#include <qhash.h>
+#include <qobject.h>
+#include <qset.h>
+#include <qtmetamacros.h>
 
 class QTextDocument;
 

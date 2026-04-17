@@ -1,7 +1,21 @@
 #include "geometry/segment_base.h"
 
+#include <utility>
+#include <vector>
+
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
+#include "geometry/point.h"
 #include "geometry/segments/travel.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 SegmentBase::SegmentBase(Point start, Point end) : m_start(start), m_end(end), m_sb(new SettingsBase()) {

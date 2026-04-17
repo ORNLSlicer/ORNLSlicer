@@ -1,9 +1,32 @@
 #include "graphics/graphics_object.h"
 
-#include "QOpenGLShaderProgram"
-#include "QStack"
+#include <GL/gl.h>
+
+#include <algorithm>
+#include <cmath>
+#include <cstring>
+#include <tuple>
+#include <vector>
+
+#include <QOpenGLShaderProgram>
+#include <QStack>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qimage.h>
+#include <qmatrix4x4.h>
+#include <qopenglbuffer.h>
+#include <qopengltexture.h>
+#include <qopenglvertexarrayobject.h>
+#include <qquaternion.h>
+#include <qqueue.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "graphics/base_view.h"
 #include "graphics/objects/part_object.h"
+#include "utilities/constants.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {
@@ -14,6 +37,9 @@ GraphicsObject::GraphicsObject(BaseView* view, const std::vector<float>& vertice
 }
 
 GraphicsObject::~GraphicsObject() {
+    if (m_view.isNull() || m_view->context() == nullptr)
+        return;
+
     m_view->makeCurrent();
 
     m_vao->destroy();
@@ -78,7 +104,7 @@ void GraphicsObject::configureUniforms() {
     m_view->shaderProgram()->setUniformValue(m_shader_locs.renderingPartObject, false);
 }
 
-BaseView* GraphicsObject::view() { return m_view; }
+BaseView* GraphicsObject::view() { return m_view.data(); }
 
 QVector<QVector3D> GraphicsObject::minimumBoundingBox() { return m_transformed_mbb; }
 

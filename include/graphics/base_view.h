@@ -1,9 +1,18 @@
 #pragma once
 
-#include "QOpenGLFunctions"
-#include "QOpenGLFunctions_3_3_Core"
-#include "QOpenGLShaderProgram"
-#include "QOpenGLWidget"
+#include <QOpenGLFunctions>
+#include <QOpenGLFunctions_3_3_Core>
+#include <QOpenGLShaderProgram>
+#include <QOpenGLWidget>
+#include <qlist.h>
+#include <qmatrix4x4.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
 #include "graphics/graphics_object.h"
 #include "graphics/support/camera_manager.h"
 
@@ -12,7 +21,7 @@ namespace ORNL {
 class AxesObject;
 class GCodeObject;
 
-/*! \brief Base class for all OpenGL views in Slicer2.
+/*! \brief Base class for all OpenGL views in ORNLSlicer.
  *
  *  This base class is responsible only for the rendering of objects. Derived classes are responsible for the
  *  management and manipulation of parts and other objects. See PartView for an example of this.

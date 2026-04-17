@@ -1,5 +1,21 @@
 #include "windows/flowratecalc.h"
 
+#include <math.h>
+
+#include <QApplication>
+#include <qcombobox.h>
+#include <qcontainerfwd.h>
+#include <qfont.h>
+#include <qframe.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qoverload.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qwidget.h>
+
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -13,9 +29,9 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     m_density_metric_to_is = m_density_metric() / IS_unit_chosen(); // around 0.036127292
 
     // setFixedSize(420,260);
-    setWindowTitle("Slicer-2: Flowrate Calculator");
+    setWindowTitle(QApplication::applicationDisplayName() + ": Flowrate Calculator");
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer2.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     m_layout = new QGridLayout();

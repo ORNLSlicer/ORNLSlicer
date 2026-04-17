@@ -1,5 +1,23 @@
 #include "optimizers/layer_order_optimizer.h"
 
+#include <qassert.h>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qminmax.h>
+#include <qsharedpointer.h>
+#include <quuid.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "part/part.h"
+#include "step/global_layer.h"
+#include "step/step.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

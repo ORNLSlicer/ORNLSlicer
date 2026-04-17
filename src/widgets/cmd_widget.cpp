@@ -1,5 +1,12 @@
 #include "widgets/cmd_widget.h"
 
+#include <qgridlayout.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qobjectdefs.h>
+#include <qtextedit.h>
+#include <qwidget.h>
+
 namespace ORNL {
 
 CmdWidget::CmdWidget(QWidget* parent) : QWidget(parent) { this->setupWidget(); }

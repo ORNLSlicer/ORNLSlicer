@@ -1,5 +1,19 @@
 #include "widgets/part_widget/model/part_meta_item.h"
 
+#include <GL/gl.h>
+
+#include <tuple>
+
+#include <qlist.h>
+#include <qobject.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 

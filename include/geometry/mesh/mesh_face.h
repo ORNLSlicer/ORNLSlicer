@@ -1,6 +1,6 @@
 #pragma once
 
-#include "QVector3D"
+#include <QVector3D>
 
 namespace ORNL {
 /*!

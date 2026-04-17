@@ -1,16 +1,36 @@
 #include "gcode/parsers/common_parser.h"
 
-#include "QRegExp"
-#include "QString"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
-#include "QVector"
-#include "QtMath"
+#include <algorithm>
+#include <functional>
+#include <limits>
+
+#include <QRegExp>
+#include <QString>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <QVector>
+#include <QtMath>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlatin1stringview.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qnumeric.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qstringmatcher.h>
+#include <qtmetamacros.h>
+
 #include "exceptions/exceptions.h"
+#include "gcode/gcode_command.h"
+#include "gcode/gcode_meta.h"
 #include "gcode/gcode_motion_estimate.h"
+#include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
 #include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
@@ -27,11 +47,14 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     MotionEstimation::Init();
 
-    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta)
+    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta) {
         m_g4_prefix = "G4 S";
-
-    if (meta == GcodeMetaList::MVPMeta) {
+    }
+    else if (meta == GcodeMetaList::MVPMeta) {
         m_negate_z_value = true;
+        m_g4_prefix = "G4 F";
+    }
+    else if (meta == GcodeMetaList::IngersollMeta) {
         m_g4_prefix = "G4 F";
     }
 
@@ -103,7 +126,7 @@ QHash<QString, double> CommonParser::parseFooter() {
                             m_file_settings.insert(it.value(), v.from(value, mm / s));
                         }
                         else {
-                            // material type is 0 based in slicer 2
+                            // material type is 0 based in ORNLSlicer
                             if (key == Constants::GcodeFileVariables::kPlasticType)
                                 m_file_settings.insert(key.toLower(), value - 1);
                             else
@@ -136,10 +159,10 @@ QHash<QString, double> CommonParser::parseFooter() {
             break;
     }
 
-    // convert force minimum layer time setting from Slicer-1 to Slicer-2 if needed
+    // convert force minimum layer time setting from Slicer-1 to ORNLSlicer if needed
     // Slicer-1
     //   force_minimum_layer_time: enum, 0=DISABLED, 1=Dwell time, 2=Modify feedrate
-    // Slicer-2
+    // ORNLSlicer
     //   force_minimum_layer_time: bool
     //   minimum_layer_time_method: enum, 0=Dwell time, 1=Modify feedrate
     if (foundForcedMinLayerTime && !foundForcedMinLayerTimeMethod) {
@@ -341,6 +364,16 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
                 if (m_extruders_active[i])
                     m_extruders_on[i] = true;
             }
+
+            int first = m_upper_lines[m_current_line].indexOf("(") + 1;
+            int second = m_upper_lines[m_current_line].indexOf(")");
+            QString spindleString = m_upper_lines[m_current_line].mid(first, second - first);
+            double spindleSpeed = spindleString.toDouble(&no_error);
+            if (!no_error) {
+                throwFloatConversionErrorException();
+            }
+            setSpindleSpeed(spindleSpeed * m_angular_velocity_unit());
+
             continue;
         }
         else if (m_upper_lines[m_current_line].contains("Z_R") && m_upper_lines[m_current_line].contains("C_P")) {
@@ -1785,7 +1818,66 @@ void CommonParser::AdjustFeedrate(double modifier) {
 
         while (current_layer_motion_end != current_layer_motion_begin &&
                current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
+            double tempModifier = modifier;
             auto parameters = current_layer_motion_end->getParameters();
+            if (parameters.contains(m_q_parameter.toLatin1()) &&
+                current_layer_motion_end->getCommandID() != 5) // G5 also used the Q param, so spline are not supported
+                                                               // by syntaxes that use it for spindle control
+            {
+                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
+                QRegularExpressionMatch myMatch = m_q_param_and_value.match(line);
+                double value = myMatch.captured().mid(1).toDouble();
+                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+                // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
+                if (modifier < 1) {
+                    extruderModifier = 1 / extruderModifier;
+                    if (value > 0 && value * modifier * extruderModifier <
+                                         sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
+                    }
+                }
+                else {
+                    if (value > 0 && value * modifier * extruderModifier >
+                                         sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
+                    }
+                }
+                line = line.left(myMatch.capturedStart()) % m_q_parameter %
+                       QString::number(value * tempModifier * extruderModifier, 'f', 4) %
+                       line.mid(myMatch.capturedEnd());
+                current_layer_motion_end->addParameter(m_q_parameter.toLatin1(),
+                                                       parameters[m_q_parameter.toLatin1()] * tempModifier);
+            }
+            if (parameters.contains(m_s_parameter.toLatin1()) &&
+                !sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
+                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
+                QRegularExpressionMatch myMatch = m_s_param_and_value.match(line);
+                double value = myMatch.captured().mid(1).toDouble();
+                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+                // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
+                if (modifier < 1) {
+                    extruderModifier = 1 / extruderModifier;
+                    if (value > 0 && value * modifier * extruderModifier <
+                                         sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
+                    }
+                }
+                else {
+                    if (value > 0 && value * modifier * extruderModifier >
+                                         sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                        tempModifier = modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                   (value * modifier * extruderModifier));
+                    }
+                }
+                line = line.left(myMatch.capturedStart()) % m_s_parameter %
+                       QString::number(value * tempModifier * extruderModifier, 'f', 4) %
+                       line.mid(myMatch.capturedEnd());
+                current_layer_motion_end->addParameter(m_s_parameter.toLatin1(),
+                                                       parameters[m_s_parameter.toLatin1()] * tempModifier);
+            }
             if (parameters.contains(m_f_parameter.toLatin1())) {
                 if (sb->setting<int>(MS::Extruder::kEnableM3S)) {
                     int cmd_index = current_layer_motion_end->getLineNumber() - 1;
@@ -1802,10 +1894,24 @@ void CommonParser::AdjustFeedrate(double modifier) {
                             // factor
                             if (modifier < 1) {
                                 extruderModifier = 1 / extruderModifier;
+                                if (value > 0 && value * modifier * extruderModifier <
+                                                     sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                                    tempModifier =
+                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                    (value * modifier * extruderModifier));
+                                }
+                            }
+                            else {
+                                if (value > 0 && value * modifier * extruderModifier >
+                                                     sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                                    tempModifier =
+                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                    (value * modifier * extruderModifier));
+                                }
                             }
 
                             line = line.left(myMatch.capturedStart()) % m_s_parameter %
-                                   QString::number(value * modifier * extruderModifier, 'f', 4) %
+                                   QString::number(value * tempModifier * extruderModifier, 'f', 4) %
                                    line.mid(myMatch.capturedEnd());
 
                             m_lines.insert(cmd_index + 1, line);
@@ -1817,40 +1923,10 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 QString& line = m_lines[current_layer_motion_end->getLineNumber()];
                 QRegularExpressionMatch myMatch = m_f_param_and_value.match(line);
                 double value = myMatch.captured().mid(1).toDouble();
-                line = line.left(myMatch.capturedStart()) % m_f_parameter % QString::number(value * modifier, 'f', 4) %
-                       line.mid(myMatch.capturedEnd());
+                line = line.left(myMatch.capturedStart()) % m_f_parameter %
+                       QString::number(value * tempModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
                 current_layer_motion_end->addParameter(m_f_parameter.toLatin1(),
-                                                       parameters[m_f_parameter.toLatin1()] * modifier);
-            }
-            if (parameters.contains(m_q_parameter.toLatin1()) &&
-                current_layer_motion_end->getCommandID() != 5) // G5 also used the Q param, so spline are not supported
-                                                               // by syntaxes that use it for spindle control
-            {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
-                QRegularExpressionMatch myMatch = m_q_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
-                // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
-                if (modifier < 1)
-                    extruderModifier = 1 / extruderModifier;
-                line = line.left(myMatch.capturedStart()) % m_q_parameter %
-                       QString::number(value * modifier * extruderModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_q_parameter.toLatin1(),
-                                                       parameters[m_q_parameter.toLatin1()] * modifier);
-            }
-            if (parameters.contains(m_s_parameter.toLatin1()) &&
-                !sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
-                QRegularExpressionMatch myMatch = m_s_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
-                // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
-                if (modifier < 1)
-                    extruderModifier = 1 / extruderModifier;
-                line = line.left(myMatch.capturedStart()) % m_s_parameter %
-                       QString::number(value * modifier * extruderModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_s_parameter.toLatin1(),
-                                                       parameters[m_s_parameter.toLatin1()] * modifier);
+                                                       parameters[m_f_parameter.toLatin1()] * tempModifier);
             }
             --current_layer_motion_end;
         }

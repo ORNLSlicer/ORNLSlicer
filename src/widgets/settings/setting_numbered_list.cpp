@@ -1,8 +1,24 @@
 #include "widgets/settings/setting_numbered_list.h"
 
-#include "QDropEvent"
-#include "QHeaderView"
-#include "QToolTip"
+#include <QDropEvent>
+#include <QHeaderView>
+#include <QToolTip>
+#include <qabstractitemview.h>
+#include <qcontainerfwd.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtablewidget.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 SettingNumberedList::SettingNumberedList(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,

@@ -1,15 +1,35 @@
 #include "windows/preferences_window.h"
 
-#include "QFileDialog"
-#include "QGridLayout"
-#include "QLabel"
-#include "QLineEdit"
-#include "QMenu"
-#include "QMenuBar"
-#include "QScrollArea"
-#include "QSpinBox"
-#include "QStandardPaths"
-#include "QTabWidget"
+#include <QFileDialog>
+#include <QGridLayout>
+#include <QLabel>
+#include <QLineEdit>
+#include <QMenu>
+#include <QMenuBar>
+#include <QScrollArea>
+#include <QSpinBox>
+#include <QStandardPaths>
+#include <QTabWidget>
+#include <qboxlayout.h>
+#include <qcheckbox.h>
+#include <qcombobox.h>
+#include <qevent.h>
+#include <qgroupbox.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qmainwindow.h>
+#include <qnamespace.h>
+#include <qoverload.h>
+#include <qradiobutton.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
+#include "managers/preferences_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "widgets/visualization_color_picker.h"
 
 namespace ORNL {
@@ -26,7 +46,7 @@ void PreferencesWindow::setupLayout() {
     setWindowTitle("Preferences");
 
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer2.png"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     QMenuBar* menubar = new QMenuBar();

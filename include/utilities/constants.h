@@ -1,12 +1,14 @@
 #pragma once
 
-#include "QColor"
-#include "QHash"
-#include "QVector"
-#include "QVector3D"
-#include "units/unit.h"
-
 #include <string>
+
+#include <QColor>
+#include <QHash>
+#include <QVector3D>
+#include <QVector>
+#include <qcontainerfwd.h>
+
+#include "units/unit.h"
 
 namespace ORNL {
 /*!
@@ -237,6 +239,7 @@ class Constants {
           public:
             static const QString kMinXYSpeed;
             static const QString kMaxXYSpeed;
+            static const QString kMinExtruderSpeed;
             static const QString kMaxExtruderSpeed;
             static const QString kWTableSpeed;
             static const QString kZSpeed;
@@ -311,6 +314,7 @@ class Constants {
             static QString kMach4;
             static QString kAeroBasic;
             static QString kAdamantine;
+            static QString kORNLMetric;
         };
     };
 
@@ -664,6 +668,11 @@ class Constants {
             static const QString kSkeletonAdaptMaxWidth;
             static const QString kSkeletonAdaptMaxWidthFilter;
             static const QString kMinPathLength;
+            static const QString kLeadInEnable;
+            static const QString kLeadInDistance;
+            static const QString kLeadInSpeed;
+            static const QString kLeadInExtruderSpeed;
+            static const QString kLeadInAreaModifier;
             static const QString kUseSkinMcode;
         };
 
@@ -681,10 +690,6 @@ class Constants {
             static const QString kExtrusionMultiplier;
             static const QString kOverlap;
             static const QString kMinPathLength;
-            static const QString kPrestart;
-            static const QString kPrestartDistance;
-            static const QString kPrestartSpeed;
-            static const QString kPrestartExtruderSpeed;
             static const QString kInfillEnable;
             static const QString kInfillSteps;
             static const QString kInfillPattern;
@@ -699,6 +704,7 @@ class Constants {
             static const QString kDensity;
             static const QString kManualLineSpacing;
             static const QString kPattern;
+            static const QString kLinesPartitionedLinking;
             static const QString kBasedOnPrinter;
             static const QString kAngle;
             static const QString kAngleRotation;
@@ -710,10 +716,6 @@ class Constants {
             static const QString kCombineXLayers;
             static const QString kCombineLayerShift;
             static const QString kMinPathLength;
-            static const QString kPrestart;
-            static const QString kPrestartDistance;
-            static const QString kPrestartSpeed;
-            static const QString kPrestartExtruderSpeed;
             static const QString kSectorCount;
             static const QString kPower;
             static const QString kFocus;
@@ -941,6 +943,7 @@ class Constants {
             static const QString kMarlinOutput;
             static const QString kMarlinTravels;
             static const QString kSimulationOutput;
+            static const QString kAMCMOutput;
         };
 
         class RotationOrigin {
@@ -1130,7 +1133,6 @@ class Constants {
                 static const int kSettingsWidth;
                 static const int kGCodeWidth;
                 static const int kLayerTimesWidth;
-                static const int kExternalFileWidth;
             };
 
             class Margins {

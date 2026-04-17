@@ -1,6 +1,24 @@
 #include "graphics/objects/gcode_object.h"
 
+#include <GL/gl.h>
+
+#include <utility>
+#include <vector>
+
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmatrix4x4.h>
+#include <qnamespace.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/segment_base.h"
 #include "graphics/base_view.h"
+#include "graphics/graphics_object.h"
+#include "utilities/enums.h"
+#include "widgets/gcode_info_control.h"
 
 namespace ORNL {
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,

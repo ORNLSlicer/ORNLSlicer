@@ -1,13 +1,33 @@
 #include "graphics/view/gcode_view.h"
 
+#include <cmath>
+
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmatrix4x4.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/segment_base.h"
+#include "graphics/base_view.h"
 #include "graphics/objects/axes_object.h"
+#include "graphics/objects/gcode_object.h"
+#include "graphics/objects/part_object.h"
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 #include "graphics/objects/printer/toroidal_printer_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/mathutils.h"
+#include "widgets/gcode_info_control.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+#include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {
 GCodeView::GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoControl> segmentInfoControl) {

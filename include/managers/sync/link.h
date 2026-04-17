@@ -1,9 +1,9 @@
 #pragma once
 
-#include "QMutex"
-#include "QSharedPointer"
-#include "QVariant"
-#include "QWaitCondition"
+#include <QMutex>
+#include <QSharedPointer>
+#include <QVariant>
+#include <QWaitCondition>
 
 namespace ORNL {
 /*!

@@ -1,5 +1,8 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
 #include "step/layer/island/island_base.h"
 #include "utilities/enums.h"
 

@@ -1,13 +1,31 @@
 #include "managers/settings/settings_manager.h"
 
-#include "QDirIterator"
-#include "QFile"
-#include "QMessageBox"
-#include "QRegularExpression"
-#include "QStandardPaths"
+#include <iostream>
+#include <string>
+
+#include <QCoreApplication>
+#include <QDirIterator>
+#include <QFile>
+#include <QMessageBox>
+#include <QRegularExpression>
+#include <QStandardPaths>
+#include <nlohmann/json.hpp>
+#include <qcontainerfwd.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qhash.h>
+#include <qlogging.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "configs/settings_range.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_version_control.h"
-#include "nlohmann/json.hpp"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 QSharedPointer<SettingsManager> SettingsManager::m_singleton = QSharedPointer<SettingsManager>();
@@ -217,7 +235,7 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, boo
             int ret = m_yes_to_all_update;
             if (!ret)
                 ret = QMessageBox::warning(
-                    nullptr, "ORNL Slicer 2",
+                    nullptr, QCoreApplication::applicationName(),
                     filename + "is outdated. Do you want to update this template to the newest compatible version?  "
                                "Failure to do so may result in program instability.",
                     QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No);

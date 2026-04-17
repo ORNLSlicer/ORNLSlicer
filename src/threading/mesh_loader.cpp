@@ -1,15 +1,34 @@
 #include "threading/mesh_loader.h"
 
-#include "QLinkedList"
-#include "QStack"
-#include "QtDebug"
+#include <cstddef>
+#include <cstdio>
+#include <cstdlib>
+#include <utility>
+
+#include <QLinkedList>
+#include <QStack>
+#include <QtDebug>
+#include <assimp/Importer.hpp>
+#include <assimp/mesh.h>
+#include <assimp/postprocess.h>
+#include <qcontainerfwd.h>
+#include <qfileinfo.h>
+#include <qmap.h>
+#include <qmatrix4x4.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/open_mesh.h"
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
-
-#include <utility>
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 MeshLoader::MeshLoader(QString file_path, MeshType mt, QMatrix4x4 transform, Distance unit)

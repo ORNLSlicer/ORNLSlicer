@@ -1,15 +1,21 @@
 #pragma once
 
-#include "QLinkedList"
+#include <QLinkedList>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
-#include "external_files/external_grid.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "optimizers/path_order_optimizer.h"
+#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
+#include "utilities/enums.h"
 
 #ifdef HAVE_SINGLE_PATH
-    #include "single_path/single_path.h"
+    #include <single_path/single_path.h>
 Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
 #endif
 
@@ -25,10 +31,8 @@ class IslandBase {
     //! \param geometry: the outlines
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
-    //! \param gridInfo: optional external file information
     IslandBase(const PolygonList& geometry, const QSharedPointer<SettingsBase>& m_sb,
-               const QVector<SettingsPolygon>& settings_polygons,
-               const SingleExternalGridInfo& gridInfo = SingleExternalGridInfo());
+               const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Destructor.
     virtual ~IslandBase() = default;
@@ -129,9 +133,6 @@ class IslandBase {
 
     //! \brief The settings polygon this region may use
     QVector<SettingsPolygon> m_settings_polygons;
-
-    //! \brief External grid information
-    SingleExternalGridInfo m_grid_info;
 
     //! \brief Enum value of island type
     IslandType m_island_type;

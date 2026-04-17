@@ -1,6 +1,15 @@
 #include "graphics/objects/cube_object.h"
 
-#include "QPainter"
+#include <vector>
+
+#include <QPainter>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qimage.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/support/shape_factory.h"
 
 namespace ORNL {

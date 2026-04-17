@@ -1,13 +1,19 @@
 #pragma once
 
-#include "clipper.hpp"
+#include <cstdint>
+
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qvectornd.h>
+
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polyline.h"
+#include "units/unit.h"
 
 #ifdef HAVE_SINGLE_PATH
-    #include "single_path/geometry/point.h"
-    #include "single_path/geometry/polygon.h"
+    #include <single_path/geometry/point.h>
+    #include <single_path/geometry/polygon.h>
 #endif
 
 namespace ORNL {

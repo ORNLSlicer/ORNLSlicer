@@ -1,7 +1,24 @@
 
 #include "geometry/polygon_list.h"
 
-#include "QPolygon"
+#include <algorithm>
+#include <cfloat>
+#include <cmath>
+#include <cstdint>
+#include <limits>
+
+#include <QPolygon>
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qmath.h>
+#include <qminmax.h>
+#include <qpoint.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {
@@ -195,7 +212,7 @@ PolygonList PolygonList::getOutsidePolygons() const {
         if (polygonId == 0)
             polygons.append(p);
         else {
-            // this should not happen in Slicer-2 as a PolyhonList only contains a polygon and some interior polygons
+            // this should not happen in ORNLSlicer as a PolyhonList only contains a polygon and some interior polygons
             if (!polygons.first().inside(p.boundingRectCenter())) {
                 polygons.append(p);
             }

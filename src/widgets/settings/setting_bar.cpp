@@ -1,8 +1,28 @@
 #include "widgets/settings/setting_bar.h"
 
+#include <qboxlayout.h>
+#include <qcombobox.h>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qsharedpointer.h>
+#include <qtabwidget.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_pane.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 
@@ -52,7 +72,7 @@ void SettingBar::barTabWarning(int count, QString pane) {
 SettingTab* SettingBar::getTab(QString major, QString minor) {
     SettingTab* tab = this->getPane(major)->getTab(minor);
     if (tab == nullptr)
-        tab = this->getPane(major)->newTab(minor, QIcon(":/icons/slicer2.png"),
+        tab = this->getPane(major)->newTab(minor, QIcon(":/icons/ornlslicer_logo.png"),
                                            PreferencesManager::getInstance()->isSettingHidden(major, minor));
 
     return tab;

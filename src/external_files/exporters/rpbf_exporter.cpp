@@ -1,8 +1,20 @@
 #include "external_files/exporters/rpbf_exporter.h"
 
-#include "QStringBuilder"
-#include "QStringList"
+#include <math.h>
+
+#include <QStringBuilder>
+#include <QStringList>
+#include <qcontainerfwd.h>
+#include <qdebug.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qhashfunctions.h>
+#include <qstringliteral.h>
+
+#include "gcode/gcode_meta.h"
+#include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
 
 namespace ORNL {

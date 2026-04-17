@@ -1,14 +1,30 @@
 #pragma once
 
-#include "QDir"
-#include "QFile"
-#include "QQueue"
-#include "QStandardPaths"
-#include "data_stream.h"
-#include "external_files/external_grid.h"
+#include <cstddef>
+#include <cstdint>
+
+#include <QDir>
+#include <QFile>
+#include <QQueue>
+#include <QStandardPaths>
+#include <data_stream.h>
+#include <qcontainerfwd.h>
+#include <qdatetime.h>
+#include <qhash.h>
+#include <qmap.h>
+#include <qmatrix4x4.h>
+#include <qmutex.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <tcp_server.h>
+
+#include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
-#include "tcp_server.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {
@@ -188,7 +204,7 @@ class SessionManager : public QObject {
     //! \param shouldDelete Whether or not to delete current parts/settings before
     //! loading the session
     //! \param path The path to the project to load
-    void loadSession(bool shouldDelete, QString path = QString());
+    SessionLoader* loadSession(bool shouldDelete, QString path = QString());
 
     //! \brief Slot to receive slicing updates from.  Info to be forwarded to slice dialog
     //! \param type The current section of the step being completed
@@ -197,14 +213,6 @@ class SessionManager : public QObject {
 
     //! \brief Set slicing thread cancel flag
     void cancelSlice();
-
-    //! \brief Set external file information that was processed
-    //! \param gridInfo: Structure calculated from external files.
-    //! Holds grid and relevant dimensional information
-    void setExternalInfo(ExternalGridInfo gridInfo);
-
-    //! \brief Clear external file information from slicer
-    void clearExternalInfo();
 
     //! \brief Set pointer to part to potentially copy
     //! \param part: part to copy
@@ -312,10 +320,6 @@ class SessionManager : public QObject {
 
     //! \brief default slicer is polymer
     SlicerType m_slicer_type = SlicerType::kPolymerSlice;
-
-    //! \brief grid info from external files.  Copy must be saved in case
-    //! slicer type is changed.
-    ExternalGridInfo m_grid_info;
 
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.

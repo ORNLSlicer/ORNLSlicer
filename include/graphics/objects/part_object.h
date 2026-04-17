@@ -1,8 +1,16 @@
 #pragma once
 
-#include "QColor"
-#include "geometry/mesh/closed_mesh.h"
+#include <GL/gl.h>
+
+#include <QColor>
+#include <qhashfunctions.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "graphics/graphics_object.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 // Forward

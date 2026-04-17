@@ -1,8 +1,18 @@
 #include "geometry/path.h"
 
+#include <cassert>
+#include <limits>
+
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+
 #include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/travel.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
 
 namespace ORNL {
