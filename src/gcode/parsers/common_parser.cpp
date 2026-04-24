@@ -1916,45 +1916,44 @@ void CommonParser::AdjustFeedrate(double modifier) {
                         }
                     }
                     else if (line.startsWith("EXTRUDER(")) {
-                        // Handle the case where the line starts with "Extruder("
-                        QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
-                        QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
-                        double extruderValue = 0.0; // Default value if no match is found
+                        // Handle the case where the line starts with "EXTRUDER("
+                        static const QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
+                        const QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
                         if (extruderMatch.hasMatch()) {
-                            extruderValue = extruderMatch.captured(1).toDouble();
-                        }
-                        if (extruderValue != 0.0) {
-                            double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+                            const double extruderValue = extruderMatch.captured(1).toDouble();
+                            if (extruderValue != 0.0) {
+                                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
 
-                            // If slowing down, the multiplier for the extruder should be the inverse of the scale
-                            // factor
-                            if (modifier < 1) {
-                                extruderModifier = 1 / extruderModifier;
-                                if (extruderValue > 0 &&
-                                    extruderValue * modifier * extruderModifier <
-                                        sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
-                                    tempModifier =
-                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
-                                                    (extruderValue * modifier * extruderModifier));
+                                // If slowing down, the multiplier for the extruder should be the inverse of the scale
+                                // factor
+                                if (modifier < 1) {
+                                    extruderModifier = 1 / extruderModifier;
+                                    if (extruderValue > 0 &&
+                                        extruderValue * modifier * extruderModifier <
+                                            sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                                        tempModifier =
+                                            modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                        (extruderValue * modifier * extruderModifier));
+                                    }
                                 }
-                            }
-                            else {
-                                if (extruderValue > 0 &&
-                                    extruderValue * modifier * extruderModifier >
-                                        sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
-                                    tempModifier =
-                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
-                                                    (extruderValue * modifier * extruderModifier));
+                                else {
+                                    if (extruderValue > 0 &&
+                                        extruderValue * modifier * extruderModifier >
+                                            sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                                        tempModifier =
+                                            modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                        (extruderValue * modifier * extruderModifier));
+                                    }
                                 }
+
+                                const QString modifiedLine =
+                                    line.left(extruderMatch.capturedStart()) % "EXTRUDER(" %
+                                    QString::number(extruderValue * tempModifier * extruderModifier, 'f', 4) % ")" %
+                                    line.mid(extruderMatch.capturedEnd());
+
+                                m_lines.insert(cmd_index + 1, modifiedLine);
+                                m_lines.removeAt(cmd_index);
                             }
-
-                            QString modifiedLine =
-                                line.left(extruderMatch.capturedStart()) + "EXTRUDER(" +
-                                QString::number(extruderValue * tempModifier * extruderModifier, 'f', 4) + ")" +
-                                line.mid(extruderMatch.capturedEnd());
-
-                            m_lines.insert(cmd_index + 1, modifiedLine);
-                            m_lines.removeAt(cmd_index);
                         }
                     }
                 }
