@@ -1804,6 +1804,7 @@ void CommonParser::AdjustFeedrate(double modifier) {
                         // Handle the case where the line starts with "EXTRUDER("
                         static const QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
                         const QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
+                        double extruderValue = 0.0; // Default value if no match is found
                         if (extruderMatch.hasMatch()) {
                             const double extruderValue = extruderMatch.captured(1).toDouble();
                             if (extruderValue != 0.0) {
