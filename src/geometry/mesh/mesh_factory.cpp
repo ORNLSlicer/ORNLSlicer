@@ -1,5 +1,20 @@
 #include "geometry/mesh/mesh_factory.h"
 
+#include <math.h>
+
+#include <cmath>
+
+#include <qcontainerfwd.h>
+#include <qmath.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
+#include "geometry/mesh/open_mesh.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
+
 namespace ORNL {
 MeshFactory::MeshFactory() {}
 

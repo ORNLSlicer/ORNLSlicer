@@ -1,9 +1,24 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qqueue.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
 #include "configs/settings_range.h"
-#include "geometry/mesh/advanced/mesh_skeleton.h"
+#include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
 #include "part/part.h"
+#include "units/unit.h"
 
 namespace ORNL {
 //! \class BufferedSlicer
@@ -37,7 +52,7 @@ class BufferedSlicer {
     //! \param ranges the ranges the apply settings along
     //! \param previous_buffer the number of past slices to track
     //! \param future_buffer the numer of future slices to buffer
-    //! \param use_cgal_cross_section use cgal cross-sectioning in place of ORNL Slicer-2's
+    //! \param use_cgal_cross_section use cgal cross-sectioning in place of ORNLSlicer's
     BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
                    QVector<QSharedPointer<Part>> settings_parts,
                    QMap<uint, QSharedPointer<SettingsRange>> ranges = QMap<uint, QSharedPointer<SettingsRange>>(),
@@ -109,9 +124,6 @@ class BufferedSlicer {
 
     //! \brief the height of the last layer
     Distance m_last_layer_height;
-
-    //! \brief the mesh skeleton that may be used for this slicer
-    QSharedPointer<MeshSkeleton> m_skeleton = nullptr;
 
     //! \brief running total of shifts
     QList<Point> m_running_shifts;

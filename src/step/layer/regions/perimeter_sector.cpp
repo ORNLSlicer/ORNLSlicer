@@ -1,7 +1,22 @@
 #include "step/layer/regions/perimeter_sector.h"
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/point.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

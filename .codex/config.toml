@@ -1,0 +1,10 @@
+#:schema https://developers.openai.com/codex/config-schema.json
+
+model = "gpt-5.4"
+personality = "pragmatic"
+model_reasoning_effort = "xhigh"
+plan_mode_reasoning_effort = "xhigh"
+approval_policy = "on-request"
+
+[plugins."github@openai-curated"]
+enabled = true

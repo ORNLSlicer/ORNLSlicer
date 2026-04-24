@@ -1,8 +1,15 @@
 #pragma once
 
-#include "QToolBar"
-#include "QToolButton"
-#include "QVector3D"
+#include <QToolBar>
+#include <QToolButton>
+#include <QVector3D>
+#include <qkeysequence.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
+#include "units/unit.h"
 #include "widgets/part_widget/input/tool_bar_align_input.h"
 #include "widgets/part_widget/input/tool_bar_input.h"
 

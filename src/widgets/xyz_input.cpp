@@ -1,5 +1,22 @@
 #include "widgets/xyz_input.h"
 
+#include <qboxlayout.h>
+#include <qcheckbox.h>
+#include <qhashfunctions.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qsizepolicy.h>
+#include <qspinbox.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+#include <qwidget.h>
+
+#include "utilities/constants.h"
+#include "utilities/enums.h"
+
 namespace ORNL {
 XYZInputWidget::XYZInputWidget(QWidget* parent) : QWidget(parent) {
     this->setupWidget();

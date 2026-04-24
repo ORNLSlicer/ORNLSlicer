@@ -1,10 +1,26 @@
 #include "console/main_control.h"
 
+#include <iostream>
+
+#include <qdebug.h>
+#include <qdir.h>
+#include <qfiledevice.h>
+#include <qfileinfo.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
+#include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
+#include "managers/settings/settings_manager.h"
 #include "threading/gcode_loader.h"
 #include "threading/gcode_rpbf_saver.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 

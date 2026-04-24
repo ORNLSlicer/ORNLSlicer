@@ -1,7 +1,14 @@
 #pragma once
 
-#include "QVBoxLayout"
-#include "QWidget"
+#include <QVBoxLayout>
+#include <QWidget>
+#include <qcontainerfwd.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+
+#include "geometry/segment_base.h"
 #include "graphics/view/gcode_view.h"
 #include "widgets/gcode_info_control.h"
 #include "widgets/part_widget/model/part_meta_model.h"

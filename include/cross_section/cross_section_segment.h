@@ -1,5 +1,7 @@
 #pragma once
 
+#include <qvectornd.h>
+
 #include "geometry/point.h"
 
 namespace ORNL {

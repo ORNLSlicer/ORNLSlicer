@@ -1,8 +1,13 @@
 #pragma once
 
-#include "QThread"
+#include <string>
+
+#include <QThread>
+#include <qobject.h>
+#include <qtmetamacros.h>
+#include <zip/zip.h>
+
 #include "utilities/qt_json_conversion.h"
-#include "zip/zip.h"
 
 namespace ORNL {
 /*!
@@ -32,6 +37,9 @@ class SessionLoader : public QThread {
   signals:
     //! \brief Signal that an error has occured.
     void error(QString error);
+
+    //! \brief Signal that a session file has been loaded successfully.
+    void loadSucceeded();
 
   private:
     //! \brief Saves a session.

@@ -1,6 +1,11 @@
 #pragma once
 
-#include "QLinkedList"
+#include <QLinkedList>
+#include <qcontainerfwd.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
 #include "step/layer/layer.h"
 
 namespace ORNL {

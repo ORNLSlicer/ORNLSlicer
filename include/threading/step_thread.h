@@ -1,6 +1,10 @@
 #pragma once
 
-#include "QThread"
+#include <QThread>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
 #include "step/step.h"
 
 namespace ORNL {

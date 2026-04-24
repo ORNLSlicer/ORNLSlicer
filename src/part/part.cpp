@@ -1,10 +1,30 @@
 #include "part/part.h"
 
+#include <qassert.h>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qmatrix4x4.h>
+#include <qminmax.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <quuid.h>
+
+#include "configs/settings_range.h"
 #include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
 #include "geometry/mesh/open_mesh.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "managers/sync/sync_manager.h"
+#include "step/layer/layer.h"
+#include "step/layer/scan_layer.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

@@ -1,13 +1,30 @@
 #include "widgets/part_widget/part_control/part_control.h"
 
-#include "QDir"
-#include "QGraphicsDropShadowEffect"
-#include "QListWidget"
-#include "QMenu"
-#include "QStack"
-#include "QtWidgets/QInputDialog"
+#include <QDir>
+#include <QGraphicsDropShadowEffect>
+#include <QListWidget>
+#include <QMenu>
+#include <QStack>
+#include <QtWidgets/QInputDialog>
+#include <qabstractitemview.h>
+#include <qboxlayout.h>
+#include <qfiledevice.h>
+#include <qlist.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qpoint.h>
+#include <qsharedpointer.h>
+#include <qtreewidget.h>
+#include <qwidget.h>
+
+#include "gcode/writers/writer_base.h"
 #include "managers/preferences_manager.h"
+#include "utilities/constants.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+#include "widgets/part_widget/model/part_meta_model.h"
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
+#include "widgets/part_widget/part_control/part_control_tree_widget.h"
+#include "widgets/part_widget/right_click_menu.h"
 
 namespace ORNL {
 PartControl::PartControl(QWidget* parent) : QWidget(parent) {

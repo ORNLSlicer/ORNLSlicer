@@ -1,8 +1,14 @@
 #include "gcode/parsers/siemens_parser.h"
 
-#include "QString"
-#include "QStringList"
-#include "QVector"
+#include <functional>
+
+#include <QString>
+#include <QStringList>
+#include <QVector>
+#include <qcontainerfwd.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
 
 namespace ORNL {
 SiemensParser::SiemensParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

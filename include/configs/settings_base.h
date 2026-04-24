@@ -1,8 +1,9 @@
 #pragma once
 
-#include "QSharedPointer"
-#include "QString"
-#include "nlohmann/json.hpp"
+#include <QSharedPointer>
+#include <QString>
+#include <nlohmann/json.hpp>
+
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {

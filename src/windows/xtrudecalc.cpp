@@ -1,6 +1,22 @@
 #include "windows/xtrudecalc.h"
 
+#include <QApplication>
+#include <qcombobox.h>
+#include <qcontainerfwd.h>
+#include <qfont.h>
+#include <qframe.h>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qnamespace.h>
+#include <qoverload.h>
+#include <qpixmap.h>
+#include <qsize.h>
+#include <qstringliteral.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -26,9 +42,9 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_fpr_text = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "/rev):";
 
     // setFixedSize(420,260);
-    setWindowTitle("Slicer-2: Xtrude Calculator");
+    setWindowTitle(QApplication::applicationDisplayName() + ": Xtrude Calculator");
     QIcon icon;
-    icon.addFile(QStringLiteral(":/icons/slicer-2_logo.ico"), QSize(), QIcon::Normal, QIcon::Off);
+    icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.ico"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
     // Printing Parameter Section

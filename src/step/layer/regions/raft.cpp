@@ -1,9 +1,25 @@
 #include "step/layer/regions/raft.h"
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
 #include "geometry/pattern_generator.h"
+#include "geometry/point.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 Raft::Raft(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
@@ -65,7 +81,8 @@ void Raft::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
 
     poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kInfill,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));

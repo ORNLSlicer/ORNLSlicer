@@ -1,5 +1,18 @@
 #include "widgets/settings/setting_tab.h"
 
+#include <qboxlayout.h>
+#include <qframe.h>
+#include <qgridlayout.h>
+#include <qicon.h>
+#include <qlist.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
+#include "configs/settings_base.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/settings/double_spin_subtypes/setting_accel_spin_box.h"
 #include "widgets/settings/double_spin_subtypes/setting_ang_vel_spin_box.h"
 #include "widgets/settings/double_spin_subtypes/setting_angle_spin_box.h"
@@ -13,9 +26,11 @@
 #include "widgets/settings/setting_check_box.h"
 #include "widgets/settings/setting_combo_box.h"
 #include "widgets/settings/setting_double_spin_box.h"
+#include "widgets/settings/setting_header.h"
 #include "widgets/settings/setting_line_edit.h"
 #include "widgets/settings/setting_numbered_list.h"
 #include "widgets/settings/setting_plain_text_edit.h"
+#include "widgets/settings/setting_row_base.h"
 #include "widgets/settings/setting_spin_box.h"
 
 namespace ORNL {
@@ -122,7 +137,7 @@ void SettingTab::headerWarning(int count) {
         m_header->setIcon(QIcon(":/icons/warning.png"));
     }
     else {
-        m_header->setIcon(QIcon(":/icons/slicer-2_logo.png"));
+        m_header->setIcon(QIcon(":/icons/ornlslicer_logo.png"));
     }
 }
 

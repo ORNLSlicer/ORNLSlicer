@@ -1,7 +1,13 @@
 #pragma once
 
+#include <qhashfunctions.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+
 #include "gcode/gcode_meta.h"
 #include "managers/settings/settings_manager.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 

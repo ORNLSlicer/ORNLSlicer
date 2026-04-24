@@ -1,5 +1,16 @@
 #include "optimizers/multi_nozzle_optimizer.h"
 
+#include <algorithm>
+#include <cassert>
+
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
+#include "step/layer/island/island_base.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
+
 namespace ORNL {
 
 void MultiNozzleOptimizer::assignByArea(QVector<QSharedPointer<IslandBase>>& islands, int nozzle_count) {

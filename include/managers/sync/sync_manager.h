@@ -1,8 +1,11 @@
 #pragma once
 
-#include "QMap"
-#include "QQueue"
-#include "QString"
+#include <QMap>
+#include <QQueue>
+#include <QString>
+#include <qsharedpointer.h>
+#include <qvariant.h>
+
 #include "managers/sync/link.h"
 #include "utilities/enums.h"
 

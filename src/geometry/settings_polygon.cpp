@@ -1,5 +1,13 @@
 #include "geometry/settings_polygon.h"
 
+#include <clipper.hpp>
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+
 namespace ORNL {
 SettingsPolygon::SettingsPolygon(QVector<Polygon> geometry, QSharedPointer<SettingsBase>& sb) {
     m_sb = sb;

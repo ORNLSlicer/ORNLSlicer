@@ -1,7 +1,13 @@
 #pragma once
 
-#include "QRegularExpression"
-#include "QString"
+#include <utility>
+
+#include <QRegularExpression>
+#include <QString>
+#include <qcontainerfwd.h>
+#include <qlatin1stringview.h>
+#include <qstringmatcher.h>
+
 #include "gcode/gcode_meta.h"
 #include "geometry/point.h"
 #include "units/unit.h"

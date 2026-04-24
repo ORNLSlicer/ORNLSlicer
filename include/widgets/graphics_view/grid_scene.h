@@ -1,6 +1,9 @@
 #pragma once
 
-#include "QGraphicsScene"
+#include <QGraphicsScene>
+#include <qobject.h>
+#include <qtmetamacros.h>
+#include <qwindowdefs.h>
 
 namespace ORNL {
 class GridScene : public QGraphicsScene {

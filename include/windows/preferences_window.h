@@ -1,13 +1,20 @@
 #pragma once
 
-#include "QCheckBox"
-#include "QCloseEvent"
-#include "QComboBox"
-#include "QGroupBox"
-#include "QMainWindow"
-#include "QRadioButton"
-#include "QSpinBox"
+#include <QCheckBox>
+#include <QCloseEvent>
+#include <QComboBox>
+#include <QGroupBox>
+#include <QMainWindow>
+#include <QRadioButton>
+#include <QSpinBox>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

@@ -1,8 +1,12 @@
 #include "utilities/constants.h"
 
-#include "units/unit.h"
-
 #include <limits>
+#include <string>
+
+#include <qcontainerfwd.h>
+#include <qhash.h>
+
+#include "units/unit.h"
 
 namespace ORNL {
 //================================================================================
@@ -708,6 +712,8 @@ const QString Constants::ProfileSettings::Optimizations::kCustomIslandYLocation 
 const QString Constants::ProfileSettings::Optimizations::kCustomPathXLocation = "custom_path_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPathYLocation = "custom_path_order_y_location";
 const QString Constants::ProfileSettings::Optimizations::kPointOrder = "point_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kEnablePointOrderSegmentBreaking =
+    "enable_point_order_segment_breaking";
 const QString Constants::ProfileSettings::Optimizations::kLocalRandomnessEnable = "local_randomness_enable";
 const QString Constants::ProfileSettings::Optimizations::kLocalRandomnessRadius = "local_randomness_radius";
 const QString Constants::ProfileSettings::Optimizations::kMinDistanceEnabled = "enable_min_distance";
@@ -1105,9 +1111,9 @@ const QString Constants::GcodeFileVariables::kPlasticType = "PLASTICTYPE";
 const QString Constants::GcodeFileVariables::kManualDensity = "MANUALDENSITY";
 // actualdensity?
 
-// Slicer 1 and Slicer 2 keys that are necessary for gcode parsing
-// Slicer 1 keys are converted to Slicer 2 counterparts
-// Slicer 2 keys are inserted as is
+// Slicer 1 and ORNLSlicer keys that are necessary for gcode parsing
+// Slicer 1 keys are converted to ORNLSlicer counterparts
+// ORNLSlicer keys are inserted as is
 const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables = QHash<QString, QString>({
     {Constants::GcodeFileVariables::kPrinterBaseOffset, Constants::PrinterSettings::Dimensions::kZOffset},
     {Constants::GcodeFileVariables::kExtrusionWidth, Constants::ProfileSettings::Layer::kBeadWidth},
@@ -1168,7 +1174,7 @@ const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables
 
 });
 
-// specific Slicer 1 keys must be converted to new base in Slicer 2, this lists those keys
+// specific Slicer 1 keys must be converted to the new ORNLSlicer base; this lists those keys
 const QHash<QString, QString> Constants::GcodeFileVariables::kRequiredConversion = QHash<QString, QString>(
     {{Constants::GcodeFileVariables::kLiftSpeed, Constants::PrinterSettings::MachineSpeed::kZSpeed},
      {Constants::GcodeFileVariables::kTravelSpeedMin, Constants::PrinterSettings::MachineSpeed::kMinXYSpeed},

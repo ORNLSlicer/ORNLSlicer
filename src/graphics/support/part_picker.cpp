@@ -1,5 +1,15 @@
 #include "graphics/support/part_picker.h"
 
+#include <limits>
+#include <tuple>
+#include <vector>
+
+#include <qmatrix4x4.h>
+#include <qpoint.h>
+#include <qvectornd.h>
+
+#include "graphics/graphics_object.h"
+
 namespace ORNL {
 
 std::tuple<float, QVector3D> PartPicker::pickDistanceAndIntersection(const QMatrix4x4& projection,

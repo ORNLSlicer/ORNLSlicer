@@ -1,11 +1,12 @@
 #pragma once
 
-#include "QWidget"
+#include <QWidget>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 /*!
  * \class AboutWindow
- * \brief General information about Slicer 2
+ * \brief General information about ORNLSlicer
  */
 class AboutWindow : public QWidget {
     Q_OBJECT

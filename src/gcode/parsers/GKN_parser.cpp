@@ -1,6 +1,13 @@
 #include "gcode/parsers/GKN_parser.h"
 
-#include "QStringBuilder"
+#include <functional>
+
+#include <QStringBuilder>
+#include <qcontainerfwd.h>
+#include <qlatin1stringview.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
 
 namespace ORNL {
 GKNParser::GKNParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

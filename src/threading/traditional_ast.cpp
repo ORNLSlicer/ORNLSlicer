@@ -1,6 +1,20 @@
 #include "threading/traditional_ast.h"
 
+#include <qdebug.h>
+#include <qfiledevice.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qthread.h>
+#include <qtmetamacros.h>
+
 #include "managers/session_manager.h"
+#include "part/part.h"
+#include "step/step.h"
+#include "threading/step_thread.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 TraditionalAST::TraditionalAST(QString outputLocation, bool skipGcode)

@@ -1,14 +1,18 @@
 #include "windows/about.h"
 
-#include "QApplication"
-#include "QDesktopServices"
-#include "QFile"
-#include "QGridLayout"
-#include "QIcon"
-#include "QLabel"
-#include "QUrl"
-#include "boost/preprocessor.hpp"
-#include "qdatetime.h"
+#include <QApplication>
+#include <QDesktopServices>
+#include <QFile>
+#include <QGridLayout>
+#include <QIcon>
+#include <QLabel>
+#include <QUrl>
+#include <qdatetime.h>
+#include <qfont.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qpixmap.h>
+#include <qwidget.h>
 
 namespace ORNL {
 AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
@@ -16,8 +20,8 @@ AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
     // windows
     setWindowModality(Qt::ApplicationModal);
 
-    setWindowTitle("About ORNL Slicer-2");
-    setWindowIcon(QIcon(":/icons/slicer-2_logo.png"));
+    setWindowTitle("About " + QApplication::applicationDisplayName());
+    setWindowIcon(QIcon(":/icons/ornlslicer_logo.png"));
 
     QGridLayout* layout = new QGridLayout();
 
@@ -29,7 +33,7 @@ AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
     QFont f = QApplication::font();
     f.setPointSize(10);
 
-    QString version = "Version " BOOST_PP_STRINGIZE(SLICER2_VERSION);
+    QString version = QApplication::applicationDisplayName();
 
     QLabel* lblVersion = new QLabel(version);
     lblVersion->setFont(f);
@@ -43,7 +47,7 @@ AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
     connect(lblContact, &QLabel::linkActivated, [](const QString& link) { QDesktopServices::openUrl(QUrl(link)); });
     layout->addWidget(lblContact, 4, 0, 1, 2, Qt::AlignCenter);
 
-    QLabel* bugReport = new QLabel("<a href='https://github.com/ORNLSlicer/Slicer-2/issues'>Bug report?</a>");
+    QLabel* bugReport = new QLabel("<a href='https://github.com/ORNLSlicer/ORNLSlicer/issues'>Bug report?</a>");
     connect(bugReport, &QLabel::linkActivated, [](const QString& link) { QDesktopServices::openUrl(QUrl(link)); });
     layout->addWidget(bugReport, 6, 0, 1, 2, Qt::AlignCenter);
 

@@ -1,8 +1,24 @@
 #include "threading/session_loader.h"
 
+#include <cstddef>
+#include <cstdlib>
+#include <string>
+
+#include <CGAL/property_map.h>
+#include <qcontainerfwd.h>
+#include <qfileinfo.h>
+#include <qmap.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <zip/zip.h>
+
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
+#include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 SessionLoader::SessionLoader(QString filename, bool save) : m_filename(filename), m_save(save) {
@@ -89,7 +105,8 @@ void SessionLoader::saveSession() {
     }
 
     zip_entry_open(zip, "Version.txt");
-    std::string version = "This is an ORNL Slicer project file.\nVersion: " + std::string(BOOST_PP_STRINGIZE(SLICER2_VERSION)) + "\n";
+    std::string version =
+        "This is an ORNLSlicer project file.\nVersion: " + std::string(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION)) + "\n";
     zip_entry_write(zip, version.c_str(), version.length());
     zip_entry_close(zip);
 
@@ -172,6 +189,7 @@ void SessionLoader::loadSession() {
     }
 
     zip_close(zip);
+    emit loadSucceeded();
 }
 
 std::string SessionLoader::loadStringFromZip(struct zip_t* zip, const std::string& key) {

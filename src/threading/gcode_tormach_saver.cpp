@@ -1,12 +1,20 @@
 #include "threading/gcode_tormach_saver.h"
 
-#include "QDir"
-#include "QFile"
-#include "QRegularExpression"
-#include "QStringBuilder"
-#include "QStringList"
-#include "QTextStream"
+#include <QDir>
+#include <QFile>
+#include <QRegularExpression>
+#include <QStringBuilder>
+#include <QStringList>
+#include <QTextStream>
+#include <qcontainerfwd.h>
+#include <qfileinfo.h>
+#include <qobject.h>
+#include <qtypes.h>
+
+#include "gcode/gcode_meta.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 GCodeTormachSaver::GCodeTormachSaver(QString tempLocation, QString path, QString filename, QString text, GcodeMeta meta)
@@ -44,7 +52,7 @@ void GCodeTormachSaver::run() {
     file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
     QTextStream out(&file);
 
-    out << "$$ ORNL SLICER-2" % newline;
+    out << "$$ ORNLSLICER" % newline;
     out << "$$*" % newline;
     out << "$$ -> MFGNO" % newline;
     out << "PARTNO / ADDITIVE" % newline;

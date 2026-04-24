@@ -1,5 +1,11 @@
 #include "managers/sync/link.h"
 
+#include <qassert.h>
+#include <qmutex.h>
+#include <qsharedpointer.h>
+#include <qvariant.h>
+#include <qwaitcondition.h>
+
 //! \macro checks to make sure the mutex for a link is already locked
 //!        called everytime something is accessed/ updated within a link
 #define VARIFY_LOCK(mutex)                                                                                             \

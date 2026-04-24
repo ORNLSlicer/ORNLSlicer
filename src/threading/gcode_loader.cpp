@@ -1,10 +1,36 @@
 #include "threading/gcode_loader.h"
 
-#include "QDebug"
-#include "QFile"
-#include "QFileInfo"
-#include "QStringBuilder"
-#include "QTextStream"
+#include <limits>
+#include <tuple>
+
+#include <QDebug>
+#include <QFile>
+#include <QFileInfo>
+#include <QStringBuilder>
+#include <QTextStream>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qdatetime.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qmap.h>
+#include <qmath.h>
+#include <qminmax.h>
+#include <qnumeric.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qstringmatcher.h>
+#include <qtextformat.h>
+#include <qthread.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+#include <tcp_connection.h>
+
+#include "configs/settings_range.h"
+#include "exceptions/exceptions.h"
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/GKN_parser.h"
@@ -19,12 +45,20 @@
 #include "gcode/parsers/rpbf_parser.h"
 #include "gcode/parsers/siemens_parser.h"
 #include "gcode/parsers/tormach_parser.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
+#include "geometry/point.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/arc.h"
 #include "geometry/segments/bezier.h"
 #include "geometry/segments/line.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

@@ -1,17 +1,35 @@
 #include "windows/dialogs/cs_dbg.h"
 
-#include "QComboBox"
-#include "QGraphicsView"
-#include "QHBoxLayout"
-#include "QHeaderView"
-#include "QScrollBar"
-#include "QSpinBox"
-#include "QTableWidget"
-#include "QTableWidgetItem"
-#include "QToolTip"
+#include <QComboBox>
+#include <QGraphicsView>
+#include <QHBoxLayout>
+#include <QHeaderView>
+#include <QScrollBar>
+#include <QSpinBox>
+#include <QTableWidget>
+#include <QTableWidgetItem>
+#include <QToolTip>
+#include <qbrush.h>
+#include <qcontainerfwd.h>
+#include <qcursor.h>
+#include <qdialog.h>
+#include <qgraphicsscene.h>
+#include <qmatrix4x4.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qoverload.h>
+#include <qpen.h>
+#include <qpolygon.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+#include <qwidget.h>
+
 #include "cross_section/cross_section.h"
+#include "geometry/plane.h"
+#include "geometry/polygon_list.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "part/part.h"
 
 namespace ORNL {
 CsDebugDialog::CsDebugDialog(QWidget* parent) : QDialog(parent) { this->setupUi(); }

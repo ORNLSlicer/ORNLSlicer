@@ -1,7 +1,33 @@
 #include "windows/dialogs/template_save.h"
 
+#include <algorithm>
+
+#include <qcheckbox.h>
+#include <qcontainerfwd.h>
+#include <qdialog.h>
+#include <qdialogbuttonbox.h>
+#include <qdir.h>
+#include <qfiledialog.h>
+#include <qgridlayout.h>
+#include <qhash.h>
+#include <qheaderview.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qlist.h>
+#include <qmessagebox.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qtablewidget.h>
+#include <qtcoreexports.h>
+#include <qtoolbutton.h>
+#include <qwidget.h>
+
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/programmatic_check_box.h"
 
 namespace ORNL {
 
@@ -134,7 +160,7 @@ void TemplateSaveDialog::fileDialog() {
     QFileDialog save_dialog;
     save_dialog.setWindowTitle("Save Template Location");
     save_dialog.setAcceptMode(QFileDialog::AcceptSave);
-    save_dialog.setNameFilters(QStringList() << "Slicer-2 Configuration/Template File (*.s2c)" << "Any Files (*)");
+    save_dialog.setNameFilters(QStringList() << "ORNLSlicer Configuration/Template File (*.s2c)" << "Any Files (*)");
     save_dialog.setDirectory(m_filename);
     save_dialog.setDefaultSuffix("s2c");
 

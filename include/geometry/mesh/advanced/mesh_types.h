@@ -1,12 +1,16 @@
 #pragma once
 
-#include "CGAL/AABB_face_graph_triangle_primitive.h"
-#include "CGAL/AABB_traits.h"
-#include "CGAL/AABB_tree.h"
-#include "CGAL/Exact_predicates_inexact_constructions_kernel.h"
-#include "CGAL/Polyhedron_3.h"
-#include "CGAL/Polyhedron_items_with_id_3.h"
-#include "CGAL/Surface_mesh/Surface_mesh.h"
+#include <CGAL/AABB_face_graph_triangle_primitive.h>
+#include <CGAL/AABB_traits.h>
+#include <CGAL/AABB_tree.h>
+#include <CGAL/Exact_predicates_inexact_constructions_kernel.h>
+#include <CGAL/Object.h>
+#include <CGAL/Polyhedron_3.h>
+#include <CGAL/Polyhedron_items_with_id_3.h>
+#include <CGAL/Simple_cartesian.h>
+#include <CGAL/Surface_mesh/Surface_mesh.h>
+#include <CGAL/boost/graph/graph_traits_Polyhedron_3.h>
+#include <CGAL/boost/graph/graph_traits_Surface_mesh.h>
 
 namespace ORNL {
 /*!
@@ -94,8 +98,8 @@ typedef boost::optional<SurfaceMesh_AABB_Tree::Intersection_and_primitive_id<Seg
 typedef boost::optional<SurfaceMesh_AABB_Tree::Intersection_and_primitive_id<Plane_3>::Type>
     SurfaceMesh_Plane_intersection;
 
-//! \brief a namespace for inexact cartesian sapce. This used to be the default kernal in slicer 2, however is now used
-//! when a package does not support the exact kernal above
+//! \brief a namespace for inexact cartesian sapce. This used to be the default kernal in ORNLSlicer, however is now
+//! used when a package does not support the exact kernal above
 namespace SimpleCartesian {
 //! \brief CGAL 3D Space Type
 typedef CGAL::Simple_cartesian<double> Kernel;

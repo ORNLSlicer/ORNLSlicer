@@ -1,8 +1,15 @@
 #include "managers/settings/settings_version_control.h"
 
-#include "QDateTime"
-#include "QRegularExpression"
+#include <list>
+#include <string>
+#include <utility>
+
+#include <QDateTime>
+#include <QRegularExpression>
+#include <qhashfunctions.h>
+
 #include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 void SettingsVersionControl::rollSettingsForward(double& version, fifojson& settings) {
@@ -15,7 +22,7 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
     QString dt = QDateTime::currentDateTime().toString();
     fifojson new_format;
-    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedBy] = "ORNL Slicer-2";
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedBy] = "ORNLSlicer";
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedOn] = dt.toStdString();
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = version;

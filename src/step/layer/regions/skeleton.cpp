@@ -1,11 +1,39 @@
 #include "step/layer/regions/skeleton.h"
 
-#include "boost/graph/undirected_dfs.hpp"
-#include "boost/polygon/voronoi.hpp"
+#include <algorithm>
+#include <cmath>
+#include <cstddef>
+#include <limits>
+#include <map>
+#include <tuple>
+
+#include <boost/graph/undirected_dfs.hpp>
+#include <boost/polygon/voronoi.hpp>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qlogging.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qstack.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
 #include "geometry/geometry_debug.h"
+#include "geometry/path.h"
 #include "geometry/path_modifier.h"
+#include "geometry/point.h"
+#include "geometry/polygon.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/regions/region_base.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 template <> struct boost::polygon::geometry_concept<ORNL::Point> {
@@ -880,7 +908,8 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
 
     poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kSkeleton,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
@@ -976,7 +1005,7 @@ void Skeleton::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& in
         const auto& li_enable_width_height = m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight);
         const auto& li_area_modifier = m_sb->setting<double>(PS::Skeleton::kLeadInAreaModifier);
         PathModifierGenerator::GenerateOpenLoopLeadIn(path, li_distance, li_speed, li_extruder_speed,
-                                                        li_enable_width_height, li_area_modifier);
+                                                      li_enable_width_height, li_area_modifier);
     }
 }
 } // namespace ORNL

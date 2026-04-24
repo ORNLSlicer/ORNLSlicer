@@ -1,6 +1,16 @@
 #include "graphics/objects/axes_object.h"
 
-#include "QtMath"
+#include <math.h>
+
+#include <vector>
+
+#include <QtMath>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qmatrix4x4.h>
+#include <qvectornd.h>
+
+#include "graphics/graphics_object.h"
 #include "graphics/support/shape_factory.h"
 #include "utilities/constants.h"
 

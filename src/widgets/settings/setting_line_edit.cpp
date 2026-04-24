@@ -1,6 +1,19 @@
 #include "widgets/settings/setting_line_edit.h"
 
-#include "QToolTip"
+#include <QToolTip>
+#include <qgridlayout.h>
+#include <qlabel.h>
+#include <qlineedit.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvariant.h>
+
+#include "configs/settings_base.h"
+#include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
+#include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 

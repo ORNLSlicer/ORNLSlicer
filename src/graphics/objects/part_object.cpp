@@ -1,12 +1,30 @@
 #include "graphics/objects/part_object.h"
 
+#include <GL/gl.h>
+
+#include <cmath>
+#include <tuple>
+#include <vector>
+
+#include <qcolor.h>
+#include <qhashfunctions.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
 #include "geometry/mesh/mesh_base.h"
 #include "graphics/base_view.h"
+#include "graphics/graphics_object.h"
 #include "graphics/objects/arrow_object.h"
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cube/plane_object.h"
 #include "graphics/objects/text_object.h"
 #include "part/part.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {

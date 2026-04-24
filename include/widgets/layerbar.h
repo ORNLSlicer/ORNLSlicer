@@ -1,26 +1,34 @@
 #pragma once
 
-#include "QButtonGroup"
-#include "QDialog"
-#include "QDialogButtonBox"
-#include "QDoubleSpinBox"
-#include "QFormLayout"
-#include "QGroupBox"
-#include "QGuiApplication"
-#include "QInputDialog"
-#include "QLabel"
-#include "QMessageBox"
-#include "QMouseEvent"
-#include "QPainter"
-#include "QQueue"
-#include "QRadioButton"
-#include "QSet"
-#include "QString"
-#include "QToolTip"
-#include "QVector"
-#include "QWidget"
+#include <QButtonGroup>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDoubleSpinBox>
+#include <QFormLayout>
+#include <QGroupBox>
+#include <QGuiApplication>
+#include <QInputDialog>
+#include <QLabel>
+#include <QMessageBox>
+#include <QMouseEvent>
+#include <QPainter>
+#include <QQueue>
+#include <QRadioButton>
+#include <QSet>
+#include <QString>
+#include <QToolTip>
+#include <QVector>
+#include <QWidget>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtmetamacros.h>
+
+#include "configs/settings_base.h"
 #include "configs/settings_range.h"
 #include "part/part.h"
+#include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {

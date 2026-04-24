@@ -1,5 +1,19 @@
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
 
+#include <qboxlayout.h>
+#include <qicon.h>
+#include <qlabel.h>
+#include <qnamespace.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qsize.h>
+#include <qtreewidget.h>
+#include <qwidget.h>
+
+#include "part/part.h"
+#include "utilities/enums.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+
 namespace ORNL {
 PartControlTreeItem::PartControlTreeItem(QSharedPointer<PartMetaItem> pm) {
     m_part = pm->part();
@@ -67,7 +81,7 @@ void PartControlTreeItem::updateToolTip() {
 
     if (!m_is_mesh_closed)
         tooltip.append(
-            "\nThis model contains errors and is not a closed volume. Some Slicer-2 features may be unavailable.");
+            "\nThis model contains errors and is not a closed volume. Some ORNLSlicer features may be unavailable.");
 
     if (!m_is_mesh_inside_volume)
         tooltip.append("\nThis model is outside the print volume.");
@@ -95,7 +109,7 @@ PartControlTreeItem::Container::Container(QString name, bool closed, QWidget* pa
     auto error_label = new QLabel(this);
     error_label->setAttribute(Qt::WA_TranslucentBackground);
     error_label->setToolTip(
-        "This model contains errors is not a closed volume. Some Slicer-2 features may be unavailable.");
+        "This model contains errors is not a closed volume. Some ORNLSlicer features may be unavailable.");
     error_label->setPixmap(error_icon.pixmap(QSize(20, 20)));
     layout->addWidget(error_label);
 

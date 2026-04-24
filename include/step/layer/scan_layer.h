@@ -1,6 +1,13 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
 #include "geometry/polygon_list.h"
+#include "step/layer/regions/region_base.h"
 #include "step/step.h"
 
 namespace ORNL {

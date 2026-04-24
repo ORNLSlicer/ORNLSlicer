@@ -1,10 +1,19 @@
 #pragma once
 
+#include <cstdint>
+#include <tuple>
+#include <utility>
+
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmatrix4x4.h>
+#include <qquaternion.h>
+#include <qvectornd.h>
+
 #include "geometry/plane.h"
 #include "geometry/point.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
-
-#include <cstdint>
 
 namespace ORNL {
 //! \brief Commonly used math functions

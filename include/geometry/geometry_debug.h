@@ -1,12 +1,13 @@
 #pragma once
 
+#include <QPair>
+#include <QString>
+#include <qcontainerfwd.h>
+
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
-
-#include <QPair>
-#include <QString>
 
 namespace ORNL {
 namespace GeometryDebug {

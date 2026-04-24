@@ -2,6 +2,9 @@
 
 #include <QColor>
 #include <QWidget>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
 
 namespace ORNL {
 /*!

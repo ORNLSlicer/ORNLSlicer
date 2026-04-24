@@ -1,12 +1,14 @@
 #pragma once
 
-#include "QFont"
-#include "QFrame"
-#include "QIcon"
-#include "QLabel"
-#include "QPixmap"
-#include "QPushButton"
-#include "QWidget"
+#include <QFont>
+#include <QFrame>
+#include <QIcon>
+#include <QLabel>
+#include <QPixmap>
+#include <QPushButton>
+#include <QWidget>
+#include <qhashfunctions.h>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 

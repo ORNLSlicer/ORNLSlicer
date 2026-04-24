@@ -1,5 +1,11 @@
 #include "utilities/theme_tool.h"
 
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qnamespace.h>
+
 namespace ORNL {
 Theme::Theme(int themeNum) {
     m_dotColors << Qt::darkGreen << Qt::darkYellow << QColor(255, 172, 28) << Qt::darkBlue << Qt::white;

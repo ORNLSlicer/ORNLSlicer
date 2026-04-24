@@ -1,10 +1,12 @@
 #pragma once
 
-#include "QMap"
-#include "QObject"
-#include "QString"
+#include <QMap>
+#include <QObject>
+#include <QString>
+#include <qcontainerfwd.h>
+#include <qtmetamacros.h>
+
 #include "geometry/point.h"
-#include "utilities/constants.h"
 
 namespace ORNL {
 //! \brief A plain old data structure class for a GCode command.

@@ -1,9 +1,16 @@
 #pragma once
 
-#include "QMessageBox"
+#include <cstdint>
+#include <stdexcept>
+
+#include <QCoreApplication>
+#include <QMessageBox>
+#include <qcolor.h>
+#include <qtcoreexports.h>
+
 #include "constants.h"
 #include "exceptions/exceptions.h"
-#include "nlohmann/json.hpp"
+#include "units/unit.h"
 #include "utilities/qt_json_conversion.h"
 
 using json = fifojson;
@@ -23,7 +30,7 @@ enum RealTimeSlicingOutput { kFile = 0, kNetwork = 1 };
 
 /*!
  * \enum MeshType
- * \brief the various types of meshes supported by Slicer 2
+ * \brief the various types of meshes supported by ORNLSlicer
  */
 enum MeshType { kBuild, kClipping, kSettings, kSupport };
 
@@ -714,7 +721,7 @@ inline QString VisualizationColorsName(VisualizationColors color) {
 
         default:
             QMessageBox::critical(
-                Q_NULLPTR, "ORNL Slicer-2",
+                Q_NULLPTR, QCoreApplication::applicationName(),
                 "Unimplemented corosponding visualization colors string.\n"
                 "With a new enum entry for color, a corrosponding name (in VisualizationColorsName) and\n"
                 "default color value (in VisualizationColorsDefaults) needs to be created.",
@@ -782,7 +789,7 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
 
         default:
             QMessageBox::critical(
-                Q_NULLPTR, "ORNL Slicer-2",
+                Q_NULLPTR, QCoreApplication::applicationName(),
                 "Unimplemented corosponding visualization default color.\n"
                 "With a new enum entry for color, a corrosponding name (in VisualizationColorsName) and\n"
                 "default color value (in VisualizationColorsDefaults) needs to be created.",

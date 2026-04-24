@@ -1,6 +1,12 @@
 #include "gcode/parsers/aerobasic_parser.h"
 
-#include "QString"
+#include <functional>
+
+#include <QString>
+#include <qcontainerfwd.h>
+
+#include "gcode/gcode_meta.h"
+#include "gcode/parsers/common_parser.h"
 
 namespace ORNL {
 AeroBasicParser::AeroBasicParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)

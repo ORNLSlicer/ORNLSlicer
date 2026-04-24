@@ -1,6 +1,15 @@
 #include "step/layer/powder_layer.h"
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
 #include "step/layer/island/powder_sector_island.h"
+#include "step/layer/layer.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 PowderLayer::PowderLayer(uint layer_nr, const QSharedPointer<SettingsBase>& sb) : Layer(layer_nr, sb) {

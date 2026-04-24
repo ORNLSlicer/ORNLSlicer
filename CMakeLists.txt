@@ -7,11 +7,11 @@ set(TARGET_VERSION "${RESULT_VAR}")
 
 # Define project name and base it on C++
 project(
-    slicer2
+    ornlslicer
     LANGUAGES CXX C
     VERSION ${TARGET_VERSION}
     DESCRIPTION "Advanced object slicer by ORNL"
-    HOMEPAGE_URL "https://github.com/ORNLSlicer/Slicer-2"
+    HOMEPAGE_URL "https://github.com/ORNLSlicer/ORNLSlicer"
 )
 
 set(CMAKE_CXX_STANDARD 23)
@@ -88,7 +88,7 @@ function(FindDependencies)
 endfunction()
 
 FindDependencies()
-set(SLICER2_DEPS ${RESULT_VAR})
+set(ORNLSLICER_DEPS ${RESULT_VAR})
 
 # Find all project files.
 file(GLOB_RECURSE SOURCES "src/**.cpp")
@@ -104,7 +104,7 @@ target_sources(
     FILES ${HEADERS}
 )
 
-target_link_libraries(${PROJECT_NAME}_obj ${SLICER2_DEPS})
+target_link_libraries(${PROJECT_NAME}_obj ${ORNLSLICER_DEPS})
 target_compile_options(${PROJECT_NAME}_obj PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fpermissive -Wno-deprecated-declarations>)
 
 add_executable(${PROJECT_NAME})
@@ -119,9 +119,9 @@ if(WIN32)
 endif()
 
 function(CreateODSTarget)
-    option(SLICER2_AUTO_GENERATE_MASTER_CONFIG "Generates the master configuration file as part of the build process" ON)
+    option(ORNLSLICER_AUTO_GENERATE_MASTER_CONFIG "Generates the master configuration file as part of the build process" ON)
 
-    if(SLICER2_AUTO_GENERATE_MASTER_CONFIG)
+    if(ORNLSLICER_AUTO_GENERATE_MASTER_CONFIG)
         find_package(Python COMPONENTS Interpreter)
         if(Python_FOUND)
             message(STATUS "Python interpreter found, enabling automatic master ODS -> JSON generator.")
@@ -143,11 +143,11 @@ function(CreateODSTarget)
 endfunction()
 
 function(CreateDocTarget)
-    option(SLICER2_BUILD_DOC "Build Doxygen documentation" OFF)
-    if(SLICER2_BUILD_DOC)
+    option(ORNLSLICER_BUILD_DOC "Build Doxygen documentation" OFF)
+    if(ORNLSLICER_BUILD_DOC)
         find_package(Doxygen)
         if(DOXYGEN_FOUND)
-            set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/doc/Doxyfile.in)
+            set(DOXYGEN_IN ${CMAKE_CURRENT_SOURCE_DIR}/Doxyfile)
             set(DOXYGEN_OUT ${CMAKE_CURRENT_BINARY_DIR}/Doxyfile)
 
             configure_file(${DOXYGEN_IN} ${DOXYGEN_OUT} @ONLY)
@@ -178,6 +178,5 @@ if(WIN32)
     install(TARGETS ${PROJECT_NAME}_cli)
 endif()
 
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/doc/slicer-2_user_guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
-

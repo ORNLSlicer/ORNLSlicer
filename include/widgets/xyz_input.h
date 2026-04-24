@@ -1,11 +1,14 @@
 #pragma once
 
-#include "QCheckBox"
-#include "QDoubleSpinBox"
-#include "QHBoxLayout"
-#include "QLabel"
-#include "QWidget"
-#include "units/unit.h"
+#include <QCheckBox>
+#include <QDoubleSpinBox>
+#include <QHBoxLayout>
+#include <QLabel>
+#include <QWidget>
+#include <qhashfunctions.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+
 #include "utilities/enums.h"
 
 namespace ORNL {

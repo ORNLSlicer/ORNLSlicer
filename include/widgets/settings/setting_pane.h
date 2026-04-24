@@ -1,9 +1,14 @@
 #pragma once
 
-#include "QInputDialog"
-#include "QScrollArea"
-#include "QToolButton"
-#include "QWidget"
+#include <QInputDialog>
+#include <QScrollArea>
+#include <QToolButton>
+#include <QWidget>
+#include <qboxlayout.h>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qtmetamacros.h>
+
 #include "widgets/settings/setting_tab.h"
 
 namespace ORNL {

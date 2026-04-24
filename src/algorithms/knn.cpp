@@ -1,5 +1,15 @@
 #include "algorithms/knn.h"
 
+#include <algorithm>
+#include <cstdlib>
+
+#include <qcontainerfwd.h>
+#include <qmath.h>
+
+#include "algorithms/algorithm_base.h"
+#include "geometry/point.h"
+#include "units/unit.h"
+
 namespace ORNL {
 
 kNN::kNN(QVector<Point> referencePoints, QVector<Point> queryPoints, int kNeighbors, GPU_VARIANT variant)

@@ -1,11 +1,36 @@
 #include "threading/slicers/rpbf_slicer.h"
 
+#include <math.h>
+
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qdebug.h>
+#include <qhashfunctions.h>
+#include <qmath.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+
+#include "gcode/writers/writer_base.h"
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/polygon.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "part/part.h"
+#include "slicing/buffered_slicer.h"
 #include "slicing/preprocessor.h"
 #include "slicing/slicing_utilities.h"
+#include "step/layer/island/powder_sector_island.h"
+#include "step/layer/layer.h"
 #include "step/layer/powder_layer.h"
+#include "threading/traditional_ast.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 

@@ -1,10 +1,14 @@
 #pragma once
 
-#include "geometry/mesh/closed_mesh.h"
-#include "geometry/mesh/mesh_base.h"
-#include "geometry/mesh/open_mesh.h"
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
 #include "step/layer/island/powder_sector_island.h"
-#include "step/layer/layer.h"
 #include "threading/traditional_ast.h"
 
 namespace ORNL {

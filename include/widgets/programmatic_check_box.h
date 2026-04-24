@@ -1,6 +1,9 @@
 #pragma once
 
-#include "QCheckBox"
+#include <QCheckBox>
+#include <qhashfunctions.h>
+#include <qtmetamacros.h>
+#include <qwidget.h>
 
 namespace ORNL {
 /*!

@@ -1,8 +1,16 @@
 #pragma once
 
-#include "QUuid"
+#include <QUuid>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+
 #include "geometry/point.h"
 #include "step/layer/island/island_base.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

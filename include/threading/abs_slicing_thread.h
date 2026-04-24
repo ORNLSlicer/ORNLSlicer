@@ -1,10 +1,17 @@
 #pragma once
 
-#include "QElapsedTimer"
-#include "QQueue"
-#include "QThread"
-#include "gcode/gcode_parser.h"
-#include "threading/step_thread.h"
+#include <QElapsedTimer>
+#include <QQueue>
+#include <QThread>
+#include <nlohmann/json_fwd.hpp>
+#include <qdir.h>
+#include <qhashfunctions.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qtypes.h>
+
+#include "gcode/writers/writer_base.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

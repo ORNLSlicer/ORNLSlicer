@@ -1,11 +1,27 @@
 #include "geometry/path_modifier.h"
 
-#include "QtMath"
+#include <math.h>
+
+#include <cmath>
+#include <limits>
+
+#include <QtMath>
+#include <qcontainerfwd.h>
+#include <qminmax.h>
+#include <qnumeric.h>
+#include <qsharedpointer.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
 #include "geometry/segment_base.h"
 #include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
+#include "geometry/segments/travel.h"
 #include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {
@@ -49,7 +65,8 @@ void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, V
 }
 
 void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDistance, Velocity leadInSpeed,
-                                 AngularVelocity leadInExtruderSpeed, bool enableWidthHeight, double areaMultiplier){
+                                                   AngularVelocity leadInExtruderSpeed, bool enableWidthHeight,
+                                                   double areaMultiplier) {
     Point firstPoint = path[0]->start();
     Point secondPoint = path[0]->end();
     Distance length = secondPoint.distance(firstPoint);
@@ -71,10 +88,8 @@ void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDi
     // Update Width and Height if using Width and Height mode
     if (enableWidthHeight) {
         areaMultiplier = qSqrt(areaMultiplier / 100.0);
-        segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth) *
-                                                        areaMultiplier);
-        segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight) *
-                                                        areaMultiplier);
+        segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth) * areaMultiplier);
+        segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight) * areaMultiplier);
     }
 
     path.insert(0, segment);

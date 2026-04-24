@@ -1,5 +1,9 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "configs/settings_base.h"
 #include "geometry/path.h"
 #include "geometry/point.h"

@@ -1,10 +1,23 @@
 #pragma once
 
-#include "QMatrix4x4"
-#include "QOpenGLBuffer"
-#include "QOpenGLTexture"
-#include "QOpenGLVertexArrayObject"
-#include "QQueue"
+#include <GL/gl.h>
+
+#include <vector>
+
+#include <QMatrix4x4>
+#include <QOpenGLBuffer>
+#include <QOpenGLTexture>
+#include <QOpenGLVertexArrayObject>
+#include <QPointer>
+#include <QQueue>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qimage.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
 
 // Forward
 class QOpenGLShaderProgram;
@@ -49,7 +62,7 @@ struct Triangle {
  *
  * Note that all graphics objects have their own set of buffers. In OpenGL, switching
  * buffers is one of the more expensive operations. While this is fine
- * for most cases in Slicer2, having more than a few hundred objects shown at once
+ * for most cases in ORNLSlicer, having more than a few hundred objects shown at once
  * can start to incur slowdown. In these cases, it is recommended to use the GraphicsObject
  * as a sort of container object. See GCodeObject for an example of this.
  *
@@ -286,8 +299,8 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
 
     } m_state;
 
-    //! \brief View that we draw to. Raw pointer to prevent double free.
-    BaseView* m_view;
+    //! \brief View that we draw to. Guarded so shutdown can null this before lingering shared refs release.
+    QPointer<BaseView> m_view;
 
     //! \brief GL mesh information.
     std::vector<float> m_vertices;

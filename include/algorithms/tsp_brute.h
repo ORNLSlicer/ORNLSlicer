@@ -1,8 +1,12 @@
 #pragma once
 
-#include "QVector"
+#include <QVector>
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
 #include "algorithm_base.h"
 #include "step/layer/island/island_base.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!

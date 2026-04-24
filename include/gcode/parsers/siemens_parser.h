@@ -1,5 +1,9 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+
+#include "gcode/gcode_meta.h"
 #include "gcode/parsers/common_parser.h"
 
 namespace ORNL {

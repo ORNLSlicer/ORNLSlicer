@@ -1,8 +1,19 @@
 #pragma once
 
-#include "QElapsedTimer"
+#include <QElapsedTimer>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qpoint.h>
+#include <qquaternion.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+
 #include "configs/settings_base.h"
 #include "graphics/base_view.h"
+#include "graphics/graphics_object.h"
 #include "part/part.h"
 
 namespace ORNL {
@@ -17,9 +28,9 @@ class PartMetaItem;
 class RightClickMenu;
 
 /*!
- * \brief The main part manipulation view in Slicer2.
+ * \brief The main part manipulation view in ORNLSlicer.
  *
- * The part view is the main view in Slicer2. It is responsible for the manipulation of
+ * The part view is the main view in ORNLSlicer. It is responsible for the manipulation of
  * added geometry in the build volume.
  *
  * This view makes use of the PartMetaModel class, which is intended to allow for easy

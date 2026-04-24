@@ -1,5 +1,9 @@
 #include "units/unit.h"
 
+#include <math.h>
+
+#include <qmath.h>
+
 #include "exceptions/exceptions.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"

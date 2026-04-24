@@ -1,6 +1,15 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/settings_polygon.h"
 #include "step/layer/island/island_base.h"
+#include "step/layer/regions/region_base.h"
 
 namespace ORNL {
 /*!

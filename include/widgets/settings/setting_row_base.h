@@ -1,14 +1,18 @@
 #pragma once
 
-#include "QCheckBox"
-#include "QComboBox"
-#include "QGridLayout"
-#include "QLabel"
-#include "QObject"
-#include "QWidget"
+#include <QCheckBox>
+#include <QComboBox>
+#include <QGridLayout>
+#include <QLabel>
+#include <QObject>
+#include <QWidget>
+#include <qlist.h>
+#include <qscopedpointer.h>
+
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
 #include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 

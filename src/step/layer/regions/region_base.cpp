@@ -1,7 +1,23 @@
 #include "step/layer/regions/region_base.h"
 
+#include <algorithm>
+#include <limits>
+
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qquaternion.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
+#include "geometry/settings_polygon.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
 
 namespace ORNL {
 RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,

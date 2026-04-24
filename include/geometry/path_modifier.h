@@ -1,7 +1,13 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+
+#include "configs/settings_base.h"
 #include "geometry/path.h"
-#include "geometry/segments/travel.h"
+#include "geometry/point.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /**
@@ -22,7 +28,8 @@ class PathModifierGenerator {
      * @param areaMultiplier: The area multiplier.
      */
     static void GenerateOpenLoopLeadIn(Path& path, Distance leadInDistance, Velocity leadInSpeed,
-                                 AngularVelocity leadInExtruderSpeed, bool enableWidthHeight, double areaMultiplier);
+                                       AngularVelocity leadInExtruderSpeed, bool enableWidthHeight,
+                                       double areaMultiplier);
 
     /**
      * @brief GenerateFlyingStart generates a flying start path which begins motion before enabling extrusion.

@@ -1,9 +1,10 @@
 #pragma once
 
-#include "QObject"
-#include "QSize"
-#include "QToolBar"
-#include "QToolButton"
+#include <QObject>
+#include <QSize>
+#include <QToolBar>
+#include <QToolButton>
+#include <qtmetamacros.h>
 
 namespace ORNL {
 /*!

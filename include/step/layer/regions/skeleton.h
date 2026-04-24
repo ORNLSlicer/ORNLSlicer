@@ -1,14 +1,28 @@
 #pragma once
 
-#include "QStack"
-#include "boost/graph/adjacency_list.hpp"
-#include "boost/graph/connected_components.hpp"
-#include "boost/graph/filtered_graph.hpp"
-#include "boost/graph/graph_traits.hpp"
-#include "boost/graph/subgraph.hpp"
-#include "boost/property_map/property_map.hpp"
+#include <QStack>
+#include <boost/graph/adjacency_list.hpp>
+#include <boost/graph/connected_components.hpp>
+#include <boost/graph/filtered_graph.hpp>
+#include <boost/graph/graph_traits.hpp>
+#include <boost/graph/subgraph.hpp>
+#include <boost/property_map/property_map.hpp>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
+#include <qmap.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
+#include "configs/settings_base.h"
+#include "gcode/writers/writer_base.h"
+#include "geometry/path.h"
+#include "geometry/point.h"
+#include "geometry/polyline.h"
 #include "geometry/segments/line.h"
+#include "geometry/settings_polygon.h"
+#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
+#include "units/unit.h"
 
 namespace ORNL {
 using SkeletonGraph = boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, Point, Polyline>;

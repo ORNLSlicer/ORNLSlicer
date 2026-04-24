@@ -1,8 +1,29 @@
 #include "threading/real_time_ast.h"
 
-#include "QApplication"
+#include <algorithm>
+#include <limits>
+
+#include <QApplication>
+#include <data_stream.h>
+#include <nlohmann/json_fwd.hpp>
+#include <qabstractsocket.h>
+#include <qdebug.h>
+#include <qlist.h>
+#include <qlogging.h>
+#include <qobject.h>
+#include <qsharedpointer.h>
+#include <qthread.h>
+#include <qtmetamacros.h>
+#include <tcp_connection.h>
+
+#include "external_files/exporters/rpbf_exporter.h"
+#include "gcode/writers/writer_base.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "threading/step_thread.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 RealTimeAST::RealTimeAST(QString outputLocation) : AbstractSlicingThread(outputLocation) {}

@@ -1,41 +1,23 @@
----
-name: Bug Report
-about: Create a report to help us improve
-title: '[BUG] <short description>'
-labels: bug
-assignees: ''
----
+## Summary
+<!-- Briefly describe the bug and why it matters. -->
 
-## Describe the bug
 
-<!-- A clear and concise description of what the bug is. -->
+## Steps to reproduce
+<!-- List the exact commands, inputs, or workflow steps needed to reproduce the issue. -->
+<!-- Describe how often this happens and whether you have noticed any pattern. -->
 
-## To Reproduce
 
-<!--
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '...'
-3. Scroll down to '...'
-4. See error
--->
+## Observed behavior
+<!-- Describe what happened when following the steps above, including any errors, crashes, incorrect output, or other unexpected results. -->
+
 
 ## Expected behavior
+<!-- Describe what you expected to happen when following the same steps. -->
 
-<!-- A clear and concise description of what you expected to happen. -->
-
-## Screenshots
-
-<!-- If applicable, add screenshots to help explain your problem. -->
 
 ## Environment
+<!-- Describe the setup where the issue occurred, including OS, shell, Python version, Myna version, install method, and any other relevant environment details. -->
 
-<!--
-- OS: [e.g. Windows, Linux, macOS]
-- Version [e.g. 1.0.0]
-- Build type [Debug/Release]
--->
 
-## Additional context
-
-<!-- Add any other context about the problem here. -->
+## Possible solution
+<!-- If you have ideas about how this bug could be fixed, describe them here. This could include potential changes to the code, configuration, or workflow that might resolve the issue. -->

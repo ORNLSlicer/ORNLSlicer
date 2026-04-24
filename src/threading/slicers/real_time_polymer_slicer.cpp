@@ -1,13 +1,29 @@
 #include "threading/slicers/real_time_polymer_slicer.h"
 
-#include "QSharedPointer"
+#include <QSharedPointer>
+#include <nlohmann/json_fwd.hpp>
+#include <qcontainerfwd.h>
+#include <qvectornd.h>
+
+#include "geometry/mesh/mesh_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
+#include "geometry/polygon_list.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "optimizers/layer_order_optimizer.h"
+#include "part/part.h"
 #include "slicing/buffered_slicer.h"
 #include "slicing/layer_additions.h"
 #include "slicing/preprocessor.h"
 #include "slicing/slicing_utilities.h"
 #include "step/layer/island/polymer_island.h"
+#include "step/layer/layer.h"
+#include "step/layer/regions/region_base.h"
+#include "threading/real_time_ast.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 
@@ -40,67 +56,64 @@ void RealTimePolymerSlicer::initialSetup() {
     });
 
     // Setup how to build steps
-    m_preprocessor->addStepBuilder([this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
-                                          Preprocessor::ActivePartMeta& meta) {
-        meta.part->clearSteps(); // Remove and old steps
+    m_preprocessor->addStepBuilder(
+        [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
+            meta.part->clearSteps(); // Remove and old steps
 
-        QSharedPointer<Layer> layer =
-            QSharedPointer<Layer>::create(next_layer_meta->number + 1, next_layer_meta->settings);
-        layer->setSettingsPolygons(next_layer_meta->settings_polygons);
+            QSharedPointer<Layer> layer =
+                QSharedPointer<Layer>::create(next_layer_meta->number + 1, next_layer_meta->settings);
+            layer->setSettingsPolygons(next_layer_meta->settings_polygons);
 
-        // Add data from cross-sectioning to a layer
-        layer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
-        layer->setOrientation(next_layer_meta->plane,
-                              next_layer_meta->shift_amount + next_layer_meta->additional_shift);
-        layer->setRaftShift(QVector3D(0, 0, 1) *
-                            m_raft_shift()); // Offset this layer based on how many raftswe have added, rafts are always
-                                             // perpendicular to the build plate
+            // Add data from cross-sectioning to a layer
+            layer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
+            layer->setOrientation(next_layer_meta->plane,
+                                  next_layer_meta->shift_amount + next_layer_meta->additional_shift);
+            layer->setRaftShift(QVector3D(0, 0, 1) *
+                                m_raft_shift()); // Offset this layer based on how many raftswe have added, rafts are
+                                                 // always perpendicular to the build plate
 
-        // Create the islands from the geometry.
-        QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
-        for (const PolygonList& island_geometry : split_geometry) {
-            // Polymer builds use polymer islands.
-            QSharedPointer<PolymerIsland> poly_isl =
-                QSharedPointer<PolymerIsland>::create(island_geometry, next_layer_meta->settings,
-                                                      next_layer_meta->settings_polygons);
-            layer->addIsland(IslandType::kPolymer, poly_isl);
-        }
+            // Create the islands from the geometry.
+            QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
+            for (const PolygonList& island_geometry : split_geometry) {
+                // Polymer builds use polymer islands.
+                QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
+                    island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
+                layer->addIsland(IslandType::kPolymer, poly_isl);
+            }
 
-        // If rafts are enabled and we have not added enough of them yet, append a raft layer instead
-        //! \note once enough rafts have been processed, the preprocessor needs to be instructed to start consuming
-        //! those layers in the buffered slicer
-        int raft_layers = meta.part_sb->setting<int>(MS::PlatformAdhesion::kRaftLayers);
-        if (meta.part_sb->setting<bool>(MS::PlatformAdhesion::kRaftEnable) && meta.steps_processed <= raft_layers) {
-            auto raft_layer = LayerAdditions::createRaft(layer);
+            // If rafts are enabled and we have not added enough of them yet, append a raft layer instead
+            //! \note once enough rafts have been processed, the preprocessor needs to be instructed to start consuming
+            //! those layers in the buffered slicer
+            int raft_layers = meta.part_sb->setting<int>(MS::PlatformAdhesion::kRaftLayers);
+            if (meta.part_sb->setting<bool>(MS::PlatformAdhesion::kRaftEnable) && meta.steps_processed <= raft_layers) {
+                auto raft_layer = LayerAdditions::createRaft(layer);
 
-            // Offset raft height based on how many layers have been completed
-            raft_layer->setRaftShift(QVector3D(0, 0, 1) * m_raft_shift());
-            meta.part->appendStep(raft_layer);
+                // Offset raft height based on how many layers have been completed
+                raft_layer->setRaftShift(QVector3D(0, 0, 1) * m_raft_shift());
+                meta.part->appendStep(raft_layer);
 
-            Distance raft_layer_height = raft_layer->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-            meta.current_height += raft_layer_height;
+                Distance raft_layer_height = raft_layer->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
+                meta.current_height += raft_layer_height;
 
-            m_raft_shift += raft_layer_height;
+                m_raft_shift += raft_layer_height;
 
-            // Tell the preprocessor to start consuming layers for this part
-            if (meta.steps_processed == raft_layers)
-                meta.consuming = true;
-        }
-        else {
-            meta.part->appendStep(layer);
-            meta.current_height += layer->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-        }
+                // Tell the preprocessor to start consuming layers for this part
+                if (meta.steps_processed == raft_layers)
+                    meta.consuming = true;
+            }
+            else {
+                meta.part->appendStep(layer);
+                meta.current_height += layer->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
+            }
 
-        return false; // No need to stop slicing
-    });
+            return false; // No need to stop slicing
+        });
 
     m_preprocessor->addCrossSectionProcessing([this](Preprocessor::ActivePartMeta& meta) {
         processBrim(meta.part, meta.steps_processed, meta.part_sb);
         processSkirt(meta.part, meta.steps_processed, meta.part_sb);
         processThermalScan(meta.part, meta.part_sb);
         processLaserScan(meta.part, meta.steps_processed, meta.part_sb, meta.current_height);
-
-        // TODO: real time skins
 
         return false;
     });

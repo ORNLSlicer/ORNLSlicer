@@ -1,9 +1,14 @@
 #include "widgets/scrollable_graphics_view.h"
 
-#include "QDebug"
-#include "QLabel"
-#include "QResizeEvent"
-#include "QWheelEvent"
+#include <QDebug>
+#include <QLabel>
+#include <QResizeEvent>
+#include <QWheelEvent>
+#include <qgraphicsview.h>
+#include <qpainter.h>
+#include <qpoint.h>
+#include <qsize.h>
+#include <qwidget.h>
 
 namespace ORNL {
 ScrollableGraphicsView::ScrollableGraphicsView(QWidget* parent) : QGraphicsView(parent) {

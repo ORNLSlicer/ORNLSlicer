@@ -1,10 +1,28 @@
 #include "optimizers/path_order_optimizer.h"
 
-#include "QRandomGenerator"
+#include <algorithm>
+#include <cfloat>
+#include <limits>
+
+#include <QRandomGenerator>
+#include <qcontainerfwd.h>
+#include <qlist.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+#include <qvectornd.h>
+
+#include "configs/settings_base.h"
+#include "geometry/path.h"
+#include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/point_order_optimizer.h"
+#include "units/unit.h"
+#include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {
@@ -379,7 +397,8 @@ Path PathOrderOptimizer::linkTo() {
                                          m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                                          m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                                          m_sb->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                                         m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                                         m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius))
+            .rotation_index;
 
     addTravel(pointIndex, nextPath);
 
@@ -524,8 +543,10 @@ Path PathOrderOptimizer::linkSpiralPath2D(bool last_spiral) {
     for (QSharedPointer<SegmentBase> seg : newPath)
         line.append(seg->start());
 
-    int pointIndex = PointOrderOptimizer::linkToPoint(m_current_location, line, m_layer_num,
-                                                      PointOrderOptimization::kNextClosest, false, 0, 0, false, 0);
+    int pointIndex =
+        PointOrderOptimizer::linkToPoint(m_current_location, line, m_layer_num, PointOrderOptimization::kNextClosest,
+                                         false, 0, 0, false, 0)
+            .rotation_index;
 
     for (int i = 0; i < pointIndex; ++i)
         newPath.move(0, newPath.size() - 1);

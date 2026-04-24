@@ -1,12 +1,14 @@
 #pragma once
 
-#include "QColor"
-#include "QHash"
-#include "QVector"
-#include "QVector3D"
-#include "units/unit.h"
-
 #include <string>
+
+#include <QColor>
+#include <QHash>
+#include <QVector3D>
+#include <QVector>
+#include <qcontainerfwd.h>
+
+#include "units/unit.h"
 
 namespace ORNL {
 /*!
@@ -783,6 +785,7 @@ class Constants {
             static const QString kCustomPathXLocation;
             static const QString kCustomPathYLocation;
             static const QString kPointOrder;
+            static const QString kEnablePointOrderSegmentBreaking;
             static const QString kLocalRandomnessEnable;
             static const QString kLocalRandomnessRadius;
             static const QString kMinDistanceEnabled;

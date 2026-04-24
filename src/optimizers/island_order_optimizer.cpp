@@ -1,10 +1,26 @@
 
 #include "optimizers/island_order_optimizer.h"
 
-#include "QRandomGenerator"
+#include <algorithm>
+#include <cassert>
+#include <limits>
+
+#include <QRandomGenerator>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <quuid.h>
+
 #include "algorithms/tsp_brute.h"
 #include "geometry/path.h"
+#include "geometry/point.h"
 #include "geometry/polygon.h"
+#include "step/layer/island/island_base.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 

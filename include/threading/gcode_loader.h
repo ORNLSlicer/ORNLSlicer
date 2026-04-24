@@ -1,10 +1,25 @@
 #pragma once
 
-#include "QTextCharFormat"
-#include "QThread"
+#include <QTextCharFormat>
+#include <QThread>
+#include <qcolor.h>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qlist.h>
+#include <qmap.h>
+#include <qregularexpression.h>
+#include <qscopedpointer.h>
+#include <qset.h>
+#include <qsharedpointer.h>
+#include <qstringmatcher.h>
+#include <qtmetamacros.h>
+#include <qvectornd.h>
+
+#include "gcode/gcode_meta.h"
 #include "gcode/parsers/common_parser.h"
 #include "geometry/point.h"
 #include "geometry/segment_base.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {

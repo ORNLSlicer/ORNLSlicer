@@ -1,6 +1,10 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+
 #include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
+#include "units/unit.h"
 
 namespace ORNL {
 

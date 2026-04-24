@@ -1,9 +1,15 @@
 #pragma once
 
+#include <qcontainerfwd.h>
+#include <qsharedpointer.h>
+#include <qtypes.h>
+
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "optimizers/point_order_optimizer.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -50,7 +56,7 @@ class PolylineOrderOptimizer {
 
     void setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
                             Distance minDistanceThreshold, Distance consecutiveThreshold, bool randomnessEnable,
-                            Distance randomnessRadius);
+                            Distance randomnessRadius, bool enableSegmentBreaking);
 
     //! \brief Gets remaining Polylines
     //! \return current Polylines remaining
@@ -90,6 +96,11 @@ class PolylineOrderOptimizer {
 
     //! \brief Links the POO position to the given Polyline with a travel (used for closed contours)
     Polyline linkTo();
+
+    //! \brief Applies a point-order selection by optionally splitting a segment and rotating the closed loop
+    //! \param polyline: Closed-loop polyline to mutate
+    //! \param selection: Rotation/split instructions from the point optimizer
+    void applyPointOrderSelection(Polyline& polyline, const PointOrderOptimizer::PointOrderSelection& selection) const;
 
     //! \brief Links together and orders next, single infill Polyline
     //! \param Polylines: Polylines to consider
@@ -165,7 +176,7 @@ class PolylineOrderOptimizer {
 
     //! \brief Settings needed for Point Optimization
     PointOrderOptimization m_point_optimization;
-    bool m_min_point_distance_enable, m_randomness_enable;
+    bool m_min_point_distance_enable, m_randomness_enable, m_segment_breaking_enable = false;
     Distance m_min_point_distance, m_consecutive_threshold, m_randomness_radius;
 
     //! \brief Internal copy of the pattern to evaluate

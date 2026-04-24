@@ -1,11 +1,21 @@
 #pragma once
 
-#include "QScopedPointer"
-#include "QVector"
+#include <QScopedPointer>
+#include <QVector>
+#include <qcontainerfwd.h>
+#include <qhash.h>
+#include <qhashfunctions.h>
+#include <qlist.h>
+#include <qregularexpression.h>
+#include <qset.h>
+#include <qtmetamacros.h>
+
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
 #include "geometry/point.h"
 #include "parser_base.h"
+#include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 /*!
@@ -35,7 +45,7 @@ class CommonParser : public ParserBase {
     //! \param upperLines Uppercase lines of the original used for ease of parsing/comparison
     CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines);
 
-    //! \brief Parse header lines and identify Slicer 1 or Slicer 2.
+    //! \brief Parse header lines and identify Slicer 1 or ORNLSlicer.
     void parseHeader();
 
     //! \brief Parse footer lines extracting necessary settings for parsing time,
