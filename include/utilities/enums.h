@@ -544,7 +544,14 @@ enum class IslandType : uint8_t {
     kAnchor
 };
 
-enum class MachineType : uint8_t { kPellet, kFilament, kWire_Arc, kLaser_Wire, kConcrete, kThermoset };
+enum class MachineType : uint8_t {
+    kPellet = 0,
+    kFilament = 1,
+    kWire_Arc = 2,
+    kLaser_Wire = 3,
+    kConcrete = 4,
+    kThermoset = 5
+};
 
 enum class PrintMaterial : uint8_t {
     kABS20CF = 0,
