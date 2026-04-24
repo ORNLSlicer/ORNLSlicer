@@ -1,6 +1,6 @@
 #:schema https://developers.openai.com/codex/config-schema.json
 
-model = "gpt-5.4"
+model = "gpt-5.5"
 personality = "pragmatic"
 model_reasoning_effort = "xhigh"
 plan_mode_reasoning_effort = "xhigh"
