@@ -1137,7 +1137,6 @@ void CommonParser::G2Handler(QVector<QString> params) {
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
-    // TODO: Need this to be 2/3 and the associated thing.
     if (x_not_used || y_not_used) {
         QString exceptionString;
         QTextStream(&exceptionString) << "Error not all required parameters passed for GCode command "
@@ -1330,8 +1329,6 @@ void CommonParser::G3Handler(QVector<QString> params) {
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
-    // TODO: Need this to be 2/3 and the associated thing.
-    // TODO: Need to add logic for Z.
     int num_not_used = 0;
     num_not_used += x_not_used + y_not_used + z_not_used;
     if (num_not_used > 1) {
@@ -1714,7 +1711,6 @@ void CommonParser::AddDwell(double dwellTime) {
                  m_g4_comment % getCommentEndDelimiter();
             m_lines.insert(insertIndex, rv);
             ++m_insertions;
-            // insertIndex++;
         }
 
         // Move to purge location
@@ -1918,7 +1914,7 @@ void CommonParser::AdjustFeedrate(double modifier) {
                             m_lines.removeAt(cmd_index);
                         }
                     }
-					else if(line.startsWith("EXTRUDER(")) {
+                    else if (line.startsWith("EXTRUDER(")) {
                         // Handle the case where the line starts with "Extruder("
                         QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
                         QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
@@ -1933,25 +1929,28 @@ void CommonParser::AdjustFeedrate(double modifier) {
                             // factor
                             if (modifier < 1) {
                                 extruderModifier = 1 / extruderModifier;
-                                if (extruderValue > 0 && extruderValue * modifier * extruderModifier <
-                                                             sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                                if (extruderValue > 0 &&
+                                    extruderValue * modifier * extruderModifier <
+                                        sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
                                     tempModifier =
                                         modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
                                                     (extruderValue * modifier * extruderModifier));
                                 }
                             }
                             else {
-                                if (extruderValue > 0 && extruderValue * modifier * extruderModifier >
-                                                             sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                                if (extruderValue > 0 &&
+                                    extruderValue * modifier * extruderModifier >
+                                        sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
                                     tempModifier =
                                         modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
                                                     (extruderValue * modifier * extruderModifier));
                                 }
                             }
 
-                            QString modifiedLine = line.left(extruderMatch.capturedStart()) +
-                                                   "EXTRUDER(" + QString::number(extruderValue * tempModifier * extruderModifier, 'f', 4) + ")" +
-                                                   line.mid(extruderMatch.capturedEnd());
+                            QString modifiedLine =
+                                line.left(extruderMatch.capturedStart()) + "EXTRUDER(" +
+                                QString::number(extruderValue * tempModifier * extruderModifier, 'f', 4) + ")" +
+                                line.mid(extruderMatch.capturedEnd());
 
                             m_lines.insert(cmd_index + 1, modifiedLine);
                             m_lines.removeAt(cmd_index);
