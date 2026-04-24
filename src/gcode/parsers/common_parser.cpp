@@ -1851,7 +1851,7 @@ void CommonParser::AdjustFeedrate(double modifier) {
                                                        parameters[m_s_parameter.toLatin1()] * tempModifier);
             }
             if (parameters.contains(m_f_parameter.toLatin1())) {
-                if (sb->setting<int>(MS::Extruder::kEnableM3S)) {
+                if (sb->setting<int>(MS::Extruder::kEnableM3S) || sb->setting<int>(PRS::MachineSetup::kSyntax) == 10) {
                     int cmd_index = current_layer_motion_end->getLineNumber() - 1;
                     QString& line = m_lines[cmd_index];
 
@@ -1882,6 +1882,45 @@ void CommonParser::AdjustFeedrate(double modifier) {
                                    line.mid(myMatch.capturedEnd());
 
                             m_lines.insert(cmd_index + 1, line);
+                            m_lines.removeAt(cmd_index);
+                        }
+                    }
+					else if(line.startsWith("EXTRUDER(")) {
+                        // Handle the case where the line starts with "Extruder("
+                        QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
+                        QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
+                        double extruderValue = 0.0; // Default value if no match is found
+                        if (extruderMatch.hasMatch()) {
+                            extruderValue = extruderMatch.captured(1).toDouble();
+                        }
+                        if (extruderValue != 0.0) {
+                            double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+
+                            // If slowing down, the multiplier for the extruder should be the inverse of the scale
+                            // factor
+                            if (modifier < 1) {
+                                extruderModifier = 1 / extruderModifier;
+                                if (extruderValue > 0 && extruderValue * modifier * extruderModifier <
+                                                             sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                                    tempModifier =
+                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                    (extruderValue * modifier * extruderModifier));
+                                }
+                            }
+                            else {
+                                if (extruderValue > 0 && extruderValue * modifier * extruderModifier >
+                                                             sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                                    tempModifier =
+                                        modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                    (extruderValue * modifier * extruderModifier));
+                                }
+                            }
+
+                            QString modifiedLine = line.left(extruderMatch.capturedStart()) +
+                                                   "EXTRUDER(" + QString::number(extruderValue * tempModifier * extruderModifier, 'f', 4) + ")" +
+                                                   line.mid(extruderMatch.capturedEnd());
+
+                            m_lines.insert(cmd_index + 1, modifiedLine);
                             m_lines.removeAt(cmd_index);
                         }
                     }
