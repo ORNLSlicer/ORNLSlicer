@@ -1671,7 +1671,7 @@ void CommonParser::AddDwell(double dwellTime) {
         double purgeTime = sb->setting<double>(MS::Purge::kPurgeDwellDuration);
         double purgeLength;
         double purgeRate;
-        if (sb->setting<int>(PRS::MachineSetup::kMachineType) == 1) {
+        if (sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFilament) {
             double purgeLength = sb->setting<double>(MS::Purge::kPurgeLength);
             double purgeRate = sb->setting<double>(MS::Purge::kPurgeFeedrate);
             new_dwellTime = dwellTime - purgeLength / purgeRate;
@@ -1681,7 +1681,7 @@ void CommonParser::AddDwell(double dwellTime) {
         }
 
         // Purge
-        if (sb->setting<int>(PRS::MachineSetup::kMachineType) == 1) {
+        if (sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFilament) {
             MotionEstimation::m_previous_e += sb->setting<Distance>(MS::Purge::kPurgeLength);
             if (sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv = "G1 F" % QString::number(sb->setting<Velocity>(MS::Purge::kPurgeFeedrate).to(m_velocity_unit)) %
@@ -1714,7 +1714,7 @@ void CommonParser::AddDwell(double dwellTime) {
         }
 
         // Move to purge location
-        if (sb->setting<int>(PRS::MachineSetup::kSyntax) == 1) {
+        if (sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax) == GcodeSyntax::kCincinnati) {
             rv = "M68" % m_space % getCommentStartDelimiter() % "PARK" % getCommentEndDelimiter();
             m_lines.insert(insertIndex, rv);
             ++m_insertions;
@@ -1875,7 +1875,8 @@ void CommonParser::AdjustFeedrate(double modifier) {
                                                        parameters[m_s_parameter.toLatin1()] * tempModifier);
             }
             if (parameters.contains(m_f_parameter.toLatin1())) {
-                if (sb->setting<int>(MS::Extruder::kEnableM3S) || sb->setting<int>(PRS::MachineSetup::kSyntax) == 10) {
+                if (sb->setting<int>(MS::Extruder::kEnableM3S) ||
+                    sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax) == GcodeSyntax::kIngersoll) {
                     int cmd_index = current_layer_motion_end->getLineNumber() - 1;
                     QString& line = m_lines[cmd_index];
 
