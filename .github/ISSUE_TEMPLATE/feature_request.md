@@ -1,3 +1,12 @@
+---
+name: Feature request
+about: Suggest a new feature or enhancement to improve the project.
+title: ''
+labels: 'feature'
+assignees: ''
+
+---
+
 ## Summary
 <!-- Briefly describe the feature being requested and the outcome it should enable. -->
 

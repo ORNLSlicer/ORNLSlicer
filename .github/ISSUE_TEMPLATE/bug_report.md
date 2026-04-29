@@ -1,3 +1,12 @@
+---
+name: Bug report
+about: Report a bug or unexpected behavior in the project.
+title: ''
+labels: 'bug'
+assignees: ''
+
+---
+
 ## Summary
 <!-- Briefly describe the bug and why it matters. -->
 
