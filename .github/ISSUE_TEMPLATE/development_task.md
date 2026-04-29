@@ -1,3 +1,12 @@
+---
+name: Development task
+about: Create a task for development work such as refactoring, performance improvement, or maintenance.
+title: ''
+labels: 'development'
+assignees: ''
+
+---
+
 ## Summary
 <!-- Briefly describe the development task being requested. -->
 <!-- This may be a refactor, performance improvement, chore, etc. -->
