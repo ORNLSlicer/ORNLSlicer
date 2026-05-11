@@ -116,6 +116,10 @@ void MeshBase::setTransformations(const QVector<QMatrix4x4> matrixes) {
 
         m_all_transformations.append(matrix);
     }
+
+    // Replaying a saved transform list can call setTransformation(), which records rotations as a side effect. Keep the
+    // saved history stable so load -> save does not duplicate rotations.
+    m_all_transformations = matrixes;
 }
 
 void MeshBase::alignAxis(const QMatrix4x4& matrix) {
@@ -144,10 +148,12 @@ void MeshBase::resetAlignedAxis(const QMatrix4x4& matrix) {
 const QMatrix4x4& MeshBase::transformation() const { return m_transformation; }
 
 QVector<QMatrix4x4> MeshBase::transformations() {
-    if (m_all_transformations.isEmpty() || m_all_transformations.last() != m_transformation)
-        m_all_transformations.append(m_transformation);
+    QVector<QMatrix4x4> transformations = m_all_transformations;
 
-    return m_all_transformations;
+    if (transformations.isEmpty() || transformations.last() != m_transformation)
+        transformations.append(m_transformation);
+
+    return transformations;
 }
 
 void MeshBase::scale(Distance3D bounds) {
