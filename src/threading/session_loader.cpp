@@ -7,8 +7,8 @@
 #include <CGAL/property_map.h>
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
-#include <qmap.h>
 #include <qobject.h>
+#include <qset.h>
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <zip/zip.h>
@@ -37,13 +37,29 @@ void SessionLoader::saveSession() {
     if (zip == nullptr)
         return;
 
-    QMap<QString, QSharedPointer<Part>> meshes;
+    QSet<QString> active_model_names;
+    auto addActiveModelName = [&active_model_names](const QString& name) {
+        if (name.isEmpty())
+            return;
+
+        QFileInfo file_info(name);
+        active_model_names.insert(name);
+        active_model_names.insert(file_info.fileName());
+
+        QString base_name = file_info.baseName();
+        if (!base_name.isEmpty())
+            active_model_names.insert(base_name);
+    };
+
     auto parts = CSM->parts();
     for (auto& part : parts) {
-        meshes.insert(part->rootMesh()->name(), part);
+        addActiveModelName(part->rootMesh()->name());
+        addActiveModelName(part->rootMesh()->path());
 
-        for (auto& submesh : part->subMeshes())
-            meshes.insert(submesh->name(), part);
+        for (auto& submesh : part->subMeshes()) {
+            addActiveModelName(submesh->name());
+            addActiveModelName(submesh->path());
+        }
     }
 
     // Save models
@@ -51,10 +67,10 @@ void SessionLoader::saveSession() {
         QString file_name = it.key();
         QFileInfo file_info(file_name);
 
-        // Hack to make sure mesh can be found if loaded from project or stl.
-        // This is bad.
-        QString basename = file_info.baseName();
-        if (meshes.contains(basename) || meshes.contains(file_name)) // If this mesh was in the list of active meshes
+        // Embed model data when the active part still references this source file. Projects can carry a display name
+        // that differs from the model file name, so both mesh names and mesh paths are considered.
+        if (active_model_names.contains(file_name) || active_model_names.contains(file_info.fileName()) ||
+            active_model_names.contains(file_info.baseName()))
         {
             // To and back from QString in a single line. What an adventure.
             std::string filename = it.key().split("/").back().toStdString();
@@ -182,6 +198,11 @@ void SessionLoader::loadSession() {
     for (auto& part_json : parts_and_ranges) {
         std::string name = part_json[Constants::Settings::Session::LocalFile::kName];
         QSharedPointer<Part> part = CSM->getPart(QString::fromStdString(name));
+        if (part.isNull()) {
+            emit error("Project references settings for a part that was not loaded: " + QString::fromStdString(name));
+            continue;
+        }
+
         part->getSb()->json(part_json[Constants::Settings::Session::LocalFile::kSettings]);
 
         auto ranges = part_json[Constants::Settings::Session::LocalFile::kRanges];
