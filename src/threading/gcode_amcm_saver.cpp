@@ -100,14 +100,14 @@ void GCodeAMCMSaver::run() {
     out << "$APO.CDIS = 1.000" % newline;
     out << "$VEL.CP = 0.06000" % newline;
     out << "; ---- Setting reference (Base) ----" % newline;
-    out << "; BASE_DATA[14] = {FRAME: X 1022.920,Y -1522.720,Z -588.000,A 135.000,B 0.000,C 0.000}" % newline;
-    out << "; $BASE = {FRAME: X 1022.920,Y -1522.720,Z -588.000,A 135.000,B 0.000,C 0.000}" % newline;
-    out << "$BASE = BASE_DATA[14]" % newline;
+    //out << "; BASE_DATA[14] = {FRAME: X 1022.920,Y -1522.720,Z -588.000,A 135.000,B 0.000,C 0.000}" % newline;
+    //out << "; $BASE = {FRAME: X 1022.920,Y -1522.720,Z -588.000,A 135.000,B 0.000,C 0.000}" % newline;
+    out << "$BASE = BASE_DATA[" % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kBaseCoordinate)) %"]" % newline;
     out << "; --------------------------" % newline;
     out << "; ---- Setting tool (TCP) ----" % newline;
-    out << "; TOOL_DATA[5] = {FRAME: X 843.812,Y 0.000,Z 301.216,A 0.000,B 0.000,C -90.000}" % newline;
-    out << "; $TOOL = {FRAME: X 843.812,Y 0.000,Z 301.216,A 0.000,B 0.000,C -90.000}" % newline;
-    out << "$TOOL = TOOL_DATA[5]" % newline;
+    //out << "; TOOL_DATA[5] = {FRAME: X 843.812,Y 0.000,Z 301.216,A 0.000,B 0.000,C -90.000}" % newline;
+    //out << "; $TOOL = {FRAME: X 843.812,Y 0.000,Z 301.216,A 0.000,B 0.000,C -90.000}" % newline;
+    out << "$TOOL = TOOL_DATA[" % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kToolCoordinate)) %"]" % newline;
     out << "; --------------------------" % newline;
     out << "; Show Tool 5" % newline;
     out << "PTP {A1 60.68200,A2 -65.00000,A3 124.01700,A4 18.60870,A5 -57.89280,A6 -10.14630,E1 0.00000} C_PTP" %
@@ -119,7 +119,7 @@ void GCodeAMCMSaver::run() {
         line = lines[i];
         if (line.startsWith(G0)) {
             velocity = QString::number(
-                GSM->getGlobal()->setting<Velocity>(PS::Travel::kSpeed).to(m_selected_meta.m_velocity_unit), 'f', 4);
+                GSM->getGlobal()->setting<Velocity>(PS::Travel::kSpeed).to(m_selected_meta.m_velocity_unit) / 1000.0, 'f', 4); // Meta uses mm/min, but AMCM needs m/min
             QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
@@ -155,7 +155,7 @@ void GCodeAMCMSaver::run() {
                     else if (params[i].startsWith(z))
                         zval = params[i].mid(1);
                     else if (params[i].startsWith(f))
-                        velocity = params[i].mid(1);
+                        velocity = QString::number(params[i].mid(1).toDouble() / 1000.0, 'f', 4);
                 }
             }
             if (velocity != feedrate) {
