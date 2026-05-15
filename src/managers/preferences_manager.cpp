@@ -9,6 +9,7 @@
 
 #include <QDir>
 #include <QStandardPaths>
+#include <QString>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
@@ -28,6 +29,49 @@
 #include "utilities/theme_tool.h"
 
 namespace ORNL {
+namespace {
+/*!
+ * \brief Resolve a persisted visualization color name to its enum value.
+ * \param name Persisted visualization color name.
+ * \param color Output enum value when the name is recognized.
+ * \return True if \p name maps to a known VisualizationColors entry.
+ */
+bool visualizationColorFromName(const std::string& name, VisualizationColors& color) {
+    int visualizationColorsLength = (int)VisualizationColors::Length;
+    for (int i = 0; i < visualizationColorsLength; ++i) {
+        VisualizationColors colorEnum = (VisualizationColors)i;
+        if (VisualizationColorsName(colorEnum).toStdString() == name) {
+            color = colorEnum;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * \brief Parse a persisted visualization color string.
+ * \param colorText Hex color text, with or without a leading '#'.
+ * \param valid Output validity flag from Qt's color parser.
+ * \return Parsed opaque color when valid, otherwise an invalid QColor.
+ */
+QColor parseVisualizationColor(const std::string& colorText, bool& valid) {
+    QString text = QString::fromStdString(colorText).trimmed();
+    QColor color(text);
+
+    if (!color.isValid() && !text.startsWith("#")) {
+        color = QColor(QString("#") + text);
+    }
+
+    valid = color.isValid();
+    if (valid) {
+        color.setAlpha(255);
+    }
+
+    return color;
+}
+} // namespace
+
 QSharedPointer<PreferencesManager> PreferencesManager::m_singleton = QSharedPointer<PreferencesManager>();
 
 QSharedPointer<PreferencesManager> PreferencesManager::getInstance() {
@@ -56,14 +100,17 @@ PreferencesManager::PreferencesManager()
     m_step_connectivity = QVector<bool>(5, false);
     m_katana_tcp_ip = "127.0.0.1";
     m_katana_tcp_port = 12345;
+    setDefaultVisualizationColors({});
 }
 
 QColor PreferencesManager::getVisualizationColor(VisualizationColors color) {
-    return m_visualization_qcolors[VisualizationColorsName(color).toStdString()];
+    std::string name = VisualizationColorsName(color).toStdString();
+    return m_visualization_qcolors.try_emplace(name, VisualizationColorsDefaults(color)).first->second;
 }
 
 void PreferencesManager::setVisualizationColor(QString name, QColor value) {
     m_visualization_qcolors[name.toStdString()] = value;
+    m_dirty = true;
 }
 
 QColor PreferencesManager::revertVisualizationColor(QString name) {
@@ -72,6 +119,7 @@ QColor PreferencesManager::revertVisualizationColor(QString name) {
         VisualizationColors colorEnum = (VisualizationColors)i;
         if (VisualizationColorsName(colorEnum) == name) {
             m_visualization_qcolors[name.toStdString()] = VisualizationColorsDefaults(colorEnum);
+            m_dirty = true;
             break;
         }
     }
@@ -107,7 +155,7 @@ std::map<std::string, std::string> PreferencesManager::getVisualizationHexColors
 }
 
 void PreferencesManager::setDefaultVisualizationColors(
-    std::unordered_map<std::string, std::string> visualizationColorsHex) {
+    const std::unordered_map<std::string, std::string>& visualizationColorsHex) {
     m_visualization_qcolors.clear();
     int visualizationColorsLength = (int)VisualizationColors::Length;
     for (int i = 0; i < visualizationColorsLength; ++i) {
@@ -117,12 +165,24 @@ void PreferencesManager::setDefaultVisualizationColors(
     }
 
     for (const auto& color : visualizationColorsHex) {
-        if (!visualizationColorsHex[color.first].empty()) {
-            bool validColorHexStr;
-            int val = QString::fromStdString(color.second).remove('#').toInt(&validColorHexStr, 16);
-            if (validColorHexStr)
-                m_visualization_qcolors[color.first] = QColor(val);
+        VisualizationColors colorEnum;
+        if (!visualizationColorFromName(color.first, colorEnum)) {
+            continue;
         }
+
+        if (color.second.empty()) {
+            m_dirty = true;
+            continue;
+        }
+
+        bool validColor;
+        QColor parsedColor = parseVisualizationColor(color.second, validColor);
+        if (!validColor) {
+            m_dirty = true;
+            continue;
+        }
+
+        m_visualization_qcolors[color.first] = parsedColor;
     }
 }
 

@@ -428,8 +428,11 @@ class PreferencesManager : public QObject {
     //! \brief Constructor
     PreferencesManager();
 
-    //! \brief Set Visualization Colors to Default
-    void setDefaultVisualizationColors(std::unordered_map<std::string, std::string> visualizationColorsHex);
+    //! \brief Set visualization colors to defaults and apply valid persisted overrides
+    //! \param visualizationColorsHex Persisted visualization color values keyed by VisualizationColorsName()
+    //!
+    //! Invalid persisted colors are left at their default values so they can be repaired on the next export.
+    void setDefaultVisualizationColors(const std::unordered_map<std::string, std::string>& visualizationColorsHex);
 
     //! \brief Singleton pointer
     static QSharedPointer<PreferencesManager> m_singleton;
