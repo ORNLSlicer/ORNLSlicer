@@ -11,7 +11,6 @@
 #include "geometry/point.h"
 #include "geometry/polyline.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 
 namespace ORNL {
@@ -27,7 +26,7 @@ class Brim : public RegionBase {
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
     //! \brief Computes the brim region.
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync) override;
+    void compute(uint layer_num) override;
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number

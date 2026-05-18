@@ -45,7 +45,7 @@ QString PowderLayer::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void PowderLayer::compute() {
     for (QSharedPointer<IslandBase> island : m_islands) {
-        island->compute(m_layer_nr, m_sync);
+        island->compute(m_layer_nr);
 
         island.dynamicCast<PowderSectorIsland>()->reorderRegions();
     }

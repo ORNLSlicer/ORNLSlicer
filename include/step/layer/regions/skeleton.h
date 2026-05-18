@@ -20,7 +20,6 @@
 #include "geometry/polyline.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 
@@ -56,7 +55,7 @@ class Skeleton : public RegionBase {
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
     //! \brief Computes the skeleton region
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync) override;
+    void compute(uint layer_num) override;
 
     //! \brief Computes a Voronoi Diagram from a set of segments
     void computeSegmentVoronoi();
