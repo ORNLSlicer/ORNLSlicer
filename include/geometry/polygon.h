@@ -11,11 +11,6 @@
 #include "geometry/polyline.h"
 #include "units/unit.h"
 
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/geometry/point.h>
-    #include <single_path/geometry/polygon.h>
-#endif
-
 namespace ORNL {
 class PolygonList;
 class Polyline;
@@ -42,14 +37,6 @@ class Polygon : public QVector<Point> {
 
     //! \brief Conversion Constructor
     Polygon(const Path& path);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Conversion constructor
-    Polygon(SinglePath::Polygon& polygon);
-
-    //! \brief Conversion operator
-    operator SinglePath::Polygon() const;
-#endif
 
     //! \brief Checks the orientation of the Polygon
     //! \details Checks the orientation of the polygon based on the area.

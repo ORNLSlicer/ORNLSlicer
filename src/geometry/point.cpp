@@ -115,22 +115,6 @@ Point::Point(const QVector3D& p) {
     m_z = p.z();
 }
 
-#ifdef HAVE_SINGLE_PATH
-Point::Point(SinglePath::Point& point) {
-    m_x = point.x();
-    m_y = point.y();
-    m_z = point.z();
-}
-
-ORNL::Point::operator SinglePath::Point() const {
-    SinglePath::Point p;
-    p.x(m_x);
-    p.y(m_y);
-    p.z(m_z);
-    return p;
-}
-#endif
-
 Point Point::round(Point p) {
     p.m_x = std::round(p.m_x);
     p.m_y = std::round(p.m_y);

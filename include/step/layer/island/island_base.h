@@ -14,11 +14,6 @@
 #include "step/layer/regions/region_base.h"
 #include "utilities/enums.h"
 
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/single_path.h>
-Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
-#endif
-
 namespace ORNL {
 /*!
  * \class IslandBase
@@ -61,14 +56,6 @@ class IslandBase {
 
     //! \brief Compute all regions in the island.
     void compute(uint layer_num, QSharedPointer<SyncManager>& sync);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief applies the single path algorithm on a set of geometry
-    //! \param geometry: input closed contours
-    //! \param layer_num: the index of this layer
-    //! \param sync: used to sync between layers
-    void applySinglePath(QVector<SinglePath::PolygonList>& geometry, uint layer_num, QSharedPointer<SyncManager>& sync);
-#endif
 
     //! \brief Get the settings for the island.
     QSharedPointer<SettingsBase> getSb() const;
