@@ -20,4 +20,4 @@ ORNLSlicer is a 3D printing slicer developed by Oak Ridge National Laboratory (O
 
 ## Formatting
 
-- Always leave a blank line after a heading in markdown files.
+- Always leave a blank line after a heading when writing in Markdown.
