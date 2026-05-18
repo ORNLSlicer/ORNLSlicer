@@ -111,12 +111,5 @@ class IngersollWriter : public WriterBase {
     //! \brief preallocated prefixs commonly used in this syntax
     int m_material_number;
 
-    //! \brief state for wire feed. Whether or not pathing is in the middle of feed or not
-    //! and whether or not the current segment is the final one before cutoff.
-    bool m_wire_feed;
-    // bool m_final_wire_feed;
-    bool m_next_to_last;
-    Distance m_wire_feed_total;
-
 }; // class IngersollWriter
 } // namespace ORNL

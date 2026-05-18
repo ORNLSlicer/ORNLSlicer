@@ -130,12 +130,5 @@ class CincinnatiWriter : public WriterBase {
     QString m_M10, m_M11, m_M64, m_M65;
     int m_material_number;
 
-    //! \brief wire feed state (on/off)
-    bool m_wire_feed;
-
-    //! \brief wire cutoff point
-    Point m_wire_cutoff;
-    bool m_need_wirecut;
-
 }; // class CincinnatiWriter
 } // namespace ORNL

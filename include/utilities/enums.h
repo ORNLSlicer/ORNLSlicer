@@ -301,8 +301,7 @@ enum class RegionType : int {
     kSupportRoof,
     kLaserScan,
     kThermalScan,
-    kSkeleton,
-    kAnchor
+    kSkeleton
 };
 
 enum class SkeletonInput : int { kSegments, kPoints };
@@ -410,8 +409,6 @@ inline QString toString(RegionType region_type) {
             return Constants::RegionTypeStrings::kThermalScan;
         case RegionType::kSkeleton:
             return Constants::RegionTypeStrings::kSkeleton;
-        case RegionType::kAnchor:
-            return Constants::RegionTypeStrings::kAnchor;
     }
     return QString();
 }
@@ -539,9 +536,7 @@ enum class IslandType : uint8_t {
     kThermalScan,
     kSkirt,
     kSupport,
-    kPowderSector,
-    kWireFeed,
-    kAnchor
+    kPowderSector
 };
 
 enum class MachineType : uint8_t {

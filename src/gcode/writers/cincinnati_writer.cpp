@@ -43,8 +43,6 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
     m_w_travel = false;
     m_first_print = true;
     m_layer_start = true;
-    m_wire_feed = false;
-    m_need_wirecut = false;
     m_min_z = 0.0f;
     m_material_number = -1;
     QString rv;
