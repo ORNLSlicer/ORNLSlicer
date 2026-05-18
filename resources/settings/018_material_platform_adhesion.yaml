@@ -1,0 +1,171 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "raft"
+    display: "Add Raft"
+    type: "boolean"
+    tooltip: "If selected, a raft will be printed below the part to help account for an unlevel build surface"
+    depends: {}
+    options: []
+    default: false
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kAddRaft"
+    local: false
+  - name: "raft_offset"
+    display: "Raft XY Offset"
+    type: "distance"
+    tooltip: "Determines how far beyond the base of the part the raft extends"
+    depends: {"raft":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kRaftXYOffset"
+    local: false
+  - name: "raft_layer_count"
+    display: "Raft Layer Count"
+    type: "positive_int"
+    tooltip: "Determines how many layers of raft are created"
+    depends: {"raft":true}
+    options: []
+    default: 1
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kRaftLayerCount"
+    local: false
+  - name: "raft_bead_width"
+    display: "Raft Bead Width"
+    type: "distance"
+    tooltip: "Bead width for raft paths"
+    depends: {"raft":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kRaftBeadWidth"
+    local: false
+  - name: "brim"
+    display: "Add Brim"
+    type: "boolean"
+    tooltip: "If selected, a brim will be attached to the part at the base to help with platform adhesion"
+    depends: {}
+    options: []
+    default: false
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kAddBrim"
+    local: false
+  - name: "brim_width"
+    display: "Brim Width"
+    type: "distance"
+    tooltip: "Width of the brim"
+    depends: {"brim":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kBrimWidth"
+    local: false
+  - name: "brim_layer_count"
+    display: "Brim Layer Count"
+    type: "positive_int"
+    tooltip: "Number of layers to print the brim starting with layer 1"
+    depends: {"brim":true}
+    options: []
+    default: 1
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kBrimLayerCount"
+    local: false
+  - name: "brim_bead_width"
+    display: "Brim Bead Width"
+    type: "distance"
+    tooltip: "Bead width for brim paths"
+    depends: {"brim":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kBrimBeadWidth"
+    local: false
+  - name: "skirt"
+    display: "Add Skirt"
+    type: "boolean"
+    tooltip: "If selected, a skirt will be printed around the object to prime the extruder"
+    depends: {}
+    options: []
+    default: false
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kAddSkirt"
+    local: false
+  - name: "skirt_loops"
+    display: "Skirt Loops"
+    type: "positive_int"
+    tooltip: "The amount of closed loop paths offset from the base of the print that funtions as a purge"
+    depends: {"skirt":true}
+    options: []
+    default: 1
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kSkirtLoops"
+    local: false
+  - name: "skirt_distance_from_object"
+    display: "Skirt Distance from Object"
+    type: "distance"
+    tooltip: "The distance\u00a0away from the object where the skirt is being created"
+    depends: {"skirt":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kSkirtDistancefromObject"
+    local: false
+  - name: "skirt_layer_count"
+    display: "Skirt Layer Count"
+    type: "positive_int"
+    tooltip: "Determines how many layers the skirt contains"
+    depends: {"skirt":true}
+    options: []
+    default: 1
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kSkirtLayerCount"
+    local: false
+  - name: "skirt_minimum_length"
+    display: "Skirt Minimum Length"
+    type: "distance"
+    tooltip: "The minimum extrusion length for the skirt"
+    depends: {"skirt":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kSkirtMinimumLength"
+    local: false
+  - name: "skirt_bead_width"
+    display: "Skirt Bead Width"
+    type: "distance"
+    tooltip: "Bead width for skirt paths"
+    depends: {"skirt":true}
+    options: []
+    default: 0
+    minor: "Platform Adhesion"
+    major: "Material"
+    namespace: "Material::PlatformAdhesion"
+    symbol: "kSkirtBeadWidth"
+    local: false

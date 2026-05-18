@@ -1,0 +1,63 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_tamper"
+    display: "Enable Tamper"
+    type: "boolean"
+    tooltip: "If selected, will turn tamper on during all extrude moves"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kEnableTamper"
+    local: false
+  - name: "tamper_voltage"
+    display: "Tamper Voltage"
+    type: "voltage"
+    tooltip: "Voltage sent to the tamper to control it's speed"
+    depends: {"enable_tamper":true}
+    options: []
+    default: 0
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kTamperVoltage"
+    local: false
+  - name: "gkn_laser_power"
+    display: "GKN Laser Power"
+    type: "voltage"
+    tooltip: "Laser power for GKN syntax"
+    depends: {"syntax":4}
+    options: []
+    default: 0
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kGKNLaserPower"
+    local: false
+  - name: "gkn_wire_speed"
+    display: "GKN Wire Speed"
+    type: "voltage"
+    tooltip: "Wire feeder speed for GKN syntax"
+    depends: {"syntax":4}
+    options: []
+    default: 0
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kGKNWireSpeed"
+    local: false
+  - name: "gkn_melt_pool"
+    display: "GKN Melt Pool Override"
+    type: "percentage"
+    tooltip: "Percentage change to melt pool size"
+    depends: {"syntax":4}
+    options: []
+    default: 100
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kGKNMeltPoolOverride"
+    local: false

@@ -1,0 +1,219 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "perimeter"
+    display: "Enable Perimeter"
+    type: "boolean"
+    tooltip: "If selected, perimeters will be generated"
+    depends: {}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kEnablePerimeter"
+    local: true
+  - name: "perimeter_count"
+    display: "Number of Perimeters"
+    type: "positive_int"
+    tooltip: "Total number of perimeters per layer"
+    depends: {"perimeter":true}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kNumberofPerimeters"
+    local: true
+  - name: "perimeter_width"
+    display: "Perimeter Bead Width"
+    type: "distance"
+    tooltip: "Bead width for perimeter paths"
+    depends: {"perimeter":true}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterBeadWidth"
+    local: true
+  - name: "perimeter_speed"
+    display: "Perimeter Speed"
+    type: "speed"
+    tooltip: "Speed for perimeter paths"
+    depends: {"perimeter":true}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterSpeed"
+    local: true
+  - name: "perimeter_extruder_speed"
+    display: "Perimeter Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder speed for perimeter paths"
+    depends: {"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterExtruderSpeed"
+    local: true
+  - name: "perimeter_extrusion_multiplier"
+    display: "Perimeter Extrusion Multiplier"
+    type: "unitless_float"
+    tooltip: "Extrusion multiplier to increase/decrease flowrate for perimeter paths for systems without RPM control"
+    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":29}]}]}
+    options: []
+    default: 1
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterExtrusionMultiplier"
+    local: true
+  - name: "perimeter_minimum_path_length"
+    display: "Minimum Perimeter Path Length"
+    type: "distance"
+    tooltip: "Perimeter extrusion paths less than this value are deleted"
+    depends: {"perimeter":true}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kMinimumPerimeterPathLength"
+    local: true
+  - name: "perimeter_power"
+    display: "Perimeter Power"
+    type: "power"
+    tooltip: "Power for perimeter"
+    depends: {"AND":[{"perimeter":true},{"syntax":16}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterPower"
+    local: true
+  - name: "perimeter_focus"
+    display: "Perimeter Focus"
+    type: "distance"
+    tooltip: "Focus for perimeter"
+    depends: {"AND":[{"perimeter":true},{"syntax":16}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterFocus"
+    local: true
+  - name: "perimeter_spot_size"
+    display: "Perimeter Spot Size"
+    type: "distance"
+    tooltip: "Spot size for perimeter"
+    depends: {"AND":[{"perimeter":true},{"syntax":16}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterSpotSize"
+    local: true
+  - name: "perimeter_lead_in"
+    display: "Enable Perimeter Lead-In"
+    type: "boolean"
+    tooltip: "If selected, a lead-in path segment is added to the first perimeter path that can be used to prime the extruder"
+    depends: {"perimeter":true}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kEnablePerimeterLeadIn"
+    local: true
+  - name: "perimeter_lead_in_first_layer"
+    display: "Lead-In on First Layer Only"
+    type: "boolean"
+    tooltip: "If selected, lead-in is only applied to layer 1."
+    depends: {"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}
+    options: []
+    default: true
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kLeadInonFirstLayerOnly"
+    local: false
+  - name: "perimeter_lead_in_x"
+    display: "Lead-In Point X Position"
+    type: "distance"
+    tooltip: "X Position for the start of the perimeter lead-in segment"
+    depends: {"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kLeadInPointXPosition"
+    local: true
+  - name: "perimeter_lead_in_y"
+    display: "Lead-In Point Y Position"
+    type: "distance"
+    tooltip: "Y Position for the start of the perimeter lead-in segment"
+    depends: {"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kLeadInPointYPosition"
+    local: true
+  - name: "perimeter_flying_start"
+    display: "Enable Perimeter Flying Start"
+    type: "boolean"
+    tooltip: "If selected, motions are created prior to the first extrusion move such that the end effector is in motion at the start of the path."
+    depends: {"perimeter":true}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kEnablePerimeterFlyingStart"
+    local: true
+  - name: "perimeter_flying_start_distance"
+    display: "Perimeter Flying Start Distance"
+    type: "distance"
+    tooltip: "Distance away from the start of the extrusion path to begin the flying start motion."
+    depends: {"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterFlyingStartDistance"
+    local: true
+  - name: "perimeter_flying_start_speed"
+    display: "Perimeter Flying Start Speed"
+    type: "speed"
+    tooltip: "Speed for the flying start motion."
+    depends: {"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterFlyingStartSpeed"
+    local: true
+  - name: "perimeter_shifted_beads"
+    display: "Enable Perimeter Shifted Beads"
+    type: "boolean"
+    tooltip: "If selected, perimeter shifted beads will be generated"
+    depends: {"perimeter_shifted_beads":true}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kEnablePerimeterShiftedBeads"
+    local: true

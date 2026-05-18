@@ -1,0 +1,87 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_single_path"
+    display: "Enable Single Path Generation"
+    type: "boolean"
+    tooltip: "Attemps to compose all polygons into a single build path"
+    depends: {"enable_single_path":true}
+    options: []
+    default: false
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kEnableSinglePathGeneration"
+    local: true
+  - name: "enable_bridge_exclusion"
+    display: "Enable Bridge Exclusion"
+    type: "boolean"
+    tooltip: "Enforces the requirement that bridges for each layer not lie on top of previous layer"
+    depends: {"enable_single_path":true}
+    options: []
+    default: false
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kEnableBridgeExclusion"
+    local: true
+  - name: "enable_zippering"
+    display: "Enable Single Path Zippering"
+    type: "boolean"
+    tooltip: "Attempts to alternate single path bridges from one layer to the next"
+    depends: {"enable_single_path":true}
+    options: []
+    default: false
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kEnableSinglePathZippering"
+    local: true
+  - name: "previous_layer_exclusion_distance"
+    display: "Previous Layer Exclusion Distance"
+    type: "distance"
+    tooltip: "The minimum distance a bridge can be away from one on the previous layer"
+    depends: {"AND":[{"enable_single_path":true},{"enable_bridge_exclusion":true}]}
+    options: []
+    default: 0
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kPreviousLayerExclusionDistance"
+    local: true
+  - name: "corner_exclusion_distance"
+    display: "Corner Exclusion Distance"
+    type: "distance"
+    tooltip: "The minimum distance a bridge can be placed near a corner"
+    depends: {"enable_single_path":true}
+    options: []
+    default: 0
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kCornerExclusionDistance"
+    local: true
+  - name: "max_bridge_length"
+    display: "Max Bridge Beads"
+    type: "number"
+    tooltip: "The maximum number of bead widths a bridge can be"
+    depends: {"enable_single_path":true}
+    options: []
+    default: 0
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kMaxBridgeBeads"
+    local: true
+  - name: "min_bridge_separation"
+    display: "Min Bridge Separation"
+    type: "distance"
+    tooltip: "The minimum distance that separates bridges"
+    depends: {"enable_single_path":true}
+    options: []
+    default: 0
+    minor: "Single Path"
+    major: "Experimental"
+    namespace: "Experimental::SinglePath"
+    symbol: "kMinBridgeSeparation"
+    local: true

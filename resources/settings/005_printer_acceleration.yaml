@@ -1,0 +1,99 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_dynamic_acceleration"
+    display: "Enable Dynamic Acceleration"
+    type: "boolean"
+    tooltip: "If selected, machine acceleration will be changed throughout the G-Code"
+    depends: {"OR":[{"syntax":1},{"syntax":11}]}
+    options: []
+    default: false
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kEnableDynamicAcceleration"
+    local: false
+  - name: "default_acceleration"
+    display: "Default Acceleration"
+    type: "accel"
+    tooltip: "Default acceleration value"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kDefaultAcceleration"
+    local: false
+  - name: "perimeter_acceleration"
+    display: "Perimeter Acceleration"
+    type: "accel"
+    tooltip: "Acceleration value for perimeters"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kPerimeterAcceleration"
+    local: false
+  - name: "inset_acceleration"
+    display: "Inset Acceleration"
+    type: "accel"
+    tooltip: "Acceleration value for inset"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kInsetAcceleration"
+    local: false
+  - name: "skin_acceleration"
+    display: "Skin Acceleration"
+    type: "accel"
+    tooltip: "Acceleration value for skin"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kSkinAcceleration"
+    local: false
+  - name: "infill_acceleration"
+    display: "Infill Acceleration"
+    type: "accel"
+    tooltip: "Acceleration value for infill"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kInfillAcceleration"
+    local: false
+  - name: "skeleton_acceleration"
+    display: "Skeleton Acceleration"
+    type: "accel"
+    tooltip: "Acceleration value for skeletons"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kSkeletonAcceleration"
+    local: false
+  - name: "support_acceleration"
+    display: "Support Acceleration"
+    type: "accel"
+    tooltip: "Acceleration value for support"
+    depends: {"enable_dynamic_acceleration":true}
+    options: []
+    default: 0
+    minor: "Acceleration"
+    major: "Printer"
+    namespace: "Printer::Acceleration"
+    symbol: "kSupportAcceleration"
+    local: false

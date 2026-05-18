@@ -1,0 +1,125 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "support"
+    display: "Enable Support"
+    type: "boolean"
+    tooltip: "If selected, support structures will be generated for overhangs"
+    depends: {}
+    options: []
+    default: false
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kEnableSupport"
+    local: true
+  - name: "support_print_first"
+    display: "Print Support First"
+    type: "boolean"
+    tooltip: "If selected, support material will be printed first"
+    depends: {"support":true}
+    options: []
+    default: false
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kPrintSupportFirst"
+    local: true
+  - name: "support_tapering"
+    display: "Taper Support"
+    type: "boolean"
+    tooltip: "If selected, support structures will be tapered inward"
+    depends: {"support":true}
+    options: []
+    default: false
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kTaperSupport"
+    local: false
+  - name: "support_threshold_angle"
+    display: "Support Threshold Angle"
+    type: "angle"
+    tooltip: "Overhangs exceeding this angle will generate support"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportThresholdAngle"
+    local: false
+  - name: "support_xy_distance"
+    display: "Support XY Distance"
+    type: "distance"
+    tooltip: "XY distance from the part to generate support"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportXYDistance"
+    local: false
+  - name: "support_layer_offset"
+    display: "Support Layer Offset"
+    type: "number"
+    tooltip: "Number of vertical layers to offset support from model surface"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportLayerOffset"
+    local: false
+  - name: "support_minimum_infill_area"
+    display: "Minimum Support Infill Area"
+    type: "area"
+    tooltip: "Support structures smaller than this will not generate infill"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kMinimumSupportInfillArea"
+    local: true
+  - name: "support_minimum_area"
+    display: "Minimum Support Area"
+    type: "area"
+    tooltip: "Areas of the part smaller than this will not have supports generated"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kMinimumSupportArea"
+    local: true
+  - name: "support_pattern"
+    display: "Support Pattern"
+    type: "enumeration"
+    tooltip: "Lines or Grid"
+    depends: {"support":true}
+    options:
+      - "SUPPORT_TYPE_LINES"
+      - "SUPPORT_TYPE_GRID"
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportPattern"
+    local: true
+  - name: "support_line_spacing"
+    display: "Support Line Spacing"
+    type: "distance"
+    tooltip: "Distance between beads on sparse support fill"
+    depends: {"support":true}
+    options: []
+    default: 10000
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportLineSpacing"
+    local: true

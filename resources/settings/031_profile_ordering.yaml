@@ -1,0 +1,45 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "region_order"
+    display: "Region Order"
+    type: "numbered_list"
+    tooltip: "Order that region paths will be connected"
+    depends: {}
+    options: []
+    default: ["Perimeter","Inset","Skin","Infill","Skeleton"]
+    minor: "Ordering"
+    major: "Profile"
+    namespace: "Profile::Ordering"
+    symbol: "kRegionOrder"
+    local: true
+  - name: "perimeter_reverse_direction"
+    display: "Reverse Perimeter Direction"
+    type: "enumeration"
+    tooltip: "Reverse the printing direction of the perimeters (CW vs CCW)"
+    depends: {"perimeter":true}
+    options:
+      - "REVERSE_OFF"
+      - "REVERSE_ALL_LAYERS"
+      - "REVERSE_ALTERNATING_LAYERS"
+    default: 0
+    minor: "Ordering"
+    major: "Profile"
+    namespace: "Profile::Ordering"
+    symbol: "kReversePerimeterDirection"
+    local: true
+  - name: "inset_reverse_direction"
+    display: "Reverse Inset Direction"
+    type: "enumeration"
+    tooltip: "Reverse the printing direction of the insets (CW vs CCW)"
+    depends: {"inset":true}
+    options:
+      - "REVERSE_OFF"
+      - "REVERSE_ALL_LAYERS"
+      - "REVERSE_ALTERNATING_LAYERS"
+    default: 0
+    minor: "Ordering"
+    major: "Profile"
+    namespace: "Profile::Ordering"
+    symbol: "kReverseInsetDirection"
+    local: true

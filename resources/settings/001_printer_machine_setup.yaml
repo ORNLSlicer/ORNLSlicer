@@ -1,0 +1,188 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "syntax"
+    display: "Syntax"
+    type: "enumeration"
+    tooltip: "Declares the syntax of the G-code (mm or in, comments () or ; etc"
+    depends: {}
+    options:
+      - "Beam"
+      - "Cincinnati"
+      - "Common"
+      - "Dmg Dmu"
+      - "GKN"
+      - "Gudel"
+      - "Haas Inch"
+      - "Haas Metric"
+      - "Haas Metric No Comments"
+      - "Hurco"
+      - "Ingersoll"
+      - "Marlin"
+      - "Marlin Pellet"
+      - "Mazak"
+      - "MVP"
+      - "RomiFanuc"
+      - "RPBF"
+      - "Siemens"
+      - "SkyBaam"
+      - "Thermwood"
+      - "Wolf"
+      - "RepRap"
+      - "Mach4"
+      - "AeroBasic"
+      - "Meld"
+      - "ORNL"
+      - "Okuma"
+      - "Tormach"
+      - "AML3D"
+      - "KraussMaffei"
+      - "Sandia"
+      - "5AxisMarlin"
+      - "Meltio"
+      - "Adamantine"
+      - "ORNL Metric"
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kSyntax"
+    local: false
+  - name: "machine_type"
+    display: "Machine Type"
+    type: "enumeration"
+    tooltip: "What type of machine"
+    depends: {}
+    options:
+      - "Pellet"
+      - "Filament"
+      - "Wire_Arc"
+      - "Laser_Wire"
+      - "Concrete"
+      - "Thermoset"
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kMachineType"
+    local: false
+  - name: "force_G1"
+    display: "Force G1 Travels"
+    type: "boolean"
+    tooltip: "Forces travel moves to use G1 rather than G0"
+    depends: {"OR":[{"syntax":1},{"syntax":10}]}
+    options: []
+    default: false
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kForceG1"
+    local: false
+  - name: "supports_G2_3"
+    display: "Supports G2/G3"
+    type: "boolean"
+    tooltip: "If selected, machine will use G2/G3 for spiral lift commands.  Otherwise, the spiral will be comprised of G1s."
+    depends: {}
+    options: []
+    default: false
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kSupportsG2G3"
+    local: false
+  - name: "tool_number"
+    display: "Tool Number"
+    type: "number"
+    tooltip: "Sets the tool number for the primary extruder."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kToolNumber"
+    local: false
+  - name: "axis_a"
+    display: "Axis A"
+    type: "angle"
+    tooltip: "Sets the printing angle for the A axis"
+    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":31},{"OR":[{"syntax":34},{"syntax":25}]}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kAxisA"
+    local: false
+  - name: "axis_b"
+    display: "Axis B"
+    type: "angle"
+    tooltip: "Sets the printing angle for the B axis"
+    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":31},{"OR":[{"syntax":34},{"syntax":25}]}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kAxisB"
+    local: false
+  - name: "axis_c"
+    display: "Axis C"
+    type: "angle"
+    tooltip: "Sets the printing angle for the C axis"
+    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":31},{"OR":[{"syntax":34},{"syntax":25}]}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kAxisC"
+    local: false
+  - name: "tool_coordinate"
+    display: "Tool Coordinate"
+    type: "number"
+    tooltip: "Sets the tool coordinate - used by GKN"
+    depends: {"syntax":4}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kToolCoordinate"
+    local: false
+  - name: "base_coordinate"
+    display: "Base Coordinate"
+    type: "number"
+    tooltip: "Sets the base coordinate - used by GKN"
+    depends: {"syntax":4}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kBaseCoordinate"
+    local: false
+  - name: "supports_E1"
+    display: "Supports E1"
+    type: "boolean"
+    tooltip: "If selected, machine will use E1 commands for table tilt"
+    depends: {"syntax":4}
+    options: []
+    default: false
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kSupportsE1"
+    local: false
+  - name: "supports_E2"
+    display: "Supports E2"
+    type: "boolean"
+    tooltip: "If selected, machine will use E1 commands for table rotation"
+    depends: {"syntax":4}
+    options: []
+    default: false
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kSupportsE2"
+    local: false

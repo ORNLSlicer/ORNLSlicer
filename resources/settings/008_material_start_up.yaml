@@ -1,0 +1,375 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "perimeter_start-up"
+    display: "Enable Perimeter Start-Up"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a perimeter path"
+    depends: {"perimeter":true}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnablePerimeterStartUp"
+    local: true
+  - name: "perimeter_start-up_distance"
+    display: "Perimeter Start-Up Distance"
+    type: "distance"
+    tooltip: "Distance for the perimeter start-up move"
+    depends: {"AND":[{"perimeter":true},{"perimeter_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kPerimeterStartUpDistance"
+    local: true
+  - name: "perimeter_start-up_speed"
+    display: "Perimeter Start-Up Speed"
+    type: "speed"
+    tooltip: "Speed for the perimeter start-up move"
+    depends: {"AND":[{"perimeter":true},{"perimeter_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kPerimeterStartUpSpeed"
+    local: true
+  - name: "perimeter_start-up_extruder_speed"
+    display: "Perimeter Start-Up Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the perimeter start-up move"
+    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kPerimeterStartUpExtruderSpeed"
+    local: true
+  - name: "perimeter_start-up_ramp-up"
+    display: "Enable Perimeter Start-Up Ramp-Up"
+    type: "boolean"
+    tooltip: "If selected, will ramp-up the extruder speed from the Perimeter Start-Up Extruder Speed to the Perimeter Speed using short segments of increasing RPM"
+    depends: {"AND":[{"perimeter":true},{"perimeter_start-up":true}]}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnablePerimeterStartUpRampUp"
+    local: true
+  - name: "perimeter_start-up_steps"
+    display: "Perimeter Start-Up Ramp-Up Steps"
+    type: "positive_int"
+    tooltip: "Numbers of steps to take while ramping up the extruder speed during perimeter start-up paths"
+    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up_ramp-up":true},{"perimeter_start-up":true}]}]}
+    options: []
+    default: 1
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kPerimeterStartUpRampUpSteps"
+    local: true
+  - name: "inset_start-up"
+    display: "Enable Inset Start-Up"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of an inset path"
+    depends: {"inset":true}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableInsetStartUp"
+    local: true
+  - name: "inset_start-up_distance"
+    display: "Inset Start-Up Distance"
+    type: "distance"
+    tooltip: "Distance for the inset start-up move"
+    depends: {"AND":[{"inset":true},{"inset_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInsetStartUpDistance"
+    local: true
+  - name: "inset_start-up_speed"
+    display: "Inset Start-Up Speed"
+    type: "speed"
+    tooltip: "Speed for the inset start-up move"
+    depends: {"AND":[{"inset":true},{"inset_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInsetStartUpSpeed"
+    local: true
+  - name: "inset_start-up_extruder_speed"
+    display: "Inset Start-Up Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the inset start-up move"
+    depends: {"AND":[{"inset":true},{"AND":[{"inset_start-up":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInsetStartUpExtruderSpeed"
+    local: true
+  - name: "inset_start-up_ramp-up"
+    display: "Enable Inset Start-Up Ramp-Up"
+    type: "boolean"
+    tooltip: "If selected, will ramp-up the extruder speed from the Inset Start-Up Extruder Speed to the Inset Speed using short segments of increasing RPM"
+    depends: {"AND":[{"inset":true},{"inset_start-up":true}]}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableInsetStartUpRampUp"
+    local: true
+  - name: "inset_start-up_steps"
+    display: "Inset Start-Up Ramp-Up Steps"
+    type: "positive_int"
+    tooltip: "Numbers of steps to take while ramping up the extruder speed during inset start-up paths"
+    depends: {"AND":[{"inset":true},{"AND":[{"inset_start-up_ramp-up":true},{"inset_start-up":true}]}]}
+    options: []
+    default: 1
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInsetStartUpRampUpSteps"
+    local: true
+  - name: "skin_start-up"
+    display: "Enable Skin Start-Up"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a skin path"
+    depends: {"skin":true}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableSkinStartUp"
+    local: true
+  - name: "skin_start-up_distance"
+    display: "Skin Start-Up Distance"
+    type: "distance"
+    tooltip: "Distance for the skin start-up move"
+    depends: {"AND":[{"skin":true},{"skin_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkinStartUpDistance"
+    local: true
+  - name: "skin_start-up_speed"
+    display: "Skin Start-Up Speed"
+    type: "speed"
+    tooltip: "Speed for the skin start-up move"
+    depends: {"AND":[{"skin":true},{"skin_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkinStartUpSpeed"
+    local: true
+  - name: "skin_start-up_extruder_speed"
+    display: "Skin Start-Up Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the skin start-up move"
+    depends: {"AND":[{"skin":true},{"AND":[{"skin_start-up":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkinStartUpExtruderSpeed"
+    local: true
+  - name: "skin_start-up_ramp-up"
+    display: "Enable Skin Start-Up Ramp-Up"
+    type: "boolean"
+    tooltip: "If selected, will ramp-up the extruder speed from the Skin Start-Up Extruder Speed to the Skin Speed using short segments of increasing RPM"
+    depends: {"AND":[{"skin":true},{"skin_start-up":true}]}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableSkinStartUpRampUp"
+    local: true
+  - name: "skin_start-up_steps"
+    display: "Skin Start-Up Ramp-Up Steps"
+    type: "positive_int"
+    tooltip: "Numbers of steps to take while ramping up the extruder speed during skin start-up paths"
+    depends: {"AND":[{"skin":true},{"AND":[{"skin_start-up_ramp-up":true},{"skin_start-up":true}]}]}
+    options: []
+    default: 1
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkinStartUpRampUpSteps"
+    local: true
+  - name: "infill_start-up"
+    display: "Enable Infill Start-Up"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of an infill path"
+    depends: {"infill":true}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableInfillStartUp"
+    local: true
+  - name: "infill_start-up_distance"
+    display: "Infill Start-Up Distance"
+    type: "distance"
+    tooltip: "Distance for the infill start-up move"
+    depends: {"AND":[{"infill":true},{"infill_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInfillStartUpDistance"
+    local: true
+  - name: "infill_start-up_speed"
+    display: "Infill Start-Up Speed"
+    type: "speed"
+    tooltip: "Speed for the infill start-up move"
+    depends: {"AND":[{"infill":true},{"infill_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInfillStartUpSpeed"
+    local: true
+  - name: "infill_start-up_extruder_speed"
+    display: "Infill Start-Up Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the infill start-up move"
+    depends: {"AND":[{"infill":true},{"AND":[{"infill_start-up":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInfillStartUpExtruderSpeed"
+    local: true
+  - name: "infill_start-up_ramp-up"
+    display: "Enable Infill Start-Up Ramp-Up"
+    type: "boolean"
+    tooltip: "If selected, will ramp-up the extruder speed from the Infill Start-Up Extruder Speed to the Infill Speed using short segments of increasing RPM"
+    depends: {"AND":[{"infill":true},{"infill_start-up":true}]}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableInfillStartUpRampUp"
+    local: true
+  - name: "infill_start-up_steps"
+    display: "Infill Start-Up Ramp-Up Steps"
+    type: "positive_int"
+    tooltip: "Numbers of steps to take while ramping up the extruder speed during infill start-up paths"
+    depends: {"AND":[{"infill":true},{"AND":[{"infill_start-up_ramp-up":true},{"infill_start-up":true}]}]}
+    options: []
+    default: 1
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kInfillStartUpRampUpSteps"
+    local: true
+  - name: "skeleton_start-up"
+    display: "Enable Skeleton Start-Up"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a skeleton path"
+    depends: {"skeleton":true}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableSkeletonStartUp"
+    local: true
+  - name: "skeleton_start-up_distance"
+    display: "Skeleton Start-Up Distance"
+    type: "distance"
+    tooltip: "Distance for the skeleton start-up move"
+    depends: {"AND":[{"skeleton":true},{"skeleton_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkeletonStartUpDistance"
+    local: true
+  - name: "skeleton_start-up_speed"
+    display: "Skeleton Start-Up Speed"
+    type: "speed"
+    tooltip: "Speed for the skeleton start-up move"
+    depends: {"AND":[{"skeleton":true},{"skeleton_start-up":true}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkeletonStartUpSpeed"
+    local: true
+  - name: "skeleton_start-up_extruder_speed"
+    display: "Skeleton Start-Up Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the skeleton start-up move"
+    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkeletonStartUpExtruderSpeed"
+    local: true
+  - name: "skeleton_start-up_ramp-up"
+    display: "Enable Skeleton Start-Up Ramp-Up"
+    type: "boolean"
+    tooltip: "If selected, will ramp-up the extruder speed from the Skeleton Start-Up Extruder Speed to the Skeleton Speed using short segments of increasing RPM"
+    depends: {"AND":[{"skeleton":true},{"skeleton_start-up":true}]}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kEnableSkeletonStartUpRampUp"
+    local: true
+  - name: "skeleton_start-up_steps"
+    display: "Skeleton Start-Up Ramp-Up Steps"
+    type: "positive_int"
+    tooltip: "Numbers of steps to take while ramping up the extruder speed during skeleton start-up paths"
+    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up_ramp-up":true},{"skeleton_start-up":true}]}]}
+    options: []
+    default: 1
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kSkeletonStartUpRampUpSteps"
+    local: true
+  - name: "start-up_area_modifier"
+    display: "Start-Up Bead Area Modifier"
+    type: "percentage"
+    tooltip: "Percent multiplier for bead area of start-up paths"
+    depends: {"AND":[{"enable_width_height":true},{"OR":[{"perimeter_start-up":true},{"OR":[{"inset_start-up":true},{"OR":[{"skin_start-up":true},{"OR":[{"infill_start-up":true},{"skeleton_start-up":true}]}]}]}]}]}
+    options: []
+    default: 100
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kStartUpBeadAreaModifier"
+    local: true

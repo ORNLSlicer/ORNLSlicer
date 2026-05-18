@@ -1,0 +1,87 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "sector_offsetting_enable"
+    display: "Enable Sector Offsetting"
+    type: "boolean"
+    tooltip: "Offset each successive layers"
+    depends: {"slicer_type":3}
+    options: []
+    default: false
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kEnableSectorOffsetting"
+    local: false
+  - name: "sector_size"
+    display: "Sector Size"
+    type: "angle"
+    tooltip: "The size of the sector when using sector offsetting"
+    depends: {"AND":[{"slicer_type":3},{"sector_offsetting_enable":true}]}
+    options: []
+    default: 0
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kSectorSize"
+    local: true
+  - name: "sector_overlap"
+    display: "Sector Overlap"
+    type: "angle"
+    tooltip: "The amount to extend each sector by"
+    depends: {"slicer_type":3}
+    options: []
+    default: 0
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kSectorOverlap"
+    local: true
+  - name: "sector_stagger_enable"
+    display: "Enable Sector Stagger"
+    type: "boolean"
+    tooltip: "Enable/disable sector alignment alterations"
+    depends: {"slicer_type":3}
+    options: []
+    default: false
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kEnableSectorStagger"
+    local: true
+  - name: "sector_stagger_angle"
+    display: "Sector Stagger Angle"
+    type: "angle"
+    tooltip: "Amount fo alternate sector stagger size by"
+    depends: {"AND":[{"slicer_type":3},{"sector_stagger_enable":true}]}
+    options: []
+    default: 0
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kSectorStaggerAngle"
+    local: true
+  - name: "clocking_angle"
+    display: "Clocking Angle"
+    type: "angle"
+    tooltip: "Amount of clocking to apply when exporting gcode"
+    depends: {"slicer_type":3}
+    options: []
+    default: 0
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kClockingAngle"
+    local: false
+  - name: "enable_radial_split"
+    display: "Enable Radial Split"
+    type: "boolean"
+    tooltip: "Enables radial split of sectors"
+    depends: {"slicer_type":3}
+    options: []
+    default: false
+    minor: "RPBF Slicing"
+    major: "Experimental"
+    namespace: "Experimental::RPBFSlicing"
+    symbol: "kEnableRadialSplit"
+    local: false
