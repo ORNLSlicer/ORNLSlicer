@@ -9,7 +9,6 @@
 #include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "units/unit.h"
 
 namespace ORNL {
@@ -42,8 +41,7 @@ class RegionBase {
 
     //! \brief Performs the computation for this region.
     //! \param layer_num: current layer number
-    //! \param sync: Sync token for linking layers together
-    virtual void compute(uint layer_num, QSharedPointer<SyncManager>& sync) = 0;
+    virtual void compute(uint layer_num) = 0;
 
     //! \brief Performs the optimization for this region.
     //! \param layerNumber: current layer

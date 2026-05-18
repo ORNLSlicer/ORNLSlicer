@@ -12,7 +12,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/scan.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -35,7 +34,7 @@ QString LaserScan::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void LaserScan::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void LaserScan::compute(uint layer_num) {
     m_paths.clear();
 
     Distance x_offset = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerXOffset);

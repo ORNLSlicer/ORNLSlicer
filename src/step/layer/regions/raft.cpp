@@ -14,7 +14,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -41,7 +40,7 @@ QString Raft::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void Raft::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void Raft::compute(uint layer_num) {
     m_paths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));

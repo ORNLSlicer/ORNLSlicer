@@ -19,7 +19,6 @@
 #include "geometry/mesh/open_mesh.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/layer.h"
 #include "step/layer/scan_layer.h"
 #include "units/unit.h"
@@ -29,7 +28,6 @@
 
 namespace ORNL {
 Part::Part() {
-    m_sync = QSharedPointer<SyncManager>::create();
     m_sb = QSharedPointer<SettingsBase>::create();
     m_uuid = QUuid::createUuid();
 }
@@ -70,7 +68,6 @@ Part::Part(QSharedPointer<MeshBase> root_mesh, QString file_name, MeshType mt) {
     m_mesh_type = mt;
     m_name = root_mesh->name();
     m_root_mesh = root_mesh;
-    m_sync = QSharedPointer<SyncManager>::create();
     m_sb = QSharedPointer<SettingsBase>::create();
     m_template_applied = false;
 
@@ -508,10 +505,6 @@ bool Part::isPartDirty() {
     // a part is "clean" only if all of its steps are not dirty
     return false;
 }
-
-QSharedPointer<SyncManager> Part::getSync() const { return m_sync; }
-
-void Part::setSync(const QSharedPointer<SyncManager>& sync) { m_sync = sync; }
 
 QUuid Part::getId() { return m_uuid; }
 

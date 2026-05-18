@@ -10,7 +10,6 @@
 #include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "utilities/enums.h"
 
@@ -55,7 +54,7 @@ class IslandBase {
     const PolygonList& getGeometry() const;
 
     //! \brief Compute all regions in the island.
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync);
+    void compute(uint layer_num);
 
     //! \brief Get the settings for the island.
     QSharedPointer<SettingsBase> getSb() const;
