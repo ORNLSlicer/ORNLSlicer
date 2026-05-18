@@ -44,15 +44,6 @@ class AbstractSlicingThread : public QObject {
     //! \brief Sets cancel flag
     void setCancel();
 
-    //! \brief Sets whether or not to communicate via tcp server
-    //! \param communicate: whether or not to transmit
-    void setCommunicate(bool communicate);
-
-    //! \brief Sets network return data (response from client) for processing step
-    //! \param stage: processing step to set info for (currently only after gcode generation)
-    //! \param data: data to set (currently gcode)
-    void setNetworkData(StatusUpdateStepType stage, QString data);
-
     //! \brief Get the time it took to slice
     qint64 getTimeElapsed();
 
@@ -76,11 +67,6 @@ class AbstractSlicingThread : public QObject {
 
     //! \brief Signal to session manager that slicing is complete
     void sliceComplete();
-
-    //! \brief Send output from processing stage for tcp transfer
-    //! \param type: type of processing step (currently only after gcode generation)
-    //! \param msg: message to send (currently only gcode)
-    void sendMessage(StatusUpdateStepType type, QString msg);
 
   protected:
     //! \brief Pure virtual for preprocess step. This is always run first.
@@ -124,10 +110,6 @@ class AbstractSlicingThread : public QObject {
     //! \brief Accessor for child slicers to see if cancel flag has been set
     bool shouldCancel();
 
-    //! \brief whether or not to communicate results after processing step on tcp server
-    //! \return whether or not to communicate
-    bool shouldCommunicate();
-
     //! \brief the output gcode file
     QFile m_temp_gcode_output_file;
 
@@ -165,7 +147,5 @@ class AbstractSlicingThread : public QObject {
     //! \brief Cancel flag set by session manager if user clicks on cancel button
     bool m_should_cancel;
 
-    //! \brief whether or not to send processing step output to manager for transmission on tcp server
-    bool m_should_communicate;
 };
 } // namespace ORNL

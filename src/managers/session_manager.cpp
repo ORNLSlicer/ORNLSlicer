@@ -5,10 +5,7 @@
 
 #include <QCoreApplication>
 #include <QStandardPaths>
-#include <QUuid>
-#include <data_stream.h>
 #include <qcontainerfwd.h>
-#include <qdatetime.h>
 #include <qdir.h>
 #include <qfiledevice.h>
 #include <qfileinfo.h>
@@ -19,8 +16,6 @@
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
-#include <tcp_connection.h>
-#include <tcp_server.h>
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
@@ -525,11 +520,6 @@ bool SessionManager::doSlice() {
             m_ast->setGcodeOutput(tempGcodeFile);
     }
 
-    if (m_active_connections.size() > 0)
-        m_ast->setCommunicate(true);
-    else
-        m_ast->setCommunicate(false);
-
     // Request new information about the parts to be sliced.
     emit requestTransformationUpdate();
 
@@ -572,81 +562,6 @@ void SessionManager::pastePart() {
     m_parts.insert(name, new_copy);
     emit partAdded(new_copy);
     m_load_mutex.unlock();
-}
-
-void SessionManager::setupTCPServer() {
-    m_tcp_server = new TCPServer();
-
-    m_step_connectivity = {
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kPreProcess),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kCompute),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kPostProcess),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kGcodeGeneraton),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kGcodeParsing)};
-
-    if (PreferencesManager::getInstance()->getTcpServerAutoStart()) {
-        setServerInformation(PreferencesManager::getInstance()->getTCPServerPort());
-    }
-}
-void SessionManager::setServerInformation(int port) {
-    m_tcp_server->close();
-    connect(m_tcp_server, &TCPServer::newClient, this, [this](ORNL::TCPConnection* connection) {
-        QSharedPointer<DataStream> data_stream = QSharedPointer<DataStream>::create(connection);
-        // auto data_stream = new DataStream(connection);
-        connect(data_stream.get(), &DataStream::newData, this, [this, data_stream, connection]() {
-            fifojson message = json::parse(data_stream->getNextMessage().toStdString());
-            QString id = QString::fromStdString(message["header"]["request-id"]);
-            if (m_active_connections.contains(id)) {
-                int command = message["header"]["command"];
-                switch (command) {
-                    case 1:
-                        if (message["data"]["response"] != 200) {
-                            m_active_connections.remove(id);
-                            connection->close();
-                        }
-                        break;
-
-                    case 5:
-                        if (message["data"]["response"] == 200) {
-                            m_ast->setNetworkData(StatusUpdateStepType::kGcodeGeneraton,
-                                                  QString::fromStdString(message["data"]["gcode"]));
-                        }
-                        break;
-                }
-            }
-        });
-
-        QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-        QDateTime current = QDateTime::currentDateTime();
-        QString dt = current.toString();
-
-        m_active_connections.insert(id, connection_data {data_stream, current});
-        fifojson handshake;
-        handshake["header"]["request-id"] = id.toStdString();
-        handshake["header"]["date"] = dt.toStdString();
-        handshake["header"]["command"] = 1;
-        data_stream->send(QString::fromStdString(handshake.dump(4)));
-    });
-
-    m_tcp_server->startAsync(port);
-    emit forwardStatusUpdate("TCP Server started/restarted on port: " + QString::number(port));
-}
-
-void SessionManager::sendMessage(StatusUpdateStepType type, QString data) {
-    if (m_active_connections.size() > 0 && m_step_connectivity[(int)type]) {
-        for (QString key : m_active_connections.keys()) {
-            fifojson j;
-            j["header"]["request-id"] = key.toStdString();
-            j["header"]["date"] = m_active_connections[key].current_date_time.toString().toStdString();
-            j["header"]["command"] = (int)type + 2;
-            j["data"]["gcode"] = data.toStdString();
-            m_active_connections[key].data_stream->send(QString::fromStdString(j.dump(4)));
-        }
-    }
-}
-
-void SessionManager::setServerStepConnectivity(StatusUpdateStepType type, bool state) {
-    m_step_connectivity[(int)type] = state;
 }
 
 qint64 SessionManager::getSliceTimeElapsed() {
@@ -704,7 +619,6 @@ bool SessionManager::changeSlicer(SlicerType type) {
     QObject::connect(this, &SessionManager::startSlice, m_ast.get(), &AbstractSlicingThread::doSlice);
     connect(m_ast.get(), &AbstractSlicingThread::statusUpdate, this, &SessionManager::forwardDialogUpdate);
     connect(m_ast.get(), &AbstractSlicingThread::sliceComplete, this, &SessionManager::sliceComplete);
-    connect(m_ast.get(), &AbstractSlicingThread::sendMessage, this, &SessionManager::sendMessage);
     return true;
 }
 

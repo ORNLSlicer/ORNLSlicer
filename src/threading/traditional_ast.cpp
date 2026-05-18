@@ -154,15 +154,7 @@ void TraditionalAST::cleanThread() {
                 if (this->shouldCancel())
                     return;
 
-                if (this->shouldCommunicate()) {
-                    m_temp_gcode_output_file.open(QIODevice::ReadOnly | QIODevice::Text);
-                    QTextStream stream(&m_temp_gcode_output_file);
-                    QString data = stream.readAll();
-                    m_temp_gcode_output_file.close();
-                    emit sendMessage(StatusUpdateStepType::kGcodeGeneraton, data);
-                }
-                else
-                    emit sliceComplete();
+                emit sliceComplete();
             }
 
             return;
