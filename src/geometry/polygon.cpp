@@ -33,22 +33,6 @@ Polygon::Polygon(const Path& path) {
     }
 }
 
-#ifdef HAVE_SINGLE_PATH
-Polygon::Polygon(SinglePath::Polygon& polygon) {
-    for (SinglePath::Point point : polygon) {
-        append(point);
-    }
-}
-
-ORNL::Polygon::operator SinglePath::Polygon() const {
-    SinglePath::Polygon polygon;
-    for (Point point : *this) {
-        polygon.append(point);
-    }
-    return polygon;
-}
-#endif
-
 bool Polygon::orientation() const { return ClipperLib2::Orientation((*this)()); }
 
 PolygonList Polygon::offset(const Distance& distance, const ClipperLib2::JoinType& joinType) const {

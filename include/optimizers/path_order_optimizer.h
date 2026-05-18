@@ -109,11 +109,11 @@ class PathOrderOptimizer {
     //! \return Next path linked via travel
     Path linkNextSkeletonPath();
 
-    //! \brief Links single path in line infill
+    //! \brief Links one line infill path
     //! \return Next path linked via travel
     Path linkNextInfillLines(QVector<Path>& paths);
 
-    //! \brief Links single path in concentric infill
+    //! \brief Links one concentric infill path
     //! \return Next path linked via travel
     Path linkNextInfillConcentric();
 

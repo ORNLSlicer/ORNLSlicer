@@ -44,15 +44,6 @@ class Inset : public RegionBase {
     //! \return Polyline converted to path
     Path createPath(Polyline line) override;
 
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Sets the single path geometry
-    //! \param sp_geometry: the new geometry
-    void setSinglePathGeometry(QVector<SinglePath::PolygonList> sp_geometry);
-
-    //! \brief Creates single paths for this region, plus any connected ones from insets
-    void createSinglePaths();
-#endif
-
     //!\brief Returns the set of paths representing the outermost contours
     //! \return a list of paths of outermost inset contours
     QVector<Path>& getOuterMostPathSet();
@@ -61,7 +52,7 @@ class Inset : public RegionBase {
     //! \return a list of paths of innermost inset contours
     QVector<Path>& getInnerMostPathSet();
 
-    //! \brief gets the computed geometry, used for single path
+    //! \brief gets the computed geometry
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
@@ -90,11 +81,6 @@ class Inset : public RegionBase {
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Holds the single path geometry before it is converted into paths
-    QVector<SinglePath::PolygonList> m_single_path_geometry;
-#endif
 
     //! \brief Holds the first set of insets generated to provide for later
     //! optimizations and path modifiers

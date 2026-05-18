@@ -613,22 +613,6 @@ float PolygonList::distanceTo(Point point) // used by poleOfInaccessibility
 
 PolygonList PolygonList::operator^=(const Polygon& rhs) { return _xor_with_this(rhs); }
 
-#ifdef HAVE_SINGLE_PATH
-PolygonList::PolygonList(SinglePath::PolygonList& poly_list) {
-    for (SinglePath::Polygon polygon : poly_list) {
-        append(polygon);
-    }
-}
-
-ORNL::PolygonList::operator SinglePath::PolygonList() const {
-    SinglePath::PolygonList poly_list;
-    for (Polygon polygon : *this) {
-        poly_list.append(polygon);
-    }
-    return poly_list;
-}
-#endif
-
 PolygonList::PolygonList(const ClipperLib2::Paths& paths) { clipperLoad(paths); }
 
 void PolygonList::clipperLoad(const ClipperLib2::Paths& paths) {

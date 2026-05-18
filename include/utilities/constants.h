@@ -860,17 +860,6 @@ class Constants {
             static const QString kLayerGroupingTolerance;
         };
 
-        class SinglePath {
-          public:
-            static const QString kEnableSinglePath;
-            static const QString kEnableBridgeExclusion;
-            static const QString kEnableZippering;
-            static const QString kPrevLayerExclusionDistance;
-            static const QString kCornerExclusionDistance;
-            static const QString kMaxBridgeLength;
-            static const QString kMinBridgeSeparation;
-        };
-
         class RPBFSlicing {
           public:
             static const QString kSectorSize;

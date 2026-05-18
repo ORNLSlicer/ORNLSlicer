@@ -26,11 +26,6 @@
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/single_path.h>
-Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
-#endif
-
 namespace ORNL {
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
                      const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
@@ -232,99 +227,6 @@ Path Perimeter::createPath(Polyline line) {
     // ---------- Settings Regions ----------
     return createPathWithLocalizedSettings(line);
 }
-
-#ifdef HAVE_SINGLE_PATH
-void Perimeter::setSinglePathGeometry(QVector<SinglePath::PolygonList> sp_geometry) {
-    m_single_path_geometry = sp_geometry;
-}
-
-void Perimeter::createSinglePaths() {
-    Distance perim_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-    Distance perim_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity perim_speed = m_sb->setting<Velocity>(PS::Perimeter::kSpeed);
-    Acceleration perim_acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kPerimeter);
-    AngularVelocity perim_extruder_speed = m_sb->setting<AngularVelocity>(PS::Perimeter::kExtruderSpeed);
-
-    Distance inset_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
-    Distance inset_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity inset_speed = m_sb->setting<Velocity>(PS::Inset::kSpeed);
-    Acceleration inset_acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kInset);
-    AngularVelocity inset_extruder_speed = m_sb->setting<AngularVelocity>(PS::Inset::kExtruderSpeed);
-
-    for (SinglePath::PolygonList polygonList : m_single_path_geometry) {
-        for (SinglePath::Polygon polygon : polygonList) {
-            Path new_path;
-            for (int i = 0; i < polygon.size() - 1; i++) {
-                SinglePath::Point start = polygon[i];
-                SinglePath::Point end = polygon[i + 1];
-
-                QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, end);
-
-                if (start.getRegionType() != end.getRegionType()) // This bridge jumps regions
-                {
-                    segment->getSb()->setSetting(SS::kWidth, perim_width);
-                    segment->getSb()->setSetting(SS::kHeight, perim_height);
-                    segment->getSb()->setSetting(SS::kSpeed, perim_speed);
-                    segment->getSb()->setSetting(SS::kAccel, perim_acceleration);
-                    segment->getSb()->setSetting(SS::kExtruderSpeed, perim_extruder_speed);
-                    segment->getSb()->setSetting(SS::kRegionType, RegionType::kPerimeter);
-                }
-                else {
-                    segment->getSb()->setSetting(
-                        SS::kWidth,
-                        (start.getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_width : inset_width);
-                    segment->getSb()->setSetting(
-                        SS::kHeight,
-                        (start.getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_height : inset_height);
-                    segment->getSb()->setSetting(
-                        SS::kSpeed,
-                        (start.getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_speed : inset_speed);
-                    segment->getSb()->setSetting(
-                        SS::kAccel, (start.getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_acceleration
-                                                                                                  : inset_acceleration);
-                    segment->getSb()->setSetting(SS::kExtruderSpeed,
-                                                 (start.getRegionType() == SinglePath::RegionType::kPerimeter)
-                                                     ? perim_extruder_speed
-                                                     : inset_extruder_speed);
-                    segment->getSb()->setSetting(SS::kRegionType,
-                                                 (start.getRegionType() == SinglePath::RegionType::kPerimeter)
-                                                     ? RegionType::kPerimeter
-                                                     : RegionType::kInset);
-                }
-                new_path.append(segment);
-            }
-
-            //! \note Close Polygon
-            QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polygon.last(), polygon.first());
-            segment->getSb()->setSetting(
-                SS::kWidth,
-                (polygon.last().getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_width : inset_width);
-            segment->getSb()->setSetting(
-                SS::kHeight,
-                (polygon.last().getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_height : inset_height);
-            segment->getSb()->setSetting(
-                SS::kSpeed,
-                (polygon.last().getRegionType() == SinglePath::RegionType::kPerimeter) ? perim_speed : inset_speed);
-            segment->getSb()->setSetting(SS::kAccel,
-                                         (polygon.last().getRegionType() == SinglePath::RegionType::kPerimeter)
-                                             ? perim_acceleration
-                                             : inset_acceleration);
-            segment->getSb()->setSetting(SS::kExtruderSpeed,
-                                         (polygon.last().getRegionType() == SinglePath::RegionType::kPerimeter)
-                                             ? perim_extruder_speed
-                                             : inset_extruder_speed);
-            segment->getSb()->setSetting(SS::kRegionType,
-                                         (polygon.last().getRegionType() == SinglePath::RegionType::kPerimeter)
-                                             ? RegionType::kPerimeter
-                                             : RegionType::kInset);
-
-            new_path.append(segment);
-            if (new_path.calculateLength() > m_sb->setting<Distance>(PS::Perimeter::kMinPathLength))
-                m_paths.append(new_path);
-        }
-    }
-}
-#endif
 
 QVector<Path>& Perimeter::getOuterMostPathSet() { return m_outer_most_path_set; }
 

@@ -13,11 +13,6 @@
 #include "geometry/polyline.h"
 #include "units/unit.h"
 
-// Single Path Lib
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/geometry/polygon_list.h>
-#endif
-
 namespace ORNL {
 class Point;
 
@@ -303,14 +298,6 @@ class PolygonList : public QVector<Polygon> {
 
     //! \brief xor equals
     PolygonList operator^=(const Polygon& rhs);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Conversion constructor
-    PolygonList(SinglePath::PolygonList& poly_list);
-
-    //! \brief Conversion operator
-    operator SinglePath::PolygonList() const;
-#endif
 
     friend class Polygon;
     friend class Polyline;

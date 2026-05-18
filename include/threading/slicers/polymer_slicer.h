@@ -93,10 +93,6 @@ class PolymerSlicer : public TraditionalAST {
 
     void assignNozzles(const QSharedPointer<SettingsBase>& settings);
 
-    //! \brief computes layer links for threading, used in SinglePath algorithm
-    //! \param parts: parts to use
-    void processLayerLinks(QVector<QSharedPointer<Part>> parts);
-
     //! \brief checks if any parts is the CSM are dirty
     //! \return if any part is dirty
     bool anythingDirty();

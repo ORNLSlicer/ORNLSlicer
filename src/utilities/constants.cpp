@@ -784,16 +784,6 @@ const QString Constants::ExperimentalSettings::PrinterConfig::kSlicerType = "sli
 const QString Constants::ExperimentalSettings::PrinterConfig::kLayerOrdering = "layer_ordering";
 const QString Constants::ExperimentalSettings::PrinterConfig::kLayerGroupingTolerance = "layer_grouping_tolerance";
 
-// Single Path
-const QString Constants::ExperimentalSettings::SinglePath::kEnableSinglePath = "enable_single_path";
-const QString Constants::ExperimentalSettings::SinglePath::kEnableBridgeExclusion = "enable_bridge_exclusion";
-const QString Constants::ExperimentalSettings::SinglePath::kEnableZippering = "enable_zippering";
-const QString Constants::ExperimentalSettings::SinglePath::kPrevLayerExclusionDistance =
-    "previous_layer_exclusion_distance";
-const QString Constants::ExperimentalSettings::SinglePath::kCornerExclusionDistance = "corner_exclusion_distance";
-const QString Constants::ExperimentalSettings::SinglePath::kMaxBridgeLength = "max_bridge_length";
-const QString Constants::ExperimentalSettings::SinglePath::kMinBridgeSeparation = "min_bridge_separation";
-
 // RPBF Slicing
 const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorSize = "sector_size";
 const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorOffsettingEnable = "sector_offsetting_enable";

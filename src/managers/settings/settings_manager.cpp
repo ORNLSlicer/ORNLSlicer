@@ -182,23 +182,39 @@ bool SettingsManager::loadGlobalLayerBarTemplate(QString path, bool newTemplateS
 }
 
 void SettingsManager::constructActiveGlobal(QString settingTab, QString settingFile) {
-    if (m_allGlobals[settingTab].contains(settingFile)) {
-        m_global->populate(m_allGlobals[settingTab][settingFile]->json());
-    }
-    else {
-        m_global->populate(m_allGlobals[settingTab]["LFAM_03in"]->json());
+    auto tab = m_allGlobals.find(settingTab);
+    if (tab == m_allGlobals.end())
+        return;
+
+    auto setting = tab.value().find(settingFile);
+    if (setting == tab.value().end()) {
+        setting = tab.value().find("LFAM_03in");
+        if (setting == tab.value().end() || setting.value().isNull())
+            return;
+
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
+
+    if (!setting.value().isNull())
+        m_global->populate(setting.value()->json());
 }
 
 void SettingsManager::constructLayerBarTemplate(QString settingTab, QString settingFile) {
-    if (m_allGlobals[settingTab].contains(settingFile)) {
-        m_global->populate(m_allGlobals[settingTab][settingFile]->json());
-    }
-    else {
-        m_global->populate(m_allGlobals[settingTab]["LFAM_03in"]->json());
+    auto tab = m_allGlobals.find(settingTab);
+    if (tab == m_allGlobals.end())
+        return;
+
+    auto setting = tab.value().find(settingFile);
+    if (setting == tab.value().end()) {
+        setting = tab.value().find("LFAM_03in");
+        if (setting == tab.value().end() || setting.value().isNull())
+            return;
+
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
+
+    if (!setting.value().isNull())
+        m_global->populate(setting.value()->json());
 }
 
 void SettingsManager::constructActiveGlobal(QHash<QString, QString> settingTabAndFile) {
