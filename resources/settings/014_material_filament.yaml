@@ -1,0 +1,51 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "filament_diameter"
+    display: "Filament Diameter"
+    type: "distance"
+    tooltip: "Average diameter of the filament"
+    depends: {"machine_type":1}
+    options: []
+    default: 0
+    minor: "Filament"
+    major: "Material"
+    namespace: "Material::Filament"
+    symbol: "kFilamentDiameter"
+    local: false
+  - name: "filament_relative_distance"
+    display: "Enable Relative Distance"
+    type: "boolean"
+    tooltip: "If selected, sets extrusion distances to relative mode. This issues a G91 command in the startup sequence."
+    depends: {"machine_type":1}
+    options: []
+    default: true
+    minor: "Filament"
+    major: "Material"
+    namespace: "Material::Filament"
+    symbol: "kEnableRelativeDistance"
+    local: false
+  - name: "disable_g92"
+    display: "Remove G92 Commands"
+    type: "boolean"
+    tooltip: "If selected, the G92 command to reset the filament axis to 0 will not be issued"
+    depends: {"machine_type":1}
+    options: []
+    default: false
+    minor: "Filament"
+    major: "Material"
+    namespace: "Material::Filament"
+    symbol: "kRemoveG92Commands"
+    local: false
+  - name: "filament_b_axis"
+    display: "Use B for Filament Axis"
+    type: "boolean"
+    tooltip: "If selected, uses B for filament distance output in the g-code rather than the standard E"
+    depends: {"machine_type":1}
+    options: []
+    default: false
+    minor: "Filament"
+    major: "Material"
+    namespace: "Material::Filament"
+    symbol: "kUseBforFilamentAxis"
+    local: false

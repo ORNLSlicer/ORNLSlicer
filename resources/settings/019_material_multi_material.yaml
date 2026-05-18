@@ -1,0 +1,135 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_multi_material"
+    display: "Enable Multi-material"
+    type: "boolean"
+    tooltip: "If selected, enables the use of multiple printing materials"
+    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":11},{"syntax":12}]}]}
+    options: []
+    default: false
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kEnableMultimaterial"
+    local: true
+  - name: "perimeter_material_num"
+    display: "Perimeter Material Number"
+    type: "number"
+    tooltip: "Sets the material number to be used during perimeter, brim, skeleton, and skirt paths"
+    depends: {"AND":[{"enable_multi_material":true},{"OR":[{"perimeter":true},{"OR":[{"brim":true},{"OR":[{"skeleton":true},{"skirt":true}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kPerimeterMaterialNumber"
+    local: true
+  - name: "inset_material_num"
+    display: "Inset Material Number"
+    type: "number"
+    tooltip: "Sets the material number to be used during inset paths"
+    depends: {"AND":[{"inset":true},{"enable_multi_material":true}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kInsetMaterialNumber"
+    local: true
+  - name: "skeleton_material_num"
+    display: "Skeleton Material Number"
+    type: "number"
+    tooltip: "Sets the material number to be used for skeleton paths."
+    depends: {"AND":[{"skeleton":true},{"enable_multi_material":true}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kSkeletonMaterialNumber"
+    local: true
+  - name: "skin_material_num"
+    display: "Skin Material Number"
+    type: "number"
+    tooltip: "Sets the material number to be used during skin paths"
+    depends: {"AND":[{"skin":true},{"enable_multi_material":true}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kSkinMaterialNumber"
+    local: true
+  - name: "infill_material_num"
+    display: "Infill Material Number"
+    type: "number"
+    tooltip: "Sets the material number to be used during infill paths"
+    depends: {"AND":[{"infill":true},{"enable_multi_material":true}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kInfillMaterialNumber"
+    local: true
+  - name: "support_material_num"
+    display: "Support Material Number"
+    type: "number"
+    tooltip: "Sets the material number to be used during support and raft paths"
+    depends: {"AND":[{"enable_multi_material":true},{"OR":[{"support":true},{"raft":true}]}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kSupportMaterialNumber"
+    local: true
+  - name: "material_transition_distance"
+    display: "Transition Distance"
+    type: "distance"
+    tooltip: "The distance needed to transition between materials"
+    depends: {"enable_multi_material":true}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kTransitionDistance"
+    local: true
+  - name: "enable_second_transition_distance"
+    display: "Enable Second Transition Distance"
+    type: "boolean"
+    tooltip: "If selected, Transition Distance will be used to transition from 1 to 2 and Second Transition Distance will be used for 2 to 1"
+    depends: {"enable_multi_material":true}
+    options: []
+    default: false
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kEnableSecondTransitionDistance"
+    local: true
+  - name: "second_transition_distance"
+    display: "Second Transition Distance"
+    type: "distance"
+    tooltip: "Distance used for transition from material 2 to material 1"
+    depends: {"AND":[{"enable_multi_material":true},{"enable_second_transition_distance":true}]}
+    options: []
+    default: 0
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kSecondTransitionDistance"
+    local: true
+  - name: "enable_m222"
+    display: "Use M222 Code"
+    type: "boolean"
+    tooltip: "Uses the M222 code for material transitions rather than the standard M237"
+    depends: {"enable_multi_material":true}
+    options: []
+    default: false
+    minor: "Multi-Material"
+    major: "Material"
+    namespace: "Material::MultiMaterial"
+    symbol: "kUseM222Code"
+    local: true

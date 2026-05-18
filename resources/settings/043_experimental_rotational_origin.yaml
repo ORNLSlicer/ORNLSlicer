@@ -1,0 +1,27 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "rotation_origin_offset_x"
+    display: "Rotational Origin X Offset"
+    type: "location"
+    tooltip: "Offset X position of origin for rotation E1"
+    depends: {"supports_E2":true}
+    options: []
+    default: 0
+    minor: "Rotational Origin"
+    major: "Experimental"
+    namespace: "Experimental::RotationalOrigin"
+    symbol: "kRotationalOriginXOffset"
+    local: false
+  - name: "rotation_origin_offset_y"
+    display: "Rotational Origin Y Offset"
+    type: "location"
+    tooltip: "Offset Y position of origin for rotation E1"
+    depends: {"supports_E2":true}
+    options: []
+    default: 0
+    minor: "Rotational Origin"
+    major: "Experimental"
+    namespace: "Experimental::RotationalOrigin"
+    symbol: "kRotationalOriginYOffset"
+    local: false

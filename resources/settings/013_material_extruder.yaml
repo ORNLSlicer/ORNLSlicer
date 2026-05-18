@@ -1,0 +1,135 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "initial_extruder_speed"
+    display: "Initial Extruder Speed"
+    type: "rpm"
+    tooltip: "Sets the initial extruder speed that is used during the specific extruder on delay set below"
+    depends: {"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kInitialExtruderSpeed"
+    local: true
+  - name: "extruder_prime_volume"
+    display: "Extruder Prime Volume"
+    type: "unitless_float"
+    tooltip: "Sets the volume of material to purge during priming. Used for pellet extruders without RPM control"
+    depends: {"syntax":29}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kExtruderPrimeVolume"
+    local: true
+  - name: "extruder_prime_speed"
+    display: "Extruder Prime Speed"
+    type: "speed"
+    tooltip: "Sets the speed of the extruder during priming. Used for pellet extruders without RPM control"
+    depends: {"syntax":29}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kExtruderPrimeSpeed"
+    local: true
+  - name: "extruder_on_delay_perimeter"
+    display: "Perimeter Extruder On Delay"
+    type: "time"
+    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for perimeters"
+    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kPerimeterExtruderOnDelay"
+    local: true
+  - name: "extruder_on_delay_inset"
+    display: "Inset Extruder On Delay"
+    type: "time"
+    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for insets"
+    depends: {"AND":[{"inset":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kInsetExtruderOnDelay"
+    local: true
+  - name: "extruder_on_delay_skin"
+    display: "Skin Extruder On Delay"
+    type: "time"
+    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for skins"
+    depends: {"AND":[{"skin":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kSkinExtruderOnDelay"
+    local: true
+  - name: "extruder_on_delay_infill"
+    display: "Infill Extruder On Delay"
+    type: "time"
+    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for infill"
+    depends: {"AND":[{"infill":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kInfillExtruderOnDelay"
+    local: true
+  - name: "extruder_on_delay_skeleton"
+    display: "Skeleton Extruder On Delay"
+    type: "time"
+    tooltip: "Sets the time that the extruder is turned on before the print head begins moving for skeletons"
+    depends: {"AND":[{"skeleton":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kSkeletonExtruderOnDelay"
+    local: true
+  - name: "extruder_off_delay"
+    display: "Extruder Off Delay"
+    type: "time"
+    tooltip: "Sets the time that the extruder is turned offf after the print head stops moving"
+    depends: {"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}
+    options: []
+    default: 0
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kExtruderOffDelay"
+    local: true
+  - name: "servo_extruder_to_travel_speed"
+    display: "Servo Extruder to Travel Speed"
+    type: "boolean"
+    tooltip: "If selected, the speed of the extruder will servo with the speed of the gantry"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kServoExtrudertoTravelSpeed"
+    local: false
+  - name: "enable_m3s"
+    display: "Enable M3 S"
+    type: "boolean"
+    tooltip: "If selected, CI BAAM extruder commands will always use M3 S rather than G1 S. This is helpful for using arc welder, but prevents feedrate scaling from working."
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Extruder"
+    major: "Material"
+    namespace: "Material::Extruder"
+    symbol: "kEnableM3S"
+    local: false

@@ -1,0 +1,27 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "disable_visualization"
+    display: "Disable Visualization"
+    type: "boolean"
+    tooltip: "Enables/disables 3D visualization of gcode"
+    depends: {}
+    options: []
+    default: false
+    minor: "Visualization"
+    major: "Experimental"
+    namespace: "Experimental::Visualization"
+    symbol: "kDisableVisualization"
+    local: false
+  - name: "visualization_layer_skip"
+    display: "Visualization Layer Skip"
+    type: "positive_int"
+    tooltip: "Specifies a layer multiple to skip (ex: 1 = visualize every layer, 2 = visualize every 2nd layer, etc.)"
+    depends: {"disable_visualization":false}
+    options: []
+    default: 1
+    minor: "Visualization"
+    major: "Experimental"
+    namespace: "Experimental::Visualization"
+    symbol: "kVisualizationLayerSkip"
+    local: false
