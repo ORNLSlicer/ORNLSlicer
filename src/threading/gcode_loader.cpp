@@ -27,7 +27,6 @@
 #include <qtmetamacros.h>
 #include <qtypes.h>
 #include <qvectornd.h>
-#include <tcp_connection.h>
 
 #include "configs/settings_range.h"
 #include "exceptions/exceptions.h"
@@ -155,66 +154,6 @@ QString GCodeLoader::additionalExportComments() {
     }
 
     return partMinTranslation % travelTypes % travelColors;
-}
-
-void GCodeLoader::savePartsModelObjFile() {
-    QFileInfo info(m_filename);
-    QString strObjFile = info.absoluteDir().absolutePath() + "/" + info.baseName() + ".obj";
-    QFile::remove(strObjFile);
-    QFile objFile(strObjFile);
-    if (objFile.open(QIODevice::WriteOnly | QIODevice::Text)) {
-        QTextStream out(&objFile);
-
-        int vertIndex = 1;
-        for (QSharedPointer<Part> part : CSM->parts()) {
-            auto verts = part->rootMesh()->vertices();
-            auto faces = part->rootMesh()->faces();
-
-            out << "# Object name\no " << part->rootMesh()->name() << "\n" << "# Begin list of vertices\n";
-
-            for (MeshVertex& vertex : verts) {
-                out << "v " << QString::number(vertex.location.x() / 1000, 'f', 4) << " "
-                    << QString::number(vertex.location.y() / 1000, 'f', 4) << " "
-                    << QString::number(vertex.location.z() / 1000, 'f', 4) << " 1.0\n";
-            }
-
-            out << "# End list of vertices\n# Begin list of faces\n";
-
-            for (MeshFace& face : faces) {
-                out << "f " << face.vertex_index[0] + vertIndex << " " << face.vertex_index[1] + vertIndex << " "
-                    << face.vertex_index[2] + vertIndex << "\n";
-            }
-
-            out << "# End list of faces\n# End Object " << part->rootMesh()->name() << "\n\n";
-
-            vertIndex += verts.length();
-        }
-
-        objFile.close();
-    }
-    else {
-        return;
-    }
-}
-
-void GCodeLoader::sendGcodeModelObjFile(QString host, int port, QString machineName, QString gcodeFilePath,
-                                        QString objFilePath) {
-    TCPConnection client;
-    client.setupNew(host, port);
-    QThread::sleep(1);
-
-    if (client.isReady()) {
-        client.write("Machine Printer: " + machineName);
-        QThread::sleep(1);
-
-        client.write("GCode File Path: " + gcodeFilePath);
-        QThread::sleep(1);
-
-        client.write("Model File Path: " + objFilePath);
-        QThread::sleep(1);
-
-        client.close();
-    }
 }
 
 void GCodeLoader::run() {
@@ -490,9 +429,6 @@ void GCodeLoader::run() {
                     ret = QFile::rename(tempFile.fileName(), m_filename);
                 }
 
-                if (PreferencesManager::getInstance()->getKatanaSendOutput()) {
-                    savePartsModelObjFile();
-                }
             }
         } catch (ExceptionBase& exception) {
             QString message = "Error parsing GCode: " + QString(exception.what());

@@ -132,18 +132,6 @@ class GCodeLoader : public QThread {
     //! \return string
     QString additionalExportComments();
 
-    //! \brief generate part(s) model obj file
-    void savePartsModelObjFile();
-
-    //! \brief send the part and gcode over tcp
-    //! \param host
-    //! \param port
-    //! \param machine name
-    //! \param gcode file path
-    //! \param model file path
-    void static sendGcodeModelObjFile(QString host, int port, QString machineName, QString gcodeFilePath,
-                                      QString objFilePath);
-
     //! \brief generates an open gl object for a given gcode command
     //! \param line_num: Line number that links visual segment to gcode for highlighting
     //! \param layer_num Layer: to inset segment into

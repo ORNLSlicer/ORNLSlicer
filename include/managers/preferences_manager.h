@@ -215,31 +215,6 @@ class PreferencesManager : public QObject {
     //! \return visualization color map of name and color as hex string
     std::map<std::string, std::string> getVisualizationHexColors();
 
-    //! \brief Get processing step connectivity
-    //! \param type: processing step to get
-    //! \return whether or not to transmit results over TCP
-    bool getStepConnectivity(StatusUpdateStepType type);
-
-    //! \brief Get TCP server port
-    //! \return TCP port
-    int getTCPServerPort();
-
-    //! \brief Get TCP server autostart
-    //! \return whether or not to autostart
-    bool getTcpServerAutoStart();
-
-    //! \brief Get Send Output To Katana
-    //! \return whether or not to send gcode / model to Katana
-    bool getKatanaSendOutput();
-
-    //! \brief Get Katana TCP IP Address
-    //! \return Katana TCP IP Address as string
-    QString getKatanaTCPIp();
-
-    //! \brief Get Katana TCP Port
-    //! \return Katana TCP Port as integer
-    int getKatanaTCPPort();
-
   signals:
     //! \brief Signal emitted when the import unit is changed
     void importUnitChanged(Distance new_value, Distance old_value);
@@ -399,31 +374,6 @@ class PreferencesManager : public QObject {
     //! \param lag: time to lag in milliseconds
     void setSegmentLag(int lag);
 
-    //! \brief Sets processing stage connectivity (currently only gcode)
-    //! \param type: processing stage to set
-    //! \param toggle: whether or not to transmit over TCP
-    void setStepConnectivity(StatusUpdateStepType type, bool toggle);
-
-    //! \brief Sets TCP server's port
-    //! \param port: port to set
-    void setTCPServerPort(int port);
-
-    //! \brief Sets whether TCP server should autostart or not
-    //! \param start: whether or not to autostart
-    void setTcpServerAutoStart(bool start);
-
-    //! \brief Sets whether Send Output To Katana or not
-    //! \param send: whether or not to send
-    void setKatanaSendOutput(bool send);
-
-    //! \brief Set Katana TCP IP Address
-    //! \param Katana TCP IP Address as string
-    void setKatanaTCPIp(QString ipAddress);
-
-    //! \brief Set Katana TCP Port
-    //! \param Katana TCP Port as integer
-    void setKatanaTCPPort(int port);
-
   private:
     //! \brief Constructor
     PreferencesManager();
@@ -491,24 +441,6 @@ class PreferencesManager : public QObject {
 
     //! \brief visualization color's preferences QColors
     std::unordered_map<std::string, QColor> m_visualization_qcolors;
-
-    //! \brief whether or not to transmit information for each major processing stage (currently only gcode)
-    QVector<bool> m_step_connectivity;
-
-    //! \brief port to run tcp server on
-    int m_tcp_port;
-
-    //! \brief whether to automatically start tcp server on startup
-    bool m_tcp_server_autostart;
-
-    //! \brief whether to Send Output To Katana
-    bool m_katana_send_output;
-
-    //! \brief Katana TCP IP Address
-    QString m_katana_tcp_ip;
-
-    //! \brief Katana TCP Port
-    int m_katana_tcp_port;
 
 }; // class PreferencesManager
 } // namespace ORNL

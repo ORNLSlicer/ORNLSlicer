@@ -90,7 +90,7 @@ class RealTimeAST : public AbstractSlicingThread {
     //! \brief runs single time when the slicing process is started before any layers are computed
     virtual void initialSetup();
 
-    //! \brief starts TCP server thread and setups signals to handle new connections
+    //! \brief starts the TCP client connection and sets up network signals
     void setupNetworking();
 
     //! \brief computes the next layer and add it to the part

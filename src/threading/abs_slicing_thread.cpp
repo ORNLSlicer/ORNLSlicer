@@ -53,7 +53,7 @@
 
 namespace ORNL {
 AbstractSlicingThread::AbstractSlicingThread(QString outputLocation, bool skipGcode)
-    : QObject(), m_min(0), m_max(INT_MAX), m_should_cancel(false), m_should_communicate(false) {
+    : QObject(), m_min(0), m_max(INT_MAX), m_should_cancel(false) {
     m_skip_gcode = skipGcode;
     setGcodeOutput(outputLocation);
 
@@ -215,20 +215,6 @@ bool AbstractSlicingThread::shouldCancel() {
 void AbstractSlicingThread::setMaxSteps(int steps) { m_max_steps = steps; }
 
 int AbstractSlicingThread::getMaxSteps() { return m_max_steps; }
-
-void AbstractSlicingThread::setCommunicate(bool communicate) { m_should_communicate = communicate; }
-
-bool AbstractSlicingThread::shouldCommunicate() { return m_should_communicate; }
-
-void AbstractSlicingThread::setNetworkData(StatusUpdateStepType stage, QString data) {
-    if (stage == StatusUpdateStepType::kGcodeGeneraton) {
-        m_temp_gcode_output_file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text);
-        QTextStream stream(&m_temp_gcode_output_file);
-        stream << data;
-        m_temp_gcode_output_file.close();
-        emit sliceComplete();
-    }
-}
 
 void AbstractSlicingThread::forwardStatus(StatusUpdateStepType type, int completedPercentage) {
     emit statusUpdate(type, completedPercentage);

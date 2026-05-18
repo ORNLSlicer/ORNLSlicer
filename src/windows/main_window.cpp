@@ -113,11 +113,9 @@ void MainWindow::continueStartup() {
 
     GSM->loadAllGlobals(tmp);
     GSM->constructActiveGlobal(CSM->getMostRecentSettingHistory());
-    // GSM->loadLayerBarTemplate(qApp->applicationDirPath() + "/layerbartemplates");
     GSM->loadLayerBarTemplate(CSM->getMostRecentLayerBarSettingFolderLocation());
     this->setupClasses();
     this->setupUi();
-    CSM->setupTCPServer();
 }
 
 MainWindow::~MainWindow() {

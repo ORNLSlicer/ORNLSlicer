@@ -7,9 +7,7 @@
 #include <QFile>
 #include <QQueue>
 #include <QStandardPaths>
-#include <data_stream.h>
 #include <qcontainerfwd.h>
-#include <qdatetime.h>
 #include <qhash.h>
 #include <qmap.h>
 #include <qmatrix4x4.h>
@@ -18,7 +16,6 @@
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
-#include <tcp_server.h>
 
 #include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
@@ -125,9 +122,6 @@ class SessionManager : public QObject {
     //! \param new_part: part to copy for later paste
     void addCopiedPart(QSharedPointer<Part> new_part);
 
-    //! \brief Checks preferences to see if TCP server should be started
-    void setupTCPServer();
-
     //! \brief Sets the default gcode dir to output location to skip copy/paste of files (useful for image slicing when
     //! there are 1000s of files)
     void setDefaultGcodeDir(QString dir);
@@ -220,20 +214,6 @@ class SessionManager : public QObject {
 
     //! \brief Paste previously copied part
     void pastePart();
-
-    //! \brief Start/Restart the server based on dialog information
-    //! \param port: port to start server on
-    void setServerInformation(int port);
-
-    //! \brief Send information to connected clients on tcp server
-    //! \param type: currently finished processing stage
-    //! \param data: data from stage to send (currently just gcode
-    void sendMessage(StatusUpdateStepType type, QString data);
-
-    //! \brief Sets which processing stages will forward information to tcp server (currently just gcode)
-    //! \param type: stage to set
-    //! \param state: whether or not to transmit
-    void setServerStepConnectivity(StatusUpdateStepType type, bool state);
 
   signals:
 
@@ -331,19 +311,5 @@ class SessionManager : public QObject {
     //! \brief pointer to part to potentially paste
     QSharedPointer<Part> m_copied_part;
 
-    //! \brief current server
-    TCPServer* m_tcp_server;
-
-    //! \brief struct to hold server connection information
-    struct connection_data {
-        QSharedPointer<DataStream> data_stream;
-        QDateTime current_date_time;
-    };
-
-    //! \brief current tcp server connections
-    QHash<QString, connection_data> m_active_connections;
-
-    //! \brief whether or not to transmit information between each major processing step (currently just gcode)
-    QVector<bool> m_step_connectivity;
 };
 } // namespace ORNL

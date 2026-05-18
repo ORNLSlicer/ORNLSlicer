@@ -95,11 +95,6 @@ PreferencesManager::PreferencesManager()
     m_hidden_settings["Material"] = std::list<std::string>();
     m_hidden_settings["Profile"] = std::list<std::string>();
     m_hidden_settings["Experimental"] = std::list<std::string>();
-    m_tcp_port = 12345;
-    m_tcp_server_autostart = false;
-    m_step_connectivity = QVector<bool>(5, false);
-    m_katana_tcp_ip = "127.0.0.1";
-    m_katana_tcp_port = 12345;
     setDefaultVisualizationColors({});
 }
 
@@ -243,19 +238,6 @@ void PreferencesManager::importPreferences(QString filepath) {
             visualizationColorsHex = j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
         setDefaultVisualizationColors(visualizationColorsHex);
 
-        if (j.find("tcp_server_settings") != j.end()) {
-            m_tcp_port = j["tcp_server_settings"]["port"];
-            m_tcp_server_autostart = j["tcp_server_settings"]["auto_start"];
-            std::vector<bool> connectivities = j["tcp_server_settings"]["step_connectivity"];
-            m_step_connectivity = QVector<bool>(connectivities.begin(), connectivities.end());
-        }
-
-        if (j.find("katana_server_settings") != j.end()) {
-            setKatanaSendOutput(j["katana_server_settings"]["send_output"]);
-            setKatanaTCPIp(j["katana_server_settings"]["ip"]);
-            setKatanaTCPPort(j["katana_server_settings"]["port"]);
-        }
-
         file.close();
     }
     else
@@ -305,12 +287,6 @@ fifojson PreferencesManager::json() {
     j["use_implicit_transforms"] = m_use_implicit_transforms;
     j["always_drop_parts"] = m_always_drop_parts;
     j["visualization_colors"] = getVisualizationHexColors();
-    j["tcp_server_settings"]["port"] = m_tcp_port;
-    j["tcp_server_settings"]["auto_start"] = m_tcp_server_autostart;
-    j["tcp_server_settings"]["step_connectivity"] = m_step_connectivity;
-    j["katana_server_settings"]["send_output"] = m_katana_send_output;
-    j["katana_server_settings"]["ip"] = m_katana_tcp_ip;
-    j["katana_server_settings"]["port"] = m_katana_tcp_port;
     j["layer_lag"] = m_layer_lag;
     j["segment_lag"] = m_segment_lag;
 
@@ -657,30 +633,4 @@ bool PreferencesManager::isSettingHidden(QString panel, QString setting) {
     std::list<std::string> settingList = m_hidden_settings[panel.toStdString()];
     return std::find(settingList.begin(), settingList.end(), setting.toStdString()) != settingList.end();
 }
-
-void PreferencesManager::setStepConnectivity(StatusUpdateStepType type, bool toggle) {
-    m_step_connectivity[(int)type] = toggle;
-}
-
-void PreferencesManager::setTCPServerPort(int port) { m_tcp_port = port; }
-
-void PreferencesManager::setTcpServerAutoStart(bool start) { m_tcp_server_autostart = start; }
-
-bool PreferencesManager::getStepConnectivity(StatusUpdateStepType type) { return m_step_connectivity[(int)type]; }
-
-int PreferencesManager::getTCPServerPort() { return m_tcp_port; }
-
-bool PreferencesManager::getTcpServerAutoStart() { return m_tcp_server_autostart; }
-
-bool PreferencesManager::getKatanaSendOutput() { return m_katana_send_output; }
-
-void PreferencesManager::setKatanaSendOutput(bool send) { m_katana_send_output = send; }
-
-QString PreferencesManager::getKatanaTCPIp() { return m_katana_tcp_ip; }
-
-void PreferencesManager::setKatanaTCPIp(QString ipAddress) { m_katana_tcp_ip = ipAddress; }
-
-int PreferencesManager::getKatanaTCPPort() { return m_katana_tcp_port; }
-
-void PreferencesManager::setKatanaTCPPort(int port) { m_katana_tcp_port = port; }
 } // namespace ORNL
