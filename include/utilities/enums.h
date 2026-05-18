@@ -48,17 +48,6 @@ enum MeshGeneratorType {
     kCone = 6
 };
 
-/*!
- * \enum LinkType
- * \brief Selects the type of link between threads
- */
-enum class LinkType : uint8_t {
-    kPreviousLayerExclusionInset,
-    kZipperingInset,
-    kPreviousLayerExclusionPerimeter,
-    kZipperingPerimeter
-};
-
 /*! \enum BuildVolumeType
  * \brief Determines the type of build volume to create.
  */

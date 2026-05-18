@@ -19,11 +19,6 @@
 #include "units/derivative_units.h"
 #include "units/unit.h"
 
-// Single Path Lib
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/geometry/point.h>
-#endif
-
 namespace ORNL {
 /*!
  * \class Point
@@ -61,14 +56,6 @@ class Point {
     Point(const QPointF& p);
 
     Point(const QVector3D& p);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Conversion constructor
-    Point(SinglePath::Point& point);
-
-    //! \brief Conversion operator
-    operator SinglePath::Point() const;
-#endif
 
     /*!
      * \brief Function for going from QVector2D to Point

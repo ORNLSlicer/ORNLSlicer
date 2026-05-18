@@ -242,9 +242,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
             // Assign pathing to nozzles
             assignNozzles(global_settings);
 
-            // Adds thread links for single path zippering and exclusion
-            processLayerLinks(parts.build_parts);
-
             return false; // No error, so continune slicing
         });
 
@@ -472,44 +469,6 @@ void PolymerSlicer::assignNozzles(const QSharedPointer<SettingsBase>& settings_b
                 case NozzleAssignmentMethod::kArea:
                     MultiNozzleOptimizer::assignByArea(layer_islands, tool_count);
                     break;
-            }
-        }
-    }
-}
-
-void PolymerSlicer::processLayerLinks(QVector<QSharedPointer<Part>> parts) {
-    for (auto& part : parts) {
-        auto part_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal()); // Copy global
-        part_sb->populate(part->getSb());                                       // Fill with part overrides
-        bool enable_single_path = part_sb->setting<bool>(ES::SinglePath::kEnableSinglePath);
-        bool enable_exclusion = part_sb->setting<bool>(ES::SinglePath::kEnableBridgeExclusion);
-        bool enable_zippering = part_sb->setting<bool>(ES::SinglePath::kEnableZippering);
-
-        // Link layer threads for zippering/ exclusion
-        if (enable_single_path) {
-            auto sync = part->getSync();
-            sync->clearLinks();
-            for (auto step : part->steps()) {
-                QSharedPointer<Layer> layer = step.dynamicCast<Layer>();
-                int layer_num = layer->getLayerNumber();
-
-                // Exclusion links links
-                if (enable_exclusion && (layer_num + 1 <= part->steps().size())) {
-                    for (auto island : layer->getIslands()) {
-                        // Add a link to next layer
-                        sync->addLink(layer_num, layer_num + 1, LinkType::kPreviousLayerExclusionPerimeter);
-                        sync->addLink(layer_num, layer_num + 1, LinkType::kPreviousLayerExclusionInset);
-                    }
-                }
-
-                // Zipper links
-                if (enable_zippering && (layer_num + 2 < part->steps().size())) {
-                    for (auto island : layer->getIslands()) {
-                        // Add a link to prev zipper layer
-                        sync->addLink(layer_num, layer_num + 2, LinkType::kZipperingPerimeter);
-                        sync->addLink(layer_num, layer_num + 2, LinkType::kZipperingInset);
-                    }
-                }
             }
         }
     }
