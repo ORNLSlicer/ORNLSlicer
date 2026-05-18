@@ -31,10 +31,6 @@
 Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
 #endif
 
-#ifdef HAVE_WIRE_FEED
-    #include <wire_feed/wire_feed.h>
-#endif
-
 namespace ORNL {
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
                      const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
@@ -63,50 +59,41 @@ void Perimeter::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
     int rings = m_sb->setting<int>(PS::Perimeter::kCount);
 
-    if (m_sb->setting<bool>(ES::WireFeed::kWireFeedEnable) && m_uncut_geometry != PolygonList() && rings == 3) {
-#ifdef HAVE_WIRE_FEED
-        QVector<QVector<QPair<double, double>>> result = WireFeed::WireFeed::computePerimetersForBase(
-            m_geometry.getRawPoints(), m_uncut_geometry.getRawPoints(), beadWidth(), rings);
-        m_computed_geometry.append(PolygonList(result));
-#endif
+    PolygonList path_line = m_geometry.offset(-beadWidth / 2);
+
+    QVector<Point> previousPoints;
+    QVector<Point> currentPoints;
+    for (Polygon& poly : m_geometry) {
+        for (Point& p : poly) {
+            previousPoints.push_back(p);
+        }
     }
-    else {
-        PolygonList path_line = m_geometry.offset(-beadWidth / 2);
 
-        QVector<Point> previousPoints;
-        QVector<Point> currentPoints;
-        for (Polygon& poly : m_geometry) {
+    int ring_nr = 0;
+    while (!path_line.isEmpty() && ring_nr < rings) {
+        for (Polygon& poly : path_line) {
             for (Point& p : poly) {
-                previousPoints.push_back(p);
+                kNN neighbor(previousPoints, QVector<Point> {p}, 1);
+                neighbor.execute();
+
+                int closest = neighbor.getNearestIndices().first();
+                p.setNormals(previousPoints[closest].getNormals());
+                currentPoints.push_back(p);
             }
         }
+        previousPoints = currentPoints;
+        currentPoints.clear();
 
-        int ring_nr = 0;
-        while (!path_line.isEmpty() && ring_nr < rings) {
-            for (Polygon& poly : path_line) {
-                for (Point& p : poly) {
-                    kNN neighbor(previousPoints, QVector<Point> {p}, 1);
-                    neighbor.execute();
-
-                    int closest = neighbor.getNearestIndices().first();
-                    p.setNormals(previousPoints[closest].getNormals());
-                    currentPoints.push_back(p);
-                }
-            }
-            previousPoints = currentPoints;
-            currentPoints.clear();
-
-            for (Polygon poly : path_line) {
-                Polyline line = poly.toPolyline();
-                line.pop_back();
-                m_computed_geometry.push_back(line);
-            }
-
-            ring_nr++;
-
-            m_geometry = path_line.offset(-beadWidth / 2, -beadWidth / 2);
-            path_line = path_line.offset(-beadWidth, -beadWidth / 2);
+        for (Polygon poly : path_line) {
+            Polyline line = poly.toPolyline();
+            line.pop_back();
+            m_computed_geometry.push_back(line);
         }
+
+        ring_nr++;
+
+        m_geometry = path_line.offset(-beadWidth / 2, -beadWidth / 2);
+        path_line = path_line.offset(-beadWidth, -beadWidth / 2);
     }
 }
 

@@ -63,10 +63,8 @@ template <> struct boost::polygon::segment_traits<ORNL::Polyline> {
 
 namespace ORNL {
 Skeleton::Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
-                   const QVector<SettingsPolygon>& settings_polygons, bool isWireFed)
-    : RegionBase(sb, index, settings_polygons) {
-    m_wire_region = isWireFed;
-}
+                   const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons) {}
 
 QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
@@ -113,10 +111,6 @@ void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
             //! Uncomment to inspect Skeleton structure. See instructions in header file.
             // inspectSkeleton(layer_num);
 
-            if (m_computed_anchor_lines.size() != 0) {
-                m_computed_geometry.push_front(m_computed_anchor_lines.first());
-                m_computed_geometry.push_back(m_computed_anchor_lines.last());
-            }
         }
         else {
             qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << m_layer_num;
@@ -859,8 +853,6 @@ QVector<Path> Skeleton::filterPath(const Path& path) {
     flushPath(); // Push any trailing path
     return filtered_paths;
 }
-
-void Skeleton::setAnchorWireFeed(QVector<Polyline> anchor_lines) { m_computed_anchor_lines = anchor_lines; }
 
 void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
                         QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {

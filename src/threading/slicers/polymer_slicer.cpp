@@ -28,7 +28,6 @@
 #include "step/layer/island/island_base.h"
 #include "step/layer/island/polymer_island.h"
 #include "step/layer/island/support_island.h"
-#include "step/layer/island/wire_feed_island.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/infill.h"
 #include "step/layer/regions/perimeter.h"
@@ -105,30 +104,11 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
             // Create the islands from the geometry.
             QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
 
-            // If user wanted polygons manipulated by settings regions, use those instead of original
-            if (!(next_layer_meta->modified_geometry.isEmpty() ||
-                  next_layer_meta->setting_bounded_geometry.isEmpty())) {
-                split_geometry = next_layer_meta->modified_geometry.splitIntoParts();
-                split_geometry += next_layer_meta->setting_bounded_geometry.splitIntoParts();
-            }
-
-            // If wire feeding is turned on, have to create special island combinations
-            if (next_layer_meta->settings->setting<bool>(ES::WireFeed::kWireFeedEnable)) {
-                for (const PolygonList& island_geometry : split_geometry) {
-                    // Polymer builds use polymer islands.
-                    QSharedPointer<WireFeedIsland> poly_isl = QSharedPointer<WireFeedIsland>::create(
-                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-                    new_layer->addIsland(IslandType::kWireFeed, poly_isl);
-                }
-            }
-            // Else, normal polymer islands
-            else {
-                for (const PolygonList& island_geometry : split_geometry) {
-                    // Polymer builds use polymer islands.
-                    QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
-                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-                    new_layer->addIsland(IslandType::kPolymer, poly_isl);
-                }
+            for (const PolygonList& island_geometry : split_geometry) {
+                // Polymer builds use polymer islands.
+                QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
+                    island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
+                new_layer->addIsland(IslandType::kPolymer, poly_isl);
             }
         };
 
@@ -199,35 +179,14 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
                 // Create the islands from the geometry.
                 QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
 
-                // If user wanted polygons manipulated by settings regions, use those instead of original
-                if (!(next_layer_meta->modified_geometry.isEmpty() ||
-                      next_layer_meta->setting_bounded_geometry.isEmpty())) {
-                    split_geometry = next_layer_meta->modified_geometry.splitIntoParts();
-                    split_geometry += next_layer_meta->setting_bounded_geometry.splitIntoParts();
+                QVector<QSharedPointer<IslandBase>> newIslands;
+                for (const PolygonList& island_geometry : split_geometry) {
+                    // Polymer builds use polymer islands.
+                    QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
+                        island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
+                    newIslands.append(poly_isl);
                 }
-
-                // If wire feeding is turned on, have to create special island combinations
-                if (next_layer_meta->settings->setting<bool>(ES::WireFeed::kWireFeedEnable)) {
-                    QVector<QSharedPointer<IslandBase>> newIslands;
-
-                    for (const PolygonList& island_geometry : split_geometry) {
-                        // Polymer builds use polymer islands.
-                        QSharedPointer<WireFeedIsland> poly_isl = QSharedPointer<WireFeedIsland>::create(
-                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-                        newIslands.append(poly_isl);
-                    }
-                    newLayer->updateIslands(IslandType::kWireFeed, newIslands);
-                }
-                else {
-                    QVector<QSharedPointer<IslandBase>> newIslands;
-                    for (const PolygonList& island_geometry : split_geometry) {
-                        // Polymer builds use polymer islands.
-                        QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
-                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-                        newIslands.append(poly_isl);
-                    }
-                    newLayer->updateIslands(IslandType::kPolymer, newIslands);
-                }
+                newLayer->updateIslands(IslandType::kPolymer, newIslands);
             }
         }
 
@@ -264,7 +223,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
         processSkirt(meta.part, meta.part_sb);
         processLaserScan(meta.part, meta.part_sb);
         processThermalScan(meta.part, meta.part_sb);
-        processAnchors(meta.part, meta.part_sb);
 
         // Update max steps
         if (meta.part->countStepPairs() > this->getMaxSteps()) {
@@ -475,14 +433,6 @@ void PolymerSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<S
                 part->removeStepFromGroup(i, StepType::kScan);
             }
         }
-    }
-}
-
-void PolymerSlicer::processAnchors(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
-    if (part_sb->setting<bool>(ES::WireFeed::kAnchorEnable)) {
-        int total_layers = part->countStepPairs();
-        for (int current_layer = 0; current_layer < total_layers; ++current_layer)
-            LayerAdditions::addAnchors(part->step(current_layer, StepType::kLayer).dynamicCast<Layer>());
     }
 }
 
