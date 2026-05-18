@@ -113,7 +113,6 @@ class Constants {
         static const QString kLaserScan;
         static const QString kThermalScan;
         static const QString kSkeleton;
-        static const QString kAnchor;
     };
 
     // Used?
@@ -914,21 +913,6 @@ class Constants {
             static const QString kTrajectoryAngleExtruderSpeedUp;
         };
 
-        class WireFeed {
-          public:
-            static const QString kWireFeedEnable;
-            static const QString kSettingsRegionMeshSplit;
-            static const QString kInitialTravelSpeed;
-            static const QString kAnchorEnable;
-            static const QString kAnchorWidth;
-            static const QString kAnchorHeight;
-            static const QString kAnchorObjectDistanceLeft;
-            static const QString kAnchorObjectDistanceRight;
-            static const QString kWireCutoffDistance;
-            static const QString kWireStickoutDistance;
-            static const QString kWirePrestartDistance;
-        };
-
         class FileOutput {
           public:
             static const QString kMeldCompanionOutput;
@@ -1045,9 +1029,6 @@ class Constants {
         static const QString kESP;
         static const QString kExtruders;
         static const QString kIsRegionStartSegment;
-        static const QString kWireFeed;
-        static const QString kFinalWireCoast;
-        static const QString kFinalWireFeed;
         static const QString kAdapted;
     };
 

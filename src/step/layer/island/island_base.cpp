@@ -15,7 +15,6 @@
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "managers/sync/sync_manager.h"
-#include "step/layer/regions/anchor.h"
 #include "step/layer/regions/brim.h"
 #include "step/layer/regions/infill.h"
 #include "step/layer/regions/inset.h"
@@ -166,15 +165,6 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
                     continue;
 
                 return std::move(thermalscan);
-            }
-            break;
-        case RegionType::kAnchor:
-            for (QSharedPointer<RegionBase> r : m_regions) {
-                QSharedPointer<Anchor> anchor = r.dynamicCast<Anchor>();
-                if (anchor.isNull())
-                    continue;
-
-                return std::move(anchor);
             }
             break;
         case RegionType::kSupportRoof:

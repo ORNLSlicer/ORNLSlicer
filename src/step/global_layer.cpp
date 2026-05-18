@@ -206,21 +206,6 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, QVector<P
             island_optimizer.setStartPoint(start_override);
         }
 
-        QList<QSharedPointer<IslandBase>> wire_feed_islands =
-            islands_for_current_tool.values(static_cast<int>(IslandType::kWireFeed));
-
-        if (wire_feed_islands.size() > 0) {
-            island_optimizer.setIslands(wire_feed_islands);
-            while (wire_feed_islands.size() > 0) {
-                int index = island_optimizer.computeNextIndex();
-                QSharedPointer<IslandBase> isl = wire_feed_islands[index];
-                wire_feed_islands.removeAt(index);
-                isl->optimize(m_layer_number, start[tool], previous_regions[tool]);
-                m_island_order[tool].push_back(isl);
-                island_optimizer.setStartPoint(start[tool]);
-            }
-        }
-
         // Handle skirts
         QList<QSharedPointer<IslandBase>> skirt_islands;
         skirt_islands = islands_for_current_tool.values(static_cast<int>(IslandType::kSkirt));

@@ -163,20 +163,6 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
         }
     }
 
-    currentIslands = m_islands.values(static_cast<int>(IslandType::kWireFeed));
-
-    if (currentIslands.size() > 0) {
-        ioo.setIslands(currentIslands);
-
-        while (currentIslands.size() > 0) {
-            int index = ioo.computeNextIndex();
-            QSharedPointer<IslandBase> isl = currentIslands[index];
-            currentIslands.removeAt(index);
-            isl->optimize(m_layer_nr, start, previousRegions);
-            m_island_order.push_back(isl);
-        }
-    }
-
     currentIslands = m_islands.values(static_cast<int>(IslandType::kThermalScan));
 
     if (currentIslands.size() > 0) {

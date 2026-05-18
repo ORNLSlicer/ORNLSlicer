@@ -48,8 +48,8 @@ class Skeleton : public RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    Skeleton(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-             bool iswireFed = false);
+    Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
+             const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Writes the gcode for the skeleton
     //! \param writer is the instance of the Writer Base to be used for writing skeleton region GCode
@@ -159,10 +159,6 @@ class Skeleton : public RegionBase {
      */
     QVector<Path> filterPath(const Path& path);
 
-    //! \brief Sets pathing for anchor lines
-    //! \param anchor_lines: polylines for wire feed
-    void setAnchorWireFeed(QVector<Polyline> anchor_lines);
-
   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
@@ -178,12 +174,6 @@ class Skeleton : public RegionBase {
 
     //! \brief Holds computed geometry
     QVector<Polyline> m_computed_geometry;
-
-    //! \brief Whether or not skeletons belong to wire fed areas or not
-    bool m_wire_region;
-
-    //! \brief Precomputed paths for wire feed at anchors
-    QVector<Polyline> m_computed_anchor_lines;
 
     //! @brief The current layer number being processed
     uint m_layer_num;

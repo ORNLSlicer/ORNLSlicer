@@ -126,7 +126,6 @@ const QString Constants::RegionTypeStrings::kSkirt = "SKIRT";
 const QString Constants::RegionTypeStrings::kLaserScan = "LASER SCANNER";
 const QString Constants::RegionTypeStrings::kThermalScan = "IR CAMERA";
 const QString Constants::RegionTypeStrings::kSkeleton = "SKELETON";
-const QString Constants::RegionTypeStrings::kAnchor = "ANCHOR";
 
 //================================================================================
 // Legacy Region Type Strings
@@ -836,19 +835,6 @@ const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleSpeedUp 
 const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleExtruderSpeedUp =
     "trajectory_angle_extruder_speed_up";
 
-// Wire Feed
-const QString Constants::ExperimentalSettings::WireFeed::kWireFeedEnable = "wire_feed_enable";
-const QString Constants::ExperimentalSettings::WireFeed::kSettingsRegionMeshSplit = "setting_region_mesh_split";
-const QString Constants::ExperimentalSettings::WireFeed::kInitialTravelSpeed = "wire_feed_initial_travel";
-const QString Constants::ExperimentalSettings::WireFeed::kAnchorEnable = "anchor_enable";
-const QString Constants::ExperimentalSettings::WireFeed::kAnchorWidth = "anchor_width";
-const QString Constants::ExperimentalSettings::WireFeed::kAnchorHeight = "anchor_height";
-const QString Constants::ExperimentalSettings::WireFeed::kAnchorObjectDistanceLeft = "anchor_object_distance_left";
-const QString Constants::ExperimentalSettings::WireFeed::kAnchorObjectDistanceRight = "anchor_object_distance_right";
-const QString Constants::ExperimentalSettings::WireFeed::kWireCutoffDistance = "wire_feed_cutoff_distance";
-const QString Constants::ExperimentalSettings::WireFeed::kWireStickoutDistance = "wire_feed_stickout_distance";
-const QString Constants::ExperimentalSettings::WireFeed::kWirePrestartDistance = "wire_feed_prestart_distance";
-
 // File Output
 const QString Constants::ExperimentalSettings::FileOutput::kMeldCompanionOutput = "additional_meld_output";
 const QString Constants::ExperimentalSettings::FileOutput::kMeldDiscrete = "meld_discrete_feed_commands";
@@ -940,9 +926,6 @@ const QString Constants::SegmentSettings::kCCW = "ccw";
 const QString Constants::SegmentSettings::kESP = "esp";
 const QString Constants::SegmentSettings::kExtruders = "extruders";
 const QString Constants::SegmentSettings::kIsRegionStartSegment = "is_region_start_segment";
-const QString Constants::SegmentSettings::kWireFeed = "wire_feed";
-const QString Constants::SegmentSettings::kFinalWireCoast = "final_wire_coast";
-const QString Constants::SegmentSettings::kFinalWireFeed = "final_wire_feed";
 const QString Constants::SegmentSettings::kAdapted = "adapted";
 
 //================================================================================

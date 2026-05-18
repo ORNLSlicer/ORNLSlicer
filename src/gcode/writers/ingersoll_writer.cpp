@@ -29,8 +29,6 @@ QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
     m_layer_start = true;
     m_min_z = 0.0f;
     m_material_number = -1;
-    m_wire_feed = false;
-    m_wire_feed_total = 0;
 
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
@@ -129,13 +127,6 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     QString rv;
     Point new_start_location;
 
-    bool isWireFeed = false;
-    if (params->contains(SS::kWireFeed))
-        isWireFeed = true;
-
-    if (isWireFeed)
-        m_wire_feed_total = 0;
-
     // Use updated start location if this is the first travel
     if (m_first_travel)
         new_start_location = m_start_point;
@@ -160,26 +151,15 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
         Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
-        if (isWireFeed) {
-            rv += m_G1 % writeCoordinates(lift_destination);
-            Velocity speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
-            if (getFeedrate() != speed) {
-                setFeedrate(speed);
-                rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-            }
-            rv += commentSpaceLine("TRAVEL LIFT Z");
+        if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         }
         else {
-            if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
-                rv += m_G1 % m_f %
-                      QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                      writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
-            }
-            else {
-                rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
-            }
-            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
+            rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         }
+        setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
     // write the travel
@@ -189,56 +169,28 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     else if (travel_lift_required)
         travel_destination = travel_destination + travel_lift; // travel destination is above the target point
 
-    if (isWireFeed) {
-        rv += "H54" % commentSpaceLine("Zero UA and UT");
-        rv += "H122" % commentSpaceLine("Engage add roller");
-        rv += m_G1 % writeCoordinates(travel_destination);
-        rv += " UA=" + QString::number(params->setting<Distance>(SS::kWireFeed).to(m_meta.m_distance_unit));
-        m_wire_feed_total += params->setting<Distance>(SS::kWireFeed);
-        Velocity speed = params->setting<Velocity>(SS::kSpeed);
-        if (getFeedrate() != speed) {
-            setFeedrate(speed);
-            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-        }
+    if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+        rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
+              writeCoordinates(travel_destination);
     }
     else {
-        if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
-            rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
-                  writeCoordinates(travel_destination);
-        }
-        else {
-            rv += m_G0 % writeCoordinates(travel_destination);
-        }
+        rv += m_G0 % writeCoordinates(travel_destination);
     }
 
     rv += commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (isWireFeed)
-        rv += "H123" % commentSpaceLine("Disengage add roller");
-
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        if (isWireFeed) {
-            rv += m_G1 % writeCoordinates(target_location);
-            Velocity speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
-            if (getFeedrate() != speed) {
-                setFeedrate(speed);
-                rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-            }
-            rv += commentSpaceLine("TRAVEL LOWER Z");
+        if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         }
         else {
-            if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
-                rv += m_G1 % m_f %
-                      QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                      writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
-            }
-            else {
-                rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
-            }
-            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
+            rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         }
+        setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
     if (m_first_travel)         // if this is the first travel
@@ -273,12 +225,6 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
         }
     }
 
-    if (!m_wire_feed && params->contains(SS::kWireFeed)) {
-        rv += "H54" % commentSpaceLine("Zero UA and UT");
-        rv += "H122" % commentSpaceLine("Engage add roller");
-        m_wire_feed = true;
-    }
-
     rv += m_G1;
     // Update feedrate if needed
     if (getFeedrate() != speed || m_layer_start) {
@@ -289,20 +235,6 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
 
     // Writes WXYZ to destination
     rv += writeCoordinates(target_point);
-
-    if (m_wire_feed) {
-        m_wire_feed_total += params->setting<Distance>(SS::kWireFeed);
-        rv += " UA=" % QString::number(m_wire_feed_total.to(m_meta.m_distance_unit));
-
-        if (params->setting<bool>(SS::kFinalWireCoast)) {
-            rv += " H120";
-            m_wire_feed = false;
-        }
-
-        if (params->setting<bool>(SS::kFinalWireFeed)) {
-            rv += " H123";
-        }
-    }
 
     // Add comment for gcode parser
     if (path_modifiers != PathModifiers::kNone)

@@ -86,11 +86,6 @@ class PolymerSlicer : public TraditionalAST {
     //! \param part_sb: the settings to use
     void processLaserScan(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb);
 
-    //! \brief adds anchors to part if needed
-    //! \param part: the part to process
-    //! \param part_sb: the settings to use
-    void processAnchors(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb);
-
     //! \brief computes global layer assignments for a set of parts
     //! \param parts: parts to use
     //! \param settings: settings to use

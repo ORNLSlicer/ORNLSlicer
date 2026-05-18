@@ -1,6 +1,5 @@
 #include "slicing/layer_additions.h"
 
-#include <algorithm>
 #include <limits>
 
 #include <qcontainerfwd.h>
@@ -23,17 +22,12 @@
 #include "step/layer/island/raft_island.h"
 #include "step/layer/island/skirt_island.h"
 #include "step/layer/island/thermal_scan_island.h"
-#include "step/layer/island/wire_feed_island.h"
 #include "step/layer/layer.h"
 #include "step/layer/scan_layer.h"
 #include "step/step.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
-
-#if HAVE_WIRE_FEED
-    #include <wire_feed/wire_feed.h>
-#endif
 
 namespace ORNL {
 QSharedPointer<Layer> LayerAdditions::createRaft(QSharedPointer<Layer> layer) {
@@ -206,81 +200,4 @@ void LayerAdditions::addLaserScan(QSharedPointer<Part> part, int layer_index, do
     }
 }
 
-void LayerAdditions::createWireFeedIslands(QSharedPointer<Layer> layer,
-                                           QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
-                                           bool new_islands) {
-    QVector<PolygonList> split_geometry = next_layer_meta->modified_geometry.splitIntoParts();
-
-    auto surface = *std::min_element(split_geometry.begin(), split_geometry.end(),
-                                     [](const PolygonList& a, const PolygonList& b) { return a.min() < b.min(); });
-
-    auto base = *std::max_element(split_geometry.begin(), split_geometry.end(),
-                                  [](const PolygonList& a, const PolygonList& b) { return a.max() < b.max(); });
-
-    QSharedPointer<SettingsBase> base_sb = QSharedPointer<SettingsBase>::create(*next_layer_meta->settings);
-    base_sb->setSetting(PS::Inset::kEnable, false);
-    base_sb->setSetting(PS::Skin::kEnable, false);
-    base_sb->setSetting(PS::Infill::kEnable, false);
-    base_sb->setSetting(PS::Skeleton::kEnable, false);
-
-    QSharedPointer<PolymerIsland> base_isl = QSharedPointer<PolymerIsland>::create(
-        base, base_sb, next_layer_meta->settings_polygons, next_layer_meta->geometry);
-
-    QSharedPointer<PolymerIsland> surface_isl =
-        QSharedPointer<PolymerIsland>::create(surface, next_layer_meta->settings, next_layer_meta->settings_polygons);
-
-    QSharedPointer<WireFeedIsland> wire_feed_isl = QSharedPointer<WireFeedIsland>::create(
-        next_layer_meta->setting_bounded_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-    if (new_islands) {
-        layer->addIsland(IslandType::kPolymer, base_isl);
-        layer->addIsland(IslandType::kPolymer, surface_isl);
-        layer->addIsland(IslandType::kWireFeed, wire_feed_isl);
-    }
-    else {
-        layer->updateIslands(IslandType::kPolymer, QVector<QSharedPointer<IslandBase>> {base_isl, surface_isl});
-        layer->updateIslands(IslandType::kWireFeed, QVector<QSharedPointer<IslandBase>> {wire_feed_isl});
-    }
-}
-
-void LayerAdditions::addAnchors(QSharedPointer<Layer> layer) {
-#ifdef HAVE_WIRE_FEED
-    QSharedPointer<SettingsBase> anchor_sb = QSharedPointer<SettingsBase>::create(*layer->getSb());
-    anchor_sb->setSetting(PS::Perimeter::kCount, 1);
-    QSharedPointer<IslandBase> isl = layer->getIslands(IslandType::kWireFeed).first();
-
-    Point starting_point(INT_MAX, INT_MAX), ending_point(INT_MIN, INT_MIN);
-    for (Polygon poly : isl->getGeometry()) {
-        for (Point pt : poly) {
-            if (pt.x() < starting_point.x())
-                starting_point = pt;
-
-            if (pt.x() > ending_point.x())
-                ending_point = pt;
-        }
-    }
-    WireFeed::AnchorInfo ai = WireFeed::WireFeed::generateAnchors(
-        anchor_sb->setting<double>(ES::WireFeed::kAnchorObjectDistanceLeft),
-        anchor_sb->setting<double>(ES::WireFeed::kAnchorObjectDistanceRight),
-        anchor_sb->setting<double>(PS::Perimeter::kBeadWidth) / 2.0,
-        anchor_sb->setting<double>(ES::WireFeed::kAnchorWidth), anchor_sb->setting<double>(ES::WireFeed::kAnchorHeight),
-        starting_point.x(), starting_point.y(), ending_point.x(), ending_point.y());
-
-    for (QVector<QPair<double, double>> anchor : ai.anchors) {
-        Polygon poly(anchor);
-        PolygonList polyList;
-        polyList.addAll(QVector<Polygon> {poly});
-        QSharedPointer<AnchorIsland> anchor_island =
-            QSharedPointer<AnchorIsland>::create(polyList, anchor_sb, QVector<SettingsPolygon>());
-        layer->addIsland(IslandType::kPolymer, anchor_island);
-    }
-
-    QVector<Polyline> anchor_wire_feed;
-    for (QVector<QPair<double, double>> anchor_wire : ai.wire_feed_for_anchors)
-        anchor_wire_feed.push_back(Polyline(anchor_wire));
-
-    QSharedPointer<WireFeedIsland> wire_isl =
-        layer->getIslands(IslandType::kWireFeed).first().dynamicCast<WireFeedIsland>();
-    wire_isl->setAnchorWireFeed(anchor_wire_feed);
-#endif
-}
 } // namespace ORNL
