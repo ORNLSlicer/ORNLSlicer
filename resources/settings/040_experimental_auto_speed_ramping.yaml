@@ -1,0 +1,99 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "trajectory_angle_slow_down"
+    display: "Enable Trajectory Auto Speed Ramping"
+    type: "boolean"
+    tooltip: "If selected, will ramp speed for a certain distance at the intersections"
+    depends: {}
+    options: []
+    default: false
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kEnableTrajectoryAutoSpeedRamping"
+    local: true
+  - name: "trajectory_angle_threshold_slow_down"
+    display: "Angle Threshold"
+    type: "angle"
+    tooltip: "Based on the threshold for change in angle of trajectory, will ramp speed for a certain distance on a path segment"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 2.3562
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kAngleThreshold"
+    local: true
+  - name: "trajectory_angle_distance_slow_down"
+    display: "Min Ramp Down Distance"
+    type: "distance"
+    tooltip: "Distance for the Auto Speed Ramp Down trajectory move, when angle is over threshold"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 25400
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kMinRampDownDistance"
+    local: true
+  - name: "trajectory_angle_distance_speed_up"
+    display: "Min Ramp Up Distance"
+    type: "distance"
+    tooltip: "Distance for the Auto Speed Ramp Up trajectory move, when angle is over threshold"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 25400
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kMinRampUpDistance"
+    local: true
+  - name: "trajectory_angle_speed_slow_down"
+    display: "Ramping Down Speed"
+    type: "speed"
+    tooltip: "Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 25400
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kRampingDownSpeed"
+    local: true
+  - name: "trajectory_angle_extruder_speed_slow_down"
+    display: "Ramping Down Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 14
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kRampingDownExtruderSpeed"
+    local: true
+  - name: "trajectory_angle_speed_up"
+    display: "Ramping Up Speed"
+    type: "speed"
+    tooltip: "Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 50800
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kRampingUpSpeed"
+    local: true
+  - name: "trajectory_angle_extruder_speed_up"
+    display: "Ramping Up Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    depends: {"trajectory_angle_slow_down":true}
+    options: []
+    default: 28
+    minor: "Auto Speed Ramping"
+    major: "Experimental"
+    namespace: "Experimental::AutoSpeedRamping"
+    symbol: "kRampingUpExtruderSpeed"
+    local: true

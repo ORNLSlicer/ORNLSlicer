@@ -1,0 +1,27 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "image_resolution_x"
+    display: "Image Resolution X"
+    type: "distance"
+    tooltip: "Resolution in x dimension of images created using the image kernel"
+    depends: {"slicer_type":6}
+    options: []
+    default: 0
+    minor: "Image Resolution"
+    major: "Experimental"
+    namespace: "Experimental::ImageResolution"
+    symbol: "kImageResolutionX"
+    local: false
+  - name: "image_resolution_y"
+    display: "Image Resolution Y"
+    type: "distance"
+    tooltip: "Resolution in y dimension of images created using the image kernel"
+    depends: {"slicer_type":6}
+    options: []
+    default: 0
+    minor: "Image Resolution"
+    major: "Experimental"
+    namespace: "Experimental::ImageResolution"
+    symbol: "kImageResolutionY"
+    local: false

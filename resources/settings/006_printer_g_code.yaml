@@ -1,0 +1,99 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_default_startup_code"
+    display: "Use Default Startup G-Code"
+    type: "boolean"
+    tooltip: "If selected, default G-Code will be added to the header of the print. See the user's manual for what is included for each syntax."
+    depends: {}
+    options: []
+    default: false
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kUseDefaultStartupGCode"
+    local: false
+  - name: "enable_material_load"
+    display: "Material Load"
+    type: "boolean"
+    tooltip: "If selected, material loading/purging commands will be added to the header of the G-Code"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kMaterialLoad"
+    local: false
+  - name: "enable_wait_for_user"
+    display: "Wait For User"
+    type: "boolean"
+    tooltip: "If selected, M0 wait for user commands are added at the end of the header for the operator to initiate the print"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kWaitForUser"
+    local: false
+  - name: "enable_bounding_box"
+    display: "Demo Bounding Box"
+    type: "boolean"
+    tooltip: "If selected, will trace a perimeter bounding box around the max X/Y coordinates of the object before starting the print"
+    depends: {}
+    options: []
+    default: false
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kDemoBoundingBox"
+    local: false
+  - name: "enable_settings_footer"
+    display: "Settings Footer"
+    type: "boolean"
+    tooltip: "If selected, will write all settings values at the end of the g-code file as comments."
+    depends: {}
+    options: []
+    default: true
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kSettingsFooter"
+    local: false
+  - name: "start_code"
+    display: "Start Code"
+    type: "multiline_text"
+    tooltip: "Input G-Code to be executed before the start of the print"
+    depends: {}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kStartCode"
+    local: false
+  - name: "layer_change_code"
+    display: "Layer Change Code"
+    type: "multiline_text"
+    tooltip: "Input G-Code to be executed at each layer change"
+    depends: {}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kLayerChangeCode"
+    local: false
+  - name: "end_code"
+    display: "End Code"
+    type: "multiline_text"
+    tooltip: "Input G-Code to be executed after the end of the print"
+    depends: {}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kEndCode"
+    local: false

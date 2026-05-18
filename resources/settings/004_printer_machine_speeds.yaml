@@ -1,0 +1,99 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "min_xy_speed"
+    display: "Minimum XY Speed"
+    type: "speed"
+    tooltip: "Minimum XY speed of the machine"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMinimumXYSpeed"
+    local: false
+  - name: "max_xy_speed"
+    display: "Maximum XY Speed"
+    type: "speed"
+    tooltip: "Maximum XY speed of the machine"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMaximumXYSpeed"
+    local: false
+  - name: "min_extruder_speed"
+    display: "Minimum Extruder Speed"
+    type: "rpm"
+    tooltip: "Minimum speed of the extruder"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMinimumExtruderSpeed"
+    local: false
+  - name: "max_extruder_speed"
+    display: "Maximum Extruder Speed"
+    type: "rpm"
+    tooltip: "Maximum speed of the extruder"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMaximumExtruderSpeed"
+    local: false
+  - name: "w_table_speed"
+    display: "W Table Speed"
+    type: "speed"
+    tooltip: "Speed to move the table"
+    depends: {"enable_w_axis":true}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kWTableSpeed"
+    local: false
+  - name: "z_speed"
+    display: "Z Speed"
+    type: "speed"
+    tooltip: "Speed for Z axis moves"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kZSpeed"
+    local: false
+  - name: "gkn_print_speed"
+    display: "GKN Print Speed"
+    type: "speed"
+    tooltip: "Movement speed for all print moves on GKN syntax"
+    depends: {"syntax":4}
+    options: []
+    default: 0
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kGKNPrintSpeed"
+    local: false
+  - name: "extruder_gear_ratio"
+    display: "Extruder Gear Ratio"
+    type: "unitless_float"
+    tooltip: "Sets the gear ratio for the extruder. This number is multiplied by any output RPM i.e. a Perimeter RPM of 100 and Gear Ratio of 7 would output 700RPM to the G-Code"
+    depends: {"machine_type":0}
+    options: []
+    default: 1
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kExtruderGearRatio"
+    local: false

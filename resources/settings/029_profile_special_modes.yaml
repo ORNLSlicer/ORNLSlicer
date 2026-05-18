@@ -1,0 +1,87 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "smoothing"
+    display: "Enable Smoothing"
+    type: "boolean"
+    tooltip: "If selected, a smoothing process will be applied on all contours of the STL"
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableSmoothing"
+    local: false
+  - name: "smoothing_tolerance"
+    display: "Smoothing Tolerance"
+    type: "distance"
+    tooltip: "The tolerance for the smoothing algorithm"
+    depends: {"smoothing":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSmoothingTolerance"
+    local: false
+  - name: "enable_spiralize_mode"
+    display: "Enable Spiralize Mode"
+    type: "boolean"
+    tooltip: "If selected, extruder will never lift and part will be made in one continuous path without infill"
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableSpiralizeMode"
+    local: true
+  - name: "enable_fix_model"
+    display: "Enable Fix Model"
+    type: "boolean"
+    tooltip: "If selected, manifold issues with the model will be repaired"
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableFixModel"
+    local: false
+  - name: "oversize"
+    display: "Oversize Part"
+    type: "boolean"
+    tooltip: "If selected, the part can be oversized in the X and Y dimensions to allow for a machining tolerance"
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kOversizePart"
+    local: false
+  - name: "oversize_distance"
+    display: "Oversize Distance"
+    type: "location"
+    tooltip: "Distance to oversize the part in the X and Y directions"
+    depends: {"oversize":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kOversizeDistance"
+    local: false
+  - name: "enable_width_height"
+    display: "Use Width and Height"
+    type: "boolean"
+    tooltip: "If selected, G-Code will not command feeds and speed and instead send desired bead geometry for the HMI to interpret"
+    depends: {"syntax":12}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kUseWidthandHeight"
+    local: false

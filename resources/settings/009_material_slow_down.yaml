@@ -1,0 +1,375 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "perimeter_slow_down"
+    display: "Enable Perimeter Slow Down"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the end of a perimeter path"
+    depends: {"perimeter":true}
+    options: []
+    default: false
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kEnablePerimeterSlowDown"
+    local: true
+  - name: "perimeter_slow_down_distance"
+    display: "Perimeter Slow Down Distance"
+    type: "distance"
+    tooltip: "Distance for the perimeter slow down move"
+    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kPerimeterSlowDownDistance"
+    local: true
+  - name: "perimeter_slow_down_lift_distance"
+    display: "Perimeter Slow Down Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift during the perimeter slow down move"
+    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kPerimeterSlowDownLiftDistance"
+    local: true
+  - name: "perimeter_slow_down_speed"
+    display: "Perimeter Slow Down Speed"
+    type: "speed"
+    tooltip: "Speed for the perimeter slow down move"
+    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kPerimeterSlowDownSpeed"
+    local: true
+  - name: "perimeter_slow_down_extruder_speed"
+    display: "Perimeter Slow Down Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the perimeter slow down move"
+    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_slow_down":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kPerimeterSlowDownExtruderSpeed"
+    local: true
+  - name: "perimeter_slow_down_extruder_off_distance"
+    display: "Perimeter Slow Down Extruder Cutoff Distance"
+    type: "distance"
+    tooltip: "Distance from the end of the perimeter slow down move to turn the extruder off"
+    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kPerimeterSlowDownExtruderCutoffDistance"
+    local: true
+  - name: "inset_slow_down"
+    display: "Enable Inset Slow Down"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the end of an inset path"
+    depends: {"inset":true}
+    options: []
+    default: false
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kEnableInsetSlowDown"
+    local: true
+  - name: "inset_slow_down_distance"
+    display: "Inset Slow Down Distance"
+    type: "distance"
+    tooltip: "Distance for the inset slow down move"
+    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInsetSlowDownDistance"
+    local: true
+  - name: "inset_slow_down_lift_distance"
+    display: "Inset Slow Down Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift during the inset slow down move"
+    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInsetSlowDownLiftDistance"
+    local: true
+  - name: "inset_slow_down_speed"
+    display: "Inset Slow Down Speed"
+    type: "speed"
+    tooltip: "Speed for the inset slow down move"
+    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInsetSlowDownSpeed"
+    local: true
+  - name: "inset_slow_down_extruder_speed"
+    display: "Inset Slow Down Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the inset slow down move"
+    depends: {"AND":[{"inset":true},{"AND":[{"inset_slow_down":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInsetSlowDownExtruderSpeed"
+    local: true
+  - name: "inset_slow_down_extruder_off_distance"
+    display: "Inset Slow Down Extruder Cutoff Distance"
+    type: "distance"
+    tooltip: "Distance from the end of the inset slow down move to turn the extruder off"
+    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInsetSlowDownExtruderCutoffDistance"
+    local: true
+  - name: "skin_slow_down"
+    display: "Enable Skin Slow Down"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the end of a skin path"
+    depends: {"skin":true}
+    options: []
+    default: false
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kEnableSkinSlowDown"
+    local: true
+  - name: "skin_slow_down_distance"
+    display: "Skin Slow Down Distance"
+    type: "distance"
+    tooltip: "Distance for the skin slow down move"
+    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkinSlowDownDistance"
+    local: true
+  - name: "skin_slow_down_lift_distance"
+    display: "Skin Slow Down Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift during the skin slow down move"
+    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkinSlowDownLiftDistance"
+    local: true
+  - name: "skin_slow_down_speed"
+    display: "Skin Slow Down Speed"
+    type: "speed"
+    tooltip: "Speed for the skin slow down move"
+    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkinSlowDownSpeed"
+    local: true
+  - name: "skin_slow_down_extruder_speed"
+    display: "Skin Slow Down Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the skin slow down move"
+    depends: {"AND":[{"skin":true},{"AND":[{"skin_slow_down":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkinSlowDownExtruderSpeed"
+    local: true
+  - name: "skin_slow_down_extruder_off_distance"
+    display: "Skin Slow Down Extruder Cutoff Distance"
+    type: "distance"
+    tooltip: "Distance from the end of the skin slow down move to turn the extruder off"
+    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkinSlowDownExtruderCutoffDistance"
+    local: true
+  - name: "infill_slow_down"
+    display: "Enable Infill Slow Down"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the end of an infill path"
+    depends: {"infill":true}
+    options: []
+    default: false
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kEnableInfillSlowDown"
+    local: true
+  - name: "infill_slow_down_distance"
+    display: "Infill Slow Down Distance"
+    type: "distance"
+    tooltip: "Distance for the infill slow down move"
+    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInfillSlowDownDistance"
+    local: true
+  - name: "infill_slow_down_lift_distance"
+    display: "Infill Slow Down Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift during the infill slow down move"
+    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInfillSlowDownLiftDistance"
+    local: true
+  - name: "infill_slow_down_speed"
+    display: "Infill Slow Down Speed"
+    type: "speed"
+    tooltip: "Speed for the infill slow down move"
+    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInfillSlowDownSpeed"
+    local: true
+  - name: "infill_slow_down_extruder_speed"
+    display: "Infill Slow Down Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the infill slow down move"
+    depends: {"AND":[{"infill":true},{"AND":[{"infill_slow_down":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInfillSlowDownExtruderSpeed"
+    local: true
+  - name: "infill_slow_down_extruder_off_distance"
+    display: "Infill Slow Down Extruder Cutoff Distance"
+    type: "distance"
+    tooltip: "Distance from the end of the infill slow down move to turn the extruder off"
+    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kInfillSlowDownExtruderCutoffDistance"
+    local: true
+  - name: "skeleton_slow_down"
+    display: "Enable Skeleton Slow Down"
+    type: "boolean"
+    tooltip: "If selected, will move at a slower speed for a certain distance at the end of a skeleton path"
+    depends: {"skeleton":true}
+    options: []
+    default: false
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kEnableSkeletonSlowDown"
+    local: true
+  - name: "skeleton_slow_down_distance"
+    display: "Skeleton Slow Down Distance"
+    type: "distance"
+    tooltip: "Distance for the skeleton slow down move"
+    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkeletonSlowDownDistance"
+    local: true
+  - name: "skeleton_slow_down_lift_distance"
+    display: "Skeleton Slow Down Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift during the skeleton slow down move"
+    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkeletonSlowDownLiftDistance"
+    local: true
+  - name: "skeleton_slow_down_speed"
+    display: "Skeleton Slow Down Speed"
+    type: "speed"
+    tooltip: "Speed for the skeleton slow down move"
+    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkeletonSlowDownSpeed"
+    local: true
+  - name: "skeleton_slow_down_extruder_speed"
+    display: "Skeleton Slow Down Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder Speed for the skeleton slow down move"
+    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_slow_down":true},{"enable_width_height":false}]}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkeletonSlowDownExtruderSpeed"
+    local: true
+  - name: "skeleton_slow_down_extruder_off_distance"
+    display: "Skeleton Slow Down Extruder Cutoff Distance"
+    type: "distance"
+    tooltip: "Distance from the end of the skeleton slow down move to turn the extruder off"
+    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    options: []
+    default: 0
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSkeletonSlowDownExtruderCutoffDistance"
+    local: true
+  - name: "slow_down_area_modifier"
+    display: "Slow Down Bead Area Modifier"
+    type: "percentage"
+    tooltip: "Percent multiplier for bead area of slow down paths"
+    depends: {"AND":[{"enable_width_height":true},{"OR":[{"perimeter_slow_down":true},{"OR":[{"inset_slow_down":true},{"OR":[{"skin_slow_down":true},{"OR":[{"infill_slow_down":true},{"skeleton_slow_down":true}]}]}]}]}]}
+    options: []
+    default: 100
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kSlowDownBeadAreaModifier"
+    local: true

@@ -1,0 +1,38 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "printing_material"
+    display: "Printing Material"
+    type: "enumeration"
+    tooltip: "Material type used to calculate approximate weight\u00a0"
+    depends: {}
+    options:
+      - "ABS20CF"
+      - "ABS"
+      - "PPS"
+      - "PPS50CF"
+      - "PPSU"
+      - "PPSU25CF"
+      - "PESU"
+      - "PESU25CF"
+      - "PLA"
+      - "Concrete"
+      - "Other"
+    default: 0
+    minor: "Density"
+    major: "Material"
+    namespace: "Material::Density"
+    symbol: "kPrintingMaterial"
+    local: false
+  - name: "other_density"
+    display: "Other Density"
+    type: "density"
+    tooltip: "Density of material being used to print"
+    depends: {"printing_material":10}
+    options: []
+    default: 0
+    minor: "Density"
+    major: "Material"
+    namespace: "Material::Density"
+    symbol: "kOtherDensity"
+    local: false

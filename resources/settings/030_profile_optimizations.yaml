@@ -1,0 +1,273 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "island_order_optimization"
+    display: "Island Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of order optimizer to use on islands"
+    depends: {}
+    options:
+      - "Next Closest"
+      - "Next Farthest"
+      - "Shortest Distance (approximate)"
+      - "Shortest Distance (brute force)"
+      - "Least Recently Visited"
+      - "Random"
+      - "Custom Location"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kIslandOrderOptimization"
+    local: true
+  - name: "custom_island_order_x_location"
+    display: "Custom Island Point X Location"
+    type: "location"
+    tooltip: "X Coordinate for Custom Point Optimization Location"
+    depends: {"island_order_optimization":6}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomIslandPointXLocation"
+    local: true
+  - name: "custom_island_order_y_location"
+    display: "Custom Island Point Y Location"
+    type: "location"
+    tooltip: "Y Coordinate for Custom Point Optimization Location"
+    depends: {"island_order_optimization":6}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomIslandPointYLocation"
+    local: true
+  - name: "path_order_optimization"
+    display: "Path Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of order optimizer to use on paths"
+    depends: {}
+    options:
+      - "Next Closest"
+      - "Next Farthest"
+      - "Random"
+      - "Outside In"
+      - "Inside Out"
+      - "Custom Location"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kPathOrderOptimization"
+    local: true
+  - name: "custom_path_order_x_location"
+    display: "Custom Path Point X Location"
+    type: "location"
+    tooltip: "X Coordinate for Custom Point Optimization Location"
+    depends: {"path_order_optimization":5}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPathPointXLocation"
+    local: true
+  - name: "custom_path_order_y_location"
+    display: "Custom Path Point Y Location"
+    type: "location"
+    tooltip: "Y Coordinate for Custom Point Optimization Location"
+    depends: {"path_order_optimization":5}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPathPointYLocation"
+    local: true
+  - name: "point_order_optimization"
+    display: "Point Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of order optimizer to use on point selection after a path has been determined"
+    depends: {}
+    options:
+      - "Next Closest"
+      - "Next Farthest"
+      - "Random"
+      - "Consecutive"
+      - "Custom Location"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kPointOrderOptimization"
+    local: true
+  - name: "enable_point_order_segment_breaking"
+    display: "Enable Point Order Segment Breaking"
+    type: "boolean"
+    tooltip: "Allows point order optimization to split a closed contour segment so the seam can start at the closest point along an edge."
+    depends: {"OR":[{"point_order_optimization":0},{"point_order_optimization":4}]}
+    options: []
+    default: false
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kEnablePointOrderSegmentBreaking"
+    local: true
+  - name: "local_randomness_enable"
+    display: "Enable Local Randomness"
+    type: "boolean"
+    tooltip: "Enables local randomness within a specified radius after the selected point optimization scheme"
+    depends: {}
+    options: []
+    default: false
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kEnableLocalRandomness"
+    local: true
+  - name: "local_randomness_radius"
+    display: "Local Randomness Radius"
+    type: "distance"
+    tooltip: "Radius within which the travel connection will be randomized after having computed connectivity via point optimization scheme"
+    depends: {"local_randomness_enable":true}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kLocalRandomnessRadius"
+    local: true
+  - name: "enable_min_distance"
+    display: "Enable Minimum Distance"
+    type: "boolean"
+    tooltip: "Enables a minimum distance threshold when using next closest point optimization"
+    depends: {"point_order_optimization":0}
+    options: []
+    default: false
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kEnableMinimumDistance"
+    local: true
+  - name: "min_distance_threshold"
+    display: "Minimum Distance Threshold"
+    type: "distance"
+    tooltip: "Minimum distance that a point must be when selected via next closest point optimization. If none are found, furthest point is selected."
+    depends: {"AND":[{"point_order_optimization":0},{"enable_min_distance":true}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kMinimumDistanceThreshold"
+    local: true
+  - name: "consecutive_distance_threshold"
+    display: "Consecutive Distance Threshold"
+    type: "distance"
+    tooltip: "Sets minimum distance to rotate consecutive point layer to layer"
+    depends: {"point_order_optimization":3}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kConsecutiveDistanceThreshold"
+    local: true
+  - name: "custom_point_order_x_location"
+    display: "Custom Point X Location"
+    type: "location"
+    tooltip: "X Coordinate for Custom Point for Point Optimization Scheme"
+    depends: {"point_order_optimization":4}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPointXLocation"
+    local: true
+  - name: "custom_point_order_y_location"
+    display: "Custom Point Y Location"
+    type: "location"
+    tooltip: "Y Coordinate for Custom Point for Point Optimization Scheme"
+    depends: {"point_order_optimization":4}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPointYLocation"
+    local: true
+  - name: "enable_second_custom_point_location"
+    display: "Add Second Custom Location"
+    type: "boolean"
+    tooltip: "Enables a second custom point location so that points alternate layer to layer. The second point is used for even numbered layers."
+    depends: {"point_order_optimization":4}
+    options: []
+    default: false
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kAddSecondCustomLocation"
+    local: true
+  - name: "enable_second_point_every_two"
+    display: "Enable Second Custom Location Every Two Layers"
+    type: "boolean"
+    tooltip: "Enables the second custom point, but custom points are alternated every two layers. I.e. layers 1 and 2 use the original point and layers 3 and 4 use the second point."
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"point_order_optimization":4}]}
+    options: []
+    default: false
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kEnableSecondCustomLocationEveryTwoLayers"
+    local: true
+  - name: "custom_second_point_order_x_location"
+    display: "Second Custom Point X Location"
+    type: "location"
+    tooltip: "X Coordinate for Second Custom Point for Point Optimization Scheme"
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"point_order_optimization":4}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSecondCustomPointXLocation"
+    local: true
+  - name: "custom_second_point_order_y_location"
+    display: "Second Custom Point Y Location"
+    type: "location"
+    tooltip: "Y Coordinate for Second Custom Point for Point Optimization Scheme"
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"point_order_optimization":4}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSecondCustomPointYLocation"
+    local: true
+  - name: "custom_point_order_x_increment"
+    display: "Custom Point X Increment"
+    type: "location"
+    tooltip: "Distance to increment the custom point X location from layer to layer. This is used for angled printing to move the seam along with the slicing plane."
+    depends: {"point_order_optimization":4}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPointXIncrement"
+    local: true
+  - name: "custom_point_order_y_increment"
+    display: "Custom Point Y Increment"
+    type: "location"
+    tooltip: "Distance to increment the custom point Y location from layer to layer. This is used for angled printing to move the seam along with the slicing plane."
+    depends: {"point_order_optimization":4}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPointYIncrement"
+    local: true

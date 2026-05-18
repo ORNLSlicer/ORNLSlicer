@@ -1,0 +1,422 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "infill"
+    display: "Enable Infill"
+    type: "boolean"
+    tooltip: "If selected, infill will be generated"
+    depends: {}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableInfill"
+    local: true
+  - name: "infill_density"
+    display: "Infill Density"
+    type: "percentage100"
+    tooltip: "Percent of area to be covered by infill"
+    depends: {"AND":[{"infill":true},{"infill_manual_spacing":false}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillDensity"
+    local: true
+  - name: "infill_manual_spacing"
+    display: "Enable Manual Infill Line Spacing"
+    type: "boolean"
+    tooltip: "Override infill density and manually define distance between beads on infill"
+    depends: {"infill":true}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableManualInfillLineSpacing"
+    local: true
+  - name: "infill_line_spacing"
+    display: "Infill Line Spacing"
+    type: "distance"
+    tooltip: "Distance between beads on sparse infill"
+    depends: {"AND":[{"infill":true},{"infill_manual_spacing":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillLineSpacing"
+    local: true
+  - name: "infill_pattern"
+    display: "Infill Pattern"
+    type: "enumeration"
+    tooltip: "Pattern for the infill"
+    depends: {"infill":true}
+    options:
+      - "Lines"
+      - "Grid"
+      - "Concentric"
+      - "Inside Out Concentric"
+      - "Triangles"
+      - "Hexagons and Triangles"
+      - "Honeycomb"
+      - "Radial Hatch"
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillPattern"
+    local: true
+  - name: "infill_lines_partitioned_linking"
+    display: "Enable Partitioned Linking of Infill Lines"
+    type: "boolean"
+    tooltip: "If enabled and the Infill Pattern is Lines, line segments are first partitioned using the selected Path Order Optimization, then linked. If disabled, line segments are linked monolithically."
+    depends: {"AND":[{"infill":true},{"infill_pattern":0}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillLinesPartitionedLinking"
+    local: true
+  - name: "infill_based_on_printer"
+    display: "Infill Based on Printer Area"
+    type: "boolean"
+    tooltip: "If selected, infill pattern is generated based on the printer area rather than the object. This means the infill pattern is specific to where the object is within the printer."
+    depends: {"infill":true}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillBasedonPrinterArea"
+    local: true
+  - name: "infill_angle"
+    display: "Infill Angle"
+    type: "angle"
+    tooltip: "Sets the angle for the infill"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillAngle"
+    local: true
+  - name: "infill_angle_rotation"
+    display: "Infill Angle Rotation"
+    type: "angle"
+    tooltip: "Determines how much the infill angle rotates on every layer, default 90 degree"
+    depends: {"infill":true}
+    options: []
+    default: 1.570796327
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillAngleRotation"
+    local: true
+  - name: "infill_overlap_distance"
+    display: "Infill Overlap Distance"
+    type: "location"
+    tooltip: "Width of the infill overlaps with exterior"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillOverlapDistance"
+    local: true
+  - name: "infill_width"
+    display: "Infill Bead Width"
+    type: "distance"
+    tooltip: "Width of the bead for the infill print moves"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillBeadWidth"
+    local: true
+  - name: "infill_speed"
+    display: "Infill Speed"
+    type: "speed"
+    tooltip: "Speed for the infill paths"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillSpeed"
+    local: true
+  - name: "infill_extruder_speed"
+    display: "Infill Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder speed for the infill"
+    depends: {"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillExtruderSpeed"
+    local: true
+  - name: "infill_extrusion_multiplier"
+    display: "Infill Extrusion Multiplier"
+    type: "unitless_float"
+    tooltip: "Extrusion multiplier to increase/decrease flowrate for infill paths for systems without RPM control"
+    depends: {"AND":[{"infill":true},{"OR":[{"machine_type":1},{"syntax":29}]}]}
+    options: []
+    default: 1
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillExtrusionMultiplier"
+    local: true
+  - name: "infill_minimum_path_length"
+    display: "Minimum Infill Path Length"
+    type: "distance"
+    tooltip: "Infill extrusion paths less than this value are deleted"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kMinimumInfillPathLength"
+    local: true
+  - name: "infill_maximum_path_length"
+    display: "Maximum Infill Path Length"
+    type: "distance"
+    tooltip: "Infill extrusion paths greater than this are split"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kMaximumInfillPathLength"
+    local: true
+  - name: "infill_combine_every_x_layers"
+    display: "Combine Infill Every X Layers"
+    type: "number"
+    tooltip: "Prints perimeter for X amount of layers then goes back and prints all of the infill for those layers as one thicker layer, saves time"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kCombineInfillEveryXLayers"
+    local: false
+  - name: "infill_combine_layer_shift"
+    display: "Shift Combine Infill Start Layer"
+    type: "number"
+    tooltip: "Shift the first starting layer of infill when using combine infill every X layers. A shift value of 1 paired with a combine value of 4 would mean infill on layers 5, 9, 13 and so on."
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kShiftCombineInfillStartLayer"
+    local: false
+  - name: "infill_sector_count"
+    display: "Infill Sector Count"
+    type: "number"
+    tooltip: "Number of sectors for radial hatch pattern"
+    depends: {"AND":[{"infill":true},{"infill_pattern":7}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillSectorCount"
+    local: true
+  - name: "infill_power"
+    display: "Infill Power"
+    type: "power"
+    tooltip: "Power for infill"
+    depends: {"AND":[{"infill":true},{"syntax":16}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillPower"
+    local: true
+  - name: "infill_focus"
+    display: "Infill Focus"
+    type: "distance"
+    tooltip: "Focus for infill"
+    depends: {"AND":[{"infill":true},{"syntax":16}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillFocus"
+    local: true
+  - name: "infill_spot_size"
+    display: "Infill Spot Size"
+    type: "distance"
+    tooltip: "Spot size for infill"
+    depends: {"AND":[{"infill":true},{"syntax":16}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillSpotSize"
+    local: true
+  - name: "enable_partition_scheme"
+    display: "Enable Parition Scheme"
+    type: "boolean"
+    tooltip: "Enables geometric partitioning of hatches"
+    depends: {"AND":[{"infill":true},{"slicer_type":3}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableParitionScheme"
+    local: true
+  - name: "infill_partition_scheme"
+    display: "Hatch Partition Scheme"
+    type: "enumeration"
+    tooltip: "Scheme for geometric partitioning"
+    depends: {"AND":[{"infill":true},{"AND":[{"slicer_type":3},{"enable_partition_scheme":true}]}]}
+    options:
+      - "Convex"
+      - "Monotone X"
+      - "Monotone Y"
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kHatchPartitionScheme"
+    local: true
+  - name: "enable_infill_stripe"
+    display: "Enable Striping"
+    type: "boolean"
+    tooltip: "If selected, stripes will be overlaid onto pathing"
+    depends: {"infill":true}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableStriping"
+    local: true
+  - name: "infill_stripe_width"
+    display: "Stripe Width"
+    type: "distance"
+    tooltip: "Width of stripe along x axis"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeWidth"
+    local: true
+  - name: "infill_stripe_height"
+    display: "Stripe Height"
+    type: "distance"
+    tooltip: "Height of stripe along y axis"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeHeight"
+    local: true
+  - name: "infill_stripe_angle"
+    display: "Stripe Angle"
+    type: "angle"
+    tooltip: "Sets the angle for the stripe"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeAngle"
+    local: true
+  - name: "infill_stripe_angle_rotation"
+    display: "Stripe Angle Rotation"
+    type: "angle"
+    tooltip: "Determines how much the stripe angle rotates on every layer, default 90 degree"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 1.570796327
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeAngleRotation"
+    local: true
+  - name: "infill_stripe_overlap_x"
+    display: "Stripe Overlap X Distance"
+    type: "location"
+    tooltip: "Overlap of stripes in x direction"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeOverlapXDistance"
+    local: true
+  - name: "infill_stripe_overlap_y"
+    display: "Stripe Overlap Y Distance"
+    type: "location"
+    tooltip: "Overlap of stripes in y direction"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeOverlapYDistance"
+    local: true
+  - name: "infill_stripe_shift_x"
+    display: "Stripe Shift X Distance"
+    type: "location"
+    tooltip: "Shift of stripes in x direction"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeShiftXDistance"
+    local: true
+  - name: "infill_stripe_shift_y"
+    display: "Stripe Shift Y Distance"
+    type: "location"
+    tooltip: "Shift of stripes in y direction"
+    depends: {"enable_infill_stripe":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kStripeShiftYDistance"
+    local: true
+  - name: "infill_alternating_lines"
+    display: "Enable Infill Alternating Lines"
+    type: "boolean"
+    tooltip: "If selected, infill lines will be shifted for an alternating pattern of full and half heights."
+    depends: {"infill_alternating_lines":true}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableInfillAlternatingLines"
+    local: true

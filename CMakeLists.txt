@@ -118,27 +118,42 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
 endif()
 
-function(CreateODSTarget)
+function(CreateSettingsTarget)
     option(ORNLSLICER_AUTO_GENERATE_MASTER_CONFIG "Generates the master configuration file as part of the build process" ON)
 
     if(ORNLSLICER_AUTO_GENERATE_MASTER_CONFIG)
         find_package(Python COMPONENTS Interpreter)
         if(Python_FOUND)
-            message(STATUS "Python interpreter found, enabling automatic master ODS -> JSON generator.")
+            file(
+                GLOB_RECURSE MASTER_SETTING_SOURCES
+                CONFIGURE_DEPENDS
+                "${CMAKE_CURRENT_SOURCE_DIR}/resources/settings/*.yaml"
+            )
+
+            if(NOT MASTER_SETTING_SOURCES)
+                message(FATAL_ERROR "No settings YAML files found under resources/settings.")
+            endif()
+
+            message(STATUS "Python interpreter found, enabling automatic master settings generator.")
             add_custom_command(
                 OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf
-                DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/mss.ods
+                DEPENDS
+                    ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_master_config.py
+                    ${MASTER_SETTING_SOURCES}
                 COMMENT "Generating master settings json"
                 COMMAND
-                    ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/ods_to_json.py
-                    ${CMAKE_CURRENT_SOURCE_DIR}/mss.ods
+                    ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_master_config.py
+                    ${CMAKE_CURRENT_SOURCE_DIR}/resources/settings
                     ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf
+                VERBATIM
             )
+            add_custom_target(generate_master_config DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf)
+            add_dependencies(${PROJECT_NAME}_obj generate_master_config)
         else()
-            message(FATAL_ERROR "Python not found, ODS -> JSON generator cannot be enabled.")
+            message(FATAL_ERROR "Python not found, master settings generator cannot be enabled.")
         endif()
     else()
-        message(STATUS "Automatic ODS -> JSON generator not enabled.")
+        message(STATUS "Automatic master settings generator not enabled.")
     endif()
 endfunction()
 
@@ -168,7 +183,7 @@ function(CreateDocTarget)
     endif()
 endfunction()
 
-CreateODSTarget()
+CreateSettingsTarget()
 CreateDocTarget()
 
 include(GNUInstallDirs)

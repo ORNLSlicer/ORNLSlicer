@@ -1,0 +1,176 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "additional_meld_output"
+    display: "Enable Meld Companion File Output"
+    type: "boolean"
+    tooltip: "Additional companion file csv output for Meld syntax"
+    depends: {"syntax":24}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableMeldCompanionFileOutput"
+    local: false
+  - name: "meld_discrete_feed_commands"
+    display: "Enable Meld Discrete Feed Commands"
+    type: "boolean"
+    tooltip: "Uses discrete feed commands for g-code output"
+    depends: {"syntax":24}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableMeldDiscreteFeedCommands"
+    local: false
+  - name: "tormach_file_output"
+    display: "Enable Tormach File Output"
+    type: "boolean"
+    tooltip: "Modified output file format for Tormach will be created."
+    depends: {"syntax":27}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableTormachFileOutput"
+    local: false
+  - name: "tormach_mode"
+    display: "Tormach Print Mode"
+    type: "enumeration"
+    tooltip: "Select the welder print mode for the Tormach system."
+    depends: {"syntax":27}
+    options:
+      - "Mode_21"
+      - "Mode_40"
+      - "Mode_102"
+      - "Mode_274"
+      - "Mode_509"
+    default: 0
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kTormachPrintMode"
+    local: false
+  - name: "aml3d_file_output"
+    display: "Enable AML3D Companion File Output"
+    type: "boolean"
+    tooltip: "Modified output file format for AML3D will be created."
+    depends: {"syntax":28}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableAML3DCompanionFileOutput"
+    local: false
+  - name: "aml3d_weave_length"
+    display: "AML3D Weave Length"
+    type: "distance"
+    tooltip: "Wave length of the weave patten."
+    depends: {"syntax":28}
+    options: []
+    default: 0
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kAML3DWeaveLength"
+    local: false
+  - name: "aml3d_weave_width"
+    display: "AML3D Weave Width"
+    type: "distance"
+    tooltip: "Amplitude of the weave patten."
+    depends: {"syntax":28}
+    options: []
+    default: 0
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kAML3DWeaveWidth"
+    local: false
+  - name: "sandia_file_output"
+    display: "Enable Sandia Companion File Output"
+    type: "boolean"
+    tooltip: "Modified output file format for Sandia will be created."
+    depends: {"syntax":30}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableSandiaCompanionFileOutput"
+    local: false
+  - name: "sandia_metal_file"
+    display: "Use Sandia Metal Printing Mode"
+    type: "boolean"
+    tooltip: "If enabled, the Sandia companion file will use metal deposition commands. If disabled, companion file will use polymer commands."
+    depends: {"AND":[{"syntax":30},{"sandia_file_output":true}]}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kUseSandiaMetalPrintingMode"
+    local: false
+  - name: "sandia_cvel"
+    display: "Use Sandia C_VEL"
+    type: "boolean"
+    tooltip: "If enabled, the Sandia companion file will use C_VEL rather than C_DIS."
+    depends: {"AND":[{"syntax":30},{"sandia_file_output":true}]}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kUseSandiaC_VEL"
+    local: false
+  - name: "marlin_file_output"
+    display: "Enable Marlin Companion File Output"
+    type: "boolean"
+    tooltip: "Additional output file format to be used for simulation."
+    depends: {"syntax":11}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableMarlinCompanionFileOutput"
+    local: false
+  - name: "marlin_include_travels"
+    display: "Include Travel Flag for Marlin Output"
+    type: "boolean"
+    tooltip: "If enabled, a 9th column will be added to the Marlin companion file that signifies if the move is a travel. If disabled, travels are included but without the ninth column in the output."
+    depends: {"marlin_file_output":true}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kIncludeTravelFlagforMarlinOutput"
+    local: false
+  - name: "simulation_file_output"
+    display: "Enable Simulation Companion File Output"
+    type: "boolean"
+    tooltip: "If enabled, a text file listing timestamp, coordinates, and extrusion on/off will be generated for use with ABAQUS. Works with Cincinnati and Marlin Pellet."
+    depends: {"OR":[{"syntax":1},{"syntax":12}]}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableSimulationCompanionFileOutput"
+    local: false
+  - name: "amcm_file_output"
+    display: "Enable AMCM SRC File Output"
+    type: "boolean"
+    tooltip: "If enabled, a src file for AMCM will be saved when exporting the g-code file."
+    depends: {"OR":[{"syntax":25},{"syntax":34}]}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableAMCMSRCFileOutput"
+    local: false
