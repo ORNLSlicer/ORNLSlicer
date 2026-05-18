@@ -62,8 +62,6 @@ void TraditionalAST::doSlice() {
 
         QList<QSharedPointer<Step>> allSteps = part->steps();
         for (QSharedPointer<Step> step : allSteps) {
-            step->setSync(part->getSync());
-
             if (step->isDirty() && !m_step_queue.contains(step)) {
                 m_step_queue.append(step);
             }

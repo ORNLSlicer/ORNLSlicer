@@ -14,7 +14,6 @@
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/brim.h"
 #include "step/layer/regions/infill.h"
 #include "step/layer/regions/inset.h"
@@ -178,12 +177,12 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
 
 const PolygonList& IslandBase::getGeometry() const { return m_geometry; }
 
-void IslandBase::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void IslandBase::compute(uint layer_num) {
     PolygonList pl = m_geometry;
 
     for (QSharedPointer<RegionBase> r : m_regions) {
         r->setGeometry(pl);
-        r->compute(layer_num, sync);
+        r->compute(layer_num);
         pl = r->getGeometry();
     }
 

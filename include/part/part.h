@@ -13,7 +13,6 @@
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/mesh_face.h"
 #include "geometry/mesh/mesh_vertex.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/layer.h"
 #include "step/layer/scan_layer.h"
 #include "utilities/enums.h"
@@ -272,14 +271,6 @@ class Part : public QEnableSharedFromThis<Part> {
     //! \return if any step is marked dirty
     bool isPartDirty();
 
-    //! \brief gets the step sync manager
-    //! \return the manager for step synchronization
-    QSharedPointer<SyncManager> getSync() const;
-
-    //! \brief sets the step sync manager
-    //! \param the new step synchronizer
-    void setSync(const QSharedPointer<SyncManager>& sync);
-
     //! \brief Sets template being applied to currently selected part.
     void setCurrentPartTemplate(QString current_template);
 
@@ -323,9 +314,6 @@ class Part : public QEnableSharedFromThis<Part> {
 
     //! \brief Step pairs that constitute the part
     QList<StepPair> m_step_pairs;
-
-    //! \brief Manages syncing of mutiple step threads
-    QSharedPointer<SyncManager> m_sync;
 
     //! \brief Settings for the part.
     QSharedPointer<SettingsBase> m_sb;

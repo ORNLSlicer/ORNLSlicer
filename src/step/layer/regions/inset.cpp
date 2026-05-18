@@ -18,7 +18,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -45,7 +44,7 @@ QString Inset::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void Inset::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void Inset::compute(uint layer_num) {
     m_paths.clear();
     m_outer_most_path_set.clear();
     m_inner_most_path_set.clear();

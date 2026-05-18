@@ -17,7 +17,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -49,7 +48,7 @@ QString InfillSector::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void InfillSector::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void InfillSector::compute(uint layer_num) {
     m_paths.clear();
 
     Point center(m_sb->setting<double>(PRS::Dimensions::kXOffset), m_sb->setting<double>(PRS::Dimensions::kYOffset));

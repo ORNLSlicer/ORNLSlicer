@@ -10,7 +10,6 @@
 #include "gcode/writers/writer_base.h"
 #include "geometry/plane.h"
 #include "geometry/polygon_list.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/island/island_base.h"
 #include "utilities/enums.h"
 
@@ -63,14 +62,6 @@ class Step {
     //! \brief returns whether or not step is dirty
     //! \return bool that represents dirty status
     bool isDirty();
-
-    //! \brief gets the step sync manager
-    //! \return the manager for step synchronization
-    QSharedPointer<SyncManager> getSync() const;
-
-    //! \brief sets the step sync manager
-    //! \param the new step synchronizer
-    void setSync(const QSharedPointer<SyncManager>& sync);
 
     //! \brief Get step type
     //! \return step type
@@ -139,9 +130,6 @@ class Step {
   protected:
     //! \brief Settings for the step.
     QSharedPointer<SettingsBase> m_sb;
-
-    //! \brief Manages syncing of this step with others
-    QSharedPointer<SyncManager> m_sync;
 
     //! \brief Step type
     StepType m_type;

@@ -60,7 +60,7 @@ uint Layer::getLayerNumber() const { return m_layer_nr; }
 
 void Layer::compute() {
     for (QSharedPointer<IslandBase> island : m_islands) {
-        island->compute(m_layer_nr, m_sync);
+        island->compute(m_layer_nr);
 
         QSharedPointer<PolymerIsland> polyIsland = island.dynamicCast<PolymerIsland>();
         if (polyIsland != nullptr) {
