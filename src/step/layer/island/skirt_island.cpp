@@ -25,8 +25,7 @@ void SkirtIsland::optimize(int layerNumber, Point& currentLocation,
                            QVector<QSharedPointer<RegionBase>>& previousRegions) {
     bool unused = true;
     for (QSharedPointer<RegionBase> r : m_regions) {
-        QVector<Path> tmp_path;
-        r->optimize(layerNumber, currentLocation, tmp_path, tmp_path, unused);
+        r->optimize(layerNumber, currentLocation, unused);
     }
 }
 } // namespace ORNL

@@ -119,12 +119,11 @@ void LaserScan::compute(uint layer_num) {
     m_paths.append(finalPath);
 }
 
-void LaserScan::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                         QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void LaserScan::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     // NOP - handled by ScanLayer
 }
 
-void LaserScan::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void LaserScan::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

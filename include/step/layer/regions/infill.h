@@ -32,12 +32,9 @@ class Infill : public RegionBase {
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number
-    //! \param innerMostClosedContour: used for subsequent path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param current_location: most recent location
     //! \param shouldNextPathBeCCW: state as to CW or CCW of previous path for use with additional DOF
-    void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                  QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) override;
+    void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) override;
 
     //! \brief Creates paths for the infill region.
     //! \param line: polyline representing path
@@ -50,8 +47,7 @@ class Infill : public RegionBase {
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
-    //! \param innerMostClosedContour used for Prestarts (currently only skins/infill)
-    void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) override;
+    void calculateModifiers(Path& path, bool supportsG3) override;
 
     //! \brief fills a set of geometry with infill according to settings
     //! \param geometry: what to fill

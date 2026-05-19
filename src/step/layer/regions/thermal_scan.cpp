@@ -51,12 +51,11 @@ void ThermalScan::compute(uint layer_num) {
     m_paths.push_back(createPath(m_computed_geometry));
 }
 
-void ThermalScan::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                           QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void ThermalScan::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     // NOP?
 }
 
-void ThermalScan::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void ThermalScan::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 
