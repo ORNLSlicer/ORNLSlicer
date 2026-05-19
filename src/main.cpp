@@ -3,7 +3,6 @@
 #include <QStyleFactory>
 #include <boost/preprocessor.hpp>
 #include <nlohmann/json_fwd.hpp>
-#include <qabstractsocket.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
 #include <qdeadlinetimer.h>
@@ -61,14 +60,12 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<fifojson>("fifojson");
     qRegisterMetaType<QList<QList<ORNL::Time>>>("QList<QList<Time>>");
     qRegisterMetaType<nlohmann::json>("nlohmann::json");
-    qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
     qRegisterMetaType<quintptr>("quintptr");
     qRegisterMetaType<ORNL::MeshLoader::MeshData>("MeshData");
     qRegisterMetaType<qintptr>("qintptr");
     qRegisterMetaType<QSet<int>>("QSet<int>");
 
     // Register the message handler so all output is printed in the main window as well.
-    // qInstallMessageHandler(ORNL::msgHandler);
 
     QCommandLineParser parser;
 

@@ -1254,14 +1254,6 @@ class Constants {
         static const QString kHeaderDescription;
 
         static const QString kSliceBounds;
-        static const QString kRealTimeMode;
-        static const QString kRecoveryFilePath;
-        static const QString kOpenLoop;
-        static const QString kRealTimeCommunicationMode;
-        static const QString kRealTimeNetworkAddress;
-        static const QString kRealTimeNetworkIP;
-        static const QString kRealTimeNetworkPort;
-        static const QString kRealTimePrinter;
         static const QString kSingleSliceHeight;
         static const QString kSingleSliceLayerNumber;
 
