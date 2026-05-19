@@ -35,8 +35,6 @@ Point& PathOrderOptimizer::getCurrentLocation() { return m_current_location; }
 
 int PathOrderOptimizer::getCurrentPathCount() { return m_paths.size(); }
 
-bool PathOrderOptimizer::getCurrentCCW() { return m_should_next_path_be_ccw; }
-
 void PathOrderOptimizer::setPathsToEvaluate(QVector<Path> paths) {
     m_paths = paths;
     for (Path& path : m_paths)
@@ -57,8 +55,6 @@ void PathOrderOptimizer::setParameters(InfillPatterns infillPattern, PolygonList
 }
 
 void PathOrderOptimizer::setParameters(PolygonList previousIslands) {}
-
-void PathOrderOptimizer::setParameters(bool shouldNextPathBeCCW) { m_should_next_path_be_ccw = shouldNextPathBeCCW; }
 
 void PathOrderOptimizer::setStartOverride(Point pt) {
     m_override_location = pt;
@@ -336,11 +332,6 @@ void PathOrderOptimizer::addTravel(int index, Path& path) {
     Velocity velocity = m_sb->setting<Velocity>(PS::Travel::kSpeed);
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
 
-    if (path.size() > 0 && path[0]->getSb()->contains(SS::kTilt)) {
-        travel_segment->getSb()->setSetting(SS::kTilt, path[0]->getSb()->setting<QVector<QVector3D>>(SS::kTilt));
-        travel_segment->getSb()->setSetting(SS::kCCW, path[0]->getSb()->setting<bool>(SS::kCCW));
-    }
-
     m_current_location = path[index]->start();
     for (int i = 0; i < index; ++i) {
         path.move(0, path.size() - 1);
@@ -375,8 +366,6 @@ Path PathOrderOptimizer::linkTo() {
 
     Path nextPath = m_paths[pathIndex];
     m_paths.removeAt(pathIndex);
-
-    setRotation(nextPath);
 
     Point queryPoint;
     PointOrderOptimization pointOrderOptimization =
@@ -582,36 +571,6 @@ Path PathOrderOptimizer::linkSpiralPath2D(bool last_spiral) {
         m_current_location.y(endPt.y());
     }
     return newPath;
-}
-
-void PathOrderOptimizer::setRotation(Path& path) {
-    Point rotation_origin = Point(m_sb->setting<Distance>(ES::RotationOrigin::kXOffset),
-                                  m_sb->setting<Distance>(ES::RotationOrigin::kYOffset));
-    bool shouldRotate = m_sb->setting<bool>(PRS::MachineSetup::kSupportsE2);
-
-    if (shouldRotate) {
-        if (path.getCCW() != m_should_next_path_be_ccw) {
-            path.reverseSegments();
-            path.setCCW(!path.getCCW());
-        }
-        m_should_next_path_be_ccw = !m_should_next_path_be_ccw;
-
-        for (QSharedPointer<SegmentBase> seg : path.getSegments()) {
-            seg->getSb()->setSetting(SS::kRotation,
-                                     MathUtils::internalAngle(seg->start(), rotation_origin, seg->end()));
-        }
-    }
-    if (m_sb->setting<bool>(PRS::MachineSetup::kSupportsE1)) {
-        for (QSharedPointer<SegmentBase>& seg : path.getSegments()) {
-            if (path.getCCW()) {
-                Point newPoint = seg->start();
-                newPoint.reverseNormals();
-                seg->setStart(newPoint);
-            }
-            seg->getSb()->setSetting(SS::kTilt, seg->start().getNormals());
-            seg->getSb()->setSetting(SS::kCCW, path.getCCW());
-        }
-    }
 }
 
 } // namespace ORNL

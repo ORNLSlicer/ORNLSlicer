@@ -89,7 +89,7 @@ settings:
     display: "Purge Length"
     type: "distance"
     tooltip: "Length of filament, or screw rotation distance, for purges issued between layers"
-    depends: {"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":11},{"machine_type":1}]}]}
+    depends: {"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -101,7 +101,7 @@ settings:
     display: "Purge Feedrate"
     type: "speed"
     tooltip: "Feedrate for extrusion used for the purge between layers"
-    depends: {"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":11},{"machine_type":1}]}]}
+    depends: {"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}
     options: []
     default: 0
     minor: "Purge"

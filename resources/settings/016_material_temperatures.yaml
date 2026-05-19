@@ -5,7 +5,7 @@ settings:
     display: "Bed Temperature"
     type: "temperature"
     tooltip: "Temperature of bed while printing"
-    depends: {"OR":[{"machine_type":1},{"syntax":12}]}
+    depends: {"OR":[{"machine_type":1},{"syntax":11}]}
     options: []
     default: 398.15
     minor: "Temperatures"
@@ -17,7 +17,7 @@ settings:
     display: "Two Zone Extruders"
     type: "boolean"
     tooltip: "Enables two zones for extruder temperature control"
-    depends: {"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}
+    depends: {"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
     options: []
     default: false
     minor: "Temperatures"
@@ -29,7 +29,7 @@ settings:
     display: "Three Zone Extruders"
     type: "boolean"
     tooltip: "Enables three zones for extruder temperature control"
-    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}
+    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
     options: []
     default: false
     minor: "Temperatures"
@@ -41,7 +41,7 @@ settings:
     display: "Four Zone Extruders"
     type: "boolean"
     tooltip: "Enables four zones for extruder temperature control"
-    depends: {"AND":[{"three_zone_extruders":false},{"AND":[{"two_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}
+    depends: {"AND":[{"three_zone_extruders":false},{"AND":[{"two_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
     options: []
     default: false
     minor: "Temperatures"
@@ -53,7 +53,7 @@ settings:
     display: "Five Zone Extruders"
     type: "boolean"
     tooltip: "Enables five zones for extruder temperature control"
-    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}
+    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
     options: []
     default: false
     minor: "Temperatures"
@@ -65,7 +65,7 @@ settings:
     display: "Extruder 0 Temperature"
     type: "temperature"
     tooltip: "Temperature of extruder 0 while printing"
-    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}]}
+    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}]}
     options: []
     default: 473.15
     minor: "Temperatures"
@@ -77,7 +77,7 @@ settings:
     display: "Extruder 1 Temperature"
     type: "temperature"
     tooltip: "Temperature of extruder 1 while printing"
-    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}]}
+    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}]}
     options: []
     default: 473.15
     minor: "Temperatures"
@@ -89,7 +89,7 @@ settings:
     display: "Extruder 0 Standby Temperature"
     type: "temperature"
     tooltip: "Temperature to hold extruder 0 at when it's not in use"
-    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}]}
+    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}]}
     options: []
     default: 423.15
     minor: "Temperatures"
@@ -101,7 +101,7 @@ settings:
     display: "Extruder 1 Standby Temperature"
     type: "temperature"
     tooltip: "Temperature to hold extruder 1 at when it's not in use"
-    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":12}]}]}]}]}]}
+    depends: {"AND":[{"two_zone_extruders":false},{"AND":[{"three_zone_extruders":false},{"AND":[{"four_zone_extruders":false},{"AND":[{"five_zone_extruders":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}]}
     options: []
     default: 423.15
     minor: "Temperatures"

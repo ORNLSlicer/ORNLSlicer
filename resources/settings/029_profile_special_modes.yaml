@@ -77,7 +77,7 @@ settings:
     display: "Use Width and Height"
     type: "boolean"
     tooltip: "If selected, G-Code will not command feeds and speed and instead send desired bead geometry for the HMI to interpret"
-    depends: {"syntax":12}
+    depends: {"syntax":11}
     options: []
     default: false
     minor: "Special Modes"

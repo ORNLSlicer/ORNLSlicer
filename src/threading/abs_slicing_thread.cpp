@@ -21,7 +21,6 @@
 #include "gcode/writers/cincinnati_writer.h"
 #include "gcode/writers/dmg_dmu_writer.h"
 #include "gcode/writers/five_axis_marlin_writer.h"
-#include "gcode/writers/gkn_writer.h"
 #include "gcode/writers/gudel_writer.h"
 #include "gcode/writers/haas_metric_no_comments_writer.h"
 #include "gcode/writers/haas_writer.h"
@@ -92,9 +91,6 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kDmgDmu:
             m_base = QSharedPointer<DMGDMUWriter>(new DMGDMUWriter(GcodeMetaList::DmgDmuAndBeamMeta, GSM->getGlobal()));
-            break;
-        case GcodeSyntax::kGKN:
-            m_base = QSharedPointer<GKNWriter>(new GKNWriter(GcodeMetaList::GKNMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kGudel:
             m_base = QSharedPointer<GudelWriter>(new GudelWriter(GcodeMetaList::GudelMeta, GSM->getGlobal()));

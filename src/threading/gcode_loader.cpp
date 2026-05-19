@@ -32,7 +32,6 @@
 #include "exceptions/exceptions.h"
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
-#include "gcode/parsers/GKN_parser.h"
 #include "gcode/parsers/adamantine_parser.h"
 #include "gcode/parsers/aerobasic_parser.h"
 #include "gcode/parsers/beam_parser.h"
@@ -473,10 +472,6 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kDmgDmu).toUpper())) {
                 m_parser.reset(new CommonParser(GcodeMetaList::DmgDmuAndBeamMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::DmgDmuAndBeamMeta;
-            }
-            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kGKN).toUpper())) {
-                m_parser.reset(new GKNParser(GcodeMetaList::GKNMeta, m_adjust_file, originalLines, lines));
-                m_selected_meta = GcodeMetaList::GKNMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kGudel).toUpper())) {
                 m_parser.reset(new CommonParser(GcodeMetaList::GudelMeta, m_adjust_file, originalLines, lines));

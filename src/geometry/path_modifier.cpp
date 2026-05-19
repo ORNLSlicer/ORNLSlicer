@@ -25,40 +25,10 @@
 
 namespace ORNL {
 
-void PathModifierGenerator::GenerateRotationAndTilt(Path& path, Point origin, bool rotate, bool& next_ccw, bool tilt) {
-    if (rotate) {
-        if (path.getCCW() != next_ccw) {
-            path.reverseSegments();
-            path.setCCW(!path.getCCW());
-        }
-        next_ccw = !next_ccw;
-
-        for (QSharedPointer<SegmentBase> seg : path.getSegments()) {
-            seg->getSb()->setSetting(SS::kRotation, MathUtils::internalAngle(seg->start(), origin, seg->end()));
-        }
-    }
-    if (tilt) {
-        for (QSharedPointer<SegmentBase>& seg : path.getSegments()) {
-            if (path.getCCW()) {
-                Point newPoint = seg->start();
-                newPoint.reverseNormals();
-                seg->setStart(newPoint);
-            }
-            seg->getSb()->setSetting(SS::kTilt, seg->start().getNormals());
-            seg->getSb()->setSetting(SS::kCCW, path.getCCW());
-        }
-    }
-}
-
 void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, Velocity velocity) {
     QSharedPointer<TravelSegment> travel_segment =
         QSharedPointer<TravelSegment>::create(current_location, path.front()->start());
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
-
-    if (path.size() > 0 && path[0]->getSb()->contains(SS::kTilt)) {
-        travel_segment->getSb()->setSetting(SS::kTilt, path[0]->getSb()->setting<QVector<QVector3D>>(SS::kTilt));
-        travel_segment->getSb()->setSetting(SS::kCCW, path[0]->getSb()->setting<bool>(SS::kCCW));
-    }
 
     path.prepend(travel_segment);
 }

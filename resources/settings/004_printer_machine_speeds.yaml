@@ -73,18 +73,6 @@ settings:
     namespace: "Printer::MachineSpeeds"
     symbol: "kZSpeed"
     local: false
-  - name: "gkn_print_speed"
-    display: "GKN Print Speed"
-    type: "speed"
-    tooltip: "Movement speed for all print moves on GKN syntax"
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Machine Speeds"
-    major: "Printer"
-    namespace: "Printer::MachineSpeeds"
-    symbol: "kGKNPrintSpeed"
-    local: false
   - name: "extruder_gear_ratio"
     display: "Extruder Gear Ratio"
     type: "unitless_float"

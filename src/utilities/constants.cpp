@@ -160,7 +160,6 @@ QString Constants::PrinterSettings::SyntaxString::kCincinnati = "Cincinnati";
 QString Constants::PrinterSettings::SyntaxString::kCincinnatiLegacy = "Cincinnati-BERTHA";
 QString Constants::PrinterSettings::SyntaxString::kCommon = "Common";
 QString Constants::PrinterSettings::SyntaxString::kDmgDmu = "DMG DMU";
-QString Constants::PrinterSettings::SyntaxString::kGKN = "GKN";
 QString Constants::PrinterSettings::SyntaxString::kGudel = "Gudel";
 QString Constants::PrinterSettings::SyntaxString::kHaasInch = "Haas-Inch";
 QString Constants::PrinterSettings::SyntaxString::kHaasMetric = "Haas-Metric";
@@ -243,10 +242,6 @@ const QString Constants::PrinterSettings::MachineSetup::kToolNumber = "tool_numb
 const QString Constants::PrinterSettings::MachineSetup::kAxisA = "axis_a";
 const QString Constants::PrinterSettings::MachineSetup::kAxisB = "axis_b";
 const QString Constants::PrinterSettings::MachineSetup::kAxisC = "axis_c";
-const QString Constants::PrinterSettings::MachineSetup::kToolCoordinate = "tool_coordinate";
-const QString Constants::PrinterSettings::MachineSetup::kBaseCoordinate = "base_coordinate";
-const QString Constants::PrinterSettings::MachineSetup::kSupportsE1 = "supports_E1";
-const QString Constants::PrinterSettings::MachineSetup::kSupportsE2 = "supports_E2";
 
 // Dimensions
 const QString Constants::PrinterSettings::Dimensions::kBuildVolumeType = "build_volume_type";
@@ -282,8 +277,6 @@ const QString Constants::PrinterSettings::Dimensions::kGridYOffset = "grid_y_off
 // Auxiliary
 const QString Constants::PrinterSettings::Auxiliary::kEnableTamper = "enable_tamper";
 const QString Constants::PrinterSettings::Auxiliary::kTamperVoltage = "tamper_voltage";
-const QString Constants::PrinterSettings::Auxiliary::kGKNLaserPower = "gkn_laser_power";
-const QString Constants::PrinterSettings::Auxiliary::kGKNWireSpeed = "gkn_wire_speed";
 
 // Machine Speed
 const QString Constants::PrinterSettings::MachineSpeed::kMinXYSpeed = "min_xy_speed";
@@ -292,7 +285,6 @@ const QString Constants::PrinterSettings::MachineSpeed::kMinExtruderSpeed = "min
 const QString Constants::PrinterSettings::MachineSpeed::kMaxExtruderSpeed = "max_extruder_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed = "w_table_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kZSpeed = "z_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kGKNPrintSpeed = "gkn_print_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kGearRatio = "extruder_gear_ratio";
 
 // Acceleration
@@ -432,8 +424,6 @@ const QString Constants::MaterialSettings::TipWipe::kSkeletonDirection = "skelet
 const QString Constants::MaterialSettings::TipWipe::kSkeletonAngle = "skeleton_wipe_angle";
 const QString Constants::MaterialSettings::TipWipe::kSkeletonCutoffDistance = "skeleton_wipe_cutoff_distance";
 const QString Constants::MaterialSettings::TipWipe::kSkeletonLiftHeight = "skeleton_wipe_lift_height";
-const QString Constants::MaterialSettings::TipWipe::kLaserPowerMultiplier = "laser_power_multiplier";
-const QString Constants::MaterialSettings::TipWipe::kWireFeedMultiplier = "wire_feed_multiplier";
 const QString Constants::MaterialSettings::TipWipe::kTipWipeVoltage = "tip_wipe_voltage";
 
 // Spiral Lift
@@ -761,7 +751,6 @@ const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerTempera
     "thermal_scanner_temperature_cutoff";
 const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerXOffset = "thermal_scanner_x_offset";
 const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerYOffset = "thermal_scanner_y_offset";
-const QString Constants::ProfileSettings::ThermalScanner::kPyrometerMove = "pyrometer_move";
 
 // Slicing Angle
 const QString Constants::ProfileSettings::SlicingVector::kSlicingVectorX = "slicing_vector_x";
@@ -825,10 +814,6 @@ const QString Constants::ExperimentalSettings::FileOutput::kMarlinOutput = "marl
 const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels = "marlin_include_travels";
 const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput = "simulation_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput = "amcm_file_output";
-
-// Rotation Origin
-const QString Constants::ExperimentalSettings::RotationOrigin::kXOffset = "rotation_origin_offset_x";
-const QString Constants::ExperimentalSettings::RotationOrigin::kYOffset = "rotation_origin_offset_y";
 
 // Image Resolution
 const QString Constants::ExperimentalSettings::ImageResolution::kImageResolutionX = "image_resolution_x";
@@ -894,10 +879,7 @@ const QString Constants::SegmentSettings::kWaitTime = "wait_time";
 const QString Constants::SegmentSettings::kRegionType = "region_type";
 const QString Constants::SegmentSettings::kPathModifiers = "path_modifiers";
 const QString Constants::SegmentSettings::kMaterialNumber = "material_number";
-const QString Constants::SegmentSettings::kRotation = "rotation";
 const QString Constants::SegmentSettings::kRecipe = "recipe_index";
-const QString Constants::SegmentSettings::kTilt = "tilt";
-const QString Constants::SegmentSettings::kCCW = "ccw";
 const QString Constants::SegmentSettings::kESP = "esp";
 const QString Constants::SegmentSettings::kExtruders = "extruders";
 const QString Constants::SegmentSettings::kIsRegionStartSegment = "is_region_start_segment";

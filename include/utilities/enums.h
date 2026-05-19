@@ -110,36 +110,35 @@ enum class GcodeSyntax : uint8_t {
     kCincinnati = 1,
     kCommon = 2,
     kDmgDmu = 3,
-    kGKN = 4,
-    kGudel = 5,
-    kHaasInch = 6,
-    kHaasMetric = 7,
-    kHaasMetricNoComments = 8,
-    kHurco = 9,
-    kIngersoll = 10,
-    kMarlin = 11,
-    kMarlinPellet = 12,
-    kMazak = 13,
-    kMVP = 14,
-    kRomiFanuc = 15,
-    kSiemens = 16,
-    kSkyBaam = 17,
-    kThermwood = 18,
-    kWolf = 19,
-    kRepRap = 20,
-    kMach4 = 21,
-    kAeroBasic = 22,
-    kMeld = 23,
-    kORNL = 24,
-    kOkuma = 25,
-    kTormach = 26,
-    kAML3D = 27,
-    kKraussMaffei = 28,
-    kSandia = 29,
-    k5AxisMarlin = 30,
-    kMeltio = 31,
-    kAdamantine = 32,
-    kORNLMetric = 33
+    kGudel = 4,
+    kHaasInch = 5,
+    kHaasMetric = 6,
+    kHaasMetricNoComments = 7,
+    kHurco = 8,
+    kIngersoll = 9,
+    kMarlin = 10,
+    kMarlinPellet = 11,
+    kMazak = 12,
+    kMVP = 13,
+    kRomiFanuc = 14,
+    kSiemens = 15,
+    kSkyBaam = 16,
+    kThermwood = 17,
+    kWolf = 18,
+    kRepRap = 19,
+    kMach4 = 20,
+    kAeroBasic = 21,
+    kMeld = 22,
+    kORNL = 23,
+    kOkuma = 24,
+    kTormach = 25,
+    kAML3D = 26,
+    kKraussMaffei = 27,
+    kSandia = 28,
+    k5AxisMarlin = 29,
+    kMeltio = 30,
+    kAdamantine = 31,
+    kORNLMetric = 32
 };
 
 inline QString toString(GcodeSyntax syntax) {
@@ -154,8 +153,6 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kCincinnati;
         case GcodeSyntax::kDmgDmu:
             return PRS::SyntaxString::kDmgDmu;
-        case GcodeSyntax::kGKN:
-            return PRS::SyntaxString::kGKN;
         case GcodeSyntax::kGudel:
             return PRS::SyntaxString::kGudel;
         case GcodeSyntax::kHaasInch:

@@ -15,7 +15,6 @@ namespace ORNL {
  */
 class PathModifierGenerator {
   public:
-    static void GenerateRotationAndTilt(Path& path, Point origin, bool rotate, bool& next_ccw, bool tilt);
     static void GenerateTravel(Path& path, Point current_location, Velocity velocity);
 
     /**

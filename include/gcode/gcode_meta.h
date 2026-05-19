@@ -76,17 +76,6 @@ static GcodeMeta WolfMeta = {GcodeSyntax::kWolf,
                              mm / s / s,   // acceleration
                              rev / minute, // angular velocity
                              ".gcode"};
-static GcodeMeta GKNMeta = {GcodeSyntax::kGKN,
-                            QString(";"), // starting_delim
-                            QString(),    // ending_delim
-                            mm,           // distance
-                            s,            // time
-                            degree,       // angle
-                            g,            // mass
-                            m / s,        // velocity
-                            m / s / s,    // acceleration
-                            rev / minute, // angular velocity
-                            ".gcode"};
 static GcodeMeta HaasInchMeta = {GcodeSyntax::kHaasInch,
                                  QString("("), // starting_delim
                                  QString(")"), // ending_delim
@@ -314,7 +303,6 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kCincinnati, CincinnatiMeta);
     result.insert((int)GcodeSyntax::kCommon, MarlinMeta);
     result.insert((int)GcodeSyntax::kDmgDmu, DmgDmuAndBeamMeta);
-    result.insert((int)GcodeSyntax::kGKN, GKNMeta);
     result.insert((int)GcodeSyntax::kGudel, GudelMeta);
     result.insert((int)GcodeSyntax::kHaasInch, HaasInchMeta);
     result.insert((int)GcodeSyntax::kHaasMetric, HaasMetricMeta);

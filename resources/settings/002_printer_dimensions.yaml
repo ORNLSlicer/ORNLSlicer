@@ -251,7 +251,7 @@ settings:
     display: "Purge X Location"
     type: "location"
     tooltip: "X location for the purge routine"
-    depends: {"syntax":11}
+    depends: {"syntax":10}
     options: []
     default: 0
     minor: "Dimensions"
@@ -263,7 +263,7 @@ settings:
     display: "Purge Y Location"
     type: "location"
     tooltip: "Y location for the purge routine"
-    depends: {"syntax":11}
+    depends: {"syntax":10}
     options: []
     default: 0
     minor: "Dimensions"
@@ -275,7 +275,7 @@ settings:
     display: "Purge Z Location"
     type: "location"
     tooltip: "Z location for the purge routine"
-    depends: {"syntax":11}
+    depends: {"syntax":10}
     options: []
     default: 0
     minor: "Dimensions"
