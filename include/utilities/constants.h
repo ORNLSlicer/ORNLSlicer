@@ -302,7 +302,6 @@ class Constants {
             static QString kOkuma;
             static QString kORNL;
             static QString kRomiFanuc;
-            static QString kRPBF;
             static QString kSandia;
             static QString kSiemens;
             static QString kSkyBaam;
@@ -624,9 +623,6 @@ class Constants {
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
-            static const QString kPower;
-            static const QString kFocus;
-            static const QString kSpotSize;
             static const QString kEnableLeadIn;
             static const QString kLeadInFirstLayerOnly;
             static const QString kEnableLeadInX;
@@ -716,10 +712,6 @@ class Constants {
             static const QString kCombineXLayers;
             static const QString kCombineLayerShift;
             static const QString kMinPathLength;
-            static const QString kSectorCount;
-            static const QString kPower;
-            static const QString kFocus;
-            static const QString kSpotSize;
             static const QString kEnableAlternatingLines;
         };
 
@@ -859,16 +851,6 @@ class Constants {
             static const QString kSlicerType;
             static const QString kLayerOrdering;
             static const QString kLayerGroupingTolerance;
-        };
-
-        class RPBFSlicing {
-          public:
-            static const QString kSectorSize;
-            static const QString kSectorOffsettingEnable;
-            static const QString kSectorOverlap;
-            static const QString kSectorStaggerEnable;
-            static const QString kSectorStaggerAngle;
-            static const QString kClockingAngle;
         };
 
         class MultiNozzle {

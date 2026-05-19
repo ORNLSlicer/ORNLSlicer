@@ -132,7 +132,7 @@ settings:
     display: "Skin Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for skin paths for systems without RPM control"
-    depends: {"AND":[{"skin":true},{"OR":[{"machine_type":1},{"syntax":29}]}]}
+    depends: {"AND":[{"skin":true},{"OR":[{"machine_type":1},{"syntax":28}]}]}
     options: []
     default: 1
     minor: "Skin"

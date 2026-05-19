@@ -177,7 +177,6 @@ QString Constants::PrinterSettings::SyntaxString::kMVP = "MVP";
 QString Constants::PrinterSettings::SyntaxString::kOkuma = "Okuma";
 QString Constants::PrinterSettings::SyntaxString::kORNL = "ORNL";
 QString Constants::PrinterSettings::SyntaxString::kRomiFanuc = "ROMI Fanuc";
-QString Constants::PrinterSettings::SyntaxString::kRPBF = "RPBF";
 QString Constants::PrinterSettings::SyntaxString::kSandia = "Sandia";
 QString Constants::PrinterSettings::SyntaxString::kSiemens = "Siemens";
 QString Constants::PrinterSettings::SyntaxString::kSkyBaam = "SkyBAAM";
@@ -570,9 +569,6 @@ const QString Constants::ProfileSettings::Perimeter::kSpeed = "perimeter_speed";
 const QString Constants::ProfileSettings::Perimeter::kExtruderSpeed = "perimeter_extruder_speed";
 const QString Constants::ProfileSettings::Perimeter::kExtrusionMultiplier = "perimeter_extrusion_multiplier";
 const QString Constants::ProfileSettings::Perimeter::kMinPathLength = "perimeter_minimum_path_length";
-const QString Constants::ProfileSettings::Perimeter::kPower = "perimeter_power";
-const QString Constants::ProfileSettings::Perimeter::kFocus = "perimeter_focus";
-const QString Constants::ProfileSettings::Perimeter::kSpotSize = "perimeter_spot_size";
 const QString Constants::ProfileSettings::Perimeter::kEnableLeadIn = "perimeter_lead_in";
 const QString Constants::ProfileSettings::Perimeter::kLeadInFirstLayerOnly = "perimeter_lead_in_first_layer";
 const QString Constants::ProfileSettings::Perimeter::kEnableLeadInX = "perimeter_lead_in_x";
@@ -654,10 +650,6 @@ const QString Constants::ProfileSettings::Infill::kExtrusionMultiplier = "infill
 const QString Constants::ProfileSettings::Infill::kCombineXLayers = "infill_combine_every_x_layers";
 const QString Constants::ProfileSettings::Infill::kCombineLayerShift = "infill_combine_layer_shift";
 const QString Constants::ProfileSettings::Infill::kMinPathLength = "infill_minimum_path_length";
-const QString Constants::ProfileSettings::Infill::kSectorCount = "infill_sector_count";
-const QString Constants::ProfileSettings::Infill::kPower = "infill_power";
-const QString Constants::ProfileSettings::Infill::kFocus = "infill_focus";
-const QString Constants::ProfileSettings::Infill::kSpotSize = "infill_spot_size";
 const QString Constants::ProfileSettings::Infill::kEnableAlternatingLines = "infill_alternating_lines";
 
 // Support
@@ -784,14 +776,6 @@ const QString Constants::ProfileSettings::SlicingVector::kSlicingVectorZ = "slic
 const QString Constants::ExperimentalSettings::PrinterConfig::kSlicerType = "slicer_type";
 const QString Constants::ExperimentalSettings::PrinterConfig::kLayerOrdering = "layer_ordering";
 const QString Constants::ExperimentalSettings::PrinterConfig::kLayerGroupingTolerance = "layer_grouping_tolerance";
-
-// RPBF Slicing
-const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorSize = "sector_size";
-const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorOffsettingEnable = "sector_offsetting_enable";
-const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorOverlap = "sector_overlap";
-const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorStaggerEnable = "sector_stagger_enable";
-const QString Constants::ExperimentalSettings::RPBFSlicing::kSectorStaggerAngle = "sector_stagger_angle";
-const QString Constants::ExperimentalSettings::RPBFSlicing::kClockingAngle = "clocking_angle";
 
 // Multi-Nozzle
 const QString Constants::ExperimentalSettings::MultiNozzle::kEnableMultiNozzleMultiMaterial = "enable_multi_nozzle";

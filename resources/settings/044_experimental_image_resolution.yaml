@@ -5,7 +5,7 @@ settings:
     display: "Image Resolution X"
     type: "distance"
     tooltip: "Resolution in x dimension of images created using the image kernel"
-    depends: {"slicer_type":6}
+    depends: {"slicer_type":4}
     options: []
     default: 0
     minor: "Image Resolution"
@@ -17,7 +17,7 @@ settings:
     display: "Image Resolution Y"
     type: "distance"
     tooltip: "Resolution in y dimension of images created using the image kernel"
-    depends: {"slicer_type":6}
+    depends: {"slicer_type":4}
     options: []
     default: 0
     minor: "Image Resolution"

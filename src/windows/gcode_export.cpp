@@ -29,7 +29,6 @@
 #include "threading/gcode_aml3d_saver.h"
 #include "threading/gcode_marlin_saver.h"
 #include "threading/gcode_meld_saver.h"
-#include "threading/gcode_rpbf_saver.h"
 #include "threading/gcode_sandia_saver.h"
 #include "threading/gcode_simulation_output.h"
 #include "threading/gcode_tormach_saver.h"
@@ -272,22 +271,9 @@ void GcodeExport::exportGcode() {
             }
         }
 
-        if (m_most_recent_meta == GcodeMetaList::RPBFMeta) {
-            Angle clockAngle = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kClockingAngle);
-
-            bool use_sector_offsetting = GSM->getGlobal()->setting<bool>(ES::RPBFSlicing::kSectorOffsettingEnable);
-            Angle sector_width = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kSectorSize);
-
-            GCodeRPBFSaver* saver = new GCodeRPBFSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta,
-                                                       clockAngle(), use_sector_offsetting, sector_width);
-            connect(saver, &GCodeRPBFSaver::finished, saver, &GCodeRPBFSaver::deleteLater);
-            connect(saver, &GCodeRPBFSaver::finished, this,
-                    [this, filepath, partName]() { showComplete(filepath, partName); });
-            saver->start();
-        }
-        else if ((m_most_recent_meta == GcodeMetaList::MarlinMeta ||
-                  m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
-                 GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
+        if ((m_most_recent_meta == GcodeMetaList::MarlinMeta ||
+             m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
+            GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
             GCodeSimulationOutput* saver =
                 new GCodeSimulationOutput(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
             connect(saver, &GCodeSimulationOutput::finished, saver, &GCodeSimulationOutput::deleteLater);

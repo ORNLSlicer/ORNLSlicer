@@ -239,7 +239,6 @@
             "infill_prestart_distance": 1000,
             "infill_prestart_extruder_speed": 50,
             "infill_prestart_speed": 3000,
-            "infill_sector_count": 12,
             "skeleton": false,
             "skeleton_input": 0,
             "skeleton_input_cleaning_distance": 25,

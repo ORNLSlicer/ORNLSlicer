@@ -65,7 +65,7 @@ settings:
     display: "Inset Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for inset paths for systems without RPM control"
-    depends: {"AND":[{"inset":true},{"OR":[{"machine_type":1},{"syntax":29}]}]}
+    depends: {"AND":[{"inset":true},{"OR":[{"machine_type":1},{"syntax":28}]}]}
     options: []
     default: 1
     minor: "Inset"

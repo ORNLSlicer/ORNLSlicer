@@ -16,7 +16,6 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "threading/gcode_loader.h"
-#include "threading/gcode_rpbf_saver.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -160,30 +159,15 @@ void MainControl::gcodeParseComplete() {
         inputFile.close();
     }
 
-    if (m_selected_meta == GcodeMetaList::RPBFMeta &&
-        static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) !=
-            SlicerType::kRealTimeRPBF) {
-        Angle clockInRad = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kClockingAngle);
-        bool use_sector_offsetting = GSM->getGlobal()->setting<bool>(ES::RPBFSlicing::kSectorOffsettingEnable);
-        Angle sector_width = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kSectorSize);
+    QFile tempFile(m_temp_location % "temp");
+    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        QTextStream out(&tempFile);
+        out << text;
+        tempFile.close();
 
-        GCodeRPBFSaver* saver = new GCodeRPBFSaver(m_temp_location, filepath, gcodeFileName, text, m_selected_meta,
-                                                   clockInRad(), use_sector_offsetting, sector_width);
-        connect(saver, &GCodeRPBFSaver::finished, saver, &GCodeRPBFSaver::deleteLater);
-        connect(saver, &GCodeRPBFSaver::finished, this, [this, filepath, partName]() { emit finished(); });
-        saver->start();
-    }
-    else {
-        QFile tempFile(m_temp_location % "temp");
-        if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-            QTextStream out(&tempFile);
-            out << text;
-            tempFile.close();
+        QFile::rename(tempFile.fileName(), gcodeFileName);
 
-            QFile::rename(tempFile.fileName(), gcodeFileName);
-
-            emit finished();
-        }
+        emit finished();
     }
 }
 

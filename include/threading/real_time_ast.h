@@ -10,7 +10,6 @@
 #include <qtypes.h>
 #include <tcp_connection.h>
 
-#include "external_files/exporters/rpbf_exporter.h"
 #include "threading/abs_slicing_thread.h"
 #include "threading/step_thread.h"
 #include "utilities/enums.h"
@@ -112,9 +111,6 @@ class RealTimeAST : public AbstractSlicingThread {
 
     //! \brief the TCP connection that connects to Sensor Control 2
     TCPConnection* m_tcp_connection = nullptr;
-
-    //! \brief optional exporter used to save RPBF files
-    RPBFExporter* m_RPBF_exporter = nullptr;
 
     //! \brief the mode of real time slicing
     RealTimeSlicingMode m_mode = RealTimeSlicingMode::kClosedLoop;

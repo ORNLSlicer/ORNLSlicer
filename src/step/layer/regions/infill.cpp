@@ -134,24 +134,6 @@ void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBas
                                                                            default_global_printer_area, min, max));
             break;
         case InfillPatterns::kRadialHatch:
-            //            Point m_center =
-            //            Point(m_sb->setting<double>(PRS::Dimensions::kXOffset),
-            //            m_sb->setting<double>(PRS::Dimensions::kYOffset)); Point diff = max -
-            //            min; Distance radius; if(diff.x() > diff.y())
-            //                radius = diff.x() / 2.0 + 10;
-            //            else
-            //                radius = diff.y() / 2.0 + 10;
-
-            //            QVector<QVector<Polyline>> result = PatternGenerator::GenerateRadialHatch(adjustedGeometry,
-            //            default_line_spacing, default_angle,
-            //                                                                            sb->setting<int>(PS::Infill::kSectorCount),
-            //                                                                            m_center, radius);
-            //            QVector<Polyline> final;
-            //            for(QVector<Polyline> sector : result)
-            //            {
-            //                final += sector;
-            //            }
-            //            m_computed_geometry.append(final);
             break;
     }
 
@@ -370,7 +352,6 @@ bool Infill::settingsSame(QSharedPointer<SettingsBase> a, QSharedPointer<Setting
                          b->setting<Distance>(PS::Infill::kLineSpacing)()) &&
            qFuzzyCompare(a->setting<Distance>(PS::Infill::kBeadWidth)(),
                          b->setting<Distance>(PS::Infill::kBeadWidth)()) &&
-           a->setting<int>(PS::Infill::kSectorCount) == b->setting<int>(PS::Infill::kSectorCount) &&
            a->setting<bool>(PS::Infill::kBasedOnPrinter) == b->setting<bool>(PS::Infill::kBasedOnPrinter) &&
            qFuzzyCompare(a->setting<Angle>(PS::Infill::kAngle)(), b->setting<Angle>(PS::Infill::kAngle)()) &&
            a->setting<bool>(PS::Infill::kEnable) == b->setting<bool>(PS::Infill::kEnable);

@@ -244,7 +244,6 @@
             "infill_prestart_distance": 24000,
             "infill_prestart_extruder_speed": 0,
             "infill_prestart_speed": 10000,
-            "infill_sector_count": 12,
             "support": false,
             "support_extruder": 0,
             "support_print_first": false,

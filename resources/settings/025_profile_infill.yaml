@@ -169,7 +169,7 @@ settings:
     display: "Infill Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for infill paths for systems without RPM control"
-    depends: {"AND":[{"infill":true},{"OR":[{"machine_type":1},{"syntax":29}]}]}
+    depends: {"AND":[{"infill":true},{"OR":[{"machine_type":1},{"syntax":28}]}]}
     options: []
     default: 1
     minor: "Infill"
@@ -225,81 +225,6 @@ settings:
     namespace: "Profile::Infill"
     symbol: "kShiftCombineInfillStartLayer"
     local: false
-  - name: "infill_sector_count"
-    display: "Infill Sector Count"
-    type: "number"
-    tooltip: "Number of sectors for radial hatch pattern"
-    depends: {"AND":[{"infill":true},{"infill_pattern":7}]}
-    options: []
-    default: 0
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kInfillSectorCount"
-    local: true
-  - name: "infill_power"
-    display: "Infill Power"
-    type: "power"
-    tooltip: "Power for infill"
-    depends: {"AND":[{"infill":true},{"syntax":16}]}
-    options: []
-    default: 0
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kInfillPower"
-    local: true
-  - name: "infill_focus"
-    display: "Infill Focus"
-    type: "distance"
-    tooltip: "Focus for infill"
-    depends: {"AND":[{"infill":true},{"syntax":16}]}
-    options: []
-    default: 0
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kInfillFocus"
-    local: true
-  - name: "infill_spot_size"
-    display: "Infill Spot Size"
-    type: "distance"
-    tooltip: "Spot size for infill"
-    depends: {"AND":[{"infill":true},{"syntax":16}]}
-    options: []
-    default: 0
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kInfillSpotSize"
-    local: true
-  - name: "enable_partition_scheme"
-    display: "Enable Parition Scheme"
-    type: "boolean"
-    tooltip: "Enables geometric partitioning of hatches"
-    depends: {"AND":[{"infill":true},{"slicer_type":3}]}
-    options: []
-    default: false
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kEnableParitionScheme"
-    local: true
-  - name: "infill_partition_scheme"
-    display: "Hatch Partition Scheme"
-    type: "enumeration"
-    tooltip: "Scheme for geometric partitioning"
-    depends: {"AND":[{"infill":true},{"AND":[{"slicer_type":3},{"enable_partition_scheme":true}]}]}
-    options:
-      - "Convex"
-      - "Monotone X"
-      - "Monotone Y"
-    default: 0
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kHatchPartitionScheme"
-    local: true
   - name: "enable_infill_stripe"
     display: "Enable Striping"
     type: "boolean"

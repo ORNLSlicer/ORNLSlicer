@@ -184,12 +184,5 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
         }
     }
 
-    if (setting<bool>(ES::RPBFSlicing::kSectorStaggerEnable)) {
-        Angle staggerAngle = setting<Angle>(ES::RPBFSlicing::kSectorStaggerAngle);
-        if (layer_number % 2 == 1)
-            setSetting(ES::RPBFSlicing::kSectorStaggerAngle, staggerAngle * -1);
-        else
-            setSetting(ES::RPBFSlicing::kSectorStaggerAngle, 0);
-    }
 }
 } // namespace ORNL
