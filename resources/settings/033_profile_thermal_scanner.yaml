@@ -49,15 +49,3 @@ settings:
     namespace: "Profile::ThermalScanner"
     symbol: "kThermalScannerTemperatureCutoff"
     local: false
-  - name: "pyrometer_move"
-    display: "Move to Pyrometer Location"
-    type: "boolean"
-    tooltip: "If selected, will move to the pyrometer location after lifting during travel"
-    depends: {"syntax":4}
-    options: []
-    default: false
-    minor: "Thermal Scanner"
-    major: "Profile"
-    namespace: "Profile::ThermalScanner"
-    symbol: "kMovetoPyrometerLocation"
-    local: false

@@ -5,7 +5,7 @@ settings:
     display: "Enable Laser Scanner"
     type: "boolean"
     tooltip: "If selected, will generate G/M codes for laser scanner path between layers"
-    depends: {"OR":[{"syntax":1},{"syntax":4}]}
+    depends: {"syntax":1}
     options: []
     default: false
     minor: "Laser Scanner"

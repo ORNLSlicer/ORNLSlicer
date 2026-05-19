@@ -11,7 +11,6 @@ settings:
       - "Cincinnati"
       - "Common"
       - "Dmg Dmu"
-      - "GKN"
       - "Gudel"
       - "Haas Inch"
       - "Haas Metric"
@@ -69,7 +68,7 @@ settings:
     display: "Force G1 Travels"
     type: "boolean"
     tooltip: "Forces travel moves to use G1 rather than G0"
-    depends: {"OR":[{"syntax":1},{"syntax":10}]}
+    depends: {"OR":[{"syntax":1},{"syntax":9}]}
     options: []
     default: false
     minor: "Machine Setup"
@@ -105,7 +104,7 @@ settings:
     display: "Axis A"
     type: "angle"
     tooltip: "Sets the printing angle for the A axis"
-    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":30},{"OR":[{"syntax":33},{"syntax":24}]}]}]}
+    depends: {"OR":[{"syntax":29},{"OR":[{"syntax":32},{"syntax":23}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -117,7 +116,7 @@ settings:
     display: "Axis B"
     type: "angle"
     tooltip: "Sets the printing angle for the B axis"
-    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":30},{"OR":[{"syntax":33},{"syntax":24}]}]}]}
+    depends: {"OR":[{"syntax":29},{"OR":[{"syntax":32},{"syntax":23}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -129,59 +128,11 @@ settings:
     display: "Axis C"
     type: "angle"
     tooltip: "Sets the printing angle for the C axis"
-    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":30},{"OR":[{"syntax":33},{"syntax":24}]}]}]}
+    depends: {"OR":[{"syntax":29},{"OR":[{"syntax":32},{"syntax":23}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
     major: "Printer"
     namespace: "Printer::MachineSetup"
     symbol: "kAxisC"
-    local: false
-  - name: "tool_coordinate"
-    display: "Tool Coordinate"
-    type: "number"
-    tooltip: "Sets the tool coordinate - used by GKN"
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Machine Setup"
-    major: "Printer"
-    namespace: "Printer::MachineSetup"
-    symbol: "kToolCoordinate"
-    local: false
-  - name: "base_coordinate"
-    display: "Base Coordinate"
-    type: "number"
-    tooltip: "Sets the base coordinate - used by GKN"
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Machine Setup"
-    major: "Printer"
-    namespace: "Printer::MachineSetup"
-    symbol: "kBaseCoordinate"
-    local: false
-  - name: "supports_E1"
-    display: "Supports E1"
-    type: "boolean"
-    tooltip: "If selected, machine will use E1 commands for table tilt"
-    depends: {"syntax":4}
-    options: []
-    default: false
-    minor: "Machine Setup"
-    major: "Printer"
-    namespace: "Printer::MachineSetup"
-    symbol: "kSupportsE1"
-    local: false
-  - name: "supports_E2"
-    display: "Supports E2"
-    type: "boolean"
-    tooltip: "If selected, machine will use E1 commands for table rotation"
-    depends: {"syntax":4}
-    options: []
-    default: false
-    minor: "Machine Setup"
-    major: "Printer"
-    namespace: "Printer::MachineSetup"
-    symbol: "kSupportsE2"
     local: false

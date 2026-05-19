@@ -50,10 +50,6 @@ class PathOrderOptimizer {
     //! \param previousIslands: List of previously visited islands
     void setParameters(PolygonList previousIslands);
 
-    //! \brief Set parameters (when using additional DOF for perimeter/inset)
-    //! \param shouldNextPathBeCCW: Whether or not next path should be CW or CCW after travel is determined
-    void setParameters(bool shouldNextPathBeCCW);
-
     //! \brief Gets remaining paths
     //! \return current paths remaining
     int getCurrentPathCount();
@@ -61,10 +57,6 @@ class PathOrderOptimizer {
     //! \brief Gets current location
     //! \return current location
     Point& getCurrentLocation();
-
-    //! \brief Gets whether current path is CW or CCW
-    //! \return CW or CCW status
-    bool getCurrentCCW();
 
     //! \brief Link path as part of spiral (works only for a single perimeter)
     //! \param path: Path to link
@@ -146,9 +138,6 @@ class PathOrderOptimizer {
     //! \return Index for vertex in closest path and index for path itself
     int findInteriorExterior(bool ExtToInt = true);
 
-    //! \brief Sets rotation of path based on internal status of the previous paths' CW or CCW status
-    void setRotation(Path& path);
-
     //! \brief Computes the topological heirarchy necessary for outside-in and inside-out optimization schemes
     //! \return Returns pointer to root node of n-ary tree representing heirarchy
     QSharedPointer<TopologicalNode> computeTopologicalHeirarchy();
@@ -191,9 +180,6 @@ class PathOrderOptimizer {
 
     //! \brief Current region type for path. Determines which version of link is called
     RegionType m_current_region_type;
-
-    //! \brief CW or CCW status for next path to determine which direction to rotate
-    bool m_should_next_path_be_ccw;
 
     //! \brief The layer number we are currently on
     int m_layer_num;

@@ -501,35 +501,11 @@ settings:
     namespace: "Material::TipWipe"
     symbol: "kInfillWipeLiftHeight"
     local: true
-  - name: "laser_power_multiplier"
-    display: "Laser Power Multiplier"
-    type: "unitless_float"
-    tooltip: "Sets multiplier value issued when laser power is updated during tip wipe. GKN Only."
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Tip Wipe"
-    major: "Material"
-    namespace: "Material::TipWipe"
-    symbol: "kLaserPowerMultiplier"
-    local: true
-  - name: "wire_feed_multiplier"
-    display: "Wire Feed Multiplier"
-    type: "unitless_float"
-    tooltip: "Sets multiplier value issued when wire feed is updated during tip wipe. GKN Only."
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Tip Wipe"
-    major: "Material"
-    namespace: "Material::TipWipe"
-    symbol: "kWireFeedMultiplier"
-    local: true
   - name: "tip_wipe_voltage"
     display: "Tip Wipe Voltage"
     type: "voltage"
     tooltip: "Sets welder voltage during tip wipe motions"
-    depends: {"syntax":26}
+    depends: {"syntax":25}
     options: []
     default: 0
     minor: "Tip Wipe"
