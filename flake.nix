@@ -57,7 +57,7 @@
             src     = self;
             version = (lib.fetchVersion ./version.json);
 
-            inherit (libraries) sockets kuba-zip clipper psimpl;
+            inherit (libraries) kuba-zip clipper psimpl;
             inherit stdenv;
           };
         };

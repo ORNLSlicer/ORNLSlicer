@@ -48,7 +48,6 @@ void SliceDialog::setupUi() {
 }
 
 void SliceDialog::updateStatus(StatusUpdateStepType type, int percentage) {
-    if (type != StatusUpdateStepType::kRealTimeLayerCompleted)
-        m_progress_bars[(int)type]->setValue(percentage);
+    m_progress_bars[(int)type]->setValue(percentage);
 }
 } // namespace ORNL

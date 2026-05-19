@@ -30,7 +30,6 @@
 #include "threading/session_loader.h"
 #include "threading/slicers/image_slicer.h"
 #include "threading/slicers/polymer_slicer.h"
-#include "threading/slicers/real_time_polymer_slicer.h"
 #include "units/derivative_units.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -574,13 +573,6 @@ bool SessionManager::changeSlicer(SlicerType type) {
     // Disconnect the signals from the AST.
     QObject::disconnect(this, &SessionManager::startSlice, nullptr, nullptr);
 
-    if (GSM->getConsoleSettings() != nullptr) {
-        bool use_real_time = GSM->getConsoleSettings()->setting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode);
-        if (use_real_time && type == SlicerType::kPolymerSlice) {
-            type = SlicerType::kRealTimePolymer;
-        }
-    }
-
     // Reset the AST with a new slicer.
     switch (type) {
         case SlicerType::kPolymerSlice:
@@ -588,9 +580,6 @@ bool SessionManager::changeSlicer(SlicerType type) {
             break;
         case SlicerType::kMetalEmbossingSlice:
         case SlicerType::kMetalSlice:
-            break;
-        case SlicerType::kRealTimePolymer:
-            m_ast.reset(new RealTimePolymerSlicer(tempGcodeFile));
             break;
         case SlicerType::kImageSlice:
             m_ast.reset(new ImageSlicer(tempGcodeFile));

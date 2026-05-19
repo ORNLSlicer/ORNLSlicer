@@ -45,8 +45,8 @@ class CommandLineConverter {
     //! (operator/description) \param parser: parser with values \param options: valid command line options
     bool checkOptionalExportOptions(QCommandLineParser& parser, QSharedPointer<SettingsBase> options);
 
-    //! \brief Convert/Check options that are optional: real-time mode.
-    //! These include slice bounds, real-time mode, real-time communication mode, and real-time network address.
+    //! \brief Convert/Check options that are optional for advanced slicing control.
+    //! These include slice bounds and single-slice controls.
     //! \param parser: parser with values
     //! \param options: valid command line options
     bool checkAdvancedOptions(QCommandLineParser& parser, QSharedPointer<SettingsBase> options);

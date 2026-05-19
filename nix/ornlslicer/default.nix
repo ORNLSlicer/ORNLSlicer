@@ -6,7 +6,7 @@
   cmake, pkg-config, ninja, wrapQtAppsHook, deployQtWinPluginsHook,
 
   qtbase, qtcharts, qt5compat, assimp, boost184, cgal_5, eigen, nlohmann_json, gmp, mpfr,
-  hdf5, vtk-qt, kuba-zip, clipper, psimpl, sockets
+  hdf5, vtk-qt, kuba-zip, clipper, psimpl
 }:
 
 stdenv.mkDerivation rec {
@@ -28,7 +28,6 @@ stdenv.mkDerivation rec {
     kuba-zip
     clipper
     psimpl
-    sockets
     gmp
     mpfr
   ] ++ lib.optionals stdenv.hostPlatform.isMinGW [
@@ -59,7 +58,7 @@ stdenv.mkDerivation rec {
     homepage = "https://github.com/ORNLSlicer/ORNLSlicer/";
     license = lib.licenses.gpl3;
     maintainers = with lib.maintainers; [
-      cadkin
+      liamnwhite1
     ];
   };
 }
