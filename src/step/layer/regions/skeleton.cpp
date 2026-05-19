@@ -853,8 +853,7 @@ QVector<Path> Skeleton::filterPath(const Path& path) {
     return filtered_paths;
 }
 
-void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                        QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Skeleton::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -876,25 +875,6 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
         poo.setStartPointOverride(startOverride);
     }
 
-    //! Uncomment if erroneous skeletons are being generated outside geometry
-    if (!outerMostClosedContour.isEmpty()) {
-        PolygonList _outerMostClosedContour;
-        for (const Path& path : outerMostClosedContour) {
-            _outerMostClosedContour += Polygon(path);
-        }
-
-        //! Removes skeletons generated outside outerMostClosedContour
-        QVector<Polyline> containedPaths;
-        for (Polyline line : m_computed_geometry) {
-            if (std::all_of(line.begin(), line.end(), [_outerMostClosedContour](const Point& pt) mutable {
-                    return _outerMostClosedContour.inside(pt);
-                })) {
-                containedPaths += line;
-            }
-        }
-        m_computed_geometry = containedPaths;
-    }
-
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
@@ -912,8 +892,7 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
 
             if (paths.size() > 0) {
                 for (Path path : paths) {
-                    QVector<Path> temp_path;
-                    calculateModifiers(path, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), temp_path);
+                    calculateModifiers(path, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                     PathModifierGenerator::GenerateTravel(path, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
                     current_location = path.back()->end();
@@ -924,7 +903,7 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
     }
 }
 
-void Skeleton::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Skeleton::calculateModifiers(Path& path, bool supportsG3) {
     // Ramping
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);

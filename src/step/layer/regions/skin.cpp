@@ -182,8 +182,7 @@ void Skin::computeGradualSkinSteps(const int& gradual_count) {
     }
 }
 
-void Skin::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                    QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -215,19 +214,17 @@ void Skin::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
     m_paths.clear();
     bool supportsG3 = m_sb->setting<bool>(PRS::MachineSetup::kSupportG3);
     InfillPatterns skinPattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
-    optimizeHelper(poo, supportsG3, innerMostClosedContour, current_location, skinPattern, m_computed_geometry,
-                   m_skin_geometry);
+    optimizeHelper(poo, supportsG3, current_location, skinPattern, m_computed_geometry, m_skin_geometry);
 
     InfillPatterns gradualPattern = InfillPatterns::kLines;
     for (int i = 0, end = m_gradual_computed_geometry.size(); i < end; ++i) {
-        optimizeHelper(poo, supportsG3, innerMostClosedContour, current_location, gradualPattern,
-                       m_gradual_computed_geometry[i], m_gradual_skin_geometry[i]);
+        optimizeHelper(poo, supportsG3, current_location, gradualPattern, m_gradual_computed_geometry[i],
+                       m_gradual_skin_geometry[i]);
     }
 }
 
-void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, QVector<Path>& innerMostClosedContour,
-                          Point& current_location, InfillPatterns pattern, QVector<Polyline> lines,
-                          PolygonList geometry) {
+void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
+                          QVector<Polyline> lines, PolygonList geometry) {
     poo.setInfillParameters(pattern, geometry, getSb()->setting<Distance>(PS::Skin::kMinPathLength),
                             getSb()->setting<Distance>(PS::Travel::kMinLength));
 
@@ -240,7 +237,7 @@ void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, QVector<P
         if (result.size() > 0) {
             Path newPath = createPath(result);
             if (newPath.size() > 0) {
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), innerMostClosedContour);
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                       m_sb->setting<Velocity>(PS::Travel::kSpeed));
                 current_location = newPath.back()->end();
@@ -306,7 +303,7 @@ void Skin::setGeometryIncludes(bool top, bool bottom, bool gradual) {
     m_gradual_geometry_includes_top = gradual;
 }
 
-void Skin::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Skin::calculateModifiers(Path& path, bool supportsG3) {
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
@@ -350,14 +347,6 @@ void Skin::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerM
                 PathModifierGenerator::GenerateTipWipe(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),
-                    m_sb->setting<AngularVelocity>(MS::TipWipe::kSkinExtruderSpeed),
-                    m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
-                    m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));
-            else if (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))
-                PathModifierGenerator::GenerateTipWipe(
-                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
-                    m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), innerMostClosedContour,
-                    m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),
                     m_sb->setting<AngularVelocity>(MS::TipWipe::kSkinExtruderSpeed),
                     m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
                     m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));

@@ -159,8 +159,7 @@ void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBas
         this->reversePaths();
 }
 
-void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                      QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -204,8 +203,7 @@ void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& i
             if (result.size() > 0) {
                 Path newPath = createPath(result);
                 if (newPath.size() > 0) {
-                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3),
-                                       innerMostClosedContour);
+                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                     PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
                     current_location = newPath.back()->end();
@@ -260,7 +258,7 @@ Path Infill::createPath(Polyline line) {
     return newPath;
 }
 
-void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Infill::calculateModifiers(Path& path, bool supportsG3) {
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
@@ -304,14 +302,6 @@ void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& inne
                 PathModifierGenerator::GenerateTipWipe(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
-                    m_sb->setting<AngularVelocity>(MS::TipWipe::kInfillExtruderSpeed),
-                    m_sb->setting<Distance>(MS::TipWipe::kInfillLiftHeight),
-                    m_sb->setting<Distance>(MS::TipWipe::kInfillCutoffDistance));
-            else if (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))
-                PathModifierGenerator::GenerateTipWipe(
-                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
-                    m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), innerMostClosedContour,
-                    m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
                     m_sb->setting<AngularVelocity>(MS::TipWipe::kInfillExtruderSpeed),
                     m_sb->setting<Distance>(MS::TipWipe::kInfillLiftHeight),
                     m_sb->setting<Distance>(MS::TipWipe::kInfillCutoffDistance));

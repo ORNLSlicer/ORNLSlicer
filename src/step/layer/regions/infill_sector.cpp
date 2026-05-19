@@ -131,12 +131,11 @@ void InfillSector::uniform(QVector<Polyline>& sector) {
         sector[i] = sector[i].reverse();
 }
 
-void InfillSector::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                            QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void InfillSector::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     // NOP
 }
 
-void InfillSector::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void InfillSector::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

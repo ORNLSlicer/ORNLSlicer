@@ -7,7 +7,6 @@
 
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
-#include "geometry/path.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "step/layer/regions/region_base.h"
@@ -113,9 +112,6 @@ class IslandBase {
 
     //! \brief Settings the island will use.
     QSharedPointer<SettingsBase> m_sb;
-
-    //! \brief Last enclosing contour for use with path modifiers
-    Path innermostClosedContour;
 
     //! \brief The settings polygon this region may use
     QVector<SettingsPolygon> m_settings_polygons;

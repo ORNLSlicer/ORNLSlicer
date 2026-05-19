@@ -131,8 +131,7 @@ void Support::computeGrid(Distance line_spacing, Angle rotation) {
     computeLine(line_spacing, rotation + 90 * deg);
 }
 
-void Support::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                       QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Support::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -201,7 +200,7 @@ void Support::optimize(int layerNumber, Point& current_location, QVector<Path>& 
     }
 }
 
-void Support::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Support::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

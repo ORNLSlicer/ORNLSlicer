@@ -46,8 +46,6 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void Perimeter::compute(uint layer_num) {
     m_paths.clear();
-    m_outer_most_path_set.clear();
-    m_inner_most_path_set.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
@@ -91,8 +89,7 @@ void Perimeter::compute(uint layer_num) {
     }
 }
 
-void Perimeter::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                         QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -197,9 +194,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, QVector<Path>
                     PathModifierGenerator::GenerateRotationAndTilt(newPath, rotation_origin, shouldRotate,
                                                                    shouldNextPathBeCCW, shouldTilt);
                 }
-
-                QVector<Path> temp_path;
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), temp_path);
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                       m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
@@ -227,13 +222,9 @@ Path Perimeter::createPath(Polyline line) {
     return createPathWithLocalizedSettings(line);
 }
 
-QVector<Path>& Perimeter::getOuterMostPathSet() { return m_outer_most_path_set; }
-
-QVector<Path>& Perimeter::getInnerMostPathSet() { return m_inner_most_path_set; }
-
 QVector<Polyline> Perimeter::getComputedGeometry() { return m_computed_geometry; }
 
-void Perimeter::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }

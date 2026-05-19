@@ -79,8 +79,7 @@ void Skirt::compute(uint layer_num) {
     }
 }
 
-void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                     QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Skirt::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -127,7 +126,7 @@ void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& in
     }
 }
 
-void Skirt::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Skirt::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

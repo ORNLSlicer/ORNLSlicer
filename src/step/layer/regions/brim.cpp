@@ -74,8 +74,7 @@ void Brim::compute(uint layer_num) {
     }
 }
 
-void Brim::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                    QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Brim::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -114,8 +113,7 @@ void Brim::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
         Path newPath = createPath(result);
 
         if (newPath.size() > 0) {
-            QVector<Path> temp_path;
-            calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), temp_path);
+            calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
             PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                   m_sb->setting<Velocity>(PS::Travel::kSpeed));
             current_location = newPath.back()->end();
@@ -124,7 +122,7 @@ void Brim::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
     }
 }
 
-void Brim::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Brim::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 
