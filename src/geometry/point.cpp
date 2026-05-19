@@ -3,7 +3,6 @@
 #include <cmath>
 
 #include <clipper.hpp>
-#include <qassert.h>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qmath.h>
@@ -106,7 +105,6 @@ Point::Point(const Point& p) {
     m_y = p.m_y;
     m_z = p.m_z;
     m_sb = p.m_sb;
-    m_normals = p.m_normals;
 }
 
 Point::Point(const QVector3D& p) {
@@ -157,16 +155,7 @@ Point Point::rotateAround(Point center, Angle angle, QVector3D axis) {
     p -= c;
     p = m * p;
     p += c;
-    Point result = Point::fromQVector3D(p);
-
-    if (!m_normals.isEmpty()) {
-        QVector<QVector3D> normals = m_normals;
-        normals[0] = (m * normals[0]).normalized();
-        normals[1] = (m * normals[1]).normalized();
-        result.setNormals(normals);
-    }
-
-    return result;
+    return Point::fromQVector3D(p);
 }
 
 void Point::moveTowards(const Point& target, const Distance dist) {
@@ -198,9 +187,7 @@ MeshTypes::Kernel::Point_3 Point::toCartesian3D() const { return MeshTypes::Kern
 MeshTypes::Vector_3 Point::toVector_3() const { return MeshTypes::Vector_3(m_x, m_y, m_z); }
 
 Point Point::operator+(const Point& rhs) {
-    Point result = Point(m_x + rhs.m_x, m_y + rhs.m_y, m_z + rhs.m_z);
-    result.setNormals(this->getNormals());
-    return result;
+    return Point(m_x + rhs.m_x, m_y + rhs.m_y, m_z + rhs.m_z);
 }
 
 Point Point::operator+=(const Point& rhs) {
@@ -211,9 +198,7 @@ Point Point::operator+=(const Point& rhs) {
 }
 
 Point Point::operator-(const Point& rhs) {
-    Point result = Point(m_x - rhs.m_x, m_y - rhs.m_y, m_z - rhs.m_z);
-    result.setNormals(this->getNormals());
-    return result;
+    return Point(m_x - rhs.m_x, m_y - rhs.m_y, m_z - rhs.m_z);
 }
 
 Point Point::operator-=(const Point& rhs) {
@@ -224,15 +209,11 @@ Point Point::operator-=(const Point& rhs) {
 }
 
 Point Point::operator*(const float rhs) const {
-    Point result = Point(rhs * m_x, rhs * m_y, rhs * m_z);
-    result.setNormals(this->getNormals());
-    return result;
+    return Point(rhs * m_x, rhs * m_y, rhs * m_z);
 }
 
 Point Point::operator*(const float rhs) {
-    Point result = Point(rhs * m_x, rhs * m_y, rhs * m_z);
-    result.setNormals(this->getNormals());
-    return result;
+    return Point(rhs * m_x, rhs * m_y, rhs * m_z);
 }
 
 Point Point::operator*=(const float rhs) {
@@ -243,9 +224,7 @@ Point Point::operator*=(const float rhs) {
 }
 
 Point Point::operator/(const float rhs) {
-    Point result = Point(m_x / rhs, m_y / rhs, m_z / rhs);
-    result.setNormals(this->getNormals());
-    return result;
+    return Point(m_x / rhs, m_y / rhs, m_z / rhs);
 }
 
 Point Point::operator/=(const float m) {
@@ -292,41 +271,13 @@ void Point::setSettings(QSharedPointer<SettingsBase> sb) { m_sb = sb; }
 
 QSharedPointer<SettingsBase> Point::getSettings() { return m_sb; }
 
-void Point::setNormals(QVector<QVector3D> normals) { m_normals = normals; }
-
-QVector<QVector3D> Point::getNormals() const { return m_normals; }
-
-void Point::reverseNormals() {
-    Q_ASSERT(!m_normals.isEmpty());
-
-    QVector3D temp = m_normals[0];
-    m_normals[0] = m_normals[1];
-    m_normals[1] = temp;
-}
-
-void Point::reverseNormalDirections() {
-    Q_ASSERT(!m_normals.isEmpty());
-
-    m_normals[0] *= -1;
-    m_normals[1] *= -1;
-}
-
 QString Point::toCSVString() {
     return QString(QString::number(m_x) + "," + QString::number(m_y) + "," + QString::number(m_z));
 }
 
 Point operator*(const QMatrix4x4& lhs, const Point& rhs) {
     QVector3D p = rhs.toQVector3D();
-    Point result = Point(lhs * p);
-
-    if (!rhs.getNormals().isEmpty()) {
-        QVector<QVector3D> normals = rhs.getNormals();
-        normals[0] = (lhs * normals[0]).normalized();
-        normals[1] = (lhs * normals[1]).normalized();
-        result.setNormals(normals);
-    }
-
-    return result;
+    return Point(lhs * p);
 }
 
 Point operator*(const float lhs, Point& rhs) { return rhs * lhs; }

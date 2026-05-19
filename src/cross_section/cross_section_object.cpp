@@ -185,10 +185,6 @@ PolygonList CrossSectionObject::makePolygons() {
                     (quint64)(possiblePoints[closest].x() * 1000) << 32 | (quint64)(possiblePoints[closest].y() * 1000);
             }
 
-            QVector<QVector3D> normals;
-            normals.push_back(m_segments[endPointHash.value(key)].normal);
-            normals.push_back(m_segments[startPointHash.value(key)].normal);
-            p.setNormals(normals);
         }
     }
 
