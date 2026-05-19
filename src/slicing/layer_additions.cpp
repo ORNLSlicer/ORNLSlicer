@@ -87,7 +87,7 @@ void LayerAdditions::addBrim(QSharedPointer<Layer> layer) {
     for (PolygonList poly : islandOutlines) {
         // get the subset of the polygon list that only describes the outer boundary
         //  and set the Brim with an offset from that polygon list
-        PolygonList outerPoly = poly.getOutsidePolygons();
+        PolygonList outerPoly = poly.externalPolygonBoundaries();
         newOutlines |= outerPoly.offset(brim_offset);
     }
     QVector<PolygonList> newIslands = newOutlines.splitIntoParts();

@@ -95,23 +95,28 @@ PolygonList PolygonList::cleanPolygons(const Distance distance) {
     return cleaned_polygons;
 }
 
-PolygonList PolygonList::getOutsidePolygons() const {
-    PolygonList polygons;
-    int polygonId = 0;
+PolygonList PolygonList::externalPolygonBoundaries() const {
+    PolygonList boundaries;
 
-    for (Polygon p : (*this)) {
-        // based on an assumption: the first polygon is the most exterior one
-        if (polygonId == 0)
-            polygons.append(p);
-        else {
-            // this should not happen in ORNLSlicer as a PolyhonList only contains a polygon and some interior polygons
-            if (!polygons.first().inside(p.boundingRectCenter())) {
-                polygons.append(p);
-            }
+    for (const PolygonList& part : splitIntoParts()) {
+        if (!part.isEmpty()) {
+            boundaries.append(part.first());
         }
-        polygonId++;
     }
-    return polygons;
+
+    return boundaries;
+}
+
+PolygonList PolygonList::internalPolygonBoundaries() const {
+    PolygonList boundaries;
+
+    for (const PolygonList& part : splitIntoParts()) {
+        for (int i = 1; i < part.size(); ++i) {
+            boundaries.append(part[i]);
+        }
+    }
+
+    return boundaries;
 }
 
 QVector<PolygonList> PolygonList::splitIntoParts(bool unionAll) const {
