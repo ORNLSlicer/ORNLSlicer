@@ -5,7 +5,7 @@ settings:
     display: "Enable Multi-material"
     type: "boolean"
     tooltip: "If selected, enables the use of multiple printing materials"
-    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":11},{"syntax":12}]}]}
+    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":10},{"syntax":11}]}]}
     options: []
     default: false
     minor: "Multi-Material"

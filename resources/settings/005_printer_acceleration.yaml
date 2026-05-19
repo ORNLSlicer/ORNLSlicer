@@ -5,7 +5,7 @@ settings:
     display: "Enable Dynamic Acceleration"
     type: "boolean"
     tooltip: "If selected, machine acceleration will be changed throughout the G-Code"
-    depends: {"OR":[{"syntax":1},{"syntax":11}]}
+    depends: {"OR":[{"syntax":1},{"syntax":10}]}
     options: []
     default: false
     minor: "Acceleration"

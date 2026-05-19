@@ -143,6 +143,8 @@ void Perimeter::compute(uint layer_num) {
 }
 
 void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
+    Q_UNUSED(shouldNextPathBeCCW)
+
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -237,16 +239,6 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
             if (newPath.size() > 0) {
-                bool shouldRotate = m_sb->setting<bool>(PRS::MachineSetup::kSupportsE2);
-                bool shouldTilt = m_sb->setting<bool>(PRS::MachineSetup::kSupportsE1);
-
-                if (shouldTilt || shouldRotate) {
-                    Point rotation_origin = Point(m_sb->setting<Distance>(ES::RotationOrigin::kXOffset),
-                                                  m_sb->setting<Distance>(ES::RotationOrigin::kYOffset));
-
-                    PathModifierGenerator::GenerateRotationAndTilt(newPath, rotation_origin, shouldRotate,
-                                                                   shouldNextPathBeCCW, shouldTilt);
-                }
                 calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                       m_sb->setting<Velocity>(PS::Travel::kSpeed));

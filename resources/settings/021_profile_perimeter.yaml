@@ -80,7 +80,7 @@ settings:
     display: "Perimeter Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for perimeter paths for systems without RPM control"
-    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":28}]}]}
+    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":27}]}]}
     options: []
     default: 1
     minor: "Perimeter"

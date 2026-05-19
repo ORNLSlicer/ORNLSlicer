@@ -25,39 +25,3 @@ settings:
     namespace: "Printer::Auxiliary"
     symbol: "kTamperVoltage"
     local: false
-  - name: "gkn_laser_power"
-    display: "GKN Laser Power"
-    type: "voltage"
-    tooltip: "Laser power for GKN syntax"
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Auxiliary"
-    major: "Printer"
-    namespace: "Printer::Auxiliary"
-    symbol: "kGKNLaserPower"
-    local: false
-  - name: "gkn_wire_speed"
-    display: "GKN Wire Speed"
-    type: "voltage"
-    tooltip: "Wire feeder speed for GKN syntax"
-    depends: {"syntax":4}
-    options: []
-    default: 0
-    minor: "Auxiliary"
-    major: "Printer"
-    namespace: "Printer::Auxiliary"
-    symbol: "kGKNWireSpeed"
-    local: false
-  - name: "gkn_melt_pool"
-    display: "GKN Melt Pool Override"
-    type: "percentage"
-    tooltip: "Percentage change to melt pool size"
-    depends: {"syntax":4}
-    options: []
-    default: 100
-    minor: "Auxiliary"
-    major: "Printer"
-    namespace: "Printer::Auxiliary"
-    symbol: "kGKNMeltPoolOverride"
-    local: false

@@ -181,10 +181,6 @@ class Constants {
             static const QString kAxisA;
             static const QString kAxisB;
             static const QString kAxisC;
-            static const QString kToolCoordinate;
-            static const QString kBaseCoordinate;
-            static const QString kSupportsE1;
-            static const QString kSupportsE2;
         };
 
         // Categories
@@ -230,8 +226,6 @@ class Constants {
           public:
             static const QString kEnableTamper;
             static const QString kTamperVoltage;
-            static const QString kGKNLaserPower;
-            static const QString kGKNWireSpeed;
         };
 
         class MachineSpeed {
@@ -242,7 +236,6 @@ class Constants {
             static const QString kMaxExtruderSpeed;
             static const QString kWTableSpeed;
             static const QString kZSpeed;
-            static const QString kGKNPrintSpeed;
             static const QString kGearRatio;
         };
 
@@ -285,7 +278,6 @@ class Constants {
             static QString kCincinnatiLegacy;
             static QString kCommon;
             static QString kDmgDmu;
-            static QString kGKN;
             static QString kGudel;
             static QString kHaasInch;
             static QString kHaasMetric;
@@ -455,8 +447,6 @@ class Constants {
             static const QString kSkeletonCutoffDistance;
             static const QString kSkeletonLiftHeight;
 
-            static const QString kLaserPowerMultiplier;
-            static const QString kWireFeedMultiplier;
             static const QString kTipWipeVoltage;
         };
 
@@ -833,7 +823,6 @@ class Constants {
             static const QString kThermalScannerTemperatureCutoff;
             static const QString kThermalScannerXOffset;
             static const QString kThermalScannerYOffset;
-            static const QString kPyrometerMove;
         };
 
         class SlicingVector {
@@ -901,12 +890,6 @@ class Constants {
             static const QString kMarlinTravels;
             static const QString kSimulationOutput;
             static const QString kAMCMOutput;
-        };
-
-        class RotationOrigin {
-          public:
-            static const QString kXOffset;
-            static const QString kYOffset;
         };
 
         class ImageResolution {
@@ -994,10 +977,7 @@ class Constants {
         static const QString kRegionType;
         static const QString kPathModifiers;
         static const QString kMaterialNumber;
-        static const QString kRotation;
         static const QString kRecipe;
-        static const QString kTilt;
-        static const QString kCCW;
         static const QString kESP;
         static const QString kExtruders;
         static const QString kIsRegionStartSegment;

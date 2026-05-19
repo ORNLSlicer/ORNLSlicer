@@ -77,12 +77,6 @@ void SegmentBase::setEnd(Point end) { m_end = end; }
 
 void SegmentBase::reverse() {
     std::swap(m_start, m_end);
-
-    QVector<QVector3D> normals = m_sb->setting<QVector<QVector3D>>(SS::kTilt);
-    if (!normals.isEmpty()) {
-        normals.swapItemsAt(0, 1);
-        m_sb->setSetting(SS::kTilt, normals);
-    }
 }
 
 QSharedPointer<SettingsBase> SegmentBase::getSb() const { return m_sb; }
