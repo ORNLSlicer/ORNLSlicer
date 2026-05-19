@@ -71,11 +71,16 @@ class PolygonList : public QVector<Polygon> {
     PolygonList cleanPolygons(const Distance distance = 10);
 
     /*!
-     * Remove all but the polygons on the very outside.
-     * Exclude holes and parts within holes.
-     * \return the resulting polygons.
+     * \brief Returns the external polygon boundaries.
+     * \return PolygonList containing each part's outer boundary.
      */
-    PolygonList getOutsidePolygons() const;
+    PolygonList externalPolygonBoundaries() const;
+
+    /*!
+     * \brief Returns the internal polygon boundaries.
+     * \return PolygonList containing each part's hole boundaries.
+     */
+    PolygonList internalPolygonBoundaries() const;
 
     /*!
      * \brief Returns the sum of parimeters of polygons
