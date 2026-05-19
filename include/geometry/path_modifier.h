@@ -114,22 +114,6 @@ class PathModifierGenerator {
                                 Distance tipWipeCutoffDistance);
 
     /**
-     * @brief GenerateTipWipe generates a tip wipe path for skin/infill patterns.
-     * @param path: The path to modify.
-     * @param modifiers: The path modifiers.
-     * @param wipeDistance: The wipe distance.
-     * @param wipeSpeed: The wipe speed.
-     * @param outerPath: The outer path to connect to
-     * @param wipeAngle: The wipe angle.
-     * @param extruderSpeed: The extruder speed.
-     * @param tipWipeLiftDistance: The tip wipe lift distance.
-     * @param tipWipeCutoffDistance: The tip wipe cutoff distance.
-     */
-    static void GenerateTipWipe(Path& path, PathModifiers modifiers, Distance wipeDistance, Velocity wipeSpeed,
-                                QVector<Path>& outerPath, Angle wipeAngle, AngularVelocity extruderSpeed,
-                                Distance tipWipeLiftDistance, Distance tipWipeCutoffDistance);
-
-    /**
      * @brief GenerateForwardTipWipeOpenLoop generates a forward tip wipe path for open loop paths.
      * @param path: The path to modify.
      * @param modifiers: The path modifiers.

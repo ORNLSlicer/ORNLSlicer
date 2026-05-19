@@ -46,11 +46,8 @@ class RegionBase {
     //! \brief Performs the optimization for this region.
     //! \param layerNumber: current layer
     //! \param current_location: current location
-    //! \param innerMostClosedContour: inner most contour used in conjunction with path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param shouldNextPathBeCCW: CW or CCW state of last contour when using additional DOF
-    virtual void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                          QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) = 0;
+    virtual void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) = 0;
 
     //! \brief Get the paths generated from this region.
     //! \return Reference to region paths
@@ -123,8 +120,7 @@ class RegionBase {
     //! \brief adds the modifiers for each region
     //! \param path: path to add modifiers to
     //! \param supportsG3: whether or not the system supports G3 command
-    //! \param innerMostClosedContour: inner most closed contour for use with path modifiers/open paths
-    virtual void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) = 0;
+    virtual void calculateModifiers(Path& path, bool supportsG3) = 0;
 
     //! \brief The geometery this region will work on.
     PolygonList m_geometry;

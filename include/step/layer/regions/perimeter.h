@@ -34,25 +34,14 @@ class Perimeter : public RegionBase {
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number
-    //! \param innerMostClosedContour: used for subsequent path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param current_location: most recent location
     //! \param shouldNextPathBeCCW: state as to CW or CCW of previous path for use with additional DOF
-    void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                  QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) override;
+    void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) override;
 
     //! \brief Creates paths for the perimeter region.
     //! \param line: polyline representing path
     //! \return Polyline converted to path
     Path createPath(Polyline line) override;
-
-    //!\brief Returns the set of paths representing the outermost contours
-    //! \return a list of paths of outermost perimeter contours
-    QVector<Path>& getOuterMostPathSet();
-
-    //!\brief Returns the set of paths representing the innermost contours
-    //! \return a list of paths of innermost perimeter contours
-    QVector<Path>& getInnerMostPathSet();
 
     //! \brief gets the computed geometry
     //! \return the computed geometry
@@ -62,8 +51,7 @@ class Perimeter : public RegionBase {
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
-    //! \param innerMostClosedContour used for Prestarts (currently only skins/infill)
-    void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) override;
+    void calculateModifiers(Path& path, bool supportsG3) override;
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
@@ -83,14 +71,6 @@ class Perimeter : public RegionBase {
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
-
-    //! \brief Holds the first set of perimeter generated to provide for later
-    //! optimizations and path modifiers
-    QVector<Path> m_outer_most_path_set;
-
-    //! \brief Holds the last set of perimeter generated to provide for later
-    //! optimizations and path modifiers
-    QVector<Path> m_inner_most_path_set;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;

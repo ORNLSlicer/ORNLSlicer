@@ -51,8 +51,7 @@ void Raft::compute(uint layer_num) {
         PatternGenerator::GenerateLines(m_geometry.offset(-nozzle_offset / 2), nozzle_offset, Angle(), false));
 }
 
-void Raft::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                    QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Raft::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -102,7 +101,7 @@ void Raft::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
     }
 }
 
-void Raft::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Raft::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

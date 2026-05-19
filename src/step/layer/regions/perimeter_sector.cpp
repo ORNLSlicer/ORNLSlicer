@@ -105,12 +105,11 @@ void PerimeterSector::compute(uint layer_num) {
         m_paths.push_back(createPath(line));
 }
 
-void PerimeterSector::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                               QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void PerimeterSector::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     // NOP
 }
 
-void PerimeterSector::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void PerimeterSector::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

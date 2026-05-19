@@ -46,8 +46,6 @@ QString Inset::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void Inset::compute(uint layer_num) {
     m_paths.clear();
-    m_outer_most_path_set.clear();
-    m_inner_most_path_set.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kInsetNum));
 
@@ -76,8 +74,7 @@ void Inset::compute(uint layer_num) {
     }
 }
 
-void Inset::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                     QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
@@ -136,8 +133,7 @@ void Inset::optimize(int layerNumber, Point& current_location, QVector<Path>& in
         }
 
         if (newPath.size() > 0) {
-            QVector<Path> temp_path;
-            calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), temp_path);
+            calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
             PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                   m_sb->setting<Velocity>(PS::Travel::kSpeed));
             current_location = newPath.back()->end();
@@ -162,13 +158,9 @@ Path Inset::createPath(Polyline line) {
     return createPathWithLocalizedSettings(line);
 }
 
-QVector<Path>& Inset::getOuterMostPathSet() { return m_outer_most_path_set; }
-
-QVector<Path>& Inset::getInnerMostPathSet() { return m_inner_most_path_set; }
-
 QVector<Polyline> Inset::getComputedGeometry() { return m_computed_geometry; }
 
-void Inset::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Inset::calculateModifiers(Path& path, bool supportsG3) {
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
