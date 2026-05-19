@@ -617,6 +617,7 @@ class Constants {
           public:
             static const QString kEnable;
             static const QString kCount;
+            static const QString kBoundarySelection;
             static const QString kBeadWidth;
             static const QString kFirstLayerBeadWidth;
             static const QString kSpeed;

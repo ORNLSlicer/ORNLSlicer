@@ -170,10 +170,10 @@ class PolygonList : public QVector<Polygon> {
     PolygonList operator+=(const Polygon& rhs);
 
     //! \brief difference
-    PolygonList operator-(const PolygonList& rhs);
+    PolygonList operator-(const PolygonList& rhs) const;
 
     //! \brief difference
-    PolygonList operator-(const Polygon& rhs);
+    PolygonList operator-(const Polygon& rhs) const;
 
     //! \brief difference
     PolygonList operator-=(const PolygonList& rhs);
@@ -274,13 +274,13 @@ class PolygonList : public QVector<Polygon> {
      * \brief Remove any regions of this that overlap with other
      *        The result is returned.
      */
-    PolygonList _subtract(const Polygon& rhs);
+    PolygonList _subtract(const Polygon& rhs) const;
 
     /*!
      * \brief Remove any regions of the polygon that overlap with other's
      * Polygons The result is returned.
      */
-    PolygonList _subtract(const PolygonList& rhs);
+    PolygonList _subtract(const PolygonList& rhs) const;
 
     /*!
      * \brief Remove any regions of this that overlap with other

@@ -25,6 +25,21 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kNumberofPerimeters"
     local: true
+  - name: "perimeter_boundary_selection"
+    display: "Perimeter Boundaries"
+    type: "enumeration"
+    tooltip: "Selects which polygon boundaries are used to generate perimeter paths."
+    depends: {"perimeter":true}
+    options:
+      - "All Boundaries"
+      - "Internal Boundaries"
+      - "External Boundaries"
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kPerimeterBoundarySelection"
+    local: true
   - name: "perimeter_width"
     display: "Perimeter Bead Width"
     type: "distance"
