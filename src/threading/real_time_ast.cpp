@@ -16,7 +16,6 @@
 #include <qtmetamacros.h>
 #include <tcp_connection.h>
 
-#include "external_files/exporters/rpbf_exporter.h"
 #include "gcode/writers/writer_base.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
@@ -53,32 +52,6 @@ void RealTimeAST::doSlice() {
                 layer_to_start_at = m_recovery["layer_number"];
         }
         recovery_file.close();
-    }
-
-    // If this is the RPBF syntax, also setup the RPBF exporter
-    if (m_syntax == GcodeSyntax::kRPBF) {
-        if (m_RPBF_exporter != nullptr)
-            delete m_RPBF_exporter;
-
-        int global_sector_restart = 1;
-        int scan_head_restart = 0;
-
-        auto global_sector_itr = m_recovery.find("global_sector_count");
-        if (global_sector_itr != m_recovery.end() && !global_sector_itr.value().is_null())
-            global_sector_restart = m_recovery["global_sector_count"];
-
-        auto scan_head_itr = m_recovery.find("scan_head_count");
-        if (scan_head_itr != m_recovery.end() && !scan_head_itr.value().is_null())
-            scan_head_restart = m_recovery["scan_head_count"];
-
-        QString RPBF_exporter_path = "";
-        if (console_settings != nullptr)
-            recovery_file_path = console_settings->setting<QString>(Constants::ConsoleOptionStrings::kOutputLocation);
-        else
-            recovery_file_path = m_temp_gcode_dir.path();
-
-        m_RPBF_exporter =
-            new RPBFExporter(recovery_file_path, layer_to_start_at, global_sector_restart, scan_head_restart);
     }
 
     if (CSM->parts().empty()) {
@@ -214,9 +187,6 @@ void RealTimeAST::sendGCode() {
             QTextStream stream(&m_temp_gcode_output_file);
             stream << m_gcode_output;
 
-            if (m_syntax == GcodeSyntax::kRPBF)
-                m_RPBF_exporter->saveLayer(m_gcode_output);
-
             break;
         }
         case (RealTimeSlicingOutput::kNetwork): {
@@ -259,12 +229,6 @@ void RealTimeAST::saveRecoveryFile() {
 
     nlohmann::json recovery_info;
     recovery_info["layer_number"] = m_steps_done;
-
-    // If RPBF slicing then also save extra info
-    if (m_syntax == GcodeSyntax::kRPBF) {
-        recovery_info["global_sector_count"] = m_RPBF_exporter->getGlobalSectorCount();
-        recovery_info["scan_head_count"] = m_RPBF_exporter->getScanHeadCount();
-    }
 
     if (recovery.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream recovery_out(&recovery);

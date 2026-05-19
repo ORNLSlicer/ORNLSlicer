@@ -80,7 +80,7 @@ settings:
     display: "Perimeter Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for perimeter paths for systems without RPM control"
-    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":29}]}]}
+    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":28}]}]}
     options: []
     default: 1
     minor: "Perimeter"
@@ -99,42 +99,6 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kMinimumPerimeterPathLength"
-    local: true
-  - name: "perimeter_power"
-    display: "Perimeter Power"
-    type: "power"
-    tooltip: "Power for perimeter"
-    depends: {"AND":[{"perimeter":true},{"syntax":16}]}
-    options: []
-    default: 0
-    minor: "Perimeter"
-    major: "Profile"
-    namespace: "Profile::Perimeter"
-    symbol: "kPerimeterPower"
-    local: true
-  - name: "perimeter_focus"
-    display: "Perimeter Focus"
-    type: "distance"
-    tooltip: "Focus for perimeter"
-    depends: {"AND":[{"perimeter":true},{"syntax":16}]}
-    options: []
-    default: 0
-    minor: "Perimeter"
-    major: "Profile"
-    namespace: "Profile::Perimeter"
-    symbol: "kPerimeterFocus"
-    local: true
-  - name: "perimeter_spot_size"
-    display: "Perimeter Spot Size"
-    type: "distance"
-    tooltip: "Spot size for perimeter"
-    depends: {"AND":[{"perimeter":true},{"syntax":16}]}
-    options: []
-    default: 0
-    minor: "Perimeter"
-    major: "Profile"
-    namespace: "Profile::Perimeter"
-    symbol: "kPerimeterSpotSize"
     local: true
   - name: "perimeter_lead_in"
     display: "Enable Perimeter Lead-In"

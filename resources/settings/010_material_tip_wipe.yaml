@@ -529,7 +529,7 @@ settings:
     display: "Tip Wipe Voltage"
     type: "voltage"
     tooltip: "Sets welder voltage during tip wipe motions"
-    depends: {"syntax":27}
+    depends: {"syntax":26}
     options: []
     default: 0
     minor: "Tip Wipe"

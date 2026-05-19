@@ -39,7 +39,6 @@
 #include "gcode/writers/ornl_writer.h"
 #include "gcode/writers/reprap_writer.h"
 #include "gcode/writers/romi_fanuc_writer.h"
-#include "gcode/writers/rpbf_writer.h"
 #include "gcode/writers/sandia_writer.h"
 #include "gcode/writers/siemens_writer.h"
 #include "gcode/writers/skybaam_writer.h"
@@ -149,9 +148,6 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
         case GcodeSyntax::kRomiFanuc:
             m_base =
                 QSharedPointer<RomiFanucWriter>(new RomiFanucWriter(GcodeMetaList::RomiFanucMeta, GSM->getGlobal()));
-            break;
-        case GcodeSyntax::kRPBF:
-            m_base = QSharedPointer<RPBFWriter>(new RPBFWriter(GcodeMetaList::RPBFMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kSandia:
             m_base = QSharedPointer<SandiaWriter>(new SandiaWriter(GcodeMetaList::SandiaMeta, GSM->getGlobal()));

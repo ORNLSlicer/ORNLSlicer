@@ -200,9 +200,6 @@ static GcodeMeta HurcoMeta = {GcodeSyntax::kHurco,
 static GcodeMeta SkyBaamMeta = {GcodeSyntax::kSkyBaam, QString("("), QString(")"), in,   s, degree, lbm,
                                 in / minute,           in / s / s,   rev / minute, ".nc"};
 
-static GcodeMeta RPBFMeta = {GcodeSyntax::kRPBF, QString("//"), QString("//"), tensOfMicrons, s, degree, g, mm / s,
-                             mm / s / s,         rev / minute,  ".cli",        false};
-
 static GcodeMeta RepRapMeta = {
     GcodeSyntax::kRepRap,
     QString(";"), // starting_delim
@@ -332,7 +329,6 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kMeltio, MeltioMeta);
     result.insert((int)GcodeSyntax::kMVP, MVPMeta);
     result.insert((int)GcodeSyntax::kRomiFanuc, RomiFanucMeta);
-    result.insert((int)GcodeSyntax::kRPBF, RPBFMeta);
     result.insert((int)GcodeSyntax::kSandia, SandiaMeta);
     result.insert((int)GcodeSyntax::kSiemens, SiemensMeta);
     result.insert((int)GcodeSyntax::kSkyBaam, SkyBaamMeta);
