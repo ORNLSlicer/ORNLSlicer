@@ -618,6 +618,8 @@ enum class SeamSelection : uint8_t { kRandom, kOptimized, kRotating };
 
 enum class PrintDirection : uint8_t { kReverse_off, kReverse_All_Layers, kReverse_Alternating_Layers };
 
+enum class PerimeterBoundarySelection : uint8_t { kAll = 0, kInternal = 1, kExternal = 2 };
+
 enum class ForceMinimumLayerTime : uint8_t { kUse_Purge_Dwells, kSlow_Feedrate };
 
 enum class PreferenceChoice : uint8_t { kAsk = 0, kPerformAutomatically = 1, kSkipAutomatically = 2 };
