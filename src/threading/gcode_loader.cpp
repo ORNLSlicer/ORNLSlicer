@@ -44,8 +44,6 @@
 #include "gcode/parsers/rpbf_parser.h"
 #include "gcode/parsers/siemens_parser.h"
 #include "gcode/parsers/tormach_parser.h"
-#include "geometry/mesh/mesh_face.h"
-#include "geometry/mesh/mesh_vertex.h"
 #include "geometry/point.h"
 #include "geometry/segment_base.h"
 #include "geometry/segments/arc.h"
@@ -428,7 +426,6 @@ void GCodeLoader::run() {
 
                     ret = QFile::rename(tempFile.fileName(), m_filename);
                 }
-
             }
         } catch (ExceptionBase& exception) {
             QString message = "Error parsing GCode: " + QString(exception.what());
