@@ -6,7 +6,6 @@
 #include <clipper.hpp>
 #include <qcontainerfwd.h>
 #include <qpolygon.h>
-#include <qtypes.h>
 #include <qvectornd.h>
 
 #include "geometry/polygon.h"
@@ -17,7 +16,6 @@ namespace ORNL {
 class Point;
 
 const static int clipper_init = (0);
-#define NO_INDEX (std::numeric_limits<uint>::max())
 
 /*!
  * \class PolygonList
@@ -30,20 +28,9 @@ const static int clipper_init = (0);
  */
 class PolygonList : public QVector<Polygon> {
   public:
-    // QVector constructors.
     using QVector<Polygon>::QVector;
 
     PolygonList();
-
-    PolygonList(QVector<QVector<QPair<double, double>>> raw_poly_list);
-    /*!
-     * \brief getRawPoints - returns points of all polygons in list as raw values
-     * \return Vector of polygons comprised of pairs (x, y)
-     */
-    QVector<QVector<QPair<double, double>>> getRawPoints();
-
-    //! The total number of points in all the individual polygons
-    uint pointCount() const;
 
     /*!
      * \brief Offsets each of the polygons.
@@ -70,28 +57,6 @@ class PolygonList : public QVector<Polygon> {
     bool inside(Point p, bool border_result = false) const;
 
     /*!
-     * \brief Implements monotone chain convex hull algorithm
-     *
-     * See <a
-     * href="https://en.wikibooks.org/wiki/Algorithm_Implementation/Geometry/Convex_hull/Monotone_chain">Monotone
-     * Chain</a>
-     */
-    Polygon convexHull() const;
-
-    /*!
-     * \brief Smooth out small perpendicular segments
-     *
-     * Smoothing is performed by removing the inner most vertex of a line
-     * segment smaller than \p remove_length which has an angle with the
-     * next and previous line segment smaller than roughly 150*
-     *
-     * Note that in its current implementation this function doesn't remove
-     * line segments with an angle smaller than 30* Such would be the case
-     * for an N shape.
-     */
-    PolygonList smooth(const Distance& remove_length);
-
-    /*!
      * \brief removes all middle collinear points judged by the specified tolerance angle
      * tolerance is defaulted to 0.01 degree
      */
@@ -113,34 +78,12 @@ class PolygonList : public QVector<Polygon> {
     PolygonList getOutsidePolygons() const;
 
     /*!
-     * Exclude holes which have no parts inside of them.
-     * \return the resulting polygons.
-     */
-    PolygonList removeEmptyHoles() const;
-
-    /*!
-     * Return hole polygons which have no parts inside of them.
-     * \return the resulting polygons.
-     */
-    PolygonList getEmptyHoles() const;
-
-    // Jingyang-optimizer
-    /*!
      * \brief Returns the sum of parimeters of polygons
      */
     int64_t totalLength();
 
-    // Nitish-support
-    //! \brief Calculates the area of a the boundary of the polygonList
-    Area outerArea();
-
     //! \brief Calcultes the area of a PolygonList accounting for holes
     Area netArea();
-
-    PolygonList shift(Point shift);
-
-    // intersection over union of two polygonlist
-    float commonArea(PolygonList cur_layer_outline);
 
     // Peform union by even-odd on all polygons at once.
     void addAll(QVector<Polygon> polygons);
@@ -157,19 +100,6 @@ class PolygonList : public QVector<Polygon> {
      */
     QVector<Polyline> getEdges() const;
 
-  private:
-    /*!
-     * recursive part of \ref Polygons::removeEmptyHoles and \ref
-     * Polygons::getEmptyHoles
-     * \param node The node of the polygons part to process
-     * \param remove_holes Whether to remove empty holes or everything but
-     * the empty holes \param ret Where to store polygons which are not
-     * empty holes
-     */
-    void removeEmptyHoles_processPolyTreeNode(const ClipperLib2::PolyNode& node, const bool remove_holes,
-                                              PolygonList& ret) const;
-
-  public:
     /*!
      * Split up the polygons into groups according to the even-odd rule.
      * Each PolygonsPart in the result has an outline as first polygon,
@@ -188,18 +118,10 @@ class PolygonList : public QVector<Polygon> {
     //! \brief Reverses the direction of normals for the points of this polygon list
     PolygonList reverseNormalDirections();
 
-    //! \brief Returns the closest point to `rhs`
-    //! \param rhs: the point in question
-    //! \return The closest point
-    Point closestPointTo(const Point& rhs);
-
   private:
     void splitIntoParts_processPolyTreeNode(ClipperLib2::PolyNode* node, QVector<PolygonList>& ret) const;
 
   public:
-    //! \brief Removes polygons with area smaller than \p minAreaSize.
-    PolygonList removeSmallAreas(Area minAreaSize);
-
     //! \brief Removes overlapping consecutive line segments which don't
     //! delimit a positive area.
     PolygonList removeDegenerateVertices();
@@ -304,9 +226,6 @@ class PolygonList : public QVector<Polygon> {
 
     //! \brief Tracks geometry that is lost as a result of inward offsetting
     QVector<Polygon> lost_geometry;
-
-    //! \brief Returns distance from between point and edge of island
-    float distanceTo(Point point);
 
   protected:
     //! \brief Private operator for use with internal clipper functions
