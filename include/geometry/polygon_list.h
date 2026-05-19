@@ -112,17 +112,6 @@ class PolygonList : public QVector<Polygon> {
      */
     QVector<PolygonList> splitIntoParts(bool unionAll = false) const;
 
-    //! \brief Restores point normals to geometry after it has been modified
-    //! \param all_polys: List of Polygons to retrieve normals from
-    //! \param offset: Whether normals are being restored after an offset operation.
-    //! If true: normals will be restored from the closest point found within all_polys.
-    //! If false: normals will be restored from exact matching point found within all_polys.
-    //! If no exact match can be found, the bisecting normal will be computed and assigned.
-    void restoreNormals(QVector<Polygon> all_polys, bool offset = false);
-
-    //! \brief Reverses the direction of normals for the points of this polygon list
-    PolygonList reverseNormalDirections();
-
   private:
     void splitIntoParts_processPolyTreeNode(ClipperLib2::PolyNode* node, QVector<PolygonList>& ret) const;
 

@@ -7,7 +7,6 @@
 #include <qsharedpointer.h>
 #include <qtypes.h>
 
-#include "algorithms/knn.h"
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
@@ -27,37 +26,12 @@
 
 namespace ORNL {
 namespace {
-QVector<Point> collectNormalSourcePoints(const PolygonList& geometry) {
-    QVector<Point> points;
-    for (const Polygon& poly : geometry) {
-        for (const Point& point : poly) {
-            points.push_back(point);
-        }
-    }
-
-    return points;
-}
-
-void appendPathLinesWithNormals(PolygonList& path_lines, QVector<Point>& previous_points,
-                                QVector<Polyline>& computed_geometry) {
-    QVector<Point> current_points;
-
+void appendPathLines(PolygonList& path_lines, QVector<Polyline>& computed_geometry) {
     for (Polygon& poly : path_lines) {
-        for (Point& p : poly) {
-            kNN neighbor(previous_points, QVector<Point> {p}, 1);
-            neighbor.execute();
-
-            int closest = neighbor.getNearestIndices().first();
-            p.setNormals(previous_points[closest].getNormals());
-            current_points.push_back(p);
-        }
-
         Polyline line = poly.toPolyline();
         line.pop_back();
         computed_geometry.push_back(line);
     }
-
-    previous_points = current_points;
 }
 
 PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundaries,
@@ -102,14 +76,12 @@ void Perimeter::compute(uint layer_num) {
         static_cast<PerimeterBoundarySelection>(m_sb->setting<int>(PS::Perimeter::kBoundarySelection));
 
     const PolygonList original_geometry = m_geometry;
-    QVector<Point> previous_points = collectNormalSourcePoints(original_geometry);
-
     if (boundary_selection == PerimeterBoundarySelection::kAll) {
         PolygonList path_lines = m_geometry.offset(-beadWidth / 2);
 
         for (int perimeter_number = 0; !path_lines.isEmpty() && perimeter_number < perimeter_count;
              ++perimeter_number) {
-            appendPathLinesWithNormals(path_lines, previous_points, m_computed_geometry);
+            appendPathLines(path_lines, m_computed_geometry);
 
             m_geometry = path_lines.offset(-beadWidth / 2, -beadWidth / 2);
             path_lines = path_lines.offset(-beadWidth, -beadWidth / 2);
@@ -134,7 +106,7 @@ void Perimeter::compute(uint layer_num) {
             break;
         }
 
-        appendPathLinesWithNormals(path_lines, previous_points, m_computed_geometry);
+        appendPathLines(path_lines, m_computed_geometry);
 
         const Distance remaining_offset = beadWidth * (perimeter_number + 1);
         m_geometry = selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, boundary_selection,
