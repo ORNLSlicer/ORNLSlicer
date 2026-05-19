@@ -116,19 +116,12 @@ void MainControl::loadComplete() {
 void MainControl::sliceComplete(QString filepath, bool alterFile) {
     if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) !=
         SlicerType::kImageSlice) {
-        if (m_options->setting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode)) {
-            auto meta = GcodeMetaList::createMapping()[GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)];
-            updateOutputInformation(filepath, meta);
-            gcodeParseComplete();
-        }
-        else {
-            GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
-            connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);
-            connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this, &MainControl::updateOutputInformation);
-            connect(loader, &GCodeLoader::finished, this, &MainControl::gcodeParseComplete);
-            connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
-            loader->start();
-        }
+        GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
+        connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);
+        connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this, &MainControl::updateOutputInformation);
+        connect(loader, &GCodeLoader::finished, this, &MainControl::gcodeParseComplete);
+        connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
+        loader->start();
     }
     else {
         emit finished();
@@ -172,25 +165,14 @@ void MainControl::gcodeParseComplete() {
 }
 
 void MainControl::displayProgress(StatusUpdateStepType type, int percentage) {
-    if (!m_options->setting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode)) {
-        if (m_last_step_type != type)
-            m_last_step_type = type;
-        else
-            std::cout << "\r";
+    if (m_last_step_type != type)
+        m_last_step_type = type;
+    else
+        std::cout << "\r";
 
-        std::cout << toString(type).toStdString() << " " << percentage;
+    std::cout << toString(type).toStdString() << " " << percentage;
 
-        if (percentage == 100)
-            std::cout << "\n";
-    }
-    else {
-        if (type == StatusUpdateStepType::kRealTimeLayerCompleted) {
-            if (percentage == -1)
-                std::cout << "\n" << "Slice complete";
-            else
-                std::cout << "\r" << toString(type).toStdString() << " "
-                          << percentage; // Percentage is actually a layer number here
-        }
-    }
+    if (percentage == 100)
+        std::cout << "\n";
 }
 } // namespace ORNL

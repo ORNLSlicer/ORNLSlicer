@@ -21,22 +21,6 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
-QSharedPointer<GlobalLayer> LayerOrderOptimizer::populateStep(QVector<QSharedPointer<Part>> build_parts) {
-    //! \note called by real-time slicers only
-
-    QSharedPointer<GlobalLayer> new_g_layer =
-        QSharedPointer<GlobalLayer>::create(0); // only one layer is kept at a time, so we can always number it 0
-
-    // add all the dirty step groups to the global layer
-    for (auto& part : build_parts) {
-        QList<Part::StepPair> dirty_step_groups = part->getDirtyStepPairs();
-        for (auto& step_group : dirty_step_groups)
-            new_g_layer->addStepPair(part->getId(), step_group);
-    }
-
-    return new_g_layer;
-}
-
 QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPointer<SettingsBase> global_sb,
                                                                       QVector<QSharedPointer<Part>> build_parts) {
     // list to return at end of function

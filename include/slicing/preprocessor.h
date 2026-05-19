@@ -3,7 +3,6 @@
 #include <functional>
 
 #include <qcontainerfwd.h>
-#include <qhash.h>
 #include <qobject.h>
 #include <qsharedpointer.h>
 
@@ -20,10 +19,9 @@ namespace ORNL {
 //!        level, this class iterates through parts, then meshes and then cross-sections. You can supply custom
 //!        processing in the form of: \code std::functions<bool(SomeKindOfProcessing)> \endcode to various stages of the
 //!        pipeline. See individual modes for exactly what each one of these functions are called.
-//!   This class is separated into two major modes:
-//!         A. Whole-part approach:
-//!             This method replaces the old system used by PolymerSlicer. It assumes that all parts can be sliced from
-//!             start to end with all information. This mode can be triggered by using the processAll() call.
+//!   This class processes parts using a whole-part approach:
+//!             It assumes that all parts can be sliced from start to end with all information. This mode can be
+//!             triggered by using the processAll() call.
 //!
 //!             Preprocessing occurs in this order:
 //!                 1. Initial Processing: provides access to all parts/ global settings before any steps are created
@@ -34,26 +32,6 @@ namespace ORNL {
 //!                 6. Status Update: provides access to a percentage of the total number of parts done
 //!                 7. Final Processing: provides access to all parts/ global settings after all steps are created
 //!
-//!         B. Single-step approach:
-//!             This method enables real time slicing. It differs from the whole-part approach in that it only computes
-//!             a single layer/ step per call. This method utilizes two calls: processInitial() runs code once before
-//!             any steps are generated, and processNext() which loads each part with up to one layer to process next.
-//!
-//!             Preprocessing occurs in this order:
-//!                 Before any layers can be processed:
-//!                     1. Initial Processing: provides access to all parts/ global settings before any steps are
-//!                     created
-//!                     2. Part Processing: provides access to single part and its settings
-//!                     3. Mesh Processing: provides access to single mesh and its parent part's settings
-//!                 On each call to processNext():
-//!                     1. Step Builder: serves as instructions to build a single step from a single cross-sectional
-//!                     slice for a part
-//!                     2. Cross Section Processing: allows for access to newly generated step on part
-//!                     3. Final Processing: provides access to all parts/ global settings after all steps are created
-//!                     for this layer
-//!                 \note processNext() will only slice parts who form the next global layer. It also returns a boolean
-//!                 to signal if a layer was
-//!                       created or when no more layers can be processed.
 class Preprocessor {
   public:
     //! \struct Parts
@@ -68,23 +46,18 @@ class Preprocessor {
     //! \brief stores information about where a part is in the slicing process
     struct ActivePartMeta {
         ActivePartMeta(QSharedPointer<Part> _part = nullptr, QSharedPointer<SettingsBase> _part_sb = nullptr,
-                       int _steps_processed = 0, Distance _current_height = 0.0, int _part_start = 0,
-                       bool _consuming = true) {
+                       int _steps_processed = 0, int _part_start = 0) {
             part = _part;
             part_sb = _part_sb;
             steps_processed = _steps_processed;
-            current_height = _current_height;
             part_start = _part_start;
-            consuming = _consuming;
         }
 
         QSharedPointer<Part> part;
         QSharedPointer<SettingsBase> part_sb;
         int steps_processed = 0;
-        Distance current_height = 0.0;
         int part_start = 0;
         int last_step_count = 0;
-        bool consuming = true;
     };
 
     //! \typedef Processing
@@ -132,13 +105,6 @@ class Preprocessor {
 
     //! \brief Processes all parts, meshes and cross-sections at once
     void processAll();
-
-    //! \brief Initial processing run on all parts and meshes, building slicer objects
-    void processInital();
-
-    //! \brief Processes the next printable global layer
-    //! \return true if a new layer was created
-    bool processNext();
 
     //! \brief Provides access to all parts/ global settings before any steps are created
     //! \param \see Processing
@@ -188,10 +154,5 @@ class Preprocessor {
     //! \brief Sorted parts
     Parts m_parts;
 
-    //! \brief A list of Slicers matched with their part indices
-    QHash<int, QSharedPointer<BufferedSlicer>> m_mesh_slicers;
-
-    //! \brief A list of ActivePartMeta matched with their part name
-    QHash<QString, ActivePartMeta> m_active_parts;
 };
 } // namespace ORNL

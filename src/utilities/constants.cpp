@@ -1171,14 +1171,6 @@ const QString Constants::ConsoleOptionStrings::kHeaderSlicedBy = "header_sliced_
 const QString Constants::ConsoleOptionStrings::kHeaderDescription = "header_description";
 
 const QString Constants::ConsoleOptionStrings::kSliceBounds = "slice_bounds";
-const QString Constants::ConsoleOptionStrings::kRealTimeMode = "real_time_mode";
-const QString Constants::ConsoleOptionStrings::kRecoveryFilePath = "recovery_file_path";
-const QString Constants::ConsoleOptionStrings::kOpenLoop = "open_loop";
-const QString Constants::ConsoleOptionStrings::kRealTimeCommunicationMode = "real_time_communication_mode";
-const QString Constants::ConsoleOptionStrings::kRealTimeNetworkAddress = "real_time_network_address";
-const QString Constants::ConsoleOptionStrings::kRealTimeNetworkIP = "real_time_network_ip";
-const QString Constants::ConsoleOptionStrings::kRealTimeNetworkPort = "real_time_network_port";
-const QString Constants::ConsoleOptionStrings::kRealTimePrinter = "real_time_printer_name";
 const QString Constants::ConsoleOptionStrings::kSingleSliceHeight = "single_slice_height";
 const QString Constants::ConsoleOptionStrings::kSingleSliceLayerNumber = "single_slice_layer_number";
 

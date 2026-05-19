@@ -17,18 +17,6 @@ using json = fifojson;
 
 namespace ORNL {
 /*!
- * \enum RealTimeSlicingMode
- * \brief what mode real time slicing is operating in
- */
-enum RealTimeSlicingMode { kClosedLoop = 0, kOpenLoop = 1 };
-
-/*!
- * \enum RealTimeSlicingOutput
- * \brief how the gcode should be written when using real time slicing
- */
-enum RealTimeSlicingOutput { kFile = 0, kNetwork = 1 };
-
-/*!
  * \enum MeshType
  * \brief the various types of meshes supported by ORNLSlicer
  */
@@ -61,8 +49,7 @@ enum class SlicerType : uint8_t {
     kPolymerSlice = 0,
     kMetalEmbossingSlice = 1,
     kMetalSlice = 2,
-    kRealTimePolymer = 3,
-    kImageSlice = 4
+    kImageSlice = 3
 };
 
 //! \brief Function for going from json to SlicerType
@@ -835,7 +822,6 @@ enum class StatusUpdateStepType : uint8_t {
     kGcodeGeneraton = 3,
     kGcodeParsing = 4,
     kVisualization = 5,
-    kRealTimeLayerCompleted = 6,
 };
 
 inline QString toString(StatusUpdateStepType statusType) {
@@ -852,8 +838,6 @@ inline QString toString(StatusUpdateStepType statusType) {
             return "G-Code Parsing:";
         case StatusUpdateStepType::kVisualization:
             return "Visualization:";
-        case StatusUpdateStepType::kRealTimeLayerCompleted:
-            return "Layers completed:";
     }
 }
 

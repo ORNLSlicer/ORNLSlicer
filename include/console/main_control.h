@@ -75,7 +75,7 @@ class MainControl : public QObject {
     QSharedPointer<SettingsBase> m_options;
 
     //! \brief Last step of slicing process seen.  Needed to format console output.
-    StatusUpdateStepType m_last_step_type;
+    StatusUpdateStepType m_last_step_type = StatusUpdateStepType::kPreProcess;
 
     //! \brief Number of parts remaining to load if more than one specified.
     int m_parts_to_load;

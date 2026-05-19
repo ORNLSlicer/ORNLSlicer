@@ -15,11 +15,6 @@ namespace ORNL {
  */
 class LayerOrderOptimizer {
   public:
-    //! \brief creates a single global layer
-    //! \param build_parts: list of parts with steps
-    //! \note used by real time slicers
-    static QSharedPointer<GlobalLayer> populateStep(QVector<QSharedPointer<Part>> build_parts);
-
     //! \brief Creates and orders global layers
     //! \param global_sb: global settings base
     //! \param build_parts: list of build parts to access steps

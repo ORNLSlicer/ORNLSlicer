@@ -3,9 +3,7 @@
 #include <vector>
 
 #include <CGAL/property_map.h>
-#include <QHostAddress>
 #include <boost/preprocessor.hpp>
-#include <qabstractsocket.h>
 #include <qcommandlineparser.h>
 #include <qcontainerfwd.h>
 #include <qdir.h>
@@ -53,8 +51,6 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
 
     parser.addOption({Constants::ConsoleOptionStrings::kInputGlobalSettings,
                       "Valid settings file to extract global settings from.", "file", ""});
-    // parser.addOption({Constants::ConsoleOptionStrings::kInputLocalSettings, "Comma separated pair: index,file. Where
-    // index is 0-based id for STL reference and file is the settings file to apply.", "index,file pair", ""});
     parser.addOption(
         {Constants::ConsoleOptionStrings::kInputSTLTransform, "File containing stl transforms.", "file", ""});
     parser.addOption(
@@ -90,30 +86,6 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
     parser.addOption({Constants::ConsoleOptionStrings::kSliceBounds,
                       "Comma separated pair: low,high. 0-based indicies specifying layers to slice (inclusive).",
                       "low,high pair", ""});
-    parser.addOption({Constants::ConsoleOptionStrings::kRealTimeMode,
-                      "Keeps slicing instance running and generates Gcode for each "
-                      "layer. Requires network communication. Default is false."});
-    parser.addOption({Constants::ConsoleOptionStrings::kRecoveryFilePath,
-                      "If using real time mode, slicing will continue from a recovery file position.",
-                      "Recovery file path", ""});
-    parser.addOption({Constants::ConsoleOptionStrings::kOpenLoop,
-                      "If using real time mode, open loop will not wait for signals "
-                      "before compute the next layer. Default is false."});
-    parser.addOption({Constants::ConsoleOptionStrings::kRealTimeCommunicationMode,
-                      "0 - file, 1 - network. Specifies whether to write Gcode to file or socket."
-                      " In the case of file, Gcode will be written to the location specified by output_location option "
-                      "and completion signal will be sent to "
-                      " real_time_network_address. In the case of network, Gcode will be sent directly to "
-                      "real_time_network_address. Default is 0.",
-                      "0/1", ""});
-    parser.addOption({Constants::ConsoleOptionStrings::kRealTimeNetworkAddress,
-                      "Comma separated pair: IP Address,Port. Specifies connection information for real-time mode. "
-                      "Default is localhost/12345.",
-                      "IP Address,Port pair", ""});
-    parser.addOption({Constants::ConsoleOptionStrings::kRealTimePrinter,
-                      "The name of the printer to stream commands and gcode to over the network. This is set in Sensor "
-                      "Control 2. Default is \"Default\"",
-                      "Printer Name", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kSingleSliceHeight,
                       "List of heights to slice in lieu of slicing the entire object. Mutually exclusive to "
                       "single_slice_layer_number. Parameter can be specified multiple times.",
@@ -326,82 +298,6 @@ bool CommandLineConverter::checkAdvancedOptions(QCommandLineParser& parser, QSha
         options->setSetting<bool>(
             Constants::ConsoleOptionStrings::kOverwriteOutputFile,
             QVariant(parser.value(Constants::ConsoleOptionStrings::kOverwriteOutputFile)).toBool());
-    }
-
-    if (parser.isSet(Constants::ConsoleOptionStrings::kRealTimeMode))
-        options->setSetting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode, true);
-    else
-        options->setSetting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode, false);
-
-    if (parser.isSet(Constants::ConsoleOptionStrings::kRecoveryFilePath)) {
-        QString value = parser.value(Constants::ConsoleOptionStrings::kRecoveryFilePath);
-        if (!value.isEmpty())
-            options->setSetting<QString>(Constants::ConsoleOptionStrings::kRecoveryFilePath, value);
-        else {
-            qInfo() << "Not a valid value for " << Constants::ConsoleOptionStrings::kRecoveryFilePath;
-            return false;
-        }
-    }
-    else
-        options->setSetting<QString>(Constants::ConsoleOptionStrings::kRecoveryFilePath, "");
-
-    if (parser.isSet(Constants::ConsoleOptionStrings::kOpenLoop))
-        options->setSetting<bool>(Constants::ConsoleOptionStrings::kOpenLoop, true);
-    else
-        options->setSetting<bool>(Constants::ConsoleOptionStrings::kOpenLoop, false);
-
-    if (parser.isSet(Constants::ConsoleOptionStrings::kRealTimeCommunicationMode)) {
-        bool ok;
-        int value = QVariant(parser.value(Constants::ConsoleOptionStrings::kRealTimeCommunicationMode)).toInt(&ok);
-        if (ok)
-            options->setSetting<int>(Constants::ConsoleOptionStrings::kRealTimeCommunicationMode, value);
-        else {
-            qInfo() << "Not a valid value for real_time_communication_mode";
-            return false;
-        }
-    }
-    else {
-        if (parser.isSet(Constants::ConsoleOptionStrings::kRealTimeMode))
-            options->setSetting<int>(Constants::ConsoleOptionStrings::kRealTimeCommunicationMode, 0);
-    }
-
-    if (parser.isSet(Constants::ConsoleOptionStrings::kRealTimeNetworkAddress)) {
-        QStringList ipAndPort = parser.value(Constants::ConsoleOptionStrings::kRealTimeNetworkAddress).split(',');
-        if (ipAndPort.size() != 2) {
-            qInfo() << "IP Address/Port must be a comma-separated pair";
-            return false;
-        }
-
-        QHostAddress address(ipAndPort[0]);
-        if (QAbstractSocket::IPv4Protocol != address.protocol() &&
-            QAbstractSocket::IPv6Protocol != address.protocol()) {
-            qInfo() << "Not a valid IP Address";
-            return false;
-        }
-
-        bool ok;
-        int port = QVariant(ipAndPort[1]).toInt(&ok);
-        if (port < 1 || port > 65535) {
-            qInfo() << "Not a valid port";
-            return false;
-        }
-
-        options->setSetting<QString>(Constants::ConsoleOptionStrings::kRealTimeNetworkIP, ipAndPort[0]);
-        options->setSetting<int>(Constants::ConsoleOptionStrings::kRealTimeNetworkPort, port);
-    }
-    else {
-        if (parser.isSet(Constants::ConsoleOptionStrings::kRealTimeMode)) {
-            options->setSetting<QString>(Constants::ConsoleOptionStrings::kRealTimeNetworkIP, "localhost");
-            options->setSetting<int>(Constants::ConsoleOptionStrings::kRealTimeNetworkPort, 12345);
-        }
-    }
-
-    if (parser.isSet(Constants::ConsoleOptionStrings::kRealTimePrinter)) {
-        QString name = parser.value(Constants::ConsoleOptionStrings::kRealTimePrinter);
-        options->setSetting<QString>(Constants::ConsoleOptionStrings::kOutputLocation, name);
-    }
-    else {
-        options->setSetting<QString>(Constants::ConsoleOptionStrings::kRealTimePrinter, "Default");
     }
 
     if (parser.isSet(Constants::ConsoleOptionStrings::kSingleSliceHeight) &&

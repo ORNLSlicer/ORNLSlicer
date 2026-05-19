@@ -41,7 +41,6 @@ function(FindDependencies)
     find_package(zip           REQUIRED)
     find_package(polyclipping  REQUIRED)
     find_package(psimpl        REQUIRED)
-    find_package(sockets       REQUIRED)
 
     include(CGAL_Eigen3_support)
     if(TARGET CGAL::Eigen3_support)
@@ -76,7 +75,6 @@ function(FindDependencies)
         Eigen3::Eigen
         CGAL::Eigen3_support
         nlohmann_json::nlohmann_json
-        ornl::sockets
         ornl::psimpl
         ornl::polyclipping
         zip::zip
