@@ -59,11 +59,10 @@ enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1, kToro
  */
 enum class SlicerType : uint8_t {
     kPolymerSlice = 0,
-    kMetalSlice = 1,
-    kRPBFSlice = 2,
+    kMetalEmbossingSlice = 1,
+    kMetalSlice = 2,
     kRealTimePolymer = 3,
-    kRealTimeRPBF = 4,
-    kImageSlice = 5
+    kImageSlice = 4
 };
 
 //! \brief Function for going from json to SlicerType
@@ -136,25 +135,24 @@ enum class GcodeSyntax : uint8_t {
     kMazak = 13,
     kMVP = 14,
     kRomiFanuc = 15,
-    kRPBF = 16,
-    kSiemens = 17,
-    kSkyBaam = 18,
-    kThermwood = 19,
-    kWolf = 20,
-    kRepRap = 21,
-    kMach4 = 22,
-    kAeroBasic = 23,
-    kMeld = 24,
-    kORNL = 25,
-    kOkuma = 26,
-    kTormach = 27,
-    kAML3D = 28,
-    kKraussMaffei = 29,
-    kSandia = 30,
-    k5AxisMarlin = 31,
-    kMeltio = 32,
-    kAdamantine = 33,
-    kORNLMetric = 34
+    kSiemens = 16,
+    kSkyBaam = 17,
+    kThermwood = 18,
+    kWolf = 19,
+    kRepRap = 20,
+    kMach4 = 21,
+    kAeroBasic = 22,
+    kMeld = 23,
+    kORNL = 24,
+    kOkuma = 25,
+    kTormach = 26,
+    kAML3D = 27,
+    kKraussMaffei = 28,
+    kSandia = 29,
+    k5AxisMarlin = 30,
+    kMeltio = 31,
+    kAdamantine = 32,
+    kORNLMetric = 33
 };
 
 inline QString toString(GcodeSyntax syntax) {
@@ -203,8 +201,6 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kORNL;
         case GcodeSyntax::kRomiFanuc:
             return PRS::SyntaxString::kRomiFanuc;
-        case GcodeSyntax::kRPBF:
-            return PRS::SyntaxString::kRPBF;
         case GcodeSyntax::kSandia:
             return PRS::SyntaxString::kSandia;
         case GcodeSyntax::kSiemens:
@@ -524,8 +520,7 @@ enum class IslandType : uint8_t {
     kLaserScan,
     kThermalScan,
     kSkirt,
-    kSupport,
-    kPowderSector
+    kSupport
 };
 
 enum class MachineType : uint8_t {

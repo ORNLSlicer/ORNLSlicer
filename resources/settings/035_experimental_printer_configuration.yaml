@@ -10,9 +10,7 @@ settings:
       - "Polymer"
       - "Metal Embossing"
       - "Metal"
-      - "RPBF"
       - "Real Time Polymer"
-      - "Real Time RPBF"
       - "Image"
     default: 0
     minor: "Printer Configuration"

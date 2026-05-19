@@ -235,12 +235,12 @@ class CommonParser : public ParserBase {
     //! \return Current line index
     int getCurrentLine();
 
-    //! \brief Updates current end line index.  Used by RPBF_parser child class for command expansion.
+    //! \brief Updates current end line index.
     //! \param count Number of lines to add
     void alterCurrentEndLine(int count);
 
     //! \brief Sets the flag indicating the text was modified.  Triggers gcode_loader to reload text once
-    //! processing complete.  Used by RPBF_parser since it modifies text.
+    //! processing complete.
     void setModified();
 
     //! \brief Sets the X position of the extruder.

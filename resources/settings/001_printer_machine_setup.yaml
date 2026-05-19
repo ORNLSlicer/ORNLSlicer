@@ -23,7 +23,6 @@ settings:
       - "Mazak"
       - "MVP"
       - "RomiFanuc"
-      - "RPBF"
       - "Siemens"
       - "SkyBaam"
       - "Thermwood"
@@ -106,7 +105,7 @@ settings:
     display: "Axis A"
     type: "angle"
     tooltip: "Sets the printing angle for the A axis"
-    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":31},{"OR":[{"syntax":34},{"syntax":25}]}]}]}
+    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":30},{"OR":[{"syntax":33},{"syntax":24}]}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -118,7 +117,7 @@ settings:
     display: "Axis B"
     type: "angle"
     tooltip: "Sets the printing angle for the B axis"
-    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":31},{"OR":[{"syntax":34},{"syntax":25}]}]}]}
+    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":30},{"OR":[{"syntax":33},{"syntax":24}]}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -130,7 +129,7 @@ settings:
     display: "Axis C"
     type: "angle"
     tooltip: "Sets the printing angle for the C axis"
-    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":31},{"OR":[{"syntax":34},{"syntax":25}]}]}]}
+    depends: {"OR":[{"syntax":4},{"OR":[{"syntax":30},{"OR":[{"syntax":33},{"syntax":24}]}]}]}
     options: []
     default: 0
     minor: "Machine Setup"

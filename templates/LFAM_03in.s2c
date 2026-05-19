@@ -222,7 +222,6 @@
             "infill_prestart_distance": 50800,
             "infill_prestart_extruder_speed": 150,
             "infill_prestart_speed": 101600,
-            "infill_sector_count": 12,
             "ironing": false,
             "ironing_top": true,
             "ironing_line_spacing": 5080,
