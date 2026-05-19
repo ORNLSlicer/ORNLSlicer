@@ -564,6 +564,7 @@ const QString Constants::ProfileSettings::Layer::kMinExtrudeLength = "minimum_ex
 // Perimeter
 const QString Constants::ProfileSettings::Perimeter::kEnable = "perimeter";
 const QString Constants::ProfileSettings::Perimeter::kCount = "perimeter_count";
+const QString Constants::ProfileSettings::Perimeter::kBoundarySelection = "perimeter_boundary_selection";
 const QString Constants::ProfileSettings::Perimeter::kBeadWidth = "perimeter_width";
 const QString Constants::ProfileSettings::Perimeter::kSpeed = "perimeter_speed";
 const QString Constants::ProfileSettings::Perimeter::kExtruderSpeed = "perimeter_extruder_speed";

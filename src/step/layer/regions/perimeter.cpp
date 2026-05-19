@@ -26,6 +26,54 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+QVector<Point> collectNormalSourcePoints(const PolygonList& geometry) {
+    QVector<Point> points;
+    for (const Polygon& poly : geometry) {
+        for (const Point& point : poly) {
+            points.push_back(point);
+        }
+    }
+
+    return points;
+}
+
+void appendPathLinesWithNormals(PolygonList& path_lines, QVector<Point>& previous_points,
+                                QVector<Polyline>& computed_geometry) {
+    QVector<Point> current_points;
+
+    for (Polygon& poly : path_lines) {
+        for (Point& p : poly) {
+            kNN neighbor(previous_points, QVector<Point> {p}, 1);
+            neighbor.execute();
+
+            int closest = neighbor.getNearestIndices().first();
+            p.setNormals(previous_points[closest].getNormals());
+            current_points.push_back(p);
+        }
+
+        Polyline line = poly.toPolyline();
+        line.pop_back();
+        computed_geometry.push_back(line);
+    }
+
+    previous_points = current_points;
+}
+
+PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundaries,
+                                           const PolygonList& internal_boundaries, PerimeterBoundarySelection selection,
+                                           Distance offset_distance) {
+    if (selection == PerimeterBoundarySelection::kInternal) {
+        return external_boundaries - internal_boundaries.offset(offset_distance);
+    }
+
+    PolygonList offset_external_geometry = external_boundaries.offset(-offset_distance);
+    PolygonList offset_geometry = offset_external_geometry - internal_boundaries;
+    offset_geometry.lost_geometry = offset_external_geometry.lost_geometry;
+    return offset_geometry;
+}
+} // namespace
+
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
                      const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
     : RegionBase(sb, index, settings_polygons, uncut_geometry) {}
@@ -49,43 +97,48 @@ void Perimeter::compute(uint layer_num) {
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-    int rings = m_sb->setting<int>(PS::Perimeter::kCount);
+    int perimeter_count = m_sb->setting<int>(PS::Perimeter::kCount);
+    const PerimeterBoundarySelection boundary_selection =
+        static_cast<PerimeterBoundarySelection>(m_sb->setting<int>(PS::Perimeter::kBoundarySelection));
 
-    PolygonList path_line = m_geometry.offset(-beadWidth / 2);
+    const PolygonList original_geometry = m_geometry;
+    QVector<Point> previous_points = collectNormalSourcePoints(original_geometry);
 
-    QVector<Point> previousPoints;
-    QVector<Point> currentPoints;
-    for (Polygon& poly : m_geometry) {
-        for (Point& p : poly) {
-            previousPoints.push_back(p);
+    if (boundary_selection == PerimeterBoundarySelection::kAll) {
+        PolygonList path_lines = m_geometry.offset(-beadWidth / 2);
+
+        for (int perimeter_number = 0; !path_lines.isEmpty() && perimeter_number < perimeter_count;
+             ++perimeter_number) {
+            appendPathLinesWithNormals(path_lines, previous_points, m_computed_geometry);
+
+            m_geometry = path_lines.offset(-beadWidth / 2, -beadWidth / 2);
+            path_lines = path_lines.offset(-beadWidth, -beadWidth / 2);
         }
+        return;
     }
 
-    int ring_nr = 0;
-    while (!path_line.isEmpty() && ring_nr < rings) {
-        for (Polygon& poly : path_line) {
-            for (Point& p : poly) {
-                kNN neighbor(previousPoints, QVector<Point> {p}, 1);
-                neighbor.execute();
+    // Selective modes offset the full part mask and then extract the requested boundary type. Offsetting a hole or an
+    // outline as a standalone polygon would send paths into void space or through holes because the opposite boundary
+    // would no longer clip the offset.
+    const PolygonList external_boundaries = original_geometry.externalPolygonBoundaries();
+    const PolygonList internal_boundaries = original_geometry.internalPolygonBoundaries();
 
-                int closest = neighbor.getNearestIndices().first();
-                p.setNormals(previousPoints[closest].getNormals());
-                currentPoints.push_back(p);
-            }
-        }
-        previousPoints = currentPoints;
-        currentPoints.clear();
-
-        for (Polygon poly : path_line) {
-            Polyline line = poly.toPolyline();
-            line.pop_back();
-            m_computed_geometry.push_back(line);
+    for (int perimeter_number = 0; perimeter_number < perimeter_count; ++perimeter_number) {
+        const Distance path_offset = beadWidth * perimeter_number + beadWidth / 2;
+        PolygonList offset_geometry =
+            selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, boundary_selection, path_offset);
+        PolygonList path_lines = boundary_selection == PerimeterBoundarySelection::kInternal
+                                     ? offset_geometry.internalPolygonBoundaries()
+                                     : offset_geometry.externalPolygonBoundaries();
+        if (path_lines.isEmpty()) {
+            break;
         }
 
-        ring_nr++;
+        appendPathLinesWithNormals(path_lines, previous_points, m_computed_geometry);
 
-        m_geometry = path_line.offset(-beadWidth / 2, -beadWidth / 2);
-        path_line = path_line.offset(-beadWidth, -beadWidth / 2);
+        const Distance remaining_offset = beadWidth * (perimeter_number + 1);
+        m_geometry = selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, boundary_selection,
+                                                    remaining_offset);
     }
 }
 

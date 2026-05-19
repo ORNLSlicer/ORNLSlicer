@@ -376,9 +376,9 @@ PolygonList PolygonList::operator+=(const PolygonList& rhs) { return _add_to_thi
 
 PolygonList PolygonList::operator+=(const Polygon& rhs) { return _add_to_this(rhs); }
 
-PolygonList PolygonList::operator-(const PolygonList& rhs) { return _subtract(rhs); }
+PolygonList PolygonList::operator-(const PolygonList& rhs) const { return _subtract(rhs); }
 
-PolygonList PolygonList::operator-(const Polygon& rhs) { return _subtract(rhs); }
+PolygonList PolygonList::operator-(const Polygon& rhs) const { return _subtract(rhs); }
 
 PolygonList PolygonList::operator-=(const PolygonList& rhs) { return _subtract_from_this(rhs); }
 
@@ -499,7 +499,7 @@ PolygonList PolygonList::_add_to_this(const PolygonList& other) {
     return (*this);
 }
 
-PolygonList PolygonList::_subtract(const Polygon& other) {
+PolygonList PolygonList::_subtract(const Polygon& other) const {
     QVector<Polygon> all_polys = QVector<Polygon> {*this} + QVector<Polygon> {Polygon(other).reverseNormalDirections()};
 
     ClipperLib2::Paths paths;
@@ -514,7 +514,7 @@ PolygonList PolygonList::_subtract(const Polygon& other) {
     return result;
 }
 
-PolygonList PolygonList::_subtract(const PolygonList& other) {
+PolygonList PolygonList::_subtract(const PolygonList& other) const {
     QVector<Polygon> all_polys =
         QVector<Polygon> {*this} + QVector<Polygon> {PolygonList(other).reverseNormalDirections()};
 
