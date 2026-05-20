@@ -16,7 +16,9 @@ namespace {
 constexpr int kCincinnatiSyntax = 1;
 constexpr int kThermwoodSyntax = 16;
 constexpr int kPolymerSlicer = 0;
-constexpr int kMetalSlicer = 2;
+constexpr int kImageSlicer = 1;
+constexpr int kV3LegacySlicerType2 = 2;
+constexpr int kV3ImageSlicer = 3;
 constexpr int kAllPerimeterBoundaries = 0;
 
 constexpr std::array<int, 35> kSyntaxV2ToV3 = {
@@ -59,12 +61,19 @@ constexpr std::array<int, 35> kSyntaxV2ToV3 = {
 
 constexpr std::array<int, 7> kSlicerTypeV2ToV3 = {
     0,              // Polymer
-    1,              // Metal Embossing
-    2,              // Metal
-    kMetalSlicer,   // RPBF removed
+    1,              // Legacy slicer type 1
+    2,              // Legacy slicer type 2
+    kV3LegacySlicerType2, // RPBF removed
     kPolymerSlicer, // Real Time Polymer removed
-    kMetalSlicer,   // Real Time RPBF removed
-    3               // Image
+    kV3LegacySlicerType2, // Real Time RPBF removed
+    kV3ImageSlicer  // Image
+};
+
+constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
+    kPolymerSlicer, // Polymer
+    kPolymerSlicer, // Legacy slicer type 1 removed
+    kPolymerSlicer, // Legacy slicer type 2 removed
+    kImageSlicer    // Image
 };
 
 constexpr std::array<const char*, 47> kRemovedV3Settings = {
@@ -167,6 +176,8 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
         pre_2_0To2_0(version, settings);
     if (version < 3)
         pre_3_0To3_0(version, settings);
+    if (version < 4)
+        pre_4_0To4_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -268,6 +279,25 @@ void SettingsVersionControl::pre_3_0To3_0(double& version, fifojson& settings) {
     }
 
     version = 3.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_4_0To4_0(double& version, fifojson& settings) {
+    QString dt = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] =
+        dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 4.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value()) {
+            migrateIndexedSetting(settings_group, Constants::ExperimentalSettings::PrinterConfig::kSlicerType,
+                                  kSlicerTypeV3ToV4);
+        }
+    }
+
+    version = 4.0;
     settings = new_format;
 }
 } // namespace ORNL

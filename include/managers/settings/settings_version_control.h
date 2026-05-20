@@ -35,5 +35,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_3_0To3_0(double& version, fifojson& settings);
+
+    //! \brief Rolls settings after removed slicer types and positional enum changes to version 4.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_4_0To4_0(double& version, fifojson& settings);
 };
 } // namespace ORNL
