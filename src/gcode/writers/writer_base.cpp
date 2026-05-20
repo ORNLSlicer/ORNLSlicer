@@ -109,8 +109,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
     //
 
     if (syntax != GcodeSyntax::kCincinnati && syntax != GcodeSyntax::kHaasInch && syntax != GcodeSyntax::kMeld &&
-        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric &&
-        syntax != GcodeSyntax::kSkyBaam) {
+        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric) {
         text += commentLine(
             QString("Nozzle Diameter: %0mm").arg(m_sb->setting<Distance>(PS::Layer::kNozzleDiameter).to(mm)));
     }
@@ -124,8 +123,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
             QString("Filament Diameter: %0mm").arg(m_sb->setting<Distance>(MS::Filament::kDiameter).to(mm)));
     }
     if (syntax != GcodeSyntax::kCincinnati && syntax != GcodeSyntax::kHaasInch && syntax != GcodeSyntax::kMeld &&
-        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric &&
-        syntax != GcodeSyntax::kSkyBaam) {
+        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric) {
         text += commentLine(
             QString("Printer Base Offset: %0mm").arg(m_sb->setting<Distance>(PRS::Dimensions::kZOffset).to(mm)));
     }
@@ -138,8 +136,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
             QString("Minimum Table Value: %0in").arg(m_sb->setting<Distance>(PRS::Dimensions::kWMin).to(in)));
     }
     if (syntax != GcodeSyntax::kCincinnati && syntax != GcodeSyntax::kHaasInch && syntax != GcodeSyntax::kMeld &&
-        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric &&
-        syntax != GcodeSyntax::kSkyBaam) {
+        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric) {
         text += commentLine(QString("Layer Height: %0mm").arg(m_sb->setting<Distance>(PS::Layer::kLayerHeight).to(mm)));
         text += commentLine(
             QString("Default Extrusion Width: %0mm").arg(m_sb->setting<Distance>(PS::Layer::kBeadWidth).to(mm)));

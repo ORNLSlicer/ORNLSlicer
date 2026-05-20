@@ -296,7 +296,6 @@ class Constants {
             static QString kRomiFanuc;
             static QString kSandia;
             static QString kSiemens;
-            static QString kSkyBaam;
             static QString kThermwood;
             static QString kTormach;
             static QString kWolf;

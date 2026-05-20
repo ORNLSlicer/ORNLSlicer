@@ -40,7 +40,6 @@
 #include "gcode/writers/romi_fanuc_writer.h"
 #include "gcode/writers/sandia_writer.h"
 #include "gcode/writers/siemens_writer.h"
-#include "gcode/writers/skybaam_writer.h"
 #include "gcode/writers/thermwood_writer.h"
 #include "gcode/writers/tormach_writer.h"
 #include "managers/session_manager.h"
@@ -150,9 +149,6 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kSiemens:
             m_base = QSharedPointer<SiemensWriter>(new SiemensWriter(GcodeMetaList::SiemensMeta, GSM->getGlobal()));
-            break;
-        case GcodeSyntax::kSkyBaam:
-            m_base = QSharedPointer<SkyBaamWriter>(new SkyBaamWriter(GcodeMetaList::SkyBaamMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kThermwood:
             m_base =
