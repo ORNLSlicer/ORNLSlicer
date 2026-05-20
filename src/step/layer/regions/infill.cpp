@@ -256,9 +256,9 @@ void Infill::calculateModifiers(Path& path, bool supportsG3) {
     }
     if (m_sb->setting<bool>(MS::TipWipe::kInfillEnable)) {
         // If angled slicing, force tip wipe to be reverse
-        if (m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ) != 1) {
+        if (m_sb->setting<float>(PS::Slicing::kSlicingVectorX) != 0 ||
+            m_sb->setting<float>(PS::Slicing::kSlicingVectorY) != 0 ||
+            m_sb->setting<float>(PS::Slicing::kSlicingVectorZ) != 1) {
             PathModifierGenerator::GenerateTipWipe(
                 path, PathModifiers::kReverseTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
                 m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
@@ -314,9 +314,9 @@ void Infill::calculateModifiers(Path& path, bool supportsG3) {
     }
     if (m_sb->setting<bool>(MS::SpiralLift::kInfillEnable)) {
         // Prevent spiral lifts during angled slicing to avoid collisions
-        if (m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX) == 0 &&
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY) == 0 &&
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ) == 1) {
+        if (m_sb->setting<float>(PS::Slicing::kSlicingVectorX) == 0 &&
+            m_sb->setting<float>(PS::Slicing::kSlicingVectorY) == 0 &&
+            m_sb->setting<float>(PS::Slicing::kSlicingVectorZ) == 1) {
             PathModifierGenerator::GenerateSpiralLift(path, m_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
                                                       m_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
                                                       m_sb->setting<int>(MS::SpiralLift::kLiftPoints),

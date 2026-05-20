@@ -161,9 +161,9 @@ QString CincinnatiWriter::writeBeforeLayer(float new_min_z, QSharedPointer<Setti
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
     // Retrieve the slicing plane normal
-    QVector3D slicing_vector = {sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
     slicing_vector.normalize();
 
     /*
@@ -947,12 +947,12 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
 
         // If sequential mode && target Z is less than current Z, adjust Z. This is for completing one object and moving
         // to the next.
-        if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_z < m_last_z)) {
             target_z = m_last_z + m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
-        else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        else if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
                  m_is_travel == true && (target_z < m_last_z)) {
             target_z = m_last_z;
             m_is_travel = false;
@@ -977,12 +977,12 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
 
         // If sequential mode && target W is greater than current W, adjust W. This is for completing one object and
         // moving to the next.
-        if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_w > m_last_w)) {
             target_w = m_last_w - m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
-        else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        else if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
                  m_is_travel == true && (target_w > m_last_w)) {
             target_w = m_last_w;
             m_is_travel = false;

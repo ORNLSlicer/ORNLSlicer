@@ -1740,9 +1740,9 @@ QMatrix4x4 ShapeFactory::computeGcodeCylinderTransform(const QVector3D& start, c
     QVector3D tangent = end.normalized();
 
     // Retrieve the normal (up) vector from the global settings
-    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                        GSM->getGlobal()->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                        GSM->getGlobal()->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
+                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
+                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
     normal.normalize();
 
     // Compute the right vector

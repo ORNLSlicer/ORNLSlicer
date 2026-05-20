@@ -144,7 +144,7 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                         PRS::Dimensions::kGridYOffset};
 
     static const auto material_settings = QSet<QString> {
-        PS::SlicingVector::kSlicingVectorX, PS::SlicingVector::kSlicingVectorY, PS::SlicingVector::kSlicingVectorZ};
+        PS::Slicing::kSlicingVectorX, PS::Slicing::kSlicingVectorY, PS::Slicing::kSlicingVectorZ};
 
     static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
                                                              PS::Optimizations::kCustomIslandXLocation,

@@ -272,7 +272,7 @@ void SettingsVersionControl::pre_3_0To3_0(double& version, fifojson& settings) {
         for (auto& settings_group : settings_array.value()) {
             removeV2Settings(settings_group);
             migrateIndexedSetting(settings_group, Constants::PrinterSettings::MachineSetup::kSyntax, kSyntaxV2ToV3);
-            migrateIndexedSetting(settings_group, Constants::ExperimentalSettings::PrinterConfig::kSlicerType,
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType,
                                   kSlicerTypeV2ToV3);
             addV3Settings(settings_group);
         }
@@ -292,7 +292,7 @@ void SettingsVersionControl::pre_4_0To4_0(double& version, fifojson& settings) {
     auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
     if (settings_array != new_format.end() && settings_array.value().is_array()) {
         for (auto& settings_group : settings_array.value()) {
-            migrateIndexedSetting(settings_group, Constants::ExperimentalSettings::PrinterConfig::kSlicerType,
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType,
                                   kSlicerTypeV3ToV4);
         }
     }

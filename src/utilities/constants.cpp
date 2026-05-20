@@ -686,6 +686,8 @@ const QString Constants::ProfileSettings::SpecialModes::kOversizeDistance = "ove
 const QString Constants::ProfileSettings::SpecialModes::kEnableWidthHeight = "enable_width_height";
 
 // Optimizations
+const QString Constants::ProfileSettings::Optimizations::kLayerOrdering = "layer_ordering";
+const QString Constants::ProfileSettings::Optimizations::kLayerGroupingTolerance = "layer_grouping_tolerance";
 const QString Constants::ProfileSettings::Optimizations::kIslandOrder = "island_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kPathOrder = "path_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kCustomIslandXLocation = "custom_island_order_x_location";
@@ -751,19 +753,15 @@ const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerTempera
 const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerXOffset = "thermal_scanner_x_offset";
 const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerYOffset = "thermal_scanner_y_offset";
 
-// Slicing Angle
-const QString Constants::ProfileSettings::SlicingVector::kSlicingVectorX = "slicing_vector_x";
-const QString Constants::ProfileSettings::SlicingVector::kSlicingVectorY = "slicing_vector_y";
-const QString Constants::ProfileSettings::SlicingVector::kSlicingVectorZ = "slicing_vector_z";
+// Slicing
+const QString Constants::ProfileSettings::Slicing::kSlicerType = "slicer_type";
+const QString Constants::ProfileSettings::Slicing::kSlicingVectorX = "slicing_vector_x";
+const QString Constants::ProfileSettings::Slicing::kSlicingVectorY = "slicing_vector_y";
+const QString Constants::ProfileSettings::Slicing::kSlicingVectorZ = "slicing_vector_z";
 
 //================================================================================
 // Experimental Settings
 //================================================================================
-
-// Printer Config
-const QString Constants::ExperimentalSettings::PrinterConfig::kSlicerType = "slicer_type";
-const QString Constants::ExperimentalSettings::PrinterConfig::kLayerOrdering = "layer_ordering";
-const QString Constants::ExperimentalSettings::PrinterConfig::kLayerGroupingTolerance = "layer_grouping_tolerance";
 
 // Multi-Nozzle
 const QString Constants::ExperimentalSettings::MultiNozzle::kEnableMultiNozzleMultiMaterial = "enable_multi_nozzle";

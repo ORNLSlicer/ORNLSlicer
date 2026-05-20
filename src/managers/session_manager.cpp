@@ -504,7 +504,7 @@ bool SessionManager::doSlice() {
         GcodeMetaList::SyntaxToMetaHash[(int)GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax)]
             .m_file_suffix;
 
-    SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType));
+    SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
     m_sensor_files_generated = GSM->getGlobal()->setting<bool>(PS::LaserScanner::kLaserScanner);
 
     if (m_ast.isNull())
