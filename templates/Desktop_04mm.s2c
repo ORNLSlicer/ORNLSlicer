@@ -3,7 +3,7 @@
         "created_by": "Alex Roschli",
         "created_on": "Fri Sep 17 09:10:00 2021",
         "last_modified": "Fri Sep 15 11:36:35 2023",
-        "version": 2.0,
+        "version": 3.0,
         "lock": "true"
     },
     "settings": [
@@ -183,6 +183,7 @@
             "minimum_extrude_length": 2000,
             "perimeter": true,
             "perimeter_count": 1,
+            "perimeter_boundary_selection": 0,
             "perimeter_width": 400,
             "perimeter_speed": 60000,
             "perimeter_extruder_speed": 0,
