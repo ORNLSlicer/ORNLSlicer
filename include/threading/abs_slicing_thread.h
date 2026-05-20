@@ -65,6 +65,10 @@ class AbstractSlicingThread : public QObject {
     //! \param completedPercentage: The percentage complete of the current step process
     void statusUpdate(StatusUpdateStepType type, int completedPercentage);
 
+    //! \brief Signal to session manager/main window with a user-visible slicing status message.
+    //! \param status Status text to show to the user.
+    void statusMessage(QString status);
+
     //! \brief Signal to session manager that slicing is complete
     void sliceComplete();
 

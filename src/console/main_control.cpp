@@ -109,8 +109,8 @@ void MainControl::partsInProject(int total) { m_parts_to_load = total; }
 void MainControl::loadComplete() {
     --m_parts_to_load;
 
-    if (m_parts_to_load == 0)
-        CSM->doSlice();
+    if (m_parts_to_load == 0 && !CSM->doSlice())
+        emit finished();
 }
 
 void MainControl::sliceComplete(QString filepath, bool alterFile) {

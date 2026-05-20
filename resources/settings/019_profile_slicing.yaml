@@ -9,12 +9,78 @@ settings:
     options:
       - "Polymer"
       - "Image"
+      - "Radial Slice"
     default: 0
     minor: "Slicing"
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kSlicerType"
     local: false
+  - name: "radial_axis_mode"
+    display: "Radial Axis Mode"
+    type: "enumeration"
+    tooltip: "Selects the XY axis used for radial cylinder slicing. Part Centroid uses each build part's centroid, while Custom XY uses the configured radial axis coordinates."
+    depends: {"slicer_type":2}
+    options:
+      - "Part Centroid"
+      - "Custom XY"
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kRadialAxisMode"
+    local: true
+  - name: "radial_axis_x"
+    display: "Radial Axis X"
+    type: "distance"
+    tooltip: "X coordinate for the radial cylinder axis when Radial Axis Mode is Custom XY."
+    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kRadialAxisX"
+    local: true
+  - name: "radial_axis_y"
+    display: "Radial Axis Y"
+    type: "distance"
+    tooltip: "Y coordinate for the radial cylinder axis when Radial Axis Mode is Custom XY."
+    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kRadialAxisY"
+    local: true
+  - name: "radial_initial_radius"
+    display: "Radial Initial Radius"
+    type: "distance"
+    tooltip: "Starting radius for radial cylinder slicing. Values less than or equal to zero use half the layer height."
+    depends: {"slicer_type":2}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kRadialInitialRadius"
+    local: true
+  - name: "radial_boundary_handling"
+    display: "Radial Boundary Handling"
+    type: "enumeration"
+    tooltip: "Controls radial paths that cross the model boundary. Clip to model keeps only the portions inside the model, keep boundary-crossing path outputs the original path when any portion is inside, and discard boundary-crossing path omits paths cut by the model boundary."
+    depends: {"slicer_type":2}
+    options:
+      - "Clip to Model"
+      - "Keep Boundary-Crossing Path"
+      - "Discard Boundary-Crossing Path"
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kRadialBoundaryHandling"
+    local: true
   - name: "slicing_vector_x"
     display: "Slicing Vector - X"
     type: "unitless_float"

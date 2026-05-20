@@ -112,6 +112,7 @@ const QStringList Constants::Units::kRotationUnits = {Constants::Units::kPitchRo
 //================================================================================
 const QString Constants::RegionTypeStrings::kUnknown = "unknown";
 const QString Constants::RegionTypeStrings::kPerimeter = "PERIMETER";
+const QString Constants::RegionTypeStrings::kRadial = "RADIAL";
 const QString Constants::RegionTypeStrings::kInset = "INSET";
 const QString Constants::RegionTypeStrings::kInfill = "INFILL";
 const QString Constants::RegionTypeStrings::kTopSkin = "TOP_SKIN";
@@ -186,6 +187,7 @@ QString Constants::PrinterSettings::SyntaxString::kMach4 = "Mach4";
 QString Constants::PrinterSettings::SyntaxString::kAeroBasic = "AeroBasic";
 QString Constants::PrinterSettings::SyntaxString::kAdamantine = "Adamantine";
 QString Constants::PrinterSettings::SyntaxString::kORNLMetric = "ORNL-Metric";
+QString Constants::PrinterSettings::SyntaxString::kRadial3Plus2 = "Radial3Plus2";
 
 //================================================================================
 // Optimizations
@@ -758,6 +760,11 @@ const QString Constants::ProfileSettings::Slicing::kSlicerType = "slicer_type";
 const QString Constants::ProfileSettings::Slicing::kSlicingVectorX = "slicing_vector_x";
 const QString Constants::ProfileSettings::Slicing::kSlicingVectorY = "slicing_vector_y";
 const QString Constants::ProfileSettings::Slicing::kSlicingVectorZ = "slicing_vector_z";
+const QString Constants::ProfileSettings::Slicing::kRadialInitialRadius = "radial_initial_radius";
+const QString Constants::ProfileSettings::Slicing::kRadialAxisMode = "radial_axis_mode";
+const QString Constants::ProfileSettings::Slicing::kRadialAxisX = "radial_axis_x";
+const QString Constants::ProfileSettings::Slicing::kRadialAxisY = "radial_axis_y";
+const QString Constants::ProfileSettings::Slicing::kRadialBoundaryHandling = "radial_boundary_handling";
 
 //================================================================================
 // Experimental Settings

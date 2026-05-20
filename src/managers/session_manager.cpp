@@ -30,6 +30,7 @@
 #include "threading/session_loader.h"
 #include "threading/slicers/image_slicer.h"
 #include "threading/slicers/polymer_slicer.h"
+#include "threading/slicers/radial_slicer.h"
 #include "units/derivative_units.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -498,13 +499,19 @@ bool SessionManager::isBuildMode() {
 }
 
 bool SessionManager::doSlice() {
-    // check current syntax for file suffix that needs to be output
-    tempGcodeFile =
-        defaultGcodeFile +
-        GcodeMetaList::SyntaxToMetaHash[(int)GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax)]
-            .m_file_suffix;
+    const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    const SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
 
-    SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
+    if (type == SlicerType::kRadialSlice && syntax != GcodeSyntax::kRadial3Plus2) {
+        const QString message = "Radial slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2.";
+        qWarning() << message;
+        emit forwardStatusUpdate(message);
+        return false;
+    }
+
+    // check current syntax for file suffix that needs to be output
+    tempGcodeFile = defaultGcodeFile + GcodeMetaList::SyntaxToMetaHash[(int)syntax].m_file_suffix;
+
     m_sensor_files_generated = GSM->getGlobal()->setting<bool>(PS::LaserScanner::kLaserScanner);
 
     if (m_ast.isNull())
@@ -581,6 +588,14 @@ bool SessionManager::changeSlicer(SlicerType type) {
         case SlicerType::kImageSlice:
             m_ast.reset(new ImageSlicer(tempGcodeFile));
             break;
+        case SlicerType::kRadialSlice:
+            m_ast.reset(new RadialSlicer(tempGcodeFile));
+            break;
+        default:
+            qWarning() << "Unknown slicer type requested. Falling back to Polymer slicer.";
+            m_ast.reset(new PolymerSlicer(tempGcodeFile));
+            type = SlicerType::kPolymerSlice;
+            break;
     }
 
     m_slicer_type = type;
@@ -593,6 +608,7 @@ bool SessionManager::changeSlicer(SlicerType type) {
     // Reconnect the signal to the AST.
     QObject::connect(this, &SessionManager::startSlice, m_ast.get(), &AbstractSlicingThread::doSlice);
     connect(m_ast.get(), &AbstractSlicingThread::statusUpdate, this, &SessionManager::forwardDialogUpdate);
+    connect(m_ast.get(), &AbstractSlicingThread::statusMessage, this, &SessionManager::forwardStatusUpdate);
     connect(m_ast.get(), &AbstractSlicingThread::sliceComplete, this, &SessionManager::sliceComplete);
     return true;
 }
