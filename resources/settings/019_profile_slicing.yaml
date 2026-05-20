@@ -1,6 +1,20 @@
 # Canonical settings metadata for ORNLSlicer.
 # Edit this file instead of resources/configs/master.conf.
 settings:
+  - name: "slicer_type"
+    display: "Slicer Type"
+    type: "enumeration"
+    tooltip: "Selects the slicing engine to use"
+    depends: {}
+    options:
+      - "Polymer"
+      - "Image"
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kSlicerType"
+    local: false
   - name: "slicing_vector_x"
     display: "Slicing Vector - X"
     type: "unitless_float"
@@ -8,9 +22,9 @@ settings:
     depends: {}
     options: []
     default: 0
-    minor: "Slicing Vector"
+    minor: "Slicing"
     major: "Profile"
-    namespace: "Profile::SlicingVector"
+    namespace: "Profile::Slicing"
     symbol: "kSlicingVectorX"
     local: false
   - name: "slicing_vector_y"
@@ -20,9 +34,9 @@ settings:
     depends: {}
     options: []
     default: 0
-    minor: "Slicing Vector"
+    minor: "Slicing"
     major: "Profile"
-    namespace: "Profile::SlicingVector"
+    namespace: "Profile::Slicing"
     symbol: "kSlicingVectorY"
     local: false
   - name: "slicing_vector_z"
@@ -32,8 +46,8 @@ settings:
     depends: {}
     options: []
     default: 1
-    minor: "Slicing Vector"
+    minor: "Slicing"
     major: "Profile"
-    namespace: "Profile::SlicingVector"
+    namespace: "Profile::Slicing"
     symbol: "kSlicingVectorZ"
     local: false

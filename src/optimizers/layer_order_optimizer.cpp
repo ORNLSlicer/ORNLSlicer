@@ -28,13 +28,13 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
 
     // get the layer ordering method, and then populate the global layers accordingly
     // after global layers have been assigned, assign nozzles/tools (if necessary)
-    LayerOrdering order_method = global_sb->setting<LayerOrdering>(ES::PrinterConfig::kLayerOrdering);
+    LayerOrdering order_method = global_sb->setting<LayerOrdering>(PS::Optimizations::kLayerOrdering);
 
     if (order_method == LayerOrdering::kByHeight) {
         // Retrieve the slicing plane normal
-        QVector3D slicing_vector = {global_sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                    global_sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                    global_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+        QVector3D slicing_vector = {global_sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                    global_sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                    global_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
         slicing_vector.normalize();
 
         bool steps_left = true;
@@ -95,7 +95,7 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
 
                 Distance layer_height = current_step->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
                 Distance layer_grouping_tolerance =
-                    global_sb->setting<Distance>(ES::PrinterConfig::kLayerGroupingTolerance);
+                    global_sb->setting<Distance>(PS::Optimizations::kLayerGroupingTolerance);
                 Plane layer_plane = current_step->getSlicingPlane();
                 layer_plane.shiftAlongNormal(layer_height() / 2.0);
 
