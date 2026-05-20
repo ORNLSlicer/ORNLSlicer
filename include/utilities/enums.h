@@ -122,23 +122,22 @@ enum class GcodeSyntax : uint8_t {
     kMVP = 13,
     kRomiFanuc = 14,
     kSiemens = 15,
-    kSkyBaam = 16,
-    kThermwood = 17,
-    kWolf = 18,
-    kRepRap = 19,
-    kMach4 = 20,
-    kAeroBasic = 21,
-    kMeld = 22,
-    kORNL = 23,
-    kOkuma = 24,
-    kTormach = 25,
-    kAML3D = 26,
-    kKraussMaffei = 27,
-    kSandia = 28,
-    k5AxisMarlin = 29,
-    kMeltio = 30,
-    kAdamantine = 31,
-    kORNLMetric = 32
+    kThermwood = 16,
+    kWolf = 17,
+    kRepRap = 18,
+    kMach4 = 19,
+    kAeroBasic = 20,
+    kMeld = 21,
+    kORNL = 22,
+    kOkuma = 23,
+    kTormach = 24,
+    kAML3D = 25,
+    kKraussMaffei = 26,
+    kSandia = 27,
+    k5AxisMarlin = 28,
+    kMeltio = 29,
+    kAdamantine = 30,
+    kORNLMetric = 31
 };
 
 inline QString toString(GcodeSyntax syntax) {
@@ -189,8 +188,6 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kSandia;
         case GcodeSyntax::kSiemens:
             return PRS::SyntaxString::kSiemens;
-        case GcodeSyntax::kSkyBaam:
-            return PRS::SyntaxString::kSkyBaam;
         case GcodeSyntax::kThermwood:
             return PRS::SyntaxString::kThermwood;
         case GcodeSyntax::kTormach:

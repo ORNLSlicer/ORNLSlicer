@@ -47,7 +47,7 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     MotionEstimation::Init();
 
-    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta) {
+    if (meta == GcodeMetaList::KraussMaffeiMeta) {
         m_g4_prefix = "G4 S";
     }
     else if (meta == GcodeMetaList::MVPMeta) {

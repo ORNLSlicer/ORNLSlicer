@@ -178,7 +178,6 @@ QString Constants::PrinterSettings::SyntaxString::kORNL = "ORNL";
 QString Constants::PrinterSettings::SyntaxString::kRomiFanuc = "ROMI Fanuc";
 QString Constants::PrinterSettings::SyntaxString::kSandia = "Sandia";
 QString Constants::PrinterSettings::SyntaxString::kSiemens = "Siemens";
-QString Constants::PrinterSettings::SyntaxString::kSkyBaam = "SkyBAAM";
 QString Constants::PrinterSettings::SyntaxString::kThermwood = "Thermwood";
 QString Constants::PrinterSettings::SyntaxString::kTormach = "Tormach";
 QString Constants::PrinterSettings::SyntaxString::kWolf = "Wolf";
