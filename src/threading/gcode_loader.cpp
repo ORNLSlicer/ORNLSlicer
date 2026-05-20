@@ -553,10 +553,6 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
                 m_parser.reset(new SiemensParser(GcodeMetaList::SiemensMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::SiemensMeta;
             }
-            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kSkyBaam).toUpper())) {
-                m_parser.reset(new CincinnatiParser(GcodeMetaList::SkyBaamMeta, m_adjust_file, originalLines, lines));
-                m_selected_meta = GcodeMetaList::SkyBaamMeta;
-            }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kThermwood).toUpper())) {
                 m_parser.reset(
                     new CincinnatiParser(GcodeMetaList::CincinnatiMeta, m_adjust_file, originalLines, lines));

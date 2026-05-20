@@ -5,7 +5,7 @@ settings:
     display: "Enable Meld Companion File Output"
     type: "boolean"
     tooltip: "Additional companion file csv output for Meld syntax"
-    depends: {"syntax":22}
+    depends: {"syntax":21}
     options: []
     default: false
     minor: "File Output"
@@ -17,7 +17,7 @@ settings:
     display: "Enable Meld Discrete Feed Commands"
     type: "boolean"
     tooltip: "Uses discrete feed commands for g-code output"
-    depends: {"syntax":22}
+    depends: {"syntax":21}
     options: []
     default: false
     minor: "File Output"
@@ -29,7 +29,7 @@ settings:
     display: "Enable Tormach File Output"
     type: "boolean"
     tooltip: "Modified output file format for Tormach will be created."
-    depends: {"syntax":25}
+    depends: {"syntax":24}
     options: []
     default: false
     minor: "File Output"
@@ -41,7 +41,7 @@ settings:
     display: "Tormach Print Mode"
     type: "enumeration"
     tooltip: "Select the welder print mode for the Tormach system."
-    depends: {"syntax":25}
+    depends: {"syntax":24}
     options:
       - "Mode_21"
       - "Mode_40"
@@ -58,7 +58,7 @@ settings:
     display: "Enable AML3D Companion File Output"
     type: "boolean"
     tooltip: "Modified output file format for AML3D will be created."
-    depends: {"syntax":26}
+    depends: {"syntax":25}
     options: []
     default: false
     minor: "File Output"
@@ -70,7 +70,7 @@ settings:
     display: "AML3D Weave Length"
     type: "distance"
     tooltip: "Wave length of the weave patten."
-    depends: {"syntax":26}
+    depends: {"syntax":25}
     options: []
     default: 0
     minor: "File Output"
@@ -82,7 +82,7 @@ settings:
     display: "AML3D Weave Width"
     type: "distance"
     tooltip: "Amplitude of the weave patten."
-    depends: {"syntax":26}
+    depends: {"syntax":25}
     options: []
     default: 0
     minor: "File Output"
@@ -94,7 +94,7 @@ settings:
     display: "Enable Sandia Companion File Output"
     type: "boolean"
     tooltip: "Modified output file format for Sandia will be created."
-    depends: {"syntax":28}
+    depends: {"syntax":27}
     options: []
     default: false
     minor: "File Output"
@@ -106,7 +106,7 @@ settings:
     display: "Use Sandia Metal Printing Mode"
     type: "boolean"
     tooltip: "If enabled, the Sandia companion file will use metal deposition commands. If disabled, companion file will use polymer commands."
-    depends: {"AND":[{"syntax":28},{"sandia_file_output":true}]}
+    depends: {"AND":[{"syntax":27},{"sandia_file_output":true}]}
     options: []
     default: false
     minor: "File Output"
@@ -118,7 +118,7 @@ settings:
     display: "Use Sandia C_VEL"
     type: "boolean"
     tooltip: "If enabled, the Sandia companion file will use C_VEL rather than C_DIS."
-    depends: {"AND":[{"syntax":28},{"sandia_file_output":true}]}
+    depends: {"AND":[{"syntax":27},{"sandia_file_output":true}]}
     options: []
     default: false
     minor: "File Output"
@@ -166,7 +166,7 @@ settings:
     display: "Enable AMCM SRC File Output"
     type: "boolean"
     tooltip: "If enabled, a src file for AMCM will be saved when exporting the g-code file."
-    depends: {"OR":[{"syntax":23},{"syntax":32}]}
+    depends: {"OR":[{"syntax":22},{"syntax":31}]}
     options: []
     default: false
     minor: "File Output"

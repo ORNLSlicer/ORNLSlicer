@@ -23,7 +23,6 @@ settings:
       - "MVP"
       - "RomiFanuc"
       - "Siemens"
-      - "SkyBaam"
       - "Thermwood"
       - "Wolf"
       - "RepRap"
@@ -104,7 +103,7 @@ settings:
     display: "Axis A"
     type: "angle"
     tooltip: "Sets the printing angle for the A axis"
-    depends: {"OR":[{"syntax":29},{"OR":[{"syntax":32},{"syntax":23}]}]}
+    depends: {"OR":[{"syntax":28},{"OR":[{"syntax":31},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -116,7 +115,7 @@ settings:
     display: "Axis B"
     type: "angle"
     tooltip: "Sets the printing angle for the B axis"
-    depends: {"OR":[{"syntax":29},{"OR":[{"syntax":32},{"syntax":23}]}]}
+    depends: {"OR":[{"syntax":28},{"OR":[{"syntax":31},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -128,7 +127,7 @@ settings:
     display: "Axis C"
     type: "angle"
     tooltip: "Sets the printing angle for the C axis"
-    depends: {"OR":[{"syntax":29},{"OR":[{"syntax":32},{"syntax":23}]}]}
+    depends: {"OR":[{"syntax":28},{"OR":[{"syntax":31},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
