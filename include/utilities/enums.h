@@ -47,9 +47,7 @@ enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1, kToro
  */
 enum class SlicerType : uint8_t {
     kPolymerSlice = 0,
-    kMetalEmbossingSlice = 1,
-    kMetalSlice = 2,
-    kImageSlice = 3
+    kImageSlice = 1
 };
 
 //! \brief Function for going from json to SlicerType
