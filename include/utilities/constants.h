@@ -99,6 +99,7 @@ class Constants {
       public:
         static const QString kUnknown;
         static const QString kPerimeter;
+        static const QString kRadial;
         static const QString kInset;
         static const QString kInfill;
         static const QString kTopSkin;
@@ -304,6 +305,7 @@ class Constants {
             static QString kAeroBasic;
             static QString kAdamantine;
             static QString kORNLMetric;
+            static QString kRadial3Plus2;
         };
     };
 
@@ -832,6 +834,11 @@ class Constants {
             static const QString kSlicingVectorX;
             static const QString kSlicingVectorY;
             static const QString kSlicingVectorZ;
+            static const QString kRadialInitialRadius;
+            static const QString kRadialAxisMode;
+            static const QString kRadialAxisX;
+            static const QString kRadialAxisY;
+            static const QString kRadialBoundaryHandling;
         };
     };
 

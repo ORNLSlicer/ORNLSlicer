@@ -170,8 +170,8 @@ class GCodeLoader : public QThread {
         m_coasting, m_spirallift, m_rampingup, m_rampingdown, m_leadin;
 
     //! \brief matchers for type identification for coloring
-    QStringMatcher m_perimeter, m_inset, m_infill, m_skin, m_skeleton, m_support, m_support_roof, m_travel, m_raft,
-        m_brim, m_skirt, m_laserscan, m_thermalscan;
+    QStringMatcher m_perimeter, m_radial, m_inset, m_infill, m_skin, m_skeleton, m_support, m_support_roof, m_travel,
+        m_raft, m_brim, m_skirt, m_laserscan, m_thermalscan;
 
     //! \brief colors for modifiers to adjust display size
     QVector<QColor> m_modifier_colors;

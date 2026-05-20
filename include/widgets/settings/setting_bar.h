@@ -148,6 +148,19 @@ class SettingBar : public QWidget {
      */
     SettingTab* getTab(QString major, QString minor);
 
+    /*!
+     * \brief Keeps radial slicing and Radial3Plus2 syntax paired when either setting enters radial mode.
+     * \param setting_key Setting that triggered the sync check.
+     * \return Additional setting keys changed by the sync.
+     */
+    QStringList syncRadialSlicingSettings(const QString& setting_key);
+
+    /*!
+     * \brief Reloads the visible setting row for a programmatically updated setting.
+     * \param setting_key Setting row key to reload.
+     */
+    void reloadSettingRow(const QString& setting_key);
+
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -196,5 +209,8 @@ class SettingBar : public QWidget {
 
     //! \brief Whether or not ranges are currently selected
     bool m_range_selected;
+
+    //! \brief Prevents recursive setting sync while paired radial settings are reloaded.
+    bool m_syncing_radial_settings = false;
 };
 } // Namespace ORNL

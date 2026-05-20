@@ -42,12 +42,18 @@ enum MeshGeneratorType {
 enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1, kToroidal = 2 };
 
 /*!
- * \enum SlicerType
- * \brief Selects the type of slice to perform. Pass this to Session Manager to decide.
+ * @enum SlicerType
+ * @brief Selects the type of slice to perform. Pass this to Session Manager to decide.
  */
 enum class SlicerType : uint8_t {
+    //! @brief Standard polymer planar slicing.
     kPolymerSlice = 0,
-    kImageSlice = 1
+
+    //! @brief Image-based slicing workflow.
+    kImageSlice = 1,
+
+    //! @brief Radial cylinder slicing around each part's XY centroid.
+    kRadialSlice = 2
 };
 
 //! \brief Function for going from json to SlicerType
@@ -55,6 +61,55 @@ void to_json(json& j, const SlicerType& i);
 
 //! \brief Function for going from SlicerType to json
 void from_json(const json& j, SlicerType& i);
+
+/*!
+ * @enum RadialBoundaryHandling
+ * @brief Controls how radial paths are handled when they cross the model boundary.
+ */
+enum class RadialBoundaryHandling : uint8_t {
+    //! @brief Keep only the portions retained by the model cross section.
+    kClipToModel = 0,
+
+    //! @brief Keep the original radial path that crosses the model boundary.
+    kKeepBoundaryCrossingPath = 1,
+
+    //! @brief Omit radial paths that are cut by the model cross-section boundary.
+    kDiscardBoundaryCrossingPath = 2
+};
+
+inline QString toString(RadialBoundaryHandling handling) {
+    switch (handling) {
+        case RadialBoundaryHandling::kKeepBoundaryCrossingPath:
+            return "Keep Boundary-Crossing Path";
+        case RadialBoundaryHandling::kDiscardBoundaryCrossingPath:
+            return "Discard Boundary-Crossing Path";
+        case RadialBoundaryHandling::kClipToModel:
+        default:
+            return "Clip to Model";
+    }
+}
+
+/*!
+ * @enum RadialAxisMode
+ * @brief Selects the XY cylinder axis used by radial slicing.
+ */
+enum class RadialAxisMode : uint8_t {
+    //! @brief Use the build part's XY centroid.
+    kPartCentroid = 0,
+
+    //! @brief Use the configured radial_axis_x/radial_axis_y settings.
+    kCustomXY = 1
+};
+
+inline QString toString(RadialAxisMode mode) {
+    switch (mode) {
+        case RadialAxisMode::kCustomXY:
+            return "Custom XY";
+        case RadialAxisMode::kPartCentroid:
+        default:
+            return "Part Centroid";
+    }
+}
 
 /*!
  * \enum AffectedArea
@@ -100,8 +155,8 @@ inline ThemeName themeFromString(const QString& theme) {
 }
 
 /*!
- * \enum GcodeSyntax
- * \brief The GcodeSyntax enum
+ * @enum GcodeSyntax
+ * @brief Available output syntaxes and parser/writer dialects.
  */
 enum class GcodeSyntax : uint8_t {
     kBeam = 0,
@@ -135,11 +190,14 @@ enum class GcodeSyntax : uint8_t {
     k5AxisMarlin = 28,
     kMeltio = 29,
     kAdamantine = 30,
-    kORNLMetric = 31
+    kORNLMetric = 31,
+    kRadial3Plus2 = 32
 };
 
 inline QString toString(GcodeSyntax syntax) {
     switch (syntax) {
+        case GcodeSyntax::kRadial3Plus2:
+            return PRS::SyntaxString::kRadial3Plus2;
         case GcodeSyntax::k5AxisMarlin:
             return PRS::SyntaxString::k5AxisMarlin;
         case GcodeSyntax::kAML3D:
@@ -491,16 +549,7 @@ void from_json(const json& j, PathOrderOptimization& i);
 
 enum class Axis : uint8_t { kX, kY, kZ };
 
-enum class IslandType : uint8_t {
-    kAll,
-    kBrim,
-    kPolymer,
-    kRaft,
-    kLaserScan,
-    kThermalScan,
-    kSkirt,
-    kSupport
-};
+enum class IslandType : uint8_t { kAll, kBrim, kPolymer, kRaft, kLaserScan, kThermalScan, kSkirt, kSupport };
 
 enum class MachineType : uint8_t {
     kPellet = 0,
@@ -610,6 +659,7 @@ enum class VisualizationColors {
     kPerimeter,
     kPrestart,
     kRaft,
+    kRadial,
     kRampingDown,
     kRampingUp,
     kSkeleton,
@@ -653,6 +703,8 @@ inline QString VisualizationColorsName(VisualizationColors color) {
             return "Prestart";
         case VisualizationColors::kRaft:
             return "Raft";
+        case VisualizationColors::kRadial:
+            return "Radial";
         case VisualizationColors::kRampingDown:
             return "RampingDown";
         case VisualizationColors::kRampingUp:
@@ -721,6 +773,8 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
             return QColor(204, 0, 255, 255);
         case VisualizationColors::kRaft:
             return QColor(102, 102, 102, 255);
+        case VisualizationColors::kRadial:
+            return QColor(47, 82, 102, 255);
         case VisualizationColors::kRampingDown:
             return QColor(22, 99, 137, 255);
         case VisualizationColors::kRampingUp:
