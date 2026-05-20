@@ -578,9 +578,6 @@ bool SessionManager::changeSlicer(SlicerType type) {
         case SlicerType::kPolymerSlice:
             m_ast.reset(new PolymerSlicer(tempGcodeFile));
             break;
-        case SlicerType::kMetalEmbossingSlice:
-        case SlicerType::kMetalSlice:
-            break;
         case SlicerType::kImageSlice:
             m_ast.reset(new ImageSlicer(tempGcodeFile));
             break;

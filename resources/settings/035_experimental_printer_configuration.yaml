@@ -8,8 +8,6 @@ settings:
     depends: {}
     options:
       - "Polymer"
-      - "Metal Embossing"
-      - "Metal"
       - "Image"
     default: 0
     minor: "Printer Configuration"
