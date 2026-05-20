@@ -40,6 +40,7 @@
 #include "gcode/parsers/marlin_parser.h"
 #include "gcode/parsers/mazak_parser.h"
 #include "gcode/parsers/mvp_parser.h"
+#include "gcode/parsers/radial_parser.h"
 #include "gcode/parsers/siemens_parser.h"
 #include "gcode/parsers/tormach_parser.h"
 #include "geometry/point.h"
@@ -96,6 +97,7 @@ GCodeLoader::GCodeLoader(QString filename, bool alterFile)
     m_modifier_colors.push_back(PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kLeadIn));
 
     m_perimeter = QStringMatcher(Constants::RegionTypeStrings::kPerimeter.toUpper());
+    m_radial = QStringMatcher(Constants::RegionTypeStrings::kRadial.toUpper());
     m_inset = QStringMatcher(Constants::RegionTypeStrings::kInset.toUpper());
     m_infill = QStringMatcher(Constants::RegionTypeStrings::kInfill.toUpper());
     m_skin = QStringMatcher(Constants::RegionTypeStrings::kSkin.toUpper());
@@ -541,6 +543,10 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
                 m_parser.reset(new CommonParser(GcodeMetaList::ORNLMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::ORNLMeta;
             }
+            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kRadial3Plus2).toUpper())) {
+                m_parser.reset(new RadialParser(GcodeMetaList::RadialMeta, m_adjust_file, originalLines, lines));
+                m_selected_meta = GcodeMetaList::RadialMeta;
+            }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kRomiFanuc).toUpper())) {
                 m_parser.reset(new CommonParser(GcodeMetaList::RomiFanucMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::RomiFanucMeta;
@@ -628,6 +634,9 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     if (m_perimeter.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kPerimeter);
     }
+    if (m_radial.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRadial);
+    }
     if (m_inset.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kInset);
     }
@@ -689,7 +698,10 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, co
         m_modifier_colors.contains(color) ? 1.1f : 1.0f; // Scale modifier segments by 1.1 for better visibility
 
     // Set the display width of the segment based on its region type
-    if (comment.contains("PERIMETER")) {
+    if (comment.contains(Constants::RegionTypeStrings::kRadial)) {
+        display_width = m_sb->setting<float>(PS::Layer::kBeadWidth) * Constants::OpenGL::kObjectToView;
+    }
+    else if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
         display_width = m_sb->setting<float>(PS::Perimeter::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
     else if (comment.contains("INSET")) {

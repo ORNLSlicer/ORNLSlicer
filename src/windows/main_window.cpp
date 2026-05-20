@@ -1023,7 +1023,10 @@ void MainWindow::doSlice() {
     m_slice_dialog->show();
 
     // Execute.
-    CSM->doSlice();
+    if (!CSM->doSlice()) {
+        m_slice_dialog.reset();
+        return;
+    }
 
     m_statusbar->showMessage("Slicing the loaded part(s) ...");
     m_cmdbar->append("Slicing the loaded part(s) ...");

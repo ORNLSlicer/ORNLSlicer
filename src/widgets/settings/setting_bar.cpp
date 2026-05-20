@@ -20,6 +20,7 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_pane.h"
 #include "widgets/settings/setting_row_base.h"
@@ -285,7 +286,70 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
     enableDependRows();
 }
 
-void SettingBar::forwardModifiedSetting(QString setting_key) { emit settingModified(setting_key); }
+void SettingBar::forwardModifiedSetting(QString setting_key) {
+    if (m_syncing_radial_settings) {
+        return;
+    }
+
+    QStringList modified_keys {setting_key};
+
+    m_syncing_radial_settings = true;
+    modified_keys.append(syncRadialSlicingSettings(setting_key));
+    m_syncing_radial_settings = false;
+
+    if (modified_keys.size() > 1) {
+        enableDependRows();
+    }
+
+    for (const QString& modified_key : modified_keys) {
+        emit settingModified(modified_key);
+    }
+}
+
+QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
+    QStringList synced_keys;
+    QSharedPointer<SettingsBase> sb = GSM->getGlobal();
+
+    if (setting_key == PS::Slicing::kSlicerType) {
+        const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
+        const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+        if (slicer_type == SlicerType::kRadialSlice && syntax != GcodeSyntax::kRadial3Plus2) {
+            sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kRadial3Plus2));
+            reloadSettingRow(PRS::MachineSetup::kSyntax);
+            synced_keys.push_back(PRS::MachineSetup::kSyntax);
+        }
+    }
+    else if (setting_key == PRS::MachineSetup::kSyntax) {
+        const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+        const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
+        if (syntax == GcodeSyntax::kRadial3Plus2 && slicer_type != SlicerType::kRadialSlice) {
+            sb->setSetting(PS::Slicing::kSlicerType, static_cast<int>(SlicerType::kRadialSlice));
+            reloadSettingRow(PS::Slicing::kSlicerType);
+            synced_keys.push_back(PS::Slicing::kSlicerType);
+        }
+    }
+
+    return synced_keys;
+}
+
+void SettingBar::reloadSettingRow(const QString& setting_key) {
+    fifojson& master_json = GSM->getMaster()->json();
+    auto setting = master_json.find(setting_key.toStdString());
+    if (setting == master_json.end()) {
+        return;
+    }
+
+    SettingTab* tab = getTab(setting.value()[Constants::Settings::Master::kMajor],
+                             setting.value()[Constants::Settings::Master::kMinor]);
+    if (tab == nullptr) {
+        return;
+    }
+
+    QSharedPointer<SettingRowBase> row = tab->getRow(setting_key);
+    if (!row.isNull()) {
+        row->reloadValue();
+    }
+}
 
 void SettingBar::forwardHideTab(QString pane, QString category) { emit tabHidden(pane, category); }
 
