@@ -167,13 +167,28 @@ void GCodeAMCMSaver::run() {
                        ", E1 0.000} C_DIS" % newline;
             if (line.contains("S0")) {
                 out << "; Stop Extrusion" % newline;
+                out << "$OUT[25]=True" % newline;
+                out << "WAIT SEC 0.5" % newline;
+                out << "$OUT[25]=False" % newline;
             }
         }
         else if (line.startsWith(M3)) {
             out << "; Start Extrusion" % newline;
+            out << "IF ($MODE_OP==#AUT) THEN" % newline;
+            out << "	$OUT[24]=True" % newline;
+            out << "	WAIT SEC 0.5" % newline;
+            out << "	$OUT[24]=False" % newline;
+            out << "ELSE" % newline;
+            out << "	$OUT[25]=True" % newline;
+            out << "	WAIT SEC 0.5" % newline;
+            out << "	$OUT[25]=False" % newline;
+            out << "ENDIF" % newline;
         }
         else if (line.startsWith(M5)) {
             out << "; Stop Extrusion" % newline;
+            out << "$OUT[25]=True" % newline;
+            out << "WAIT SEC 0.5" % newline;
+            out << "$OUT[25]=False" % newline;
         }
     }
 
