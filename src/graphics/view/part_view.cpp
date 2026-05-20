@@ -341,9 +341,9 @@ void PartView::updateSlicingSettings(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
 
     // Determine the slicing plane normal
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
     slicing_vector.normalize();
 
     QQuaternion rotation = QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1));

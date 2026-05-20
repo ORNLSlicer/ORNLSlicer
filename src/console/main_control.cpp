@@ -62,7 +62,7 @@ void MainControl::run() {
             m_options->setting<bool>(Constants::ConsoleOptionStrings::kUseImplicitTransforms));
     }
 
-    if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) ==
+    if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType)) ==
         SlicerType::kImageSlice)
         CSM->setDefaultGcodeDir(m_options->setting<QString>(Constants::ConsoleOptionStrings::kOutputLocation));
 
@@ -114,7 +114,7 @@ void MainControl::loadComplete() {
 }
 
 void MainControl::sliceComplete(QString filepath, bool alterFile) {
-    if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) !=
+    if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType)) !=
         SlicerType::kImageSlice) {
         GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
         connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);

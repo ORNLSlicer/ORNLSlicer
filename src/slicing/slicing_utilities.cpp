@@ -71,9 +71,9 @@ int SlicingUtilities::GetPartStart(QSharedPointer<Part> part, int current_steps)
 std::tuple<Plane, Point, Point> SlicingUtilities::GetDefaultSlicingAxis(QSharedPointer<SettingsBase> sb,
                                                                         QSharedPointer<MeshBase> mesh) {
     // Retrieve the slicing plane normal
-    QVector3D slicing_vector = {sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
     slicing_vector.normalize();
 
     // Retrieve the mesh extrema along the slicing plane normal

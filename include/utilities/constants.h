@@ -759,6 +759,8 @@ class Constants {
 
         class Optimizations {
           public:
+            static const QString kLayerOrdering;
+            static const QString kLayerGroupingTolerance;
             static const QString kIslandOrder;
             static const QString kPathOrder;
             static const QString kCustomIslandXLocation;
@@ -824,8 +826,9 @@ class Constants {
             static const QString kThermalScannerYOffset;
         };
 
-        class SlicingVector {
+        class Slicing {
           public:
+            static const QString kSlicerType;
             static const QString kSlicingVectorX;
             static const QString kSlicingVectorY;
             static const QString kSlicingVectorZ;
@@ -834,13 +837,6 @@ class Constants {
 
     class ExperimentalSettings {
       public:
-        class PrinterConfig {
-          public:
-            static const QString kSlicerType;
-            static const QString kLayerOrdering;
-            static const QString kLayerGroupingTolerance;
-        };
-
         class MultiNozzle {
           public:
             static const QString kNozzleCount;

@@ -66,9 +66,9 @@ QString WriterBase::commentSpaceLine(const QString& text) {
 
 QVector3D WriterBase::getTravelLift() {
     // Retrieve the slicing plane normal
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
     slicing_vector.normalize();
 
     // Retrieve the lift height
@@ -224,9 +224,9 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
                                     .arg(m_sb->setting<Time>(MS::Cooling::kMaxLayerTime)()));
         if (SettingsManager::getInstance()->getGlobal()->setting<bool>("useSmoothing"))
             text += commentLine("Smoothing is turned ON");
-        if (m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ) != 1) {
+        if (m_sb->setting<float>(PS::Slicing::kSlicingVectorX) != 0 ||
+            m_sb->setting<float>(PS::Slicing::kSlicingVectorY) != 0 ||
+            m_sb->setting<float>(PS::Slicing::kSlicingVectorZ) != 1) {
             text += commentLine("ANGLED SLICING ENABLED");
         }
         if (m_sb->setting<int>(PS::SpecialModes::kEnableOversize)) {
