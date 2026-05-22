@@ -41,7 +41,6 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
-        rv += "G1 F120 " % commentLine("SET INITIAL FEEDRATE");
         if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
             rv += "M0" % commentSpaceLine("WAIT FOR USER");
         }
@@ -517,6 +516,7 @@ QString ORNLWriter::writeExtruderOff(int extruder_number) {
         rv += writeDwell(off_delay);
     }
 
+    rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF");
     m_current_rpm = 0;
 
     return rv;
