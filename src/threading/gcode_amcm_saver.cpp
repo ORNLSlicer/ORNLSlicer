@@ -58,9 +58,9 @@ void GCodeAMCMSaver::run() {
 
     // File Header
     out << "&ACCESS RVP" % newline;
-    out << "&REL 1" % newline;
-    out << "&PARAM TEMPLATE = C:\\KRC\\Roboter\\Template\\vorgabe" % newline;
+    out << "&REL 2" % newline;
     out << "&PARAM EDITMASK = *" % newline;
+    out << "&PARAM TEMPLATE = C:\\KRC\\Roboter\\Template\\vorgabe" % newline;
     out << "DEF Hexagon ( )" % newline % newline;
 
     out << "; GLOBAL INTERRUPT DECL 3 WHEN $STOPMESS==TRUE DO IR_STOPM ( )" % newline;
@@ -68,7 +68,7 @@ void GCodeAMCMSaver::run() {
 
     out << ";FOLD Initialise and set default speed" % newline;
     out << "BAS (#INITMOV,0)" % newline;
-    out << "BAS (#VEL_PTP,100)" % newline;
+    out << "BAS (#VEL_PTP,25)" % newline;
     out << "BAS (#ACC_PTP,20)" % newline;
     out << "$VEL.CP=0.2" % newline;
     out << "BAS (#TOOL,0)" % newline;
@@ -119,7 +119,7 @@ void GCodeAMCMSaver::run() {
         line = lines[i];
         if (line.startsWith(G0)) {
             velocity = QString::number(
-                GSM->getGlobal()->setting<Velocity>(PS::Travel::kSpeed).to(m_selected_meta.m_velocity_unit) / 1000.0, 'f', 4); // Meta uses mm/min, but AMCM needs m/min
+                GSM->getGlobal()->setting<Velocity>(PS::Travel::kSpeed).to(m_selected_meta.m_velocity_unit) / 1000.0 / 60.0, 'f', 4); // Meta uses mm/min, but AMCM needs m/s
             QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
@@ -155,7 +155,7 @@ void GCodeAMCMSaver::run() {
                     else if (params[i].startsWith(z))
                         zval = params[i].mid(1);
                     else if (params[i].startsWith(f))
-                        velocity = QString::number(params[i].mid(1).toDouble() / 1000.0, 'f', 4);
+                        velocity = QString::number(params[i].mid(1).toDouble() / 1000.0 /60.0, 'f', 4);
                 }
             }
             if (velocity != feedrate) {
