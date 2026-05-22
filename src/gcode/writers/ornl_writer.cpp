@@ -517,6 +517,7 @@ QString ORNLWriter::writeExtruderOff(int extruder_number) {
         rv += writeDwell(off_delay);
     }
 
+    rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF");
     m_current_rpm = 0;
 
     return rv;
