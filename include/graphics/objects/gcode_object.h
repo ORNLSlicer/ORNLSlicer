@@ -121,6 +121,9 @@ class GCodeObject : public GraphicsObject {
     //! \param color: Color to paint.
     void paintSegment(QSharedPointer<SegmentDisplayMeta> seg_meta, QColor color);
 
+    //! \brief True when very large gcode is rendered as lightweight GL lines instead of bead meshes.
+    bool m_lightweight_lines = false;
+
     //! \brief Segment metadata container.
     QVector<QVector<QSharedPointer<SegmentDisplayMeta>>> m_segments;
 

@@ -15,12 +15,62 @@
 #include <qvectornd.h>
 
 #include "geometry/segment_base.h"
+#include "geometry/segments/line.h"
 #include "graphics/base_view.h"
 #include "graphics/graphics_object.h"
 #include "utilities/enums.h"
 #include "widgets/gcode_info_control.h"
 
 namespace ORNL {
+namespace {
+//! @brief Segment count where full bead mesh visualization is likely to exceed practical GL buffer sizes.
+constexpr qsizetype kLightweightLineThreshold = 1000000;
+
+//! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
+qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    qsizetype count = 0;
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+        count += layer.size();
+    }
+    return count;
+}
+
+//! @brief Appends a single GL_LINES segment using the parser's display-space line representation.
+void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vector<float>& vertices,
+                           std::vector<float>& normals, std::vector<float>& colors) {
+    QVector3D start = segment->start().toQVector3D();
+    QVector3D end = segment->end().toQVector3D();
+
+    // GCodeLoader stores parsed G0/G1 line endpoints as displacement vectors
+    // because the standard bead renderer builds cylinders from start+direction.
+    if (dynamic_cast<LineSegment*>(segment.data()) != nullptr) {
+        end += start;
+    }
+
+    vertices.push_back(start.x());
+    vertices.push_back(start.y());
+    vertices.push_back(start.z());
+    vertices.push_back(end.x());
+    vertices.push_back(end.y());
+    vertices.push_back(end.z());
+
+    for (int i = 0; i < 2; ++i) {
+        // Lightweight gcode uses GL_LINES, so these vertices do not have a
+        // meaningful surface normal. Keep them consistent with other line-only
+        // objects to avoid lighting/specular highlights washing pale segment
+        // colors, such as travel, toward white.
+        normals.push_back(0.0f);
+        normals.push_back(0.0f);
+        normals.push_back(0.0f);
+
+        colors.push_back(segment->color().redF());
+        colors.push_back(segment->color().greenF());
+        colors.push_back(segment->color().blueF());
+        colors.push_back(segment->color().alphaF());
+    }
+}
+} // namespace
+
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
                          QSharedPointer<GCodeInfoControl> segmentInfoControl) {
     std::vector<float> vertices;
@@ -29,6 +79,14 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
 
     m_segment_info_control = segmentInfoControl;
     m_segment_info_control->setGCode(gcode);
+
+    const qsizetype segment_count = countSegments(gcode);
+    m_lightweight_lines = segment_count > kLightweightLineThreshold;
+    if (m_lightweight_lines) {
+        vertices.reserve(segment_count * 2 * 3);
+        normals.reserve(segment_count * 2 * 3);
+        colors.reserve(segment_count * 2 * 4);
+    }
 
     m_segments.reserve(gcode.size());
 
@@ -45,7 +103,12 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
             seg_meta->current_color = segment->color();
             seg_meta->offset = vertices.size() / 3;
 
-            segment->createGraphic(vertices, normals, colors);
+            if (m_lightweight_lines) {
+                appendLightweightLine(segment, vertices, normals, colors);
+            }
+            else {
+                segment->createGraphic(vertices, normals, colors);
+            }
 
             seg_meta->length = (vertices.size() / 3) - seg_meta->offset;
 
@@ -64,7 +127,7 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     m_low_segment = 0;
     m_high_segment = visibleSegmentCount();
 
-    this->populateGL(view, vertices, normals, colors, GL_TRIANGLES);
+    this->populateGL(view, vertices, normals, colors, m_lightweight_lines ? GL_LINES : GL_TRIANGLES);
 }
 
 void GCodeObject::hideSegmentType(SegmentDisplayType type, bool hide) {
@@ -213,6 +276,10 @@ bool GCodeObject::isCurrentlySelected(int line_num) { return m_selected_segments
 
 const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriangles() {
     QVector<std::pair<uint, std::vector<Triangle>>> ret;
+
+    if (m_lightweight_lines) {
+        return ret;
+    }
 
     QMatrix4x4 transform = this->transformation();
     const std::vector<float>& vert = this->vertices();
