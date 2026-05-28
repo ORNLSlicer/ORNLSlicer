@@ -90,6 +90,7 @@
         packages = [
           pkgs.git
           pkgs.jq
+          pkgs.ccache
 
           pkgs.doxygen
           pkgs.graphviz

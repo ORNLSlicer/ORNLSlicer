@@ -11,6 +11,16 @@
                 "CMAKE_C_COMPILER":   "clang",
                 "CMAKE_CXX_COMPILER": "clang++"
             }
+        },
+        {
+            "name":        "generic-llvm-ninja-fast",
+            "displayName": "Generic Fast (llvm-ninja)",
+            "description": "LLVM/Ninja configuration with unity builds enabled for faster clean builds.",
+            "inherits":    "generic-llvm-ninja",
+            "binaryDir":   "${sourceDir}/build/${presetName}",
+            "cacheVariables": {
+                "ORNLSLICER_ENABLE_UNITY_BUILD": "ON"
+            }
         }
     ],
     "buildPresets": [
@@ -26,6 +36,20 @@
             "displayName": "Release (llvm-ninja)",
             "description": "Compile a release build using LLVM Clang.",
             "configurePreset": "generic-llvm-ninja",
+            "configuration": "Release"
+        },
+        {
+            "name": "debug-generic-llvm-ninja-fast",
+            "displayName": "Debug Fast (llvm-ninja)",
+            "description": "Compile a debug build using LLVM Clang with unity builds enabled.",
+            "configurePreset": "generic-llvm-ninja-fast",
+            "configuration": "Debug"
+        },
+        {
+            "name": "release-generic-llvm-ninja-fast",
+            "displayName": "Release Fast (llvm-ninja)",
+            "description": "Compile a release build using LLVM Clang with unity builds enabled.",
+            "configurePreset": "generic-llvm-ninja-fast",
             "configuration": "Release"
         }
     ]

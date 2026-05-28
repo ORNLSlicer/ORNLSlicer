@@ -3,7 +3,6 @@
 #include <vector>
 
 #include <CGAL/property_map.h>
-#include <boost/preprocessor.hpp>
 #include <qcommandlineparser.h>
 #include <qcontainerfwd.h>
 #include <qdir.h>
@@ -13,6 +12,7 @@
 #include <qsharedpointer.h>
 
 #include "configs/settings_base.h"
+#include "ornlslicer/build_info.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
@@ -99,7 +99,7 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
 
 bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSharedPointer<SettingsBase> options) {
     if (parser.isSet(Constants::ConsoleOptionStrings::kVersion)) {
-        qInfo() << BOOST_PP_STRINGIZE(ORNLSLICER_VERSION);
+        qInfo() << QString::fromUtf8(ORNL::BuildInfo::Version);
         return false;
     }
 
