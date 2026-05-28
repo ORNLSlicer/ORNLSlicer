@@ -98,6 +98,7 @@ GCodeLoader::GCodeLoader(QString filename, bool alterFile)
 
     m_perimeter = QStringMatcher(Constants::RegionTypeStrings::kPerimeter.toUpper());
     m_radial = QStringMatcher(Constants::RegionTypeStrings::kRadial.toUpper());
+    m_helical = QStringMatcher(Constants::RegionTypeStrings::kHelical.toUpper());
     m_inset = QStringMatcher(Constants::RegionTypeStrings::kInset.toUpper());
     m_infill = QStringMatcher(Constants::RegionTypeStrings::kInfill.toUpper());
     m_skin = QStringMatcher(Constants::RegionTypeStrings::kSkin.toUpper());
@@ -637,6 +638,9 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     if (m_radial.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRadial);
     }
+    if (m_helical.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRadial);
+    }
     if (m_inset.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kInset);
     }
@@ -698,7 +702,8 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, co
         m_modifier_colors.contains(color) ? 1.1f : 1.0f; // Scale modifier segments by 1.1 for better visibility
 
     // Set the display width of the segment based on its region type
-    if (comment.contains(Constants::RegionTypeStrings::kRadial)) {
+    if (comment.contains(Constants::RegionTypeStrings::kRadial) ||
+        comment.contains(Constants::RegionTypeStrings::kHelical)) {
         display_width = m_sb->setting<float>(PS::Layer::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
     else if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
