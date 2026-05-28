@@ -9,6 +9,7 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [ORNLSlicer User Guide](ornlslicer-user-guide.pdf)
 - [Getting Started](wiki/Getting-Started.md)
 - [Radial Slicing](radial-slicing.md)
+- [Helical Slicing](helical-slicing.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
 

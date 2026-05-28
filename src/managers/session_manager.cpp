@@ -28,6 +28,7 @@
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
+#include "threading/slicers/helical_slicer.h"
 #include "threading/slicers/image_slicer.h"
 #include "threading/slicers/polymer_slicer.h"
 #include "threading/slicers/radial_slicer.h"
@@ -502,8 +503,10 @@ bool SessionManager::doSlice() {
     const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     const SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
 
-    if (type == SlicerType::kRadialSlice && syntax != GcodeSyntax::kRadial3Plus2) {
-        const QString message = "Radial slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2.";
+    if ((type == SlicerType::kRadialSlice || type == SlicerType::kHelicalSlice) &&
+        syntax != GcodeSyntax::kRadial3Plus2) {
+        const QString message =
+            "Radial and helical slicing require Printer > Machine Setup > Syntax to be Radial3Plus2.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;
@@ -590,6 +593,9 @@ bool SessionManager::changeSlicer(SlicerType type) {
             break;
         case SlicerType::kRadialSlice:
             m_ast.reset(new RadialSlicer(tempGcodeFile));
+            break;
+        case SlicerType::kHelicalSlice:
+            m_ast.reset(new HelicalSlicer(tempGcodeFile));
             break;
         default:
             qWarning() << "Unknown slicer type requested. Falling back to Polymer slicer.";

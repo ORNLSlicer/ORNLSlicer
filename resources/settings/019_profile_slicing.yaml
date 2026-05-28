@@ -10,6 +10,7 @@ settings:
       - "Polymer"
       - "Image"
       - "Radial Slice"
+      - "Helical Slice"
     default: 0
     minor: "Slicing"
     major: "Profile"
@@ -19,8 +20,8 @@ settings:
   - name: "radial_axis_mode"
     display: "Radial Axis Mode"
     type: "enumeration"
-    tooltip: "Selects the XY axis used for radial cylinder slicing. Part Centroid uses each build part's centroid, while Custom XY uses the configured radial axis coordinates."
-    depends: {"slicer_type":2}
+    tooltip: "Selects the XY axis used for radial cylinder or helical slicing. Part Centroid uses each build part's centroid, while Custom XY uses the configured radial axis coordinates."
+    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
     options:
       - "Part Centroid"
       - "Custom XY"
@@ -33,8 +34,8 @@ settings:
   - name: "radial_axis_x"
     display: "Radial Axis X"
     type: "distance"
-    tooltip: "X coordinate for the radial cylinder axis when Radial Axis Mode is Custom XY."
-    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    tooltip: "X coordinate for the radial cylinder or helical axis when Radial Axis Mode is Custom XY."
+    depends: {"AND":[{"OR":[{"slicer_type":2},{"slicer_type":3}]},{"radial_axis_mode":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -45,8 +46,8 @@ settings:
   - name: "radial_axis_y"
     display: "Radial Axis Y"
     type: "distance"
-    tooltip: "Y coordinate for the radial cylinder axis when Radial Axis Mode is Custom XY."
-    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    tooltip: "Y coordinate for the radial cylinder or helical axis when Radial Axis Mode is Custom XY."
+    depends: {"AND":[{"OR":[{"slicer_type":2},{"slicer_type":3}]},{"radial_axis_mode":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -57,8 +58,8 @@ settings:
   - name: "radial_initial_radius"
     display: "Radial Initial Radius"
     type: "distance"
-    tooltip: "Starting radius for radial cylinder slicing. Values less than or equal to zero use half the layer height."
-    depends: {"slicer_type":2}
+    tooltip: "Starting radius for radial cylinder or helical slicing. Values less than or equal to zero use half the layer height."
+    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -69,8 +70,8 @@ settings:
   - name: "radial_boundary_handling"
     display: "Radial Boundary Handling"
     type: "enumeration"
-    tooltip: "Controls radial paths that cross the model boundary. Clip to model keeps only the portions inside the model, keep boundary-crossing path outputs the original path when any portion is inside, and discard boundary-crossing path omits paths cut by the model boundary."
-    depends: {"slicer_type":2}
+    tooltip: "Controls radial or helical paths that cross the model boundary. Clip to model keeps only the portions inside the model, keep boundary-crossing path outputs the original path when any portion is inside, and discard boundary-crossing path omits paths cut by the model boundary."
+    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
     options:
       - "Clip to Model"
       - "Keep Boundary-Crossing Path"
