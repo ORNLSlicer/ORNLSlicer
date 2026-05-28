@@ -113,6 +113,7 @@ const QStringList Constants::Units::kRotationUnits = {Constants::Units::kPitchRo
 const QString Constants::RegionTypeStrings::kUnknown = "unknown";
 const QString Constants::RegionTypeStrings::kPerimeter = "PERIMETER";
 const QString Constants::RegionTypeStrings::kRadial = "RADIAL";
+const QString Constants::RegionTypeStrings::kHelical = "HELICAL";
 const QString Constants::RegionTypeStrings::kInset = "INSET";
 const QString Constants::RegionTypeStrings::kInfill = "INFILL";
 const QString Constants::RegionTypeStrings::kTopSkin = "TOP_SKIN";

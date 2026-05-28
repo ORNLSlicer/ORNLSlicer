@@ -313,7 +313,8 @@ QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
     if (setting_key == PS::Slicing::kSlicerType) {
         const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-        if (slicer_type == SlicerType::kRadialSlice && syntax != GcodeSyntax::kRadial3Plus2) {
+        if ((slicer_type == SlicerType::kRadialSlice || slicer_type == SlicerType::kHelicalSlice) &&
+            syntax != GcodeSyntax::kRadial3Plus2) {
             sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kRadial3Plus2));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
             synced_keys.push_back(PRS::MachineSetup::kSyntax);
@@ -322,7 +323,8 @@ QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
     else if (setting_key == PRS::MachineSetup::kSyntax) {
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
         const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
-        if (syntax == GcodeSyntax::kRadial3Plus2 && slicer_type != SlicerType::kRadialSlice) {
+        if (syntax == GcodeSyntax::kRadial3Plus2 && slicer_type != SlicerType::kRadialSlice &&
+            slicer_type != SlicerType::kHelicalSlice) {
             sb->setSetting(PS::Slicing::kSlicerType, static_cast<int>(SlicerType::kRadialSlice));
             reloadSettingRow(PS::Slicing::kSlicerType);
             synced_keys.push_back(PS::Slicing::kSlicerType);

@@ -149,7 +149,7 @@ class SettingBar : public QWidget {
     SettingTab* getTab(QString major, QString minor);
 
     /*!
-     * \brief Keeps radial slicing and Radial3Plus2 syntax paired when either setting enters radial mode.
+     * \brief Keeps cylindrical slicing workflows and Radial3Plus2 syntax paired when either setting enters that mode.
      * \param setting_key Setting that triggered the sync check.
      * \return Additional setting keys changed by the sync.
      */

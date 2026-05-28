@@ -53,7 +53,10 @@ enum class SlicerType : uint8_t {
     kImageSlice = 1,
 
     //! @brief Radial cylinder slicing around each part's XY centroid.
-    kRadialSlice = 2
+    kRadialSlice = 2,
+
+    //! @brief Helical slicing around each part's XY centroid.
+    kHelicalSlice = 3
 };
 
 //! \brief Function for going from json to SlicerType

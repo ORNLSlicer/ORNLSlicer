@@ -85,7 +85,8 @@ bool RadialParser::isRotaryAxis(QChar axis) const { return axis == 'A' || axis =
 
 bool RadialParser::isCommentedPrintMove() const {
     const QString comment = m_current_gcode_command.getComment().toUpper();
-    return comment.contains(Constants::RegionTypeStrings::kRadial) &&
+    return (comment.contains(Constants::RegionTypeStrings::kRadial) ||
+            comment.contains(Constants::RegionTypeStrings::kHelical)) &&
            !comment.contains(Constants::RegionTypeStrings::kTravel);
 }
 

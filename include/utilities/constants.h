@@ -100,6 +100,7 @@ class Constants {
         static const QString kUnknown;
         static const QString kPerimeter;
         static const QString kRadial;
+        static const QString kHelical;
         static const QString kInset;
         static const QString kInfill;
         static const QString kTopSkin;
