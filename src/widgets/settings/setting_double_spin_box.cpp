@@ -51,8 +51,8 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
         unitText = "%";
     }
     else if (type == "unitless_float") {
-        this->setMinimum(-9999.99);
-        this->setMaximum(9999.99);
+        this->setMinimum(Constants::Limits::Minimums::kMinUnitlessFloat);
+        this->setMaximum(Constants::Limits::Maximums::kMaxUnitlessFloat);
         this->setDecimals(m_precision);
     }
 

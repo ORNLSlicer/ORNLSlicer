@@ -1,6 +1,7 @@
 <RCC>
     <qresource prefix="/configs">
         <file>master.conf</file>
+        <file>setting_inputs.conf</file>
         <file>versions.conf</file>
     </qresource>
     <qresource prefix="/"/>

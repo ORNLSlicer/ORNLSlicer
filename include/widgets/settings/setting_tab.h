@@ -51,7 +51,7 @@ class SettingTab : public QWidget {
     QList<QSharedPointer<SettingsBase>> m_settings_bases;
 
     //! \brief Adds a row to this tab.
-    void addRow(QString key, fifojson& json);
+    void addRow(QString key, const fifojson& json, const fifojson& input = fifojson());
 
     //! \brief Get all rows in this tab.
     QList<QSharedPointer<SettingRowBase>> getRows();
@@ -147,6 +147,9 @@ class SettingTab : public QWidget {
 
     //! \brief Map of key to input row.
     QHash<QString, QSharedPointer<SettingRowBase>> m_rows;
+
+    //! \brief Alternate keys handled by a composite input row.
+    QHash<QString, QSharedPointer<SettingRowBase>> m_row_aliases;
 
     //! \brief Settings bases this tab uses.
     QSharedPointer<SettingsBase> m_sb;

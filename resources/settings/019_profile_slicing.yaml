@@ -33,7 +33,7 @@ settings:
     local: true
   - name: "radial_axis_x"
     display: "Radial Axis X"
-    type: "distance"
+    type: "location"
     tooltip: "X coordinate for the radial cylinder or helical axis when Radial Axis Mode is Custom XY."
     depends: {"AND":[{"OR":[{"slicer_type":2},{"slicer_type":3}]},{"radial_axis_mode":1}]}
     options: []
@@ -45,7 +45,7 @@ settings:
     local: true
   - name: "radial_axis_y"
     display: "Radial Axis Y"
-    type: "distance"
+    type: "location"
     tooltip: "Y coordinate for the radial cylinder or helical axis when Radial Axis Mode is Custom XY."
     depends: {"AND":[{"OR":[{"slicer_type":2},{"slicer_type":3}]},{"radial_axis_mode":1}]}
     options: []
@@ -118,3 +118,30 @@ settings:
     namespace: "Profile::Slicing"
     symbol: "kSlicingVectorZ"
     local: false
+inputs:
+  - name: "radial_axis"
+    display: "Radial Axis"
+    widget: "vector2"
+    tooltip: "Defines the custom XY coordinate used as the radial cylinder axis when Radial Axis Mode is Custom XY."
+    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    minor: "Slicing"
+    major: "Profile"
+    components:
+      - setting: "radial_axis_x"
+        label: "X"
+      - setting: "radial_axis_y"
+        label: "Y"
+  - name: "slicing_vector"
+    display: "Slicing Vector"
+    widget: "vector3"
+    tooltip: "Defines the slicing vector used as the slicing plane normal. Values are normalized before use; {0, 0, 1} produces horizontal XY layers, while tilted vectors produce angled slicing planes."
+    depends: {}
+    minor: "Slicing"
+    major: "Profile"
+    components:
+      - setting: "slicing_vector_x"
+        label: "X"
+      - setting: "slicing_vector_y"
+        label: "Y"
+      - setting: "slicing_vector_z"
+        label: "Z"

@@ -441,8 +441,9 @@ void SettingBar::setupGlobalSettings() {
         SettingTab* curr_tab = this->getTab(curr_json[Constants::Settings::Master::kMajor],
                                             curr_json[Constants::Settings::Master::kMinor]);
         QString key = QString::fromStdString(it.key());
+        fifojson input_json = GSM->getSettingInput(key);
 
-        curr_tab->addRow(key, curr_json);
+        curr_tab->addRow(key, curr_json, input_json);
     }
     enableDependRows();
 
