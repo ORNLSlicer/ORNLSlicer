@@ -1,7 +1,6 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QStyleFactory>
-#include <boost/preprocessor.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
@@ -25,6 +24,7 @@
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/open_mesh.h"
 #include "geometry/segment_base.h"
+#include "ornlslicer/build_info.h"
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "units/unit.h"
@@ -73,7 +73,7 @@ int main(int argc, char* argv[]) {
         QCoreApplication ca(argc, argv);
         QCoreApplication::setApplicationName("ornlslicer");
         QCoreApplication::setOrganizationName("ornl");
-        QCoreApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
+        QCoreApplication::setApplicationVersion(QString::fromUtf8(ORNL::BuildInfo::Version));
 
         QSharedPointer<ORNL::SettingsBase> options = QSharedPointer<ORNL::SettingsBase>::create();
         ORNL::CommandLineConverter clc;
@@ -101,8 +101,8 @@ int main(int argc, char* argv[]) {
 
         QApplication::setApplicationName("ornlslicer");
         QApplication::setOrganizationName("ornl");
-        QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
-        QApplication::setApplicationDisplayName("ORNLSlicer-" BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
+        QApplication::setApplicationVersion(QString::fromUtf8(ORNL::BuildInfo::Version));
+        QApplication::setApplicationDisplayName(QString("ORNLSlicer-") + QString::fromUtf8(ORNL::BuildInfo::Version));
 
         Q_INIT_RESOURCE(icons);
         Q_INIT_RESOURCE(shaders);

@@ -20,12 +20,35 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 SET(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 
 set(CMAKE_AUTOMOC ON)
-set(CMAKE_AUTOUIC ON)
+set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTORCC ON)
-set(CMAKE_AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/ui")
 
 include(build_info)
 FetchBuildInfo()
+set(ORNLSLICER_BUILD_VERSION "${RESULT_VAR}")
+configure_file(
+    ${CMAKE_CURRENT_SOURCE_DIR}/cmake/build_info.h.in
+    ${CMAKE_CURRENT_BINARY_DIR}/generated/include/ornlslicer/build_info.h
+    @ONLY
+)
+
+option(ORNLSLICER_ENABLE_COMPILER_CACHE "Use sccache or ccache when available" ON)
+if(ORNLSLICER_ENABLE_COMPILER_CACHE)
+    find_program(SCCACHE_PROGRAM sccache)
+    find_program(CCACHE_PROGRAM ccache)
+
+    if(SCCACHE_PROGRAM)
+        message(STATUS "Using sccache compiler launcher: ${SCCACHE_PROGRAM}")
+        set(CMAKE_C_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${SCCACHE_PROGRAM}")
+    elseif(CCACHE_PROGRAM)
+        message(STATUS "Using ccache compiler launcher: ${CCACHE_PROGRAM}")
+        set(CMAKE_C_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+        set(CMAKE_CXX_COMPILER_LAUNCHER "${CCACHE_PROGRAM}")
+    else()
+        message(STATUS "No compiler cache found; configure with sccache or ccache in PATH to enable one.")
+    endif()
+endif()
 
 function(FindDependencies)
     find_package(Qt6 REQUIRED COMPONENTS
@@ -94,6 +117,7 @@ file(GLOB_RECURSE HEADERS "include/**.h")
 file(GLOB_RECURSE RESOURCES "resources/**.qrc")
 
 add_library(${PROJECT_NAME}_obj OBJECT)
+target_include_directories(${PROJECT_NAME}_obj PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated/include)
 target_sources(
     ${PROJECT_NAME}_obj
     PRIVATE ${SOURCES} ${RESOURCES}
@@ -104,6 +128,54 @@ target_sources(
 
 target_link_libraries(${PROJECT_NAME}_obj ${ORNLSLICER_DEPS})
 target_compile_options(${PROJECT_NAME}_obj PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fpermissive -Wno-deprecated-declarations>)
+
+option(ORNLSLICER_ENABLE_PCH "Use precompiled headers for common C++ and Qt headers" ON)
+if(ORNLSLICER_ENABLE_PCH)
+    target_precompile_headers(
+        ${PROJECT_NAME}_obj
+        PRIVATE
+            <algorithm>
+            <array>
+            <cmath>
+            <cstddef>
+            <cstdint>
+            <functional>
+            <limits>
+            <map>
+            <memory>
+            <string>
+            <tuple>
+            <utility>
+            <vector>
+            <QtCore/QHash>
+            <QtCore/QList>
+            <QtCore/QMap>
+            <QtCore/QObject>
+            <QtCore/QSharedPointer>
+            <QtCore/QString>
+            <QtCore/QStringBuilder>
+            <QtCore/QVariant>
+            <QtCore/QVector>
+            <QtCore/QtGlobal>
+            <QtGui/QColor>
+            <QtGui/QMatrix4x4>
+            <QtGui/QQuaternion>
+            <QtGui/QVector3D>
+            <QtWidgets/QGridLayout>
+            <QtWidgets/QLabel>
+            <QtWidgets/QWidget>
+    )
+endif()
+
+option(ORNLSLICER_ENABLE_UNITY_BUILD "Build ORNLSlicer sources with CMake unity builds" OFF)
+if(ORNLSLICER_ENABLE_UNITY_BUILD)
+    set_target_properties(
+        ${PROJECT_NAME}_obj
+        PROPERTIES
+            UNITY_BUILD ON
+            UNITY_BUILD_BATCH_SIZE 16
+    )
+endif()
 
 add_executable(${PROJECT_NAME})
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_obj)
