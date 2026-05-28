@@ -133,8 +133,8 @@ void CylindricalPrinterObject::updateMembers() {
     m_floor_center = QVector3D(0.0f, 0.0f, 0.0f);
 
     m_printer_max_dims.setX(m_radius);
-    m_printer_max_dims.setY(m_radius);
-    m_printer_max_dims.setZ(max.z() - min.z());
+    m_printer_max_dims.setY(2.0f * m_radius);
+    m_printer_max_dims.setZ(m_height);
 }
 
 void CylindricalPrinterObject::updateGeometry() {
