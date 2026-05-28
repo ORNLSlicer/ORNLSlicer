@@ -1,10 +1,8 @@
 #pragma once
 
 #include <QVector>
-#include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 
-#include "algorithm_base.h"
 #include "step/layer/island/island_base.h"
 #include "units/unit.h"
 
@@ -12,39 +10,29 @@ namespace ORNL {
 /*!
  * \class TspBrute
  *
- * \brief Provides access to both CPU and GPU implementation of a brute-force traveling salesman problem solver. Takes
- * in islands and uses their center of mass as coordinates to find the shortest circuit. Since we pick our starting
- * island and do not have to return to it, this reduces to number of permutations form N! to (N-1)!. The CPU
- * implementation uses recursion to find the shortest path. The GPU implementation uses factoradics and parallel
- * reduction to compute the shortest path. When benchmarked the CPU implementation faster for N up to 5 before it starts
- * to become much slower. At 11 islands, the GPU implementation runs around 72 times faster than the CPU. This class is
- * built off the Algorithm base class the handles GPU and CPU selection. An Algorithm constructor must be included when
- * TspBrute is created to specify the number of GPUs this algorithm uses(currently 1).
+ * \brief Brute-force traveling salesman problem solver.
+ *
+ * Takes in islands and uses their center of mass as coordinates to find an optimized path. Since the starting island is
+ * fixed and the path does not need to return to it, the search space is reduced from N! to (N-1)! permutations.
  */
-class TspBrute : public AlgorithmBase {
+class TspBrute {
   public:
     //! \brief Computes the optimal path(shortest or longest) to visit all islands in a list.
     //! \note IslandBases are represented by their center of mass
     //! \note Can compute either shortest of longest path
     //! \note This is only computed in 2D
-    TspBrute(QVector<QSharedPointer<IslandBase>> islands, int startIndex, bool shortest);
+    TspBrute(const QVector<QSharedPointer<IslandBase>>& islands, int startIndex, bool shortest);
 
     //! Destructor
-    ~TspBrute();
+    ~TspBrute() = default;
+
+    //! \brief Executes the brute-force TSP calculation.
+    void execute();
 
     //! \brief Returns an order list of optimized islands
     QVector<QSharedPointer<IslandBase>> getOptimizedIslandBases();
 
   protected:
-    //! \brief Pointer to an array of optimized island indexs
-    int* m_optimized_path;
-
-    //! \brief Pointer to an array x coordinates
-    float* m_x;
-
-    //! \brief Pointer to an array y coordinates
-    float* m_y;
-
     //! \brief The number of islands to order
     int m_number_of_islands;
 
@@ -62,9 +50,6 @@ class TspBrute : public AlgorithmBase {
 
     //! \brief A vector of un-optimized islands
     QVector<QSharedPointer<IslandBase>> m_islands;
-
-    //! \brief Holds the CPU implementation.
-    void executeCPU();
 
     /*! \brief Called by computeExtremunDistance, recursively tries all possibilities of visiting orders,
      *         and gives the shortest/longest one

@@ -1,12 +1,9 @@
 #include "algorithms/tsp_brute.h"
 
-#include <cstdlib>
 #include <limits>
 
-#include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 
-#include "algorithms/algorithm_base.h"
 #include "algorithms/knn.h"
 #include "geometry/path.h"
 #include "geometry/point.h"
@@ -15,22 +12,16 @@
 
 namespace ORNL {
 
-TspBrute::TspBrute(QVector<QSharedPointer<IslandBase>> islands, int startIndex, bool shortest) : AlgorithmBase() {
+TspBrute::TspBrute(const QVector<QSharedPointer<IslandBase>>& islands, int startIndex, bool shortest) {
     m_islands = islands;
     m_start_index = startIndex;
     m_shortest = shortest;
     m_number_of_islands = islands.size();
 
-    m_x = static_cast<float*>(malloc(m_islands.size() * sizeof(float)));
-    m_y = static_cast<float*>(malloc(m_islands.size() * sizeof(float)));
-    m_optimized_path = static_cast<int*>(malloc(m_islands.size() * sizeof(int)));
-
     QVector<Point> centers;
     for (int i = 0; i < m_islands.size(); i++) {
         Point center = m_islands[i]->getGeometry().boundingRectCenter();
         centers.push_back(center);
-        m_x[i] = center.x();
-        m_y[i] = center.y();
     }
 
     kNN knn(centers, centers, 2);
@@ -44,9 +35,7 @@ TspBrute::TspBrute(QVector<QSharedPointer<IslandBase>> islands, int startIndex, 
     }
 }
 
-TspBrute::~TspBrute() {}
-
-void TspBrute::executeCPU() {
+void TspBrute::execute() {
     QVector<QSharedPointer<IslandBase>> optimized_island_path;
     QVector<QSharedPointer<IslandBase>> tmp_island_path;
     QVector<int> island_index_list;
