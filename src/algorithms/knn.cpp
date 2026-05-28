@@ -3,22 +3,18 @@
 #include <algorithm>
 #include <cstdlib>
 
-#include <qcontainerfwd.h>
 #include <qmath.h>
 
-#include "algorithms/algorithm_base.h"
 #include "geometry/point.h"
 #include "units/unit.h"
 
 namespace ORNL {
 
-kNN::kNN(QVector<Point> referencePoints, QVector<Point> queryPoints, int kNeighbors, GPU_VARIANT variant)
-    : AlgorithmBase() {
+kNN::kNN(const QVector<Point>& referencePoints, const QVector<Point>& queryPoints, int kNeighbors) {
     m_point_dimension = 3;
     m_kNeighbors = kNeighbors;
     m_referencePointsSize = referencePoints.size();
     m_queryPointsSize = queryPoints.size();
-    m_variant = variant;
 
     m_referencePoints = static_cast<float*>(malloc(referencePoints.size() * m_point_dimension * sizeof(float)));
     m_queryPoints = static_cast<float*>(malloc(queryPoints.size() * m_point_dimension * sizeof(float)));
@@ -62,7 +58,7 @@ kNN::~kNN() {
     free(m_knn_index);
 }
 
-void kNN::executeCPU() {
+void kNN::execute() {
     knn_c(m_referencePoints, m_referencePointsSize, m_queryPoints, m_queryPointsSize, m_point_dimension, m_kNeighbors,
           m_knn_dist, m_knn_index);
 }
