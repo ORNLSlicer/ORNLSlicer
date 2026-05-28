@@ -200,7 +200,6 @@ class Constants {
             static const QString kYMax;
             static const QString kZMin;
             static const QString kZMax;
-            static const QString kInnerRadius;
             static const QString kOuterRadius;
             static const QString kXOffset;
             static const QString kYOffset;

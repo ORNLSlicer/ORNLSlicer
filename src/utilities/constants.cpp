@@ -254,7 +254,6 @@ const QString Constants::PrinterSettings::Dimensions::kYMax = "maximum_y";
 const QString Constants::PrinterSettings::Dimensions::kZMin = "minimum_z";
 const QString Constants::PrinterSettings::Dimensions::kZMax = "maximum_z";
 const QString Constants::PrinterSettings::Dimensions::kUseVariableForZ = "variable_for_z";
-const QString Constants::PrinterSettings::Dimensions::kInnerRadius = "inner_radius";
 const QString Constants::PrinterSettings::Dimensions::kOuterRadius = "outer_radius";
 const QString Constants::PrinterSettings::Dimensions::kXOffset = "x_offset";
 const QString Constants::PrinterSettings::Dimensions::kYOffset = "y_offset";
