@@ -67,7 +67,7 @@ Each setting entry has these fields:
 Run CMake/build, or run the generator directly:
 
 ```bash
-python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf
+python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf
 ```
 
 See [Generating the Master Settings File](Generating-the-Master-Settings-File) for more information.

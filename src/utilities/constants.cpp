@@ -842,6 +842,23 @@ const std::string Constants::Settings::Master::kDefault = "default";
 const std::string Constants::Settings::Master::kDependencyGroup = "dependency_group";
 const std::string Constants::Settings::Master::kLocal = "local";
 
+// Input
+const std::string Constants::Settings::Input::kName = "name";
+const std::string Constants::Settings::Input::kDisplay = "display";
+const std::string Constants::Settings::Input::kWidget = "widget";
+const std::string Constants::Settings::Input::kToolTip = "tooltip";
+const std::string Constants::Settings::Input::kDepends = "depends";
+const std::string Constants::Settings::Input::kMinor = "minor";
+const std::string Constants::Settings::Input::kMajor = "major";
+const std::string Constants::Settings::Input::kLocal = "local";
+const std::string Constants::Settings::Input::kComponents = "components";
+const std::string Constants::Settings::Input::kSetting = "setting";
+const std::string Constants::Settings::Input::kLabel = "label";
+const std::string Constants::Settings::Input::kType = "type";
+const std::string Constants::Settings::Input::kDefault = "default";
+const std::string Constants::Settings::Input::kVector2 = "vector2";
+const std::string Constants::Settings::Input::kVector3 = "vector3";
+
 // Session
 const std::string Constants::Settings::Session::kParts = "parts";
 const std::string Constants::Settings::Session::kName = "name";
@@ -902,6 +919,7 @@ const Temperature Constants::Limits::Maximums::kMaxTemperature = std::numeric_li
 const Angle Constants::Limits::Maximums::kMaxAngle = 2 * pi;
 const Area Constants::Limits::Maximums::kMaxArea = std::numeric_limits<float>::max();
 const Voltage Constants::Limits::Maximums::kMaxVoltage = std::numeric_limits<float>::max();
+const double Constants::Limits::Maximums::kMaxUnitlessFloat = 9999.99;
 const float Constants::Limits::Maximums::kMaxFloat = std::numeric_limits<float>::max();
 const float Constants::Limits::Maximums::kInfFloat = std::numeric_limits<float>::infinity();
 
@@ -915,6 +933,7 @@ const Time Constants::Limits::Minimums::kMinTime = std::numeric_limits<float>::l
 const Temperature Constants::Limits::Minimums::kMinTemperature = std::numeric_limits<float>::lowest();
 const Angle Constants::Limits::Minimums::kMinAngle = -2 * pi;
 const Area Constants::Limits::Minimums::kMinArea = std::numeric_limits<float>::lowest();
+const double Constants::Limits::Minimums::kMinUnitlessFloat = -9999.99;
 const float Constants::Limits::Minimums::kMinFloat = std::numeric_limits<float>::lowest();
 
 //================================================================================

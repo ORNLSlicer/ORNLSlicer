@@ -923,6 +923,24 @@ class Constants {
             static const std::string kDependencyGroup;
             static const std::string kLocal;
         };
+        class Input {
+          public:
+            static const std::string kName;
+            static const std::string kDisplay;
+            static const std::string kWidget;
+            static const std::string kToolTip;
+            static const std::string kDepends;
+            static const std::string kMinor;
+            static const std::string kMajor;
+            static const std::string kLocal;
+            static const std::string kComponents;
+            static const std::string kSetting;
+            static const std::string kLabel;
+            static const std::string kType;
+            static const std::string kDefault;
+            static const std::string kVector2;
+            static const std::string kVector3;
+        };
         class Session {
           public:
             static const std::string kParts;
@@ -1003,6 +1021,7 @@ class Constants {
             static const Angle kMaxAngle;
             static const Area kMaxArea;
             static const Voltage kMaxVoltage;
+            static const double kMaxUnitlessFloat;
             static const float kMaxFloat;
             static const float kInfFloat;
         };
@@ -1022,6 +1041,7 @@ class Constants {
             static const Temperature kMinTemperature;
             static const Angle kMinAngle;
             static const Area kMinArea;
+            static const double kMinUnitlessFloat;
             static const float kMinFloat;
         };
     };
