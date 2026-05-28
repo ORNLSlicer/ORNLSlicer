@@ -1,0 +1,5 @@
+#pragma once
+
+namespace ORNL::BuildInfo {
+inline constexpr const char* Version = "@ORNLSLICER_BUILD_VERSION@";
+}

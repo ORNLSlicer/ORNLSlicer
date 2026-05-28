@@ -15,6 +15,7 @@
 
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "ornlslicer/build_info.h"
 #include "part/part.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -122,7 +123,7 @@ void SessionLoader::saveSession() {
 
     zip_entry_open(zip, "Version.txt");
     std::string version =
-        "This is an ORNLSlicer project file.\nVersion: " + std::string(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION)) + "\n";
+        "This is an ORNLSlicer project file.\nVersion: " + std::string(ORNL::BuildInfo::Version) + "\n";
     zip_entry_write(zip, version.c_str(), version.length());
     zip_entry_close(zip);
 
