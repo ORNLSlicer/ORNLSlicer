@@ -38,6 +38,12 @@ class SettingsManager : public QObject {
     //!        for display purposes.
     QSharedPointer<SettingsBase> getMaster() const;
 
+    //! \brief Obtains input metadata used to group scalar settings into composite UI rows.
+    fifojson getSettingInputs() const;
+
+    //! \brief Returns the composite input metadata for a setting key, or null if the key is not grouped.
+    fifojson getSettingInput(const QString& setting_key) const;
+
     // ---- Global Configuration ----
 
     bool loadAllGlobals(QString path);
@@ -182,6 +188,9 @@ class SettingsManager : public QObject {
 
     //! \brief Master settings.
     QSharedPointer<SettingsBase> m_master;
+
+    //! \brief UI input group metadata generated from settings YAML files.
+    fifojson m_setting_inputs;
 
     //! \brief Valid file suffixes for settings files
     QVector<QString> m_validSuffixes;

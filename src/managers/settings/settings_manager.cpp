@@ -44,6 +44,16 @@ SettingsManager::SettingsManager() : m_global(new SettingsBase()), m_master(new 
 
     QString master_data = master_file.readAll();
     m_master->json(json::parse(master_data.toStdString()));
+
+    QFile setting_inputs_file(":/configs/setting_inputs.conf");
+    if (setting_inputs_file.open(QIODevice::ReadOnly)) {
+        QString input_data = setting_inputs_file.readAll();
+        m_setting_inputs = input_data.isEmpty() ? fifojson::object() : json::parse(input_data.toStdString());
+    }
+    else {
+        m_setting_inputs = fifojson::object();
+    }
+
     for (auto& el : m_master->json().items()) {
         if (!m_allGlobals.contains(QString::fromStdString(el.value()[Constants::Settings::Master::kMajor]))) {
             m_allGlobals.insert(QString::fromStdString(el.value()[Constants::Settings::Master::kMajor]),
@@ -65,6 +75,20 @@ SettingsManager::SettingsManager() : m_global(new SettingsBase()), m_master(new 
 }
 
 QSharedPointer<SettingsBase> SettingsManager::getMaster() const { return m_master; }
+
+fifojson SettingsManager::getSettingInputs() const { return m_setting_inputs; }
+
+fifojson SettingsManager::getSettingInput(const QString& setting_key) const {
+    for (auto& input : m_setting_inputs.items()) {
+        for (auto& component : input.value().at(Constants::Settings::Input::kComponents).items()) {
+            if (QString::fromStdString(component.value().at(Constants::Settings::Input::kSetting).get<std::string>()) ==
+                setting_key)
+                return input.value();
+        }
+    }
+
+    return fifojson();
+}
 
 bool SettingsManager::loadGlobalJson(QString path) {
 
