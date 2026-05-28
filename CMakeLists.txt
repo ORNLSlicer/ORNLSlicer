@@ -206,7 +206,9 @@ function(CreateSettingsTarget)
 
             message(STATUS "Python interpreter found, enabling automatic master settings generator.")
             add_custom_command(
-                OUTPUT  ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf
+                OUTPUT
+                    ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf
+                    ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/setting_inputs.conf
                 DEPENDS
                     ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_master_config.py
                     ${MASTER_SETTING_SOURCES}
@@ -215,9 +217,15 @@ function(CreateSettingsTarget)
                     ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/generate_master_config.py
                     ${CMAKE_CURRENT_SOURCE_DIR}/resources/settings
                     ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf
+                    ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/setting_inputs.conf
                 VERBATIM
             )
-            add_custom_target(generate_master_config DEPENDS ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf)
+            add_custom_target(
+                generate_master_config
+                DEPENDS
+                    ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/master.conf
+                    ${CMAKE_CURRENT_SOURCE_DIR}/resources/configs/setting_inputs.conf
+            )
             add_dependencies(${PROJECT_NAME}_obj generate_master_config)
         else()
             message(FATAL_ERROR "Python not found, master settings generator cannot be enabled.")
