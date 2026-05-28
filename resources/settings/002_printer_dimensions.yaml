@@ -9,7 +9,6 @@ settings:
     options:
       - "Rectangular"
       - "Cylindrical"
-      - "Toroidal"
     default: 0
     minor: "Dimensions"
     major: "Printer"
@@ -88,23 +87,11 @@ settings:
     namespace: "Printer::Dimensions"
     symbol: "kMaximumZ"
     local: false
-  - name: "inner_radius"
-    display: "Inner Radius"
-    type: "location"
-    tooltip: "Inner radius value"
-    depends: {"build_volume_type":2}
-    options: []
-    default: 100000
-    minor: "Dimensions"
-    major: "Printer"
-    namespace: "Printer::Dimensions"
-    symbol: "kInnerRadius"
-    local: false
   - name: "outer_radius"
     display: "Outer Radius"
     type: "location"
     tooltip: "Outer radius value"
-    depends: {"OR":[{"build_volume_type":1},{"build_volume_type":2}]}
+    depends: {"build_volume_type":1}
     options: []
     default: 1000000
     minor: "Dimensions"

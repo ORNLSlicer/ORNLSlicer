@@ -39,7 +39,7 @@ enum MeshGeneratorType {
 /*! \enum BuildVolumeType
  * \brief Determines the type of build volume to create.
  */
-enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1, kToroidal = 2 };
+enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1 };
 
 /*!
  * @enum SlicerType

@@ -133,7 +133,6 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                         PRS::Dimensions::kWMin,
                                                         PRS::Dimensions::kWMax,
                                                         PRS::Dimensions::kBuildVolumeType,
-                                                        PRS::Dimensions::kInnerRadius,
                                                         PRS::Dimensions::kOuterRadius,
                                                         PRS::Dimensions::kEnableW,
                                                         PRS::Dimensions::kEnableGridX,

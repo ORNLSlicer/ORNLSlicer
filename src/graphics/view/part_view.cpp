@@ -33,7 +33,6 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 #include "graphics/objects/printer/printer_object.h"
-#include "graphics/objects/printer/toroidal_printer_object.h"
 #include "graphics/objects/text_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
@@ -256,9 +255,9 @@ void PartView::updatePrinterSettings(QSharedPointer<SettingsBase> sb) {
                 new_printer = QSharedPointer<CylindricalPrinterObject>::create(this, m_sb, false);
             }
             break;
-        case ORNL::BuildVolumeType::kToroidal:
-            if (m_printer.dynamicCast<ToroidalPrinterObject>().isNull()) {
-                new_printer = QSharedPointer<ToroidalPrinterObject>::create(this, m_sb, false);
+        default:
+            if (m_printer.dynamicCast<CartesianPrinterObject>().isNull()) {
+                new_printer = QSharedPointer<CartesianPrinterObject>::create(this, m_sb, false);
             }
             break;
     }
@@ -368,8 +367,8 @@ void PartView::initView() {
         case ORNL::BuildVolumeType::kCylindrical:
             m_printer = QSharedPointer<CylindricalPrinterObject>::create(this, m_sb, false);
             break;
-        case ORNL::BuildVolumeType::kToroidal:
-            m_printer = QSharedPointer<ToroidalPrinterObject>::create(this, m_sb, false);
+        default:
+            m_printer = QSharedPointer<CartesianPrinterObject>::create(this, m_sb, false);
             break;
     }
 

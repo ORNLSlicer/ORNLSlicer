@@ -220,22 +220,6 @@ class ShapeFactory {
                                           const QColor& color, std::vector<float>& vertices,
                                           std::vector<float>& colors);
 
-    /*! \brief Create torus for build volume representation
-     *
-     *  Constructs a wire frame toroidal build volume representation
-     *  @param outerRadius Radius of outer circle for top/bottom of cylinder
-     *  @param innerRadius Radius of iner circle for top/bottom of cylinder
-     *  @param height Height of torus
-     *  @param x_grid_dist: Distance between grid lines in x direction
-     *  @param y_grid_dist: Distance between grid lines in y direction
-     *  @param color Color of resulting volume
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     */
-    static void createBuildVolumeToroidal(float outerRadius, float innerRadius, float height, float x_grid_dist,
-                                          float y_grid_dist, const QColor& color, std::vector<float>& vertices,
-                                          std::vector<float>& colors);
-
     //! \brief Constructs an arrow.
     static void createArrow(QVector3D begin, QVector3D end, const QColor& color, std::vector<float>& vertices,
                             std::vector<float>& colors);
