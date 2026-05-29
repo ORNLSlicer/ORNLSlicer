@@ -17,7 +17,7 @@ LineSegment::LineSegment(Point start, Point end) : SegmentBase(start, end) {
 
 void LineSegment::createGraphic(std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
     ShapeFactory::createGcodeCylinder(m_display_width, m_display_length, m_display_height, m_start.toQVector3D(),
-                                      m_end.toQVector3D(), m_color, vertices, colors, normals);
+                                      m_end.toQVector3D(), m_display_normal, m_color, vertices, colors, normals);
 }
 
 QSharedPointer<SegmentBase> LineSegment::clone() const { return QSharedPointer<LineSegment>::create(*this); }

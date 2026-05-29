@@ -6,6 +6,7 @@ layout(location = 3) in vec2 uv;
 layout(location = 4) in vec3 instanceStart;
 layout(location = 5) in vec3 instanceDelta;
 layout(location = 6) in vec4 instanceColor;
+layout(location = 7) in vec3 instanceNormal;
 out vec4 vColor;
 out vec3 fragPos;
 out vec3 vNormal;
@@ -33,12 +34,16 @@ void main()
     {
         float segmentLength = length(instanceDelta);
         vec3 tangent = segmentLength > 0.000001 ? instanceDelta / segmentLength : vec3(0.0, 0.0, 1.0);
-        vec3 normalAxis = normalize(stackingAxis);
+        vec3 normalAxis = dot(instanceNormal, instanceNormal) > 0.000001
+                              ? normalize(instanceNormal)
+                              : normalize(stackingAxis);
         vec3 binormal = cross(tangent, normalAxis);
 
         if (dot(binormal, binormal) < 0.000001)
         {
-            normalAxis = vec3(1.0, 0.0, 0.0);
+            normalAxis = abs(dot(tangent, vec3(0.0, 0.0, 1.0))) < 0.9
+                           ? vec3(0.0, 0.0, 1.0)
+                           : vec3(1.0, 0.0, 0.0);
             binormal = cross(tangent, normalAxis);
         }
 

@@ -1,5 +1,6 @@
 #include "geometry/segment_base.h"
 
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -62,6 +63,15 @@ void SegmentBase::setDisplayInfo(float display_width, float display_length, floa
 void SegmentBase::setDisplayWidth(float display_width) { m_display_width = display_width; }
 
 void SegmentBase::setDisplayHeight(float display_height) { m_display_height = display_height; }
+
+QVector3D SegmentBase::displayNormal() const { return m_display_normal; }
+
+void SegmentBase::setDisplayNormal(QVector3D display_normal) {
+    if (display_normal.lengthSquared() > std::numeric_limits<float>::epsilon()) {
+        display_normal.normalize();
+    }
+    m_display_normal = display_normal;
+}
 
 void SegmentBase::createGraphic(std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
     // NOP

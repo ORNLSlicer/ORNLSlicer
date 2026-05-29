@@ -65,10 +65,13 @@ QVector<QString> RadialParser::stripRotaryAxes(QVector<QString> params) {
         }
 
         bool no_error = false;
-        param.right(param.size() - 1).toDouble(&no_error);
+        const double rotary_value = param.right(param.size() - 1).toDouble(&no_error);
         if (!no_error) {
             throwFloatConversionErrorException();
         }
+
+        const char axis_key = axis.toUpper().toLatin1();
+        m_current_gcode_command.addParameter(axis_key, rotary_value);
 
         if (axis == 'A' || axis == 'a') {
             a_not_used = false;

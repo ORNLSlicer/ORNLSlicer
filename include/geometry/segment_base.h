@@ -9,6 +9,7 @@
 #include <qquaternion.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
+#include <qvectornd.h>
 
 #include "geometry/point.h"
 #include "units/unit.h"
@@ -80,6 +81,13 @@ class SegmentBase {
     //! \brief Sets the display height of the gcode segment
     //! \param display_height the display height
     void setDisplayHeight(float display_height);
+
+    //! \brief Gets the custom display normal for bead construction.
+    QVector3D displayNormal() const;
+
+    //! \brief Sets the custom display normal for bead construction.
+    //! \param display_normal Segment-local display normal. A zero vector uses the global slicing vector.
+    void setDisplayNormal(QVector3D display_normal);
 
     //! \brief Creates the vertex info for this segment. Requires info set in setGCodeInfo(). Virtual function by
     //! default does nothing. \todo This function expects segments generated using OpenGL scales. A less brittle version
@@ -208,5 +216,8 @@ class SegmentBase {
 
     //! \brief The height of the segment in display units.
     float m_display_height;
+
+    //! \brief Optional normal used as the segment cross-section height direction for visualization.
+    QVector3D m_display_normal;
 };
 } // namespace ORNL

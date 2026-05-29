@@ -37,10 +37,11 @@ constexpr qsizetype kLightweightLineThreshold = 2000000;
 //! @brief Segment count where instanced bead rendering starts avoiding large CPU mesh expansion.
 constexpr qsizetype kInstancedBeadThreshold = 100000;
 
-constexpr uint kInstanceFloatCount = 10;
+constexpr uint kInstanceFloatCount = 13;
 constexpr uint kInstanceStartOffset = 0;
 constexpr uint kInstanceDeltaOffset = 3;
 constexpr uint kInstanceColorOffset = 6;
+constexpr uint kInstanceNormalOffset = 10;
 constexpr uint kInstanceStrideBytes = kInstanceFloatCount * sizeof(float);
 constexpr float kMinimumPickRadius = 0.025f;
 constexpr float kPickTieTolerance = 0.000001f;
@@ -365,10 +366,12 @@ std::pair<uint, uint> GCodeObject::appendInstancedBead(const QSharedPointer<Segm
     const uint instance_index = group->instances.size() / kInstanceFloatCount;
     const QVector3D start = segment->start().toQVector3D();
     const QVector3D delta = displayEnd(segment) - start;
+    const QVector3D display_normal = segment->displayNormal();
     const QColor color = segment->color();
 
     group->instances.insert(group->instances.end(), {start.x(), start.y(), start.z(), delta.x(), delta.y(), delta.z(),
-                                                     color.redF(), color.greenF(), color.blueF(), color.alphaF()});
+                                                     color.redF(), color.greenF(), color.blueF(), color.alphaF(),
+                                                     display_normal.x(), display_normal.y(), display_normal.z()});
 
     return std::make_pair(group_index, instance_index);
 }
@@ -415,6 +418,11 @@ void GCodeObject::populateInstancedBeadsGL() {
         this->view()->glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, kInstanceStrideBytes,
                                             reinterpret_cast<const void*>(kInstanceColorOffset * sizeof(float)));
         this->view()->glVertexAttribDivisor(6, 1);
+
+        this->view()->glEnableVertexAttribArray(7);
+        this->view()->glVertexAttribPointer(7, 3, GL_FLOAT, GL_FALSE, kInstanceStrideBytes,
+                                            reinterpret_cast<const void*>(kInstanceNormalOffset * sizeof(float)));
+        this->view()->glVertexAttribDivisor(7, 1);
 
         group->vao->release();
         group->template_vbo.release();
@@ -751,6 +759,9 @@ void GCodeObject::drawInstancedBeadRun(uint group_index, uint first_instance, ui
     this->view()->glVertexAttribPointer(
         6, 4, GL_FLOAT, GL_FALSE, kInstanceStrideBytes,
         reinterpret_cast<const void*>(first_instance_bytes + (kInstanceColorOffset * sizeof(float))));
+    this->view()->glVertexAttribPointer(
+        7, 3, GL_FLOAT, GL_FALSE, kInstanceStrideBytes,
+        reinterpret_cast<const void*>(first_instance_bytes + (kInstanceNormalOffset * sizeof(float))));
 
     this->view()->glDrawArraysInstanced(GL_TRIANGLES, 0, group->template_vertex_count, instance_count);
 

@@ -96,6 +96,9 @@ class GCodeLoader : public QThread {
     //! \param lines Uppercase: lines used for ease of parsing/comparison
     void setParser(QStringList& originalLines, QStringList& lines);
 
+    //! \brief Parses visualization hints that are not part of the motion command stream.
+    void parseRadialVisualizationHints();
+
     //! \brief determine color based on comment keywords
     //! \param comment: Comment to parse
     //! \return color based on comment keywords
@@ -123,6 +126,9 @@ class GCodeLoader : public QThread {
     //! \param extruder_speed: The speed of the extruder.
     void setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const QString& comment, QVector3D& info_end_pos,
                             const bool& extruder_on, const bool& info_speed_set, const double& extruder_speed);
+
+    //! \brief Computes a custom display normal for radial/helical gcode commands.
+    QVector3D radialDisplayNormal(const QMap<char, double>& parameters);
 
     //! \brief generate additional export comments
     //! \return string
@@ -211,5 +217,14 @@ class GCodeLoader : public QThread {
 
     //! \brief Current settings for gcode loader
     QSharedPointer<SettingsBase> m_sb;
+
+    //! \brief C-axis offset from radial/helical gcode headers, in degrees.
+    double m_radial_c_axis_offset_degrees = 0.0;
+
+    //! \brief Tracks previous C value so segment normals are computed at segment midpoints.
+    bool m_has_last_radial_c = false;
+
+    //! \brief Previous C-axis angle for radial/helical visualization.
+    double m_last_radial_c_degrees = 0.0;
 }; // class GCodeLoader
 } // namespace ORNL

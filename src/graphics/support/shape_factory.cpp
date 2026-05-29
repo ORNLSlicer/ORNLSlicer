@@ -21,6 +21,16 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+QVector3D fallbackNormalForTangent(const QVector3D& tangent) {
+    const QVector3D normalized_tangent = tangent.normalized();
+    if (std::abs(QVector3D::dotProduct(normalized_tangent, QVector3D(0.0f, 0.0f, 1.0f))) < 0.9f) {
+        return QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    return QVector3D(1.0f, 0.0f, 0.0f);
+}
+} // namespace
+
 void ShapeFactory::createRectangle(float length, float width, float height, const QMatrix4x4& transform,
                                    const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                    std::vector<float>& normals) {
@@ -815,8 +825,16 @@ void ShapeFactory::createGcodeCylinder(const float& width, const float& length, 
                                        const QVector3D& start, const QVector3D& end, const QColor& color,
                                        std::vector<float>& vertices, std::vector<float>& colors,
                                        std::vector<float>& normals) {
+    createGcodeCylinder(width, length, height, start, end, QVector3D(), color, vertices, colors, normals);
+}
+
+void ShapeFactory::createGcodeCylinder(const float& width, const float& length, const float& height,
+                                       const QVector3D& start, const QVector3D& end,
+                                       const QVector3D& display_normal, const QColor& color,
+                                       std::vector<float>& vertices, std::vector<float>& colors,
+                                       std::vector<float>& normals) {
     // Compute the transformation matrix for the clipped cylinder
-    QMatrix4x4 transform = computeGcodeCylinderTransform(start, end);
+    QMatrix4x4 transform = computeGcodeCylinderTransform(start, end, display_normal);
 
     // Radius of the clipped cylinder and number of quads per side
     float radius;
@@ -1293,24 +1311,38 @@ void ShapeFactory::createBuildVolumeCylinder(float radius, float height, float x
 }
 
 QMatrix4x4 ShapeFactory::computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end) {
+    return computeGcodeCylinderTransform(start, end, QVector3D());
+}
+
+QMatrix4x4 ShapeFactory::computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end,
+                                                       const QVector3D& display_normal) {
     // Convert the start position and displacement to a transform matrix we can use in the standard method
     QMatrix4x4 transform;
     transform.translate(start);
 
     // Retrieve the tangent (forward) vector from start to end
-    QVector3D tangent = end.normalized();
+    QVector3D tangent = end;
+    if (tangent.lengthSquared() < std::numeric_limits<float>::epsilon()) {
+        tangent = QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    else {
+        tangent.normalize();
+    }
 
     // Retrieve the normal (up) vector from the global settings
-    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
-                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
-                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    QVector3D normal = display_normal;
+    if (normal.lengthSquared() < std::numeric_limits<float>::epsilon()) {
+        normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
+                  GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
+                  GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    }
     normal.normalize();
 
     // Compute the right vector
     QVector3D binormal = QVector3D::crossProduct(tangent, normal);
     if (binormal.lengthSquared() < std::numeric_limits<float>::epsilon()) {
-        // Up and forward are parallel or anti-parallel; choose a different up vector
-        normal = QVector3D(1, 0, 0);
+        // Up and forward are parallel or anti-parallel; choose a different up vector.
+        normal = fallbackNormalForTangent(tangent);
         binormal = QVector3D::crossProduct(tangent, normal);
     }
     binormal.normalize();

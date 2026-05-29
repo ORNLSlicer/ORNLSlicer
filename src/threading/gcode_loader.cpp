@@ -1,5 +1,6 @@
 #include "threading/gcode_loader.h"
 
+#include <cmath>
 #include <limits>
 #include <tuple>
 
@@ -57,6 +58,19 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+double shortestAngleDeltaDegrees(double start_degrees, double end_degrees) {
+    double delta = end_degrees - start_degrees;
+    while (delta > 180.0) {
+        delta -= 360.0;
+    }
+    while (delta < -180.0) {
+        delta += 360.0;
+    }
+    return delta;
+}
+} // namespace
+
 GCodeLoader::GCodeLoader(QString filename, bool alterFile)
     : m_filename(filename), m_adjust_file(alterFile), m_should_cancel(false) {
     m_sb = GSM->getGlobal();
@@ -282,6 +296,7 @@ void GCodeLoader::run() {
             m_origin = QVector3D(m_x_offset, m_y_offset, 0.0f);
             m_table_offset = 0.0f;
             m_prev_table_offset = 0.0f;
+            parseRadialVisualizationHints();
 
             // reserve more memory than the hash will need to guarantee no reallocation
             QHash<QString, QTextCharFormat> fontColors;
@@ -579,6 +594,33 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
     }
 }
 
+void GCodeLoader::parseRadialVisualizationHints() {
+    m_has_last_radial_c = false;
+    m_last_radial_c_degrees = 0.0;
+    m_radial_c_axis_offset_degrees = GSM->getGlobal()->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
+
+    if (m_selected_meta.m_syntax_id != GcodeSyntax::kRadial3Plus2) {
+        return;
+    }
+
+    const QRegularExpression c_axis_offset_pattern(
+        R"(C\s+AXIS\s+OFFSET:\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)))", QRegularExpression::CaseInsensitiveOption);
+
+    for (const QString& line : m_original_lines) {
+        const QRegularExpressionMatch match = c_axis_offset_pattern.match(line);
+        if (!match.hasMatch()) {
+            continue;
+        }
+
+        bool parsed = false;
+        const double offset = match.captured(1).toDouble(&parsed);
+        if (parsed) {
+            m_radial_c_axis_offset_degrees = offset;
+        }
+        return;
+    }
+}
+
 QColor GCodeLoader::determineFontColor(const QString& comment) {
 
     if (m_prestart.indexIn(comment) != -1) {
@@ -658,6 +700,25 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     }
 
     return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kUnknown);
+}
+
+QVector3D GCodeLoader::radialDisplayNormal(const QMap<char, double>& parameters) {
+    if (m_selected_meta.m_syntax_id != GcodeSyntax::kRadial3Plus2 || !parameters.contains('C')) {
+        return QVector3D();
+    }
+
+    const double current_c_degrees = parameters['C'];
+    double segment_c_degrees = current_c_degrees;
+    if (m_has_last_radial_c) {
+        segment_c_degrees =
+            m_last_radial_c_degrees + (shortestAngleDeltaDegrees(m_last_radial_c_degrees, current_c_degrees) / 2.0);
+    }
+
+    m_last_radial_c_degrees = current_c_degrees;
+    m_has_last_radial_c = true;
+
+    const double radians = qDegreesToRadians(segment_c_degrees - m_radial_c_axis_offset_degrees);
+    return QVector3D(std::cos(radians), std::sin(radians), 0.0f).normalized();
 }
 
 void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, const QColor& color,
@@ -833,6 +894,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
     }
 
     QVector<QSharedPointer<SegmentBase>> generated_segments;
+    const QVector3D display_normal = radialDisplayNormal(parameters);
 
     if (extruder_on || is_travel) {
         QSharedPointer<SegmentBase> segment;
@@ -896,6 +958,10 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
             else { // G0, G1, or anything else is drawn as a line
                 // Create line segment
                 segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos - m_start_pos);
+            }
+
+            if (!segment.isNull() && display_normal.lengthSquared() > std::numeric_limits<float>::epsilon()) {
+                segment->setDisplayNormal(display_normal);
             }
 
             // Set the segment's display info

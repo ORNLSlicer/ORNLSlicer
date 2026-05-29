@@ -71,6 +71,24 @@ class ShapeFactory {
                                     std::vector<float>& vertices, std::vector<float>& colors,
                                     std::vector<float>& normals);
 
+    /*! \brief Append the data for a clipped cylinder with a custom cross-section normal
+     *  @param width: Width of the clipped cylinder
+     *  @param length: Length of the clipped cylinder
+     *  @param height: Height of the clipped cylinder
+     *  @param start: Start point of the gcode segment
+     *  @param end: Displacement of the gcode segment
+     *  @param display_normal: Cross-section height direction. A zero vector uses the global slicing vector.
+     *  @param color: Color of the clipped cylinder
+     *  @param vertices Vertices of the clipped cylinder
+     *  @param colors Vertex colors of the clipped cylinder
+     *  @param normals Normal vectors of the clipped cylinder
+     */
+    static void createGcodeCylinder(const float& width, const float& length, const float& height,
+                                    const QVector3D& start, const QVector3D& end,
+                                    const QVector3D& display_normal, const QColor& color,
+                                    std::vector<float>& vertices, std::vector<float>& colors,
+                                    std::vector<float>& normals);
+
     /*!
      * \brief appends the data for a arc cylinder to input vectors
      * \note this is an overload that automatically computes the transform
@@ -172,6 +190,15 @@ class ShapeFactory {
      *  @return Transformation matrix to place the cylinder at the correct point and orientation
      */
     static QMatrix4x4 computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end);
+
+    /*! \brief Helper function to compute the transformation matrix for a gcode cylinder with a custom normal
+     *  @param start Start point of the gcode segment
+     *  @param end Displacement of the gcode segment
+     *  @param display_normal Cross-section height direction. A zero vector uses the global slicing vector.
+     *  @return Transformation matrix to place the cylinder at the correct point and orientation
+     */
+    static QMatrix4x4 computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end,
+                                                    const QVector3D& display_normal);
 
     /*!
      * \brief appends the data for a clockwise (G2) arc cylinder to input vectors
