@@ -94,14 +94,14 @@ void GCodeAMCMSaver::run() {
     out << "; ---- Setting reference (Base) ----" % newline;
     //out << "; BASE_DATA[14] = {FRAME: X 1022.920,Y -1522.720,Z -588.000,A 135.000,B 0.000,C 0.000}" % newline;
     //out << "; $BASE = {FRAME: X 1022.920,Y -1522.720,Z -588.000,A 135.000,B 0.000,C 0.000}" % newline;
-    out << "$BASE = BASE_DATA[" % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kBaseCoordinate)) % "]" % newline;
+    //out << "$BASE = BASE_DATA[" % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kBaseCoordinate)) % "]" % newline;
     out << "; --------------------------" % newline;
     out << "; ---- Setting tool (TCP) ----" % newline;
     //out << "; TOOL_DATA[5] = {FRAME: X 843.812,Y 0.000,Z 301.216,A 0.000,B 0.000,C -90.000}" % newline;
     //out << "; $TOOL = {FRAME: X 843.812,Y 0.000,Z 301.216,A 0.000,B 0.000,C -90.000}" % newline;
-    out << "$TOOL = TOOL_DATA[" % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kToolCoordinate)) % "]" % newline;
+    //out << "$TOOL = TOOL_DATA[" % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kToolCoordinate)) % "]" % newline;
     out << "; --------------------------" % newline;
-    out << "; Show Tool " % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kToolCoordinate)) % newline;
+    //out << "; Show Tool " % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kToolCoordinate)) % newline;
     out << "PTP {A1 2.22261,A2 -70.64010,A3 83.97050,A4 103.99200,A5 44.42060,A6 -109.23300,E1 0.00000} C_PTP" %
                newline;
 
