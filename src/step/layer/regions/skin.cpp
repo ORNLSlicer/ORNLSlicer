@@ -226,7 +226,7 @@ void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
 void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
                           QVector<Polyline> lines, PolygonList geometry) {
     poo.setInfillParameters(pattern, geometry, getSb()->setting<Distance>(PS::Skin::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength));
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength));
 
     poo.setGeometryToEvaluate(lines, RegionType::kSkin,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
