@@ -621,7 +621,6 @@ class Constants {
             static const QString kEnableFlyingStart;
             static const QString kFlyingStartDistance;
             static const QString kFlyingStartSpeed;
-            static const QString kEnableShiftedBeads;
         };
 
         class Inset {
@@ -703,7 +702,6 @@ class Constants {
             static const QString kCombineXLayers;
             static const QString kCombineLayerShift;
             static const QString kMinPathLength;
-            static const QString kEnableAlternatingLines;
         };
 
         class Support {

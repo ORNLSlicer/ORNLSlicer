@@ -225,15 +225,3 @@ settings:
     namespace: "Profile::Infill"
     symbol: "kShiftCombineInfillStartLayer"
     local: false
-  - name: "infill_alternating_lines"
-    display: "Enable Infill Alternating Lines"
-    type: "boolean"
-    tooltip: "If selected, infill lines will be shifted for an alternating pattern of full and half heights."
-    depends: {"infill_alternating_lines":true}
-    options: []
-    default: false
-    minor: "Infill"
-    major: "Profile"
-    namespace: "Profile::Infill"
-    symbol: "kEnableInfillAlternatingLines"
-    local: true
