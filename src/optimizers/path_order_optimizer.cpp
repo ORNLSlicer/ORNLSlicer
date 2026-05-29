@@ -160,16 +160,6 @@ Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths) {
     QSharedPointer<TravelSegment> travel_segment =
         QSharedPointer<TravelSegment>::create(m_current_location, m_paths[index].front()->start());
 
-    if (m_sb->setting<bool>(PS::Infill::kEnableAlternatingLines) && m_sb->setting<bool>(PS::Infill::kEnable)) {
-        if (!(linkIntersects(m_current_location, m_paths[index].front()->start(), empty_paths, m_border_geometry) ||
-              linkIntersects(m_current_location, m_paths[index].front()->start(), m_paths, empty_polygon_list) ||
-              linkIntersects(m_current_location, m_paths[index].front()->start(), paths, empty_polygon_list) ||
-              linkIntersects(m_current_location, m_paths[index].front()->start(), QVector<Path> {new_path},
-                             empty_polygon_list))) {
-            travel_segment->setLiftType(TravelLiftType::kNoLift);
-        }
-    }
-
     Velocity velocity = m_sb->setting<Velocity>(PS::Travel::kSpeed);
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
     new_path.append(travel_segment);

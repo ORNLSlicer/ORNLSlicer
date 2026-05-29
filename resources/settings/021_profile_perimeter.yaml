@@ -184,15 +184,3 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kPerimeterFlyingStartSpeed"
     local: true
-  - name: "perimeter_shifted_beads"
-    display: "Enable Perimeter Shifted Beads"
-    type: "boolean"
-    tooltip: "If selected, perimeter shifted beads will be generated"
-    depends: {"perimeter_shifted_beads":true}
-    options: []
-    default: false
-    minor: "Perimeter"
-    major: "Profile"
-    namespace: "Profile::Perimeter"
-    symbol: "kEnablePerimeterShiftedBeads"
-    local: true
