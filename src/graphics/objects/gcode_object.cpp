@@ -314,12 +314,33 @@ const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriang
 
 void GCodeObject::draw() {
     for (uint i = m_low_layer; i <= m_high_layer; i++) {
-        for (const auto& segment : m_segments[i]) {
-            if (segment->hidden)
-                continue;
+        uint run_offset = 0;
+        uint run_length = 0;
 
-            this->view()->glDrawArrays(this->renderMode(), segment->offset, segment->length);
+        auto drawRun = [&]() {
+            if (run_length > 0) {
+                this->view()->glDrawArrays(this->renderMode(), run_offset, run_length);
+                run_length = 0;
+            }
+        };
+
+        for (const auto& segment : m_segments[i]) {
+            if (segment->hidden) {
+                drawRun();
+                continue;
+            }
+
+            if (run_length > 0 && run_offset + run_length == segment->offset) {
+                run_length += segment->length;
+            }
+            else {
+                drawRun();
+                run_offset = segment->offset;
+                run_length = segment->length;
+            }
         }
+
+        drawRun();
     }
 }
 
