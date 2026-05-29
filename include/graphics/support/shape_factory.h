@@ -12,8 +12,6 @@ namespace ORNL {
 //! \brief "Class" for creating various geometries. Input vectors are appended to so shapes can be built additively.
 class ShapeFactory {
   public:
-    ShapeFactory();
-
     /*! \brief Append the data for a rectangular prism to input vectors
      *
      *  @param length Total X dimension
@@ -28,19 +26,6 @@ class ShapeFactory {
     static void createRectangle(float length, float width, float height, const QMatrix4x4& transform,
                                 const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                 std::vector<float>& normals);
-
-    /*! \brief Append the data for a torus to input vectors
-     *
-     *  @param inner_radius Inner radius of torus
-     *  @param outer_radius Outer radius of torus
-     *  @param transform Matrix to apply to each vertex
-     *  @param color Color of torus
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
-     */
-    static void createTorus(float inner_radius, float outer_radius, const QMatrix4x4& transform, const QColor& color,
-                            std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
     /*! \brief Append the data for a cylinder to input vectors
      *
@@ -133,46 +118,6 @@ class ShapeFactory {
     static void createCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                            std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! \brief Append the data for a full gimbal (all 6 components) to input vectors
-     *
-     *  Constructs 3 torii for rotation gimbals and 3 pairs of cylinders and cones to make arrows for the translation
-     * gimbals
-     *  @param inner_radius Inner radius of torii
-     *  @param outer_radius Outer radius of torii
-     *  @param center Starting position of gimbal relative to local coordinates of part it is being built around
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
-     */
-    static void createFullGimbal(float inner_radius, float outer_radius, const QVector3D& center,
-                                 std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
-
-    /*! \brief Append the data for a xy-gimbal to the input vectors
-     *
-     *  Constructs one torus in the xy-plane and 2 pairs of cylinders and cones to make arrows in the x and y direction.
-     *  @param inner_radius Inner radius of torii
-     *  @param outer_radius Outer radius of torii
-     *  @param center Starting position of gimbal relative to local coordinates of part it is being built around
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
-     */
-    static void createXYGimbal(float inner_radius, float outer_radius, const QVector3D& center,
-                               std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
-
-    /*! \brief Append the data for a xz-gimbal to the input vectors
-     *
-     *  Constructs one torus in the xz-plane and 2 pairs of cylinders and cones to make arrows in the x and z direction.
-     *  @param inner_radius Inner radius of torii
-     *  @param outer_radius Outer radius of torii
-     *  @param center Starting position of gimbal relative to local coordinates of part it is being built around
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
-     */
-    static void createXZGimbal(float inner_radius, float outer_radius, const QVector3D& center,
-                               std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
-
     /*! \brief Create rectangle for use as a plane.
      *
      *  Constructs a wire frame rectangular prism build volume representation
@@ -219,10 +164,6 @@ class ShapeFactory {
     static void createBuildVolumeCylinder(float radius, float height, float x_grid_dist, float y_grid_dist,
                                           const QColor& color, std::vector<float>& vertices,
                                           std::vector<float>& colors);
-
-    //! \brief Constructs an arrow.
-    static void createArrow(QVector3D begin, QVector3D end, const QColor& color, std::vector<float>& vertices,
-                            std::vector<float>& colors);
 
   private:
     /*! \brief Helper function to compute the transformation matrix for a gcode cylinder
