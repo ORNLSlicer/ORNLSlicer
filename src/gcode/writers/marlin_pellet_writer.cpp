@@ -123,8 +123,14 @@ QString MarlinPelletWriter::writeTravel(Point start_location, Point target_locat
 
     m_current_bead_area = 0;
 
-    if (m_extruder_on)
+    // Determine if travel length is short enough to keep extruder on
+    Distance travel_distance = start_location.distance(target_location);
+    if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOff();
+    }
+    else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+        rv += writeExtruderOn(RegionType::kPerimeter, m_sb->setting<int>(PS::Perimeter::kExtruderSpeed), m_sb->setting<Distance>(PS::Perimeter::kBeadWidth), m_sb->setting<Distance>(PS::Layer::kLayerHeight));
+    }
 
     Point new_start_location;
 
@@ -190,7 +196,7 @@ QString MarlinPelletWriter::writeLine(const Point& start_point, const Point& tar
     Distance width = params->setting<Distance>(SS::kWidth);
     Distance height = params->setting<Distance>(SS::kHeight);
     Area bead_area = (width - height) * height +
-                     (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
+                    (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
 
     QString rv;
 
@@ -205,7 +211,7 @@ QString MarlinPelletWriter::writeLine(const Point& start_point, const Point& tar
 
     if (requiresWriteExtruderOn && rpm > 0) // && !m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight))
     {
-        rv += writeExtruderOn(region_type, rpm, width, height, bead_area);
+        rv += writeExtruderOn(region_type, rpm, width, height);
         // m_current_rpm = rpm;
     }
 
@@ -262,8 +268,6 @@ QString MarlinPelletWriter::writeArc(const Point& start_point, const Point& end_
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     Distance width = params->setting<Distance>(SS::kWidth);
     Distance height = params->setting<Distance>(SS::kHeight);
-    Area bead_area = (width - height) * height +
-                     (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
 
     // Update the material number if necessary
     if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
@@ -275,7 +279,7 @@ QString MarlinPelletWriter::writeArc(const Point& start_point, const Point& end_
     bool requiresWriteExtruderOn = !m_extruder_on;
 
     if (requiresWriteExtruderOn && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, width, height, bead_area);
+        rv += writeExtruderOn(region_type, rpm, width, height);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -387,9 +391,11 @@ QString MarlinPelletWriter::writeDwell(Time time) {
         return {};
 }
 
-QString MarlinPelletWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height, Area bead_area) {
+QString MarlinPelletWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height) {
     m_extruder_on = true;
     QString rv;
+    Area bead_area = (width - height) * height +
+                    (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
 
     if (!m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
         float output_rpm;

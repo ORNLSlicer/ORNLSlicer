@@ -651,6 +651,7 @@ const QString Constants::ProfileSettings::Support::kLineSpacing = "support_line_
 // Travel
 const QString Constants::ProfileSettings::Travel::kSpeed = "travel_speed";
 const QString Constants::ProfileSettings::Travel::kInfillMinLength = "minimum_infill_travel_length";
+const QString Constants::ProfileSettings::Travel::kMinTravelLength = "min_travel_length";
 const QString Constants::ProfileSettings::Travel::kMinTravelForLift = "minimum_travel_for_lift";
 const QString Constants::ProfileSettings::Travel::kLiftHeight = "travel_lift_height";
 const QString Constants::ProfileSettings::Travel::kEnableTravelPause = "enable_travel_pause";

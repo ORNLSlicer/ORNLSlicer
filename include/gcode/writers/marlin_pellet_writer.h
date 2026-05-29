@@ -78,7 +78,7 @@ class MarlinPelletWriter : public WriterBase {
 
   private:
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, int rpm, Distance bead_width, Distance bead_height, Area bead_area);
+    QString writeExtruderOn(RegionType type, int rpm, Distance bead_width, Distance bead_height);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
 
