@@ -179,7 +179,7 @@ void Support::optimize(int layerNumber, Point& current_location, bool& shouldNex
 
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Support::kPattern)), m_geometry,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength));
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength));
 
     poo.setGeometryToEvaluate(m_computed_infill_geometry, RegionType::kInfill,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
