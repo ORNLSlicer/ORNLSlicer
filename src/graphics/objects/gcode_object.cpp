@@ -23,6 +23,7 @@
 #include "geometry/segments/line.h"
 #include "graphics/base_view.h"
 #include "graphics/graphics_object.h"
+#include "graphics/support/part_picker.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -41,6 +42,10 @@ constexpr uint kInstanceStartOffset = 0;
 constexpr uint kInstanceDeltaOffset = 3;
 constexpr uint kInstanceColorOffset = 6;
 constexpr uint kInstanceStrideBytes = kInstanceFloatCount * sizeof(float);
+constexpr float kMinimumPickRadius = 0.025f;
+constexpr float kPickTieTolerance = 0.000001f;
+constexpr float kTravelPickRadiusMultiplier = 2.0f;
+constexpr float kTravelPickScoreBias = 0.75f;
 
 //! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
 qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
@@ -203,6 +208,39 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
         colors.push_back(segment->color().alphaF());
     }
 }
+
+float closestRaySegmentDistance(const QVector3D& ray_start, const QVector3D& ray_dir, const QVector3D& seg_start,
+                                const QVector3D& seg_end, float& ray_distance) {
+    const QVector3D segment = seg_end - seg_start;
+    const QVector3D ray_to_segment = ray_start - seg_start;
+    const float segment_length_squared = segment.lengthSquared();
+
+    if (segment_length_squared < std::numeric_limits<float>::epsilon()) {
+        ray_distance = std::max(0.0f, QVector3D::dotProduct(seg_start - ray_start, ray_dir));
+        return ((ray_start + (ray_dir * ray_distance)) - seg_start).length();
+    }
+
+    const float ray_segment_dot = QVector3D::dotProduct(ray_dir, segment);
+    const float segment_offset_dot = QVector3D::dotProduct(segment, ray_to_segment);
+    const float ray_offset_dot = QVector3D::dotProduct(ray_dir, ray_to_segment);
+    const float denominator = segment_length_squared - (ray_segment_dot * ray_segment_dot);
+
+    float segment_t = 0.0f;
+    if (std::abs(denominator) > std::numeric_limits<float>::epsilon()) {
+        segment_t = (segment_offset_dot - (ray_segment_dot * ray_offset_dot)) / denominator;
+        segment_t = std::clamp(segment_t, 0.0f, 1.0f);
+    }
+
+    ray_distance = QVector3D::dotProduct((seg_start + (segment * segment_t)) - ray_start, ray_dir);
+    if (ray_distance < 0.0f) {
+        ray_distance = 0.0f;
+        segment_t = std::clamp(-segment_offset_dot / segment_length_squared, 0.0f, 1.0f);
+    }
+
+    const QVector3D closest_ray = ray_start + (ray_dir * ray_distance);
+    const QVector3D closest_segment = seg_start + (segment * segment_t);
+    return (closest_ray - closest_segment).length();
+}
 } // namespace
 
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
@@ -239,6 +277,9 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
             seg_meta->type = segment->displayType();
             seg_meta->original_color = segment->color();
             seg_meta->current_color = segment->color();
+            seg_meta->pick_start = segment->start().toQVector3D();
+            seg_meta->pick_end = displayEnd(segment);
+            seg_meta->pick_radius = std::max(segment->displayWidth(), segment->displayHeight()) / 2.0f;
 
             if (m_lightweight_lines) {
                 seg_meta->offset = vertices.size() / 3;
@@ -564,6 +605,54 @@ const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriang
     }
 
     return ret;
+}
+
+uint GCodeObject::pickSegment(const QMatrix4x4& projection, const QMatrix4x4& view, const QPointF& mouse_ndc_pos,
+                              bool ortho) {
+    QVector3D ray_start;
+    QVector3D ray_dir;
+    std::tie(ray_start, ray_dir) = PartPicker::getDirectionAndStart(projection, mouse_ndc_pos, view, ortho);
+
+    const QMatrix4x4 transform = this->transformation();
+    const float radius_scale =
+        std::max({transform.column(0).toVector3D().length(), transform.column(1).toVector3D().length(),
+                  transform.column(2).toVector3D().length(), 1.0f});
+
+    float best_pick_score = std::numeric_limits<float>::infinity();
+    float best_ray_distance = std::numeric_limits<float>::infinity();
+    uint picked_line = 0;
+
+    for (uint i = m_low_layer; i <= m_high_layer; ++i) {
+        for (const QSharedPointer<SegmentDisplayMeta>& segment : m_segments[i]) {
+            if (segment->hidden)
+                continue;
+
+            const QVector3D start = transform * segment->pick_start;
+            const QVector3D end = transform * segment->pick_end;
+
+            float ray_distance = std::numeric_limits<float>::infinity();
+            const float segment_distance = closestRaySegmentDistance(ray_start, ray_dir, start, end, ray_distance);
+            float pick_radius = std::max(segment->pick_radius * radius_scale, kMinimumPickRadius);
+            if (segment->type == SegmentDisplayType::kTravel) {
+                pick_radius *= kTravelPickRadiusMultiplier;
+            }
+
+            float pick_score = segment_distance / pick_radius;
+            if (segment->type == SegmentDisplayType::kTravel) {
+                pick_score *= kTravelPickScoreBias;
+            }
+
+            if (segment_distance <= pick_radius && (pick_score + kPickTieTolerance < best_pick_score ||
+                                                   (std::abs(pick_score - best_pick_score) <= kPickTieTolerance &&
+                                                    ray_distance < best_ray_distance))) {
+                best_pick_score = pick_score;
+                best_ray_distance = ray_distance;
+                picked_line = segment->line;
+            }
+        }
+    }
+
+    return picked_line;
 }
 
 void GCodeObject::draw() {

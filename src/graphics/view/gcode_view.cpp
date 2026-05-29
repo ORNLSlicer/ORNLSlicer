@@ -76,6 +76,11 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
         m_gcode_object->hideSegmentType(m_state.hidden_type, true);
 
         m_printer->adoptChild(m_gcode_object);
+
+        uint segment_count = m_gcode_object->visibleSegmentCount();
+        this->setMouseTracking(segment_count <= 10000);
+        if (segment_count > 0)
+            emit maxSegmentChanged(segment_count - 1);
     }
 
     // Clear out old ghosted parts
@@ -265,6 +270,9 @@ uint GCodeView::pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeOb
     uint picked_seg = 0;
 
     auto tris = gog->segmentTriangles();
+    if (tris.isEmpty()) {
+        return gog->pickSegment(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, m_state.ortho);
+    }
 
     for (auto& tri : tris) {
         float dist = PartPicker::pickDistance(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, tri.second,

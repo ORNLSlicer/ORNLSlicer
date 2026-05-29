@@ -9,8 +9,10 @@
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
+#include <qpoint.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
+#include <qvectornd.h>
 
 #include "geometry/segment_base.h"
 #include "graphics/graphics_object.h"
@@ -86,6 +88,14 @@ class GCodeObject : public GraphicsObject {
     //! \return Pairs of (layer number, Triangles) for each segment.
     const QVector<std::pair<uint, std::vector<Triangle>>> segmentTriangles();
 
+    //! \brief Picks a line segment in optimized render modes that do not keep CPU triangles.
+    //! \param projection: Current view projection matrix.
+    //! \param view: Current camera view matrix.
+    //! \param mouse_ndc_pos: Mouse position in normalized device coordinates.
+    //! \param ortho: If the current projection is orthographic.
+    //! \return G-code line number, or 0 when no segment is close enough.
+    uint pickSegment(const QMatrix4x4& projection, const QMatrix4x4& view, const QPointF& mouse_ndc_pos, bool ortho);
+
     //! \brief Allows the object to enable instanced gcode uniforms when needed.
     void configureUniforms() override;
 
@@ -104,6 +114,12 @@ class GCodeObject : public GraphicsObject {
         uint instance_group = 0;
         //! \brief Offset in the group's instance buffer, when using instanced rendering.
         uint instance_offset = 0;
+        //! \brief Segment start for optimized picking.
+        QVector3D pick_start;
+        //! \brief Segment end for optimized picking.
+        QVector3D pick_end;
+        //! \brief Approximate selection radius in display units.
+        float pick_radius = 0.0f;
 
         //! \brief If this segment is hidden.
         bool hidden = false;
