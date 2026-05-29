@@ -13,8 +13,8 @@ settings:
     namespace: "Profile::Travel"
     symbol: "kTravelSpeed"
     local: true
-  - name: "minimum_travel_length"
-    display: "Minimum Travel Length"
+  - name: "minimum_infill_travel_length"
+    display: "Minimum Infill Travel Length"
     type: "distance"
     tooltip: "Travel moves less than this value in the infill and skin regions are replaced with extrusion moves"
     depends: {"OR":[{"infill":true},{"skin":true}]}
@@ -23,7 +23,7 @@ settings:
     minor: "Travel"
     major: "Profile"
     namespace: "Profile::Travel"
-    symbol: "kMinimumTravelLength"
+    symbol: "kMinimumInfillTravelLength"
     local: true
   - name: "minimum_travel_for_lift"
     display: "Minimum Travel Length for Lifting"

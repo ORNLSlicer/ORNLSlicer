@@ -164,7 +164,7 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
     }
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)), m_geometry_copy,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength),
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength),
                             getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking));
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),

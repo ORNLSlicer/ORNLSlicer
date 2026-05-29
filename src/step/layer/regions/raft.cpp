@@ -73,7 +73,7 @@ void Raft::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
         poo.setStartPointOverride(startOverride);
     }
     poo.setInfillParameters(InfillPatterns::kLines, m_geometry, getSb()->setting<Distance>(PS::Infill::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength));
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength));
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
