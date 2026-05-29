@@ -17,7 +17,6 @@
 #include <qlist.h>
 #include <qnamespace.h>
 #include <qnumeric.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qstringmatcher.h>
 #include <qtmetamacros.h>
@@ -237,7 +236,7 @@ void CommonParser::checkAndSetNecessarySettings() {
     }
 }
 
-void CommonParser::preallocateVisualCommands(int layerSkip) {
+void CommonParser::preallocateVisualCommands() {
     // iterate through file looking only for the number of layers and peeking at first char
     // to determine number of motion commands
     // this is to preallocate memory for later return for visualization
@@ -248,7 +247,6 @@ void CommonParser::preallocateVisualCommands(int layerSkip) {
     QRegExp digitExpression("\\d+");
     QRegularExpression gMotionCommand("^G0|^G1|^G2|^G3|^G5");
     m_current_layer = 0;
-    bool skip = false;
     for (int i = m_current_line; i < m_current_end_line; ++i) {
         // find layer total, only executed once
         if (yetToFindLayerCount && layerCountIdentifier.indexIn(m_upper_lines[i]) != -1) {
@@ -259,27 +257,17 @@ void CommonParser::preallocateVisualCommands(int layerSkip) {
         }
 
         if (m_upper_lines[i].length() > 0) {
-            if (skip) {
-                if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
-                    m_motion_commands.push_back(QList<GcodeCommand>());
-                    ++m_current_layer;
-                    skip = m_current_layer % layerSkip != 0;
-                }
+            // most common case, valid motion command
+            if (m_upper_lines[i].indexOf(gMotionCommand) == 0) {
+                commandsInLayer++;
             }
-            else {
-                // most common case, valid motion command
-                if (m_upper_lines[i].indexOf(gMotionCommand) == 0) {
-                    commandsInLayer++;
-                }
-                // lastly, when reaching a new layer or the final line, allocate memory
-                else if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
-                    QList<GcodeCommand> commands;
-                    commands.reserve(commandsInLayer);
-                    m_motion_commands.push_back(commands);
-                    commandsInLayer = 0;
-                    ++m_current_layer;
-                    skip = m_current_layer % layerSkip != 0;
-                }
+            // lastly, when reaching a new layer or the final line, allocate memory
+            else if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
+                QList<GcodeCommand> commands;
+                commands.reserve(commandsInLayer);
+                m_motion_commands.push_back(commands);
+                commandsInLayer = 0;
+                ++m_current_layer;
             }
         }
     }
@@ -292,9 +280,9 @@ void CommonParser::preallocateVisualCommands(int layerSkip) {
     m_current_layer = 0;
 }
 
-QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
+QList<QList<GcodeCommand>> CommonParser::parseLines() {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
-    preallocateVisualCommands(layerSkip);
+    preallocateVisualCommands();
 
     m_layer_start_lines.reserve(m_motion_commands.size());
     m_layer_start_lines.push_back(1);
@@ -307,10 +295,6 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
     m_layer_FR_modifiers.push_back(1.0);
     m_layer_G1F_times.push_back(Time());
     m_layer_volumes.push_back(Volume());
-
-    bool skip = false;
-    int actualLayer = 0;
-    QStringMatcher layerDelimiter(m_layer_delimiter);
 
     QString newCurrentLine, zOffsetString;
     double currentZOffset = sb->setting<Distance>(PRS::Dimensions::kZOffset).to(m_distance_unit);
@@ -384,113 +368,87 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
             newCurrentLine = m_upper_lines[m_current_line];
         }
         if (!m_upper_lines[m_current_line].mid(0).trimmed().isEmpty()) {
-            if (skip) {
-                m_layer_skip_lines.insert(m_current_line);
-                if (layerDelimiter.indexIn(m_upper_lines[m_current_line]) != -1) {
-                    ++m_current_layer;
-                    skip = m_current_layer % layerSkip != 0;
+            parseCommand(newCurrentLine, m_current_line + m_insertions);
 
-                    QList<Time> extruder_times;
-                    for (int i = 0; i < m_num_extruders; ++i)
-                        extruder_times.push_back(Time());
+            // If a new layer has just started, check if previous layer needs to be adjusted
+            // to meet the minimum layer time
+            if (m_current_gcode_command.getCommandIsEndOfLayer() || m_current_line == m_current_end_line) {
+                if (m_file_settings[MS::Cooling::kForceMinLayerTime] && m_allow_layer_alter && m_current_layer > 0) {
+                    Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer][m_current_nozzle];
+                    Time decreaseTime = m_layer_times[m_current_layer][m_current_nozzle] - m_max_layer_time_allowed;
 
-                    m_layer_times.push_back(extruder_times);
-                    m_layer_FR_modifiers.push_back(1.0);
-                    m_layer_G1F_times.push_back(Time());
-                    m_layer_volumes.push_back(Volume());
+                    double minModifier = std::numeric_limits<double>::max();
+                    double maxModifier = 1;
+                    if (increaseTime > 0 || decreaseTime > 0)
+                        getMinMaxModifier(minModifier, maxModifier);
 
-                    m_layer_start_lines.push_back(m_current_line + 1);
-                }
-            }
-            else {
-                parseCommand(newCurrentLine, m_current_line + m_insertions);
+                    if (m_layer_G1F_times[m_current_layer] > 0) {
+                        if (increaseTime > 0) { // If layer time less than minimum, slow feedrate or add dwell
+                            if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
+                                // Ratio uses the layer time as well as the total time for all G1 F moves, which are
+                                // what get adjusted
+                                double ratio = (increaseTime / m_layer_G1F_times[m_current_layer])();
+                                double modifier = 1 / (1.0 + ratio);
 
-                // If a new layer has just started, check if previous layer needs to be adjusted
-                // to meet the minimum layer time
-                if (m_current_gcode_command.getCommandIsEndOfLayer() || m_current_line == m_current_end_line) {
-                    if (m_file_settings[MS::Cooling::kForceMinLayerTime] && m_allow_layer_alter &&
-                        m_current_layer > 0) {
-                        Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer][m_current_nozzle];
-                        Time decreaseTime = m_layer_times[m_current_layer][m_current_nozzle] - m_max_layer_time_allowed;
-
-                        double minModifier = std::numeric_limits<double>::max();
-                        double maxModifier = 1;
-                        if (increaseTime > 0 || decreaseTime > 0)
-                            getMinMaxModifier(minModifier, maxModifier);
-
-                        if (m_layer_G1F_times[m_current_layer] > 0) {
-                            if (increaseTime > 0) { // If layer time less than minimum, slow feedrate or add dwell
-                                if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
-                                    // Ratio uses the layer time as well as the total time for all G1 F moves, which are
-                                    // what get adjusted
-                                    double ratio = (increaseTime / m_layer_G1F_times[m_current_layer])();
-                                    double modifier = 1 / (1.0 + ratio);
-
-                                    if (modifier < minModifier && minModifier > 0 && minModifier < 1) {
-                                        modifier = minModifier;
-                                        emit forwardInfoToMainWindow("Computed speed is lower than min machine speed, "
-                                                                     "machine min speed will be used");
-                                    }
-
-                                    if (modifier > 0 && modifier < 1) {
-                                        AdjustFeedrate(modifier);
-                                        m_was_modified = true;
-                                    }
+                                if (modifier < minModifier && minModifier > 0 && minModifier < 1) {
+                                    modifier = minModifier;
+                                    emit forwardInfoToMainWindow("Computed speed is lower than min machine speed, "
+                                                                 "machine min speed will be used");
                                 }
-                                else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
-                                    AddDwell(increaseTime());
+
+                                if (modifier > 0 && modifier < 1) {
+                                    AdjustFeedrate(modifier);
                                     m_was_modified = true;
                                 }
                             }
-                            else if (decreaseTime > 0) { // If layer time more than maximum, increase feedrate
-                                if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
-                                    // Ratio uses the layer time as well as the total time for all G1 F moves, which are
-                                    // what get adjusted
-                                    double ratio = (decreaseTime / m_layer_G1F_times[m_current_layer])();
-                                    double modifier = 1 / (1.0 - ratio);
+                            else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
+                                AddDwell(increaseTime());
+                                m_was_modified = true;
+                            }
+                        }
+                        else if (decreaseTime > 0) { // If layer time more than maximum, increase feedrate
+                            if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
+                                // Ratio uses the layer time as well as the total time for all G1 F moves, which are
+                                // what get adjusted
+                                double ratio = (decreaseTime / m_layer_G1F_times[m_current_layer])();
+                                double modifier = 1 / (1.0 - ratio);
 
-                                    if (modifier > maxModifier && maxModifier > 1) {
-                                        modifier = maxModifier;
-                                        emit forwardInfoToMainWindow(
-                                            "Computed speed exceeds max machine speed, machine max speed will be used");
-                                    }
-
-                                    if (modifier > 1) {
-                                        AdjustFeedrate(modifier);
-                                        m_was_modified = true;
-                                    }
-                                }
-                                else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
+                                if (modifier > maxModifier && maxModifier > 1) {
+                                    modifier = maxModifier;
                                     emit forwardInfoToMainWindow(
-                                        "Add dwell time method was selected, can not modify layer times");
+                                        "Computed speed exceeds max machine speed, machine max speed will be used");
                                 }
+
+                                if (modifier > 1) {
+                                    AdjustFeedrate(modifier);
+                                    m_was_modified = true;
+                                }
+                            }
+                            else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
+                                emit forwardInfoToMainWindow(
+                                    "Add dwell time method was selected, can not modify layer times");
                             }
                         }
                     }
-
-                    if (m_current_line == m_current_end_line)
-                        break;
-
-                    m_last_layer_line_start = m_current_line;
-                    //++actualLayer;
-                    ++m_current_layer;
-                    if (m_current_layer <= 1 || layerSkip == 1)
-                        skip = false;
-                    else
-                        skip = m_current_layer % layerSkip != 0;
-
-                    // add empty slots to arrays for this layer
-                    QList<Time> extruder_times;
-                    for (int i = 0; i < m_num_extruders; ++i)
-                        extruder_times.push_back(Time());
-
-                    m_layer_times.push_back(extruder_times);
-                    m_layer_FR_modifiers.push_back(1.0);
-                    m_layer_G1F_times.push_back(Time());
-                    m_layer_volumes.push_back(Volume());
-
-                    m_layer_start_lines.push_back(m_current_line + 1);
                 }
+
+                if (m_current_line == m_current_end_line)
+                    break;
+
+                m_last_layer_line_start = m_current_line;
+                ++m_current_layer;
+
+                // add empty slots to arrays for this layer
+                QList<Time> extruder_times;
+                for (int i = 0; i < m_num_extruders; ++i)
+                    extruder_times.push_back(Time());
+
+                m_layer_times.push_back(extruder_times);
+                m_layer_FR_modifiers.push_back(1.0);
+                m_layer_G1F_times.push_back(Time());
+                m_layer_volumes.push_back(Volume());
+
+                m_layer_start_lines.push_back(m_current_line + 1);
             }
 
             emit statusUpdate(StatusUpdateStepType::kGcodeParsing,
@@ -613,8 +571,6 @@ bool CommonParser::getWasModified() { return m_was_modified; }
 void CommonParser::cancelSlice() { m_should_cancel = true; }
 
 QList<int> CommonParser::getLayerStartLines() { return m_layer_start_lines; }
-
-QSet<int> CommonParser::getLayerSkipLines() { return m_layer_skip_lines; }
 
 int CommonParser::getCurrentLine() { return m_current_line; }
 

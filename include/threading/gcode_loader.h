@@ -9,7 +9,6 @@
 #include <qmap.h>
 #include <qregularexpression.h>
 #include <qscopedpointer.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qstringmatcher.h>
 #include <qtmetamacros.h>
@@ -55,10 +54,7 @@ class GCodeLoader : public QThread {
     //! into the hash for appropriate format.
     //! \param layerFirstLineNumbers: line numbers for BEGINNING LAYER for each layer to jump the cursor to
     //! appropriate line when spinbox moves up and down.
-    //! \param layerSkipLineNumbers: line numbers to skip applying formatting to hash based on visualization
-    //! settings
-    void gcodeLoadedText(QString text, QHash<QString, QTextCharFormat> fontColors, QList<int> layerFirstLineNumbers,
-                         QSet<int> layerSkipLineNumbers);
+    void gcodeLoadedText(QString text, QHash<QString, QTextCharFormat> fontColors, QList<int> layerFirstLineNumbers);
 
     //! \brief Emits error signal
     //! \param msg: Qstring error message
@@ -170,8 +166,8 @@ class GCodeLoader : public QThread {
         m_coasting, m_spirallift, m_rampingup, m_rampingdown, m_leadin;
 
     //! \brief matchers for type identification for coloring
-    QStringMatcher m_perimeter, m_radial, m_helical, m_inset, m_infill, m_skin, m_skeleton, m_support,
-        m_support_roof, m_travel, m_raft, m_brim, m_skirt, m_laserscan, m_thermalscan;
+    QStringMatcher m_perimeter, m_radial, m_helical, m_inset, m_infill, m_skin, m_skeleton, m_support, m_support_roof,
+        m_travel, m_raft, m_brim, m_skirt, m_laserscan, m_thermalscan;
 
     //! \brief colors for modifiers to adjust display size
     QVector<QColor> m_modifier_colors;

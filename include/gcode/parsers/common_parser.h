@@ -7,7 +7,6 @@
 #include <qhashfunctions.h>
 #include <qlist.h>
 #include <qregularexpression.h>
-#include <qset.h>
 #include <qtmetamacros.h>
 
 #include "gcode/gcode_command.h"
@@ -54,9 +53,8 @@ class CommonParser : public ParserBase {
     QHash<QString, double> parseFooter();
 
     //! \brief Parse all remaining lines outside of header and footer.
-    //! \param layerSkip: Layer interval to skip
     //! \return Copy of parsed gcode commands (used for visualization construction)
-    QList<QList<GcodeCommand>> parseLines(int layerSkip);
+    QList<QList<GcodeCommand>> parseLines();
 
     // ---- Regular Commands ----
 
@@ -213,10 +211,6 @@ class CommonParser : public ParserBase {
     //! \brief Get lines for the start of each layer (for visualization)
     //! \return List of start lines for each layer
     QList<int> getLayerStartLines();
-
-    //! \brief Get lines to skip visualization for if setting was turned on
-    //! \return Set of all lines for which coloring should not apply
-    QSet<int> getLayerSkipLines();
 
   signals:
 
@@ -506,8 +500,7 @@ class CommonParser : public ParserBase {
 
     //! \brief Preallocate memory for processed gcode commands.  A copy is later returned
     //! for use in visualization construction.
-    //! \param layerSkip: Layer interval to skip
-    void preallocateVisualCommands(int layerSkip);
+    void preallocateVisualCommands();
 
     //! \brief sets m_extruders_on according to which extruders are active
     void turnOnActiveExtruders();
@@ -613,9 +606,6 @@ class CommonParser : public ParserBase {
 
     //! \brief Line at which each layer start (used for visualization)
     QList<int> m_layer_start_lines;
-
-    //! \brief Lines in a layer that should be skipped for visualization if setting is enabled
-    QSet<int> m_layer_skip_lines;
 
 }; // class CommonParser
 
