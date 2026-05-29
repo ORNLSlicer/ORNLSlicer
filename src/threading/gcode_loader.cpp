@@ -19,7 +19,6 @@
 #include <qminmax.h>
 #include <qnumeric.h>
 #include <qquaternion.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qstringmatcher.h>
 #include <qtextformat.h>
@@ -156,10 +155,7 @@ QString GCodeLoader::additionalExportComments() {
 }
 
 void GCodeLoader::run() {
-    bool disableVisualization = m_sb->setting<bool>(ES::GcodeVisualization::kDisableVisualization);
-    int layerSkip = m_sb->setting<int>(ES::GcodeVisualization::kVisualizationSkip);
-
-    if (!m_filename.isEmpty() && (!disableVisualization || m_adjust_file)) {
+    if (!m_filename.isEmpty()) {
         // Try-catch is necessary to prevent a crash when the GCode refresh button is clicked after an erroneous
         // modification
         try {
@@ -183,210 +179,199 @@ void GCodeLoader::run() {
             QString weightInfo = "No statistics calculated";
             // parse header looking for syntax
             setParser(m_original_lines, m_lines);
-            if (!disableVisualization) {
-                connect(m_parser.get(), &CommonParser::statusUpdate, this, &GCodeLoader::forwardDialogUpdate);
-                connect(m_parser.get(), &CommonParser::forwardInfoToMainWindow, this,
-                        &GCodeLoader::forwardInfoToMainWindow);
+            connect(m_parser.get(), &CommonParser::statusUpdate, this, &GCodeLoader::forwardDialogUpdate);
+            connect(m_parser.get(), &CommonParser::forwardInfoToMainWindow, this,
+                    &GCodeLoader::forwardInfoToMainWindow);
 
-                m_parser->parseHeader();
-                QHash<QString, double> visualizationSettings = m_parser->parseFooter();
-                QList<QList<GcodeCommand>> m_motion_commands = m_parser->parseLines(layerSkip);
+            m_parser->parseHeader();
+            QHash<QString, double> visualizationSettings = m_parser->parseFooter();
+            QList<QList<GcodeCommand>> m_motion_commands = m_parser->parseLines();
 
-                if (m_parser->getWasModified()) {
-                    text = m_original_lines.join("\n");
-                    m_lines = text.toUpper().split("\n");
+            if (m_parser->getWasModified()) {
+                text = m_original_lines.join("\n");
+                m_lines = text.toUpper().split("\n");
+            }
+
+            QList<QList<Time>> layer_times = m_parser->getLayerTimes();
+            QList<double> layer_FR_modifiers = m_parser->getLayerFeedRateModifiers();
+            QList<Volume> layer_volumes = m_parser->getLayerVolumes();
+
+            Volume total_volume;
+            min_time = std::numeric_limits<int>::max();
+            max_time = std::numeric_limits<int>::min();
+            adjusted_min_time = std::numeric_limits<int>::max();
+            adjusted_max_time = std::numeric_limits<int>::min();
+
+            for (int i = 0; i < layer_times.size(); ++i) {
+                Time& current = layer_times[i][0]; // layer time is the max of the extruders time
+                for (auto extruder_time : layer_times[i]) {
+                    current = qMax(current, extruder_time);
                 }
 
-                QList<QList<Time>> layer_times = m_parser->getLayerTimes();
-                QList<double> layer_FR_modifiers = m_parser->getLayerFeedRateModifiers();
-                QList<Volume> layer_volumes = m_parser->getLayerVolumes();
+                min_time = qMin(current, min_time);
+                max_time = qMax(current, max_time);
 
-                Volume total_volume;
-                min_time = std::numeric_limits<int>::max();
-                max_time = std::numeric_limits<int>::min();
-                adjusted_min_time = std::numeric_limits<int>::max();
-                adjusted_max_time = std::numeric_limits<int>::min();
+                temp_time = current / layer_FR_modifiers[i];
+                adjusted_min_time = qMin(temp_time, adjusted_min_time);
+                adjusted_max_time = qMax(temp_time, adjusted_max_time);
 
-                for (int i = 0; i < layer_times.size(); ++i) {
-                    Time& current = layer_times[i][0]; // layer time is the max of the extruders time
-                    for (auto extruder_time : layer_times[i]) {
-                        current = qMax(current, extruder_time);
-                    }
+                // add current layer to total printing and adjusted time
+                total_time += current;
+                total_adjusted_time += current / layer_FR_modifiers[i];
+                total_volume += layer_volumes[i];
+            }
 
-                    min_time = qMin(current, min_time);
-                    max_time = qMax(current, max_time);
+            PrintMaterial m_material =
+                static_cast<PrintMaterial>((int)visualizationSettings[MS::Density::kMaterialType]);
 
-                    temp_time = current / layer_FR_modifiers[i];
-                    adjusted_min_time = qMin(temp_time, adjusted_min_time);
-                    adjusted_max_time = qMax(temp_time, adjusted_max_time);
+            Density materialDensity =
+                ((m_material == PrintMaterial::kOther) ? (visualizationSettings[MS::Density::kDensity])
+                                                       : toDensityValue(m_material));
 
-                    // add current layer to total printing and adjusted time
-                    total_time += current;
-                    total_adjusted_time += current / layer_FR_modifiers[i];
-                    total_volume += layer_volumes[i];
-                }
+            Mass total_mass = total_volume * materialDensity;
 
-                PrintMaterial m_material =
-                    static_cast<PrintMaterial>((int)visualizationSettings[MS::Density::kMaterialType]);
+            // forward to layer_times_window
+            emit forwardInfoToLayerTimeWindow(
+                layer_times, layer_FR_modifiers,
+                ForceMinimumLayerTime::kSlow_Feedrate ==
+                    static_cast<ForceMinimumLayerTime>(m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod)));
 
-                Density materialDensity =
-                    ((m_material == PrintMaterial::kOther) ? (visualizationSettings[MS::Density::kDensity])
-                                                           : toDensityValue(m_material));
+            weightInfo = QString::number((total_mass / m_selected_meta.m_mass_unit)()) % " " %
+                         m_selected_meta.m_mass_unit.toString();
 
-                Mass total_mass = total_volume * materialDensity;
+            // forward to build_log_export
+            emit forwardInfoToBuildExportWindow(m_filename, m_selected_meta);
 
-                // forward to layer_times_window
-                emit forwardInfoToLayerTimeWindow(
-                    layer_times, layer_FR_modifiers,
-                    ForceMinimumLayerTime::kSlow_Feedrate ==
-                        static_cast<ForceMinimumLayerTime>(m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod)));
+            QString keyInfo = "GCode file: " % m_filename % "\n" % "Total Time Estimate: " %
+                              MathUtils::formattedTimeSpan(total_time()) % "\n";
 
-                weightInfo = QString::number((total_mass / m_selected_meta.m_mass_unit)()) % " " %
-                             m_selected_meta.m_mass_unit.toString();
-
-                // forward to build_log_export
-                emit forwardInfoToBuildExportWindow(m_filename, m_selected_meta);
-
-                QString keyInfo = "GCode file: " % m_filename % "\n" % "Total Time Estimate: " %
-                                  MathUtils::formattedTimeSpan(total_time()) % "\n";
-
-                if (m_adjust_file && total_adjusted_time > 0 && m_sb->setting<int>(MS::Cooling::kForceMinLayerTime)) {
-                    keyInfo =
-                        keyInfo % "Total Adjusted Time: " % MathUtils::formattedTimeSpan(total_adjusted_time()) % "\n";
-                }
-
-                double volumeValue = total_volume() / pow<3>(PreferencesManager::getInstance()->getDistanceUnit())();
-                double distanceValue =
-                    (m_parser->getTotalDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
-                double printingDistanceValue =
-                    (m_parser->getPrintingDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
-                double travelDistanceValue =
-                    (m_parser->getTravelDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
-                double massValue = (total_mass / PreferencesManager::getInstance()->getMassUnit())();
-                keyInfo = keyInfo % "Volume: " % QString::number(volumeValue) % " " %
-                          PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" %
-                          "Printing Distance: " % QString::number(printingDistanceValue) % " " %
-                          PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Travel Distance: " %
-                          QString::number(travelDistanceValue) % " " %
-                          PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Total Distance: " %
-                          QString::number(distanceValue) % " " %
-                          PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
-                          "Approximate Weight (" % toString(m_material) % "): " % QString::number(massValue) % " " %
-                          PreferencesManager::getInstance()->getMassUnit().toString() % "\n";
-
-                QTime qt(0, 0);
-                qt = qt.addMSecs(CSM->getSliceTimeElapsed());
+            if (m_adjust_file && total_adjusted_time > 0 && m_sb->setting<int>(MS::Cooling::kForceMinLayerTime)) {
                 keyInfo =
-                    keyInfo % "Total Slice Time (excluding gcode writing/parsing): " % qt.toString("hh:mm:ss.zzz");
+                    keyInfo % "Total Adjusted Time: " % MathUtils::formattedTimeSpan(total_adjusted_time()) % "\n";
+            }
 
-                emit forwardInfoToMainWindow(keyInfo);
+            double volumeValue = total_volume() / pow<3>(PreferencesManager::getInstance()->getDistanceUnit())();
+            double distanceValue =
+                (m_parser->getTotalDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
+            double printingDistanceValue =
+                (m_parser->getPrintingDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
+            double travelDistanceValue =
+                (m_parser->getTravelDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
+            double massValue = (total_mass / PreferencesManager::getInstance()->getMassUnit())();
+            keyInfo = keyInfo % "Volume: " % QString::number(volumeValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" % "Printing Distance: " %
+                      QString::number(printingDistanceValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Travel Distance: " %
+                      QString::number(travelDistanceValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Total Distance: " %
+                      QString::number(distanceValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Approximate Weight (" %
+                      toString(m_material) % "): " % QString::number(massValue) % " " %
+                      PreferencesManager::getInstance()->getMassUnit().toString() % "\n";
 
-                m_x_offset = visualizationSettings[PRS::Dimensions::kXOffset];
-                m_y_offset = visualizationSettings[PRS::Dimensions::kYOffset];
-                const Distance& z_offset = visualizationSettings[PRS::Dimensions::kZOffset];
-                const Distance& z_min = GSM->getGlobal()->setting<Distance>(PRS::Dimensions::kZMin);
-                m_z_offset = (z_min - z_offset)() * Constants::OpenGL::kObjectToView;
-                m_start_pos = QVector3D(m_x_offset * Constants::OpenGL::kObjectToView,
-                                        m_y_offset * Constants::OpenGL::kObjectToView, 0.0f);
-                m_origin = QVector3D(m_x_offset, m_y_offset, 0.0f);
-                m_table_offset = 0.0f;
-                m_prev_table_offset = 0.0f;
+            QTime qt(0, 0);
+            qt = qt.addMSecs(CSM->getSliceTimeElapsed());
+            keyInfo = keyInfo % "Total Slice Time (excluding gcode writing/parsing): " % qt.toString("hh:mm:ss.zzz");
 
-                // reserve more memory than the hash will need to guarantee no reallocation
-                QHash<QString, QTextCharFormat> fontColors;
-                fontColors.reserve(m_lines.size());
+            emit forwardInfoToMainWindow(keyInfo);
 
-                // Retrieve the total number of layers
-                const int& total_layer = m_motion_commands.size();
+            m_x_offset = visualizationSettings[PRS::Dimensions::kXOffset];
+            m_y_offset = visualizationSettings[PRS::Dimensions::kYOffset];
+            const Distance& z_offset = visualizationSettings[PRS::Dimensions::kZOffset];
+            const Distance& z_min = GSM->getGlobal()->setting<Distance>(PRS::Dimensions::kZMin);
+            m_z_offset = (z_min - z_offset)() * Constants::OpenGL::kObjectToView;
+            m_start_pos = QVector3D(m_x_offset * Constants::OpenGL::kObjectToView,
+                                    m_y_offset * Constants::OpenGL::kObjectToView, 0.0f);
+            m_origin = QVector3D(m_x_offset, m_y_offset, 0.0f);
+            m_table_offset = 0.0f;
+            m_prev_table_offset = 0.0f;
 
-                // Prepopulate the layer settings with the global settings
-                QVector<QSharedPointer<SettingsBase>> layer_settings(total_layer, GSM->getGlobal());
+            // reserve more memory than the hash will need to guarantee no reallocation
+            QHash<QString, QTextCharFormat> fontColors;
+            fontColors.reserve(m_lines.size());
 
-                // Set layer specific settings. Currently only supports a single part.
-                if (CSM->parts().size() == 1) {
-                    // Retrieve the settings ranges for the first part
-                    const QSharedPointer<Part>& part = CSM->parts().first();
-                    const QList<QSharedPointer<SettingsRange>>& ranges = part->getSettingsRanges().values();
+            // Retrieve the total number of layers
+            const int& total_layer = m_motion_commands.size();
 
-                    // Populate the layer settings for each range
-                    for (const QSharedPointer<SettingsRange>& range : ranges) {
-                        QSharedPointer<SettingsBase> sb = QSharedPointer<SettingsBase>::create();
-                        sb->populate(GSM->getGlobal());
-                        sb->populate(range->getSb());
+            // Prepopulate the layer settings with the global settings
+            QVector<QSharedPointer<SettingsBase>> layer_settings(total_layer, GSM->getGlobal());
 
-                        for (uint layer = range->low(); layer <= range->high(); layer++) {
-                            layer_settings[layer + 1] = sb;
-                        }
+            // Set layer specific settings. Currently only supports a single part.
+            if (CSM->parts().size() == 1) {
+                // Retrieve the settings ranges for the first part
+                const QSharedPointer<Part>& part = CSM->parts().first();
+                const QList<QSharedPointer<SettingsRange>>& ranges = part->getSettingsRanges().values();
+
+                // Populate the layer settings for each range
+                for (const QSharedPointer<SettingsRange>& range : ranges) {
+                    QSharedPointer<SettingsBase> sb = QSharedPointer<SettingsBase>::create();
+                    sb->populate(GSM->getGlobal());
+                    sb->populate(range->getSb());
+
+                    for (uint layer = range->low(); layer <= range->high(); layer++) {
+                        layer_settings[layer + 1] = sb;
                     }
                 }
+            }
 
-                // Create the layers
-                QVector<QVector<QSharedPointer<SegmentBase>>> layers;
+            // Create the layers
+            QVector<QVector<QSharedPointer<SegmentBase>>> layers;
 
-                // Generate the segments for each layer
-                int current_layer = 0;
-                for (const QList<GcodeCommand>& layer_commands : m_motion_commands) {
-                    // Set the current layer settings
-                    m_sb = layer_settings[current_layer];
+            // Generate the segments for each layer
+            int current_layer = 0;
+            for (const QList<GcodeCommand>& layer_commands : m_motion_commands) {
+                // Set the current layer settings
+                m_sb = layer_settings[current_layer];
 
-                    QVector<QSharedPointer<SegmentBase>> layer;
+                QVector<QSharedPointer<SegmentBase>> layer;
 
-                    for (const GcodeCommand& command : layer_commands) {
-                        QColor line_color(
-                            PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kUnknown));
+                for (const GcodeCommand& command : layer_commands) {
+                    QColor line_color(
+                        PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kUnknown));
 
-                        if (fontColors.contains(command.getComment())) {
-                            line_color = fontColors[command.getComment()].foreground().color();
-                        }
-                        else if (!command.getComment().isEmpty()) {
-                            line_color = determineFontColor(command.getComment());
-                            QTextCharFormat format;
-                            format.setForeground(line_color);
-                            fontColors.insert(m_original_lines[command.getLineNumber()], format);
-                        }
-
-                        QVector<QSharedPointer<SegmentBase>> generated_segments;
-
-                        if (m_selected_meta.hasTravels) {
-                            generated_segments = generateVisualSegment(
-                                command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
-                                command.getParameters(), command.getExtrudersOn(), command.getExtruderOffsets(),
-                                command.getExtrudersSpeed(), true, command.getComment());
-                        }
-                        else {
-                            generated_segments = generateVisualSegment(
-                                command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
-                                command.getParameters(), command.getExtrudersOn(), command.getExtruderOffsets(),
-                                command.getExtrudersSpeed(), false, command.getComment(),
-                                command.getOptionalParameters());
-                        }
-                        layer.append(generated_segments);
+                    if (fontColors.contains(command.getComment())) {
+                        line_color = fontColors[command.getComment()].foreground().color();
                     }
-                    layers.push_back(layer);
-                    ++current_layer;
-
-                    emit updateDialog(StatusUpdateStepType::kVisualization,
-                                      (double)current_layer / (double)total_layer * 100);
-
-                    if (m_should_cancel) {
-                        return;
+                    else if (!command.getComment().isEmpty()) {
+                        line_color = determineFontColor(command.getComment());
+                        QTextCharFormat format;
+                        format.setForeground(line_color);
+                        fontColors.insert(m_original_lines[command.getLineNumber()], format);
                     }
+
+                    QVector<QSharedPointer<SegmentBase>> generated_segments;
+
+                    if (m_selected_meta.hasTravels) {
+                        generated_segments = generateVisualSegment(
+                            command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
+                            command.getParameters(), command.getExtrudersOn(), command.getExtruderOffsets(),
+                            command.getExtrudersSpeed(), true, command.getComment());
+                    }
+                    else {
+                        generated_segments = generateVisualSegment(
+                            command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
+                            command.getParameters(), command.getExtrudersOn(), command.getExtruderOffsets(),
+                            command.getExtrudersSpeed(), false, command.getComment(), command.getOptionalParameters());
+                    }
+                    layer.append(generated_segments);
                 }
+                layers.push_back(layer);
+                ++current_layer;
 
-                // emit vector for visualization
-                emit gcodeLoadedVisualization(layers);
-                // very likely to have allocated too much memory, free extra
-                fontColors.squeeze();
-                // send text and font colors for display, and line numbers for easy editor navigation
-                emit gcodeLoadedText(text, fontColors, m_parser->getLayerStartLines(), m_parser->getLayerSkipLines());
+                emit updateDialog(StatusUpdateStepType::kVisualization,
+                                  (double)current_layer / (double)total_layer * 100);
+
+                if (m_should_cancel) {
+                    return;
+                }
             }
-            else {
-                emit forwardInfoToBuildExportWindow(m_filename, m_selected_meta);
-                emit forwardInfoToMainWindow("GCode file: " % m_filename % "\n");
-                emit updateDialog(StatusUpdateStepType::kVisualization, 100);
-                emit gcodeLoadedVisualization(QVector<QVector<QSharedPointer<SegmentBase>>>());
-                emit gcodeLoadedText(text, QHash<QString, QTextCharFormat>(), QList<int>(), QSet<int>());
-            }
+
+            // emit vector for visualization
+            emit gcodeLoadedVisualization(layers);
+            // very likely to have allocated too much memory, free extra
+            fontColors.squeeze();
+            // send text and font colors for display, and line numbers for easy editor navigation
+            emit gcodeLoadedText(text, fontColors, m_parser->getLayerStartLines());
 
             QString openingDelim = m_selected_meta.m_comment_starting_delimiter;
             QString closingDelim = m_selected_meta.m_comment_ending_delimiter;

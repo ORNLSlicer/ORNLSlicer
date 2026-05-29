@@ -856,12 +856,6 @@ class Constants {
             static const QString kNozzleAssignmentMethod;
         };
 
-        class GcodeVisualization {
-          public:
-            static const QString kDisableVisualization;
-            static const QString kVisualizationSkip;
-        };
-
         class Ramping {
           public:
             static const QString kTrajectoryAngleEnabled;

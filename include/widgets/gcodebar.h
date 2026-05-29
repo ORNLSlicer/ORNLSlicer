@@ -13,7 +13,6 @@
 #include <qhash.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
-#include <qset.h>
 #include <qslider.h>
 #include <qtextformat.h>
 #include <qtmetamacros.h>
@@ -65,9 +64,7 @@ class GcodeBar : public QWidget {
     //! \param text: GCode content
     //! \param fontColors: hash that contains color/highlight information for all lines
     //! \param layerFirstLineNumbers: layer numbers for all layer beginning lines
-    //! \param layerSkipLineNumbers: line numbers to skip highlighting if visualization reduction setting is enabled
-    void updateGcodeText(QString text, QHash<QString, QTextCharFormat> fontColors, QList<int> layerFirstLineNumbers,
-                         QSet<int> layerSkipLineNumbers);
+    void updateGcodeText(QString text, QHash<QString, QTextCharFormat> fontColors, QList<int> layerFirstLineNumbers);
 
     //! \brief Clear GcodeBar
     void clear();

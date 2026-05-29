@@ -14,7 +14,6 @@
 #include <qpainter.h>
 #include <qplaintextedit.h>
 #include <qscrollbar.h>
-#include <qset.h>
 #include <qtextdocumentfragment.h>
 #include <qtextformat.h>
 #include <qtextobject.h>
@@ -38,9 +37,8 @@ GcodeTextBoxWidget::GcodeTextBoxWidget(QWidget* parent)
     m_manual_cursor_move = false;
 }
 
-void GcodeTextBoxWidget::setHighlighterColors(QHash<QString, QTextCharFormat> fontColors,
-                                              QSet<int> layerSkipLineNumbers) {
-    m_highlighter.setColorRules(fontColors, layerSkipLineNumbers);
+void GcodeTextBoxWidget::setHighlighterColors(QHash<QString, QTextCharFormat> fontColors) {
+    m_highlighter.setColorRules(fontColors);
 }
 
 void GcodeTextBoxWidget::lineNumbersPaintEvent(QPaintEvent* event) {
