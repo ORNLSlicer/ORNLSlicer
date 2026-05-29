@@ -567,7 +567,6 @@ const QString Constants::ProfileSettings::Perimeter::kEnableLeadInY = "perimeter
 const QString Constants::ProfileSettings::Perimeter::kEnableFlyingStart = "perimeter_flying_start";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartDistance = "perimeter_flying_start_distance";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartSpeed = "perimeter_flying_start_speed";
-const QString Constants::ProfileSettings::Perimeter::kEnableShiftedBeads = "perimeter_shifted_beads";
 
 // Inset
 const QString Constants::ProfileSettings::Inset::kEnable = "inset";
@@ -641,7 +640,6 @@ const QString Constants::ProfileSettings::Infill::kExtrusionMultiplier = "infill
 const QString Constants::ProfileSettings::Infill::kCombineXLayers = "infill_combine_every_x_layers";
 const QString Constants::ProfileSettings::Infill::kCombineLayerShift = "infill_combine_layer_shift";
 const QString Constants::ProfileSettings::Infill::kMinPathLength = "infill_minimum_path_length";
-const QString Constants::ProfileSettings::Infill::kEnableAlternatingLines = "infill_alternating_lines";
 
 // Support
 const QString Constants::ProfileSettings::Support::kEnable = "support";

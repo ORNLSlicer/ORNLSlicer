@@ -356,6 +356,4 @@ bool Infill::settingsSame(QSharedPointer<SettingsBase> a, QSharedPointer<Setting
            qFuzzyCompare(a->setting<Angle>(PS::Infill::kAngle)(), b->setting<Angle>(PS::Infill::kAngle)()) &&
            a->setting<bool>(PS::Infill::kEnable) == b->setting<bool>(PS::Infill::kEnable);
 }
-
-void Infill::setLayerCount(uint layer_count) { m_layer_count = layer_count - 1; }
 } // namespace ORNL

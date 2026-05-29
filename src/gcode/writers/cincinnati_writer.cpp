@@ -327,7 +327,6 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
 
     Point new_start_location;
     RegionType rType = params->setting<RegionType>(SS::kRegionType);
-    bool infill_alternating_lines = m_sb->setting<bool>(PS::Infill::kEnableAlternatingLines);
     bool w_active_first_travel = false;
 
     if (m_first_travel) {
@@ -352,12 +351,6 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     }
 
     bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
-
-    // Need to check if a lift is needed if infill alternating lines is enabled
-    if (infill_alternating_lines && m_region_type == RegionType::kInfill && !m_first_travel &&
-        lType == TravelLiftType::kNoLift) {
-        travel_lift_required = false;
-    }
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {

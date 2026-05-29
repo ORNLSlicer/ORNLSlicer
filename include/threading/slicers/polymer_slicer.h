@@ -36,18 +36,6 @@ class PolymerSlicer : public TraditionalAST {
     void writeGCode() override;
 
   private:
-    //! \brief Processes perimeters on a part. Gives each perimeter the total layer count.
-    //! \param part: The part whose perimeters need processing
-    //! \param part_start: The first layer number of the part
-    //! \param last_layer_count: The total layer count of the part
-    void processPerimeter(QSharedPointer<Part> part, int part_start, int last_layer_count);
-
-    //! \brief Gives the infill the total layer count.
-    //! \param part: The part whose perimeters need processing
-    //! \param part_start: The first layer number of the part
-    //! \param last_layer_count: The total layer count of the part
-    void processInfill(QSharedPointer<Part> part, int part_start, int last_layer_count);
-
     //! \brief Creates layer steps for support structure
     //! \param part: Part to create supports for
     //! \param layer_count: Total number of layers
@@ -103,10 +91,5 @@ class PolymerSlicer : public TraditionalAST {
     //! \brief cached layer settings
     QList<QSharedPointer<SettingsBase>> m_saved_layer_settings;
 
-    //! \brief height of the half-height bead in the first layer
-    int m_half_layer_height = 0;
-
-    //! \brief layer that we are currently on
-    uint m_layer_num;
 };
 } // namespace ORNL

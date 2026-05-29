@@ -41,8 +41,6 @@ class Infill : public RegionBase {
     //! \return Polyline converted to path
     Path createPath(Polyline line) override;
 
-    void setLayerCount(uint layer_count);
-
   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
@@ -69,7 +67,5 @@ class Infill : public RegionBase {
     //! \brief Contains the layer that we are currently on
     uint m_layer_num;
 
-    //! \brief Contains the total number of layers
-    uint m_layer_count;
 };
 } // namespace ORNL
