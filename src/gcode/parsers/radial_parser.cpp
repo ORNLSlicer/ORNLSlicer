@@ -27,13 +27,13 @@ void RadialParser::G1Handler(QVector<QString> params) {
     if (!filtered_params.isEmpty()) {
         const bool force_print_state = isCommentedPrintMove();
         if (force_print_state) {
-            setActiveExtruders(true);
+            setExtruderActive(true);
         }
 
         CommonParser::G1Handler(filtered_params);
 
         if (force_print_state) {
-            setActiveExtruders(false);
+            setExtruderActive(false);
         }
     }
 }
@@ -90,21 +90,5 @@ bool RadialParser::isCommentedPrintMove() const {
            !comment.contains(Constants::RegionTypeStrings::kTravel);
 }
 
-void RadialParser::setActiveExtruders(bool on) {
-    if (m_extruders_on.isEmpty()) {
-        return;
-    }
-
-    bool updated_active_extruder = false;
-    for (int i = 0, end = std::min(m_extruders_on.size(), m_extruders_active.size()); i < end; ++i) {
-        if (m_extruders_active[i]) {
-            m_extruders_on[i] = on;
-            updated_active_extruder = true;
-        }
-    }
-
-    if (!updated_active_extruder) {
-        m_extruders_on[0] = on;
-    }
-}
+void RadialParser::setExtruderActive(bool on) { m_extruder_on = on; }
 } // namespace ORNL

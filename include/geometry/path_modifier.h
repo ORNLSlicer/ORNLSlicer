@@ -153,11 +153,10 @@ class PathModifierGenerator {
      * @param regionType: The region type.
      * @param pathModifiers: The path modifiers.
      * @param materialNumber: The material number.
-     * @param extruders: The extruders.
      */
     static void writeSegment(Path& path, Point start, Point end, Distance width, Distance height, Velocity speed,
                              Acceleration acceleration, AngularVelocity extruder_speed, RegionType regionType,
-                             PathModifiers pathModifiers, int materialNumber, QVector<int> extruders);
+                             PathModifiers pathModifiers, int materialNumber);
 
     /**
      * @brief writeArcSegment writes an arc segment to the path.
@@ -175,12 +174,11 @@ class PathModifierGenerator {
      * @param regionType: The region type.
      * @param pathModifiers: The path modifiers.
      * @param materialNumber: The material number.
-     * @param extruders: The extruders.
      */
     static void writeArcSegment(Path& path, Point start, Point end, Point center, Angle angle, bool ccw, Distance width,
                                 Distance height, Velocity speed, Acceleration acceleration,
                                 AngularVelocity extruder_speed, RegionType regionType, PathModifiers pathModifiers,
-                                int materialNumber, QVector<int> extruders);
+                                int materialNumber);
 
     /**
      * @brief GenerateRamp generates a ramp path.
@@ -199,7 +197,7 @@ class PathModifierGenerator {
     static void generateTipWipeSegment(Path& path, Point start, Point end, Distance width, Distance height,
                                        Velocity speed, Acceleration acceleration, AngularVelocity extruder_speed,
                                        RegionType regionType, PathModifiers pathModifiers, int materialNumber,
-                                       QVector<int> extruders, Distance tipWipeCutoffDistance);
+                                       Distance tipWipeCutoffDistance);
 
     //! \brief track the distance already covered
     static Distance tipWipeDistanceCovered;

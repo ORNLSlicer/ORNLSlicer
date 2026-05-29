@@ -37,19 +37,15 @@ class GlobalLayer {
     void reorient();
 
     //! \brief Creates path modifiers; must be called after connectPaths()
-    void calculateModifiers(QSharedPointer<SettingsBase> global_sb, QVector<Point>& current_location, int layer_num);
-
-    //! \brief Adjusts pathing on a layer to account for multiple fixed nozzles
-    void adjustFixedMultiNozzle();
+    void calculateModifiers(QSharedPointer<SettingsBase> global_sb, Point& current_location, int layer_num);
 
     //! \brief orders islands & paths, generates travels
     //! \param global_sb - a reference to the global settings base
-    //! \param start - list of the start points of pathing for each extruder
-    //! \param start_index - list of island index to start with for each extruder
-    //! \param previous_regions - list of previousRegions visited by each extruder
-    //! \note index in vector corresponds to extruder number
-    void connectPaths(QSharedPointer<SettingsBase> global_sb, QVector<Point>& start, QVector<int>& start_index,
-                      QVector<QVector<QSharedPointer<RegionBase>>>& previousRegions);
+    //! \param start - the start point for pathing
+    //! \param start_index - island index to start with
+    //! \param previous_regions - previous regions visited
+    void connectPaths(QSharedPointer<SettingsBase> global_sb, Point& start, int& start_index,
+                      QVector<QSharedPointer<RegionBase>>& previousRegions);
 
     //! \brief generates gcode
     //! \param the writer/syntax to use
@@ -90,7 +86,7 @@ class GlobalLayer {
 
     //! \brief Precendence list based on geometry and settings to define order for traveling and gcode.
     //! \note used by connectPaths()
-    QVector<QList<QSharedPointer<IslandBase>>> m_island_order;
+    QList<QSharedPointer<IslandBase>> m_island_order;
 
     //! \brief maintains the order of this layer in the list of all global layers
     int m_layer_number;

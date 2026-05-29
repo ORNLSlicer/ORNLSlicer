@@ -22,7 +22,7 @@ QString RomiFanucWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_extruder_on = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -181,7 +181,7 @@ QString RomiFanucWriter::writeLine(const Point& start_point, const Point& target
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruders_on[0] == false && rpm > 0) {
+    if (m_extruder_on == false && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
 
@@ -234,7 +234,7 @@ QString RomiFanucWriter::writeArc(const Point& start_point, const Point& end_poi
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
+    if (!m_extruder_on && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
 
@@ -352,7 +352,7 @@ QString RomiFanucWriter::writeDwell(Time time) {
 
 QString RomiFanucWriter::writeExtruderOn(RegionType type, int rpm) {
     QString rv;
-    m_extruders_on[0] = true;
+    m_extruder_on = true;
     float output_rpm;
 
     if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
@@ -405,7 +405,7 @@ QString RomiFanucWriter::writeExtruderOn(RegionType type, int rpm) {
 
 QString RomiFanucWriter::writeExtruderOff() {
     QString rv;
-    m_extruders_on[0] = false;
+    m_extruder_on = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

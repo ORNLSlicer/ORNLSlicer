@@ -519,20 +519,13 @@ class Constants {
             static const QString kThreeZones;
             static const QString kFourZones;
             static const QString kFiveZones;
-            static const QString kExtruder0;
-            static const QString kExtruder1;
-            static const QString kStandBy0;
-            static const QString kStandBy1;
-            static const QString kExtruder0Zone1;
-            static const QString kExtruder0Zone2;
-            static const QString kExtruder0Zone3;
-            static const QString kExtruder0Zone4;
-            static const QString kExtruder0Zone5;
-            static const QString kExtruder1Zone1;
-            static const QString kExtruder1Zone2;
-            static const QString kExtruder1Zone3;
-            static const QString kExtruder1Zone4;
-            static const QString kExtruder1Zone5;
+            static const QString kExtruder;
+            static const QString kStandBy;
+            static const QString kExtruderZone1;
+            static const QString kExtruderZone2;
+            static const QString kExtruderZone3;
+            static const QString kExtruderZone4;
+            static const QString kExtruderZone5;
         };
 
         class Cooling {
@@ -842,20 +835,6 @@ class Constants {
 
     class ExperimentalSettings {
       public:
-        class MultiNozzle {
-          public:
-            static const QString kNozzleCount;
-            static const QString kNozzleOffsetX;
-            static const QString kNozzleOffsetY;
-            static const QString kNozzleOffsetZ;
-            static const QString kNozzleMaterial;
-            static const QString kEnableMultiNozzleMultiMaterial;
-            static const QString kEnableDuplicatePathRemoval;
-            static const QString kDuplicatePathSimilarity;
-            static const QString kEnableIndependentNozzles;
-            static const QString kNozzleAssignmentMethod;
-        };
-
         class Ramping {
           public:
             static const QString kTrajectoryAngleEnabled;
@@ -991,7 +970,6 @@ class Constants {
         static const QString kMaterialNumber;
         static const QString kRecipe;
         static const QString kESP;
-        static const QString kExtruders;
         static const QString kIsRegionStartSegment;
         static const QString kAdapted;
     };

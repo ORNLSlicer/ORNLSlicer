@@ -1,6 +1,5 @@
 #include "geometry/path.h"
 
-#include <cassert>
 #include <limits>
 
 #include <qcontainerfwd.h>
@@ -11,9 +10,7 @@
 #include "geometry/polyline.h"
 #include "geometry/segment_base.h"
 #include "geometry/segments/travel.h"
-#include "managers/settings/settings_manager.h"
 #include "units/unit.h"
-#include "utilities/constants.h"
 
 namespace ORNL {
 void Path::add(const QSharedPointer<SegmentBase>& ps) { m_segments.append(ps); }
@@ -132,58 +129,5 @@ bool Path::isClosed() { return m_segments.first()->start() == m_segments.last()-
 void Path::setCCW(bool ccw) { m_ccw = ccw; }
 
 bool Path::getCCW() { return m_ccw; }
-
-void Path::addNozzle(int nozzle) {
-    for (QSharedPointer<SegmentBase> segment : getSegments()) {
-        segment->addNozzle(nozzle);
-    }
-}
-
-void Path::adjustMultiNozzle() {
-    if (GSM->getGlobal()->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
-        // get the nozzle materials and offsets from settings
-        int num_nozzles = GSM->getGlobal()->setting<int>(ES::MultiNozzle::kNozzleCount);
-        QVector<Point> nozzle_offsets;
-        nozzle_offsets.reserve(num_nozzles);
-
-        QVector<int> nozzle_materials;
-        nozzle_materials.reserve(num_nozzles);
-
-        for (int nozzle = 0; nozzle < num_nozzles; ++nozzle) {
-            Distance x = GSM->getGlobal()->setting<Distance>(ES::MultiNozzle::kNozzleOffsetX, nozzle);
-            Distance y = GSM->getGlobal()->setting<Distance>(ES::MultiNozzle::kNozzleOffsetY, nozzle);
-            Distance z = GSM->getGlobal()->setting<Distance>(ES::MultiNozzle::kNozzleOffsetZ, nozzle);
-            int material = GSM->getGlobal()->setting<int>(ES::MultiNozzle::kNozzleMaterial, nozzle);
-
-            nozzle_offsets.push_back(Point(x(), y(), z()));
-            nozzle_materials.push_back(material);
-        }
-
-        // adjust segments to use nozzle according to materials
-        for (auto& current_segment : getSegments()) {
-            int segment_material = current_segment->getSb()->setting<int>(SS::kMaterialNumber);
-
-            // find a nozzle with the current segment's material
-            // selects first nozzle if more than one has correct material
-            int current_segment_nozzle = -1;
-            for (int i = 0; i < num_nozzles; ++i) {
-                if (segment_material == nozzle_materials[i]) {
-                    current_segment_nozzle = i;
-                    break;
-                }
-            }
-            assert(current_segment_nozzle >= 0); // assume there is at least one nozzle with the necessary material
-
-            // shift segment according to nozzle offset
-            Point nozzle_offset = nozzle_offsets[current_segment_nozzle];
-            current_segment->shift(Point(0, 0, 0) - nozzle_offset);
-
-            // set segment's nozzle
-            QVector<int> nozzles;
-            nozzles.append(current_segment_nozzle);
-            current_segment->setNozzles(nozzles);
-        }
-    }
-}
 
 } // namespace ORNL

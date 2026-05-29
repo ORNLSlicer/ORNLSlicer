@@ -21,8 +21,8 @@ void TormachParser::config() {
     addCommandMapping("M65", std::bind(&TormachParser::M65Handler, this, std::placeholders::_1));
 }
 
-void TormachParser::M64Handler(QVector<QString> params) { m_extruders_on[0] = true; }
+void TormachParser::M64Handler(QVector<QString> params) { m_extruder_on = true; }
 
-void TormachParser::M65Handler(QVector<QString> params) { m_extruders_on[0] = false; }
+void TormachParser::M65Handler(QVector<QString> params) { m_extruder_on = false; }
 
 } // namespace ORNL

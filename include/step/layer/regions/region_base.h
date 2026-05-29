@@ -96,13 +96,6 @@ class RegionBase {
     //! \param next_material_number: material number to set for transition segments
     void calculateMultiMaterialTransition(Distance& transition_distance, int next_material_number);
 
-    //! \brief adds nozzle to list of nozzles that should be on when this region prints
-    //! \param nozzle number, indexed at 0
-    void addNozzle(int nozzle);
-
-    //! \brief adjusts regions according to multiple-nozzle settings
-    void adjustMultiNozzle();
-
     //! \brief Sets whether last region was spiralized or not (path optimizer needs this info)
     //! \param spiral: whether or not last region was spiralized
     void setLastSpiral(bool spiral);

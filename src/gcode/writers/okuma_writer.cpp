@@ -22,7 +22,7 @@ QString OkumaWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_extruder_on = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -205,15 +205,9 @@ QString OkumaWriter::writeLine(const Point& start_point, const Point& target_poi
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruders_on[0] == false && rpm > 0) {
+    if (m_extruder_on == false && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
-
-    // turn off extruder with an M5 before the line, rather than in-line with S0
-    // if (rpm == 0 && m_extruders_on[0] == true)
-    //{
-    //     rv += writeExtruderOff();
-    // }
 
     rv += m_G1;
     // Forces first motion of layer to issue speed (needed for spiralize mode so that feedrate is scaled properly)
@@ -256,7 +250,7 @@ QString OkumaWriter::writeArc(const Point& start_point, const Point& end_point, 
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
+    if (!m_extruder_on && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
 
@@ -379,7 +373,7 @@ QString OkumaWriter::writeDwell(Time time) {
 
 QString OkumaWriter::writeExtruderOn(RegionType type, int rpm) {
     QString rv;
-    m_extruders_on[0] = true;
+    m_extruder_on = true;
     rv += "( -------------------- laser_on.txt --- )" % m_newline;
     rv += "/LPW=LPWW        (LASER POWER)" % m_newline;
     rv += "( -------------------- )" % m_newline;
@@ -388,7 +382,7 @@ QString OkumaWriter::writeExtruderOn(RegionType type, int rpm) {
 
 QString OkumaWriter::writeExtruderOff() {
     QString rv;
-    m_extruders_on[0] = false;
+    m_extruder_on = false;
     rv += "( -------------------- laser_off.txt --- )" % m_newline;
     rv += "/LPW=0               (LASER POWER)" % m_newline;
     rv += "(/)" % m_newline;

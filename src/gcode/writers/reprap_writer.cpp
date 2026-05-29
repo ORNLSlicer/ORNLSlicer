@@ -24,8 +24,7 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
                                         int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) // all extruders initially off
-        m_extruders_on[i] = false;
+    m_extruder_on = false;
     m_first_print = true;
     m_first_travel = true;
     m_layer_start = true;
@@ -43,11 +42,11 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
                   commentSpaceLine("SET BED TEMPERATURE AND WAIT");
         }
 
-        rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0).to(degC)) % " T0" %
-              commentSpaceLine("SET EXTRUDER 0 TEMPERATURE");
+        rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) % " T0" %
+              commentSpaceLine("SET EXTRUDER TEMPERATURE");
         if (m_sb->setting<int>(MS::Temperatures::kBed) > 0) {
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 0 TEMPERATURE AND WAIT");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER TEMPERATURE AND WAIT");
         }
 
         //            rv += "G28" % commentSpaceLine("TRAVEL HOME ALL AXES");
@@ -171,7 +170,7 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
     Point new_start_location;
-    setTools(QVector<int>()); // turn off all extruders
+    m_extruder_on = false;
 
     // Update Acceleration
     if (m_sb->setting<bool>(PRS::Acceleration::kEnableDynamic)) {
@@ -243,13 +242,9 @@ QString RepRapWriter::writeLine(const Point& start_point, const Point& target_po
 
     QString rv;
 
-    // check if any extruders need priming
-    bool needs_prime = false;
-    for (int ext : params->setting<QVector<int>>(SS::kExtruders))
-        needs_prime = !m_extruders_on[ext] || needs_prime;
-
-    // set the tools/extruders before priming so that correct extruders get primed
-    rv += setTools(params->setting<QVector<int>>(SS::kExtruders));
+    // check if extruder needs priming
+    bool needs_prime = !m_extruder_on;
+    m_extruder_on = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
     // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
@@ -575,8 +570,4 @@ QString RepRapWriter::writePrime() {
     return rv;
 }
 
-QString RepRapWriter::setTools(QVector<int> extruders) {
-    QString rv = "";
-    return rv;
-}
 } // namespace ORNL

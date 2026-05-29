@@ -91,9 +91,5 @@ class KraussMaffeiWriter : public WriterBase {
     //! \brief true is first print motion of the layer
     bool m_layer_start;
 
-    //! \brief writes the necessary tool changes
-    //! \param list of tool numbers that should be on
-    QString setTools(QVector<int> extruders);
-
 }; // class KraussMaffeiWriter
 } // namespace ORNL

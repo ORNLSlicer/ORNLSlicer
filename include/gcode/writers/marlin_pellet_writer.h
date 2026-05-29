@@ -85,10 +85,6 @@ class MarlinPelletWriter : public WriterBase {
     //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
     QString writeCoordinates(Point destination);
 
-    //! \brief writes the necessary tool changes
-    //! \param list of tool numbers that should be on
-    QString setTools(QVector<int> extruders);
-
     //! \brief true if first printing segment, false for subsquent paths - needed for Spiralize
     bool m_first_print;
     //! \brief true if first travel segment, false for subsquent travels - needed for adjusting the start point in
@@ -97,8 +93,6 @@ class MarlinPelletWriter : public WriterBase {
     //! \brief true is first print motion of the layer
     bool m_layer_start;
 
-    //! \brief used to track active extruders, ie tool changes
-    QVector<bool> m_extruders_active;
     int m_material_number;
 
     AngularVelocity m_current_rpm;

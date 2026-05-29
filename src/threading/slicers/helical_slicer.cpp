@@ -518,7 +518,6 @@ QSharedPointer<SettingsBase> HelicalSlicer::createSegmentSettings(const QSharedP
     segment_settings->setSetting(SS::kPathModifiers, PathModifiers::kNone);
     segment_settings->setSetting(SS::kMaterialNumber, 0);
     segment_settings->setSetting(SS::kRecipe, 0);
-    segment_settings->setSetting(SS::kExtruders, QVector<int> {0});
     segment_settings->setSetting(SS::kIsRegionStartSegment, region_start);
 
     segment_settings->setSetting(kRadialCenterX, Distance(center.x()));
