@@ -781,10 +781,6 @@ const QString Constants::ExperimentalSettings::MultiNozzle::kDuplicatePathSimila
 const QString Constants::ExperimentalSettings::MultiNozzle::kEnableIndependentNozzles = "enable_indpendent_nozzles";
 const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleAssignmentMethod = "independent_nozzle_optimizer";
 
-// Visualization
-const QString Constants::ExperimentalSettings::GcodeVisualization::kDisableVisualization = "disable_visualization";
-const QString Constants::ExperimentalSettings::GcodeVisualization::kVisualizationSkip = "visualization_layer_skip";
-
 // Ramping
 const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleEnabled = "trajectory_angle_slow_down";
 const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleThreshold =
