@@ -257,19 +257,4 @@ void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<Region
     }
 }
 
-void IslandBase::adjustMultiNozzle() {
-    for (auto region : getRegions()) {
-        region->adjustMultiNozzle();
-    }
-}
-
-void IslandBase::addNozzle(int extruder) {
-    for (QSharedPointer<ORNL::RegionBase> region : getRegions()) {
-        region->addNozzle(extruder);
-    }
-}
-
-void IslandBase::setExtruder(int ext) { m_extruder = ext; }
-
-int IslandBase::getExtruder() { return m_extruder; }
 } // namespace ORNL

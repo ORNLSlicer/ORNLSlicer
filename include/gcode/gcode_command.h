@@ -104,29 +104,19 @@ class GcodeCommand : public QObject {
     //! \brief Clears the comment string.
     void clearComment();
 
-    //! \brief sets what extruders are on for this command
-    //! \param extruders_on a list of the status of the extruders
-    void setExtrudersOn(QVector<bool>& extruders_on);
+    //! \brief sets whether the extruder is on for this command
+    void setExtruderOn(bool extruder_on);
 
-    //! \brief gets a list of the extruder status for this command
-    //! \return a list of booleans for the status
-    const QVector<bool>& getExtrudersOn() const;
-
-    //! \brief sets the extruder offsets for each nozzle
-    //! \param extruder_offsets the distance from the first extruder
-    void setExtruderOffsets(QVector<Point>& extruder_offsets);
-
-    //! \brief gets the distances from the first extruder to the others
-    //! \return a list of offsets
-    const QVector<Point>& getExtruderOffsets() const;
+    //! \brief gets whether the extruder is on for this command
+    bool getExtruderOn() const;
 
     //! \brief sets extruder speed for this command
-    //! \param extruders_speed
-    void setExtrudersSpeed(double extruders_speed);
+    //! \param extruder_speed
+    void setExtruderSpeed(double extruder_speed);
 
     //! \brief gets extruder speed for this command
     //! \return double value
-    const double& getExtrudersSpeed() const;
+    const double& getExtruderSpeed() const;
 
     //! \brief Equality operator to check if two gcode commands are equal.
     //! \note Equality is determined for the mapping of both commands if the
@@ -145,9 +135,8 @@ class GcodeCommand : public QObject {
     int m_command_id;
     QMap<char, double> m_parameters;
     QMap<char, double> m_optional_parameters;
-    QVector<bool> m_extruders_on;
-    QVector<Point> m_extruder_offsets;
-    double m_extruders_speed;
+    bool m_extruder_on;
+    double m_extruder_speed;
     QString m_comment;
     QString m_commandLine;
     bool m_is_motion_command;

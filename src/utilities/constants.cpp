@@ -480,24 +480,17 @@ const QString Constants::MaterialSettings::Retraction::kPrimeAdditionalLength = 
 
 // Temperatures
 const QString Constants::MaterialSettings::Temperatures::kBed = "bed_temperature";
-const QString Constants::MaterialSettings::Temperatures::kTwoZones = "two_zone_extruders";
-const QString Constants::MaterialSettings::Temperatures::kThreeZones = "three_zone_extruders";
-const QString Constants::MaterialSettings::Temperatures::kFourZones = "four_zone_extruders";
-const QString Constants::MaterialSettings::Temperatures::kFiveZones = "five_zone_extruders";
-const QString Constants::MaterialSettings::Temperatures::kExtruder0 = "extruder0_temperature";
-const QString Constants::MaterialSettings::Temperatures::kExtruder1 = "extruder1_temperature";
-const QString Constants::MaterialSettings::Temperatures::kStandBy0 = "standby0_temperature";
-const QString Constants::MaterialSettings::Temperatures::kStandBy1 = "standby1_temperature";
-const QString Constants::MaterialSettings::Temperatures::kExtruder0Zone1 = "extruder0_zone1";
-const QString Constants::MaterialSettings::Temperatures::kExtruder0Zone2 = "extruder0_zone2";
-const QString Constants::MaterialSettings::Temperatures::kExtruder0Zone3 = "extruder0_zone3";
-const QString Constants::MaterialSettings::Temperatures::kExtruder0Zone4 = "extruder0_zone4";
-const QString Constants::MaterialSettings::Temperatures::kExtruder0Zone5 = "extruder0_zone5";
-const QString Constants::MaterialSettings::Temperatures::kExtruder1Zone1 = "extruder1_zone1";
-const QString Constants::MaterialSettings::Temperatures::kExtruder1Zone2 = "extruder1_zone2";
-const QString Constants::MaterialSettings::Temperatures::kExtruder1Zone3 = "extruder1_zone3";
-const QString Constants::MaterialSettings::Temperatures::kExtruder1Zone4 = "extruder1_zone4";
-const QString Constants::MaterialSettings::Temperatures::kExtruder1Zone5 = "extruder1_zone5";
+const QString Constants::MaterialSettings::Temperatures::kTwoZones = "two_zone_extruder";
+const QString Constants::MaterialSettings::Temperatures::kThreeZones = "three_zone_extruder";
+const QString Constants::MaterialSettings::Temperatures::kFourZones = "four_zone_extruder";
+const QString Constants::MaterialSettings::Temperatures::kFiveZones = "five_zone_extruder";
+const QString Constants::MaterialSettings::Temperatures::kExtruder = "extruder_temperature";
+const QString Constants::MaterialSettings::Temperatures::kStandBy = "standby_temperature";
+const QString Constants::MaterialSettings::Temperatures::kExtruderZone1 = "extruder_zone1";
+const QString Constants::MaterialSettings::Temperatures::kExtruderZone2 = "extruder_zone2";
+const QString Constants::MaterialSettings::Temperatures::kExtruderZone3 = "extruder_zone3";
+const QString Constants::MaterialSettings::Temperatures::kExtruderZone4 = "extruder_zone4";
+const QString Constants::MaterialSettings::Temperatures::kExtruderZone5 = "extruder_zone5";
 
 // Cooling
 const QString Constants::MaterialSettings::Cooling::kEnable = "fan";
@@ -768,19 +761,6 @@ const QString Constants::ProfileSettings::Slicing::kRadialBoundaryHandling = "ra
 // Experimental Settings
 //================================================================================
 
-// Multi-Nozzle
-const QString Constants::ExperimentalSettings::MultiNozzle::kEnableMultiNozzleMultiMaterial = "enable_multi_nozzle";
-const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleCount = "nozzle_count";
-const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetX = "nozzle_offset_x";
-const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetY = "nozzle_offset_y";
-const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetZ = "nozzle_offset_z";
-const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleMaterial = "nozzle_material";
-const QString Constants::ExperimentalSettings::MultiNozzle::kEnableDuplicatePathRemoval =
-    "enable_duplicate_path_removal";
-const QString Constants::ExperimentalSettings::MultiNozzle::kDuplicatePathSimilarity = "duplicate_path_similarity";
-const QString Constants::ExperimentalSettings::MultiNozzle::kEnableIndependentNozzles = "enable_indpendent_nozzles";
-const QString Constants::ExperimentalSettings::MultiNozzle::kNozzleAssignmentMethod = "independent_nozzle_optimizer";
-
 // Ramping
 const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleEnabled = "trajectory_angle_slow_down";
 const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleThreshold =
@@ -896,7 +876,6 @@ const QString Constants::SegmentSettings::kPathModifiers = "path_modifiers";
 const QString Constants::SegmentSettings::kMaterialNumber = "material_number";
 const QString Constants::SegmentSettings::kRecipe = "recipe_index";
 const QString Constants::SegmentSettings::kESP = "esp";
-const QString Constants::SegmentSettings::kExtruders = "extruders";
 const QString Constants::SegmentSettings::kIsRegionStartSegment = "is_region_start_segment";
 const QString Constants::SegmentSettings::kAdapted = "adapted";
 
@@ -1120,14 +1099,6 @@ const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables
     {Constants::MaterialSettings::Density::kMaterialType.toUpper(),
      Constants::MaterialSettings::Density::kMaterialType},
     {Constants::MaterialSettings::Density::kDensity.toUpper(), Constants::MaterialSettings::Density::kDensity},
-    {Constants::ExperimentalSettings::MultiNozzle::kNozzleCount.toUpper(),
-     Constants::ExperimentalSettings::MultiNozzle::kNozzleCount},
-    {Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetX.toUpper(),
-     Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetX},
-    {Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetY.toUpper(),
-     Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetY},
-    {Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetZ.toUpper(),
-     Constants::ExperimentalSettings::MultiNozzle::kNozzleOffsetZ},
 
 });
 

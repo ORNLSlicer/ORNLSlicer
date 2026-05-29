@@ -24,7 +24,7 @@ QString SiemensWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_extruder_on = false;
     m_first_print = true;
     m_first_travel = true;
     m_layer_start = true;
@@ -88,41 +88,6 @@ QString SiemensWriter::writeBeforeRegion(RegionType type, int pathSize) {
 
 QString SiemensWriter::writeBeforePath(RegionType type) {
     QString rv;
-    // Commented out on 12/29/20 by Alex because these G-Code lines need issued after travels, not at the start of the
-    // region
-    /*if(!m_spiral_layer || m_first_print)
-    {
-        if (type == RegionType::kPerimeter)
-        {
-            if (!m_sb->setting< QString >(PS::GCode::kPerimeterStart).isEmpty())
-                rv += m_sb->setting< QString >(PS::GCode::kPerimeterStart) % m_newline;
-        }
-        else if (type == RegionType::kInset)
-        {
-            if (!m_sb->setting< QString >(PS::GCode::kInsetStart).isEmpty())
-                rv += m_sb->setting< QString >(PS::GCode::kInsetStart) % m_newline;
-        }
-        else if(type == RegionType::kSkeleton)
-        {
-            if (!m_sb->setting< QString >(PS::GCode::kSkeletonStart).isEmpty())
-                rv += m_sb->setting< QString >(PS::GCode::kSkeletonStart) % m_newline;
-        }
-        else if (type == RegionType::kSkin)
-        {
-            if (!m_sb->setting< QString >(PS::GCode::kSkinStart).isEmpty())
-                rv += m_sb->setting< QString >(PS::GCode::kSkinStart) % m_newline;
-        }
-        else if (type == RegionType::kInfill)
-        {
-            if (!m_sb->setting< QString >(PS::GCode::kInfillStart).isEmpty())
-                rv += m_sb->setting< QString >(PS::GCode::kInfillStart) % m_newline;
-        }
-        else if (type == RegionType::kSupport)
-        {
-            if (!m_sb->setting< QString >(PS::GCode::kSupportStart).isEmpty())
-                rv += m_sb->setting< QString >(PS::GCode::kSupportStart) % m_newline;
-        }
-    }*/
     return rv;
 }
 
@@ -133,8 +98,8 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
     // If extruder is left on because of no end of path modifier, turn it off using Perimeter end of path G-Code
     // This syntax doesn't currently issue extruder on/off commands because they are manually input to the
     // start/end G-Code of the settings
-    if (m_extruders_on[0]) {
-        m_extruders_on[0] = false;
+    if (m_extruder_on) {
+        m_extruder_on = false;
         if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
             rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
     }
@@ -150,7 +115,7 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0; // do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -201,10 +166,10 @@ QString SiemensWriter::writeLine(const Point& start_point, const Point& target_p
     // start/end G-Code of the setting
     // Write out the region starting G-Code if this is the first segment of the path
     // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
-    if (m_extruders_on[0] == false && path_modifiers != PathModifiers::kSlowDown &&
+    if (m_extruder_on == false && path_modifiers != PathModifiers::kSlowDown &&
         path_modifiers != PathModifiers::kForwardTipWipe && path_modifiers != PathModifiers::kReverseTipWipe &&
         path_modifiers != PathModifiers::kCoasting && path_modifiers != PathModifiers::kSpiralLift) {
-        m_extruders_on[0] = true;
+        m_extruder_on = true;
         if (region_type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterStart).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterStart) % m_newline;
@@ -232,11 +197,11 @@ QString SiemensWriter::writeLine(const Point& start_point, const Point& target_p
     }
     // Write out the region ending G-Code if this is the first segment of the ending path modifiers
     // First segment is signified by extruder being on and the modifier is one of five ending modifiers
-    else if (m_extruders_on[0] == true &&
+    else if (m_extruder_on == true &&
              (path_modifiers == PathModifiers::kSlowDown || path_modifiers == PathModifiers::kForwardTipWipe ||
               path_modifiers == PathModifiers::kReverseTipWipe || path_modifiers == PathModifiers::kCoasting ||
               path_modifiers == PathModifiers::kSpiralLift)) {
-        m_extruders_on[0] = false;
+        m_extruder_on = false;
         if (region_type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -296,7 +261,7 @@ QString SiemensWriter::writeArc(const Point& start_point, const Point& end_point
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
+    if (!m_extruder_on && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
 

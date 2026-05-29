@@ -14,12 +14,12 @@ class MotionEstimation {
     //! \param layer, current layer number
     //! \param isFIncluded, if the current command statement include velocity / speed
     //! \param isGOCommand, if the current command statement is the fast non extruding move (G0)
-    //! \param extrudersOn, list of extruders and there state indicating on or off currently
+    //! \param extruder_on, whether the extruder is on currently
     //! \param G1F_time, G1 commands execution time estimates
     //! \param layer_time, accumulated time estimate for the entire layer
     //! \param layer_volume, accumulated volume estimate for the entire layer
     //! \param use_b, if using B filament axis, time calculation is based on extrusion not X/Y/Z distance
-    static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, QVector<bool> extrudersOn,
+    static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
                                            Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b);
 
     static Acceleration m_v_acceleration;

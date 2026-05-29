@@ -125,17 +125,5 @@ void RegionBase::calculateMultiMaterialTransition(Distance& transition_distance,
     }
 }
 
-void RegionBase::adjustMultiNozzle() {
-    for (auto& path : getPaths()) {
-        path.adjustMultiNozzle();
-    }
-}
-
-void RegionBase::addNozzle(int nozzle) {
-    for (Path path : getPaths()) {
-        path.addNozzle(nozzle);
-    }
-}
-
 void RegionBase::setLastSpiral(bool spiral) { m_was_last_region_spiral = spiral; }
 } // namespace ORNL

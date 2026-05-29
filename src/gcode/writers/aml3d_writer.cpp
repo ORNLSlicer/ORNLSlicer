@@ -31,8 +31,7 @@ QString AML3DWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
                                        int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
-        m_extruders_on[ext] = false;
+    m_extruder_on = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -215,19 +214,13 @@ QString AML3DWriter::writeLine(const Point& start_point, const Point& target_poi
 
     QString rv;
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            // Set Feedrate to 0 if turning extruder on so that an F parameter
-            // is issued with the first G1 of the path
-            setFeedrate(0);
-        }
+    if (!m_extruder_on && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
+        setFeedrate(0);
     }
     if ((path_modifiers == PathModifiers::kForwardTipWipe || path_modifiers == PathModifiers::kReverseTipWipe ||
          path_modifiers == PathModifiers::kPerimeterTipWipe) &&
-        m_extruders_on[0] && !m_tip_wipe) {
+        m_extruder_on && !m_tip_wipe) {
         m_tip_wipe = true;
         rv += commentLine("UPDATE VOLTAGE FOR TIP WIPE");
     }
@@ -280,12 +273,8 @@ QString AML3DWriter::writeArc(const Point& start_point, const Point& end_point, 
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
+    if (!m_extruder_on && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -333,7 +322,7 @@ QString AML3DWriter::writeScan(Point target_point, Velocity speed, bool on_off) 
 QString AML3DWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -420,7 +409,7 @@ QString AML3DWriter::writeTamperOff() {
 
 QString AML3DWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
     QString rv;
-    m_extruders_on[extruder_number] = true;
+    m_extruder_on = true;
     float output_rpm;
 
     rv += writeTamperOn();
@@ -478,7 +467,7 @@ QString AML3DWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_extruder_on = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

@@ -57,7 +57,6 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<ORNL::GcodeCommand>("GcodeCommand");
     qRegisterMetaType<ORNL::GcodeMeta>("GcodeMeta");
     qRegisterMetaType<fifojson>("fifojson");
-    qRegisterMetaType<QList<QList<ORNL::Time>>>("QList<QList<Time>>");
     qRegisterMetaType<nlohmann::json>("nlohmann::json");
     qRegisterMetaType<quintptr>("quintptr");
     qRegisterMetaType<ORNL::MeshLoader::MeshData>("MeshData");

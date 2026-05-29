@@ -896,8 +896,6 @@ enum class RotationUnit { kPitchRollYaw = 0, kXYZ = 1 };
 
 enum class LayerOrdering : uint8_t { kByHeight = 0, kByLayerNumber = 1, kByPart = 2 };
 
-enum class NozzleAssignmentMethod : uint8_t { kXLocation = 0, kYLocation = 1, kArea = 2 };
-
 enum class TormachMode : uint8_t { kMode21 = 0, kMode40 = 1, kMode102 = 2, kMode274 = 3, kMode509 = 4 };
 
 enum class PolygonPartition : uint8_t { kConvex = 0, kMonoX = 1, kMonoY = 2 };

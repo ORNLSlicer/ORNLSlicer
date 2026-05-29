@@ -28,8 +28,7 @@ class LayerTimesWindow : public QWidget {
     //! \brief Slot to receive updated time information from gcode parse
     //! \param layerTimes list of times for each layer
     //! \param minlayerTime user-specified minimum layer time for cooling purpose
-    void updateTimeInformation(QList<QList<Time>> layer_times, QList<double> layer_FR_modifiers,
-                               bool adjusted_layer_time);
+    void updateTimeInformation(QList<Time> layer_times, QList<double> layer_FR_modifiers, bool adjusted_layer_time);
 
     //! \brief Clear Layer times text
     void clear();
@@ -49,7 +48,7 @@ class LayerTimesWindow : public QWidget {
     QLineEdit* m_min_layer_time_edit;
 
     //! \brief Local copy of layer times received from gcode parse
-    QList<QList<Time>> m_layer_times;
+    QList<Time> m_layer_times;
 
     //! \brief Local copy of layer calculated feedrate modifiers for each layer
     QList<double> m_layer_FR_modifiers;

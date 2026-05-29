@@ -27,7 +27,6 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
     QList<QSharedPointer<GlobalLayer>> global_layers = QList<QSharedPointer<GlobalLayer>>();
 
     // get the layer ordering method, and then populate the global layers accordingly
-    // after global layers have been assigned, assign nozzles/tools (if necessary)
     LayerOrdering order_method = global_sb->setting<LayerOrdering>(PS::Optimizations::kLayerOrdering);
 
     if (order_method == LayerOrdering::kByHeight) {

@@ -120,15 +120,6 @@ class SegmentBase {
     //! \brief returns true if the segment is printing/extruding
     bool isPrintingSegment();
 
-    //! \brief sets the list of nozzles that should be on when this
-    //!        segment prints
-    //! \param list of extruders indexes
-    void setNozzles(QVector<int> extruder_numbers);
-
-    //! \brief adds a nozzle number to the list
-    //! \param extruder number (indexed at 0)
-    void addNozzle(int extruder_number);
-
     //! \brief computes the length of this segment
     //! \return the distance from start to end along this segment
     virtual Distance length();

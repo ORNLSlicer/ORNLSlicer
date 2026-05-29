@@ -19,7 +19,6 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "optimizers/layer_order_optimizer.h"
-#include "optimizers/multi_nozzle_optimizer.h"
 #include "part/part.h"
 #include "slicing/buffered_slicer.h"
 #include "slicing/layer_additions.h"
@@ -185,9 +184,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
             // Compute and populate global layers
             processGlobalLayers(parts.build_parts, global_settings);
 
-            // Assign pathing to nozzles
-            assignNozzles(global_settings);
-
             return false; // No error, so continune slicing
         });
 
@@ -352,39 +348,6 @@ void PolymerSlicer::processGlobalLayers(QVector<QSharedPointer<Part>> parts,
     if (anythingDirty()) {
         // create global layers from all the part layers
         m_global_layers = LayerOrderOptimizer::populateSteps(settings, parts);
-    }
-}
-
-void PolymerSlicer::assignNozzles(const QSharedPointer<SettingsBase>& settings_base) {
-    int tool_count = settings_base->setting<int>(ES::MultiNozzle::kNozzleCount);
-    if (tool_count == 1) {
-        // default, set every island to extruder 0
-        for (auto g_layer : m_global_layers) {
-            QVector<QSharedPointer<IslandBase>> layer_islands = g_layer->getIslands();
-            for (auto island : layer_islands)
-                island->setExtruder(0);
-        }
-    }
-    // more than one nozzle & nozzles are independent
-    else if (settings_base->setting<bool>(ES::MultiNozzle::kEnableIndependentNozzles)) {
-        NozzleAssignmentMethod assignment_method =
-            settings_base->setting<NozzleAssignmentMethod>(ES::MultiNozzle::kNozzleAssignmentMethod);
-
-        // iterate through global layers and assign nozzles
-        for (auto global_layer : m_global_layers) {
-            QVector<QSharedPointer<IslandBase>> layer_islands = global_layer->getIslands();
-            switch (assignment_method) {
-                case NozzleAssignmentMethod::kXLocation:
-                    MultiNozzleOptimizer::assignByAxisLocation(layer_islands, tool_count, Axis::kX);
-                    break;
-                case NozzleAssignmentMethod::kYLocation:
-                    MultiNozzleOptimizer::assignByAxisLocation(layer_islands, tool_count, Axis::kY);
-                    break;
-                case NozzleAssignmentMethod::kArea:
-                    MultiNozzleOptimizer::assignByArea(layer_islands, tool_count);
-                    break;
-            }
-        }
     }
 }
 
@@ -559,34 +522,20 @@ void PolymerSlicer::postProcess(nlohmann::json opt_data) {
         QSharedPointer<SettingsBase> global_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
         global_sb->makeGlobalAdjustments();
 
-        // set up the start points, first region indicies, and previous region list for each tool
+        // set up the start point, first region index, and previous region list
         // used by island and path order optimizer to generate travels
-        // in these vectors, index 0 corresponds to tool 0, index 1 to tool 1, etc.
-        QVector<Point> current_points;
-        QVector<int> start_indices;
-        QVector<QVector<QSharedPointer<RegionBase>>> previous_regions_list;
-
-        int num_nozzles = global_sb->setting<int>(ES::MultiNozzle::kNozzleCount);
-        for (int i = 0; i < num_nozzles; ++i) {
-            current_points.push_back(Point(0, 0, 0));
-            start_indices.push_back(-1);
-            previous_regions_list.push_back(QVector<QSharedPointer<RegionBase>>());
-        }
+        Point current_point(0, 0, 0);
+        int start_index = -1;
+        QVector<QSharedPointer<RegionBase>> previous_regions;
 
         for (int g_layer_num = 0, max_layers = m_global_layers.size(); g_layer_num < max_layers; ++g_layer_num) {
             m_global_layers[g_layer_num]->unorient();
 
-            // if there are multiple nozzles that are NOT independent
-            if (global_sb->setting<int>(ES::MultiNozzle::kNozzleCount) > 1 &&
-                !global_sb->setting<bool>(ES::MultiNozzle::kEnableIndependentNozzles)) {
-                m_global_layers[g_layer_num]->adjustFixedMultiNozzle();
-            }
-
-            // current_points, start_indices, & previous_regions_list are updated during method execution
+            // current_point, start_index, & previous_regions are updated during method execution
             // so that each layer starts where the last layer ended
-            m_global_layers[g_layer_num]->connectPaths(global_sb, current_points, start_indices, previous_regions_list);
+            m_global_layers[g_layer_num]->connectPaths(global_sb, current_point, start_index, previous_regions);
 
-            m_global_layers[g_layer_num]->calculateModifiers(global_sb, current_points, g_layer_num);
+            m_global_layers[g_layer_num]->calculateModifiers(global_sb, current_point, g_layer_num);
 
             m_global_layers[g_layer_num]->reorient();
 

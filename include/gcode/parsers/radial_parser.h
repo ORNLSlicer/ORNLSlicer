@@ -60,9 +60,9 @@ class RadialParser : public CommonParser {
     bool isCommentedPrintMove() const;
 
     /*!
-     * @brief Sets the active extruder state used by CommonParser motion estimation.
-     * @param on True to mark active extruders as printing.
+     * @brief Sets the extruder state used by CommonParser motion estimation.
+     * @param on True to mark the extruder as printing.
      */
-    void setActiveExtruders(bool on);
+    void setExtruderActive(bool on);
 };
 } // namespace ORNL

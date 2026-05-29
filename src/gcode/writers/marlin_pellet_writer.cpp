@@ -15,22 +15,14 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
-MarlinPelletWriter::MarlinPelletWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {
-    int num_extruders = m_sb->setting<int>(ES::MultiNozzle::kNozzleCount);
-    m_extruders_active.resize(num_extruders); // sets vector size
-}
+MarlinPelletWriter::MarlinPelletWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {}
 
 QString MarlinPelletWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
                                               Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
     m_current_bead_area = 0;
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) // all extruders initially off, and inactive
-    {
-        m_extruders_on[i] = false;
-        m_extruders_active[i] = false;
-    }
-    m_extruders_active[0] = true; // extruder 0 is active by default
+    m_extruder_on = false;
     m_material_number = -1;
     m_first_print = true;
     m_first_travel = true;
@@ -39,7 +31,6 @@ QString MarlinPelletWriter::writeInitialSetup(Distance minimum_x, Distance minim
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += "G29" % commentSpaceLine("ENABLE BED COMPENSATION");
-        rv += "T0\n";
         rv += m_newline;
         if (m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight))
             rv += "M102 S1" % commentSpaceLine("USE BEAD AREA MODE");
@@ -132,11 +123,7 @@ QString MarlinPelletWriter::writeTravel(Point start_location, Point target_locat
 
     m_current_bead_area = 0;
 
-    bool any_extr_on = false;
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i)
-        any_extr_on = any_extr_on || m_extruders_on[i];
-
-    if (any_extr_on)
+    if (m_extruder_on)
         rv += writeExtruderOff();
 
     Point new_start_location;
@@ -207,29 +194,14 @@ QString MarlinPelletWriter::writeLine(const Point& start_point, const Point& tar
 
     QString rv;
 
-    // change tools if necessary
-    QString tool_change = setTools(params->setting<QVector<int>>(SS::kExtruders));
-    if (tool_change.length() > 0) // if the tools need to change
-    {
-        rv += writeExtruderOff(); // write extruder off before tool changes
-        rv += tool_change;
-    }
-
     // Update the material number if necessary
-    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable) &&
-        !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
-        rv += "T" % QString::number(material_number) % commentSpaceLine("SET ACTIVE EXTRUDER");
+    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
+        rv += "T" % QString::number(material_number) % commentSpaceLine("SET ACTIVE MATERIAL");
         m_material_number = material_number;
     }
 
     // determine if writeExtruderOn is necessary
-    bool requiresWriteExtruderOn = false;
-    for (int i = 0, end = m_extruders_active.size(); i < end; ++i) {
-        // if an extruder is active and off, need to write extruders on
-        // (should happen after tool changes or travels)
-        if (m_extruders_active[i] && !m_extruders_on[i])
-            requiresWriteExtruderOn = true;
-    }
+    bool requiresWriteExtruderOn = !m_extruder_on;
 
     if (requiresWriteExtruderOn && rpm > 0) // && !m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight))
     {
@@ -293,31 +265,16 @@ QString MarlinPelletWriter::writeArc(const Point& start_point, const Point& end_
     Area bead_area = (width - height) * height +
                      (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
 
-    // change tools if necessary
-    QString tool_change = setTools(params->setting<QVector<int>>(SS::kExtruders));
-    if (tool_change.length() > 0) // if the tools need to change
-    {
-        rv += writeExtruderOff(); // write extruder off before tool changes
-        rv += tool_change;
-    }
-
     // Update the material number if necessary
-    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable) &&
-        !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
-        rv += "T" % QString::number(material_number) % commentSpaceLine("SET ACTIVE EXTRUDER");
+    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
+        rv += "T" % QString::number(material_number) % commentSpaceLine("SET ACTIVE MATERIAL");
         m_material_number = material_number;
     }
 
     // determine if writeExtruderOn is necessary
-    bool requiresWriteExtruderOn = false;
-    for (int i = 0, end = m_extruders_active.size(); i < end; ++i) {
-        // if an extruder is active and off, need to write extruders on
-        // (should happen after tool changes or travels)
-        if (m_extruders_active[i] && !m_extruders_on[i])
-            requiresWriteExtruderOn = true;
-    }
+    bool requiresWriteExtruderOn = !m_extruder_on;
 
-    if (!requiresWriteExtruderOn && rpm > 0) {
+    if (requiresWriteExtruderOn && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, width, height, bead_area);
     }
 
@@ -413,11 +370,7 @@ QString MarlinPelletWriter::writeAfterLayer() {
 QString MarlinPelletWriter::writeShutdown() {
     QString rv;
     rv += "M5" % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT") % "M104 S0 T0" %
-          commentSpaceLine("TURN EXTRUDER 1 OFF");
-    if (m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
-        rv += "M104 S0 T1" % commentSpaceLine("TURN EXTRUDER 2 OFF");
-    }
-
+          commentSpaceLine("TURN EXTRUDER OFF");
     rv +=
         "M140 S0" % commentSpaceLine("TURN HEATED PLATEN OFF") % "M141 S0" % commentSpaceLine("TURN PRINT CHAMBER OFF");
 
@@ -435,11 +388,7 @@ QString MarlinPelletWriter::writeDwell(Time time) {
 }
 
 QString MarlinPelletWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height, Area bead_area) {
-    // extruder on/off commands only affect extruder marked active by a tool change
-    for (int i = 0, end = m_extruders_active.size(); i < end; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = true;
-    }
+    m_extruder_on = true;
     QString rv;
 
     if (!m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
@@ -518,11 +467,7 @@ QString MarlinPelletWriter::writeExtruderOn(RegionType type, int rpm, Distance w
 }
 
 QString MarlinPelletWriter::writeExtruderOff() {
-    // extruder on/off commands only affect extruder marked active by a tool change
-    for (int i = 0, end = m_extruders_active.size(); i < end; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = false;
-    }
+    m_extruder_on = false;
 
     QString rv;
 
@@ -556,44 +501,4 @@ QString MarlinPelletWriter::writeCoordinates(Point destination) {
     return rv;
 }
 
-QString MarlinPelletWriter::setTools(QVector<int> extruders) {
-
-    QString rv = "";
-    if (m_extruders_active.size() > 2) // assumes that simultaneous extruders are ext0 and ext1
-    {
-        if (m_extruders_active[0] && m_extruders_active[1] &&
-            extruders.length() < 2) // currently both on, need single ext
-        {
-            // turn off both
-            rv += "M605 S0" % m_newline;
-            m_extruders_active[0] = false;
-            m_extruders_active[1] = false;
-        }
-
-        if (extruders.length() > 1 &&
-            !(m_extruders_active[0] && m_extruders_active[1])) // need both exts. on & not already on
-        {
-            // turn on both
-            rv += "M605 S2" % m_newline;
-            m_extruders_active[0] = true;
-            m_extruders_active[1] = true;
-        }
-    }
-
-    // zero or one ext. need to be on
-    for (int i = 0, end = m_extruders_active.size(); i < end; ++i) {
-        if (!m_extruders_active[i] && extruders.contains(i)) // ext isn't active, needs to be
-        {
-            // write tool change to zero
-            rv += "T" % QString::number(i) % m_newline;
-            m_extruders_active[i] = true;
-        }
-        else if (m_extruders_active[i] && !extruders.contains(i)) // ext is active, needs to not be
-        {
-            m_extruders_active[i] = false;
-        }
-        // else - the extruder was already correctly marked active/inactive
-    }
-    return rv;
-}
 } // namespace ORNL

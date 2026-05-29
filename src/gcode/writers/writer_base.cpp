@@ -46,9 +46,7 @@ WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) :
     m_M5 = "M5";
     m_start_point = Point(0, 0, 0);
 
-    // allocate array to keep track of extruder(s) status
-    int num_extruders = m_sb->setting<int>(ES::MultiNozzle::kNozzleCount);
-    m_extruders_on.resize(num_extruders); // sets vector size
+    m_extruder_on = false;
 }
 
 QString WriterBase::comment(const QString& text) {

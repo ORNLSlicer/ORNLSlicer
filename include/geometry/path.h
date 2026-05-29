@@ -120,14 +120,6 @@ class Path {
     //! \return whether or not path is ccw
     bool getCCW();
 
-    //! \brief Adds an extruder/nozzle number to the list of extruders that should
-    //!        be on with this path prints
-    //! \param extruder/nozzle number, indexed at 0
-    void addNozzle(int nozzle);
-
-    //! \brief Adjusts pathing according to multi-nozzle settings
-    void adjustMultiNozzle();
-
   private:
     //! \brief Segments that compose this path.
     QList<QSharedPointer<SegmentBase>> m_segments;
