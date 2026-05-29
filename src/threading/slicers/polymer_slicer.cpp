@@ -29,8 +29,6 @@
 #include "step/layer/island/polymer_island.h"
 #include "step/layer/island/support_island.h"
 #include "step/layer/layer.h"
-#include "step/layer/regions/infill.h"
-#include "step/layer/regions/perimeter.h"
 #include "step/layer/regions/region_base.h"
 #include "step/layer/regions/skin.h"
 #include "threading/traditional_ast.h"
@@ -61,10 +59,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
     pp.addPartProcessing([this](QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
         m_saved_layer_settings.clear();
 
-        if (m_half_layer_height != 0) {
-            m_half_layer_height = 0;
-        }
-
         // Caching does not work correctly - just always clear.
         part->clearSteps();
 
@@ -82,7 +76,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
     pp.addStepBuilder([this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
                              Preprocessor::ActivePartMeta& meta) {
         auto addNewLayer = [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
-                                  Preprocessor::ActivePartMeta& meta, QSharedPointer<Layer>& new_layer, int layerNum) {
+                                  Preprocessor::ActivePartMeta& meta, QSharedPointer<Layer>& new_layer) {
             // Save settings
             m_saved_layer_settings.push_back(next_layer_meta->settings);
 
@@ -92,10 +86,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
 
             // add data from cross-sectioning to a layer
             new_layer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
-
-            if (layerNum == 2) {
-                next_layer_meta->shift_amount.z(next_layer_meta->shift_amount.z() + m_half_layer_height);
-            }
 
             new_layer->setOrientation(next_layer_meta->plane,
                                       next_layer_meta->shift_amount + next_layer_meta->additional_shift);
@@ -115,43 +105,9 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
         // must add new
         if (next_layer_meta->number >= meta.steps_processed) {
             QSharedPointer<Layer> layer;
-            QSharedPointer<Layer> layerWithSameZ;
-            QSharedPointer<Layer> layer2;
 
-            bool perimeter_enabled = next_layer_meta->settings->setting<bool>(PS::Perimeter::kEnable);
-            bool shifted_beads_enabled = next_layer_meta->settings->setting<bool>(PS::Perimeter::kEnableShiftedBeads);
-            bool infill_enabled = next_layer_meta->settings->setting<bool>(PS::Infill::kEnable);
-            bool alternating_lines_enabled =
-                next_layer_meta->settings->setting<bool>(PS::Infill::kEnableAlternatingLines);
-
-            if ((perimeter_enabled && shifted_beads_enabled) || (infill_enabled && alternating_lines_enabled)) {
-                // get height of the half sized layer on first layer creation
-                if (m_half_layer_height == 0) {
-                    next_layer_meta->number = (next_layer_meta->number * 2 + 1);
-                    m_half_layer_height = next_layer_meta->shift_amount.z();
-                }
-                // if not creating the first layer
-                else {
-                    next_layer_meta->number = (next_layer_meta->number * 2 + 2);
-                }
-            }
-            else {
-                next_layer_meta->number++;
-            }
-
-            addNewLayer(next_layer_meta, meta, layer, 1);
-
-            if ((perimeter_enabled && shifted_beads_enabled) || (infill_enabled && alternating_lines_enabled)) {
-                // creation of layer on the same z as the layer number 1
-                if (next_layer_meta->number == 1) {
-                    next_layer_meta->number = next_layer_meta->number + 1;
-                    addNewLayer(next_layer_meta, meta, layerWithSameZ, 3);
-                }
-
-                // creation of the next half layer
-                next_layer_meta->number = next_layer_meta->number + 1;
-                addNewLayer(next_layer_meta, meta, layer2, 2);
-            }
+            next_layer_meta->number++;
+            addNewLayer(next_layer_meta, meta, layer);
         }
         else {
             // Save settings
@@ -197,16 +153,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
         // If fewer layers than last slice, remove all steps from that layer onwards
         meta.part->clearStepsFromIndex(meta.last_step_count + meta.part_start);
 
-        //! If perimeters are enabled, give each perimeter the total number of layers
-        if (meta.part_sb->setting<bool>(PS::Perimeter::kEnable)) {
-            processPerimeter(meta.part, meta.part_start, meta.last_step_count);
-        }
-
-        //! If infill alternating lines are enabled, give the infill the total number of layers
-        if (meta.part_sb->setting<bool>(PS::Infill::kEnableAlternatingLines)) {
-            processInfill(meta.part, meta.part_start, meta.last_step_count);
-        }
-
         //! If skins are enabled, give each skin its upper and lower geometry
         if (meta.part_sb->setting<bool>(PS::Skin::kEnable)) {
             processSkin(meta.part, meta.part_start, meta.last_step_count);
@@ -246,22 +192,6 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
         });
 
     pp.processAll();
-}
-
-void PolymerSlicer::processPerimeter(QSharedPointer<Part> part, int part_start, int last_layer_count) {
-    m_layer_num = last_layer_count;
-    for (int layer_nbr = part_start; layer_nbr < last_layer_count; ++layer_nbr) {
-        if (layer_nbr < part->countStepPairs()) {
-            QSharedPointer<Layer> layer = part->step(layer_nbr, StepType::kLayer).dynamicCast<Layer>();
-
-            if (layer->isDirty()) {
-                for (QSharedPointer<IslandBase> isl : layer->getIslands()) {
-                    QSharedPointer<Perimeter> perimeter =
-                        isl->getRegion(RegionType::kPerimeter).dynamicCast<Perimeter>();
-                }
-            }
-        }
-    }
 }
 
 void PolymerSlicer::processSkin(QSharedPointer<Part> part, int part_start, int last_layer_count) {
@@ -304,22 +234,6 @@ void PolymerSlicer::processSkin(QSharedPointer<Part> part, int part_start, int l
                     //! Lower geometry
                     for (int i = lower_bound; i < layer_nr; ++i)
                         skin->addLowerGeometry(part->step(i, StepType::kLayer).dynamicCast<Layer>()->getGeometry());
-                }
-            }
-        }
-    }
-}
-
-void PolymerSlicer::processInfill(QSharedPointer<Part> part, int part_start, int last_layer_count) {
-    m_layer_num = last_layer_count;
-    for (int layer_nbr = part_start; layer_nbr < last_layer_count; ++layer_nbr) {
-        if (layer_nbr < part->countStepPairs()) {
-            QSharedPointer<Layer> layer = part->step(layer_nbr, StepType::kLayer).dynamicCast<Layer>();
-
-            if (layer->isDirty()) {
-                for (QSharedPointer<IslandBase> isl : layer->getIslands()) {
-                    QSharedPointer<Infill> infill = isl->getRegion(RegionType::kInfill).dynamicCast<Infill>();
-                    infill->setLayerCount(last_layer_count);
                 }
             }
         }
