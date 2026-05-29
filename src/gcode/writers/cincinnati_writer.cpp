@@ -326,6 +326,12 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     RegionType rType = params->setting<RegionType>(SS::kRegionType);
     bool w_active_first_travel = false;
 
+    // Determine if travel length is short enough to keep extruder on
+    Distance travel_distance = start_location.distance(target_location);
+    if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+        rv += writeExtruderOn(RegionType::kPerimeter, m_sb->setting<int>(PS::Perimeter::kExtruderSpeed));
+    }
+
     if (m_first_travel) {
         w_active_first_travel = true;
     }
@@ -540,7 +546,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     }
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm);
         setFeedrate(0);
     }
 
@@ -634,7 +640,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
     }
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm);
     }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
@@ -694,7 +700,7 @@ QString CincinnatiWriter::writeScan(Point target_point, Velocity speed, bool on_
 QString CincinnatiWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off the extruder
+        rv += writeExtruderOff(); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty()) {
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -804,7 +810,7 @@ QString CincinnatiWriter::writeTamperOff() {
     }
 }
 
-QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
+QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
@@ -879,7 +885,7 @@ QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, int extruder
     return rv;
 }
 
-QString CincinnatiWriter::writeExtruderOff(int extruder_number) {
+QString CincinnatiWriter::writeExtruderOff() {
     // update to use extruder number
 
     QString rv;

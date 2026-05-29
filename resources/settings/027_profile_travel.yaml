@@ -25,6 +25,18 @@ settings:
     namespace: "Profile::Travel"
     symbol: "kMinimumInfillTravelLength"
     local: true
+  - name: "min_travel_length"
+    display: "Minimum Travel Length"
+    type: "distance"
+    tooltip: "Travel moves less than this value will leave the extruder enabled"
+    depends: {"OR":[{"syntax":1},{"syntax":11}]}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kMinimumTravelLength"
+    local: true
   - name: "minimum_travel_for_lift"
     display: "Minimum Travel Length for Lifting"
     type: "distance"
