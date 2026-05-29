@@ -1162,6 +1162,7 @@ class Constants {
             static const char* kOverhangAngleName;
             static const char* kOverhangModeName;
             static const char* kRenderingPartObjectName;
+            static const char* kUsingInstancedGcodeName;
         };
     };
 

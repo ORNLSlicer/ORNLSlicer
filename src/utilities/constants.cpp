@@ -1025,6 +1025,7 @@ const char* Constants::OpenGL::Shader::kStackingAxisName = "stackingAxis";
 const char* Constants::OpenGL::Shader::kOverhangAngleName = "overhangAngle";
 const char* Constants::OpenGL::Shader::kOverhangModeName = "usingOverhangMode";
 const char* Constants::OpenGL::Shader::kRenderingPartObjectName = "renderingPartObject";
+const char* Constants::OpenGL::Shader::kUsingInstancedGcodeName = "usingInstancedGcode";
 //================================================================================
 // Slicer 1 Keys - used for gcode processing (all caps)
 //================================================================================

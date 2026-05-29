@@ -3,6 +3,9 @@ layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec4 color;
 layout(location = 3) in vec2 uv;
+layout(location = 4) in vec3 instanceStart;
+layout(location = 5) in vec3 instanceDelta;
+layout(location = 6) in vec4 instanceColor;
 out vec4 vColor;
 out vec3 fragPos;
 out vec3 vNormal;
@@ -17,20 +20,49 @@ uniform vec3 stackingAxis;
 uniform float overhangAngle;
 uniform bool usingOverhangMode;
 uniform bool renderingPartObject;
+uniform bool usingInstancedGcode;
 mat3 rotation;
 
 void main()
 {
-    vec4 temp = (model * vec4(position, 1));
+    vec3 objectPosition = position;
+    vec3 objectNormal = normal;
+    vec4 objectColor = color;
+
+    if (usingInstancedGcode)
+    {
+        float segmentLength = length(instanceDelta);
+        vec3 tangent = segmentLength > 0.000001 ? instanceDelta / segmentLength : vec3(0.0, 0.0, 1.0);
+        vec3 normalAxis = normalize(stackingAxis);
+        vec3 binormal = cross(tangent, normalAxis);
+
+        if (dot(binormal, binormal) < 0.000001)
+        {
+            normalAxis = vec3(1.0, 0.0, 0.0);
+            binormal = cross(tangent, normalAxis);
+        }
+
+        binormal = normalize(binormal);
+        normalAxis = normalize(cross(binormal, tangent));
+
+        objectPosition = instanceStart +
+                         (binormal * position.x) +
+                         (normalAxis * position.y) +
+                         (tangent * (position.z * segmentLength));
+        objectNormal = normalize((binormal * normal.x) + (normalAxis * normal.y) + (tangent * normal.z));
+        objectColor = instanceColor;
+    }
+
+    vec4 temp = (model * vec4(objectPosition, 1));
     vWorldPos = vec3(temp.x, temp.y, temp.z);
     rotation = mat3(model[0][0], model[0][1], model[0][2],
                     model[1][0], model[1][1], model[1][2],
                     model[2][0], model[2][1], model[2][2]);
-    vNormal = normalize(normal);
-    vColor = color;
-    vWorldNormal = rotation * normal;
-    fragPos = vec3(model * vec4(position, 1.0));
-    gl_Position = projection * view * model * vec4(position, 1.0);
+    vNormal = normalize(objectNormal);
+    vColor = objectColor;
+    vWorldNormal = rotation * objectNormal;
+    fragPos = vec3(model * vec4(objectPosition, 1.0));
+    gl_Position = projection * view * model * vec4(objectPosition, 1.0);
     texcoord_uv = uv;
     //We need the know the baryocentric coordinate of each pixel to determine how
     //close each pixel is to an edge of a triangle

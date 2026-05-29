@@ -146,6 +146,7 @@ void PartObject::draw() {
     }
 }
 void PartObject::configureUniforms() {
+    GraphicsObject::configureUniforms();
     view()->shaderProgram()->setUniformValue(m_shader_locs.renderingPartObject, true);
 }
 

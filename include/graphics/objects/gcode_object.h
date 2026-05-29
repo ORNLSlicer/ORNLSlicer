@@ -3,6 +3,8 @@
 #include <utility>
 #include <vector>
 
+#include <QOpenGLBuffer>
+#include <QOpenGLVertexArrayObject>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qhash.h>
@@ -84,9 +86,12 @@ class GCodeObject : public GraphicsObject {
     //! \return Pairs of (layer number, Triangles) for each segment.
     const QVector<std::pair<uint, std::vector<Triangle>>> segmentTriangles();
 
+    //! \brief Allows the object to enable instanced gcode uniforms when needed.
+    void configureUniforms() override;
+
   protected:
     //! \brief Overridden draw call to allow segment hiding.
-    void draw();
+    void draw() override;
 
   private:
     //! \brief Segment metadata.
@@ -95,6 +100,10 @@ class GCodeObject : public GraphicsObject {
         uint offset = 0;
         //! \brief Segment length in GL buffer.
         uint length = 0;
+        //! \brief Instanced bead template group, when using instanced rendering.
+        uint instance_group = 0;
+        //! \brief Offset in the group's instance buffer, when using instanced rendering.
+        uint instance_offset = 0;
 
         //! \brief If this segment is hidden.
         bool hidden = false;
@@ -121,8 +130,45 @@ class GCodeObject : public GraphicsObject {
     //! \param color: Color to paint.
     void paintSegment(QSharedPointer<SegmentDisplayMeta> seg_meta, QColor color);
 
+    //! \brief Instanced bead data for one display-width/display-height shape.
+    struct InstancedBeadGroup {
+        float width = 0.0f;
+        float height = 0.0f;
+        uint template_vertex_count = 0;
+
+        std::vector<float> template_vertices;
+        std::vector<float> template_normals;
+        std::vector<float> instances;
+
+        QSharedPointer<QOpenGLVertexArrayObject> vao;
+        QOpenGLBuffer template_vbo {QOpenGLBuffer::VertexBuffer};
+        QOpenGLBuffer template_nbo {QOpenGLBuffer::VertexBuffer};
+        QOpenGLBuffer instance_vbo {QOpenGLBuffer::VertexBuffer};
+    };
+
+    //! \brief Adds an instance record and returns (group index, instance index).
+    std::pair<uint, uint> appendInstancedBead(const QSharedPointer<SegmentBase>& segment);
+
+    //! \brief Creates GL buffers for all instanced bead groups.
+    void populateInstancedBeadsGL();
+
+    //! \brief Draws visible instanced bead runs.
+    void drawInstancedBeads();
+
+    //! \brief Draws a contiguous run from one instanced bead group.
+    void drawInstancedBeadRun(uint group_index, uint first_instance, uint instance_count);
+
+    //! \brief Updates one instanced bead's color in CPU and GL buffers.
+    void paintInstancedBead(QSharedPointer<SegmentDisplayMeta> seg_meta, QColor color);
+
     //! \brief True when very large gcode is rendered as lightweight GL lines instead of bead meshes.
     bool m_lightweight_lines = false;
+
+    //! \brief True when line gcode is rendered with a shared bead mesh and per-segment instances.
+    bool m_instanced_beads = false;
+
+    //! \brief Shared bead template groups keyed by display width/height.
+    std::vector<QSharedPointer<InstancedBeadGroup>> m_instanced_bead_groups;
 
     //! \brief Segment metadata container.
     QVector<QVector<QSharedPointer<SegmentDisplayMeta>>> m_segments;

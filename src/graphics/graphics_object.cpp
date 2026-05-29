@@ -102,6 +102,7 @@ void GraphicsObject::render() {
 
 void GraphicsObject::configureUniforms() {
     m_view->shaderProgram()->setUniformValue(m_shader_locs.renderingPartObject, false);
+    m_view->shaderProgram()->setUniformValue(m_shader_locs.usingInstancedGcode, false);
 }
 
 BaseView* GraphicsObject::view() { return m_view.data(); }
@@ -367,6 +368,8 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     m_shader_locs.uv = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kUVName);
     m_shader_locs.usingSolidWireframeMode =
         m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kUsingSolidWireframeModeName);
+    m_shader_locs.usingInstancedGcode =
+        m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kUsingInstancedGcodeName);
 
     m_view->makeCurrent();
 
