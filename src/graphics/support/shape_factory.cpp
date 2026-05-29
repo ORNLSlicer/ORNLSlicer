@@ -11,7 +11,6 @@
 #include <QMatrix4x4>
 #include <QtMath>
 #include <qcolor.h>
-#include <qquaternion.h>
 #include <qvectornd.h>
 
 #include "geometry/point.h"
@@ -22,8 +21,6 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
-ShapeFactory::ShapeFactory() {}
-
 void ShapeFactory::createRectangle(float length, float width, float height, const QMatrix4x4& transform,
                                    const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                    std::vector<float>& normals) {
@@ -238,126 +235,6 @@ void ShapeFactory::createRectangle(float length, float width, float height, cons
         colors.push_back(color.greenF());
         colors.push_back(color.blueF());
         colors.push_back(color.alphaF());
-    }
-}
-
-void ShapeFactory::createTorus(float inner_radius, float outer_radius, const QMatrix4x4& transform, const QColor& color,
-                               std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
-    unsigned int segments = 50; // segments of torus
-    unsigned int segment_slices =
-        30;          // a segment is essentially a cylinder, this is the number of axial slices we want to use
-    float theta = 0; // angle in plane of torus; used to distinguish segments
-    float phi = 0;   // angle used to go around the tube; always go from 0 to 2PI for each segment
-    float tube_radius = (outer_radius - inner_radius) / 2.0f;
-    float mid_radius = inner_radius + tube_radius; // distance from center of torus to center of tube
-    float phiIncrement = 2.0f * float(M_PI) / float(segment_slices);
-    float thetaIncrement = 2.0f * float(M_PI) / float(segments);
-    unsigned int next_radial_slice;       // used in loop that pushes back data
-    unsigned int next_axial_slice;        // used in loop that pushes back data
-    std::vector<QVector3D> temp_vertices; // store all the raw values of the vertices used to construct the triangles
-
-    /*
-     * The the torus will be drawn by segment by segment. Each segment is drawn as
-     * a band of triangles around the center of torus' tube.
-     * Torus is centered at (0,0,0) in local coordinates
-     */
-
-    // Outer loop is segments, inner loop is going around each segment
-    for (int i = 0; i < segments; ++i) {
-        for (int j = 0; j < segment_slices; ++j) {
-            // Parametric equations can be found on Wikipedia
-            temp_vertices.push_back(transform * QVector3D((mid_radius + tube_radius * qCos(theta)) * qCos(phi),
-                                                          tube_radius * qSin(theta),
-                                                          (mid_radius + tube_radius * qCos(theta)) * qSin(phi)));
-
-            phi += phiIncrement;
-        }
-        theta += thetaIncrement;
-    }
-
-    /* Vertices are arranged like so:
-     * 0 to segment_slices-1: all vertices (aka every phi) at first theta
-     *
-     * segment_slices to 2*segement_slices-1: all vertices at second theta
-     *
-     * 2*segment_slices-1 to 3*segement_slices-1: all vertices at third theta
-     *
-     * And so on.
-     * Last segment needs to connect to vertices at first theta.
-     */
-
-    QVector3D vertex1, vertex2, vertex3; // vertices of a face(triangle)
-    QVector3D normal;                    // normal of a face shared by each of its vertices
-    for (int i = 0; i < segments; ++i) {
-        // Number from 0 to segments-1 of the next segment
-        // Modulo so that the last segment connects to vertices at first theta
-        next_radial_slice = (i + 1) % segments;
-
-        // Each segment will have a number of triangles equal to twice the amount
-        // of segment slices because it takes two triangles to connect four points
-
-        // This loop constructs a segment (which is again, a cylinder) from two circles
-        for (int j = 0; j < segment_slices; ++j) {
-            // Number from 0 to segment_slices-1 of the next slice of this segment
-            // Modulo so that the last segment connects to vertices at first theta
-            next_axial_slice = (j + 1) % segment_slices;
-
-            // First triangle's data
-            vertex1 = temp_vertices.at(i * segment_slices + j); // Point on first circle
-            vertices.push_back(vertex1.x());
-            vertices.push_back(vertex1.y());
-            vertices.push_back(vertex1.z());
-
-            vertex2 = temp_vertices.at(next_radial_slice * segment_slices + j); // Point on second circle
-            vertices.push_back(vertex2.x());
-            vertices.push_back(vertex2.y());
-            vertices.push_back(vertex2.z());
-
-            vertex3 = temp_vertices.at(next_radial_slice * segment_slices + next_axial_slice); // Point on second circle
-            vertices.push_back(vertex3.x());
-            vertices.push_back(vertex3.y());
-            vertices.push_back(vertex3.z());
-
-            // Every vertex in a triangle has the same normal
-            // Every vertex has the same color, this is just a convenient place to push back the color data
-            normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-            for (int i = 0; i < 3; ++i) {
-                normals.push_back(normal.x());
-                normals.push_back(normal.y());
-                normals.push_back(normal.z());
-                colors.push_back(color.redF());
-                colors.push_back(color.greenF());
-                colors.push_back(color.blueF());
-                colors.push_back(color.alphaF());
-            }
-
-            // Second triangle's data
-            vertex1 = temp_vertices.at(i * segment_slices + j); // Point on first circle
-            vertices.push_back(vertex1.x());
-            vertices.push_back(vertex1.y());
-            vertices.push_back(vertex1.z());
-
-            vertex2 = temp_vertices.at(next_radial_slice * segment_slices + next_axial_slice); // Point on second circle
-            vertices.push_back(vertex2.x());
-            vertices.push_back(vertex2.y());
-            vertices.push_back(vertex2.z());
-
-            vertex3 = temp_vertices.at(i * segment_slices + next_axial_slice); // Point on first circle
-            vertices.push_back(vertex3.x());
-            vertices.push_back(vertex3.y());
-            vertices.push_back(vertex3.z());
-
-            normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-            for (int i = 0; i < 3; ++i) {
-                normals.push_back(normal.x());
-                normals.push_back(normal.y());
-                normals.push_back(normal.z());
-                colors.push_back(color.redF());
-                colors.push_back(color.greenF());
-                colors.push_back(color.blueF());
-                colors.push_back(color.alphaF());
-            }
-        }
     }
 }
 
@@ -1095,142 +972,6 @@ void ShapeFactory::createCone(float radius, float height, const QMatrix4x4& tran
     }
 }
 
-void ShapeFactory::createFullGimbal(float inner_radius, float outer_radius, const QVector3D& center,
-                                    std::vector<float>& vertices, std::vector<float>& colors,
-                                    std::vector<float>& normals) {
-    QMatrix4x4 transform;
-    QColor color;
-
-    // Make sure cylinder has same radius as the torii's tube
-    float cylinder_radius = (outer_radius - inner_radius) / 2.0f;
-    // The rest of these floats are just hard-coded with what looks good
-    float cylinder_height = outer_radius + 2 * cylinder_radius;
-    float cone_radius = cylinder_radius * 1.5f;
-    float cone_height = cylinder_radius * 3.5f;
-
-    color = Constants::Colors::kRed;
-    transform.setToIdentity();
-    transform.translate(center);
-
-    // Draw red torus in x-z plane
-    createTorus(inner_radius, outer_radius, transform, color, vertices, colors, normals);
-
-    // Draw green torus in y-z plane
-    color = Constants::Colors::kGreen;
-    transform.rotate(90.0f, 0.0f, 0.0f, 1.0f);
-    createTorus(inner_radius, outer_radius, transform, color, vertices, colors, normals);
-    transform.rotate(-90.0f, 0.0f, 0.0f, 1.0f);
-
-    // Draw blue torus in x-y plane
-    color = Constants::Colors::kBlue;
-    transform.rotate(90.0f, 1.0f, 0.0f, 0.0f);
-    createTorus(inner_radius, outer_radius, transform, color, vertices, colors, normals);
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-
-    // Draw blue arrow pointing in the +z direction
-    color = Constants::Colors::kBlue;
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-
-    // Draw red arrow pointing in the +y direction
-    color = Constants::Colors::kRed;
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-    transform.rotate(90.0f, 1.0f, 0.0f, 0.0f);
-
-    // Draw green arrow pointing in the +x direction
-    color = Constants::Colors::kGreen;
-    transform.rotate(90.0f, 0.0f, 1.0f, 0.0f);
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-}
-
-void ShapeFactory::createXYGimbal(float inner_radius, float outer_radius, const QVector3D& center,
-                                  std::vector<float>& vertices, std::vector<float>& colors,
-                                  std::vector<float>& normals) {
-    QMatrix4x4 transform;
-    QColor color;
-
-    // Make sure cylinder has same radius as the torii's tube
-    float cylinder_radius = (outer_radius - inner_radius) / 2.0f;
-    // The rest of these floats are just hard-coded with what looks good
-    float cylinder_height = outer_radius + 2 * cylinder_radius;
-    float cone_radius = cylinder_radius * 1.5f;
-    float cone_height = cylinder_radius * 3.5f;
-
-    transform.setToIdentity();
-    transform.translate(center);
-
-    // Draw blue torus in x-y plane
-    color = Constants::Colors::kBlue;
-    transform.rotate(90.0f, 1.0f, 0.0f, 0.0f);
-    createTorus(inner_radius, outer_radius, transform, color, vertices, colors, normals);
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-
-    // Draw red arrow pointing in the +y direction
-    color = Constants::Colors::kRed;
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-    transform.rotate(90.0f, 1.0f, 0.0f, 0.0f);
-
-    // Draw green arrow pointing in the +x direction
-    color = Constants::Colors::kGreen;
-    transform.rotate(90.0f, 0.0f, 1.0f, 0.0f);
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-}
-
-void ShapeFactory::createXZGimbal(float inner_radius, float outer_radius, const QVector3D& center,
-                                  std::vector<float>& vertices, std::vector<float>& colors,
-                                  std::vector<float>& normals) {
-    QMatrix4x4 transform;
-    QColor color;
-
-    // Make sure cylinder has same radius as the torii's tube
-    float cylinder_radius = (outer_radius - inner_radius) / 2.0f;
-    // The rest of these floats are just hard-coded with what looks good
-    float cylinder_height = outer_radius + 2 * cylinder_radius;
-    float cone_radius = cylinder_radius * 1.5f;
-    float cone_height = cylinder_radius * 3.5f;
-
-    color = Constants::Colors::kRed;
-    transform.setToIdentity();
-    transform.translate(center);
-
-    // Draw red torus in x-z plane
-    createTorus(inner_radius, outer_radius, transform, color, vertices, colors, normals);
-
-    // Draw blue arrow pointing in the +z direction
-    color = Constants::Colors::kBlue;
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-
-    // Draw green arrow pointing in the +x direction
-    color = Constants::Colors::kGreen;
-    transform.rotate(90.0f, 0.0f, 1.0f, 0.0f);
-    createCylinder(cylinder_radius, cylinder_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, cylinder_height);
-    createCone(cone_radius, cone_height, transform, color, vertices, colors, normals);
-    transform.translate(0.0f, 0.0f, -cylinder_height);
-    transform.rotate(-90.0f, 1.0f, 0.0f, 0.0f);
-}
-
 void ShapeFactory::createGridPlane(float length, float width, float x_grid_dist, float y_grid_dist, const QColor& color,
                                    std::vector<float>& vertices, std::vector<float>& colors) {
     float y_min = -width / 2;
@@ -1541,34 +1282,6 @@ void ShapeFactory::createBuildVolumeCylinder(float radius, float height, float x
     }
 
     // set colors for all vertices
-    int colorSize = vertices.size() / 3 * 4;
-    colors.reserve(colorSize);
-    for (int i = 0; i < colorSize; i += 4) {
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
-    }
-}
-
-
-void ShapeFactory::createArrow(QVector3D begin, QVector3D end, const QColor& color, std::vector<float>& vertices,
-                               std::vector<float>& colors) {
-    vertices = {// Begin to end
-                begin.x(), begin.y(), begin.z(), end.x(), end.y(), end.z()};
-
-    // Translate to end and rotate to match direction.
-    QMatrix4x4 cone_tfm;
-    cone_tfm.translate(end);
-
-    QVector3D dir_vec = end - begin;
-    QVector3D up_vec = QVector3D(0, 0, 1);
-    QQuaternion rotation = QQuaternion::fromDirection(dir_vec, up_vec);
-    cone_tfm.rotate(rotation);
-
-    std::vector<float> tmp_norm;
-    ShapeFactory::createCone(.3, 1, cone_tfm, QColor(), vertices, colors, tmp_norm);
-
     int colorSize = vertices.size() / 3 * 4;
     colors.reserve(colorSize);
     for (int i = 0; i < colorSize; i += 4) {
