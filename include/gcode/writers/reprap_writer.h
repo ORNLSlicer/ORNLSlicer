@@ -101,9 +101,5 @@ class RepRapWriter : public WriterBase {
     //! \brief tracks the current amount of filament output for the E command
     Distance m_filament_location;
 
-    //! \brief writes the necessary tool changes
-    //! \param list of tool numbers that should be on
-    QString setTools(QVector<int> extruders);
-
 }; // class RapRapWriter
 } // namespace ORNL

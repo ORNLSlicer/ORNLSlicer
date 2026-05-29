@@ -22,8 +22,7 @@ QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
                                            Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
-        m_extruders_on[ext] = false;
+    m_extruder_on = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -210,19 +209,14 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
 
     QString rv;
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            m_current_rpm = rpm;
-        }
-        // Update extruder speed if needed
-        if (m_extruders_on[0] == true && rpm != m_current_rpm) // only check first extruder
-        {
-            rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
-            m_current_rpm = rpm;
-        }
+    if (!m_extruder_on && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
+        m_current_rpm = rpm;
+    }
+    // Update extruder speed if needed
+    if (m_extruder_on && rpm != m_current_rpm) {
+        rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
+        m_current_rpm = rpm;
     }
 
     rv += m_G1;
@@ -258,18 +252,13 @@ QString IngersollWriter::writeArc(const Point& start_point, const Point& end_poi
     auto region_type = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
-        // Update extruder speed if needed
-        if (m_extruders_on[0] == true && rpm != m_current_rpm) // only check first extruder
-        {
-            rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
-            m_current_rpm = rpm;
-        }
+    if (!m_extruder_on && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
+    }
+    // Update extruder speed if needed
+    if (m_extruder_on && rpm != m_current_rpm) {
+        rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
+        m_current_rpm = rpm;
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -301,7 +290,7 @@ QString IngersollWriter::writeScan(Point target_point, Velocity speed, bool on_o
 QString IngersollWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -356,7 +345,7 @@ QString IngersollWriter::writeAfterLayer() {
 
 QString IngersollWriter::writeShutdown() {
     QString rv;
-    rv += writeExtruderOff(0); // update to turn off appropriate extruders
+    rv += writeExtruderOff(0); // update to turn off the extruder
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode);
     return rv;
 }
@@ -376,7 +365,7 @@ QString IngersollWriter::writeExtruderOn(RegionType type, float rpm, int extrude
 
     rv += commentLine("Bead Start");
 
-    m_extruders_on[extruder_number] = true;
+    m_extruder_on = true;
 
     // write dwell and initial extruder turn on depending on region type
     if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
@@ -419,7 +408,7 @@ QString IngersollWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_extruder_on = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

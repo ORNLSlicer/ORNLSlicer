@@ -59,8 +59,6 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     m_insertions = 0;
 
-    m_current_nozzle = 0; // 0th nozzle is default
-
     config();
 
     MotionEstimation::m_total_distance = 0;
@@ -73,9 +71,8 @@ Distance CommonParser::getCurrentGXDistance() {
     bool uses_b = sb->setting<bool>(MS::Filament::kFilamentBAxis);
 
     return MotionEstimation::calculateTimeAndVolume(
-        m_current_layer, m_with_F_value, m_current_gcode_command.getCommandID() == 0, m_extruders_on,
-        m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer][m_current_nozzle],
-        m_layer_volumes[m_current_layer], uses_b);
+        m_current_layer, m_with_F_value, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
+        m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer], uses_b);
 }
 
 // currently nothing of interest in header, so skip as long as line starts with
@@ -135,15 +132,6 @@ QHash<QString, double> CommonParser::parseFooter() {
                                 foundForcedMinLayerTime = true;
                             else if (key == Constants::GcodeFileVariables::kForceMinLayerTimeMethod)
                                 foundForcedMinLayerTimeMethod = true;
-
-                            if (key_root.toLower() == ES::MultiNozzle::kNozzleCount) {
-                                m_num_extruders = (int)value >= 1 ? (int)value : 1;
-                                for (int i = 0; i < m_num_extruders; ++i) {
-                                    m_extruders_on.push_back(false);
-                                    m_extruders_active.push_back(false);
-                                }
-                                m_extruders_active[0] = true;
-                            }
                         }
 
                         QString possible_other_key = it.value().toUpper();
@@ -175,26 +163,7 @@ QHash<QString, double> CommonParser::parseFooter() {
 
     checkAndSetNecessarySettings();
 
-    if (m_num_extruders == 0) {
-        m_num_extruders = 1;
-        for (int i = 0; i < m_num_extruders; ++i) {
-            m_extruders_on.push_back(false);
-            m_extruders_active.push_back(false);
-        }
-        m_extruders_active[0] = true;
-    }
-
-    // after parsing all nozzle offsets, group by extruder and put into vector
-    for (int i = 0; i < m_num_extruders; ++i) {
-        QString x_key = ES::MultiNozzle::kNozzleOffsetX + "_" + QString::number(i);
-        QString y_key = ES::MultiNozzle::kNozzleOffsetY + "_" + QString::number(i);
-        QString z_key = ES::MultiNozzle::kNozzleOffsetZ + "_" + QString::number(i);
-
-        double x = m_file_settings[x_key];
-        double y = m_file_settings[y_key];
-        double z = m_file_settings[z_key];
-        m_extruder_offsets.push_back(Point(x, y, z));
-    }
+    m_extruder_on = false;
 
     // return copy to gcode loader as several settings are required to calculate visualization
     return m_file_settings;
@@ -287,11 +256,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
     m_layer_start_lines.reserve(m_motion_commands.size());
     m_layer_start_lines.push_back(1);
 
-    QList<Time> extruder_times;
-    for (int i = 0; i < m_num_extruders; ++i)
-        extruder_times.push_back(Time());
-
-    m_layer_times.push_back(extruder_times);
+    m_layer_times.push_back(Time());
     m_layer_FR_modifiers.push_back(1.0);
     m_layer_G1F_times.push_back(Time());
     m_layer_volumes.push_back(Volume());
@@ -337,17 +302,11 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
             continue;
         }
         else if (m_upper_lines[m_current_line].contains("EXTRUDER(0)")) {
-            for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-                if (m_extruders_active[i])
-                    m_extruders_on[i] = false;
-            }
+            m_extruder_on = false;
             continue;
         }
         else if (m_upper_lines[m_current_line].contains("EXTRUDER(")) {
-            for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-                if (m_extruders_active[i])
-                    m_extruders_on[i] = true;
-            }
+            m_extruder_on = true;
 
             int first = m_upper_lines[m_current_line].indexOf("(") + 1;
             int second = m_upper_lines[m_current_line].indexOf(")");
@@ -374,8 +333,8 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
             // to meet the minimum layer time
             if (m_current_gcode_command.getCommandIsEndOfLayer() || m_current_line == m_current_end_line) {
                 if (m_file_settings[MS::Cooling::kForceMinLayerTime] && m_allow_layer_alter && m_current_layer > 0) {
-                    Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer][m_current_nozzle];
-                    Time decreaseTime = m_layer_times[m_current_layer][m_current_nozzle] - m_max_layer_time_allowed;
+                    Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer];
+                    Time decreaseTime = m_layer_times[m_current_layer] - m_max_layer_time_allowed;
 
                     double minModifier = std::numeric_limits<double>::max();
                     double maxModifier = 1;
@@ -439,11 +398,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                 ++m_current_layer;
 
                 // add empty slots to arrays for this layer
-                QList<Time> extruder_times;
-                for (int i = 0; i < m_num_extruders; ++i)
-                    extruder_times.push_back(Time());
-
-                m_layer_times.push_back(extruder_times);
+                m_layer_times.push_back(Time());
                 m_layer_FR_modifiers.push_back(1.0);
                 m_layer_G1F_times.push_back(Time());
                 m_layer_volumes.push_back(Volume());
@@ -536,7 +491,7 @@ void CommonParser::reset() {
 
     m_current_spindle_speed = 0.0 * m_angle_unit / m_time_unit;
 
-    m_current_extruders_speed = 0.0;
+    m_current_extruder_speed = 0.0;
 
     // all machines, except for BAAM, use a constant acceleration that is not set through the Slicer in any way
     // So don't reset to 0 here and leave it to the default acceleration set in the constructor
@@ -547,14 +502,12 @@ void CommonParser::reset() {
     m_wait_to_wipe_time = 0 * m_time_unit;
     m_wait_time_to_start_purge = 0 * m_time_unit;
 
-    for (int i = 0; i < m_num_extruders; ++i)
-        m_extruders_on[i] = false;
-    //        m_extruder_ON                 = false;
+    m_extruder_on = false;
     m_dynamic_spindle_control = false;
     m_park = false;
 }
 
-QList<QList<Time>> CommonParser::getLayerTimes() { return m_layer_times; }
+QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
 
 QList<double> CommonParser::getLayerFeedRateModifiers() { return m_layer_FR_modifiers; }
 
@@ -687,10 +640,8 @@ void CommonParser::G0Handler(QVector<QString> params) {
                 break;
         }
     }
-
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    m_current_gcode_command.setExtruderOn(m_extruder_on);
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (is_motion_command) {
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
@@ -699,15 +650,9 @@ void CommonParser::G0Handler(QVector<QString> params) {
     Distance temp = getCurrentGXDistance();
     MotionEstimation::m_total_distance += temp;
 
-    bool isPrinting = false;
-    for (int i = 0; i < m_extruders_on.size(); i++) {
-        if (m_extruders_on[i]) {
-            MotionEstimation::m_printing_distance += temp;
-            isPrinting = true;
-            break;
-        }
-    }
-    if (!isPrinting)
+    if (m_extruder_on)
+        MotionEstimation::m_printing_distance += temp;
+    else
         MotionEstimation::m_travel_distance += temp;
 }
 
@@ -845,15 +790,15 @@ void CommonParser::G1Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -873,10 +818,8 @@ void CommonParser::G1Handler(QVector<QString> params) {
         }
         m_current_gcode_command.addParameter(current_parameter, current_value);
     }
-
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    m_current_gcode_command.setExtruderOn(m_extruder_on);
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (is_motion_command) {
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
@@ -886,16 +829,9 @@ void CommonParser::G1Handler(QVector<QString> params) {
 
     Distance temp = getCurrentGXDistance();
     MotionEstimation::m_total_distance += temp;
-
-    bool isPrinting = false;
-    for (int i = 0; i < m_extruders_on.size(); i++) {
-        if (m_extruders_on[i]) {
-            MotionEstimation::m_printing_distance += temp;
-            isPrinting = true;
-            break;
-        }
-    }
-    if (!isPrinting)
+    if (m_extruder_on)
+        MotionEstimation::m_printing_distance += temp;
+    else
         MotionEstimation::m_travel_distance += temp;
 
     m_with_F_value = false;
@@ -1059,15 +995,15 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -1085,10 +1021,8 @@ void CommonParser::G2Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
-
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    m_current_gcode_command.setExtruderOn(m_extruder_on);
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
@@ -1251,15 +1185,15 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -1277,10 +1211,8 @@ void CommonParser::G3Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
-
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    m_current_gcode_command.setExtruderOn(m_extruder_on);
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
@@ -1388,7 +1320,7 @@ void CommonParser::G4Handler(QVector<QString> params) {
                                       << "With GCode command string: " << getCurrentCommandString();
         throw IllegalParameterException(exceptionString);
     }
-    m_layer_times[m_current_layer][m_current_nozzle] += m_current_gcode_command.getParameters()['P'];
+    m_layer_times[m_current_layer] += m_current_gcode_command.getParameters()['P'];
 }
 
 void CommonParser::G5Handler(QVector<QString> params) {
@@ -1530,15 +1462,15 @@ void CommonParser::G5Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setExtruderOn(true);
                         else
-                            turnOffActiveExtruders();
+                            setExtruderOn(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -1556,10 +1488,8 @@ void CommonParser::G5Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
-
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    m_current_gcode_command.setExtruderOn(m_extruder_on);
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
@@ -1583,27 +1513,21 @@ void CommonParser::M3Handler(QVector<QString> params) {
     for (QString ref : params) {
         current_parameter = ref.at(0).toLatin1();
         if (current_parameter == 'S' || current_parameter == 's') {
-            m_current_extruders_speed = ref.right(ref.size() - 1).toDouble(&no_error);
+            m_current_extruder_speed = ref.right(ref.size() - 1).toDouble(&no_error);
 
             if (!no_error)
-                m_current_extruders_speed = 0;
+                m_current_extruder_speed = 0;
 
-            setSpindleSpeed(m_current_extruders_speed * m_angular_velocity_unit());
+            setSpindleSpeed(m_current_extruder_speed * m_angular_velocity_unit());
         }
     }
 
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = true;
-    }
+    m_extruder_on = true;
 }
 
 void CommonParser::M5Handler(QVector<QString> params) {
-    m_current_spindle_speed = m_current_extruders_speed = 0;
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = false;
-    }
+    m_current_spindle_speed = m_current_extruder_speed = 0;
+    m_extruder_on = false;
 }
 
 void CommonParser::AddDwell(double dwellTime) {
@@ -1995,17 +1919,5 @@ void CommonParser::throwIntegerConversionErrorException() {
     throw IllegalParameterException(exceptionString);
 }
 
-void CommonParser::turnOnActiveExtruders() {
-    for (int i = 0; i < m_num_extruders; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = true;
-    }
-}
-
-void CommonParser::turnOffActiveExtruders() {
-    for (int i = 0; i < m_num_extruders; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = false;
-    }
-}
+void CommonParser::setExtruderOn(bool on) { m_extruder_on = on; }
 } // namespace ORNL

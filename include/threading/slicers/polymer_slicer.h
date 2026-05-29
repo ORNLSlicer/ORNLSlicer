@@ -79,8 +79,6 @@ class PolymerSlicer : public TraditionalAST {
     //! \param settings: settings to use
     void processGlobalLayers(QVector<QSharedPointer<Part>> parts, const QSharedPointer<SettingsBase>& settings);
 
-    void assignNozzles(const QSharedPointer<SettingsBase>& settings);
-
     //! \brief checks if any parts is the CSM are dirty
     //! \return if any part is dirty
     bool anythingDirty();

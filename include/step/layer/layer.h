@@ -41,9 +41,6 @@ class Layer : public Step {
     //! transitions
     void connectPaths(Point& start, int& start_index, QVector<QSharedPointer<RegionBase>>& previousRegions);
 
-    //! \brief Adjusts pathing to use multiple nozzles
-    void adjustMultiNozzle();
-
     //! \brief Creates modifiers
     //! \param currentLocation: current location used to update start points of travels after modifiers are added
     void calculateModifiers(Point& currentLocation) override;
@@ -93,9 +90,6 @@ class Layer : public Step {
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order
     QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
     createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
-
-    //! \brief removes duplicate islands according to remove-duplicate-path settings
-    void removeDuplicateIslands();
 
     //! \brief a collection of polygons on this layer that contain setting overrides
     QVector<SettingsPolygon> m_settings_polygons;

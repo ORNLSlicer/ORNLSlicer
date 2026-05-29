@@ -23,8 +23,7 @@ QString FiveAxisMarlinWriter::writeInitialSetup(Distance minimum_x, Distance min
                                                 Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) // all extruders initially off
-        m_extruders_on[i] = false;
+    m_extruder_on = false;
     m_first_print = true;
     m_first_travel = true;
     m_layer_start = true;
@@ -39,74 +38,74 @@ QString FiveAxisMarlinWriter::writeInitialSetup(Distance minimum_x, Distance min
         }
 
         if (m_sb->setting<bool>(MS::Temperatures::kTwoZones)) {
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 0 ZONE 1 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 0 ZONE 2 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 1 ZONE 1 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 1 ZONE 2 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("SET EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 2 TEMPERATURE");
         }
         else if (m_sb->setting<bool>(MS::Temperatures::kThreeZones)) {
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 0 ZONE 1 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 0 ZONE 2 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone3).to(degC)) %
-                  " T2" % commentSpaceLine("SET EXTRUDER 0 ZONE 3 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 1 ZONE 1 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 1 ZONE 2 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone3).to(degC)) %
-                  " T2" % commentSpaceLine("SET EXTRUDER 1 ZONE 3 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("SET EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone3).to(degC)) %
+                  " T2" % commentSpaceLine("SET EXTRUDER ZONE 3 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone3).to(degC)) %
+                  " T2" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 3 TEMPERATURE");
         }
         else if (m_sb->setting<bool>(MS::Temperatures::kFourZones)) {
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 0 ZONE 1 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 0 ZONE 2 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone3).to(degC)) %
-                  " T2" % commentSpaceLine("SET EXTRUDER 0 ZONE 3 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone4).to(degC)) %
-                  " T3" % commentSpaceLine("SET EXTRUDER 0 ZONE 4 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 1 ZONE 1 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 1 ZONE 2 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone3).to(degC)) %
-                  " T2" % commentSpaceLine("SET EXTRUDER 1 ZONE 3 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone4).to(degC)) %
-                  " T3" % commentSpaceLine("SET EXTRUDER 1 ZONE 4 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("SET EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone3).to(degC)) %
+                  " T2" % commentSpaceLine("SET EXTRUDER ZONE 3 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone4).to(degC)) %
+                  " T3" % commentSpaceLine("SET EXTRUDER ZONE 4 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone3).to(degC)) %
+                  " T2" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 3 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone4).to(degC)) %
+                  " T3" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 4 TEMPERATURE");
         }
         else if (m_sb->setting<bool>(MS::Temperatures::kFiveZones)) {
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 0 ZONE 1 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 0 ZONE 2 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone3).to(degC)) %
-                  " T2" % commentSpaceLine("SET EXTRUDER 0 ZONE 3 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone4).to(degC)) %
-                  " T3" % commentSpaceLine("SET EXTRUDER 0 ZONE 4 TEMPERATURE");
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0Zone5).to(degC)) %
-                  " T4" % commentSpaceLine("SET EXTRUDER 0 ZONE 5 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 1 ZONE 1 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone2).to(degC)) %
-                  " T1" % commentSpaceLine("SET EXTRUDER 1 ZONE 2 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone3).to(degC)) %
-                  " T2" % commentSpaceLine("SET EXTRUDER 1 ZONE 3 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone4).to(degC)) %
-                  " T3" % commentSpaceLine("SET EXTRUDER 1 ZONE 4 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1Zone5).to(degC)) %
-                  " T4" % commentSpaceLine("SET EXTRUDER 1 ZONE 5 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("SET EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone3).to(degC)) %
+                  " T2" % commentSpaceLine("SET EXTRUDER ZONE 3 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone4).to(degC)) %
+                  " T3" % commentSpaceLine("SET EXTRUDER ZONE 4 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone5).to(degC)) %
+                  " T4" % commentSpaceLine("SET EXTRUDER ZONE 5 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone1).to(degC)) %
+                  " T0" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 1 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone2).to(degC)) %
+                  " T1" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 2 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone3).to(degC)) %
+                  " T2" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 3 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone4).to(degC)) %
+                  " T3" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 4 TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruderZone5).to(degC)) %
+                  " T4" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 5 TEMPERATURE");
         }
         else {
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder0).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 0 TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder1).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER 1 TEMPERATURE");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) %
+                  " T0" % commentSpaceLine("SET EXTRUDER TEMPERATURE AND WAIT");
         }
 
         rv += "G28" % commentSpaceLine("TRAVEL HOME ALL AXES");
@@ -236,7 +235,7 @@ QString FiveAxisMarlinWriter::writeTravel(Point start_location, Point target_loc
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
     Point new_start_location;
 
-    setTools(QVector<int>()); // turn off all extruders
+    m_extruder_on = false;
 
     // Update Acceleration
     if (m_sb->setting<bool>(PRS::Acceleration::kEnableDynamic)) {
@@ -309,13 +308,9 @@ QString FiveAxisMarlinWriter::writeLine(const Point& start_point, const Point& t
 
     QString rv;
 
-    // check if any extruders need priming
-    bool needs_prime = false;
-    for (int ext : params->setting<QVector<int>>(SS::kExtruders))
-        needs_prime = !m_extruders_on[ext] || needs_prime;
-
-    // set the tools/extruders before priming so that correct extruders get primed
-    rv += setTools(params->setting<QVector<int>>(SS::kExtruders));
+    // check if extruder needs priming
+    bool needs_prime = !m_extruder_on;
+    m_extruder_on = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
     // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
@@ -452,13 +447,9 @@ QString FiveAxisMarlinWriter::writeArc(const Point& start_point, const Point& en
     auto region_type = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
-    // check if any extruders need priming
-    bool needs_prime = false;
-    for (int ext : params->setting<QVector<int>>(SS::kExtruders))
-        needs_prime = !m_extruders_on[ext] || needs_prime;
-
-    // set the tools/extruders before priming so that correct extruders get primed
-    rv += setTools(params->setting<QVector<int>>(SS::kExtruders));
+    // check if extruder needs priming
+    bool needs_prime = !m_extruder_on;
+    m_extruder_on = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
     // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
@@ -805,41 +796,4 @@ QString FiveAxisMarlinWriter::writePrime() {
     return rv;
 }
 
-QString FiveAxisMarlinWriter::setTools(QVector<int> extruders) {
-
-    QString rv = "";
-    if (m_extruders_on.size() > 2) // assumes at most two extruders for simultaneuos extrusion
-    {
-        if (m_extruders_on[0] && m_extruders_on[1] && extruders.length() < 2) // currently both on, need single ext
-        {
-            // turn off both
-            rv += "M605 S0" % m_newline;
-            m_extruders_on[0] = false;
-            m_extruders_on[1] = false;
-        }
-
-        if (extruders.length() > 1 && !(m_extruders_on[0] && m_extruders_on[1])) // need both exts. on & not already on
-        {
-            // turn on both
-            rv += "M605 S2" % m_newline;
-            m_extruders_on[0] = true;
-            m_extruders_on[1] = true;
-        }
-    }
-
-    // zero or one ext. need to be on
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-        if (!m_extruders_on[i] && extruders.contains(i)) // ext0 should be on but isn't
-        {
-            // write tool change to zero
-            rv += "T" % QString::number(i) % m_newline;
-            m_extruders_on[i] = true;
-        }
-        else if (m_extruders_on[i] && !extruders.contains(i)) {
-            m_extruders_on[i] = false;
-        }
-        // else - was already corrrect
-    }
-    return rv;
-}
 } // namespace ORNL

@@ -43,7 +43,7 @@ void LayerTimesWindow::setupEvents() {
     connect(m_min_layer_time_edit, &QLineEdit::textChanged, this, &LayerTimesWindow::updateText);
 }
 
-void LayerTimesWindow::updateTimeInformation(QList<QList<Time>> layer_times, QList<double> layer_FR_modifiers,
+void LayerTimesWindow::updateTimeInformation(QList<Time> layer_times, QList<double> layer_FR_modifiers,
                                              bool adjusted_layer_time) {
     m_layer_times = layer_times;
     m_layer_FR_modifiers = layer_FR_modifiers;
@@ -54,11 +54,7 @@ void LayerTimesWindow::updateTimeInformation(QList<QList<Time>> layer_times, QLi
     m_total_adjusted_time = 0;
 
     for (int i = 1; i < m_layer_times.size(); ++i) {
-        // a layer's time is the max time of any extruders printing on that layer
-        Time& current_time = m_layer_times[i][0];
-        for (auto& time : m_layer_times[i]) {
-            current_time = qMax(current_time, time);
-        }
+        Time& current_time = m_layer_times[i];
 
         if (current_time < m_min) {
             m_min_index = i;
@@ -97,11 +93,7 @@ void LayerTimesWindow::updateText() {
 
     Time currentTotal = 0;
     for (int i = 0; i < m_layer_times.count(); ++i) {
-        // a layer's time is the max time of any extruders printing on that layer
-        Time& current_time = m_layer_times[i][0];
-        for (auto& time : m_layer_times[i]) {
-            current_time = qMax(current_time, time);
-        }
+        Time& current_time = m_layer_times[i];
 
         QString oneLayer =
             "Layer " % QString::number(i) % " " % MathUtils::formattedTimeSpanHHMMSS(current_time()) % ",";

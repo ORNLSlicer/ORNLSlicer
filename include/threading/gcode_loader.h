@@ -62,7 +62,7 @@ class GCodeLoader : public QThread {
 
     //! \brief signal to layer time window with info
     //! \param layertimes: List of layer times for display
-    void forwardInfoToLayerTimeWindow(QList<QList<Time>> layer_times, QList<double> layer_FR_modifiers,
+    void forwardInfoToLayerTimeWindow(QList<Time> layer_times, QList<double> layer_FR_modifiers,
                                       bool adjusted_layer_time);
 
     //! \brief signal to export window with info
@@ -118,11 +118,11 @@ class GCodeLoader : public QThread {
     //! \param segment: Segment to set meta info for.
     //! \param comment: Comment to parse for the segment type.
     //! \param info_end_pos: The end position of the segment.
-    //! \param extruders_on: Indicates if the extruders are on or off.
+    //! \param extruder_on: Indicates if the extruder is on or off.
     //! \param info_speed_set: Indicates if the speed is set.
-    //! \param extruders_speed: The speed of the extruders.
+    //! \param extruder_speed: The speed of the extruder.
     void setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const QString& comment, QVector3D& info_end_pos,
-                            const bool& extruders_on, const bool& info_speed_set, const double& extruders_speed);
+                            const bool& extruder_on, const bool& info_speed_set, const double& extruder_speed);
 
     //! \brief generate additional export comments
     //! \return string
@@ -134,19 +134,16 @@ class GCodeLoader : public QThread {
     //! \param color: Color of segment based on comments from gcode
     //! \param command_id: the id of the gcode command for th segment
     //! \param parameters: Parameters of gcodecommand end (x, y, z, w, i, j, p, q)
-    //! \param extruders_on: vector indicating if each extruder is on or off, determines how many segments to
-    //! draw
-    //! \param extruder_offsets: vector indicating offset of each extruder relative to ext0, used to determine
-    //! if shift is necessary
-    //! \param extruders_speed: double value read from gcode
+    //! \param extruder_on: whether the extruder is on
+    //! \param extruder_speed: double value read from gcode
     //! \param is_travel: if this line is a travel, ignores extruder status
     //! \param optional_parameters: Parameters of gcodecommand for start (x, y, z, w)
     //! \return List of generated visual segments.
     QVector<QSharedPointer<SegmentBase>>
     generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
-                          const QMap<char, double>& parameters, QVector<bool> extruders_on,
-                          QVector<Point> extruder_offsets, double extruders_speed, bool is_travel,
-                          const QString comment, const QMap<char, double>& optional_parameters = QMap<char, double>());
+                          const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
+                          bool is_travel, const QString comment,
+                          const QMap<char, double>& optional_parameters = QMap<char, double>());
 
     //! \brief Filename.
     QString m_filename;

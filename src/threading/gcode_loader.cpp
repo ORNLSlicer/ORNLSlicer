@@ -192,7 +192,7 @@ void GCodeLoader::run() {
                 m_lines = text.toUpper().split("\n");
             }
 
-            QList<QList<Time>> layer_times = m_parser->getLayerTimes();
+            QList<Time> layer_times = m_parser->getLayerTimes();
             QList<double> layer_FR_modifiers = m_parser->getLayerFeedRateModifiers();
             QList<Volume> layer_volumes = m_parser->getLayerVolumes();
 
@@ -203,10 +203,7 @@ void GCodeLoader::run() {
             adjusted_max_time = std::numeric_limits<int>::min();
 
             for (int i = 0; i < layer_times.size(); ++i) {
-                Time& current = layer_times[i][0]; // layer time is the max of the extruders time
-                for (auto extruder_time : layer_times[i]) {
-                    current = qMax(current, extruder_time);
-                }
+                Time& current = layer_times[i];
 
                 min_time = qMin(current, min_time);
                 max_time = qMax(current, max_time);
@@ -344,14 +341,14 @@ void GCodeLoader::run() {
                     if (m_selected_meta.hasTravels) {
                         generated_segments = generateVisualSegment(
                             command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
-                            command.getParameters(), command.getExtrudersOn(), command.getExtruderOffsets(),
-                            command.getExtrudersSpeed(), true, command.getComment());
+                            command.getParameters(), command.getExtruderOn(), command.getExtruderSpeed(), true,
+                            command.getComment());
                     }
                     else {
                         generated_segments = generateVisualSegment(
                             command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
-                            command.getParameters(), command.getExtrudersOn(), command.getExtruderOffsets(),
-                            command.getExtrudersSpeed(), false, command.getComment(), command.getOptionalParameters());
+                            command.getParameters(), command.getExtruderOn(), command.getExtruderSpeed(), false,
+                            command.getComment(), command.getOptionalParameters());
                     }
                     layer.append(generated_segments);
                 }
@@ -719,8 +716,8 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, co
 }
 
 void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const QString& comment,
-                                     QVector3D& info_end_pos, const bool& extruders_on, const bool& info_speed_set,
-                                     const double& extruders_speed) {
+                                     QVector3D& info_end_pos, const bool& extruder_on, const bool& info_speed_set,
+                                     const double& extruder_speed) {
     // Set the type info of the segment
     segment->m_segment_info_meta.type = comment;
 
@@ -729,7 +726,7 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
     segment->m_segment_info_meta.end = info_end_pos;
 
     // If the extruder is on, set the speed info
-    if (!extruders_on && !info_speed_set) {
+    if (!extruder_on && !info_speed_set) {
         segment->m_segment_info_meta.speed = "";
     }
     else {
@@ -737,9 +734,9 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
     }
 
     // If the extruder is on, set the extruder speed info
-    if (extruders_on) {
+    if (extruder_on) {
         if (m_info_extruder_speed.isEmpty()) {
-            segment->m_segment_info_meta.extruderSpeed = QString().asprintf("%0.4f", extruders_speed) % " rpm";
+            segment->m_segment_info_meta.extruderSpeed = QString().asprintf("%0.4f", extruder_speed) % " rpm";
         }
         else {
             segment->m_segment_info_meta.extruderSpeed = m_info_extruder_speed;
@@ -759,8 +756,8 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
 
 QVector<QSharedPointer<SegmentBase>>
 GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
-                                   const QMap<char, double>& parameters, QVector<bool> extruders_on,
-                                   QVector<Point> extruder_offsets, double extruders_speed, bool is_travel,
+                                   const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
+                                   bool is_travel,
                                    QString comment, const QMap<char, double>& optional_parameters) {
     // Parameters for drawing and placing each segment in the world correctly
     QVector3D end_pos = m_start_pos;
@@ -837,11 +834,8 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
 
     QVector<QSharedPointer<SegmentBase>> generated_segments;
 
-    for (int i = 0, end = extruders_on.size(); i < end; ++i) {
-        if (extruders_on[i] || is_travel) {
-            QSharedPointer<SegmentBase> segment;
-
-            QVector3D extruder_offset = extruder_offsets[i].toQVector3D() * Constants::OpenGL::kObjectToView;
+    if (extruder_on || is_travel) {
+        QSharedPointer<SegmentBase> segment;
 
             // Builds and draws segments according to their type (Line, Arc, Spline)
             if (command_id == 2 || command_id == 3) { // G2 clockwise arc & G3 counter-clockwise arc
@@ -868,9 +862,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
                         center -= perp;
                     }
 
-                    segment =
-                        QSharedPointer<ArcSegment>::create(m_start_pos + extruder_offset, end_pos + extruder_offset,
-                                                           center + extruder_offset, (command_id == 3));
+                    segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
                 }
                 else if (parameters.contains('I') && parameters.contains('J')) {
                     // Determine center from I, J
@@ -884,9 +876,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
                         center.z(m_start_pos.z());
                     }
 
-                    segment =
-                        QSharedPointer<ArcSegment>::create(m_start_pos + extruder_offset, end_pos + extruder_offset,
-                                                           center + extruder_offset, (command_id == 3));
+                    segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
                 }
             }
             else if (command_id == 5) { // G5 splines
@@ -900,25 +890,22 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
                     control_b.x(end_pos.x() + ((parameters['P']) * Constants::OpenGL::kObjectToView));
                     control_b.y(end_pos.y() + ((parameters['Q']) * Constants::OpenGL::kObjectToView));
 
-                    segment = QSharedPointer<BezierSegment>::create(
-                        m_start_pos + extruder_offset, control_a + extruder_offset, control_b + extruder_offset,
-                        end_pos + extruder_offset);
+                    segment = QSharedPointer<BezierSegment>::create(m_start_pos, control_a, control_b, end_pos);
                 }
             }
             else { // G0, G1, or anything else is drawn as a line
                 // Create line segment
-                segment = QSharedPointer<LineSegment>::create(m_start_pos + extruder_offset, end_pos - m_start_pos);
+                segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos - m_start_pos);
             }
 
             // Set the segment's display info
             setSegmentDisplayInfo(segment, color, comment, m_start_pos, end_pos, line_num, layer_num);
 
             // Set the segment's meta info
-            setSegmentMetaInfo(segment, comment, info_end_pos, extruders_on[i], info_speed_set, extruders_speed);
+        setSegmentMetaInfo(segment, comment, info_end_pos, extruder_on, info_speed_set, extruder_speed);
 
             // Add the segment to the list of generated segments
             generated_segments.append(segment);
-        }
     }
     // Update our start position for the next command
     m_start_pos = end_pos;
