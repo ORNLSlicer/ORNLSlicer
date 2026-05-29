@@ -66,8 +66,7 @@ class GcodeTextBoxWidget : public QPlainTextEdit {
     //! determined during the file parse
     //! \param fontColors: keys are the lines of gcode text while values are the font color
     //! for that line (used by gcode highlighter)
-    //! \param layerSkipLineNumbers: line numbers to skip highlighting if visualization reduction setting is enabled
-    void setHighlighterColors(QHash<QString, QTextCharFormat> fontColors, QSet<int> layerSkipLineNumbers);
+    void setHighlighterColors(QHash<QString, QTextCharFormat> fontColors);
 
     //! \brief update layer beginning line numbers for all layers
     //! \param firstLineNumbers a vector containing first line number for all layers

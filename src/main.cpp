@@ -9,7 +9,6 @@
 #include <qlist.h>
 #include <qnamespace.h>
 #include <qobject.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qtextformat.h>
 #include <qtresource.h>
@@ -63,8 +62,6 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<quintptr>("quintptr");
     qRegisterMetaType<ORNL::MeshLoader::MeshData>("MeshData");
     qRegisterMetaType<qintptr>("qintptr");
-    qRegisterMetaType<QSet<int>>("QSet<int>");
-
     // Register the message handler so all output is printed in the main window as well.
 
     QCommandLineParser parser;
