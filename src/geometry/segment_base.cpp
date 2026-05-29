@@ -28,10 +28,6 @@ SegmentBase::SegmentBase(Point start, Point end) : m_start(start), m_end(end), m
                             PathModifiers::kPerimeterTipWipe | PathModifiers::kReverseTipWipe |
                             PathModifiers::kSpiralLift;
 
-    // default to extruder 0
-    QVector<int> nozzles = QVector<int>();
-    nozzles.append(0);
-    m_sb->setSetting(SS::kExtruders, nozzles);
 }
 
 Point SegmentBase::start() const { return m_start; }
@@ -105,16 +101,6 @@ bool SegmentBase::isPrintingSegment() {
         return false;
 
     return true;
-}
-
-void SegmentBase::setNozzles(QVector<int> nozzles) { m_sb->setSetting<QVector<int>>("extruders", nozzles); }
-
-void SegmentBase::addNozzle(int nozzle) {
-    QVector<int> nozzles = m_sb->setting<QVector<int>>(SS::kExtruders);
-    if (!nozzles.contains(nozzle)) {
-        nozzles.append(nozzle);
-        m_sb->setSetting<QVector<int>>(SS::kExtruders, nozzles);
-    }
 }
 
 Distance SegmentBase::length() { return m_start.distance(m_end); }

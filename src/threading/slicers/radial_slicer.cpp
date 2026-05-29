@@ -389,7 +389,6 @@ QSharedPointer<SettingsBase> RadialSlicer::createSegmentSettings(const QSharedPo
     segment_settings->setSetting(SS::kPathModifiers, PathModifiers::kNone);
     segment_settings->setSetting(SS::kMaterialNumber, 0);
     segment_settings->setSetting(SS::kRecipe, 0);
-    segment_settings->setSetting(SS::kExtruders, QVector<int> {0});
     segment_settings->setSetting(SS::kIsRegionStartSegment, region_start);
 
     // Store the radial center on each segment so the writer can compute C from

@@ -29,7 +29,7 @@ void MotionEstimation::Init() {
 }
 
 Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand,
-                                                  QVector<bool> extrudersOn, Time& G1F_time, Time& layer_time,
+                                                  bool extruder_on, Time& G1F_time, Time& layer_time,
                                                   Volume& layer_volume, bool use_b) {
     // minimum distance to be considered move for estimate calculation
     double m_min_threshold = 10;
@@ -138,16 +138,8 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
             }
         }
 
-        // count the number of extruders on
-        int extruders_on_count = 0;
-        for (bool ext_on : extrudersOn) {
-            if (ext_on) {
-                extruders_on_count++;
-            }
-        }
-
-        // if any extruders are on, calculate the extruded volume, accounting for multiple extruders on simultaneously
-        if (extruders_on_count > 0) {
+        // if the extruder is on, calculate the extruded volume
+        if (extruder_on) {
             Distance width, height;
 
             if (layer == 0) {
@@ -164,7 +156,7 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
             // (M_PI * height * height / 4.0) is the circular ends
             Area bead_area = (width * height) + (M_PI * height * height / 4.0);
 
-            layer_volume += bead_area * length * extruders_on_count;
+            layer_volume += bead_area * length;
         }
 
         m_previous_distance = length;

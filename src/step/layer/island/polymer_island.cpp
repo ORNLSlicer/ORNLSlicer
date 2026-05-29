@@ -83,9 +83,7 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
             previousRegions.push_back(r);
 
         if (m_sb->setting<bool>(MS::MultiMaterial::kEnable) &&
-            m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0 &&
-            !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
-            // multi-material without multi-nozzle requires material transitions
+            m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0) {
             calculateMultiMaterialTransitions(previousRegions);
         }
     }

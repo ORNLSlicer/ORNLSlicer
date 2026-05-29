@@ -16,7 +16,7 @@ settings:
   - name: "extruder_prime_volume"
     display: "Extruder Prime Volume"
     type: "unitless_float"
-    tooltip: "Sets the volume of material to purge during priming. Used for pellet extruders without RPM control"
+    tooltip: "Sets the volume of material to purge during priming. Used for pellet extruder without RPM control"
     depends: {"syntax":26}
     options: []
     default: 0
@@ -28,7 +28,7 @@ settings:
   - name: "extruder_prime_speed"
     display: "Extruder Prime Speed"
     type: "speed"
-    tooltip: "Sets the speed of the extruder during priming. Used for pellet extruders without RPM control"
+    tooltip: "Sets the speed of the extruder during priming. Used for pellet extruder without RPM control"
     depends: {"syntax":26}
     options: []
     default: 0

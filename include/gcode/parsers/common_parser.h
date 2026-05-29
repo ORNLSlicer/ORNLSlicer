@@ -179,7 +179,7 @@ class CommonParser : public ParserBase {
 
     //! \brief Returns the currently calculated times for each layer
     //! \return The time in seconds
-    QList<QList<Time>> getLayerTimes();
+    QList<Time> getLayerTimes();
 
     //! \brief Returns the currently calculated feedrate modifier for each layer
     //! \return The time in seconds
@@ -460,19 +460,8 @@ class CommonParser : public ParserBase {
     //! an integer conversion occurs. \throws IllegalParameterException
     void throwIntegerConversionErrorException();
 
-    //! \brief number of extruders/nozzles; parsed from settings
-    int m_num_extruders = 0;
-
-    //! \brief maintains where each extruder is on or off
-    QVector<bool> m_extruders_on;
-
-    //! \brief maintains which extruders are active, ie tracks tool changes
-    QVector<bool> m_extruders_active;
-
-    //! \brief offsets corresponding to each extruder, parsed from
-    //!        settings at end of gcode file; used to visualize segments in
-    //!        correct locations
-    QVector<Point> m_extruder_offsets;
+    //! \brief maintains whether the extruder is on or off
+    bool m_extruder_on = false;
 
     bool m_dynamic_spindle_control; // true if on, false if off.
     bool m_park;                    // true if parking, false if not.
@@ -502,18 +491,13 @@ class CommonParser : public ParserBase {
     //! for use in visualization construction.
     void preallocateVisualCommands();
 
-    //! \brief sets m_extruders_on according to which extruders are active
-    void turnOnActiveExtruders();
-
-    //! \brief sets m_extruders_on according to which extruders are active
-    void turnOffActiveExtruders();
+    //! \brief sets whether the extruder is on
+    void setExtruderOn(bool on);
 
     // STATE VARIABLES
 
     //! \brief Numerous state variables.  Used to track current/previous values of various
     //! pieces of state.  This is necessary to produce time and volume estimates.
-    int m_current_nozzle;
-
     Distance m_current_arc_center_x;
     Distance m_current_arc_center_y;
     Distance m_current_arc_center_z;
@@ -527,12 +511,12 @@ class CommonParser : public ParserBase {
 
     AngularVelocity m_current_spindle_speed;
 
-    double m_current_extruders_speed;
+    double m_current_extruder_speed;
 
     Time m_sleep_time;
 
     // List of all calculated times/volumes for layers as well as total distance
-    QList<QList<Time>> m_layer_times; // 2D list: row=layer #, col=extruder#
+    QList<Time> m_layer_times;
 
     //! \brief layer "G1 F" lines feedrate modifier
     QList<double> m_layer_FR_modifiers;

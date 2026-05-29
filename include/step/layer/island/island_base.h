@@ -90,19 +90,6 @@ class IslandBase {
     //! \param previousRegions: chain of regions visited to allow cross-island and cross-layer transitions
     void calculateMultiMaterialTransitions(QVector<QSharedPointer<RegionBase>>& previousRegions);
 
-    //! \brief adjusts pathing for multiple extruders
-    void adjustMultiNozzle();
-
-    //! \brief add nozzle to list of nozzles that should be on when this island prints
-    //! \param nozzle number, indexed at 0
-    void addNozzle(int nozzle);
-
-    //! \brief sets extruder/nozzle number for this island
-    void setExtruder(int ext);
-
-    //! \brief returns extruder/nozzle number for island
-    int getExtruder();
-
   protected:
     //! \brief Geometry of island.
     PolygonList m_geometry;
@@ -119,7 +106,5 @@ class IslandBase {
     //! \brief Enum value of island type
     IslandType m_island_type;
 
-    //! \brief zero-indexed extruder # this island is assigned to
-    int m_extruder;
 };
 } // namespace ORNL

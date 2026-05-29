@@ -32,10 +32,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) {
-        // all extruders off initially
-        m_extruders_on[ext] = false;
-    }
+    m_extruder_on = false;
     m_first_travel = true;
     m_is_lift = false;
     m_is_travel = false;
@@ -528,8 +525,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     QString rv;
 
     // Update the material number if needed
-    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable) &&
-        !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
+    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
         rv += (m_sb->setting<int>(MS::MultiMaterial::kUseM222)) ? "M222 P" : "M237 L";
         rv += QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL");
         m_material_number = material_number;
@@ -543,13 +539,9 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
         }
     }
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) { // only check first extruder
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            // Set Feedrate to 0 if turning extruder on so that an F parameter is issued with the first G1 of the path
-            setFeedrate(0);
-        }
+    if (!m_extruder_on && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
+        setFeedrate(0);
     }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
@@ -623,8 +615,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // update the material number if needed
-    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable) &&
-        !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
+    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
         if (m_sb->setting<int>(MS::MultiMaterial::kUseM222)) {
             rv += "M222 P" % QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL");
         }
@@ -642,11 +633,8 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
         }
     }
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) { // only check first extruder
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
+    if (!m_extruder_on && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
     }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
@@ -706,7 +694,7 @@ QString CincinnatiWriter::writeScan(Point target_point, Velocity speed, bool on_
 QString CincinnatiWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty()) {
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -818,7 +806,7 @@ QString CincinnatiWriter::writeTamperOff() {
 
 QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
     QString rv;
-    m_extruders_on[extruder_number] = true;
+    m_extruder_on = true;
     float output_rpm;
 
     rv += writeTamperOn();
@@ -895,7 +883,7 @@ QString CincinnatiWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_extruder_on = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

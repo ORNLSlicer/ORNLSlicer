@@ -9,14 +9,13 @@
 namespace ORNL {
 GcodeCommand::GcodeCommand()
     : m_line_number(-1), m_command(0), m_command_id(-1), m_is_motion_command(false), m_is_end_of_layer(false),
-      m_extruders_speed(0) {}
+      m_extruder_on(false), m_extruder_speed(0) {}
 
 GcodeCommand::GcodeCommand(const GcodeCommand& other)
     : m_line_number(other.m_line_number), m_command(other.m_command), m_command_id(other.m_command_id),
       m_parameters(other.m_parameters), m_optional_parameters(other.m_optional_parameters), m_comment(other.m_comment),
       m_is_motion_command(other.m_is_motion_command), m_is_end_of_layer(other.m_is_end_of_layer),
-      m_extruders_on(other.m_extruders_on), m_extruder_offsets(other.m_extruder_offsets),
-      m_extruders_speed(other.m_extruders_speed) {}
+      m_extruder_on(other.m_extruder_on), m_extruder_speed(other.m_extruder_speed) {}
 
 //! \brief Retrieves the line number of the command
 const int& GcodeCommand::getLineNumber() const { return m_line_number; }
@@ -98,16 +97,12 @@ GcodeCommand& GcodeCommand::operator=(const GcodeCommand& other) {
     return *this;
 }
 
-void GcodeCommand::setExtrudersOn(QVector<bool>& extruders_on) { m_extruders_on = extruders_on; }
+void GcodeCommand::setExtruderOn(bool extruder_on) { m_extruder_on = extruder_on; }
 
-const QVector<bool>& GcodeCommand::getExtrudersOn() const { return m_extruders_on; }
+bool GcodeCommand::getExtruderOn() const { return m_extruder_on; }
 
-void GcodeCommand::setExtruderOffsets(QVector<Point>& extruder_offsets) { m_extruder_offsets = extruder_offsets; }
+void GcodeCommand::setExtruderSpeed(double extruder_speed) { m_extruder_speed = extruder_speed; }
 
-const QVector<Point>& GcodeCommand::getExtruderOffsets() const { return m_extruder_offsets; }
-
-void GcodeCommand::setExtrudersSpeed(double extruders_speed) { m_extruders_speed = extruders_speed; }
-
-const double& GcodeCommand::getExtrudersSpeed() const { return m_extruders_speed; }
+const double& GcodeCommand::getExtruderSpeed() const { return m_extruder_speed; }
 
 } // namespace ORNL

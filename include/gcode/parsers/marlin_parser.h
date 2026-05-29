@@ -47,16 +47,6 @@ class MarlinParser : public CommonParser {
     //! used for the command
     virtual void M83Handler(QVector<QString> params);
 
-    //! \brief Handler for 'M605' command to change dual nozzle modes
-    //! \param params S0, S1, or S2 are used to indicate which dual-nozzle mode
-    //!        to use
-    virtual void M605Handler(QVector<QString> params);
-
-    //! \brief Handler for all tool change commands ( T0, T1, ... T6)
-    //! \param params Accepted by function for formatting check, but are not
-    //!        used for the command
-    virtual void THandler(QVector<QString> params);
-
   private:
     //! \brief Predefined string for home command
     QString m_home_string;
