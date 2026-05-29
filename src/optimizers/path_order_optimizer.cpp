@@ -188,7 +188,7 @@ Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths) {
                   linkIntersects(link_start, link_end, m_paths, empty_polygon_list) ||
                   linkIntersects(link_start, link_end, paths, empty_polygon_list) ||
                   linkIntersects(link_start, link_end, QVector<Path> {new_path}, empty_polygon_list)) &&
-                link_start.distance(link_end) < m_sb->setting<int>(PS::Travel::kMinLength)) {
+                link_start.distance(link_end) < m_sb->setting<int>(PS::Travel::kInfillMinLength)) {
                 QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(link_start, link_end);
 
                 line_segment->getSb()->setSetting(SS::kWidth, bead_width);

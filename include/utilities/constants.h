@@ -716,7 +716,7 @@ class Constants {
         class Travel {
           public:
             static const QString kSpeed;
-            static const QString kMinLength;
+            static const QString kInfillMinLength;
             static const QString kMinTravelForLift;
             static const QString kLiftHeight;
             static const QString kEnableTravelPause;
