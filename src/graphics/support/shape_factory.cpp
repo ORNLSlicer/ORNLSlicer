@@ -430,7 +430,8 @@ void ShapeFactory::appendSphere(float radius, int sector_count, int stack_count,
 
 void ShapeFactory::appendLinearBead(float width, float length, float height, const QVector3D& start,
                                     const QVector3D& end, const QColor& color, std::vector<float>& vertices,
-                                    std::vector<float>& colors, std::vector<float>& normals) {
+                                    std::vector<float>& colors, std::vector<float>& normals,
+                                    unsigned int quads_per_side) {
     if (width <= kVectorEpsilon || height <= kVectorEpsilon || length <= kVectorEpsilon ||
         (end - start).lengthSquared() <= kVectorEpsilonSquared) {
         return;
@@ -446,12 +447,12 @@ void ShapeFactory::appendLinearBead(float width, float length, float height, con
         return;
     }
 
-    const unsigned int quads_per_side = rectangular_prism ? 1 : 6;
-    const unsigned int vertices_per_arc = quads_per_side + 1;
+    const unsigned int resolved_quads_per_side = rectangular_prism ? 1 : std::max(1u, quads_per_side);
+    const unsigned int vertices_per_arc = resolved_quads_per_side + 1;
     const unsigned int vertices_per_side = 2 * vertices_per_arc;
     const float theta_start = -std::asin(std::clamp((height / 2.0f) / radius, -1.0f, 1.0f));
     const float theta_end = -theta_start;
-    const float theta_increment = (theta_end - theta_start) / static_cast<float>(quads_per_side);
+    const float theta_increment = (theta_end - theta_start) / static_cast<float>(resolved_quads_per_side);
 
     std::vector<QVector3D> top_vertices(vertices_per_side);
     std::vector<QVector3D> bottom_vertices(vertices_per_side);
