@@ -9,7 +9,7 @@
 #include "geometry/point.h"
 
 namespace ORNL {
-//! \brief Utility for appending generated geometry to OpenGL buffer vectors.
+//! @brief Utility for appending generated geometry to OpenGL buffer vectors.
 //!
 //! All creation functions append to the supplied vectors so callers can build combined meshes without intermediate
 //! allocations.
@@ -17,12 +17,12 @@ class ShapeFactory final {
   public:
     ShapeFactory() = delete;
 
-    //! \name Closed Triangle Meshes
+    //! @name Closed Triangle Meshes
     //! @{
 
-    /*! \brief Appends a transformed rectangular-prism triangle mesh.
+    /*! @brief Appends a transformed rectangular-prism triangle mesh.
      *
-     *  The prism is centered at the local origin before \p transform is applied.
+     *  The prism is centered at the local origin before @p transform is applied.
      *  Output is suitable for GL_TRIANGLES.
      *
      *  @param length Local X dimension.
@@ -37,9 +37,9 @@ class ShapeFactory final {
     static void appendBox(float length, float width, float height, const QMatrix4x4& transform, const QColor& color,
                           std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! \brief Appends a transformed capped-cylinder triangle mesh.
+    /*! @brief Appends a transformed capped-cylinder triangle mesh.
      *
-     *  The local cylinder runs from z=0 to z=\p height before \p transform is applied.
+     *  The local cylinder runs from z=0 to z=@p height before @p transform is applied.
      *  Output is suitable for GL_TRIANGLES.
      *
      *  @param radius Local cylinder radius.
@@ -53,7 +53,7 @@ class ShapeFactory final {
     static void appendCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                                std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! \brief Appends a transformed UV-sphere triangle mesh.
+    /*! @brief Appends a transformed UV-sphere triangle mesh.
      *
      *  Output is suitable for GL_TRIANGLES.
      *
@@ -70,9 +70,9 @@ class ShapeFactory final {
                              const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                              std::vector<float>& normals);
 
-    /*! \brief Appends a transformed capped-cone triangle mesh.
+    /*! @brief Appends a transformed capped-cone triangle mesh.
      *
-     *  The local cone base is on z=0 and its tip is at z=\p height before \p transform is applied.
+     *  The local cone base is on z=0 and its tip is at z=@p height before @p transform is applied.
      *  Output is suitable for GL_TRIANGLES.
      *
      *  @param radius Local base radius.
@@ -88,13 +88,13 @@ class ShapeFactory final {
 
     //! @}
 
-    //! \name Toolpath Bead Meshes
+    //! @name Toolpath Bead Meshes
     //! @{
 
-    /*! \brief Appends a straight squished-bead triangle mesh between two points.
+    /*! @brief Appends a straight squished-bead triangle mesh between two points.
      *
      *  This is the filled G-code line bead representation, not a round cylinder. The cross-section is clipped/squished
-     *  from \p width and \p height, capped at \p start and \p end, and oriented using the current slicing vector.
+     *  from @p width and @p height, capped at @p start and @p end, and oriented using the current slicing vector.
      *  Output is suitable for GL_TRIANGLES.
      *
      *  @param width Display bead width across the path.
@@ -113,9 +113,9 @@ class ShapeFactory final {
                                  const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                  std::vector<float>& normals, unsigned int quads_per_side = 4);
 
-    /*! \brief Appends a circular-arc bead triangle mesh.
+    /*! @brief Appends a circular-arc bead triangle mesh.
      *
-     *  The bead follows the XY arc defined by \p start, \p center, \p end, and \p is_ccw. Z is linearly interpolated
+     *  The bead follows the XY arc defined by @p start, @p center, @p end, and @p is_ccw. Z is linearly interpolated
      *  from start to end. Output is suitable for GL_TRIANGLES.
      *
      *  @param bead_diameter Diameter of the circular bead cross-section.
@@ -132,7 +132,7 @@ class ShapeFactory final {
                               bool is_ccw, const QColor& color, std::vector<float>& vertices,
                               std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! \brief Appends a cubic Bezier bead triangle mesh.
+    /*! @brief Appends a cubic Bezier bead triangle mesh.
      *
      *  The bead follows the cubic Bezier curve defined by start, two controls, and end. Output is suitable for
      *  GL_TRIANGLES.
@@ -153,10 +153,10 @@ class ShapeFactory final {
 
     //! @}
 
-    //! \name Line Geometry
+    //! @name Line Geometry
     //! @{
 
-    /*! \brief Appends XY grid lines for a rectangular plane centered at the origin.
+    /*! @brief Appends XY grid lines for a rectangular plane centered at the origin.
      *
      *  Output is suitable for GL_LINES.
      *
@@ -171,7 +171,7 @@ class ShapeFactory final {
     static void appendGridPlaneLines(float length, float width, float x_grid_dist, float y_grid_dist,
                                      const QColor& color, std::vector<float>& vertices, std::vector<float>& colors);
 
-    /*! \brief Appends wireframe and floor-grid lines for a rectangular build volume.
+    /*! @brief Appends wireframe and floor-grid lines for a rectangular build volume.
      *
      *  Output is suitable for GL_LINES.
      *
@@ -190,7 +190,7 @@ class ShapeFactory final {
                                           const QColor& color, std::vector<float>& vertices,
                                           std::vector<float>& colors);
 
-    /*! \brief Appends wireframe and floor-grid lines for a cylindrical build volume.
+    /*! @brief Appends wireframe and floor-grid lines for a cylindrical build volume.
      *
      *  Output is suitable for GL_LINES.
      *
@@ -209,10 +209,10 @@ class ShapeFactory final {
     //! @}
 
   private:
-    /*! \brief Computes the transform that places a local +Z bead mesh between two endpoints.
+    /*! @brief Computes the transform that places a local +Z bead mesh between two endpoints.
      *  @param start Segment start point.
      *  @param end Segment end point.
-     *  @return Transform that translates to \p start and rotates local +Z toward \p end.
+     *  @return Transform that translates to @p start and rotates local +Z toward @p end.
      */
     static QMatrix4x4 computeLinearBeadTransform(const QVector3D& start, const QVector3D& end);
 };
