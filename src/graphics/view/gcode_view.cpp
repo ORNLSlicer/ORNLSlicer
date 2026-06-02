@@ -1,6 +1,8 @@
 #include "graphics/view/gcode_view.h"
 
+#include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -29,6 +31,44 @@
 #include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {
+namespace {
+constexpr float kLinePickToleranceSquared = 0.000225f;
+
+float distanceSquaredToSegment(const QPointF& point, const QPointF& start, const QPointF& end) {
+    const float dx = end.x() - start.x();
+    const float dy = end.y() - start.y();
+    const float length_squared = (dx * dx) + (dy * dy);
+
+    if (length_squared <= std::numeric_limits<float>::epsilon()) {
+        const float point_dx = point.x() - start.x();
+        const float point_dy = point.y() - start.y();
+        return (point_dx * point_dx) + (point_dy * point_dy);
+    }
+
+    float t = ((point.x() - start.x()) * dx + (point.y() - start.y()) * dy) / length_squared;
+    t = MathUtils::clamp(0.0f, t, 1.0f);
+
+    const float projected_x = start.x() + (t * dx);
+    const float projected_y = start.y() + (t * dy);
+    const float point_dx = point.x() - projected_x;
+    const float point_dy = point.y() - projected_y;
+    return (point_dx * point_dx) + (point_dy * point_dy);
+}
+
+bool projectToNdc(const QMatrix4x4& projection, const QMatrix4x4& view, const QVector3D& point, QPointF& ndc,
+                  float& depth) {
+    const QVector4D clip = projection * view * QVector4D(point, 1.0f);
+    if (qFuzzyIsNull(clip.w())) {
+        return false;
+    }
+
+    const QVector3D projected = clip.toVector3DAffine();
+    ndc = QPointF(projected.x(), projected.y());
+    depth = projected.z();
+    return true;
+}
+} // namespace
+
 GCodeView::GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoControl> segmentInfoControl) {
     m_sb = sb;
     m_segment_info_control = segmentInfoControl;
@@ -273,6 +313,30 @@ uint GCodeView::pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeOb
         if (dist < min_dist) {
             min_dist = dist;
             picked_seg = tri.first;
+        }
+    }
+
+    if (picked_seg != 0) {
+        return picked_seg;
+    }
+
+    float min_line_depth = std::numeric_limits<float>::infinity();
+    auto lines = gog->segmentLines();
+    for (auto& line : lines) {
+        QPointF start_ndc;
+        QPointF end_ndc;
+        float start_depth;
+        float end_depth;
+        if (!projectToNdc(this->projectionMatrix(), this->viewMatrix(), line.second.first, start_ndc, start_depth) ||
+            !projectToNdc(this->projectionMatrix(), this->viewMatrix(), line.second.second, end_ndc, end_depth)) {
+            continue;
+        }
+
+        const float distance_squared = distanceSquaredToSegment(mouse_ndc_pos, start_ndc, end_ndc);
+        const float line_depth = std::min(start_depth, end_depth);
+        if (distance_squared <= kLinePickToleranceSquared && line_depth < min_line_depth) {
+            min_line_depth = line_depth;
+            picked_seg = line.first;
         }
     }
 

@@ -2,14 +2,18 @@
 
 #include <GL/gl.h>
 
+#include <cstring>
 #include <utility>
 #include <vector>
 
+#include <QOpenGLShaderProgram>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qmatrix4x4.h>
 #include <qnamespace.h>
+#include <qopenglbuffer.h>
+#include <qopenglvertexarrayobject.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
 #include <qvectornd.h>
@@ -32,6 +36,19 @@ qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gco
         count += layer.size();
     }
     return count;
+}
+
+//! @brief Returns true when any segment needs bead mesh geometry in normal rendering.
+bool hasMeshSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+        for (const QSharedPointer<SegmentBase>& segment : layer) {
+            if (!static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
 }
 
 //! @brief Appends a single GL_LINES segment using the parser's display-space line representation.
@@ -66,19 +83,24 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
 
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
                          QSharedPointer<GCodeInfoControl> segmentInfoControl) {
-    std::vector<float> vertices;
-    std::vector<float> normals;
-    std::vector<float> colors;
+    std::vector<float> primary_vertices;
+    std::vector<float> primary_normals;
+    std::vector<float> primary_colors;
+    std::vector<float> travel_line_vertices;
+    std::vector<float> travel_line_normals;
+    std::vector<float> travel_line_colors;
 
     m_segment_info_control = segmentInfoControl;
     m_segment_info_control->setGCode(gcode);
 
     const qsizetype segment_count = countSegments(gcode);
     m_lightweight_lines = segment_count > kLightweightLineThreshold;
+    m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
+
     if (m_lightweight_lines) {
-        vertices.reserve(segment_count * 2 * 3);
-        normals.reserve(segment_count * 2 * 3);
-        colors.reserve(segment_count * 2 * 4);
+        primary_vertices.reserve(segment_count * 2 * 3);
+        primary_normals.reserve(segment_count * 2 * 3);
+        primary_colors.reserve(segment_count * 2 * 4);
     }
 
     m_segments.reserve(gcode.size());
@@ -94,16 +116,27 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
             seg_meta->type = segment->displayType();
             seg_meta->original_color = segment->color();
             seg_meta->current_color = segment->color();
-            seg_meta->offset = vertices.size() / 3;
 
-            if (m_lightweight_lines) {
-                appendLightweightLine(segment, vertices, normals, colors);
+            const bool render_as_line =
+                m_lightweight_lines || static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel);
+            const bool use_primary_buffer = m_lightweight_lines || !render_as_line || m_primary_render_mode == GL_LINES;
+            seg_meta->buffer = use_primary_buffer ? SegmentRenderBuffer::kPrimary : SegmentRenderBuffer::kTravelLine;
+
+            if (use_primary_buffer) {
+                seg_meta->offset = primary_vertices.size() / 3;
+                if (render_as_line) {
+                    appendLightweightLine(segment, primary_vertices, primary_normals, primary_colors);
+                }
+                else {
+                    segment->createGraphic(primary_vertices, primary_normals, primary_colors);
+                }
+                seg_meta->length = (primary_vertices.size() / 3) - seg_meta->offset;
             }
             else {
-                segment->createGraphic(vertices, normals, colors);
+                seg_meta->offset = travel_line_vertices.size() / 3;
+                appendLightweightLine(segment, travel_line_vertices, travel_line_normals, travel_line_colors);
+                seg_meta->length = (travel_line_vertices.size() / 3) - seg_meta->offset;
             }
-
-            seg_meta->length = (vertices.size() / 3) - seg_meta->offset;
 
             if (static_cast<bool>(seg_meta->type & m_hidden_type))
                 seg_meta->hidden = true;
@@ -120,7 +153,79 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     m_low_segment = 0;
     m_high_segment = visibleSegmentCount();
 
-    this->populateGL(view, vertices, normals, colors, m_lightweight_lines ? GL_LINES : GL_TRIANGLES);
+    this->populateGL(view, primary_vertices, primary_normals, primary_colors, m_primary_render_mode);
+    this->populateTravelLineGL(view, travel_line_vertices, travel_line_normals, travel_line_colors);
+}
+
+GCodeObject::~GCodeObject() {
+    if (m_view.isNull() || m_view->context() == nullptr)
+        return;
+
+    m_view->makeCurrent();
+
+    if (!m_travel_line_vao.isNull()) {
+        m_travel_line_vao->destroy();
+    }
+
+    m_travel_line_vbo.destroy();
+    m_travel_line_nbo.destroy();
+    m_travel_line_cbo.destroy();
+    m_travel_line_tbo.destroy();
+}
+
+void GCodeObject::populateTravelLineGL(BaseView* view, const std::vector<float>& vertices,
+                                       const std::vector<float>& normals, const std::vector<float>& colors) {
+    if (vertices.empty()) {
+        return;
+    }
+
+    m_travel_line_vertices = vertices;
+    m_travel_line_normals = normals;
+    m_travel_line_colors = colors;
+    m_travel_line_uv.resize((m_travel_line_vertices.size() / 3) * 2, 0.0f);
+
+    view->makeCurrent();
+    view->shaderProgram()->bind();
+
+    m_travel_line_vao = QSharedPointer<QOpenGLVertexArrayObject>::create();
+    m_travel_line_vao->create();
+    m_travel_line_vao->bind();
+
+    m_travel_line_vbo.create();
+    m_travel_line_vbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    m_travel_line_vbo.bind();
+    m_travel_line_vbo.allocate(m_travel_line_vertices.data(), m_travel_line_vertices.size() * sizeof(float));
+    view->shaderProgram()->enableAttributeArray(m_shader_locs.vertice);
+    view->shaderProgram()->setAttributeBuffer(m_shader_locs.vertice, GL_FLOAT, 0, 3);
+
+    m_travel_line_nbo.create();
+    m_travel_line_nbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
+    m_travel_line_nbo.bind();
+    m_travel_line_nbo.allocate(m_travel_line_normals.data(), m_travel_line_normals.size() * sizeof(float));
+    view->shaderProgram()->enableAttributeArray(m_shader_locs.normal);
+    view->shaderProgram()->setAttributeBuffer(m_shader_locs.normal, GL_FLOAT, 0, 3);
+
+    m_travel_line_cbo.create();
+    m_travel_line_cbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    m_travel_line_cbo.bind();
+    m_travel_line_cbo.allocate(m_travel_line_colors.data(), m_travel_line_colors.size() * sizeof(float));
+    view->shaderProgram()->enableAttributeArray(m_shader_locs.color);
+    view->shaderProgram()->setAttributeBuffer(m_shader_locs.color, GL_FLOAT, 0, 4);
+
+    m_travel_line_tbo.create();
+    m_travel_line_tbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
+    m_travel_line_tbo.bind();
+    m_travel_line_tbo.allocate(m_travel_line_uv.data(), m_travel_line_uv.size() * sizeof(float));
+    view->shaderProgram()->enableAttributeArray(m_shader_locs.uv);
+    view->shaderProgram()->setAttributeBuffer(m_shader_locs.uv, GL_FLOAT, 0, 2);
+
+    m_travel_line_vao->release();
+    m_travel_line_vbo.release();
+    m_travel_line_nbo.release();
+    m_travel_line_cbo.release();
+    m_travel_line_tbo.release();
+
+    view->shaderProgram()->release();
 }
 
 void GCodeObject::hideSegmentType(SegmentDisplayType type, bool hide) {
@@ -270,7 +375,7 @@ bool GCodeObject::isCurrentlySelected(int line_num) { return m_selected_segments
 const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriangles() {
     QVector<std::pair<uint, std::vector<Triangle>>> ret;
 
-    if (m_lightweight_lines) {
+    if (m_primary_render_mode != GL_TRIANGLES) {
         return ret;
     }
 
@@ -279,7 +384,7 @@ const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriang
 
     for (uint i = m_low_layer; i <= m_high_layer; i++) {
         for (QSharedPointer<SegmentDisplayMeta> seg : m_segments[i]) {
-            if (seg->hidden)
+            if (seg->hidden || seg->buffer != SegmentRenderBuffer::kPrimary)
                 continue;
             // For each segment, get its triangles.
             std::vector<Triangle> seg_tri;
@@ -305,20 +410,47 @@ const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriang
     return ret;
 }
 
-void GCodeObject::draw() {
+const QVector<std::pair<uint, std::pair<QVector3D, QVector3D>>> GCodeObject::segmentLines() {
+    QVector<std::pair<uint, std::pair<QVector3D, QVector3D>>> ret;
+    QMatrix4x4 transform = this->transformation();
+
+    for (uint i = m_low_layer; i <= m_high_layer; i++) {
+        for (QSharedPointer<SegmentDisplayMeta> seg : m_segments[i]) {
+            if (seg->hidden)
+                continue;
+            if (seg->buffer == SegmentRenderBuffer::kPrimary && m_primary_render_mode != GL_LINES)
+                continue;
+
+            const std::vector<float>& vert =
+                seg->buffer == SegmentRenderBuffer::kTravelLine ? m_travel_line_vertices : this->vertices();
+            uint seg_start = seg->offset * 3;
+            uint seg_end = (seg->offset + seg->length) * 3;
+
+            for (uint i = seg_start; i + 5 < seg_end; i += 6) {
+                QVector3D start = transform * QVector3D(vert[i + 0], vert[i + 1], vert[i + 2]);
+                QVector3D end = transform * QVector3D(vert[i + 3], vert[i + 4], vert[i + 5]);
+                ret.push_back(std::make_pair(seg->line, std::make_pair(start, end)));
+            }
+        }
+    }
+
+    return ret;
+}
+
+void GCodeObject::drawBufferRuns(SegmentRenderBuffer buffer, ushort render_mode) {
     for (uint i = m_low_layer; i <= m_high_layer; i++) {
         uint run_offset = 0;
         uint run_length = 0;
 
         auto drawRun = [&]() {
             if (run_length > 0) {
-                this->view()->glDrawArrays(this->renderMode(), run_offset, run_length);
+                this->view()->glDrawArrays(render_mode, run_offset, run_length);
                 run_length = 0;
             }
         };
 
         for (const auto& segment : m_segments[i]) {
-            if (segment->hidden) {
+            if (segment->hidden || segment->buffer != buffer) {
                 drawRun();
                 continue;
             }
@@ -337,6 +469,42 @@ void GCodeObject::draw() {
     }
 }
 
+void GCodeObject::draw() {
+    drawBufferRuns(SegmentRenderBuffer::kPrimary, m_primary_render_mode);
+
+    if (m_travel_line_vao.isNull()) {
+        return;
+    }
+
+    this->vao()->release();
+    m_travel_line_vao->bind();
+    drawBufferRuns(SegmentRenderBuffer::kTravelLine, GL_LINES);
+    m_travel_line_vao->release();
+    this->vao()->bind();
+}
+
+void GCodeObject::updateTravelLineColors(std::vector<float>& colors, uint whence) {
+    if (m_travel_line_vao.isNull()) {
+        return;
+    }
+
+    m_travel_line_cbo.bind();
+
+    const uint end_count = colors.size() + whence;
+    if (end_count > m_travel_line_colors.size()) {
+        m_travel_line_colors.resize(end_count);
+
+        m_travel_line_cbo.allocate(end_count);
+        m_travel_line_cbo.write(0, m_travel_line_colors.data(), (whence + 1) * sizeof(float));
+    }
+
+    memcpy(m_travel_line_colors.data() + whence, colors.data(), colors.size() * sizeof(float));
+
+    m_travel_line_cbo.write(whence * sizeof(float), m_travel_line_colors.data() + whence,
+                            colors.size() * sizeof(float));
+    m_travel_line_cbo.release();
+}
+
 void GCodeObject::paintSegment(QSharedPointer<GCodeObject::SegmentDisplayMeta> seg_meta, QColor color) {
     std::vector<float> new_colors;
     new_colors.resize(seg_meta->length * 4, 0.0f);
@@ -348,6 +516,11 @@ void GCodeObject::paintSegment(QSharedPointer<GCodeObject::SegmentDisplayMeta> s
         new_colors[(4 * i) + 3] = color.alphaF();
     }
 
-    this->updateColors(new_colors, seg_meta->offset * 4);
+    if (seg_meta->buffer == SegmentRenderBuffer::kTravelLine) {
+        updateTravelLineColors(new_colors, seg_meta->offset * 4);
+    }
+    else {
+        this->updateColors(new_colors, seg_meta->offset * 4);
+    }
 }
 } // namespace ORNL
