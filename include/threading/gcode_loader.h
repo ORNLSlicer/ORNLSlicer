@@ -101,17 +101,23 @@ class GCodeLoader : public QThread {
     //! \return color based on comment keywords
     QColor determineFontColor(const QString& comment);
 
+    //! \brief determine display type based on comment keywords
+    //! \param comment: Comment to parse
+    //! \return semantic display type used for visibility and selection behavior
+    SegmentDisplayType determineSegmentDisplayType(const QString& comment);
+
     //! \brief Set the segment display information based on the region type defined in the comment.
     //! \param segment: Segment to set display info for.
+    //! \param type: Segment visibility/display classification.
     //! \param color: Color to set for the segment.
     //! \param comment: Comment to parse for the segment type.
     //! \param start_pos: The start position of the segment.
     //! \param end_pos: The end position of the segment.
     //! \param line_num: The line number of the segment.
     //! \param layer_num: The layer number of the segment.
-    void setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, const QColor& color, const QString& comment,
-                               const QVector3D& start_pos, const QVector3D& end_pos, const int& line_num,
-                               const int& layer_num);
+    void setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, SegmentDisplayType type, const QColor& color,
+                               const QString& comment, const QVector3D& start_pos, const QVector3D& end_pos,
+                               const int& line_num, const int& layer_num);
 
     //! \brief Set the segment meta information. This is the information that is displayed when the user selects
     //! a segment in the UI.
@@ -136,13 +142,13 @@ class GCodeLoader : public QThread {
     //! \param parameters: Parameters of gcodecommand end (x, y, z, w, i, j, p, q)
     //! \param extruder_on: whether the extruder is on
     //! \param extruder_speed: double value read from gcode
-    //! \param is_travel: if this line is a travel, ignores extruder status
+    //! \param include_non_extruding_moves: if true, generates visual segments when the extruder is off
     //! \param optional_parameters: Parameters of gcodecommand for start (x, y, z, w)
     //! \return List of generated visual segments.
     QVector<QSharedPointer<SegmentBase>>
     generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
                           const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
-                          bool is_travel, const QString comment,
+                          bool include_non_extruding_moves, const QString comment,
                           const QMap<char, double>& optional_parameters = QMap<char, double>());
 
     //! \brief Filename.
