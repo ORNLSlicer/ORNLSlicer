@@ -7,8 +7,11 @@
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
+#include <qopenglbuffer.h>
+#include <qopenglvertexarrayobject.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
+#include <qvectornd.h>
 
 #include "geometry/segment_base.h"
 #include "graphics/graphics_object.h"
@@ -32,6 +35,9 @@ class GCodeObject : public GraphicsObject {
     //! \param segmentInfoControl: Segment / Bead info display control
     GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
                 QSharedPointer<GCodeInfoControl> segmentInfoControl);
+
+    //! \brief Destructor.
+    ~GCodeObject();
 
     //! \brief Hides/Show all segments matching a type.
     //! \param type: Type to hide/show.
@@ -84,17 +90,26 @@ class GCodeObject : public GraphicsObject {
     //! \return Pairs of (layer number, Triangles) for each segment.
     const QVector<std::pair<uint, std::vector<Triangle>>> segmentTriangles();
 
+    //! \brief Line primitives that compose lightweight-rendered segments.
+    //! \return Pairs of (line number, segment endpoints) for each line segment.
+    const QVector<std::pair<uint, std::pair<QVector3D, QVector3D>>> segmentLines();
+
   protected:
     //! \brief Overridden draw call to allow segment hiding.
     void draw();
 
   private:
+    //! \brief Render buffer that contains a segment's vertices.
+    enum class SegmentRenderBuffer { kPrimary, kTravelLine };
+
     //! \brief Segment metadata.
     struct SegmentDisplayMeta {
         //! \brief Segment location in GL buffer.
         uint offset = 0;
         //! \brief Segment length in GL buffer.
         uint length = 0;
+        //! \brief Buffer containing this segment's geometry.
+        SegmentRenderBuffer buffer = SegmentRenderBuffer::kPrimary;
 
         //! \brief If this segment is hidden.
         bool hidden = false;
@@ -110,11 +125,21 @@ class GCodeObject : public GraphicsObject {
         uint line;
 
         bool operator==(const SegmentDisplayMeta& rhs) const {
-            return offset == rhs.offset && length == rhs.length && hidden == rhs.hidden && type == rhs.type &&
-                   original_color == rhs.original_color && current_color == rhs.current_color && layer == rhs.layer &&
-                   line == rhs.line;
+            return offset == rhs.offset && length == rhs.length && buffer == rhs.buffer && hidden == rhs.hidden &&
+                   type == rhs.type && original_color == rhs.original_color && current_color == rhs.current_color &&
+                   layer == rhs.layer && line == rhs.line;
         }
     };
+
+    //! \brief Initializes the secondary GL line buffer used by travel segments.
+    void populateTravelLineGL(BaseView* view, const std::vector<float>& vertices, const std::vector<float>& normals,
+                              const std::vector<float>& colors);
+
+    //! \brief Draws all visible runs for the requested buffer.
+    void drawBufferRuns(SegmentRenderBuffer buffer, ushort render_mode);
+
+    //! \brief Updates the travel line color buffer with new float data.
+    void updateTravelLineColors(std::vector<float>& colors, uint whence);
 
     //! \brief Paints a segment different color.
     //! \param seg_meta: Segment to paint.
@@ -123,6 +148,22 @@ class GCodeObject : public GraphicsObject {
 
     //! \brief True when very large gcode is rendered as lightweight GL lines instead of bead meshes.
     bool m_lightweight_lines = false;
+
+    //! \brief Render mode used by the primary GraphicsObject buffer.
+    ushort m_primary_render_mode = GL_TRIANGLES;
+
+    //! \brief Travel line buffer geometry.
+    std::vector<float> m_travel_line_vertices;
+    std::vector<float> m_travel_line_normals;
+    std::vector<float> m_travel_line_colors;
+    std::vector<float> m_travel_line_uv;
+
+    //! \brief Travel line OpenGL buffers.
+    QSharedPointer<QOpenGLVertexArrayObject> m_travel_line_vao;
+    QOpenGLBuffer m_travel_line_vbo;
+    QOpenGLBuffer m_travel_line_cbo;
+    QOpenGLBuffer m_travel_line_nbo;
+    QOpenGLBuffer m_travel_line_tbo;
 
     //! \brief Segment metadata container.
     QVector<QVector<QSharedPointer<SegmentDisplayMeta>>> m_segments;
