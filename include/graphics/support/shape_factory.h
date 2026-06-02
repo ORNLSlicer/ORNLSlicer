@@ -89,6 +89,39 @@ class ShapeFactory {
                                     std::vector<float>& vertices, std::vector<float>& colors,
                                     std::vector<float>& normals);
 
+    /*! \brief Append the data for a square-prism gcode segment to the input vector
+     *  @param width: Width of the prism's display envelope
+     *  @param length: Length of the prism
+     *  @param height: Height of the prism's display envelope
+     *  @param start: Start point of the gcode segment
+     *  @param end: Displacement of the gcode segment
+     *  @param color: Color of the prism
+     *  @param vertices Vertices of the prism
+     *  @param colors Vertex colors of the prism
+     *  @param normals Normal vectors of the prism
+     */
+    static void createGcodePrism(const float& width, const float& length, const float& height,
+                                 const QVector3D& start, const QVector3D& end, const QColor& color,
+                                 std::vector<float>& vertices, std::vector<float>& colors,
+                                 std::vector<float>& normals);
+
+    /*! \brief Append the data for a square-prism gcode segment with a custom cross-section normal
+     *  @param width: Width of the prism's display envelope
+     *  @param length: Length of the prism
+     *  @param height: Height of the prism's display envelope
+     *  @param start: Start point of the gcode segment
+     *  @param end: Displacement of the gcode segment
+     *  @param display_normal: Cross-section height direction. A zero vector uses the global slicing vector.
+     *  @param color: Color of the prism
+     *  @param vertices Vertices of the prism
+     *  @param colors Vertex colors of the prism
+     *  @param normals Normal vectors of the prism
+     */
+    static void createGcodePrism(const float& width, const float& length, const float& height,
+                                 const QVector3D& start, const QVector3D& end, const QVector3D& display_normal,
+                                 const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
+                                 std::vector<float>& normals);
+
     /*!
      * \brief appends the data for a arc cylinder to input vectors
      * \note this is an overload that automatically computes the transform

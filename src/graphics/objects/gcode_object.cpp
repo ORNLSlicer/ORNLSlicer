@@ -47,6 +47,8 @@ constexpr float kMinimumPickRadius = 0.025f;
 constexpr float kPickTieTolerance = 0.000001f;
 constexpr float kTravelPickRadiusMultiplier = 2.0f;
 constexpr float kTravelPickScoreBias = 0.75f;
+constexpr float kPickGeometryEpsilon = 0.000001f;
+constexpr float kPickDepthTieRadiusMultiplier = 2.0f;
 
 //! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
 qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
@@ -133,6 +135,140 @@ void createInstancedBeadTemplate(float width, float height, std::vector<float>& 
         appendInstancedTemplateTriangle(top_vertices[i], top_vertices[j], bottom_vertices[j], vertices, normals);
         appendInstancedTemplateTriangle(bottom_center, bottom_vertices[i], bottom_vertices[j], vertices, normals);
     }
+}
+
+void createInstancedPrismTemplate(float width, float height, std::vector<float>& vertices,
+                                  std::vector<float>& normals) {
+    const float half_side =
+        std::max({width, height, std::numeric_limits<float>::epsilon()}) / 2.0f;
+
+    const std::array<QVector3D, 8> v = {
+        QVector3D(-half_side, -half_side, 0.0f), QVector3D(half_side, -half_side, 0.0f),
+        QVector3D(half_side, half_side, 0.0f),   QVector3D(-half_side, half_side, 0.0f),
+        QVector3D(-half_side, -half_side, 1.0f), QVector3D(half_side, -half_side, 1.0f),
+        QVector3D(half_side, half_side, 1.0f),   QVector3D(-half_side, half_side, 1.0f)};
+
+    // The gcode segment frame mirrors the local prism X axis. Wind prism faces
+    // opposite the local box convention so transformed faces remain outward.
+    appendInstancedTemplateTriangle(v[0], v[2], v[3], vertices, normals);
+    appendInstancedTemplateTriangle(v[0], v[1], v[2], vertices, normals);
+    appendInstancedTemplateTriangle(v[4], v[6], v[5], vertices, normals);
+    appendInstancedTemplateTriangle(v[4], v[7], v[6], vertices, normals);
+    appendInstancedTemplateTriangle(v[0], v[7], v[4], vertices, normals);
+    appendInstancedTemplateTriangle(v[0], v[3], v[7], vertices, normals);
+    appendInstancedTemplateTriangle(v[1], v[6], v[2], vertices, normals);
+    appendInstancedTemplateTriangle(v[1], v[5], v[6], vertices, normals);
+    appendInstancedTemplateTriangle(v[3], v[6], v[7], vertices, normals);
+    appendInstancedTemplateTriangle(v[3], v[2], v[6], vertices, normals);
+    appendInstancedTemplateTriangle(v[0], v[5], v[1], vertices, normals);
+    appendInstancedTemplateTriangle(v[0], v[4], v[5], vertices, normals);
+}
+
+bool renderAsPrism(SegmentDisplayType type) {
+    return type == SegmentDisplayType::kTravel;
+}
+
+QVector3D transformVector(const QMatrix4x4& transform, const QVector3D& vector) {
+    return (transform * QVector4D(vector, 0.0f)).toVector3D();
+}
+
+QVector3D fallbackNormalForTangent(const QVector3D& tangent) {
+    const QVector3D normalized_tangent = tangent.normalized();
+    if (std::abs(QVector3D::dotProduct(normalized_tangent, QVector3D(0.0f, 0.0f, 1.0f))) < 0.9f) {
+        return QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    return QVector3D(1.0f, 0.0f, 0.0f);
+}
+
+QVector3D segmentDisplayNormal(const QVector3D& tangent, const QVector3D& display_normal) {
+    QVector3D normal = display_normal;
+    if (normal.lengthSquared() < kPickGeometryEpsilon) {
+        normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
+                  GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
+                  GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    }
+
+    if (normal.lengthSquared() < kPickGeometryEpsilon ||
+        QVector3D::crossProduct(tangent, normal).lengthSquared() < kPickGeometryEpsilon) {
+        normal = fallbackNormalForTangent(tangent);
+    }
+
+    return normal.normalized();
+}
+
+bool rayObbEntryDistance(const QVector3D& ray_start, const QVector3D& ray_dir, const QVector3D& center,
+                         const std::array<QVector3D, 3>& axes, const std::array<float, 3>& half_extents,
+                         float& entry_distance) {
+    float min_distance = 0.0f;
+    float max_distance = std::numeric_limits<float>::infinity();
+    const QVector3D origin_offset = ray_start - center;
+
+    for (uint i = 0; i < axes.size(); ++i) {
+        const float origin_projection = QVector3D::dotProduct(origin_offset, axes[i]);
+        const float direction_projection = QVector3D::dotProduct(ray_dir, axes[i]);
+
+        if (std::abs(direction_projection) < kPickGeometryEpsilon) {
+            if (std::abs(origin_projection) > half_extents[i]) {
+                return false;
+            }
+            continue;
+        }
+
+        float near_distance = (-half_extents[i] - origin_projection) / direction_projection;
+        float far_distance = (half_extents[i] - origin_projection) / direction_projection;
+        if (near_distance > far_distance) {
+            std::swap(near_distance, far_distance);
+        }
+
+        min_distance = std::max(min_distance, near_distance);
+        max_distance = std::min(max_distance, far_distance);
+
+        if (min_distance > max_distance || max_distance < 0.0f) {
+            return false;
+        }
+    }
+
+    entry_distance = min_distance;
+    return true;
+}
+
+bool travelPrismEntryDistance(const QVector3D& pick_start, const QVector3D& pick_end, const QVector3D& pick_normal,
+                              float pick_radius, const QMatrix4x4& transform, const QVector3D& ray_start,
+                              const QVector3D& ray_dir, float& entry_distance) {
+    const QVector3D object_delta = pick_end - pick_start;
+    const float object_length = object_delta.length();
+    if (object_length < kPickGeometryEpsilon) {
+        return false;
+    }
+
+    const QVector3D object_tangent = object_delta / object_length;
+    QVector3D object_normal = segmentDisplayNormal(object_tangent, pick_normal);
+    QVector3D object_binormal = QVector3D::crossProduct(object_tangent, object_normal);
+    if (object_binormal.lengthSquared() < kPickGeometryEpsilon) {
+        object_normal = fallbackNormalForTangent(object_tangent);
+        object_binormal = QVector3D::crossProduct(object_tangent, object_normal);
+    }
+    object_binormal.normalize();
+    object_normal = QVector3D::crossProduct(object_binormal, object_tangent).normalized();
+
+    std::array<QVector3D, 3> axes = {transformVector(transform, object_binormal),
+                                    transformVector(transform, object_normal),
+                                    transformVector(transform, object_tangent)};
+    std::array<float, 3> half_extents = {pick_radius, pick_radius, object_length / 2.0f};
+
+    for (uint i = 0; i < axes.size(); ++i) {
+        const float axis_length = axes[i].length();
+        if (axis_length < kPickGeometryEpsilon) {
+            return false;
+        }
+
+        axes[i] /= axis_length;
+        half_extents[i] *= axis_length;
+    }
+
+    const QVector3D object_center = pick_start + (object_delta * 0.5f);
+    const QVector3D center = transform * object_center;
+    return rayObbEntryDistance(ray_start, ray_dir, center, axes, half_extents, entry_distance);
 }
 
 void appendBoundingVertices(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode, std::vector<float>& vertices,
@@ -242,6 +378,36 @@ float closestRaySegmentDistance(const QVector3D& ray_start, const QVector3D& ray
     const QVector3D closest_segment = seg_start + (segment * segment_t);
     return (closest_ray - closest_segment).length();
 }
+
+float approximateSurfaceEntryDistance(float ray_distance, float segment_distance, float pick_radius) {
+    const float half_chord =
+        std::sqrt(std::max(0.0f, (pick_radius * pick_radius) - (segment_distance * segment_distance)));
+    return std::max(0.0f, ray_distance - half_chord);
+}
+
+bool isBetterPick(float entry_distance, float pick_score, float depth_tolerance, float best_entry_distance,
+                  float best_pick_score, float best_depth_tolerance) {
+    if (!std::isfinite(best_entry_distance)) {
+        return true;
+    }
+
+    const float combined_depth_tolerance = std::max({kPickTieTolerance, depth_tolerance, best_depth_tolerance});
+    if (entry_distance + combined_depth_tolerance < best_entry_distance) {
+        return true;
+    }
+
+    if (std::abs(entry_distance - best_entry_distance) <= combined_depth_tolerance) {
+        if (pick_score + kPickTieTolerance < best_pick_score) {
+            return true;
+        }
+
+        if (std::abs(pick_score - best_pick_score) <= kPickTieTolerance && entry_distance < best_entry_distance) {
+            return true;
+        }
+    }
+
+    return false;
+}
 } // namespace
 
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
@@ -280,6 +446,7 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
             seg_meta->current_color = segment->color();
             seg_meta->pick_start = segment->start().toQVector3D();
             seg_meta->pick_end = displayEnd(segment);
+            seg_meta->pick_normal = segment->displayNormal();
             seg_meta->pick_radius = std::max(segment->displayWidth(), segment->displayHeight()) / 2.0f;
 
             if (m_lightweight_lines) {
@@ -344,11 +511,13 @@ void GCodeObject::configureUniforms() {
 std::pair<uint, uint> GCodeObject::appendInstancedBead(const QSharedPointer<SegmentBase>& segment) {
     const float width = segment->displayWidth();
     const float height = segment->displayHeight();
+    const bool prism = renderAsPrism(segment->displayType());
 
     uint group_index = 0;
     for (; group_index < m_instanced_bead_groups.size(); ++group_index) {
         const QSharedPointer<InstancedBeadGroup>& group = m_instanced_bead_groups[group_index];
-        if (std::abs(group->width - width) < 0.000001f && std::abs(group->height - height) < 0.000001f) {
+        if (group->prism == prism && std::abs(group->width - width) < 0.000001f &&
+            std::abs(group->height - height) < 0.000001f) {
             break;
         }
     }
@@ -357,7 +526,13 @@ std::pair<uint, uint> GCodeObject::appendInstancedBead(const QSharedPointer<Segm
         QSharedPointer<InstancedBeadGroup> group = QSharedPointer<InstancedBeadGroup>::create();
         group->width = width;
         group->height = height;
-        createInstancedBeadTemplate(width, height, group->template_vertices, group->template_normals);
+        group->prism = prism;
+        if (prism) {
+            createInstancedPrismTemplate(width, height, group->template_vertices, group->template_normals);
+        }
+        else {
+            createInstancedBeadTemplate(width, height, group->template_vertices, group->template_normals);
+        }
         group->template_vertex_count = group->template_vertices.size() / 3;
         m_instanced_bead_groups.push_back(group);
     }
@@ -626,8 +801,9 @@ uint GCodeObject::pickSegment(const QMatrix4x4& projection, const QMatrix4x4& vi
         std::max({transform.column(0).toVector3D().length(), transform.column(1).toVector3D().length(),
                   transform.column(2).toVector3D().length(), 1.0f});
 
+    float best_entry_distance = std::numeric_limits<float>::infinity();
     float best_pick_score = std::numeric_limits<float>::infinity();
-    float best_ray_distance = std::numeric_limits<float>::infinity();
+    float best_depth_tolerance = 0.0f;
     uint picked_line = 0;
 
     for (uint i = m_low_layer; i <= m_high_layer; ++i) {
@@ -635,26 +811,51 @@ uint GCodeObject::pickSegment(const QMatrix4x4& projection, const QMatrix4x4& vi
             if (segment->hidden)
                 continue;
 
+            float entry_distance = std::numeric_limits<float>::infinity();
+            float pick_score = std::numeric_limits<float>::infinity();
+            float depth_tolerance = 0.0f;
+            bool hit = false;
+
             const QVector3D start = transform * segment->pick_start;
             const QVector3D end = transform * segment->pick_end;
+            const float world_pick_radius = std::max(segment->pick_radius * radius_scale, kMinimumPickRadius);
 
-            float ray_distance = std::numeric_limits<float>::infinity();
-            const float segment_distance = closestRaySegmentDistance(ray_start, ray_dir, start, end, ray_distance);
-            float pick_radius = std::max(segment->pick_radius * radius_scale, kMinimumPickRadius);
             if (segment->type == SegmentDisplayType::kTravel) {
-                pick_radius *= kTravelPickRadiusMultiplier;
+                hit = travelPrismEntryDistance(segment->pick_start, segment->pick_end, segment->pick_normal,
+                                               segment->pick_radius, transform, ray_start, ray_dir, entry_distance);
+                if (hit) {
+                    float ray_distance = std::numeric_limits<float>::infinity();
+                    const float segment_distance = closestRaySegmentDistance(ray_start, ray_dir, start, end,
+                                                                             ray_distance);
+                    pick_score = (segment_distance / world_pick_radius) * kTravelPickScoreBias;
+                    depth_tolerance = world_pick_radius * kPickDepthTieRadiusMultiplier;
+                }
             }
 
-            float pick_score = segment_distance / pick_radius;
-            if (segment->type == SegmentDisplayType::kTravel) {
-                pick_score *= kTravelPickScoreBias;
+            if (!hit) {
+                float ray_distance = std::numeric_limits<float>::infinity();
+                const float segment_distance = closestRaySegmentDistance(ray_start, ray_dir, start, end, ray_distance);
+                float pick_radius = world_pick_radius;
+                if (segment->type == SegmentDisplayType::kTravel) {
+                    pick_radius *= kTravelPickRadiusMultiplier;
+                }
+
+                if (segment_distance <= pick_radius) {
+                    hit = true;
+                    entry_distance = approximateSurfaceEntryDistance(ray_distance, segment_distance, pick_radius);
+                    pick_score = segment_distance / pick_radius;
+                    if (segment->type == SegmentDisplayType::kTravel) {
+                        pick_score *= kTravelPickScoreBias;
+                    }
+                    depth_tolerance = pick_radius * kPickDepthTieRadiusMultiplier;
+                }
             }
 
-            if (segment_distance <= pick_radius && (pick_score + kPickTieTolerance < best_pick_score ||
-                                                   (std::abs(pick_score - best_pick_score) <= kPickTieTolerance &&
-                                                    ray_distance < best_ray_distance))) {
+            if (hit && isBetterPick(entry_distance, pick_score, depth_tolerance, best_entry_distance, best_pick_score,
+                                    best_depth_tolerance)) {
+                best_entry_distance = entry_distance;
                 best_pick_score = pick_score;
-                best_ray_distance = ray_distance;
+                best_depth_tolerance = depth_tolerance;
                 picked_line = segment->line;
             }
         }

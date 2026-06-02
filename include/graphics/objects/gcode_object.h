@@ -118,6 +118,8 @@ class GCodeObject : public GraphicsObject {
         QVector3D pick_start;
         //! \brief Segment end for optimized picking.
         QVector3D pick_end;
+        //! \brief Segment display normal for optimized prism picking.
+        QVector3D pick_normal;
         //! \brief Approximate selection radius in display units.
         float pick_radius = 0.0f;
 
@@ -150,6 +152,7 @@ class GCodeObject : public GraphicsObject {
     struct InstancedBeadGroup {
         float width = 0.0f;
         float height = 0.0f;
+        bool prism = false;
         uint template_vertex_count = 0;
 
         std::vector<float> template_vertices;

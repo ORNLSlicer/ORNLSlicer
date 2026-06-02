@@ -3,6 +3,7 @@
 
 #include <math.h>
 
+#include <algorithm>
 #include <array>
 #include <cmath>
 #include <limits>
@@ -894,6 +895,47 @@ void ShapeFactory::createGcodeCylinder(const float& width, const float& length, 
         appendTriangle(bottom_center, bottom_vertices[i], bottom_vertices[j], color, vertices, colors,
                        normals); // Bottom triangle
     }
+}
+
+void ShapeFactory::createGcodePrism(const float& width, const float& length, const float& height,
+                                    const QVector3D& start, const QVector3D& end, const QColor& color,
+                                    std::vector<float>& vertices, std::vector<float>& colors,
+                                    std::vector<float>& normals) {
+    createGcodePrism(width, length, height, start, end, QVector3D(), color, vertices, colors, normals);
+}
+
+void ShapeFactory::createGcodePrism(const float& width, const float& length, const float& height,
+                                    const QVector3D& start, const QVector3D& end,
+                                    const QVector3D& display_normal, const QColor& color,
+                                    std::vector<float>& vertices, std::vector<float>& colors,
+                                    std::vector<float>& normals) {
+    const QMatrix4x4 transform = computeGcodeCylinderTransform(start, end, display_normal);
+    const float half_side =
+        std::max({width, height, std::numeric_limits<float>::epsilon()}) / 2.0f;
+
+    const QVector3D v0 = transform * QVector3D(-half_side, -half_side, 0.0f);
+    const QVector3D v1 = transform * QVector3D(half_side, -half_side, 0.0f);
+    const QVector3D v2 = transform * QVector3D(half_side, half_side, 0.0f);
+    const QVector3D v3 = transform * QVector3D(-half_side, half_side, 0.0f);
+    const QVector3D v4 = transform * QVector3D(-half_side, -half_side, length);
+    const QVector3D v5 = transform * QVector3D(half_side, -half_side, length);
+    const QVector3D v6 = transform * QVector3D(half_side, half_side, length);
+    const QVector3D v7 = transform * QVector3D(-half_side, half_side, length);
+
+    // The gcode segment frame mirrors the local prism X axis. Wind prism faces
+    // opposite the local box convention so transformed faces remain outward.
+    appendTriangle(v0, v2, v3, color, vertices, colors, normals);
+    appendTriangle(v0, v1, v2, color, vertices, colors, normals);
+    appendTriangle(v4, v6, v5, color, vertices, colors, normals);
+    appendTriangle(v4, v7, v6, color, vertices, colors, normals);
+    appendTriangle(v0, v7, v4, color, vertices, colors, normals);
+    appendTriangle(v0, v3, v7, color, vertices, colors, normals);
+    appendTriangle(v1, v6, v2, color, vertices, colors, normals);
+    appendTriangle(v1, v5, v6, color, vertices, colors, normals);
+    appendTriangle(v3, v6, v7, color, vertices, colors, normals);
+    appendTriangle(v3, v2, v6, color, vertices, colors, normals);
+    appendTriangle(v0, v5, v1, color, vertices, colors, normals);
+    appendTriangle(v0, v4, v5, color, vertices, colors, normals);
 }
 
 void ShapeFactory::createCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
