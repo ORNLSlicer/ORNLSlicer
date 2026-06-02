@@ -63,15 +63,15 @@ AxesObject::AxesObject(ORNL::BaseView* view, float axis_length) {
     std::vector<float> axesColors;
     std::vector<float> axesNormals;
     for (int i = 0; i < 3; ++i) {
-        ShapeFactory::createCylinder(radius, height, axesCylinderTransforms[i], axesColorList[i], axesVertices,
+        ShapeFactory::appendCylinder(radius, height, axesCylinderTransforms[i], axesColorList[i], axesVertices,
                                      axesColors, axesNormals);
-        ShapeFactory::createCone(radius * 1.5, height / 3.0, axesConeTransforms[i], axesColorList[i], axesVertices,
+        ShapeFactory::appendCone(radius * 1.5, height / 3.0, axesConeTransforms[i], axesColorList[i], axesVertices,
                                  axesColors, axesNormals);
     }
 
     QMatrix4x4 joint_tfm;
     joint_tfm.translate(-QVector3D(radius, radius, 0) * 3 / 4);
-    ShapeFactory::createSphere(radius * 2, 30, 30, joint_tfm, Constants::Colors::kBlack, axesVertices, axesColors,
+    ShapeFactory::appendSphere(radius * 2, 30, 30, joint_tfm, Constants::Colors::kBlack, axesVertices, axesColors,
                                axesNormals);
 
     this->populateGL(view, axesVertices, axesNormals, axesColors);

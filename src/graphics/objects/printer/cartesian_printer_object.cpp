@@ -30,8 +30,8 @@ CartesianPrinterObject::CartesianPrinterObject(BaseView* view, QSharedPointer<Se
     std::vector<float> vertices;
     std::vector<float> colors;
 
-    ShapeFactory::createBuildVolumeRectangle(m_min, m_max, m_x_grid, m_x_grid_offset, m_y_grid, m_y_grid_offset,
-                                             Constants::Colors::kBlack, vertices, colors);
+    ShapeFactory::appendBuildVolumeBoxLines(m_min, m_max, m_x_grid, m_x_grid_offset, m_y_grid, m_y_grid_offset,
+                                            Constants::Colors::kBlack, vertices, colors);
 
     std::vector<float> tmp_norm;
     this->populateGL(view, vertices, tmp_norm, colors, GL_LINES);
@@ -148,8 +148,8 @@ void CartesianPrinterObject::updateGeometry() {
     std::vector<float> vertices;
     std::vector<float> colors;
 
-    ShapeFactory::createBuildVolumeRectangle(m_min, m_max, m_x_grid, m_x_grid_offset, m_y_grid, m_y_grid_offset,
-                                             Constants::Colors::kBlack, vertices, colors);
+    ShapeFactory::appendBuildVolumeBoxLines(m_min, m_max, m_x_grid, m_x_grid_offset, m_y_grid, m_y_grid_offset,
+                                            Constants::Colors::kBlack, vertices, colors);
 
     this->replaceVertices(vertices);
     this->replaceColors(colors);
