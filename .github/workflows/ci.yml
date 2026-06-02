@@ -61,8 +61,8 @@ jobs:
       - uses: cachix/install-nix-action@v27
       - name: Setup Environment
         run: |
-          echo "install_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-installer.exe" >> $GITHUB_ENV
-          echo "package_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-portable" >> $GITHUB_ENV
+          echo "install_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-installer-${{ github.run_number }}.exe" >> $GITHUB_ENV
+          echo "package_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-portable-${{ github.run_number }}" >> $GITHUB_ENV
           echo "version=$(nix eval --raw .#${{ env.ci_derivation }}.version)" >> $GITHUB_ENV
       - name: Compile Windows Build
         run: nix build -L .#${{ env.ci_derivation }} --accept-flake-config -o ${{ env.out_link }}
