@@ -614,6 +614,12 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     if (m_leadin.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kLeadIn);
     }
+    if (m_travel.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kTravel);
+    }
+    if (m_support.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSupport);
+    }
     if (m_perimeter.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kPerimeter);
     }
@@ -635,12 +641,6 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     if (m_skeleton.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSkeleton);
     }
-    if (m_support.indexIn(comment) != -1) {
-        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSupport);
-    }
-    if (m_travel.indexIn(comment) != -1) {
-        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kTravel);
-    }
     if (m_raft.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRaft);
     }
@@ -660,22 +660,22 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kUnknown);
 }
 
-void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, const QColor& color,
-                                        const QString& comment, const QVector3D& start_pos, const QVector3D& end_pos,
-                                        const int& line_num, const int& layer_num) {
-    // Determine the display type of the segment
-    SegmentDisplayType type;
+SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comment) {
+    SegmentDisplayType type = SegmentDisplayType::kNone;
 
-    if (color == PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kTravel)) {
-        type = SegmentDisplayType::kTravel;
+    if (m_travel.indexIn(comment) != -1) {
+        type |= SegmentDisplayType::kTravel;
     }
-    else if (color == PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSupport)) {
-        type = SegmentDisplayType::kSupport;
-    }
-    else {
-        type = SegmentDisplayType::kLine;
+    if (m_support.indexIn(comment) != -1) {
+        type |= SegmentDisplayType::kSupport;
     }
 
+    return type == SegmentDisplayType::kNone ? SegmentDisplayType::kLine : type;
+}
+
+void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, SegmentDisplayType type,
+                                        const QColor& color, const QString& comment, const QVector3D& start_pos,
+                                        const QVector3D& end_pos, const int& line_num, const int& layer_num) {
     // Set the display info of the segment
     float display_width = 0.0f;
     float display_height = m_sb->setting<float>(PS::Layer::kLayerHeight) * Constants::OpenGL::kObjectToView;
@@ -757,7 +757,8 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
 QVector<QSharedPointer<SegmentBase>>
 GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
                                    const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
-                                   bool is_travel, QString comment, const QMap<char, double>& optional_parameters) {
+                                   bool include_non_extruding_moves, QString comment,
+                                   const QMap<char, double>& optional_parameters) {
     // Parameters for drawing and placing each segment in the world correctly
     QVector3D end_pos = m_start_pos;
     QVector3D info_end_pos = m_info_start_pos;
@@ -833,7 +834,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
 
     QVector<QSharedPointer<SegmentBase>> generated_segments;
 
-    if (extruder_on || is_travel) {
+    if (extruder_on || include_non_extruding_moves) {
         QSharedPointer<SegmentBase> segment;
 
         // Builds and draws segments according to their type (Line, Arc, Spline)
@@ -844,24 +845,28 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
             if (parameters.contains('R') && !parameters.contains('I') && !parameters.contains('J')) {
                 Distance R(parameters['R'] * Constants::OpenGL::kObjectToView);
                 Distance H = m_start_pos.distanceToPoint(end_pos) / 2.0;
-                Distance L = qSqrt(((R * R) - (H * H))());
+                const double center_offset_squared = ((R * R) - (H * H))();
 
-                center = m_start_pos;
-                center.moveTowards(end_pos, H);
+                if (center_offset_squared >= 0.0) {
+                    Distance L = qSqrt(center_offset_squared);
 
-                QVector3D se = end_pos - m_start_pos;
-                QVector3D perp(se.y(), -se.x(), se.z());
-                perp.normalize();
-                perp *= L();
+                    center = m_start_pos;
+                    center.moveTowards(end_pos, H);
 
-                if (command_id == 2) {
-                    center += perp;
+                    QVector3D se = end_pos - m_start_pos;
+                    QVector3D perp(se.y(), -se.x(), se.z());
+                    perp.normalize();
+                    perp *= L();
+
+                    if (command_id == 2) {
+                        center += perp;
+                    }
+                    else {
+                        center -= perp;
+                    }
+
+                    segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
                 }
-                else {
-                    center -= perp;
-                }
-
-                segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
             }
             else if (parameters.contains('I') && parameters.contains('J')) {
                 // Determine center from I, J
@@ -896,8 +901,13 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
             segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos);
         }
 
+        if (segment.isNull()) {
+            segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos);
+        }
+
         // Set the segment's display info
-        setSegmentDisplayInfo(segment, color, comment, m_start_pos, end_pos, line_num, layer_num);
+        setSegmentDisplayInfo(segment, determineSegmentDisplayType(comment), color, comment, m_start_pos, end_pos,
+                              line_num, layer_num);
 
         // Set the segment's meta info
         setSegmentMetaInfo(segment, comment, info_end_pos, extruder_on, info_speed_set, extruder_speed);
