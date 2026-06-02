@@ -4,14 +4,19 @@
 
 #include <QColor>
 #include <QMatrix4x4>
-#include <qvectornd.h>
+#include <QVector3D>
 
 #include "geometry/point.h"
 
 namespace ORNL {
-//! \brief "Class" for creating various geometries. Input vectors are appended to so shapes can be built additively.
-class ShapeFactory {
+//! \brief Utility for appending generated geometry to OpenGL buffer vectors.
+//!
+//! All creation functions append to the supplied vectors so callers can build combined meshes without intermediate
+//! allocations.
+class ShapeFactory final {
   public:
+    ShapeFactory() = delete;
+
     /*! \brief Append the data for a rectangular prism to input vectors
      *
      *  @param length Total X dimension
@@ -66,10 +71,9 @@ class ShapeFactory {
      *  @param colors Vertex colors of the clipped cylinder
      *  @param normals Normal vectors of the clipped cylinder
      */
-    static void createGcodeCylinder(const float& width, const float& length, const float& height,
-                                    const QVector3D& start, const QVector3D& end, const QColor& color,
-                                    std::vector<float>& vertices, std::vector<float>& colors,
-                                    std::vector<float>& normals);
+    static void createGcodeCylinder(float width, float length, float height, const QVector3D& start,
+                                    const QVector3D& end, const QColor& color, std::vector<float>& vertices,
+                                    std::vector<float>& colors, std::vector<float>& normals);
 
     /*!
      * \brief appends the data for a arc cylinder to input vectors
@@ -77,15 +81,15 @@ class ShapeFactory {
      * @param cylinder_height how thick of a cylinder to draw
      * @param start the start point of the cylinder
      * @param center the center point of the arc
-     * @param angle the angle of the arc
-     * @param transform the transformation matrix to place the arc at the correct point
+     * @param end the end point of the cylinder
+     * @param is_ccw true when the arc is counter-clockwise
      * @param color the color to draw the arc as
      * @param vertices Vector of vertices to append the new vertices to
      * @param colors Vector of colors to append the new colors to
      * @param normals Vector of normals to append the new normals to
      */
-    static void createArcCylinder(const float cylinder_height, const Point& start, const Point& center,
-                                  const Point& end, bool is_ccw, const QColor& color, std::vector<float>& vertices,
+    static void createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
+                                  bool is_ccw, const QColor& color, std::vector<float>& vertices,
                                   std::vector<float>& colors, std::vector<float>& normals);
 
     /*!
@@ -100,7 +104,7 @@ class ShapeFactory {
      * @param colors Vector of colors to append the new colors to
      * @param normals Vector of normals to append the new normals to
      */
-    static void createSplineCylinder(const float cylinder_height, const Point& start, const Point& control_a,
+    static void createSplineCylinder(float cylinder_height, const Point& start, const Point& control_a,
                                      const Point& control_b, const Point& end, const QColor& color,
                                      std::vector<float>& vertices, std::vector<float>& colors,
                                      std::vector<float>& normals);
@@ -145,10 +149,10 @@ class ShapeFactory {
      *  @param vertices Vector of vertices to append the new vertices to
      *  @param colors Vector of colors to append the new colors to
      */
-    static void createBuildVolumeRectangle(const QVector3D& min, const QVector3D& max, const float& x_grid_dist,
-                                           const float& x_grid_offset, const float& y_grid_dist,
-                                           const float& y_grid_offset, const QColor& color,
-                                           std::vector<float>& vertices, std::vector<float>& colors);
+    static void createBuildVolumeRectangle(const QVector3D& min, const QVector3D& max, float x_grid_dist,
+                                           float x_grid_offset, float y_grid_dist, float y_grid_offset,
+                                           const QColor& color, std::vector<float>& vertices,
+                                           std::vector<float>& colors);
 
     /*! \brief Create cylinder for build volume representation
      *
@@ -178,7 +182,7 @@ class ShapeFactory {
      * @param cylinder_height how thick of a cylinder to draw
      * @param start the start point of the cylinder
      * @param center the center point of the arc
-     * @param angle the angle of the arc
+     * @param end the end point of the cylinder
      * @param transform the transformation matrix to place the arc at the correct point
      * @param color the color to draw the arc as
      * @param vertices Vector of vertices to append the new vertices to
@@ -194,7 +198,7 @@ class ShapeFactory {
      * @param cylinder_height how thick of a cylinder to draw
      * @param start the start point of the cylinder
      * @param center the center point of the arc
-     * @param angle the angle of the arc
+     * @param end the end point of the cylinder
      * @param transform the transformation matrix to place the arc at the correct point
      * @param color the color to draw the arc as
      * @param vertices Vector of vertices to append the new vertices to
@@ -204,16 +208,5 @@ class ShapeFactory {
     static void createArcCylinderCCW(float cylinder_height, const Point& start, const Point& center, const Point& end,
                                      const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
                                      std::vector<float>& colors, std::vector<float>& normals);
-
-    //! adds three vectors to array and computes normal/ colors
-    //! \param v0 the first vertex
-    //! \param v1 the second vertex
-    //! \param v2 the third vertex
-    //! \param color the color to draw as
-    //! \param vertices Vector of vertices to append the new vertices to
-    //! \param colors Vector of colors to append the new colors to
-    //! \param normals Vector of normals to append the new normals to
-    static void appendTriangle(const QVector3D& v0, const QVector3D& v1, const QVector3D& v2, const QColor& color,
-                               std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 };
-} // Namespace ORNL
+} // namespace ORNL

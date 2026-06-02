@@ -15,7 +15,6 @@
 #include <qvectornd.h>
 
 #include "geometry/segment_base.h"
-#include "geometry/segments/line.h"
 #include "graphics/base_view.h"
 #include "graphics/graphics_object.h"
 #include "utilities/enums.h"
@@ -40,12 +39,6 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
                            std::vector<float>& normals, std::vector<float>& colors) {
     QVector3D start = segment->start().toQVector3D();
     QVector3D end = segment->end().toQVector3D();
-
-    // GCodeLoader stores parsed G0/G1 line endpoints as displacement vectors
-    // because the standard bead renderer builds cylinders from start+direction.
-    if (dynamic_cast<LineSegment*>(segment.data()) != nullptr) {
-        end += start;
-    }
 
     vertices.push_back(start.x());
     vertices.push_back(start.y());

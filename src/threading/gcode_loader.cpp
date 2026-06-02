@@ -757,8 +757,7 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
 QVector<QSharedPointer<SegmentBase>>
 GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
                                    const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
-                                   bool is_travel,
-                                   QString comment, const QMap<char, double>& optional_parameters) {
+                                   bool is_travel, QString comment, const QMap<char, double>& optional_parameters) {
     // Parameters for drawing and placing each segment in the world correctly
     QVector3D end_pos = m_start_pos;
     QVector3D info_end_pos = m_info_start_pos;
@@ -837,75 +836,74 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
     if (extruder_on || is_travel) {
         QSharedPointer<SegmentBase> segment;
 
-            // Builds and draws segments according to their type (Line, Arc, Spline)
-            if (command_id == 2 || command_id == 3) { // G2 clockwise arc & G3 counter-clockwise arc
-                // Parse extra params
-                Point center;
+        // Builds and draws segments according to their type (Line, Arc, Spline)
+        if (command_id == 2 || command_id == 3) { // G2 clockwise arc & G3 counter-clockwise arc
+            // Parse extra params
+            Point center;
 
-                if (parameters.contains('R') && !parameters.contains('I') && !parameters.contains('J')) {
-                    Distance R(parameters['R'] * Constants::OpenGL::kObjectToView);
-                    Distance H = m_start_pos.distanceToPoint(end_pos) / 2.0;
-                    Distance L = qSqrt(((R * R) - (H * H))());
+            if (parameters.contains('R') && !parameters.contains('I') && !parameters.contains('J')) {
+                Distance R(parameters['R'] * Constants::OpenGL::kObjectToView);
+                Distance H = m_start_pos.distanceToPoint(end_pos) / 2.0;
+                Distance L = qSqrt(((R * R) - (H * H))());
 
-                    center = m_start_pos;
-                    center.moveTowards(end_pos, H);
+                center = m_start_pos;
+                center.moveTowards(end_pos, H);
 
-                    QVector3D se = end_pos - m_start_pos;
-                    QVector3D perp(se.y(), -se.x(), se.z());
-                    perp.normalize();
-                    perp *= L();
+                QVector3D se = end_pos - m_start_pos;
+                QVector3D perp(se.y(), -se.x(), se.z());
+                perp.normalize();
+                perp *= L();
 
-                    if (command_id == 2) {
-                        center += perp;
-                    }
-                    else {
-                        center -= perp;
-                    }
-
-                    segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
+                if (command_id == 2) {
+                    center += perp;
                 }
-                else if (parameters.contains('I') && parameters.contains('J')) {
-                    // Determine center from I, J
-                    center.x(m_start_pos.x() + ((parameters['I']) * Constants::OpenGL::kObjectToView));
-                    center.y(m_start_pos.y() + ((parameters['J']) * Constants::OpenGL::kObjectToView));
-
-                    if (parameters.contains('K')) {
-                        center.z(m_start_pos.z() + ((parameters['K']) * Constants::OpenGL::kObjectToView));
-                    }
-                    else {
-                        center.z(m_start_pos.z());
-                    }
-
-                    segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
+                else {
+                    center -= perp;
                 }
+
+                segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
             }
-            else if (command_id == 5) { // G5 splines
-                Point control_a;
-                Point control_b;
+            else if (parameters.contains('I') && parameters.contains('J')) {
+                // Determine center from I, J
+                center.x(m_start_pos.x() + ((parameters['I']) * Constants::OpenGL::kObjectToView));
+                center.y(m_start_pos.y() + ((parameters['J']) * Constants::OpenGL::kObjectToView));
 
-                if (parameters.contains('I') && parameters.contains('J') && parameters.contains('P') &&
-                    parameters.contains('Q')) {
-                    control_a.x(m_start_pos.x() + ((parameters['I']) * Constants::OpenGL::kObjectToView));
-                    control_a.y(m_start_pos.y() + ((parameters['J']) * Constants::OpenGL::kObjectToView));
-                    control_b.x(end_pos.x() + ((parameters['P']) * Constants::OpenGL::kObjectToView));
-                    control_b.y(end_pos.y() + ((parameters['Q']) * Constants::OpenGL::kObjectToView));
-
-                    segment = QSharedPointer<BezierSegment>::create(m_start_pos, control_a, control_b, end_pos);
+                if (parameters.contains('K')) {
+                    center.z(m_start_pos.z() + ((parameters['K']) * Constants::OpenGL::kObjectToView));
                 }
-            }
-            else { // G0, G1, or anything else is drawn as a line
-                // Create line segment
-                segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos - m_start_pos);
-            }
+                else {
+                    center.z(m_start_pos.z());
+                }
 
-            // Set the segment's display info
-            setSegmentDisplayInfo(segment, color, comment, m_start_pos, end_pos, line_num, layer_num);
+                segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
+            }
+        }
+        else if (command_id == 5) { // G5 splines
+            Point control_a;
+            Point control_b;
 
-            // Set the segment's meta info
+            if (parameters.contains('I') && parameters.contains('J') && parameters.contains('P') &&
+                parameters.contains('Q')) {
+                control_a.x(m_start_pos.x() + ((parameters['I']) * Constants::OpenGL::kObjectToView));
+                control_a.y(m_start_pos.y() + ((parameters['J']) * Constants::OpenGL::kObjectToView));
+                control_b.x(end_pos.x() + ((parameters['P']) * Constants::OpenGL::kObjectToView));
+                control_b.y(end_pos.y() + ((parameters['Q']) * Constants::OpenGL::kObjectToView));
+
+                segment = QSharedPointer<BezierSegment>::create(m_start_pos, control_a, control_b, end_pos);
+            }
+        }
+        else { // G0, G1, or anything else is drawn as a line
+            segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos);
+        }
+
+        // Set the segment's display info
+        setSegmentDisplayInfo(segment, color, comment, m_start_pos, end_pos, line_num, layer_num);
+
+        // Set the segment's meta info
         setSegmentMetaInfo(segment, comment, info_end_pos, extruder_on, info_speed_set, extruder_speed);
 
-            // Add the segment to the list of generated segments
-            generated_segments.append(segment);
+        // Add the segment to the list of generated segments
+        generated_segments.append(segment);
     }
     // Update our start position for the next command
     m_start_pos = end_pos;
