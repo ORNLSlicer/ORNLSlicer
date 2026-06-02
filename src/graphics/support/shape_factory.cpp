@@ -151,11 +151,11 @@ float arcSweepAngle(const Point& start, const Point& center, const Point& end, b
     return angle;
 }
 
-void createArcCylinderMesh(float cylinder_height, const Point& start, const Point& center, const Point& end,
-                           const QMatrix4x4& transform, bool counterclockwise, const QColor& color,
-                           std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
+void appendArcBeadMesh(float bead_diameter, const Point& start, const Point& center, const Point& end,
+                       const QMatrix4x4& transform, bool counterclockwise, const QColor& color,
+                       std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
     const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const float minor_radius = cylinder_height / 2.0f;
+    const float minor_radius = bead_diameter / 2.0f;
     if (major_radius <= kVectorEpsilon || minor_radius <= kVectorEpsilon) {
         return;
     }
@@ -238,9 +238,8 @@ void createArcCylinderMesh(float cylinder_height, const Point& start, const Poin
 }
 } // namespace
 
-void ShapeFactory::createRectangle(float length, float width, float height, const QMatrix4x4& transform,
-                                   const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
-                                   std::vector<float>& normals) {
+void ShapeFactory::appendBox(float length, float width, float height, const QMatrix4x4& transform, const QColor& color,
+                             std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
     const float half_length = length / 2.0f;
     const float half_width = width / 2.0f;
     const float half_height = height / 2.0f;
@@ -280,24 +279,25 @@ void ShapeFactory::createRectangle(float length, float width, float height, cons
     }
 }
 
-void ShapeFactory::createArcCylinderCCW(float cylinder_height, const Point& start, const Point& center,
-                                        const Point& end, const QMatrix4x4& transform, const QColor& color,
-                                        std::vector<float>& vertices, std::vector<float>& colors,
-                                        std::vector<float>& normals) {
-    createArcCylinderMesh(cylinder_height, start, center, end, transform, true, color, vertices, colors, normals);
+void ShapeFactory::appendArcBeadCounterClockwise(float bead_diameter, const Point& start, const Point& center,
+                                                 const Point& end, const QMatrix4x4& transform, const QColor& color,
+                                                 std::vector<float>& vertices, std::vector<float>& colors,
+                                                 std::vector<float>& normals) {
+    appendArcBeadMesh(bead_diameter, start, center, end, transform, true, color, vertices, colors, normals);
 }
 
-void ShapeFactory::createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
-                                     const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
-                                     std::vector<float>& colors, std::vector<float>& normals) {
-    createArcCylinderMesh(cylinder_height, start, center, end, transform, false, color, vertices, colors, normals);
+void ShapeFactory::appendArcBeadClockwise(float bead_diameter, const Point& start, const Point& center,
+                                          const Point& end, const QMatrix4x4& transform, const QColor& color,
+                                          std::vector<float>& vertices, std::vector<float>& colors,
+                                          std::vector<float>& normals) {
+    appendArcBeadMesh(bead_diameter, start, center, end, transform, false, color, vertices, colors, normals);
 }
 
-void ShapeFactory::createSplineCylinder(float diameter, const Point& start, const Point& control_a,
-                                        const Point& control_b, const Point& end, const QColor& color,
-                                        std::vector<float>& vertices, std::vector<float>& colors,
-                                        std::vector<float>& normals) {
-    const float radius = diameter / 2.0f;
+void ShapeFactory::appendSplineBead(float bead_diameter, const Point& start, const Point& control_a,
+                                    const Point& control_b, const Point& end, const QColor& color,
+                                    std::vector<float>& vertices, std::vector<float>& colors,
+                                    std::vector<float>& normals) {
+    const float radius = bead_diameter / 2.0f;
     if (radius <= kVectorEpsilon) {
         return;
     }
@@ -355,7 +355,7 @@ void ShapeFactory::createSplineCylinder(float diameter, const Point& start, cons
     }
 }
 
-void ShapeFactory::createCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
+void ShapeFactory::appendCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                                   std::vector<float>& vertices, std::vector<float>& colors,
                                   std::vector<float>& normals) {
     if (radius <= kVectorEpsilon || height <= kVectorEpsilon) {
@@ -389,40 +389,40 @@ void ShapeFactory::createCylinder(float radius, float height, const QMatrix4x4& 
     }
 }
 
-void ShapeFactory::createSphere(float radius, int sectorCount, int stackCount, const QMatrix4x4& transform,
+void ShapeFactory::appendSphere(float radius, int sector_count, int stack_count, const QMatrix4x4& transform,
                                 const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                 std::vector<float>& normals) {
-    if (radius <= kVectorEpsilon || sectorCount < kSphereMinSectorCount || stackCount < kSphereMinStackCount) {
+    if (radius <= kVectorEpsilon || sector_count < kSphereMinSectorCount || stack_count < kSphereMinStackCount) {
         return;
     }
 
-    const float sector_step = kTwoPi / static_cast<float>(sectorCount);
-    const float stack_step = kPi / static_cast<float>(stackCount);
+    const float sector_step = kTwoPi / static_cast<float>(sector_count);
+    const float stack_step = kPi / static_cast<float>(stack_count);
 
     std::vector<QVector3D> tmp_vertices;
-    tmp_vertices.reserve(static_cast<std::size_t>(stackCount + 1) * static_cast<std::size_t>(sectorCount + 1));
+    tmp_vertices.reserve(static_cast<std::size_t>(stack_count + 1) * static_cast<std::size_t>(sector_count + 1));
 
-    for (int i = 0; i <= stackCount; ++i) {
+    for (int i = 0; i <= stack_count; ++i) {
         const float stack_angle = (kPi / 2.0f) - (static_cast<float>(i) * stack_step);
         const float xy = radius * std::cos(stack_angle);
         const float z = radius * std::sin(stack_angle);
 
-        for (int j = 0; j <= sectorCount; ++j) {
+        for (int j = 0; j <= sector_count; ++j) {
             const float sector_angle = static_cast<float>(j) * sector_step;
             tmp_vertices.push_back(transform * QVector3D(xy * std::cos(sector_angle), xy * std::sin(sector_angle), z));
         }
     }
 
     const std::size_t triangle_count =
-        static_cast<std::size_t>(sectorCount) * static_cast<std::size_t>((2 * stackCount) - 2);
+        static_cast<std::size_t>(sector_count) * static_cast<std::size_t>((2 * stack_count) - 2);
     const Rgba rgba(color);
     reserveTriangleMesh(vertices, colors, normals, triangle_count);
 
-    for (int i = 0; i < stackCount; ++i) {
-        int vi1 = i * (sectorCount + 1);
-        int vi2 = (i + 1) * (sectorCount + 1);
+    for (int i = 0; i < stack_count; ++i) {
+        int vi1 = i * (sector_count + 1);
+        int vi2 = (i + 1) * (sector_count + 1);
 
-        for (int j = 0; j < sectorCount; ++j, ++vi1, ++vi2) {
+        for (int j = 0; j < sector_count; ++j, ++vi1, ++vi2) {
             const QVector3D& v1 = tmp_vertices[vi1];
             const QVector3D& v2 = tmp_vertices[vi2];
             const QVector3D& v3 = tmp_vertices[vi1 + 1];
@@ -431,7 +431,7 @@ void ShapeFactory::createSphere(float radius, int sectorCount, int stackCount, c
             if (i == 0) {
                 appendTriangleData(v1, v2, v4, rgba, vertices, colors, normals);
             }
-            else if (i == (stackCount - 1)) {
+            else if (i == (stack_count - 1)) {
                 appendTriangleData(v1, v2, v3, rgba, vertices, colors, normals);
             }
             else {
@@ -442,15 +442,15 @@ void ShapeFactory::createSphere(float radius, int sectorCount, int stackCount, c
     }
 }
 
-void ShapeFactory::createGcodeCylinder(float width, float length, float height, const QVector3D& start,
-                                       const QVector3D& end, const QColor& color, std::vector<float>& vertices,
-                                       std::vector<float>& colors, std::vector<float>& normals) {
+void ShapeFactory::appendLinearBead(float width, float length, float height, const QVector3D& start,
+                                    const QVector3D& end, const QColor& color, std::vector<float>& vertices,
+                                    std::vector<float>& colors, std::vector<float>& normals) {
     if (width <= kVectorEpsilon || height <= kVectorEpsilon || length <= kVectorEpsilon ||
         (end - start).lengthSquared() <= kVectorEpsilonSquared) {
         return;
     }
 
-    const QMatrix4x4 transform = computeGcodeCylinderTransform(start, end);
+    const QMatrix4x4 transform = computeLinearBeadTransform(start, end);
 
     const bool rectangular_prism = height > width;
     const float radius = rectangular_prism
@@ -495,7 +495,7 @@ void ShapeFactory::createGcodeCylinder(float width, float length, float height, 
     }
 }
 
-void ShapeFactory::createCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
+void ShapeFactory::appendCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                               std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
     if (radius <= kVectorEpsilon || height <= kVectorEpsilon) {
         return;
@@ -522,8 +522,8 @@ void ShapeFactory::createCone(float radius, float height, const QMatrix4x4& tran
     }
 }
 
-void ShapeFactory::createGridPlane(float length, float width, float x_grid_dist, float y_grid_dist, const QColor& color,
-                                   std::vector<float>& vertices, std::vector<float>& colors) {
+void ShapeFactory::appendGridPlaneLines(float length, float width, float x_grid_dist, float y_grid_dist,
+                                        const QColor& color, std::vector<float>& vertices, std::vector<float>& colors) {
     const float y_min = -width / 2.0f;
     const float y_max = width / 2.0f;
     const float x_min = -length / 2.0f;
@@ -553,10 +553,10 @@ void ShapeFactory::createGridPlane(float length, float width, float x_grid_dist,
     }
 }
 
-void ShapeFactory::createBuildVolumeRectangle(const QVector3D& min, const QVector3D& max, float x_grid_dist,
-                                              float x_grid_offset, float y_grid_dist, float y_grid_offset,
-                                              const QColor& color, std::vector<float>& vertices,
-                                              std::vector<float>& colors) {
+void ShapeFactory::appendBuildVolumeBoxLines(const QVector3D& min, const QVector3D& max, float x_grid_dist,
+                                             float x_grid_offset, float y_grid_dist, float y_grid_offset,
+                                             const QColor& color, std::vector<float>& vertices,
+                                             std::vector<float>& colors) {
     const float printer_x_min = min.x();
     const float printer_x_max = max.x();
     const float printer_y_min = min.y();
@@ -618,9 +618,9 @@ void ShapeFactory::createBuildVolumeRectangle(const QVector3D& min, const QVecto
     }
 }
 
-void ShapeFactory::createBuildVolumeCylinder(float radius, float height, float x_grid_dist, float y_grid_dist,
-                                             const QColor& color, std::vector<float>& vertices,
-                                             std::vector<float>& colors) {
+void ShapeFactory::appendBuildVolumeCylinderLines(float radius, float height, float x_grid_dist, float y_grid_dist,
+                                                  const QColor& color, std::vector<float>& vertices,
+                                                  std::vector<float>& colors) {
     if (radius <= kVectorEpsilon || height <= kVectorEpsilon) {
         return;
     }
@@ -672,7 +672,7 @@ void ShapeFactory::createBuildVolumeCylinder(float radius, float height, float x
     }
 }
 
-QMatrix4x4 ShapeFactory::computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end) {
+QMatrix4x4 ShapeFactory::computeLinearBeadTransform(const QVector3D& start, const QVector3D& end) {
     QMatrix4x4 transform;
     transform.translate(start);
 
@@ -712,11 +712,11 @@ QMatrix4x4 ShapeFactory::computeGcodeCylinderTransform(const QVector3D& start, c
     return transform;
 }
 
-void ShapeFactory::createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
-                                     bool is_ccw, const QColor& color, std::vector<float>& vertices,
-                                     std::vector<float>& colors, std::vector<float>& normals) {
+void ShapeFactory::appendArcBead(float bead_diameter, const Point& start, const Point& center, const Point& end,
+                                 bool is_ccw, const QColor& color, std::vector<float>& vertices,
+                                 std::vector<float>& colors, std::vector<float>& normals) {
     const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    if (major_radius <= kVectorEpsilon || cylinder_height <= kVectorEpsilon) {
+    if (major_radius <= kVectorEpsilon || bead_diameter <= kVectorEpsilon) {
         return;
     }
 
@@ -729,10 +729,10 @@ void ShapeFactory::createArcCylinder(float cylinder_height, const Point& start, 
         MathUtils::CreateQuaternion((reference - center).toQVector3D(), (projected_start - center).toQVector3D()));
 
     if (is_ccw) {
-        createArcCylinderCCW(cylinder_height, start, center, end, transform, color, vertices, colors, normals);
+        appendArcBeadCounterClockwise(bead_diameter, start, center, end, transform, color, vertices, colors, normals);
     }
     else {
-        createArcCylinder(cylinder_height, start, center, end, transform, color, vertices, colors, normals);
+        appendArcBeadClockwise(bead_diameter, start, center, end, transform, color, vertices, colors, normals);
     }
 }
 
