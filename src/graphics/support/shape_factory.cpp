@@ -1,240 +1,282 @@
-
 #include "graphics/support/shape_factory.h"
 
-#include <math.h>
-
+#include <algorithm>
 #include <array>
 #include <cmath>
-#include <limits>
+#include <cstddef>
 #include <vector>
 
 #include <QMatrix4x4>
-#include <QtMath>
-#include <qcolor.h>
-#include <qvectornd.h>
+#include <QVector2D>
+#include <QVector4D>
 
-#include "geometry/point.h"
 #include "geometry/segments/bezier.h"
 #include "managers/settings/settings_manager.h"
-#include "units/unit.h"
-#include "utilities/constants.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+constexpr float kPi = 3.14159265358979323846f;
+constexpr float kTwoPi = 2.0f * kPi;
+constexpr float kVectorEpsilon = 1.0e-6f;
+constexpr float kVectorEpsilonSquared = kVectorEpsilon * kVectorEpsilon;
+
+constexpr int kCylinderSegments = 50;
+constexpr int kConeSlices = 50;
+constexpr int kSphereMinSectorCount = 3;
+constexpr int kSphereMinStackCount = 2;
+constexpr int kTubeCrossSectionResolution = 20;
+constexpr int kCurveSegments = 75;
+constexpr int kBuildVolumeCylinderSegments = 100;
+constexpr int kBuildVolumeVerticalLines = 6;
+
+struct Rgba {
+    float r;
+    float g;
+    float b;
+    float a;
+
+    explicit Rgba(const QColor& color)
+        : r(static_cast<float>(color.redF())), g(static_cast<float>(color.greenF())),
+          b(static_cast<float>(color.blueF())), a(static_cast<float>(color.alphaF())) {}
+};
+
+void reserveAdditional(std::vector<float>& values, std::size_t count) { values.reserve(values.size() + count); }
+
+void reserveTriangleMesh(std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals,
+                         std::size_t triangle_count) {
+    const std::size_t vertex_count = triangle_count * 3;
+    reserveAdditional(vertices, vertex_count * 3);
+    reserveAdditional(normals, vertex_count * 3);
+    reserveAdditional(colors, vertex_count * 4);
+}
+
+void reserveLineMesh(std::vector<float>& vertices, std::vector<float>& colors, std::size_t line_count) {
+    const std::size_t vertex_count = line_count * 2;
+    reserveAdditional(vertices, vertex_count * 3);
+    reserveAdditional(colors, vertex_count * 4);
+}
+
+void appendVertex(std::vector<float>& vertices, const QVector3D& vertex) {
+    vertices.push_back(vertex.x());
+    vertices.push_back(vertex.y());
+    vertices.push_back(vertex.z());
+}
+
+void appendVector(std::vector<float>& values, const QVector3D& vector) {
+    values.push_back(vector.x());
+    values.push_back(vector.y());
+    values.push_back(vector.z());
+}
+
+void appendColor(std::vector<float>& colors, const Rgba& rgba) {
+    colors.push_back(rgba.r);
+    colors.push_back(rgba.g);
+    colors.push_back(rgba.b);
+    colors.push_back(rgba.a);
+}
+
+QVector3D faceNormal(const QVector3D& v0, const QVector3D& v1, const QVector3D& v2) {
+    QVector3D normal = QVector3D::crossProduct(v1 - v0, v2 - v0);
+    if (normal.lengthSquared() > kVectorEpsilonSquared) {
+        normal.normalize();
+    }
+    return normal;
+}
+
+void appendTriangleData(const QVector3D& v0, const QVector3D& v1, const QVector3D& v2, const Rgba& rgba,
+                        std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
+    const QVector3D normal = faceNormal(v0, v1, v2);
+
+    appendVertex(vertices, v0);
+    appendVertex(vertices, v1);
+    appendVertex(vertices, v2);
+
+    for (int i = 0; i < 3; ++i) {
+        appendVector(normals, normal);
+        appendColor(colors, rgba);
+    }
+}
+
+void appendLine(const QVector3D& start, const QVector3D& end, const Rgba& rgba, std::vector<float>& vertices,
+                std::vector<float>& colors) {
+    appendVertex(vertices, start);
+    appendVertex(vertices, end);
+    appendColor(colors, rgba);
+    appendColor(colors, rgba);
+}
+
+std::size_t countLoopValues(float value, float limit, float step) {
+    if (!std::isfinite(value) || !std::isfinite(limit) || !std::isfinite(step) || step <= 0.0f) {
+        return 0;
+    }
+
+    std::size_t count = 0;
+    while (value < limit) {
+        ++count;
+        value += step;
+    }
+    return count;
+}
+
+const std::array<QVector2D, kTubeCrossSectionResolution>& circleTable() {
+    static const std::array<QVector2D, kTubeCrossSectionResolution> table = [] {
+        std::array<QVector2D, kTubeCrossSectionResolution> values;
+        const float step = kTwoPi / static_cast<float>(kTubeCrossSectionResolution);
+
+        for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+            const float theta = static_cast<float>(i) * step;
+            values[i] = QVector2D(std::cos(theta), std::sin(theta));
+        }
+
+        return values;
+    }();
+
+    return table;
+}
+
+float arcSweepAngle(const Point& start, const Point& center, const Point& end, bool counterclockwise) {
+    if (MathUtils::orientation(start, center, end) == 0) {
+        return (start == end) ? kTwoPi : kPi;
+    }
+
+    const float start_angle = std::atan2(center.x() - start.x(), center.y() - start.y());
+    const float end_angle = std::atan2(center.x() - end.x(), center.y() - end.y());
+
+    float angle = counterclockwise ? start_angle - end_angle : end_angle - start_angle;
+    if (angle < 0.0f) {
+        angle += kTwoPi;
+    }
+
+    return angle;
+}
+
+void createArcCylinderMesh(float cylinder_height, const Point& start, const Point& center, const Point& end,
+                           const QMatrix4x4& transform, bool counterclockwise, const QColor& color,
+                           std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
+    const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const float minor_radius = cylinder_height / 2.0f;
+    if (major_radius <= kVectorEpsilon || minor_radius <= kVectorEpsilon) {
+        return;
+    }
+
+    const float angle = arcSweepAngle(start, center, end, counterclockwise);
+    const float phi_increment = angle / static_cast<float>(kCurveSegments);
+    const float height_increment = (end.z() - start.z()) / static_cast<float>(kCurveSegments);
+    const auto& circle = circleTable();
+    const Rgba rgba(color);
+
+    reserveTriangleMesh(vertices, colors, normals,
+                        kTubeCrossSectionResolution * (2 + (2 * static_cast<std::size_t>(kCurveSegments))));
+
+    std::array<std::array<QVector3D, kTubeCrossSectionResolution>, kCurveSegments + 1> tube_vertices;
+
+    float phi = counterclockwise ? 0.0f : kTwoPi;
+    float height = 0.0f;
+    for (auto& ring_vertices : tube_vertices) {
+        const float cos_phi = std::cos(phi);
+        const float sin_phi = std::sin(phi);
+
+        for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+            const float local_radius = major_radius + (minor_radius * circle[i].x());
+            ring_vertices[i] = transform * QVector3D(cos_phi * local_radius, sin_phi * local_radius,
+                                                     (circle[i].y() * minor_radius) + height);
+        }
+
+        height += height_increment;
+        phi += counterclockwise ? phi_increment : -phi_increment;
+    }
+
+    const QVector3D start_center = transform * QVector3D(major_radius, 0.0f, 0.0f);
+    const float end_phi = counterclockwise ? angle : -angle;
+    const QVector3D end_center =
+        transform * QVector3D(major_radius * std::cos(end_phi), major_radius * std::sin(end_phi), end.z() - start.z());
+
+    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+        const int next = (i + 1) % kTubeCrossSectionResolution;
+        if (counterclockwise) {
+            appendTriangleData(start_center, tube_vertices[0][i], tube_vertices[0][next], rgba, vertices, colors,
+                               normals);
+        }
+        else {
+            appendTriangleData(tube_vertices[0][next], tube_vertices[0][i], start_center, rgba, vertices, colors,
+                               normals);
+        }
+    }
+
+    for (int slice_index = 0; slice_index < kCurveSegments; ++slice_index) {
+        const int next_slice = slice_index + 1;
+        for (int vertex_index = 0; vertex_index < kTubeCrossSectionResolution; ++vertex_index) {
+            const int next_vertex = (vertex_index + 1) % kTubeCrossSectionResolution;
+
+            if (counterclockwise) {
+                appendTriangleData(tube_vertices[slice_index][vertex_index], tube_vertices[next_slice][vertex_index],
+                                   tube_vertices[slice_index][next_vertex], rgba, vertices, colors, normals);
+                appendTriangleData(tube_vertices[next_slice][next_vertex], tube_vertices[slice_index][next_vertex],
+                                   tube_vertices[next_slice][vertex_index], rgba, vertices, colors, normals);
+            }
+            else {
+                appendTriangleData(tube_vertices[slice_index][next_vertex], tube_vertices[next_slice][vertex_index],
+                                   tube_vertices[slice_index][vertex_index], rgba, vertices, colors, normals);
+                appendTriangleData(tube_vertices[next_slice][vertex_index], tube_vertices[slice_index][next_vertex],
+                                   tube_vertices[next_slice][next_vertex], rgba, vertices, colors, normals);
+            }
+        }
+    }
+
+    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+        const int next = (i + 1) % kTubeCrossSectionResolution;
+        if (counterclockwise) {
+            appendTriangleData(tube_vertices[kCurveSegments][next], tube_vertices[kCurveSegments][i], end_center, rgba,
+                               vertices, colors, normals);
+        }
+        else {
+            appendTriangleData(end_center, tube_vertices[kCurveSegments][i], tube_vertices[kCurveSegments][next], rgba,
+                               vertices, colors, normals);
+        }
+    }
+}
+} // namespace
+
 void ShapeFactory::createRectangle(float length, float width, float height, const QMatrix4x4& transform,
                                    const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                    std::vector<float>& normals) {
-    QVector3D vertex0, vertex1, vertex2, vertex3, vertex4, vertex5, vertex6, vertex7;
+    const float half_length = length / 2.0f;
+    const float half_width = width / 2.0f;
+    const float half_height = height / 2.0f;
 
-    // Divide everything by 2 since we want to center the rectangle on the origin
-    length /= 2.0f;
-    width /= 2.0f;
-    height /= 2.0f;
+    const std::array<QVector3D, 8> corner_vertices = {
+        transform * QVector3D(-half_length, -half_width, half_height),  // back  left  top
+        transform * QVector3D(half_length, -half_width, half_height),   // back  right top
+        transform * QVector3D(half_length, half_width, half_height),    // front right top
+        transform * QVector3D(-half_length, half_width, half_height),   // front left  top
+        transform * QVector3D(-half_length, -half_width, -half_height), // back  left  bottom
+        transform * QVector3D(half_length, -half_width, -half_height),  // back  right bottom
+        transform * QVector3D(half_length, half_width, -half_height),   // front right bottom
+        transform * QVector3D(-half_length, half_width, -half_height),  // front left  bottom
+    };
 
-    // Create the eight vertices
-    vertex0 = transform * QVector3D(-length, -width, height); // back  left  top
+    static constexpr std::array<std::array<int, 3>, 12> kTriangles = {
+        std::array<int, 3> {7, 6, 4},
+        {6, 5, 4},
+        {0, 1, 3},
+        {1, 2, 3},
+        {0, 3, 4},
+        {3, 7, 4},
+        {3, 2, 7},
+        {2, 6, 7},
+        {2, 1, 6},
+        {1, 5, 6},
+        {1, 0, 5},
+        {0, 4, 5},
+    };
 
-    vertex1 = transform * QVector3D(length, -width, height); // back  right top
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, kTriangles.size());
 
-    vertex2 = transform * QVector3D(length, width, height); // front right top
-
-    vertex3 = transform * QVector3D(-length, width, height); // front left  top
-
-    vertex4 = transform * QVector3D(-length, -width, -height); // back  left  bottom
-
-    vertex5 = transform * QVector3D(length, -width, -height); // back  right bottom
-
-    vertex6 = transform * QVector3D(length, width, -height); // front right bottom
-
-    vertex7 = transform * QVector3D(-length, width, -height); // front left  bottom
-
-    // Create the necessary 12 (2 for each face) triangles from the vertices
-
-    // Bottom face
-    vertices.push_back(vertex7.x());
-    vertices.push_back(vertex7.y());
-    vertices.push_back(vertex7.z());
-    vertices.push_back(vertex6.x());
-    vertices.push_back(vertex6.y());
-    vertices.push_back(vertex6.z());
-    vertices.push_back(vertex4.x());
-    vertices.push_back(vertex4.y());
-    vertices.push_back(vertex4.z());
-
-    vertices.push_back(vertex6.x());
-    vertices.push_back(vertex6.y());
-    vertices.push_back(vertex6.z());
-    vertices.push_back(vertex5.x());
-    vertices.push_back(vertex5.y());
-    vertices.push_back(vertex5.z());
-    vertices.push_back(vertex4.x());
-    vertices.push_back(vertex4.y());
-    vertices.push_back(vertex4.z());
-
-    // All vertices for each face have the same normal and color
-    for (int i = 0; i < 6; i++) {
-        normals.push_back(0.0f);
-        normals.push_back(0.0f);
-        normals.push_back(-1.0f);
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
-    }
-
-    // Top face
-    vertices.push_back(vertex0.x());
-    vertices.push_back(vertex0.y());
-    vertices.push_back(vertex0.z());
-    vertices.push_back(vertex1.x());
-    vertices.push_back(vertex1.y());
-    vertices.push_back(vertex1.z());
-    vertices.push_back(vertex3.x());
-    vertices.push_back(vertex3.y());
-    vertices.push_back(vertex3.z());
-
-    vertices.push_back(vertex1.x());
-    vertices.push_back(vertex1.y());
-    vertices.push_back(vertex1.z());
-    vertices.push_back(vertex2.x());
-    vertices.push_back(vertex2.y());
-    vertices.push_back(vertex2.z());
-    vertices.push_back(vertex3.x());
-    vertices.push_back(vertex3.y());
-    vertices.push_back(vertex3.z());
-
-    for (int i = 0; i < 6; i++) {
-        normals.push_back(0.0f);
-        normals.push_back(0.0f);
-        normals.push_back(1.0f);
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
-    }
-
-    // Left face
-    vertices.push_back(vertex0.x());
-    vertices.push_back(vertex0.y());
-    vertices.push_back(vertex0.z());
-    vertices.push_back(vertex3.x());
-    vertices.push_back(vertex3.y());
-    vertices.push_back(vertex3.z());
-    vertices.push_back(vertex4.x());
-    vertices.push_back(vertex4.y());
-    vertices.push_back(vertex4.z());
-
-    vertices.push_back(vertex3.x());
-    vertices.push_back(vertex3.y());
-    vertices.push_back(vertex3.z());
-    vertices.push_back(vertex7.x());
-    vertices.push_back(vertex7.y());
-    vertices.push_back(vertex7.z());
-    vertices.push_back(vertex4.x());
-    vertices.push_back(vertex4.y());
-    vertices.push_back(vertex4.z());
-
-    for (int i = 0; i < 6; i++) {
-        normals.push_back(-1.0f);
-        normals.push_back(0.0f);
-        normals.push_back(0.0f);
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
-    }
-
-    // Front face
-    vertices.push_back(vertex3.x());
-    vertices.push_back(vertex3.y());
-    vertices.push_back(vertex3.z());
-    vertices.push_back(vertex2.x());
-    vertices.push_back(vertex2.y());
-    vertices.push_back(vertex2.z());
-    vertices.push_back(vertex7.x());
-    vertices.push_back(vertex7.y());
-    vertices.push_back(vertex7.z());
-
-    vertices.push_back(vertex2.x());
-    vertices.push_back(vertex2.y());
-    vertices.push_back(vertex2.z());
-    vertices.push_back(vertex6.x());
-    vertices.push_back(vertex6.y());
-    vertices.push_back(vertex6.z());
-    vertices.push_back(vertex7.x());
-    vertices.push_back(vertex7.y());
-    vertices.push_back(vertex7.z());
-
-    for (int i = 0; i < 6; i++) {
-        normals.push_back(0.0f);
-        normals.push_back(1.0f);
-        normals.push_back(0.0f);
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
-    }
-
-    // Right face
-    vertices.push_back(vertex2.x());
-    vertices.push_back(vertex2.y());
-    vertices.push_back(vertex2.z());
-    vertices.push_back(vertex1.x());
-    vertices.push_back(vertex1.y());
-    vertices.push_back(vertex1.z());
-    vertices.push_back(vertex6.x());
-    vertices.push_back(vertex6.y());
-    vertices.push_back(vertex6.z());
-
-    vertices.push_back(vertex1.x());
-    vertices.push_back(vertex1.y());
-    vertices.push_back(vertex1.z());
-    vertices.push_back(vertex5.x());
-    vertices.push_back(vertex5.y());
-    vertices.push_back(vertex5.z());
-    vertices.push_back(vertex6.x());
-    vertices.push_back(vertex6.y());
-    vertices.push_back(vertex6.z());
-
-    for (int i = 0; i < 6; i++) {
-        normals.push_back(1.0f);
-        normals.push_back(0.0f);
-        normals.push_back(0.0f);
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
-    }
-
-    // Back face
-    vertices.push_back(vertex1.x());
-    vertices.push_back(vertex1.y());
-    vertices.push_back(vertex1.z());
-    vertices.push_back(vertex0.x());
-    vertices.push_back(vertex0.y());
-    vertices.push_back(vertex0.z());
-    vertices.push_back(vertex5.x());
-    vertices.push_back(vertex5.y());
-    vertices.push_back(vertex5.z());
-
-    vertices.push_back(vertex0.x());
-    vertices.push_back(vertex0.y());
-    vertices.push_back(vertex0.z());
-    vertices.push_back(vertex4.x());
-    vertices.push_back(vertex4.y());
-    vertices.push_back(vertex4.z());
-    vertices.push_back(vertex5.x());
-    vertices.push_back(vertex5.y());
-    vertices.push_back(vertex5.z());
-
-    for (int i = 0; i < 6; i++) {
-        normals.push_back(0.0f);
-        normals.push_back(-1.0f);
-        normals.push_back(0.0f);
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
+    for (const auto& triangle : kTriangles) {
+        appendTriangleData(corner_vertices[triangle[0]], corner_vertices[triangle[1]], corner_vertices[triangle[2]],
+                           rgba, vertices, colors, normals);
     }
 }
 
@@ -242,1106 +284,449 @@ void ShapeFactory::createArcCylinderCCW(float cylinder_height, const Point& star
                                         const Point& end, const QMatrix4x4& transform, const QColor& color,
                                         std::vector<float>& vertices, std::vector<float>& colors,
                                         std::vector<float>& normals) {
-    const unsigned int cross_sectional_resolution = 20; // number of points that make up a cross-sectional circle
-    const unsigned int arc_segments = 75;               // number of cylindrical segments that comprise an arc
-
-    Angle angle;
-    if (MathUtils::orientation(start, center, end) == 0) {
-        // These are co-linear
-        if (start == end) {
-            // this is a circle
-            angle = 2.0f * M_PI;
-        }
-        else {
-            angle = M_PI;
-        }
-    }
-    else {
-        double a = qAtan2(center.x() - start.x(), center.y() - start.y());
-        double b = qAtan2(center.x() - end.x(), center.y() - end.y());
-
-        angle = Angle(a - b);
-        if (angle < 0) {
-            angle = (2.0f * M_PI) + angle;
-        }
-    }
-
-    float theta = 0; // angle around the cross-sectional circle
-    float theta_increment =
-        2.0f * float(M_PI) /
-        float(cross_sectional_resolution); // the amount to add each iteration through on the cross_sectional circle
-    float phi = 0;                         // angle around the arc
-    float phi_increment = angle() / arc_segments; // the amount to add each iteration though on the arc
-
-    float major_radius = Point(center.x(), center.y(), 0)
-                             .distance(Point(start.x(), start.y(),
-                                             0))(); // the distance from the center of the arc to the start/ end points
-    float minor_radius = cylinder_height / 2.0f;    // the radius the cross-sectional circle
-
-    QVector3D temp_vertices[arc_segments + 1][cross_sectional_resolution];
-
-    auto height = float(0.0);
-    auto height_increment = (end.z() - start.z()) / arc_segments;
-    for (auto& ring_vertices : temp_vertices) {
-        theta = 0;
-        for (auto& vertex : ring_vertices) {
-            vertex = transform * QVector3D(qCos(phi) * (major_radius + (minor_radius * qCos(theta))),
-                                           qSin(phi) * (major_radius + (minor_radius * qCos(theta))),
-                                           (qSin(theta) * minor_radius) + height);
-            theta += theta_increment;
-        }
-        height += height_increment;
-        phi += phi_increment;
-    }
-
-    // Connect first vertex to cap start
-    for (int i = 0; i < cross_sectional_resolution; ++i) {
-        appendTriangle(transform * QVector3D(major_radius, 0, 0), temp_vertices[0][i],
-                       temp_vertices[0][(i + 1) % cross_sectional_resolution], color, vertices, colors, normals);
-    }
-
-    for (int slice_index = 0; slice_index < arc_segments; ++slice_index) {
-        auto next_slice = slice_index + 1;
-        for (int vertex_index = 0; vertex_index < cross_sectional_resolution; ++vertex_index) {
-            auto next_point_index = (vertex_index + 1) % cross_sectional_resolution;
-
-            // Need to build two triangles per side of rectangle
-            appendTriangle(temp_vertices[slice_index][vertex_index], temp_vertices[next_slice][vertex_index],
-                           temp_vertices[slice_index][next_point_index], color, vertices, colors, normals);
-
-            appendTriangle(temp_vertices[next_slice][next_point_index], temp_vertices[slice_index][next_point_index],
-                           temp_vertices[next_slice][vertex_index], color, vertices, colors, normals);
-        }
-    }
-
-    // Cap the end
-    for (int i = 0; i < cross_sectional_resolution; ++i) {
-        appendTriangle(temp_vertices[arc_segments][(i + 1) % cross_sectional_resolution],
-                       temp_vertices[arc_segments][i],
-                       transform * QVector3D(major_radius * qCos(angle()), major_radius * qSin(angle()), height), color,
-                       vertices, colors, normals);
-    }
+    createArcCylinderMesh(cylinder_height, start, center, end, transform, true, color, vertices, colors, normals);
 }
 
 void ShapeFactory::createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
                                      const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
                                      std::vector<float>& colors, std::vector<float>& normals) {
-    const unsigned int cross_sectional_resolution = 20; // number of points that make up a cross-sectional circle
-    const unsigned int arc_segments = 75;               // number of cylindrical segments that comprise an arc
-
-    Angle angle;
-    short orientation = MathUtils::orientation(start, center, end);
-    if (orientation == 0) {
-        // These are co-linear
-        if (start == end) {
-            // this is a circle
-            angle = 2.0f * M_PI;
-        }
-        else {
-            angle = M_PI;
-        }
-    }
-    else {
-        double a = qAtan2(center.x() - start.x(), center.y() - start.y());
-        double b = qAtan2(center.x() - end.x(), center.y() - end.y());
-
-        angle = Angle(b - a);
-        if (angle < 0) {
-            angle = (2.0f * M_PI) + angle;
-        }
-    }
-
-    float theta = 0; // angle around the cross-sectional circle
-    float theta_increment =
-        2.0f * float(M_PI) /
-        float(cross_sectional_resolution); // the amount to add each iteration through on the cross_sectional circle
-    float phi = 2.0f * float(M_PI);        // Since this is clockwise, phi will start at 2 * Pi
-    float phi_increment = (angle() / float(arc_segments)); // and decrease by arc_segments number of increments
-
-    float major_radius = Point(center.x(), center.y(), 0)
-                             .distance(Point(start.x(), start.y(),
-                                             0))(); // the distance from the center of the arc to the start/ end points
-    float minor_radius = cylinder_height / 2.0f;    // the radius the cross-sectional circle
-
-    QVector3D temp_vertices[arc_segments + 1][cross_sectional_resolution];
-
-    auto height = float(0.0);
-    auto height_increment = (end.z() - start.z()) / arc_segments;
-    for (auto& ring_vertices : temp_vertices) {
-        theta = 0;
-        for (auto& vertex : ring_vertices) {
-            vertex = transform * QVector3D(qCos(phi) * (major_radius + (minor_radius * qCos(theta))),
-                                           qSin(phi) * (major_radius + (minor_radius * qCos(theta))),
-                                           (qSin(theta) * minor_radius) + height);
-            theta += theta_increment;
-        }
-        height += height_increment;
-        phi -= phi_increment;
-    }
-
-    // Connect first vertex to cap start
-    for (int i = 0; i < cross_sectional_resolution; ++i) {
-        appendTriangle(temp_vertices[0][(i + 1) % cross_sectional_resolution], temp_vertices[0][i],
-                       transform * QVector3D(major_radius, 0, 0), color, vertices, colors, normals);
-    }
-
-    for (int slice_index = 0; slice_index < arc_segments; ++slice_index) {
-        auto next_slice = slice_index + 1;
-        for (int vertex_index = 0; vertex_index < cross_sectional_resolution; ++vertex_index) {
-            auto next_point_index = (vertex_index + 1) % cross_sectional_resolution;
-
-            // Need to build two triangles per side of rectangle
-            appendTriangle(temp_vertices[slice_index][next_point_index], temp_vertices[next_slice][vertex_index],
-                           temp_vertices[slice_index][vertex_index], color, vertices, colors, normals);
-
-            appendTriangle(temp_vertices[next_slice][vertex_index], temp_vertices[slice_index][next_point_index],
-                           temp_vertices[next_slice][next_point_index], color, vertices, colors, normals);
-        }
-    }
-
-    // Cap the end
-    for (int i = 0; i < cross_sectional_resolution; ++i) {
-        appendTriangle(
-            transform * QVector3D(major_radius * qCos(angle() * -1), major_radius * qSin(angle() * -1), height),
-            temp_vertices[arc_segments][i], temp_vertices[arc_segments][(i + 1) % cross_sectional_resolution], color,
-            vertices, colors, normals);
-    }
+    createArcCylinderMesh(cylinder_height, start, center, end, transform, false, color, vertices, colors, normals);
 }
 
-void ShapeFactory::createSplineCylinder(const float diameter, const Point& start, const Point& control_a,
+void ShapeFactory::createSplineCylinder(float diameter, const Point& start, const Point& control_a,
                                         const Point& control_b, const Point& end, const QColor& color,
                                         std::vector<float>& vertices, std::vector<float>& colors,
                                         std::vector<float>& normals) {
-    const unsigned int cross_sectional_resolution = 20; // number of points that make up a cross-sectional circle
-    const unsigned int spline_segments = 75;            // number of cylindrical segments that comprise an spline
+    const float radius = diameter / 2.0f;
+    if (radius <= kVectorEpsilon) {
+        return;
+    }
 
-    float theta = 0; // angle around the cross-sectional circle
-    float theta_increment =
-        2.0f * float(M_PI) /
-        float(cross_sectional_resolution); // the amount to add each iteration through on the cross_sectional circle
+    const auto& circle = circleTable();
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals,
+                        kTubeCrossSectionResolution * (2 + (2 * static_cast<std::size_t>(kCurveSegments))));
 
-    QVector3D temp_vertices[spline_segments + 1][cross_sectional_resolution];
+    std::array<std::array<QVector3D, kTubeCrossSectionResolution>, kCurveSegments + 1> tube_vertices;
 
-    double t = 0.0;
-    double increment = 1.0 / spline_segments;
     BezierSegment curve(start, control_a, control_b, end);
+    const double increment = 1.0 / static_cast<double>(kCurveSegments);
+    double t = 0.0;
 
-    for (auto& ring_vertices : temp_vertices) {
-        theta = 0;
-        Point center = curve.getPointAlong(t);
-        Point next_center = curve.getPointAlong(t + increment);
+    for (auto& ring_vertices : tube_vertices) {
+        const Point center_point = curve.getPointAlong(t);
+        const Point next_center = curve.getPointAlong(t + increment);
+        const Angle tangent_angle = MathUtils::signedInternalAngle(
+            Point(center_point.x(), center_point.y() + 10.0f, center_point.z()), center_point, next_center);
 
-        for (auto& vertex : ring_vertices) {
-            Point p(center.x() + ((diameter / 2) * qCos(theta)), center.y(),
-                    center.z() + ((diameter / 2) * qSin(theta)));
-            p = p.rotateAround(center, MathUtils::signedInternalAngle(Point(center.x(), center.y() + 10, center.z()),
-                                                                      center, next_center));
-
-            vertex = p.toQVector3D();
-            theta += theta_increment;
+        for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+            Point point(center_point.x() + (radius * circle[i].x()), center_point.y(),
+                        center_point.z() + (radius * circle[i].y()));
+            point = point.rotateAround(center_point, tangent_angle);
+            ring_vertices[i] = point.toQVector3D();
         }
+
         t += increment;
     }
 
-    // Connect first vertex to cap start
-    for (int i = 0; i < cross_sectional_resolution; ++i) {
-        appendTriangle(curve.getPointAlong(0).toQVector3D(), temp_vertices[0][i],
-                       temp_vertices[0][(i + 1) % cross_sectional_resolution], color, vertices, colors, normals);
+    const QVector3D start_center = curve.getPointAlong(0.0).toQVector3D();
+    const QVector3D end_center = curve.getPointAlong(1.0).toQVector3D();
+
+    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+        appendTriangleData(start_center, tube_vertices[0][i], tube_vertices[0][(i + 1) % kTubeCrossSectionResolution],
+                           rgba, vertices, colors, normals);
     }
 
-    for (int slice_index = 0; slice_index < spline_segments; ++slice_index) {
-        auto next_slice = slice_index + 1;
-        for (int vertex_index = 0; vertex_index < cross_sectional_resolution; ++vertex_index) {
-            auto next_point_index = (vertex_index + 1) % cross_sectional_resolution;
+    for (int slice_index = 0; slice_index < kCurveSegments; ++slice_index) {
+        const int next_slice = slice_index + 1;
+        for (int vertex_index = 0; vertex_index < kTubeCrossSectionResolution; ++vertex_index) {
+            const int next_vertex = (vertex_index + 1) % kTubeCrossSectionResolution;
 
-            // Need to build two triangles per side of rectangle
-            appendTriangle(temp_vertices[slice_index][vertex_index], temp_vertices[next_slice][vertex_index],
-                           temp_vertices[slice_index][next_point_index], color, vertices, colors, normals);
-
-            appendTriangle(temp_vertices[next_slice][next_point_index], temp_vertices[slice_index][next_point_index],
-                           temp_vertices[next_slice][vertex_index], color, vertices, colors, normals);
+            appendTriangleData(tube_vertices[slice_index][vertex_index], tube_vertices[next_slice][vertex_index],
+                               tube_vertices[slice_index][next_vertex], rgba, vertices, colors, normals);
+            appendTriangleData(tube_vertices[next_slice][next_vertex], tube_vertices[slice_index][next_vertex],
+                               tube_vertices[next_slice][vertex_index], rgba, vertices, colors, normals);
         }
     }
 
-    // Cap the end
-    for (int i = 0; i < cross_sectional_resolution; ++i) {
-        appendTriangle(temp_vertices[spline_segments][(i + 1) % cross_sectional_resolution],
-                       temp_vertices[spline_segments][i], curve.getPointAlong(1.0).toQVector3D(), color, vertices,
-                       colors, normals);
-    }
-}
-
-void ShapeFactory::appendTriangle(const QVector3D& v0, const QVector3D& v1, const QVector3D& v2, const QColor& color,
-                                  std::vector<float>& vertices, std::vector<float>& colors,
-                                  std::vector<float>& normals) {
-    // Convert color to RGBA format
-    std::array<float, 4> rgba = {static_cast<float>(color.redF()), static_cast<float>(color.greenF()),
-                                 static_cast<float>(color.blueF()), static_cast<float>(color.alphaF())};
-
-    // Add the vertices
-    vertices.insert(vertices.end(), {v0.x(), v0.y(), v0.z(), v1.x(), v1.y(), v1.z(), v2.x(), v2.y(), v2.z()});
-
-    // Compute the normal
-    QVector3D normal = QVector3D::crossProduct(v1 - v0, v2 - v0).normalized();
-
-    // Add the normal and color for each vertex
-    for (int i = 0; i < 3; ++i) {
-        normals.insert(normals.end(), {normal.x(), normal.y(), normal.z()});
-        colors.insert(colors.end(), rgba.begin(), rgba.end());
+    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
+        appendTriangleData(tube_vertices[kCurveSegments][(i + 1) % kTubeCrossSectionResolution],
+                           tube_vertices[kCurveSegments][i], end_center, rgba, vertices, colors, normals);
     }
 }
 
 void ShapeFactory::createCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                                   std::vector<float>& vertices, std::vector<float>& colors,
                                   std::vector<float>& normals) {
-    unsigned int segments = 50; // Number of arc segments used to approximate a cylinder
-    float theta = 0.0f;         // Measure of angle at which each segment starts; first theta is just 0
-    float thetaIncrement = 2.0f * float(M_PI) / float(segments);
-    unsigned int center_top, center_bottom, first_top, second_top, first_bottom,
-        second_bottom;                    // Used to correctly place vertices in triangles
-    std::vector<QVector3D> temp_vertices; // store all the raw values of the vertices used to construct the triangles
-
-    /*
-     * The cylinder is drawn segment by segment. Each segment is represented
-     * by four triangles and six points: one triangle from the center of the top circle
-     * to two points on the top circle, then two triangles to make the vertical wall,
-     * then one triangle from the center of the bottom circle to two points on the bottom circle
-     *
-     * The bottom center is at (0,0,0) and the top center is at (0,0,height)
-     */
-
-    // Start with just the top center point
-    temp_vertices.push_back(transform * QVector3D(0.0f, 0.0f, height));
-
-    // Each iteration of this loop will create one vertex on the top circle and
-    // another vertex on the bottom circle
-    for (int i = 0; i < segments; ++i) {
-        temp_vertices.push_back(transform *
-                                QVector3D(radius * float(qCos(theta)), radius * float(qSin(theta)), height));
-        temp_vertices.push_back(transform * QVector3D(radius * float(qCos(theta)), radius * float(qSin(theta)), 0.0f));
-        theta += thetaIncrement;
+    if (radius <= kVectorEpsilon || height <= kVectorEpsilon) {
+        return;
     }
 
-    // End with just the bottom center point
-    temp_vertices.push_back(transform * QVector3D(0.0f, 0.0f, 0.0f));
+    std::array<QVector3D, kCylinderSegments> top_vertices;
+    std::array<QVector3D, kCylinderSegments> bottom_vertices;
+    const float theta_increment = kTwoPi / static_cast<float>(kCylinderSegments);
 
-    /* Vertices are arranged like so:
-     * 0: top center
-     * 1 to 2*slices: odds on top, evens on bottom;
-     *                pairs of vertices like 1&2, 3&4, 5&6, etc. have same theta
-     * 2*slices+1: bottom center
-     *
-     * Each loop will make 4 triangles to connect top center, bottom center, and two pairs
-     */
+    for (int i = 0; i < kCylinderSegments; ++i) {
+        const float theta = static_cast<float>(i) * theta_increment;
+        const float x = radius * std::cos(theta);
+        const float y = radius * std::sin(theta);
+        top_vertices[i] = transform * QVector3D(x, y, height);
+        bottom_vertices[i] = transform * QVector3D(x, y, 0.0f);
+    }
 
-    center_top = 0;
-    center_bottom = 2 * segments + 1;
+    const QVector3D top_center = transform * QVector3D(0.0f, 0.0f, height);
+    const QVector3D bottom_center = transform * QVector3D(0.0f, 0.0f, 0.0f);
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, static_cast<std::size_t>(kCylinderSegments) * 4);
 
-    // first_top and first_bottom have same theta but different z
-    first_top = 1;
-    first_bottom = 2;
-
-    // second_top and second_bottom have same theta but different z
-    second_top = 3;
-    second_bottom = 4;
-
-    // Create four triangles per slice.
-    QVector3D vertex1, vertex2, vertex3; // vertices of a face
-    QVector3D normal;                    // normal of a face shared by each of its vertices
-    for (int i = 0; i < segments; ++i) {
-        // Triangle on top circle
-        vertex1 = temp_vertices.at(center_top);
-        vertex2 = temp_vertices.at(first_top);
-        vertex3 = temp_vertices.at(second_top);
-        vertices.push_back(vertex1.x());
-        vertices.push_back(vertex1.y());
-        vertices.push_back(vertex1.z());
-        vertices.push_back(vertex2.x());
-        vertices.push_back(vertex2.y());
-        vertices.push_back(vertex2.z());
-        vertices.push_back(vertex3.x());
-        vertices.push_back(vertex3.y());
-        vertices.push_back(vertex3.z());
-
-        // All vertices in a triangle share the same normal
-        // All vertices have the same color, convenient to put in for loop here
-        normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-        for (int i = 0; i < 3; ++i) {
-            normals.push_back(normal.x());
-            normals.push_back(normal.y());
-            normals.push_back(normal.z());
-            colors.push_back(color.redF());
-            colors.push_back(color.greenF());
-            colors.push_back(color.blueF());
-            colors.push_back(color.alphaF());
-        }
-
-        // Triangles along cylinder side
-        vertex1 = temp_vertices.at(second_top);
-        vertex2 = temp_vertices.at(first_top);
-        vertex3 = temp_vertices.at(first_bottom);
-        vertices.push_back(vertex1.x());
-        vertices.push_back(vertex1.y());
-        vertices.push_back(vertex1.z());
-        vertices.push_back(vertex2.x());
-        vertices.push_back(vertex2.y());
-        vertices.push_back(vertex2.z());
-        vertices.push_back(vertex3.x());
-        vertices.push_back(vertex3.y());
-        vertices.push_back(vertex3.z());
-
-        normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-        for (int i = 0; i < 3; ++i) {
-            normals.push_back(normal.x());
-            normals.push_back(normal.y());
-            normals.push_back(normal.z());
-            colors.push_back(color.redF());
-            colors.push_back(color.greenF());
-            colors.push_back(color.blueF());
-            colors.push_back(color.alphaF());
-        }
-
-        vertex1 = temp_vertices.at(second_top);
-        vertex2 = temp_vertices.at(first_bottom);
-        vertex3 = temp_vertices.at(second_bottom);
-        vertices.push_back(vertex1.x());
-        vertices.push_back(vertex1.y());
-        vertices.push_back(vertex1.z());
-        vertices.push_back(vertex2.x());
-        vertices.push_back(vertex2.y());
-        vertices.push_back(vertex2.z());
-        vertices.push_back(vertex3.x());
-        vertices.push_back(vertex3.y());
-        vertices.push_back(vertex3.z());
-
-        normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-        for (int i = 0; i < 3; ++i) {
-            normals.push_back(normal.x());
-            normals.push_back(normal.y());
-            normals.push_back(normal.z());
-            colors.push_back(color.redF());
-            colors.push_back(color.greenF());
-            colors.push_back(color.blueF());
-            colors.push_back(color.alphaF());
-        }
-
-        // Triangle on bottom circle
-        vertex1 = temp_vertices.at(second_bottom);
-        vertex2 = temp_vertices.at(first_bottom);
-        vertex3 = temp_vertices.at(center_bottom);
-        vertices.push_back(vertex1.x());
-        vertices.push_back(vertex1.y());
-        vertices.push_back(vertex1.z());
-        vertices.push_back(vertex2.x());
-        vertices.push_back(vertex2.y());
-        vertices.push_back(vertex2.z());
-        vertices.push_back(vertex3.x());
-        vertices.push_back(vertex3.y());
-        vertices.push_back(vertex3.z());
-
-        normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-        for (int i = 0; i < 3; ++i) {
-            normals.push_back(normal.x());
-            normals.push_back(normal.y());
-            normals.push_back(normal.z());
-            colors.push_back(color.redF());
-            colors.push_back(color.greenF());
-            colors.push_back(color.blueF());
-            colors.push_back(color.alphaF());
-        }
-
-        first_top = second_top;
-        first_bottom = second_bottom;
-        second_top = first_top + 2;
-        second_bottom = first_bottom + 2;
-
-        // Last segment connects with first two vertices (vertices 1&2),
-        // so this is just doing some modulo
-        if (second_top > (2 * segments)) {
-            second_top -= 2 * segments;
-        }
-        if (second_bottom > (2 * segments)) {
-            second_bottom -= 2 * segments;
-        }
+    for (int i = 0; i < kCylinderSegments; ++i) {
+        const int next = (i + 1) % kCylinderSegments;
+        appendTriangleData(top_center, top_vertices[i], top_vertices[next], rgba, vertices, colors, normals);
+        appendTriangleData(top_vertices[next], top_vertices[i], bottom_vertices[i], rgba, vertices, colors, normals);
+        appendTriangleData(top_vertices[next], bottom_vertices[i], bottom_vertices[next], rgba, vertices, colors,
+                           normals);
+        appendTriangleData(bottom_vertices[next], bottom_vertices[i], bottom_center, rgba, vertices, colors, normals);
     }
 }
 
 void ShapeFactory::createSphere(float radius, int sectorCount, int stackCount, const QMatrix4x4& transform,
                                 const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                 std::vector<float>& normals) {
-    std::vector<QVector3D> tmpVertices;
+    if (radius <= kVectorEpsilon || sectorCount < kSphereMinSectorCount || stackCount < kSphereMinStackCount) {
+        return;
+    }
 
-    float sectorStep = 2 * M_PI / sectorCount;
-    float stackStep = M_PI / stackCount;
-    float sectorAngle, stackAngle;
+    const float sector_step = kTwoPi / static_cast<float>(sectorCount);
+    const float stack_step = kPi / static_cast<float>(stackCount);
 
-    // compute all vertices first, each vertex contains (x,y,z,s,t) except normal
+    std::vector<QVector3D> tmp_vertices;
+    tmp_vertices.reserve(static_cast<std::size_t>(stackCount + 1) * static_cast<std::size_t>(sectorCount + 1));
+
     for (int i = 0; i <= stackCount; ++i) {
-        stackAngle = M_PI / 2 - i * stackStep; // starting from pi/2 to -pi/2
-        float xy = radius * cosf(stackAngle);  // r * cos(u)
-        float z = radius * sinf(stackAngle);   // r * sin(u)
+        const float stack_angle = (kPi / 2.0f) - (static_cast<float>(i) * stack_step);
+        const float xy = radius * std::cos(stack_angle);
+        const float z = radius * std::sin(stack_angle);
 
-        // add (sectorCount+1) vertices per stack
-        // the first and last vertices have same position and normal, but different tex coords
         for (int j = 0; j <= sectorCount; ++j) {
-            sectorAngle = j * sectorStep; // starting from 0 to 2pi
-
-            QVector3D vertex;
-            vertex.setX(xy * cosf(sectorAngle)); // x = r * cos(u) * cos(v)
-            vertex.setY(xy * sinf(sectorAngle)); // y = r * cos(u) * sin(v)
-            vertex.setZ(z);                      // z = r * sin(u)
-            tmpVertices.push_back(transform * vertex);
+            const float sector_angle = static_cast<float>(j) * sector_step;
+            tmp_vertices.push_back(transform * QVector3D(xy * std::cos(sector_angle), xy * std::sin(sector_angle), z));
         }
     }
 
-    vertices.reserve(tmpVertices.size());
-    normals.reserve(vertices.size() / 3.0);
-    colors.reserve(vertices.size() / 3.0 * 4.0);
+    const std::size_t triangle_count =
+        static_cast<std::size_t>(sectorCount) * static_cast<std::size_t>((2 * stackCount) - 2);
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, triangle_count);
 
-    QVector3D v1, v2, v3, v4; // 4 vertex positions and tex coords
-    QVector3D n;              // 1 face normal
+    for (int i = 0; i < stackCount; ++i) {
+        int vi1 = i * (sectorCount + 1);
+        int vi2 = (i + 1) * (sectorCount + 1);
 
-    int i, j, k, vi1, vi2;
-    int index = 0; // index for vertex
-    for (i = 0; i < stackCount; ++i) {
-        vi1 = i * (sectorCount + 1); // index of tmpVertices
-        vi2 = (i + 1) * (sectorCount + 1);
+        for (int j = 0; j < sectorCount; ++j, ++vi1, ++vi2) {
+            const QVector3D& v1 = tmp_vertices[vi1];
+            const QVector3D& v2 = tmp_vertices[vi2];
+            const QVector3D& v3 = tmp_vertices[vi1 + 1];
+            const QVector3D& v4 = tmp_vertices[vi2 + 1];
 
-        for (j = 0; j < sectorCount; ++j, ++vi1, ++vi2) {
-            // get 4 vertices per sector
-            //  v1--v3
-            //  |    |
-            //  v2--v4
-            v1 = tmpVertices[vi1];
-            v2 = tmpVertices[vi2];
-            v3 = tmpVertices[vi1 + 1];
-            v4 = tmpVertices[vi2 + 1];
-
-            // if 1st stack and last stack, store only 1 triangle per sector
-            // otherwise, store 2 triangles (quad) per sector
-            if (i == 0) { // a triangle for first stack ==========================
-                vertices.push_back(v1.x());
-                vertices.push_back(v1.y());
-                vertices.push_back(v1.z());
-                vertices.push_back(v2.x());
-                vertices.push_back(v2.y());
-                vertices.push_back(v2.z());
-                vertices.push_back(v4.x());
-                vertices.push_back(v4.y());
-                vertices.push_back(v4.z());
-
-                n = QVector3D::crossProduct(v4 - v2, v1 - v2).normalized();
-                // put normal
-                for (k = 0; k < 3; ++k) { // same normals for 3 vertices
-                    normals.push_back(n.x());
-                    normals.push_back(n.y());
-                    normals.push_back(n.z());
-                    colors.push_back(color.redF());
-                    colors.push_back(color.greenF());
-                    colors.push_back(color.blueF());
-                    colors.push_back(color.alphaF());
-                }
-                index += 3; // for next
+            if (i == 0) {
+                appendTriangleData(v1, v2, v4, rgba, vertices, colors, normals);
             }
-            else if (i == (stackCount - 1)) { // a triangle for last stack =========
-                vertices.push_back(v1.x());
-                vertices.push_back(v1.y());
-                vertices.push_back(v1.z());
-                vertices.push_back(v2.x());
-                vertices.push_back(v2.y());
-                vertices.push_back(v2.z());
-                vertices.push_back(v3.x());
-                vertices.push_back(v3.y());
-                vertices.push_back(v3.z());
-
-                n = QVector3D::crossProduct(v3 - v2, v1 - v2).normalized();
-
-                // put normal
-                for (k = 0; k < 3; ++k) { // same normals for 3 vertices
-                    normals.push_back(n.x());
-                    normals.push_back(n.y());
-                    normals.push_back(n.z());
-                    colors.push_back(color.redF());
-                    colors.push_back(color.greenF());
-                    colors.push_back(color.blueF());
-                    colors.push_back(color.alphaF());
-                }
-                index += 3; // for next
+            else if (i == (stackCount - 1)) {
+                appendTriangleData(v1, v2, v3, rgba, vertices, colors, normals);
             }
-            else { // 2 triangles for others ====================================
-                // put quad vertices: v1-v2-v3-v4
-                vertices.push_back(v1.x());
-                vertices.push_back(v1.y());
-                vertices.push_back(v1.z());
-                vertices.push_back(v2.x());
-                vertices.push_back(v2.y());
-                vertices.push_back(v2.z());
-                vertices.push_back(v3.x());
-                vertices.push_back(v3.y());
-                vertices.push_back(v3.z());
-
-                vertices.push_back(v3.x());
-                vertices.push_back(v3.y());
-                vertices.push_back(v3.z());
-                vertices.push_back(v2.x());
-                vertices.push_back(v2.y());
-                vertices.push_back(v2.z());
-                vertices.push_back(v4.x());
-                vertices.push_back(v4.y());
-                vertices.push_back(v4.z());
-                // 0-1-2, 2-1-3
-
-                // put normal
-                n = QVector3D::crossProduct(v3 - v2, v1 - v2).normalized();
-
-                // put normal
-                for (k = 0; k < 6; ++k) { // same normals for 6 vertices
-                    normals.push_back(n.x());
-                    normals.push_back(n.y());
-                    normals.push_back(n.z());
-                    colors.push_back(color.redF());
-                    colors.push_back(color.greenF());
-                    colors.push_back(color.blueF());
-                    colors.push_back(color.alphaF());
-                }
-
-                index += 4; // for next
+            else {
+                appendTriangleData(v1, v2, v3, rgba, vertices, colors, normals);
+                appendTriangleData(v3, v2, v4, rgba, vertices, colors, normals);
             }
         }
     }
 }
 
-void ShapeFactory::createGcodeCylinder(const float& width, const float& length, const float& height,
-                                       const QVector3D& start, const QVector3D& end, const QColor& color,
-                                       std::vector<float>& vertices, std::vector<float>& colors,
-                                       std::vector<float>& normals) {
-    // Compute the transformation matrix for the clipped cylinder
-    QMatrix4x4 transform = computeGcodeCylinderTransform(start, end);
-
-    // Radius of the clipped cylinder and number of quads per side
-    float radius;
-    unsigned int quads_per_side;
-
-    // If the height is greater than the width, the clipped cylinder is a rectangular prism
-    if (height > width) {
-        radius = std::sqrt((width / 2.0f) * (width / 2.0f) + (height / 2.0f) * (height / 2.0f));
-        quads_per_side = 1;
-    }
-    else { // Otherwise, the clipped cylinder is approximated by 6 quads per side
-        radius = width / 2.0f;
-        quads_per_side = 6;
+void ShapeFactory::createGcodeCylinder(float width, float length, float height, const QVector3D& start,
+                                       const QVector3D& end, const QColor& color, std::vector<float>& vertices,
+                                       std::vector<float>& colors, std::vector<float>& normals) {
+    if (width <= kVectorEpsilon || height <= kVectorEpsilon || length <= kVectorEpsilon ||
+        (end - start).lengthSquared() <= kVectorEpsilonSquared) {
+        return;
     }
 
-    // Compute number of vertices per arc and side of the clipped cylinder
-    unsigned int vertices_per_arc = quads_per_side + 1;
-    unsigned int vertices_per_side = 2 * vertices_per_arc;
+    const QMatrix4x4 transform = computeGcodeCylinderTransform(start, end);
 
-    // Compute the angular range based on the height and radius
-    float theta_start = -std::asin((height / 2.0f) / radius);
-    float theta_end = -theta_start;
-    float theta_increment = (theta_end - theta_start) / quads_per_side;
+    const bool rectangular_prism = height > width;
+    const float radius = rectangular_prism
+                             ? std::sqrt(((width / 2.0f) * (width / 2.0f)) + ((height / 2.0f) * (height / 2.0f)))
+                             : width / 2.0f;
+    if (radius <= kVectorEpsilon) {
+        return;
+    }
 
-    // Vectors to hold the vertices of the top and bottom of the clipped cylinder
-    std::vector<QVector3D> top_vertices(2 * vertices_per_arc);
-    std::vector<QVector3D> bottom_vertices(2 * vertices_per_arc);
+    const unsigned int quads_per_side = rectangular_prism ? 1 : 6;
+    const unsigned int vertices_per_arc = quads_per_side + 1;
+    const unsigned int vertices_per_side = 2 * vertices_per_arc;
+    const float theta_start = -std::asin(std::clamp((height / 2.0f) / radius, -1.0f, 1.0f));
+    const float theta_end = -theta_start;
+    const float theta_increment = (theta_end - theta_start) / static_cast<float>(quads_per_side);
 
-    // Generate vertices vertices for the top and bottom of the clipped cylinder
-    for (int i = 0; i < vertices_per_arc; ++i) {
-        float theta = theta_start + i * theta_increment;
+    std::vector<QVector3D> top_vertices(vertices_per_side);
+    std::vector<QVector3D> bottom_vertices(vertices_per_side);
 
-        float x = radius * std::cos(theta);
-        float y = radius * std::sin(theta);
+    for (unsigned int i = 0; i < vertices_per_arc; ++i) {
+        const float theta = theta_start + (static_cast<float>(i) * theta_increment);
+        const float x = radius * std::cos(theta);
+        const float y = radius * std::sin(theta);
 
-        // Right side vertices
         top_vertices[i] = transform * QVector3D(x, y, length);
         bottom_vertices[i] = transform * QVector3D(x, y, 0.0f);
-
-        // Left side vertices
         top_vertices[i + vertices_per_arc] = transform * QVector3D(-x, -y, length);
         bottom_vertices[i + vertices_per_arc] = transform * QVector3D(-x, -y, 0.0f);
     }
 
-    // Compute the top and bottom center points
-    QVector3D top_center = transform * QVector3D(0.0f, 0.0f, length);
-    QVector3D bottom_center = transform * QVector3D(0.0f, 0.0f, 0.0f);
+    const QVector3D top_center = transform * QVector3D(0.0f, 0.0f, length);
+    const QVector3D bottom_center = transform * QVector3D(0.0f, 0.0f, 0.0f);
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, static_cast<std::size_t>(vertices_per_side) * 4);
 
-    // Generate triangle faces for each slice (quads split into two triangles)
     for (unsigned int i = 0; i < vertices_per_side; ++i) {
-        unsigned int j = (i + 1) % vertices_per_side;
-        appendTriangle(top_center, top_vertices[j], top_vertices[i], color, vertices, colors, normals); // Top triangle
-        appendTriangle(top_vertices[i], bottom_vertices[j], bottom_vertices[i], color, vertices, colors,
-                       normals); // Quad triangle 1
-        appendTriangle(top_vertices[i], top_vertices[j], bottom_vertices[j], color, vertices, colors,
-                       normals); // Quad triangle 2
-        appendTriangle(bottom_center, bottom_vertices[i], bottom_vertices[j], color, vertices, colors,
-                       normals); // Bottom triangle
+        const unsigned int next = (i + 1) % vertices_per_side;
+        appendTriangleData(top_center, top_vertices[next], top_vertices[i], rgba, vertices, colors, normals);
+        appendTriangleData(top_vertices[i], bottom_vertices[next], bottom_vertices[i], rgba, vertices, colors, normals);
+        appendTriangleData(top_vertices[i], top_vertices[next], bottom_vertices[next], rgba, vertices, colors, normals);
+        appendTriangleData(bottom_center, bottom_vertices[i], bottom_vertices[next], rgba, vertices, colors, normals);
     }
 }
 
 void ShapeFactory::createCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                               std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
-    unsigned int slices = 50; // Number of segments used to approximate a cone
-    float theta = 0;          // Theta of each segment, starts at 0
-    float theta_increment = 2 * float(M_PI) / float(slices);
-    unsigned int start_vertex;            // Used to build triangles at the end
-    unsigned int next_vertex;             // Used to build triangles at the end
-    std::vector<QVector3D> temp_vertices; // store all the raw values of the vertices used to construct the triangles
-
-    /*
-     * The cone is drawn as a series of pairs of triangles: one with a vertex at the tip and two
-     * vertices along the circle. The other with two vertices on the circle and one vertex at the base's center
-     */
-
-    // Tip of cone
-    temp_vertices.push_back(transform * QVector3D(0.0f, 0.0f, height));
-
-    // Perimeter of base
-    for (int i = 0; i < slices; ++i) {
-        temp_vertices.push_back(transform * QVector3D(radius * qSin(theta), radius * qCos(theta), 0.0f));
-        theta += theta_increment;
+    if (radius <= kVectorEpsilon || height <= kVectorEpsilon) {
+        return;
     }
 
-    // Center of base
-    temp_vertices.push_back(transform * QVector3D(0.0f, 0.0f, 0.0f));
+    std::array<QVector3D, kConeSlices> perimeter_vertices;
+    const float theta_increment = kTwoPi / static_cast<float>(kConeSlices);
 
-    // Iterativel draw pairs of triangles
-    start_vertex = 1;
-    next_vertex = 2;
-    QVector3D vertex1, vertex2, vertex3;
-    QVector3D normal;
-    for (int i = 0; i < slices; ++i) {
-        // Triangle from tip to two points on circle
-        vertex1 = temp_vertices.at(0);
-        vertex2 = temp_vertices.at(next_vertex);
-        vertex3 = temp_vertices.at(start_vertex);
-        vertices.push_back(vertex1.x());
-        vertices.push_back(vertex1.y());
-        vertices.push_back(vertex1.z());
-        vertices.push_back(vertex2.x());
-        vertices.push_back(vertex2.y());
-        vertices.push_back(vertex2.z());
-        vertices.push_back(vertex3.x());
-        vertices.push_back(vertex3.y());
-        vertices.push_back(vertex3.z());
+    for (int i = 0; i < kConeSlices; ++i) {
+        const float theta = static_cast<float>(i) * theta_increment;
+        perimeter_vertices[i] = transform * QVector3D(radius * std::sin(theta), radius * std::cos(theta), 0.0f);
+    }
 
-        // Each vertex in a face has the same normals
-        // Each vertex has same color, convenient to push back color data in these loops
-        normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-        for (int i = 0; i < 3; ++i) {
-            normals.push_back(normal.x());
-            normals.push_back(normal.y());
-            normals.push_back(normal.z());
-            colors.push_back(color.redF());
-            colors.push_back(color.greenF());
-            colors.push_back(color.blueF());
-            colors.push_back(color.alphaF());
-        }
+    const QVector3D tip = transform * QVector3D(0.0f, 0.0f, height);
+    const QVector3D base_center = transform * QVector3D(0.0f, 0.0f, 0.0f);
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, static_cast<std::size_t>(kConeSlices) * 2);
 
-        // Triangle from center of base to two points on circle
-        vertex1 = temp_vertices.at(start_vertex);
-        vertex2 = temp_vertices.at(next_vertex);
-        vertex3 = temp_vertices.at((slices + 1));
-        vertices.push_back(vertex1.x());
-        vertices.push_back(vertex1.y());
-        vertices.push_back(vertex1.z());
-        vertices.push_back(vertex2.x());
-        vertices.push_back(vertex2.y());
-        vertices.push_back(vertex2.z());
-        vertices.push_back(vertex3.x());
-        vertices.push_back(vertex3.y());
-        vertices.push_back(vertex3.z());
-
-        normal = QVector3D::crossProduct(vertex3 - vertex2, vertex1 - vertex2).normalized();
-        for (int i = 0; i < 3; ++i) {
-            normals.push_back(normal.x());
-            normals.push_back(normal.y());
-            normals.push_back(normal.z());
-            colors.push_back(color.redF());
-            colors.push_back(color.greenF());
-            colors.push_back(color.blueF());
-            colors.push_back(color.alphaF());
-        }
-
-        start_vertex = next_vertex;
-        ++next_vertex;
-
-        // Handle last slice where you come back to the first vertex to be added after the cone tip
-        if (next_vertex > slices) {
-            next_vertex -= slices;
-        }
+    for (int i = 0; i < kConeSlices; ++i) {
+        const int next = (i + 1) % kConeSlices;
+        appendTriangleData(tip, perimeter_vertices[next], perimeter_vertices[i], rgba, vertices, colors, normals);
+        appendTriangleData(perimeter_vertices[i], perimeter_vertices[next], base_center, rgba, vertices, colors,
+                           normals);
     }
 }
 
 void ShapeFactory::createGridPlane(float length, float width, float x_grid_dist, float y_grid_dist, const QColor& color,
                                    std::vector<float>& vertices, std::vector<float>& colors) {
-    float y_min = -width / 2;
-    float y_max = width / 2;
-    float x_min = -length / 2;
-    float x_max = length / 2;
-    float z = 0;
+    const float y_min = -width / 2.0f;
+    const float y_max = width / 2.0f;
+    const float x_min = -length / 2.0f;
+    const float x_max = length / 2.0f;
+    constexpr float z = 0.0f;
+    const Rgba rgba(color);
 
-    if (x_grid_dist > 0) {
-        float totalDist = x_max - x_min;
+    std::size_t line_count = 0;
+    if (x_grid_dist > 0.0f && x_grid_dist < (x_max - x_min)) {
+        line_count += countLoopValues(x_min, x_max + (x_grid_dist / 2.0f), x_grid_dist);
+    }
+    if (y_grid_dist > 0.0f && y_grid_dist < (y_max - y_min)) {
+        line_count += countLoopValues(y_min, y_max + (y_grid_dist / 2.0f), y_grid_dist);
+    }
+    reserveLineMesh(vertices, colors, line_count);
 
-        if (x_grid_dist < totalDist) {
-            float currentX = x_min;
-
-            while (currentX < (x_max + (x_grid_dist / 2))) {
-                vertices.push_back(currentX);
-                vertices.push_back(y_min);
-                vertices.push_back(z);
-                vertices.push_back(currentX);
-                vertices.push_back(y_max);
-                vertices.push_back(z);
-                currentX += x_grid_dist;
-            }
+    if (x_grid_dist > 0.0f && x_grid_dist < (x_max - x_min)) {
+        for (float current_x = x_min; current_x < (x_max + (x_grid_dist / 2.0f)); current_x += x_grid_dist) {
+            appendLine(QVector3D(current_x, y_min, z), QVector3D(current_x, y_max, z), rgba, vertices, colors);
         }
     }
 
-    if (y_grid_dist > 0) {
-        float totalDist = y_max - y_min;
-
-        if (y_grid_dist < totalDist) {
-            float currentY = y_min;
-
-            while (currentY < (y_max + (y_grid_dist / 2))) {
-                vertices.push_back(x_min);
-                vertices.push_back(currentY);
-                vertices.push_back(z);
-                vertices.push_back(x_max);
-                vertices.push_back(currentY);
-                vertices.push_back(z);
-                currentY += y_grid_dist;
-            }
+    if (y_grid_dist > 0.0f && y_grid_dist < (y_max - y_min)) {
+        for (float current_y = y_min; current_y < (y_max + (y_grid_dist / 2.0f)); current_y += y_grid_dist) {
+            appendLine(QVector3D(x_min, current_y, z), QVector3D(x_max, current_y, z), rgba, vertices, colors);
         }
-    }
-
-    int colorSize = vertices.size() / 3 * 4;
-    colors.reserve(colorSize);
-    for (int i = 0; i < colorSize; i += 4) {
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
     }
 }
 
-void ShapeFactory::createBuildVolumeRectangle(const QVector3D& min, const QVector3D& max, const float& x_grid_dist,
-                                              const float& x_grid_offset, const float& y_grid_dist,
-                                              const float& y_grid_offset, const QColor& color,
-                                              std::vector<float>& vertices, std::vector<float>& colors) {
-    float printer_x_min = min.x();
-    float printer_x_max = max.x();
-    float printer_y_min = min.y();
-    float printer_y_max = max.y();
-    float printer_z_min = min.z();
-    float printer_z_max = max.z();
+void ShapeFactory::createBuildVolumeRectangle(const QVector3D& min, const QVector3D& max, float x_grid_dist,
+                                              float x_grid_offset, float y_grid_dist, float y_grid_offset,
+                                              const QColor& color, std::vector<float>& vertices,
+                                              std::vector<float>& colors) {
+    const float printer_x_min = min.x();
+    const float printer_x_max = max.x();
+    const float printer_y_min = min.y();
+    const float printer_y_max = max.y();
+    const float printer_z_min = min.z();
+    const float printer_z_max = max.z();
 
-    vertices = {
-        // Line from back top left to...
-        // back top right
-        printer_x_min,
-        printer_y_min,
-        printer_z_max,
-        printer_x_max,
-        printer_y_min,
-        printer_z_max,
+    std::size_t line_count = 12;
+    if (x_grid_dist > 0.0f && x_grid_dist < (printer_x_max - printer_x_min)) {
+        line_count += countLoopValues(printer_x_min + x_grid_offset, printer_x_max, x_grid_dist);
+    }
+    if (y_grid_dist > 0.0f && y_grid_dist < (printer_y_max - printer_y_min)) {
+        line_count += countLoopValues(printer_y_min + y_grid_offset, printer_y_max, y_grid_dist);
+    }
 
-        // front top left
-        printer_x_min,
-        printer_y_min,
-        printer_z_max,
-        printer_x_min,
-        printer_y_max,
-        printer_z_max,
+    const Rgba rgba(color);
+    reserveLineMesh(vertices, colors, line_count);
 
-        // back bottom left
-        printer_x_min,
-        printer_y_min,
-        printer_z_max,
-        printer_x_min,
-        printer_y_min,
-        printer_z_min,
+    appendLine(QVector3D(printer_x_min, printer_y_min, printer_z_max),
+               QVector3D(printer_x_max, printer_y_min, printer_z_max), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_min, printer_y_min, printer_z_max),
+               QVector3D(printer_x_min, printer_y_max, printer_z_max), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_min, printer_y_min, printer_z_max),
+               QVector3D(printer_x_min, printer_y_min, printer_z_min), rgba, vertices, colors);
 
-        // Line from front top right to...
-        // back top right
-        printer_x_max,
-        printer_y_max,
-        printer_z_max,
-        printer_x_max,
-        printer_y_min,
-        printer_z_max,
+    appendLine(QVector3D(printer_x_max, printer_y_max, printer_z_max),
+               QVector3D(printer_x_max, printer_y_min, printer_z_max), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_max, printer_y_max, printer_z_max),
+               QVector3D(printer_x_min, printer_y_max, printer_z_max), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_max, printer_y_max, printer_z_max),
+               QVector3D(printer_x_max, printer_y_max, printer_z_min), rgba, vertices, colors);
 
-        // front top left
-        printer_x_max,
-        printer_y_max,
-        printer_z_max,
-        printer_x_min,
-        printer_y_max,
-        printer_z_max,
+    appendLine(QVector3D(printer_x_max, printer_y_min, printer_z_min),
+               QVector3D(printer_x_max, printer_y_min, printer_z_max), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_max, printer_y_min, printer_z_min),
+               QVector3D(printer_x_min, printer_y_min, printer_z_min), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_max, printer_y_min, printer_z_min),
+               QVector3D(printer_x_max, printer_y_max, printer_z_min), rgba, vertices, colors);
 
-        // front bottom right
-        printer_x_max,
-        printer_y_max,
-        printer_z_max,
-        printer_x_max,
-        printer_y_max,
-        printer_z_min,
+    appendLine(QVector3D(printer_x_min, printer_y_max, printer_z_min),
+               QVector3D(printer_x_min, printer_y_max, printer_z_max), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_min, printer_y_max, printer_z_min),
+               QVector3D(printer_x_min, printer_y_min, printer_z_min), rgba, vertices, colors);
+    appendLine(QVector3D(printer_x_min, printer_y_max, printer_z_min),
+               QVector3D(printer_x_max, printer_y_max, printer_z_min), rgba, vertices, colors);
 
-        // Line from back bottom right to...
-        // back top right
-        printer_x_max,
-        printer_y_min,
-        printer_z_min,
-        printer_x_max,
-        printer_y_min,
-        printer_z_max,
-
-        // back bottom left
-        printer_x_max,
-        printer_y_min,
-        printer_z_min,
-        printer_x_min,
-        printer_y_min,
-        printer_z_min,
-
-        // front bottom right
-        printer_x_max,
-        printer_y_min,
-        printer_z_min,
-        printer_x_max,
-        printer_y_max,
-        printer_z_min,
-
-        // Line from front bottom left to...
-        // front top left
-        printer_x_min,
-        printer_y_max,
-        printer_z_min,
-        printer_x_min,
-        printer_y_max,
-        printer_z_max,
-
-        // back bottom left
-        printer_x_min,
-        printer_y_max,
-        printer_z_min,
-        printer_x_min,
-        printer_y_min,
-        printer_z_min,
-
-        // front bottom right
-        printer_x_min,
-        printer_y_max,
-        printer_z_min,
-        printer_x_max,
-        printer_y_max,
-        printer_z_min,
-    };
-
-    if (x_grid_dist > 0) {
-        float totalDist = printer_x_max - printer_x_min;
-
-        if (x_grid_dist < totalDist) {
-            float currentX = printer_x_min + x_grid_offset;
-
-            while (currentX < printer_x_max) {
-                vertices.push_back(currentX);
-                vertices.push_back(printer_y_min);
-                vertices.push_back(printer_z_min);
-                vertices.push_back(currentX);
-                vertices.push_back(printer_y_max);
-                vertices.push_back(printer_z_min);
-                currentX += x_grid_dist;
-            }
+    if (x_grid_dist > 0.0f && x_grid_dist < (printer_x_max - printer_x_min)) {
+        for (float current_x = printer_x_min + x_grid_offset; current_x < printer_x_max; current_x += x_grid_dist) {
+            appendLine(QVector3D(current_x, printer_y_min, printer_z_min),
+                       QVector3D(current_x, printer_y_max, printer_z_min), rgba, vertices, colors);
         }
     }
 
-    if (y_grid_dist > 0) {
-        float totalDist = printer_y_max - printer_y_min;
-
-        if (y_grid_dist < totalDist) {
-            float currentY = printer_y_min + y_grid_offset;
-
-            while (currentY < printer_y_max) {
-                vertices.push_back(printer_x_min);
-                vertices.push_back(currentY);
-                vertices.push_back(printer_z_min);
-                vertices.push_back(printer_x_max);
-                vertices.push_back(currentY);
-                vertices.push_back(printer_z_min);
-                currentY += y_grid_dist;
-            }
+    if (y_grid_dist > 0.0f && y_grid_dist < (printer_y_max - printer_y_min)) {
+        for (float current_y = printer_y_min + y_grid_offset; current_y < printer_y_max; current_y += y_grid_dist) {
+            appendLine(QVector3D(printer_x_min, current_y, printer_z_min),
+                       QVector3D(printer_x_max, current_y, printer_z_min), rgba, vertices, colors);
         }
-    }
-
-    int colorSize = vertices.size() / 3 * 4;
-    colors.reserve(colorSize);
-    for (int i = 0; i < colorSize; i += 4) {
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
     }
 }
 
 void ShapeFactory::createBuildVolumeCylinder(float radius, float height, float x_grid_dist, float y_grid_dist,
                                              const QColor& color, std::vector<float>& vertices,
                                              std::vector<float>& colors) {
-    unsigned int segments = 100; // Number of arc segments used to approximate a cylinder
-    float theta = 0.0f;          // Measure of angle at which each segment starts; first theta is just 0
-    float thetaIncrement = 2.0f * M_PI / float(segments);
-    int verticalIncrement = 6;
+    if (radius <= kVectorEpsilon || height <= kVectorEpsilon) {
+        return;
+    }
 
-    vertices.reserve(segments * 6 + verticalIncrement * 6);
-    std::vector<float> heights {0.0f, height};
+    const float theta_increment = kTwoPi / static_cast<float>(kBuildVolumeCylinderSegments);
+    const float vertical_step = kTwoPi / static_cast<float>(kBuildVolumeVerticalLines);
+    const float r_squared = radius * radius;
 
-    // draw two circles
-    for (float m_h : heights) {
-        theta = 0.0f;
+    std::size_t line_count = (static_cast<std::size_t>(kBuildVolumeCylinderSegments) * 2) + kBuildVolumeVerticalLines;
+    if (x_grid_dist > 0.0f) {
+        line_count += countLoopValues(-radius, radius + kVectorEpsilon, x_grid_dist);
+    }
+    if (y_grid_dist > 0.0f) {
+        line_count += countLoopValues(-radius, radius + kVectorEpsilon, y_grid_dist);
+    }
 
-        for (int i = 0; i < segments; ++i) {
-            vertices.push_back(radius * qCos(theta));
-            vertices.push_back(radius * qSin(theta));
-            vertices.push_back(m_h);
+    const Rgba rgba(color);
+    reserveLineMesh(vertices, colors, line_count);
 
-            theta += thetaIncrement;
-
-            vertices.push_back(radius * qCos(theta));
-            vertices.push_back(radius * qSin(theta));
-            vertices.push_back(m_h);
+    for (float current_height : std::array<float, 2> {0.0f, height}) {
+        for (int i = 0; i < kBuildVolumeCylinderSegments; ++i) {
+            const float theta = static_cast<float>(i) * theta_increment;
+            const float next_theta = static_cast<float>(i + 1) * theta_increment;
+            appendLine(QVector3D(radius * std::cos(theta), radius * std::sin(theta), current_height),
+                       QVector3D(radius * std::cos(next_theta), radius * std::sin(next_theta), current_height), rgba,
+                       vertices, colors);
         }
     }
 
-    // draw vertical lines
-    theta = 0.0;
-    float verticalStep = 2.0f * M_PI / float(verticalIncrement);
-    for (int i = 0; i < verticalIncrement; ++i) {
-        float x = radius * qCos(theta);
-        float y = radius * qSin(theta);
-
-        vertices.push_back(x);
-        vertices.push_back(y);
-        vertices.push_back(0.0f);
-
-        vertices.push_back(x);
-        vertices.push_back(y);
-        vertices.push_back(height);
-
-        theta += verticalStep;
+    for (int i = 0; i < kBuildVolumeVerticalLines; ++i) {
+        const float theta = static_cast<float>(i) * vertical_step;
+        const float x = radius * std::cos(theta);
+        const float y = radius * std::sin(theta);
+        appendLine(QVector3D(x, y, 0.0f), QVector3D(x, y, height), rgba, vertices, colors);
     }
 
-    float r_squared = radius * radius;
-    float diameter = 2.0 * radius;
-    if (x_grid_dist > 0) {
-        float x = -radius;
-
-        while (x < diameter) {
-            float x_squared = x * x;
-            float y = qSqrt(r_squared - x_squared);
-
-            if (std::isnan(y)) {
-                x += x_grid_dist;
-                continue;
-            }
-
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(0.0f);
-
-            vertices.push_back(x);
-            vertices.push_back(-y);
-            vertices.push_back(0.0f);
-
-            x += x_grid_dist;
+    if (x_grid_dist > 0.0f) {
+        for (float x = -radius; x <= radius + kVectorEpsilon; x += x_grid_dist) {
+            const float y = std::sqrt(std::max(0.0f, r_squared - (x * x)));
+            appendLine(QVector3D(x, y, 0.0f), QVector3D(x, -y, 0.0f), rgba, vertices, colors);
         }
     }
 
-    if (y_grid_dist > 0) {
-        float y = -radius;
-
-        while (y < diameter) {
-            float y_squared = y * y;
-            float x = qSqrt(r_squared - y_squared);
-
-            if (std::isnan(x)) {
-                y += y_grid_dist;
-                continue;
-            }
-
-            vertices.push_back(x);
-            vertices.push_back(y);
-            vertices.push_back(0.0f);
-
-            vertices.push_back(-x);
-            vertices.push_back(y);
-            vertices.push_back(0.0f);
-
-            y += y_grid_dist;
+    if (y_grid_dist > 0.0f) {
+        for (float y = -radius; y <= radius + kVectorEpsilon; y += y_grid_dist) {
+            const float x = std::sqrt(std::max(0.0f, r_squared - (y * y)));
+            appendLine(QVector3D(x, y, 0.0f), QVector3D(-x, y, 0.0f), rgba, vertices, colors);
         }
-    }
-
-    // set colors for all vertices
-    int colorSize = vertices.size() / 3 * 4;
-    colors.reserve(colorSize);
-    for (int i = 0; i < colorSize; i += 4) {
-        colors.push_back(color.redF());
-        colors.push_back(color.greenF());
-        colors.push_back(color.blueF());
-        colors.push_back(color.alphaF());
     }
 }
 
 QMatrix4x4 ShapeFactory::computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end) {
-    // Convert the start position and displacement to a transform matrix we can use in the standard method
     QMatrix4x4 transform;
     transform.translate(start);
 
-    // Retrieve the tangent (forward) vector from start to end
-    QVector3D tangent = end.normalized();
+    QVector3D tangent = end - start;
+    if (tangent.lengthSquared() <= kVectorEpsilonSquared) {
+        return transform;
+    }
+    tangent.normalize();
 
-    // Retrieve the normal (up) vector from the global settings
     QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
                         GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
                         GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
-    normal.normalize();
+    if (normal.lengthSquared() <= kVectorEpsilonSquared) {
+        normal = QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    else {
+        normal.normalize();
+    }
 
-    // Compute the right vector
     QVector3D binormal = QVector3D::crossProduct(tangent, normal);
-    if (binormal.lengthSquared() < std::numeric_limits<float>::epsilon()) {
-        // Up and forward are parallel or anti-parallel; choose a different up vector
-        normal = QVector3D(1, 0, 0);
+    if (binormal.lengthSquared() <= kVectorEpsilonSquared) {
+        normal = (std::fabs(tangent.x()) < 0.9f) ? QVector3D(1.0f, 0.0f, 0.0f) : QVector3D(0.0f, 1.0f, 0.0f);
         binormal = QVector3D::crossProduct(tangent, normal);
     }
     binormal.normalize();
 
-    // Recompute up vector to ensure orthogonality
     normal = QVector3D::crossProduct(binormal, tangent);
+    normal.normalize();
 
-    // Build the rotation matrix
     QMatrix4x4 rotation;
-    rotation.setColumn(0, QVector4D(binormal, 0));
-    rotation.setColumn(1, QVector4D(normal, 0));
-    rotation.setColumn(2, QVector4D(tangent, 0));
-    rotation.setColumn(3, QVector4D(0, 0, 0, 1));
+    rotation.setColumn(0, QVector4D(binormal, 0.0f));
+    rotation.setColumn(1, QVector4D(normal, 0.0f));
+    rotation.setColumn(2, QVector4D(tangent, 0.0f));
+    rotation.setColumn(3, QVector4D(0.0f, 0.0f, 0.0f, 1.0f));
 
-    // Apply the rotation to the transform
     transform *= rotation;
-
     return transform;
 }
 
-void ShapeFactory::createArcCylinder(const float cylinder_height, const Point& start, const Point& center,
-                                     const Point& end, bool is_ccw, const QColor& color, std::vector<float>& vertices,
+void ShapeFactory::createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
+                                     bool is_ccw, const QColor& color, std::vector<float>& vertices,
                                      std::vector<float>& colors, std::vector<float>& normals) {
-    // Convert the start position and displacement to a transform matrix we can use in the standard method
+    const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
+    if (major_radius <= kVectorEpsilon || cylinder_height <= kVectorEpsilon) {
+        return;
+    }
+
     QMatrix4x4 transform;
-    transform.setToIdentity();
     transform.translate(center.toQVector3D());
 
-    Point a(start.x(), start.y(), center.z());
-    Point c(center.x() + (center.distance(a)), center.y(), center.z());
-    transform.rotate(MathUtils::CreateQuaternion((c - center).toQVector3D(), (a - center).toQVector3D()));
+    const Point projected_start(start.x(), start.y(), center.z());
+    const Point reference(center.x() + major_radius, center.y(), center.z());
+    transform.rotate(
+        MathUtils::CreateQuaternion((reference - center).toQVector3D(), (projected_start - center).toQVector3D()));
 
     if (is_ccw) {
         createArcCylinderCCW(cylinder_height, start, center, end, transform, color, vertices, colors, normals);
@@ -1351,4 +736,4 @@ void ShapeFactory::createArcCylinder(const float cylinder_height, const Point& s
     }
 }
 
-} // Namespace ORNL
+} // namespace ORNL
