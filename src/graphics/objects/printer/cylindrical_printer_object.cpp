@@ -29,8 +29,8 @@ CylindricalPrinterObject::CylindricalPrinterObject(BaseView* view, QSharedPointe
     std::vector<float> vertices;
     std::vector<float> colors;
 
-    ShapeFactory::createBuildVolumeCylinder(m_radius, m_height, m_x_grid, m_y_grid, Constants::Colors::kBlack, vertices,
-                                            colors);
+    ShapeFactory::appendBuildVolumeCylinderLines(m_radius, m_height, m_x_grid, m_y_grid, Constants::Colors::kBlack,
+                                                 vertices, colors);
 
     std::vector<float> tmp_norm;
     this->populateGL(view, vertices, tmp_norm, colors, GL_LINES);
@@ -141,8 +141,8 @@ void CylindricalPrinterObject::updateGeometry() {
     std::vector<float> vertices;
     std::vector<float> colors;
 
-    ShapeFactory::createBuildVolumeCylinder(m_radius, m_height, m_x_grid, m_y_grid, Constants::Colors::kBlack, vertices,
-                                            colors);
+    ShapeFactory::appendBuildVolumeCylinderLines(m_radius, m_height, m_x_grid, m_y_grid, Constants::Colors::kBlack,
+                                                 vertices, colors);
 
     this->replaceVertices(vertices);
     this->replaceColors(colors);

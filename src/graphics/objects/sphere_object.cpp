@@ -17,7 +17,7 @@ SphereObject::SphereObject(BaseView* view, float radius, QColor color, ushort re
     std::vector<float> normals;
     std::vector<float> colors;
 
-    ShapeFactory::createSphere(m_radius, 25, 25, QMatrix4x4(), color, vertices, colors, normals);
+    ShapeFactory::appendSphere(m_radius, 25, 25, QMatrix4x4(), color, vertices, colors, normals);
 
     this->populateGL(view, vertices, normals, colors, render_mode);
 }

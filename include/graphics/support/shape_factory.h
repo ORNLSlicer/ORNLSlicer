@@ -17,196 +17,234 @@ class ShapeFactory final {
   public:
     ShapeFactory() = delete;
 
-    /*! \brief Append the data for a rectangular prism to input vectors
-     *
-     *  @param length Total X dimension
-     *  @param width Total Y dimension
-     *  @param height Total Z dimension
-     *  @param transform Matrix to apply to each vertex
-     *  @param color Color of prism
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
-     */
-    static void createRectangle(float length, float width, float height, const QMatrix4x4& transform,
-                                const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
-                                std::vector<float>& normals);
+    //! \name Closed Triangle Meshes
+    //! @{
 
-    /*! \brief Append the data for a cylinder to input vectors
+    /*! \brief Appends a transformed rectangular-prism triangle mesh.
      *
-     *  @param radius Radius of cylinder
-     *  @param height Height of cylinder
-     *  @param transform Matrix to apply to each vertex
-     *  @param color Color of cylinder
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
+     *  The prism is centered at the local origin before \p transform is applied.
+     *  Output is suitable for GL_TRIANGLES.
+     *
+     *  @param length Local X dimension.
+     *  @param width Local Y dimension.
+     *  @param height Local Z dimension.
+     *  @param transform Matrix applied to every generated vertex.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
      */
-    static void createCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
+    static void appendBox(float length, float width, float height, const QMatrix4x4& transform, const QColor& color,
+                          std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
+
+    /*! \brief Appends a transformed capped-cylinder triangle mesh.
+     *
+     *  The local cylinder runs from z=0 to z=\p height before \p transform is applied.
+     *  Output is suitable for GL_TRIANGLES.
+     *
+     *  @param radius Local cylinder radius.
+     *  @param height Local cylinder height.
+     *  @param transform Matrix applied to every generated vertex.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
+     */
+    static void appendCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                                std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! \brief Append the data for a sphere to input vectors
+    /*! \brief Appends a transformed UV-sphere triangle mesh.
      *
-     *  @param radius: Radius of sphere
-     *  @param sectorCount: Number of horizontal sectors that make up sphere
-     *  @param stackCount: Number of vertical sectors that make up sphere
-     *  @param transform: Matrix to apply to each vertex
-     *  @param color: Color of sphere
-     *  @param vertices: Vector of vertices to append the new vertices to
-     *  @param colors: Vector of colors to append the new colors to
-     *  @param normals: Vector of normals to append the new normals to
+     *  Output is suitable for GL_TRIANGLES.
+     *
+     *  @param radius Local sphere radius.
+     *  @param sector_count Number of longitudinal sectors.
+     *  @param stack_count Number of latitudinal stacks.
+     *  @param transform Matrix applied to every generated vertex.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
      */
-    static void createSphere(float radius, int sectorCount, int stackCount, const QMatrix4x4& transform,
+    static void appendSphere(float radius, int sector_count, int stack_count, const QMatrix4x4& transform,
                              const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                              std::vector<float>& normals);
 
-    /*! \brief Append the data for a clipped cylinder to the input vector
-     *  @param width: Width of the clipped cylinder
-     *  @param length: Length of the clipped cylinder
-     *  @param height: Height of the clipped cylinder
-     *  @param start: Start point of the gcode segment
-     *  @param end: End point of the gcode segment
-     *  @param color: Color of the clipped cylinder
-     *  @param vertices Vertices of the clipped cylinder
-     *  @param colors Vertex colors of the clipped cylinder
-     *  @param normals Normal vectors of the clipped cylinder
-     */
-    static void createGcodeCylinder(float width, float length, float height, const QVector3D& start,
-                                    const QVector3D& end, const QColor& color, std::vector<float>& vertices,
-                                    std::vector<float>& colors, std::vector<float>& normals);
-
-    /*!
-     * \brief appends the data for a arc cylinder to input vectors
-     * \note this is an overload that automatically computes the transform
-     * @param cylinder_height how thick of a cylinder to draw
-     * @param start the start point of the cylinder
-     * @param center the center point of the arc
-     * @param end the end point of the cylinder
-     * @param is_ccw true when the arc is counter-clockwise
-     * @param color the color to draw the arc as
-     * @param vertices Vector of vertices to append the new vertices to
-     * @param colors Vector of colors to append the new colors to
-     * @param normals Vector of normals to append the new normals to
-     */
-    static void createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
-                                  bool is_ccw, const QColor& color, std::vector<float>& vertices,
-                                  std::vector<float>& colors, std::vector<float>& normals);
-
-    /*!
-     * \brief appends the data for a spline cylinder for input values
-     * @param cylinder_height how thick of a cylinder to draw
-     * @param start the start point of the cylinder
-     * @param control_a the first control point
-     * @param control_b the second control point
-     * @param end the end point of the spline
-     * @param color the color to draw the arc as
-     * @param vertices Vector of vertices to append the new vertices to
-     * @param colors Vector of colors to append the new colors to
-     * @param normals Vector of normals to append the new normals to
-     */
-    static void createSplineCylinder(float cylinder_height, const Point& start, const Point& control_a,
-                                     const Point& control_b, const Point& end, const QColor& color,
-                                     std::vector<float>& vertices, std::vector<float>& colors,
-                                     std::vector<float>& normals);
-
-    /*! \brief Append the data for a cone to input vectors
+    /*! \brief Appends a transformed capped-cone triangle mesh.
      *
-     *  @param radius Radius of base of cone
-     *  @param height Height from base to tip
-     *  @param transform Matrix to apply to each vertex
-     *  @param color Color of cone
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     *  @param normals Vector of normals to append the new normals to
+     *  The local cone base is on z=0 and its tip is at z=\p height before \p transform is applied.
+     *  Output is suitable for GL_TRIANGLES.
+     *
+     *  @param radius Local base radius.
+     *  @param height Local height from base to tip.
+     *  @param transform Matrix applied to every generated vertex.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
      */
-    static void createCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
+    static void appendCone(float radius, float height, const QMatrix4x4& transform, const QColor& color,
                            std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! \brief Create rectangle for use as a plane.
-     *
-     *  Constructs a wire frame rectangular prism build volume representation
-     *  @param length: length of plane
-     *  @param width: length of plane
-     *  @param x_grid_dist: Distance between grid lines in x direction
-     *  @param y_grid_dist: Distance between grid lines in y direction
-     *  @param color Color of resulting volume
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     */
-    static void createGridPlane(float length, float width, float x_grid_dist, float y_grid_dist, const QColor& color,
-                                std::vector<float>& vertices, std::vector<float>& colors);
+    //! @}
 
-    /*! \brief Create rectangle for build volume representation
-     *
-     *  Constructs a wire frame rectangular prism build volume representation
-     *  @param min Min value of rectangle
-     *  @param max Max value of rectangle
-     *  @param x_grid_dist: Distance between grid lines in x direction
-     *  @param x_grid_offset: Distance to offset the first grid line from the minimum X
-     *  @param y_grid_dist: Distance between grid lines in y direction
-     *  @param y_grid_offset: Distance to offset the first grid line from the minimum Y
-     *  @param color Color of resulting volume
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
-     */
-    static void createBuildVolumeRectangle(const QVector3D& min, const QVector3D& max, float x_grid_dist,
-                                           float x_grid_offset, float y_grid_dist, float y_grid_offset,
-                                           const QColor& color, std::vector<float>& vertices,
-                                           std::vector<float>& colors);
+    //! \name Toolpath Bead Meshes
+    //! @{
 
-    /*! \brief Create cylinder for build volume representation
+    /*! \brief Appends a straight squished-bead triangle mesh between two points.
      *
-     *  Constructs a wire frame cylindrical build volume representation
-     *  @param radius Radius of circle for top/bottom of cylinder
-     *  @param height Height of cylinder
-     *  @param x_grid_dist: Distance between grid lines in x direction
-     *  @param y_grid_dist: Distance between grid lines in y direction
-     *  @param color Color of resulting volume
-     *  @param vertices Vector of vertices to append the new vertices to
-     *  @param colors Vector of colors to append the new colors to
+     *  This is the filled G-code line bead representation, not a round cylinder. The cross-section is clipped/squished
+     *  from \p width and \p height, capped at \p start and \p end, and oriented using the current slicing vector.
+     *  Output is suitable for GL_TRIANGLES.
+     *
+     *  @param width Display bead width across the path.
+     *  @param length Display bead length along the path.
+     *  @param height Display bead height.
+     *  @param start Segment start point.
+     *  @param end Segment end point.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
      */
-    static void createBuildVolumeCylinder(float radius, float height, float x_grid_dist, float y_grid_dist,
+    static void appendLinearBead(float width, float length, float height, const QVector3D& start, const QVector3D& end,
+                                 const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
+                                 std::vector<float>& normals);
+
+    /*! \brief Appends a circular-arc bead triangle mesh.
+     *
+     *  The bead follows the XY arc defined by \p start, \p center, \p end, and \p is_ccw. Z is linearly interpolated
+     *  from start to end. Output is suitable for GL_TRIANGLES.
+     *
+     *  @param bead_diameter Diameter of the circular bead cross-section.
+     *  @param start Arc start point.
+     *  @param center Arc center point.
+     *  @param end Arc end point.
+     *  @param is_ccw True when the arc travels counter-clockwise.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
+     */
+    static void appendArcBead(float bead_diameter, const Point& start, const Point& center, const Point& end,
+                              bool is_ccw, const QColor& color, std::vector<float>& vertices,
+                              std::vector<float>& colors, std::vector<float>& normals);
+
+    /*! \brief Appends a cubic Bezier bead triangle mesh.
+     *
+     *  The bead follows the cubic Bezier curve defined by start, two controls, and end. Output is suitable for
+     *  GL_TRIANGLES.
+     *
+     *  @param bead_diameter Diameter of the circular bead cross-section.
+     *  @param start Curve start point.
+     *  @param control_a First Bezier control point.
+     *  @param control_b Second Bezier control point.
+     *  @param end Curve end point.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
+     */
+    static void appendSplineBead(float bead_diameter, const Point& start, const Point& control_a,
+                                 const Point& control_b, const Point& end, const QColor& color,
+                                 std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
+
+    //! @}
+
+    //! \name Line Geometry
+    //! @{
+
+    /*! \brief Appends XY grid lines for a rectangular plane centered at the origin.
+     *
+     *  Output is suitable for GL_LINES.
+     *
+     *  @param length Plane length in X.
+     *  @param width Plane width in Y.
+     *  @param x_grid_dist Distance between grid lines parallel to Y.
+     *  @param y_grid_dist Distance between grid lines parallel to X.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     */
+    static void appendGridPlaneLines(float length, float width, float x_grid_dist, float y_grid_dist,
+                                     const QColor& color, std::vector<float>& vertices, std::vector<float>& colors);
+
+    /*! \brief Appends wireframe and floor-grid lines for a rectangular build volume.
+     *
+     *  Output is suitable for GL_LINES.
+     *
+     *  @param min Minimum build-volume corner.
+     *  @param max Maximum build-volume corner.
+     *  @param x_grid_dist Distance between floor grid lines parallel to Y.
+     *  @param x_grid_offset X offset for the first floor grid line.
+     *  @param y_grid_dist Distance between floor grid lines parallel to X.
+     *  @param y_grid_offset Y offset for the first floor grid line.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     */
+    static void appendBuildVolumeBoxLines(const QVector3D& min, const QVector3D& max, float x_grid_dist,
+                                          float x_grid_offset, float y_grid_dist, float y_grid_offset,
                                           const QColor& color, std::vector<float>& vertices,
                                           std::vector<float>& colors);
 
+    /*! \brief Appends wireframe and floor-grid lines for a cylindrical build volume.
+     *
+     *  Output is suitable for GL_LINES.
+     *
+     *  @param radius Build-volume radius.
+     *  @param height Build-volume height.
+     *  @param x_grid_dist Distance between floor grid lines parallel to Y.
+     *  @param y_grid_dist Distance between floor grid lines parallel to X.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     */
+    static void appendBuildVolumeCylinderLines(float radius, float height, float x_grid_dist, float y_grid_dist,
+                                               const QColor& color, std::vector<float>& vertices,
+                                               std::vector<float>& colors);
+
+    //! @}
+
   private:
-    /*! \brief Helper function to compute the transformation matrix for a gcode cylinder
-     *  @param start Start point of the gcode segment
-     *  @param end End point of the gcode segment
-     *  @return Transformation matrix to place the cylinder at the correct point and orientation
+    /*! \brief Computes the transform that places a local +Z bead mesh between two endpoints.
+     *  @param start Segment start point.
+     *  @param end Segment end point.
+     *  @return Transform that translates to \p start and rotates local +Z toward \p end.
      */
-    static QMatrix4x4 computeGcodeCylinderTransform(const QVector3D& start, const QVector3D& end);
+    static QMatrix4x4 computeLinearBeadTransform(const QVector3D& start, const QVector3D& end);
 
     /*!
-     * \brief appends the data for a clockwise (G2) arc cylinder to input vectors
-     * @param cylinder_height how thick of a cylinder to draw
-     * @param start the start point of the cylinder
-     * @param center the center point of the arc
-     * @param end the end point of the cylinder
-     * @param transform the transformation matrix to place the arc at the correct point
-     * @param color the color to draw the arc as
-     * @param vertices Vector of vertices to append the new vertices to
-     * @param colors Vector of colors to append the new colors to
-     * @param normals Vector of normals to append the new normals to
+     * \brief Appends a clockwise circular-arc bead using a precomputed placement transform.
+     * @param bead_diameter Diameter of the circular bead cross-section.
+     * @param start Arc start point.
+     * @param center Arc center point.
+     * @param end Arc end point.
+     * @param transform Matrix placing the local arc frame in world coordinates.
+     * @param color RGBA color applied to every generated vertex.
+     * @param vertices Destination xyz vertex buffer to append to.
+     * @param colors Destination rgba color buffer to append to.
+     * @param normals Destination xyz normal buffer to append to.
      */
-    static void createArcCylinder(float cylinder_height, const Point& start, const Point& center, const Point& end,
-                                  const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
-                                  std::vector<float>& colors, std::vector<float>& normals);
+    static void appendArcBeadClockwise(float bead_diameter, const Point& start, const Point& center, const Point& end,
+                                       const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
+                                       std::vector<float>& colors, std::vector<float>& normals);
 
     /*!
-     * \brief appends the data for a counter-clockwise (G3) arc cylinder to input vectors
-     * @param cylinder_height how thick of a cylinder to draw
-     * @param start the start point of the cylinder
-     * @param center the center point of the arc
-     * @param end the end point of the cylinder
-     * @param transform the transformation matrix to place the arc at the correct point
-     * @param color the color to draw the arc as
-     * @param vertices Vector of vertices to append the new vertices to
-     * @param colors Vector of colors to append the new colors to
-     * @param normals Vector of normals to append the new normals to
+     * \brief Appends a counter-clockwise circular-arc bead using a precomputed placement transform.
+     * @param bead_diameter Diameter of the circular bead cross-section.
+     * @param start Arc start point.
+     * @param center Arc center point.
+     * @param end Arc end point.
+     * @param transform Matrix placing the local arc frame in world coordinates.
+     * @param color RGBA color applied to every generated vertex.
+     * @param vertices Destination xyz vertex buffer to append to.
+     * @param colors Destination rgba color buffer to append to.
+     * @param normals Destination xyz normal buffer to append to.
      */
-    static void createArcCylinderCCW(float cylinder_height, const Point& start, const Point& center, const Point& end,
-                                     const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
-                                     std::vector<float>& colors, std::vector<float>& normals);
+    static void appendArcBeadCounterClockwise(float bead_diameter, const Point& start, const Point& center,
+                                              const Point& end, const QMatrix4x4& transform, const QColor& color,
+                                              std::vector<float>& vertices, std::vector<float>& colors,
+                                              std::vector<float>& normals);
 };
 } // namespace ORNL

@@ -52,8 +52,7 @@ ArcSegment::ArcSegment(Point start, Point end, Point center, bool ccw)
 }
 
 void ArcSegment::createGraphic(std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
-    ShapeFactory::createArcCylinder(m_display_width, m_start, m_center, m_end, m_ccw, m_color, vertices, colors,
-                                    normals);
+    ShapeFactory::appendArcBead(m_display_width, m_start, m_center, m_end, m_ccw, m_color, vertices, colors, normals);
 }
 
 QSharedPointer<SegmentBase> ArcSegment::clone() const { return QSharedPointer<ArcSegment>::create(*this); }
