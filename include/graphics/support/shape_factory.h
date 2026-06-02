@@ -106,10 +106,12 @@ class ShapeFactory final {
      *  @param vertices Destination xyz vertex buffer to append to.
      *  @param colors Destination rgba color buffer to append to.
      *  @param normals Destination xyz normal buffer to append to.
+     *  @param quads_per_side Number of quads used to approximate each rounded side of the bead cross-section. Defaults
+     *                         to 4.
      */
     static void appendLinearBead(float width, float length, float height, const QVector3D& start, const QVector3D& end,
                                  const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
-                                 std::vector<float>& normals);
+                                 std::vector<float>& normals, unsigned int quads_per_side = 4);
 
     /*! \brief Appends a circular-arc bead triangle mesh.
      *
