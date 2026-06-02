@@ -213,38 +213,5 @@ class ShapeFactory final {
      *  @return Transform that translates to \p start and rotates local +Z toward \p end.
      */
     static QMatrix4x4 computeLinearBeadTransform(const QVector3D& start, const QVector3D& end);
-
-    /*!
-     * \brief Appends a clockwise circular-arc bead using a precomputed placement transform.
-     * @param bead_diameter Diameter of the circular bead cross-section.
-     * @param start Arc start point.
-     * @param center Arc center point.
-     * @param end Arc end point.
-     * @param transform Matrix placing the local arc frame in world coordinates.
-     * @param color RGBA color applied to every generated vertex.
-     * @param vertices Destination xyz vertex buffer to append to.
-     * @param colors Destination rgba color buffer to append to.
-     * @param normals Destination xyz normal buffer to append to.
-     */
-    static void appendArcBeadClockwise(float bead_diameter, const Point& start, const Point& center, const Point& end,
-                                       const QMatrix4x4& transform, const QColor& color, std::vector<float>& vertices,
-                                       std::vector<float>& colors, std::vector<float>& normals);
-
-    /*!
-     * \brief Appends a counter-clockwise circular-arc bead using a precomputed placement transform.
-     * @param bead_diameter Diameter of the circular bead cross-section.
-     * @param start Arc start point.
-     * @param center Arc center point.
-     * @param end Arc end point.
-     * @param transform Matrix placing the local arc frame in world coordinates.
-     * @param color RGBA color applied to every generated vertex.
-     * @param vertices Destination xyz vertex buffer to append to.
-     * @param colors Destination rgba color buffer to append to.
-     * @param normals Destination xyz normal buffer to append to.
-     */
-    static void appendArcBeadCounterClockwise(float bead_diameter, const Point& start, const Point& center,
-                                              const Point& end, const QMatrix4x4& transform, const QColor& color,
-                                              std::vector<float>& vertices, std::vector<float>& colors,
-                                              std::vector<float>& normals);
 };
 } // namespace ORNL

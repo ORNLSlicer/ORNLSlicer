@@ -279,20 +279,6 @@ void ShapeFactory::appendBox(float length, float width, float height, const QMat
     }
 }
 
-void ShapeFactory::appendArcBeadCounterClockwise(float bead_diameter, const Point& start, const Point& center,
-                                                 const Point& end, const QMatrix4x4& transform, const QColor& color,
-                                                 std::vector<float>& vertices, std::vector<float>& colors,
-                                                 std::vector<float>& normals) {
-    appendArcBeadMesh(bead_diameter, start, center, end, transform, true, color, vertices, colors, normals);
-}
-
-void ShapeFactory::appendArcBeadClockwise(float bead_diameter, const Point& start, const Point& center,
-                                          const Point& end, const QMatrix4x4& transform, const QColor& color,
-                                          std::vector<float>& vertices, std::vector<float>& colors,
-                                          std::vector<float>& normals) {
-    appendArcBeadMesh(bead_diameter, start, center, end, transform, false, color, vertices, colors, normals);
-}
-
 void ShapeFactory::appendSplineBead(float bead_diameter, const Point& start, const Point& control_a,
                                     const Point& control_b, const Point& end, const QColor& color,
                                     std::vector<float>& vertices, std::vector<float>& colors,
@@ -728,12 +714,7 @@ void ShapeFactory::appendArcBead(float bead_diameter, const Point& start, const 
     transform.rotate(
         MathUtils::CreateQuaternion((reference - center).toQVector3D(), (projected_start - center).toQVector3D()));
 
-    if (is_ccw) {
-        appendArcBeadCounterClockwise(bead_diameter, start, center, end, transform, color, vertices, colors, normals);
-    }
-    else {
-        appendArcBeadClockwise(bead_diameter, start, center, end, transform, color, vertices, colors, normals);
-    }
+    appendArcBeadMesh(bead_diameter, start, center, end, transform, is_ccw, color, vertices, colors, normals);
 }
 
 } // namespace ORNL
