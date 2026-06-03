@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include <limits>
 #include <vector>
 
 #include <qhashfunctions.h>
@@ -85,39 +86,22 @@ float ArcSegment::getMinZ() {
 Distance ArcSegment::length() { return m_angle() * m_center.distance(m_start); }
 
 Point ArcSegment::CalculateCenter(const Point& start, const Point& middle, const Point& end) {
-    // Find the perpendicular bisector of start -> middle and end -> middle
-    Point mid_start_middle = start;
-    Point mid_end_middle = end;
-    mid_start_middle.moveTowards(middle, start.distance(middle) / 2.0f);
-    mid_end_middle.moveTowards(middle, end.distance(middle) / 2.0f);
+    const double ax = start.x() - end.x();
+    const double ay = start.y() - end.y();
+    const double bx = middle.x() - end.x();
+    const double by = middle.y() - end.y();
+    const double determinant = 2.0 * ((ax * by) - (ay * bx));
+    const double scale = qMax(1.0, qMax(qMax(qAbs(ax), qAbs(ay)), qMax(qAbs(bx), qAbs(by))));
+    const double determinant_tolerance = std::numeric_limits<double>::epsilon() * scale * scale * 16.0;
 
-    double slope_start_middle = 0.0;
-    double slope_end_middle = 0.0;
-    double x = 0.0;
-    double y = 0.0;
+    if (qFuzzyIsNull(determinant) || qAbs(determinant) <= determinant_tolerance) {
+        throw IllegalArgumentException("Cannot calculate an arc center from collinear or near-collinear points");
+    }
 
-    if (!qFuzzyCompare(middle.x(), start.x()) &&
-        !qFuzzyCompare(end.x(), middle.x())) // If neither of the lines are vertical
-    {
-        slope_start_middle = (middle.y() - start.y()) / (middle.x() - start.x());
-        slope_end_middle = (middle.y() - end.y()) / (middle.x() - end.x());
-        x = (((slope_start_middle * slope_end_middle) * (start.y() - end.y())) +
-             (slope_end_middle * (start.x() + middle.x())) - (slope_start_middle * (middle.x() + end.x()))) /
-            (2 * (slope_end_middle - slope_start_middle));
-        y = (-1 / slope_start_middle) * (x - ((start.x() + middle.x()) / 2)) + ((start.y() + middle.y()) / 2);
-    }
-    else if (qFuzzyCompare(middle.x(), start.x()) &&
-             !qFuzzyCompare(end.x(), middle.x())) // The start- > middle line is vertical
-    {
-        slope_end_middle = (end.y() - middle.y()) / (end.x() - middle.x());
-        y = (middle.y() + start.y()) / 2;
-        x = (y - ((end.y() + middle.y()) / 2)) * (slope_end_middle / -1) + ((end.x() + middle.x()) / 2);
-    }
-    else if (!qFuzzyCompare(middle.x(), start.x()) && qFuzzyCompare(end.x(), middle.x())) {
-        slope_start_middle = (middle.y() - start.y()) / (middle.x() - start.x());
-        y = (middle.y() + end.y()) / 2;
-        x = (y - ((start.y() + middle.y()) / 2)) * (slope_start_middle / -1) + ((start.x() + middle.x()) / 2);
-    } // else Both are vertical, therefore co-linear
+    const double start_offset_squared = (ax * ax) + (ay * ay);
+    const double middle_offset_squared = (bx * bx) + (by * by);
+    const double x = end.x() + ((by * start_offset_squared) - (ay * middle_offset_squared)) / determinant;
+    const double y = end.y() + ((ax * middle_offset_squared) - (bx * start_offset_squared)) / determinant;
 
     return Point(x, y, ((end.z() - start.z()) / 2) + start.z());
 }
