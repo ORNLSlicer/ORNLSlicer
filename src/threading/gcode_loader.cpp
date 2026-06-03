@@ -1,5 +1,6 @@
 #include "threading/gcode_loader.h"
 
+#include <cmath>
 #include <limits>
 #include <tuple>
 
@@ -843,28 +844,26 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
             Point center;
 
             if (parameters.contains('R') && !parameters.contains('I') && !parameters.contains('J')) {
-                Distance R(parameters['R'] * Constants::OpenGL::kObjectToView);
-                Distance H = m_start_pos.distanceToPoint(end_pos) / 2.0;
-                const double center_offset_squared = ((R * R) - (H * H))();
+                const double radius = parameters['R'] * Constants::OpenGL::kObjectToView;
+                const double abs_radius = qAbs(radius);
+                const double dx = end_pos.x() - m_start_pos.x();
+                const double dy = end_pos.y() - m_start_pos.y();
+                const double chord_length = std::hypot(dx, dy);
+                const double half_chord = chord_length / 2.0;
+                const double center_offset_squared = (abs_radius * abs_radius) - (half_chord * half_chord);
 
-                if (center_offset_squared >= 0.0) {
-                    Distance L = qSqrt(center_offset_squared);
+                if (chord_length > std::numeric_limits<double>::epsilon() && center_offset_squared >= 0.0) {
+                    const double center_offset = qSqrt(center_offset_squared);
+                    const double mid_x = (m_start_pos.x() + end_pos.x()) / 2.0;
+                    const double mid_y = (m_start_pos.y() + end_pos.y()) / 2.0;
+                    const double left_normal_x = -dy / chord_length;
+                    const double left_normal_y = dx / chord_length;
+                    const bool use_left_center = (command_id == 3) == (radius >= 0.0);
+                    const double direction = use_left_center ? 1.0 : -1.0;
 
-                    center = m_start_pos;
-                    center.moveTowards(end_pos, H);
-
-                    QVector3D se = end_pos - m_start_pos;
-                    QVector3D perp(se.y(), -se.x(), se.z());
-                    perp.normalize();
-                    perp *= L();
-
-                    if (command_id == 2) {
-                        center += perp;
-                    }
-                    else {
-                        center -= perp;
-                    }
-
+                    center.x(mid_x + (direction * left_normal_x * center_offset));
+                    center.y(mid_y + (direction * left_normal_y * center_offset));
+                    center.z(m_start_pos.z());
                     segment = QSharedPointer<ArcSegment>::create(m_start_pos, end_pos, center, (command_id == 3));
                 }
             }
