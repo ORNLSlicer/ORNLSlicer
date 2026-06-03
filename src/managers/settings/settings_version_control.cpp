@@ -27,17 +27,17 @@ constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     2,                 // Common
     3,                 // Dmg Dmu
     kCincinnatiSyntax, // GKN removed
-    4,                 // Gudel
-    5,                 // Haas Inch
-    6,                 // Haas Metric
-    7,                 // Haas Metric No Comments
-    8,                 // Hurco
-    9,                 // Ingersoll
-    10,                // Marlin
-    11,                // Marlin Pellet
-    12,                // Mazak
-    13,                // MVP
-    14,                // RomiFanuc
+    4,                // Gudel
+    5,                // Haas Inch
+    6,                // Haas Metric
+    7,                // Haas Metric No Comments
+    8,                // Hurco
+    9,                // Ingersoll
+    10,               // Marlin
+    11,               // JuggerBot
+    12,               // Mazak
+    13,               // MVP
+    14,               // RomiFanuc
     kCincinnatiSyntax, // RPBF removed
     15,                // Siemens
     kThermwoodSyntax,  // SkyBaam removed; concrete templates now use Thermwood
