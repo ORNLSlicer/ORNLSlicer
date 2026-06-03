@@ -135,6 +135,12 @@ ClosedMesh MeshFactory::CreateTriaglePyramidMesh(const Distance& length) {
     return new_mesh;
 }
 
+ClosedMesh MeshFactory::CreateHexagonalPrismMesh(const Distance& side_length, const Distance& height) {
+    auto mesh = CreateCylinderMesh(side_length, height, 6);
+    mesh.setGenType(MeshGeneratorType::kHexagonalPrism);
+    return mesh;
+}
+
 ClosedMesh MeshFactory::CreateCylinderMesh(const Distance& radius, const Distance& height, const int resolution) {
     QVector<MeshFace> faces;
     QVector<MeshVertex> vertices;
