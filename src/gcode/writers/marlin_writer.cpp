@@ -11,6 +11,7 @@
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -547,7 +548,7 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance length = angle() * center_point.distance(start_point);
+        Distance length = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
         Distance width = params->setting<Distance>(SS::kWidth);
         Distance height = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
