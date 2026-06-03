@@ -540,7 +540,8 @@ void PolymerSlicer::postProcess(nlohmann::json opt_data) {
             m_global_layers[g_layer_num]->reorient();
 
             // update status in UI
-            emit statusUpdate(StatusUpdateStepType::kPostProcess, (g_layer_num + 1) / max_layers * 100);
+            emit statusUpdate(StatusUpdateStepType::kPostProcess,
+                              qRound(static_cast<double>(g_layer_num + 1) / static_cast<double>(max_layers) * 100.0));
         }
     }
     else {

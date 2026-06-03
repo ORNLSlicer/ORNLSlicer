@@ -19,6 +19,8 @@
 #include <qvectornd.h>
 
 #include "geometry/segment_base.h"
+#include "geometry/segments/arc.h"
+#include "geometry/segments/bezier.h"
 #include "graphics/base_view.h"
 #include "graphics/graphics_object.h"
 #include "utilities/enums.h"
@@ -28,6 +30,13 @@ namespace ORNL {
 namespace {
 //! @brief Segment count where full bead mesh visualization is likely to exceed practical GL buffer sizes.
 constexpr qsizetype kLightweightLineThreshold = 1000000;
+
+//! @brief Estimated mesh vertices where true-width bead rendering becomes too expensive for interactive loading.
+constexpr qsizetype kLightweightMeshVertexThreshold = 5000000;
+
+//! @brief Vertex counts emitted by ShapeFactory for each full bead mesh segment type.
+constexpr qsizetype kLinearBeadVertexCount = 120;
+constexpr qsizetype kCurvedBeadVertexCount = 9120;
 
 //! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
 qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
@@ -49,6 +58,32 @@ bool hasMeshSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode)
     }
 
     return false;
+}
+
+//! @brief Estimates vertices required if printable segments are expanded to true-width bead meshes.
+qsizetype estimateMeshVertexCount(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    qsizetype count = 0;
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+        for (const QSharedPointer<SegmentBase>& segment : layer) {
+            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
+                continue;
+            }
+
+            if (dynamic_cast<ArcSegment*>(segment.data()) != nullptr ||
+                dynamic_cast<BezierSegment*>(segment.data()) != nullptr) {
+                count += kCurvedBeadVertexCount;
+            }
+            else {
+                count += kLinearBeadVertexCount;
+            }
+
+            if (count > kLightweightMeshVertexThreshold) {
+                return count;
+            }
+        }
+    }
+
+    return count;
 }
 
 //! @brief Appends a single GL_LINES segment using the parser's display-space line representation.
@@ -94,7 +129,9 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     m_segment_info_control->setGCode(gcode);
 
     const qsizetype segment_count = countSegments(gcode);
-    m_lightweight_lines = segment_count > kLightweightLineThreshold;
+    const qsizetype mesh_vertex_count = estimateMeshVertexCount(gcode);
+    m_lightweight_lines =
+        segment_count > kLightweightLineThreshold || mesh_vertex_count > kLightweightMeshVertexThreshold;
     m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
 
     if (m_lightweight_lines) {
