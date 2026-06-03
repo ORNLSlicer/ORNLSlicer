@@ -663,7 +663,7 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
         Point spiral_end_point(startPoint.x() + spiralWidth + spiralHeight * qCos(355.0 * M_PI / 180),
                                startPoint.y() + spiralWidth + spiralHeight * qSin(355.0 * M_PI / 180),
                                startPoint.z() + spiralHeight);
-        Point center_point(startPoint.x(), startPoint.y());
+        Point center_point(startPoint.x(), startPoint.y(), startPoint.z());
 
         writeSegment(path, startPoint, spiral_start_point, path.back()->getSb()->setting<Distance>(SS::kWidth),
                      spiralHeight, spiralLiftVelocity, path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,

@@ -707,13 +707,16 @@ void ShapeFactory::appendArcBead(float bead_diameter, const Point& start, const 
         return;
     }
 
-    QMatrix4x4 transform;
-    transform.translate(center.toQVector3D());
+    const Point display_center(center.x(), center.y(), start.z());
 
-    const Point projected_start(start.x(), start.y(), center.z());
-    const Point reference(center.x() + major_radius, center.y(), center.z());
+    QMatrix4x4 transform;
+    transform.translate(display_center.toQVector3D());
+
+    const Point projected_start(start.x(), start.y(), display_center.z());
+    const Point reference(display_center.x() + major_radius, display_center.y(), display_center.z());
     transform.rotate(
-        MathUtils::CreateQuaternion((reference - center).toQVector3D(), (projected_start - center).toQVector3D()));
+        MathUtils::CreateQuaternion((reference - display_center).toQVector3D(),
+                                    (projected_start - display_center).toQVector3D()));
 
     appendArcBeadMesh(bead_diameter, start, center, end, transform, is_ccw, color, vertices, colors, normals);
 }
