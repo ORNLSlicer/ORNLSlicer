@@ -1037,6 +1037,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
     }
     setXPos(temp_x);
     setYPos(temp_y);
+    setZPos(temp_z);
 }
 
 void CommonParser::G3Handler(QVector<QString> params) {
