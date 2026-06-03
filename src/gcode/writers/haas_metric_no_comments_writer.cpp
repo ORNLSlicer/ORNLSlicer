@@ -231,8 +231,6 @@ QString HaasMetricNoCommentsWriter::writeArc(const Point& start_point, const Poi
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    rv += ((ccw) ? m_G3 : m_G2);
-
     // Turn on the extruder if it isn't already on
     if (!m_extruder_on && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
