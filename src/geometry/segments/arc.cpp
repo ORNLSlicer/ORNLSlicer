@@ -2,6 +2,7 @@
 
 #include <math.h>
 
+#include <cmath>
 #include <limits>
 #include <vector>
 
@@ -83,7 +84,12 @@ float ArcSegment::getMinZ() {
         return m_end.z();
 }
 
-Distance ArcSegment::length() { return m_angle() * m_center.distance(m_start); }
+Distance ArcSegment::length() {
+    const double planar_radius = std::hypot(m_start.x() - m_center.x(), m_start.y() - m_center.y());
+    const double planar_length = m_angle() * planar_radius;
+    const double z_delta = m_end.z() - m_start.z();
+    return Distance(std::hypot(planar_length, z_delta));
+}
 
 Point ArcSegment::CalculateCenter(const Point& start, const Point& middle, const Point& end) {
     const double ax = start.x() - end.x();

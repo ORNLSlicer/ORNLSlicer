@@ -410,7 +410,7 @@ QString RepRapWriter::writeArc(const Point& start_point, const Point& end_point,
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance segment_length = ArcSegment(start_point, end_point, center_point, ccw).length();
+        Distance segment_length = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
         Distance width = params->setting<Distance>(SS::kWidth);
         Distance height = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
