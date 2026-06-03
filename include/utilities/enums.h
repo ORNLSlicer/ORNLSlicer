@@ -33,7 +33,8 @@ enum MeshGeneratorType {
     kRectangularBox = 3,
     kTriangularPyramid = 4,
     kCylinder = 5,
-    kCone = 6
+    kCone = 6,
+    kHexagonalPrism = 7
 };
 
 /*! \enum BuildVolumeType

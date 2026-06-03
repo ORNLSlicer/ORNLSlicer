@@ -259,6 +259,32 @@ QMenu* MainToolbar::buildShapeMenu() {
     });
     shape_menu->addAction(rect_prism_action);
 
+    auto* hex_prism_action = new QAction("Create Hexagonal Prism", this);
+    connect(hex_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+        bool side_length_ok, height_ok;
+
+        double side_length = promptForSize("Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                           PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
+        if (!side_length_ok) {
+            return;
+        }
+        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                      PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
+        if (!height_ok) {
+            return;
+        }
+
+        auto new_mesh =
+            QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(side_length, height));
+        QString name = promptForName();
+        if (name != "") {
+            new_mesh->setName(name);
+            auto new_part = QSharedPointer<Part>::create(new_mesh);
+            CSM->addPart(new_mesh);
+        }
+    });
+    shape_menu->addAction(hex_prism_action);
+
     auto* open_rect_prism_action = new QAction("Create Open Top Rectangular Prism", this);
     connect(open_rect_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
         bool len_ok, width_ok, height_ok;
