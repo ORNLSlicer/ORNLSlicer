@@ -264,6 +264,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
     QString newCurrentLine, zOffsetString;
     double currentZOffset = sb->setting<Distance>(PRS::Dimensions::kZOffset).to(m_distance_unit);
     bool no_error;
+    int last_status_percent = -1;
 
     // parse each line
     for (; m_current_line <= m_current_end_line; ++m_current_line) {
@@ -406,8 +407,12 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                 m_layer_start_lines.push_back(m_current_line + 1);
             }
 
-            emit statusUpdate(StatusUpdateStepType::kGcodeParsing,
-                              qRound((double)(m_current_line + 1) / (double)(m_current_end_line + 1) * 100));
+            const int status_percent =
+                qRound((double)(m_current_line + 1) / (double)(m_current_end_line + 1) * 100);
+            if (status_percent != last_status_percent) {
+                emit statusUpdate(StatusUpdateStepType::kGcodeParsing, status_percent);
+                last_status_percent = status_percent;
+            }
         }
 
         if (m_should_cancel)
