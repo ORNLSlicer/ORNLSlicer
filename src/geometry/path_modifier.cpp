@@ -659,9 +659,11 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
     Point startPoint = path.back()->end();
 
     if (supportsG3) {
+        const Angle spiral_angle = 355.0f * degree;
+        const Angle end_angle = (360.0f * degree) - spiral_angle;
         Point spiral_start_point(startPoint.x() + spiralWidth, startPoint.y(), startPoint.z());
-        Point spiral_end_point(startPoint.x() + spiralWidth + spiralHeight * qCos(355.0 * M_PI / 180),
-                               startPoint.y() + spiralWidth + spiralHeight * qSin(355.0 * M_PI / 180),
+        Point spiral_end_point(startPoint.x() + spiralWidth * qCos(end_angle()),
+                               startPoint.y() + spiralWidth * qSin(end_angle()),
                                startPoint.z() + spiralHeight);
         Point center_point(startPoint.x(), startPoint.y(), startPoint.z());
 
@@ -670,7 +672,7 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
                      path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
                      path.back()->getSb()->setting<int>(SS::kMaterialNumber));
 
-        writeArcSegment(path, spiral_start_point, spiral_end_point, center_point, 355, false,
+        writeArcSegment(path, spiral_start_point, spiral_end_point, center_point, spiral_angle, false,
                         path.back()->getSb()->setting<Distance>(SS::kWidth),
                         path.back()->getSb()->setting<Distance>(SS::kHeight), spiralLiftVelocity,
                         path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
