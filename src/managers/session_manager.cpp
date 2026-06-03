@@ -458,6 +458,15 @@ bool SessionManager::loadPartsJson(fifojson j) {
                 CSM->addPart(mesh);
                 break;
             }
+            case kHexagonalPrism: {
+                auto mesh = QSharedPointer<ClosedMesh>::create(
+                    MeshFactory::CreateHexagonalPrismMesh(org_dims.x / 2.0, org_dims.z));
+                mesh->setTransformations(mtrxes);
+                mesh->setType(mesh_type);
+                mesh->setName(name);
+                CSM->addPart(mesh);
+                break;
+            }
             case kCylinder: {
                 auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(org_dims.y, org_dims.z));
                 mesh->setTransformations(mtrxes);
