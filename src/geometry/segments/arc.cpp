@@ -2,7 +2,6 @@
 
 #include <math.h>
 
-#include <cassert>
 #include <vector>
 
 #include <qhashfunctions.h>
@@ -12,6 +11,7 @@
 #include <qsharedpointer.h>
 #include <qvectornd.h>
 
+#include "exceptions/exceptions.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
 #include "geometry/segment_base.h"
@@ -29,8 +29,9 @@ ArcSegment::ArcSegment(Point start, Point end, Point center, Angle angle, bool c
 
 ArcSegment::ArcSegment(Point start, Point middle, Point end) : SegmentBase(start, end) {
     switch (MathUtils::orientation(start, middle, end)) {
-        case 0:            // These points are co-linear and an arc is not valid so throw an error
-            assert(false); // This function should never reach this point
+        case 0:
+            throw IllegalArgumentException(
+                "Cannot construct an ArcSegment from collinear start, middle, and end points");
         case 1:            // Clockwise
             m_ccw = false;
             break;
