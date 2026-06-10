@@ -866,6 +866,7 @@ class Constants {
             static const QString kMarlinTravels;
             static const QString kSimulationOutput;
             static const QString kAMCMOutput;
+            static const QString kAMCMDataLogging;
         };
 
         class ImageResolution {

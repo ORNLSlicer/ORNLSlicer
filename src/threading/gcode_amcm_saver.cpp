@@ -27,7 +27,7 @@ void GCodeAMCMSaver::run() {
     // First, get necessary parameters from settings to rotate all pathing
     QChar comma(','), newline('\n'), space(' '), x('X'), y('Y'), z('Z'), f('F'), s('S'), zero('0');
     qint16 layerNum = 0;
-    bool extruderOn = false;
+    bool extruderOn = false, sync = true;
     QStringList lines = m_text.split(newline);
     QString G0("G0"), G1("G1"), M3("M3 "), M5("M5"), commaSpace(", ");
     QString xval("0"), yval("0"), zval("0"), velocity, feedrate;
@@ -104,6 +104,9 @@ void GCodeAMCMSaver::run() {
     out << "; Show Tool " % QString::number(GSM->getGlobal()->setting<int>(PRS::MachineSetup::kToolCoordinate)) % newline;
     out << "PTP {A1 2.22261,A2 -70.64010,A3 83.97050,A4 103.99200,A5 44.42060,A6 -109.23300,E1 0.00000} C_PTP" %
                newline;
+    if(GSM->getGlobal()->setting<int>(ES::FileOutput::kAMCMDataLogging)) {
+        out << "Logging_Enabled=TRUE" % newline;
+    }
 
     QString line;
 
@@ -158,7 +161,7 @@ void GCodeAMCMSaver::run() {
             if (line.contains("S0") && extruderOn) {
                 out << "; Stop Extrusion" % newline;
                 out << "$OUT[25]=True" % newline;
-                out << "WAIT SEC 0.5" % newline;
+                out << "WAIT SEC 0.2" % newline;
                 out << "$OUT[25]=False" % newline;
                 extruderOn = false;
             }
@@ -179,16 +182,25 @@ void GCodeAMCMSaver::run() {
             out << "	$OUT[25]=False" % newline;
             extruderOn = true;
             out << "ENDIF" % newline;
+            if (sync)
+            {
+                out << "CHAMP_EXTR_SYNC=TRUE" % newline;
+                sync = false;
+            }
         }
         else if (line.startsWith(M5) && extruderOn) {
             out << "; Stop Extrusion" % newline;
             out << "$OUT[25]=True" % newline;
-            out << "WAIT SEC 0.5" % newline;
+            out << "WAIT SEC 0.2" % newline;
             out << "$OUT[25]=False" % newline;
             extruderOn = false;
         }
     }
 
+    out << "CHAMP_EXTR_SYNC=FALSE" % newline;
+    if(GSM->getGlobal()->setting<int>(ES::FileOutput::kAMCMDataLogging)) {
+        out << "Logging_Enabled=FALSE" % newline;
+    }
     out << newline % "END";
     file.close();
 }
