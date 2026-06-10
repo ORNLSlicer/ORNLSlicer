@@ -174,3 +174,15 @@ settings:
     namespace: "Experimental::FileOutput"
     symbol: "kEnableAMCMSRCFileOutput"
     local: false
+  - name: "amcm_data_logging"
+    display: "Enable AMCM Data Logging"
+    type: "boolean"
+    tooltip: "If enabled, AMCM data logging commands will be added to the g-code."
+    depends: {"OR":[{"syntax":22},{"syntax":31}]}
+    options: []
+    default: false
+    minor: "File Output"
+    major: "Experimental"
+    namespace: "Experimental::FileOutput"
+    symbol: "kEnableAMCMDataLogging"
+    local: false
