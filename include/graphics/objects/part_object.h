@@ -106,6 +106,7 @@ class PartObject : public GraphicsObject {
     QSharedPointer<TextObject> m_label_object;
     QSharedPointer<AxesObject> m_axes_object;
     QSharedPointer<PlaneObject> m_plane_object;
+    QSharedPointer<GraphicsObject> m_feature_edge_object;
 
     //! \brief Overhang angle to use for calculations.
     Angle m_overhang_angle;
