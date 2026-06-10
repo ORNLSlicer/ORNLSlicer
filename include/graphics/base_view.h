@@ -4,6 +4,7 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
+#include <qevent.h>
 #include <qlist.h>
 #include <qmatrix4x4.h>
 #include <qobject.h>
@@ -61,6 +62,10 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     //! \brief Responds to mouse wheel events.
     //! \param e Qt event that has data about wheel movement.
     void wheelEvent(QWheelEvent* e) override;
+    //! \brief Responds to keyboard shortcuts for camera navigation.
+    //! \param e Qt event that has data about the pressed key and any keyboard modifiers.
+    //! \note Arrow keys rotate the camera. Shift, Control, or Alt with an arrow key pans the camera.
+    void keyPressEvent(QKeyEvent* e) override;
 
     /*!
      * \title Interactivity - Camera
@@ -183,8 +188,15 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     virtual void handleWheelForward(QPointF mouse_ndc_pos, float delta);
     //! \brief Respond to a mouse wheel backward movement
     virtual void handleWheelBackward(QPointF mouse_ndc_pos, float delta);
-    //! \brief Translates camera (and objects in sub views)
+    //! \brief Applies a pan request from mouse or keyboard navigation.
+    //! \param v World-space translation vector to apply.
+    //! \param absolute If true, set the camera pan target to \p v; otherwise apply \p v as a relative pan.
+    //! \note Derived views can override this when camera panning also affects view-specific scene objects.
     virtual void translateCamera(QVector3D v, bool absolute);
+    //! \brief Applies a camera rotation from a normalized screen-space input delta.
+    //! \param screen_delta Horizontal and vertical NDC-style delta using the same convention as mouse rotation.
+    //! \note Derived views can override this to constrain or disable rotation for a particular projection mode.
+    virtual void rotateCamera(QVector2D screen_delta);
 
     //! \brief Helper: Convert coordinates of point in widget to normalized device coordinates, i.e. x in [-1,1] and y
     //! in [-1,1] \param widget_pos Local widget position of an event
