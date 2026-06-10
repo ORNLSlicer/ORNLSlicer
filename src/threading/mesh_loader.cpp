@@ -3,8 +3,10 @@
 #include <cstddef>
 #include <cstdio>
 #include <cstdlib>
+#include <exception>
 #include <utility>
 
+#include <CGAL/exceptions.h>
 #include <QLinkedList>
 #include <QStack>
 #include <QtDebug>
@@ -118,8 +120,19 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
                 MeshBuilderAssimp<MeshTypes::HalfedgeDescriptor> builder(mesh);
                 polyhedron.delegate(builder);
 
-                if (GSM->getGlobal()->setting<bool>(PS::SpecialModes::kEnableFixModel))
-                    ClosedMesh::CleanPolyhedron(polyhedron);
+                if (!builder.wasError() && GSM->getGlobal()->setting<bool>(PS::SpecialModes::kEnableFixModel)) {
+                    MeshTypes::Polyhedron repaired_polyhedron = polyhedron;
+                    try {
+                        ClosedMesh::CleanPolyhedron(repaired_polyhedron);
+                        polyhedron = repaired_polyhedron;
+                    } catch (const CGAL::Failure_exception& error) {
+                        qWarning() << "CGAL model repair failed for" << file_info.fileName()
+                                   << "- importing unrepaired mesh:" << error.what();
+                    } catch (const std::exception& error) {
+                        qWarning() << "Model repair failed for" << file_info.fileName()
+                                   << "- importing unrepaired mesh:" << error.what();
+                    }
+                }
 
                 if (builder.wasError() || !polyhedron.is_closed()) {
                     MeshTypes::SurfaceMesh sm = BuildSurfaceMesh(mesh);

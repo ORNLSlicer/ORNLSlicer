@@ -2,7 +2,10 @@
 
 #include <GL/gl.h>
 
+#include <algorithm>
+#include <array>
 #include <cmath>
+#include <map>
 #include <tuple>
 #include <vector>
 
@@ -28,6 +31,144 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+constexpr float kFeatureEdgeCosThreshold = 0.9063078f; // 25 degrees.
+constexpr float kFeatureEdgePositionTolerance = 1.0f;
+
+struct EdgeSample {
+    int start_index;
+    int end_index;
+    QVector3D normal;
+};
+
+std::array<long long, 3> vertexKey(const QVector3D& vertex) {
+    return {std::llround(vertex.x() / kFeatureEdgePositionTolerance),
+            std::llround(vertex.y() / kFeatureEdgePositionTolerance),
+            std::llround(vertex.z() / kFeatureEdgePositionTolerance)};
+}
+
+std::array<long long, 6> edgeKey(const QVector3D& start, const QVector3D& end) {
+    const std::array<long long, 3> start_key = vertexKey(start);
+    const std::array<long long, 3> end_key = vertexKey(end);
+
+    if (end_key < start_key)
+        return {end_key[0], end_key[1], end_key[2], start_key[0], start_key[1], start_key[2]};
+
+    return {start_key[0], start_key[1], start_key[2], end_key[0], end_key[1], end_key[2]};
+}
+
+bool isFeatureEdge(const QVector<EdgeSample>& edge_samples) {
+    if (edge_samples.size() == 1)
+        return true;
+
+    for (int i = 0; i < edge_samples.size(); ++i) {
+        QVector3D first_normal = edge_samples[i].normal.normalized();
+
+        if (first_normal.isNull())
+            continue;
+
+        for (int j = i + 1; j < edge_samples.size(); ++j) {
+            QVector3D second_normal = edge_samples[j].normal.normalized();
+
+            if (second_normal.isNull())
+                continue;
+
+            float edge_angle_cos = std::fabs(QVector3D::dotProduct(first_normal, second_normal));
+            edge_angle_cos = std::max(-1.0f, std::min(1.0f, edge_angle_cos));
+
+            if (edge_angle_cos <= kFeatureEdgeCosThreshold)
+                return true;
+        }
+    }
+
+    return false;
+}
+
+void appendFeatureEdge(std::vector<float>& edge_vertices, const QVector<MeshVertex>& vertices,
+                       const EdgeSample& edge_sample) {
+    if (edge_sample.start_index < 0 || edge_sample.start_index >= vertices.size() || edge_sample.end_index < 0 ||
+        edge_sample.end_index >= vertices.size())
+        return;
+
+    const QVector3D start = vertices[edge_sample.start_index].location * Constants::OpenGL::kObjectToView;
+    const QVector3D end = vertices[edge_sample.end_index].location * Constants::OpenGL::kObjectToView;
+
+    edge_vertices.push_back(start.x());
+    edge_vertices.push_back(start.y());
+    edge_vertices.push_back(start.z());
+    edge_vertices.push_back(end.x());
+    edge_vertices.push_back(end.y());
+    edge_vertices.push_back(end.z());
+}
+
+bool isValidFaceEdge(const QVector<MeshVertex>& vertices, const MeshFace& face, int edge_index) {
+    const int start_index = face.vertex_index[edge_index];
+    const int end_index = face.vertex_index[(edge_index + 1) % 3];
+
+    return start_index >= 0 && start_index < vertices.size() && end_index >= 0 && end_index < vertices.size();
+}
+
+std::map<std::array<long long, 6>, QVector<EdgeSample>> buildEdgeMap(const QVector<MeshVertex>& vertices,
+                                                                     const QVector<MeshFace>& faces) {
+    std::map<std::array<long long, 6>, QVector<EdgeSample>> edge_map;
+
+    for (const MeshFace& face : faces) {
+        for (int edge_index = 0; edge_index < 3; ++edge_index) {
+            if (!isValidFaceEdge(vertices, face, edge_index))
+                continue;
+
+            const int start_index = face.vertex_index[edge_index];
+            const int end_index = face.vertex_index[(edge_index + 1) % 3];
+            const QVector3D& start = vertices[start_index].location;
+            const QVector3D& end = vertices[end_index].location;
+
+            edge_map[edgeKey(start, end)].push_back({start_index, end_index, face.normal});
+        }
+    }
+
+    return edge_map;
+}
+
+std::vector<float> buildFeatureEdgeVertices(QSharedPointer<MeshBase> mesh) {
+    const QVector<MeshVertex> vertices = mesh->originalVertices();
+    const QVector<MeshFace> faces = mesh->originalFaces();
+    const std::map<std::array<long long, 6>, QVector<EdgeSample>> edge_map = buildEdgeMap(vertices, faces);
+
+    std::vector<float> edge_vertices;
+    edge_vertices.reserve(faces.size() * 6);
+
+    for (auto edge_iter = edge_map.cbegin(); edge_iter != edge_map.cend(); ++edge_iter) {
+        if (isFeatureEdge(edge_iter->second))
+            appendFeatureEdge(edge_vertices, vertices, edge_iter->second.first());
+    }
+
+    return edge_vertices;
+}
+
+QSharedPointer<GraphicsObject> createFeatureEdgeObject(BaseView* view, QSharedPointer<MeshBase> mesh) {
+    std::vector<float> edge_vertices = buildFeatureEdgeVertices(mesh);
+
+    if (edge_vertices.empty())
+        return QSharedPointer<GraphicsObject>();
+
+    std::vector<float> edge_normals(edge_vertices.size(), 0.0f);
+    for (size_t i = 2; i < edge_normals.size(); i += 3) {
+        edge_normals[i] = 1.0f;
+    }
+
+    std::vector<float> edge_colors;
+    edge_colors.reserve((edge_vertices.size() / 3) * 4);
+    for (size_t i = 0; i < edge_vertices.size() / 3; ++i) {
+        edge_colors.push_back(0.04f);
+        edge_colors.push_back(0.06f);
+        edge_colors.push_back(0.07f);
+        edge_colors.push_back(0.35f);
+    }
+
+    return QSharedPointer<GraphicsObject>::create(view, edge_vertices, edge_normals, edge_colors, GL_LINES);
+}
+} // namespace
+
 PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mode) {
     m_part = p;
     QSharedPointer<MeshBase> mesh = p->rootMesh();
@@ -89,6 +230,8 @@ PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mod
 
     this->populateGL(view, vertices, normals, colors, render_mode);
 
+    m_feature_edge_object = createFeatureEdgeObject(this->view(), mesh);
+
     // Make a label.
     auto got = QSharedPointer<TextObject>::create(this->view(), m_part->name());
     got->setOnTop(true);
@@ -143,6 +286,11 @@ void PartObject::draw() {
     }
     else {
         m_view->glDrawArrays(renderMode(), 0, m_vertices.size() / 3);
+        if (!getSolidWireFrameMode() && !m_feature_edge_object.isNull()) {
+            m_view->glDepthFunc(GL_LEQUAL);
+            m_feature_edge_object->render();
+            m_view->glDepthFunc(GL_LESS);
+        }
     }
 }
 void PartObject::configureUniforms() {
@@ -281,6 +429,9 @@ void PartObject::overhangUpdate() {
 }
 
 void PartObject::transformationCallback() {
+    if (!m_feature_edge_object.isNull())
+        m_feature_edge_object->setTransformation(this->transformation(), false);
+
     if (!m_arrow_object.isNull())
         m_arrow_object->updateEndpoints();
     for (auto& goc : m_part_children) {

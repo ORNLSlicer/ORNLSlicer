@@ -2,6 +2,7 @@
 
 #include <array>
 #include <cstddef>
+#include <exception>
 #include <iterator>
 #include <list>
 #include <utility>
@@ -15,10 +16,10 @@
 #include <CGAL/Polygon_mesh_processing/clip.h>
 #include <CGAL/Polygon_mesh_processing/compute_normal.h>
 #include <CGAL/Polygon_mesh_processing/corefinement.h>
+#include <CGAL/Polygon_mesh_processing/manifoldness.h>
 #include <CGAL/Polygon_mesh_processing/measure.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Polygon_mesh_processing/repair_degeneracies.h>
-#include <CGAL/Polygon_mesh_processing/repair_self_intersections.h>
 #include <CGAL/Polygon_mesh_processing/transform.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_hole.h>
 #include <CGAL/Polygon_mesh_slicer.h>
@@ -32,6 +33,8 @@
 #include <CGAL/boost/graph/iterator.h>
 #include <CGAL/boost/graph/properties.h>
 #include <CGAL/boost/graph/properties_Polyhedron_3.h>
+#include <CGAL/exceptions.h>
+#include <QtDebug>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -419,10 +422,33 @@ void ClosedMesh::CleanPolyhedron(MeshTypes::Polyhedron& polyhedron) {
     CGAL::Polygon_mesh_processing::remove_degenerate_faces(polyhedron);
     CGAL::Polygon_mesh_processing::remove_isolated_vertices(polyhedron);
     CGAL::Polygon_mesh_processing::remove_connected_components_of_negligible_size(polyhedron);
-    CGAL::Polygon_mesh_processing::experimental::remove_self_intersections(polyhedron);
+
+    MeshTypes::Polyhedron self_intersection_repair = polyhedron;
+    try {
+        if (CGAL::Polygon_mesh_processing::experimental::autorefine_and_remove_self_intersections(
+                self_intersection_repair)) {
+            polyhedron = self_intersection_repair;
+        }
+        else {
+            qWarning() << "CGAL could not repair all self-intersections; continuing with the unrepaired mesh.";
+        }
+    } catch (const CGAL::Failure_exception& error) {
+        qWarning() << "CGAL self-intersection repair failed; continuing with the unrepaired mesh:" << error.what();
+    } catch (const std::exception& error) {
+        qWarning() << "Self-intersection repair failed; continuing with the unrepaired mesh:" << error.what();
+    }
 
     // If the mesh is not closed, fill holes
     if (!polyhedron.is_closed()) {
+        typedef boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor halfedge_descriptor;
+        std::vector<halfedge_descriptor> non_manifold_vertices;
+        CGAL::Polygon_mesh_processing::non_manifold_vertices(polyhedron, std::back_inserter(non_manifold_vertices));
+
+        if (!non_manifold_vertices.empty()) {
+            qWarning() << "Skipping hole filling because the mesh has non-manifold boundary vertices.";
+            return;
+        }
+
         for (boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor h : halfedges(polyhedron)) {
             if (CGAL::is_border(h, polyhedron)) {
                 std::vector<boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor> patch_facets;

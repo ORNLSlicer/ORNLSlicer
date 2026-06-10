@@ -5,7 +5,6 @@ layout(location = 2) in vec4 color;
 layout(location = 3) in vec2 uv;
 out vec4 vColor;
 out vec3 fragPos;
-out vec3 vNormal;
 out vec3 vWorldPos;
 out vec3 vWorldNormal;
 out vec2 texcoord_uv;
@@ -17,18 +16,13 @@ uniform vec3 stackingAxis;
 uniform float overhangAngle;
 uniform bool usingOverhangMode;
 uniform bool renderingPartObject;
-mat3 rotation;
 
 void main()
 {
     vec4 temp = (model * vec4(position, 1));
     vWorldPos = vec3(temp.x, temp.y, temp.z);
-    rotation = mat3(model[0][0], model[0][1], model[0][2],
-                    model[1][0], model[1][1], model[1][2],
-                    model[2][0], model[2][1], model[2][2]);
-    vNormal = normalize(normal);
     vColor = color;
-    vWorldNormal = rotation * normal;
+    vWorldNormal = normalize(transpose(inverse(mat3(model))) * normal);
     fragPos = vec3(model * vec4(position, 1.0));
     gl_Position = projection * view * model * vec4(position, 1.0);
     texcoord_uv = uv;
@@ -42,7 +36,7 @@ void main()
     //Z pointing down
     if (upward < 0.0 && usingOverhangMode && renderingPartObject)
     {
-        vec4 overhangColor = vec4(255, 0, 0, 255);
+        vec4 overhangColor = vec4(1, 0, 0, 1);
         float M_PI = 3.14159265358979323846;
         float faceAngle;
         float val = dot(stackingAxis, vWorldNormal) / (length(vWorldNormal) * length(stackingAxis));
