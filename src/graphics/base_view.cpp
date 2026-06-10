@@ -4,6 +4,7 @@
 #include <GL/gl.h>
 
 #include <QFileDialog>
+#include <QKeyEvent>
 #include <QMouseEvent>
 #include <qmatrix4x4.h>
 #include <qnamespace.h>
@@ -22,6 +23,35 @@
 #include "utilities/constants.h"
 
 namespace ORNL {
+namespace {
+constexpr float kKeyboardRotateDegrees = 5.0f;
+constexpr float kKeyboardPanNdcStep = 0.10f;
+
+bool isArrowKey(int key) {
+    return key == Qt::Key_Left || key == Qt::Key_Right || key == Qt::Key_Up || key == Qt::Key_Down;
+}
+
+QVector2D arrowDirection(int key) {
+    switch (key) {
+        case Qt::Key_Left:
+            return QVector2D(-1.0f, 0.0f);
+        case Qt::Key_Right:
+            return QVector2D(1.0f, 0.0f);
+        case Qt::Key_Up:
+            return QVector2D(0.0f, 1.0f);
+        case Qt::Key_Down:
+            return QVector2D(0.0f, -1.0f);
+        default:
+            return QVector2D();
+    }
+}
+
+bool hasCameraPanModifier(Qt::KeyboardModifiers modifiers) {
+    return modifiers.testFlag(Qt::ShiftModifier) || modifiers.testFlag(Qt::ControlModifier) ||
+           modifiers.testFlag(Qt::AltModifier);
+}
+} // namespace
+
 BaseView::BaseView(QWidget* parent) : QOpenGLWidget(parent) {
     // Initalize camera projection.
     float aspect;
@@ -34,6 +64,7 @@ BaseView::BaseView(QWidget* parent) : QOpenGLWidget(parent) {
     m_camera = QSharedPointer<CameraManager>::create(); // Manager for camera/view matrix
     m_shader_program.reset(new QOpenGLShaderProgram());
     this->setMouseTracking(true);
+    this->setFocusPolicy(Qt::StrongFocus);
 }
 
 BaseView::~BaseView() {
@@ -149,6 +180,38 @@ void BaseView::wheelEvent(QWheelEvent* e) {
         this->handleWheelForward(ndc_mouse_pos, (float)e->angleDelta().y());
     else
         this->handleWheelBackward(ndc_mouse_pos, (float)e->angleDelta().y());
+}
+
+void BaseView::keyPressEvent(QKeyEvent* e) {
+    if (!isArrowKey(e->key())) {
+        QOpenGLWidget::keyPressEvent(e);
+        return;
+    }
+
+    const QVector2D direction = -arrowDirection(e->key());
+
+    if (hasCameraPanModifier(e->modifiers())) {
+        QMatrix4x4 view = m_camera->viewMatrix();
+        QVector3D right = QVector3D(view(0, 0), view(0, 1), view(0, 2));
+        QVector3D up = QVector3D(view(1, 0), view(1, 1), view(1, 2));
+
+        right.setZ(0);
+        up.setZ(0);
+        right.normalize();
+        up.normalize();
+
+        const float translation_speed = 20.0f * (m_camera->getZoom() / m_camera->getDefaultZoom());
+        const QVector3D camera_trans =
+            translation_speed * kKeyboardPanNdcStep * ((direction.x() * right) + (direction.y() * up));
+        this->translateCamera(camera_trans, false);
+    }
+    else {
+        const float rotation_step = kKeyboardRotateDegrees / Constants::OpenGL::kTrackball;
+        this->rotateCamera(direction * rotation_step);
+    }
+
+    this->update();
+    e->accept();
 }
 
 void BaseView::zoomIn() {
@@ -301,6 +364,8 @@ void BaseView::translateCamera(QVector3D v, bool absolute) {
         m_focus->translateAbsolute(m_camera->getPan());
     }
 }
+
+void BaseView::rotateCamera(QVector2D screen_delta) { m_camera->rotateByScreenDelta(screen_delta); }
 
 void BaseView::initializeGL() {
     // Required for OpenGL to work
