@@ -795,6 +795,7 @@ const QString Constants::ExperimentalSettings::FileOutput::kMarlinOutput = "marl
 const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels = "marlin_include_travels";
 const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput = "simulation_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput = "amcm_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kAMCMDataLogging = "amcm_data_logging";
 
 // Image Resolution
 const QString Constants::ExperimentalSettings::ImageResolution::kImageResolutionX = "image_resolution_x";
