@@ -290,6 +290,11 @@ void GCodeView::translateCamera(QVector3D v, bool absolute) {
     }
 }
 
+void GCodeView::rotateCamera(QVector2D screen_delta) {
+    if (!m_state.ortho)
+        this->BaseView::rotateCamera(screen_delta);
+}
+
 void GCodeView::resizeGL(int width, int height) {
     if (!m_state.ortho) {
         this->BaseView::resizeGL(width, height);

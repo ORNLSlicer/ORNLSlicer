@@ -105,10 +105,16 @@ class GCodeView : public BaseView {
     //! \brief Alters the view matrix depending on the projection type and the new view size.
     void resizeGL(int width, int height) override;
 
-    //! \brief Handles the translation of the printer in the volume due to camera movement.
-    //! \param v: Translation vector
-    //! \param absolute: If this translation is relative to (0, 0, 0).
+    //! \brief Applies camera pan to the G-code view camera target.
+    //! \param v World-space translation vector to apply.
+    //! \param absolute If true, set the camera target to \p v; otherwise apply \p v as a relative pan.
+    //! \note This override keeps G-code navigation centered on the printer volume.
     void translateCamera(QVector3D v, bool absolute) override;
+
+    //! \brief Applies shared camera rotation unless the G-code view is orthographic.
+    //! \param screen_delta Horizontal and vertical NDC-style delta requested by keyboard or mouse input.
+    //! \note Orthographic G-code previews intentionally keep the top-down orientation locked.
+    void rotateCamera(QVector2D screen_delta) override;
 
     //! \brief Handles the following: Segment deselection
     void handleLeftClick(QPointF mouse_ndc_pos) override;
@@ -116,7 +122,8 @@ class GCodeView : public BaseView {
     //! \brief Handles the following: Segment selection
     void handleLeftDoubleClick(QPointF mouse_ndc_pos) override;
 
-    //! \brief Handles the following: Orthographic rotation blocking
+    //! \brief Handles mouse-drag camera rotation unless orthographic mode is active.
+    //! \param mouse_ndc_pos Mouse position in normalized device coordinates.
     void handleRightMove(QPointF mouse_ndc_pos) override;
 
     //! \brief Handles the following: Segment hover highlighting

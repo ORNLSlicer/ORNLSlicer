@@ -26,18 +26,22 @@ class CameraManager {
     void rotate(const QVector2D dr);
     //! \brief Set the rotation. Horizontal pitch and vertical yaw.
     void rotateAbsolute(const QVector2D r);
+    //! \brief Applies trackball-scaled camera rotation from a normalized screen-space input delta.
+    //! \param delta Horizontal and vertical NDC-style delta used for camera rotation.
+    //! \note Honors the camera inversion preference used by mouse-drag rotation.
+    void rotateByScreenDelta(const QVector2D delta);
 
     //! \brief Update camera position.
     void zoom(float delta);
 
-    /*! Rotate the camera between the point given
-     * @param ndc_pos Position of mouse in NDC
+    /*! \brief Rotates the camera from the previous drag-start point to the current mouse position.
+     * \param ndc_pos Current mouse position in normalized device coordinates.
      */
     void rotateFromPoint(QPointF ndc_pos);
 
-    /*! Translate the camera from the point given
-     * @param ndc_pos Position of mouse in NDC
-     * @return Translation that just occured.
+    /*! \brief Computes camera pan from the previous drag-start point to the current mouse position.
+     * \param ndc_pos Current mouse position in normalized device coordinates.
+     * \return Relative world-space translation produced by the drag.
      */
     QVector3D translateFromPoint(QPointF ndc_pos);
 
