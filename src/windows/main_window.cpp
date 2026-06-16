@@ -22,6 +22,7 @@
 #include <qmap.h>
 #include <qmenu.h>
 #include <qmenubar.h>
+#include <qmessagebox.h>
 #include <qminmax.h>
 #include <qnamespace.h>
 #include <qobject.h>
@@ -777,6 +778,9 @@ void MainWindow::setupEvents() {
         switchViews(1);
     });
     connect(CSM.get(), &SessionManager::forwardStatusUpdate, this, &MainWindow::updateStatus);
+    connect(CSM.get(), &SessionManager::sessionSaved, this, [this](QString path) {
+        QMessageBox::information(this, "Save Project", "Project has been successfully saved to " + path);
+    });
 
     // Hook up updated layer min/max from gcode bar to gcodewidget
     connect(m_gcodebar, &GcodeBar::lowerLayerUpdated, m_gcode_widget->view(), &GCodeView::setLowLayer);
@@ -1161,7 +1165,7 @@ void MainWindow::saveSession() {
     if (filename.isEmpty())
         return;
 
-    CSM->saveSession(filename);
+    CSM->saveSession(filename, true, true);
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
 
     this->setTitleInfo(QFileInfo(filename).fileName());

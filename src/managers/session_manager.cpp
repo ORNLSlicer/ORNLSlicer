@@ -628,12 +628,14 @@ bool SessionManager::changeSlicer(SlicerType type) {
     return true;
 }
 
-SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack) {
+SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack, bool notifyOnSuccess) {
     // Request an update.
     emit requestTransformationUpdate();
 
     SessionLoader* loader = new SessionLoader(path, true);
     connect(loader, &SessionLoader::finished, loader, &SessionLoader::deleteLater);
+    if (notifyOnSuccess)
+        connect(loader, &SessionLoader::saveSucceeded, this, [this, path]() { emit sessionSaved(path); });
 
     loader->start();
     m_file = path;
