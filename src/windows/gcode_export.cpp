@@ -36,6 +36,17 @@
 #include "utilities/constants.h"
 
 namespace ORNL {
+namespace {
+QString removeModelFileExtension(QString name) {
+    QFileInfo file_info(name);
+    QString suffix = file_info.suffix().toLower();
+
+    if (suffix == "stl" || suffix == "3mf" || suffix == "obj" || suffix == "amf" || suffix == "step" || suffix == "stp")
+        return file_info.completeBaseName();
+
+    return name;
+}
+} // namespace
 
 GcodeExport::GcodeExport(QWidget* parent) {
     setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
@@ -87,7 +98,7 @@ GcodeExport::GcodeExport(QWidget* parent) {
 
 GcodeExport::~GcodeExport() {}
 
-void GcodeExport::setDefaultName(QString name) { m_default_name = name; }
+void GcodeExport::setDefaultName(QString name) { m_default_name = removeModelFileExtension(name); }
 
 void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
     m_location = tempLocation;
@@ -356,5 +367,6 @@ void GcodeExport::exportGcode() {
 
 void GcodeExport::showComplete(QString path, QString filename) {
     QMessageBox::information(this, "File Export", filename % " has been succesfully exported to " % path);
+    close();
 }
 } // namespace ORNL

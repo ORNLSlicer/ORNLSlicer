@@ -127,6 +127,7 @@ void SessionLoader::saveSession() {
     zip_entry_close(zip);
 
     zip_close(zip);
+    emit saveSucceeded();
 }
 
 fifojson SessionLoader::getSettingsFromZip() {

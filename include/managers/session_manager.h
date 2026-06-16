@@ -192,7 +192,7 @@ class SessionManager : public QObject {
     bool changeSlicer(SlicerType type);
 
     //! \brief Creates a new session loader to save the current session.
-    SessionLoader* saveSession(QString path, bool shouldTrack = true);
+    SessionLoader* saveSession(QString path, bool shouldTrack = true, bool notifyOnSuccess = false);
 
     //! \brief Creates a new session loader to load another session.
     //! \param shouldDelete Whether or not to delete current parts/settings before
@@ -248,6 +248,9 @@ class SessionManager : public QObject {
 
     //! \brief Signal that slicing thread has started writing the GCode file.
     void forwardStatusUpdate(QString status);
+
+    //! \brief Signal that a session file has been saved successfully.
+    void sessionSaved(QString path);
 
     //! \brief Signal for total number of parts expected to load from project
     void totalPartsInProject(int total);
