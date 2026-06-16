@@ -8,9 +8,11 @@
 #include <QGridLayout>
 #include <QIcon>
 #include <QLabel>
+#include <QMatrix4x4>
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QPushButton>
+#include <QVector3D>
 #include <QWidget>
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -67,12 +69,21 @@ class GCodeInfoControl : public QWidget {
     //! \brief Remove segment from info tracking list.
     void removeSegmentInfo(int selectedLineNumber);
 
+    //! \brief Updates the camera view matrix used to display segment travel direction.
+    void setViewMatrix(const QMatrix4x4& viewMatrix);
+
   private:
     //! \brief Display xy direction
-    inline void updateDirection(double angle);
+    void updateDirection(double angle);
 
     //! \brief Display z direction
-    inline void updateZDirection(double angle);
+    void updateZDirection(double angle);
+
+    //! \brief Display direction for the current camera view.
+    void updateDirectionForSegment(const QSharedPointer<SegmentBase>& segment);
+
+    //! \brief Converts a 3D travel vector to a screen-space angle.
+    double viewAngleForDirection(const QVector3D& direction, double fallbackAngle) const;
 
     //! \brief Initilizes the widget.
     void setupWidget();
@@ -87,6 +98,12 @@ class GCodeInfoControl : public QWidget {
 
     //! \brief list of segments
     QVector<QVector<QSharedPointer<SegmentBase>>> m_gcode;
+
+    //! \brief Segment currently shown in the info panel.
+    QSharedPointer<SegmentBase> m_current_segment;
+
+    //! \brief Current camera view matrix used to orient the direction arrow.
+    QMatrix4x4 m_view_matrix;
 
     //! \brief Int list of gcode line numbers that are currently selected
     QList<int> m_line_no_list;

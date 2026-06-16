@@ -1,5 +1,8 @@
 #include "widgets/gcode_info_control.h"
 
+#include <cmath>
+
+#include <QtMath>
 #include <qboxlayout.h>
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
@@ -26,6 +29,7 @@ GCodeInfoControl::GCodeInfoControl(QWidget* parent) : QWidget(parent) { setupWid
 
 void GCodeInfoControl::setGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     m_gcode = gcode;
+    m_current_segment.clear();
 
     m_line_no_list.clear();
     fillSegmentInfo(0);
@@ -47,17 +51,8 @@ void GCodeInfoControl::fillSegmentInfo(uint lineNo) {
                     m_infolbl_length->setText(seg->m_segment_info_meta.length);
                     m_infolbl_layer_no->setText(QString::number(seg->layerNumber()));
                     m_infolbl_line_no->setText(QString::number(lineNo));
-
-                    if (seg->m_segment_info_meta.isXYmove()) {
-                        updateDirection(360 - seg->m_segment_info_meta.getCCWXAngle());
-                    }
-                    else {
-                        float diff = seg->m_segment_info_meta.getZChange();
-                        if (diff == 0)
-                            m_infolbl_direction->setVisible(false);
-                        else
-                            updateZDirection(diff > 0 ? 180 : 0);
-                    }
+                    m_current_segment = seg;
+                    updateDirectionForSegment(m_current_segment);
 
                     return;
                 }
@@ -72,6 +67,7 @@ void GCodeInfoControl::fillSegmentInfo(uint lineNo) {
     m_infolbl_layer_no->setText("");
     m_infolbl_line_no->setText("");
 
+    m_current_segment.clear();
     m_infolbl_direction->setVisible(false);
 }
 
@@ -114,6 +110,50 @@ void GCodeInfoControl::updateZDirection(double angle) {
     m_infolbl_direction->setPixmap(m_infopm_direction_z->transformed(QTransform().rotate(angle)));
 }
 
+void GCodeInfoControl::updateDirectionForSegment(const QSharedPointer<SegmentBase>& segment) {
+    if (segment.isNull()) {
+        m_infolbl_direction->setVisible(false);
+        return;
+    }
+
+    auto& meta = segment->m_segment_info_meta;
+    QVector3D direction(meta.end.x() - meta.start.x(), meta.end.y() - meta.start.y(), meta.end.z() - meta.start.z());
+
+    if (meta.isXYmove()) {
+        updateDirection(viewAngleForDirection(direction, 360 - meta.getCCWXAngle()));
+    }
+    else {
+        float diff = meta.getZChange();
+        if (diff == 0) {
+            m_infolbl_direction->setVisible(false);
+        }
+        else {
+            updateZDirection(viewAngleForDirection(direction, diff > 0 ? 180 : 0));
+        }
+    }
+}
+
+double GCodeInfoControl::viewAngleForDirection(const QVector3D& direction, double fallbackAngle) const {
+    constexpr float kMinimumVisibleDirection = 1.0e-6f;
+
+    const QVector3D view_direction = m_view_matrix.mapVector(direction);
+    if (std::abs(view_direction.x()) < kMinimumVisibleDirection &&
+        std::abs(view_direction.y()) < kMinimumVisibleDirection) {
+        return fallbackAngle;
+    }
+
+    double angle = qRadiansToDegrees(std::atan2(view_direction.y(), view_direction.x()));
+    if (angle < 0.0)
+        angle += 360.0;
+
+    return 360.0 - angle;
+}
+
+void GCodeInfoControl::setViewMatrix(const QMatrix4x4& viewMatrix) {
+    m_view_matrix = viewMatrix;
+    updateDirectionForSegment(m_current_segment);
+}
+
 void GCodeInfoControl::setupWidget() {
     QLabel* lbl2DAxis = new QLabel;
 
@@ -132,8 +172,8 @@ void GCodeInfoControl::setupWidget() {
     m_info_display_indicator = new QLabel;
     m_info_display_indicator->setPixmap(QPixmap(":/icons/down_black.png"));
 
-    lbl2DAxis->setToolTip("Print Orientation, 2D (X Y)\nOnly Top Projection View (With Out Any Rotation) Considered");
-    m_infolbl_direction->setToolTip("Print Direction\nOnly Top Projection View (With Out Any Rotation) Considered");
+    lbl2DAxis->setToolTip("Print Orientation, 2D (X Y)");
+    m_infolbl_direction->setToolTip("Print Direction\nMatches the current G-Code view");
 
     m_info_grid = new QGridLayout(m_info_display);
     m_info_grid->setRowMinimumHeight(0, 75);
