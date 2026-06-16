@@ -37,6 +37,24 @@ class GCodeView : public BaseView {
     //! \param segmentInfoControl: Segment info display control
     GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoControl> segmentInfoControl);
 
+    //! \brief Moves the camera toward the print volume.
+    void zoomIn();
+    //! \brief Moves the camera away from the print volume.
+    void zoomOut();
+    //! \brief Moves the camera to its default zoom.
+    void resetZoom() override;
+
+    //! \brief Set camera to view from top.
+    void setTopView();
+    //! \brief Set camera to view from side.
+    void setSideView();
+    //! \brief Set camera to view from front.
+    void setFrontView();
+    //! \brief Set camera to view from the forward direction.
+    void setForwardView();
+    //! \brief Set camera to view from an isometric direction.
+    void setIsoView();
+
   public slots:
     //! \brief Changes the view to use an orthographic projection instead of the normal perspective view.
     void useOrthographic(bool ortho);
@@ -144,6 +162,9 @@ class GCodeView : public BaseView {
     //! \param gog: GCode object to search through.
     //! \return Segment line number.
     uint pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeObject> gog);
+
+    //! \brief Refreshes camera-dependent segment info display.
+    void updateSegmentInfoViewMatrix();
 
     //! \brief Settings for the view.
     QSharedPointer<SettingsBase> m_sb;

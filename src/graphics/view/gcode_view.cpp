@@ -83,6 +83,46 @@ GCodeView::GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoCo
     m_use_true_segment_widths = PreferencesManager::getInstance()->getUseTrueWidthsPreference();
 }
 
+void GCodeView::zoomIn() {
+    this->BaseView::zoomIn();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::zoomOut() {
+    this->BaseView::zoomOut();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::resetZoom() {
+    this->BaseView::resetZoom();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::setTopView() {
+    this->BaseView::setTopView();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::setSideView() {
+    this->BaseView::setSideView();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::setFrontView() {
+    this->BaseView::setFrontView();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::setForwardView() {
+    this->BaseView::setForwardView();
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::setIsoView() {
+    this->BaseView::setIsoView();
+    updateSegmentInfoViewMatrix();
+}
+
 void GCodeView::useOrthographic(bool ortho) {
     m_state.ortho = ortho;
 
@@ -92,6 +132,8 @@ void GCodeView::useOrthographic(bool ortho) {
         this->setForwardView();
     else
         this->setTopView();
+
+    updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
@@ -151,6 +193,7 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
 
     this->update();
     m_gcode = gcode;
+    updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::hideSegmentType(SegmentDisplayType type, bool hidden) {
@@ -251,13 +294,16 @@ void GCodeView::handleMouseMove(QPointF mouse_ndc_pos) {
 }
 
 void GCodeView::handleRightMove(QPointF mouse_ndc_pos) {
-    if (!m_state.ortho)
+    if (!m_state.ortho) {
         this->BaseView::handleRightMove(mouse_ndc_pos);
+        updateSegmentInfoViewMatrix();
+    }
 }
 
 void GCodeView::handleWheelForward(QPointF mouse_ndc_pos, float delta) {
     if (!m_state.ortho) {
         this->BaseView::handleWheelForward(mouse_ndc_pos, delta);
+        updateSegmentInfoViewMatrix();
         return;
     }
 
@@ -265,11 +311,13 @@ void GCodeView::handleWheelForward(QPointF mouse_ndc_pos, float delta) {
     m_state.zoom_factor = MathUtils::clamp(0.0f, m_state.zoom_factor, 2.0f);
 
     this->resizeGL(this->width(), this->height());
+    updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::handleWheelBackward(QPointF mouse_ndc_pos, float delta) {
     if (!m_state.ortho) {
         this->BaseView::handleWheelBackward(mouse_ndc_pos, delta);
+        updateSegmentInfoViewMatrix();
         return;
     }
 
@@ -277,6 +325,7 @@ void GCodeView::handleWheelBackward(QPointF mouse_ndc_pos, float delta) {
     m_state.zoom_factor = MathUtils::clamp(0.0f, m_state.zoom_factor, 2.0f);
 
     this->resizeGL(this->width(), this->height());
+    updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::translateCamera(QVector3D v, bool absolute) {
@@ -288,6 +337,8 @@ void GCodeView::translateCamera(QVector3D v, bool absolute) {
         m_camera->pan(v);
         m_focus->translateAbsolute(m_camera->getPan());
     }
+
+    updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::rotateCamera(QVector2D screen_delta) {
@@ -321,6 +372,7 @@ void GCodeView::resizeGL(int width, int height) {
     this->setProjectionMatrix(projection);
 
     this->update();
+    updateSegmentInfoViewMatrix();
 }
 
 uint GCodeView::pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeObject> gog) {
@@ -515,5 +567,11 @@ void GCodeView::resetCamera() {
         QVector3D(m_printer->printerCenter().x(), m_printer->printerCenter().y(), m_printer->minimum().z()), true);
 
     this->update(); // Need to repaint with new model matrices
+    updateSegmentInfoViewMatrix();
+}
+
+void GCodeView::updateSegmentInfoViewMatrix() {
+    if (!m_segment_info_control.isNull())
+        m_segment_info_control->setViewMatrix(this->viewMatrix());
 }
 } // namespace ORNL
