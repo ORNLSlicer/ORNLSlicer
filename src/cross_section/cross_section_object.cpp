@@ -144,8 +144,28 @@ PolygonList CrossSectionObject::makePolygons() {
             }
             std::vector<double> result;
             result.reserve(polyline.size());
-            psimpl::simplify_douglas_peucker<2>(polyline.begin(), polyline.end(), tolerance(),
+            SmoothingType smoothingType =
+                static_cast<SmoothingType>(m_sb->setting<int>(PS::SpecialModes::kSmoothingType));
+            if(smoothingType == SmoothingType::kDouglasPeucker) {
+                psimpl::simplify_douglas_peucker<2>(polyline.begin(), polyline.end(), tolerance(),
                                                 std::back_inserter(result));
+            }
+            else if(smoothingType == SmoothingType::kRadialDistance){
+                psimpl::simplify_radial_distance<2>(polyline.begin(), polyline.end(), tolerance(),
+                                                std::back_inserter(result));
+            }
+            else if(smoothingType == SmoothingType::kPerpendicularDistance){
+                psimpl::simplify_perpendicular_distance<2>(polyline.begin(), polyline.end(), tolerance(),
+                                                std::back_inserter(result));
+            }
+            else if(smoothingType == SmoothingType::kReumannWitkam){
+                psimpl::simplify_reumann_witkam<2>(polyline.begin(), polyline.end(), tolerance(),
+                                                std::back_inserter(result));
+            }
+            else{
+                psimpl::simplify_douglas_peucker<2>(polyline.begin(), polyline.end(), tolerance(),
+                                                std::back_inserter(result));
+            }
 
             Polygon newPolygon;
             for (unsigned int n = 0, end = result.size(); n < end; n += 2) {

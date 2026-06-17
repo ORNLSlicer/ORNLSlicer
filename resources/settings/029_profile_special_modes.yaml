@@ -13,6 +13,22 @@ settings:
     namespace: "Profile::SpecialModes"
     symbol: "kEnableSmoothing"
     local: false
+  - name: "smoothing_type"
+    display: "Smoothing Type"
+    type: "enumeration"
+    tooltip: "Select the smoothing algorithm to be applied"
+    depends: {"smoothing":true}
+    options:
+      - "Douglas Peucker"
+      - "Radial Distance"
+      - "Perpendicular Distance"
+      - "Reumann-Witkam"
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSmoothingType"
+    local: false
   - name: "smoothing_tolerance"
     display: "Smoothing Tolerance"
     type: "distance"
