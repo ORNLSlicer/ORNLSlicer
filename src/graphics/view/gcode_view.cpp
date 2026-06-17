@@ -1,8 +1,8 @@
 #include "graphics/view/gcode_view.h"
 
-#include <algorithm>
 #include <cmath>
 #include <limits>
+#include <tuple>
 
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -35,7 +35,13 @@ namespace {
 constexpr float kLinePickToleranceSquared = 0.000225f;
 constexpr uint kHoverTrackingSegmentLimit = 10000;
 
-float distanceSquaredToSegment(const QPointF& point, const QPointF& start, const QPointF& end) {
+struct LinePickResult {
+    float distance_squared;
+    float depth;
+};
+
+LinePickResult projectLineHit(const QPointF& point, const QPointF& start, const QPointF& end, float start_depth,
+                              float end_depth) {
     const float dx = end.x() - start.x();
     const float dy = end.y() - start.y();
     const float length_squared = (dx * dx) + (dy * dy);
@@ -43,7 +49,7 @@ float distanceSquaredToSegment(const QPointF& point, const QPointF& start, const
     if (length_squared <= std::numeric_limits<float>::epsilon()) {
         const float point_dx = point.x() - start.x();
         const float point_dy = point.y() - start.y();
-        return (point_dx * point_dx) + (point_dy * point_dy);
+        return {(point_dx * point_dx) + (point_dy * point_dy), start_depth};
     }
 
     float t = ((point.x() - start.x()) * dx + (point.y() - start.y()) * dy) / length_squared;
@@ -53,7 +59,8 @@ float distanceSquaredToSegment(const QPointF& point, const QPointF& start, const
     const float projected_y = start.y() + (t * dy);
     const float point_dx = point.x() - projected_x;
     const float point_dy = point.y() - projected_y;
-    return (point_dx * point_dx) + (point_dy * point_dy);
+    const float depth = start_depth + (t * (end_depth - start_depth));
+    return {(point_dx * point_dx) + (point_dy * point_dy), depth};
 }
 
 bool projectToNdc(const QMatrix4x4& projection, const QMatrix4x4& view, const QVector3D& point, QPointF& ndc,
@@ -312,26 +319,27 @@ void GCodeView::resizeGL(int width, int height) {
 }
 
 uint GCodeView::pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeObject> gog) {
-    float min_dist = Constants::Limits::Maximums::kMaxFloat;
+    float min_triangle_dist = Constants::Limits::Maximums::kMaxFloat;
+    float min_pick_depth = std::numeric_limits<float>::infinity();
     uint picked_seg = 0;
 
     auto tris = gog->segmentTriangles();
 
     for (auto& tri : tris) {
-        float dist = PartPicker::pickDistance(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, tri.second,
-                                              m_state.ortho);
+        const auto pick = PartPicker::pickDistanceAndIntersection(this->projectionMatrix(), this->viewMatrix(),
+                                                                  mouse_ndc_pos, tri.second, m_state.ortho);
+        const float dist = std::get<0>(pick);
 
-        if (dist < min_dist) {
-            min_dist = dist;
+        if (dist < min_triangle_dist) {
+            QPointF ndc;
+            float depth = min_pick_depth;
+            projectToNdc(this->projectionMatrix(), this->viewMatrix(), std::get<1>(pick), ndc, depth);
+            min_triangle_dist = dist;
+            min_pick_depth = depth;
             picked_seg = tri.first;
         }
     }
 
-    if (picked_seg != 0) {
-        return picked_seg;
-    }
-
-    float min_line_depth = std::numeric_limits<float>::infinity();
     auto lines = gog->segmentLines();
     for (auto& line : lines) {
         QPointF start_ndc;
@@ -343,10 +351,9 @@ uint GCodeView::pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeOb
             continue;
         }
 
-        const float distance_squared = distanceSquaredToSegment(mouse_ndc_pos, start_ndc, end_ndc);
-        const float line_depth = std::min(start_depth, end_depth);
-        if (distance_squared <= kLinePickToleranceSquared && line_depth < min_line_depth) {
-            min_line_depth = line_depth;
+        const LinePickResult line_hit = projectLineHit(mouse_ndc_pos, start_ndc, end_ndc, start_depth, end_depth);
+        if (line_hit.distance_squared <= kLinePickToleranceSquared && line_hit.depth < min_pick_depth) {
+            min_pick_depth = line_hit.depth;
             picked_seg = line.first;
         }
     }
