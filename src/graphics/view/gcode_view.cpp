@@ -33,6 +33,7 @@
 namespace ORNL {
 namespace {
 constexpr float kLinePickToleranceSquared = 0.000225f;
+constexpr uint kHoverTrackingSegmentLimit = 10000;
 
 float distanceSquaredToSegment(const QPointF& point, const QPointF& start, const QPointF& end) {
     const float dx = end.x() - start.x();
@@ -117,6 +118,7 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
 
         m_printer->adoptChild(m_gcode_object);
     }
+    updateHoverTracking();
 
     // Clear out old ghosted parts
     for (auto ghost : m_ghosted_parts) {
@@ -153,6 +155,15 @@ void GCodeView::hideSegmentType(SegmentDisplayType type, bool hidden) {
     m_gcode_object->hideSegmentType(type, hidden);
 
     this->update();
+}
+
+void GCodeView::updateHoverTracking() {
+    if (m_gcode_object.isNull()) {
+        this->setMouseTracking(true);
+        return;
+    }
+
+    this->setMouseTracking(m_gcode_object->visibleSegmentCount() <= kHoverTrackingSegmentLimit);
 }
 
 void GCodeView::updateSegmentWidths(bool use_true_width) {
@@ -394,14 +405,8 @@ void GCodeView::setLowLayer(uint low_layer) {
     m_gcode_object->showLow(low_layer);
     m_state.low_layer = low_layer;
 
-    // When there are more than 10000 segments being shown at once,
-    // disable the mouse tracking (highlighting when mouse on top of
-    // segment). This helps performance.
     uint segment_count = m_gcode_object->visibleSegmentCount();
-    if (segment_count > 10000)
-        this->setMouseTracking(false);
-    else
-        this->setMouseTracking(true);
+    updateHoverTracking();
 
     emit maxSegmentChanged(segment_count - 1);
 
@@ -416,10 +421,7 @@ void GCodeView::setHighLayer(uint high_layer) {
     m_state.high_layer = high_layer;
 
     uint segment_count = m_gcode_object->visibleSegmentCount();
-    if (segment_count > 10000)
-        this->setMouseTracking(false);
-    else
-        this->setMouseTracking(true);
+    updateHoverTracking();
 
     emit maxSegmentChanged(segment_count - 1);
 
@@ -432,10 +434,7 @@ void GCodeView::setLowSegment(uint low_segment) {
 
     m_gcode_object->showLowSegment(low_segment);
 
-    if (m_gcode_object->visibleSegmentCount() > 10000)
-        this->setMouseTracking(false);
-    else
-        this->setMouseTracking(true);
+    updateHoverTracking();
 
     this->update();
 }
@@ -446,10 +445,7 @@ void GCodeView::setHighSegment(uint high_segment) {
 
     m_gcode_object->showHighSegment(high_segment);
 
-    if (m_gcode_object->visibleSegmentCount() > 10000)
-        this->setMouseTracking(false);
-    else
-        this->setMouseTracking(true);
+    updateHoverTracking();
 
     this->update();
 }
