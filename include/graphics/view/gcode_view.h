@@ -129,6 +129,9 @@ class GCodeView : public BaseView {
     void handleWheelBackward(QPointF mouse_ndc_pos, float delta) override;
 
   private:
+    //! \brief Enables hover tracking only when the visible segment count is small enough for interactive picking.
+    void updateHoverTracking();
+
     //! \brief Picks a segment based on the mouse position.
     //! \param mouse_ndc_pos: Mouse normalized location.
     //! \param gog: GCode object to search through.
