@@ -76,6 +76,12 @@ QString ArcSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     return writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
 }
 
+void ArcSegment::reverse() {
+    SegmentBase::reverse();
+    m_ccw = !m_ccw;
+    updateAngle();
+}
+
 float ArcSegment::getMinZ() {
     // might not actually be correct
     if (m_start.z() < m_end.z())
