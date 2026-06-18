@@ -180,6 +180,8 @@ class Constants {
             static const QString kForceG1;
             static const QString kSupportG3;
             static const QString kToolNumber;
+            static const QString kToolCoordinate;
+            static const QString kBaseCoordinate;
             static const QString kAxisA;
             static const QString kAxisB;
             static const QString kAxisC;
