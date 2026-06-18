@@ -66,6 +66,5 @@ class Infill : public RegionBase {
 
     //! \brief Contains the layer that we are currently on
     uint m_layer_num;
-
 };
 } // namespace ORNL

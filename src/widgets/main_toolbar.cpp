@@ -263,8 +263,9 @@ QMenu* MainToolbar::buildShapeMenu() {
     connect(hex_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
         bool side_length_ok, height_ok;
 
-        double side_length = promptForSize("Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                           PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
+        double side_length =
+            promptForSize("Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
+                          PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
         if (!side_length_ok) {
             return;
         }
@@ -274,8 +275,7 @@ QMenu* MainToolbar::buildShapeMenu() {
             return;
         }
 
-        auto new_mesh =
-            QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(side_length, height));
+        auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(side_length, height));
         QString name = promptForName();
         if (name != "") {
             new_mesh->setName(name);

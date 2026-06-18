@@ -226,10 +226,10 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
         // Remove last element because it is a duplicate of the first. It will be re-added after re-ordering the vector.
         new_polyline.removeLast();
 
-        auto pointSelection = PointOrderOptimizer::linkToPoint(
-            queryPoint, new_polyline, m_layer_num, m_point_optimization, m_min_point_distance_enable,
-            m_min_point_distance, m_consecutive_threshold, m_randomness_enable, m_randomness_radius,
-            m_segment_breaking_enable);
+        auto pointSelection =
+            PointOrderOptimizer::linkToPoint(queryPoint, new_polyline, m_layer_num, m_point_optimization,
+                                             m_min_point_distance_enable, m_min_point_distance, m_consecutive_threshold,
+                                             m_randomness_enable, m_randomness_radius, m_segment_breaking_enable);
 
         applyPointOrderSelection(new_polyline, pointSelection);
 
@@ -302,8 +302,8 @@ QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> p
     return QPair<int, bool>(index, start);
 }
 
-void PolylineOrderOptimizer::applyPointOrderSelection(
-    Polyline& polyline, const PointOrderOptimizer::PointOrderSelection& selection) const {
+void PolylineOrderOptimizer::applyPointOrderSelection(Polyline& polyline,
+                                                      const PointOrderOptimizer::PointOrderSelection& selection) const {
     if (polyline.isEmpty())
         return;
 
@@ -501,8 +501,8 @@ Polyline PolylineOrderOptimizer::linkSpiralPolyline2D(bool last_spiral, Distance
     Polyline newPolyline = m_polylines[polylineIndex];
     m_polylines.removeAt(polylineIndex);
     auto pointSelection = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num,
-                                                           PointOrderOptimization::kNextClosest, false, 0, 0, false,
-                                                           0, m_segment_breaking_enable);
+                                                           PointOrderOptimization::kNextClosest, false, 0, 0, false, 0,
+                                                           m_segment_breaking_enable);
 
     // Define which point to start layer one - all other layers must use next closest
     if (m_layer_num == 0) {

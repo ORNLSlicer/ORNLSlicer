@@ -72,81 +72,81 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
         return false; // No error, so continune slicing
     });
 
-    pp.addStepBuilder([this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
-                             Preprocessor::ActivePartMeta& meta) {
-        auto addNewLayer = [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
-                                  Preprocessor::ActivePartMeta& meta, QSharedPointer<Layer>& new_layer) {
-            // Save settings
-            m_saved_layer_settings.push_back(next_layer_meta->settings);
+    pp.addStepBuilder(
+        [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
+            auto addNewLayer = [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
+                                      Preprocessor::ActivePartMeta& meta, QSharedPointer<Layer>& new_layer) {
+                // Save settings
+                m_saved_layer_settings.push_back(next_layer_meta->settings);
 
-            new_layer = QSharedPointer<Layer>::create(next_layer_meta->number, next_layer_meta->settings);
+                new_layer = QSharedPointer<Layer>::create(next_layer_meta->number, next_layer_meta->settings);
 
-            new_layer->setSettingsPolygons(next_layer_meta->settings_polygons);
+                new_layer->setSettingsPolygons(next_layer_meta->settings_polygons);
 
-            // add data from cross-sectioning to a layer
-            new_layer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
-
-            new_layer->setOrientation(next_layer_meta->plane,
-                                      next_layer_meta->shift_amount + next_layer_meta->additional_shift);
-            meta.part->appendStep(new_layer);
-
-            // Create the islands from the geometry.
-            QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
-
-            for (const PolygonList& island_geometry : split_geometry) {
-                // Polymer builds use polymer islands.
-                QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
-                    island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-                new_layer->addIsland(IslandType::kPolymer, poly_isl);
-            }
-        };
-
-        // must add new
-        if (next_layer_meta->number >= meta.steps_processed) {
-            QSharedPointer<Layer> layer;
-
-            next_layer_meta->number++;
-            addNewLayer(next_layer_meta, meta, layer);
-        }
-        else {
-            // Save settings
-            m_saved_layer_settings.push_back(next_layer_meta->settings);
-
-            QSharedPointer<Layer> layer =
-                meta.part->step(next_layer_meta->number + meta.part_start, StepType::kLayer).dynamicCast<Layer>();
-            layer->flagIfDirtySettings(next_layer_meta->settings);
-            layer->flagIfDirtySettingsPolygons(next_layer_meta->settings_polygons);
-
-            // if already dirty, must be because of user manipulation of geometry
-            // otherwise, check if settings have changed
-            // if either is true, need new layer
-            // TODO: make dirty recalc less restrictive
-            if (layer->isDirty()) {
-                QSharedPointer<Layer> newLayer =
-                    QSharedPointer<Layer>::create(next_layer_meta->number + 1, next_layer_meta->settings);
                 // add data from cross-sectioning to a layer
-                newLayer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
-                newLayer->setSettingsPolygons(next_layer_meta->settings_polygons);
-                newLayer->setOrientation(next_layer_meta->plane,
-                                         next_layer_meta->shift_amount + next_layer_meta->additional_shift);
-                meta.part->replaceStep(next_layer_meta->number + meta.part_start, newLayer);
+                new_layer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
+
+                new_layer->setOrientation(next_layer_meta->plane,
+                                          next_layer_meta->shift_amount + next_layer_meta->additional_shift);
+                meta.part->appendStep(new_layer);
 
                 // Create the islands from the geometry.
                 QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
 
-                QVector<QSharedPointer<IslandBase>> newIslands;
                 for (const PolygonList& island_geometry : split_geometry) {
                     // Polymer builds use polymer islands.
                     QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
                         island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
-                    newIslands.append(poly_isl);
+                    new_layer->addIsland(IslandType::kPolymer, poly_isl);
                 }
-                newLayer->updateIslands(IslandType::kPolymer, newIslands);
-            }
-        }
+            };
 
-        return false; // No error, so continune slicing
-    });
+            // must add new
+            if (next_layer_meta->number >= meta.steps_processed) {
+                QSharedPointer<Layer> layer;
+
+                next_layer_meta->number++;
+                addNewLayer(next_layer_meta, meta, layer);
+            }
+            else {
+                // Save settings
+                m_saved_layer_settings.push_back(next_layer_meta->settings);
+
+                QSharedPointer<Layer> layer =
+                    meta.part->step(next_layer_meta->number + meta.part_start, StepType::kLayer).dynamicCast<Layer>();
+                layer->flagIfDirtySettings(next_layer_meta->settings);
+                layer->flagIfDirtySettingsPolygons(next_layer_meta->settings_polygons);
+
+                // if already dirty, must be because of user manipulation of geometry
+                // otherwise, check if settings have changed
+                // if either is true, need new layer
+                // TODO: make dirty recalc less restrictive
+                if (layer->isDirty()) {
+                    QSharedPointer<Layer> newLayer =
+                        QSharedPointer<Layer>::create(next_layer_meta->number + 1, next_layer_meta->settings);
+                    // add data from cross-sectioning to a layer
+                    newLayer->setGeometry(next_layer_meta->geometry, next_layer_meta->average_normal);
+                    newLayer->setSettingsPolygons(next_layer_meta->settings_polygons);
+                    newLayer->setOrientation(next_layer_meta->plane,
+                                             next_layer_meta->shift_amount + next_layer_meta->additional_shift);
+                    meta.part->replaceStep(next_layer_meta->number + meta.part_start, newLayer);
+
+                    // Create the islands from the geometry.
+                    QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
+
+                    QVector<QSharedPointer<IslandBase>> newIslands;
+                    for (const PolygonList& island_geometry : split_geometry) {
+                        // Polymer builds use polymer islands.
+                        QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
+                            island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
+                        newIslands.append(poly_isl);
+                    }
+                    newLayer->updateIslands(IslandType::kPolymer, newIslands);
+                }
+            }
+
+            return false; // No error, so continune slicing
+        });
 
     pp.addCrossSectionProcessing([this](Preprocessor::ActivePartMeta& meta) {
         // If fewer layers than last slice, remove all steps from that layer onwards

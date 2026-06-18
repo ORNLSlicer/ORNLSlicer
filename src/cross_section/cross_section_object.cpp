@@ -184,7 +184,6 @@ PolygonList CrossSectionObject::makePolygons() {
                 key =
                     (quint64)(possiblePoints[closest].x() * 1000) << 32 | (quint64)(possiblePoints[closest].y() * 1000);
             }
-
         }
     }
 

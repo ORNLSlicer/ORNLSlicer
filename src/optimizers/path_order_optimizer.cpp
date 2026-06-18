@@ -330,8 +330,7 @@ QPair<int, bool> PathOrderOptimizer::radialOpenPath(const Point& center) {
             break;
         case PathOrderOptimization::kOutsideIn:
         case PathOrderOptimization::kInsideOut: {
-            const double query_radius =
-                std::hypot(query_point.x() - center.x(), query_point.y() - center.y());
+            const double query_radius = std::hypot(query_point.x() - center.x(), query_point.y() - center.y());
             const bool reverse_sweep = path_order == PathOrderOptimization::kInsideOut;
             double best_sweep = std::numeric_limits<double>::max();
 
@@ -339,8 +338,7 @@ QPair<int, bool> PathOrderOptimizer::radialOpenPath(const Point& center) {
                 const double path_angle = radialArcMidpointAngle(m_paths[i], center);
                 double sweep = path_angle;
                 if (query_radius > std::numeric_limits<double>::epsilon()) {
-                    const double query_angle =
-                        std::atan2(query_point.y() - center.y(), query_point.x() - center.x());
+                    const double query_angle = std::atan2(query_point.y() - center.y(), query_point.x() - center.x());
                     sweep = reverse_sweep ? positiveAngularDelta(query_angle - path_angle)
                                           : positiveAngularDelta(path_angle - query_angle);
                 }
@@ -700,10 +698,9 @@ Path PathOrderOptimizer::linkSpiralPath2D(bool last_spiral) {
     for (QSharedPointer<SegmentBase> seg : newPath)
         line.append(seg->start());
 
-    int pointIndex =
-        PointOrderOptimizer::linkToPoint(m_current_location, line, m_layer_num, PointOrderOptimization::kNextClosest,
-                                         false, 0, 0, false, 0)
-            .rotation_index;
+    int pointIndex = PointOrderOptimizer::linkToPoint(m_current_location, line, m_layer_num,
+                                                      PointOrderOptimization::kNextClosest, false, 0, 0, false, 0)
+                         .rotation_index;
 
     for (int i = 0; i < pointIndex; ++i)
         newPath.move(0, newPath.size() - 1);

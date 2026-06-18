@@ -105,6 +105,5 @@ class IslandBase {
 
     //! \brief Enum value of island type
     IslandType m_island_type;
-
 };
 } // namespace ORNL

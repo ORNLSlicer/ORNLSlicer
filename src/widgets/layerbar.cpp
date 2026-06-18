@@ -1558,8 +1558,8 @@ void LayerBar::splitRange(LayerBar::dot_range* range) {
 }
 
 void LayerBar::handleModifiedSetting(QString key) {
-    if (key == PS::Layer::kLayerHeight || key == PS::Slicing::kSlicingVectorX ||
-        key == PS::Slicing::kSlicingVectorY || key == PS::Slicing::kSlicingVectorZ) {
+    if (key == PS::Layer::kLayerHeight || key == PS::Slicing::kSlicingVectorX || key == PS::Slicing::kSlicingVectorY ||
+        key == PS::Slicing::kSlicingVectorZ) {
         updateLayers();
     }
 }

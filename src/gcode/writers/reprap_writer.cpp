@@ -45,8 +45,8 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
         rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) % " T0" %
               commentSpaceLine("SET EXTRUDER TEMPERATURE");
         if (m_sb->setting<int>(MS::Temperatures::kBed) > 0) {
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER TEMPERATURE AND WAIT");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) % " T0" %
+                  commentSpaceLine("SET EXTRUDER TEMPERATURE AND WAIT");
         }
 
         //            rv += "G28" % commentSpaceLine("TRAVEL HOME ALL AXES");

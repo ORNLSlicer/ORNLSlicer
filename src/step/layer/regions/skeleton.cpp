@@ -109,7 +109,6 @@ void Skeleton::compute(uint layer_num) {
 
             //! Uncomment to inspect Skeleton structure. See instructions in header file.
             // inspectSkeleton(layer_num);
-
         }
         else {
             qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << m_layer_num;

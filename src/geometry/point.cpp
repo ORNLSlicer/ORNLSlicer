@@ -186,9 +186,7 @@ MeshTypes::Kernel::Point_3 Point::toCartesian3D() const { return MeshTypes::Kern
 
 MeshTypes::Vector_3 Point::toVector_3() const { return MeshTypes::Vector_3(m_x, m_y, m_z); }
 
-Point Point::operator+(const Point& rhs) {
-    return Point(m_x + rhs.m_x, m_y + rhs.m_y, m_z + rhs.m_z);
-}
+Point Point::operator+(const Point& rhs) { return Point(m_x + rhs.m_x, m_y + rhs.m_y, m_z + rhs.m_z); }
 
 Point Point::operator+=(const Point& rhs) {
     m_x += rhs.m_x;
@@ -197,9 +195,7 @@ Point Point::operator+=(const Point& rhs) {
     return *this;
 }
 
-Point Point::operator-(const Point& rhs) {
-    return Point(m_x - rhs.m_x, m_y - rhs.m_y, m_z - rhs.m_z);
-}
+Point Point::operator-(const Point& rhs) { return Point(m_x - rhs.m_x, m_y - rhs.m_y, m_z - rhs.m_z); }
 
 Point Point::operator-=(const Point& rhs) {
     m_x -= rhs.m_x;
@@ -208,13 +204,9 @@ Point Point::operator-=(const Point& rhs) {
     return *this;
 }
 
-Point Point::operator*(const float rhs) const {
-    return Point(rhs * m_x, rhs * m_y, rhs * m_z);
-}
+Point Point::operator*(const float rhs) const { return Point(rhs * m_x, rhs * m_y, rhs * m_z); }
 
-Point Point::operator*(const float rhs) {
-    return Point(rhs * m_x, rhs * m_y, rhs * m_z);
-}
+Point Point::operator*(const float rhs) { return Point(rhs * m_x, rhs * m_y, rhs * m_z); }
 
 Point Point::operator*=(const float rhs) {
     m_x *= rhs;
@@ -223,9 +215,7 @@ Point Point::operator*=(const float rhs) {
     return *this;
 }
 
-Point Point::operator/(const float rhs) {
-    return Point(m_x / rhs, m_y / rhs, m_z / rhs);
-}
+Point Point::operator/(const float rhs) { return Point(m_x / rhs, m_y / rhs, m_z / rhs); }
 
 Point Point::operator/=(const float m) {
     m_x /= m;

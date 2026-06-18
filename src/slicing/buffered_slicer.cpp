@@ -145,15 +145,8 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         computeSettingsPolygons(settings_polygons, shift_amount);
 
         SliceMeta meta = {
-            m_slice_count,
-            layer_specific_settings,
-            geometry,
-            m_slicing_plane,
-            settings_polygons,
-            average_normal,
-            shift_amount,
-            m_additional_shift,
-            opt_polylines,
+            m_slice_count, layer_specific_settings, geometry,      m_slicing_plane, settings_polygons, average_normal,
+            shift_amount,  m_additional_shift,      opt_polylines,
         };
 
         slice_meta = QSharedPointer<SliceMeta>::create(meta);

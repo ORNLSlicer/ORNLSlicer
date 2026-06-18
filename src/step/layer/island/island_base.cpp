@@ -185,7 +185,6 @@ void IslandBase::compute(uint layer_num) {
         r->compute(layer_num);
         pl = r->getGeometry();
     }
-
 }
 
 QSharedPointer<SettingsBase> IslandBase::getSb() const { return m_sb; }

@@ -150,6 +150,5 @@ class AbstractSlicingThread : public QObject {
 
     //! \brief Cancel flag set by session manager if user clicks on cancel button
     bool m_should_cancel;
-
 };
 } // namespace ORNL

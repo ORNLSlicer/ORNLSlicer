@@ -57,8 +57,7 @@ void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, Poi
         bool perimeter_lead_in_enabled = firstIsland->getSb()->setting<bool>(PS::Perimeter::kEnableLeadIn);
         bool perimeter_lead_in_first_layer_only = global_sb->setting<bool>(PS::Perimeter::kLeadInFirstLayerOnly);
 
-        if (perimeter_enabled && perimeter_lead_in_enabled &&
-            (layer_num == 0 || !perimeter_lead_in_first_layer_only)) {
+        if (perimeter_enabled && perimeter_lead_in_enabled && (layer_num == 0 || !perimeter_lead_in_first_layer_only)) {
             Point leadIn = Point(firstIsland->getSb()->setting<Distance>(PS::Perimeter::kEnableLeadInX),
                                  firstIsland->getSb()->setting<Distance>(PS::Perimeter::kEnableLeadInY), 0.0);
 

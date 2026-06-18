@@ -34,7 +34,7 @@ ArcSegment::ArcSegment(Point start, Point middle, Point end) : SegmentBase(start
         case 0:
             throw IllegalArgumentException(
                 "Cannot construct an ArcSegment from collinear start, middle, and end points");
-        case 1:            // Clockwise
+        case 1: // Clockwise
             m_ccw = false;
             break;
         case -1: // Counter-clockwise
