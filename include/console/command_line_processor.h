@@ -56,6 +56,10 @@ class CommandLineConverter {
     //! \param suffix: necessary file extension
     bool isValid(QString path, QString suffix);
 
+    //! \brief Check if file path is valid and has a supported model extension
+    //! \param path: path of file
+    bool isValidModelFile(QString path);
+
     //! \brief Copy of master json for access to individual settings
     QSharedPointer<SettingsBase> m_master;
 };

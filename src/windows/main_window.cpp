@@ -1039,20 +1039,18 @@ void MainWindow::doSlice() {
 
 void MainWindow::loadModel(MeshType mt) {
     QStringList filepaths;
+    const QString model_filter = QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)");
     if (mt == MeshType::kClipping) {
-        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL clipping file"),
-                                                  CSM->getMostRecentModelLocation(),
-                                                  QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model clipping file"),
+                                                  CSM->getMostRecentModelLocation(), model_filter);
     }
     else if (mt == MeshType::kSettings) {
-        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL settings file"),
-                                                  CSM->getMostRecentModelLocation(),
-                                                  QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model settings file"),
+                                                  CSM->getMostRecentModelLocation(), model_filter);
     }
     else {
-        filepaths =
-            QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL part file"), CSM->getMostRecentModelLocation(),
-                                          QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model part file"),
+                                                  CSM->getMostRecentModelLocation(), model_filter);
     }
 
     if (filepaths.isEmpty())
@@ -1070,7 +1068,7 @@ void MainWindow::loadModel(MeshType mt) {
 void MainWindow::loadPointCloud() {
     // Load a point cloud from file
     QStringList filepaths =
-        QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL part file"), CSM->getMostRecentModelLocation(),
+        QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open point cloud file"), CSM->getMostRecentModelLocation(),
                                       QObject::tr("Point Cloud (*.matrix *.xyz)"));
     if (filepaths.isEmpty())
         return;

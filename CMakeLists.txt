@@ -59,6 +59,7 @@ function(FindDependencies)
     find_package(Boost         REQUIRED COMPONENTS system)
     find_package(CGAL          REQUIRED)
     find_package(nlohmann_json REQUIRED)
+    find_package(OpenCASCADE REQUIRED)
     find_package(VTK           REQUIRED)
     find_package(Eigen3        REQUIRED NO_MODULE)
     find_package(zip           REQUIRED)
@@ -98,6 +99,7 @@ function(FindDependencies)
         Eigen3::Eigen
         CGAL::Eigen3_support
         nlohmann_json::nlohmann_json
+        ${OpenCASCADE_LIBRARIES}
         ornl::psimpl
         ornl::polyclipping
         zip::zip
@@ -105,11 +107,29 @@ function(FindDependencies)
         ${OPTIONAL_PACKAGES}
     )
 
+    set(RESULT_INCLUDE_DIRS "")
+    if(OpenCASCADE_INCLUDE_DIRS)
+        list(APPEND RESULT_INCLUDE_DIRS ${OpenCASCADE_INCLUDE_DIRS})
+    elseif(OpenCASCADE_INCLUDE_DIR)
+        list(APPEND RESULT_INCLUDE_DIRS ${OpenCASCADE_INCLUDE_DIR})
+    endif()
+
+    set(RESULT_LIBRARY_DIRS "")
+    if(OpenCASCADE_LIBRARY_DIRS)
+        list(APPEND RESULT_LIBRARY_DIRS ${OpenCASCADE_LIBRARY_DIRS})
+    elseif(OpenCASCADE_LIBRARY_DIR)
+        list(APPEND RESULT_LIBRARY_DIRS ${OpenCASCADE_LIBRARY_DIR})
+    endif()
+
     set(RESULT_VAR ${RESULT_VAR} PARENT_SCOPE)
+    set(RESULT_INCLUDE_DIRS ${RESULT_INCLUDE_DIRS} PARENT_SCOPE)
+    set(RESULT_LIBRARY_DIRS ${RESULT_LIBRARY_DIRS} PARENT_SCOPE)
 endfunction()
 
 FindDependencies()
 set(ORNLSLICER_DEPS ${RESULT_VAR})
+set(ORNLSLICER_INCLUDE_DIRS ${RESULT_INCLUDE_DIRS})
+set(ORNLSLICER_LIBRARY_DIRS ${RESULT_LIBRARY_DIRS})
 
 # Find all project files.
 file(GLOB_RECURSE SOURCES "src/**.cpp")
@@ -117,7 +137,12 @@ file(GLOB_RECURSE HEADERS "include/**.h")
 file(GLOB_RECURSE RESOURCES "resources/**.qrc")
 
 add_library(${PROJECT_NAME}_obj OBJECT)
-target_include_directories(${PROJECT_NAME}_obj PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated/include)
+target_include_directories(
+    ${PROJECT_NAME}_obj
+    PRIVATE
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+        ${ORNLSLICER_INCLUDE_DIRS}
+)
 target_sources(
     ${PROJECT_NAME}_obj
     PRIVATE ${SOURCES} ${RESOURCES}
@@ -126,6 +151,9 @@ target_sources(
     FILES ${HEADERS}
 )
 
+if(ORNLSLICER_LIBRARY_DIRS)
+    target_link_directories(${PROJECT_NAME}_obj PRIVATE ${ORNLSLICER_LIBRARY_DIRS})
+endif()
 target_link_libraries(${PROJECT_NAME}_obj ${ORNLSLICER_DEPS})
 target_compile_options(${PROJECT_NAME}_obj PRIVATE $<$<COMPILE_LANGUAGE:CXX>: -fpermissive -Wno-deprecated-declarations>)
 

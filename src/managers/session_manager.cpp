@@ -281,7 +281,7 @@ void SessionManager::reloadPart(QSharedPointer<PartMetaItem> pm) {
         m_models[file_info.fileName()] = {mesh_data.raw_data, mesh_data.size};
 
         emit partReloaded(pm);
-        emit forwardStatusUpdate("Reloaded Part STL, file \"" + file_info.fileName() + "\"");
+        emit forwardStatusUpdate("Reloaded part model, file \"" + file_info.fileName() + "\"");
     });
     loader->start();
 }
@@ -309,7 +309,7 @@ void SessionManager::replacePart(QSharedPointer<PartMetaItem> pm, QString filena
         m_models[file_info.fileName()] = {mesh_data.raw_data, mesh_data.size};
 
         emit partReloaded(pm);
-        emit forwardStatusUpdate("Reloaded Part STL, file \"" + file_info.fileName() + "\"");
+        emit forwardStatusUpdate("Reloaded part model, file \"" + file_info.fileName() + "\"");
     });
     loader->start();
 }
