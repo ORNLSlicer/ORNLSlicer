@@ -407,8 +407,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                 m_layer_start_lines.push_back(m_current_line + 1);
             }
 
-            const int status_percent =
-                qRound((double)(m_current_line + 1) / (double)(m_current_end_line + 1) * 100);
+            const int status_percent = qRound((double)(m_current_line + 1) / (double)(m_current_end_line + 1) * 100);
             if (status_percent != last_status_percent) {
                 emit statusUpdate(StatusUpdateStepType::kGcodeParsing, status_percent);
                 last_status_percent = status_percent;

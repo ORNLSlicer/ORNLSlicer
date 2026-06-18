@@ -277,8 +277,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         const Distance layer_height =
             positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kLayerHeight), kDefaultHelicalLayerHeight);
         const Distance bead_width = positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kBeadWidth), layer_height);
-        const Distance section_spacing =
-            bead_width / 2.0 > kMinSectionSpacing ? bead_width / 2.0 : kMinSectionSpacing;
+        const Distance section_spacing = bead_width / 2.0 > kMinSectionSpacing ? bead_width / 2.0 : kMinSectionSpacing;
         const RadialBoundaryHandling boundary_handling =
             static_cast<RadialBoundaryHandling>(part_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling));
         Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius);
@@ -449,8 +448,8 @@ QSharedPointer<MeshBase> HelicalSlicer::copyMesh(const QSharedPointer<MeshBase>&
     return nullptr;
 }
 
-Point HelicalSlicer::helicalCenterForPart(const QSharedPointer<SettingsBase>& part_sb,
-                                          const QSharedPointer<Part>& part, Distance base_z) {
+Point HelicalSlicer::helicalCenterForPart(const QSharedPointer<SettingsBase>& part_sb, const QSharedPointer<Part>& part,
+                                          Distance base_z) {
     const RadialAxisMode axis_mode = static_cast<RadialAxisMode>(part_sb->setting<int>(PS::Slicing::kRadialAxisMode));
 
     Point center = part->rootMesh()->centroid();

@@ -22,51 +22,51 @@ constexpr int kV3ImageSlicer = 3;
 constexpr int kAllPerimeterBoundaries = 0;
 
 constexpr std::array<int, 35> kSyntaxV2ToV3 = {
-    0,                // Beam
-    1,                // Cincinnati
-    2,                // Common
-    3,                // Dmg Dmu
+    0,                 // Beam
+    1,                 // Cincinnati
+    2,                 // Common
+    3,                 // Dmg Dmu
     kCincinnatiSyntax, // GKN removed
-    4,                // Gudel
-    5,                // Haas Inch
-    6,                // Haas Metric
-    7,                // Haas Metric No Comments
-    8,                // Hurco
-    9,                // Ingersoll
-    10,               // Marlin
-    11,               // Marlin Pellet
-    12,               // Mazak
-    13,               // MVP
-    14,               // RomiFanuc
+    4,                 // Gudel
+    5,                 // Haas Inch
+    6,                 // Haas Metric
+    7,                 // Haas Metric No Comments
+    8,                 // Hurco
+    9,                 // Ingersoll
+    10,                // Marlin
+    11,                // Marlin Pellet
+    12,                // Mazak
+    13,                // MVP
+    14,                // RomiFanuc
     kCincinnatiSyntax, // RPBF removed
-    15,               // Siemens
-    kThermwoodSyntax, // SkyBaam removed; concrete templates now use Thermwood
-    16,               // Thermwood
-    17,               // Wolf
-    18,               // RepRap
-    19,               // Mach4
-    20,               // AeroBasic
-    21,               // Meld
-    22,               // ORNL
-    23,               // Okuma
-    24,               // Tormach
-    25,               // AML3D
-    26,               // KraussMaffei
-    27,               // Sandia
-    28,               // 5AxisMarlin
-    29,               // Meltio
-    30,               // Adamantine
-    31                // ORNL Metric
+    15,                // Siemens
+    kThermwoodSyntax,  // SkyBaam removed; concrete templates now use Thermwood
+    16,                // Thermwood
+    17,                // Wolf
+    18,                // RepRap
+    19,                // Mach4
+    20,                // AeroBasic
+    21,                // Meld
+    22,                // ORNL
+    23,                // Okuma
+    24,                // Tormach
+    25,                // AML3D
+    26,                // KraussMaffei
+    27,                // Sandia
+    28,                // 5AxisMarlin
+    29,                // Meltio
+    30,                // Adamantine
+    31                 // ORNL Metric
 };
 
 constexpr std::array<int, 7> kSlicerTypeV2ToV3 = {
-    0,              // Polymer
-    1,              // Legacy slicer type 1
-    2,              // Legacy slicer type 2
+    0,                    // Polymer
+    1,                    // Legacy slicer type 1
+    2,                    // Legacy slicer type 2
     kV3LegacySlicerType2, // RPBF removed
-    kPolymerSlicer, // Real Time Polymer removed
+    kPolymerSlicer,       // Real Time Polymer removed
     kV3LegacySlicerType2, // Real Time RPBF removed
-    kV3ImageSlicer  // Image
+    kV3ImageSlicer        // Image
 };
 
 constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
@@ -78,62 +78,27 @@ constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
 
 constexpr std::array<const char*, 47> kRemovedV3Settings = {
     // GKN syntax settings
-    "base_coordinate",
-    "gkn_laser_power",
-    "gkn_melt_pool",
-    "gkn_print_speed",
-    "gkn_wire_speed",
-    "supports_E1",
-    "supports_E2",
-    "tool_coordinate",
+    "base_coordinate", "gkn_laser_power", "gkn_melt_pool", "gkn_print_speed", "gkn_wire_speed", "supports_E1",
+    "supports_E2", "tool_coordinate",
 
     // RPBF and metal sector settings
-    "clocking_angle",
-    "enable_partition_scheme",
-    "enable_radial_split",
-    "infill_focus",
-    "infill_partition_scheme",
-    "infill_power",
-    "infill_sector_count",
-    "infill_spot_size",
-    "perimeter_focus",
-    "perimeter_power",
-    "perimeter_spot_size",
-    "sector_offsetting_enable",
-    "sector_overlap",
-    "sector_size",
-    "sector_stagger_angle",
+    "clocking_angle", "enable_partition_scheme", "enable_radial_split", "infill_focus", "infill_partition_scheme",
+    "infill_power", "infill_sector_count", "infill_spot_size", "perimeter_focus", "perimeter_power",
+    "perimeter_spot_size", "sector_offsetting_enable", "sector_overlap", "sector_size", "sector_stagger_angle",
     "sector_stagger_enable",
 
     // Single path and real-time settings
-    "corner_exclusion_distance",
-    "enable_bridge_exclusion",
-    "enable_single_path",
-    "enable_zippering",
-    "max_bridge_length",
-    "min_bridge_separation",
-    "previous_layer_exclusion_distance",
+    "corner_exclusion_distance", "enable_bridge_exclusion", "enable_single_path", "enable_zippering",
+    "max_bridge_length", "min_bridge_separation", "previous_layer_exclusion_distance",
 
     // Removed writer/path modifier settings
-    "laser_power_multiplier",
-    "pyrometer_move",
-    "rotation_origin_offset_x",
-    "rotation_origin_offset_y",
+    "laser_power_multiplier", "pyrometer_move", "rotation_origin_offset_x", "rotation_origin_offset_y",
     "wire_feed_multiplier",
 
     // Wire-feed and anchor settings
-    "anchor_enable",
-    "anchor_height",
-    "anchor_object_distance_left",
-    "anchor_object_distance_right",
-    "anchor_width",
-    "setting_region_mesh_split",
-    "wire_feed_cutoff_distance",
-    "wire_feed_enable",
-    "wire_feed_initial_travel",
-    "wire_feed_prestart_distance",
-    "wire_feed_stickout_distance"
-};
+    "anchor_enable", "anchor_height", "anchor_object_distance_left", "anchor_object_distance_right", "anchor_width",
+    "setting_region_mesh_split", "wire_feed_cutoff_distance", "wire_feed_enable", "wire_feed_initial_travel",
+    "wire_feed_prestart_distance", "wire_feed_stickout_distance"};
 
 template <std::size_t N>
 void migrateIndexedSetting(fifojson& settings_group, const QString& setting_key, const std::array<int, N>& mapping) {
@@ -263,8 +228,7 @@ void SettingsVersionControl::pre_2_0To2_0(double& version, fifojson& settings) {
 void SettingsVersionControl::pre_3_0To3_0(double& version, fifojson& settings) {
     QString dt = QDateTime::currentDateTime().toString();
     fifojson new_format = settings;
-    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] =
-        dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 3.0;
 
     auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
@@ -272,8 +236,7 @@ void SettingsVersionControl::pre_3_0To3_0(double& version, fifojson& settings) {
         for (auto& settings_group : settings_array.value()) {
             removeV2Settings(settings_group);
             migrateIndexedSetting(settings_group, Constants::PrinterSettings::MachineSetup::kSyntax, kSyntaxV2ToV3);
-            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType,
-                                  kSlicerTypeV2ToV3);
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType, kSlicerTypeV2ToV3);
             addV3Settings(settings_group);
         }
     }
@@ -285,15 +248,13 @@ void SettingsVersionControl::pre_3_0To3_0(double& version, fifojson& settings) {
 void SettingsVersionControl::pre_4_0To4_0(double& version, fifojson& settings) {
     QString dt = QDateTime::currentDateTime().toString();
     fifojson new_format = settings;
-    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] =
-        dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
     new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 4.0;
 
     auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
     if (settings_array != new_format.end() && settings_array.value().is_array()) {
         for (auto& settings_group : settings_array.value()) {
-            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType,
-                                  kSlicerTypeV3ToV4);
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType, kSlicerTypeV3ToV4);
         }
     }
 

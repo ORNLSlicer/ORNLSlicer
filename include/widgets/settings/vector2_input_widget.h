@@ -26,8 +26,8 @@ class Vector2InputWidget : public QWidget, public SettingRowBase {
     Q_OBJECT
 
   public:
-    Vector2InputWidget(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString primary_key,
-                       QString secondary_key, fifojson json, QGridLayout* layout, int index, Distance primary_default,
+    Vector2InputWidget(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString primary_key, QString secondary_key,
+                       fifojson json, QGridLayout* layout, int index, Distance primary_default,
                        Distance secondary_default, QString primary_label = "X", QString secondary_label = "Y");
 
     //! \brief Hides current row.
@@ -78,8 +78,8 @@ class Vector2InputWidget : public QWidget, public SettingRowBase {
     bool hasConsistentEffectiveValues(const QString& key, Distance default_value);
     bool hasAnyInconsistentValue();
     void updateWarningStateAfterEdit();
-    void setSpinBoxValue(QDoubleSpinBox* spin_box, const QString& key, Distance default_value,
-                         bool only_if_consistent, bool& consistent);
+    void setSpinBoxValue(QDoubleSpinBox* spin_box, const QString& key, Distance default_value, bool only_if_consistent,
+                         bool& consistent);
 
     std::array<Component, 2> m_components;
     bool m_warn;

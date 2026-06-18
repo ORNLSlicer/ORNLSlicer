@@ -68,6 +68,5 @@ class Inset : public RegionBase {
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
-
 };
 } // namespace ORNL

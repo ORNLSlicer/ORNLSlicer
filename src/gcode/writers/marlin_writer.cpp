@@ -102,10 +102,10 @@ QString MarlinWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
                   " T4" % commentSpaceLine("WAIT FOR EXTRUDER ZONE 5 TEMPERATURE");
         }
         else {
-            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER TEMPERATURE");
-            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) %
-                  " T0" % commentSpaceLine("SET EXTRUDER TEMPERATURE AND WAIT");
+            rv += "M104 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) % " T0" %
+                  commentSpaceLine("SET EXTRUDER TEMPERATURE");
+            rv += "M109 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kExtruder).to(degC)) % " T0" %
+                  commentSpaceLine("SET EXTRUDER TEMPERATURE AND WAIT");
         }
 
         rv += "G28" % commentSpaceLine("TRAVEL HOME ALL AXES");

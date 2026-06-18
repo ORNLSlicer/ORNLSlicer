@@ -271,8 +271,7 @@ void GcodeExport::exportGcode() {
             }
         }
 
-        if ((m_most_recent_meta == GcodeMetaList::MarlinMeta ||
-             m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
+        if ((m_most_recent_meta == GcodeMetaList::MarlinMeta || m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
             GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
             GCodeSimulationOutput* saver =
                 new GCodeSimulationOutput(m_location, filepath, gcodeFileName, text, m_most_recent_meta);

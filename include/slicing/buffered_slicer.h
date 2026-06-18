@@ -132,6 +132,5 @@ class BufferedSlicer {
 
     //! \brief list of settings parts being tracked
     QVector<QSharedPointer<Part>> m_settings_parts;
-
 };
 } // namespace ORNL
