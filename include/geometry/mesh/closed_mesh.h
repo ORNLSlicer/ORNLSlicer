@@ -153,9 +153,13 @@ class ClosedMesh : public MeshBase {
     static std::pair<QVector<MeshVertex>, QVector<MeshFace>>
     FacesAndVerticesFromPolyhedron(MeshTypes::Polyhedron& mesh);
 
-    //! \brief cleans a supplied polyhedron
-    //! \param polyhedron the object to clean
-    static void CleanPolyhedron(MeshTypes::Polyhedron& polyhedron);
+    //! \brief Attempts to clean a supplied polyhedron for closed-mesh import.
+    //! \param polyhedron Candidate polyhedron to clean in place.
+    //! \return True if the cleaned polyhedron should replace the import candidate; false if callers should keep the
+    //! original mesh.
+    //! \note Repair operations are expected to run on a caller-owned copy so failed repairs do not partially replace
+    //! the original import geometry.
+    static bool CleanPolyhedron(MeshTypes::Polyhedron& polyhedron);
 
     MeshTypes::SurfaceMesh extractUpwardFaces() override;
 

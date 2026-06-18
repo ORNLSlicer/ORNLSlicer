@@ -123,8 +123,13 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
                 if (!builder.wasError() && GSM->getGlobal()->setting<bool>(PS::SpecialModes::kEnableFixModel)) {
                     MeshTypes::Polyhedron repaired_polyhedron = polyhedron;
                     try {
-                        ClosedMesh::CleanPolyhedron(repaired_polyhedron);
-                        polyhedron = repaired_polyhedron;
+                        if (ClosedMesh::CleanPolyhedron(repaired_polyhedron)) {
+                            polyhedron = repaired_polyhedron;
+                        }
+                        else {
+                            qWarning() << "Model repair did not complete for" << file_info.fileName()
+                                       << "- importing unrepaired mesh.";
+                        }
                     } catch (const CGAL::Failure_exception& error) {
                         qWarning() << "CGAL model repair failed for" << file_info.fileName()
                                    << "- importing unrepaired mesh:" << error.what();

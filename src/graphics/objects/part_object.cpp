@@ -34,11 +34,33 @@ namespace ORNL {
 namespace {
 constexpr float kFeatureEdgeCosThreshold = 0.9063078f; // 25 degrees.
 constexpr float kFeatureEdgePositionTolerance = 1.0f;
+//! \brief Base opacity for feature-edge lines when the parent part is fully opaque.
+constexpr float kFeatureEdgeAlpha = 0.35f;
+//! \brief Number of floats used by one triangle's three positions.
+constexpr size_t kTrianglePositionFloatCount = 9;
+//! \brief Number of floats used by one triangle's three RGBA vertex colors.
+constexpr size_t kTriangleColorFloatCount = 12;
 
 struct EdgeSample {
     int start_index;
     int end_index;
     QVector3D normal;
+};
+
+//! \brief View-space depth for a triangle in a PartObject render buffer.
+struct TriangleDepth {
+    size_t triangle_index;
+    float view_z;
+};
+
+//! \brief Graphics object wrapper that exposes repainting for the feature-edge overlay.
+class FeatureEdgeObject : public GraphicsObject {
+  public:
+    using GraphicsObject::GraphicsObject;
+
+    //! \brief Repaints every feature-edge vertex with the supplied display color.
+    //! \param color Color and alpha to apply to the overlay lines.
+    void setEdgeColor(QColor color) { this->paint(color); }
 };
 
 std::array<long long, 3> vertexKey(const QVector3D& vertex) {
@@ -55,6 +77,26 @@ std::array<long long, 6> edgeKey(const QVector3D& start, const QVector3D& end) {
         return {end_key[0], end_key[1], end_key[2], start_key[0], start_key[1], start_key[2]};
 
     return {start_key[0], start_key[1], start_key[2], end_key[0], end_key[1], end_key[2]};
+}
+
+//! \brief Builds the feature-edge line color using the current part transparency.
+//! \param part_transparency Current PartObject alpha in the range [0, 255].
+//! \return RGBA color for feature-edge vertices.
+QColor featureEdgeColor(uint part_transparency) {
+    QColor color;
+    color.setRgbF(0.04f, 0.06f, 0.07f, kFeatureEdgeAlpha * (static_cast<float>(part_transparency) / 255.0f));
+    return color;
+}
+
+//! \brief Appends one triangle's contiguous float data to a sorted render buffer.
+//! \param source Buffer containing packed per-triangle data.
+//! \param triangle_index Triangle to copy.
+//! \param floats_per_triangle Number of floats occupied by one triangle in \p source.
+//! \param sorted Destination buffer receiving the copied triangle data.
+void appendTriangleData(const std::vector<float>& source, size_t triangle_index, size_t floats_per_triangle,
+                        std::vector<float>& sorted) {
+    const size_t offset = triangle_index * floats_per_triangle;
+    sorted.insert(sorted.end(), source.begin() + offset, source.begin() + offset + floats_per_triangle);
 }
 
 bool isFeatureEdge(const QVector<EdgeSample>& edge_samples) {
@@ -156,16 +198,17 @@ QSharedPointer<GraphicsObject> createFeatureEdgeObject(BaseView* view, QSharedPo
         edge_normals[i] = 1.0f;
     }
 
+    const QColor edge_color = featureEdgeColor(255);
     std::vector<float> edge_colors;
     edge_colors.reserve((edge_vertices.size() / 3) * 4);
     for (size_t i = 0; i < edge_vertices.size() / 3; ++i) {
-        edge_colors.push_back(0.04f);
-        edge_colors.push_back(0.06f);
-        edge_colors.push_back(0.07f);
-        edge_colors.push_back(0.35f);
+        edge_colors.push_back(edge_color.redF());
+        edge_colors.push_back(edge_color.greenF());
+        edge_colors.push_back(edge_color.blueF());
+        edge_colors.push_back(edge_color.alphaF());
     }
 
-    return QSharedPointer<GraphicsObject>::create(view, edge_vertices, edge_normals, edge_colors, GL_LINES);
+    return QSharedPointer<FeatureEdgeObject>::create(view, edge_vertices, edge_normals, edge_colors, GL_LINES);
 }
 } // namespace
 
@@ -231,6 +274,7 @@ PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mod
     this->populateGL(view, vertices, normals, colors, render_mode);
 
     m_feature_edge_object = createFeatureEdgeObject(this->view(), mesh);
+    this->updateFeatureEdgeAppearance();
 
     // Make a label.
     auto got = QSharedPointer<TextObject>::create(this->view(), m_part->name());
@@ -285,7 +329,17 @@ void PartObject::draw() {
         m_view->glEnable(GL_CULL_FACE);
     }
     else {
+        const bool sort_for_transparency = m_transparency < 255 && renderMode() == GL_TRIANGLES;
+        if (sort_for_transparency) {
+            this->sortTrianglesForTransparency();
+            m_view->glDepthMask(GL_FALSE);
+        }
+
         m_view->glDrawArrays(renderMode(), 0, m_vertices.size() / 3);
+
+        if (sort_for_transparency)
+            m_view->glDepthMask(GL_TRUE);
+
         if (!getSolidWireFrameMode() && !m_feature_edge_object.isNull()) {
             m_view->glDepthFunc(GL_LEQUAL);
             m_feature_edge_object->render();
@@ -428,6 +482,56 @@ void PartObject::overhangUpdate() {
     this->view()->shaderProgram()->release();
 }
 
+void PartObject::sortTrianglesForTransparency() {
+    const size_t triangle_count = m_vertices.size() / kTrianglePositionFloatCount;
+    if (triangle_count < 2 || m_normals.size() != m_vertices.size() ||
+        m_colors.size() != triangle_count * kTriangleColorFloatCount)
+        return;
+
+    const QMatrix4x4 model_view = this->view()->camera()->viewMatrix() * this->transformation();
+
+    std::vector<TriangleDepth> triangle_depths;
+    triangle_depths.reserve(triangle_count);
+    for (size_t triangle_index = 0; triangle_index < triangle_count; ++triangle_index) {
+        const size_t offset = triangle_index * kTrianglePositionFloatCount;
+        const QVector3D center =
+            (QVector3D(m_vertices[offset], m_vertices[offset + 1], m_vertices[offset + 2]) +
+             QVector3D(m_vertices[offset + 3], m_vertices[offset + 4], m_vertices[offset + 5]) +
+             QVector3D(m_vertices[offset + 6], m_vertices[offset + 7], m_vertices[offset + 8])) /
+            3.0f;
+
+        triangle_depths.push_back({triangle_index, (model_view * center).z()});
+    }
+
+    std::stable_sort(triangle_depths.begin(), triangle_depths.end(),
+                     [](const TriangleDepth& lhs, const TriangleDepth& rhs) { return lhs.view_z < rhs.view_z; });
+
+    std::vector<float> sorted_vertices;
+    std::vector<float> sorted_normals;
+    std::vector<float> sorted_colors;
+    sorted_vertices.reserve(m_vertices.size());
+    sorted_normals.reserve(m_normals.size());
+    sorted_colors.reserve(m_colors.size());
+    for (const TriangleDepth& triangle_depth : triangle_depths) {
+        appendTriangleData(m_vertices, triangle_depth.triangle_index, kTrianglePositionFloatCount, sorted_vertices);
+        appendTriangleData(m_normals, triangle_depth.triangle_index, kTrianglePositionFloatCount, sorted_normals);
+        appendTriangleData(m_colors, triangle_depth.triangle_index, kTriangleColorFloatCount, sorted_colors);
+    }
+
+    this->replaceVertices(sorted_vertices);
+    this->replaceNormals(sorted_normals);
+    this->replaceColors(sorted_colors);
+}
+
+void PartObject::updateFeatureEdgeAppearance() {
+    if (m_feature_edge_object.isNull())
+        return;
+
+    QSharedPointer<FeatureEdgeObject> feature_edge_object = m_feature_edge_object.dynamicCast<FeatureEdgeObject>();
+    if (!feature_edge_object.isNull())
+        feature_edge_object->setEdgeColor(featureEdgeColor(m_transparency));
+}
+
 void PartObject::transformationCallback() {
     if (!m_feature_edge_object.isNull())
         m_feature_edge_object->setTransformation(this->transformation(), false);
@@ -491,6 +595,7 @@ void PartObject::paint(QColor color) {
     color.setAlpha(m_transparency);
 
     this->GraphicsObject::paint(color);
+    this->updateFeatureEdgeAppearance();
     if (m_overhang_shown)
         this->overhangUpdate();
 }
