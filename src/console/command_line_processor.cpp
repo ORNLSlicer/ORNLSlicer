@@ -17,6 +17,18 @@
 #include "utilities/constants.h"
 
 namespace ORNL {
+namespace {
+const QStringList kModelSuffixes = {"stl", "3mf", "obj", "amf", "step", "stp"};
+
+QStringList modelNameFilters() {
+    QStringList filters;
+    for (const QString& suffix : kModelSuffixes) {
+        filters << "*." + suffix;
+        filters << "*." + suffix.toUpper();
+    }
+    return filters;
+}
+} // namespace
 
 CommandLineConverter::CommandLineConverter() {
     m_master = QSharedPointer<SettingsBase>::create();
@@ -36,31 +48,33 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
     parser.addOption({Constants::ConsoleOptionStrings::kInputProjectFile,
                       "Run ORNLSlicer using project file at <directory>.", "directory", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kInputStlFiles,
-                      "List of STLs to load for slicing. Parameter can be specified multiple times.", "file-list", ""});
+                      "List of model files to load for slicing. Parameter can be specified multiple times.",
+                      "file-list", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kInputSupportStlFiles,
-                      "List of support STLs to load for slicing. Parameter can be specified multiple times.",
+                      "List of support model files to load for slicing. Parameter can be specified multiple times.",
                       "file-list", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kInputStlFilesDirectory,
-                      "Loads all STLs for slicing at <directory>. Equivalent to listing the files individually using "
+                      "Loads all supported model files for slicing at <directory>. Equivalent to listing the files "
+                      "individually using "
                       "--input_stl_files.",
                       "directory", ""});
     parser.addOption({Constants::ConsoleOptionStrings::kInputSupportStlFilesDirectory,
-                      "Loads all STLs as supports for slicing at <directory>. Equivalent to listing the support files "
-                      "individual using --input_support_stl_files.",
+                      "Loads all supported model files as supports for slicing at <directory>. Equivalent to listing "
+                      "the support files individually using --input_support_stl_files.",
                       "directory", ""});
 
     parser.addOption({Constants::ConsoleOptionStrings::kInputGlobalSettings,
                       "Valid settings file to extract global settings from.", "file", ""});
     parser.addOption(
-        {Constants::ConsoleOptionStrings::kInputSTLTransform, "File containing stl transforms.", "file", ""});
+        {Constants::ConsoleOptionStrings::kInputSTLTransform, "File containing model transforms.", "file", ""});
     parser.addOption(
         {Constants::ConsoleOptionStrings::kOutputLocation, "File to write out Gcode to.", "directory", ""});
 
     // preference option
     parser.addOption({Constants::ConsoleOptionStrings::kShiftPartsOnLoad,
-                      "Specifies whether or not to shift STLs after load. Default is true.", "bool", "true"});
+                      "Specifies whether or not to shift models after load. Default is true.", "bool", "true"});
     parser.addOption({Constants::ConsoleOptionStrings::kAlignParts,
-                      "Specifies whether or not to align/center STLs after load.  Default is true.", "bool", "true"});
+                      "Specifies whether or not to align/center models after load.  Default is true.", "bool", "true"});
     parser.addOption(
         {Constants::ConsoleOptionStrings::kUseImplicitTransforms,
          "Specifies whether or not to use implicit transforms.  Default is false. Typically used in conjunction with "
@@ -103,12 +117,12 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
         return false;
     }
 
-    // either both or neither stls/project file were specified.  Must have one or the other.
+    // Either a model list, model directory, or project file must be specified.
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputStlFiles) +
             parser.isSet(Constants::ConsoleOptionStrings::kInputProjectFile) +
             parser.isSet(Constants::ConsoleOptionStrings::kInputStlFilesDirectory) !=
         1) {
-        qInfo() << "Either stls, an stl directory, or a project file must be specified as input";
+        qInfo() << "Either model files, a model directory, or a project file must be specified as input";
         return false;
     }
 
@@ -123,7 +137,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputStlFiles)) {
         QStringList stlList = parser.values(Constants::ConsoleOptionStrings::kInputStlFiles);
         for (int i = 0, end = stlList.size(); i < end; ++i) {
-            validSTL = isValid(stlList[i], "stl");
+            validSTL = isValidModelFile(stlList[i]);
             if (!validSTL)
                 return false;
 
@@ -137,7 +151,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
     bool validSTLDirectory = false;
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputStlFilesDirectory)) {
         QDir dir(parser.value(Constants::ConsoleOptionStrings::kInputStlFilesDirectory));
-        QStringList names = dir.entryList(QStringList() << "*.stl");
+        QStringList names = dir.entryList(modelNameFilters());
         if (names.size() == 0)
             return false;
 
@@ -150,7 +164,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
     }
 
     if (!validProject && !validSTL && !validSTLDirectory) {
-        qInfo() << "No valid stl file, directory, or project was specified";
+        qInfo() << "No valid model file, directory, or project was specified";
         return false;
     }
 
@@ -172,7 +186,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
 
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputSTLTransform)) {
         if (!parser.isSet(Constants::ConsoleOptionStrings::kInputStlFiles)) {
-            qInfo() << "No stls specified for transform application";
+            qInfo() << "No models specified for transform application";
             return false;
         }
         options->setSetting<QString>(Constants::ConsoleOptionStrings::kInputSTLTransform,
@@ -190,17 +204,17 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
         return false;
     }
 
-    // optional STLs
+    // optional support models
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputSupportStlFiles) &&
         parser.isSet(Constants::ConsoleOptionStrings::kInputSupportStlFilesDirectory)) {
-        qInfo() << "Either support stls or a directory can be specified, not both";
+        qInfo() << "Either support models or a directory can be specified, not both";
         return false;
     }
 
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputSupportStlFiles)) {
         QStringList stlList = parser.values(Constants::ConsoleOptionStrings::kInputSupportStlFiles);
         for (int i = 0, end = stlList.size(); i < end; ++i) {
-            validSTL = isValid(stlList[i], "stl");
+            validSTL = isValidModelFile(stlList[i]);
             if (!validSTL)
                 return false;
 
@@ -214,10 +228,10 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
 
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputSupportStlFilesDirectory)) {
         QDir dir(parser.value(Constants::ConsoleOptionStrings::kInputSupportStlFilesDirectory));
-        QStringList names = dir.entryList(QStringList() << "*.stl");
+        QStringList names = dir.entryList(modelNameFilters());
         if (names.size() == 0) {
             options->setSetting(Constants::ConsoleOptionStrings::kInputSupportStlCount, 0);
-            qInfo() << "No support stls found in specified directory";
+            qInfo() << "No support model files found in specified directory";
         }
         else {
             for (int i = 0; i < names.size(); ++i)
@@ -360,6 +374,22 @@ bool CommandLineConverter::isValid(QString path, QString suffix) {
         qInfo() << "Input: " + path + " does not have an " + suffix + " extension";
         return false;
     }
+    return true;
+}
+
+bool CommandLineConverter::isValidModelFile(QString path) {
+    QFileInfo info(path);
+    if (!info.exists()) {
+        qInfo() << "Input: " + path + " does not exist";
+        return false;
+    }
+
+    const QString suffix = info.suffix().toLower();
+    if (!kModelSuffixes.contains(suffix)) {
+        qInfo() << "Input: " + path + " does not have a supported model extension";
+        return false;
+    }
+
     return true;
 }
 } // namespace ORNL

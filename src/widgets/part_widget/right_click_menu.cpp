@@ -29,8 +29,8 @@ void RightClickMenu::setupActions() {
     m_switch_to_clipper_action = new QAction("Switch to Clipper", this);
     m_switch_to_setting_action = new QAction("Switch to Setting", this);
     m_reset_transformation_action = new QAction("Reset Transformation", this);
-    m_replace_part_action = new QAction("Replace Part STL", this);
-    m_reload_part_action = new QAction("Reload Part(s) STL", this);
+    m_replace_part_action = new QAction("Replace Part Model", this);
+    m_reload_part_action = new QAction("Reload Part Model(s)", this);
     m_delete_part_action = new QAction("Delete Part(s)", this);
     m_lock_part_action = new QAction("Toggle Part Lock(s)", this);
 
@@ -119,9 +119,9 @@ void RightClickMenu::setupEvents() {
     });
 
     connect(m_replace_part_action, &QAction::triggered, this, [this]() {
-        QString filepath = QFileDialog::getOpenFileName(nullptr, QObject::tr("Open STL clipping file"),
-                                                        CSM->getMostRecentModelLocation(),
-                                                        QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        QString filepath =
+            QFileDialog::getOpenFileName(nullptr, QObject::tr("Open model file"), CSM->getMostRecentModelLocation(),
+                                         QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)"));
 
         if (filepath.isNull()) {
             return;
