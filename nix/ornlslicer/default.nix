@@ -5,7 +5,7 @@
 
   cmake, pkg-config, ninja, wrapQtAppsHook, deployQtWinPluginsHook,
 
-  qtbase, qtcharts, qt5compat, assimp, boost184, cgal_5, eigen, nlohmann_json, gmp, mpfr,
+  qtbase, qtcharts, qt5compat, assimp, boost184, cgal_5, eigen, nlohmann_json, opencascade-occt, gmp, mpfr,
   hdf5, vtk-qt, kuba-zip, clipper, psimpl
 }:
 
@@ -23,6 +23,7 @@ stdenv.mkDerivation rec {
     cgal_5
     eigen
     nlohmann_json
+    opencascade-occt
     hdf5
     vtk-qt
     kuba-zip
