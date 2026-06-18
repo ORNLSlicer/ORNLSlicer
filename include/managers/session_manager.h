@@ -310,6 +310,5 @@ class SessionManager : public QObject {
 
     //! \brief pointer to part to potentially paste
     QSharedPointer<Part> m_copied_part;
-
 };
 } // namespace ORNL

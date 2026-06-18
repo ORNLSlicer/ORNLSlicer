@@ -183,6 +183,5 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
             setSetting(PS::Skin::kInfillAngle, skin_infill_angle);
         }
     }
-
 }
 } // namespace ORNL

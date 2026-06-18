@@ -78,20 +78,18 @@ QString RadialWriter::writeSettingsHeader(GcodeSyntax) {
 
     QString text;
     text += commentLine(helical_mode ? "Helical Slicing Parameters" : "Radial Slicing Parameters");
-    text += commentLine(QString(helical_mode ? "Helical Initial Radius: " : "Radial Initial Radius: ") %
-                        formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius),
-                                       m_meta.m_distance_unit));
+    text +=
+        commentLine(QString(helical_mode ? "Helical Initial Radius: " : "Radial Initial Radius: ") %
+                    formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius), m_meta.m_distance_unit));
     const RadialAxisMode radial_axis_mode =
         static_cast<RadialAxisMode>(m_sb->setting<int>(PS::Slicing::kRadialAxisMode));
-    text += commentLine(QString(helical_mode ? "Helical Axis Mode: " : "Radial Axis Mode: ") %
-                        toString(radial_axis_mode));
+    text +=
+        commentLine(QString(helical_mode ? "Helical Axis Mode: " : "Radial Axis Mode: ") % toString(radial_axis_mode));
     if (radial_axis_mode == RadialAxisMode::kCustomXY) {
         text += commentLine(QString(helical_mode ? "Helical Axis X: " : "Radial Axis X: ") %
-                            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisX),
-                                           m_meta.m_distance_unit));
+                            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisX), m_meta.m_distance_unit));
         text += commentLine(QString(helical_mode ? "Helical Axis Y: " : "Radial Axis Y: ") %
-                            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisY),
-                                           m_meta.m_distance_unit));
+                            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisY), m_meta.m_distance_unit));
     }
     text += commentLine(QString(helical_mode ? "Helical Radial Spacing: " : "Radial Layer Spacing: ") %
                         formatDistance(m_sb->setting<Distance>(PS::Layer::kLayerHeight), m_meta.m_distance_unit));
@@ -105,9 +103,9 @@ QString RadialWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine("Vertical Bead Spacing: " %
                             formatDistance(m_sb->setting<Distance>(PS::Layer::kBeadWidth), m_meta.m_distance_unit));
     }
-    text += commentLine(QString(helical_mode ? "Helical Boundary Handling: " : "Radial Boundary Handling: ") %
-                        toString(static_cast<RadialBoundaryHandling>(
-                            m_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling))));
+    text += commentLine(
+        QString(helical_mode ? "Helical Boundary Handling: " : "Radial Boundary Handling: ") %
+        toString(static_cast<RadialBoundaryHandling>(m_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling))));
     text += commentLine("Travel Lift Distance: " %
                         formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
     text += commentLine("A Axis Tilt: " %
@@ -275,7 +273,7 @@ QString RadialWriter::writeLine(const Point&, const Point& target_point, const Q
     rv += writeCoordinates(target_point, params);
     const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
     rv += commentSpaceLine(slicer_type == SlicerType::kHelicalSlice ? Constants::RegionTypeStrings::kHelical
-                                                                     : Constants::RegionTypeStrings::kRadial);
+                                                                    : Constants::RegionTypeStrings::kRadial);
 
     return rv;
 }

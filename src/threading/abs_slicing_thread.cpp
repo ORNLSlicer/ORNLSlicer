@@ -176,8 +176,7 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             m_base = QSharedPointer<ORNLWriter>(new ORNLWriter(GcodeMetaList::ORNLMetricMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kRadial3Plus2:
-            m_base = QSharedPointer<RadialWriter>(
-                new RadialWriter(GcodeMetaList::RadialMeta, GSM->getGlobal()));
+            m_base = QSharedPointer<RadialWriter>(new RadialWriter(GcodeMetaList::RadialMeta, GSM->getGlobal()));
             break;
         default:
             m_base =

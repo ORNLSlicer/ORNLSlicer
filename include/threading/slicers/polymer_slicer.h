@@ -88,6 +88,5 @@ class PolymerSlicer : public TraditionalAST {
 
     //! \brief cached layer settings
     QList<QSharedPointer<SettingsBase>> m_saved_layer_settings;
-
 };
 } // namespace ORNL

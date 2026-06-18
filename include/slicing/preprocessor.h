@@ -153,6 +153,5 @@ class Preprocessor {
 
     //! \brief Sorted parts
     Parts m_parts;
-
 };
 } // namespace ORNL

@@ -27,7 +27,6 @@ SegmentBase::SegmentBase(Point start, Point end) : m_start(start), m_end(end), m
     m_non_build_modifiers = PathModifiers::kCoasting | PathModifiers::kForwardTipWipe |
                             PathModifiers::kPerimeterTipWipe | PathModifiers::kReverseTipWipe |
                             PathModifiers::kSpiralLift;
-
 }
 
 Point SegmentBase::start() const { return m_start; }
@@ -71,9 +70,7 @@ void SegmentBase::setStart(Point start) { m_start = start; }
 
 void SegmentBase::setEnd(Point end) { m_end = end; }
 
-void SegmentBase::reverse() {
-    std::swap(m_start, m_end);
-}
+void SegmentBase::reverse() { std::swap(m_start, m_end); }
 
 QSharedPointer<SettingsBase> SegmentBase::getSb() const { return m_sb; }
 

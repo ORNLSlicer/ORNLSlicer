@@ -71,8 +71,7 @@ void SessionLoader::saveSession() {
         // Embed model data when the active part still references this source file. Projects can carry a display name
         // that differs from the model file name, so both mesh names and mesh paths are considered.
         if (active_model_names.contains(file_name) || active_model_names.contains(file_info.fileName()) ||
-            active_model_names.contains(file_info.baseName()))
-        {
+            active_model_names.contains(file_info.baseName())) {
             // To and back from QString in a single line. What an adventure.
             std::string filename = it.key().split("/").back().toStdString();
 

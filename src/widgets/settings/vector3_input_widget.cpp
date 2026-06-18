@@ -42,10 +42,10 @@ void addComponentEditor(QHBoxLayout* layout, QWidget* parent, const QString& lab
 } // namespace
 
 Vector3InputWidget::Vector3InputWidget(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString primary_key,
-                                       QString secondary_key, QString tertiary_key, fifojson json,
-                                       QGridLayout* layout, int index, double primary_default,
-                                       double secondary_default, double tertiary_default, QString primary_label,
-                                       QString secondary_label, QString tertiary_label)
+                                       QString secondary_key, QString tertiary_key, fifojson json, QGridLayout* layout,
+                                       int index, double primary_default, double secondary_default,
+                                       double tertiary_default, QString primary_label, QString secondary_label,
+                                       QString tertiary_label)
     : QWidget(parent), SettingRowBase(parent, sb, primary_key, json, layout, index),
       m_components {{{primary_key, new QDoubleSpinBox(this), primary_default},
                      {secondary_key, new QDoubleSpinBox(this), secondary_default},

@@ -28,9 +28,8 @@ void MotionEstimation::Init() {
     m_incomingV = max_xy_speed;
 }
 
-Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand,
-                                                  bool extruder_on, Time& G1F_time, Time& layer_time,
-                                                  Volume& layer_volume, bool use_b) {
+Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
+                                                  Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b) {
     // minimum distance to be considered move for estimate calculation
     double m_min_threshold = 10;
 

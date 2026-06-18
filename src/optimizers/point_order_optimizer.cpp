@@ -16,17 +16,18 @@
 
 namespace ORNL {
 
-PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::linkToPoint(
-    const Point& current_location, const Polyline& polyline, uint layer_number,
-    PointOrderOptimization pointOptimization, bool min_dist_enabled, Distance min_dist_threshold,
-    Distance consecutive_dist_threshold, bool local_randomness_enable, Distance randomness_radius,
-    bool allow_segment_breaking) {
+PointOrderOptimizer::PointOrderSelection
+PointOrderOptimizer::linkToPoint(const Point& current_location, const Polyline& polyline, uint layer_number,
+                                 PointOrderOptimization pointOptimization, bool min_dist_enabled,
+                                 Distance min_dist_threshold, Distance consecutive_dist_threshold,
+                                 bool local_randomness_enable, Distance randomness_radius,
+                                 bool allow_segment_breaking) {
     PointOrderSelection result;
 
-    bool use_segment_breaking =
-        allow_segment_breaking && polyline.size() > 1 && !min_dist_enabled && !local_randomness_enable &&
-        (pointOptimization == PointOrderOptimization::kNextClosest ||
-         pointOptimization == PointOrderOptimization::kCustomPoint);
+    bool use_segment_breaking = allow_segment_breaking && polyline.size() > 1 && !min_dist_enabled &&
+                                !local_randomness_enable &&
+                                (pointOptimization == PointOrderOptimization::kNextClosest ||
+                                 pointOptimization == PointOrderOptimization::kCustomPoint);
 
     if (use_segment_breaking) {
         result = findClosestPointOnClosedLoop(polyline, current_location);
@@ -140,7 +141,8 @@ PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::findClosestPointOn
 
     for (int i = 0, end = polyline.size(); i < end; ++i) {
         int next_index = (i + 1) % polyline.size();
-        auto [closest_point, distance] = MathUtils::nearestPointOnSegment(polyline[i], polyline[next_index], queryPoint);
+        auto [closest_point, distance] =
+            MathUtils::nearestPointOnSegment(polyline[i], polyline[next_index], queryPoint);
 
         if (distance < closest_distance) {
             closest_distance = distance;
@@ -190,7 +192,9 @@ int PointOrderOptimizer::findClosestEnd(const Polyline& polyline, const Point& c
     }
 }
 
-int PointOrderOptimizer::linkToRandom(const Polyline& polyline) { return QRandomGenerator::global()->bounded(polyline.size()); }
+int PointOrderOptimizer::linkToRandom(const Polyline& polyline) {
+    return QRandomGenerator::global()->bounded(polyline.size());
+}
 
 int PointOrderOptimizer::linkToConsecutive(const Polyline& polyline, uint layer_number, Distance minDist) {
     int startIndex = layer_number - 2;
