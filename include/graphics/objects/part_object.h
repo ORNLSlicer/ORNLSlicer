@@ -95,6 +95,14 @@ class PartObject : public GraphicsObject {
     void paint(QColor color) override;
 
   private:
+    //! \brief Sorts triangle vertex, normal, and color buffers from back to front for transparent rendering.
+    //!
+    //! Transparent triangle blending is order-dependent. Sorting by view-space depth before drawing reduces dark
+    //! self-overlap artifacts on translucent parts without changing the underlying mesh or stored normals.
+    void sortTrianglesForTransparency();
+
+    //! \brief Repaints the feature-edge overlay to match the current part transparency.
+    void updateFeatureEdgeAppearance();
     //! \brief Part pointer.
     QSharedPointer<Part> m_part;
 
@@ -106,6 +114,7 @@ class PartObject : public GraphicsObject {
     QSharedPointer<TextObject> m_label_object;
     QSharedPointer<AxesObject> m_axes_object;
     QSharedPointer<PlaneObject> m_plane_object;
+    //! \brief Optional overlay that draws silhouette and sharp feature edges over shaded parts.
     QSharedPointer<GraphicsObject> m_feature_edge_object;
 
     //! \brief Overhang angle to use for calculations.
