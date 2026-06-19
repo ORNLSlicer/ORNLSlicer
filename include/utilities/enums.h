@@ -174,7 +174,7 @@ enum class GcodeSyntax : uint8_t {
     kHurco = 8,
     kIngersoll = 9,
     kMarlin = 10,
-    kMarlinPellet = 11,
+    kJuggerBot = 11,
     kMazak = 12,
     kMVP = 13,
     kRomiFanuc = 14,
@@ -228,8 +228,8 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kKraussMaffei;
         case GcodeSyntax::kMarlin:
             return PRS::SyntaxString::kMarlin;
-        case GcodeSyntax::kMarlinPellet:
-            return PRS::SyntaxString::kMarlinPellet;
+        case GcodeSyntax::kJuggerBot:
+            return PRS::SyntaxString::kJuggerBot;
         case GcodeSyntax::kMazak:
             return PRS::SyntaxString::kMazak;
         case GcodeSyntax::kMeld:
