@@ -13,13 +13,13 @@
 
 namespace ORNL {
 /*!
- * \class MarlinPelletWriter
- * \brief The gcode writer for the Marlin Pellet syntax
+ * \class JuggerBotWriter
+ * \brief The gcode writer for the JuggerBot syntax
  */
-class MarlinPelletWriter : public WriterBase {
+class JuggerBotWriter : public WriterBase {
   public:
     //! \brief Constructor
-    MarlinPelletWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
+    JuggerBotWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
     //! \brief Writes initial setup instructions for the machine state
     QString writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
@@ -98,5 +98,5 @@ class MarlinPelletWriter : public WriterBase {
     AngularVelocity m_current_rpm;
     Area m_current_bead_area;
 
-}; // class MarlinPelletWriter
+}; // class JuggerBotWriter
 } // namespace ORNL
