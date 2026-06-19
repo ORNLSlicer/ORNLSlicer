@@ -28,7 +28,7 @@
 #include "gcode/writers/ingersoll_writer.h"
 #include "gcode/writers/kraussmaffei_writer.h"
 #include "gcode/writers/mach4_writer.h"
-#include "gcode/writers/marlin_pellet_writer.h"
+#include "gcode/writers/juggerbot_writer.h"
 #include "gcode/writers/marlin_writer.h"
 #include "gcode/writers/mazak_writer.h"
 #include "gcode/writers/meld_writer.h"
@@ -119,9 +119,9 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
         case GcodeSyntax::kMarlin:
             m_base = QSharedPointer<MarlinWriter>(new MarlinWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
             break;
-        case GcodeSyntax::kMarlinPellet:
+        case GcodeSyntax::kJuggerBot:
             m_base =
-                QSharedPointer<MarlinPelletWriter>(new MarlinPelletWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
+                QSharedPointer<JuggerBotWriter>(new JuggerBotWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kMazak:
             m_base = QSharedPointer<MazakWriter>(new MazakWriter(GcodeMetaList::MazakMeta, GSM->getGlobal()));

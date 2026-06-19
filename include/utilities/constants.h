@@ -287,7 +287,7 @@ class Constants {
             static QString kIngersoll;
             static QString kKraussMaffei;
             static QString kMarlin;
-            static QString kMarlinPellet;
+            static QString kJuggerBot;
             static QString kMazak;
             static QString kMeld;
             static QString kMeltio;

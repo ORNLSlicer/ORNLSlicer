@@ -34,7 +34,7 @@ constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     8,                // Hurco
     9,                // Ingersoll
     10,               // Marlin
-    11,               // Marlin Pellet
+    11,               // JuggerBot
     12,               // Mazak
     13,               // MVP
     14,               // RomiFanuc
