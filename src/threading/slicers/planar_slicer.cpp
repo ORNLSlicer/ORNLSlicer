@@ -1,5 +1,5 @@
 
-#include "threading/slicers/polymer_slicer.h"
+#include "threading/slicers/planar_slicer.h"
 
 #include <QtCore/QDir>
 #include <QtCore/QSharedPointer>
@@ -37,9 +37,9 @@
 
 namespace ORNL {
 
-PolymerSlicer::PolymerSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {}
+PlanarSlicer::PlanarSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {}
 
-void PolymerSlicer::preProcess(nlohmann::json opt_data) {
+void PlanarSlicer::preProcess(nlohmann::json opt_data) {
     Preprocessor pp;
 
     pp.addInitialProcessing(
@@ -94,7 +94,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
                 QVector<PolygonList> split_geometry = next_layer_meta->geometry.splitIntoParts();
 
                 for (const PolygonList& island_geometry : split_geometry) {
-                    // Polymer builds use polymer islands.
+                    // Planar builds use polymer islands.
                     QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
                         island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
                     new_layer->addIsland(IslandType::kPolymer, poly_isl);
@@ -136,7 +136,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
 
                     QVector<QSharedPointer<IslandBase>> newIslands;
                     for (const PolygonList& island_geometry : split_geometry) {
-                        // Polymer builds use polymer islands.
+                        // Planar builds use polymer islands.
                         QSharedPointer<PolymerIsland> poly_isl = QSharedPointer<PolymerIsland>::create(
                             island_geometry, next_layer_meta->settings, next_layer_meta->settings_polygons);
                         newIslands.append(poly_isl);
@@ -190,7 +190,7 @@ void PolymerSlicer::preProcess(nlohmann::json opt_data) {
     pp.processAll();
 }
 
-void PolymerSlicer::processSkin(QSharedPointer<Part> part, int part_start, int last_layer_count) {
+void PlanarSlicer::processSkin(QSharedPointer<Part> part, int part_start, int last_layer_count) {
     for (int layer_nr = part_start; layer_nr < last_layer_count; layer_nr++) {
         if (layer_nr < part->countStepPairs()) {
             QSharedPointer<Layer> layer = part->step(layer_nr, StepType::kLayer).dynamicCast<Layer>();
@@ -236,7 +236,7 @@ void PolymerSlicer::processSkin(QSharedPointer<Part> part, int part_start, int l
     }
 }
 
-void PolymerSlicer::processRaft(QSharedPointer<Part> part, int part_start, QSharedPointer<SettingsBase> part_sb) {
+void PlanarSlicer::processRaft(QSharedPointer<Part> part, int part_start, QSharedPointer<SettingsBase> part_sb) {
     if (!part->steps(StepType::kLayer).empty()) {
         if (part_sb->setting<bool>(MS::PlatformAdhesion::kRaftEnable)) {
             int raft_layers = part_sb->setting<int>(MS::PlatformAdhesion::kRaftLayers);
@@ -273,7 +273,7 @@ void PolymerSlicer::processRaft(QSharedPointer<Part> part, int part_start, QShar
     }
 }
 
-void PolymerSlicer::processBrim(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
+void PlanarSlicer::processBrim(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
     if (part_sb->setting<bool>(MS::PlatformAdhesion::kBrimEnable)) {
         QList<QSharedPointer<Step>> steps = part->steps(StepType::kLayer);
         for (int i = 0, end = steps.size(); i < end; ++i) {
@@ -283,7 +283,7 @@ void PolymerSlicer::processBrim(QSharedPointer<Part> part, QSharedPointer<Settin
     }
 }
 
-void PolymerSlicer::processSkirt(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
+void PlanarSlicer::processSkirt(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
     if (part_sb->setting<bool>(MS::PlatformAdhesion::kSkirtEnable)) {
         QList<QSharedPointer<Step>> steps = part->steps(StepType::kLayer);
         for (int i = 0, end = steps.size(); i < end; ++i) {
@@ -293,7 +293,7 @@ void PolymerSlicer::processSkirt(QSharedPointer<Part> part, QSharedPointer<Setti
     }
 }
 
-void PolymerSlicer::processThermalScan(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
+void PlanarSlicer::processThermalScan(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
     if (part_sb->setting<bool>(PS::ThermalScanner::kThermalScanner)) {
         int first_layer = 0;
 
@@ -309,7 +309,7 @@ void PolymerSlicer::processThermalScan(QSharedPointer<Part> part, QSharedPointer
     }
 }
 
-void PolymerSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
+void PlanarSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
     if (!m_saved_layer_settings.isEmpty() &&
         m_saved_layer_settings.first()->setting<bool>(PS::LaserScanner::kLaserScanner) && !part->steps().isEmpty()) {
         if (m_saved_layer_settings.first()->setting<bool>(PS::LaserScanner::kLaserScanner)) {
@@ -343,7 +343,7 @@ void PolymerSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<S
     }
 }
 
-void PolymerSlicer::processGlobalLayers(QVector<QSharedPointer<Part>> parts,
+void PlanarSlicer::processGlobalLayers(QVector<QSharedPointer<Part>> parts,
                                         const QSharedPointer<SettingsBase>& settings) {
     if (anythingDirty()) {
         // create global layers from all the part layers
@@ -351,7 +351,7 @@ void PolymerSlicer::processGlobalLayers(QVector<QSharedPointer<Part>> parts,
     }
 }
 
-bool PolymerSlicer::anythingDirty() {
+bool PlanarSlicer::anythingDirty() {
     bool anything_dirty = false;
     for (QSharedPointer<Part> curr_part : CSM->parts().values()) {
         if (curr_part->isPartDirty()) {
@@ -373,7 +373,7 @@ bool PolymerSlicer::anythingDirty() {
 // The calculated overhang is then applied to layer #N
 // Get the overlap between the overhang and (layer #N with xy_offset)
 // If the overlap > 0, remove the overlap from the overhang, and add the result to layer #N
-void PolymerSlicer::processSupport(QSharedPointer<Part> part, int layer_count, int partStart) {
+void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, int partStart) {
     if (!part->steps().isEmpty()) {
         auto part_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal()); // Copy global
         part_sb->populate(part->getSb());                                       // Fill with part overrides
@@ -517,7 +517,7 @@ void PolymerSlicer::processSupport(QSharedPointer<Part> part, int layer_count, i
     }
 }
 
-void PolymerSlicer::postProcess(nlohmann::json opt_data) {
+void PlanarSlicer::postProcess(nlohmann::json opt_data) {
     if (anythingDirty()) {
         QSharedPointer<SettingsBase> global_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
         global_sb->makeGlobalAdjustments();
@@ -549,7 +549,7 @@ void PolymerSlicer::postProcess(nlohmann::json opt_data) {
     }
 }
 
-void PolymerSlicer::writeGCode() {
+void PlanarSlicer::writeGCode() {
     QTextStream stream(&m_temp_gcode_output_file);
 
     // for updating status window

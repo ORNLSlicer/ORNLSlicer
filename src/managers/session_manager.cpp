@@ -30,7 +30,7 @@
 #include "threading/session_loader.h"
 #include "threading/slicers/helical_slicer.h"
 #include "threading/slicers/image_slicer.h"
-#include "threading/slicers/polymer_slicer.h"
+#include "threading/slicers/planar_slicer.h"
 #include "threading/slicers/radial_slicer.h"
 #include "units/derivative_units.h"
 #include "units/unit.h"
@@ -594,8 +594,8 @@ bool SessionManager::changeSlicer(SlicerType type) {
 
     // Reset the AST with a new slicer.
     switch (type) {
-        case SlicerType::kPolymerSlice:
-            m_ast.reset(new PolymerSlicer(tempGcodeFile));
+        case SlicerType::kPlanarSlice:
+            m_ast.reset(new PlanarSlicer(tempGcodeFile));
             break;
         case SlicerType::kImageSlice:
             m_ast.reset(new ImageSlicer(tempGcodeFile));
@@ -607,9 +607,9 @@ bool SessionManager::changeSlicer(SlicerType type) {
             m_ast.reset(new HelicalSlicer(tempGcodeFile));
             break;
         default:
-            qWarning() << "Unknown slicer type requested. Falling back to Polymer slicer.";
-            m_ast.reset(new PolymerSlicer(tempGcodeFile));
-            type = SlicerType::kPolymerSlice;
+            qWarning() << "Unknown slicer type requested. Falling back to Planar slicer.";
+            m_ast.reset(new PlanarSlicer(tempGcodeFile));
+            type = SlicerType::kPlanarSlice;
             break;
     }
 
