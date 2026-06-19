@@ -515,7 +515,7 @@ inline QString toString(PathModifiers modifier_type) {
 enum class SmoothingType : uint8_t {
     kDouglasPeucker = 0,
     kRadialDistance = 1,
-    kPerpendicularDistance =2,
+    kPerpendicularDistance = 2,
     kReumannWitkam = 3
 };
 

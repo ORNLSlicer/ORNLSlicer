@@ -494,11 +494,10 @@ void PartObject::sortTrianglesForTransparency() {
     triangle_depths.reserve(triangle_count);
     for (size_t triangle_index = 0; triangle_index < triangle_count; ++triangle_index) {
         const size_t offset = triangle_index * kTrianglePositionFloatCount;
-        const QVector3D center =
-            (QVector3D(m_vertices[offset], m_vertices[offset + 1], m_vertices[offset + 2]) +
-             QVector3D(m_vertices[offset + 3], m_vertices[offset + 4], m_vertices[offset + 5]) +
-             QVector3D(m_vertices[offset + 6], m_vertices[offset + 7], m_vertices[offset + 8])) /
-            3.0f;
+        const QVector3D center = (QVector3D(m_vertices[offset], m_vertices[offset + 1], m_vertices[offset + 2]) +
+                                  QVector3D(m_vertices[offset + 3], m_vertices[offset + 4], m_vertices[offset + 5]) +
+                                  QVector3D(m_vertices[offset + 6], m_vertices[offset + 7], m_vertices[offset + 8])) /
+                                 3.0f;
 
         triangle_depths.push_back({triangle_index, (model_view * center).z()});
     }
