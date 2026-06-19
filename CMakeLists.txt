@@ -5,6 +5,41 @@ include(version)
 FetchCMakeFriendlyVersion()
 set(TARGET_VERSION "${RESULT_VAR}")
 
+function(ConfigureGitHooks)
+    find_package(Git QUIET)
+    if(NOT GIT_FOUND)
+        message(STATUS "Git not found; skipping pre-commit hook installation.")
+        return()
+    endif()
+
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} rev-parse --is-inside-work-tree
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE GIT_WORK_TREE_RESULT
+        OUTPUT_QUIET
+        ERROR_QUIET
+    )
+    if(NOT GIT_WORK_TREE_RESULT EQUAL 0)
+        message(STATUS "Not configuring from a Git worktree; skipping pre-commit hook installation.")
+        return()
+    endif()
+
+    execute_process(
+        COMMAND ${GIT_EXECUTABLE} config --local core.hooksPath .githooks
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        RESULT_VARIABLE GIT_HOOKS_RESULT
+        ERROR_VARIABLE GIT_HOOKS_ERROR
+    )
+    if(GIT_HOOKS_RESULT EQUAL 0)
+        message(STATUS "Configured Git hooks path: .githooks")
+    else()
+        string(STRIP "${GIT_HOOKS_ERROR}" GIT_HOOKS_ERROR)
+        message(WARNING "Could not configure Git hooks path: ${GIT_HOOKS_ERROR}")
+    endif()
+endfunction()
+
+ConfigureGitHooks()
+
 # Define project name and base it on C++
 project(
     ornlslicer

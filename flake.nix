@@ -128,6 +128,13 @@
           legacyPackages.ornl.ornlslicer
         ];
 
+        shellHook = ''
+          if git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+            git config --local core.hooksPath .githooks || \
+              echo "warning: could not configure Git hooks path" >&2
+          fi
+        '';
+
         LD_FALLBACK_PATH = "/usr/lib/x86_64-linux-gnu";
       };
     };

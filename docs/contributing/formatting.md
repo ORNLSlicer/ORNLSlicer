@@ -65,7 +65,11 @@ GitHub Actions runs the same check on pushes and pull requests. Maintainers shou
 
 ## Pre-Commit Hook
 
-Install the tracked Git hook once per checkout:
+The tracked Git hook is installed automatically by normal repository setup:
+- `nix develop` configures `core.hooksPath` in the local checkout.
+- CMake configure also configures `core.hooksPath` when run from a Git worktree.
+
+If neither setup path has run yet, install the hook manually:
 ```bash
 git config core.hooksPath .githooks
 ```
@@ -86,7 +90,8 @@ git config --unset core.hooksPath
 ## Best Practices
 
 - Format before commit (stage, format, re-stage if needed).
-- Install the tracked pre-commit hook or use format-on-save to keep changes clean while developing.
+- The tracked pre-commit hook should be active after entering the dev shell or configuring CMake.
+- Use format-on-save to keep changes clean while developing.
 - Use the `format` CMake target for an explicit full-tree formatting pass.
 - Never hand-tweak whitespace—fix `.clang-format` instead.
 - Separate pure formatting PRs from logic changes.
