@@ -176,7 +176,7 @@ class SessionManager : public QObject {
     bool isBuildMode();
 
     //! \brief Signals the internal slicing thread to begin computation.
-    //! \note If the internal slicing thread is unset, this function assumes that it should be a polymer slice.
+    //! \note If the internal slicing thread is unset, this function assumes that it should be a planar slice.
     bool doSlice();
 
     //! \brief Signals the internal slicing thread has complete computation.
@@ -186,8 +186,6 @@ class SessionManager : public QObject {
     qint64 getSliceTimeElapsed();
 
     //! \brief Changes which slicer is used for computation.
-    //! \todo Currently, there is only one slicer (the PolymerSlicer). When more methods are added, more Slicer types
-    //! should be added
     //!       Both here and in the SlicerType enum. A dialog still needs to be written to run this function.
     bool changeSlicer(SlicerType type);
 
@@ -301,8 +299,8 @@ class SessionManager : public QObject {
     //! \brief bool to track whether additional files need to be considered for export
     bool m_sensor_files_generated;
 
-    //! \brief default slicer is polymer
-    SlicerType m_slicer_type = SlicerType::kPolymerSlice;
+    //! \brief default slicer is planar
+    SlicerType m_slicer_type = SlicerType::kPlanarSlice;
 
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.

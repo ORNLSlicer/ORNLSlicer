@@ -47,8 +47,8 @@ enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1 };
  * @brief Selects the type of slice to perform. Pass this to Session Manager to decide.
  */
 enum class SlicerType : uint8_t {
-    //! @brief Standard polymer planar slicing.
-    kPolymerSlice = 0,
+    //! @brief Standard planar slicing.
+    kPlanarSlice = 0,
 
     //! @brief Image-based slicing workflow.
     kImageSlice = 1,

@@ -14,12 +14,12 @@
 
 namespace ORNL {
 /*!
- * \class PolymerSlicer
- * \brief Implementation of SlicingThread for polymer slices.
+ * \class PlanarSlicer
+ * \brief Implementation of SlicingThread for planar slices.
  */
-class PolymerSlicer : public TraditionalAST {
+class PlanarSlicer : public TraditionalAST {
   public:
-    PolymerSlicer(QString gcodeLocation);
+    PlanarSlicer(QString gcodeLocation);
 
   protected:
     //! \brief Creates layer steps by performing cross-sections.
