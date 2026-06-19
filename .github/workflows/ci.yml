@@ -1,10 +1,23 @@
 ---
 name: Nix CI
-on: push
+on:
+  push:
+  pull_request:
 concurrency:
   group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
   cancel-in-progress: true
 jobs:
+  format:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./
+    steps:
+      - uses: actions/checkout@v4
+      - uses: cachix/install-nix-action@v29
+      - name: Check C++ formatting
+        run: nix develop --accept-flake-config --command python3 scripts/format_cpp.py --check
+
   check:
     strategy:
       matrix:

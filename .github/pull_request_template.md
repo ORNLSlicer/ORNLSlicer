@@ -41,6 +41,7 @@ Describe the testing strategy for this change and include any relevant details a
 - Relevant .stl/.s2p files or test cases used
 - Workflow steps taken to validate the change
 - Commands run and their output
+- Formatting check run for C++ changes, such as `python3 scripts/format_cpp.py --check`
 If the change is covered by the CI test suite, state that explicitly.
 If manual testing was performed, describe the testing process and results.
 -->

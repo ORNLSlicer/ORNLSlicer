@@ -9,7 +9,7 @@ This guide summarizes expectations for code style, formatting, documentation, an
 1. Create a branch using the conventional branch scheme (e.g. `feat/feature-name`).
 2. Implement changes following the style & formatting guides.
 3. Add/adjust Doxygen docs for public APIs.
-4. Run `clang-format` on changed files.
+4. Run `python3 scripts/format_cpp.py` on changed C++ files; CI enforces `--check`.
 5. Write commits using Conventional Commits.
 6. Rebase or update from `develop` if needed; resolve conflicts.
 7. Open a pull request with a clear summary and rationale.
@@ -39,7 +39,7 @@ Follow naming, layout, and structural conventions; favor clarity over cleverness
 
 ## [Formatting](/docs/contributing/formatting.md)
 
-Use `clang-format` before committing; never hand-adjust whitespace.
+Use `scripts/format_cpp.py` before committing; never hand-adjust whitespace.
 
 ## [Documentation](/docs/contributing/documentation.md)
 

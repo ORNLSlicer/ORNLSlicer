@@ -18,46 +18,54 @@ Updating style:
 1. Edit `.clang-format` (optionally test variants using an online configurator).
 2. Reformat the codebase:
    ```bash
-   find . -name '*.cpp' -o -name '*.h' | xargs clang-format -i --style=file
+   python3 scripts/format_cpp.py
    ```
-3. Commit ONLY formatting changes (separate PR) to minimize noise & conflicts.
+3. Verify the result:
+   ```bash
+   python3 scripts/format_cpp.py --check
+   ```
+4. Commit ONLY formatting changes (separate PR) to minimize noise & conflicts.
 
 ---
 
 ## How to Format Code
 
-Single file:
+All tracked C++ headers and sources:
 ```bash
-clang-format -i --style=file src/main.cpp
+python3 scripts/format_cpp.py
 ```
 
-Multiple files:
+Specific files or directories:
 ```bash
-clang-format -i --style=file src/main.cpp include/util.h
+python3 scripts/format_cpp.py src/main.cpp include/util.h
 ```
 
-All C++ headers and sources:
+Check without modifying files:
 ```bash
-find . -name '*.cpp' -o -name '*.h' | xargs clang-format -i --style=file
+python3 scripts/format_cpp.py --check
 ```
 
-Changed files only (staged):
+Equivalent CMake targets after configuring a build tree:
 ```bash
-git diff --cached --name-only -- '*.cpp' '*.h' | xargs clang-format -i --style=file
+cmake --build build/generic-llvm-ninja --target format
+cmake --build build/generic-llvm-ninja --target format-check
 ```
 
 Flags:
-- `-i` in-place modify
-- `--style=file` use repository `.clang-format`
+- `--check` verifies formatting without modifying files.
+- `--clang-format` selects a specific formatter executable.
+- `CLANG_FORMAT` can also point to the formatter executable.
 
-Enable editor format-on-save to avoid manual runs.
+The script formats tracked C/C++ files by default. If it is run outside a Git checkout, it falls back to scanning `src/` and `include/`.
+
+GitHub Actions runs the same check on pushes and pull requests. Maintainers should require the formatting job before merging into `develop`.
 
 ---
 
 ## Best Practices
 
 - Format before commit (stage, format, re-stage if needed).
-- Use format-on-save / pre-commit hook to enforce style.
+- Use format-on-save or the `format` CMake target to keep changes clean while developing.
 - Never hand-tweak whitespace—fix `.clang-format` instead.
 - Separate pure formatting PRs from logic changes.
 - After style modifications, re-run full-project formatting to normalize.

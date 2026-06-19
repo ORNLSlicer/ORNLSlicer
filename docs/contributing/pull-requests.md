@@ -25,7 +25,7 @@ Complete these before marking a PR ready for review:
 - Commits follow Conventional Commits; squash fixups locally before opening.
 - Code builds locally; no new warnings introduced intentionally.
 - Public APIs, structs, classes, and complex functions documented (see `documentation.md`).
-- Formatting applied: `clang-format` run on all modified C++ headers and sources.
+- Formatting check passes: `python3 scripts/format_cpp.py --check` or the `format-check` CMake target.
 - No stray debug code, commented-out blocks, or unused includes.
 - Added/updated tests where feasible (logic, parsing, geometry, algorithms). If not applicable, state why.
 - Large assets or generated files are excluded from the diff.
@@ -163,4 +163,3 @@ Final squash commit message should:
 ---
 
 Cross-reference: [`CONTRIBUTING.md`](../../CONTRIBUTING.md), [`conventional-commits.md`](conventional-commits.md), [`conventional-branch.md`](conventional-branch.md), [`formatting.md`](formatting.md), [`documentation.md`](documentation.md), [`style-guide.md`](style-guide.md)
-

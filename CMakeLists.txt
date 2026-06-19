@@ -289,8 +289,32 @@ function(CreateDocTarget)
     endif()
 endfunction()
 
+function(CreateFormatTargets)
+    find_package(Python COMPONENTS Interpreter)
+    if(NOT Python_FOUND)
+        message(WARNING "Python not found, C++ format targets will not be available.")
+        return()
+    endif()
+
+    add_custom_target(
+        format
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/format_cpp.py
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Formatting C++ sources with clang-format"
+        VERBATIM
+    )
+    add_custom_target(
+        format-check
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/scripts/format_cpp.py --check
+        WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+        COMMENT "Checking C++ formatting with clang-format"
+        VERBATIM
+    )
+endfunction()
+
 CreateSettingsTarget()
 CreateDocTarget()
+CreateFormatTargets()
 
 include(GNUInstallDirs)
 

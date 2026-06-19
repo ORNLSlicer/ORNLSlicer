@@ -74,6 +74,20 @@
       ornlslicer = legacyPackages.ornl.ornlslicer;
     };
 
+    checks = {
+      formatting = pkgs.runCommand "ornlslicer-formatting" {
+        nativeBuildInputs = [
+          pkgs.python3
+          llvm.tooling.clang-tools
+        ];
+        src = self;
+      } ''
+        cd "$src"
+        python3 scripts/format_cpp.py --check
+        touch "$out"
+      '';
+    };
+
     bundlers = rec {
       default = appimage;
 
