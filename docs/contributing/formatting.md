@@ -6,6 +6,7 @@ We enforce a single C++ style using [clang-format](https://clang.llvm.org/docs/C
 
 - [Configuration](#configuration)
 - [How to Format Code](#how-to-format-code)
+- [Pre-Commit Hook](#pre-commit-hook)
 - [Best Practices](#best-practices)
 
 ---
@@ -62,10 +63,31 @@ GitHub Actions runs the same check on pushes and pull requests. Maintainers shou
 
 ---
 
+## Pre-Commit Hook
+
+Install the tracked Git hook once per checkout:
+```bash
+git config core.hooksPath .githooks
+```
+
+After installation, `git commit` automatically formats staged C/C++ files with `scripts/format_cpp.py`, re-stages the formatted files, and verifies them with `--check`.
+
+The hook uses `clang-format` from the current environment when available. If it is not available, the hook retries through `nix develop --accept-flake-config`.
+
+The hook refuses to run when a staged C/C++ file also has unstaged changes, because auto-staging after formatting could otherwise include unrelated local edits. Stage or stash those changes, then commit again.
+
+Disable the hook for this checkout:
+```bash
+git config --unset core.hooksPath
+```
+
+---
+
 ## Best Practices
 
 - Format before commit (stage, format, re-stage if needed).
-- Use format-on-save or the `format` CMake target to keep changes clean while developing.
+- Install the tracked pre-commit hook or use format-on-save to keep changes clean while developing.
+- Use the `format` CMake target for an explicit full-tree formatting pass.
 - Never hand-tweak whitespace—fix `.clang-format` instead.
 - Separate pure formatting PRs from logic changes.
 - After style modifications, re-run full-project formatting to normalize.

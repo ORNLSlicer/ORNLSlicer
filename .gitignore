@@ -4,6 +4,8 @@
 *.tmp
 *.tmp.diff
 *.tmp.patch
+__pycache__/
+*.py[cod]
 
 # Prerequisites
 *.d

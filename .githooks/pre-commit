@@ -1,0 +1,59 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+repo_root="$(git rev-parse --show-toplevel)"
+cd "$repo_root"
+
+cpp_patterns=(
+    "*.c"
+    "*.cc"
+    "*.cpp"
+    "*.cxx"
+    "*.h"
+    "*.hh"
+    "*.hpp"
+    "*.hxx"
+)
+
+mapfile -d "" staged_cpp_files < <(
+    git diff --cached --name-only -z --diff-filter=ACMR -- "${cpp_patterns[@]}"
+)
+
+if [[ ${#staged_cpp_files[@]} -eq 0 ]]; then
+    exit 0
+fi
+
+partially_staged_files=()
+for file in "${staged_cpp_files[@]}"; do
+    if ! git diff --quiet -- "$file"; then
+        partially_staged_files+=("$file")
+    fi
+done
+
+if [[ ${#partially_staged_files[@]} -ne 0 ]]; then
+    {
+        echo "C++ formatting hook skipped because these staged files also have unstaged changes:"
+        printf "  %s\n" "${partially_staged_files[@]}"
+        echo
+        echo "Stage or stash the unstaged changes, then commit again."
+    } >&2
+    exit 1
+fi
+
+run_format_cpp() {
+    if python3 scripts/format_cpp.py "$@"; then
+        return 0
+    fi
+
+    if command -v nix >/dev/null 2>&1; then
+        echo "Retrying C++ formatting through nix develop..." >&2
+        nix develop --accept-flake-config --command python3 scripts/format_cpp.py "$@"
+        return
+    fi
+
+    return 1
+}
+
+run_format_cpp "${staged_cpp_files[@]}"
+git add -- "${staged_cpp_files[@]}"
+run_format_cpp --check "${staged_cpp_files[@]}"
