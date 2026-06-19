@@ -7,7 +7,7 @@ settings:
     tooltip: "Selects the slicing engine to use"
     depends: {}
     options:
-      - "Polymer"
+      - "Planar"
       - "Image"
       - "Radial Slice"
       - "Helical Slice"

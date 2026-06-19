@@ -15,7 +15,7 @@
 namespace {
 constexpr int kCincinnatiSyntax = 1;
 constexpr int kThermwoodSyntax = 16;
-constexpr int kPolymerSlicer = 0;
+constexpr int kPlanarSlicer = 0;
 constexpr int kImageSlicer = 1;
 constexpr int kV3LegacySlicerType2 = 2;
 constexpr int kV3ImageSlicer = 3;
@@ -64,15 +64,15 @@ constexpr std::array<int, 7> kSlicerTypeV2ToV3 = {
     1,                    // Legacy slicer type 1
     2,                    // Legacy slicer type 2
     kV3LegacySlicerType2, // RPBF removed
-    kPolymerSlicer,       // Real Time Polymer removed
+    kPlanarSlicer,        // Real Time Polymer removed
     kV3LegacySlicerType2, // Real Time RPBF removed
     kV3ImageSlicer        // Image
 };
 
 constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
-    kPolymerSlicer, // Polymer
-    kPolymerSlicer, // Legacy slicer type 1 removed
-    kPolymerSlicer, // Legacy slicer type 2 removed
+    kPlanarSlicer, // Polymer
+    kPlanarSlicer, // Legacy slicer type 1 removed
+    kPlanarSlicer, // Legacy slicer type 2 removed
     kImageSlicer    // Image
 };
 

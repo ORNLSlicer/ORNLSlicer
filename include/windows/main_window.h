@@ -46,7 +46,7 @@
 
 namespace ORNL {
 
-class PolymerSlicer;
+class PlanarSlicer;
 class SessionLoader;
 
 //! \brief Define for quick access to this singleton.
