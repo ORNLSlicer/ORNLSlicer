@@ -1,4 +1,4 @@
-#include "gcode/writers/marlin_pellet_writer.h"
+#include "gcode/writers/juggerbot_writer.h"
 
 #include <QStringBuilder>
 #include <qcontainerfwd.h>
@@ -15,10 +15,10 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
-MarlinPelletWriter::MarlinPelletWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {}
+JuggerBotWriter::JuggerBotWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {}
 
-QString MarlinPelletWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
-                                              Distance maximum_y, int num_layers) {
+QString JuggerBotWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
+                                           Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
     m_current_bead_area = 0;
@@ -63,29 +63,29 @@ QString MarlinPelletWriter::writeInitialSetup(Distance minimum_x, Distance minim
     return rv;
 }
 
-QString MarlinPelletWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
+QString JuggerBotWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
     m_layer_start = true;
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeBeforePart(QVector3D normal) {
+QString JuggerBotWriter::writeBeforePart(QVector3D normal) {
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeBeforeIsland() {
+QString JuggerBotWriter::writeBeforeIsland() {
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeBeforeRegion(RegionType type, int pathSize) {
+QString JuggerBotWriter::writeBeforeRegion(RegionType type, int pathSize) {
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeBeforePath(RegionType type) {
+QString JuggerBotWriter::writeBeforePath(RegionType type) {
     QString rv;
     if (!m_spiral_layer || m_first_print) {
         if (type == RegionType::kPerimeter) {
@@ -116,7 +116,7 @@ QString MarlinPelletWriter::writeBeforePath(RegionType type) {
     return rv;
 }
 
-QString MarlinPelletWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
+QString JuggerBotWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                         QSharedPointer<SettingsBase> params) {
     QString rv;
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
@@ -185,8 +185,8 @@ QString MarlinPelletWriter::writeTravel(Point start_location, Point target_locat
     return rv;
 }
 
-QString MarlinPelletWriter::writeLine(const Point& start_point, const Point& target_point,
-                                      const QSharedPointer<SettingsBase> params) {
+QString JuggerBotWriter::writeLine(const Point& start_point, const Point& target_point,
+                                   const QSharedPointer<SettingsBase> params) {
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
     int rpm = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
@@ -257,8 +257,8 @@ QString MarlinPelletWriter::writeLine(const Point& start_point, const Point& tar
     return rv;
 }
 
-QString MarlinPelletWriter::writeArc(const Point& start_point, const Point& end_point, const Point& center_point,
-                                     const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
+QString JuggerBotWriter::writeArc(const Point& start_point, const Point& end_point, const Point& center_point,
+                                  const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
@@ -318,7 +318,7 @@ QString MarlinPelletWriter::writeArc(const Point& start_point, const Point& end_
     return rv;
 }
 
-QString MarlinPelletWriter::writeAfterPath(RegionType type) {
+QString JuggerBotWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
         rv += writeExtruderOff();
@@ -350,28 +350,28 @@ QString MarlinPelletWriter::writeAfterPath(RegionType type) {
     return rv;
 }
 
-QString MarlinPelletWriter::writeAfterRegion(RegionType type) {
+QString JuggerBotWriter::writeAfterRegion(RegionType type) {
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeAfterIsland() {
+QString JuggerBotWriter::writeAfterIsland() {
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeAfterPart() {
+QString JuggerBotWriter::writeAfterPart() {
     QString rv;
     return rv;
 }
 
-QString MarlinPelletWriter::writeAfterLayer() {
+QString JuggerBotWriter::writeAfterLayer() {
     QString rv;
     rv += m_sb->setting<QString>(PRS::GCode::kLayerCodeChange) % m_newline;
     return rv;
 }
 
-QString MarlinPelletWriter::writeShutdown() {
+QString JuggerBotWriter::writeShutdown() {
     QString rv;
     rv += "M5" % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT") % "M104 S0 T0" %
           commentSpaceLine("TURN EXTRUDER OFF");
@@ -382,16 +382,16 @@ QString MarlinPelletWriter::writeShutdown() {
     return rv;
 }
 
-QString MarlinPelletWriter::writePurge(int RPM, int duration, int delay) { return {}; }
+QString JuggerBotWriter::writePurge(int RPM, int duration, int delay) { return {}; }
 
-QString MarlinPelletWriter::writeDwell(Time time) {
+QString JuggerBotWriter::writeDwell(Time time) {
     if (time > 0)
         return m_G4 % m_p % QString::number(time.to(m_meta.m_time_unit), 'f', 4) % commentSpaceLine("DWELL");
     else
         return {};
 }
 
-QString MarlinPelletWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height) {
+QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height) {
     m_extruder_on = true;
     QString rv;
     Area bead_area = (width - height) * height +
@@ -472,7 +472,7 @@ QString MarlinPelletWriter::writeExtruderOn(RegionType type, int rpm, Distance w
     return rv;
 }
 
-QString MarlinPelletWriter::writeExtruderOff() {
+QString JuggerBotWriter::writeExtruderOff() {
     m_extruder_on = false;
 
     QString rv;
@@ -488,7 +488,7 @@ QString MarlinPelletWriter::writeExtruderOff() {
     return rv;
 }
 
-QString MarlinPelletWriter::writeCoordinates(Point destination) {
+QString JuggerBotWriter::writeCoordinates(Point destination) {
     QString rv;
 
     // always specify X and Y

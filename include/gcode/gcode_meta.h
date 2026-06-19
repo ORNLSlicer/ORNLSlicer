@@ -321,7 +321,7 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kIngersoll, IngersollMeta);
     result.insert((int)GcodeSyntax::kKraussMaffei, KraussMaffeiMeta);
     result.insert((int)GcodeSyntax::kMarlin, MarlinMeta);
-    result.insert((int)GcodeSyntax::kMarlinPellet, MarlinMeta);
+    result.insert((int)GcodeSyntax::kJuggerBot, MarlinMeta);
     result.insert((int)GcodeSyntax::kMazak, MazakMeta);
     result.insert((int)GcodeSyntax::kMeld, MeldMeta);
     result.insert((int)GcodeSyntax::kMeltio, MeltioMeta);

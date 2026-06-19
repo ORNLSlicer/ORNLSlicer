@@ -483,7 +483,7 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
                 m_parser.reset(new MarlinParser(GcodeMetaList::KraussMaffeiMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::KraussMaffeiMeta;
             }
-            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kMarlinPellet).toUpper())) {
+            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kJuggerBot).toUpper())) {
                 m_parser.reset(new MarlinParser(GcodeMetaList::MarlinMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::MarlinMeta;
             }
