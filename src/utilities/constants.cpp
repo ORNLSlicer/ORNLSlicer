@@ -155,7 +155,6 @@ const QStringList Constants::InfillPatternTypeStrings::kInfillTypes = {
 // Machine Syntax Strings
 //================================================================================
 QString Constants::PrinterSettings::SyntaxString::kAML3D = "AML3D";
-QString Constants::PrinterSettings::SyntaxString::k5AxisMarlin = "5AxisMarlin";
 QString Constants::PrinterSettings::SyntaxString::kBeam = "Beam";
 QString Constants::PrinterSettings::SyntaxString::kCincinnati = "Cincinnati";
 QString Constants::PrinterSettings::SyntaxString::kCincinnatiLegacy = "Cincinnati-BERTHA";

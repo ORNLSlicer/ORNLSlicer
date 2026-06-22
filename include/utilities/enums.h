@@ -191,19 +191,16 @@ enum class GcodeSyntax : uint8_t {
     kAML3D = 25,
     kKraussMaffei = 26,
     kSandia = 27,
-    k5AxisMarlin = 28,
-    kMeltio = 29,
-    kAdamantine = 30,
-    kORNLMetric = 31,
-    kRadial3Plus2 = 32
+    kMeltio = 28,
+    kAdamantine = 29,
+    kORNLMetric = 30,
+    kRadial3Plus2 = 31
 };
 
 inline QString toString(GcodeSyntax syntax) {
     switch (syntax) {
         case GcodeSyntax::kRadial3Plus2:
             return PRS::SyntaxString::kRadial3Plus2;
-        case GcodeSyntax::k5AxisMarlin:
-            return PRS::SyntaxString::k5AxisMarlin;
         case GcodeSyntax::kAML3D:
             return PRS::SyntaxString::kAML3D;
         case GcodeSyntax::kBeam:
