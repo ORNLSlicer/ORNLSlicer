@@ -14,7 +14,9 @@
 
 namespace {
 constexpr int kCincinnatiSyntax = 1;
+constexpr int kMarlinSyntax = 10;
 constexpr int kThermwoodSyntax = 16;
+constexpr int kRemovedGcodeSyntax = 28;
 constexpr int kPlanarSlicer = 0;
 constexpr int kImageSlicer = 1;
 constexpr int kV3LegacySlicerType2 = 2;
@@ -53,7 +55,7 @@ constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     25,                // AML3D
     26,                // KraussMaffei
     27,                // Sandia
-    28,                // 5AxisMarlin
+    28,                // Removed syntax
     29,                // Meltio
     30,                // Adamantine
     31                 // ORNL Metric
@@ -152,6 +154,22 @@ void addV3Settings(fifojson& settings_group) {
     if (settings_group.find(perimeter_boundary_selection) == settings_group.end())
         settings_group[perimeter_boundary_selection] = kAllPerimeterBoundaries;
 }
+
+void migrateRemovedGcodeSyntax(fifojson& settings_group) {
+    if (!settings_group.is_object())
+        return;
+
+    const std::string syntax_key = ORNL::Constants::PrinterSettings::MachineSetup::kSyntax.toStdString();
+    auto setting = settings_group.find(syntax_key);
+    if (setting == settings_group.end() || !setting.value().is_number_integer())
+        return;
+
+    const int setting_value = setting.value().get<int>();
+    if (setting_value == kRemovedGcodeSyntax)
+        setting.value() = kMarlinSyntax;
+    else if (setting_value > kRemovedGcodeSyntax)
+        setting.value() = setting_value - 1;
+}
 } // namespace
 
 namespace ORNL {
@@ -166,6 +184,8 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
         pre_4_0To4_0(version, settings);
     if (version < 5)
         pre_5_0To5_0(version, settings);
+    if (version < 6)
+        pre_6_0To6_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -300,6 +320,22 @@ void SettingsVersionControl::pre_5_0To5_0(double& version, fifojson& settings) {
     }
 
     version = 5.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_6_0To6_0(double& version, fifojson& settings) {
+    QString dt = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 6.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value())
+            migrateRemovedGcodeSyntax(settings_group);
+    }
+
+    version = 6.0;
     settings = new_format;
 }
 } // namespace ORNL

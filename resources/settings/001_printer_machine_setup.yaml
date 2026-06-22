@@ -35,7 +35,6 @@ settings:
       - "AML3D"
       - "KraussMaffei"
       - "Sandia"
-      - "5AxisMarlin"
       - "Meltio"
       - "Adamantine"
       - "ORNL Metric"
@@ -104,7 +103,7 @@ settings:
     display: "Tool Coordinate"
     type: "number"
     tooltip: "Sets the tool coordinate for the primary extruder."
-    depends: {"OR":[{"syntax":22},{"syntax":31}]}
+    depends: {"OR":[{"syntax":22},{"syntax":30}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -116,7 +115,7 @@ settings:
     display: "Base Coordinate"
     type: "number"
     tooltip: "Sets the base coordinate for the primary extruder."
-    depends: {"OR":[{"syntax":22},{"syntax":31}]}
+    depends: {"OR":[{"syntax":22},{"syntax":30}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -128,7 +127,7 @@ settings:
     display: "Axis A"
     type: "angle"
     tooltip: "Sets the printing angle for the A axis"
-    depends: {"OR":[{"syntax":28},{"OR":[{"syntax":32},{"OR":[{"syntax":31},{"syntax":22}]}]}]}
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -140,7 +139,7 @@ settings:
     display: "Axis B"
     type: "angle"
     tooltip: "Sets the printing angle for the B axis"
-    depends: {"OR":[{"syntax":28},{"OR":[{"syntax":32},{"OR":[{"syntax":31},{"syntax":22}]}]}]}
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -152,7 +151,7 @@ settings:
     display: "Axis C"
     type: "angle"
     tooltip: "Sets the printing angle for the C axis"
-    depends: {"OR":[{"syntax":28},{"OR":[{"syntax":32},{"OR":[{"syntax":31},{"syntax":22}]}]}]}
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"

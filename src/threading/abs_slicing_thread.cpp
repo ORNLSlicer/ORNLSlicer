@@ -20,15 +20,14 @@
 #include "gcode/writers/aml3d_writer.h"
 #include "gcode/writers/cincinnati_writer.h"
 #include "gcode/writers/dmg_dmu_writer.h"
-#include "gcode/writers/five_axis_marlin_writer.h"
 #include "gcode/writers/gudel_writer.h"
 #include "gcode/writers/haas_metric_no_comments_writer.h"
 #include "gcode/writers/haas_writer.h"
 #include "gcode/writers/hurco_writer.h"
 #include "gcode/writers/ingersoll_writer.h"
+#include "gcode/writers/juggerbot_writer.h"
 #include "gcode/writers/kraussmaffei_writer.h"
 #include "gcode/writers/mach4_writer.h"
-#include "gcode/writers/juggerbot_writer.h"
 #include "gcode/writers/marlin_writer.h"
 #include "gcode/writers/mazak_writer.h"
 #include "gcode/writers/meld_writer.h"
@@ -79,10 +78,6 @@ qint64 AbstractSlicingThread::getTimeElapsed() { return m_elapsed_time; }
 void AbstractSlicingThread::setGcodeOutput(QString output) {
     m_syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     switch (m_syntax) {
-        case GcodeSyntax::k5AxisMarlin:
-            m_base = QSharedPointer<FiveAxisMarlinWriter>(
-                new FiveAxisMarlinWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
-            break;
         case GcodeSyntax::kAML3D:
             m_base = QSharedPointer<AML3DWriter>(new AML3DWriter(GcodeMetaList::AML3DMeta, GSM->getGlobal()));
             break;

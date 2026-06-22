@@ -45,5 +45,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_5_0To5_0(double& version, fifojson& settings);
+
+    //! \brief Rolls settings after removed G-code syntax and positional enum changes to version 6.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_6_0To6_0(double& version, fifojson& settings);
 };
 } // namespace ORNL
