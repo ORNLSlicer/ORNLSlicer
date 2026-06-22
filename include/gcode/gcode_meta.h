@@ -307,7 +307,6 @@ static GcodeMeta RadialMeta = {GcodeSyntax::kRadial3Plus2,
                                ".gcode"};
 static QHash<int, GcodeMeta> createMapping() {
     QHash<int, GcodeMeta> result;
-    result.insert((int)GcodeSyntax::k5AxisMarlin, MarlinMeta);
     result.insert((int)GcodeSyntax::kAML3D, AML3DMeta);
     result.insert((int)GcodeSyntax::kBeam, DmgDmuAndBeamMeta);
     result.insert((int)GcodeSyntax::kCincinnati, CincinnatiMeta);

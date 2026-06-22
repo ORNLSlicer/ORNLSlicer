@@ -438,11 +438,7 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
     while (m_current_line < m_lines.size()) {
         if (syntaxIdentifier1.indexIn(m_lines[m_current_line]) != -1 ||
             syntaxIdentifier2.indexIn(m_lines[m_current_line]) != -1) {
-            if (m_lines[m_current_line].contains(toString(GcodeSyntax::k5AxisMarlin).toUpper())) {
-                m_parser.reset(new MarlinParser(GcodeMetaList::MarlinMeta, m_adjust_file, originalLines, lines));
-                m_selected_meta = GcodeMetaList::MarlinMeta;
-            }
-            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kAML3D).toUpper())) {
+            if (m_lines[m_current_line].contains(toString(GcodeSyntax::kAML3D).toUpper())) {
                 m_parser.reset(new CincinnatiParser(GcodeMetaList::AML3DMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::AML3DMeta;
             }

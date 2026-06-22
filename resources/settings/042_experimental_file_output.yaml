@@ -166,7 +166,7 @@ settings:
     display: "Enable AMCM SRC File Output"
     type: "boolean"
     tooltip: "If enabled, a src file for AMCM will be saved when exporting the g-code file."
-    depends: {"OR":[{"syntax":22},{"syntax":31}]}
+    depends: {"OR":[{"syntax":22},{"syntax":30}]}
     options: []
     default: false
     minor: "File Output"
@@ -178,7 +178,7 @@ settings:
     display: "Enable AMCM Data Logging"
     type: "boolean"
     tooltip: "If enabled, AMCM data logging commands will be added to the g-code."
-    depends: {"OR":[{"syntax":22},{"syntax":31}]}
+    depends: {"OR":[{"syntax":22},{"syntax":30}]}
     options: []
     default: false
     minor: "File Output"

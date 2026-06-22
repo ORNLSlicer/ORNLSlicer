@@ -274,7 +274,6 @@ class Constants {
         class SyntaxString {
           public:
             static QString kAML3D;
-            static QString k5AxisMarlin;
             static QString kBeam;
             static QString kCincinnati;
             static QString kCincinnatiLegacy;
