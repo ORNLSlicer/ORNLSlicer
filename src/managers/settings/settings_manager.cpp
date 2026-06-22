@@ -276,7 +276,7 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, boo
             if (!ret)
                 ret = QMessageBox::warning(
                     nullptr, QCoreApplication::applicationName(),
-                    filename + "is outdated. Do you want to update this template to the newest compatible version?  "
+                    filename + " is outdated. Do you want to update this template to the newest compatible version?  "
                                "Failure to do so may result in program instability.",
                     QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No);
 
