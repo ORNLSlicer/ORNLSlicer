@@ -106,6 +106,7 @@
           )
         ] ++ lib.optionals stdenv.isLinux [
           pkgs.nsis
+          pkgs.osslsigncode
           pkgs.cntr
           pkgs.clazy
         ];

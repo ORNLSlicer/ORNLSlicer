@@ -49,7 +49,12 @@ jobs:
     env:
       ci_derivation: windows.ornl.ornlslicer
       out_link: ornlslicer
+      package_dir: ornlslicer-package
       nsis_script: scripts/installer.nsi
+      WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 }}
+      WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD: ${{ secrets.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD }}
+      WINDOWS_CODE_SIGNING_DESCRIPTION: ORNLSlicer
+      WINDOWS_CODE_SIGNING_PUBLISHER_URL: https://github.com/ORNLSlicer/ORNLSlicer
     runs-on: ubuntu-latest
     defaults:
       run:
@@ -66,19 +71,55 @@ jobs:
           echo "version=$(nix eval --raw .#${{ env.ci_derivation }}.version)" >> $GITHUB_ENV
       - name: Compile Windows Build
         run: nix build -L .#${{ env.ci_derivation }} --accept-flake-config -o ${{ env.out_link }}
+      - name: Stage Windows Package
+        run: |
+          cp -R -L ${{ env.out_link }} ${{ env.package_dir }}
+          chmod -R u+w ${{ env.package_dir }}
+      - name: Check Windows Signing Configuration
+        run: |
+          if [[ -z "${WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64}" || -z "${WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD}" ]]; then
+            echo "::warning title=Windows artifacts unsigned::Configure WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 and WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD repository secrets to Authenticode-sign Windows artifacts."
+          fi
+      - name: Prepare Windows Signing Certificate
+        if: ${{ env.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 != '' && env.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD != '' }}
+        run: |
+          cert_path="${RUNNER_TEMP}/windows-code-signing.pfx"
+          printf '%s' "${WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64}" | base64 --decode > "${cert_path}"
+          chmod 600 "${cert_path}"
+          echo "WINDOWS_CODE_SIGNING_CERTIFICATE_PATH=${cert_path}" >> "${GITHUB_ENV}"
+      - name: Sign Windows Package Executables
+        if: ${{ env.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 != '' && env.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD != '' }}
+        run: |
+          nix develop --accept-flake-config --command \
+            bash scripts/sign_windows_artifacts.sh \
+              "${WINDOWS_CODE_SIGNING_CERTIFICATE_PATH}" \
+              "${{ env.package_dir }}"
       - name: Generate Installer
         run: >
           nix develop --accept-flake-config --command
           makensis
           -DOUTFILE=../${{ env.install_artifact }}
-          -DEXE_SOURCES=${{ env.out_link }}
+          -DEXE_SOURCES=${{ env.package_dir }}
           -DVERSION=${{ env.version }}
           ${{ env.nsis_script }}
+      - name: Sign Windows Installer
+        if: ${{ env.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 != '' && env.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD != '' }}
+        run: |
+          nix develop --accept-flake-config --command \
+            bash scripts/sign_windows_artifacts.sh \
+              "${WINDOWS_CODE_SIGNING_CERTIFICATE_PATH}" \
+              "${{ env.install_artifact }}"
+      - name: Remove Windows Signing Certificate
+        if: ${{ always() }}
+        run: |
+          if [[ -n "${WINDOWS_CODE_SIGNING_CERTIFICATE_PATH:-}" ]]; then
+            rm -f "${WINDOWS_CODE_SIGNING_CERTIFICATE_PATH}"
+          fi
       - name: Upload Portable Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: ${{ env.package_artifact }}
-          path: ${{ env.out_link }}
+          path: ${{ env.package_dir }}
       - name: Upload Installer Artifacts
         uses: actions/upload-artifact@v4
         with:
