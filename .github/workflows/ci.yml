@@ -75,20 +75,19 @@ jobs:
         run: |
           cp -R -L ${{ env.out_link }} ${{ env.package_dir }}
           chmod -R u+w ${{ env.package_dir }}
-      - name: Check Windows Signing Configuration
+      - name: Require Windows Signing Configuration
         run: |
           if [[ -z "${WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64}" || -z "${WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD}" ]]; then
-            echo "::warning title=Windows artifacts unsigned::Configure WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 and WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD repository secrets to Authenticode-sign Windows artifacts."
+            echo "::error title=Windows signing secrets missing::Configure WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 and WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD repository secrets to Authenticode-sign Windows artifacts."
+            exit 1
           fi
       - name: Prepare Windows Signing Certificate
-        if: ${{ env.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 != '' && env.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD != '' }}
         run: |
           cert_path="${RUNNER_TEMP}/windows-code-signing.pfx"
           printf '%s' "${WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64}" | base64 --decode > "${cert_path}"
           chmod 600 "${cert_path}"
           echo "WINDOWS_CODE_SIGNING_CERTIFICATE_PATH=${cert_path}" >> "${GITHUB_ENV}"
       - name: Sign Windows Package Executables
-        if: ${{ env.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 != '' && env.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD != '' }}
         run: |
           nix develop --accept-flake-config --command \
             bash scripts/sign_windows_artifacts.sh \
@@ -103,7 +102,6 @@ jobs:
           -DVERSION=${{ env.version }}
           ${{ env.nsis_script }}
       - name: Sign Windows Installer
-        if: ${{ env.WINDOWS_CODE_SIGNING_CERTIFICATE_BASE64 != '' && env.WINDOWS_CODE_SIGNING_CERTIFICATE_PASSWORD != '' }}
         run: |
           nix develop --accept-flake-config --command \
             bash scripts/sign_windows_artifacts.sh \
