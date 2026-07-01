@@ -82,6 +82,8 @@ function(FindDependencies)
         message(WARNING "OpenMP NOT found, the build will not be optimized.")
     endif()
 
+    set(OPENCASCADE_LIBRARIES TKDESTEP TKMesh)
+
     set(RESULT_VAR "")
     list(
         APPEND RESULT_VAR
@@ -99,7 +101,7 @@ function(FindDependencies)
         Eigen3::Eigen
         CGAL::Eigen3_support
         nlohmann_json::nlohmann_json
-        ${OpenCASCADE_LIBRARIES}
+        ${OPENCASCADE_LIBRARIES}
         ornl::psimpl
         ornl::polyclipping
         zip::zip
@@ -297,6 +299,8 @@ include(GNUInstallDirs)
 install(TARGETS ${PROJECT_NAME})
 if(WIN32)
     install(TARGETS ${PROJECT_NAME}_cli)
+    install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}> DESTINATION ${CMAKE_INSTALL_BINDIR})
+    install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}_cli> DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
