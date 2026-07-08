@@ -184,3 +184,15 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kPerimeterFlyingStartSpeed"
     local: true
+  - name: "spiral_perimeter"
+    display: "Enable Spiral Perimeter"
+    type: "boolean"
+    tooltip: "If selected, spiral perimeters will be generated"
+    depends: {"perimeter":true}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kEnableSpiralPerimeter"
+    local: true

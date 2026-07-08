@@ -562,6 +562,7 @@ const QString Constants::ProfileSettings::Perimeter::kEnableLeadInY = "perimeter
 const QString Constants::ProfileSettings::Perimeter::kEnableFlyingStart = "perimeter_flying_start";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartDistance = "perimeter_flying_start_distance";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartSpeed = "perimeter_flying_start_speed";
+const QString Constants::ProfileSettings::Perimeter::kEnableSpiralPerimeter = "spiral_perimeter";
 
 // Inset
 const QString Constants::ProfileSettings::Inset::kEnable = "inset";
