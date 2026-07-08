@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
+#include <QUndoCommand>
 #include <qaction.h>
 #include <qapplication.h>
 #include <qcontainerfwd.h>
@@ -57,6 +58,8 @@
 #include "widgets/gcodebar.h"
 #include "widgets/layerbar.h"
 #include "widgets/main_toolbar.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+#include "widgets/part_widget/model/part_meta_model.h"
 #include "widgets/part_widget/part_widget.h"
 #include "widgets/settings/setting_bar.h"
 #include "windows/about.h"
@@ -70,6 +73,96 @@
 #include "windows/xtrudecalc.h"
 
 namespace ORNL {
+constexpr int kPartTransformUndoCommandId = 1;
+constexpr int kSettingValueUndoCommandId = 2;
+
+class PartTransformUndoCommand : public QUndoCommand {
+  public:
+    PartTransformUndoCommand(MainWindow* window, QSharedPointer<PartMetaItem> item,
+                             const MainWindow::PartTransformSnapshot& before,
+                             const MainWindow::PartTransformSnapshot& after)
+        : m_window(window), m_item(item), m_before(before), m_after(after) {
+        setText("part position change");
+    }
+
+    int id() const override { return kPartTransformUndoCommandId; }
+
+    bool mergeWith(const QUndoCommand* command) override {
+        const auto* other = dynamic_cast<const PartTransformUndoCommand*>(command);
+        if (other == nullptr || other->m_window != m_window || other->m_item != m_item) {
+            return false;
+        }
+
+        m_after = other->m_after;
+        return true;
+    }
+
+    void undo() override { m_window->applyPartTransformSnapshot(m_item, m_before); }
+
+    void redo() override {
+        if (m_skip_first_redo) {
+            m_skip_first_redo = false;
+            return;
+        }
+
+        m_window->applyPartTransformSnapshot(m_item, m_after);
+    }
+
+  private:
+    MainWindow* m_window;
+    QSharedPointer<PartMetaItem> m_item;
+    MainWindow::PartTransformSnapshot m_before;
+    MainWindow::PartTransformSnapshot m_after;
+    bool m_skip_first_redo = true;
+};
+
+class SettingValueUndoCommand : public QUndoCommand {
+  public:
+    SettingValueUndoCommand(MainWindow* window, const QString& key,
+                            const QVector<MainWindow::SettingValueSnapshot>& before,
+                            const QVector<MainWindow::SettingValueSnapshot>& after)
+        : m_window(window), m_key(key), m_before(before), m_after(after) {
+        setText("setting change");
+    }
+
+    int id() const override { return kSettingValueUndoCommandId; }
+
+    bool mergeWith(const QUndoCommand* command) override {
+        const auto* other = dynamic_cast<const SettingValueUndoCommand*>(command);
+        if (other == nullptr || other->m_window != m_window || other->m_key != m_key ||
+            other->m_before.size() != m_before.size()) {
+            return false;
+        }
+
+        for (int i = 0, end = m_before.size(); i < end; ++i) {
+            if (m_before[i].settings_base != other->m_before[i].settings_base ||
+                m_before[i].key != other->m_before[i].key) {
+                return false;
+            }
+        }
+
+        m_after = other->m_after;
+        return true;
+    }
+
+    void undo() override { m_window->applySettingValueSnapshots(m_before); }
+
+    void redo() override {
+        if (m_skip_first_redo) {
+            m_skip_first_redo = false;
+            return;
+        }
+
+        m_window->applySettingValueSnapshots(m_after);
+    }
+
+  private:
+    MainWindow* m_window;
+    QString m_key;
+    QVector<MainWindow::SettingValueSnapshot> m_before;
+    QVector<MainWindow::SettingValueSnapshot> m_after;
+    bool m_skip_first_redo = true;
+};
 
 MainWindow* MainWindow::m_singleton = nullptr;
 
@@ -179,6 +272,8 @@ void MainWindow::setupClasses() {
     // Timer. This controls auto save.
     m_timer = new QTimer(this);
     m_timer->start(300000);
+
+    m_undo_stack = new QUndoStack(this);
 }
 
 void MainWindow::teardownClasses() {
@@ -411,8 +506,8 @@ void MainWindow::setupActions() {
     m_actions["exit"] = {"Exit", ":/icons/exit_black.png", false, QKeySequence(), nullptr};
 
     // Menu Edit
-    m_actions["undo"] = {"Undo", ":/icons/undo_black.png", false, QKeySequence(), nullptr};
-    m_actions["redo"] = {"Redo", ":/icons/redo_black.png", false, QKeySequence(), nullptr};
+    m_actions["undo"] = {"Undo", ":/icons/undo_black.png", false, QKeySequence(QKeySequence::Undo), nullptr};
+    m_actions["redo"] = {"Redo", ":/icons/redo_black.png", false, QKeySequence(QKeySequence::Redo), nullptr};
     m_actions["copy"] = {"Copy", ":/icons/copy_black.png", false, QKeySequence(tr("Ctrl+c")), nullptr};
     m_actions["paste"] = {"Paste", ":/icons/paste_black.png", false, QKeySequence(tr("Ctrl+v")), nullptr};
     m_actions["reload"] = {"Reload", ":/icons/file_refresh_black.png", false, QKeySequence(tr("Ctrl+r")), nullptr};
@@ -657,8 +752,8 @@ void MainWindow::setupEvents() {
     connect(m_actions["last_session"].action, &QAction::triggered, this, &MainWindow::autoLoad);
     connect(m_actions["screenshot"].action, &QAction::triggered, m_part_widget, &PartWidget::takeScreenshot);
 
-    connect(m_actions["undo"].action, &QAction::triggered, m_part_widget, &PartWidget::undo);
-    connect(m_actions["redo"].action, &QAction::triggered, m_part_widget, &PartWidget::redo);
+    connect(m_actions["undo"].action, &QAction::triggered, m_undo_stack, &QUndoStack::undo);
+    connect(m_actions["redo"].action, &QAction::triggered, m_undo_stack, &QUndoStack::redo);
     connect(m_actions["copy"].action, &QAction::triggered, this, [this]() {
         m_actions["paste"].action->setEnabled(true);
         m_part_widget->copy();
@@ -668,6 +763,8 @@ void MainWindow::setupEvents() {
     connect(m_actions["delete"].action, &QAction::triggered, m_part_widget, QOverload<>::of(&PartWidget::remove));
 
     m_actions["slice"].action->setEnabled(false);
+    m_actions["undo"].action->setEnabled(false);
+    m_actions["redo"].action->setEnabled(false);
     m_actions["copy"].action->setEnabled(false);
     m_actions["paste"].action->setEnabled(false);
     m_actions["reload"].action->setEnabled(false);
@@ -678,6 +775,9 @@ void MainWindow::setupEvents() {
     m_actions["sel_printer"].action->setEnabled(false);
     m_actions["python_int"].action->setEnabled(false);
     m_actions["debug"].action->setEnabled(true);
+
+    connect(m_undo_stack, &QUndoStack::canUndoChanged, m_actions["undo"].action, &QAction::setEnabled);
+    connect(m_undo_stack, &QUndoStack::canRedoChanged, m_actions["redo"].action, &QAction::setEnabled);
 
     connect(m_actions["zoom_in"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomIn);
     connect(m_actions["zoom_out"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomOut);
@@ -836,10 +936,17 @@ void MainWindow::setupEvents() {
                          "Scaling factors are reset to 100%\r\n");
     });
 
+    QSharedPointer<PartMetaModel> part_meta = m_part_widget->getPartMeta();
+    connect(part_meta.get(), &PartMetaModel::itemAddedUpdate, this, &MainWindow::initializePartTransform);
+    connect(part_meta.get(), &PartMetaModel::itemRemovedUpdate, this, &MainWindow::removePartTransform);
+    connect(part_meta.get(), &PartMetaModel::transformUpdate, this, &MainWindow::recordPartTransform);
+
     // Connect to timer.
     connect(m_timer, &QTimer::timeout, this, &MainWindow::autoSave);
 
     // Allow stuff to changed at runtime based upon user-modified settings
+    connect(m_settingbar, &SettingBar::settingAboutToChange, this, &MainWindow::captureSettingChange);
+    connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::recordSettingChange);
     connect(m_settingbar, &SettingBar::settingModified, m_part_widget, &PartWidget::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_gcode_widget, &GCodeWidget::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
@@ -916,6 +1023,181 @@ void MainWindow::switchViews(int index) {
         QObject::disconnect(m_actions["zoom_reset"].action, &QAction::triggered, m_gcode_widget,
                             &GCodeWidget::resetZoom);
     }
+}
+
+MainWindow::PartTransformSnapshot MainWindow::partTransformSnapshot(QSharedPointer<PartMetaItem> item) const {
+    PartTransformSnapshot snapshot;
+    if (!item.isNull()) {
+        snapshot.transformation = item->transformation();
+        snapshot.scale_unit_index = item->scaleUnitIndex();
+    }
+    return snapshot;
+}
+
+void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item,
+                                            const PartTransformSnapshot& snapshot) {
+    if (item.isNull() || !m_part_transform_snapshots.contains(item)) {
+        return;
+    }
+
+    m_applying_undo_redo = true;
+    item->setTransformation(snapshot.transformation);
+    item->setScaleUnitIndex(snapshot.scale_unit_index);
+    m_part_transform_snapshots[item] = snapshot;
+    m_applying_undo_redo = false;
+}
+
+QVector<MainWindow::SettingValueSnapshot> MainWindow::settingValueSnapshots(
+    const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const {
+    QList<QSharedPointer<SettingsBase>> targets = settings_bases;
+    if (targets.isEmpty()) {
+        targets.push_back(GSM->getGlobal());
+    }
+
+    QVector<SettingValueSnapshot> snapshots;
+    for (const QSharedPointer<SettingsBase>& settings_base : targets) {
+        if (settings_base.isNull()) {
+            continue;
+        }
+
+        SettingValueSnapshot snapshot;
+        snapshot.key = key;
+        snapshot.settings_base = settings_base;
+        snapshot.existed = settings_base->contains(key);
+        if (snapshot.existed) {
+            snapshot.value = settings_base->json()[0][key.toStdString()];
+        }
+
+        snapshots.push_back(snapshot);
+    }
+
+    return snapshots;
+}
+
+void MainWindow::applySettingValueSnapshots(const QVector<SettingValueSnapshot>& snapshots) {
+    if (snapshots.isEmpty()) {
+        return;
+    }
+
+    QSet<QString> restored_keys;
+
+    m_applying_undo_redo = true;
+    for (const SettingValueSnapshot& snapshot : snapshots) {
+        if (snapshot.settings_base.isNull()) {
+            continue;
+        }
+
+        fifojson& settings_json = snapshot.settings_base->json();
+        if (settings_json.empty()) {
+            settings_json.push_back(fifojson::object());
+        }
+
+        if (snapshot.existed) {
+            settings_json[0][snapshot.key.toStdString()] = snapshot.value;
+        }
+        else {
+            snapshot.settings_base->remove(snapshot.key);
+        }
+
+        restored_keys.insert(snapshot.key);
+    }
+
+    for (const QString& key : restored_keys) {
+        m_settingbar->restoreSettingValue(key);
+    }
+    m_applying_undo_redo = false;
+}
+
+bool MainWindow::partTransformSnapshotsEqual(const PartTransformSnapshot& lhs,
+                                             const PartTransformSnapshot& rhs) const {
+    return lhs.scale_unit_index == rhs.scale_unit_index && lhs.transformation == rhs.transformation;
+}
+
+bool MainWindow::settingValueSnapshotsEqual(const QVector<SettingValueSnapshot>& lhs,
+                                            const QVector<SettingValueSnapshot>& rhs) const {
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+
+    for (int i = 0, end = lhs.size(); i < end; ++i) {
+        if (lhs[i].key != rhs[i].key || lhs[i].settings_base != rhs[i].settings_base ||
+            lhs[i].existed != rhs[i].existed) {
+            return false;
+        }
+
+        if (lhs[i].existed && lhs[i].value != rhs[i].value) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void MainWindow::captureSettingChange(QString key, QList<QSharedPointer<SettingsBase>> settings_bases) {
+    if (m_applying_undo_redo || m_pending_setting_snapshots.contains(key)) {
+        return;
+    }
+
+    m_pending_setting_snapshots[key] = settingValueSnapshots(key, settings_bases);
+}
+
+void MainWindow::recordSettingChange(QString key) {
+    if (m_applying_undo_redo || !m_pending_setting_snapshots.contains(key)) {
+        return;
+    }
+
+    QVector<SettingValueSnapshot> before = m_pending_setting_snapshots.take(key);
+    QStringList coupled_keys = m_pending_setting_snapshots.keys();
+    coupled_keys.sort();
+    for (const QString& coupled_key : coupled_keys) {
+        before.append(m_pending_setting_snapshots.take(coupled_key));
+    }
+
+    QVector<SettingValueSnapshot> after;
+    after.reserve(before.size());
+    for (const SettingValueSnapshot& snapshot : before) {
+        QList<QSharedPointer<SettingsBase>> settings_bases;
+        settings_bases.push_back(snapshot.settings_base);
+
+        const QVector<SettingValueSnapshot> current = settingValueSnapshots(snapshot.key, settings_bases);
+        if (!current.isEmpty()) {
+            after.push_back(current[0]);
+        }
+    }
+
+    if (settingValueSnapshotsEqual(before, after)) {
+        return;
+    }
+
+    m_undo_stack->push(new SettingValueUndoCommand(this, key, before, after));
+}
+
+void MainWindow::initializePartTransform(QSharedPointer<PartMetaItem> item) {
+    if (!item.isNull()) {
+        m_part_transform_snapshots[item] = partTransformSnapshot(item);
+    }
+}
+
+void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) { m_part_transform_snapshots.remove(item); }
+
+void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
+    if (m_applying_undo_redo || item.isNull()) {
+        return;
+    }
+
+    const PartTransformSnapshot current = partTransformSnapshot(item);
+    if (!m_part_transform_snapshots.contains(item)) {
+        m_part_transform_snapshots[item] = current;
+        return;
+    }
+
+    const PartTransformSnapshot before = m_part_transform_snapshots[item];
+    if (partTransformSnapshotsEqual(before, current)) {
+        return;
+    }
+
+    m_undo_stack->push(new PartTransformUndoCommand(this, item, before, current));
+    m_part_transform_snapshots[item] = current;
 }
 
 void MainWindow::handleModifiedSetting(const QString key) {}

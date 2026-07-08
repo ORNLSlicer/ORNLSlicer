@@ -187,6 +187,8 @@ void Vector2InputWidget::updateSetting(const QString& key, double displayed_valu
     Distance base_value;
     base_value.from(displayed_value, PreferencesManager::getInstance()->getDistanceUnit());
 
+    notifyValueAboutToChange(key);
+
     if (m_settings_bases.size() != 0) {
         for (QSharedPointer<SettingsBase> range : m_settings_bases)
             range->setSetting(key, base_value());

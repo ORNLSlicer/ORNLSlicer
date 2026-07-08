@@ -66,12 +66,26 @@ class SettingPane : public QWidget {
 
   private slots:
     /*!
+     * \brief Forwards an impending setting modification to the bar for retransmission.
+     * \param setting_key   Key that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
+    /*!
      * \brief Forwards a modified setting to the bar for retransmission.
      * \param setting_key   Key that was modified.
      */
     void forwardModifiedSetting(QString setting_key);
 
   signals:
+    /*!
+     * \brief Signal that setting is about to be modified.
+     * \param setting_key   Key that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void settingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
     /*!
      * \brief Signal that setting was modified.
      * \param setting_key   Key that was modified.

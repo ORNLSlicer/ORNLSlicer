@@ -124,6 +124,14 @@ void SettingRowBase::setDependencyLogic(DependencyNode root) { m_dependency_logi
 
 void SettingRowBase::setSettingsBase(QSharedPointer<SettingsBase> sb) { m_sb = sb; }
 
+void SettingRowBase::setValueChangeCallback(ValueChangeCallback callback) { m_value_change_callback = callback; }
+
+void SettingRowBase::notifyValueAboutToChange(const QString& key) {
+    if (m_value_change_callback) {
+        m_value_change_callback(key, m_settings_bases);
+    }
+}
+
 bool SettingRowBase::checkLogic(DependencyNode root) {
     if (root.key == "AND") {
         return checkLogic(root.children[0]) && checkLogic(root.children[1]);
