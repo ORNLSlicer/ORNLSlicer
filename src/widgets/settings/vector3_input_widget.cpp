@@ -177,6 +177,8 @@ void Vector3InputWidget::ensureSetting(const QString& key, double default_value)
 }
 
 void Vector3InputWidget::updateSetting(const QString& key, double value) {
+    notifyValueAboutToChange(key);
+
     if (m_settings_bases.size() != 0) {
         for (QSharedPointer<SettingsBase> range : m_settings_bases)
             range->setSetting(key, value);

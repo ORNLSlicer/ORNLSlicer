@@ -64,6 +64,13 @@ class SettingBar : public QWidget {
 
   signals:
     /*!
+     * \brief Signals that a setting is about to be modified.
+     * \param setting_key   Setting that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void settingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
+    /*!
      * \brief Signals that a setting has been modified.
      * \param setting_key   Setting that has been modified.
      */
@@ -125,7 +132,17 @@ class SettingBar : public QWidget {
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
 
+    //! \brief Reloads a restored setting row and forwards normal modified-setting notifications.
+    void restoreSettingValue(QString setting_key);
+
   private slots:
+    /*!
+     * \brief Re-emits a signal that a setting is about to be modified.
+     * \param setting_key   Key that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
     /*!
      * \brief Re-emitts a signal that a setting has been modified.
      * \param setting_key   Key that was modified.
@@ -212,5 +229,8 @@ class SettingBar : public QWidget {
 
     //! \brief Prevents recursive setting sync while paired radial settings are reloaded.
     bool m_syncing_radial_settings = false;
+
+    //! \brief Prevents restored undo/redo values from being treated like fresh row edits.
+    bool m_restoring_settings = false;
 };
 } // Namespace ORNL

@@ -99,6 +99,13 @@ class SettingTab : public QWidget {
 
   signals:
     /*!
+     * \brief Notification before a setting is modified.
+     * \param key   Key that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void settingAboutToChange(QString key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
+    /*!
      * \brief Notification that a setting was modified.
      * \param key   Key that was modified.
      */

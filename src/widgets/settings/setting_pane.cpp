@@ -38,6 +38,7 @@ SettingTab* SettingPane::newTab(QString category, QIcon icon, bool isHidden) {
     if (!isHidden)
         m_scroll_layout->insertWidget(m_scroll_layout->count() - 1, m_tabs[category]);
 
+    connect(m_tabs[category], &SettingTab::settingAboutToChange, this, &SettingPane::forwardSettingAboutToChange);
     connect(m_tabs[category], &SettingTab::modified, this, &SettingPane::forwardModifiedSetting);
     connect(m_tabs[category], &SettingTab::removeTabFromList, this, &SettingPane::hideTab);
     connect(m_tabs[category], &SettingTab::warnPane, this, &SettingPane::paneWarning);
@@ -80,6 +81,11 @@ void SettingPane::paneWarning(int count) {
     else {
         emit warnSettingBar(0, m_name);
     }
+}
+
+void SettingPane::forwardSettingAboutToChange(QString setting_key,
+                                              QList<QSharedPointer<SettingsBase>> settings_bases) {
+    emit settingAboutToChange(setting_key, settings_bases);
 }
 
 void SettingPane::forwardModifiedSetting(QString setting_key) { emit settingModified(setting_key); }

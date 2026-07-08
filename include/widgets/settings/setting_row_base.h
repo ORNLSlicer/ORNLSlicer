@@ -1,5 +1,7 @@
 #pragma once
 
+#include <functional>
+
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGridLayout>
@@ -38,6 +40,8 @@ struct DependencyNode {
 class SettingRowBase {
 
   public:
+    using ValueChangeCallback = std::function<void(const QString&, const QList<QSharedPointer<SettingsBase>>&)>;
+
     //! \brief Default Constructor
     //! \param sb: global setting base
     //! \param key: key of current row
@@ -115,6 +119,9 @@ class SettingRowBase {
     //! \param sb: new settingsbase to set
     void setSettingsBase(QSharedPointer<SettingsBase> sb);
 
+    //! \brief Set callback used to notify before this row writes a new value.
+    void setValueChangeCallback(ValueChangeCallback callback);
+
   protected:
     //! \brief Function to handle value changes for each widget type
     virtual void valueChanged(QVariant val) = 0;
@@ -122,12 +129,17 @@ class SettingRowBase {
     //! \brief Check dependencies enforced through dynamic feedback
     void checkDynamicDependencies();
 
+    //! \brief Notify before a setting key is written by this row.
+    void notifyValueAboutToChange(const QString& key);
+
     //! \brief Recursive check of dependencynode logic
     //! \param root: Dependency logic to check
     bool checkLogic(DependencyNode root);
 
     //! \brief Templated helper for all widget types when value is changed
     template <class T> void valueChangedHelper(T value) {
+        notifyValueAboutToChange(m_key);
+
         if (m_settings_bases.size() != 0)
             for (QSharedPointer<SettingsBase> range : m_settings_bases)
                 range->setSetting(m_key, value);
@@ -255,6 +267,9 @@ class SettingRowBase {
 
     //! \brief Holds pointers to dependents to notify when current value changes
     QList<QSharedPointer<SettingRowBase>> m_rows_to_notify;
+
+    //! \brief Callback for snapshotting undo state before a row mutates settings.
+    ValueChangeCallback m_value_change_callback;
 };
 
 } // Namespace ORNL
