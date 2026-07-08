@@ -18,12 +18,12 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
+#include "geometry/spiral_path.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
-#include "utilities/mathutils.h"
 
 namespace ORNL {
 namespace {
@@ -46,84 +46,6 @@ PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundarie
     PolygonList offset_geometry = offset_external_geometry - internal_boundaries;
     offset_geometry.lost_geometry = offset_external_geometry.lost_geometry;
     return offset_geometry;
-}
-
-Distance closedPolylineLength(const Polyline& line) {
-    if (line.size() < 2) {
-        return 0;
-    }
-
-    return line.length() + line.back().distance(line.front());
-}
-
-Point pointAlongSegment(const Point& start, const Point& end, double ratio) {
-    return Point(start.x() + ((end.x() - start.x()) * ratio), start.y() + ((end.y() - start.y()) * ratio),
-                 start.z() + ((end.z() - start.z()) * ratio));
-}
-
-Point stopPointOnClosingSegment(const Polyline& line, Distance distance_before_start) {
-    if (line.isEmpty()) {
-        return Point();
-    }
-
-    const Point segment_start = line.back();
-    const Point segment_end = line.front();
-    const Distance segment_length = segment_start.distance(segment_end);
-
-    if (segment_length <= distance_before_start) {
-        return segment_start;
-    }
-
-    const double ratio = (segment_length() - distance_before_start()) / segment_length();
-    return pointAlongSegment(segment_start, segment_end, ratio);
-}
-
-bool hasSmoothClosingSegment(const Polyline& line) {
-    if (line.size() < 3) {
-        return false;
-    }
-
-    return MathUtils::nearCollinear(line[line.size() - 2], line.back(), line.front(), 45 * deg);
-}
-
-Polyline buildSpiralPerimeterPolyline(const QVector<Polyline>& ordered_perimeters, Distance final_stop_distance) {
-    Polyline spiral;
-
-    for (int perimeter_index = 0, end = ordered_perimeters.size(); perimeter_index < end; ++perimeter_index) {
-        const Polyline& perimeter = ordered_perimeters[perimeter_index];
-        if (perimeter.size() < 3) {
-            continue;
-        }
-
-        spiral += perimeter;
-
-        if (perimeter_index + 1 < end) {
-            const Point next_start = ordered_perimeters[perimeter_index + 1].front();
-            Point connector_start;
-            if (hasSmoothClosingSegment(perimeter)) {
-                connector_start = stopPointOnClosingSegment(perimeter, final_stop_distance);
-            }
-            else {
-                auto [projected_connector_start, distance] =
-                    MathUtils::nearestPointOnSegment(perimeter.back(), perimeter.front(), next_start);
-                Q_UNUSED(distance)
-                connector_start = projected_connector_start;
-            }
-
-            if (spiral.back() != connector_start) {
-                spiral += connector_start;
-            }
-        }
-        else {
-            const Point final_stop = stopPointOnClosingSegment(perimeter, final_stop_distance);
-
-            if (spiral.back() != final_stop) {
-                spiral += final_stop;
-            }
-        }
-    }
-
-    return spiral;
 }
 } // namespace
 
@@ -288,7 +210,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 Polyline result = spiral_poo.linkNextPolyline();
 
-                if (result.size() < 3 || closedPolylineLength(result) < min_path_length) {
+                if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) {
                     continue;
                 }
 
@@ -302,7 +224,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
             Polyline result =
-                buildSpiralPerimeterPolyline(ordered_perimeters, m_sb->setting<Distance>(PS::Perimeter::kBeadWidth));
+                SpiralPath::linkClosedPolylines(ordered_perimeters, m_sb->setting<Distance>(PS::Perimeter::kBeadWidth));
 
             if (result.size() < 3) {
                 return;

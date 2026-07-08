@@ -97,3 +97,15 @@ settings:
     namespace: "Profile::Inset"
     symbol: "kInsetOverlapDistance"
     local: true
+  - name: "spiral_inset"
+    display: "Enable Spiral Inset"
+    type: "boolean"
+    tooltip: "If selected, spiral insets will be generated"
+    depends: {"inset":true}
+    options: []
+    default: false
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kEnableSpiralInset"
+    local: true
