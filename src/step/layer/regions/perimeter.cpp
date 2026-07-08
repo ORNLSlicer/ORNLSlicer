@@ -61,31 +61,21 @@ Point pointAlongSegment(const Point& start, const Point& end, double ratio) {
                  start.z() + ((end.z() - start.z()) * ratio));
 }
 
-Point pointBeforeClosedPolylineStart(const Polyline& line, Distance distance_before_start) {
+Point stopPointOnClosingSegment(const Polyline& line, Distance distance_before_start) {
     if (line.isEmpty()) {
         return Point();
     }
 
-    Point segment_end = line.front();
-    Distance remaining_distance = distance_before_start;
+    const Point segment_start = line.back();
+    const Point segment_end = line.front();
+    const Distance segment_length = segment_start.distance(segment_end);
 
-    for (int i = line.size() - 1; i >= 0; --i) {
-        const Point segment_start = line[i];
-        const Distance segment_length = segment_start.distance(segment_end);
-
-        if (segment_length > 0) {
-            if (remaining_distance <= segment_length) {
-                const double ratio = (segment_length() - remaining_distance()) / segment_length();
-                return pointAlongSegment(segment_start, segment_end, ratio);
-            }
-
-            remaining_distance -= segment_length;
-        }
-
-        segment_end = segment_start;
+    if (segment_length <= distance_before_start) {
+        return segment_start;
     }
 
-    return line.front();
+    const double ratio = (segment_length() - distance_before_start()) / segment_length();
+    return pointAlongSegment(segment_start, segment_end, ratio);
 }
 
 bool hasSmoothClosingSegment(const Polyline& line) {
@@ -111,7 +101,7 @@ Polyline buildSpiralPerimeterPolyline(const QVector<Polyline>& ordered_perimeter
             const Point next_start = ordered_perimeters[perimeter_index + 1].front();
             Point connector_start;
             if (hasSmoothClosingSegment(perimeter)) {
-                connector_start = pointBeforeClosedPolylineStart(perimeter, final_stop_distance);
+                connector_start = stopPointOnClosingSegment(perimeter, final_stop_distance);
             }
             else {
                 auto [projected_connector_start, distance] =
@@ -125,7 +115,7 @@ Polyline buildSpiralPerimeterPolyline(const QVector<Polyline>& ordered_perimeter
             }
         }
         else {
-            const Point final_stop = pointBeforeClosedPolylineStart(perimeter, final_stop_distance);
+            const Point final_stop = stopPointOnClosingSegment(perimeter, final_stop_distance);
 
             if (spiral.back() != final_stop) {
                 spiral += final_stop;
