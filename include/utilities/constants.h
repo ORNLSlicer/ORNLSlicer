@@ -630,6 +630,7 @@ class Constants {
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
             static const QString kOverlap;
+            static const QString kEnableSpiralInset;
         };
 
         class Skeleton {
