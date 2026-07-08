@@ -616,6 +616,7 @@ class Constants {
             static const QString kEnableFlyingStart;
             static const QString kFlyingStartDistance;
             static const QString kFlyingStartSpeed;
+            static const QString kEnableSpiralPerimeter;
         };
 
         class Inset {

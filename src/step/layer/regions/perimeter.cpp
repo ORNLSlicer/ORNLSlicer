@@ -23,6 +23,7 @@
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/mathutils.h"
 
 namespace ORNL {
 namespace {
@@ -45,6 +46,94 @@ PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundarie
     PolygonList offset_geometry = offset_external_geometry - internal_boundaries;
     offset_geometry.lost_geometry = offset_external_geometry.lost_geometry;
     return offset_geometry;
+}
+
+Distance closedPolylineLength(const Polyline& line) {
+    if (line.size() < 2) {
+        return 0;
+    }
+
+    return line.length() + line.back().distance(line.front());
+}
+
+Point pointAlongSegment(const Point& start, const Point& end, double ratio) {
+    return Point(start.x() + ((end.x() - start.x()) * ratio), start.y() + ((end.y() - start.y()) * ratio),
+                 start.z() + ((end.z() - start.z()) * ratio));
+}
+
+Point pointBeforeClosedPolylineStart(const Polyline& line, Distance distance_before_start) {
+    if (line.isEmpty()) {
+        return Point();
+    }
+
+    Point segment_end = line.front();
+    Distance remaining_distance = distance_before_start;
+
+    for (int i = line.size() - 1; i >= 0; --i) {
+        const Point segment_start = line[i];
+        const Distance segment_length = segment_start.distance(segment_end);
+
+        if (segment_length > 0) {
+            if (remaining_distance <= segment_length) {
+                const double ratio = (segment_length() - remaining_distance()) / segment_length();
+                return pointAlongSegment(segment_start, segment_end, ratio);
+            }
+
+            remaining_distance -= segment_length;
+        }
+
+        segment_end = segment_start;
+    }
+
+    return line.front();
+}
+
+bool hasSmoothClosingSegment(const Polyline& line) {
+    if (line.size() < 3) {
+        return false;
+    }
+
+    return MathUtils::nearCollinear(line[line.size() - 2], line.back(), line.front(), 45 * deg);
+}
+
+Polyline buildSpiralPerimeterPolyline(const QVector<Polyline>& ordered_perimeters, Distance final_stop_distance) {
+    Polyline spiral;
+
+    for (int perimeter_index = 0, end = ordered_perimeters.size(); perimeter_index < end; ++perimeter_index) {
+        const Polyline& perimeter = ordered_perimeters[perimeter_index];
+        if (perimeter.size() < 3) {
+            continue;
+        }
+
+        spiral += perimeter;
+
+        if (perimeter_index + 1 < end) {
+            const Point next_start = ordered_perimeters[perimeter_index + 1].front();
+            Point connector_start;
+            if (hasSmoothClosingSegment(perimeter)) {
+                connector_start = pointBeforeClosedPolylineStart(perimeter, final_stop_distance);
+            }
+            else {
+                auto [projected_connector_start, distance] =
+                    MathUtils::nearestPointOnSegment(perimeter.back(), perimeter.front(), next_start);
+                Q_UNUSED(distance)
+                connector_start = projected_connector_start;
+            }
+
+            if (spiral.back() != connector_start) {
+                spiral += connector_start;
+            }
+        }
+        else {
+            const Point final_stop = pointBeforeClosedPolylineStart(perimeter, final_stop_distance);
+
+            if (spiral.back() != final_stop) {
+                spiral += final_stop;
+            }
+        }
+    }
+
+    return spiral;
 }
 } // namespace
 
@@ -117,33 +206,37 @@ void Perimeter::compute(uint layer_num) {
 void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     Q_UNUSED(shouldNextPathBeCCW)
 
-    PolylineOrderOptimizer poo(current_location, layerNumber);
-
     PathOrderOptimization pathOrderOptimization =
         static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
-    if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
-
-        poo.setStartOverride(startOverride);
-    }
 
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+    auto configureOptimizer = [&](PolylineOrderOptimizer& optimizer, PointOrderOptimization point_order) {
+        if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
+            Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
+                                getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
 
-        poo.setStartPointOverride(startOverride);
-    }
+            optimizer.setStartOverride(startOverride);
+        }
 
-    poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
-                           getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
-                           getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
-                           getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
-                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+        if (point_order == PointOrderOptimization::kCustomPoint) {
+            Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
+                                getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+
+            optimizer.setStartPointOverride(startOverride);
+        }
+
+        optimizer.setPointParameters(point_order, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
+                                     getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
+                                     getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
+                                     getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
+                                     getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                                     getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    };
+
+    PolylineOrderOptimizer poo(current_location, layerNumber);
+    configureOptimizer(poo, pointOrderOptimization);
 
     m_paths.clear();
 
@@ -188,6 +281,65 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             for (Polyline& line : m_computed_geometry) {
                 line = line.reverse();
             }
+
+        if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
+            Point spiral_query_location = current_location;
+            PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
+            configureOptimizer(spiral_poo, pointOrderOptimization);
+            spiral_poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
+
+            QVector<Polyline> ordered_perimeters;
+            const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
+
+            while (spiral_poo.getCurrentPolylineCount() > 0) {
+                if (!ordered_perimeters.isEmpty()) {
+                    spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0, true);
+                }
+
+                Polyline result = spiral_poo.linkNextPolyline();
+
+                if (result.size() < 3 || closedPolylineLength(result) < min_path_length) {
+                    continue;
+                }
+
+                // Keep loop choice near the local seam to avoid jumping across the island on the next transition.
+                spiral_query_location = result.front();
+                ordered_perimeters.push_back(result);
+            }
+
+            if (ordered_perimeters.isEmpty()) {
+                return;
+            }
+
+            Polyline result =
+                buildSpiralPerimeterPolyline(ordered_perimeters, m_sb->setting<Distance>(PS::Perimeter::kBeadWidth));
+
+            if (result.size() < 3) {
+                return;
+            }
+
+            Path newPath = createPath(result);
+            newPath.setCCW(ordered_perimeters.front().orientation());
+
+            if (newPath.size() > 0) {
+                newPath.getSegments().removeLast();
+            }
+
+            if (newPath.calculateLength() < min_path_length) {
+                return;
+            }
+
+            if (newPath.size() > 0) {
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                current_location = newPath.back()->end();
+                m_paths.push_back(newPath);
+            }
+
+            return;
+        }
 
         poo.setGeometryToEvaluate(
             m_computed_geometry, RegionType::kPerimeter,
