@@ -195,6 +195,9 @@ class SettingBar : public QWidget {
     //! \brief Enables appropriate rows after all settings have been loaded
     void enableDependRows();
 
+    //! \brief Keeps the settings-base combo popup compact across application themes.
+    void updateSettingBasePopupHeight();
+
     //! \brief Creates dependency node information for each setting row
     //! \param master Copy of master json to pull appropriate information from
     //! \param row Pointer to row to assign appropriate information to

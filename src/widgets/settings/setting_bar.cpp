@@ -1,5 +1,8 @@
 #include "widgets/settings/setting_bar.h"
 
+#include <algorithm>
+
+#include <qabstractitemview.h>
 #include <qboxlayout.h>
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
@@ -8,10 +11,12 @@
 #include <qlabel.h>
 #include <qlineedit.h>
 #include <qlist.h>
+#include <qlistview.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qoverload.h>
 #include <qsharedpointer.h>
+#include <qsizepolicy.h>
 #include <qtabwidget.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
@@ -26,6 +31,10 @@
 #include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
+namespace {
+constexpr int kMaxVisibleSettingBaseItems = 16;
+constexpr int kSettingBaseItemHeightFallback = 22;
+} // namespace
 
 SettingBar::SettingBar(QHash<QString, QString> selectedSettingBases)
     : QWidget(nullptr), mostRecentSetting(selectedSettingBases), m_range_selected(false) {
@@ -235,11 +244,31 @@ void SettingBar::updateDisplayedLists(int index) {
     m_combo_box->clear();
 
     m_combo_box->addItems(GSM->getAllGlobals()[paneMapping[index]].keys());
+    updateSettingBasePopupHeight();
     int listIndex = m_combo_box->findText(mostRecentSetting[paneMapping[index]]);
     if (listIndex != -1)
         m_combo_box->setCurrentIndex(listIndex);
     else
         m_combo_box->setCurrentIndex(0);
+}
+
+void SettingBar::updateSettingBasePopupHeight() {
+    QAbstractItemView* combo_view = m_combo_box->view();
+    if (combo_view == nullptr)
+        return;
+
+    const int visible_items = std::min(m_combo_box->count(), m_combo_box->maxVisibleItems());
+    if (visible_items <= 0) {
+        combo_view->setMaximumHeight(0);
+        return;
+    }
+
+    int row_height = combo_view->sizeHintForRow(std::max(0, m_combo_box->currentIndex()));
+    if (row_height <= 0)
+        row_height = kSettingBaseItemHeightFallback;
+
+    combo_view->setMinimumHeight(0);
+    combo_view->setMaximumHeight((row_height * visible_items) + (combo_view->frameWidth() * 2));
 }
 
 // change selected settings base
@@ -424,6 +453,15 @@ void SettingBar::setupSubWidgets() {
     m_tab_widget->setMovable(true);
 
     m_combo_box = new QComboBox(this);
+    m_combo_box->setMaxVisibleItems(kMaxVisibleSettingBaseItems);
+    m_combo_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    QListView* combo_view = new QListView(m_combo_box);
+    combo_view->setUniformItemSizes(true);
+    combo_view->setVerticalScrollMode(QAbstractItemView::ScrollPerItem);
+    combo_view->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    combo_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    m_combo_box->setView(combo_view);
 
     m_current_folder = new QLabel(this);
     m_current_folder->setText("Currently searching in : <Not Set> for additional setting files");
@@ -465,6 +503,7 @@ void SettingBar::setupGlobalSettings() {
     enableDependRows();
 
     m_combo_box->addItems(GSM->getAllGlobals()[paneMapping[0]].keys());
+    updateSettingBasePopupHeight();
 
     // should always be found and should already be loaded by virtue of the GSM creation, else default values should
     // have been loaded and nothing selected

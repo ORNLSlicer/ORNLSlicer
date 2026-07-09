@@ -1068,6 +1068,7 @@ QCommandLinkButton:disabled {
 QComboBox {
     border: 1px solid #4d5557;
     border-radius: 4px;
+    combobox-popup: 0;
     selection-background-color: #84C446;
     padding-left: 4px;
     padding-right: 4px;
@@ -1658,12 +1659,29 @@ QColumnView:disabled {
     color: #787878;
 }
 
-QListView:selected,
-QTreeView:selected,
-QTableView:selected,
-QColumnView:selected {
+QListView::item:selected,
+QTreeView::item:selected,
+QTableView::item:selected,
+QColumnView::item:selected {
     background: #84C446;
     color: #3a4143;
+}
+
+/* Keep combo popups from inheriting the whole-list selected background. Fixes #99. */
+QComboBox QListView,
+QComboBox QAbstractItemView {
+    background-color: #41494a;
+    color: #F0F0F0;
+}
+
+QComboBox QAbstractItemView::item {
+    min-height: 20px;
+    padding: 2px 6px;
+}
+
+QComboBox QAbstractItemView::item:selected {
+    background-color: #84C446;
+    color: #2b3234;
 }
 
 QListView:hover,
