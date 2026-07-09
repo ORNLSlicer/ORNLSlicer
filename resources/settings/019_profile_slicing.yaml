@@ -118,6 +118,30 @@ settings:
     namespace: "Profile::Slicing"
     symbol: "kSlicingVectorZ"
     local: false
+  - name: "helical_path_length"
+    display: "Helical Path Length"
+    type: "distance"
+    tooltip: "The maximum length of the helical path before breaking the path "
+    depends: {"slicer_type":3}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kHelicalPathLength"
+    local: false
+  - name: "arcs_per_revolution"
+    display: "Number of Arcs per Revolution"
+    type: "positive_int"
+    tooltip: "Total number of arcs per revolution"
+    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kArcsPerRevolution"
+    local: false
 inputs:
   - name: "radial_axis"
     display: "Radial Axis"

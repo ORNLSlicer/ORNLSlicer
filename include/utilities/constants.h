@@ -860,6 +860,8 @@ class Constants {
             static const QString kRadialAxisX;
             static const QString kRadialAxisY;
             static const QString kRadialBoundaryHandling;
+            static const QString kHelicalPathLength;
+            static const QString kArcsPerRevolution;
         };
     };
 
