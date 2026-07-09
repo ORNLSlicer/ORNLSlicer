@@ -284,6 +284,7 @@ void SettingBar::updateSettings(QString text) {
         mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]] = text;
         CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
+        emit settingsBaseChanged(text);
     }
 }
 
