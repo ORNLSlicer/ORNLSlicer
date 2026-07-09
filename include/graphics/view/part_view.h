@@ -4,6 +4,7 @@
 #include <qhashfunctions.h>
 #include <qlist.h>
 #include <qmap.h>
+#include <qpair.h>
 #include <qpoint.h>
 #include <qquaternion.h>
 #include <qset.h>
@@ -59,6 +60,12 @@ class PartView : public BaseView {
 
     //! \brief Shows or hides part slicing planes.
     void showSlicingPlanes(bool show);
+
+    //! \brief Shows or hides selected layer settings range plane.
+    void showLayerSettingsRange(bool show);
+
+    //! \brief Sets the selected layer settings range plane targets.
+    void setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges);
 
     //! \brief Shows or hides overhangs.
     void showOverhang(bool show);
@@ -231,6 +238,15 @@ class PartView : public BaseView {
         //! \brief If slicing planes are shown.
         bool planes_shown = false;
 
+        //! \brief If selected layer settings range plane is shown.
+        bool layer_settings_range_shown = false;
+
+        //! \brief Part whose selected layer settings range should be shown.
+        QSharedPointer<Part> layer_settings_range_part = nullptr;
+
+        //! \brief Selected layer settings range indices.
+        QList<QPair<int, int>> layer_settings_ranges;
+
         //! \brief If name plates are shown.
         bool names_shown = false;
 
@@ -256,6 +272,19 @@ class PartView : public BaseView {
     //! \param name: Name to find.
     //! \todo This should be removed when center part uses selection.
     QSharedPointer<PartObject> findObject(QString name);
+
+    //! \brief Finds an object based on its part pointer.
+    QSharedPointer<PartObject> findObject(QSharedPointer<Part> part);
+
+    //! \brief Updates the selected layer settings range plane visibility and placement.
+    void updateLayerSettingsRangePlane();
+
+    //! \brief Hides all layer settings range planes.
+    void hideLayerSettingsRangePlanes();
+
+    //! \brief Calculates selected layer settings range geometry for display.
+    bool layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int low_layer, int high_layer,
+                                    QVector3D& center, float& thickness) const;
 
     //! \brief Blocks the model from modifying the view. Useful when making model changes in the view to prevent
     //! feedback.

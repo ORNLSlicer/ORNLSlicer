@@ -306,6 +306,8 @@ PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mod
     this->adoptChild(gos);
     m_plane_object = gos;
 
+    this->createLayerSettingsRangePlane();
+
     // Object translation happens last since it will callback (see translationCallback()) this object and everything
     // needs to be setup first.
     QVector3D trans;
@@ -450,6 +452,42 @@ QSharedPointer<TextObject> PartObject::label() { return m_label_object; }
 QSharedPointer<AxesObject> PartObject::axes() { return m_axes_object; }
 
 QSharedPointer<PlaneObject> PartObject::plane() { return m_plane_object; }
+
+QSharedPointer<PlaneObject> PartObject::layerSettingsRangePlane(int index) {
+    index = std::max(index, 0);
+
+    while (m_layer_settings_range_objects.size() <= index) {
+        this->createLayerSettingsRangePlane();
+    }
+
+    return m_layer_settings_range_objects[index];
+}
+
+QVector<QSharedPointer<PlaneObject>> PartObject::layerSettingsRangePlanes() const {
+    return m_layer_settings_range_objects;
+}
+
+QSharedPointer<PlaneObject> PartObject::createLayerSettingsRangePlane() {
+    float length = this->maximum().x() - this->minimum().x();
+    float width = this->maximum().y() - this->minimum().y();
+    float depth = this->maximum().z() - this->minimum().z();
+    float max_dim = std::fmax(length, std::fmax(width, depth));
+    max_dim += max_dim * 0.20f;
+    max_dim = std::fmax(max_dim, 1.0f);
+
+    QColor layer_settings_range_color = Constants::Colors::kOrange;
+    layer_settings_range_color.setAlpha(80);
+
+    auto range_plane =
+        QSharedPointer<PlaneObject>::create(this->view(), max_dim, max_dim, 1.0f, layer_settings_range_color);
+    range_plane->setLockedRotation(true);
+    range_plane->hide();
+
+    this->adoptChild(range_plane);
+    m_layer_settings_range_objects.append(range_plane);
+
+    return range_plane;
+}
 
 void PartObject::showOverhang(bool show) {
     m_overhang_shown = show;

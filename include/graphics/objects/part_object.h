@@ -7,6 +7,7 @@
 #include <qset.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
+#include <qvector.h>
 
 #include "graphics/graphics_object.h"
 #include "units/unit.h"
@@ -67,6 +68,10 @@ class PartObject : public GraphicsObject {
     QSharedPointer<AxesObject> axes();
     //! \brief Gets the plane object.
     QSharedPointer<PlaneObject> plane();
+    //! \brief Gets a layer settings range plane object.
+    QSharedPointer<PlaneObject> layerSettingsRangePlane(int index = 0);
+    //! \brief Gets all layer settings range plane objects.
+    QVector<QSharedPointer<PlaneObject>> layerSettingsRangePlanes() const;
 
     //! \brief Sets if overhangs are shown.
     void showOverhang(bool show);
@@ -103,6 +108,9 @@ class PartObject : public GraphicsObject {
 
     //! \brief Repaints the feature-edge overlay to match the current part transparency.
     void updateFeatureEdgeAppearance();
+    //! \brief Creates a layer settings range plane object.
+    QSharedPointer<PlaneObject> createLayerSettingsRangePlane();
+
     //! \brief Part pointer.
     QSharedPointer<Part> m_part;
 
@@ -114,6 +122,7 @@ class PartObject : public GraphicsObject {
     QSharedPointer<TextObject> m_label_object;
     QSharedPointer<AxesObject> m_axes_object;
     QSharedPointer<PlaneObject> m_plane_object;
+    QVector<QSharedPointer<PlaneObject>> m_layer_settings_range_objects;
     //! \brief Optional overlay that draws silhouette and sharp feature edges over shaded parts.
     QSharedPointer<GraphicsObject> m_feature_edge_object;
 

@@ -20,6 +20,13 @@ class PlaneObject : public CubeObject {
     //! \param color: Plane color.
     PlaneObject(BaseView* view, float length, float width, QColor color = QColor(127, 0, 255, 102));
 
+    //! \brief Constructor
+    //! \param length: Plane length.
+    //! \param width: Plane width.
+    //! \param height: Plane thickness.
+    //! \param color: Plane color.
+    PlaneObject(BaseView* view, float length, float width, float height, QColor color);
+
     //! \brief Sets the rotation of the plane.
     //! \param rotation: New rotation quaternion.
     void setLockedRotationQuaternion(const QQuaternion& rotation);
@@ -30,6 +37,9 @@ class PlaneObject : public CubeObject {
     //! \brief Scales the plane to an new length/width.
     void updateDimensions(float length, float width);
 
+    //! \brief Scales the plane to a new length/width/thickness.
+    void updateDimensions(float length, float width, float height);
+
   protected:
     //! \brief Handles plane rotation locking.
     void transformationCallback();
@@ -38,6 +48,7 @@ class PlaneObject : public CubeObject {
     //! \brief Starting dims.
     float m_starting_length;
     float m_starting_width;
+    float m_starting_height;
 
     //! \brief Color
     QColor m_color;

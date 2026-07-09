@@ -86,6 +86,15 @@ void MainToolbar::setupSubWidgets() {
     connect(m_slicing_planes_btn, &QToolButton::toggled, this,
             [this](bool checked) { emit showSlicingPlanes(checked); });
 
+    // Layer Settings Range Button
+    m_layer_settings_range_btn =
+        buildIconButton(":/icons/layers_black.png", "Show selected layer settings height", true);
+    m_layer_settings_range_btn->setEnabled(false);
+    m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
+    this->addWidget(m_layer_settings_range_btn);
+    connect(m_layer_settings_range_btn, &QToolButton::toggled, this,
+            [this](bool checked) { emit showLayerSettingsRange(checked); });
+
     // Seam buttons
     m_seam_btn = buildIconButton(":/icons/map_markers_black.png", "Show optimization points", true);
     handleModifiedSetting("");
@@ -384,6 +393,7 @@ void MainToolbar::enableCorrectOptions() {
         m_add_btn->setEnabled(false);
         m_shape_btn->setEnabled(false);
         m_slicing_planes_btn->setEnabled(false);
+        m_layer_settings_range_btn->setEnabled(false);
         m_overhang_button->setEnabled(false);
         m_billboarding_button->setEnabled(false);
         m_seam_btn->setEnabled(false);
@@ -396,6 +406,7 @@ void MainToolbar::enableCorrectOptions() {
         m_add_btn->setEnabled(true);
         m_shape_btn->setEnabled(true);
         m_slicing_planes_btn->setEnabled(true);
+        m_layer_settings_range_btn->setEnabled(m_layer_settings_range_available);
         m_overhang_button->setEnabled(true);
         m_billboarding_button->setEnabled(true);
         m_segment_info_button->setEnabled(false);
@@ -491,6 +502,20 @@ void MainToolbar::resize(QSize new_size) {
 void MainToolbar::setSliceAbility(bool status) { m_slice_btn->setEnabled(status); }
 
 void MainToolbar::setExportAbility(bool status) { m_export_gcode_btn->setEnabled(status); }
+
+void MainToolbar::setLayerSettingsRangeAbility(bool status) {
+    m_layer_settings_range_available = status;
+
+    if (!status) {
+        m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
+        m_layer_settings_range_btn->setChecked(false);
+    }
+    else {
+        m_layer_settings_range_btn->setToolTip("Show selected layer settings height");
+    }
+
+    enableCorrectOptions();
+}
 
 void MainToolbar::handleModifiedSetting(const QString& setting_key) {
     IslandOrderOptimization islandOrder =

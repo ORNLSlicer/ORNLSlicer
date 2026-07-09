@@ -903,6 +903,10 @@ void MainWindow::setupEvents() {
 
     // Connect layerbar to settingbar
     connect(m_layerbar, &LayerBar::setSelectedSettings, m_settingbar, &SettingBar::settingsBasesSelected);
+    connect(m_layerbar, &LayerBar::selectedLayerSettingsRangesChanged, m_part_widget,
+            &PartWidget::setLayerSettingsRanges);
+    connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_main_toolbar,
+            &MainToolbar::setLayerSettingsRangeAbility);
 
     // Part widget connection
     connect(m_part_widget, &PartWidget::selected, this,
@@ -962,6 +966,8 @@ void MainWindow::setupEvents() {
     // Toolbar -> Part Widget
     connect(m_main_toolbar, &MainToolbar::slice, m_part_widget, &PartWidget::preSliceUpdate);
     connect(m_main_toolbar, &MainToolbar::showSlicingPlanes, m_part_widget, &PartWidget::showSlicingPlanes);
+    connect(m_main_toolbar, &MainToolbar::showLayerSettingsRange, m_part_widget,
+            &PartWidget::showLayerSettingsRange);
     connect(m_main_toolbar, &MainToolbar::showLabels, m_part_widget, &PartWidget::showLabels);
     connect(m_main_toolbar, &MainToolbar::showSeams, m_part_widget, &PartWidget::showSeams);
     connect(m_main_toolbar, &MainToolbar::showOverhang, m_part_widget, &PartWidget::showOverhang);

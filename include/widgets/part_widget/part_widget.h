@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <qlist.h>
 #include <qobject.h>
+#include <qpair.h>
 #include <qset.h>
 #include <qsharedpointer.h>
 #include <qsize.h>
@@ -127,6 +128,15 @@ class PartWidget : public QWidget {
     //! \brief enables/ disables showing slicing planes
     //! \param show enables/ disables
     void showSlicingPlanes(bool show);
+
+    //! \brief enables/ disables showing the selected layer settings range
+    //! \param show enables/ disables
+    void showLayerSettingsRange(bool show);
+
+    //! \brief sets the layer settings range visualization targets
+    //! \param part part that owns the selected range
+    //! \param layer_ranges selected layer ranges
+    void setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges);
 
     //! \brief enables/ disables showing labels
     //! \param show enables/ disables
