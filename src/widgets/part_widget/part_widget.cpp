@@ -191,6 +191,12 @@ void PartWidget::preSliceUpdate() {
 
 void PartWidget::showSlicingPlanes(bool show) { m_part_view->showSlicingPlanes(show); }
 
+void PartWidget::showLayerSettingsRange(bool show) { m_part_view->showLayerSettingsRange(show); }
+
+void PartWidget::setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges) {
+    m_part_view->setLayerSettingsRanges(part, layer_ranges);
+}
+
 void PartWidget::showLabels(bool show) { m_part_view->showLabels(show); }
 
 void PartWidget::showSeams(bool show) { m_part_view->showSeams(show); }
