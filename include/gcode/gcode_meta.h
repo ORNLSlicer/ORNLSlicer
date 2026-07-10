@@ -330,6 +330,7 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kSandia, SandiaMeta);
     result.insert((int)GcodeSyntax::kSiemens, SiemensMeta);
     result.insert((int)GcodeSyntax::kThermwood, CincinnatiMeta);
+    result.insert((int)GcodeSyntax::kWolf, WolfMeta);
     result.insert((int)GcodeSyntax::kRepRap, RepRapMeta);
     result.insert((int)GcodeSyntax::kMach4, MarlinMeta);
     result.insert((int)GcodeSyntax::kAeroBasic, AeroBasicMeta);

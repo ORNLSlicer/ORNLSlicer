@@ -552,6 +552,10 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
                 m_parser.reset(new TormachParser(GcodeMetaList::TormachMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::TormachMeta;
             }
+            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kWolf).toUpper())) {
+                m_parser.reset(new CommonParser(GcodeMetaList::WolfMeta, m_adjust_file, originalLines, lines));
+                m_selected_meta = GcodeMetaList::WolfMeta;
+            }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kAeroBasic).toUpper())) {
                 m_parser.reset(new AeroBasicParser(GcodeMetaList::AeroBasicMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::AeroBasicMeta;
