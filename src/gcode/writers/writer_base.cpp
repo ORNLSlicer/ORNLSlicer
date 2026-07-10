@@ -106,12 +106,15 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
     // Once done, delete entire switch statement, except for the code isside the kBeam case.
     //
 
-    if (syntax != GcodeSyntax::kCincinnati && syntax != GcodeSyntax::kHaasInch && syntax != GcodeSyntax::kMeld &&
-        syntax != GcodeSyntax::kORNL && syntax != GcodeSyntax::kSiemens && syntax != GcodeSyntax::kORNLMetric) {
+    if (syntax == GcodeSyntax::kJuggerBot || syntax == GcodeSyntax::k5AxisMarlin || syntax == GcodeSyntax::kMarlin ||
+        syntax == GcodeSyntax::kGudel || syntax == GcodeSyntax::kDmgDmu || syntax == GcodeSyntax::kHaasMetric || syntax == GcodeSyntax::kHurco ||
+        syntax == GcodeSyntax::kKraussMaffei || syntax == GcodeSyntax::kMazak || syntax == GcodeSyntax::kMazak
+        || syntax == GcodeSyntax::kSandia || syntax == GcodeSyntax::kRomiFanuc || syntax == GcodeSyntax::kOkuma) {
         text += commentLine(
             QString("Nozzle Diameter: %0mm").arg(m_sb->setting<Distance>(PS::Layer::kNozzleDiameter).to(mm)));
     }
-    else {
+    else if (syntax == GcodeSyntax::kCincinnati || syntax == GcodeSyntax::kHaasInch || syntax == GcodeSyntax::kMeld ||
+        syntax == GcodeSyntax::kORNL || syntax == GcodeSyntax::kSiemens){
         text += commentLine(
             QString("Nozzle Diameter: %0in").arg(m_sb->setting<Distance>(PS::Layer::kNozzleDiameter).to(in)));
     }
