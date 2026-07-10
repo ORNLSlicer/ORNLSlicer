@@ -191,6 +191,19 @@ void PreferencesWindow::setupLayout() {
     m_notifications_tab_layout->addWidget(fileshiftBox, 1, 0);
     m_boxes.push_back(fileshiftBox);
 
+    QGroupBox* unsavedProjectCloseBox = new QGroupBox("Close Project");
+    QVBoxLayout* unsavedProjectCloseLayout = new QVBoxLayout();
+    m_warn_unsaved_project_on_close_checkbox = new QCheckBox("Warn before closing unsaved projects");
+    m_warn_unsaved_project_on_close_checkbox->setChecked(
+        m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
+    unsavedProjectCloseLayout->addWidget(m_warn_unsaved_project_on_close_checkbox);
+    unsavedProjectCloseLayout->addStretch(1);
+    unsavedProjectCloseBox->setLayout(unsavedProjectCloseLayout);
+    unsavedProjectCloseBox->setToolTip("Controls whether unsaved project changes show a warning when closing");
+    m_notifications_tab_layout->addWidget(unsavedProjectCloseBox, 1, 1);
+    connect(m_warn_unsaved_project_on_close_checkbox, &QCheckBox::clicked, m_preferences_manager.get(),
+            &PreferencesManager::setWarnUnsavedProjectOnClosePreference);
+
     // Camera tab
     QWidget* cameraWidget = new QWidget(m_tab_widget);
     m_tab_widget->addTab(cameraWidget, "Camera");
@@ -407,6 +420,8 @@ void PreferencesWindow::importPreferences() {
         setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
         setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());
         setPreferenceValue(m_boxes[2], m_preferences_manager->getFileShiftPreference());
+        m_warn_unsaved_project_on_close_checkbox->setChecked(
+            m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
     }
 }
 
