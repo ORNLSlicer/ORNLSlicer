@@ -17,6 +17,7 @@
 #include <qgridlayout.h>
 #include <qicon.h>
 #include <qkeysequence.h>
+#include <qlineedit.h>
 #include <qlist.h>
 #include <qlogging.h>
 #include <qmainwindow.h>
@@ -30,6 +31,7 @@
 #include <qobjectdefs.h>
 #include <qoverload.h>
 #include <qpaintdevice.h>
+#include <qplaintextedit.h>
 #include <qprogressbar.h>
 #include <qset.h>
 #include <qsharedpointer.h>
@@ -39,6 +41,7 @@
 #include <qstringliteral.h>
 #include <qtabbar.h>
 #include <qtabwidget.h>
+#include <qtextedit.h>
 #include <qurl.h>
 #include <qwidget.h>
 
@@ -763,10 +766,42 @@ void MainWindow::setupEvents() {
     connect(m_actions["undo"].action, &QAction::triggered, m_undo_stack, &QUndoStack::undo);
     connect(m_actions["redo"].action, &QAction::triggered, m_undo_stack, &QUndoStack::redo);
     connect(m_actions["copy"].action, &QAction::triggered, this, [this]() {
+        for (QWidget* widget = QApplication::focusWidget(); widget != nullptr; widget = widget->parentWidget()) {
+            if (auto line_edit = qobject_cast<QLineEdit*>(widget)) {
+                line_edit->copy();
+                return;
+            }
+            if (auto plain_text_edit = qobject_cast<QPlainTextEdit*>(widget)) {
+                plain_text_edit->copy();
+                return;
+            }
+            if (auto text_edit = qobject_cast<QTextEdit*>(widget)) {
+                text_edit->copy();
+                return;
+            }
+        }
+
         m_actions["paste"].action->setEnabled(true);
         m_part_widget->copy();
     });
-    connect(m_actions["paste"].action, &QAction::triggered, m_part_widget, &PartWidget::paste);
+    connect(m_actions["paste"].action, &QAction::triggered, this, [this]() {
+        for (QWidget* widget = QApplication::focusWidget(); widget != nullptr; widget = widget->parentWidget()) {
+            if (auto line_edit = qobject_cast<QLineEdit*>(widget)) {
+                line_edit->paste();
+                return;
+            }
+            if (auto plain_text_edit = qobject_cast<QPlainTextEdit*>(widget)) {
+                plain_text_edit->paste();
+                return;
+            }
+            if (auto text_edit = qobject_cast<QTextEdit*>(widget)) {
+                text_edit->paste();
+                return;
+            }
+        }
+
+        m_part_widget->paste();
+    });
     connect(m_actions["reload"].action, &QAction::triggered, m_part_widget, QOverload<>::of(&PartWidget::reload));
     connect(m_actions["delete"].action, &QAction::triggered, m_part_widget, QOverload<>::of(&PartWidget::remove));
 

@@ -5,7 +5,6 @@
 
 #include <qcontainerfwd.h>
 #include <qevent.h>
-#include <qguiapplication.h>
 #include <qhash.h>
 #include <qlist.h>
 #include <qnamespace.h>
@@ -183,13 +182,24 @@ void GcodeTextBoxWidget::updateLineNumberDisplayArea(const QRect& rect, int heig
 void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
     int scrollPos = verticalScrollBar()->value();
 
+    QPlainTextEdit::mouseReleaseEvent(event);
+
+    if (event->button() != Qt::LeftButton)
+        return;
+
     m_manual_cursor_move = true;
+
+    Qt::KeyboardModifiers modifier = event->modifiers();
+    if (textCursor().hasSelection() && modifier == Qt::NoModifier) {
+        verticalScrollBar()->setValue(scrollPos);
+        return;
+    }
+
     if (m_previous_line == textCursor().blockNumber()) {
         return;
     }
 
     QList<int> linesToAdd, linesToRemove;
-    Qt::KeyboardModifiers modifier = QGuiApplication::queryKeyboardModifiers();
     if (modifier == Qt::ControlModifier) {
         if (m_selected_blocks.contains(textCursor().blockNumber()))
             linesToRemove.push_back(textCursor().blockNumber());
@@ -236,7 +246,9 @@ void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
     emit lineChange(linesToAdd, linesToRemove);
 
     verticalScrollBar()->setValue(scrollPos);
-    setTextCursor(QTextCursor(document()->findBlockByLineNumber(m_last_block_clicked_on)));
+    QTextBlock clicked_block = document()->findBlockByLineNumber(m_last_block_clicked_on);
+    if (clicked_block.isValid())
+        setTextCursor(QTextCursor(clicked_block));
 }
 
 void GcodeTextBoxWidget::keyPressEvent(QKeyEvent* event) {
