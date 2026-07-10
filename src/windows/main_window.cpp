@@ -1532,6 +1532,9 @@ bool MainWindow::hasUnsavedProjectChanges() {
 }
 
 bool MainWindow::confirmProjectClose() {
+    if (!PreferencesManager::getInstance()->getWarnUnsavedProjectOnClosePreference())
+        return true;
+
     if (!hasUnsavedProjectChanges())
         return true;
 

@@ -87,10 +87,10 @@ PreferencesManager::PreferencesManager()
       m_mass_unit(kg), m_project_shift_preference(PreferenceChoice::kAsk),
       m_file_shift_preference(PreferenceChoice::kPerformAutomatically), m_align_preference(PreferenceChoice::kAsk),
       m_hide_travel_preference(false), m_hide_support_preference(false), m_use_true_widths_preference(true),
-      m_themeName(ThemeName::kLightMode), m_theme(static_cast<int>(m_themeName)),
-      m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false), m_is_maximized(false), m_window_size(-1, -1),
-      m_window_pos(-1, -1), m_use_implicit_transforms(false), m_always_drop_parts(false), m_layer_lag(100),
-      m_segment_lag(10) {
+      m_warn_unsaved_project_on_close_preference(true), m_themeName(ThemeName::kLightMode),
+      m_theme(static_cast<int>(m_themeName)), m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false),
+      m_is_maximized(false), m_window_size(-1, -1), m_window_pos(-1, -1), m_use_implicit_transforms(false),
+      m_always_drop_parts(false), m_layer_lag(100), m_segment_lag(10) {
     m_hidden_settings["Printer"] = std::list<std::string>();
     m_hidden_settings["Material"] = std::list<std::string>();
     m_hidden_settings["Profile"] = std::list<std::string>();
@@ -233,6 +233,9 @@ void PreferencesManager::importPreferences(QString filepath) {
         if (j.contains("use_true_widths"))
             setUseTrueWidthsPreference(j["use_true_widths"]);
 
+        if (j.contains("warn_unsaved_project_on_close"))
+            setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
+
         std::unordered_map<std::string, std::string> visualizationColorsHex;
         if (j.find("visualization_colors") != j.end())
             visualizationColorsHex = j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
@@ -277,6 +280,7 @@ fifojson PreferencesManager::json() {
     j["hide_travel"] = m_hide_travel_preference;
     j["hide_support"] = m_hide_support_preference;
     j["use_true_widths"] = m_use_true_widths_preference;
+    j["warn_unsaved_project_on_close"] = m_warn_unsaved_project_on_close_preference;
     j["hidden_settings"] = m_hidden_settings;
     j["rotation"] = m_rotation_unit;
     j["invert_camera"] = m_invert_camera;
@@ -346,6 +350,10 @@ bool PreferencesManager::getHideTravelPreference() { return m_hide_travel_prefer
 bool PreferencesManager::getHideSupportPreference() { return m_hide_support_preference; }
 
 bool PreferencesManager::getUseTrueWidthsPreference() { return m_use_true_widths_preference; }
+
+bool PreferencesManager::getWarnUnsavedProjectOnClosePreference() {
+    return m_warn_unsaved_project_on_close_preference;
+}
 
 bool PreferencesManager::getWindowMaximizedPreference() { return m_is_maximized; }
 
@@ -565,6 +573,11 @@ void PreferencesManager::setHideSupportPreference(bool hide) {
 
 void PreferencesManager::setUseTrueWidthsPreference(bool use) {
     m_use_true_widths_preference = use;
+    m_dirty = true;
+}
+
+void PreferencesManager::setWarnUnsavedProjectOnClosePreference(bool warn) {
+    m_warn_unsaved_project_on_close_preference = warn;
     m_dirty = true;
 }
 
