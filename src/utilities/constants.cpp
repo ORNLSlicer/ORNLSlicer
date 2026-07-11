@@ -562,6 +562,7 @@ const QString Constants::ProfileSettings::Perimeter::kEnableLeadInY = "perimeter
 const QString Constants::ProfileSettings::Perimeter::kEnableFlyingStart = "perimeter_flying_start";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartDistance = "perimeter_flying_start_distance";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartSpeed = "perimeter_flying_start_speed";
+const QString Constants::ProfileSettings::Perimeter::kEnableSpiralPerimeter = "spiral_perimeter";
 
 // Inset
 const QString Constants::ProfileSettings::Inset::kEnable = "inset";
@@ -572,6 +573,7 @@ const QString Constants::ProfileSettings::Inset::kExtruderSpeed = "inset_extrude
 const QString Constants::ProfileSettings::Inset::kExtrusionMultiplier = "inset_extrusion_multiplier";
 const QString Constants::ProfileSettings::Inset::kMinPathLength = "inset_minimum_path_length";
 const QString Constants::ProfileSettings::Inset::kOverlap = "inset_overlap_distance";
+const QString Constants::ProfileSettings::Inset::kEnableSpiralInset = "spiral_inset";
 
 // Skeleton
 const QString Constants::ProfileSettings::Skeleton::kEnable = "skeleton";

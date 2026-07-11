@@ -616,6 +616,7 @@ class Constants {
             static const QString kEnableFlyingStart;
             static const QString kFlyingStartDistance;
             static const QString kFlyingStartSpeed;
+            static const QString kEnableSpiralPerimeter;
         };
 
         class Inset {
@@ -629,6 +630,7 @@ class Constants {
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
             static const QString kOverlap;
+            static const QString kEnableSpiralInset;
         };
 
         class Skeleton {
