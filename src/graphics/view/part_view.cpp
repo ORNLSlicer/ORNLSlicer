@@ -25,6 +25,7 @@
 #include <qtypes.h>
 #include <qvectornd.h>
 
+#include "configs/settings_range.h"
 #include "graphics/graphics_object.h"
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cube/plane_object.h"
@@ -47,6 +48,10 @@
 #include "widgets/part_widget/right_click_menu.h"
 
 namespace ORNL {
+namespace {
+constexpr float kMinimumLayerSettingsRangeThickness = 0.01f;
+} // namespace
+
 PartView::PartView(QSharedPointer<SettingsBase> sb) {
     m_menu = new RightClickMenu(this);
     m_sb = sb;
@@ -108,6 +113,17 @@ void PartView::showSlicingPlanes(bool show) {
     m_state.planes_shown = show;
 
     this->update();
+}
+
+void PartView::showLayerSettingsRange(bool show) {
+    m_state.layer_settings_range_shown = show;
+    updateLayerSettingsRangePlane();
+}
+
+void PartView::setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges) {
+    m_state.layer_settings_range_part = part;
+    m_state.layer_settings_ranges = layer_ranges;
+    updateLayerSettingsRangePlane();
 }
 
 void PartView::showOverhang(bool show) {
@@ -349,7 +365,12 @@ void PartView::updateSlicingSettings(QSharedPointer<SettingsBase> sb) {
 
     for (auto& gop : m_part_objects) {
         gop->plane()->setLockedRotationQuaternion(rotation);
+        for (auto& range_plane : gop->layerSettingsRangePlanes()) {
+            range_plane->setLockedRotationQuaternion(rotation);
+        }
     }
+
+    updateLayerSettingsRangePlane();
 
     // Changing the plane affects the overhang angle
     updateOverhangSettings(sb);
@@ -807,6 +828,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
         gop->plane()->show();
     if (m_state.names_shown)
         gop->label()->show();
+    updateLayerSettingsRangePlane();
 
     this->blockModel();
     m_model->lookupByGraphic(gop)->setTranslation(gop->translation());
@@ -854,6 +876,8 @@ void PartView::modelRemovalUpdate(QSharedPointer<PartMetaItem> pm) {
 
     if (m_state.highlighted_part == gop)
         m_state.highlighted_part = nullptr;
+
+    updateLayerSettingsRangePlane();
 
     this->update();
 }
@@ -914,6 +938,8 @@ void PartView::modelTranformUpdate(QSharedPointer<PartMetaItem> pm) {
     }
 
     this->postTransformCheck();
+
+    updateLayerSettingsRangePlane();
 
     this->update();
 }
@@ -1066,6 +1092,206 @@ QSharedPointer<PartObject> PartView::findObject(QString name) {
     }
 
     return gop;
+}
+
+QSharedPointer<PartObject> PartView::findObject(QSharedPointer<Part> part) {
+    if (part.isNull())
+        return nullptr;
+
+    for (auto& go : m_part_objects) {
+        if (go->part() == part)
+            return go;
+    }
+
+    return nullptr;
+}
+
+void PartView::updateLayerSettingsRangePlane() {
+    hideLayerSettingsRangePlanes();
+
+    if (!m_state.layer_settings_range_shown || m_state.layer_settings_range_part.isNull() ||
+        m_state.layer_settings_ranges.isEmpty()) {
+        this->update();
+        return;
+    }
+
+    QSharedPointer<PartObject> gop = findObject(m_state.layer_settings_range_part);
+    if (gop.isNull()) {
+        this->update();
+        return;
+    }
+
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    if (slicing_vector.isNull()) {
+        this->update();
+        return;
+    }
+    slicing_vector.normalize();
+
+    float length = gop->maximum().x() - gop->minimum().x();
+    float width = gop->maximum().y() - gop->minimum().y();
+    float depth = gop->maximum().z() - gop->minimum().z();
+    float max_dim = std::fmax(length, std::fmax(width, depth));
+    max_dim += max_dim * 0.20f;
+
+    int visible_plane_index = 0;
+    for (const QPair<int, int>& layer_range : m_state.layer_settings_ranges) {
+        QVector3D center;
+        float thickness = 0.0f;
+        if (!layerSettingsRangeGeometry(gop, layer_range.first, layer_range.second, center, thickness))
+            continue;
+
+        QSharedPointer<PlaneObject> range_plane = gop->layerSettingsRangePlane(visible_plane_index);
+        range_plane->updateDimensions(max_dim, max_dim, thickness);
+        range_plane->setLockedRotationQuaternion(QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1)));
+        range_plane->translateAbsolute(center);
+        range_plane->show();
+
+        ++visible_plane_index;
+    }
+
+    this->update();
+}
+
+void PartView::hideLayerSettingsRangePlanes() {
+    for (auto& gop : m_part_objects) {
+        for (auto& range_plane : gop->layerSettingsRangePlanes()) {
+            range_plane->hide();
+        }
+    }
+}
+
+bool PartView::layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int low_layer, int high_layer,
+                                          QVector3D& center, float& thickness) const {
+    if (gop.isNull() || gop->part().isNull() || gop->part()->rootMesh().isNull())
+        return false;
+
+    const int low = qMin(low_layer, high_layer);
+    const int high = qMax(low_layer, high_layer);
+    if (low < 0 || high < low)
+        return false;
+
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    if (slicing_vector.isNull())
+        return false;
+    slicing_vector.normalize();
+
+    std::vector<Triangle> triangles = gop->triangles();
+    if (triangles.empty())
+        return false;
+
+    bool initialized = false;
+    double min_projection = 0.0;
+    double max_projection = 0.0;
+
+    for (const Triangle& triangle : triangles) {
+        const QVector3D points[] = {triangle.a, triangle.b, triangle.c};
+        for (const QVector3D& point : points) {
+            const double projection = QVector3D::dotProduct(point, slicing_vector);
+
+            if (!initialized || projection < min_projection) {
+                min_projection = projection;
+            }
+
+            if (!initialized || projection > max_projection) {
+                max_projection = projection;
+            }
+
+            initialized = true;
+        }
+    }
+
+    if (!initialized)
+        return false;
+
+    const double part_height = max_projection - min_projection;
+    if (part_height <= 0.0)
+        return false;
+
+    Distance base_layer_height;
+    if (gop->part()->getSb()->contains(PS::Layer::kLayerHeight))
+        base_layer_height = gop->part()->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
+    else
+        base_layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+
+    const auto normal_height = [](Distance layer_height) {
+        return layer_height() * Constants::OpenGL::kObjectToView;
+    };
+
+    const double base_layer_normal_height = normal_height(base_layer_height);
+    if (base_layer_normal_height <= 0.0)
+        return false;
+
+    const QMap<uint, QSharedPointer<SettingsRange>> ranges = gop->part()->getSettingsRanges();
+    const auto layer_normal_height = [&ranges, &normal_height, base_layer_normal_height](int layer) {
+        QSharedPointer<SettingsRange> selected_range;
+        for (auto i = ranges.begin(), end = ranges.end(); i != end; ++i) {
+            QSharedPointer<SettingsRange> range = i.value();
+            if (!range->includesIndex(layer))
+                continue;
+
+            if (selected_range.isNull()) {
+                selected_range = range;
+                continue;
+            }
+
+            if (range->isSingle() || range->low() > selected_range->low() ||
+                (range->low() == selected_range->low() && range->high() < selected_range->high())) {
+                selected_range = range;
+            }
+        }
+
+        if (!selected_range.isNull() && selected_range->getSb()->contains(PS::Layer::kLayerHeight))
+            return normal_height(selected_range->getSb()->setting<Distance>(PS::Layer::kLayerHeight));
+
+        return base_layer_normal_height;
+    };
+
+    double current_height = 0.0;
+    double selected_start_height = 0.0;
+    double selected_end_height = 0.0;
+    bool found_start = false;
+    bool found_end = false;
+
+    for (int layer = 0; layer <= high; ++layer) {
+        if (layer == low) {
+            selected_start_height = current_height;
+            found_start = true;
+        }
+
+        current_height += layer_normal_height(layer);
+
+        if (layer == high) {
+            selected_end_height = current_height;
+            found_end = true;
+            break;
+        }
+
+        if (current_height > part_height && layer < low)
+            return false;
+    }
+
+    if (!found_start || !found_end)
+        return false;
+
+    selected_start_height = std::min(selected_start_height, part_height);
+    selected_end_height = std::min(selected_end_height, part_height);
+    if (selected_end_height <= selected_start_height)
+        return false;
+
+    const double center_height = (selected_start_height + selected_end_height) / 2.0;
+    const double center_projection = min_projection + center_height;
+
+    center = gop->center();
+    center += slicing_vector * (center_projection - QVector3D::dotProduct(center, slicing_vector));
+    thickness = static_cast<float>(selected_end_height - selected_start_height);
+    thickness = std::max(thickness, kMinimumLayerSettingsRangeThickness);
+
+    return true;
 }
 
 void PartView::blockModel() {
