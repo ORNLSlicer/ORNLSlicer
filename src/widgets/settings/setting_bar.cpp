@@ -53,6 +53,7 @@ SettingPane* SettingBar::getPane(QString major) {
 
     connect(PreferencesManager::getInstance().get(), &PreferencesManager::anyUnitChanged, m_panes[major],
             &SettingPane::reload);
+    connect(m_panes[major], &SettingPane::settingAboutToChange, this, &SettingBar::forwardSettingAboutToChange);
     connect(m_panes[major], &SettingPane::settingModified, this, &SettingBar::forwardModifiedSetting);
     connect(m_panes[major], &SettingPane::forwardHideTab, this, &SettingBar::forwardHideTab);
     connect(m_panes[major], &SettingPane::warnSettingBar, this, &SettingBar::barTabWarning);
@@ -286,8 +287,13 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
     enableDependRows();
 }
 
+void SettingBar::forwardSettingAboutToChange(QString setting_key,
+                                             QList<QSharedPointer<SettingsBase>> settings_bases) {
+    emit settingAboutToChange(setting_key, settings_bases);
+}
+
 void SettingBar::forwardModifiedSetting(QString setting_key) {
-    if (m_syncing_radial_settings) {
+    if (m_syncing_radial_settings || m_restoring_settings) {
         return;
     }
 
@@ -315,6 +321,7 @@ QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
         if ((slicer_type == SlicerType::kRadialSlice || slicer_type == SlicerType::kHelicalSlice) &&
             syntax != GcodeSyntax::kRadial3Plus2) {
+            emit settingAboutToChange(PRS::MachineSetup::kSyntax, QList<QSharedPointer<SettingsBase>>());
             sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kRadial3Plus2));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
             synced_keys.push_back(PRS::MachineSetup::kSyntax);
@@ -325,6 +332,7 @@ QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
         const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
         if (syntax == GcodeSyntax::kRadial3Plus2 && slicer_type != SlicerType::kRadialSlice &&
             slicer_type != SlicerType::kHelicalSlice) {
+            emit settingAboutToChange(PS::Slicing::kSlicerType, QList<QSharedPointer<SettingsBase>>());
             sb->setSetting(PS::Slicing::kSlicerType, static_cast<int>(SlicerType::kRadialSlice));
             reloadSettingRow(PS::Slicing::kSlicerType);
             synced_keys.push_back(PS::Slicing::kSlicerType);
@@ -351,6 +359,15 @@ void SettingBar::reloadSettingRow(const QString& setting_key) {
     if (!row.isNull()) {
         row->reloadValue();
     }
+}
+
+void SettingBar::restoreSettingValue(QString setting_key) {
+    m_restoring_settings = true;
+    reloadSettingRow(setting_key);
+    m_restoring_settings = false;
+
+    enableDependRows();
+    emit settingModified(setting_key);
 }
 
 void SettingBar::forwardHideTab(QString pane, QString category) { emit tabHidden(pane, category); }
