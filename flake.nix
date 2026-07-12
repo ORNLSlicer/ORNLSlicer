@@ -120,7 +120,7 @@
   });
 
   nixConfig = {
-    extra-substituters = [ "https://mdfbaam.cachix.org" ];
-    extra-trusted-public-keys = [ "mdfbaam.cachix.org-1:WCQinXaMJP7Ny4sMlKdisNUyhcO2MHnPoobUef5aTmQ=" ];
+    extra-substituters = [ "https://ornl-slicer.cachix.org" ];
+    extra-trusted-public-keys = [ "ornl-slicer.cachix.org-1:VIvBeaBy4B47CzxtF7VxZWsK0wXJt4Dm7VNuAb65Nzg=" ];
   };
 }
