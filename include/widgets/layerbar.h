@@ -72,7 +72,9 @@ class LayerBar : public QWidget {
   signals:
     //! \brief Signal that the selection has been altered.
     //! \param name_and_bases: Label plus list of ranges currently selected
-    void setSelectedSettings(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases);
+    //! \param inherited_bases: Parent settings for each selected base; null entries inherit Global directly
+    void setSelectedSettings(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
+                             QList<QSharedPointer<SettingsBase>> inherited_bases);
 
     //! \brief Signal that the selected layer settings ranges changed.
     //! \param part: Part that owns the selected ranges, or null when no layer range is selected.

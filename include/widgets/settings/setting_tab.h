@@ -50,6 +50,9 @@ class SettingTab : public QWidget {
     //! \brief Copy of settings bases, if applicable
     QList<QSharedPointer<SettingsBase>> m_settings_bases;
 
+    //! \brief Parent settings bases inherited by the corresponding selected bases.
+    QList<QSharedPointer<SettingsBase>> m_inherited_settings_bases;
+
     //! \brief Adds a row to this tab.
     void addRow(QString key, const fifojson& json, const fifojson& input = fifojson());
 
@@ -80,7 +83,9 @@ class SettingTab : public QWidget {
 
     //! \brief Settings bases currently selected to adjust setting
     //! \param settings_bases: settings bases to display for
-    void settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases);
+    //! \param inherited_bases: parent settings for each selected base
+    void settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases,
+                               QList<QSharedPointer<SettingsBase>> inherited_bases);
 
     //! \brief Tells the header what icon to display, based on if there is a warning from any settings in the tab
     //! \param count: Total number of warnings in this tab, should be a positive integer or zero.
