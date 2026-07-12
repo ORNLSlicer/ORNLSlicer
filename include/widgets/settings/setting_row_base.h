@@ -285,8 +285,11 @@ class SettingRowBase {
     //! \brief Returns the default tooltip from the row's master setting metadata.
     QString baseToolTip() const;
 
-    //! \brief Returns whether any selected local settings base currently owns one of this row's keys.
+    //! \brief Returns whether any selected base differs from its inherited value for one of this row's keys.
     bool hasLocalOverride() const;
+
+    //! \brief Returns whether one selected key matches the value inherited by that settings base.
+    bool matchesInheritedValue(const QString& key, int index) const;
 
     //! \brief Applies visibility/enabled state to the local override reset button.
     void updateResetButton();
