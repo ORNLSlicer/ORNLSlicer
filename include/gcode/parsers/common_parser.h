@@ -508,6 +508,9 @@ class CommonParser : public ParserBase {
     //! \brief Replaces an existing F token or inserts one before the command comment.
     void setCommandFeedrate(QString& line, double feedrate);
 
+    //! \brief Reads a numeric F token from a command before its comment.
+    bool commandFeedrate(const QString& line, double& feedrate);
+
     //! \brief Inserts feedrates where scaled and protected modal spans meet.
     void materializeFeedrateTransitions(double modifier);
 
@@ -551,6 +554,10 @@ class CommonParser : public ParserBase {
 
     //! \brief layer time from "G1 F" lines
     QList<Time> m_layer_G1F_times;
+
+    //! \brief Nominal feedrate-adjustable time attributed to each motion command.
+    QHash<int, Time> m_command_G1F_times;
+
     QList<Volume> m_layer_volumes;
 
     // key information from the footer

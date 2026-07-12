@@ -93,9 +93,17 @@ Distance CommonParser::getCurrentGXDistance() {
         m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
         !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
-    return MotionEstimation::calculateTimeAndVolume(
+    const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
+    const Distance distance = MotionEstimation::calculateTimeAndVolume(
         m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
         m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer], uses_b);
+
+    const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
+    if (command_adjustable_time > 0) {
+        m_command_G1F_times[m_current_gcode_command.getLineNumber()] += command_adjustable_time;
+    }
+
+    return distance;
 }
 
 void CommonParser::updateCurrentBeadGeometry() {
@@ -229,6 +237,27 @@ void CommonParser::setCommandFeedrate(QString& line, double feedrate) {
     while (insert_at > 0 && line.at(insert_at - 1).isSpace())
         --insert_at;
     line.insert(insert_at, m_space % replacement);
+}
+
+bool CommonParser::commandFeedrate(const QString& line, double& feedrate) {
+    static const QRegularExpression feedrate_token("(^|[\\s,/*()])(F[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?)",
+                                                   QRegularExpression::CaseInsensitiveOption);
+
+    int comment_start = line.size();
+    const QString comment_delimiter = getCommentStartDelimiter();
+    if (!comment_delimiter.isEmpty()) {
+        const int delimiter_index = line.indexOf(comment_delimiter);
+        if (delimiter_index >= 0)
+            comment_start = delimiter_index;
+    }
+
+    const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
+    if (!match.hasMatch())
+        return false;
+
+    bool converted = false;
+    feedrate = match.captured(2).mid(1).toDouble(&converted);
+    return converted;
 }
 
 void CommonParser::materializeFeedrateTransitions(double modifier) {
@@ -724,22 +753,54 @@ void CommonParser::reset() {
     m_has_modal_feedrate = false;
     m_command_modal_feedrates.clear();
     m_explicit_modal_feedrates.clear();
+    m_command_G1F_times.clear();
 }
 
 QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
 
 QList<Time> CommonParser::getAdjustedLayerTimes() {
-    QList<Time> adjusted_layer_times;
-    adjusted_layer_times.reserve(m_layer_times.size());
+    QList<Time> adjusted_layer_times = m_layer_times;
+    const bool has_adjusted_feedrates = std::any_of(m_layer_FR_modifiers.cbegin(), m_layer_FR_modifiers.cend(),
+                                                    [](double modifier) { return modifier > 0 && modifier != 1.0; });
+    if (!has_adjusted_feedrates)
+        return adjusted_layer_times;
 
-    for (int i = 0; i < m_layer_times.size(); ++i) {
-        const double modifier = m_layer_FR_modifiers[i];
-        if (modifier > 0 && modifier != 1) {
-            adjusted_layer_times.push_back(m_layer_times[i] - m_layer_G1F_times[i] +
-                                           (m_layer_G1F_times[i] / modifier));
-        }
-        else {
-            adjusted_layer_times.push_back(m_layer_times[i]);
+    bool emitted_feedrate_set = false;
+    double emitted_feedrate = 0.0;
+    auto explicit_feedrate = m_explicit_modal_feedrates.cbegin();
+
+    for (int layer = 0; layer < m_motion_commands.size() && layer < adjusted_layer_times.size(); ++layer) {
+        for (const GcodeCommand& command : m_motion_commands[layer]) {
+            const int line_number = command.getLineNumber();
+            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() < line_number) {
+                emitted_feedrate = explicit_feedrate.value();
+                emitted_feedrate_set = true;
+                ++explicit_feedrate;
+            }
+
+            const double original_feedrate = m_command_modal_feedrates.value(line_number, 0.0);
+            double explicit_command_feedrate = 0.0;
+            if (line_number >= 0 && line_number < m_lines.size() &&
+                commandFeedrate(m_lines[line_number], explicit_command_feedrate)) {
+                emitted_feedrate = explicit_command_feedrate;
+                emitted_feedrate_set = true;
+            }
+            else if (command.getParameters().contains(m_f_parameter.toLatin1()) && original_feedrate > 0) {
+                // Macro feedrates such as F#981 cannot be read back numerically, but their authored value was
+                // resolved while parsing and remains unchanged unless setCommandFeedrate replaced the token.
+                emitted_feedrate = original_feedrate;
+                emitted_feedrate_set = true;
+            }
+
+            const Time command_adjustable_time = m_command_G1F_times.value(line_number);
+            if (command_adjustable_time > 0 && original_feedrate > 0 && emitted_feedrate_set && emitted_feedrate > 0) {
+                const double effective_modifier = emitted_feedrate / original_feedrate;
+                adjusted_layer_times[layer] += command_adjustable_time / effective_modifier - command_adjustable_time;
+            }
+
+            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() == line_number) {
+                ++explicit_feedrate;
+            }
         }
     }
 
