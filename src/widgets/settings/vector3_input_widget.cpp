@@ -124,15 +124,12 @@ void Vector3InputWidget::reloadValue() {
     if (!all_consistent) {
         setNotification("Multiple Values");
         styleLabel(false);
-        m_warn = true;
-        emit warnParent(1);
     }
     else {
         clearNotification();
         styleLabel(true);
-        m_warn = false;
-        emit warnParent(0);
     }
+    emit warnParent(warningCountDelta(!all_consistent, m_warn));
 }
 
 bool Vector3InputWidget::eventFilter(QObject* watched, QEvent* event) {
@@ -247,24 +244,16 @@ bool Vector3InputWidget::hasAnyInconsistentValue() {
 }
 
 void Vector3InputWidget::updateWarningStateAfterEdit() {
-    if (hasAnyInconsistentValue()) {
+    const bool warning_active = hasAnyInconsistentValue();
+    if (warning_active) {
         setNotification("Multiple Values");
         styleLabel(false);
-        if (!m_warn)
-            emit warnParent(1);
-        else
-            emit warnParent(0);
-        m_warn = true;
     }
     else {
         clearNotification();
         styleLabel(true);
-        if (m_warn)
-            emit warnParent(-1);
-        else
-            emit warnParent(0);
-        m_warn = false;
     }
+    emit warnParent(warningCountDelta(warning_active, m_warn));
 }
 
 void Vector3InputWidget::setSpinBoxValue(QDoubleSpinBox* spin_box, const QString& key, double default_value,

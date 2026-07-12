@@ -127,15 +127,12 @@ void Vector2InputWidget::reloadValue() {
     if (!all_consistent) {
         setNotification("Multiple Values");
         styleLabel(false);
-        m_warn = true;
-        emit warnParent(1);
     }
     else {
         clearNotification();
         styleLabel(true);
-        m_warn = false;
-        emit warnParent(0);
     }
+    emit warnParent(warningCountDelta(!all_consistent, m_warn));
 }
 
 bool Vector2InputWidget::eventFilter(QObject* watched, QEvent* event) {
@@ -257,24 +254,16 @@ bool Vector2InputWidget::hasAnyInconsistentValue() {
 }
 
 void Vector2InputWidget::updateWarningStateAfterEdit() {
-    if (hasAnyInconsistentValue()) {
+    const bool warning_active = hasAnyInconsistentValue();
+    if (warning_active) {
         setNotification("Multiple Values");
         styleLabel(false);
-        if (!m_warn)
-            emit warnParent(1);
-        else
-            emit warnParent(0);
-        m_warn = true;
     }
     else {
         clearNotification();
         styleLabel(true);
-        if (m_warn)
-            emit warnParent(-1);
-        else
-            emit warnParent(0);
-        m_warn = false;
     }
+    emit warnParent(warningCountDelta(warning_active, m_warn));
 }
 
 void Vector2InputWidget::setSpinBoxValue(QDoubleSpinBox* spin_box, const QString& key, Distance default_value,
