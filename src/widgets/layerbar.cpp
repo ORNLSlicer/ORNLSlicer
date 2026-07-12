@@ -465,6 +465,8 @@ void LayerBar::setLayer() {
 void LayerBar::setPairLayers() {
     LayerDot* first_layer = m_selection.back();
     LayerDot* second_layer = m_selection.front();
+    if (first_layer->getLayer() > second_layer->getLayer())
+        std::swap(first_layer, second_layer);
 
     // Dialog prompt to get user input for range start and end
     QDialog dialog(this);
@@ -508,12 +510,20 @@ void LayerBar::setPairLayers() {
             break;
         }
 
-        if ((this->layerValid(first_val) || m_position[first_val] == first_layer) &&
+        if (first_val < second_val &&
+            !m_part->getSettingsRange(first_layer->getLayer(), second_layer->getLayer()).isNull() &&
+            (this->layerValid(first_val) || m_position[first_val] == first_layer) &&
             (this->layerValid(second_val) || m_position[second_val] == second_layer)) {
             m_part->updateSettingsRangeLimits(first_layer->getLayer(), second_layer->getLayer(), first_val, second_val);
 
-            this->moveDotToLayer(first_layer, first_val);
-            this->moveDotToLayer(second_layer, second_val);
+            if (first_layer->getLayer() != first_val)
+                this->moveDotToLayer(first_layer, first_val);
+
+            if (second_layer->getLayer() != second_val)
+                this->moveDotToLayer(second_layer, second_val);
+
+            updateLayers();
+            removeInvalidSelections();
             break;
         }
 
@@ -1488,6 +1498,10 @@ void LayerBar::updateLayers() {
     if (layer_count < m_position.size()) {
         for (int i = m_position.size() - 1; i >= layer_count; --i) {
             if (m_position[i] != nullptr) {
+                if (clampRangeToLayerCount(m_position[i], layer_count)) {
+                    continue;
+                }
+
                 int layer_num = m_position[i]->getLayer();
                 LayerDot* dot = m_position[i]->getPair();
                 if (dot == nullptr) {
@@ -1591,13 +1605,7 @@ void LayerBar::handleModifiedSetting(QString key) {
         key == PS::Slicing::kSlicingVectorZ) {
         updateLayers();
 
-        for (int i = m_selection.size() - 1; i >= 0; --i) {
-            LayerDot* dot = m_selection[i];
-            if (dot == nullptr || dot->getLayer() < 0 || dot->getLayer() >= m_position.size() ||
-                m_position[dot->getLayer()] != dot) {
-                m_selection.removeAt(i);
-            }
-        }
+        removeInvalidSelections();
 
         changeSelectedSettings();
     }
@@ -1644,6 +1652,40 @@ bool LayerBar::moveDotToLayer(LayerDot* dot, int layer) {
 }
 
 bool LayerBar::moveDotToNextLayer(LayerDot* dot) { return moveDotToNextLayer(dot, getLayerFromPosition(dot->y())); }
+
+void LayerBar::removeInvalidSelections() {
+    for (int i = m_selection.size() - 1; i >= 0; --i) {
+        LayerDot* dot = m_selection[i];
+        if (dot == nullptr || dot->getLayer() < 0 || dot->getLayer() >= m_position.size() ||
+            m_position[dot->getLayer()] != dot) {
+            m_selection.removeAt(i);
+        }
+    }
+}
+
+bool LayerBar::clampRangeToLayerCount(LayerDot* dot, int layer_count) {
+    if (dot == nullptr || dot->getRange() == nullptr || layer_count <= 0)
+        return false;
+
+    LayerDot* pair = dot->getPair();
+    if (pair == nullptr || pair->getLayer() >= layer_count)
+        return false;
+
+    const int last_layer = layer_count - 1;
+    const int old_low = qMin(dot->getLayer(), pair->getLayer());
+    const int old_high = qMax(dot->getLayer(), pair->getLayer());
+    const int new_low = qMin(pair->getLayer(), last_layer);
+    const int new_high = last_layer;
+
+    if (new_low >= new_high || m_position[new_high] != nullptr)
+        return false;
+
+    if (!moveDotToLayer(dot, new_high))
+        return false;
+
+    m_part->updateSettingsRangeLimits(old_low, old_high, new_low, new_high);
+    return true;
+}
 
 bool LayerBar::moveDotToNextLayer(LayerDot* dot, int layer) {
     int check_dist = 0;
