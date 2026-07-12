@@ -134,7 +134,7 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
         bool start;
 
         if (m_enable_partitioned_linking) {
-            std::tie(index, start) = closestOpenPolyline(m_polylines, temp_current_location);
+            std::tie(index, start) = orderedOpenPolyline(m_polylines, temp_current_location);
         }
         else {
             // Monotonic linking
@@ -188,14 +188,24 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
 
     // Determine which end of infill path should be the start
     if (!new_polyline.empty()) {
-        Distance front_distance = m_point_override_location.distance(new_polyline.front());
-        Distance back_distance = m_point_override_location.distance(new_polyline.back());
-        if (m_point_optimization == PointOrderOptimization::kCustomFarthestPoint) {
-            if (front_distance < back_distance)
+        if (m_enable_partitioned_linking) {
+            Point query_point =
+                usesCustomPointLocation(m_point_optimization) ? m_point_override_location : m_current_location;
+
+            if (PointOrderOptimizer::findSkeletonPointOrder(query_point, new_polyline, m_point_optimization,
+                                                            m_min_point_distance_enable, m_min_point_distance))
                 new_polyline = new_polyline.reverse();
         }
-        else if (front_distance > back_distance) {
-            new_polyline = new_polyline.reverse();
+        else {
+            Distance front_distance = m_point_override_location.distance(new_polyline.front());
+            Distance back_distance = m_point_override_location.distance(new_polyline.back());
+            if (m_point_optimization == PointOrderOptimization::kCustomFarthestPoint) {
+                if (front_distance < back_distance)
+                    new_polyline = new_polyline.reverse();
+            }
+            else if (front_distance > back_distance) {
+                new_polyline = new_polyline.reverse();
+            }
         }
     }
 
@@ -289,27 +299,68 @@ bool PolylineOrderOptimizer::linkIntersects(Point link_start, Point link_end, QV
 }
 
 QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> polylines, Point currentLocation) {
+    return extremumOpenPolyline(polylines, currentLocation, true);
+}
+
+QPair<int, bool> PolylineOrderOptimizer::extremumOpenPolyline(QVector<Polyline> polylines, Point currentLocation,
+                                                              bool closest) {
     Distance shortest = Distance(std::numeric_limits<float>::max());
 
     int index = 0;
-    bool start;
+    bool start = true;
+    bool found_endpoint = false;
 
     Point queryPoint = currentLocation;
 
     for (int i = 0, end = polylines.size(); i < end; ++i) {
-        if (queryPoint.distance(polylines[i].front()) < shortest) {
-            shortest = queryPoint.distance(polylines[i].front());
+        if (polylines[i].isEmpty())
+            continue;
+
+        Distance front_distance = queryPoint.distance(polylines[i].front());
+        if (!found_endpoint || (closest && front_distance < shortest) || (!closest && front_distance > shortest)) {
+            shortest = front_distance;
             index = i;
             start = true;
+            found_endpoint = true;
         }
 
-        if (queryPoint.distance(polylines[i].back()) < shortest) {
-            shortest = queryPoint.distance(polylines[i].back());
+        Distance back_distance = queryPoint.distance(polylines[i].back());
+        if (!found_endpoint || (closest && back_distance < shortest) || (!closest && back_distance > shortest)) {
+            shortest = back_distance;
             index = i;
             start = false;
+            found_endpoint = true;
         }
     }
     return QPair<int, bool>(index, start);
+}
+
+QPair<int, bool> PolylineOrderOptimizer::orderedOpenPolyline(QVector<Polyline> polylines, Point currentLocation) {
+    Point query_point = currentLocation;
+    if (m_optimization == PathOrderOptimization::kCustomPoint && m_override_used)
+        query_point = m_override_location;
+
+    switch (m_optimization) {
+        case PathOrderOptimization::kNextFarthest:
+            return extremumOpenPolyline(polylines, query_point, false);
+        case PathOrderOptimization::kRandom:
+            return QPair<int, bool>(QRandomGenerator::global()->bounded(polylines.size()),
+                                    QRandomGenerator::global()->bounded(2) == 0);
+        case PathOrderOptimization::kOutsideIn: {
+            int index = 0;
+            bool start = query_point.distance(polylines[index].front()) <= query_point.distance(polylines[index].back());
+            return QPair<int, bool>(index, start);
+        }
+        case PathOrderOptimization::kInsideOut: {
+            int index = polylines.size() - 1;
+            bool start = query_point.distance(polylines[index].front()) <= query_point.distance(polylines[index].back());
+            return QPair<int, bool>(index, start);
+        }
+        case PathOrderOptimization::kCustomPoint:
+        case PathOrderOptimization::kNextClosest:
+        default:
+            return extremumOpenPolyline(polylines, query_point, true);
+    }
 }
 
 void PolylineOrderOptimizer::applyPointOrderSelection(Polyline& polyline,
