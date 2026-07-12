@@ -7,6 +7,7 @@
 #include <QGridLayout>
 #include <QLabel>
 #include <QObject>
+#include <QToolButton>
 #include <QWidget>
 #include <qlist.h>
 #include <qscopedpointer.h>
@@ -132,6 +133,17 @@ class SettingRowBase {
     //! \brief Notify before a setting key is written by this row.
     void notifyValueAboutToChange(const QString& key);
 
+    //! \brief Sets keys that should be checked when deciding whether this row is locally overridden.
+    void setLocalOverrideKeys(QList<QString> keys);
+
+    //! \brief Removes local overrides matching the current global value.
+    template <class T> void removeRedundantLocalOverrides(const QString& key, const T& global_value) {
+        for (QSharedPointer<SettingsBase> settings_base : m_settings_bases) {
+            if (settings_base->contains(key) && settings_base->setting<T>(key) == global_value)
+                settings_base->remove(key);
+        }
+    }
+
     //! \brief Recursive check of dependencynode logic
     //! \param root: Dependency logic to check
     bool checkLogic(DependencyNode root);
@@ -145,6 +157,12 @@ class SettingRowBase {
                 range->setSetting(m_key, value);
         else
             m_sb->setSetting(m_key, value);
+
+        if (m_settings_bases.size() != 0) {
+            const T global_value =
+                m_sb->contains(m_key) ? m_sb->setting<T>(m_key) : m_json[Constants::Settings::Master::kDefault].get<T>();
+            removeRedundantLocalOverrides<T>(m_key, global_value);
+        }
 
         clearNotification();
         styleLabel(true);
@@ -179,6 +197,10 @@ class SettingRowBase {
     template <class T> T reloadValueHelper(bool& consistent) {
         T cur;
         if (m_settings_bases.size() > 0) {
+            const T global_value =
+                m_sb->contains(m_key) ? m_sb->setting<T>(m_key) : m_json[Constants::Settings::Master::kDefault].get<T>();
+            removeRedundantLocalOverrides<T>(m_key, global_value);
+
             bool all_bases_consistent = true;
             for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
                 auto sb_1 = m_settings_bases[i - 1];
@@ -258,6 +280,31 @@ class SettingRowBase {
 
     //! \brief Pointer to global setting base
     QSharedPointer<SettingsBase> m_sb;
+
+  protected:
+    //! \brief Returns the default tooltip from the row's master setting metadata.
+    QString baseToolTip() const;
+
+    //! \brief Returns whether any selected local settings base currently owns one of this row's keys.
+    bool hasLocalOverride() const;
+
+    //! \brief Applies visibility/enabled state to the local override reset button.
+    void updateResetButton();
+
+    //! \brief Remove this row's selected local overrides and reload the row.
+    void resetLocalOverrides();
+
+    //! \brief Keys that can make this row locally overridden.
+    QList<QString> m_local_override_keys;
+
+    //! \brief Button used to remove selected local overrides.
+    QScopedPointer<QToolButton> m_reset_button;
+
+    //! \brief Whether this row is currently visible.
+    bool m_row_visible;
+
+    //! \brief Whether this row is currently enabled.
+    bool m_row_enabled;
 
     //! \brief Master json that this row was constructed from
     fifojson m_json;
