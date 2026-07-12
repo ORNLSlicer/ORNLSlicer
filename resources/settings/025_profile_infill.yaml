@@ -69,9 +69,9 @@ settings:
     symbol: "kInfillPattern"
     local: true
   - name: "infill_lines_partitioned_linking"
-    display: "Use Next Closest Infill Line Travels"
+    display: "Apply Path and Point Ordering to Infill Lines"
     type: "boolean"
-    tooltip: "If enabled and the Infill Pattern is Lines, disconnected infill lines may start from either endpoint using the selected Path and Point Order Optimization so travel-linked lines can alternate direction. If disabled, travel-linked lines keep the existing monotonic ordering."
+    tooltip: "If enabled and the Infill Pattern is Lines, travel-separated infill segments are selected using Path Order Optimization and oriented using Point Order Optimization. If disabled, they retain the existing monotonic ordering."
     depends: {"AND":[{"infill":true},{"infill_pattern":0}]}
     options: []
     default: false
