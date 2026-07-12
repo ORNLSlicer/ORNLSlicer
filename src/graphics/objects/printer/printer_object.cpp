@@ -89,7 +89,7 @@ void PrinterObject::updateSeams() {
         m_seams.custom_path_opt->hide();
     }
 
-    if (pointOrder == PointOrderOptimization::kCustomPoint) {
+    if (usesCustomPointLocation(pointOrder)) {
         QVector3D translation(m_sb->setting<double>(PS::Optimizations::kCustomPointXLocation),
 
                               m_sb->setting<double>(PS::Optimizations::kCustomPointYLocation),

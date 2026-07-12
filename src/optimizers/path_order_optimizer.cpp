@@ -396,7 +396,7 @@ Point PathOrderOptimizer::radialPathQueryPoint(PathOrderOptimization optimizatio
 }
 
 Point PathOrderOptimizer::radialPointQueryPoint(PointOrderOptimization optimization) const {
-    if (optimization == PointOrderOptimization::kCustomPoint) {
+    if (usesCustomPointLocation(optimization)) {
         if (m_point_override_used) {
             return m_point_override_location;
         }
@@ -537,7 +537,7 @@ Path PathOrderOptimizer::linkTo() {
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint)
+    if (usesCustomPointLocation(pointOrderOptimization))
         queryPoint = m_point_override_location;
     else
         queryPoint = m_current_location;

@@ -547,8 +547,14 @@ enum class PointOrderOptimization : uint8_t {
     kNextFarthest = 1,
     kRandom = 2,
     kConsecutive = 3,
-    kCustomPoint = 4
+    kCustomPoint = 4,
+    kCustomFarthestPoint = 5
 };
+
+inline bool usesCustomPointLocation(PointOrderOptimization optimization) {
+    return optimization == PointOrderOptimization::kCustomPoint ||
+           optimization == PointOrderOptimization::kCustomFarthestPoint;
+}
 
 //! \brief Function for going from json to OrderOptimization
 void to_json(json& j, const IslandOrderOptimization& i);

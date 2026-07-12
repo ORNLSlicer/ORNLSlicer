@@ -124,6 +124,7 @@ settings:
       - "Random"
       - "Consecutive"
       - "Custom Location"
+      - "Custom Farthest Location"
     default: 0
     minor: "Optimizations"
     major: "Profile"
@@ -206,7 +207,7 @@ settings:
     display: "Custom Point X Location"
     type: "location"
     tooltip: "X Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"point_order_optimization":4}
+    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -218,7 +219,7 @@ settings:
     display: "Custom Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"point_order_optimization":4}
+    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -230,7 +231,7 @@ settings:
     display: "Add Second Custom Location"
     type: "boolean"
     tooltip: "Enables a second custom point location so that points alternate layer to layer. The second point is used for even numbered layers."
-    depends: {"point_order_optimization":4}
+    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
     options: []
     default: false
     minor: "Optimizations"
@@ -242,7 +243,7 @@ settings:
     display: "Enable Second Custom Location Every Two Layers"
     type: "boolean"
     tooltip: "Enables the second custom point, but custom points are alternated every two layers. I.e. layers 1 and 2 use the original point and layers 3 and 4 use the second point."
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"point_order_optimization":4}]}
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: false
     minor: "Optimizations"
@@ -254,7 +255,7 @@ settings:
     display: "Second Custom Point X Location"
     type: "location"
     tooltip: "X Coordinate for Second Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"point_order_optimization":4}]}
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -266,7 +267,7 @@ settings:
     display: "Second Custom Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Second Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"point_order_optimization":4}]}
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -278,7 +279,7 @@ settings:
     display: "Custom Point X Increment"
     type: "location"
     tooltip: "Distance to increment the custom point X location from layer to layer. This is used for angled printing to move the seam along with the slicing plane."
-    depends: {"point_order_optimization":4}
+    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -290,7 +291,7 @@ settings:
     display: "Custom Point Y Increment"
     type: "location"
     tooltip: "Distance to increment the custom point Y location from layer to layer. This is used for angled printing to move the seam along with the slicing plane."
-    depends: {"point_order_optimization":4}
+    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
