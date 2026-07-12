@@ -517,7 +517,7 @@ settings:
     display: "Disable Feedrate Scaling for Tip Wipes"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change tip wipe path speeds."
-    depends: {"OR":[{"perimeter_wipe":true},{"OR":[{"inset_wipe":true},{"OR":[{"skin_wipe":true},{"OR":[{"infill_wipe":true},{"skeleton_wipe":true}]}]}]}]}
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
     options: []
     default: false
     minor: "Tip Wipe"
