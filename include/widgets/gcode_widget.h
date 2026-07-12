@@ -53,6 +53,10 @@ class GCodeWidget : public QWidget {
     //! \param status show/ hide ghost
     void showGhosts(bool status);
 
+    //! \brief enables/ disables showing optimization points
+    //! \param show enables/ disables
+    void showSeams(bool show);
+
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
 

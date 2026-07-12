@@ -5,6 +5,7 @@
 #include <tuple>
 
 #include <qcontainerfwd.h>
+#include <qcursor.h>
 #include <qlist.h>
 #include <qmatrix4x4.h>
 #include <qpoint.h>
@@ -21,6 +22,7 @@
 #include "graphics/objects/part_object.h"
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
+#include "graphics/objects/sphere/seam_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
@@ -196,6 +198,81 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     updateSegmentInfoViewMatrix();
 }
 
+bool GCodeView::beginOptimizationPointDrag(QPointF mouse_ndc_pos) {
+    auto picked =
+        m_printer->pickOptimizationPoint(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, m_state.ortho);
+    if (!picked.isValid()) {
+        return false;
+    }
+
+    QVector3D bed_intersection;
+    if (!m_printer->bedIntersection(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, bed_intersection,
+                                    m_state.ortho)) {
+        return false;
+    }
+
+    m_state.dragging_seam = true;
+    m_state.dragged_seam = picked.object;
+    m_state.dragged_seam_x_setting = picked.x_setting;
+    m_state.dragged_seam_y_setting = picked.y_setting;
+    m_state.dragged_seam_offset = picked.object->translation() - bed_intersection;
+
+    emit optimizationPointDragStarted(picked.x_setting, picked.y_setting);
+
+    this->setCursor(QCursor(Qt::ClosedHandCursor));
+    return true;
+}
+
+bool GCodeView::updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish) {
+    if (!m_state.dragging_seam || m_state.dragged_seam.isNull()) {
+        return false;
+    }
+
+    QVector3D bed_intersection;
+    if (!m_printer->bedIntersection(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, bed_intersection,
+                                    m_state.ortho)) {
+        return false;
+    }
+
+    QVector3D translation = bed_intersection + m_state.dragged_seam_offset;
+    translation.setZ(m_printer->printerCenter().z());
+    m_state.dragged_seam->translateAbsolute(translation);
+
+    const double x = translation.x() * Constants::OpenGL::kViewToObject;
+    const double y = translation.y() * Constants::OpenGL::kViewToObject;
+    if (finish) {
+        emit optimizationPointDragFinished(m_state.dragged_seam_x_setting, x, m_state.dragged_seam_y_setting, y);
+    }
+    else {
+        emit optimizationPointDragged(m_state.dragged_seam_x_setting, x, m_state.dragged_seam_y_setting, y);
+    }
+
+    this->update();
+    return true;
+}
+
+void GCodeView::finishOptimizationPointDrag(QPointF mouse_ndc_pos) {
+    if (!m_state.dragging_seam) {
+        return;
+    }
+
+    if (!updateOptimizationPointDrag(mouse_ndc_pos, true) && !m_state.dragged_seam.isNull()) {
+        const QVector3D translation = m_state.dragged_seam->translation();
+        emit optimizationPointDragFinished(m_state.dragged_seam_x_setting,
+                                           translation.x() * Constants::OpenGL::kViewToObject,
+                                           m_state.dragged_seam_y_setting,
+                                           translation.y() * Constants::OpenGL::kViewToObject);
+    }
+
+    m_state.dragging_seam = false;
+    m_state.dragged_seam.reset();
+    m_state.dragged_seam_x_setting.clear();
+    m_state.dragged_seam_y_setting.clear();
+    m_state.dragged_seam_offset = QVector3D();
+    this->setCursor(QCursor(Qt::ArrowCursor));
+    this->update();
+}
+
 void GCodeView::hideSegmentType(SegmentDisplayType type, bool hidden) {
     m_state.hidden_type = (hidden) ? (m_state.hidden_type | type) : (m_state.hidden_type & ~type);
 
@@ -258,6 +335,10 @@ void GCodeView::initView() {
 }
 
 void GCodeView::handleLeftClick(QPointF mouse_ndc_pos) {
+    if (beginOptimizationPointDrag(mouse_ndc_pos)) {
+        return;
+    }
+
     if (m_gcode_object.isNull())
         return;
 
@@ -278,11 +359,37 @@ void GCodeView::handleLeftClick(QPointF mouse_ndc_pos) {
     this->update();
 }
 
+void GCodeView::handleLeftMove(QPointF mouse_ndc_pos) {
+    if (m_state.dragging_seam) {
+        updateOptimizationPointDrag(mouse_ndc_pos, false);
+    }
+}
+
+void GCodeView::handleLeftRelease(QPointF mouse_ndc_pos) {
+    if (m_state.dragging_seam) {
+        finishOptimizationPointDrag(mouse_ndc_pos);
+    }
+}
+
 void GCodeView::handleLeftDoubleClick(QPointF mouse_ndc_pos) {
     // NOP
 }
 
 void GCodeView::handleMouseMove(QPointF mouse_ndc_pos) {
+    auto picked_seam =
+        m_printer->pickOptimizationPoint(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, m_state.ortho);
+    if (picked_seam.isValid()) {
+        if (!m_gcode_object.isNull()) {
+            m_gcode_object->highlightSegment(0);
+        }
+
+        this->setCursor(QCursor(Qt::OpenHandCursor));
+        this->update();
+        return;
+    }
+
+    this->setCursor(QCursor(Qt::ArrowCursor));
+
     if (m_gcode_object.isNull())
         return;
 
@@ -452,6 +559,8 @@ void GCodeView::updatePrinterSettings(QSharedPointer<SettingsBase> sb) {
         this->removeObject(m_printer);
         this->addObject(new_printer);
 
+        new_printer->setSeamsHidden(!m_state.seams_shown);
+
         m_printer = new_printer;
     }
     else {
@@ -460,6 +569,22 @@ void GCodeView::updatePrinterSettings(QSharedPointer<SettingsBase> sb) {
 
     m_camera->setDefaultZoom(m_printer->getDefaultZoom());
     this->resetCamera();
+}
+
+void GCodeView::showSeams(bool show) {
+    m_printer->setSeamsHidden(!show);
+
+    m_state.seams_shown = show;
+
+    this->update();
+}
+
+void GCodeView::updateOptimizationSettings(QSharedPointer<SettingsBase> sb) {
+    m_sb = sb;
+
+    m_printer->updateFromSettings(m_sb);
+
+    this->update();
 }
 
 void GCodeView::setLowLayer(uint low_layer) {

@@ -524,11 +524,10 @@ void MainToolbar::handleModifiedSetting(const QString& setting_key) {
         static_cast<PathOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kPathOrder));
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kPointOrder));
-    bool secondPointEnabled = GSM->getGlobal()->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
 
     // Disable button.
     if (islandOrder != IslandOrderOptimization::kCustomPoint && pathOrder != PathOrderOptimization::kCustomPoint &&
-        !usesCustomPointLocation(pointOrder) && !secondPointEnabled) {
+        !usesCustomPointLocation(pointOrder)) {
         m_seam_btn->setDisabled(true);
         m_seam_btn->setToolTip("Custom optimization points are not set");
         m_seam_btn->setChecked(false);

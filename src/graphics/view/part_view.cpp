@@ -34,6 +34,7 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 #include "graphics/objects/printer/printer_object.h"
+#include "graphics/objects/sphere/seam_object.h"
 #include "graphics/objects/text_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
@@ -200,6 +201,78 @@ restart_check:
             goto restart_check;
         }
     }
+}
+
+bool PartView::beginOptimizationPointDrag(QPointF mouse_ndc_pos) {
+    auto picked = m_printer->pickOptimizationPoint(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos);
+    if (!picked.isValid()) {
+        return false;
+    }
+
+    QVector3D bed_intersection;
+    if (!m_printer->bedIntersection(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, bed_intersection)) {
+        return false;
+    }
+
+    m_state.dragging_seam = true;
+    m_state.dragged_seam = picked.object;
+    m_state.dragged_seam_x_setting = picked.x_setting;
+    m_state.dragged_seam_y_setting = picked.y_setting;
+    m_state.dragged_seam_offset = picked.object->translation() - bed_intersection;
+
+    emit optimizationPointDragStarted(picked.x_setting, picked.y_setting);
+
+    this->setCursor(QCursor(Qt::ClosedHandCursor));
+    return true;
+}
+
+bool PartView::updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish) {
+    if (!m_state.dragging_seam || m_state.dragged_seam.isNull()) {
+        return false;
+    }
+
+    QVector3D bed_intersection;
+    if (!m_printer->bedIntersection(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos, bed_intersection)) {
+        return false;
+    }
+
+    QVector3D translation = bed_intersection + m_state.dragged_seam_offset;
+    translation.setZ(m_printer->printerCenter().z());
+    m_state.dragged_seam->translateAbsolute(translation);
+
+    const double x = translation.x() * Constants::OpenGL::kViewToObject;
+    const double y = translation.y() * Constants::OpenGL::kViewToObject;
+    if (finish) {
+        emit optimizationPointDragFinished(m_state.dragged_seam_x_setting, x, m_state.dragged_seam_y_setting, y);
+    }
+    else {
+        emit optimizationPointDragged(m_state.dragged_seam_x_setting, x, m_state.dragged_seam_y_setting, y);
+    }
+
+    this->update();
+    return true;
+}
+
+void PartView::finishOptimizationPointDrag(QPointF mouse_ndc_pos) {
+    if (!m_state.dragging_seam) {
+        return;
+    }
+
+    if (!updateOptimizationPointDrag(mouse_ndc_pos, true) && !m_state.dragged_seam.isNull()) {
+        const QVector3D translation = m_state.dragged_seam->translation();
+        emit optimizationPointDragFinished(m_state.dragged_seam_x_setting,
+                                           translation.x() * Constants::OpenGL::kViewToObject,
+                                           m_state.dragged_seam_y_setting,
+                                           translation.y() * Constants::OpenGL::kViewToObject);
+    }
+
+    m_state.dragging_seam = false;
+    m_state.dragged_seam.reset();
+    m_state.dragged_seam_x_setting.clear();
+    m_state.dragged_seam_y_setting.clear();
+    m_state.dragged_seam_offset = QVector3D();
+    this->setCursor(QCursor(Qt::ArrowCursor));
+    this->update();
 }
 
 void PartView::centerSelectedParts() {
@@ -422,6 +495,10 @@ void PartView::initView() {
 }
 
 void PartView::handleLeftClick(QPointF mouse_ndc_pos) {
+    if (beginOptimizationPointDrag(mouse_ndc_pos)) {
+        return;
+    }
+
     auto picked_part = this->pickPart(mouse_ndc_pos, m_part_objects);
     if (!picked_part.isNull()) {
         // If currently in an alignment state, try to align.
@@ -504,6 +581,11 @@ void PartView::handleLeftDoubleClick(QPointF mouse_ndc_pos) {
 }
 
 void PartView::handleLeftRelease(QPointF mouse_ndc_pos) {
+    if (m_state.dragging_seam) {
+        finishOptimizationPointDrag(mouse_ndc_pos);
+        return;
+    }
+
     m_low_plane->hide();
     m_state.translate_start = QVector3D(0, 0, 0);
     m_state.part_trans_start.clear();
@@ -524,6 +606,11 @@ void PartView::handleLeftRelease(QPointF mouse_ndc_pos) {
 }
 
 void PartView::handleLeftMove(QPointF mouse_ndc_pos) {
+    if (m_state.dragging_seam) {
+        updateOptimizationPointDrag(mouse_ndc_pos, false);
+        return;
+    }
+
     if (m_selected_objects.empty())
         return;
     if (!m_state.translating)
@@ -718,6 +805,18 @@ void PartView::handleRightRelease(QPointF mouse_ndc_pos, QPointF global_pos) {
 }
 
 void PartView::handleMouseMove(QPointF mouse_ndc_pos) {
+    auto picked_seam = m_printer->pickOptimizationPoint(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos);
+    if (picked_seam.isValid()) {
+        if (!m_state.highlighted_part.isNull()) {
+            m_state.highlighted_part->unhighlight();
+            m_state.highlighted_part.reset();
+            this->update();
+        }
+
+        this->setCursor(QCursor(Qt::OpenHandCursor));
+        return;
+    }
+
     auto picked_part = this->pickPart(mouse_ndc_pos, m_part_objects);
 
     QCursor c = QCursor(Qt::ArrowCursor);

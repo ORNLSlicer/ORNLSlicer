@@ -60,6 +60,11 @@ QSharedPointer<PartMetaModel> PartWidget::getPartMeta() { return m_model; }
 
 QString PartWidget::getFirstPartName() { return m_part_control->nameOfFirstPart(); }
 
+PartView* PartWidget::view() {
+    m_view_controls->raise();
+    return m_part_view;
+}
+
 void PartWidget::takeScreenshot() {
     QString filepath;
     QImage screenshot;
@@ -151,6 +156,7 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                              PS::Optimizations::kPathOrder,
                                                              PS::Optimizations::kCustomPathXLocation,
                                                              PS::Optimizations::kCustomPathYLocation,
+                                                             PS::Optimizations::kPointOrder,
                                                              PS::Optimizations::kCustomPointXLocation,
                                                              PS::Optimizations::kCustomPointYLocation,
                                                              PS::Optimizations::kEnableSecondCustomLocation,

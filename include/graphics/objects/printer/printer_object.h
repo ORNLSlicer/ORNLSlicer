@@ -1,5 +1,8 @@
 #pragma once
 
+#include <QMatrix4x4>
+#include <QPointF>
+#include <QString>
 #include <qlist.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -20,6 +23,15 @@ class SeamObject;
  */
 class PrinterObject : public GraphicsObject {
   public:
+    //! \brief Pick result for draggable optimization point graphics.
+    struct OptimizationPointPick {
+        QSharedPointer<SeamObject> object;
+        QString x_setting;
+        QString y_setting;
+
+        bool isValid() const { return !object.isNull(); }
+    };
+
     //! \brief Update this printer using new settings.
     //! \param sb: Settings to use.
     void updateFromSettings(QSharedPointer<SettingsBase> sb);
@@ -33,6 +45,24 @@ class PrinterObject : public GraphicsObject {
 
     //! \brief Shows or hides seams.
     void setSeamsHidden(bool hide);
+
+    //! \brief Picks an optimization point graphic under the cursor.
+    //! \param projection: View projection matrix.
+    //! \param view: View matrix.
+    //! \param mouse_ndc_pos: Mouse position in normalized device coordinates.
+    //! \param ortho: If the view uses orthographic projection.
+    OptimizationPointPick pickOptimizationPoint(const QMatrix4x4& projection, const QMatrix4x4& view,
+                                                QPointF mouse_ndc_pos, bool ortho = false);
+
+    //! \brief Intersects the cursor ray with this printer's bed plane.
+    //! \param projection: View projection matrix.
+    //! \param view: View matrix.
+    //! \param mouse_ndc_pos: Mouse position in normalized device coordinates.
+    //! \param intersection: Output bed-plane intersection in view coordinates.
+    //! \param ortho: If the view uses orthographic projection.
+    //! \return If an intersection was found.
+    bool bedIntersection(const QMatrix4x4& projection, const QMatrix4x4& view, QPointF mouse_ndc_pos,
+                         QVector3D& intersection, bool ortho = false);
 
     //! \brief gets the default zoom level for the printer
     //! \return the default zoom in OpenGL space

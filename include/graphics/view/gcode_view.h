@@ -22,6 +22,7 @@
 namespace ORNL {
 // Forward
 class PrinterObject;
+class SeamObject;
 
 /*!
  * \brief View that displays generated GCode and provides interactivity with it.
@@ -76,6 +77,13 @@ class GCodeView : public BaseView {
     //! \param sb: New settings object.
     void updatePrinterSettings(QSharedPointer<SettingsBase> sb);
 
+    //! \brief Shows or hides optimization point graphics.
+    void showSeams(bool show);
+
+    //! \brief Updates optimization point graphics based on changes to the settings.
+    //! \param sb: New settings object.
+    void updateOptimizationSettings(QSharedPointer<SettingsBase> sb);
+
     //! \brief Sets the lowest layer to show.
     void setLowLayer(uint low_layer);
     //! \brief Sets the highest layer to show.
@@ -107,6 +115,15 @@ class GCodeView : public BaseView {
     virtual void resetCamera() override;
 
   signals:
+    //! \brief Notification that a draggable optimization point setting edit has started.
+    void optimizationPointDragStarted(QString x_setting, QString y_setting);
+
+    //! \brief Notification that a draggable optimization point setting edit has changed.
+    void optimizationPointDragged(QString x_setting, double x, QString y_setting, double y);
+
+    //! \brief Notification that a draggable optimization point setting edit has finished.
+    void optimizationPointDragFinished(QString x_setting, double x, QString y_setting, double y);
+
     //! \brief Signal that the passed lines were selected/deselected
     //! \param linesToAdd: lines to select
     //! \param lineToRemove: lines to deselect
@@ -137,6 +154,12 @@ class GCodeView : public BaseView {
     //! \brief Handles the following: Segment deselection
     void handleLeftClick(QPointF mouse_ndc_pos) override;
 
+    //! \brief Handles the following: Optimization point drag
+    void handleLeftMove(QPointF mouse_ndc_pos) override;
+
+    //! \brief Handles the following: Optimization point drag finalization
+    void handleLeftRelease(QPointF mouse_ndc_pos) override;
+
     //! \brief Handles the following: Segment selection
     void handleLeftDoubleClick(QPointF mouse_ndc_pos) override;
 
@@ -165,6 +188,15 @@ class GCodeView : public BaseView {
 
     //! \brief Refreshes camera-dependent segment info display.
     void updateSegmentInfoViewMatrix();
+
+    //! \brief Begins dragging an optimization point if the cursor is over one.
+    bool beginOptimizationPointDrag(QPointF mouse_ndc_pos);
+
+    //! \brief Updates an active optimization point drag.
+    bool updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish);
+
+    //! \brief Finishes an active optimization point drag.
+    void finishOptimizationPointDrag(QPointF mouse_ndc_pos);
 
     //! \brief Settings for the view.
     QSharedPointer<SettingsBase> m_sb;
@@ -200,6 +232,24 @@ class GCodeView : public BaseView {
 
         //! \brief If ghosted models are currently being displayed
         bool showing_ghosts = false;
+
+        //! \brief If optimization point graphics are shown.
+        bool seams_shown = false;
+
+        //! \brief If an optimization point is being dragged.
+        bool dragging_seam = false;
+
+        //! \brief Optimization point currently being dragged.
+        QSharedPointer<SeamObject> dragged_seam;
+
+        //! \brief X setting controlled by the dragged optimization point.
+        QString dragged_seam_x_setting;
+
+        //! \brief Y setting controlled by the dragged optimization point.
+        QString dragged_seam_y_setting;
+
+        //! \brief Cursor-to-point offset retained during optimization point drag.
+        QVector3D dragged_seam_offset;
 
         //! \brief Hidden segment types.
         SegmentDisplayType hidden_type = SegmentDisplayType::kNone;
