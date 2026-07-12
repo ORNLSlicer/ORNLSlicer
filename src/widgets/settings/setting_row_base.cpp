@@ -192,12 +192,33 @@ bool SettingRowBase::hasLocalOverride() const {
     if (m_settings_bases.isEmpty())
         return false;
 
-    for (const QSharedPointer<SettingsBase>& settings_base : m_settings_bases) {
+    for (int index = 0, end = m_settings_bases.size(); index < end; ++index) {
+        const QSharedPointer<SettingsBase>& settings_base = m_settings_bases[index];
         for (const QString& key : m_local_override_keys) {
-            if (settings_base->contains(key))
+            if (settings_base->contains(key) && !matchesInheritedValue(key, index))
                 return true;
         }
     }
+
+    return false;
+}
+
+bool SettingRowBase::matchesInheritedValue(const QString& key, int index) const {
+    if (index < 0 || index >= m_settings_bases.size() || !m_settings_bases[index]->contains(key))
+        return true;
+
+    const fifojson local_value = m_settings_bases[index]->setting<fifojson>(key);
+    if (index < m_inherited_settings_bases.size()) {
+        const QSharedPointer<SettingsBase>& inherited_base = m_inherited_settings_bases[index];
+        if (!inherited_base.isNull() && inherited_base->contains(key))
+            return local_value == inherited_base->setting<fifojson>(key);
+    }
+
+    if (m_sb->contains(key))
+        return local_value == m_sb->setting<fifojson>(key);
+
+    if (key == m_key && m_json.contains(Constants::Settings::Master::kDefault))
+        return local_value == m_json[Constants::Settings::Master::kDefault];
 
     return false;
 }
