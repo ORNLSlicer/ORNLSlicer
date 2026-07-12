@@ -135,6 +135,9 @@ class SettingRowBase {
     //! \brief Notify before a setting key is written by this row.
     void notifyValueAboutToChange(const QString& key);
 
+    //! \brief Returns the warning-count delta for a new row warning state.
+    int warningCountDelta(bool warning_active, bool& previous_warning_active);
+
     //! \brief Sets keys that should be checked when deciding whether this row is locally overridden.
     void setLocalOverrideKeys(QList<QString> keys);
 
@@ -249,6 +252,9 @@ class SettingRowBase {
 
     //! \brief Parent settings inherited by the corresponding selected settings bases.
     QList<QSharedPointer<SettingsBase>> m_inherited_settings_bases;
+
+    //! \brief Whether parent warning counters were reset for a newly selected set of bases.
+    bool m_warning_state_reset_pending = false;
 
     //! \brief Index of row
     int m_index;
