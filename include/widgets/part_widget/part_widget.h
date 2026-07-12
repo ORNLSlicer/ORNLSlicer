@@ -46,6 +46,9 @@ class PartWidget : public QWidget {
     //! \return string of name
     QString getFirstPartName();
 
+    //! \brief Get the view for this widget.
+    PartView* view();
+
   signals:
     //! \brief Signal of parts that have been selected.
     void selected(QSet<QSharedPointer<Part>> pl, QSharedPointer<Part> mp);

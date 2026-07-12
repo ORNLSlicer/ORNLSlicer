@@ -43,6 +43,8 @@ void GCodeWidget::showSegmentInfo(bool show) { m_segment_info_control->setVisibl
 
 void GCodeWidget::showGhosts(bool status) { m_gcode_view->showGhosts(status); }
 
+void GCodeWidget::showSeams(bool show) { m_gcode_view->showSeams(show); }
+
 void GCodeWidget::handleModifiedSetting(QString key) {
     static const auto printer_settings = QSet<QString> {PRS::Dimensions::kXMin,
                                                         PRS::Dimensions::kXMax,
@@ -64,8 +66,26 @@ void GCodeWidget::handleModifiedSetting(QString key) {
                                                         PRS::Dimensions::kGridYDistance,
                                                         PRS::Dimensions::kGridYOffset};
 
+    static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
+                                                             PS::Optimizations::kCustomIslandXLocation,
+                                                             PS::Optimizations::kCustomIslandYLocation,
+                                                             PS::Optimizations::kPathOrder,
+                                                             PS::Optimizations::kCustomPathXLocation,
+                                                             PS::Optimizations::kCustomPathYLocation,
+                                                             PS::Optimizations::kPointOrder,
+                                                             PS::Optimizations::kCustomPointXLocation,
+                                                             PS::Optimizations::kCustomPointYLocation,
+                                                             PS::Optimizations::kEnableSecondCustomLocation,
+                                                             PS::Optimizations::kCustomPointSecondXLocation,
+                                                             PS::Optimizations::kCustomPointSecondYLocation,
+                                                             PRS::Dimensions::kXOffset,
+                                                             PRS::Dimensions::kYOffset};
+
     if (printer_settings.contains(key)) {
         m_gcode_view->updatePrinterSettings(GSM->getGlobal());
+    }
+    else if (optimization_settings.contains(key)) {
+        m_gcode_view->updateOptimizationSettings(GSM->getGlobal());
     }
 }
 
