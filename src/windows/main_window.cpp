@@ -53,6 +53,7 @@
 #include "threading/session_loader.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
 #include "widgets/gcode_widget.h"
 #include "widgets/gcodebar.h"
@@ -210,6 +211,7 @@ void MainWindow::continueStartup() {
     GSM->loadLayerBarTemplate(CSM->getMostRecentLayerBarSettingFolderLocation());
     this->setupClasses();
     this->setupUi();
+    this->updateSavedProjectState();
 }
 
 MainWindow::~MainWindow() {
@@ -226,6 +228,11 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
+    if (!confirmProjectClose()) {
+        event->ignore();
+        return;
+    }
+
     if (PreferencesManager::getInstance()->getWindowMaximizedPreference() != this->isMaximized())
         PreferencesManager::getInstance()->setWindowMaximizedPreference(this->isMaximized());
     if (PreferencesManager::getInstance()->getWindowSizePreference() != this->size())
@@ -233,6 +240,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     if (PreferencesManager::getInstance()->getWindowPosPreference() != this->pos())
         PreferencesManager::getInstance()->setWindowPosPreference(this->pos());
 
+    event->accept();
     QApplication::quit();
 }
 
@@ -939,6 +947,16 @@ void MainWindow::setupEvents() {
         m_cmdbar->append("\r\nScaling applied permenantly to current transformation\r\n"
                          "Scaling factors are reset to 100%\r\n");
     });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemAddedUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemReloadUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemRemovedUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::parentingUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::transformUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
 
     QSharedPointer<PartMetaModel> part_meta = m_part_widget->getPartMeta();
     connect(part_meta.get(), &PartMetaModel::itemAddedUpdate, this, &MainWindow::initializePartTransform);
@@ -956,6 +974,8 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_main_toolbar, &MainToolbar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
+    connect(m_settingbar, &SettingBar::settingsBaseChanged, this,
+            [this](QString) { this->markProjectModified(); });
     connect(m_settingbar, &SettingBar::tabHidden, this, &MainWindow::addHiddenSetting);
     connect(GSM.get(), &SettingsManager::globalLoaded, this, &MainWindow::updateSettings);
 
@@ -1206,7 +1226,10 @@ void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
     m_part_transform_snapshots[item] = current;
 }
 
-void MainWindow::handleModifiedSetting(const QString key) {}
+void MainWindow::handleModifiedSetting(const QString key) {
+    Q_UNUSED(key);
+    markProjectModified();
+}
 
 QList<QAction*> MainWindow::setupSettingActions(QMenu* submenu, QString panel) {
     QList<QAction*> actions;
@@ -1437,7 +1460,7 @@ void MainWindow::updateStatus(QString status) {
     m_statusbar->showMessage(status);
 }
 
-void MainWindow::saveSession() {
+bool MainWindow::saveSessionToSelectedFile(bool notifyOnSuccess, bool waitForSave, QString* selectedFile) {
     QFileDialog save_dialog;
     save_dialog.setWindowTitle("Save project");
     save_dialog.setDirectory(CSM->getMostRecentProjectLocation());
@@ -1445,18 +1468,94 @@ void MainWindow::saveSession() {
     save_dialog.setNameFilters(QStringList() << "ORNLSlicer Project File (*.s2p)" << "Any Files (*)");
     save_dialog.setDefaultSuffix("s2p");
     if (!save_dialog.exec())
-        return;
+        return false;
 
     QString filename = save_dialog.selectedFiles().first();
     if (filename.isEmpty())
-        return;
+        return false;
+    if (selectedFile != nullptr)
+        *selectedFile = filename;
 
-    CSM->saveSession(filename, true, true);
+    SessionLoader* loader = CSM->saveSession(filename, true, notifyOnSuccess);
+    if (waitForSave)
+        loader->wait();
+
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
+    updateSavedProjectState();
 
     this->setTitleInfo(QFileInfo(filename).fileName());
+    return true;
+}
+
+void MainWindow::saveSession() {
+    QString filename;
+    if (!saveSessionToSelectedFile(true, false, &filename))
+        return;
+
     m_statusbar->showMessage("Session saved");
     m_cmdbar->append("Session saved: " + filename);
+}
+
+QString MainWindow::projectStateSnapshot() {
+    if (m_part_widget != nullptr)
+        m_part_widget->updatePartTransformations();
+
+    fifojson snapshot;
+    snapshot[Constants::Settings::Session::Files::kSession] = CSM->partsJson();
+    snapshot[Constants::Settings::Session::Files::kGlobal] = GSM->globalJson();
+
+    fifojson local_settings = fifojson::array();
+    for (auto& part : CSM->parts()) {
+        fifojson part_json;
+        part_json[Constants::Settings::Session::LocalFile::kName] = part->name();
+        part_json[Constants::Settings::Session::LocalFile::kSettings] = part->getSb()->json();
+        part_json[Constants::Settings::Session::LocalFile::kRanges] = part->SettingsRangesToJson();
+        local_settings.push_back(part_json);
+    }
+    snapshot[Constants::Settings::Session::Files::kLocal] = local_settings;
+
+    return QString::fromStdString(snapshot.dump());
+}
+
+void MainWindow::updateSavedProjectState() {
+    m_saved_project_state = projectStateSnapshot();
+    m_project_modified = false;
+}
+
+void MainWindow::markProjectModified() { m_project_modified = true; }
+
+bool MainWindow::hasUnsavedProjectChanges() {
+    if (!m_project_modified)
+        return false;
+
+    return projectStateSnapshot() != m_saved_project_state;
+}
+
+bool MainWindow::confirmProjectClose() {
+    if (!PreferencesManager::getInstance()->getWarnUnsavedProjectOnClosePreference())
+        return true;
+
+    if (!hasUnsavedProjectChanges())
+        return true;
+
+    QMessageBox dialog(this);
+    dialog.setIcon(QMessageBox::Warning);
+    dialog.setWindowTitle("Save Project");
+    dialog.setText("The current project has unsaved changes.");
+    dialog.setInformativeText("Do you want to save the project before closing?");
+    dialog.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    dialog.setDefaultButton(QMessageBox::Save);
+    dialog.setEscapeButton(QMessageBox::Cancel);
+
+    switch (static_cast<QMessageBox::StandardButton>(dialog.exec())) {
+        case QMessageBox::Save:
+            return saveSessionToSelectedFile(false, true);
+        case QMessageBox::Discard:
+            return true;
+        case QMessageBox::Cancel:
+        default:
+            return false;
+    }
 }
 
 void MainWindow::loadSession() {
@@ -1486,7 +1585,10 @@ void MainWindow::loadSession() {
 
 SessionLoader* MainWindow::loadASession(const QString& filename) {
     m_part_widget->clear();
-    return CSM->loadSession(true, filename);
+    SessionLoader* loader = CSM->loadSession(true, filename);
+    if (loader != nullptr)
+        connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
+    return loader;
 }
 
 void MainWindow::updateSettings(const QString& name) {
@@ -1547,6 +1649,7 @@ void MainWindow::saveTemplate() {
     GSM->loadGlobalJson(dialog.filename());
     QFileInfo fileInfo(dialog.filename());
     updateSettings(fileInfo.baseName());
+    markProjectModified();
 }
 
 void MainWindow::loadTemplate() {
@@ -1579,6 +1682,7 @@ void MainWindow::loadTemplate() {
             tabs.removeAt(i);
     }
     m_settingbar->displayNewSetting(tabs, actualFilename);
+    markProjectModified();
 }
 
 void MainWindow::setSettingFolder() {

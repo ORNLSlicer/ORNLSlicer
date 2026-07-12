@@ -127,6 +127,9 @@ class PreferencesManager : public QObject {
     //! \return if true widths should be used
     bool getUseTrueWidthsPreference();
 
+    //! \brief Return the user preference for warning about unsaved projects when closing
+    bool getWarnUnsavedProjectOnClosePreference();
+
     //! \brief Return the window preference for maximization
     bool getWindowMaximizedPreference();
 
@@ -339,6 +342,9 @@ class PreferencesManager : public QObject {
     //! \param use if true widths should be used
     void setUseTrueWidthsPreference(bool use);
 
+    //! \brief Sets the preference for warning about unsaved projects when closing
+    void setWarnUnsavedProjectOnClosePreference(bool warn);
+
     //! \brief Sets the unit used for rotation
     void setRotationUnit(QString unit);
 
@@ -406,6 +412,7 @@ class PreferencesManager : public QObject {
     bool m_hide_travel_preference;
     bool m_hide_support_preference;
     bool m_use_true_widths_preference;
+    bool m_warn_unsaved_project_on_close_preference;
 
     //! \brief Preferences for window size and position
     bool m_is_maximized;

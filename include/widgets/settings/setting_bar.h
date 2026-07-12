@@ -76,6 +76,12 @@ class SettingBar : public QWidget {
      */
     void settingModified(QString setting_key);
 
+    /*!
+     * \brief Signals that the selected settings base has been changed.
+     * \param setting_base Name of the newly selected settings base.
+     */
+    void settingsBaseChanged(QString setting_base);
+
     //! \brief Signal for main window to notify that a setting tab has been hidden
     //! \param pane Pane that setting is contained in
     //! \param category Setting header to add
