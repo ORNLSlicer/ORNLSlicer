@@ -71,10 +71,6 @@ class Vector2InputWidget : public QWidget, public SettingRowBase {
     void ensureSetting(const QString& key, Distance default_value);
     void updateSetting(const QString& key, double displayed_value);
     Distance reloadDistanceValue(const QString& key, Distance default_value, bool& consistent);
-    bool areConsistent(const QString& key, QSharedPointer<SettingsBase> a, QSharedPointer<SettingsBase> b,
-                       Distance default_value);
-    Distance effectiveDistanceValue(const QString& key, QSharedPointer<SettingsBase> settings_base,
-                                    Distance default_value);
     bool hasConsistentEffectiveValues(const QString& key, Distance default_value);
     bool hasAnyInconsistentValue();
     void updateWarningStateAfterEdit();

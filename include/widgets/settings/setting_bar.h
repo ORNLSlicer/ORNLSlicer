@@ -95,8 +95,10 @@ class SettingBar : public QWidget {
     void filter(QString str);
 
     //!\brief Currently selected settings bases as provided
-    //! \param settings_bases: List of currently selected ranges
-    void settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases);
+    //! \param name_and_bases: Label plus list of currently selected settings bases
+    //! \param inherited_bases: Parent settings for each selected base; null entries inherit Global directly
+    void settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
+                               QList<QSharedPointer<SettingsBase>> inherited_bases);
 
     //! \brief Closes all tabs.
     void closeAll();

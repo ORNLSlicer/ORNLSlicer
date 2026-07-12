@@ -99,9 +99,11 @@ class SettingRowBase {
     //! \param row: row to add to depenendcy list
     void addRowToNotify(QSharedPointer<SettingRowBase> row);
 
-    //! \brief Set setting bases
-    //! \param bases: list of bases currently selected by the user
-    void setBases(QList<QSharedPointer<SettingsBase>> settings_bases);
+    //! \brief Set selected setting bases and the parent settings each base inherits.
+    //! \param settings_bases: list of bases currently selected by the user
+    //! \param inherited_bases: corresponding parent bases; null entries inherit Global directly
+    void setBases(QList<QSharedPointer<SettingsBase>> settings_bases,
+                  QList<QSharedPointer<SettingsBase>> inherited_bases);
 
     //! \brief Get the setting bases of a row
     //! \return Returns the current settings bases of a row
@@ -136,10 +138,31 @@ class SettingRowBase {
     //! \brief Sets keys that should be checked when deciding whether this row is locally overridden.
     void setLocalOverrideKeys(QList<QString> keys);
 
-    //! \brief Removes local overrides matching the current global value.
+    //! \brief Returns the value inherited by one selected settings base.
+    template <class T> T inheritedValueHelper(const QString& key, int index, const T& global_value) const {
+        if (index >= 0 && index < m_inherited_settings_bases.size()) {
+            const QSharedPointer<SettingsBase>& inherited_base = m_inherited_settings_bases[index];
+            if (!inherited_base.isNull() && inherited_base->contains(key))
+                return inherited_base->setting<T>(key);
+        }
+
+        return global_value;
+    }
+
+    //! \brief Returns the effective value for one selected settings base.
+    template <class T> T effectiveValueHelper(const QString& key, int index, const T& global_value) const {
+        if (index >= 0 && index < m_settings_bases.size() && m_settings_bases[index]->contains(key))
+            return m_settings_bases[index]->setting<T>(key);
+
+        return inheritedValueHelper<T>(key, index, global_value);
+    }
+
+    //! \brief Removes edited overrides matching the value inherited by each selected base.
     template <class T> void removeRedundantLocalOverrides(const QString& key, const T& global_value) {
-        for (QSharedPointer<SettingsBase> settings_base : m_settings_bases) {
-            if (settings_base->contains(key) && settings_base->setting<T>(key) == global_value)
+        for (int index = 0, end = m_settings_bases.size(); index < end; ++index) {
+            QSharedPointer<SettingsBase> settings_base = m_settings_bases[index];
+            const T inherited_value = inheritedValueHelper<T>(key, index, global_value);
+            if (settings_base->contains(key) && settings_base->setting<T>(key) == inherited_value)
                 settings_base->remove(key);
         }
     }
@@ -159,8 +182,8 @@ class SettingRowBase {
             m_sb->setSetting(m_key, value);
 
         if (m_settings_bases.size() != 0) {
-            const T global_value =
-                m_sb->contains(m_key) ? m_sb->setting<T>(m_key) : m_json[Constants::Settings::Master::kDefault].get<T>();
+            const T global_value = m_sb->contains(m_key) ? m_sb->setting<T>(m_key)
+                                                         : m_json[Constants::Settings::Master::kDefault].get<T>();
             removeRedundantLocalOverrides<T>(m_key, global_value);
         }
 
@@ -173,52 +196,20 @@ class SettingRowBase {
         checkDynamicDependencies();
     }
 
-    //! \brief Templated comparator for checking range list consistency
-    template <class T> bool areConsistent(QSharedPointer<SettingsBase> a, QSharedPointer<SettingsBase> b) {
-        if (a->contains(m_key) && m_sb->setting<T>(m_key) == a->setting<T>(m_key))
-            a->remove(m_key);
-
-        if (b->contains(m_key) && m_sb->setting<T>(m_key) == b->setting<T>(m_key))
-            b->remove(m_key);
-
-        bool containsA = a->contains(m_key);
-        bool containsB = b->contains(m_key);
-
-        // returns true
-        //     - if both settings bases do NOT contain the key
-        //     - if both settings bases contain the SAME VALUE for the key
-        // returns false otherwise
-
-        return (containsA == containsB) &&
-               ((containsA && (a->setting<T>(m_key) == b->setting<T>(m_key))) || !containsA);
-    }
-
     //! \brief Templated helper for all widget types when settings must be reloaded
     template <class T> T reloadValueHelper(bool& consistent) {
         T cur;
         if (m_settings_bases.size() > 0) {
-            const T global_value =
-                m_sb->contains(m_key) ? m_sb->setting<T>(m_key) : m_json[Constants::Settings::Master::kDefault].get<T>();
-            removeRedundantLocalOverrides<T>(m_key, global_value);
+            const T global_value = m_sb->contains(m_key) ? m_sb->setting<T>(m_key)
+                                                         : m_json[Constants::Settings::Master::kDefault].get<T>();
+            cur = effectiveValueHelper<T>(m_key, 0, global_value);
 
             bool all_bases_consistent = true;
-            for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
-                auto sb_1 = m_settings_bases[i - 1];
-                auto sb_2 = m_settings_bases[i];
-                all_bases_consistent = all_bases_consistent && areConsistent<T>(sb_1, sb_2);
-            }
+            for (int index = 1, end = m_settings_bases.size(); index < end; ++index)
+                all_bases_consistent =
+                    all_bases_consistent && effectiveValueHelper<T>(m_key, index, global_value) == cur;
 
             if (all_bases_consistent) {
-                // setting was consistent and either didn't exist or did exist and were equal
-                // So, if it exists, use it, otherwise grab the global
-                if (m_settings_bases[0]->contains(m_key))
-                    cur = m_settings_bases[0]->setting<T>(m_key);
-                else {
-                    if (m_sb->contains(m_key))
-                        cur = m_sb->setting<T>(m_key);
-                    else
-                        cur = m_json[Constants::Settings::Master::kDefault].get<T>();
-                }
                 clearNotification();
                 styleLabel(true);
             }
@@ -255,6 +246,9 @@ class SettingRowBase {
 
     //! \brief Pointers to settings bases when a user selects them for local settings
     QList<QSharedPointer<SettingsBase>> m_settings_bases;
+
+    //! \brief Parent settings inherited by the corresponding selected settings bases.
+    QList<QSharedPointer<SettingsBase>> m_inherited_settings_bases;
 
     //! \brief Index of row
     int m_index;

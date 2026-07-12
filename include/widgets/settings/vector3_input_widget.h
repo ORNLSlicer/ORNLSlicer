@@ -71,9 +71,6 @@ class Vector3InputWidget : public QWidget, public SettingRowBase {
     void ensureSetting(const QString& key, double default_value);
     void updateSetting(const QString& key, double value);
     double reloadDoubleValue(const QString& key, double default_value, bool& consistent);
-    bool areConsistent(const QString& key, QSharedPointer<SettingsBase> a, QSharedPointer<SettingsBase> b,
-                       double default_value);
-    double effectiveDoubleValue(const QString& key, QSharedPointer<SettingsBase> settings_base, double default_value);
     bool hasConsistentEffectiveValues(const QString& key, double default_value);
     bool hasAnyInconsistentValue();
     void updateWarningStateAfterEdit();

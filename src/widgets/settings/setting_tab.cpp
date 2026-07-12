@@ -147,10 +147,10 @@ void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input
         }
 
         if (!newRow.isNull()) {
-            newRow->setValueChangeCallback([this](const QString& changed_key,
-                                                  const QList<QSharedPointer<SettingsBase>>& settings_bases) {
-                emit settingAboutToChange(changed_key, settings_bases);
-            });
+            newRow->setValueChangeCallback(
+                [this](const QString& changed_key, const QList<QSharedPointer<SettingsBase>>& settings_bases) {
+                    emit settingAboutToChange(changed_key, settings_bases);
+                });
             m_rows.insert(primary_key, newRow);
             for (std::size_t i = 1; i < components.size(); ++i)
                 m_row_aliases.insert(componentSetting(components.at(i)), newRow);
@@ -164,10 +164,10 @@ void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input
         QSharedPointer<SettingRowBase>(m_creation_mapping[json.at(Constants::Settings::Master::kType)](
             this, m_sb, key, json, m_container_layout, m_size));
 
-    newRow->setValueChangeCallback([this](const QString& changed_key,
-                                          const QList<QSharedPointer<SettingsBase>>& settings_bases) {
-        emit settingAboutToChange(changed_key, settings_bases);
-    });
+    newRow->setValueChangeCallback(
+        [this](const QString& changed_key, const QList<QSharedPointer<SettingsBase>>& settings_bases) {
+            emit settingAboutToChange(changed_key, settings_bases);
+        });
     m_rows.insert(key, newRow);
     ++m_size;
 }
@@ -197,12 +197,14 @@ void SettingTab::reload() {
     }
 }
 
-void SettingTab::settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases) {
-    if (m_settings_bases != settings_bases) {
+void SettingTab::settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases,
+                                       QList<QSharedPointer<SettingsBase>> inherited_bases) {
+    if (m_settings_bases != settings_bases || m_inherited_settings_bases != inherited_bases) {
         m_warning_count = 0; // reset the count of warnings if a new settings base has been selected
         m_settings_bases = settings_bases;
+        m_inherited_settings_bases = inherited_bases;
         for (QSharedPointer<SettingRowBase> curr_row : m_rows) {
-            curr_row->setBases(m_settings_bases);
+            curr_row->setBases(m_settings_bases, m_inherited_settings_bases);
             curr_row->reloadValue();
         }
     }
