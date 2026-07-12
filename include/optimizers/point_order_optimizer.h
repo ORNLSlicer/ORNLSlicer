@@ -21,6 +21,8 @@ namespace ORNL {
  * \list Consecutive – Move the start point a minimum user defined distance from the previous layer’s start point.
  * \list Custom Point – User defines a custom point, and the optimizer picks the point on each polyline that is closest
  * to the defined point.
+ * \list Custom Farthest Point – User defines a custom point, and the optimizer picks the point on each polyline that is
+ * farthest from the defined point.
  */
 class PointOrderOptimizer {
   public:

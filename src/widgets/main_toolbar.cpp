@@ -528,7 +528,7 @@ void MainToolbar::handleModifiedSetting(const QString& setting_key) {
 
     // Disable button.
     if (islandOrder != IslandOrderOptimization::kCustomPoint && pathOrder != PathOrderOptimization::kCustomPoint &&
-        pointOrder != PointOrderOptimization::kCustomPoint && !secondPointEnabled) {
+        !usesCustomPointLocation(pointOrder) && !secondPointEnabled) {
         m_seam_btn->setDisabled(true);
         m_seam_btn->setToolTip("Custom optimization points are not set");
         m_seam_btn->setChecked(false);
