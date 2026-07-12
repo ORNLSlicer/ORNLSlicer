@@ -127,6 +127,7 @@ void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) { m_rows
 
 void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases,
                               QList<QSharedPointer<SettingsBase>> inherited_bases) {
+    m_warning_state_reset_pending = m_settings_bases != settings_bases || m_inherited_settings_bases != inherited_bases;
     m_settings_bases = settings_bases;
     m_inherited_settings_bases = inherited_bases;
     updateResetButton();
@@ -167,6 +168,17 @@ void SettingRowBase::notifyValueAboutToChange(const QString& key) {
     if (m_value_change_callback) {
         m_value_change_callback(key, m_settings_bases);
     }
+}
+
+int SettingRowBase::warningCountDelta(bool warning_active, bool& previous_warning_active) {
+    if (m_warning_state_reset_pending) {
+        previous_warning_active = false;
+        m_warning_state_reset_pending = false;
+    }
+
+    const int delta = static_cast<int>(warning_active) - static_cast<int>(previous_warning_active);
+    previous_warning_active = warning_active;
+    return delta;
 }
 
 void SettingRowBase::setLocalOverrideKeys(QList<QString> keys) { m_local_override_keys = keys; }
