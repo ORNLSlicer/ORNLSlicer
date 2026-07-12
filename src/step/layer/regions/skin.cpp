@@ -22,6 +22,41 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+PolygonList polylineFootprint(const Polyline& line, Distance bead_width, const PolygonList& clipping_geometry) {
+    PolygonList footprint;
+    for (int i = 0, end = line.size() - 1; i < end; ++i) {
+        if (line[i] == line[i + 1])
+            continue;
+
+        footprint += Polyline({line[i], line[i + 1]}).makeReal(bead_width);
+    }
+
+    return footprint & clipping_geometry;
+}
+
+QVector<Polyline> printableLines(const QVector<Polyline>& lines, Distance min_path_length) {
+    QVector<Polyline> printable;
+    printable.reserve(lines.size());
+
+    for (const Polyline& line : lines) {
+        if (line.size() > 1 && line.length() >= min_path_length)
+            printable.push_back(line);
+    }
+
+    return printable;
+}
+
+PolygonList printableFootprint(const QVector<Polyline>& lines, Distance bead_width,
+                               const PolygonList& clipping_geometry) {
+    PolygonList footprint;
+    for (const Polyline& line : lines)
+        footprint += polylineFootprint(line, bead_width, clipping_geometry);
+
+    return footprint;
+}
+} // namespace
+
 Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
     : RegionBase(sb, index, settings_polygons) {
     // NOP
@@ -50,6 +85,7 @@ void Skin::compute(uint layer_num) {
     m_geometry = m_geometry.offset(overlap);
 
     Distance beadWidth = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
+    Distance minPathLength = m_sb->setting<Distance>(PS::Skin::kMinPathLength);
     Angle patternAngle = m_sb->setting<Angle>(PS::Skin::kAngle);
 
     int top_count = m_sb->setting<int>(PS::Skin::kTopCount);
@@ -70,13 +106,13 @@ void Skin::compute(uint layer_num) {
     if (m_sb->setting<bool>(PS::Skin::kInfillEnable))
         computeGradualSkinSteps(gradual_count);
 
-    bool anyGeometry = false;
     if (!m_skin_geometry.isEmpty()) {
-        m_geometry -= m_skin_geometry;
         PolygonList skin_offset = m_skin_geometry.offset(-beadWidth / 2);
-        m_computed_geometry = createPatternForArea(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)),
-                                                   skin_offset, beadWidth, beadWidth, patternAngle);
-        anyGeometry = true;
+        QVector<Polyline> lines =
+            createPatternForArea(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)), skin_offset,
+                                 beadWidth, beadWidth, patternAngle);
+        m_computed_geometry = printableLines(lines, minPathLength);
+        m_geometry -= printableFootprint(m_computed_geometry, beadWidth, m_skin_geometry);
     }
 
     if (!m_gradual_skin_geometry.isEmpty()) {
@@ -90,14 +126,15 @@ void Skin::compute(uint layer_num) {
         double densityStep = (1.0 - percentage) / (gradual_count + 1);
         for (int i = 0, end = m_gradual_skin_geometry.size(); i < end; ++i) {
             if (!m_gradual_skin_geometry[i].isEmpty()) {
-                m_geometry -= m_gradual_skin_geometry[i];
                 PolygonList skin_offset = m_gradual_skin_geometry[i].offset(-beadWidth / 2);
-                m_gradual_computed_geometry.push_back(
+                QVector<Polyline> lines =
                     createPatternForArea(gradualPattern, skin_offset, beadWidth,
-                                         beadWidth / (percentage + densityStep * (end - i)), infillPatternAngle));
+                                         beadWidth / (percentage + densityStep * (end - i)), infillPatternAngle);
+                m_gradual_computed_geometry.push_back(printableLines(lines, minPathLength));
+                m_geometry -=
+                    printableFootprint(m_gradual_computed_geometry.back(), beadWidth, m_gradual_skin_geometry[i]);
             }
         }
-        anyGeometry = true;
     }
 }
 
