@@ -70,9 +70,79 @@ Distance CommonParser::getCurrentGXDistance() {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
     bool uses_b = sb->setting<bool>(MS::Filament::kFilamentBAxis);
 
+    updateCurrentBeadGeometry();
+
     return MotionEstimation::calculateTimeAndVolume(
         m_current_layer, m_with_F_value, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
         m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer], uses_b);
+}
+
+void CommonParser::updateCurrentBeadGeometry() {
+    MotionEstimation::setBeadGeometry(beadWidthForComment(m_current_gcode_command.getComment()),
+                                      fileDistanceSetting(PS::Layer::kLayerHeight));
+}
+
+Distance CommonParser::fileDistanceSetting(const QString& key) const {
+    const auto setting = m_file_settings.constFind(key);
+    if (setting != m_file_settings.constEnd()) {
+        return Distance(setting.value());
+    }
+
+    return GSM->getGlobal()->setting<Distance>(key);
+}
+
+Distance CommonParser::beadWidthForComment(const QString& comment) const {
+    const Distance default_width = fileDistanceSetting(PS::Layer::kBeadWidth);
+    const QString adapted_skeleton_prefix = QStringLiteral("AD-") % Constants::RegionTypeStrings::kSkeleton;
+
+    if (comment.startsWith(Constants::RegionTypeStrings::kRadial) ||
+        comment.startsWith(Constants::RegionTypeStrings::kHelical)) {
+        return default_width;
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kPerimeter)) {
+        return fileDistanceSetting(PS::Perimeter::kBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kInset)) {
+        return fileDistanceSetting(PS::Inset::kBeadWidth);
+    }
+    else if (comment.startsWith(adapted_skeleton_prefix) ||
+             comment.startsWith(Constants::RegionTypeStrings::kSkeleton)) {
+        const int skeleton_start = comment.indexOf(Constants::RegionTypeStrings::kSkeleton);
+        const int width_start = comment.indexOf('-', skeleton_start + Constants::RegionTypeStrings::kSkeleton.size());
+
+        if (width_start >= 0) {
+            const int value_start = width_start + 1;
+            int value_end = comment.indexOf(' ', value_start);
+            if (value_end < 0) {
+                value_end = comment.size();
+            }
+
+            bool ok = false;
+            const double parsed_width = comment.mid(value_start, value_end - value_start).toDouble(&ok);
+            if (ok && parsed_width > 0) {
+                return Distance(parsed_width);
+            }
+        }
+
+        return fileDistanceSetting(PS::Skeleton::kBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kSkin)) {
+        return fileDistanceSetting(PS::Skin::kBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kInfill)) {
+        return fileDistanceSetting(PS::Infill::kBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kRaft)) {
+        return fileDistanceSetting(MS::PlatformAdhesion::kRaftBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kBrim)) {
+        return fileDistanceSetting(MS::PlatformAdhesion::kBrimBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kSkirt)) {
+        return fileDistanceSetting(MS::PlatformAdhesion::kSkirtBeadWidth);
+    }
+
+    return default_width;
 }
 
 // currently nothing of interest in header, so skip as long as line starts with
@@ -189,6 +259,9 @@ void CommonParser::checkAndSetNecessarySettings() {
     MotionEstimation::w_table_speed = m_file_settings[PRS::MachineSpeed::kWTableSpeed];
     MotionEstimation::layerThickness = m_file_settings[PS::Layer::kLayerHeight];
     MotionEstimation::extrusionWidth = m_file_settings[PS::Layer::kBeadWidth];
+    MotionEstimation::initialLayerThickness = MotionEstimation::layerThickness;
+    MotionEstimation::layer0extrusionWidth = MotionEstimation::extrusionWidth;
+    MotionEstimation::setBeadGeometry(MotionEstimation::extrusionWidth, MotionEstimation::layerThickness);
 
     if (MotionEstimation::max_xy_speed == 0) {
         MotionEstimation::max_xy_speed = 25400;
@@ -403,6 +476,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                 m_layer_FR_modifiers.push_back(1.0);
                 m_layer_G1F_times.push_back(Time());
                 m_layer_volumes.push_back(Volume());
+                MotionEstimation::resetBeadHeight();
 
                 m_layer_start_lines.push_back(m_current_line + 1);
             }
