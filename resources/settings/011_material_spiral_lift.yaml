@@ -113,7 +113,7 @@ settings:
     display: "Disable Feedrate Scaling for Spiral Lift"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change spiral lift path speeds."
-    depends: {"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
     options: []
     default: false
     minor: "Spiral Lift"

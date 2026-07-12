@@ -377,7 +377,7 @@ settings:
     display: "Disable Feedrate Scaling for Start-Up"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change start-up path speeds."
-    depends: {"OR":[{"perimeter_start-up":true},{"OR":[{"inset_start-up":true},{"OR":[{"skin_start-up":true},{"OR":[{"infill_start-up":true},{"skeleton_start-up":true}]}]}]}]}
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
     options: []
     default: false
     minor: "Start-Up"

@@ -377,7 +377,7 @@ settings:
     display: "Disable Feedrate Scaling for Slow Down"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change slow down path speeds."
-    depends: {"OR":[{"perimeter_slow_down":true},{"OR":[{"inset_slow_down":true},{"OR":[{"skin_slow_down":true},{"OR":[{"infill_slow_down":true},{"skeleton_slow_down":true}]}]}]}]}
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
     options: []
     default: false
     minor: "Slow Down"
