@@ -90,7 +90,7 @@ class CincinnatiWriter : public WriterBase {
     //! \brief Writes G-Code to disable the tamper
     QString writeTamperOff();
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, int rpm);
+    QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
     //! \brief Writes G-Code to update the acceleration value

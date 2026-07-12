@@ -95,6 +95,7 @@ void RegionBase::calculateMultiMaterialTransition(Distance& transition_distance,
                     current_segments[j]->setEnd(end);
 
                     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, old_end);
+                    segment->getSb()->populate(current_segments[j]->getSb());
                     segment->getSb()->setSetting(SS::kWidth,
                                                  current_segments[j]->getSb()->setting<Distance>(SS::kWidth));
                     segment->getSb()->setSetting(SS::kHeight,

@@ -210,7 +210,7 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
     QString rv;
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm, 0, params);
         m_current_rpm = rpm;
     }
     // Update extruder speed if needed
@@ -253,7 +253,7 @@ QString IngersollWriter::writeArc(const Point& start_point, const Point& end_poi
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm, 0, params);
     }
     // Update extruder speed if needed
     if (m_extruder_on && rpm != m_current_rpm) {
@@ -359,18 +359,19 @@ QString IngersollWriter::writeDwell(Time time) {
         return {};
 }
 
-QString IngersollWriter::writeExtruderOn(RegionType type, float rpm, int extruder_number) {
+QString IngersollWriter::writeExtruderOn(RegionType type, float rpm, int extruder_number,
+                                         const QSharedPointer<SettingsBase>& params) {
     QString rv;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += commentLine("Bead Start");
 
     m_extruder_on = true;
 
     // write dwell and initial extruder turn on depending on region type
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<float>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("TURN EXTRUDER ON");
 

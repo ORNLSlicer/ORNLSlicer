@@ -76,7 +76,7 @@ class MVPWriter : public WriterBase {
 
   private:
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, int rpm);
+    QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
 

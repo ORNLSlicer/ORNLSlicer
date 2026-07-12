@@ -78,7 +78,8 @@ class JuggerBotWriter : public WriterBase {
 
   private:
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, int rpm, Distance bead_width, Distance bead_height);
+    QString writeExtruderOn(RegionType type, int rpm, Distance bead_width, Distance bead_height,
+                            const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
 

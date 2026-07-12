@@ -329,7 +329,9 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     // Determine if travel length is short enough to keep extruder on
     Distance travel_distance = start_location.distance(target_location);
     if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
-        rv += writeExtruderOn(RegionType::kPerimeter, m_sb->setting<int>(PS::Perimeter::kExtruderSpeed));
+        int rpm = params->contains(SS::kExtruderSpeed) ? params->setting<int>(SS::kExtruderSpeed)
+                                                       : m_sb->setting<int>(PS::Perimeter::kExtruderSpeed);
+        rv += writeExtruderOn(rType == RegionType::kUnknown ? RegionType::kPerimeter : rType, rpm, params);
     }
 
     if (m_first_travel) {
@@ -546,7 +548,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     }
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+        rv += writeExtruderOn(region_type, rpm, params);
         setFeedrate(0);
     }
 
@@ -640,7 +642,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
     }
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
@@ -810,21 +812,21 @@ QString CincinnatiWriter::writeTamperOff() {
     }
 }
 
-QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm) {
+QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += writeTamperOn();
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
+    if (initial_rpm > 0) {
         // Check settings, turn off extruder servoing, will turn back on at end
         if (m_sb->setting<int>(MS::Extruder::kServoToTravelSpeed)) {
             rv += m_M11 % m_space % commentLine("TURN OFF EXTRUDER SERVOING");
         }
 
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
@@ -832,7 +834,7 @@ QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm) {
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) ==
                   (int)ForceMinimumLayerTime::kSlow_Feedrate)) {
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
         }
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");

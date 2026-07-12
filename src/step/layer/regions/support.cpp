@@ -215,6 +215,7 @@ Path Support::createPath(Polyline line) {
 
     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line.first(), line.last());
 
+    segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
     segment->getSb()->setSetting(SS::kWidth, bead_width);
     segment->getSb()->setSetting(SS::kHeight, layer_height);
     segment->getSb()->setSetting(SS::kSpeed, speed);

@@ -240,7 +240,7 @@ QString ORNLWriter::writeLine(const Point& start_point, const Point& target_poin
     QString rv;
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm, 0, params);
         setFeedrate(0);
     }
 
@@ -298,7 +298,7 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
     Distance z_offset = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm, 0, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -413,7 +413,8 @@ QString ORNLWriter::writeDwell(Time time) {
         return {};
 }
 
-QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extruder_number) {
+QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extruder_number,
+                                    const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
@@ -432,7 +433,7 @@ QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
     }
     else {
         // Retrieve relevant settings
-        int initial_speed = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        int initial_speed = getInitialExtruderSpeed(params);
         float gear_ratio = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
         bool force_min_layer_time = m_sb->setting<bool>(MS::Cooling::kForceMinLayerTime);
         ForceMinimumLayerTime force_min_layer_time_method =

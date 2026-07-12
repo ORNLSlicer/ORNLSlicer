@@ -297,6 +297,8 @@ Path Skin::createPath(Polyline line) {
     for (int i = 0; i < line.size() - 1; i++) {
         QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(line[i], line[i + 1]);
 
+        line_segment->getSb()->setSetting(MS::Extruder::kInitialSpeed,
+                                          m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         line_segment->getSb()->setSetting(SS::kWidth, width);
         line_segment->getSb()->setSetting(SS::kHeight, height);
         line_segment->getSb()->setSetting(SS::kSpeed, speed);
@@ -312,6 +314,8 @@ Path Skin::createPath(Polyline line) {
     if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric) {
         QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
+        line_segment->getSb()->setSetting(MS::Extruder::kInitialSpeed,
+                                          m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         line_segment->getSb()->setSetting(SS::kWidth, width);
         line_segment->getSb()->setSetting(SS::kHeight, height);
         line_segment->getSb()->setSetting(SS::kSpeed, speed);

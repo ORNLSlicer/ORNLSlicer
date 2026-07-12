@@ -206,6 +206,8 @@ Path Infill::createPath(Polyline line) {
     for (int j = 0, polyEnd = line.size() - 1; j < polyEnd; ++j) {
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line[j], line[j + 1]);
 
+        segment->getSb()->setSetting(MS::Extruder::kInitialSpeed,
+                                     m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, width);
         segment->getSb()->setSetting(SS::kHeight, height);
         segment->getSb()->setSetting(SS::kSpeed, speed);
@@ -221,6 +223,8 @@ Path Infill::createPath(Polyline line) {
     if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kConcentric) {
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
+        segment->getSb()->setSetting(MS::Extruder::kInitialSpeed,
+                                     m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, width);
         segment->getSb()->setSetting(SS::kHeight, height);
         segment->getSb()->setSetting(SS::kSpeed, speed);
