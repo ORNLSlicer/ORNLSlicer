@@ -348,6 +348,8 @@ const QString Constants::MaterialSettings::Startup::kSkeletonExtruderSpeed = "sk
 const QString Constants::MaterialSettings::Startup::kSkeletonRampUpEnable = "skeleton_start-up_ramp-up";
 const QString Constants::MaterialSettings::Startup::kSkeletonSteps = "skeleton_start-up_steps";
 const QString Constants::MaterialSettings::Startup::kStartUpAreaModifier = "start-up_area_modifier";
+const QString Constants::MaterialSettings::Startup::kDisableFeedrateScaling =
+    "disable_start-up_feedrate_scaling";
 
 // Slowdown
 const QString Constants::MaterialSettings::Slowdown::kPerimeterEnable = "perimeter_slow_down";
@@ -383,6 +385,8 @@ const QString Constants::MaterialSettings::Slowdown::kSkeletonExtruderSpeed = "s
 const QString Constants::MaterialSettings::Slowdown::kSkeletonCutoffDistance =
     "skeleton_slow_down_extruder_off_distance";
 const QString Constants::MaterialSettings::Slowdown::kSlowDownAreaModifier = "slow_down_area_modifier";
+const QString Constants::MaterialSettings::Slowdown::kDisableFeedrateScaling =
+    "disable_slow_down_feedrate_scaling";
 
 // TipWipe
 const QString Constants::MaterialSettings::TipWipe::kPerimeterEnable = "perimeter_wipe";
@@ -426,6 +430,8 @@ const QString Constants::MaterialSettings::TipWipe::kSkeletonAngle = "skeleton_w
 const QString Constants::MaterialSettings::TipWipe::kSkeletonCutoffDistance = "skeleton_wipe_cutoff_distance";
 const QString Constants::MaterialSettings::TipWipe::kSkeletonLiftHeight = "skeleton_wipe_lift_height";
 const QString Constants::MaterialSettings::TipWipe::kTipWipeVoltage = "tip_wipe_voltage";
+const QString Constants::MaterialSettings::TipWipe::kDisableFeedrateScaling =
+    "disable_tip_wipe_feedrate_scaling";
 
 // Spiral Lift
 const QString Constants::MaterialSettings::SpiralLift::kPerimeterEnable = "enable_spiral_perimeter";
@@ -437,6 +443,8 @@ const QString Constants::MaterialSettings::SpiralLift::kLiftHeight = "spiral_lif
 const QString Constants::MaterialSettings::SpiralLift::kLiftRadius = "spiral_lift_radius";
 const QString Constants::MaterialSettings::SpiralLift::kLiftSpeed = "spiral_lift_speed";
 const QString Constants::MaterialSettings::SpiralLift::kLiftPoints = "spiral_lift_points";
+const QString Constants::MaterialSettings::SpiralLift::kDisableFeedrateScaling =
+    "disable_spiral_lift_feedrate_scaling";
 
 // Purge
 const QString Constants::MaterialSettings::Purge::kInitialDuration = "initial_purge_duration";
@@ -1112,6 +1120,14 @@ const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables
      Constants::MaterialSettings::Cooling::kMinLayerTime},
     {Constants::MaterialSettings::Cooling::kMaxLayerTime.toUpper(),
      Constants::MaterialSettings::Cooling::kMaxLayerTime},
+    {Constants::MaterialSettings::Startup::kDisableFeedrateScaling.toUpper(),
+     Constants::MaterialSettings::Startup::kDisableFeedrateScaling},
+    {Constants::MaterialSettings::Slowdown::kDisableFeedrateScaling.toUpper(),
+     Constants::MaterialSettings::Slowdown::kDisableFeedrateScaling},
+    {Constants::MaterialSettings::TipWipe::kDisableFeedrateScaling.toUpper(),
+     Constants::MaterialSettings::TipWipe::kDisableFeedrateScaling},
+    {Constants::MaterialSettings::SpiralLift::kDisableFeedrateScaling.toUpper(),
+     Constants::MaterialSettings::SpiralLift::kDisableFeedrateScaling},
     {Constants::MaterialSettings::Density::kMaterialType.toUpper(),
      Constants::MaterialSettings::Density::kMaterialType},
     {Constants::MaterialSettings::Density::kDensity.toUpper(), Constants::MaterialSettings::Density::kDensity},

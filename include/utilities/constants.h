@@ -359,6 +359,7 @@ class Constants {
             static const QString kSkeletonSteps;
 
             static const QString kStartUpAreaModifier;
+            static const QString kDisableFeedrateScaling;
         };
 
         class Slowdown {
@@ -399,6 +400,7 @@ class Constants {
             static const QString kSkeletonCutoffDistance;
 
             static const QString kSlowDownAreaModifier;
+            static const QString kDisableFeedrateScaling;
         };
 
         class TipWipe {
@@ -449,6 +451,7 @@ class Constants {
             static const QString kSkeletonLiftHeight;
 
             static const QString kTipWipeVoltage;
+            static const QString kDisableFeedrateScaling;
         };
 
         class SpiralLift {
@@ -462,6 +465,7 @@ class Constants {
             static const QString kLiftRadius;
             static const QString kLiftSpeed;
             static const QString kLiftPoints;
+            static const QString kDisableFeedrateScaling;
         };
 
         class Purge {

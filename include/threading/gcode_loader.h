@@ -62,8 +62,8 @@ class GCodeLoader : public QThread {
 
     //! \brief signal to layer time window with info
     //! \param layertimes: List of layer times for display
-    void forwardInfoToLayerTimeWindow(QList<Time> layer_times, QList<double> layer_FR_modifiers,
-                                      bool adjusted_layer_time);
+    void forwardInfoToLayerTimeWindow(QList<Time> layer_times, QList<Time> adjusted_layer_times,
+                                      QList<double> layer_FR_modifiers, bool adjusted_layer_time);
 
     //! \brief signal to export window with info
     //! \param filename: temp gcode filename to copy

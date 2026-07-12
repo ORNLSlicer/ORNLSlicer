@@ -194,6 +194,7 @@ void GCodeLoader::run() {
             }
 
             QList<Time> layer_times = m_parser->getLayerTimes();
+            QList<Time> adjusted_layer_times = m_parser->getAdjustedLayerTimes();
             QList<double> layer_FR_modifiers = m_parser->getLayerFeedRateModifiers();
             QList<Volume> layer_volumes = m_parser->getLayerVolumes();
 
@@ -209,13 +210,13 @@ void GCodeLoader::run() {
                 min_time = qMin(current, min_time);
                 max_time = qMax(current, max_time);
 
-                temp_time = current / layer_FR_modifiers[i];
+                temp_time = adjusted_layer_times[i];
                 adjusted_min_time = qMin(temp_time, adjusted_min_time);
                 adjusted_max_time = qMax(temp_time, adjusted_max_time);
 
                 // add current layer to total printing and adjusted time
                 total_time += current;
-                total_adjusted_time += current / layer_FR_modifiers[i];
+                total_adjusted_time += temp_time;
                 total_volume += layer_volumes[i];
             }
 
@@ -230,7 +231,7 @@ void GCodeLoader::run() {
 
             // forward to layer_times_window
             emit forwardInfoToLayerTimeWindow(
-                layer_times, layer_FR_modifiers,
+                layer_times, adjusted_layer_times, layer_FR_modifiers,
                 ForceMinimumLayerTime::kSlow_Feedrate ==
                     static_cast<ForceMinimumLayerTime>(m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod)));
 
