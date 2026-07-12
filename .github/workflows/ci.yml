@@ -31,6 +31,12 @@ jobs:
         with:
           lfs: 'true'
       - uses: cachix/install-nix-action@v27
+      - name: Publish Nix build results to Cachix
+        if: github.ref == 'refs/heads/develop'
+        uses: cachix/cachix-action@v17
+        with:
+          name: ornl-slicer
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Setup Environment
         run: echo "artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name).appimage" >> $GITHUB_ENV
       - name: Compile Linux Build
@@ -59,6 +65,12 @@ jobs:
         with:
           lfs: 'true'
       - uses: cachix/install-nix-action@v27
+      - name: Publish Nix build results to Cachix
+        if: github.ref == 'refs/heads/develop'
+        uses: cachix/cachix-action@v17
+        with:
+          name: ornl-slicer
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Setup Environment
         run: |
           echo "install_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-installer-${{ github.run_number }}.exe" >> $GITHUB_ENV
