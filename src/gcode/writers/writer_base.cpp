@@ -78,6 +78,14 @@ QVector3D WriterBase::getTravelLift() {
     return lift_vector;
 }
 
+int WriterBase::getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& params) const {
+    if (params != nullptr && params->contains(MS::Extruder::kInitialSpeed)) {
+        return params->setting<int>(MS::Extruder::kInitialSpeed);
+    }
+
+    return m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+}
+
 QString WriterBase::writeSlicerHeader(const QString& syntax) {
     QString rv;
 

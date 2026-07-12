@@ -176,6 +176,9 @@ Path Brim::createPath(Polyline line) {
 
                 QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, point);
 
+                segment->getSb()->setSetting(
+                    MS::Extruder::kInitialSpeed,
+                    (is_settings_region ? start.getSettings() : m_sb)->setting<int>(MS::Extruder::kInitialSpeed));
                 segment->getSb()->setSetting(SS::kWidth, is_settings_region ? start.getSettings()->setting<Distance>(
                                                                                   MS::PlatformAdhesion::kBrimBeadWidth)
                                                                             : default_width);
@@ -204,6 +207,9 @@ Path Brim::createPath(Polyline line) {
 
         // Add final segment
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, end);
+        segment->getSb()->setSetting(
+            MS::Extruder::kInitialSpeed,
+            (is_settings_region ? start.getSettings() : m_sb)->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, is_settings_region ? start.getSettings()->setting<Distance>(
                                                                           MS::PlatformAdhesion::kBrimBeadWidth)
                                                                     : default_width);

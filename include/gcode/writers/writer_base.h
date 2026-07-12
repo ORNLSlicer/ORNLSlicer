@@ -135,6 +135,9 @@ class WriterBase {
     //! \brief gets a vector in the direction normal to the plane and of a length = travel lift height
     QVector3D getTravelLift();
 
+    //! \brief Gets the segment-local initial extruder speed, falling back to the global setting.
+    int getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& params = nullptr) const;
+
     GcodeMeta m_meta;
 
     //! \brief The settings the region will use.

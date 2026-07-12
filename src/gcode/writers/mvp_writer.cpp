@@ -184,7 +184,7 @@ QString MVPWriter::writeLine(const Point& start_point, const Point& target_point
 
     // turn on the extruder if it isn't already on
     if (m_extruder_on == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     if (rpm != m_current_rpm && rpm == 0) {
@@ -295,18 +295,18 @@ QString MVPWriter::writeDwell(Time time) {
         return {};
 }
 
-QString MVPWriter::writeExtruderOn(RegionType type, int rpm) {
+QString MVPWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += "M52" % commentSpaceLine("TURN GUN ON");
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
-        m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 

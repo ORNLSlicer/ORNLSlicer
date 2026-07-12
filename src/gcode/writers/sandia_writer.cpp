@@ -191,7 +191,7 @@ QString SandiaWriter::writeLine(const Point& start_point, const Point& target_po
     QString rv;
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm, 0, params);
         setFeedrate(0);
     }
 
@@ -244,7 +244,7 @@ QString SandiaWriter::writeArc(const Point& start_point, const Point& end_point,
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0);
+        rv += writeExtruderOn(region_type, rpm, 0, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -377,23 +377,24 @@ QString SandiaWriter::writeTamperOff() {
     return rv;
 }
 
-QString SandiaWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
+QString SandiaWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number,
+                                      const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += writeTamperOn();
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
         // scale
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate))
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 

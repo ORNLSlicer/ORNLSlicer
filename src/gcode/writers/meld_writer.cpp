@@ -189,7 +189,7 @@ QString MeldWriter::writeLine(const Point& start_point, const Point& target_poin
 
     // turn on the extruder if it isn't already on
     if (m_extruder_on == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     if (rpm == 0 && m_extruder_on == true) {
@@ -230,7 +230,7 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
 
     // Turn on the extruder if it isn't already on
     if (!m_extruder_on && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -350,11 +350,12 @@ QString MeldWriter::writeDwell(Time time) {
         return {};
 }
 
-QString MeldWriter::writeExtruderOn(RegionType type, int rpm) {
+QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
-    output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    int initial_rpm = getInitialExtruderSpeed(params);
+    output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
     if (!m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
         rv += "M4" % m_s % QString::number(output_rpm) % " @714" % commentSpaceLine("TURN SPINDLE ON");
@@ -362,8 +363,8 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm) {
         rv += "M54" % commentSpaceLine("HOLD FOR DEPOSITION START");
     }
     else {
-        if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        if (initial_rpm > 0) {
+            m_current_rpm = initial_rpm;
 
             rv += "M24 S" % QString::number(output_rpm) % commentSpaceLine("TURN ACTUATOR ON");
 

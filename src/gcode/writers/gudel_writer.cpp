@@ -174,7 +174,7 @@ QString GudelWriter::writeLine(const Point& start_point, const Point& target_poi
 
     // turn on the extruder if it isn't already on
     if (m_extruder_on == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     rv += m_G1;
@@ -326,21 +326,21 @@ QString GudelWriter::writeDwell(Time time) {
         return {};
 }
 
-QString GudelWriter::writeExtruderOn(RegionType type, int rpm) {
+QString GudelWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_extruder_on = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
         // scale
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate))
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 
