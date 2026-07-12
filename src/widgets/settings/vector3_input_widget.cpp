@@ -51,6 +51,8 @@ Vector3InputWidget::Vector3InputWidget(SettingTab* parent, QSharedPointer<Settin
                      {secondary_key, new QDoubleSpinBox(this), secondary_default},
                      {tertiary_key, new QDoubleSpinBox(this), tertiary_default}}},
       m_warn(false) {
+    setLocalOverrideKeys({primary_key, secondary_key, tertiary_key});
+
     QHBoxLayout* vector_layout = new QHBoxLayout(this);
     vector_layout->setContentsMargins(0, 0, 0, 0);
     vector_layout->setSpacing(kComponentSpacing);
@@ -182,6 +184,9 @@ void Vector3InputWidget::updateSetting(const QString& key, double value) {
     if (m_settings_bases.size() != 0) {
         for (QSharedPointer<SettingsBase> range : m_settings_bases)
             range->setSetting(key, value);
+
+        const double global_value = m_sb->contains(key) ? m_sb->setting<double>(key) : value;
+        removeRedundantLocalOverrides<double>(key, global_value);
     }
     else {
         m_sb->setSetting(key, value);
@@ -197,6 +202,9 @@ void Vector3InputWidget::updateSetting(const QString& key, double value) {
 
 double Vector3InputWidget::reloadDoubleValue(const QString& key, double default_value, bool& consistent) {
     if (m_settings_bases.size() > 0) {
+        const double base_value = m_sb->contains(key) ? m_sb->setting<double>(key) : default_value;
+        removeRedundantLocalOverrides<double>(key, base_value);
+
         bool all_bases_consistent = true;
         for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
             auto sb_1 = m_settings_bases[i - 1];
