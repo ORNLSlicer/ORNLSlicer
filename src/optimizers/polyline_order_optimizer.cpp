@@ -156,29 +156,33 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
     }
 
     // add as many motions without a travel as possible into one polyline
-    for (int i = 0, end = m_polylines.size(); i < end; ++i) {
-        if (m_polylines.size() > 0) {
-            const auto& [index, start] = closestOpenPolyline(m_polylines, temp_current_location);
+    if (m_min_travel_distance > 0) {
+        for (int i = 0, end = m_polylines.size(); i < end; ++i) {
+            if (m_polylines.size() > 0) {
+                const auto& [index, start] = closestOpenPolyline(m_polylines, temp_current_location);
 
-            // if false, indicates index is closest if you start at the end point, so reverse
-            if (start == false) {
-                m_polylines[index] = m_polylines[index].reverse();
-            }
+                // if false, indicates index is closest if you start at the end point, so reverse
+                if (start == false) {
+                    m_polylines[index] = m_polylines[index].reverse();
+                }
 
-            Point link_start = temp_current_location;
-            Point link_end = m_polylines[index].front();
+                Point link_start = temp_current_location;
+                Point link_end = m_polylines[index].front();
+                Distance link_distance = link_start.distance(link_end);
 
-            // Link must not intersect border geometry, remaining polylines, previously created/optimized polylines, or
-            // currently constructed polylines AND must be shorter than travel distance Otherwise, a travel must be used
-            if (!(linkIntersects(link_start, link_end, empty_polylines, m_border_geometry) ||
-                  linkIntersects(link_start, link_end, m_polylines, empty_polygon_list) ||
-                  linkIntersects(link_start, link_end, polylines, empty_polygon_list) ||
-                  linkIntersects(link_start, link_end, QVector<Polyline> {new_polyline}, empty_polygon_list)) &&
-                link_start.distance(link_end) < m_min_travel_distance) {
-                new_polyline += m_polylines[index];
-                temp_current_location = new_polyline.back();
-                m_polylines.remove(index);
-                i = 0;
+                // Link must not intersect border geometry, remaining polylines, previously created/optimized polylines,
+                // or currently constructed polylines AND must be shorter than travel distance. Otherwise, a travel must
+                // be used.
+                if (link_distance < m_min_travel_distance &&
+                    !(linkIntersects(link_start, link_end, empty_polylines, m_border_geometry) ||
+                      linkIntersects(link_start, link_end, m_polylines, empty_polygon_list) ||
+                      linkIntersects(link_start, link_end, polylines, empty_polygon_list) ||
+                      linkIntersects(link_start, link_end, QVector<Polyline> {new_polyline}, empty_polygon_list))) {
+                    new_polyline += m_polylines[index];
+                    temp_current_location = new_polyline.back();
+                    m_polylines.remove(index);
+                    i = 0;
+                }
             }
         }
     }

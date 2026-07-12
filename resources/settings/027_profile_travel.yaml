@@ -19,7 +19,7 @@ settings:
     tooltip: "Travel moves less than this value in the infill and skin regions are replaced with extrusion moves"
     depends: {"OR":[{"infill":true},{"skin":true}]}
     options: []
-    default: 0
+    default: 25400
     minor: "Travel"
     major: "Profile"
     namespace: "Profile::Travel"
