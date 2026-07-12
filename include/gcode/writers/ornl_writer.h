@@ -81,7 +81,8 @@ class ORNLWriter : public WriterBase {
   private: //! \brief Defines the machine type - used to differentiate between polymer extrusion and wire-arc
     MachineType m_machine_type;
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType region_type, int rpm, int extruder_number);
+    QString writeExtruderOn(RegionType region_type, int rpm, int extruder_number,
+                            const QSharedPointer<SettingsBase>& params = nullptr);
 
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff(int extruder_number);

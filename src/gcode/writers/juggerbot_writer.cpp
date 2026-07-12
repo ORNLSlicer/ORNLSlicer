@@ -129,7 +129,15 @@ QString JuggerBotWriter::writeTravel(Point start_location, Point target_location
         rv += writeExtruderOff();
     }
     else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
-        rv += writeExtruderOn(RegionType::kPerimeter, m_sb->setting<int>(PS::Perimeter::kExtruderSpeed), m_sb->setting<Distance>(PS::Perimeter::kBeadWidth), m_sb->setting<Distance>(PS::Layer::kLayerHeight));
+        RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+        int rpm = params->contains(SS::kExtruderSpeed) ? params->setting<int>(SS::kExtruderSpeed)
+                                                       : m_sb->setting<int>(PS::Perimeter::kExtruderSpeed);
+        Distance width = params->contains(SS::kWidth) ? params->setting<Distance>(SS::kWidth)
+                                                      : m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+        Distance height = params->contains(SS::kHeight) ? params->setting<Distance>(SS::kHeight)
+                                                        : m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+        rv += writeExtruderOn(region_type == RegionType::kUnknown ? RegionType::kPerimeter : region_type, rpm, width,
+                              height, params);
     }
 
     Point new_start_location;
@@ -211,7 +219,7 @@ QString JuggerBotWriter::writeLine(const Point& start_point, const Point& target
 
     if (requiresWriteExtruderOn && rpm > 0) // && !m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight))
     {
-        rv += writeExtruderOn(region_type, rpm, width, height);
+        rv += writeExtruderOn(region_type, rpm, width, height, params);
         // m_current_rpm = rpm;
     }
 
@@ -279,7 +287,7 @@ QString JuggerBotWriter::writeArc(const Point& start_point, const Point& end_poi
     bool requiresWriteExtruderOn = !m_extruder_on;
 
     if (requiresWriteExtruderOn && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, width, height);
+        rv += writeExtruderOn(region_type, rpm, width, height, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -391,21 +399,21 @@ QString JuggerBotWriter::writeDwell(Time time) {
         return {};
 }
 
-QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height) {
+QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height,
+                                         const QSharedPointer<SettingsBase>& params) {
     m_extruder_on = true;
     QString rv;
     Area bead_area = (width - height) * height +
                     (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     if (!m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
         float output_rpm;
 
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
-        if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-            output_rpm =
-                m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        if (initial_rpm > 0) {
+            output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
             // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
             // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't
@@ -413,7 +421,7 @@ QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance widt
             if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
                   m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) ==
                       (int)ForceMinimumLayerTime::kSlow_Feedrate))
-                m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+                m_current_rpm = initial_rpm;
 
             rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 

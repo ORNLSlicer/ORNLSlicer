@@ -118,6 +118,7 @@ Path Raft::createPath(Polyline line) {
     for (int i = 0, end = line.size() - 1; i < end; ++i) {
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line[i], line[i + 1]);
 
+        segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, default_width);
         segment->getSb()->setSetting(SS::kHeight, default_height);
         segment->getSb()->setSetting(SS::kSpeed, default_speed);

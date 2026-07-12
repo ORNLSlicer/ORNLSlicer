@@ -24,10 +24,25 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+void copyInitialExtruderSpeed(const QSharedPointer<SettingsBase>& destination,
+                              const QSharedPointer<SettingsBase>& source) {
+    if (source->contains(MS::Extruder::kInitialSpeed)) {
+        destination->setSetting(MS::Extruder::kInitialSpeed, source->setting<int>(MS::Extruder::kInitialSpeed));
+    }
+}
+} // namespace
 
 void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, Velocity velocity) {
     QSharedPointer<TravelSegment> travel_segment =
         QSharedPointer<TravelSegment>::create(current_location, path.front()->start());
+    QSharedPointer<SettingsBase> next_segment_settings = path.front()->getSb();
+
+    copyInitialExtruderSpeed(travel_segment->getSb(), next_segment_settings);
+    travel_segment->getSb()->setSetting(SS::kRegionType,
+                                        next_segment_settings->setting<RegionType>(SS::kRegionType));
+    travel_segment->getSb()->setSetting(SS::kExtruderSpeed,
+                                        next_segment_settings->setting<AngularVelocity>(SS::kExtruderSpeed));
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
 
     path.prepend(travel_segment);
@@ -46,6 +61,7 @@ void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDi
 
     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
 
+    copyInitialExtruderSpeed(segment->getSb(), path[0]->getSb());
     segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth));
     segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight));
     segment->getSb()->setSetting(SS::kSpeed, leadInSpeed);
@@ -91,6 +107,7 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
             QSharedPointer<LineSegment> segment =
                 QSharedPointer<LineSegment>::create(path[currentIndex]->start(), path[currentIndex]->end());
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, flyingStartSpeed);
@@ -115,6 +132,7 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, end);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, flyingStartSpeed);
@@ -165,6 +183,7 @@ void PathModifierGenerator::GenerateInitialStartup(Path& path, Distance startDis
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(oldStart, end);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, startSpeed);
@@ -232,6 +251,7 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(oldStart, end);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, startSpeed);
@@ -289,6 +309,7 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
 
                 QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(oldStart, end);
 
+                copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
                 segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
                 segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
                 segment->getSb()->setSetting(SS::kSpeed, currentSpeed);
@@ -370,6 +391,7 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, newEnd);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, slowDownSpeed);
@@ -422,6 +444,7 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, oldEnd);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, slowDownSpeed);
@@ -458,6 +481,7 @@ void PathModifierGenerator::GenerateLayerLeadIn(Path& path, const Point& leadIn,
 
         QSharedPointer<LineSegment> leadInSegment =
             QSharedPointer<LineSegment>::create(leadIn, firstBuildSegment->start());
+        copyInitialExtruderSpeed(leadInSegment->getSb(), firstBuildSegment->getSb());
         leadInSegment->getSb()->setSetting(SS::kWidth, firstBuildSegment->getSb()->setting<Distance>(SS::kWidth));
         leadInSegment->getSb()->setSetting(SS::kHeight, firstBuildSegment->getSb()->setting<Distance>(SS::kHeight));
         leadInSegment->getSb()->setSetting(SS::kSpeed, firstBuildSegment->getSb()->setting<Velocity>(SS::kSpeed));
@@ -770,6 +794,7 @@ void PathModifierGenerator::GenerateRamp(Path& path, bool& segmentSplitted, int 
             segment->setEnd(newP);
 
             QSharedPointer<LineSegment> newSegment = QSharedPointer<LineSegment>::create(newP, endP);
+            copyInitialExtruderSpeed(newSegment->getSb(), segment->getSb());
             newSegment->getSb()->setSetting(SS::kWidth, segment->getSb()->setting<Distance>(SS::kWidth));
             newSegment->getSb()->setSetting(SS::kHeight, segment->getSb()->setting<Distance>(SS::kHeight));
             newSegment->getSb()->setSetting(SS::kAccel, segment->getSb()->setting<Acceleration>(SS::kAccel));
