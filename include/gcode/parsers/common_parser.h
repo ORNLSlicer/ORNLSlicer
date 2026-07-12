@@ -6,6 +6,7 @@
 #include <qhash.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
+#include <qmap.h>
 #include <qregularexpression.h>
 #include <qtmetamacros.h>
 
@@ -501,6 +502,15 @@ class CommonParser : public ParserBase {
     //! \brief Returns whether feedrate scaling should be skipped for the parsed motion command.
     bool feedrateScalingDisabledForCommand(const GcodeCommand& command) const;
 
+    //! \brief Records the authored modal feedrate for a parsed motion command.
+    void recordModalFeedrateForCommand(const GcodeCommand& command);
+
+    //! \brief Replaces an existing F token or inserts one before the command comment.
+    void setCommandFeedrate(QString& line, double feedrate);
+
+    //! \brief Inserts feedrates where scaled and protected modal spans meet.
+    void materializeFeedrateTransitions(double modifier);
+
     //! \brief After parsing footer, check that all necessary parameters were found.
     //! If not found, set them appropriately and assign local variables.
     void checkAndSetNecessarySettings();
@@ -602,6 +612,18 @@ class CommonParser : public ParserBase {
 
     //! \brief Flag to indicate the current modal feedrate can be scaled for layer-time adjustment.
     bool m_with_F_value;
+
+    //! \brief Authored modal feedrate in the selected G-code velocity unit.
+    double m_modal_feedrate;
+
+    //! \brief Whether an authored modal feedrate has been established.
+    bool m_has_modal_feedrate;
+
+    //! \brief Authored modal feedrate active for each parsed motion command.
+    QHash<int, double> m_command_modal_feedrates;
+
+    //! \brief Explicit modal feedrate changes, including F-only G1 commands.
+    QMap<int, double> m_explicit_modal_feedrates;
 
     //! \brief Flag to indicate Z value should be multiplied by negative one, used for MVP syntax
     bool m_negate_z_value;
