@@ -276,11 +276,10 @@ enum class InfillPatterns : uint8_t {
     kLines = 0,
     kGrid = 1,
     kConcentric = 2,
-    kInsideOutConcentric = 3,
-    kTriangles = 4,
-    kHexagonsAndTriangles = 5,
-    kHoneycomb = 6,
-    kRadialHatch = 7
+    kTriangles = 3,
+    kHexagonsAndTriangles = 4,
+    kHoneycomb = 5,
+    kRadialHatch = 6
 };
 
 //! \brief Function for going from json to InfillPatterns
@@ -297,8 +296,6 @@ inline QString toString(InfillPatterns infill_type) {
             return Constants::InfillPatternTypeStrings::kGrid;
         case InfillPatterns::kConcentric:
             return Constants::InfillPatternTypeStrings::kConcentric;
-        case InfillPatterns::kInsideOutConcentric:
-            return Constants::InfillPatternTypeStrings::kInsideOutConcentric;
         case InfillPatterns::kTriangles:
             return Constants::InfillPatternTypeStrings::kTriangles;
         case InfillPatterns::kHexagonsAndTriangles:

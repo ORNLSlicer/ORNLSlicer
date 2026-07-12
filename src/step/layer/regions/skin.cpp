@@ -150,7 +150,6 @@ QVector<Polyline> Skin::createPatternForArea(InfillPatterns pattern, PolygonList
             result = PatternGenerator::GenerateGrid(geometry, lineSpacing, patternAngle);
             break;
         case InfillPatterns::kConcentric:
-        case InfillPatterns::kInsideOutConcentric:
             result = PatternGenerator::GenerateConcentric(geometry, beadWidth, lineSpacing);
             break;
         case InfillPatterns::kTriangles:
@@ -310,8 +309,7 @@ Path Skin::createPath(Polyline line) {
     }
 
     //! Creates closing segment if infill pattern is concentric
-    if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric ||
-        static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kInsideOutConcentric) {
+    if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric) {
         QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
         line_segment->getSb()->setSetting(SS::kWidth, width);
@@ -367,7 +365,7 @@ void Skin::calculateModifiers(Path& path, bool supportsG3) {
                 m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
                 m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));
         }
-        // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND (Concentric or Inside Out Concentric))
+        // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND Concentric)
         else if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
                      TipWipeDirection::kForward ||
                  (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
@@ -375,12 +373,9 @@ void Skin::calculateModifiers(Path& path, bool supportsG3) {
                   (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) ||
                  (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
                       TipWipeDirection::kOptimal &&
-                  (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric ||
-                   static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) ==
-                       InfillPatterns::kInsideOutConcentric))) {
-            if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric ||
-                static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) ==
-                    InfillPatterns::kInsideOutConcentric)
+                  (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) ==
+                   InfillPatterns::kConcentric))) {
+            if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric)
                 PathModifierGenerator::GenerateTipWipe(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),

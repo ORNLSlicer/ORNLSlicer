@@ -76,6 +76,27 @@ constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
     kImageSlicer    // Image
 };
 
+constexpr std::array<int, 7> kSkinPatternV4ToV5 = {
+    0, // Lines
+    1, // Grid
+    2, // Concentric
+    2, // Removed option; use Concentric
+    3, // Triangles
+    4, // Hexagons and Triangles
+    5  // Honeycomb
+};
+
+constexpr std::array<int, 8> kInfillPatternV4ToV5 = {
+    0, // Lines
+    1, // Grid
+    2, // Concentric
+    2, // Removed option; use Concentric
+    3, // Triangles
+    4, // Hexagons and Triangles
+    5, // Honeycomb
+    6  // Radial Hatch
+};
+
 constexpr std::array<const char*, 47> kRemovedV3Settings = {
     // GKN syntax settings
     "base_coordinate", "gkn_laser_power", "gkn_melt_pool", "gkn_print_speed", "gkn_wire_speed", "supports_E1",
@@ -143,6 +164,8 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
         pre_3_0To3_0(version, settings);
     if (version < 4)
         pre_4_0To4_0(version, settings);
+    if (version < 5)
+        pre_5_0To5_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -259,6 +282,24 @@ void SettingsVersionControl::pre_4_0To4_0(double& version, fifojson& settings) {
     }
 
     version = 4.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_5_0To5_0(double& version, fifojson& settings) {
+    QString dt = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 5.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value()) {
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Skin::kPattern, kSkinPatternV4ToV5);
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Infill::kPattern, kInfillPatternV4ToV5);
+        }
+    }
+
+    version = 5.0;
     settings = new_format;
 }
 } // namespace ORNL
