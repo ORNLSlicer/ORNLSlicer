@@ -25,11 +25,30 @@ void MotionEstimation::Init() {
     m_previous_e = 0;
     m_previous_vertical = true; // initialize for the very first move
 
+    m_current_bead_width = 0;
+    m_current_bead_height = 0;
+    m_nominal_bead_height = 0;
+    m_last_print_z = 0;
+    m_last_print_w = 0;
+
     m_incomingV = max_xy_speed;
 }
 
+void MotionEstimation::setBeadGeometry(Distance bead_width, Distance bead_height) {
+    m_current_bead_width = bead_width;
+    m_nominal_bead_height = bead_height;
+
+    if (m_current_bead_height <= 0) {
+        m_current_bead_height = bead_height;
+    }
+}
+
+void MotionEstimation::resetBeadHeight() { m_current_bead_height = 0; }
+
 Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
                                                   Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b) {
+    static_cast<void>(layer);
+
     // minimum distance to be considered move for estimate calculation
     double m_min_threshold = 10;
 
@@ -139,23 +158,33 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
 
         // if the extruder is on, calculate the extruded volume
         if (extruder_on) {
-            Distance width, height;
+            Distance height = m_current_bead_height > 0 ? m_current_bead_height : m_nominal_bead_height;
+            Distance bead_width = m_current_bead_width > 0 ? m_current_bead_width : extrusionWidth;
 
-            if (layer == 0) {
-                height = initialLayerThickness;
-                width = layer0extrusionWidth - initialLayerThickness;
-            }
-            else {
+            Distance z_delta = qAbs(m_current_z - m_last_print_z);
+            Distance w_delta = qAbs(m_current_w - m_last_print_w);
+            Distance vertical_delta = z_delta > w_delta ? z_delta : w_delta;
+
+            if (height <= 0) {
                 height = layerThickness;
-                width = extrusionWidth - layerThickness;
+            }
+
+            const Distance min_inferred_height = height * 0.2;
+            const Distance max_inferred_height = height * 5.0;
+            if (vertical_delta > m_min_threshold && vertical_delta >= min_inferred_height &&
+                vertical_delta <= max_inferred_height) {
+                height = vertical_delta;
+                m_current_bead_height = height;
             }
 
             // Calculate cross-sectional area of the bead
-            // (width * height) is the rectangular body of the bead
+            // ((bead_width - height) * height) is the rectangular body of the bead
             // (M_PI * height * height / 4.0) is the circular ends
-            Area bead_area = (width * height) + (M_PI * height * height / 4.0);
+            Area bead_area = ((bead_width - height) * height) + (M_PI * height * height / 4.0);
 
             layer_volume += bead_area * length;
+            m_last_print_z = m_current_z;
+            m_last_print_w = m_current_w;
         }
 
         m_previous_distance = length;
@@ -358,6 +387,12 @@ Distance MotionEstimation::m_current_e;
 
 Distance MotionEstimation::layerThickness;
 Distance MotionEstimation::extrusionWidth;
+
+Distance MotionEstimation::m_current_bead_width;
+Distance MotionEstimation::m_current_bead_height;
+Distance MotionEstimation::m_nominal_bead_height;
+Distance MotionEstimation::m_last_print_z;
+Distance MotionEstimation::m_last_print_w;
 
 Distance MotionEstimation::m_previous_distance;
 Distance MotionEstimation::m_total_distance;
