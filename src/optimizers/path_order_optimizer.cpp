@@ -170,46 +170,51 @@ Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths) {
     m_current_location = new_path.back()->end();
     m_paths.remove(index);
 
-    for (int i = 0, end = m_paths.size(); i < end; ++i) {
-        if (m_paths.size() > 0) {
-            indexAndStart = closestOpenPath(m_paths);
-            index = indexAndStart.first;
-            // if false, indicates index is closest if you start at the end point, so reverse
-            if (indexAndStart.second == false)
-                m_paths[index].reverseSegments();
+    const Distance min_travel_distance = m_sb->setting<Distance>(PS::Travel::kInfillMinLength);
+    if (min_travel_distance > 0) {
+        for (int i = 0, end = m_paths.size(); i < end; ++i) {
+            if (m_paths.size() > 0) {
+                indexAndStart = closestOpenPath(m_paths);
+                index = indexAndStart.first;
+                // if false, indicates index is closest if you start at the end point, so reverse
+                if (indexAndStart.second == false)
+                    m_paths[index].reverseSegments();
 
-            Point link_start = m_current_location;
-            Point link_end = m_paths[index].front()->start();
+                Point link_start = m_current_location;
+                Point link_end = m_paths[index].front()->start();
+                Distance link_distance = link_start.distance(link_end);
 
-            // If link intersects the border geometry, always travel. If link intersects the infill/skin paths, check
-            // versus minimum travel distance to see if travel or link is needed
+                // If link intersects the border geometry, always travel. If link intersects the infill/skin paths,
+                // check versus minimum travel distance to see if travel or link is needed.
 
-            if (!(linkIntersects(link_start, link_end, empty_paths, m_border_geometry) ||
-                  linkIntersects(link_start, link_end, m_paths, empty_polygon_list) ||
-                  linkIntersects(link_start, link_end, paths, empty_polygon_list) ||
-                  linkIntersects(link_start, link_end, QVector<Path> {new_path}, empty_polygon_list)) &&
-                link_start.distance(link_end) < m_sb->setting<int>(PS::Travel::kInfillMinLength)) {
-                QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(link_start, link_end);
+                if (link_distance < min_travel_distance &&
+                    !(linkIntersects(link_start, link_end, empty_paths, m_border_geometry) ||
+                      linkIntersects(link_start, link_end, m_paths, empty_polygon_list) ||
+                      linkIntersects(link_start, link_end, paths, empty_polygon_list) ||
+                      linkIntersects(link_start, link_end, QVector<Path> {new_path}, empty_polygon_list))) {
+                    QSharedPointer<LineSegment> line_segment =
+                        QSharedPointer<LineSegment>::create(link_start, link_end);
 
-                line_segment->getSb()->setSetting(SS::kWidth, bead_width);
-                line_segment->getSb()->setSetting(SS::kHeight, layer_height);
-                line_segment->getSb()->setSetting(SS::kSpeed, speed);
-                line_segment->getSb()->setSetting(SS::kAccel, acceleration);
-                line_segment->getSb()->setSetting(SS::kExtruderSpeed, extruder_speed);
-                line_segment->getSb()->setSetting(SS::kMaterialNumber,
-                                                  m_paths[index].front()->getSb()->setting<int>(SS::kMaterialNumber));
-                line_segment->getSb()->setSetting(
-                    SS::kRegionType, m_paths[index].front()->getSb()->setting<RegionType>(SS::kRegionType));
+                    line_segment->getSb()->setSetting(SS::kWidth, bead_width);
+                    line_segment->getSb()->setSetting(SS::kHeight, layer_height);
+                    line_segment->getSb()->setSetting(SS::kSpeed, speed);
+                    line_segment->getSb()->setSetting(SS::kAccel, acceleration);
+                    line_segment->getSb()->setSetting(SS::kExtruderSpeed, extruder_speed);
+                    line_segment->getSb()->setSetting(
+                        SS::kMaterialNumber, m_paths[index].front()->getSb()->setting<int>(SS::kMaterialNumber));
+                    line_segment->getSb()->setSetting(
+                        SS::kRegionType, m_paths[index].front()->getSb()->setting<RegionType>(SS::kRegionType));
 
-                new_path.append(line_segment);
+                    new_path.append(line_segment);
 
-                for (QSharedPointer<SegmentBase> seg : m_paths[index])
-                    new_path.append(seg);
+                    for (QSharedPointer<SegmentBase> seg : m_paths[index])
+                        new_path.append(seg);
 
-                m_current_location = new_path.back()->end();
-                m_paths.remove(index);
+                    m_current_location = new_path.back()->end();
+                    m_paths.remove(index);
 
-                i = 0;
+                    i = 0;
+                }
             }
         }
     }
