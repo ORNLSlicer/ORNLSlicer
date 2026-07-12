@@ -43,6 +43,7 @@
 #include "gcode/writers/siemens_writer.h"
 #include "gcode/writers/thermwood_writer.h"
 #include "gcode/writers/tormach_writer.h"
+#include "gcode/writers/wolf_writer.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "units/unit.h"
@@ -157,6 +158,9 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kTormach:
             m_base = QSharedPointer<TormachWriter>(new TormachWriter(GcodeMetaList::TormachMeta, GSM->getGlobal()));
+            break;
+        case GcodeSyntax::kWolf:
+            m_base = QSharedPointer<WolfWriter>(new WolfWriter(GcodeMetaList::WolfMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kRepRap:
             m_base = QSharedPointer<RepRapWriter>(new RepRapWriter(GcodeMetaList::RepRapMeta, GSM->getGlobal()));

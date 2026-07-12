@@ -784,6 +784,18 @@ void CommonParser::G1Handler(QVector<QString> params) {
             case ('l'):
                 break;
 
+            case('I'):
+            case('i'):
+                break;
+
+            case('J'):
+            case('j'):
+                break;
+
+            case('K'):
+            case('k'):
+                break;
+
             case ('A'):
             case ('a'):
             case ('B'):
