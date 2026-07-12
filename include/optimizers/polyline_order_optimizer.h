@@ -134,11 +134,11 @@ class PolylineOrderOptimizer {
     //! \return Index for closest Polyline and whether or not to link to beginning or end
     QPair<int, bool> closestOpenPolyline(QVector<Polyline> polylines, Point currentLocation);
 
-    //! \brief Finds the index and end of an open Polyline by comparing endpoints to the supplied location
+    //! \brief Finds the closest or farthest open Polyline using each Polyline's nearest endpoint
     //! \param polylines: vector of polylines to test
     //! \param currentLocation: current location to test distance from
-    //! \param closest: true to select the closest endpoint, false to select the farthest endpoint
-    //! \return Index for selected Polyline and whether or not to link to beginning or end
+    //! \param closest: true to select the closest Polyline, false to select the farthest Polyline
+    //! \return Index for selected Polyline and whether its nearest endpoint is the beginning or end
     QPair<int, bool> extremumOpenPolyline(QVector<Polyline> polylines, Point currentLocation, bool closest);
 
     //! \brief Selects an open line infill polyline using the configured path order optimization
@@ -223,5 +223,9 @@ class PolylineOrderOptimizer {
     /// @brief Whether to enable partitioned linking of line infill, which links lines in the same partition before
     /// linking between partitions
     bool m_enable_partitioned_linking = false;
+
+    /// @brief Selection state used to alternate the two exterior edges when ordering open lines outside-in
+    int m_open_path_selection_count = 0;
+    bool m_outside_in_from_front = true;
 };
 } // namespace ORNL
