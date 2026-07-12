@@ -134,6 +134,19 @@ class PolylineOrderOptimizer {
     //! \return Index for closest Polyline and whether or not to link to beginning or end
     QPair<int, bool> closestOpenPolyline(QVector<Polyline> polylines, Point currentLocation);
 
+    //! \brief Finds the index and end of an open Polyline by comparing endpoints to the supplied location
+    //! \param polylines: vector of polylines to test
+    //! \param currentLocation: current location to test distance from
+    //! \param closest: true to select the closest endpoint, false to select the farthest endpoint
+    //! \return Index for selected Polyline and whether or not to link to beginning or end
+    QPair<int, bool> extremumOpenPolyline(QVector<Polyline> polylines, Point currentLocation, bool closest);
+
+    //! \brief Selects an open line infill polyline using the configured path order optimization
+    //! \param polylines: vector of polylines to select from
+    //! \param currentLocation: current location to test distance from
+    //! \return Index for selected Polyline and whether or not to link to beginning or end
+    QPair<int, bool> orderedOpenPolyline(QVector<Polyline> polylines, Point currentLocation);
+
     //! \brief Links to a Polyline using shortest or longest distance
     //! \param shortest: Whether to look for shortest or longest (shortest by default)
     //! \return Index for vertex in closest Polyline and index for Polyline itself
