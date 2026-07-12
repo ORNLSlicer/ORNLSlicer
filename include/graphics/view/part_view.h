@@ -24,6 +24,7 @@ class PrinterObject;
 class PlaneObject;
 class GridObject;
 class SphereObject;
+class SeamObject;
 class PartMetaModel;
 class PartMetaItem;
 class RightClickMenu;
@@ -114,6 +115,15 @@ class PartView : public BaseView {
     //! \brief Notification of parts that are outside and/or not aligned. Emitted after translations.
     void positioningIssues(QList<QSharedPointer<Part>> opl, QList<QSharedPointer<Part>> fpl);
 
+    //! \brief Notification that a draggable optimization point setting edit has started.
+    void optimizationPointDragStarted(QString x_setting, QString y_setting);
+
+    //! \brief Notification that a draggable optimization point setting edit has changed.
+    void optimizationPointDragged(QString x_setting, double x, QString y_setting, double y);
+
+    //! \brief Notification that a draggable optimization point setting edit has finished.
+    void optimizationPointDragFinished(QString x_setting, double x, QString y_setting, double y);
+
   protected:
     //! \brief Initalizes the view with the printer and the associated objects.
     void initView() override;
@@ -165,6 +175,15 @@ class PartView : public BaseView {
     //! \brief shifts a graphics part to not intersect with other parts
     //! \param gop the graphics part object
     void shiftPart(QSharedPointer<PartObject> gop);
+
+    //! \brief Begins dragging an optimization point if the cursor is over one.
+    bool beginOptimizationPointDrag(QPointF mouse_ndc_pos);
+
+    //! \brief Updates an active optimization point drag.
+    bool updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish);
+
+    //! \brief Finishes an active optimization point drag.
+    void finishOptimizationPointDrag(QPointF mouse_ndc_pos);
 
   private slots:
     //! \brief Recieves updates from model about selections.
@@ -234,6 +253,21 @@ class PartView : public BaseView {
 
         //! \brief If opt points are shown.
         bool seams_shown = false;
+
+        //! \brief If an optimization point is being dragged.
+        bool dragging_seam = false;
+
+        //! \brief Optimization point currently being dragged.
+        QSharedPointer<SeamObject> dragged_seam;
+
+        //! \brief X setting controlled by the dragged optimization point.
+        QString dragged_seam_x_setting;
+
+        //! \brief Y setting controlled by the dragged optimization point.
+        QString dragged_seam_y_setting;
+
+        //! \brief Cursor-to-point offset retained during optimization point drag.
+        QVector3D dragged_seam_offset;
 
         //! \brief If slicing planes are shown.
         bool planes_shown = false;

@@ -400,6 +400,32 @@ void SettingBar::restoreSettingValue(QString setting_key) {
     emit settingModified(setting_key);
 }
 
+void SettingBar::beginPairedGlobalSettingChange(QString first_key, QString second_key) {
+    emit settingAboutToChange(first_key, QList<QSharedPointer<SettingsBase>>());
+    emit settingAboutToChange(second_key, QList<QSharedPointer<SettingsBase>>());
+}
+
+void SettingBar::updatePairedGlobalSetting(QString first_key, double first_value, QString second_key,
+                                           double second_value) {
+    QSharedPointer<SettingsBase> sb = GSM->getGlobal();
+    sb->setSetting(first_key, first_value);
+    sb->setSetting(second_key, second_value);
+
+    m_restoring_settings = true;
+    reloadSettingRow(first_key);
+    reloadSettingRow(second_key);
+    m_restoring_settings = false;
+}
+
+void SettingBar::finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
+                                                 double second_value) {
+    updatePairedGlobalSetting(first_key, first_value, second_key, second_value);
+    enableDependRows();
+
+    emit settingModified(first_key);
+    emit settingModified(second_key);
+}
+
 void SettingBar::forwardHideTab(QString pane, QString category) { emit tabHidden(pane, category); }
 
 void SettingBar::showHiddenSetting(QString panel, QString category) {

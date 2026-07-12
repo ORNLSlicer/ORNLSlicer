@@ -143,6 +143,16 @@ class SettingBar : public QWidget {
     //! \brief Reloads a restored setting row and forwards normal modified-setting notifications.
     void restoreSettingValue(QString setting_key);
 
+    //! \brief Starts a paired global setting edit driven by a view interaction.
+    void beginPairedGlobalSettingChange(QString first_key, QString second_key);
+
+    //! \brief Updates paired global setting values without committing a modified-setting notification.
+    void updatePairedGlobalSetting(QString first_key, double first_value, QString second_key, double second_value);
+
+    //! \brief Finishes a paired global setting edit and emits normal modified-setting notifications.
+    void finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
+                                         double second_value);
+
   private slots:
     /*!
      * \brief Re-emits a signal that a setting is about to be modified.

@@ -2,12 +2,19 @@
 
 #include <math.h>
 
+#include <limits>
+#include <tuple>
+
+#include <QMatrix4x4>
+#include <QPointF>
+#include <QVector>
 #include <qmath.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
 
 #include "configs/settings_base.h"
 #include "graphics/objects/sphere/seam_object.h"
+#include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -25,6 +32,56 @@ void PrinterObject::setSeamsHidden(bool hide) {
     m_seams_shown = !hide;
 
     this->updateSeams();
+}
+
+PrinterObject::OptimizationPointPick PrinterObject::pickOptimizationPoint(const QMatrix4x4& projection,
+                                                                          const QMatrix4x4& view, QPointF mouse_ndc_pos,
+                                                                          bool ortho) {
+    QVector<OptimizationPointPick> candidates;
+    candidates.push_back({m_seams.custom_island_opt, PS::Optimizations::kCustomIslandXLocation,
+                          PS::Optimizations::kCustomIslandYLocation});
+    candidates.push_back({m_seams.custom_path_opt, PS::Optimizations::kCustomPathXLocation,
+                          PS::Optimizations::kCustomPathYLocation});
+    candidates.push_back({m_seams.custom_point_opt, PS::Optimizations::kCustomPointXLocation,
+                          PS::Optimizations::kCustomPointYLocation});
+    candidates.push_back({m_seams.custom_point_second_opt, PS::Optimizations::kCustomPointSecondXLocation,
+                          PS::Optimizations::kCustomPointSecondYLocation});
+
+    float nearest = std::numeric_limits<float>::infinity();
+    OptimizationPointPick picked;
+    for (const OptimizationPointPick& candidate : candidates) {
+        if (!candidate.isValid() || candidate.object->hidden()) {
+            continue;
+        }
+
+        const float distance =
+            PartPicker::pickDistance(projection, view, mouse_ndc_pos, candidate.object->triangles(), ortho);
+        if (distance < nearest) {
+            nearest = distance;
+            picked = candidate;
+        }
+    }
+
+    return picked;
+}
+
+bool PrinterObject::bedIntersection(const QMatrix4x4& projection, const QMatrix4x4& view, QPointF mouse_ndc_pos,
+                                    QVector3D& intersection, bool ortho) {
+    QVector3D start;
+    QVector3D direction;
+    std::tie(start, direction) = PartPicker::getDirectionAndStart(projection, mouse_ndc_pos, view, ortho);
+
+    if (qFuzzyIsNull(direction.z())) {
+        return false;
+    }
+
+    const float distance = (this->printerCenter().z() - start.z()) / direction.z();
+    if (distance < 0.0f) {
+        return false;
+    }
+
+    intersection = start + (distance * direction);
+    return true;
 }
 
 float PrinterObject::getDefaultZoom() {
@@ -56,13 +113,14 @@ void PrinterObject::updateSeams() {
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
     bool secondPointEnabled = m_sb->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
+    float bed_z = this->printerCenter().z() * Constants::OpenGL::kViewToObject;
 
     if (islandOrder == IslandOrderOptimization::kCustomPoint) {
         QVector3D translation(m_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
 
                               m_sb->setting<double>(PS::Optimizations::kCustomIslandYLocation),
 
-                              .0f);
+                              bed_z);
 
         translation *= Constants::OpenGL::kObjectToView;
 
@@ -78,7 +136,7 @@ void PrinterObject::updateSeams() {
 
                               m_sb->setting<double>(PS::Optimizations::kCustomPathYLocation),
 
-                              .0f);
+                              bed_z);
 
         translation *= Constants::OpenGL::kObjectToView;
 
@@ -94,7 +152,7 @@ void PrinterObject::updateSeams() {
 
                               m_sb->setting<double>(PS::Optimizations::kCustomPointYLocation),
 
-                              .0f);
+                              bed_z);
 
         translation *= Constants::OpenGL::kObjectToView;
 
@@ -106,7 +164,7 @@ void PrinterObject::updateSeams() {
 
                                         m_sb->setting<double>(PS::Optimizations::kCustomPointSecondYLocation),
 
-                                        .0f);
+                                        bed_z);
 
             secondTranslation *= Constants::OpenGL::kObjectToView;
 
@@ -119,6 +177,7 @@ void PrinterObject::updateSeams() {
     }
     else {
         m_seams.custom_point_opt->hide();
+        m_seams.custom_point_second_opt->hide();
     }
 }
 

@@ -1009,6 +1009,18 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_main_toolbar, &MainToolbar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
+    connect(m_part_widget->view(), &PartView::optimizationPointDragStarted, m_settingbar,
+            &SettingBar::beginPairedGlobalSettingChange);
+    connect(m_part_widget->view(), &PartView::optimizationPointDragged, m_settingbar,
+            &SettingBar::updatePairedGlobalSetting);
+    connect(m_part_widget->view(), &PartView::optimizationPointDragFinished, m_settingbar,
+            &SettingBar::finishPairedGlobalSettingChange);
+    connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragStarted, m_settingbar,
+            &SettingBar::beginPairedGlobalSettingChange);
+    connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragged, m_settingbar,
+            &SettingBar::updatePairedGlobalSetting);
+    connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragFinished, m_settingbar,
+            &SettingBar::finishPairedGlobalSettingChange);
     connect(m_settingbar, &SettingBar::settingsBaseChanged, this,
             [this](QString) { this->markProjectModified(); });
     connect(m_settingbar, &SettingBar::tabHidden, this, &MainWindow::addHiddenSetting);
@@ -1031,6 +1043,7 @@ void MainWindow::setupEvents() {
     connect(m_main_toolbar, &MainToolbar::showSegmentInfo, m_gcode_widget, &GCodeWidget::showSegmentInfo);
     connect(m_main_toolbar, &MainToolbar::setOrthoGcode, m_gcode_widget, &GCodeWidget::setOrthoView);
     connect(m_main_toolbar, &MainToolbar::showGhosts, m_gcode_widget, &GCodeWidget::showGhosts);
+    connect(m_main_toolbar, &MainToolbar::showSeams, m_gcode_widget, &GCodeWidget::showSeams);
     connect(m_main_toolbar, &MainToolbar::exportGCode, m_export_window, [this] {
         m_export_window->raise();
         m_export_window->showNormal();
