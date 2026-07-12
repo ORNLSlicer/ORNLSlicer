@@ -22,6 +22,14 @@ class MotionEstimation {
     static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
                                            Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b);
 
+    //! \brief Set the bead dimensions to use for the next extrusion volume estimate.
+    //! \param bead_width Total bead width.
+    //! \param bead_height Nominal bead height.
+    static void setBeadGeometry(Distance bead_width, Distance bead_height);
+
+    //! \brief Clears the inferred bead height so the next layer starts from the nominal height.
+    static void resetBeadHeight();
+
     static Acceleration m_v_acceleration;
     static Acceleration m_xy_acceleration;
 
@@ -42,6 +50,12 @@ class MotionEstimation {
 
     static Distance layerThickness;
     static Distance extrusionWidth;
+
+    static Distance m_current_bead_width;
+    static Distance m_current_bead_height;
+    static Distance m_nominal_bead_height;
+    static Distance m_last_print_z;
+    static Distance m_last_print_w;
 
     static Distance m_previous_distance;
     static Distance m_total_distance;

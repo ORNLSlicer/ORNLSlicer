@@ -483,6 +483,15 @@ class CommonParser : public ParserBase {
     //! \brief calculates distance for the current motion segment
     Distance getCurrentGXDistance();
 
+    //! \brief Sets the current bead geometry used by motion volume estimation.
+    void updateCurrentBeadGeometry();
+
+    //! \brief Returns a distance setting loaded from the file footer, falling back to the current global setting.
+    Distance fileDistanceSetting(const QString& key) const;
+
+    //! \brief Resolves bead width from the parsed motion comment and loaded settings.
+    Distance beadWidthForComment(const QString& comment) const;
+
     //! \brief After parsing footer, check that all necessary parameters were found.
     //! If not found, set them appropriately and assign local variables.
     void checkAndSetNecessarySettings();
