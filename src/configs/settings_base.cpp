@@ -111,7 +111,7 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
         static_cast<PointOrderOptimization>(setting<int>(PS::Optimizations::kPointOrder));
 
     // alternating seam adjustment
-    if (point_order == PointOrderOptimization::kCustomPoint) {
+    if (usesCustomPointLocation(point_order)) {
         Point p1(setting<double>(PS::Optimizations::kCustomPointXLocation),
                  setting<double>(PS::Optimizations::kCustomPointYLocation));
         Point p2(setting<double>(PS::Optimizations::kCustomPointSecondXLocation),

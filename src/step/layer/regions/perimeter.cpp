@@ -132,7 +132,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             optimizer.setStartOverride(startOverride);
         }
 
-        if (point_order == PointOrderOptimization::kCustomPoint) {
+        if (usesCustomPointLocation(point_order)) {
             Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
                                 getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
 

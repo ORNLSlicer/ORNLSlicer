@@ -52,6 +52,10 @@ PointOrderOptimizer::linkToPoint(const Point& current_location, const Polyline& 
         case PointOrderOptimization::kCustomPoint:
             result = selectionFromIndex(findShortestOrLongestDistance(polyline, current_location, false, Distance(0)));
             break;
+        case PointOrderOptimization::kCustomFarthestPoint:
+            result = selectionFromIndex(
+                findShortestOrLongestDistance(polyline, current_location, false, Distance(0), false));
+            break;
         default:
             result = selectionFromIndex(findShortestOrLongestDistance(polyline, current_location, false, Distance(0)));
             break;
@@ -76,6 +80,7 @@ bool PointOrderOptimizer::findSkeletonPointOrder(const Point& current_location, 
                 return true;
             break;
         case PointOrderOptimization::kNextFarthest:
+        case PointOrderOptimization::kCustomFarthestPoint:
             if (findClosestEnd(polyline, current_location, min_dist_enabled, min_dist_threshold) == 0)
                 return true;
             else

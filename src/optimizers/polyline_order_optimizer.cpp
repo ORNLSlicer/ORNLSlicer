@@ -184,9 +184,16 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
     }
 
     // Determine which end of infill path should be the start
-    if (!new_polyline.empty() && m_point_override_location.distance(new_polyline.front()) >
-                                     m_point_override_location.distance(new_polyline.back())) {
-        new_polyline = new_polyline.reverse();
+    if (!new_polyline.empty()) {
+        Distance front_distance = m_point_override_location.distance(new_polyline.front());
+        Distance back_distance = m_point_override_location.distance(new_polyline.back());
+        if (m_point_optimization == PointOrderOptimization::kCustomFarthestPoint) {
+            if (front_distance < back_distance)
+                new_polyline = new_polyline.reverse();
+        }
+        else if (front_distance > back_distance) {
+            new_polyline = new_polyline.reverse();
+        }
     }
 
     return new_polyline;
@@ -216,7 +223,7 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
     }
 
     Point queryPoint;
-    if (m_point_optimization == PointOrderOptimization::kCustomPoint)
+    if (usesCustomPointLocation(m_point_optimization))
         queryPoint = m_point_override_location;
     else
         queryPoint = m_current_location;
@@ -356,7 +363,7 @@ Polyline PolylineOrderOptimizer::linkTo() {
     m_polylines.removeAt(polylineIndex);
 
     Point queryPoint;
-    if (m_point_optimization == PointOrderOptimization::kCustomPoint)
+    if (usesCustomPointLocation(m_point_optimization))
         queryPoint = m_point_override_location;
     else
         queryPoint = m_current_location;
@@ -506,7 +513,7 @@ Polyline PolylineOrderOptimizer::linkSpiralPolyline2D(bool last_spiral, Distance
 
     // Define which point to start layer one - all other layers must use next closest
     if (m_layer_num == 0) {
-        if (pointOrder == PointOrderOptimization::kCustomPoint) {
+        if (usesCustomPointLocation(pointOrder)) {
             Point startOverride = m_point_override_location;
             pointSelection = PointOrderOptimizer::linkToPoint(startOverride, newPolyline, m_layer_num, pointOrder,
                                                               false, 0, 0, false, 0, m_segment_breaking_enable);

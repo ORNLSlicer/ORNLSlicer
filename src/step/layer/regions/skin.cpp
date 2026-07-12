@@ -197,7 +197,7 @@ void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint) {
+    if (usesCustomPointLocation(pointOrderOptimization)) {
         Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
                             getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
 
