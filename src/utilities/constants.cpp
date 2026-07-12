@@ -140,7 +140,6 @@ const QString Constants::LegacyRegionTypeStrings::kThing = "";
 const QString Constants::InfillPatternTypeStrings::kLines = "Lines";
 const QString Constants::InfillPatternTypeStrings::kGrid = "Grid";
 const QString Constants::InfillPatternTypeStrings::kConcentric = "Concentric";
-const QString Constants::InfillPatternTypeStrings::kInsideOutConcentric = "Inside Out Concentric";
 const QString Constants::InfillPatternTypeStrings::kTriangles = "Triangles";
 const QString Constants::InfillPatternTypeStrings::kHexagonsAndTriangles = "Hexagons and Triangles";
 const QString Constants::InfillPatternTypeStrings::kHoneycomb = "Honeycomb";
@@ -148,8 +147,8 @@ const QString Constants::InfillPatternTypeStrings::kRadialHatch = "Radial Hatch"
 
 const QStringList Constants::InfillPatternTypeStrings::kInfillTypes = {
     Constants::InfillPatternTypeStrings::kLines,      Constants::InfillPatternTypeStrings::kGrid,
-    Constants::InfillPatternTypeStrings::kConcentric, Constants::InfillPatternTypeStrings::kInsideOutConcentric,
-    Constants::InfillPatternTypeStrings::kTriangles,  Constants::InfillPatternTypeStrings::kHexagonsAndTriangles,
+    Constants::InfillPatternTypeStrings::kConcentric, Constants::InfillPatternTypeStrings::kTriangles,
+    Constants::InfillPatternTypeStrings::kHexagonsAndTriangles,
     Constants::InfillPatternTypeStrings::kHoneycomb,  Constants::InfillPatternTypeStrings::kRadialHatch};
 
 //================================================================================

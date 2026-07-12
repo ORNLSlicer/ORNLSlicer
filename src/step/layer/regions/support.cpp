@@ -71,7 +71,6 @@ void Support::compute(uint layer_num) {
                 computeGrid(line_spacing); // Default rotation angle = 0 deg
                 break;
             case InfillPatterns::kConcentric:
-            case InfillPatterns::kInsideOutConcentric:
             case InfillPatterns::kTriangles:
             case InfillPatterns::kHexagonsAndTriangles:
             case InfillPatterns::kHoneycomb:

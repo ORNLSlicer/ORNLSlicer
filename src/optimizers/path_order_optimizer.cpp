@@ -100,7 +100,6 @@ Path PathOrderOptimizer::linkNextInfillPath(QVector<Path>& paths) {
             nextPath = linkNextInfillLines(paths);
             break;
         case InfillPatterns::kConcentric:
-        case InfillPatterns::kInsideOutConcentric:
             nextPath = linkNextInfillConcentric();
             break;
         case InfillPatterns::kTriangles:

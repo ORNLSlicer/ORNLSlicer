@@ -129,7 +129,6 @@ class Constants {
         static const QString kLines;
         static const QString kGrid;
         static const QString kConcentric;
-        static const QString kInsideOutConcentric;
         static const QString kTriangles;
         static const QString kHexagonsAndTriangles;
         static const QString kHoneycomb;

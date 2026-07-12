@@ -96,7 +96,6 @@ Polyline PolylineOrderOptimizer::linkNextInfillPolyline(QVector<Polyline>& polyl
             nextPolyline = linkNextInfillLines(polylines);
             break;
         case InfillPatterns::kConcentric:
-        case InfillPatterns::kInsideOutConcentric:
             nextPolyline = linkNextInfillConcentric();
             break;
         case InfillPatterns::kTriangles:

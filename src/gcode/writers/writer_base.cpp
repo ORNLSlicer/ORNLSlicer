@@ -198,18 +198,15 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
                     text += commentLine("Infill Pattern: Concentric");
                     break;
                 case 3:
-                    text += commentLine("Infill Pattern: Inside Out Concentric");
-                    break;
-                case 4:
                     text += commentLine("Infill Pattern: Triangles");
                     break;
-                case 5:
+                case 4:
                     text += commentLine("Infill Pattern: Hexagons and Triangles");
                     break;
-                case 6:
+                case 5:
                     text += commentLine("Infill Pattern: Honeycomb");
                     break;
-                case 7:
+                case 6:
                     text += commentLine("Infill Pattern: Radial Hatch");
                     break;
                 default:
