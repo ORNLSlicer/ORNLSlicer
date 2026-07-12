@@ -1133,7 +1133,11 @@ void CommonParser::G2Handler(QVector<QString> params) {
             throwFloatConversionErrorException();
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1173,6 +1177,8 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1279,6 +1285,9 @@ void CommonParser::G2Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
@@ -1324,7 +1333,11 @@ void CommonParser::G3Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1364,6 +1377,8 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1470,6 +1485,9 @@ void CommonParser::G3Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
@@ -1607,7 +1625,11 @@ void CommonParser::G5Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1644,6 +1666,8 @@ void CommonParser::G5Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1747,6 +1771,9 @@ void CommonParser::G5Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Enforce XYIJPQ required parameters
