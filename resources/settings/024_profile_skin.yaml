@@ -46,7 +46,6 @@ settings:
       - "Lines"
       - "Grid"
       - "Concentric"
-      - "Inside Out Concentric"
       - "Triangles"
       - "Hexagons and Triangles"
       - "Honeycomb"
