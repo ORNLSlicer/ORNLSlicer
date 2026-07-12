@@ -181,6 +181,9 @@ class CommonParser : public ParserBase {
     //! \return The time in seconds
     QList<Time> getLayerTimes();
 
+    //! \brief Returns the calculated layer times after feedrate adjustment.
+    QList<Time> getAdjustedLayerTimes();
+
     //! \brief Returns the currently calculated feedrate modifier for each layer
     //! \return The time in seconds
     QList<double> getLayerFeedRateModifiers();
@@ -489,8 +492,14 @@ class CommonParser : public ParserBase {
     //! \brief Returns a distance setting loaded from the file footer, falling back to the current global setting.
     Distance fileDistanceSetting(const QString& key) const;
 
+    //! \brief Returns a boolean setting loaded from the file footer, defaulting to false when absent.
+    bool fileBoolSetting(const QString& key) const;
+
     //! \brief Resolves bead width from the parsed motion comment and loaded settings.
     Distance beadWidthForComment(const QString& comment) const;
+
+    //! \brief Returns whether feedrate scaling should be skipped for the parsed motion command.
+    bool feedrateScalingDisabledForCommand(const GcodeCommand& command) const;
 
     //! \brief After parsing footer, check that all necessary parameters were found.
     //! If not found, set them appropriately and assign local variables.
@@ -591,7 +600,7 @@ class CommonParser : public ParserBase {
     //! \brief Flag to indicate cancelling parsing
     bool m_should_cancel;
 
-    //! \brief Flag to indicate G1 line contains F command
+    //! \brief Flag to indicate the current modal feedrate can be scaled for layer-time adjustment.
     bool m_with_F_value;
 
     //! \brief Flag to indicate Z value should be multiplied by negative one, used for MVP syntax

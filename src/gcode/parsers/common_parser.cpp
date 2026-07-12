@@ -32,6 +32,23 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+double parseFooterSettingValue(const QString& value) {
+    if (value.compare("TRUE", Qt::CaseInsensitive) == 0)
+        return 1.0;
+
+    if (value.compare("FALSE", Qt::CaseInsensitive) == 0)
+        return 0.0;
+
+    return value.toDouble();
+}
+
+bool isDisableFeedrateScalingSetting(const QString& key) {
+    return key == MS::Startup::kDisableFeedrateScaling || key == MS::Slowdown::kDisableFeedrateScaling ||
+           key == MS::TipWipe::kDisableFeedrateScaling || key == MS::SpiralLift::kDisableFeedrateScaling;
+}
+} // namespace
+
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
     : m_e_absolute(true), m_space(' '), m_distance_unit(meta.m_distance_unit), m_time_unit(meta.m_time_unit),
       m_angle_unit(meta.m_angle_unit), m_mass_unit(meta.m_mass_unit), m_velocity_unit(meta.m_velocity_unit),
@@ -72,8 +89,12 @@ Distance CommonParser::getCurrentGXDistance() {
 
     updateCurrentBeadGeometry();
 
+    const bool include_feedrate_adjustable_time =
+        m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
+        !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
     return MotionEstimation::calculateTimeAndVolume(
-        m_current_layer, m_with_F_value, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
+        m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
         m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer], uses_b);
 }
 
@@ -89,6 +110,11 @@ Distance CommonParser::fileDistanceSetting(const QString& key) const {
     }
 
     return GSM->getGlobal()->setting<Distance>(key);
+}
+
+bool CommonParser::fileBoolSetting(const QString& key) const {
+    const auto setting = m_file_settings.constFind(key);
+    return setting != m_file_settings.constEnd() && setting.value() != 0.0;
 }
 
 Distance CommonParser::beadWidthForComment(const QString& comment) const {
@@ -145,6 +171,35 @@ Distance CommonParser::beadWidthForComment(const QString& comment) const {
     return default_width;
 }
 
+bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command) const {
+    const QString& comment = command.getComment();
+
+    if (comment.isEmpty())
+        return false;
+
+    if (fileBoolSetting(MS::TipWipe::kDisableFeedrateScaling) &&
+        (comment.contains(Constants::PathModifierStrings::kForwardTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kReverseTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kAngledTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe))) {
+        return true;
+    }
+
+    if (fileBoolSetting(MS::Slowdown::kDisableFeedrateScaling) &&
+        (comment.contains(Constants::PathModifierStrings::kSlowDown) ||
+         comment.contains(Constants::PathModifierStrings::kCoasting))) {
+        return true;
+    }
+
+    if (fileBoolSetting(MS::Startup::kDisableFeedrateScaling) &&
+        comment.contains(Constants::PathModifierStrings::kInitialStartup)) {
+        return true;
+    }
+
+    return fileBoolSetting(MS::SpiralLift::kDisableFeedrateScaling) &&
+           comment.contains(Constants::PathModifierStrings::kSpiralLift);
+}
+
 // currently nothing of interest in header, so skip as long as line starts with
 // comment or is whitespace
 void CommonParser::parseHeader() {
@@ -186,7 +241,7 @@ QHash<QString, double> CommonParser::parseFooter() {
                     // search for root when deciding whether or not to parse the setting
                     QHash<QString, QString>::const_iterator it = m_necessary_variables_copy.find(key_root);
                     if (it != m_necessary_variables_copy.end()) {
-                        double value = setting_split[1].toDouble();
+                        double value = parseFooterSettingValue(setting_split[1]);
                         if (Constants::GcodeFileVariables::kRequiredConversion.find(key_root) !=
                             Constants::GcodeFileVariables::kRequiredConversion.end()) {
                             m_file_settings.insert(it.value(), v.from(value, mm / s));
@@ -247,7 +302,9 @@ void CommonParser::checkAndSetNecessarySettings() {
         while (i.hasNext()) {
             i.next();
             QString currentVal = i.value();
-            if (currentVal == MS::Cooling::kForceMinLayerTime)
+            if (isDisableFeedrateScalingSetting(currentVal))
+                m_file_settings.insert(i.value(), (double)sb->setting<bool>(currentVal));
+            else if (currentVal == MS::Cooling::kForceMinLayerTime)
                 m_file_settings.insert(i.value(), (double)sb->setting<bool>(currentVal));
             else
                 m_file_settings.insert(i.value(), sb->setting<double>(currentVal));
@@ -583,9 +640,28 @@ void CommonParser::reset() {
     m_extruder_on = false;
     m_dynamic_spindle_control = false;
     m_park = false;
+    m_with_F_value = false;
 }
 
 QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
+
+QList<Time> CommonParser::getAdjustedLayerTimes() {
+    QList<Time> adjusted_layer_times;
+    adjusted_layer_times.reserve(m_layer_times.size());
+
+    for (int i = 0; i < m_layer_times.size(); ++i) {
+        const double modifier = m_layer_FR_modifiers[i];
+        if (modifier > 0 && modifier != 1) {
+            adjusted_layer_times.push_back(m_layer_times[i] - m_layer_G1F_times[i] +
+                                           (m_layer_G1F_times[i] / modifier));
+        }
+        else {
+            adjusted_layer_times.push_back(m_layer_times[i]);
+        }
+    }
+
+    return adjusted_layer_times;
+}
 
 QList<double> CommonParser::getLayerFeedRateModifiers() { return m_layer_FR_modifiers; }
 
@@ -915,7 +991,9 @@ void CommonParser::G1Handler(QVector<QString> params) {
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
     }
 
-    m_with_F_value = m_current_spindle_speed != 0;
+    if (!f_not_used) {
+        m_with_F_value = is_motion_command && !feedrateScalingDisabledForCommand(m_current_gcode_command);
+    }
 
     Distance temp = getCurrentGXDistance();
     MotionEstimation::m_total_distance += temp;
@@ -924,7 +1002,6 @@ void CommonParser::G1Handler(QVector<QString> params) {
     else
         MotionEstimation::m_travel_distance += temp;
 
-    m_with_F_value = false;
 }
 
 void CommonParser::G1HandlerHelper(QVector<QString> params, QVector<QString> optionalParams) {
@@ -1752,6 +1829,11 @@ void CommonParser::getMinMaxModifier(double& minModifier, double& maxModifier) {
 
         while (current_layer_motion_end != current_layer_motion_begin &&
                current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
+            if (feedrateScalingDisabledForCommand(*current_layer_motion_end)) {
+                --current_layer_motion_end;
+                continue;
+            }
+
             auto parameters = current_layer_motion_end->getParameters();
             if (parameters.contains(m_f_parameter.toLatin1())) {
                 QString& line = m_lines[current_layer_motion_end->getLineNumber()];
@@ -1785,6 +1867,11 @@ void CommonParser::AdjustFeedrate(double modifier) {
 
         while (current_layer_motion_end != current_layer_motion_begin &&
                current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
+            if (feedrateScalingDisabledForCommand(*current_layer_motion_end)) {
+                --current_layer_motion_end;
+                continue;
+            }
+
             double tempModifier = modifier;
             auto parameters = current_layer_motion_end->getParameters();
             if (parameters.contains(m_q_parameter.toLatin1()) &&

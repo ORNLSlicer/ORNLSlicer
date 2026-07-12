@@ -373,3 +373,15 @@ settings:
     namespace: "Material::StartUp"
     symbol: "kStartUpBeadAreaModifier"
     local: true
+  - name: "disable_start-up_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Start-Up"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change start-up path speeds."
+    depends: {"OR":[{"perimeter_start-up":true},{"OR":[{"inset_start-up":true},{"OR":[{"skin_start-up":true},{"OR":[{"infill_start-up":true},{"skeleton_start-up":true}]}]}]}]}
+    options: []
+    default: false
+    minor: "Start-Up"
+    major: "Material"
+    namespace: "Material::StartUp"
+    symbol: "kDisableStartUpFeedrateScaling"
+    local: false
