@@ -27,12 +27,56 @@
 
 namespace ORNL {
 namespace {
-void appendPathLines(PolygonList& path_lines, QVector<Polyline>& computed_geometry) {
-    for (Polygon& poly : path_lines) {
-        Polyline line = poly.toPolyline();
+Polyline toOpenPolyline(Polygon poly) {
+    Polyline line = poly.toPolyline();
+    if (!line.isEmpty()) {
         line.pop_back();
-        computed_geometry.push_back(line);
     }
+    return line;
+}
+
+bool isValidPerimeterLine(const Polyline& line, Distance min_path_length) {
+    return line.size() >= 3 && SpiralPath::closedPolylineLength(line) >= min_path_length;
+}
+
+QVector<Polygon> appendValidPathLines(const PolygonList& path_lines, QVector<Polyline>& computed_geometry,
+                                      Distance min_path_length, bool& skipped_path_line) {
+    QVector<Polygon> valid_path_lines;
+
+    for (const Polygon& poly : path_lines) {
+        Polyline line = toOpenPolyline(poly);
+        if (!isValidPerimeterLine(line, min_path_length)) {
+            skipped_path_line = true;
+            continue;
+        }
+
+        computed_geometry.push_back(line);
+        valid_path_lines.push_back(poly);
+    }
+
+    return valid_path_lines;
+}
+
+PolygonList pathLineFootprint(const Polygon& path_line, Distance bead_width, const PolygonList& clipping_geometry) {
+    PolygonList outer_offset = path_line.offset(bead_width / 2);
+    PolygonList inner_offset = path_line.offset(-bead_width / 2);
+    PolygonList footprint = outer_offset ^ inner_offset;
+
+    return footprint & clipping_geometry;
+}
+
+bool subtractPathLineFootprints(PolygonList& geometry, const QVector<Polygon>& path_lines, Distance bead_width) {
+    PolygonList path_line_footprint;
+    for (const Polygon& poly : path_lines) {
+        path_line_footprint += pathLineFootprint(poly, bead_width, geometry);
+    }
+
+    if (path_line_footprint.isEmpty()) {
+        return false;
+    }
+
+    geometry -= path_line_footprint;
+    return true;
 }
 
 PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundaries,
@@ -46,6 +90,25 @@ PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundarie
     PolygonList offset_geometry = offset_external_geometry - internal_boundaries;
     offset_geometry.lost_geometry = offset_external_geometry.lost_geometry;
     return offset_geometry;
+}
+
+PolygonList selectedBoundaryPathLines(const PolygonList& external_boundaries, const PolygonList& internal_boundaries,
+                                      PerimeterBoundarySelection selection, Distance path_offset) {
+    PolygonList offset_geometry =
+        selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, selection, path_offset);
+
+    return selection == PerimeterBoundarySelection::kInternal ? offset_geometry.internalPolygonBoundaries()
+                                                              : offset_geometry.externalPolygonBoundaries();
+}
+
+PolygonList selectedBoundaryPathLines(const PolygonList& geometry, PerimeterBoundarySelection selection,
+                                      Distance bead_width) {
+    if (selection == PerimeterBoundarySelection::kAll) {
+        return geometry.offset(-bead_width / 2);
+    }
+
+    return selectedBoundaryPathLines(geometry.externalPolygonBoundaries(), geometry.internalPolygonBoundaries(),
+                                     selection, bead_width / 2);
 }
 } // namespace
 
@@ -69,23 +132,41 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void Perimeter::compute(uint layer_num) {
     m_paths.clear();
+    m_computed_geometry.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
     int perimeter_count = m_sb->setting<int>(PS::Perimeter::kCount);
+    const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
     const PerimeterBoundarySelection boundary_selection =
         static_cast<PerimeterBoundarySelection>(m_sb->setting<int>(PS::Perimeter::kBoundarySelection));
 
     const PolygonList original_geometry = m_geometry;
     if (boundary_selection == PerimeterBoundarySelection::kAll) {
         PolygonList path_lines = m_geometry.offset(-beadWidth / 2);
+        bool use_footprint_subtraction = false;
 
         for (int perimeter_number = 0; !path_lines.isEmpty() && perimeter_number < perimeter_count;
              ++perimeter_number) {
-            appendPathLines(path_lines, m_computed_geometry);
+            bool skipped_path_line = false;
+            QVector<Polygon> valid_path_lines =
+                appendValidPathLines(path_lines, m_computed_geometry, min_path_length, skipped_path_line);
 
-            m_geometry = path_lines.offset(-beadWidth / 2, -beadWidth / 2);
-            path_lines = path_lines.offset(-beadWidth, -beadWidth / 2);
+            if (valid_path_lines.isEmpty()) {
+                break;
+            }
+
+            if (skipped_path_line || use_footprint_subtraction) {
+                use_footprint_subtraction = true;
+                if (!subtractPathLineFootprints(m_geometry, valid_path_lines, beadWidth)) {
+                    break;
+                }
+                path_lines = selectedBoundaryPathLines(m_geometry, boundary_selection, beadWidth);
+            }
+            else {
+                m_geometry = path_lines.offset(-beadWidth / 2, -beadWidth / 2);
+                path_lines = path_lines.offset(-beadWidth, -beadWidth / 2);
+            }
         }
         return;
     }
@@ -95,23 +176,42 @@ void Perimeter::compute(uint layer_num) {
     // would no longer clip the offset.
     const PolygonList external_boundaries = original_geometry.externalPolygonBoundaries();
     const PolygonList internal_boundaries = original_geometry.internalPolygonBoundaries();
+    bool use_footprint_subtraction = false;
+    PolygonList path_lines;
 
     for (int perimeter_number = 0; perimeter_number < perimeter_count; ++perimeter_number) {
-        const Distance path_offset = beadWidth * perimeter_number + beadWidth / 2;
-        PolygonList offset_geometry =
-            selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, boundary_selection, path_offset);
-        PolygonList path_lines = boundary_selection == PerimeterBoundarySelection::kInternal
-                                     ? offset_geometry.internalPolygonBoundaries()
-                                     : offset_geometry.externalPolygonBoundaries();
+        if (use_footprint_subtraction) {
+            path_lines = selectedBoundaryPathLines(m_geometry, boundary_selection, beadWidth);
+        }
+        else {
+            const Distance path_offset = beadWidth * perimeter_number + beadWidth / 2;
+            path_lines = selectedBoundaryPathLines(external_boundaries, internal_boundaries, boundary_selection,
+                                                  path_offset);
+        }
+
         if (path_lines.isEmpty()) {
             break;
         }
 
-        appendPathLines(path_lines, m_computed_geometry);
+        bool skipped_path_line = false;
+        QVector<Polygon> valid_path_lines =
+            appendValidPathLines(path_lines, m_computed_geometry, min_path_length, skipped_path_line);
 
-        const Distance remaining_offset = beadWidth * (perimeter_number + 1);
-        m_geometry = selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, boundary_selection,
-                                                    remaining_offset);
+        if (valid_path_lines.isEmpty()) {
+            break;
+        }
+
+        if (skipped_path_line || use_footprint_subtraction) {
+            use_footprint_subtraction = true;
+            if (!subtractPathLineFootprints(m_geometry, valid_path_lines, beadWidth)) {
+                break;
+            }
+        }
+        else {
+            const Distance remaining_offset = beadWidth * (perimeter_number + 1);
+            m_geometry = selectedBoundaryOffsetGeometry(external_boundaries, internal_boundaries, boundary_selection,
+                                                        remaining_offset);
+        }
     }
 }
 
