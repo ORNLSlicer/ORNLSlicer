@@ -26,6 +26,28 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+Polyline toOpenPolyline(Polygon poly) {
+    Polyline line = poly.toPolyline();
+    if (!line.isEmpty()) {
+        line.pop_back();
+    }
+    return line;
+}
+
+bool isValidInsetLine(const Polyline& line, Distance min_path_length) {
+    return line.size() >= 3 && SpiralPath::closedPolylineLength(line) >= min_path_length;
+}
+
+PolygonList pathLineFootprint(const Polygon& path_line, Distance bead_width, const PolygonList& clipping_geometry) {
+    PolygonList outer_offset = path_line.offset(bead_width / 2);
+    PolygonList inner_offset = path_line.offset(-bead_width / 2);
+    PolygonList footprint = outer_offset ^ inner_offset;
+
+    return footprint & clipping_geometry;
+}
+} // namespace
+
 Inset::Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
     : RegionBase(sb, index, settings_polygons) {
     // NOP
@@ -47,31 +69,60 @@ QString Inset::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void Inset::compute(uint layer_num) {
     m_paths.clear();
+    m_computed_geometry.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kInsetNum));
 
     Distance beadWidth = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
     int rings = m_sb->setting<int>(PS::Inset::kCount);
 
-    PolygonList path_line = m_geometry.offset(-beadWidth / 2);
-
     Distance overlap = m_sb->setting<Distance>(PS::Inset::kOverlap);
+    const Distance min_path_length = m_sb->setting<Distance>(PS::Inset::kMinPathLength);
+
+    int ring_nr = 0;
+    PolygonList path_line = m_geometry.offset(-beadWidth / 2);
     if (overlap > 0) {
         path_line = path_line.offset(overlap);
     }
 
-    int ring_nr = 0;
     while (!path_line.isEmpty() && ring_nr < rings) {
-        for (Polygon poly : path_line) {
-            Polyline line = poly.toPolyline();
-            line.pop_back();
+        bool skipped_path_line = false;
+        QVector<Polygon> valid_path_lines;
+
+        for (const Polygon& poly : path_line) {
+            Polyline line = toOpenPolyline(poly);
+            if (!isValidInsetLine(line, min_path_length)) {
+                skipped_path_line = true;
+                continue;
+            }
+
             m_computed_geometry.push_back(line);
+            valid_path_lines.push_back(poly);
+        }
+
+        if (valid_path_lines.isEmpty()) {
+            break;
         }
 
         ring_nr++;
 
-        m_geometry = path_line.offset(-beadWidth / 2., -beadWidth / 2.);
-        path_line = path_line.offset(-beadWidth, -beadWidth / 2.);
+        if (skipped_path_line) {
+            PolygonList valid_path_line_footprint;
+            for (const Polygon& poly : valid_path_lines) {
+                valid_path_line_footprint += pathLineFootprint(poly, beadWidth, m_geometry);
+            }
+
+            if (valid_path_line_footprint.isEmpty()) {
+                break;
+            }
+
+            m_geometry -= valid_path_line_footprint;
+            path_line = m_geometry.offset(-beadWidth / 2);
+        }
+        else {
+            m_geometry = path_line.offset(-beadWidth / 2., -beadWidth / 2.);
+            path_line = path_line.offset(-beadWidth, -beadWidth / 2.);
+        }
     }
 }
 
