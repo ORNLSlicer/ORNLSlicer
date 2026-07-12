@@ -212,47 +212,20 @@ void Vector2InputWidget::updateSetting(const QString& key, double displayed_valu
 
 Distance Vector2InputWidget::reloadDistanceValue(const QString& key, Distance default_value, bool& consistent) {
     if (m_settings_bases.size() > 0) {
-        const Distance base_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : default_value;
-        removeRedundantLocalOverrides<Distance>(key, base_value);
+        const Distance global_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : default_value;
+        const Distance first_value = effectiveValueHelper<Distance>(key, 0, global_value);
 
         bool all_bases_consistent = true;
-        for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
-            auto sb_1 = m_settings_bases[i - 1];
-            auto sb_2 = m_settings_bases[i];
-            all_bases_consistent = all_bases_consistent && areConsistent(key, sb_1, sb_2, default_value);
-        }
+        for (int index = 1, end = m_settings_bases.size(); index < end; ++index)
+            all_bases_consistent =
+                all_bases_consistent && effectiveValueHelper<Distance>(key, index, global_value) == first_value;
 
         if (all_bases_consistent)
-            return effectiveDistanceValue(key, m_settings_bases[0], default_value);
+            return first_value;
 
         consistent = false;
         return default_value;
     }
-
-    return effectiveDistanceValue(key, m_sb, default_value);
-}
-
-bool Vector2InputWidget::areConsistent(const QString& key, QSharedPointer<SettingsBase> a,
-                                       QSharedPointer<SettingsBase> b, Distance default_value) {
-    const Distance base_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : default_value;
-
-    if (a->contains(key) && base_value == a->setting<Distance>(key))
-        a->remove(key);
-
-    if (b->contains(key) && base_value == b->setting<Distance>(key))
-        b->remove(key);
-
-    bool containsA = a->contains(key);
-    bool containsB = b->contains(key);
-
-    return (containsA == containsB) &&
-           ((containsA && (a->setting<Distance>(key) == b->setting<Distance>(key))) || !containsA);
-}
-
-Distance Vector2InputWidget::effectiveDistanceValue(const QString& key, QSharedPointer<SettingsBase> settings_base,
-                                                    Distance default_value) {
-    if (settings_base->contains(key))
-        return settings_base->setting<Distance>(key);
 
     if (m_sb->contains(key))
         return m_sb->setting<Distance>(key);
@@ -264,9 +237,10 @@ bool Vector2InputWidget::hasConsistentEffectiveValues(const QString& key, Distan
     if (m_settings_bases.size() <= 1)
         return true;
 
-    Distance first_value = effectiveDistanceValue(key, m_settings_bases[0], default_value);
-    for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
-        if (effectiveDistanceValue(key, m_settings_bases[i], default_value) != first_value)
+    const Distance global_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : default_value;
+    const Distance first_value = effectiveValueHelper<Distance>(key, 0, global_value);
+    for (int index = 1, end = m_settings_bases.size(); index < end; ++index) {
+        if (effectiveValueHelper<Distance>(key, index, global_value) != first_value)
             return false;
     }
 

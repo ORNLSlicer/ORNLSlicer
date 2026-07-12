@@ -137,14 +137,15 @@ void SettingBar::filter(QString str) {
     }
 }
 
-void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases) {
+void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
+                                       QList<QSharedPointer<SettingsBase>> inherited_bases) {
     auto settings_bases = name_and_bases.second;
 
     // here we clear any warnings if a new settings base has been selected, or do nothing if the settings base remains
     // the same
     for (SettingPane* cur_pane : m_panes) {
         for (SettingTab* cur_tab : cur_pane->getTabs()) {
-            if (cur_tab->m_settings_bases != settings_bases) {
+            if (cur_tab->m_settings_bases != settings_bases || cur_tab->m_inherited_settings_bases != inherited_bases) {
                 cur_pane->m_pane_warning = 0;
             }
         }
@@ -166,7 +167,7 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
             SettingPane* cur_pane = m_panes.value(key);
 
             for (SettingTab* cur_tab : cur_pane->getTabs()) {
-                cur_tab->settingsBasesSelected(settings_bases);
+                cur_tab->settingsBasesSelected(settings_bases, inherited_bases);
                 if (!hiddenSettings.contains(cur_tab->getName())) {
                     cur_tab->show();
                     for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows()) {
@@ -196,7 +197,7 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
                     if (settingsHidden == rows.size())
                         cur_tab->hide();
 
-                    cur_tab->settingsBasesSelected(settings_bases);
+                    cur_tab->settingsBasesSelected(settings_bases, inherited_bases);
                 }
             }
         }
@@ -317,8 +318,7 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
     enableDependRows();
 }
 
-void SettingBar::forwardSettingAboutToChange(QString setting_key,
-                                             QList<QSharedPointer<SettingsBase>> settings_bases) {
+void SettingBar::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
     emit settingAboutToChange(setting_key, settings_bases);
 }
 

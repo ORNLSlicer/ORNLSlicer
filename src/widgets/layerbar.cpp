@@ -245,11 +245,12 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
         // Set selected settings to be part
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(item->part()->getSb());
-        emit setSelectedSettings(qMakePair(item->part()->name(), ranges));
+        emit setSelectedSettings(qMakePair(item->part()->name(), ranges), {QSharedPointer<SettingsBase>()});
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     else {
-        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()));
+        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()),
+                                 QList<QSharedPointer<SettingsBase>>());
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     // Check if new part selected and if that part's template equals the currently selected template from drop down
@@ -271,7 +272,7 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
         loadTemplateLayers();
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(item->part()->getSb());
-        emit setSelectedSettings(qMakePair(item->part()->name(), ranges));
+        emit setSelectedSettings(qMakePair(item->part()->name(), ranges), {QSharedPointer<SettingsBase>()});
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     updateLayerSettingsRangeAvailability();
@@ -372,11 +373,12 @@ void LayerBar::reselectPart() { // If no part selected
         // Set selected settings to be part
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(m_part->getSb());
-        emit setSelectedSettings(qMakePair(m_part->name(), ranges));
+        emit setSelectedSettings(qMakePair(m_part->name(), ranges), {QSharedPointer<SettingsBase>()});
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     else {
-        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()));
+        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()),
+                                 QList<QSharedPointer<SettingsBase>>());
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     // Check if new part selected and if that part's template equals the currently selected template from drop down menu
@@ -392,7 +394,7 @@ void LayerBar::reselectPart() { // If no part selected
         loadTemplateLayers();
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(m_part->getSb());
-        emit setSelectedSettings(qMakePair(m_part->name(), ranges));
+        emit setSelectedSettings(qMakePair(m_part->name(), ranges), {QSharedPointer<SettingsBase>()});
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     updateLayerSettingsRangeAvailability();
@@ -1674,7 +1676,8 @@ void LayerBar::updateLayerSettingsRangeAvailability() {
 
 void LayerBar::changeSelectedSettings() {
     if (m_part == nullptr) {
-        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()));
+        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()),
+                                 QList<QSharedPointer<SettingsBase>>());
         emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
         updateLayerSettingsRangeAvailability();
         return;
@@ -1682,6 +1685,7 @@ void LayerBar::changeSelectedSettings() {
 
     QVector<QString> names;
     QList<QSharedPointer<SettingsBase>> settings_bases;
+    QList<QSharedPointer<SettingsBase>> inherited_bases;
     QList<QPair<int, int>> selected_layer_ranges;
 
     auto include_visual_layer_range = [&selected_layer_ranges](int low, int high) {
@@ -1708,6 +1712,7 @@ void LayerBar::changeSelectedSettings() {
             QString name = "Layers " + QString::number(low + 1) + " - " + QString::number(high + 1);
             names.append(name);
             settings_bases.append(range->getSb());
+            inherited_bases.append(m_part->getSb());
         }
         else if (dot->getGroup() != nullptr) {
             // get the dot group & its name
@@ -1724,6 +1729,7 @@ void LayerBar::changeSelectedSettings() {
             // so just get the sb of one dot
             auto range = m_part->getSettingsRange(dot->getLayer(), dot->getLayer());
             settings_bases.append(range->getSb());
+            inherited_bases.append(m_part->getSb());
 
             // remove all the dots in the group from selection copy
             for (int j = selected_copy.size() - 1; j > i; --j) {
@@ -1738,6 +1744,7 @@ void LayerBar::changeSelectedSettings() {
             QString name = "Layer " + QString::number(layer_num + 1);
             names.append(name);
             settings_bases.append(range->getSb());
+            inherited_bases.append(m_part->getSb());
         }
     }
 
@@ -1764,6 +1771,7 @@ void LayerBar::changeSelectedSettings() {
     {
         final = m_part->name();
         settings_bases.append(m_part->getSb());
+        inherited_bases.append(QSharedPointer<SettingsBase>());
     }
     else if (names.size() == 1) // just one selected range, display it
     {
@@ -1785,7 +1793,7 @@ void LayerBar::changeSelectedSettings() {
         final += " of " + m_part->name();
     }
 
-    emit setSelectedSettings(qMakePair(final, settings_bases));
+    emit setSelectedSettings(qMakePair(final, settings_bases), inherited_bases);
     emit selectedLayerSettingsRangesChanged(names.isEmpty() ? nullptr : m_part,
                                             names.isEmpty() ? QList<QPair<int, int>>() : merged_layer_ranges);
     updateLayerSettingsRangeAvailability();

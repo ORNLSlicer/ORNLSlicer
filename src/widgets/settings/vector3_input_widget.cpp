@@ -202,47 +202,20 @@ void Vector3InputWidget::updateSetting(const QString& key, double value) {
 
 double Vector3InputWidget::reloadDoubleValue(const QString& key, double default_value, bool& consistent) {
     if (m_settings_bases.size() > 0) {
-        const double base_value = m_sb->contains(key) ? m_sb->setting<double>(key) : default_value;
-        removeRedundantLocalOverrides<double>(key, base_value);
+        const double global_value = m_sb->contains(key) ? m_sb->setting<double>(key) : default_value;
+        const double first_value = effectiveValueHelper<double>(key, 0, global_value);
 
         bool all_bases_consistent = true;
-        for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
-            auto sb_1 = m_settings_bases[i - 1];
-            auto sb_2 = m_settings_bases[i];
-            all_bases_consistent = all_bases_consistent && areConsistent(key, sb_1, sb_2, default_value);
-        }
+        for (int index = 1, end = m_settings_bases.size(); index < end; ++index)
+            all_bases_consistent =
+                all_bases_consistent && effectiveValueHelper<double>(key, index, global_value) == first_value;
 
         if (all_bases_consistent)
-            return effectiveDoubleValue(key, m_settings_bases[0], default_value);
+            return first_value;
 
         consistent = false;
         return default_value;
     }
-
-    return effectiveDoubleValue(key, m_sb, default_value);
-}
-
-bool Vector3InputWidget::areConsistent(const QString& key, QSharedPointer<SettingsBase> a,
-                                       QSharedPointer<SettingsBase> b, double default_value) {
-    const double base_value = m_sb->contains(key) ? m_sb->setting<double>(key) : default_value;
-
-    if (a->contains(key) && base_value == a->setting<double>(key))
-        a->remove(key);
-
-    if (b->contains(key) && base_value == b->setting<double>(key))
-        b->remove(key);
-
-    bool containsA = a->contains(key);
-    bool containsB = b->contains(key);
-
-    return (containsA == containsB) &&
-           ((containsA && (a->setting<double>(key) == b->setting<double>(key))) || !containsA);
-}
-
-double Vector3InputWidget::effectiveDoubleValue(const QString& key, QSharedPointer<SettingsBase> settings_base,
-                                                double default_value) {
-    if (settings_base->contains(key))
-        return settings_base->setting<double>(key);
 
     if (m_sb->contains(key))
         return m_sb->setting<double>(key);
@@ -254,9 +227,10 @@ bool Vector3InputWidget::hasConsistentEffectiveValues(const QString& key, double
     if (m_settings_bases.size() <= 1)
         return true;
 
-    double first_value = effectiveDoubleValue(key, m_settings_bases[0], default_value);
-    for (int i = 1, end = m_settings_bases.size(); i < end; ++i) {
-        if (effectiveDoubleValue(key, m_settings_bases[i], default_value) != first_value)
+    const double global_value = m_sb->contains(key) ? m_sb->setting<double>(key) : default_value;
+    const double first_value = effectiveValueHelper<double>(key, 0, global_value);
+    for (int index = 1, end = m_settings_bases.size(); index < end; ++index) {
+        if (effectiveValueHelper<double>(key, index, global_value) != first_value)
             return false;
     }
 

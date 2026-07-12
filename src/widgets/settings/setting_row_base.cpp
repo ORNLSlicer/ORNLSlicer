@@ -42,7 +42,7 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
     m_reset_button->setIcon(QIcon(":/icons/revert.png"));
     m_reset_button->setAutoRaise(true);
     m_reset_button->setFixedSize(20, 20);
-    m_reset_button->setToolTip("Use global value");
+    m_reset_button->setToolTip("Use inherited value");
     m_reset_button->hide();
     QObject::connect(m_reset_button.get(), &QToolButton::clicked, m_reset_button.get(),
                      [this]() { resetLocalOverrides(); });
@@ -104,7 +104,7 @@ void SettingRowBase::styleLabel(bool isConsistent) {
             m_key_label->setStyleSheet(m_key_label->styleSheet() + "\nQLabel { color: " + accent_color +
                                        "; font-weight: 700; }");
             m_key_label->setToolTip(
-                "<html><body><p><b>Locally overridden.</b> Click the reset button to use the global value.</p><p>" +
+                "<html><body><p><b>Locally overridden.</b> Click the reset button to use the inherited value.</p><p>" +
                 QString::fromStdString(m_json.at(Constants::Settings::Master::kToolTip)) + "</p></body></html>");
         }
         else {
@@ -125,8 +125,10 @@ fifojson SettingRowBase::getDependencies() { return m_json[Constants::Settings::
 
 void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) { m_rows_to_notify.push_back(row); }
 
-void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases) {
+void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases,
+                              QList<QSharedPointer<SettingsBase>> inherited_bases) {
     m_settings_bases = settings_bases;
+    m_inherited_settings_bases = inherited_bases;
     updateResetButton();
 }
 
