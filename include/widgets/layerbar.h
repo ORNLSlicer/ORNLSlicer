@@ -249,6 +249,9 @@ class LayerBar : public QWidget {
     //! \brief Move dot to layer specified.
     bool moveDotToLayer(LayerDot* dot, int layer);
 
+    //! \brief Moves an out-of-bounds range endpoint to the new top layer when possible.
+    bool clampRangeToLayerCount(LayerDot* dot, int layer_count);
+
     //! \brief Finds the next available layer and inserts the dot there.
     bool moveDotToNextLayer(LayerDot* dot);
 
@@ -260,6 +263,9 @@ class LayerBar : public QWidget {
 
     //! \brief determines what ranges are selected and emits accordingly
     void changeSelectedSettings();
+
+    //! \brief Removes selected dots that are no longer valid after a layer count update.
+    void removeInvalidSelections();
 
     //! \brief emits if the current part has any layer-specific settings
     void updateLayerSettingsRangeAvailability();
