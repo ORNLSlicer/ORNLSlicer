@@ -339,6 +339,8 @@ QString MeltioWriter::writeAfterLayer() {
 
 QString MeltioWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     rv += "M5\n";
     rv += "G0 G90 G53 Z0.0\n";
     rv += "G53 Y0.0\n";

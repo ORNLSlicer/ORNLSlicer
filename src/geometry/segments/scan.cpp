@@ -21,8 +21,9 @@ QSharedPointer<SegmentBase> ScanSegment::clone() const { return QSharedPointer<S
 
 QString ScanSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     Velocity speed = this->getSb()->setting<Velocity>(SS::kSpeed);
-
-    return writer->writeScan(m_end, speed, m_on_off);
+    const QString gcode = writer->writeScan(m_end, speed, m_on_off);
+    writer->setCurrentPosition(m_end);
+    return gcode;
 }
 
 void ScanSegment::setDataCollection(bool on) { m_on_off = on; }

@@ -329,6 +329,8 @@ QString RomiFanucWriter::writeAfterLayer() {
 
 QString RomiFanucWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
 
     rv += "G91G28Z0.0" % m_newline;
     rv += "G91G28Y200.0" % m_newline;

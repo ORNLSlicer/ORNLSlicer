@@ -96,6 +96,9 @@ class CincinnatiWriter : public WriterBase {
     //! \brief Writes G-Code to update the acceleration value
     QString writeAcceleration(Acceleration acc);
 
+    //! \brief Writes the end-of-print lift before shutdown logic executes.
+    QString writeFinalLift();
+
     //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
     QString writeCoordinates(Point destination);
 

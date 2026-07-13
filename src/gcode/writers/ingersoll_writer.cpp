@@ -345,6 +345,17 @@ QString IngersollWriter::writeAfterLayer() {
 
 QString IngersollWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) -> QString {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+                return QString(m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) %
+                               writeCoordinates(destination));
+            }
+            return QString(m_G0 % writeCoordinates(destination));
+        },
+        "TRAVEL FINAL LIFT Z");
     rv += writeExtruderOff(0); // update to turn off the extruder
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode);
     return rv;

@@ -341,6 +341,8 @@ QString OkumaWriter::writeAfterLayer() {
 
 QString OkumaWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
 
     rv += "( --- 5X_end.txt --- )" % m_newline;
     rv += "G170 " % m_newline;

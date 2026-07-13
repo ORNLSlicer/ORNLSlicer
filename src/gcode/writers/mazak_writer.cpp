@@ -353,6 +353,8 @@ QString MazakWriter::writeAfterLayer() {
 
 QString MazakWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
 
     rv += "G91Z1.25" % m_newline;
     rv += "G91G28Y0.0" % m_newline;

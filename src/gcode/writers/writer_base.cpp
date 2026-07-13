@@ -45,6 +45,8 @@ WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) :
     m_M3 = "M3";
     m_M5 = "M5";
     m_start_point = Point(0, 0, 0);
+    m_current_position = Point(0, 0, 0);
+    m_has_current_position = false;
 
     m_extruder_on = false;
 }
@@ -63,20 +65,30 @@ QString WriterBase::commentSpaceLine(const QString& text) {
 }
 
 QVector3D WriterBase::getTravelLift() {
+    return getLiftVector(m_sb->setting<Distance>(PS::Travel::kLiftHeight));
+}
+
+QVector3D WriterBase::getLiftVector(Distance lift_height) const {
     // Retrieve the slicing plane normal
     QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
                                 m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
                                 m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
     slicing_vector.normalize();
 
-    // Retrieve the lift height
-    Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
-
     // Calculate the lift vector
     QVector3D lift_vector = slicing_vector * lift_height();
 
     return lift_vector;
 }
+
+void WriterBase::setCurrentPosition(const Point& point) {
+    m_current_position = point;
+    m_has_current_position = true;
+}
+
+bool WriterBase::hasCurrentPosition() const { return m_has_current_position; }
+
+Point WriterBase::getCurrentPosition() const { return m_current_position; }
 
 int WriterBase::getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& params) const {
     if (params != nullptr && params->contains(MS::Extruder::kInitialSpeed)) {

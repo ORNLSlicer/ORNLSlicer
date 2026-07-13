@@ -23,7 +23,9 @@ void LineSegment::createGraphic(std::vector<float>& vertices, std::vector<float>
 QSharedPointer<SegmentBase> LineSegment::clone() const { return QSharedPointer<LineSegment>::create(*this); }
 
 QString LineSegment::writeGCode(QSharedPointer<WriterBase> writer) {
-    return writer->writeLine(m_start, m_end, this->getSb());
+    const QString gcode = writer->writeLine(m_start, m_end, this->getSb());
+    writer->setCurrentPosition(m_end);
+    return gcode;
 }
 
 float LineSegment::getMinZ() {

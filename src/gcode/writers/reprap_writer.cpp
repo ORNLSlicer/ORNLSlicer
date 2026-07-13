@@ -493,6 +493,13 @@ QString RepRapWriter::writeAfterLayer() {
 
 QString RepRapWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            return m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) % writeCoordinates(destination);
+        },
+        "TRAVEL FINAL LIFT Z");
 
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M104 S0" % commentSpaceLine("TURN EXTRUDER OFF") %
           "M140 S0" % commentSpaceLine("TURN BED OFF") % "M84" % commentSpaceLine("DISABLE MOTORS") % "M106 S0" %

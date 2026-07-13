@@ -112,6 +112,15 @@ class WriterBase {
     //! \brief Return current feedrate
     Velocity getFeedrate() const;
 
+    //! \brief Records the current output position after a segment is emitted.
+    void setCurrentPosition(const Point& point);
+
+    //! \brief Returns whether a concrete output position has been recorded yet.
+    bool hasCurrentPosition() const;
+
+    //! \brief Returns the most recent recorded output position.
+    Point getCurrentPosition() const;
+
     //! \brief Write purge command
     virtual QString writePurge(int RPM, int duration, int delay) { return QString(); }
 
@@ -135,6 +144,30 @@ class WriterBase {
     //! \brief gets a vector in the direction normal to the plane and of a length = travel lift height
     QVector3D getTravelLift();
 
+    //! \brief gets a vector in the direction normal to the plane and of the provided length
+    QVector3D getLiftVector(Distance lift_height) const;
+
+    //! \brief emits a final lift move for point-based writers when configured
+    template <typename MoveEmitter>
+    QString writeFinalTravelLift(MoveEmitter&& emit_move, const QString& comment) {
+        const Distance final_lift = m_sb->setting<Distance>(PS::Travel::kFinalLiftDistance);
+        if (final_lift <= 0 || !m_has_current_position)
+            return QString();
+
+        const Point lift_destination = m_current_position + getLiftVector(final_lift);
+        QString rv = emit_move(lift_destination);
+        if (rv.isEmpty())
+            return rv;
+
+        if (comment.isEmpty())
+            rv += m_newline;
+        else
+            rv += commentSpaceLine(comment);
+
+        setCurrentPosition(lift_destination);
+        return rv;
+    }
+
     //! \brief Gets the segment-local initial extruder speed, falling back to the global setting.
     int getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& params = nullptr) const;
 
@@ -151,6 +184,12 @@ class WriterBase {
 
     //! \brief maintains the min z of the last layer so that we can determine if/when to move the table
     float m_min_z;
+
+    //! \brief the most recent point emitted by the gcode writer
+    Point m_current_position;
+
+    //! \brief whether or not the writer has emitted a point yet
+    bool m_has_current_position;
 
     //! \brief preallocated common prefixes that all writers use
     QChar m_space;

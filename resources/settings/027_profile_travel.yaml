@@ -61,6 +61,18 @@ settings:
     namespace: "Profile::Travel"
     symbol: "kTravelLiftHeight"
     local: false
+  - name: "final_lift_distance"
+    display: "Final Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift the tool at the end of the print along the slicing plane normal before shutdown."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kFinalLiftDistance"
+    local: false
   - name: "enable_travel_pause"
     display: "Pause During Travel"
     type: "boolean"

@@ -276,6 +276,8 @@ QString MVPWriter::writeAfterLayer() {
 
 QString MVPWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     rv += "M5" % commentSpaceLine("TURN PUMP OFF END OF PRINT");
     rv += "M53" % commentSpaceLine("TURN GUN OFF END OF PRINT");
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;

@@ -330,6 +330,8 @@ QString TormachWriter::writeAfterLayer() {
 
 QString TormachWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     rv +=
         m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M65 P1" % commentSpaceLine("ROBOT READY LOW *****");
     return rv;
