@@ -41,7 +41,15 @@ struct Rgba {
           b(static_cast<float>(color.blueF())), a(static_cast<float>(color.alphaF())) {}
 };
 
-void reserveAdditional(std::vector<float>& values, std::size_t count) { values.reserve(values.size() + count); }
+void reserveAdditional(std::vector<float>& values, std::size_t count) {
+    const std::size_t required_capacity = values.size() + count;
+    if (required_capacity <= values.capacity()) {
+        return;
+    }
+
+    const std::size_t grown_capacity = values.capacity() == 0 ? required_capacity : values.capacity() * 2;
+    values.reserve(std::max(required_capacity, grown_capacity));
+}
 
 void reserveTriangleMesh(std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals,
                          std::size_t triangle_count) {

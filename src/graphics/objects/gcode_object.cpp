@@ -60,6 +60,20 @@ bool hasMeshSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode)
     return false;
 }
 
+//! @brief Counts travel segments before GL buffer construction so their secondary line buffer can be preallocated.
+qsizetype countTravelSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    qsizetype count = 0;
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+        for (const QSharedPointer<SegmentBase>& segment : layer) {
+            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
+                ++count;
+            }
+        }
+    }
+
+    return count;
+}
+
 //! @brief Estimates vertices required if printable segments are expanded to true-width bead meshes.
 qsizetype estimateMeshVertexCount(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
     qsizetype count = 0;
@@ -135,6 +149,21 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
 
     if (m_lightweight_lines) {
+        primary_vertices.reserve(segment_count * 2 * 3);
+        primary_normals.reserve(segment_count * 2 * 3);
+        primary_colors.reserve(segment_count * 2 * 4);
+    }
+    else if (m_primary_render_mode == GL_TRIANGLES) {
+        primary_vertices.reserve(mesh_vertex_count * 3);
+        primary_normals.reserve(mesh_vertex_count * 3);
+        primary_colors.reserve(mesh_vertex_count * 4);
+
+        const qsizetype travel_segment_count = countTravelSegments(gcode);
+        travel_line_vertices.reserve(travel_segment_count * 2 * 3);
+        travel_line_normals.reserve(travel_segment_count * 2 * 3);
+        travel_line_colors.reserve(travel_segment_count * 2 * 4);
+    }
+    else {
         primary_vertices.reserve(segment_count * 2 * 3);
         primary_normals.reserve(segment_count * 2 * 3);
         primary_colors.reserve(segment_count * 2 * 4);
