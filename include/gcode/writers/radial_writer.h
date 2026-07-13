@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QPair>
+#include <QVector>
 #include <qsharedpointer.h>
 
 #include "gcode/gcode_meta.h"
@@ -25,6 +27,12 @@ class RadialWriter : public WriterBase {
      * @param sb Global settings used while writing.
      */
     RadialWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
+
+    /*!
+     * @brief Supplies the effective part-local helical clipping methods for the settings header.
+     * @param methods Part name and clipping method pairs for parts that produced helical paths.
+     */
+    void setHelicalClippingMethods(const QVector<QPair<QString, HelicalClippingMethod>>& methods);
 
     /*!
      * @brief Writes radial-specific process-agnostic slicing settings.
@@ -148,5 +156,8 @@ class RadialWriter : public WriterBase {
 
     //! @brief Last emitted C-axis value, used for rotary unwrapping.
     double m_last_c_degrees = 0.0;
+
+    //! @brief Effective part-local clipping methods reported in helical G-code headers.
+    QVector<QPair<QString, HelicalClippingMethod>> m_helical_clipping_methods;
 };
 } // namespace ORNL

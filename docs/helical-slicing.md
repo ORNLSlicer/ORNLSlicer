@@ -15,7 +15,8 @@ The first radius is half a `Layer Height` outward from `Radial Initial Radius`, 
 5. Set `Radial Axis Mode` if the helix should use a custom XY coordinate instead of the part centroid.
 6. Set `Radial Initial Radius` if the first helix should begin away from the axis.
 7. Set `Radial Boundary Handling` for helical paths that cross the model boundary.
-8. Confirm the printer `Syntax` is `Radial3Plus2`. Selecting `Helical Slice` updates this automatically.
+8. When boundary handling is `Clip to Model`, set `Helical Clipping Method` to choose how intersections are retained.
+9. Confirm the printer `Syntax` is `Radial3Plus2`. Selecting `Helical Slice` updates this automatically.
 
 ## Path Generation
 
@@ -27,9 +28,20 @@ Boundary handling follows the radial slicer behavior:
 
 | Option | Behavior |
 | --- | --- |
-| `Clip to Model` | Outputs only retained portions inside the model. |
+| `Clip to Model` | Clips the helix according to `Helical Clipping Method`. |
 | `Keep Boundary-Crossing Path` | Outputs the original full helix when any portion is inside. |
 | `Discard Boundary-Crossing Path` | Omits helices cut by the model boundary while keeping fully contained paths. |
+
+`Helical Clipping Method` is used only with `Clip to Model`:
+
+| Option | Behavior |
+| --- | --- |
+| `All Model Intersections` | Outputs every contiguous helix portion that lies inside the model. This is the default and preserves the existing clipping behavior. |
+| `Highest Z Intersection` | Outputs one continuous prefix of the original helix, from its generated start through the boundary intersection with the greatest Z value. Lower outside spans within that prefix are retained so the result remains continuous, and no path is emitted above the selected intersection. |
+
+When `Highest Z Intersection` finds no boundary crossing, a helix that is wholly inside the model is kept in full and a helix that is wholly outside is omitted. Tangential contacts that do not change the inside/outside classification are not boundary crossings.
+
+`Keep Boundary-Crossing Path` and `Discard Boundary-Crossing Path` do not use `Helical Clipping Method`; their behavior is unchanged.
 
 ## Output
 
