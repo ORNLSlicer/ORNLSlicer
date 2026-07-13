@@ -203,10 +203,14 @@ void PartToolbar::setupStyle() {
 
     auto partToolbarStyle = style->readAll();
     this->setStyleSheet(partToolbarStyle);
-    m_translation_controls->setStyleSheet(partToolbarStyle);
-    m_rotation_controls->setStyleSheet(partToolbarStyle);
-    m_scale_controls->setStyleSheet(partToolbarStyle);
-    m_align_controls->setStyleSheet(partToolbarStyle);
+
+    // The input panels have their own stylesheet. Replacing it with the part
+    // toolbar stylesheet removes input-specific rules such as the spin-box
+    // arrow images in the system-default theme.
+    m_translation_controls->setupStyle();
+    m_rotation_controls->setupStyle();
+    m_scale_controls->setupStyle();
+    m_align_controls->setupStyle();
 
     style->close();
 }
