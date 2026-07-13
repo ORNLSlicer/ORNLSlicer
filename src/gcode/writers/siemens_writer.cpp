@@ -364,6 +364,8 @@ QString SiemensWriter::writeAfterLayer() {
 
 QString SiemensWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     rv += comment("PARK");
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M30" % commentSpaceLine("END OF G-CODE");
     return rv;

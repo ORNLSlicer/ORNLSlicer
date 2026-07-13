@@ -393,6 +393,8 @@ QString ORNLWriter::writeAfterLayer() {
 
 QString ORNLWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     if (m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kPellet) {
         rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT");
     }

@@ -764,6 +764,7 @@ QString CincinnatiWriter::writeAfterLayer() {
 
 QString CincinnatiWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalLift();
     rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT") % writeTamperOff() % "M68 (PARK)\n";
 
     if (m_sb->setting<int>(MS::Extruder::kServoToTravelSpeed)) {
@@ -776,6 +777,48 @@ QString CincinnatiWriter::writeShutdown() {
               commentSpaceLine("JOG W TO DOFFING LOCATION");
     }
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M30" % commentSpaceLine("END OF G-CODE");
+    return rv;
+}
+
+QString CincinnatiWriter::writeFinalLift() {
+    const Distance final_lift = m_sb->setting<Distance>(PS::Travel::kFinalLiftDistance);
+    if (final_lift <= 0 || !hasCurrentPosition()) {
+        return QString();
+    }
+
+    QString rv;
+    const Point lift_destination = getCurrentPosition() + getLiftVector(final_lift);
+
+    m_is_lift = true;
+    m_is_travel = false;
+
+    if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+        if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kW_only)) {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kWTableSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(lift_destination);
+            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kWTableSpeed));
+        }
+        else {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(lift_destination);
+            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
+        }
+    }
+    else {
+        rv += m_G0 % writeCoordinates(lift_destination);
+    }
+
+    if (m_w_travel) {
+        rv += commentSpaceLine("TRAVEL FINAL LIFT W");
+    }
+    else {
+        rv += commentSpaceLine("TRAVEL FINAL LIFT Z");
+    }
+
+    setCurrentPosition(lift_destination);
+    m_is_lift = false;
     return rv;
 }
 
