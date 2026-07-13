@@ -10,6 +10,11 @@ GcodeHighlighter::GcodeHighlighter(QTextDocument* parent) : QSyntaxHighlighter(p
 
 void GcodeHighlighter::setColorRules(QHash<QString, QTextCharFormat> colorHash) { m_color_hash = colorHash; }
 
-void GcodeHighlighter::highlightBlock(const QString& text) { setFormat(0, text.length(), m_color_hash[text]); }
+void GcodeHighlighter::highlightBlock(const QString& text) {
+    const auto color = m_color_hash.constFind(text);
+    if (color != m_color_hash.constEnd()) {
+        setFormat(0, text.length(), color.value());
+    }
+}
 
 } // namespace ORNL
