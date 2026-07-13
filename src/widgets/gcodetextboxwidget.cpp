@@ -323,6 +323,11 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
     QTextDocument* document = this->document();
     document->undo();
 
+    if (searchString.isEmpty()) {
+        document->setModified(false);
+        return;
+    }
+
     QTextCursor highlightCursor(document);
     QTextCursor cursor(document);
 

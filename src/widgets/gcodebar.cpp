@@ -46,9 +46,11 @@ void GcodeBar::updateGcodeText(QString text, QHash<QString, QTextCharFormat> fon
     m_view->setLayerFirstLineNumbers(m_layer_first_line_numbers);
     m_refresh_btn->setEnabled(false);
 
-    // preserve the last search. No harm if search string is empty
+    // Preserve the last search without running an empty-document search over large G-code files.
     m_search_count = 0;
-    search();
+    if (!m_search_bar->text().trimmed().isEmpty()) {
+        search();
+    }
 }
 
 void GcodeBar::clear() {
