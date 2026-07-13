@@ -4,6 +4,7 @@
 #include <cmath>
 #include <limits>
 
+#include <QPair>
 #include <QTextStream>
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
@@ -62,6 +63,20 @@ const Distance kMinPathSegmentLength = 10.0 * micron;
 struct HelicalCrossSection {
     Distance z;
     PolygonList geometry;
+};
+
+//! @brief Approximate model-boundary crossing on a sampled helix segment.
+struct HelicalBoundaryIntersection {
+    Point point;
+    int segment_end_index;
+};
+
+//! @brief Model-clipping result for one sampled helix.
+struct HelixClipResult {
+    QVector<Polyline> fragments;
+    QVector<HelicalBoundaryIntersection> intersections;
+    bool has_inside_points = false;
+    bool has_outside_points = false;
 };
 
 //! @brief Calculates combined bounds for non-empty meshes.
@@ -182,16 +197,18 @@ Point findBoundaryPoint(const Point& start, const Point& end, bool start_inside,
     return start_inside ? low : high;
 }
 
-//! @brief Clips a sampled helix into contiguous fragments inside the model.
-QVector<Polyline> clipHelixToSections(const Polyline& helix, const QVector<HelicalCrossSection>& sections,
-                                      Distance first_z, Distance section_spacing) {
-    QVector<Polyline> clipped_lines;
+//! @brief Clips a sampled helix into contiguous fragments and records model-boundary crossings.
+HelixClipResult clipHelixToSections(const Polyline& helix, const QVector<HelicalCrossSection>& sections,
+                                    Distance first_z, Distance section_spacing) {
+    HelixClipResult result;
     if (helix.size() < 2 || sections.isEmpty()) {
-        return clipped_lines;
+        return result;
     }
 
     Point previous = helix.first();
     bool previous_inside = pointInsideModel(sections, previous, first_z, section_spacing);
+    result.has_inside_points = previous_inside;
+    result.has_outside_points = !previous_inside;
 
     Polyline current_line;
     if (previous_inside) {
@@ -201,6 +218,8 @@ QVector<Polyline> clipHelixToSections(const Polyline& helix, const QVector<Helic
     for (int i = 1, end = helix.size(); i < end; ++i) {
         const Point current = helix[i];
         const bool current_inside = pointInsideModel(sections, current, first_z, section_spacing);
+        result.has_inside_points = result.has_inside_points || current_inside;
+        result.has_outside_points = result.has_outside_points || !current_inside;
 
         if (previous_inside && current_inside) {
             if (current_line.isEmpty()) {
@@ -209,15 +228,20 @@ QVector<Polyline> clipHelixToSections(const Polyline& helix, const QVector<Helic
             current_line.push_back(current);
         }
         else if (previous_inside && !current_inside) {
-            current_line.push_back(findBoundaryPoint(previous, current, true, sections, first_z, section_spacing));
+            const Point boundary_point = findBoundaryPoint(previous, current, true, sections, first_z, section_spacing);
+            result.intersections.push_back(HelicalBoundaryIntersection {boundary_point, i});
+            current_line.push_back(boundary_point);
             if (current_line.size() > 1 && current_line.length() > kMinPathSegmentLength) {
-                clipped_lines.push_back(current_line);
+                result.fragments.push_back(current_line);
             }
             current_line.clear();
         }
         else if (!previous_inside && current_inside) {
+            const Point boundary_point =
+                findBoundaryPoint(previous, current, false, sections, first_z, section_spacing);
+            result.intersections.push_back(HelicalBoundaryIntersection {boundary_point, i});
             current_line.clear();
-            current_line.push_back(findBoundaryPoint(previous, current, false, sections, first_z, section_spacing));
+            current_line.push_back(boundary_point);
             current_line.push_back(current);
         }
 
@@ -226,10 +250,44 @@ QVector<Polyline> clipHelixToSections(const Polyline& helix, const QVector<Helic
     }
 
     if (current_line.size() > 1 && current_line.length() > kMinPathSegmentLength) {
-        clipped_lines.push_back(current_line);
+        result.fragments.push_back(current_line);
     }
 
-    return clipped_lines;
+    return result;
+}
+
+//! @brief Keeps a continuous helix prefix through its highest-Z model-boundary crossing.
+QVector<Polyline> clipHelixAtHighestIntersection(const Polyline& helix, const HelixClipResult& clip_result) {
+    if (helix.size() < 2) {
+        return {};
+    }
+
+    if (clip_result.intersections.isEmpty()) {
+        return clip_result.has_inside_points && !clip_result.has_outside_points ? QVector<Polyline> {helix}
+                                                                                : QVector<Polyline>();
+    }
+
+    const auto highest_intersection =
+        std::max_element(clip_result.intersections.cbegin(), clip_result.intersections.cend(),
+                         [](const HelicalBoundaryIntersection& lhs, const HelicalBoundaryIntersection& rhs) {
+                             return lhs.point.z() < rhs.point.z();
+                         });
+
+    Polyline clipped_helix;
+    clipped_helix.reserve(highest_intersection->segment_end_index + 1);
+    for (int i = 0; i < highest_intersection->segment_end_index; ++i) {
+        clipped_helix.push_back(helix[i]);
+    }
+
+    if (clipped_helix.isEmpty() || clipped_helix.last() != highest_intersection->point) {
+        clipped_helix.push_back(highest_intersection->point);
+    }
+
+    if (clipped_helix.size() < 2 || clipped_helix.length() <= kMinPathSegmentLength) {
+        return {};
+    }
+
+    return {clipped_helix};
 }
 } // namespace
 
@@ -248,6 +306,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     QVector<QSharedPointer<Part>> build_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
     QVector<QSharedPointer<MeshBase>> clipping_meshes =
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
+    QVector<QPair<QString, HelicalClippingMethod>> effective_clipping_methods;
 
     int parts_processed = 0;
     for (const QSharedPointer<Part>& part : build_parts) {
@@ -280,6 +339,9 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         const Distance section_spacing = bead_width / 2.0 > kMinSectionSpacing ? bead_width / 2.0 : kMinSectionSpacing;
         const RadialBoundaryHandling boundary_handling =
             static_cast<RadialBoundaryHandling>(part_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling));
+        const HelicalClippingMethod clipping_method =
+            static_cast<HelicalClippingMethod>(part_sb->setting<int>(PS::Slicing::kHelicalClippingMethod));
+        bool part_generated_paths = false;
         Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius);
         if (initial_radius < 0) {
             initial_radius = 0.0 * micron;
@@ -361,7 +423,13 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                 QSharedPointer<HelicalLayer>::create(helical_layer_number + 1, layer_settings);
 
             Polyline helix = createHelix(center, radius, first_bead_z, top_z, bead_width);
-            QVector<Polyline> clipped_lines = clipHelixToSections(helix, cross_sections, first_bead_z, section_spacing);
+            const HelixClipResult clip_result =
+                clipHelixToSections(helix, cross_sections, first_bead_z, section_spacing);
+            QVector<Polyline> clipped_lines = clip_result.fragments;
+            if (boundary_handling == RadialBoundaryHandling::kClipToModel &&
+                clipping_method == HelicalClippingMethod::kHighestZIntersection) {
+                clipped_lines = clipHelixAtHighestIntersection(helix, clip_result);
+            }
             QVector<Polyline> candidate_lines = applyBoundaryHandling(helix, clipped_lines, boundary_handling);
 
             for (const Polyline& line : candidate_lines) {
@@ -379,14 +447,24 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                 part->appendStep(helical_layer);
                 m_helical_layers.push_back(helical_layer);
                 this->setMaxSteps(m_helical_layers.size());
+                part_generated_paths = true;
             }
 
             ++helical_layer_number;
         }
 
+        if (part_generated_paths) {
+            effective_clipping_methods.push_back(QPair<QString, HelicalClippingMethod> {part->name(), clipping_method});
+        }
+
         ++parts_processed;
         emit statusUpdate(StatusUpdateStepType::kPreProcess,
                           build_parts.isEmpty() ? 100 : (double)parts_processed / (double)build_parts.size() * 100);
+    }
+
+    QSharedPointer<RadialWriter> radial_writer = m_base.dynamicCast<RadialWriter>();
+    if (!radial_writer.isNull()) {
+        radial_writer->setHelicalClippingMethods(effective_clipping_methods);
     }
 
     if (m_helical_layers.isEmpty()) {

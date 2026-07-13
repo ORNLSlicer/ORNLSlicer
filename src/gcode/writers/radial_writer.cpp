@@ -72,6 +72,10 @@ QString formatAngle(Angle value, Angle unit) { return QString::number(value.to(u
 
 RadialWriter::RadialWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb), m_c(" C") {}
 
+void RadialWriter::setHelicalClippingMethods(const QVector<QPair<QString, HelicalClippingMethod>>& methods) {
+    m_helical_clipping_methods = methods;
+}
+
 QString RadialWriter::writeSettingsHeader(GcodeSyntax) {
     const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
     const bool helical_mode = slicer_type == SlicerType::kHelicalSlice;
@@ -106,6 +110,22 @@ QString RadialWriter::writeSettingsHeader(GcodeSyntax) {
     text += commentLine(
         QString(helical_mode ? "Helical Boundary Handling: " : "Radial Boundary Handling: ") %
         toString(static_cast<RadialBoundaryHandling>(m_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling))));
+    if (helical_mode) {
+        if (m_helical_clipping_methods.size() == 1) {
+            text += commentLine("Helical Clipping Method: " % toString(m_helical_clipping_methods.first().second));
+        }
+        else if (m_helical_clipping_methods.size() > 1) {
+            for (const QPair<QString, HelicalClippingMethod>& part_method : m_helical_clipping_methods) {
+                const QString part_name = part_method.first.isEmpty() ? "Unnamed Part" : part_method.first;
+                text += commentLine("Helical Clipping Method (" % part_name % "): " % toString(part_method.second));
+            }
+        }
+        else {
+            text += commentLine(
+                "Helical Clipping Method: " %
+                toString(static_cast<HelicalClippingMethod>(m_sb->setting<int>(PS::Slicing::kHelicalClippingMethod))));
+        }
+    }
     text += commentLine("Travel Lift Distance: " %
                         formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
     text += commentLine("A Axis Tilt: " %

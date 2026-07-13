@@ -790,6 +790,7 @@ const QString Constants::ProfileSettings::Slicing::kRadialAxisMode = "radial_axi
 const QString Constants::ProfileSettings::Slicing::kRadialAxisX = "radial_axis_x";
 const QString Constants::ProfileSettings::Slicing::kRadialAxisY = "radial_axis_y";
 const QString Constants::ProfileSettings::Slicing::kRadialBoundaryHandling = "radial_boundary_handling";
+const QString Constants::ProfileSettings::Slicing::kHelicalClippingMethod = "helical_clipping_method";
 const QString Constants::ProfileSettings::Slicing::kHelicalPathLength = "helical_path_length";
 const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution = "arcs_per_revolution";
 
