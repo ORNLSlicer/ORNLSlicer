@@ -99,6 +99,9 @@ class Layer : public Step {
     //! \brief Returns the minimum Z coordinate among material-depositing segments.
     float getMinimumPrintZ();
 
+    //! \brief Redirects clearance moves that would intersect the build plate.
+    void redirectClearanceMoves();
+
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order
     QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
     createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);

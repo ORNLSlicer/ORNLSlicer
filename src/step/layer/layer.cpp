@@ -4,6 +4,7 @@
 #include <cstdlib>
 #include <limits>
 
+#include <CGAL/intersections.h>
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qhashfunctions.h>
@@ -18,6 +19,8 @@
 #include "geometry/path.h"
 #include "geometry/path_modifier.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
+#include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
 #include "optimizers/island_order_optimizer.h"
 #include "step/layer/island/polymer_island.h"
@@ -29,6 +32,50 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+bool isClearanceModifier(PathModifiers modifiers) {
+    constexpr PathModifiers clearance_modifiers =
+        PathModifiers::kForwardTipWipe | PathModifiers::kReverseTipWipe | PathModifiers::kAngledTipWipe |
+        PathModifiers::kPerimeterTipWipe | PathModifiers::kSpiralLift;
+
+    return (modifiers & clearance_modifiers) != PathModifiers::kNone;
+}
+
+bool intersectsBuildPlate(const Point& start, const Point& end, const MeshTypes::Plane_3& build_plate) {
+    const MeshTypes::Point_3 start_point = start.toCartesian3D();
+    const MeshTypes::Point_3 end_point = end.toCartesian3D();
+
+    const bool extends_below_plate = build_plate.oriented_side(start_point) == CGAL::ON_NEGATIVE_SIDE ||
+                                     build_plate.oriented_side(end_point) == CGAL::ON_NEGATIVE_SIDE;
+
+    return extends_below_plate && CGAL::do_intersect(MeshTypes::Segment_3(start_point, end_point), build_plate);
+}
+
+Point redirectTipWipeEnd(const Point& start, const QVector3D& original_move, const QVector3D& slicing_normal) {
+    // Mirror the move's in-plane component while preserving its lift along the slicing normal.
+    const QVector3D normal_component = slicing_normal * QVector3D::dotProduct(original_move, slicing_normal);
+    const QVector3D redirected_move = (2.0f * normal_component) - original_move;
+
+    return start + Point::fromQVector3D(redirected_move);
+}
+
+QSharedPointer<SegmentBase> rewriteRedirectedSegment(const QSharedPointer<SegmentBase>& segment, const Point& start,
+                                                     const Point& end) {
+    // Arc spiral lifts carry center-point metadata; once redirected, replace them with a linear clearance move so the
+    // stored arc geometry stays consistent with the emitted path.
+    if (!segment.dynamicCast<ArcSegment>().isNull()) {
+        QSharedPointer<LineSegment> redirected_segment = QSharedPointer<LineSegment>::create(start, end);
+        redirected_segment->setSb(segment->getSb());
+        return redirected_segment;
+    }
+
+    QSharedPointer<SegmentBase> redirected_segment = segment->clone();
+    redirected_segment->setStart(start);
+    redirected_segment->setEnd(end);
+    return redirected_segment;
+}
+} // namespace
+
 Layer::Layer(uint layer_nr, const QSharedPointer<SettingsBase>& sb)
     : Step(sb), m_layer_nr(layer_nr), m_minimum_z_shift(0) {
     m_type = StepType::kLayer;
@@ -409,6 +456,61 @@ void Layer::reorient() {
     }
 
     applyMinimumZShift();
+    redirectClearanceMoves();
+}
+
+void Layer::redirectClearanceMoves() {
+    QVector3D slicing_normal = m_slicing_plane.normal().normalized();
+    if (slicing_normal.isNull()) {
+        return;
+    }
+
+    const MeshTypes::Plane_3 build_plate(MeshTypes::Point_3(0.0, 0.0, 0.0), MeshTypes::Vector_3(0.0, 0.0, 1.0));
+
+    for (const QSharedPointer<IslandBase>& island : getIslands()) {
+        for (const QSharedPointer<RegionBase>& region : island->getRegions()) {
+            for (Path& path : region->getPaths()) {
+                QList<QSharedPointer<SegmentBase>>& segments = path.getSegments();
+
+                for (int index = 0; index < segments.size();) {
+                    if (!isClearanceModifier(segments[index]->getSb()->setting<PathModifiers>(SS::kPathModifiers))) {
+                        ++index;
+                        continue;
+                    }
+
+                    Point original_position = segments[index]->start();
+                    Point redirected_position = original_position;
+                    bool has_redirected = false;
+
+                    // Reconstruct the emitted moves from successive endpoints. Multi-segment wipes and spiral lifts
+                    // store segment starts on the source contour, but the machine moves from the preceding endpoint.
+                    while (index < segments.size() &&
+                           isClearanceModifier(segments[index]->getSb()->setting<PathModifiers>(SS::kPathModifiers))) {
+                        const QSharedPointer<SegmentBase>& segment = segments[index];
+                        const Point original_end = segment->end();
+                        const QVector3D original_move = (original_end - original_position).toQVector3D();
+                        Point candidate_end =
+                            has_redirected ? redirected_position + Point::fromQVector3D(original_move) : original_end;
+                        bool should_rewrite_segment = has_redirected;
+
+                        if (intersectsBuildPlate(redirected_position, candidate_end, build_plate)) {
+                            candidate_end = redirectTipWipeEnd(redirected_position, original_move, slicing_normal);
+                            has_redirected = true;
+                            should_rewrite_segment = true;
+                        }
+
+                        if (should_rewrite_segment) {
+                            segments[index] = rewriteRedirectedSegment(segment, redirected_position, candidate_end);
+                        }
+
+                        original_position = original_end;
+                        redirected_position = candidate_end;
+                        ++index;
+                    }
+                }
+            }
+        }
+    }
 }
 
 void Layer::compensateForRafts() {

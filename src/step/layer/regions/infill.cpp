@@ -261,19 +261,8 @@ void Infill::calculateModifiers(Path& path, bool supportsG3) {
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
     }
     if (m_sb->setting<bool>(MS::TipWipe::kInfillEnable)) {
-        // If angled slicing, force tip wipe to be reverse
-        if (m_sb->setting<float>(PS::Slicing::kSlicingVectorX) != 0 ||
-            m_sb->setting<float>(PS::Slicing::kSlicingVectorY) != 0 ||
-            m_sb->setting<float>(PS::Slicing::kSlicingVectorZ) != 1) {
-            PathModifierGenerator::GenerateTipWipe(
-                path, PathModifiers::kReverseTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
-                m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
-                m_sb->setting<AngularVelocity>(MS::TipWipe::kInfillExtruderSpeed),
-                m_sb->setting<Distance>(MS::TipWipe::kInfillLiftHeight),
-                m_sb->setting<Distance>(MS::TipWipe::kInfillCutoffDistance));
-        }
         // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND Concentric)
-        else if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
+        if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
                      TipWipeDirection::kForward ||
                  (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
                       TipWipeDirection::kOptimal &&
