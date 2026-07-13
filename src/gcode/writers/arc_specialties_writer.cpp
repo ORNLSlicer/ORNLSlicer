@@ -82,10 +82,17 @@ QString formatAngle(Angle value, Angle unit) { return QString::number(value.to(u
 ArcSpecialtiesWriter::ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
     : WriterBase(meta, sb) {}
 
+void ArcSpecialtiesWriter::setHelicalClippingMethods(const QVector<QPair<QString, HelicalClippingMethod>>& methods) {
+    m_helical_clipping_methods = methods;
+}
+
 QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
     QString text;
-    if (static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType)) == SlicerType::kRadialSlice) {
-        text += commentLine("Arc Specialties Radial Slicing Parameters");
+    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
+    const bool helical_mode = slicer_type == SlicerType::kHelicalSlice;
+    if (slicer_type == SlicerType::kRadialSlice || helical_mode) {
+        text += commentLine(helical_mode ? "Arc Specialties Helical Slicing Parameters"
+                                         : "Arc Specialties Radial Slicing Parameters");
         text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
                             "offset");
         text += commentLine("Work Offset Setup: manual and probe setup commands are not emitted by this first pass");
@@ -93,24 +100,50 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
         text += commentLine(
-            "Radial Initial Radius: " %
+            QString(helical_mode ? "Helical Initial Radius: " : "Radial Initial Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius), m_meta.m_distance_unit));
         const RadialAxisMode radial_axis_mode =
             static_cast<RadialAxisMode>(m_sb->setting<int>(PS::Slicing::kRadialAxisMode));
-        text += commentLine(QString("Radial Axis Mode: ") % toString(radial_axis_mode));
+        text += commentLine(QString(helical_mode ? "Helical Axis Mode: " : "Radial Axis Mode: ") %
+                            toString(radial_axis_mode));
         if (radial_axis_mode == RadialAxisMode::kCustomXY) {
-            text += commentLine("Radial Axis X: " % formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisX),
-                                                                   m_meta.m_distance_unit));
-            text += commentLine("Radial Axis Y: " % formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisY),
-                                                                   m_meta.m_distance_unit));
+            text +=
+                commentLine(QString(helical_mode ? "Helical Axis X: " : "Radial Axis X: ") %
+                            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisX), m_meta.m_distance_unit));
+            text +=
+                commentLine(QString(helical_mode ? "Helical Axis Y: " : "Radial Axis Y: ") %
+                            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisY), m_meta.m_distance_unit));
         }
-        text += commentLine("Radial Layer Spacing: " %
+        text += commentLine(QString(helical_mode ? "Helical Radial Spacing: " : "Radial Layer Spacing: ") %
                             formatDistance(m_sb->setting<Distance>(PS::Layer::kLayerHeight), m_meta.m_distance_unit));
-        text += commentLine("Vertical Bead Spacing: " %
-                            formatDistance(m_sb->setting<Distance>(PS::Layer::kBeadWidth), m_meta.m_distance_unit));
+        const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
+        if (helical_mode) {
+            text += commentLine("Helical Rise Per Revolution: " % formatDistance(bead_width, m_meta.m_distance_unit));
+            text += commentLine("Helical Rise Per Radian: " %
+                                formatDistance(bead_width / (2.0 * M_PI), m_meta.m_distance_unit));
+        }
+        else {
+            text += commentLine("Vertical Bead Spacing: " % formatDistance(bead_width, m_meta.m_distance_unit));
+        }
         text += commentLine(
-            QString("Radial Boundary Handling: ") %
+            QString(helical_mode ? "Helical Boundary Handling: " : "Radial Boundary Handling: ") %
             toString(static_cast<RadialBoundaryHandling>(m_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling))));
+        if (helical_mode) {
+            if (m_helical_clipping_methods.size() == 1) {
+                text += commentLine("Helical Clipping Method: " % toString(m_helical_clipping_methods.first().second));
+            }
+            else if (m_helical_clipping_methods.size() > 1) {
+                for (const QPair<QString, HelicalClippingMethod>& part_method : m_helical_clipping_methods) {
+                    const QString part_name = part_method.first.isEmpty() ? "Unnamed Part" : part_method.first;
+                    text += commentLine("Helical Clipping Method (" % part_name % "): " % toString(part_method.second));
+                }
+            }
+            else {
+                text += commentLine("Helical Clipping Method: " %
+                                    toString(static_cast<HelicalClippingMethod>(
+                                        m_sb->setting<int>(PS::Slicing::kHelicalClippingMethod))));
+            }
+        }
         text += commentLine("Travel Lift Distance: " %
                             formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
         text += commentLine("AP Positioner Tilt: " %
@@ -118,7 +151,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine("CP Positioner Offset: " %
                             formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC), m_meta.m_angle_unit));
         text += commentLine(QString("Arc Feed Moves: ") %
-                            (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled" : "G01 segmented"));
+                            (helical_mode ? "G01 segmented"
+                                          : (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled"
+                                                                                                : "G01 segmented")));
         text += m_newline;
     }
 
@@ -305,7 +340,10 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
         speed = 10.0 * mm / s;
     }
 
-    rv += writeMotion("G01", target_point, speed, params, Constants::RegionTypeStrings::kRadial);
+    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
+    rv += writeMotion("G01", target_point, speed, params,
+                      slicer_type == SlicerType::kHelicalSlice ? Constants::RegionTypeStrings::kHelical
+                                                               : Constants::RegionTypeStrings::kRadial);
     return rv;
 }
 
@@ -323,10 +361,12 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     setFeedrate(speed);
     m_layer_start = false;
 
+    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
     return QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
            writeArcCenterOffsets(start_point, center_point) % m_f %
            QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
-           commentSpaceLine(Constants::RegionTypeStrings::kRadial);
+           commentSpaceLine(slicer_type == SlicerType::kHelicalSlice ? Constants::RegionTypeStrings::kHelical
+                                                                     : Constants::RegionTypeStrings::kRadial);
 }
 
 QString ArcSpecialtiesWriter::writeAfterPath(RegionType type) {

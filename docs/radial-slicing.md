@@ -13,7 +13,7 @@ This slicer is intended for radial machine output using either `Radial3Plus2` X/
 5. Set `Radial Axis Mode` if the cylinder axis should use a custom XY coordinate instead of the part centroid.
 6. Set `Radial Initial Radius` if the first cylinder should begin away from the radial axis. Leave it at `0` for the default center-out behavior.
 7. Set `Radial Boundary Handling` for radial paths that cross the model boundary.
-8. Confirm the printer `Syntax` is `Radial3Plus2` or `Arc Specialties`. Selecting `Radial Slice` still defaults this to `Radial3Plus2`, and selecting either radial-capable syntax updates `Slicer Type` automatically.
+8. Confirm the printer `Syntax` is `Radial3Plus2` or `Arc Specialties`. Selecting `Radial Slice` defaults to `Radial3Plus2` only when the current syntax is not cylindrical-capable. Selecting either capable syntax preserves an existing radial or helical mode and otherwise defaults `Slicer Type` to `Radial Slice`.
 9. Set `Axis A` to the desired fixed tilt and set `Axis C` if the machine coordinate frame needs an angular offset.
 10. Slice and inspect the generated G-code preview before running the machine.
 
@@ -39,8 +39,8 @@ At each bead Z, the slicer:
 
 | Setting | Location | Effect |
 | --- | --- | --- |
-| `Slicer Type` | Profile > Slicing | Select `Radial Slice` to use the radial slicer. This automatically selects `Radial3Plus2` syntax unless a radial-capable syntax is already selected. |
-| `Syntax` | Printer > Machine Setup | Select `Radial3Plus2` or `Arc Specialties` so a radial writer and parser are used. Selecting `Arc Specialties` automatically selects `Radial Slice`. |
+| `Slicer Type` | Profile > Slicing | Select `Radial Slice` to use the radial slicer. This automatically selects `Radial3Plus2` syntax unless a cylindrical-capable syntax is already selected. |
+| `Syntax` | Printer > Machine Setup | Select `Radial3Plus2` or `Arc Specialties` so a cylindrical writer and parser are used. An existing radial or helical slicer selection is preserved; other slicer types default to `Radial Slice`. |
 | `Layer Height` | Profile > Layer | Radial distance between successive cylindrical layers. Values less than or equal to zero fall back to a physical `1 mm` default. |
 | `Default Bead Width` | Profile > Layer | Vertical distance between beads on each cylindrical layer. Values less than or equal to zero fall back to `Layer Height`. |
 | `Radial Axis Mode` | Profile > Slicing | Selects whether radial cylinders are centered on each part's centroid or on a custom XY coordinate. |
@@ -76,7 +76,7 @@ When generated `Radial3Plus2` G-code is loaded for preview, the radial parser va
 rotary axes before passing moves to the common XYZ preview parser, and treats `RADIAL` print comments as printable moves.
 When generated `Arc Specialties` G-code is loaded for preview, the Arc Specialties parser validates `XR`, `YR`, `ZR`,
 `AP`, and `CP`, normalizes `X=...`, `Y=...`, `Z=...`, `I=...`, `J=...`, `K=...`, `R=...`, and `F...` fields for the
-common XYZ preview parser, and treats `RADIAL` print comments as printable moves.
+common XYZ preview parser, and treats `RADIAL` and `HELICAL` print comments as printable moves.
 
 | Setting | Location | Effect |
 | --- | --- | --- |
@@ -127,7 +127,7 @@ Short travels below `Minimum Travel Length for Lifting` do not lift.
 - The current implementation approximates circles with line segments, so smaller bead widths create more segments and larger G-code files up to the per-circle segment cap.
 - Clipping meshes are applied before radial path generation, but slicing vector settings are not used by radial slicing.
 - Arc Specialties work-offset and touch-probe setup commands are not emitted in the first pass. The generated header documents that an appropriate user frame must already be active.
-- Arc Specialties support is radial-only in the first pass; helical slicing continues to require `Radial3Plus2`.
+- Arc Specialties helical paths use segmented `G01` moves even when `Supports G2/G3` is enabled; G02/G03 output currently applies only to supported radial circle arcs.
 
 ## Quick Checks
 
