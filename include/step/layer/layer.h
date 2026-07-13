@@ -87,9 +87,24 @@ class Layer : public Step {
     QList<QSharedPointer<IslandBase>> m_island_order;
 
   private:
+    //! \brief Builds the translation used to move paths between the flattened slicing frame and printer coordinates.
+    Point getOrientationShift() const;
+
+    //! \brief Moves restored paths above the minimum printable Z height for the slicing plane.
+    void applyMinimumZShift();
+
+    //! \brief Removes the minimum printable Z shift before flattening paths again.
+    void removeMinimumZShift();
+
+    //! \brief Returns the minimum Z coordinate among material-depositing segments.
+    float getMinimumPrintZ();
+
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order
     QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
     createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
+
+    //! \brief Vertical shift applied to keep printing paths above the build surface.
+    Distance m_minimum_z_shift;
 
     //! \brief a collection of polygons on this layer that contain setting overrides
     QVector<SettingsPolygon> m_settings_polygons;
