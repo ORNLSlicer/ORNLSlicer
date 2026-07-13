@@ -1,5 +1,6 @@
 #include "step/layer/layer.h"
 
+#include <cmath>
 #include <cstdlib>
 #include <limits>
 
@@ -28,7 +29,8 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
-Layer::Layer(uint layer_nr, const QSharedPointer<SettingsBase>& sb) : Step(sb), m_layer_nr(layer_nr) {
+Layer::Layer(uint layer_nr, const QSharedPointer<SettingsBase>& sb)
+    : Step(sb), m_layer_nr(layer_nr), m_minimum_z_shift(0) {
     m_type = StepType::kLayer;
 }
 
@@ -293,30 +295,87 @@ Point Layer::getEndLocation() {
     return Point(0, 0, 0);
 }
 
+Point Layer::getOrientationShift() const {
+    Point orientation_shift = m_shift_amount;
+
+    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
+        // Spiralized paths start on the build surface instead of at a full layer height.
+        const Distance half_layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight) / 2.0;
+        orientation_shift.z(m_shift_amount.z() - half_layer_height);
+    }
+
+    orientation_shift.x(orientation_shift.x() - m_sb->setting<double>(PRS::Dimensions::kXOffset));
+    orientation_shift.y(orientation_shift.y() - m_sb->setting<double>(PRS::Dimensions::kYOffset));
+
+    return orientation_shift;
+}
+
+void Layer::applyMinimumZShift() {
+    m_minimum_z_shift = 0;
+
+    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize))
+        return;
+
+    const QVector3D normal = m_slicing_plane.normal().normalized();
+    constexpr float kMinimumZComponent = 1.0e-6f;
+    const float z_component = std::abs(normal.z());
+    if (z_component < kMinimumZComponent)
+        return;
+
+    const Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    const Distance minimum_print_z = layer_height / z_component;
+    const Distance current_min_z = getMinimumPrintZ();
+    if (current_min_z >= minimum_print_z)
+        return;
+
+    m_minimum_z_shift = minimum_print_z - current_min_z;
+    const Point shift(0.0f, 0.0f, m_minimum_z_shift());
+    for (QSharedPointer<IslandBase> island : getIslands()) {
+        island->transform(QQuaternion(), shift);
+    }
+}
+
+void Layer::removeMinimumZShift() {
+    if (m_minimum_z_shift == 0)
+        return;
+
+    const Point shift(0.0f, 0.0f, -m_minimum_z_shift());
+    for (QSharedPointer<IslandBase> island : getIslands()) {
+        island->transform(QQuaternion(), shift);
+    }
+    m_minimum_z_shift = 0;
+}
+
+float Layer::getMinimumPrintZ() {
+    float minimum_print_z = std::numeric_limits<float>::max();
+
+    for (const QSharedPointer<IslandBase>& island : getIslands()) {
+        for (const QSharedPointer<RegionBase>& region : island->getRegions()) {
+            for (Path& path : region->getPaths()) {
+                for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
+                    if (segment->isPrintingSegment()) {
+                        const float segment_min_z = segment->getMinZ();
+                        if (segment_min_z < minimum_print_z)
+                            minimum_print_z = segment_min_z;
+                    }
+                }
+            }
+        }
+    }
+
+    return minimum_print_z;
+}
+
 void Layer::unorient() {
     if (!this->isDirty()) {
-        // raise the layer by half the layer height, because cross-sections are taken at the center of a layer
-        // but the path for the extruder should be at a full layer height
-        // don't add half the height if spiralize is enabled because spiralize should start printing
-        // with the nozzle sitting on the build surface, z=0
-        Point half_shift = m_shift_amount;
-        Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-
-        if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
-            half_shift.z(m_shift_amount.z() - (0.5 * layer_height));
-        }
-        else {
-            half_shift.z(m_shift_amount.z() + (0.5 * layer_height));
-        }
-
-        half_shift.x(half_shift.x() - m_sb->setting<double>(PRS::Dimensions::kXOffset));
-        half_shift.y(half_shift.y() - m_sb->setting<double>(PRS::Dimensions::kYOffset));
+        removeMinimumZShift();
+        const Point orientation_shift = getOrientationShift();
 
         // rotate and then shift every island in the layer
         QQuaternion rotation = MathUtils::CreateQuaternion(QVector3D(0, 0, 1), m_slicing_plane.normal());
 
         for (QSharedPointer<IslandBase> island : getIslands()) {
-            island->transform(rotation.inverted(), half_shift * -1);
+            island->transform(rotation.inverted(), orientation_shift * -1);
         }
 
         // unapply current origin shift
@@ -338,30 +397,16 @@ void Layer::reorient() {
         island->transform(QQuaternion(), origin_shift);
     }
 
-    // Raise the layer by half the layer height, because cross-sections are taken at the center of a layer but the
-    // path for the extruder should be at a full layer height.
-    // Don't add half the height if spiralize is enabled because spiralize should start printing with the nozzle
-    // sitting on the build surface, z = 0.
-    Point half_shift = m_shift_amount;
-    const Distance& layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    const Distance& half_layer_height = layer_height / 2.0;
-
-    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
-        half_shift.z(m_shift_amount.z() - half_layer_height);
-    }
-    else {
-        half_shift.z(m_shift_amount.z() + half_layer_height);
-    }
-
-    half_shift.x(half_shift.x() - m_sb->setting<double>(PRS::Dimensions::kXOffset));
-    half_shift.y(half_shift.y() - m_sb->setting<double>(PRS::Dimensions::kYOffset));
+    const Point orientation_shift = getOrientationShift();
 
     // Rotate and then shift every island in the layer
     QQuaternion rotation = MathUtils::CreateQuaternion(QVector3D(0, 0, 1), m_slicing_plane.normal());
 
     for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(rotation, half_shift);
+        island->transform(rotation, orientation_shift);
     }
+
+    applyMinimumZShift();
 }
 
 void Layer::compensateForRafts() {
