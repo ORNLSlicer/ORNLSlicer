@@ -262,7 +262,7 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
                         point.z(section.z());
                     }
 
-                    Path path = createPath(line, layer_settings, center, current_location);
+                    Path path = createPath(line, layer_settings, center, radius, current_location);
                     if (path.size() > 0) {
                         radial_layer->addPath(path);
                     }
@@ -408,28 +408,39 @@ QSharedPointer<SettingsBase> RadialSlicer::createSegmentSettings(const QSharedPo
 }
 
 Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings,
-                              const Point& center, Point& current_location) {
+                              const Point& center, Distance radius, Point& current_location) {
     Path path;
     if (polyline.size() < 2) {
         return path;
     }
 
+    const bool write_arcs = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
+    const int arcs_per_revolution = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
+    const QVector<Point> arc_points =
+        write_arcs ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution)
+                   : QVector<Point>();
+    const Point path_start = arc_points.size() > 1 ? arc_points.first() : polyline.first();
+    const Point path_end = arc_points.size() > 1 ? arc_points.last() : polyline.last();
+
     QSharedPointer<SettingsBase> region_start_settings = createSegmentSettings(layer_settings, center, true);
     QSharedPointer<SettingsBase> print_settings = createSegmentSettings(layer_settings, center, false);
-    QSharedPointer<TravelSegment> travel = QSharedPointer<TravelSegment>::create(current_location, polyline.first());
+    QSharedPointer<TravelSegment> travel = QSharedPointer<TravelSegment>::create(current_location, path_start);
     travel->setSb(region_start_settings);
 
     // Avoid tiny zero-length moves created when clipped arcs share endpoints.
-    if (current_location.distance(polyline.first()) > kMinPathSegmentLength) {
+    if (current_location.distance(path_start) > kMinPathSegmentLength) {
         path.add(travel);
     }
 
-    if (m_syntax == GcodeSyntax::kArcSpecialties && layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3)) {
-        const Point arc_center(center.x(), center.y(), polyline.first().z());
-        QSharedPointer<ArcSegment> segment =
-            QSharedPointer<ArcSegment>::create(polyline.first(), polyline.last(), arc_center, true);
-        segment->setSb(region_start_settings);
-        path.add(segment);
+    if (arc_points.size() > 1) {
+        for (int i = 1, end = arc_points.size(); i < end; ++i) {
+            const Point arc_center =
+                SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
+            QSharedPointer<ArcSegment> segment =
+                QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
+            segment->setSb(i == 1 ? region_start_settings : print_settings);
+            path.add(segment);
+        }
     }
     else {
         for (int i = 1, end = polyline.size(); i < end; ++i) {
@@ -444,7 +455,7 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
     }
 
     if (path.size() > 0) {
-        current_location = polyline.last();
+        current_location = path_end;
     }
 
     return path;

@@ -12,7 +12,7 @@ namespace ORNL {
  * The existing visualization path does not model rotary axes directly.  This
  * parser validates A and C as numeric rotary parameters, rejects duplicate
  * rotary parameters on a move, then removes them before delegating the
- * visualization-relevant X/Y/Z/F handling to the shared linear parser logic.
+ * visualization-relevant motion fields to the shared parser logic.
  */
 class RadialParser : public CommonParser {
   public:
@@ -38,11 +38,23 @@ class RadialParser : public CommonParser {
      */
     void G1Handler(QVector<QString> params) override;
 
+    /*!
+     * @brief Handles clockwise radial arc moves after validating and stripping A/C rotary axes.
+     * @param params Raw G2 parameters.
+     */
+    void G2Handler(QVector<QString> params) override;
+
+    /*!
+     * @brief Handles counter-clockwise radial arc moves after validating and stripping A/C rotary axes.
+     * @param params Raw G3 parameters.
+     */
+    void G3Handler(QVector<QString> params) override;
+
   private:
     /*!
      * @brief Validates A/C rotary parameters and returns remaining linear parameters.
      * @param params Raw gcode parameters for a motion command.
-     * @return Parameters to pass to the common linear parser.
+     * @return Parameters to pass to the common motion parser.
      */
     QVector<QString> stripRotaryAxes(QVector<QString> params);
 
@@ -58,6 +70,13 @@ class RadialParser : public CommonParser {
      * @return True for radial print comments.
      */
     bool isCommentedPrintMove() const;
+
+    /*!
+     * @brief Handles a radial arc feed move through the shared arc parser.
+     * @param params Raw G2/G3 parameters.
+     * @param ccw True for G3, false for G2.
+     */
+    void handleArcFeedMove(QVector<QString> params, bool ccw);
 
     /*!
      * @brief Sets the extruder state used by CommonParser motion estimation.

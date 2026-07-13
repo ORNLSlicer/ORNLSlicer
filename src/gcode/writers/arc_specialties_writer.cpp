@@ -151,9 +151,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine("CP Positioner Offset: " %
                             formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC), m_meta.m_angle_unit));
         text += commentLine(QString("Arc Feed Moves: ") %
-                            (helical_mode ? "G01 segmented"
-                                          : (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled"
-                                                                                                : "G01 segmented")));
+                            (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled" : "G01 segmented"));
+        text += commentLine("Arcs Per Revolution: " %
+                            QString::number(std::max(1, m_sb->setting<int>(PS::Slicing::kArcsPerRevolution))));
         text += m_newline;
     }
 
@@ -353,6 +353,11 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
         return writeLine(start_point, end_point, params);
     }
 
+    QString rv;
+    if (!m_extruder_on) {
+        rv += writeExtruderOn();
+    }
+
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
     if (speed <= 0) {
         speed = 10.0 * mm / s;
@@ -362,11 +367,12 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     m_layer_start = false;
 
     const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
-    return QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
-           writeArcCenterOffsets(start_point, center_point) % m_f %
-           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
-           commentSpaceLine(slicer_type == SlicerType::kHelicalSlice ? Constants::RegionTypeStrings::kHelical
-                                                                     : Constants::RegionTypeStrings::kRadial);
+    rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
+          writeArcCenterOffsets(start_point, center_point) % m_f %
+          QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
+          commentSpaceLine(slicer_type == SlicerType::kHelicalSlice ? Constants::RegionTypeStrings::kHelical
+                                                                    : Constants::RegionTypeStrings::kRadial);
+    return rv;
 }
 
 QString ArcSpecialtiesWriter::writeAfterPath(RegionType type) {

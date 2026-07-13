@@ -17,6 +17,7 @@ The first radius is half a `Layer Height` outward from `Radial Initial Radius`, 
 7. Set `Radial Boundary Handling` for helical paths that cross the model boundary.
 8. When boundary handling is `Clip to Model`, set `Helical Clipping Method` to choose how intersections are retained.
 9. Confirm the printer `Syntax` is `Radial3Plus2` or `Arc Specialties`. Selecting `Helical Slice` defaults to `Radial3Plus2` only when the current syntax is not cylindrical-capable.
+10. Enable `Supports G2/G3` to write the helix as arc moves, then set `Number of Arcs per Revolution` to control its angular subdivision. Leave arc support disabled to write segmented G1 moves.
 
 ## Path Generation
 
@@ -45,6 +46,6 @@ When `Highest Z Intersection` finds no boundary crossing, a helix that is wholly
 
 ## Output
 
-Helical slicing supports `Radial3Plus2` X/Y/Z/A/C output and `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP output. Arc Specialties helical paths remain segmented `G01` moves so each sampled endpoint retains its rising Z coordinate; `Supports G2/G3` applies only to supported radial circle arcs. Print moves are marked with `HELICAL`, and both syntax-specific parsers strip the rotary or orientation fields for XYZ preview visualization.
+Helical slicing supports `Radial3Plus2` X/Y/Z/A/C output and `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP output. With `Supports G2/G3` enabled, both syntaxes write rising helical arcs with endpoint Z values and divide each complete revolution into `Number of Arcs per Revolution` moves. Clipped or partial helical paths may end with a shorter final arc. With arc support disabled, helical paths remain segmented G1 moves. Print moves are marked with `HELICAL`, and both syntax-specific parsers strip the rotary or orientation fields for XYZ preview visualization.
 
 Helical slicing bypasses the standard polymer perimeter, infill, skin, support, and raft generation pipeline. This first implementation emits direct clipped helical paths only.

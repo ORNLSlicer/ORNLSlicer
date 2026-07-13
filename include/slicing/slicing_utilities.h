@@ -18,11 +18,33 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+class Polyline;
+
 /*!
  * \brief Provides access to methods used with polymer slicing
  */
 class SlicingUtilities {
   public:
+    /*!
+     * \brief Resamples a retained cylindrical path at G2/G3 arc boundaries.
+     * \param polyline: densely sampled radial or helical path in counter-clockwise order
+     * \param center: center of the cylindrical path
+     * \param radius: exact radius of the generated circle or helix
+     * \param arcs_per_revolution: number of equal angular arc spans in one revolution
+     * \return path points preserving clipped start/end locations with intermediate points on the exact radius
+     */
+    static QVector<Point> GetCylindricalArcPoints(const Polyline& polyline, const Point& center, Distance radius,
+                                                  int arcs_per_revolution);
+
+    /*!
+     * \brief Finds the closest XY arc center to a cylindrical axis that is equidistant from both endpoints.
+     * \param start: start point of the arc
+     * \param end: end point of the arc
+     * \param center: preferred cylindrical axis center
+     * \return arc center that preserves both endpoints and remains as close as possible to the preferred center
+     */
+    static Point GetCylindricalArcCenter(const Point& start, const Point& end, const Point& center);
+
     /*!
      * \brief identifies meshes from a list of parts with a certain type
      * \param parts: a list of part who's root mesh might by a certain type

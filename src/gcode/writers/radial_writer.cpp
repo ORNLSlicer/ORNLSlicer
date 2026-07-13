@@ -132,6 +132,8 @@ QString RadialWriter::writeSettingsHeader(GcodeSyntax) {
                         formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisA), m_meta.m_angle_unit));
     text += commentLine("C Axis Offset: " %
                         formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC), m_meta.m_angle_unit));
+    text += commentLine("Arcs Per Revolution: " %
+                        QString::number(std::max(1, m_sb->setting<int>(PS::Slicing::kArcsPerRevolution))));
 
     return text;
 }
@@ -296,6 +298,29 @@ QString RadialWriter::writeLine(const Point&, const Point& target_point, const Q
                                                                     : Constants::RegionTypeStrings::kRadial);
 
     return rv;
+}
+
+QString RadialWriter::writeArc(const Point& start_point, const Point& end_point, const Point& center_point,
+                               const Angle&, const bool& ccw, const QSharedPointer<SettingsBase> params) {
+    if (!m_sb->setting<bool>(PRS::MachineSetup::kSupportG3)) {
+        return writeLine(start_point, end_point, params);
+    }
+
+    Velocity speed = params->setting<Velocity>(SS::kSpeed);
+    if (speed <= 0) {
+        speed = 10.0 * mm / s;
+    }
+
+    setFeedrate(speed);
+    m_layer_start = false;
+
+    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
+    return QString(ccw ? m_G3 : m_G2) % writeCoordinates(end_point, params) % m_i %
+           QString::number(Distance(center_point.x() - start_point.x()).to(m_meta.m_distance_unit), 'f', 4) % m_j %
+           QString::number(Distance(center_point.y() - start_point.y()).to(m_meta.m_distance_unit), 'f', 4) % m_f %
+           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
+           commentSpaceLine(slicer_type == SlicerType::kHelicalSlice ? Constants::RegionTypeStrings::kHelical
+                                                                     : Constants::RegionTypeStrings::kRadial);
 }
 
 QString RadialWriter::writeAfterPath(RegionType type) { return QString(); }
