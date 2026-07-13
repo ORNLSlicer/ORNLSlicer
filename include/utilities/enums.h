@@ -94,6 +94,28 @@ inline QString toString(RadialBoundaryHandling handling) {
 }
 
 /*!
+ * @enum HelicalClippingMethod
+ * @brief Selects how a helical path is clipped to the model boundary.
+ */
+enum class HelicalClippingMethod : uint8_t {
+    //! @brief Keep every portion of the helix that lies inside the model.
+    kAllModelIntersections = 0,
+
+    //! @brief Keep the helix through the model intersection with the greatest Z value.
+    kHighestZIntersection = 1
+};
+
+inline QString toString(HelicalClippingMethod method) {
+    switch (method) {
+        case HelicalClippingMethod::kHighestZIntersection:
+            return "Highest Z Intersection";
+        case HelicalClippingMethod::kAllModelIntersections:
+        default:
+            return "All Model Intersections";
+    }
+}
+
+/*!
  * @enum RadialAxisMode
  * @brief Selects the XY cylinder axis used by radial slicing.
  */
