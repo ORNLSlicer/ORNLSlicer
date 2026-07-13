@@ -489,6 +489,13 @@ QString KraussMaffeiWriter::writeAfterLayer() {
 
 QString KraussMaffeiWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            return m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) % writeCoordinates(destination);
+        },
+        "TRAVEL FINAL LIFT Z");
     rv += commentSpaceLine("END OF THE MAIN G-CODE");
     rv += m_newline;
     rv += commentSpaceLine("START OF THE END G-CODE");

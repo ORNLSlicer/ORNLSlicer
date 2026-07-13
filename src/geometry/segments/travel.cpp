@@ -17,7 +17,9 @@ TravelSegment::TravelSegment(Point start, Point end, TravelLiftType liftType)
 QSharedPointer<SegmentBase> TravelSegment::clone() const { return QSharedPointer<TravelSegment>::create(*this); }
 
 QString TravelSegment::writeGCode(QSharedPointer<WriterBase> writer) {
-    return writer->writeTravel(m_start, m_end, m_lift_type, this->getSb());
+    const QString gcode = writer->writeTravel(m_start, m_end, m_lift_type, this->getSb());
+    writer->setCurrentPosition(m_end);
+    return gcode;
 }
 
 void TravelSegment::setLiftType(TravelLiftType newLiftType) { m_lift_type = newLiftType; }

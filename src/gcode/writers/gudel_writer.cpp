@@ -309,6 +309,8 @@ QString GudelWriter::writeAfterLayer() {
 
 QString GudelWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
 
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M84" % commentSpaceLine("END OF G-CODE");
     return rv;

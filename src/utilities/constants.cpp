@@ -682,6 +682,7 @@ const QString Constants::ProfileSettings::Travel::kInfillMinLength = "minimum_in
 const QString Constants::ProfileSettings::Travel::kMinTravelLength = "min_travel_length";
 const QString Constants::ProfileSettings::Travel::kMinTravelForLift = "minimum_travel_for_lift";
 const QString Constants::ProfileSettings::Travel::kLiftHeight = "travel_lift_height";
+const QString Constants::ProfileSettings::Travel::kFinalLiftDistance = "final_lift_distance";
 const QString Constants::ProfileSettings::Travel::kEnableTravelPause = "enable_travel_pause";
 const QString Constants::ProfileSettings::Travel::kEnableTravelCentroidMove = "travel_centroid_move";
 const QString Constants::ProfileSettings::Travel::kTravelPauseDuration = "travel_pause_duration";
