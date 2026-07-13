@@ -139,15 +139,7 @@ void GCodeView::useOrthographic(bool ortho) {
 }
 
 void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
-    // Adjust segment widths down if needed
-    if (!m_use_true_segment_widths) {
-        for (auto& layer : gcode) {
-            for (auto& segment : layer) {
-                segment->setDisplayWidth(segment->displayWidth() * 0.2f);
-                segment->setDisplayHeight(segment->displayHeight() * 0.2f);
-            }
-        }
-    }
+    clearGhosts();
 
     if (m_state.ortho) {
         m_state.zoom_factor = 1.0f;
@@ -163,7 +155,8 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
             m_state.high_layer = gcode.size() - 1;
         }
 
-        m_gcode_object = QSharedPointer<GCodeObject>::create(this, gcode, m_segment_info_control);
+        m_gcode_object = QSharedPointer<GCodeObject>::create(this, gcode, m_segment_info_control,
+                                                             m_use_true_segment_widths);
         m_gcode_object->showLayers(m_state.low_layer, m_state.high_layer);
         m_gcode_object->hideSegmentType(m_state.hidden_type, true);
 
@@ -171,26 +164,8 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     }
     updateHoverTracking();
 
-    // Clear out old ghosted parts
-    for (auto ghost : m_ghosted_parts) {
-        m_printer->orphanChild(ghost);
-    }
-    m_ghosted_parts.clear();
-
-    // Add ghosted parts
-    for (auto item : m_meta_model->items()) {
-        auto gop = QSharedPointer<PartObject>::create(this, item->part());
-        gop->setTransparency(item->transparency());
-
-        if (!m_state.showing_ghosts) {
-            gop->hide();
-        }
-
-        gop->setTransformation(item->transformation());
-        gop->translateAbsolute(QVector3D(item->translation().x(), item->translation().y(),
-                                         item->translation().z() + m_printer->minimum().z()));
-        m_printer->adoptChild(gop);
-        m_ghosted_parts[item] = gop;
+    if (m_state.showing_ghosts) {
+        rebuildGhosts();
     }
 
     this->update();
@@ -293,21 +268,41 @@ void GCodeView::updateHoverTracking() {
     this->setMouseTracking(m_gcode_object->visibleSegmentCount() <= kHoverTrackingSegmentLimit);
 }
 
+void GCodeView::clearGhosts() {
+    if (m_printer.isNull()) {
+        m_ghosted_parts.clear();
+        return;
+    }
+
+    for (auto ghost : m_ghosted_parts) {
+        m_printer->orphanChild(ghost);
+    }
+    m_ghosted_parts.clear();
+}
+
+void GCodeView::rebuildGhosts() {
+    if (m_meta_model.isNull() || m_printer.isNull()) {
+        return;
+    }
+
+    clearGhosts();
+
+    for (auto item : m_meta_model->items()) {
+        auto gop = QSharedPointer<PartObject>::create(this, item->part());
+        gop->setTransparency(item->transparency());
+        gop->setTransformation(item->transformation());
+        gop->translateAbsolute(QVector3D(item->translation().x(), item->translation().y(),
+                                         item->translation().z() + m_printer->minimum().z()));
+        m_printer->adoptChild(gop);
+        m_ghosted_parts[item] = gop;
+    }
+}
+
 void GCodeView::updateSegmentWidths(bool use_true_width) {
     clear();
     m_use_true_segment_widths = use_true_width;
 
-    // Adjust existing G-code
     if (!m_gcode.isEmpty()) {
-        // Adjust segment widths back up if needed
-        if (m_use_true_segment_widths) {
-            for (auto& layer : m_gcode) {
-                for (auto& segment : layer) {
-                    segment->setDisplayWidth(segment->displayWidth() * 5.0f);
-                    segment->setDisplayHeight(segment->displayHeight() * 5.0f);
-                }
-            }
-        }
         addGCode(m_gcode);
     }
 }
@@ -653,11 +648,12 @@ void GCodeView::updateSegments(QList<int> linesToAdd, QList<int> linesToRemove) 
 }
 
 void GCodeView::clear() {
-    if (m_gcode_object.isNull())
-        return;
+    if (!m_gcode_object.isNull()) {
+        m_printer->orphanChild(m_gcode_object);
+        m_gcode_object.reset();
+    }
 
-    m_printer->orphanChild(m_gcode_object);
-    m_gcode_object.reset();
+    clearGhosts();
 
     this->update();
 }
@@ -676,12 +672,19 @@ void GCodeView::setMeta(QSharedPointer<PartMetaModel> meta) {
 
 void GCodeView::showGhosts(bool show) {
     m_state.showing_ghosts = show;
-    for (auto ghost : m_ghosted_parts)
+    if (show && m_ghosted_parts.isEmpty()) {
+        rebuildGhosts();
+    }
+
+    for (auto ghost : m_ghosted_parts) {
         if (show) {
             ghost->show();
         }
         else
             ghost->hide();
+    }
+
+    this->update();
 }
 
 void GCodeView::resetCamera() {

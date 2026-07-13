@@ -25,8 +25,8 @@ constexpr int kCylinderSegments = 50;
 constexpr int kConeSlices = 50;
 constexpr int kSphereMinSectorCount = 3;
 constexpr int kSphereMinStackCount = 2;
-constexpr int kTubeCrossSectionResolution = 20;
-constexpr int kCurveSegments = 75;
+constexpr int kTubeCrossSectionResolution = 12;
+constexpr int kCurveSegments = 32;
 constexpr int kBuildVolumeCylinderSegments = 100;
 constexpr int kBuildVolumeVerticalLines = 6;
 

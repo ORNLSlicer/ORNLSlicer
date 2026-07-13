@@ -180,6 +180,12 @@ class GCodeView : public BaseView {
     //! \brief Enables hover tracking only when the visible segment count is small enough for interactive picking.
     void updateHoverTracking();
 
+    //! \brief Removes ghosted part meshes from the G-code view.
+    void clearGhosts();
+
+    //! \brief Rebuilds ghosted part meshes when ghost display is enabled.
+    void rebuildGhosts();
+
     //! \brief Picks a segment based on the mouse position.
     //! \param mouse_ndc_pos: Mouse normalized location.
     //! \param gog: GCode object to search through.
