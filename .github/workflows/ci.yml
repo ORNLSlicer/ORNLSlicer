@@ -14,7 +14,7 @@ jobs:
       run:
         working-directory: ./
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
       - uses: cachix/install-nix-action@v29
       - run: nix flake check --all-systems
 
@@ -27,7 +27,7 @@ jobs:
       run:
         working-directory: ./
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           lfs: 'true'
       - uses: cachix/install-nix-action@v27
@@ -46,7 +46,7 @@ jobs:
           nix bundle -L --bundler .#appimage .#${{ env.ci_derivation }} -o ${{ env.out_link }}
           cp ${{ env.out_link }} ${{ env.artifact }}
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.artifact }}
           path: ${{ env.artifact }}
@@ -61,7 +61,7 @@ jobs:
       run:
         working-directory: ./
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           lfs: 'true'
       - uses: cachix/install-nix-action@v27
@@ -87,12 +87,12 @@ jobs:
           -DVERSION=${{ env.version }}
           ${{ env.nsis_script }}
       - name: Upload Portable Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.package_artifact }}
           path: ${{ env.out_link }}
       - name: Upload Installer Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.install_artifact }}
           path: ${{ env.install_artifact }}
