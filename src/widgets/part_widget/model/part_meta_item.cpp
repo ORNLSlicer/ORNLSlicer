@@ -117,7 +117,12 @@ void PartMetaItem::setRotation(QQuaternion r, bool current_rotation) {
     if (m_rotation == r)
         return;
 
-    if (current_rotation) {
+    const bool has_parenting = !m_parent.isNull() || !m_children.isEmpty();
+
+    // Parent/child groups need to keep rotation in the live transform so child graphics objects
+    // can inherit the motion correctly. Baking rotation into the mesh resets the parent transform
+    // and breaks the hierarchy relationship for settings meshes.
+    if (current_rotation || has_parenting) {
         m_rotation = r;
         m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
         emit modified(PartMetaUpdateType::kTransformUpdate);
