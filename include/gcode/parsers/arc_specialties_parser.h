@@ -9,7 +9,7 @@
 namespace ORNL {
 /*!
  * @class ArcSpecialtiesParser
- * @brief Parser for Arc Specialties radial gcode with X/Y/Z/XR/YR/ZR/AP/CP motion fields.
+ * @brief Parser for Arc Specialties radial and helical gcode with X/Y/Z/XR/YR/ZR/AP/CP motion fields.
  *
  * The visualization path only models XYZ. This parser accepts Arc Specialties `KEY=value` motion fields, validates and
  * strips the orientation-only fields, normalizes X/Y/Z/I/J/K/R/F into the shared parser's single-letter parameter
@@ -109,8 +109,8 @@ class ArcSpecialtiesParser : public CommonParser {
     void throwIllegalArcSpecialtiesParameter(const QString& param);
 
     /*!
-     * @brief Checks whether the current line comment identifies a radial print move.
-     * @return True for radial print comments.
+     * @brief Checks whether the current line comment identifies a radial or helical print move.
+     * @return True for cylindrical print comments.
      */
     bool isCommentedPrintMove() const;
 
@@ -121,7 +121,7 @@ class ArcSpecialtiesParser : public CommonParser {
     void setExtruderActive(bool on);
 
     /*!
-     * @brief Runs a CommonParser arc handler with optional RADIAL print classification.
+     * @brief Runs a CommonParser arc handler with optional cylindrical print classification.
      * @param params Raw Arc Specialties arc parameters.
      * @param ccw True for G3/G03, false for G2/G02.
      */
