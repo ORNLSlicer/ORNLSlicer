@@ -357,8 +357,12 @@ void GCodeLoader::run() {
                 layers.push_back(layer);
                 ++current_layer;
 
-                emit updateDialog(StatusUpdateStepType::kVisualization,
-                                  (double)current_layer / (double)total_layer * 100);
+                int visualization_progress = 99;
+                if (total_layer > 0) {
+                    visualization_progress =
+                        qMin(99, static_cast<int>((double)current_layer / (double)total_layer * 100.0));
+                }
+                emit updateDialog(StatusUpdateStepType::kVisualization, visualization_progress);
 
                 if (m_should_cancel) {
                     return;
@@ -412,6 +416,7 @@ void GCodeLoader::run() {
                     ret = QFile::rename(tempFile.fileName(), m_filename);
                 }
             }
+            emit updateDialog(StatusUpdateStepType::kVisualization, 100);
         } catch (ExceptionBase& exception) {
             QString message = "Error parsing GCode: " + QString(exception.what());
             emit error(message);

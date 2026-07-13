@@ -33,8 +33,9 @@ class GCodeObject : public GraphicsObject {
     //! \param view: View to render to.
     //! \param gcode: GCode segments to visualize.
     //! \param segmentInfoControl: Segment / Bead info display control
+    //! \param use_true_widths: If true, draw printable moves as bead meshes when they are small enough to load.
     GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
-                QSharedPointer<GCodeInfoControl> segmentInfoControl);
+                QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths);
 
     //! \brief Destructor.
     ~GCodeObject();
@@ -146,7 +147,7 @@ class GCodeObject : public GraphicsObject {
     //! \param color: Color to paint.
     void paintSegment(QSharedPointer<SegmentDisplayMeta> seg_meta, QColor color);
 
-    //! \brief True when very large gcode is rendered as lightweight GL lines instead of bead meshes.
+    //! \brief True when gcode is rendered as lightweight GL lines instead of bead meshes.
     bool m_lightweight_lines = false;
 
     //! \brief Render mode used by the primary GraphicsObject buffer.

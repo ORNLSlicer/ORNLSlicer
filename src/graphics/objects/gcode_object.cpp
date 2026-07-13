@@ -36,7 +36,7 @@ constexpr qsizetype kLightweightMeshVertexThreshold = 5000000;
 
 //! @brief Vertex counts emitted by ShapeFactory for each full bead mesh segment type.
 constexpr qsizetype kLinearBeadVertexCount = 120;
-constexpr qsizetype kCurvedBeadVertexCount = 9120;
+constexpr qsizetype kCurvedBeadVertexCount = 2376;
 
 //! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
 qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
@@ -117,7 +117,7 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
 } // namespace
 
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
-                         QSharedPointer<GCodeInfoControl> segmentInfoControl) {
+                         QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths) {
     std::vector<float> primary_vertices;
     std::vector<float> primary_normals;
     std::vector<float> primary_colors;
@@ -129,9 +129,9 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     m_segment_info_control->setGCode(gcode);
 
     const qsizetype segment_count = countSegments(gcode);
-    const qsizetype mesh_vertex_count = estimateMeshVertexCount(gcode);
-    m_lightweight_lines =
-        segment_count > kLightweightLineThreshold || mesh_vertex_count > kLightweightMeshVertexThreshold;
+    const qsizetype mesh_vertex_count = use_true_widths ? estimateMeshVertexCount(gcode) : 0;
+    m_lightweight_lines = !use_true_widths || segment_count > kLightweightLineThreshold ||
+                          mesh_vertex_count > kLightweightMeshVertexThreshold;
     m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
 
     if (m_lightweight_lines) {
