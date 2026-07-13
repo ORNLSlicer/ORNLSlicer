@@ -358,19 +358,8 @@ void Skin::calculateModifiers(Path& path, bool supportsG3) {
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
     }
     if (m_sb->setting<bool>(MS::TipWipe::kSkinEnable)) {
-        // If angled slicing, force tip wipe to be reverse
-        if (m_sb->setting<float>(PS::Slicing::kSlicingVectorX) != 0 ||
-            m_sb->setting<float>(PS::Slicing::kSlicingVectorY) != 0 ||
-            m_sb->setting<float>(PS::Slicing::kSlicingVectorZ) != 1) {
-            PathModifierGenerator::GenerateTipWipe(
-                path, PathModifiers::kReverseTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
-                m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),
-                m_sb->setting<AngularVelocity>(MS::TipWipe::kSkinExtruderSpeed),
-                m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
-                m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));
-        }
         // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND Concentric)
-        else if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
+        if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
                      TipWipeDirection::kForward ||
                  (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
                       TipWipeDirection::kOptimal &&
