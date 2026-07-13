@@ -1,5 +1,7 @@
 #pragma once
 
+#include <QPair>
+#include <QVector>
 #include <qsharedpointer.h>
 
 #include "gcode/gcode_meta.h"
@@ -11,26 +13,33 @@
 namespace ORNL {
 /*!
  * @class ArcSpecialtiesWriter
- * @brief Arc Specialties radial writer using X/Y/Z tool frame and XR/YR/ZR/AP/CP orientation fields.
+ * @brief Arc Specialties radial and helical writer using X/Y/Z and XR/YR/ZR/AP/CP motion fields.
  *
  * This first pass reuses radial path coordinates as user-frame endpoint coordinates relative to the active work
  * offset. Tool-frame rotations are fixed to XR=180, YR=0, and ZR=0; AP comes from the existing Axis A setting; CP is
  * computed from each endpoint's angle around the radial slicing center plus the existing Axis C offset. When the
  * machine Supports G2/G3 setting is enabled, radial print arcs are emitted as G02/G03 with I/J center offsets.
+ * Helical paths remain segmented G01 moves so each sampled endpoint retains its rising Z coordinate.
  */
 class ArcSpecialtiesWriter : public WriterBase {
   public:
     /*!
-     * @brief Constructs an Arc Specialties radial writer.
+     * @brief Constructs an Arc Specialties radial or helical writer.
      * @param meta Gcode syntax metadata for output units and comments.
      * @param sb Global settings used while writing.
      */
     ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
     /*!
-     * @brief Writes radial and Arc Specialties setup notes.
+     * @brief Supplies the effective part-local helical clipping methods for the settings header.
+     * @param methods Part name and clipping method pairs for parts that produced helical paths.
+     */
+    void setHelicalClippingMethods(const QVector<QPair<QString, HelicalClippingMethod>>& methods);
+
+    /*!
+     * @brief Writes radial or helical geometry and Arc Specialties setup notes.
      * @param syntax Gcode syntax being written. Currently informational only.
-     * @return Header comments for radial geometry and Arc Specialties motion assumptions.
+     * @return Header comments for cylindrical geometry and Arc Specialties motion assumptions.
      */
     QString writeSettingsHeader(GcodeSyntax syntax) override;
 
@@ -54,16 +63,16 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     QString writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) override;
 
-    //! @brief Arc Specialties radial slicing does not emit a separate part prologue.
+    //! @brief Arc Specialties cylindrical slicing does not emit a separate part prologue.
     QString writeBeforePart(QVector3D normal) override;
 
-    //! @brief Arc Specialties radial slicing does not emit island prologue commands.
+    //! @brief Arc Specialties cylindrical slicing does not emit island prologue commands.
     QString writeBeforeIsland() override;
 
-    //! @brief Arc Specialties radial slicing does not emit region prologue commands.
+    //! @brief Arc Specialties cylindrical slicing does not emit region prologue commands.
     QString writeBeforeRegion(RegionType type, int pathSize) override;
 
-    //! @brief Arc Specialties radial slicing does not emit path prologue commands.
+    //! @brief Arc Specialties cylindrical slicing does not emit path prologue commands.
     QString writeBeforePath(RegionType type) override;
 
     /*!
@@ -100,16 +109,16 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeArc(const Point& start_point, const Point& end_point, const Point& center_point, const Angle& angle,
                      const bool& ccw, const QSharedPointer<SettingsBase> params) override;
 
-    //! @brief Arc Specialties radial slicing does not emit path epilogue commands.
+    //! @brief Arc Specialties cylindrical slicing does not emit path epilogue commands.
     QString writeAfterPath(RegionType type) override;
 
-    //! @brief Arc Specialties radial slicing does not emit region epilogue commands.
+    //! @brief Arc Specialties cylindrical slicing does not emit region epilogue commands.
     QString writeAfterRegion(RegionType type) override;
 
-    //! @brief Arc Specialties radial slicing does not emit island epilogue commands.
+    //! @brief Arc Specialties cylindrical slicing does not emit island epilogue commands.
     QString writeAfterIsland() override;
 
-    //! @brief Arc Specialties radial slicing does not emit a separate part epilogue.
+    //! @brief Arc Specialties cylindrical slicing does not emit a separate part epilogue.
     QString writeAfterPart() override;
 
     /*!
@@ -184,5 +193,8 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Tracks layer number.
     int m_current_layer = 0;
+
+    //! @brief Effective part-local clipping methods reported in helical G-code headers.
+    QVector<QPair<QString, HelicalClippingMethod>> m_helical_clipping_methods;
 };
 } // namespace ORNL

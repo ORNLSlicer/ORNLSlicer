@@ -305,7 +305,7 @@ static GcodeMeta RadialMeta = {GcodeSyntax::kRadial3Plus2,
                                mm / s / s,
                                rev / minute,
                                ".gcode"};
-//! @brief Metadata for Arc Specialties radial gcode.
+//! @brief Metadata for Arc Specialties radial and helical gcode.
 static GcodeMeta ArcSpecialtiesMeta = {GcodeSyntax::kArcSpecialties,
                                        QString(";"), // starting_delim
                                        QString(),    // ending_delim

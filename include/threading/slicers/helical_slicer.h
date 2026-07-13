@@ -33,7 +33,7 @@ class SettingsBase;
 class HelicalSlicer : public TraditionalAST {
   public:
     /*!
-     * @brief Constructs a helical slicer that emits Radial3Plus2 gcode.
+     * @brief Constructs a helical slicer using the selected cylindrical G-code syntax.
      * @param gcodeLocation Temporary gcode output path used by the slicing thread.
      */
     HelicalSlicer(QString gcodeLocation);
@@ -52,7 +52,7 @@ class HelicalSlicer : public TraditionalAST {
     void postProcess(nlohmann::json opt_data = nlohmann::json()) override;
 
     /*!
-     * @brief Writes all generated helical layers with the selected 3+2 writer.
+     * @brief Writes all generated helical layers with the selected cylindrical writer.
      */
     void writeGCode() override;
 

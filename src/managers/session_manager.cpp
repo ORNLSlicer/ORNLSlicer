@@ -525,8 +525,9 @@ bool SessionManager::doSlice() {
         emit forwardStatusUpdate(message);
         return false;
     }
-    if (type == SlicerType::kHelicalSlice && syntax != GcodeSyntax::kRadial3Plus2) {
-        const QString message = "Helical slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2.";
+    if (type == SlicerType::kHelicalSlice && !isRadialCapableSyntax(syntax)) {
+        const QString message =
+            "Helical slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2 or Arc Specialties.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;
