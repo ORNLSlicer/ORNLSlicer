@@ -267,8 +267,7 @@ Time MotionEstimation::firstXYMove(Distance d, Distance dx, Distance dy, Distanc
     m_previous_vv.setY((m_incomingV * dy / d)());
     m_previous_vv.setZ((m_incomingV * dz / d)());
 
-    // max_xy_speed is used in G0 XY travel
-    if (isFIncluded && m_current_speed != max_xy_speed)
+    if (isFIncluded)
         G1F_time += d / m_current_speed;
 
     return time;

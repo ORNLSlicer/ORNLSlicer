@@ -32,6 +32,23 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+double parseFooterSettingValue(const QString& value) {
+    if (value.compare("TRUE", Qt::CaseInsensitive) == 0)
+        return 1.0;
+
+    if (value.compare("FALSE", Qt::CaseInsensitive) == 0)
+        return 0.0;
+
+    return value.toDouble();
+}
+
+bool isDisableFeedrateScalingSetting(const QString& key) {
+    return key == MS::Startup::kDisableFeedrateScaling || key == MS::Slowdown::kDisableFeedrateScaling ||
+           key == MS::TipWipe::kDisableFeedrateScaling || key == MS::SpiralLift::kDisableFeedrateScaling;
+}
+} // namespace
+
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
     : m_e_absolute(true), m_space(' '), m_distance_unit(meta.m_distance_unit), m_time_unit(meta.m_time_unit),
       m_angle_unit(meta.m_angle_unit), m_mass_unit(meta.m_mass_unit), m_velocity_unit(meta.m_velocity_unit),
@@ -72,9 +89,21 @@ Distance CommonParser::getCurrentGXDistance() {
 
     updateCurrentBeadGeometry();
 
-    return MotionEstimation::calculateTimeAndVolume(
-        m_current_layer, m_with_F_value, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
+    const bool include_feedrate_adjustable_time =
+        m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
+        !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
+    const Distance distance = MotionEstimation::calculateTimeAndVolume(
+        m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0, m_extruder_on,
         m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer], uses_b);
+
+    const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
+    if (command_adjustable_time > 0) {
+        m_command_G1F_times[m_current_gcode_command.getLineNumber()] += command_adjustable_time;
+    }
+
+    return distance;
 }
 
 void CommonParser::updateCurrentBeadGeometry() {
@@ -89,6 +118,11 @@ Distance CommonParser::fileDistanceSetting(const QString& key) const {
     }
 
     return GSM->getGlobal()->setting<Distance>(key);
+}
+
+bool CommonParser::fileBoolSetting(const QString& key) const {
+    const auto setting = m_file_settings.constFind(key);
+    return setting != m_file_settings.constEnd() && setting.value() != 0.0;
 }
 
 Distance CommonParser::beadWidthForComment(const QString& comment) const {
@@ -145,6 +179,126 @@ Distance CommonParser::beadWidthForComment(const QString& comment) const {
     return default_width;
 }
 
+bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command) const {
+    const QString& comment = command.getComment();
+
+    if (comment.isEmpty())
+        return false;
+
+    if (fileBoolSetting(MS::TipWipe::kDisableFeedrateScaling) &&
+        (comment.contains(Constants::PathModifierStrings::kForwardTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kReverseTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kAngledTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe))) {
+        return true;
+    }
+
+    if (fileBoolSetting(MS::Slowdown::kDisableFeedrateScaling) &&
+        (comment.contains(Constants::PathModifierStrings::kSlowDown) ||
+         comment.contains(Constants::PathModifierStrings::kCoasting))) {
+        return true;
+    }
+
+    if (fileBoolSetting(MS::Startup::kDisableFeedrateScaling) &&
+        comment.contains(Constants::PathModifierStrings::kInitialStartup)) {
+        return true;
+    }
+
+    return fileBoolSetting(MS::SpiralLift::kDisableFeedrateScaling) &&
+           comment.contains(Constants::PathModifierStrings::kSpiralLift);
+}
+
+void CommonParser::recordModalFeedrateForCommand(const GcodeCommand& command) {
+    if (m_has_modal_feedrate)
+        m_command_modal_feedrates.insert(command.getLineNumber(), m_modal_feedrate);
+}
+
+void CommonParser::setCommandFeedrate(QString& line, double feedrate) {
+    static const QRegularExpression feedrate_token(
+        "(^|[\\s,/*()])(F(?:[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?|#[A-Za-z0-9_]+))",
+        QRegularExpression::CaseInsensitiveOption);
+
+    int comment_start = line.size();
+    const QString comment_delimiter = getCommentStartDelimiter();
+    if (!comment_delimiter.isEmpty()) {
+        const int delimiter_index = line.indexOf(comment_delimiter);
+        if (delimiter_index >= 0)
+            comment_start = delimiter_index;
+    }
+
+    const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
+    const QString replacement = m_f_parameter % QString::number(feedrate, 'f', 4);
+    if (match.hasMatch()) {
+        line.replace(match.capturedStart(2), match.capturedLength(2), replacement);
+        return;
+    }
+
+    int insert_at = comment_start;
+    while (insert_at > 0 && line.at(insert_at - 1).isSpace())
+        --insert_at;
+    line.insert(insert_at, m_space % replacement);
+}
+
+bool CommonParser::commandFeedrate(const QString& line, double& feedrate) {
+    static const QRegularExpression feedrate_token("(^|[\\s,/*()])(F[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?)",
+                                                   QRegularExpression::CaseInsensitiveOption);
+
+    int comment_start = line.size();
+    const QString comment_delimiter = getCommentStartDelimiter();
+    if (!comment_delimiter.isEmpty()) {
+        const int delimiter_index = line.indexOf(comment_delimiter);
+        if (delimiter_index >= 0)
+            comment_start = delimiter_index;
+    }
+
+    const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
+    if (!match.hasMatch())
+        return false;
+
+    bool converted = false;
+    feedrate = match.captured(2).mid(1).toDouble(&converted);
+    return converted;
+}
+
+void CommonParser::materializeFeedrateTransitions(double modifier) {
+    bool emitted_feedrate_set = false;
+    double emitted_feedrate = 0.0;
+    auto explicit_feedrate = m_explicit_modal_feedrates.upperBound(m_last_layer_line_start);
+
+    for (GcodeCommand& command : m_motion_commands[m_current_layer]) {
+        while (explicit_feedrate != m_explicit_modal_feedrates.cend() &&
+               explicit_feedrate.key() < command.getLineNumber()) {
+            emitted_feedrate = explicit_feedrate.value();
+            emitted_feedrate_set = true;
+            ++explicit_feedrate;
+        }
+
+        if (command.getLineNumber() <= m_last_layer_line_start ||
+            !m_command_modal_feedrates.contains(command.getLineNumber())) {
+            continue;
+        }
+
+        const double original_feedrate = m_command_modal_feedrates.value(command.getLineNumber());
+        const double desired_feedrate =
+            original_feedrate * (feedrateScalingDisabledForCommand(command) ? 1.0 : modifier);
+        const bool has_explicit_feedrate = command.getParameters().contains(m_f_parameter.toLatin1());
+
+        if (!has_explicit_feedrate &&
+            (!emitted_feedrate_set || !qFuzzyCompare(emitted_feedrate + 1.0, desired_feedrate + 1.0))) {
+            setCommandFeedrate(m_lines[command.getLineNumber()], desired_feedrate);
+            command.addParameter(m_f_parameter.toLatin1(), original_feedrate * m_velocity_unit());
+        }
+
+        emitted_feedrate = desired_feedrate;
+        emitted_feedrate_set = true;
+
+        while (explicit_feedrate != m_explicit_modal_feedrates.cend() &&
+               explicit_feedrate.key() == command.getLineNumber()) {
+            ++explicit_feedrate;
+        }
+    }
+}
+
 // currently nothing of interest in header, so skip as long as line starts with
 // comment or is whitespace
 void CommonParser::parseHeader() {
@@ -186,7 +340,7 @@ QHash<QString, double> CommonParser::parseFooter() {
                     // search for root when deciding whether or not to parse the setting
                     QHash<QString, QString>::const_iterator it = m_necessary_variables_copy.find(key_root);
                     if (it != m_necessary_variables_copy.end()) {
-                        double value = setting_split[1].toDouble();
+                        double value = parseFooterSettingValue(setting_split[1]);
                         if (Constants::GcodeFileVariables::kRequiredConversion.find(key_root) !=
                             Constants::GcodeFileVariables::kRequiredConversion.end()) {
                             m_file_settings.insert(it.value(), v.from(value, mm / s));
@@ -247,7 +401,9 @@ void CommonParser::checkAndSetNecessarySettings() {
         while (i.hasNext()) {
             i.next();
             QString currentVal = i.value();
-            if (currentVal == MS::Cooling::kForceMinLayerTime)
+            if (isDisableFeedrateScalingSetting(currentVal))
+                m_file_settings.insert(i.value(), (double)sb->setting<bool>(currentVal));
+            else if (currentVal == MS::Cooling::kForceMinLayerTime)
                 m_file_settings.insert(i.value(), (double)sb->setting<bool>(currentVal));
             else
                 m_file_settings.insert(i.value(), sb->setting<double>(currentVal));
@@ -406,6 +562,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
             // If a new layer has just started, check if previous layer needs to be adjusted
             // to meet the minimum layer time
             if (m_current_gcode_command.getCommandIsEndOfLayer() || m_current_line == m_current_end_line) {
+                bool layer_feedrate_adjusted = false;
                 if (m_file_settings[MS::Cooling::kForceMinLayerTime] && m_allow_layer_alter && m_current_layer > 0) {
                     Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer];
                     Time decreaseTime = m_layer_times[m_current_layer] - m_max_layer_time_allowed;
@@ -431,6 +588,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
 
                                 if (modifier > 0 && modifier < 1) {
                                     AdjustFeedrate(modifier);
+                                    layer_feedrate_adjusted = true;
                                     m_was_modified = true;
                                 }
                             }
@@ -454,6 +612,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
 
                                 if (modifier > 1) {
                                     AdjustFeedrate(modifier);
+                                    layer_feedrate_adjusted = true;
                                     m_was_modified = true;
                                 }
                             }
@@ -463,6 +622,12 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                             }
                         }
                     }
+                }
+
+                if (!layer_feedrate_adjusted && m_was_modified && m_allow_layer_alter && m_current_layer > 0 &&
+                    m_file_settings[MS::Cooling::kForceMinLayerTime] &&
+                    m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
+                    materializeFeedrateTransitions(1.0);
                 }
 
                 if (m_current_line == m_current_end_line)
@@ -583,9 +748,64 @@ void CommonParser::reset() {
     m_extruder_on = false;
     m_dynamic_spindle_control = false;
     m_park = false;
+    m_with_F_value = false;
+    m_modal_feedrate = 0.0;
+    m_has_modal_feedrate = false;
+    m_command_modal_feedrates.clear();
+    m_explicit_modal_feedrates.clear();
+    m_command_G1F_times.clear();
 }
 
 QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
+
+QList<Time> CommonParser::getAdjustedLayerTimes() {
+    QList<Time> adjusted_layer_times = m_layer_times;
+    const bool has_adjusted_feedrates = std::any_of(m_layer_FR_modifiers.cbegin(), m_layer_FR_modifiers.cend(),
+                                                    [](double modifier) { return modifier > 0 && modifier != 1.0; });
+    if (!has_adjusted_feedrates)
+        return adjusted_layer_times;
+
+    bool emitted_feedrate_set = false;
+    double emitted_feedrate = 0.0;
+    auto explicit_feedrate = m_explicit_modal_feedrates.cbegin();
+
+    for (int layer = 0; layer < m_motion_commands.size() && layer < adjusted_layer_times.size(); ++layer) {
+        for (const GcodeCommand& command : m_motion_commands[layer]) {
+            const int line_number = command.getLineNumber();
+            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() < line_number) {
+                emitted_feedrate = explicit_feedrate.value();
+                emitted_feedrate_set = true;
+                ++explicit_feedrate;
+            }
+
+            const double original_feedrate = m_command_modal_feedrates.value(line_number, 0.0);
+            double explicit_command_feedrate = 0.0;
+            if (line_number >= 0 && line_number < m_lines.size() &&
+                commandFeedrate(m_lines[line_number], explicit_command_feedrate)) {
+                emitted_feedrate = explicit_command_feedrate;
+                emitted_feedrate_set = true;
+            }
+            else if (command.getParameters().contains(m_f_parameter.toLatin1()) && original_feedrate > 0) {
+                // Macro feedrates such as F#981 cannot be read back numerically, but their authored value was
+                // resolved while parsing and remains unchanged unless setCommandFeedrate replaced the token.
+                emitted_feedrate = original_feedrate;
+                emitted_feedrate_set = true;
+            }
+
+            const Time command_adjustable_time = m_command_G1F_times.value(line_number);
+            if (command_adjustable_time > 0 && original_feedrate > 0 && emitted_feedrate_set && emitted_feedrate > 0) {
+                const double effective_modifier = emitted_feedrate / original_feedrate;
+                adjusted_layer_times[layer] += command_adjustable_time / effective_modifier - command_adjustable_time;
+            }
+
+            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() == line_number) {
+                ++explicit_feedrate;
+            }
+        }
+    }
+
+    return adjusted_layer_times;
+}
 
 QList<double> CommonParser::getLayerFeedRateModifiers() { return m_layer_FR_modifiers; }
 
@@ -817,6 +1037,8 @@ void CommonParser::G1Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = current_value;
+                    m_has_modal_feedrate = true;
                     current_value *= m_velocity_unit();
                     setSpeed(current_value);
                     f_not_used = false;
@@ -911,11 +1133,16 @@ void CommonParser::G1Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+
     if (is_motion_command) {
+        recordModalFeedrateForCommand(m_current_gcode_command);
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
     }
 
-    m_with_F_value = m_current_spindle_speed != 0;
+    m_with_F_value =
+        is_motion_command && m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
     Distance temp = getCurrentGXDistance();
     MotionEstimation::m_total_distance += temp;
@@ -924,7 +1151,6 @@ void CommonParser::G1Handler(QVector<QString> params) {
     else
         MotionEstimation::m_travel_distance += temp;
 
-    m_with_F_value = false;
 }
 
 void CommonParser::G1HandlerHelper(QVector<QString> params, QVector<QString> optionalParams) {
@@ -968,7 +1194,11 @@ void CommonParser::G2Handler(QVector<QString> params) {
             throwFloatConversionErrorException();
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1008,6 +1238,8 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1114,6 +1346,9 @@ void CommonParser::G2Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
@@ -1159,7 +1394,11 @@ void CommonParser::G3Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1199,6 +1438,8 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1305,6 +1546,9 @@ void CommonParser::G3Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
@@ -1442,7 +1686,11 @@ void CommonParser::G5Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1479,6 +1727,8 @@ void CommonParser::G5Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1582,6 +1832,9 @@ void CommonParser::G5Handler(QVector<QString> params) {
     m_current_gcode_command.setExtruderOn(m_extruder_on);
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Enforce XYIJPQ required parameters
@@ -1744,24 +1997,22 @@ void CommonParser::getMinMaxModifier(double& minModifier, double& maxModifier) {
         double maxFeedRate = 1;
         double minFeedRate = minModifier;
 
-        QList<GcodeCommand>::iterator current_layer_motion_end = m_motion_commands[m_current_layer].end();
-        --current_layer_motion_end;
-
-        QList<GcodeCommand>::const_iterator current_layer_motion_begin = m_motion_commands[m_current_layer].begin();
-        --current_layer_motion_begin;
-
-        while (current_layer_motion_end != current_layer_motion_begin &&
-               current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
-            auto parameters = current_layer_motion_end->getParameters();
-            if (parameters.contains(m_f_parameter.toLatin1())) {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
-                QRegularExpressionMatch myMatch = m_f_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-
-                minFeedRate = std::min(minFeedRate, value);
-                maxFeedRate = std::max(maxFeedRate, value);
+        for (const GcodeCommand& command : m_motion_commands[m_current_layer]) {
+            if (command.getLineNumber() <= m_last_layer_line_start || feedrateScalingDisabledForCommand(command)) {
+                continue;
             }
-            --current_layer_motion_end;
+
+            double value = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
+            if (value <= 0 && command.getParameters().contains(m_f_parameter.toLatin1())) {
+                const QRegularExpressionMatch match = m_f_param_and_value.match(m_lines[command.getLineNumber()]);
+                if (match.hasMatch())
+                    value = match.captured().mid(1).toDouble();
+            }
+            if (value <= 0)
+                continue;
+
+            minFeedRate = std::min(minFeedRate, value);
+            maxFeedRate = std::max(maxFeedRate, value);
         }
 
         Velocity velocity;
@@ -1776,22 +2027,20 @@ void CommonParser::AdjustFeedrate(double modifier) {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
     if (m_motion_commands[m_current_layer].size() > 0) {
         m_layer_FR_modifiers[m_current_layer] = modifier;
+        materializeFeedrateTransitions(modifier);
 
-        QList<GcodeCommand>::iterator current_layer_motion_end = m_motion_commands[m_current_layer].end();
-        --current_layer_motion_end;
+        for (GcodeCommand& command : m_motion_commands[m_current_layer]) {
+            if (command.getLineNumber() <= m_last_layer_line_start || feedrateScalingDisabledForCommand(command)) {
+                continue;
+            }
 
-        QList<GcodeCommand>::const_iterator current_layer_motion_begin = m_motion_commands[m_current_layer].begin();
-        --current_layer_motion_begin;
-
-        while (current_layer_motion_end != current_layer_motion_begin &&
-               current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
             double tempModifier = modifier;
-            auto parameters = current_layer_motion_end->getParameters();
+            auto parameters = command.getParameters();
             if (parameters.contains(m_q_parameter.toLatin1()) &&
-                current_layer_motion_end->getCommandID() != 5) // G5 also used the Q param, so spline are not supported
-                                                               // by syntaxes that use it for spindle control
+                command.getCommandID() != 5) // G5 also used the Q param, so spline are not supported
+                                             // by syntaxes that use it for spindle control
             {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
+                QString& line = m_lines[command.getLineNumber()];
                 QRegularExpressionMatch myMatch = m_q_param_and_value.match(line);
                 double value = myMatch.captured().mid(1).toDouble();
                 double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
@@ -1814,12 +2063,11 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 line = line.left(myMatch.capturedStart()) % m_q_parameter %
                        QString::number(value * tempModifier * extruderModifier, 'f', 4) %
                        line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_q_parameter.toLatin1(),
-                                                       parameters[m_q_parameter.toLatin1()] * tempModifier);
+                command.addParameter(m_q_parameter.toLatin1(), parameters[m_q_parameter.toLatin1()] * tempModifier);
             }
             if (parameters.contains(m_s_parameter.toLatin1()) &&
                 !sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
+                QString& line = m_lines[command.getLineNumber()];
                 QRegularExpressionMatch myMatch = m_s_param_and_value.match(line);
                 double value = myMatch.captured().mid(1).toDouble();
                 double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
@@ -1842,13 +2090,12 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 line = line.left(myMatch.capturedStart()) % m_s_parameter %
                        QString::number(value * tempModifier * extruderModifier, 'f', 4) %
                        line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_s_parameter.toLatin1(),
-                                                       parameters[m_s_parameter.toLatin1()] * tempModifier);
+                command.addParameter(m_s_parameter.toLatin1(), parameters[m_s_parameter.toLatin1()] * tempModifier);
             }
             if (parameters.contains(m_f_parameter.toLatin1())) {
                 if (sb->setting<int>(MS::Extruder::kEnableM3S) ||
                     sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax) == GcodeSyntax::kIngersoll) {
-                    int cmd_index = current_layer_motion_end->getLineNumber() - 1;
+                    int cmd_index = command.getLineNumber() - 1;
                     QString& line = m_lines[cmd_index];
 
                     if (line.startsWith("M3 ")) {
@@ -1930,15 +2177,19 @@ void CommonParser::AdjustFeedrate(double modifier) {
                     }
                 }
 
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
-                QRegularExpressionMatch myMatch = m_f_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-                line = line.left(myMatch.capturedStart()) % m_f_parameter %
-                       QString::number(value * tempModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_f_parameter.toLatin1(),
-                                                       parameters[m_f_parameter.toLatin1()] * tempModifier);
+                QString& line = m_lines[command.getLineNumber()];
+                double value = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
+                if (value <= 0) {
+                    const QRegularExpressionMatch match = m_f_param_and_value.match(line);
+                    if (match.hasMatch())
+                        value = match.captured().mid(1).toDouble();
+                }
+                if (value <= 0)
+                    continue;
+
+                setCommandFeedrate(line, value * tempModifier);
+                command.addParameter(m_f_parameter.toLatin1(), parameters[m_f_parameter.toLatin1()] * tempModifier);
             }
-            --current_layer_motion_end;
         }
     }
 }

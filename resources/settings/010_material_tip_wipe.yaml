@@ -513,3 +513,15 @@ settings:
     namespace: "Material::TipWipe"
     symbol: "kTipWipeVoltage"
     local: true
+  - name: "disable_tip_wipe_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Tip Wipes"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change tip wipe path speeds."
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kDisableTipWipeFeedrateScaling"
+    local: false

@@ -245,9 +245,13 @@ QString WriterBase::writeLayerChange(uint layer_number) {
 
 QString WriterBase::writeSettingsFooter() {
     QString rv;
+    const fifojson& settings = m_sb->json();
+    if (!settings.is_array() || settings.empty() || !settings.front().is_object())
+        return rv;
+
     if (m_sb->setting<int>(Constants::PrinterSettings::GCode::kEnableSettingsFooter)) {
         rv += m_newline % commentLine("Settings Footer");
-        for (auto& el : m_sb->json().items()) {
+        for (const auto& el : settings.front().items()) {
             rv += commentLine(QString::fromStdString(el.key()) % m_space % QString::fromStdString(el.value().dump()));
         }
         // Remove empty line from end of file that comes from the commentLine creating a new line

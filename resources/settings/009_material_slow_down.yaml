@@ -373,3 +373,15 @@ settings:
     namespace: "Material::SlowDown"
     symbol: "kSlowDownBeadAreaModifier"
     local: true
+  - name: "disable_slow_down_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Slow Down"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change slow down path speeds."
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    options: []
+    default: false
+    minor: "Slow Down"
+    major: "Material"
+    namespace: "Material::SlowDown"
+    symbol: "kDisableSlowDownFeedrateScaling"
+    local: false

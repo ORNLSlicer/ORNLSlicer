@@ -6,6 +6,7 @@
 #include <qhash.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
+#include <qmap.h>
 #include <qregularexpression.h>
 #include <qtmetamacros.h>
 
@@ -180,6 +181,9 @@ class CommonParser : public ParserBase {
     //! \brief Returns the currently calculated times for each layer
     //! \return The time in seconds
     QList<Time> getLayerTimes();
+
+    //! \brief Returns the calculated layer times after feedrate adjustment.
+    QList<Time> getAdjustedLayerTimes();
 
     //! \brief Returns the currently calculated feedrate modifier for each layer
     //! \return The time in seconds
@@ -489,8 +493,26 @@ class CommonParser : public ParserBase {
     //! \brief Returns a distance setting loaded from the file footer, falling back to the current global setting.
     Distance fileDistanceSetting(const QString& key) const;
 
+    //! \brief Returns a boolean setting loaded from the file footer, defaulting to false when absent.
+    bool fileBoolSetting(const QString& key) const;
+
     //! \brief Resolves bead width from the parsed motion comment and loaded settings.
     Distance beadWidthForComment(const QString& comment) const;
+
+    //! \brief Returns whether feedrate scaling should be skipped for the parsed motion command.
+    bool feedrateScalingDisabledForCommand(const GcodeCommand& command) const;
+
+    //! \brief Records the authored modal feedrate for a parsed motion command.
+    void recordModalFeedrateForCommand(const GcodeCommand& command);
+
+    //! \brief Replaces an existing F token or inserts one before the command comment.
+    void setCommandFeedrate(QString& line, double feedrate);
+
+    //! \brief Reads a numeric F token from a command before its comment.
+    bool commandFeedrate(const QString& line, double& feedrate);
+
+    //! \brief Inserts feedrates where scaled and protected modal spans meet.
+    void materializeFeedrateTransitions(double modifier);
 
     //! \brief After parsing footer, check that all necessary parameters were found.
     //! If not found, set them appropriately and assign local variables.
@@ -532,6 +554,10 @@ class CommonParser : public ParserBase {
 
     //! \brief layer time from "G1 F" lines
     QList<Time> m_layer_G1F_times;
+
+    //! \brief Nominal feedrate-adjustable time attributed to each motion command.
+    QHash<int, Time> m_command_G1F_times;
+
     QList<Volume> m_layer_volumes;
 
     // key information from the footer
@@ -591,8 +617,20 @@ class CommonParser : public ParserBase {
     //! \brief Flag to indicate cancelling parsing
     bool m_should_cancel;
 
-    //! \brief Flag to indicate G1 line contains F command
+    //! \brief Flag to indicate the current modal feedrate can be scaled for layer-time adjustment.
     bool m_with_F_value;
+
+    //! \brief Authored modal feedrate in the selected G-code velocity unit.
+    double m_modal_feedrate;
+
+    //! \brief Whether an authored modal feedrate has been established.
+    bool m_has_modal_feedrate;
+
+    //! \brief Authored modal feedrate active for each parsed motion command.
+    QHash<int, double> m_command_modal_feedrates;
+
+    //! \brief Explicit modal feedrate changes, including F-only G1 commands.
+    QMap<int, double> m_explicit_modal_feedrates;
 
     //! \brief Flag to indicate Z value should be multiplied by negative one, used for MVP syntax
     bool m_negate_z_value;

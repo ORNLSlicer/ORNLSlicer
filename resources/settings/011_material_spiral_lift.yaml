@@ -109,3 +109,15 @@ settings:
     namespace: "Material::SpiralLift"
     symbol: "kSpiralLiftSpeed"
     local: false
+  - name: "disable_spiral_lift_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Spiral Lift"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change spiral lift path speeds."
+    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kDisableSpiralLiftFeedrateScaling"
+    local: false
