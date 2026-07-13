@@ -18,8 +18,8 @@ namespace ORNL {
  * This first pass reuses radial path coordinates as user-frame endpoint coordinates relative to the active work
  * offset. Tool-frame rotations are fixed to XR=180, YR=0, and ZR=0; AP comes from the existing Axis A setting; CP is
  * computed from each endpoint's angle around the radial slicing center plus the existing Axis C offset. When the
- * machine Supports G2/G3 setting is enabled, radial print arcs are emitted as G02/G03 with I/J center offsets.
- * Helical paths remain segmented G01 moves so each sampled endpoint retains its rising Z coordinate.
+ * machine Supports G2/G3 setting is enabled, radial and helical print arcs are emitted as G02/G03 with I/J center
+ * offsets and are divided according to Number of Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
   public:
@@ -104,7 +104,7 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @param angle Arc sweep angle. Currently informational only.
      * @param ccw True for counter-clockwise G03 output, false for clockwise G02 output.
      * @param params Segment settings containing speed and radial center metadata.
-     * @return G02/G03 print command.
+     * @return G02/G03 print command, or a G01 move when arc output is disabled.
      */
     QString writeArc(const Point& start_point, const Point& end_point, const Point& center_point, const Angle& angle,
                      const bool& ccw, const QSharedPointer<SettingsBase> params) override;
