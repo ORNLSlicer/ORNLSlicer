@@ -25,6 +25,7 @@
 #include "geometry/plane.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "managers/session_manager.h"
@@ -445,7 +446,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                     continue;
                 }
 
-                Path path = createPath(line, layer_settings, center, current_location);
+                Path path = createPath(line, layer_settings, center, radius, current_location);
                 if (path.size() > 0) {
                     helical_layer->addPath(path);
                 }
@@ -615,33 +616,53 @@ QSharedPointer<SettingsBase> HelicalSlicer::createSegmentSettings(const QSharedP
 }
 
 Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings,
-                               const Point& center, Point& current_location) {
+                               const Point& center, Distance radius, Point& current_location) {
     Path path;
     if (polyline.size() < 2) {
         return path;
     }
 
+    const bool write_arcs = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
+    const int arcs_per_revolution = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
+    const QVector<Point> arc_points =
+        write_arcs ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution)
+                   : QVector<Point>();
+    const Point path_start = arc_points.size() > 1 ? arc_points.first() : polyline.first();
+    const Point path_end = arc_points.size() > 1 ? arc_points.last() : polyline.last();
+
     QSharedPointer<SettingsBase> region_start_settings = createSegmentSettings(layer_settings, center, true);
     QSharedPointer<SettingsBase> print_settings = createSegmentSettings(layer_settings, center, false);
-    QSharedPointer<TravelSegment> travel = QSharedPointer<TravelSegment>::create(current_location, polyline.first());
+    QSharedPointer<TravelSegment> travel = QSharedPointer<TravelSegment>::create(current_location, path_start);
     travel->setSb(region_start_settings);
 
-    if (current_location.distance(polyline.first()) > kMinPathSegmentLength) {
+    if (current_location.distance(path_start) > kMinPathSegmentLength) {
         path.add(travel);
     }
 
-    for (int i = 1, end = polyline.size(); i < end; ++i) {
-        if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) {
-            continue;
+    if (arc_points.size() > 1) {
+        for (int i = 1, end = arc_points.size(); i < end; ++i) {
+            const Point arc_center =
+                SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
+            QSharedPointer<ArcSegment> segment =
+                QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
+            segment->setSb(i == 1 ? region_start_settings : print_settings);
+            path.add(segment);
         }
+    }
+    else {
+        for (int i = 1, end = polyline.size(); i < end; ++i) {
+            if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) {
+                continue;
+            }
 
-        QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polyline[i - 1], polyline[i]);
-        segment->setSb(i == 1 ? region_start_settings : print_settings);
-        path.add(segment);
+            QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polyline[i - 1], polyline[i]);
+            segment->setSb(i == 1 ? region_start_settings : print_settings);
+            path.add(segment);
+        }
     }
 
     if (path.size() > 0) {
-        current_location = polyline.last();
+        current_location = path_end;
     }
 
     return path;

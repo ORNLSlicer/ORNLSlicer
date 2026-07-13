@@ -94,6 +94,19 @@ class RadialWriter : public WriterBase {
     QString writeLine(const Point& start_point, const Point& target_point,
                       const QSharedPointer<SettingsBase> params) override;
 
+    /*!
+     * @brief Writes a printing arc with X/Y/Z/A/C endpoint coordinates and I/J center offsets.
+     * @param start_point Start point for the arc.
+     * @param end_point End point for the arc.
+     * @param center_point Arc center point.
+     * @param angle Arc sweep angle. Currently informational only.
+     * @param ccw True for counter-clockwise G3 output, false for clockwise G2 output.
+     * @param params Segment settings containing speed and radial center metadata.
+     * @return G2/G3 print command, or a G1 move when arc output is disabled.
+     */
+    QString writeArc(const Point& start_point, const Point& end_point, const Point& center_point, const Angle& angle,
+                     const bool& ccw, const QSharedPointer<SettingsBase> params) override;
+
     //! @brief Radial slicing does not emit path epilogue commands.
     QString writeAfterPath(RegionType type) override;
 

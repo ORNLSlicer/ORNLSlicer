@@ -38,6 +38,10 @@ void RadialParser::G1Handler(QVector<QString> params) {
     }
 }
 
+void RadialParser::G2Handler(QVector<QString> params) { handleArcFeedMove(params, false); }
+
+void RadialParser::G3Handler(QVector<QString> params) { handleArcFeedMove(params, true); }
+
 QVector<QString> RadialParser::stripRotaryAxes(QVector<QString> params) {
     QVector<QString> filtered_params;
     bool a_not_used = true;
@@ -88,6 +92,29 @@ bool RadialParser::isCommentedPrintMove() const {
     return (comment.contains(Constants::RegionTypeStrings::kRadial) ||
             comment.contains(Constants::RegionTypeStrings::kHelical)) &&
            !comment.contains(Constants::RegionTypeStrings::kTravel);
+}
+
+void RadialParser::handleArcFeedMove(QVector<QString> params, bool ccw) {
+    QVector<QString> filtered_params = stripRotaryAxes(params);
+    if (filtered_params.isEmpty()) {
+        return;
+    }
+
+    const bool force_print_state = isCommentedPrintMove();
+    if (force_print_state) {
+        setExtruderActive(true);
+    }
+
+    if (ccw) {
+        CommonParser::G3Handler(filtered_params);
+    }
+    else {
+        CommonParser::G2Handler(filtered_params);
+    }
+
+    if (force_print_state) {
+        setExtruderActive(false);
+    }
 }
 
 void RadialParser::setExtruderActive(bool on) { m_extruder_on = on; }

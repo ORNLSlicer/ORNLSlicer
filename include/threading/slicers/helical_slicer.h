@@ -108,11 +108,12 @@ class HelicalSlicer : public TraditionalAST {
      * @param polyline Clipped helix fragment to convert.
      * @param layer_settings Settings for generated segment metadata.
      * @param center Helical center stored on each segment for the writer.
+     * @param radius Exact radius of the generated helical path.
      * @param current_location Last emitted endpoint, updated when a path is generated.
      * @return Path containing travel and print segments for this clipped fragment.
      */
     Path createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings, const Point& center,
-                    Point& current_location);
+                    Distance radius, Point& current_location);
 
     //! @brief Ordered helical layers generated during preprocessing.
     QList<QSharedPointer<HelicalLayer>> m_helical_layers;

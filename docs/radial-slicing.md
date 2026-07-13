@@ -33,7 +33,7 @@ At each bead Z, the slicer:
 2. Builds an approximate circle at the current radial layer radius.
 3. Clips that circle against the cross-section polygons.
 4. Applies `Radial Boundary Handling`.
-5. Converts the selected arcs or rings into direct line-segment print paths.
+5. Converts the selected arcs or rings into print paths. With `Supports G2/G3` enabled, the paths are divided into circular moves using `Number of Arcs per Revolution`; otherwise they remain line-segment paths.
 
 ## Required Settings
 
@@ -47,6 +47,7 @@ At each bead Z, the slicer:
 | `Radial Axis X` / `Radial Axis Y` | Profile > Slicing | Custom radial cylinder axis coordinates when `Radial Axis Mode` is `Custom XY`. |
 | `Radial Initial Radius` | Profile > Slicing | Inner radial boundary before the half-layer offset is applied. Values less than or equal to zero place the first printed radius at half of `Layer Height`. |
 | `Radial Boundary Handling` | Profile > Slicing | Controls radial paths that cross the model boundary. |
+| `Number of Arcs per Revolution` | Profile > Slicing | Sets how many G2/G3 moves represent one complete revolution when `Supports G2/G3` is enabled. Clipped or partial paths may end with a shorter final arc. |
 
 ## Boundary Handling
 
@@ -64,9 +65,10 @@ When a radial path crosses the model boundary at a bead Z, model clipping can sp
 `Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset and emits
 `XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. The first Arc Specialties implementation fixes
 `XR=180`, `YR=0`, and `ZR=0`; maps `Axis A` to `AP`; and computes `CP` from the radial endpoint angle plus `Axis C`,
-normalized to the 0-360 degree range. When `Supports G2/G3` is enabled, Arc Specialties radial print arcs emit `G02` or
-`G03` with equals-form `I=`/`J=` center offsets and the feedrate at the end of the motion fields; otherwise radial print
-paths remain segmented `G01` moves.
+normalized to the 0-360 degree range. For both radial-capable syntaxes, enabling `Supports G2/G3` writes radial and
+helical print paths as G2/G3 moves divided according to `Number of Arcs per Revolution`. `Radial3Plus2` uses standard
+`I`/`J` center offsets, while `Arc Specialties` uses equals-form `I=`/`J=` offsets and places the feedrate at the end of
+the motion fields. When arc support is disabled, print paths remain segmented G1 moves.
 
 The radial settings header reports radial geometry, boundary handling, and rotary or positioner settings only, so it does not
 include process-specific nozzle, filament, extrusion, or standard polymer region comments. Radial print moves are marked with
@@ -82,7 +84,8 @@ common XYZ preview parser, and treats `RADIAL` and `HELICAL` print comments as p
 | --- | --- | --- |
 | `Axis A` | Printer > Machine Setup | For `Radial3Plus2`, fixed table tilt emitted as `A`. For `Arc Specialties`, positioner tilt emitted as `AP`. |
 | `Axis C` | Printer > Machine Setup | Added to the point angle around the radial center. `Radial3Plus2` unwraps C to avoid discontinuities; `Arc Specialties` emits CP normalized to 0-360 degrees and relies on controller shortest-way movement. |
-| `Supports G2/G3` | Printer > Machine Setup | Enables Arc Specialties `G02`/`G03` radial print arcs. When disabled, radial print paths use segmented `G01` moves. |
+| `Supports G2/G3` | Printer > Machine Setup | Enables G2/G3 radial and helical print moves for both `Radial3Plus2` and `Arc Specialties`. When disabled, cylindrical print paths use segmented G1 moves. |
+| `Number of Arcs per Revolution` | Profile > Slicing | Controls the angular subdivision of radial and helical G2/G3 paths. A complete revolution is written with this many arcs. |
 | `Default Print Speed` | Profile > Layer | Print feedrate for radial bead segments. |
 | `Travel Speed` | Profile > Travel | Feedrate for non-print travel moves. If unset, the writer falls back to machine max XY speed. |
 | `Travel Lift Height` | Profile > Travel | Radial-safe travel lift distance. The lift moves outward from the cylinder axis before the travel, then lowers at the destination when enabled. |
@@ -124,18 +127,18 @@ Short travels below `Minimum Travel Length for Lifting` do not lift.
 - Standard polymer regions are not generated. Settings for perimeter count, infill, skin, support, and raft do not create additional radial features.
 - The cylinder axis is vertical Z through each part's XY centroid or the configured custom XY coordinate.
 - The top of the radial slice is the retained mesh maximum Z. There is no separate radial cylinder height setting.
-- The current implementation approximates circles with line segments, so smaller bead widths create more segments and larger G-code files up to the per-circle segment cap.
+- Candidate circles are sampled for model clipping. The output uses that sampled path as G1 segments when arc support is disabled, or G2/G3 moves controlled by `Number of Arcs per Revolution` when it is enabled.
 - Clipping meshes are applied before radial path generation, but slicing vector settings are not used by radial slicing.
 - Arc Specialties work-offset and touch-probe setup commands are not emitted in the first pass. The generated header documents that an appropriate user frame must already be active.
-- Arc Specialties helical paths use segmented `G01` moves even when `Supports G2/G3` is enabled; G02/G03 output currently applies only to supported radial circle arcs.
 
 ## Quick Checks
 
 After slicing, verify that:
 
 - The G-code header identifies `Radial3Plus2` or `Arc Specialties`.
-- `Radial3Plus2` motion lines contain `X`, `Y`, `Z`, `A`, and `C`.
+- `Radial3Plus2` motion lines contain `X`, `Y`, `Z`, `A`, and `C`, and use G2/G3 with `I`/`J` when arc support is enabled.
 - `Arc Specialties` motion lines use `G00`/`G01`, or `G02`/`G03` when `Supports G2/G3` is enabled. They contain `X=`, `Y=`, `Z=`, `XR=`, `YR=`, `ZR=`, `AP=`, `CP=`, and include `F` at the end of every motion line.
+- A complete radial ring or helical revolution contains the configured `Number of Arcs per Revolution`; clipped or partial paths may include a shorter final arc.
 - Printed arcs lie on the part rather than above or below it.
 - Travel moves arc around the radial axis when the angular move is long enough, and configured travel lift offsets them outward before traversing.
 - The radial axis is centered where expected for the selected `Radial Axis Mode`.
