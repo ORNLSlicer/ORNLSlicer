@@ -34,7 +34,12 @@ QSharedPointer<Layer> LayerAdditions::createRaft(QSharedPointer<Layer> layer) {
     Distance raft_offset = layer->getSb()->setting<Distance>(MS::PlatformAdhesion::kRaftOffset);
 
     // Extract island geometry from existing layer
-    QVector<PolygonList> island_outlines = layer->getGeometry().splitIntoParts();
+    PolygonList source_geometry = layer->getGeometry();
+    if (source_geometry.isEmpty()) {
+        for (const QSharedPointer<IslandBase>& island : layer->getIslands())
+            source_geometry |= island->getGeometry();
+    }
+    QVector<PolygonList> island_outlines = source_geometry.splitIntoParts();
 
     // Offset by raft offset
     PolygonList new_outlines;
@@ -68,16 +73,27 @@ QSharedPointer<Layer> LayerAdditions::createRaft(QSharedPointer<Layer> layer) {
 void LayerAdditions::addBrim(QSharedPointer<Layer> layer) {
     QList<QSharedPointer<IslandBase>> raftIslands = layer->getIslands(IslandType::kRaft);
     QList<QSharedPointer<IslandBase>> polymerIslands = layer->getIslands(IslandType::kPolymer);
+    QList<QSharedPointer<IslandBase>> supportIslands = layer->getIslands(IslandType::kSupport);
     QSharedPointer<SettingsBase> currentLocalSettings;
     if (raftIslands.size() > 0)
         currentLocalSettings = QSharedPointer<SettingsBase>::create(*raftIslands[0]->getSb());
-    else
+    else if (polymerIslands.size() > 0)
         currentLocalSettings = QSharedPointer<SettingsBase>::create(*polymerIslands[0]->getSb());
+    else if (supportIslands.size() > 0)
+        currentLocalSettings = QSharedPointer<SettingsBase>::create(*supportIslands[0]->getSb());
+    else
+        return;
 
     PolygonList geometry = layer->getGeometry();
+    if (geometry.isEmpty()) {
+        for (const auto& island : supportIslands)
+            geometry |= island->getGeometry();
+    }
 
     Distance brimWidth = currentLocalSettings->setting<Distance>(MS::PlatformAdhesion::kBrimWidth);
     Distance beadWidth = currentLocalSettings->setting<Distance>(MS::PlatformAdhesion::kBrimBeadWidth);
+    if (beadWidth <= 0)
+        return;
     int m_rings = qCeil(brimWidth() / beadWidth());
 
     // set the offset as the location of the outer most loop, which is where the brim printing starts
@@ -106,13 +122,20 @@ void LayerAdditions::addSkirt(QSharedPointer<Layer> layer) {
 
     QList<QSharedPointer<IslandBase>> raftIslands = layer->getIslands(IslandType::kRaft);
     QList<QSharedPointer<IslandBase>> polymerIslands = layer->getIslands(IslandType::kPolymer);
+    QList<QSharedPointer<IslandBase>> supportIslands = layer->getIslands(IslandType::kSupport);
     QSharedPointer<SettingsBase> currentLocalSettings;
     if (raftIslands.size() > 0)
         currentLocalSettings = QSharedPointer<SettingsBase>::create(*raftIslands[0]->getSb());
-    else
+    else if (polymerIslands.size() > 0)
         currentLocalSettings = QSharedPointer<SettingsBase>::create(*polymerIslands[0]->getSb());
+    else if (supportIslands.size() > 0)
+        currentLocalSettings = QSharedPointer<SettingsBase>::create(*supportIslands[0]->getSb());
+    else
+        return;
 
     QList<QSharedPointer<IslandBase>> islands = layer->getIslands();
+    if (islands.isEmpty())
+        return;
     for (QSharedPointer<IslandBase>& isl : islands) {
         PolygonList poly = isl->getGeometry();
         minX = qMin(minX, poly.min().x());
@@ -176,7 +199,15 @@ void LayerAdditions::addLaserScan(QSharedPointer<Part> part, int layer_index, do
         scan_layer->setSb(sb);
 
         // Determine laser_scan_island geometry
-        QRect boundary = build_layer->getGeometry().boundingRect();
+        PolygonList scan_geometry = build_layer->getGeometry();
+        if (scan_geometry.isEmpty()) {
+            for (const auto& island : build_layer->getIslands())
+                scan_geometry |= island->getGeometry();
+        }
+        if (scan_geometry.isEmpty())
+            return;
+
+        QRect boundary = scan_geometry.boundingRect();
         Polygon poly =
             Polygon({boundary.bottomLeft(), boundary.topLeft(), boundary.topRight(), boundary.bottomRight()});
         PolygonList island;
@@ -195,7 +226,7 @@ void LayerAdditions::addLaserScan(QSharedPointer<Part> part, int layer_index, do
 
         scan_layer->setOrientation(build_layer->getSlicingPlane(), shift);
         scan_layer->updateIslands(IslandType::kLaserScan, newIslands);
-        scan_layer->setGeometry(build_layer->getGeometry(), QVector3D());
+        scan_layer->setGeometry(scan_geometry, QVector3D());
         scan_layer->setCompanionFileLocation(output_path);
     }
 }

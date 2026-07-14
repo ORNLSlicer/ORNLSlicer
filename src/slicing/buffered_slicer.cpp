@@ -29,7 +29,7 @@ BufferedSlicer::BufferedSlicer() {}
 BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
                                QVector<QSharedPointer<Part>> settings_parts,
                                QMap<uint, QSharedPointer<SettingsRange>> ranges, int previous_buffer, int future_buffer,
-                               bool use_cgal_cross_section) {
+                               bool use_cgal_cross_section, bool include_build_plate_gap) {
     m_mesh = mesh;
     m_settings = settings;
     m_settings_parts = settings_parts;
@@ -40,6 +40,17 @@ BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QShar
     m_future_buffer_size = future_buffer;
 
     std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh);
+
+    // A normal mesh slice starts at the mesh minimum.  For planar support,
+    // retain the otherwise-empty layers below a raised mesh so support can
+    // reach the physical build plate at Z = 0.
+    const QVector3D normal = m_slicing_plane.normal().normalized();
+    if (include_build_plate_gap && m_settings->setting<bool>(PS::Support::kEnable) && qFuzzyIsNull(normal.x()) &&
+        qFuzzyIsNull(normal.y()) && normal.z() > 0.0f && m_mesh_min.z() > 0.0f) {
+        Point build_plate_point = m_slicing_plane.point();
+        build_plate_point.z(0.0);
+        m_slicing_plane.point(build_plate_point);
+    }
 
     // Fill previous slots will nullptr to start
     for (int i = 0; i < previous_buffer; ++i)

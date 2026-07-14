@@ -112,8 +112,15 @@ void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBas
                 adjustedGeometry, default_line_spacing, default_angle, default_global_printer_area, min, max));
             break;
         case InfillPatterns::kGrid:
-            m_computed_geometry.append(PatternGenerator::GenerateGrid(
+            // Keep the two grid directions in separate optimization groups.
+            // Otherwise each direction is treated as an obstacle to linking
+            // neighboring lines in the other direction, producing a travel for
+            // almost every grid segment.
+            m_computed_geometry.append(PatternGenerator::GenerateLines(
                 adjustedGeometry, default_line_spacing, default_angle, default_global_printer_area, min, max));
+            m_computed_geometry.append(PatternGenerator::GenerateLines(adjustedGeometry, default_line_spacing,
+                                                                       default_angle + 90 * deg,
+                                                                       default_global_printer_area, min, max));
             break;
         case InfillPatterns::kConcentric:
             m_computed_geometry.append(

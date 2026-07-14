@@ -40,7 +40,7 @@ namespace ORNL {
 PlanarSlicer::PlanarSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {}
 
 void PlanarSlicer::preProcess(nlohmann::json opt_data) {
-    Preprocessor pp;
+    Preprocessor pp(false, true);
 
     pp.addInitialProcessing(
         [this](const Preprocessor::Parts& parts, const QSharedPointer<SettingsBase>& global_settings) {
@@ -304,7 +304,9 @@ void PlanarSlicer::processThermalScan(QSharedPointer<Part> part, QSharedPointer<
 
         int total_layers = part->countStepPairs();
         for (int current_layer = first_layer; current_layer < total_layers; ++current_layer) {
-            LayerAdditions::addThermalScan(part->step(current_layer, StepType::kLayer).dynamicCast<Layer>());
+            auto layer = part->step(current_layer, StepType::kLayer).dynamicCast<Layer>();
+            if (!layer.isNull() && !layer->getIslands(IslandType::kPolymer).isEmpty())
+                LayerAdditions::addThermalScan(layer);
         }
     }
 }
@@ -328,7 +330,10 @@ void PlanarSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<Se
                     part->step(current_layer - 1, StepType::kLayer).dynamicCast<Layer>();
                 scan_height_total += previousLayer->getSb()->setting<double>(PS::Layer::kLayerHeight);
 
-                if ((current_layer - 1) % scan_layer_skip != 0)
+                auto currentLayer = part->step(current_layer, StepType::kLayer).dynamicCast<Layer>();
+                const bool has_model =
+                    !currentLayer.isNull() && !currentLayer->getIslands(IslandType::kPolymer).isEmpty();
+                if (!has_model || scan_layer_skip <= 0 || (current_layer - 1) % scan_layer_skip != 0)
                     part->removeStepFromGroup(current_layer, StepType::kScan);
                 else
                     LayerAdditions::addLaserScan(part, current_layer, scan_height_total,
@@ -344,7 +349,7 @@ void PlanarSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<Se
 }
 
 void PlanarSlicer::processGlobalLayers(QVector<QSharedPointer<Part>> parts,
-                                        const QSharedPointer<SettingsBase>& settings) {
+                                       const QSharedPointer<SettingsBase>& settings) {
     if (anythingDirty()) {
         // create global layers from all the part layers
         m_global_layers = LayerOrderOptimizer::populateSteps(settings, parts);
@@ -362,158 +367,546 @@ bool PlanarSlicer::anythingDirty() {
     return anything_dirty;
 }
 
-// Because of possible non-zero xy_offset and non-zero layer_offset, the original code that "added the overhangs
-//  to lower_layer and use the modified lower_layer as upper_layer for the next layer down" no longer works
-// The new approach breaks down the implementation in two loops iterating layers from top to bottom:
-// 1. First loop, get overhangs defined for each layer without considering xy_offset and layer_offset
-// 2. Second loop, apply the overhangs to each layer considering layer_offset and xy_offset
-// layer_offet will be considered first, then xy_offset:
-// If layer_offset=m, support at layer #N will be calculated as the difference between
-// layer #N+1+m and layer #N+m, or the overhang of layer #N+1+m over the one below #N+m
-// The calculated overhang is then applied to layer #N
-// Get the overlap between the overhang and (layer #N with xy_offset)
-// If the overlap > 0, remove the overlap from the overhang, and add the result to layer #N
 void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, int partStart) {
-    if (!part->steps().isEmpty()) {
-        auto part_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal()); // Copy global
-        part_sb->populate(part->getSb());                                       // Fill with part overrides
-        //! Determine the offset distance that should be used for support creation
-        Distance support_xy_distance = part_sb->setting<Distance>(PS::Support::kXYDistance);
-        Angle support_threshold_angle = part_sb->setting<Angle>(PS::Support::kThresholdAngle);
-        Distance layer_height = part_sb->setting<Distance>(PS::Layer::kLayerHeight);
-        Distance horizontal_offset = max(support_xy_distance, Distance(layer_height * tan(support_threshold_angle)));
-        int layer_offset = part_sb->setting<int>(PS::Support::kLayerOffset);
+    if (layer_count < 2 || part->steps().isEmpty())
+        return;
 
-        //! If tapering is enabled, set taper distance
-        Distance taper = 0;
-        if (part_sb->setting<bool>(PS::Support::kTaper))
-            taper = part_sb->setting<Distance>(PS::Layer::kBeadWidth) / 2;
+    QVector<QSharedPointer<Layer>> layers;
+    QVector<PolygonList> model_geometry;
+    layers.reserve(layer_count);
+    model_geometry.reserve(layer_count);
+    for (int i = 0; i < layer_count; ++i) {
+        auto layer = part->step(partStart + i, StepType::kLayer).dynamicCast<Layer>();
+        if (layer.isNull())
+            return;
+        layers.push_back(layer);
+        model_geometry.push_back(layer->getGeometry());
+    }
 
-        Area minimum_support_area = part_sb->setting<Area>(PS::Support::kMinArea);
+    auto removeSmallAreas = [](PolygonList geometry, Area minimum_area) {
+        if (minimum_area <= 0)
+            return geometry;
 
-        // Compare each layer to the one below it looking for overhangs
-        QVector<PolygonList> layers_overhangs; // for all but top layer, count = layer_count - 1
+        PolygonList filtered;
+        for (PolygonList island : geometry.splitIntoParts(true)) {
+            if (island.netArea() >= minimum_area)
+                filtered |= island;
+        }
+        return filtered;
+    };
 
-        // Layer #N, if XY offset > 0, there will be a gap between the part contour and the support region
-        // When calculating the support next layer down (layer #N-1), the gap in the upper_layer (layer #N)
-        // must be eliminated. Therefore,
-        // upper_layer_islands is introduced to represent the upper layer with the gap eliminated
-        // It is initialized as the very top layer, and will be updated each time for each layer
-        PolygonList upper_layer_islands;
-        QSharedPointer<Layer> upper_layer0 =
-            part->step(layer_count + partStart - 1, StepType::kLayer).dynamicCast<Layer>();
-        for (QSharedPointer<IslandBase> island : upper_layer0->getIslands()) {
-            if (taper > 0)
-                upper_layer_islands += island->getGeometry().offset(-taper);
+    struct OrganicBranch {
+        int target_layer;
+        Point contact;
+        Point root;
+        Distance diameter;
+        Angle angle;
+    };
+
+    auto makeCircle = [](const Point& center, Distance radius) {
+        Polygon circle;
+        constexpr int kSegments = 20;
+        circle.reserve(kSegments);
+        for (int i = 0; i < kSegments; ++i) {
+            const double theta = (2.0 * M_PI * i) / kSegments;
+            circle.push_back(Point(center.x() + radius() * std::cos(theta), center.y() + radius() * std::sin(theta)));
+        }
+        PolygonList result;
+        result += circle;
+        return result;
+    };
+
+    auto makeRectangle = [](double minimum_x, double minimum_y, double maximum_x, double maximum_y) {
+        Polygon rectangle;
+        rectangle << Point(minimum_x, minimum_y) << Point(maximum_x, minimum_y)
+                  << Point(maximum_x, maximum_y) << Point(minimum_x, maximum_y);
+        PolygonList result;
+        result += rectangle;
+        return result;
+    };
+
+    auto isBridgeable = [&makeRectangle](PolygonList component, const PolygonList& model_below,
+                                         Distance maximum_length, Distance anchor_width) {
+        if (component.isEmpty() || model_below.isEmpty() || maximum_length <= 0)
+            return false;
+
+        const Point minimum = component.min();
+        const Point maximum = component.max();
+        const double width = maximum.x() - minimum.x();
+        const double height = maximum.y() - minimum.y();
+        const double anchor = qMax(anchor_width(), 1.0);
+
+        auto intersectsModel = [&model_below](PolygonList band) {
+            PolygonList model = model_below;
+            return !(model & band).isEmpty();
+        };
+
+        if (Distance(width) <= maximum_length) {
+            const PolygonList left = makeRectangle(minimum.x() - anchor, minimum.y() - anchor,
+                                                   minimum.x() + anchor, maximum.y() + anchor);
+            const PolygonList right = makeRectangle(maximum.x() - anchor, minimum.y() - anchor,
+                                                    maximum.x() + anchor, maximum.y() + anchor);
+            if (intersectsModel(left) && intersectsModel(right))
+                return true;
+        }
+
+        if (Distance(height) <= maximum_length) {
+            const PolygonList bottom = makeRectangle(minimum.x() - anchor, minimum.y() - anchor,
+                                                     maximum.x() + anchor, minimum.y() + anchor);
+            const PolygonList top = makeRectangle(minimum.x() - anchor, maximum.y() - anchor,
+                                                  maximum.x() + anchor, maximum.y() + anchor);
+            if (intersectsModel(bottom) && intersectsModel(top))
+                return true;
+        }
+        return false;
+    };
+
+    QVector<PolygonList> support_geometry(layer_count);
+    QVector<PolygonList> taper_hole_geometry(layer_count);
+    QVector<PolygonList> taper_start_geometry(layer_count);
+    QVector<PolygonList> interface_geometry(layer_count);
+    QVector<PolygonList> base_geometry(layer_count);
+    QVector<PolygonList> blocker_geometry(layer_count);
+    QVector<PolygonList> enforcer_geometry(layer_count);
+    QVector<OrganicBranch> organic_branches;
+
+    // Settings meshes provide planar manual control.  A local support=false
+    // region is a blocker; support=true is an enforcer at model contact areas.
+    for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
+        for (const SettingsPolygon& polygon : layers[layer_index]->getSettingsPolygons()) {
+            const auto settings = polygon.getSettings();
+            if (!settings->contains(PS::Support::kEnable))
+                continue;
+            if (settings->setting<bool>(PS::Support::kEnable))
+                enforcer_geometry[layer_index] |= polygon;
             else
-                upper_layer_islands += island->getGeometry();
+                blocker_geometry[layer_index] |= polygon;
         }
-        // First iteration, without considering either XY_offset or layer_offset
-        // this will populate vector layers_overhangs[]
-        for (int current_layer = layer_count + partStart - 1; current_layer > partStart; --current_layer) {
-            QSharedPointer<Layer> upper_layer = part->step(current_layer, StepType::kLayer).dynamicCast<Layer>();
-            QSharedPointer<Layer> lower_layer = part->step(current_layer - 1, StepType::kLayer).dynamicCast<Layer>();
-            if (upper_layer->isDirty()) {
-                PolygonList lower_layer_islands;
-                PolygonList overhangs;
+    }
 
-                //! Gather lower layer island geometries
-                for (QSharedPointer<IslandBase> island : lower_layer->getIslands()) {
-                    lower_layer_islands += island->getGeometry();
-                }
+    // Find every surface that exceeds the configured self-supporting angle.
+    // The demand is placed below the surface after the requested vertical gap.
+    for (int upper_index = 1; upper_index < layer_count; ++upper_index) {
+        const auto& upper_layer = layers[upper_index];
+        if (!upper_layer->getSb()->setting<bool>(PS::Support::kEnable) || model_geometry[upper_index].isEmpty())
+            continue;
 
-                // overhangs is to be added to the lower_layer_island
-                // which is then served as the upper_layer_islands for the next layer down
-                overhangs = upper_layer_islands - lower_layer_islands;
-                layers_overhangs.push_front(overhangs);
+        const double vertical_distance =
+            upper_layer->getSlicingPlane().point().distance(layers[upper_index - 1]->getSlicingPlane().point())();
+        const double threshold =
+            qBound(0.0, upper_layer->getSb()->setting<Angle>(PS::Support::kThresholdAngle)(), (89.0 * deg)());
+        const Distance self_supporting_offset(vertical_distance * std::tan(threshold));
 
-                // prepare upper_layer_islands for the next layer down, initialize as lower_layer
-                upper_layer_islands = lower_layer_islands;
+        PolygonList supported_from_below = model_geometry[upper_index - 1];
+        if (!supported_from_below.isEmpty() && self_supporting_offset > 0)
+            supported_from_below = supported_from_below.offset(self_supporting_offset);
 
-                // add overhangs to upper_layer_islands only if overhangs is not null
-                if (overhangs.count() > 0) {
-                    QVector<PolygonList> support_islands = overhangs.splitIntoParts();
+        PolygonList overhang = model_geometry[upper_index] - supported_from_below;
+        const Area minimum_area = upper_layer->getSb()->setting<Area>(PS::Support::kMinArea);
+        overhang = removeSmallAreas(overhang, minimum_area);
 
-                    // Remove support island geometries that are smaller than the minimum support area
-                    // overhangs >= real overhangs considering xy_offset, so no issue on applying the criteria here
-                    for (int i = support_islands.size() - 1; i >= 0; --i) {
-                        if (support_islands[i].netArea() < minimum_support_area)
-                            support_islands.remove(i);
+        const bool suppress_bridges = upper_layer->getSb()->setting<bool>(PS::Support::kBridgeSuppression);
+        const Distance maximum_bridge_length =
+            upper_layer->getSb()->setting<Distance>(PS::Support::kBridgeMaxLength);
+        if (suppress_bridges && maximum_bridge_length > 0 && !overhang.isEmpty()) {
+            PolygonList unsupported_overhang;
+            const Distance anchor_width = upper_layer->getSb()->setting<Distance>(PS::Layer::kBeadWidth);
+            for (PolygonList component : overhang.splitIntoParts(true)) {
+                if (!isBridgeable(component, model_geometry[upper_index - 1], maximum_bridge_length, anchor_width))
+                    unsupported_overhang |= component;
+            }
+            overhang = unsupported_overhang;
+        }
+
+        PolygonList forced_contact = model_geometry[upper_index] & enforcer_geometry[upper_index];
+        overhang |= forced_contact;
+
+        const int layer_offset = qMax(0, upper_layer->getSb()->setting<int>(PS::Support::kLayerOffset));
+        const int target_layer = upper_index - layer_offset - 1;
+        if (target_layer < 0)
+            continue;
+
+        overhang -= blocker_geometry[target_layer];
+        if (overhang.isEmpty())
+            continue;
+
+        support_geometry[target_layer] |= overhang;
+
+        // Record only the layers immediately below this contact as interface
+        // layers.  The masks are clipped against the final support geometry
+        // after tapering and collision avoidance have been applied.
+        const int interface_layers = qMax(0, upper_layer->getSb()->setting<int>(PS::Support::kInterfaceLayers));
+        const Distance interface_expansion =
+            max(Distance(0), upper_layer->getSb()->setting<Distance>(PS::Support::kInterfaceExpansion));
+        const PolygonList interface_contact =
+            interface_expansion > 0 ? overhang.offset(interface_expansion) : overhang;
+        for (int depth = 0; depth < interface_layers && target_layer - depth >= 0; ++depth)
+            interface_geometry[target_layer - depth] |= interface_contact;
+
+        // Anchor the taper directly below the dense interface.  With no
+        // interface configured, the taper begins at the top support layer.
+        const int taper_start_layer = target_layer - interface_layers;
+        if (taper_start_layer >= 0)
+            taper_start_geometry[taper_start_layer] |= interface_contact;
+
+        if (upper_layer->getSb()->setting<int>(PS::Support::kStructure) == 1) {
+            Distance diameter = upper_layer->getSb()->setting<Distance>(PS::Support::kOrganicBranchDiameter);
+            const Distance bead_width = upper_layer->getSb()->setting<Distance>(PS::Layer::kBeadWidth);
+            if (diameter <= 0)
+                diameter = bead_width * 3.0;
+
+            Distance spacing = upper_layer->getSb()->setting<Distance>(PS::Support::kOrganicBranchSpacing);
+            if (spacing <= 0)
+                spacing = max(diameter * 4.0, upper_layer->getSb()->setting<Distance>(PS::Support::kLineSpacing) * 4.0);
+            if (spacing <= 0)
+                spacing = diameter * 2.0;
+
+            Angle branch_angle = upper_layer->getSb()->setting<Angle>(PS::Support::kOrganicBranchAngle);
+            if (branch_angle <= 0)
+                branch_angle = 25.0 * deg;
+
+            for (PolygonList contact_area : overhang.splitIntoParts(true)) {
+                Point root = contact_area.boundingRectCenter();
+                if (!contact_area.inside(root, true))
+                    root = contact_area.first().first();
+
+                QVector<Point> contacts;
+                const Point minimum = contact_area.min();
+                const Point maximum = contact_area.max();
+                for (double x = minimum.x() + spacing() / 2.0; x < maximum.x(); x += spacing()) {
+                    for (double y = minimum.y() + spacing() / 2.0; y < maximum.y(); y += spacing()) {
+                        Point candidate(x, y);
+                        if (contact_area.inside(candidate, true))
+                            contacts.push_back(candidate);
                     }
+                }
+                if (contacts.isEmpty())
+                    contacts.push_back(root);
 
-                    for (const PolygonList& island : support_islands) {
-                        upper_layer_islands += island;
-                    }
+                for (const Point& contact : contacts)
+                    organic_branches.push_back({target_layer, contact, root, diameter, branch_angle});
+            }
+        }
+    }
+
+    // Carry each demand down until it lands on model geometry or reaches the
+    // build plate.  The outer envelope remains vertical for stability.  The
+    // tapered interior is calculated separately after collision avoidance so
+    // its material can grow inward from the supported outer tube wall.
+    for (int layer_index = layer_count - 2; layer_index >= 0; --layer_index) {
+        if (!support_geometry[layer_index + 1].isEmpty())
+            support_geometry[layer_index] |= support_geometry[layer_index + 1];
+
+        if (!layers[layer_index]->getSb()->setting<bool>(PS::Support::kEnable)) {
+            support_geometry[layer_index].clear();
+            continue;
+        }
+
+        const Distance xy_distance =
+            max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
+        if (!model_geometry[layer_index].isEmpty()) {
+            PolygonList clearance = model_geometry[layer_index];
+            if (xy_distance > 0)
+                clearance = clearance.offset(xy_distance);
+            support_geometry[layer_index] -= clearance;
+        }
+    }
+
+    // Organic mode replaces the column envelope with round branches that
+    // converge toward a shared trunk while remaining inside the collision-free
+    // support envelope calculated above.
+    const bool organic = !organic_branches.isEmpty();
+    if (organic) {
+        QVector<PolygonList> organic_geometry(layer_count);
+        for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
+            for (const OrganicBranch& branch : organic_branches) {
+                if (layer_index > branch.target_layer || support_geometry[layer_index].isEmpty())
+                    continue;
+
+                const double vertical_distance = layers[branch.target_layer]->getSlicingPlane().point().distance(
+                    layers[layer_index]->getSlicingPlane().point())();
+                const double dx = branch.root.x() - branch.contact.x();
+                const double dy = branch.root.y() - branch.contact.y();
+                const double distance_to_root = std::hypot(dx, dy);
+                const double max_shift = vertical_distance * std::tan(qBound(0.0, branch.angle(), (60.0 * deg)()));
+                const double shift = qMin(distance_to_root, max_shift);
+                const double ratio = distance_to_root > 0.0 ? shift / distance_to_root : 0.0;
+                Point center(branch.contact.x() + dx * ratio, branch.contact.y() + dy * ratio);
+
+                // Branches widen gently toward the bed and naturally merge when
+                // their circular cross-sections overlap.
+                const Distance radius =
+                    branch.diameter / 2.0 + Distance(vertical_distance * std::tan(branch.angle() * 0.2));
+                organic_geometry[layer_index] |= makeCircle(center, radius);
+            }
+
+            if (!organic_geometry[layer_index].isEmpty()) {
+                const Distance envelope_margin =
+                    max(layers[layer_index]->getSb()->setting<Distance>(PS::Support::kOrganicBranchDiameter),
+                        layers[layer_index]->getSb()->setting<Distance>(PS::Layer::kBeadWidth) * 3.0);
+                PolygonList envelope = support_geometry[layer_index].offset(envelope_margin);
+                organic_geometry[layer_index] &= envelope;
+            }
+        }
+        support_geometry = organic_geometry;
+    }
+
+    // Dense interfaces may extend a short distance beyond the sparse support
+    // envelope.  Clip that expansion against blockers and model clearance, but
+    // do not carry it down the full support column.
+    for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
+        support_geometry[layer_index] |= interface_geometry[layer_index];
+
+        PolygonList forbidden = blocker_geometry[layer_index];
+        const Distance xy_distance =
+            max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
+        if (!model_geometry[layer_index].isEmpty()) {
+            PolygonList model_clearance = model_geometry[layer_index];
+            if (xy_distance > 0)
+                model_clearance = model_clearance.offset(xy_distance);
+            forbidden |= model_clearance;
+        }
+        support_geometry[layer_index] -= forbidden;
+        interface_geometry[layer_index] -= forbidden;
+    }
+
+    // Add an optional dense, expanded foot to support structures that reach
+    // the build plate.  The footprint remains constant through the configured
+    // base layers and is clipped with the same collision rules as support.
+    const int base_layers = qMax(0, layers[0]->getSb()->setting<int>(PS::Support::kBaseLayers));
+    if (base_layers > 0 && !support_geometry[0].isEmpty()) {
+        const Distance base_expansion =
+            max(Distance(0), layers[0]->getSb()->setting<Distance>(PS::Support::kBaseExpansion));
+        PolygonList base_footprint = support_geometry[0];
+        if (base_expansion > 0)
+            base_footprint = base_footprint.offset(base_expansion);
+
+        for (int layer_index = 0; layer_index < qMin(layer_count, base_layers); ++layer_index) {
+            PolygonList layer_base = base_footprint;
+            layer_base -= blocker_geometry[layer_index];
+
+            if (!model_geometry[layer_index].isEmpty()) {
+                const Distance xy_distance =
+                    max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
+                PolygonList model_clearance = model_geometry[layer_index];
+                if (xy_distance > 0)
+                    model_clearance = model_clearance.offset(xy_distance);
+                layer_base -= model_clearance;
+            }
+
+            support_geometry[layer_index] |= layer_base;
+            base_geometry[layer_index] |= layer_base;
+        }
+    }
+
+    // Validate support from the build plate upward.  In Everywhere mode a
+    // component may also land on model geometry; Build Plate Only deliberately
+    // excludes that foundation.  Invalid components are removed before path
+    // generation so disconnected islands cannot silently print in midair.
+    const int placement = layers[0]->getSb()->setting<int>(PS::Support::kPlacement);
+    const bool build_plate_only = placement == 1;
+    const bool validate_support = layers[0]->getSb()->setting<bool>(PS::Support::kValidation);
+    if (validate_support || build_plate_only) {
+        const double minimum_overlap =
+            qBound(0.0, layers[0]->getSb()->setting<double>(PS::Support::kValidationMinOverlap) / 100.0, 1.0);
+        const Area minimum_base_area =
+            validate_support ? layers[0]->getSb()->setting<Area>(PS::Support::kValidationMinBaseArea) : Area(0);
+        QVector<PolygonList> valid_support(layer_count);
+        int rejected_components = 0;
+
+        for (PolygonList component : support_geometry[0].splitIntoParts(true)) {
+            if (minimum_base_area > 0 && component.netArea() < minimum_base_area) {
+                ++rejected_components;
+                continue;
+            }
+            valid_support[0] |= component;
+        }
+
+        for (int layer_index = 1; layer_index < layer_count; ++layer_index) {
+            PolygonList foundation = valid_support[layer_index - 1];
+            if (!build_plate_only)
+                foundation |= model_geometry[layer_index - 1];
+
+            for (PolygonList component : support_geometry[layer_index].splitIntoParts(true)) {
+                PolygonList overlap_source = component;
+                PolygonList overlap = overlap_source & foundation;
+                const double component_area = component.netArea()();
+                const double overlap_ratio =
+                    component_area > 0.0 ? qMax(0.0, overlap.netArea()() / component_area) : 0.0;
+                if (overlap.isEmpty() || overlap_ratio < minimum_overlap) {
+                    ++rejected_components;
+                    continue;
                 }
-                // consider tapering
-                if (taper > 0) {
-                    upper_layer_islands = upper_layer_islands.offset(-taper);
-                }
+                valid_support[layer_index] |= component;
             }
         }
 
-        // Second top down iteration, assign already calculated overhangs[] to each layer
-        // layer_offset determines which item is used: overhangs[layerId + layer_offset]
-        // Also consider XY_offset by deleting any overlap between the assigned overhangs and the layer
-        // Apply the modified overhangs to the layer
-        for (int current_layer = layer_count + partStart - 1; current_layer > partStart; --current_layer) {
-            QSharedPointer<Layer> upper_layer = part->step(current_layer, StepType::kLayer).dynamicCast<Layer>();
-            QSharedPointer<Layer> lower_layer = part->step(current_layer - 1, StepType::kLayer).dynamicCast<Layer>();
-            if (upper_layer->isDirty()) {
-                // apply layers_overhangs[] to the lower layer, considering layer_offset
-                // create support islands and add them to lower_layer only if layers_overhangs[layer_offset] is not null
-                int overhangIndex = current_layer - 1 + layer_offset;
+        support_geometry = valid_support;
+        if (rejected_components > 0 && validate_support)
+            qWarning() << "Support validation removed" << rejected_components
+                       << "disconnected or insufficiently supported components";
+    }
 
-                if ((overhangIndex < layer_count - 1) && (layers_overhangs[overhangIndex].size() > 0)) {
-                    // delete the overlap of layers_overhangs[layer_offset] and lower_layer_islands_offset
-                    PolygonList lower_layer_islands_offset;
-                    for (QSharedPointer<IslandBase> island : lower_layer->getIslands()) {
-                        lower_layer_islands_offset += island->getGeometry().offset(horizontal_offset);
-                    }
-                    PolygonList overlap = layers_overhangs[overhangIndex] & lower_layer_islands_offset;
-                    layers_overhangs[overhangIndex] = layers_overhangs[overhangIndex] - overlap;
+    auto makeTaperSeed = [](const PolygonList& geometry, Distance growth) {
+        PolygonList seeds;
+        if (geometry.isEmpty() || growth <= 0)
+            return seeds;
 
-                    QVector<PolygonList> support_islands = layers_overhangs[overhangIndex].splitIntoParts();
+        // Erode each component to its innermost region, then back off by one
+        // layer of taper growth.  This creates a small central void immediately
+        // below the interface without assuming that the support is convex or
+        // that its bounding-box center lies inside it.
+        for (PolygonList component : geometry.splitIntoParts(true)) {
+            const Point minimum = component.min();
+            const Point maximum = component.max();
+            double lower_inset = 0.0;
+            double upper_inset = std::hypot(maximum.x() - minimum.x(), maximum.y() - minimum.y());
 
-                    // Remove support island geometries that are smaller than the minimum support area
-                    for (int i = support_islands.size() - 1; i >= 0; --i) {
-                        if (support_islands[i].netArea() < minimum_support_area)
-                            support_islands.remove(i);
-                    }
-
-                    if (support_islands.size() > 0) {
-                        // if upper_layer == layer #1 of the part, lower_layer, if needed as the support underneath the
-                        // part, is still empty SettingsBase must come from upper_layer Furthermore, if two or more
-                        // support layers are underneath the part, upper_layer can be a newly added support layer
-                        // without a kPolymer type island
-                        QSharedPointer<SettingsBase> currentLocalSettings;
-                        if (lower_layer->getIslands().count() > 0)
-                            currentLocalSettings = QSharedPointer<SettingsBase>::create(
-                                *lower_layer->getIslands(IslandType::kPolymer)[0]->getSb());
-                        else {
-                            if (upper_layer->getIslands(IslandType::kPolymer).count() > 0)
-                                currentLocalSettings = QSharedPointer<SettingsBase>::create(
-                                    *upper_layer->getIslands(IslandType::kPolymer)[0]->getSb());
-                            else if (upper_layer->getIslands(IslandType::kSupport).count() > 0)
-                                currentLocalSettings = QSharedPointer<SettingsBase>::create(
-                                    *upper_layer->getIslands(IslandType::kSupport)[0]->getSb());
-                            else {
-                                qDebug() << "Error: cannot get SettingsBase from 1. lower_layer kPolymer island, 2. "
-                                            "upper_layer kPolymer island, 3. upper_layer kSupport island";
-                                continue;
-                            }
-                        }
-
-                        // Create support islands and add them to the lower layer
-                        for (const PolygonList& island : support_islands) {
-                            QSharedPointer<SupportIsland> support_island = QSharedPointer<SupportIsland>::create(
-                                island, currentLocalSettings, QVector<SettingsPolygon>());
-                            lower_layer->addIsland(IslandType::kSupport, support_island);
-                        }
-                    }
-                }
+            for (int iteration = 0; iteration < 32; ++iteration) {
+                const double inset = (lower_inset + upper_inset) / 2.0;
+                if (component.offset(-Distance(inset)).isEmpty())
+                    upper_inset = inset;
+                else
+                    lower_inset = inset;
             }
+
+            const Distance seed_inset(qMax(0.0, lower_inset - growth()));
+            seeds |= component.offset(-seed_inset);
         }
+        return seeds;
+    };
+
+    // A conventional tapered support is represented by its empty interior,
+    // not by a detached center core.  Start with a small void immediately below
+    // each interface and expand it while moving downward.  Once the void
+    // reaches the minimum tube wall it remains at that size, keeping long lower
+    // sections hollow instead of finishing the taper early and printing solid.
+    if (!organic) {
+        for (int layer_index = layer_count - 1; layer_index >= 0; --layer_index) {
+            const auto& settings = layers[layer_index]->getSb();
+            const bool hollow_taper = settings->setting<bool>(PS::Support::kTaper) &&
+                                      settings->setting<int>(PS::Support::kStructure) == 0;
+            if (!hollow_taper || support_geometry[layer_index].isEmpty())
+                continue;
+
+            const Distance bead_width = settings->setting<Distance>(PS::Layer::kBeadWidth);
+            const int wall_contours = qMax(1, settings->setting<int>(PS::Support::kTaperWallContours));
+            const Distance wall_width = bead_width * wall_contours;
+            const PolygonList maximum_hole = support_geometry[layer_index].offset(-wall_width);
+            if (maximum_hole.isEmpty())
+                continue;
+
+            PolygonList allowed_hole = maximum_hole;
+            PolygonList dense_mask = interface_geometry[layer_index];
+            dense_mask |= base_geometry[layer_index];
+            allowed_hole -= support_geometry[layer_index] & dense_mask;
+            if (allowed_hole.isEmpty())
+                continue;
+
+            Distance taper_step(0);
+            if (layer_index + 1 < layer_count) {
+                const double vertical_distance = layers[layer_index + 1]->getSlicingPlane().point().distance(
+                    layers[layer_index]->getSlicingPlane().point())();
+                const double taper_angle =
+                    qBound(0.0, settings->setting<Angle>(PS::Support::kTaperAngle)(), (89.0 * deg)());
+                taper_step = Distance(vertical_distance * std::tan(taper_angle));
+            }
+
+            PolygonList holes;
+            if (layer_index + 1 < layer_count && !taper_hole_geometry[layer_index + 1].isEmpty()) {
+                PolygonList propagated_holes = taper_hole_geometry[layer_index + 1];
+                if (taper_step > 0)
+                    propagated_holes = propagated_holes.offset(taper_step);
+                propagated_holes &= allowed_hole;
+                holes |= propagated_holes;
+            }
+
+            PolygonList taper_starts = taper_start_geometry[layer_index];
+            taper_starts &= allowed_hole;
+            holes |= makeTaperSeed(taper_starts, taper_step);
+            holes &= allowed_hole;
+            taper_hole_geometry[layer_index] = holes;
+        }
+    }
+
+    for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
+        QVector<QSharedPointer<IslandBase>> support_islands;
+        const PolygonList interface_dense_geometry = support_geometry[layer_index] & interface_geometry[layer_index];
+        PolygonList base_dense_geometry = support_geometry[layer_index] & base_geometry[layer_index];
+        base_dense_geometry -= interface_dense_geometry;
+        PolygonList dense_geometry = interface_dense_geometry;
+        dense_geometry |= base_dense_geometry;
+        PolygonList tube_wall_geometry;
+        PolygonList sparse_geometry;
+
+        const bool hollow_taper = !organic && layers[layer_index]->getSb()->setting<bool>(PS::Support::kTaper) &&
+                                  layers[layer_index]->getSb()->setting<int>(PS::Support::kStructure) == 0;
+        if (hollow_taper) {
+            const int wall_contours =
+                qMax(1, layers[layer_index]->getSb()->setting<int>(PS::Support::kTaperWallContours));
+            const Distance wall_width =
+                layers[layer_index]->getSb()->setting<Distance>(PS::Layer::kBeadWidth) * wall_contours;
+            const PolygonList tube_interior = support_geometry[layer_index].offset(-wall_width);
+
+            tube_wall_geometry = support_geometry[layer_index] - tube_interior;
+            tube_wall_geometry -= dense_geometry;
+
+            sparse_geometry = support_geometry[layer_index] - taper_hole_geometry[layer_index];
+            sparse_geometry -= tube_wall_geometry;
+            sparse_geometry -= dense_geometry;
+        }
+        else {
+            sparse_geometry = support_geometry[layer_index] - dense_geometry;
+        }
+
+        for (const PolygonList& geometry : sparse_geometry.splitIntoParts(true)) {
+            auto settings = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
+            settings->setSetting(PS::Support::kInterfaceRegion, false);
+            settings->setSetting(PS::Support::kBaseRegion, false);
+            settings->setSetting(PS::Support::kTubeWallRegion, false);
+            support_islands.push_back(
+                QSharedPointer<SupportIsland>::create(geometry, settings, layers[layer_index]->getSettingsPolygons()));
+        }
+
+        for (const PolygonList& geometry : tube_wall_geometry.splitIntoParts(true)) {
+            auto settings = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
+            settings->setSetting(PS::Support::kInterfaceRegion, false);
+            settings->setSetting(PS::Support::kBaseRegion, false);
+            settings->setSetting(PS::Support::kTubeWallRegion, true);
+            settings->setSetting(PS::Support::kMinInfillArea, Area(0));
+            support_islands.push_back(
+                QSharedPointer<SupportIsland>::create(geometry, settings, layers[layer_index]->getSettingsPolygons()));
+        }
+
+        for (const PolygonList& geometry : base_dense_geometry.splitIntoParts(true)) {
+            auto settings = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
+            settings->setSetting(PS::Support::kInterfaceRegion, false);
+            settings->setSetting(PS::Support::kBaseRegion, true);
+            settings->setSetting(PS::Support::kTubeWallRegion, false);
+            settings->setSetting(PS::Support::kPattern, static_cast<int>(InfillPatterns::kLines));
+            settings->setSetting(PS::Support::kLineSpacing,
+                                 settings->setting<Distance>(PS::Layer::kBeadWidth));
+            settings->setSetting(PS::Support::kMinInfillArea, Area(0));
+            support_islands.push_back(
+                QSharedPointer<SupportIsland>::create(geometry, settings, layers[layer_index]->getSettingsPolygons()));
+        }
+
+        for (const PolygonList& geometry : interface_dense_geometry.splitIntoParts(true)) {
+            auto settings = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
+            Distance interface_spacing = settings->setting<Distance>(PS::Support::kInterfaceLineSpacing);
+            if (interface_spacing <= 0)
+                interface_spacing = settings->setting<Distance>(PS::Layer::kBeadWidth);
+
+            settings->setSetting(PS::Support::kInterfaceRegion, true);
+            settings->setSetting(PS::Support::kBaseRegion, false);
+            settings->setSetting(PS::Support::kTubeWallRegion, false);
+            settings->setSetting(PS::Support::kPattern, static_cast<int>(InfillPatterns::kLines));
+            settings->setSetting(PS::Support::kLineSpacing, interface_spacing);
+            settings->setSetting(PS::Support::kMinInfillArea, Area(0));
+            support_islands.push_back(
+                QSharedPointer<SupportIsland>::create(geometry, settings, layers[layer_index]->getSettingsPolygons()));
+        }
+        layers[layer_index]->updateIslands(IslandType::kSupport, support_islands);
     }
 }
 

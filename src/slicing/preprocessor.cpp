@@ -15,7 +15,7 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
-Preprocessor::Preprocessor(bool use_cgal_cross_section) {
+Preprocessor::Preprocessor(bool use_cgal_cross_section, bool include_build_plate_gap) {
     // Fetch and sort parts
     m_parts = {
         SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild),
@@ -24,6 +24,7 @@ Preprocessor::Preprocessor(bool use_cgal_cross_section) {
     };
 
     m_use_cgal_cross_section = use_cgal_cross_section;
+    m_include_build_plate_gap = include_build_plate_gap;
 }
 
 void Preprocessor::processAll() {
@@ -66,7 +67,7 @@ void Preprocessor::processAll() {
             part_meta.part_start = SlicingUtilities::GetPartStart(part, part_meta.steps_processed);
 
             BufferedSlicer slicer(mesh, part_sb, m_parts.settings_parts, part->getSettingsRanges(), 0, 0,
-                                  m_use_cgal_cross_section);
+                                  m_use_cgal_cross_section, m_include_build_plate_gap);
             QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta = nullptr;
             int last_step_count = 0;
             do {
