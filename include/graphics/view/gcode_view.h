@@ -203,6 +203,11 @@ class GCodeView : public BaseView {
     //! \return Segment line number.
     uint pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeObject> gog);
 
+    //! \brief Picks the visible G-code segment, preferring the true-width overlay when it is active.
+    //! \param mouse_ndc_pos: Mouse normalized location.
+    //! \return Segment line number.
+    uint pickVisibleSegment(const QPointF& mouse_ndc_pos);
+
     //! \brief Refreshes camera-dependent segment info display.
     void updateSegmentInfoViewMatrix();
 
