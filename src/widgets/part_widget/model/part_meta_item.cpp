@@ -216,5 +216,19 @@ uint PartMetaItem::scaleUnitIndex() { return m_scale_unit_index; }
 
 QSharedPointer<Part> PartMetaItem::part() { return m_part; }
 
+int PartMetaItem::instanceCount() {
+    if (m_model.isNull())
+        return 1;
+
+    return m_model->instanceCount(this->sharedFromThis());
+}
+
+void PartMetaItem::setInstanceCount(int count) {
+    if (m_model.isNull())
+        return;
+
+    m_model->setInstanceCount(this->sharedFromThis(), count);
+}
+
 void PartMetaItem::setModel(QSharedPointer<PartMetaModel> m) { m_model = m; }
 } // namespace ORNL

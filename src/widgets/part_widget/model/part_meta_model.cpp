@@ -1,6 +1,10 @@
 #include "widgets/part_widget/model/part_meta_model.h"
 
+#include <algorithm>
+#include <limits>
+
 #include <QStack>
+#include <QStringList>
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qmap.h>
@@ -16,6 +20,100 @@
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
 
 namespace ORNL {
+namespace {
+const QString kCopySuffix = "_copy";
+
+QString instanceBaseName(const QString& name) {
+    const int copy_index = name.lastIndexOf(kCopySuffix);
+    if (copy_index < 0)
+        return name;
+
+    const QString suffix = name.mid(copy_index + kCopySuffix.size());
+    if (suffix.isEmpty())
+        return name.left(copy_index);
+
+    if (suffix.startsWith("_")) {
+        bool suffix_is_number = false;
+        suffix.mid(1).toUInt(&suffix_is_number);
+        if (suffix_is_number)
+            return name.left(copy_index);
+    }
+
+    return name;
+}
+
+bool isInstanceName(const QString& name, const QString& base_name) {
+    if (name == base_name)
+        return true;
+
+    const QString copy_name = base_name + kCopySuffix;
+    if (name == copy_name)
+        return true;
+
+    const QString numbered_copy_prefix = copy_name + "_";
+    if (!name.startsWith(numbered_copy_prefix))
+        return false;
+
+    bool suffix_is_number = false;
+    name.mid(numbered_copy_prefix.size()).toUInt(&suffix_is_number);
+    return suffix_is_number;
+}
+
+uint instanceSortIndex(const QString& name, const QString& base_name) {
+    if (name == base_name)
+        return 0;
+
+    const QString copy_name = base_name + kCopySuffix;
+    if (name == copy_name)
+        return 1;
+
+    const QString numbered_copy_prefix = copy_name + "_";
+    if (name.startsWith(numbered_copy_prefix)) {
+        bool suffix_is_number = false;
+        const uint suffix = name.mid(numbered_copy_prefix.size()).toUInt(&suffix_is_number);
+        if (suffix_is_number)
+            return suffix + 2;
+    }
+
+    return std::numeric_limits<uint>::max();
+}
+
+QString uniqueInstanceName(const QString& base_name, const QStringList& names) {
+    if (!names.contains(base_name))
+        return base_name;
+
+    const QString first_copy_name = base_name + kCopySuffix;
+    if (!names.contains(first_copy_name))
+        return first_copy_name;
+
+    uint count = 1;
+    QString name;
+    do {
+        name = first_copy_name + "_" + QString::number(count);
+        ++count;
+    } while (names.contains(name));
+
+    return name;
+}
+
+void setPartInstanceName(QSharedPointer<Part> part, const QString& name) {
+    if (part.isNull())
+        return;
+
+    part->setName(name);
+    if (!part->rootMesh().isNull())
+        part->rootMesh()->setName(name);
+}
+
+QSharedPointer<Part> copyPartInstance(QSharedPointer<Part> source, const QString& name) {
+    QSharedPointer<Part> copy = QSharedPointer<Part>::create(source);
+    copy->setTransformation(QMatrix4x4());
+    setPartInstanceName(copy, name);
+
+    return copy;
+}
+} // namespace
+
 PartMetaModel::PartMetaModel() {
     // NOP
 }
@@ -173,6 +271,7 @@ void PartMetaModel::copySelection() {
             p->setName(org_name + "_" + QString::number(count));
             count++;
         }
+        setPartInstanceName(p, p->name());
 
         result[pm] = p;
 
@@ -188,6 +287,70 @@ void PartMetaModel::copySelection() {
             continue;
         this->newItem(p);
     }
+}
+
+int PartMetaModel::instanceCount(QSharedPointer<PartMetaItem> pm) { return this->instanceItems(pm).size(); }
+
+void PartMetaModel::setInstanceCount(QSharedPointer<PartMetaItem> pm, int count) {
+    if (pm.isNull() || count < 1)
+        return;
+
+    QList<QSharedPointer<PartMetaItem>> instances = this->instanceItems(pm);
+    const QString base_name = instanceBaseName(pm->part()->name());
+
+    while (instances.size() > count) {
+        int remove_index = -1;
+        for (int i = instances.size() - 1; i >= 0; --i) {
+            if (instances.at(i) != pm) {
+                remove_index = i;
+                break;
+            }
+        }
+
+        if (remove_index < 0)
+            break;
+
+        QSharedPointer<PartMetaItem> item = instances.takeAt(remove_index);
+        this->removeItem(item);
+    }
+
+    if (instances.size() >= count)
+        return;
+
+    QStringList namelist;
+    for (auto& p : m_pointer_lookup.keys()) {
+        namelist.append(p->name());
+    }
+
+    while (instances.size() < count) {
+        const QString name = uniqueInstanceName(base_name, namelist);
+        QSharedPointer<Part> copy = copyPartInstance(pm->part(), name);
+
+        CSM->addPart(copy, false);
+        setPartInstanceName(copy, copy->name());
+        namelist.append(copy->name());
+        instances.append(this->newItem(copy));
+    }
+}
+
+QList<QSharedPointer<PartMetaItem>> PartMetaModel::instanceItems(QSharedPointer<PartMetaItem> pm) {
+    QList<QSharedPointer<PartMetaItem>> instances;
+    if (pm.isNull())
+        return instances;
+
+    const QString base_name = instanceBaseName(pm->part()->name());
+    for (auto& item : m_pointer_lookup.values()) {
+        if (isInstanceName(item->part()->name(), base_name))
+            instances.append(item);
+    }
+
+    std::sort(instances.begin(), instances.end(),
+              [base_name](const QSharedPointer<PartMetaItem>& lhs, const QSharedPointer<PartMetaItem>& rhs) {
+                  return instanceSortIndex(lhs->part()->name(), base_name) <
+                         instanceSortIndex(rhs->part()->name(), base_name);
+              });
+
+    return instances;
 }
 
 void PartMetaModel::itemUpdated(PartMetaItem::PartMetaUpdateType type) {
