@@ -305,6 +305,18 @@ static GcodeMeta RadialMeta = {GcodeSyntax::kRadial3Plus2,
                                mm / s / s,
                                rev / minute,
                                ".gcode"};
+//! @brief Metadata for Arc Specialties radial gcode.
+static GcodeMeta ArcSpecialtiesMeta = {GcodeSyntax::kArcSpecialties,
+                                       QString(";"), // starting_delim
+                                       QString(),    // ending_delim
+                                       mm,
+                                       s,
+                                       degree,
+                                       g,
+                                       mm / minute,
+                                       mm / s / s,
+                                       rev / minute,
+                                       ".nc"};
 static QHash<int, GcodeMeta> createMapping() {
     QHash<int, GcodeMeta> result;
     result.insert((int)GcodeSyntax::kAML3D, AML3DMeta);
@@ -338,6 +350,7 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kAdamantine, AdamantineMeta);
     result.insert((int)GcodeSyntax::kORNLMetric, ORNLMetricMeta);
     result.insert((int)GcodeSyntax::kRadial3Plus2, RadialMeta);
+    result.insert((int)GcodeSyntax::kArcSpecialties, ArcSpecialtiesMeta);
     return result;
 }
 
