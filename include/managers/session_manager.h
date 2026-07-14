@@ -302,6 +302,9 @@ class SessionManager : public QObject {
     //! \brief default slicer is planar
     SlicerType m_slicer_type = SlicerType::kPlanarSlice;
 
+    //! \brief active cylindrical path type when cylindrical slicing is selected
+    CylindricalPathType m_cylindrical_path_type = CylindricalPathType::kRadial;
+
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.
     QMutex m_load_mutex;

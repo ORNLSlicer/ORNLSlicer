@@ -184,11 +184,12 @@ class SettingBar : public QWidget {
     SettingTab* getTab(QString major, QString minor);
 
     /*!
-     * \brief Keeps cylindrical slicing workflows and radial-capable syntax paired when either setting enters that mode.
+     * \brief Keeps cylindrical slicing workflows and cylindrical-capable syntax paired when either setting enters that
+     * mode.
      * \param setting_key Setting that triggered the sync check.
      * \return Additional setting keys changed by the sync.
      */
-    QStringList syncRadialSlicingSettings(const QString& setting_key);
+    QStringList syncCylindricalSlicingSettings(const QString& setting_key);
 
     /*!
      * \brief Reloads the visible setting row for a programmatically updated setting.

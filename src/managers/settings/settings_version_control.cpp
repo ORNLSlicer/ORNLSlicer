@@ -22,9 +22,16 @@ constexpr int kArcSpecialtiesSyntax = 31;
 constexpr int kLegacyArcSpecialtiesSyntax = 32;
 constexpr int kPlanarSlicer = 0;
 constexpr int kImageSlicer = 1;
+constexpr int kLegacyRadialSlicer = 2;
+constexpr int kLegacyHelicalSlicer = 3;
+constexpr int kCylindricalSlicer = 2;
+constexpr int kRadialPathType = 0;
+constexpr int kHelicalPathType = 1;
+constexpr int kClipBoundaryHandling = 0;
 constexpr int kV3LegacySlicerType2 = 2;
 constexpr int kV3ImageSlicer = 3;
 constexpr int kAllPerimeterBoundaries = 0;
+const std::string kLegacyHelicalClippingMethod = "helical_clipping_method";
 
 constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     0,                 // Beam
@@ -78,7 +85,7 @@ constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
     kPlanarSlicer, // Polymer
     kPlanarSlicer, // Legacy slicer type 1 removed
     kPlanarSlicer, // Legacy slicer type 2 removed
-    kImageSlicer    // Image
+    kImageSlicer   // Image
 };
 
 constexpr std::array<int, 7> kSkinPatternV4ToV5 = {
@@ -187,6 +194,50 @@ void migrateRemovedRadialSyntax(fifojson& settings_group) {
     if (setting_value == kRemovedRadialSyntax || setting_value == kLegacyArcSpecialtiesSyntax)
         setting.value() = kArcSpecialtiesSyntax;
 }
+
+void migrateCylindricalSlicingSettings(fifojson& settings_group) {
+    if (!settings_group.is_object())
+        return;
+
+    const std::string slicer_type_key = ORNL::Constants::ProfileSettings::Slicing::kSlicerType.toStdString();
+    const std::string path_type_key = ORNL::Constants::ProfileSettings::Slicing::kCylindricalPathType.toStdString();
+    const std::string radial_boundary_key =
+        ORNL::Constants::ProfileSettings::Slicing::kRadialBoundaryHandling.toStdString();
+    const std::string helical_boundary_key =
+        ORNL::Constants::ProfileSettings::Slicing::kHelicalBoundaryHandling.toStdString();
+
+    auto slicer_type = settings_group.find(slicer_type_key);
+    const bool has_slicer_type = slicer_type != settings_group.end() && slicer_type.value().is_number_integer();
+    const int old_slicer_type = has_slicer_type ? slicer_type.value().get<int>() : kPlanarSlicer;
+
+    if (old_slicer_type == kLegacyRadialSlicer) {
+        slicer_type.value() = kCylindricalSlicer;
+        settings_group[path_type_key] = kRadialPathType;
+    }
+    else if (old_slicer_type == kLegacyHelicalSlicer) {
+        slicer_type.value() = kCylindricalSlicer;
+        settings_group[path_type_key] = kHelicalPathType;
+
+        int helical_boundary = kClipBoundaryHandling;
+        auto radial_boundary = settings_group.find(radial_boundary_key);
+        const bool old_boundary_was_clip = radial_boundary == settings_group.end() ||
+                                           !radial_boundary.value().is_number_integer() ||
+                                           radial_boundary.value().get<int>() == kClipBoundaryHandling;
+        auto legacy_helical_boundary = settings_group.find(kLegacyHelicalClippingMethod);
+        if (old_boundary_was_clip && legacy_helical_boundary != settings_group.end() &&
+            legacy_helical_boundary.value().is_number_integer()) {
+            helical_boundary = legacy_helical_boundary.value().get<int>();
+        }
+        settings_group[helical_boundary_key] = helical_boundary;
+    }
+    else if (settings_group.find(path_type_key) == settings_group.end()) {
+        auto legacy_helical_boundary = settings_group.find(kLegacyHelicalClippingMethod);
+        if (legacy_helical_boundary != settings_group.end() && legacy_helical_boundary.value().is_number_integer())
+            settings_group[helical_boundary_key] = legacy_helical_boundary.value();
+    }
+
+    settings_group.erase(kLegacyHelicalClippingMethod);
+}
 } // namespace
 
 namespace ORNL {
@@ -205,6 +256,8 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
         pre_6_0To6_0(version, settings);
     if (version < 7)
         pre_7_0To7_0(version, settings);
+    if (version < 8)
+        pre_8_0To8_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -371,6 +424,22 @@ void SettingsVersionControl::pre_7_0To7_0(double& version, fifojson& settings) {
     }
 
     version = 7.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_8_0To8_0(double& version, fifojson& settings) {
+    QString dt = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 8.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value())
+            migrateCylindricalSlicingSettings(settings_group);
+    }
+
+    version = 8.0;
     settings = new_format;
 }
 } // namespace ORNL

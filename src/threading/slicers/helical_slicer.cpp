@@ -108,46 +108,6 @@ bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min
     return has_bounds;
 }
 
-//! @brief Returns the total length of all printable polyline fragments.
-double totalPolylineLength(const QVector<Polyline>& polylines) {
-    double total_length = 0.0;
-    for (const Polyline& polyline : polylines) {
-        if (polyline.size() > 1) {
-            total_length += polyline.length()();
-        }
-    }
-    return total_length;
-}
-
-//! @brief Returns whether model clipping removed any meaningful portion of the helical path.
-bool crossesModelBoundary(const Polyline& helix, const QVector<Polyline>& clipped_lines) {
-    if (clipped_lines.isEmpty() || helix.size() < 2) {
-        return false;
-    }
-
-    const double helix_length = helix.length()();
-    const double clipped_length = totalPolylineLength(clipped_lines);
-    return clipped_length < helix_length - kMinPathSegmentLength();
-}
-
-//! @brief Applies the configured boundary policy to a candidate helical path.
-QVector<Polyline> applyBoundaryHandling(const Polyline& helix, const QVector<Polyline>& clipped_lines,
-                                        RadialBoundaryHandling handling) {
-    if (clipped_lines.isEmpty()) {
-        return {};
-    }
-
-    switch (handling) {
-        case RadialBoundaryHandling::kKeepBoundaryCrossingPath:
-            return {helix};
-        case RadialBoundaryHandling::kDiscardBoundaryCrossingPath:
-            return crossesModelBoundary(helix, clipped_lines) ? QVector<Polyline>() : clipped_lines;
-        case RadialBoundaryHandling::kClipToModel:
-        default:
-            return clipped_lines;
-    }
-}
-
 //! @brief Linearly interpolates between two points.
 Point interpolate(const Point& start, const Point& end, double t) {
     return Point(start.x() + (end.x() - start.x()) * t, start.y() + (end.y() - start.y()) * t,
@@ -370,7 +330,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     QVector<QSharedPointer<Part>> build_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
     QVector<QSharedPointer<MeshBase>> clipping_meshes =
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
-    QVector<QPair<QString, HelicalClippingMethod>> effective_clipping_methods;
+    QVector<QPair<QString, HelicalBoundaryHandling>> effective_boundary_handling;
 
     int parts_processed = 0;
     for (const QSharedPointer<Part>& part : build_parts) {
@@ -401,10 +361,8 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kLayerHeight), kDefaultHelicalLayerHeight);
         const Distance bead_width = positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kBeadWidth), layer_height);
         const Distance section_spacing = bead_width / 2.0 > kMinSectionSpacing ? bead_width / 2.0 : kMinSectionSpacing;
-        const RadialBoundaryHandling boundary_handling =
-            static_cast<RadialBoundaryHandling>(part_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling));
-        const HelicalClippingMethod clipping_method =
-            static_cast<HelicalClippingMethod>(part_sb->setting<int>(PS::Slicing::kHelicalClippingMethod));
+        const HelicalBoundaryHandling boundary_handling =
+            static_cast<HelicalBoundaryHandling>(part_sb->setting<int>(PS::Slicing::kHelicalBoundaryHandling));
         bool part_generated_paths = false;
         Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius);
         if (initial_radius < 0) {
@@ -490,14 +448,12 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             const HelixClipResult clip_result =
                 clipHelixToSections(helix, cross_sections, first_bead_z, section_spacing);
             QVector<Polyline> clipped_lines = clip_result.fragments;
-            if (boundary_handling == RadialBoundaryHandling::kClipToModel &&
-                clipping_method == HelicalClippingMethod::kHighestZIntersection) {
+            if (boundary_handling == HelicalBoundaryHandling::kClipZ) {
                 clipped_lines = clipHelixAtHighestIntersection(helix, clip_result);
             }
-            QVector<Polyline> candidate_lines = applyBoundaryHandling(helix, clipped_lines, boundary_handling);
 
             const Distance max_path_length = layer_settings->setting<Distance>(PS::Slicing::kHelicalPathLength);
-            for (const Polyline& line : candidate_lines) {
+            for (const Polyline& line : clipped_lines) {
                 if (line.size() < 2) {
                     continue;
                 }
@@ -522,7 +478,8 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         if (part_generated_paths) {
-            effective_clipping_methods.push_back(QPair<QString, HelicalClippingMethod> {part->name(), clipping_method});
+            effective_boundary_handling.push_back(
+                QPair<QString, HelicalBoundaryHandling> {part->name(), boundary_handling});
         }
 
         ++parts_processed;
@@ -532,13 +489,13 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
 
     QSharedPointer<ArcSpecialtiesWriter> arc_specialties_writer = m_base.dynamicCast<ArcSpecialtiesWriter>();
     if (!arc_specialties_writer.isNull()) {
-        arc_specialties_writer->setHelicalClippingMethods(effective_clipping_methods);
+        arc_specialties_writer->setHelicalBoundaryHandling(effective_boundary_handling);
     }
 
     if (m_helical_layers.isEmpty()) {
         const QString message =
-            "Warning: Helical slicing generated no printable paths. Check Radial Initial Radius, Radial Axis Mode, "
-            "clipping meshes, and Radial Boundary Handling.";
+            "Warning: Helical slicing generated no printable paths. Check Initial Radius, Cylinder Axis Mode, clipping "
+            "meshes, and Boundary Handling.";
         qWarning() << message;
         emit statusMessage(message);
         emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);

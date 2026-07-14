@@ -9,19 +9,32 @@ settings:
     options:
       - "Planar"
       - "Image"
-      - "Radial Slice"
-      - "Helical Slice"
+      - "Cylindrical"
     default: 0
     minor: "Slicing"
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kSlicerType"
     local: false
-  - name: "radial_axis_mode"
-    display: "Radial Axis Mode"
+  - name: "cylindrical_path_type"
+    display: "Path Type"
     type: "enumeration"
-    tooltip: "Selects the XY axis used for radial cylinder or helical slicing. Part Centroid uses each build part's centroid, while Custom XY uses the configured radial axis coordinates."
-    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
+    tooltip: "Selects whether cylindrical slicing generates radial rings or helical paths."
+    depends: {"slicer_type":2}
+    options:
+      - "Radial"
+      - "Helical"
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kCylindricalPathType"
+    local: false
+  - name: "radial_axis_mode"
+    display: "Cylinder Axis Mode"
+    type: "enumeration"
+    tooltip: "Selects the XY axis used for cylindrical slicing. Part Centroid uses each build part's centroid, while Custom XY uses the configured cylinder axis coordinates."
+    depends: {"slicer_type":2}
     options:
       - "Part Centroid"
       - "Custom XY"
@@ -32,10 +45,10 @@ settings:
     symbol: "kRadialAxisMode"
     local: true
   - name: "radial_axis_x"
-    display: "Radial Axis X"
+    display: "Cylinder Axis X"
     type: "location"
-    tooltip: "X coordinate for the radial cylinder or helical axis when Radial Axis Mode is Custom XY."
-    depends: {"AND":[{"OR":[{"slicer_type":2},{"slicer_type":3}]},{"radial_axis_mode":1}]}
+    tooltip: "X coordinate for the cylinder axis when Cylinder Axis Mode is Custom XY."
+    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -44,10 +57,10 @@ settings:
     symbol: "kRadialAxisX"
     local: true
   - name: "radial_axis_y"
-    display: "Radial Axis Y"
+    display: "Cylinder Axis Y"
     type: "location"
-    tooltip: "Y coordinate for the radial cylinder or helical axis when Radial Axis Mode is Custom XY."
-    depends: {"AND":[{"OR":[{"slicer_type":2},{"slicer_type":3}]},{"radial_axis_mode":1}]}
+    tooltip: "Y coordinate for the cylinder axis when Cylinder Axis Mode is Custom XY."
+    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -56,10 +69,10 @@ settings:
     symbol: "kRadialAxisY"
     local: true
   - name: "radial_initial_radius"
-    display: "Radial Initial Radius"
+    display: "Initial Radius"
     type: "distance"
-    tooltip: "Starting radius for radial cylinder or helical slicing. Values less than or equal to zero use half the layer height."
-    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
+    tooltip: "Starting radius for cylindrical slicing. Values less than or equal to zero use half the layer height."
+    depends: {"slicer_type":2}
     options: []
     default: 0
     minor: "Slicing"
@@ -68,39 +81,39 @@ settings:
     symbol: "kRadialInitialRadius"
     local: true
   - name: "radial_boundary_handling"
-    display: "Radial Boundary Handling"
+    display: "Boundary Handling"
     type: "enumeration"
-    tooltip: "Controls radial or helical paths that cross the model boundary. Clip to model uses slicer-specific model clipping and the selected Helical Clipping Method when applicable, keep boundary-crossing path outputs the original path when any portion is inside, and discard boundary-crossing path omits paths cut by the model boundary."
-    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
+    tooltip: "Controls radial paths that cross the model boundary. Clip keeps model-retained portions, Keep outputs the original boundary-crossing path when any portion is inside, and Discard omits paths cut by the model boundary."
+    depends: {"AND":[{"slicer_type":2},{"cylindrical_path_type":0}]}
     options:
-      - "Clip to Model"
-      - "Keep Boundary-Crossing Path"
-      - "Discard Boundary-Crossing Path"
+      - "Clip"
+      - "Keep"
+      - "Discard"
     default: 0
     minor: "Slicing"
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kRadialBoundaryHandling"
     local: true
-  - name: "helical_clipping_method"
-    display: "Helical Clipping Method"
+  - name: "helical_boundary_handling"
+    display: "Boundary Handling"
     type: "enumeration"
-    tooltip: "Selects whether Clip to Model keeps every portion inside the model or one continuous helix through the model intersection with the greatest Z value."
-    depends: {"AND":[{"slicer_type":3},{"radial_boundary_handling":0}]}
+    tooltip: "Controls helical paths that cross the model boundary. Clip keeps every retained model intersection, and Clip Z keeps the continuous helix through the highest Z model intersection."
+    depends: {"AND":[{"slicer_type":2},{"cylindrical_path_type":1}]}
     options:
-      - "All Model Intersections"
-      - "Highest Z Intersection"
+      - "Clip"
+      - "Clip Z"
     default: 0
     minor: "Slicing"
     major: "Profile"
     namespace: "Profile::Slicing"
-    symbol: "kHelicalClippingMethod"
+    symbol: "kHelicalBoundaryHandling"
     local: true
   - name: "slicing_vector_x"
     display: "Slicing Vector - X"
     type: "unitless_float"
     tooltip: "Defines the X-component of the slicing vector, which determines the orientation of the slicing plane. A vector of {1, 0, 1}, when normalized, corresponds to a 45-degree tilt about the Y-axis. A vector of {1, 0, 0} is oriented along the positive X-axis, aligning the slicing plane parallel to the YZ plane (perpendicular to the X-axis)."
-    depends: {}
+    depends: {"slicer_type":0}
     options: []
     default: 0
     minor: "Slicing"
@@ -112,7 +125,7 @@ settings:
     display: "Slicing Vector - Y"
     type: "unitless_float"
     tooltip: "Defines the Y-component of the slicing vector, which determines the orientation of the slicing plane. A vector of {0, 1, 1}, when normalized, corresponds to a 45-degree tilt about the X-axis. A vector of {0, 1, 0} is oriented along the positive Y-axis, aligning the slicing plane parallel to the XZ plane (perpendicular to the Y-axis)."
-    depends: {}
+    depends: {"slicer_type":0}
     options: []
     default: 0
     minor: "Slicing"
@@ -124,7 +137,7 @@ settings:
     display: "Slicing Vector - Z"
     type: "unitless_float"
     tooltip: "Defines the Z-component of the slicing vector, which determines the orientation of the slicing plane. A vector of {0, 0, 1} is oriented along the positive Z-axis, aligning the slicing plane parallel to the XY plane (perpendicular to the Z-axis)."
-    depends: {}
+    depends: {"slicer_type":0}
     options: []
     default: 1
     minor: "Slicing"
@@ -136,7 +149,7 @@ settings:
     display: "Helical Path Length"
     type: "distance"
     tooltip: "Maximum length of each generated helical path before it is split. Set to 0 to leave helical paths unbroken."
-    depends: {"slicer_type":3}
+    depends: {"AND":[{"slicer_type":2},{"cylindrical_path_type":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -148,7 +161,7 @@ settings:
     display: "Number of Arcs per Revolution"
     type: "positive_int"
     tooltip: "Total number of arcs per revolution. Values less than one use one arc."
-    depends: {"OR":[{"slicer_type":2},{"slicer_type":3}]}
+    depends: {"slicer_type":2}
     options: []
     default: 1
     minor: "Slicing"
@@ -158,9 +171,9 @@ settings:
     local: false
 inputs:
   - name: "radial_axis"
-    display: "Radial Axis"
+    display: "Cylinder Axis"
     widget: "vector2"
-    tooltip: "Defines the custom XY coordinate used as the radial cylinder axis when Radial Axis Mode is Custom XY."
+    tooltip: "Defines the custom XY coordinate used as the cylinder axis when Cylinder Axis Mode is Custom XY."
     depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
     minor: "Slicing"
     major: "Profile"
@@ -173,7 +186,7 @@ inputs:
     display: "Slicing Vector"
     widget: "vector3"
     tooltip: "Defines the slicing vector used as the slicing plane normal. Values are normalized before use; {0, 0, 1} produces horizontal XY layers, while tilted vectors produce angled slicing planes."
-    depends: {}
+    depends: {"slicer_type":0}
     minor: "Slicing"
     major: "Profile"
     components:

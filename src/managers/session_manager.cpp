@@ -41,9 +41,7 @@
 
 namespace ORNL {
 namespace {
-bool isRadialCapableSyntax(GcodeSyntax syntax) {
-    return syntax == GcodeSyntax::kArcSpecialties;
-}
+bool isCylindricalCapableSyntax(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
 } // namespace
 
 QSharedPointer<SessionManager> SessionManager::m_singleton = QSharedPointer<SessionManager>();
@@ -517,15 +515,11 @@ bool SessionManager::isBuildMode() {
 bool SessionManager::doSlice() {
     const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     const SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
+    const CylindricalPathType path_type =
+        static_cast<CylindricalPathType>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathType));
 
-    if (type == SlicerType::kRadialSlice && !isRadialCapableSyntax(syntax)) {
-        const QString message = "Radial slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
-        qWarning() << message;
-        emit forwardStatusUpdate(message);
-        return false;
-    }
-    if (type == SlicerType::kHelicalSlice && !isRadialCapableSyntax(syntax)) {
-        const QString message = "Helical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
+    if (type == SlicerType::kCylindricalSlice && !isCylindricalCapableSyntax(syntax)) {
+        const QString message = "Cylindrical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;
@@ -540,7 +534,7 @@ bool SessionManager::doSlice() {
         this->changeSlicer(type);
     else {
         // See if it has changed
-        if (m_slicer_type != type)
+        if (m_slicer_type != type || (type == SlicerType::kCylindricalSlice && m_cylindrical_path_type != path_type))
             this->changeSlicer(type);
         else
             m_ast->setGcodeOutput(tempGcodeFile);
@@ -601,6 +595,8 @@ qint64 SessionManager::getSliceTimeElapsed() {
 bool SessionManager::changeSlicer(SlicerType type) {
     // Disconnect the signals from the AST.
     QObject::disconnect(this, &SessionManager::startSlice, nullptr, nullptr);
+    const CylindricalPathType path_type =
+        static_cast<CylindricalPathType>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathType));
 
     // Reset the AST with a new slicer.
     switch (type) {
@@ -610,11 +606,13 @@ bool SessionManager::changeSlicer(SlicerType type) {
         case SlicerType::kImageSlice:
             m_ast.reset(new ImageSlicer(tempGcodeFile));
             break;
-        case SlicerType::kRadialSlice:
-            m_ast.reset(new RadialSlicer(tempGcodeFile));
-            break;
-        case SlicerType::kHelicalSlice:
-            m_ast.reset(new HelicalSlicer(tempGcodeFile));
+        case SlicerType::kCylindricalSlice:
+            if (path_type == CylindricalPathType::kHelical) {
+                m_ast.reset(new HelicalSlicer(tempGcodeFile));
+            }
+            else {
+                m_ast.reset(new RadialSlicer(tempGcodeFile));
+            }
             break;
         default:
             qWarning() << "Unknown slicer type requested. Falling back to Planar slicer.";
@@ -624,6 +622,7 @@ bool SessionManager::changeSlicer(SlicerType type) {
     }
 
     m_slicer_type = type;
+    m_cylindrical_path_type = type == SlicerType::kCylindricalSlice ? path_type : CylindricalPathType::kRadial;
 
     // Reset part steps
     for (QSharedPointer<Part> part : m_parts) {
