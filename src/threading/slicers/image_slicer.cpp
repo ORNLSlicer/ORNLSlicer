@@ -182,8 +182,8 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
 
     emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);
 
-    double xResolution = GSM->getGlobal()->setting<double>(ES::ImageResolution::kImageResolutionX);
-    double yResolution = GSM->getGlobal()->setting<double>(ES::ImageResolution::kImageResolutionY);
+    double xResolution = GSM->getGlobal()->setting<double>(PS::Slicing::kImageResolutionX);
+    double yResolution = GSM->getGlobal()->setting<double>(PS::Slicing::kImageResolutionY);
     int volumeXDim = std::ceil((GSM->getGlobal()->setting<double>(PRS::Dimensions::kXMax) -
                                 GSM->getGlobal()->setting<double>(PRS::Dimensions::kXMin)) /
                                xResolution) +

@@ -863,6 +863,8 @@ class Constants {
             static const QString kHelicalBoundaryHandling;
             static const QString kHelicalPathLength;
             static const QString kArcsPerRevolution;
+            static const QString kImageResolutionX;
+            static const QString kImageResolutionY;
         };
     };
 
@@ -897,12 +899,6 @@ class Constants {
             static const QString kSimulationOutput;
             static const QString kAMCMOutput;
             static const QString kAMCMDataLogging;
-        };
-
-        class ImageResolution {
-          public:
-            static const QString kImageResolutionX;
-            static const QString kImageResolutionY;
         };
 
         class CrossSection {
