@@ -74,7 +74,8 @@ QString ArcSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     RegionType regionType = this->getSb()->setting<RegionType>(SS::kRegionType);
     PathModifiers modifiers = this->getSb()->setting<PathModifiers>(SS::kPathModifiers);
     const QString gcode = writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
-    writer->setCurrentPosition(m_end);
+    if (!gcode.isEmpty())
+        writer->setCurrentPosition(m_end);
     return gcode;
 }
 
