@@ -145,7 +145,8 @@ const std::array<QVector2D, kTubeCrossSectionResolution>& circleTable() {
 
 float arcSweepAngle(const Point& start, const Point& center, const Point& end, bool counterclockwise) {
     if (MathUtils::orientation(start, center, end) == 0) {
-        return (start == end) ? kTwoPi : kPi;
+        const bool same_planar_endpoint = std::hypot(start.x() - end.x(), start.y() - end.y()) <= kVectorEpsilon;
+        return same_planar_endpoint ? kTwoPi : kPi;
     }
 
     const float start_angle = std::atan2(center.x() - start.x(), center.y() - start.y());
@@ -720,10 +721,9 @@ void ShapeFactory::appendArcBead(float bead_diameter, const Point& start, const 
     QMatrix4x4 transform;
     transform.translate(display_center.toQVector3D());
 
-    const Point projected_start(start.x(), start.y(), display_center.z());
-    const Point reference(display_center.x() + major_radius, display_center.y(), display_center.z());
-    transform.rotate(MathUtils::CreateQuaternion((reference - display_center).toQVector3D(),
-                                                 (projected_start - display_center).toQVector3D()));
+    const double start_angle_degrees =
+        std::atan2(start.y() - display_center.y(), start.x() - display_center.x()) * 180.0 / kPi;
+    transform.rotate(static_cast<float>(start_angle_degrees), 0.0f, 0.0f, 1.0f);
 
     appendArcBeadMesh(bead_diameter, start, center, end, transform, is_ccw, color, vertices, colors, normals);
 }

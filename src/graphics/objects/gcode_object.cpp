@@ -2,6 +2,8 @@
 
 #include <GL/gl.h>
 
+#include <algorithm>
+#include <cmath>
 #include <cstring>
 #include <limits>
 #include <utility>
@@ -32,6 +34,8 @@ namespace {
 //! @brief Vertex counts emitted by ShapeFactory for each full bead mesh segment type.
 constexpr qsizetype kLinearBeadVertexCount = 120;
 constexpr qsizetype kCurvedBeadVertexCount = 2376;
+constexpr double kLightweightArcSegmentAngle = (2.0 * 3.14159265358979323846) / 48.0;
+constexpr double kLightweightArcEpsilon = 1.0e-6;
 
 //! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
 qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
@@ -69,12 +73,9 @@ qsizetype countTravelSegments(const QVector<QVector<QSharedPointer<SegmentBase>>
     return count;
 }
 
-//! @brief Appends a single GL_LINES segment using the parser's display-space line representation.
-void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vector<float>& vertices,
-                           std::vector<float>& normals, std::vector<float>& colors) {
-    QVector3D start = segment->start().toQVector3D();
-    QVector3D end = segment->end().toQVector3D();
-
+//! @brief Appends one lightweight GL_LINES edge.
+void appendLightweightLineEdge(const QVector3D& start, const QVector3D& end, const QColor& color,
+                               std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
     vertices.push_back(start.x());
     vertices.push_back(start.y());
     vertices.push_back(start.z());
@@ -91,11 +92,71 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
         normals.push_back(0.0f);
         normals.push_back(0.0f);
 
-        colors.push_back(segment->color().redF());
-        colors.push_back(segment->color().greenF());
-        colors.push_back(segment->color().blueF());
-        colors.push_back(segment->color().alphaF());
+        colors.push_back(color.redF());
+        colors.push_back(color.greenF());
+        colors.push_back(color.blueF());
+        colors.push_back(color.alphaF());
     }
+}
+
+int lightweightArcSegmentCount(const ArcSegment& arc) {
+    const double sweep = arc.angle()();
+    if (!std::isfinite(sweep) || sweep <= kLightweightArcEpsilon) {
+        return 1;
+    }
+
+    return std::max(1, static_cast<int>(std::ceil(sweep / kLightweightArcSegmentAngle)));
+}
+
+//! @brief Appends a curved GL_LINES approximation for an arc segment.
+void appendLightweightArc(const ArcSegment& arc, const QColor& color, std::vector<float>& vertices,
+                          std::vector<float>& normals, std::vector<float>& colors) {
+    const Point start = arc.start();
+    const Point center = arc.center();
+    const Point end = arc.end();
+    const double radius = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const double sweep = arc.angle()();
+
+    if (!std::isfinite(radius) || !std::isfinite(sweep) || radius <= kLightweightArcEpsilon ||
+        sweep <= kLightweightArcEpsilon) {
+        appendLightweightLineEdge(start.toQVector3D(), end.toQVector3D(), color, vertices, normals, colors);
+        return;
+    }
+
+    const int segment_count = lightweightArcSegmentCount(arc);
+    const double start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const double signed_sweep = arc.counterclockwise() ? sweep : -sweep;
+    const double z_delta = end.z() - start.z();
+
+    QVector3D previous = start.toQVector3D();
+    for (int i = 1; i <= segment_count; ++i) {
+        QVector3D current;
+        if (i == segment_count) {
+            current = end.toQVector3D();
+        }
+        else {
+            const double t = static_cast<double>(i) / static_cast<double>(segment_count);
+            const double angle = start_angle + (signed_sweep * t);
+            current = QVector3D(center.x() + (radius * std::cos(angle)), center.y() + (radius * std::sin(angle)),
+                                start.z() + (z_delta * t));
+        }
+
+        appendLightweightLineEdge(previous, current, color, vertices, normals, colors);
+        previous = current;
+    }
+}
+
+//! @brief Appends a GL_LINES representation using the parser's display-space geometry.
+void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vector<float>& vertices,
+                           std::vector<float>& normals, std::vector<float>& colors) {
+    const QColor color = segment->color();
+    if (const auto* arc = dynamic_cast<ArcSegment*>(segment.data())) {
+        appendLightweightArc(*arc, color, vertices, normals, colors);
+        return;
+    }
+
+    appendLightweightLineEdge(segment->start().toQVector3D(), segment->end().toQVector3D(), color, vertices, normals,
+                              colors);
 }
 } // namespace
 
