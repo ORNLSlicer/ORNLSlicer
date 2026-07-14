@@ -38,7 +38,6 @@ settings:
       - "Meltio"
       - "Adamantine"
       - "ORNL Metric"
-      - "Radial3Plus2"
       - "Arc Specialties"
     default: 0
     minor: "Machine Setup"
@@ -128,7 +127,7 @@ settings:
     display: "Axis A"
     type: "angle"
     tooltip: "Sets the printing angle for the A axis"
-    depends: {"OR":[{"syntax":32},{"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}]}
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -140,7 +139,7 @@ settings:
     display: "Axis B"
     type: "angle"
     tooltip: "Sets the printing angle for the B axis"
-    depends: {"OR":[{"syntax":32},{"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}]}
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"
@@ -152,7 +151,7 @@ settings:
     display: "Axis C"
     type: "angle"
     tooltip: "Sets the printing angle for the C axis"
-    depends: {"OR":[{"syntax":32},{"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}]}
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
     options: []
     default: 0
     minor: "Machine Setup"

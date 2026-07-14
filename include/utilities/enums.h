@@ -216,16 +216,13 @@ enum class GcodeSyntax : uint8_t {
     kMeltio = 28,
     kAdamantine = 29,
     kORNLMetric = 30,
-    kRadial3Plus2 = 31,
-    kArcSpecialties = 32
+    kArcSpecialties = 31
 };
 
 inline QString toString(GcodeSyntax syntax) {
     switch (syntax) {
         case GcodeSyntax::kArcSpecialties:
             return PRS::SyntaxString::kArcSpecialties;
-        case GcodeSyntax::kRadial3Plus2:
-            return PRS::SyntaxString::kRadial3Plus2;
         case GcodeSyntax::kAML3D:
             return PRS::SyntaxString::kAML3D;
         case GcodeSyntax::kBeam:
