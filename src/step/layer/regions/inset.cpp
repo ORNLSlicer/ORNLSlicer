@@ -201,8 +201,9 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
     return std::nullopt;
 }
 
-Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int remaining_count, Distance overlap,
-                              Distance min_path_length, Distance min_width, Distance max_width) {
+Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_width, int remaining_count,
+                                         Distance overlap, Distance min_path_length, Distance min_width,
+                                         Distance max_width) {
     if (std::optional<Distance> full_width =
             fullCoverageAdaptiveWidth(geometry, nominal_width, overlap, min_path_length, min_width, max_width)) {
         return *full_width;
@@ -236,6 +237,49 @@ Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int 
         more_nominal_paths_fit ? std::max(0.0, initial_area - preview_remaining_area) : initial_area;
 
     return clampedAdaptiveWidth(Distance(target_area / preview_length()), nominal_width, min_width, max_width);
+}
+
+QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance nominal_width, int remaining_count,
+                                               Distance overlap, Distance min_path_length, Distance min_width,
+                                               Distance max_width) {
+    QVector<Distance> widths;
+
+    for (int i = 0; i < remaining_count && !geometry.isEmpty(); ++i) {
+        const Distance path_width = adaptiveContourWidthForGeometry(
+            geometry, nominal_width, remaining_count - i, overlap, min_path_length, min_width, max_width);
+        PolygonList path_lines = insetPathLines(geometry, path_width, overlap);
+        QVector<Polygon> valid_path_lines = validPathLines(path_lines, min_path_length);
+        if (valid_path_lines.isEmpty()) {
+            break;
+        }
+
+        widths.push_back(path_width);
+
+        const bool clear_shell_geometry = hasInternalBoundaries(geometry) &&
+                                          shellWidthCoversGeometry(geometry, valid_path_lines, path_width,
+                                                                   nominal_width);
+
+        if (!subtractPathLineFootprints(geometry, valid_path_lines, path_width)) {
+            break;
+        }
+        if (clear_shell_geometry) {
+            geometry.clear();
+        }
+    }
+
+    return widths;
+}
+
+Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int remaining_count, Distance overlap,
+                              Distance min_path_length, Distance min_width, Distance max_width) {
+    QVector<Distance> widths = plannedAdaptiveContourWidths(geometry, nominal_width, remaining_count, overlap,
+                                                            min_path_length, min_width, max_width);
+    if (widths.isEmpty()) {
+        return nominal_width;
+    }
+
+    return *std::max_element(widths.begin(), widths.end(),
+                             [](const Distance& lhs, const Distance& rhs) { return lhs() < rhs(); });
 }
 
 double distanceXYToSegment(const Point& point, const Point& start, const Point& end) {
