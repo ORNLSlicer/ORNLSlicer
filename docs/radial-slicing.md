@@ -2,7 +2,7 @@
 
 Radial slicing generates toolpaths by expanding cylindrical layers outward from a selected vertical radial axis. By default, the axis uses each build part's XY centroid, but it can also be set to a custom XY coordinate. Each cylindrical layer is clipped against horizontal cross sections of the model, producing ring arc beads that follow the part boundary at that radius.
 
-This slicer is intended for 3+2 output using X, Y, Z, A, and C axes. It is an initial direct-path implementation and does not run the standard perimeter, infill, skin, support, or raft generation logic.
+This slicer is intended for radial machine output using either `Radial3Plus2` X/Y/Z/A/C motion or `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP motion. It is an initial direct-path implementation and does not run the standard perimeter, infill, skin, support, or raft generation logic.
 
 ## Basic Workflow
 
@@ -13,8 +13,8 @@ This slicer is intended for 3+2 output using X, Y, Z, A, and C axes. It is an in
 5. Set `Radial Axis Mode` if the cylinder axis should use a custom XY coordinate instead of the part centroid.
 6. Set `Radial Initial Radius` if the first cylinder should begin away from the radial axis. Leave it at `0` for the default center-out behavior.
 7. Set `Radial Boundary Handling` for radial paths that cross the model boundary.
-8. Confirm the printer `Syntax` is `Radial3Plus2`. Selecting `Radial Slice` updates this automatically, and selecting `Radial3Plus2` updates `Slicer Type` automatically.
-9. Set `Axis A` to the desired fixed table tilt and set `Axis C` if the machine coordinate frame needs an offset.
+8. Confirm the printer `Syntax` is `Radial3Plus2` or `Arc Specialties`. Selecting `Radial Slice` still defaults this to `Radial3Plus2`, and selecting either radial-capable syntax updates `Slicer Type` automatically.
+9. Set `Axis A` to the desired fixed tilt and set `Axis C` if the machine coordinate frame needs an angular offset.
 10. Slice and inspect the generated G-code preview before running the machine.
 
 ## How Paths Are Generated
@@ -25,7 +25,7 @@ The first radial layer centerline is offset by half of `Layer Height`, then late
 
 On each radius, the first bead centerline is offset from the retained mesh base by half of `Default Bead Width`, then later beads advance by the full `Default Bead Width`. For example, with a retained mesh base at `0 mm` and `Default Bead Width = 1 mm`, bead Z positions are `0.5 mm`, `1.5 mm`, `2.5 mm`, and so on until the retained mesh maximum Z is reached.
 
-The profile values above follow the application's active distance unit in the settings UI. Internally, radial slicing stores them as unit-aware distances before path generation. The generated G-code uses the distance and angle units declared by the selected syntax metadata; `Radial3Plus2` is currently a metric syntax, so its X/Y/Z output is in millimeters.
+The profile values above follow the application's active distance unit in the settings UI. Internally, radial slicing stores them as unit-aware distances before path generation. The generated G-code uses the distance and angle units declared by the selected syntax metadata; both radial-capable syntaxes are currently metric syntaxes, so their X/Y/Z output is in millimeters.
 
 At each bead Z, the slicer:
 
@@ -39,8 +39,8 @@ At each bead Z, the slicer:
 
 | Setting | Location | Effect |
 | --- | --- | --- |
-| `Slicer Type` | Profile > Slicing | Select `Radial Slice` to use the radial slicer. This automatically selects `Radial3Plus2` syntax. |
-| `Syntax` | Printer > Machine Setup | Select `Radial3Plus2` so the radial writer and parser are used. This automatically selects `Radial Slice`. |
+| `Slicer Type` | Profile > Slicing | Select `Radial Slice` to use the radial slicer. This automatically selects `Radial3Plus2` syntax unless a radial-capable syntax is already selected. |
+| `Syntax` | Printer > Machine Setup | Select `Radial3Plus2` or `Arc Specialties` so a radial writer and parser are used. Selecting `Arc Specialties` automatically selects `Radial Slice`. |
 | `Layer Height` | Profile > Layer | Radial distance between successive cylindrical layers. Values less than or equal to zero fall back to a physical `1 mm` default. |
 | `Default Bead Width` | Profile > Layer | Vertical distance between beads on each cylindrical layer. Values less than or equal to zero fall back to `Layer Height`. |
 | `Radial Axis Mode` | Profile > Slicing | Selects whether radial cylinders are centered on each part's centroid or on a custom XY coordinate. |
@@ -60,18 +60,29 @@ When a radial path crosses the model boundary at a bead Z, model clipping can sp
 
 ## G-code And Machine Settings
 
-`Radial3Plus2` output keeps X, Y, and Z in model coordinates and emits rotary axes on every travel and print move.
-The radial settings header reports radial geometry, boundary handling, and rotary settings only, so it does not include
-process-specific nozzle, filament, extrusion, or standard polymer region comments. Radial print moves are marked with
+`Radial3Plus2` output keeps X, Y, and Z in model coordinates and emits A/C rotary axes on every travel and print move.
+`Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset and emits
+`XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. The first Arc Specialties implementation fixes
+`XR=180`, `YR=0`, and `ZR=0`; maps `Axis A` to `AP`; and computes `CP` from the radial endpoint angle plus `Axis C`,
+normalized to the 0-360 degree range. When `Supports G2/G3` is enabled, Arc Specialties radial print arcs emit `G02` or
+`G03` with equals-form `I=`/`J=` center offsets and the feedrate at the end of the motion fields; otherwise radial print
+paths remain segmented `G01` moves.
+
+The radial settings header reports radial geometry, boundary handling, and rotary or positioner settings only, so it does not
+include process-specific nozzle, filament, extrusion, or standard polymer region comments. Radial print moves are marked with
 `RADIAL`.
 
 When generated `Radial3Plus2` G-code is loaded for preview, the radial parser validates A and C values, strips those
 rotary axes before passing moves to the common XYZ preview parser, and treats `RADIAL` print comments as printable moves.
+When generated `Arc Specialties` G-code is loaded for preview, the Arc Specialties parser validates `XR`, `YR`, `ZR`,
+`AP`, and `CP`, normalizes `X=...`, `Y=...`, `Z=...`, `I=...`, `J=...`, `K=...`, `R=...`, and `F...` fields for the
+common XYZ preview parser, and treats `RADIAL` print comments as printable moves.
 
 | Setting | Location | Effect |
 | --- | --- | --- |
-| `Axis A` | Printer > Machine Setup | Fixed table tilt emitted on every radial travel and print move. Output `A` is the configured `Axis A` value. |
-| `Axis C` | Printer > Machine Setup | Added to the point angle around the radial center. The writer unwraps C to avoid discontinuities across the +/-180 degree boundary. |
+| `Axis A` | Printer > Machine Setup | For `Radial3Plus2`, fixed table tilt emitted as `A`. For `Arc Specialties`, positioner tilt emitted as `AP`. |
+| `Axis C` | Printer > Machine Setup | Added to the point angle around the radial center. `Radial3Plus2` unwraps C to avoid discontinuities; `Arc Specialties` emits CP normalized to 0-360 degrees and relies on controller shortest-way movement. |
+| `Supports G2/G3` | Printer > Machine Setup | Enables Arc Specialties `G02`/`G03` radial print arcs. When disabled, radial print paths use segmented `G01` moves. |
 | `Default Print Speed` | Profile > Layer | Print feedrate for radial bead segments. |
 | `Travel Speed` | Profile > Travel | Feedrate for non-print travel moves. If unset, the writer falls back to machine max XY speed. |
 | `Travel Lift Height` | Profile > Travel | Radial-safe travel lift distance. The lift moves outward from the cylinder axis before the travel, then lowers at the destination when enabled. |
@@ -115,13 +126,16 @@ Short travels below `Minimum Travel Length for Lifting` do not lift.
 - The top of the radial slice is the retained mesh maximum Z. There is no separate radial cylinder height setting.
 - The current implementation approximates circles with line segments, so smaller bead widths create more segments and larger G-code files up to the per-circle segment cap.
 - Clipping meshes are applied before radial path generation, but slicing vector settings are not used by radial slicing.
+- Arc Specialties work-offset and touch-probe setup commands are not emitted in the first pass. The generated header documents that an appropriate user frame must already be active.
+- Arc Specialties support is radial-only in the first pass; helical slicing continues to require `Radial3Plus2`.
 
 ## Quick Checks
 
 After slicing, verify that:
 
-- The G-code header identifies `Radial3Plus2`.
-- Motion lines contain `X`, `Y`, `Z`, `A`, and `C`.
+- The G-code header identifies `Radial3Plus2` or `Arc Specialties`.
+- `Radial3Plus2` motion lines contain `X`, `Y`, `Z`, `A`, and `C`.
+- `Arc Specialties` motion lines use `G00`/`G01`, or `G02`/`G03` when `Supports G2/G3` is enabled. They contain `X=`, `Y=`, `Z=`, `XR=`, `YR=`, `ZR=`, `AP=`, `CP=`, and include `F` at the end of every motion line.
 - Printed arcs lie on the part rather than above or below it.
 - Travel moves arc around the radial axis when the angular move is long enough, and configured travel lift offsets them outward before traversing.
 - The radial axis is centered where expected for the selected `Radial Axis Mode`.
