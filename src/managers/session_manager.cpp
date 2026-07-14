@@ -40,6 +40,12 @@
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
+namespace {
+bool isRadialCapableSyntax(GcodeSyntax syntax) {
+    return syntax == GcodeSyntax::kRadial3Plus2 || syntax == GcodeSyntax::kArcSpecialties;
+}
+} // namespace
+
 QSharedPointer<SessionManager> SessionManager::m_singleton = QSharedPointer<SessionManager>();
 
 QSharedPointer<SessionManager> SessionManager::getInstance() {
@@ -512,10 +518,15 @@ bool SessionManager::doSlice() {
     const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     const SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
 
-    if ((type == SlicerType::kRadialSlice || type == SlicerType::kHelicalSlice) &&
-        syntax != GcodeSyntax::kRadial3Plus2) {
+    if (type == SlicerType::kRadialSlice && !isRadialCapableSyntax(syntax)) {
         const QString message =
-            "Radial and helical slicing require Printer > Machine Setup > Syntax to be Radial3Plus2.";
+            "Radial slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2 or Arc Specialties.";
+        qWarning() << message;
+        emit forwardStatusUpdate(message);
+        return false;
+    }
+    if (type == SlicerType::kHelicalSlice && syntax != GcodeSyntax::kRadial3Plus2) {
+        const QString message = "Helical slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;

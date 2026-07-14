@@ -34,7 +34,7 @@ class SettingsBase;
 class RadialSlicer : public TraditionalAST {
   public:
     /*!
-     * @brief Constructs a radial slicer that emits Radial3Plus2 gcode.
+     * @brief Constructs a radial slicer that emits the selected radial-capable gcode syntax.
      * @param gcodeLocation Temporary gcode output path used by the slicing thread.
      */
     RadialSlicer(QString gcodeLocation);

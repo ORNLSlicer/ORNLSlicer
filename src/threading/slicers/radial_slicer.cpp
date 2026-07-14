@@ -14,6 +14,7 @@
 #include "configs/settings_base.h"
 #include "cross_section/cross_section.h"
 #include "gcode/gcode_meta.h"
+#include "gcode/writers/arc_specialties_writer.h"
 #include "gcode/writers/radial_writer.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
@@ -23,6 +24,7 @@
 #include "geometry/plane.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "managers/session_manager.h"
@@ -134,8 +136,15 @@ bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min
 } // namespace
 
 RadialSlicer::RadialSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
-    m_syntax = GcodeSyntax::kRadial3Plus2;
-    m_base = QSharedPointer<RadialWriter>::create(GcodeMetaList::RadialMeta, GSM->getGlobal());
+    const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    if (syntax == GcodeSyntax::kArcSpecialties) {
+        m_syntax = GcodeSyntax::kArcSpecialties;
+        m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
+    }
+    else {
+        m_syntax = GcodeSyntax::kRadial3Plus2;
+        m_base = QSharedPointer<RadialWriter>::create(GcodeMetaList::RadialMeta, GSM->getGlobal());
+    }
 }
 
 void RadialSlicer::preProcess(nlohmann::json opt_data) {
@@ -415,14 +424,23 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
         path.add(travel);
     }
 
-    for (int i = 1, end = polyline.size(); i < end; ++i) {
-        if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) {
-            continue;
-        }
-
-        QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polyline[i - 1], polyline[i]);
-        segment->setSb(i == 1 ? region_start_settings : print_settings);
+    if (m_syntax == GcodeSyntax::kArcSpecialties && layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3)) {
+        const Point arc_center(center.x(), center.y(), polyline.first().z());
+        QSharedPointer<ArcSegment> segment =
+            QSharedPointer<ArcSegment>::create(polyline.first(), polyline.last(), arc_center, true);
+        segment->setSb(region_start_settings);
         path.add(segment);
+    }
+    else {
+        for (int i = 1, end = polyline.size(); i < end; ++i) {
+            if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) {
+                continue;
+            }
+
+            QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polyline[i - 1], polyline[i]);
+            segment->setSb(i == 1 ? region_start_settings : print_settings);
+            path.add(segment);
+        }
     }
 
     if (path.size() > 0) {
