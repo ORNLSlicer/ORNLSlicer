@@ -37,6 +37,18 @@ class SlicingUtilities {
                                                   int arcs_per_revolution);
 
     /*!
+     * \brief Checks whether two endpoints can be represented as a cylindrical G2/G3 arc.
+     * \param start: start point of the candidate segment
+     * \param end: end point of the candidate segment
+     * \param center: cylindrical axis center
+     * \param radius: expected cylindrical path radius
+     * \param arcs_per_revolution: configured maximum arc subdivisions per revolution
+     * \return true when the segment has a valid angular span and produces an arc center near the axis
+     */
+    static bool IsCylindricalArcSegment(const Point& start, const Point& end, const Point& center, Distance radius,
+                                        int arcs_per_revolution);
+
+    /*!
      * \brief Finds the closest XY arc center to a cylindrical axis that is equidistant from both endpoints.
      * \param start: start point of the arc
      * \param end: end point of the arc

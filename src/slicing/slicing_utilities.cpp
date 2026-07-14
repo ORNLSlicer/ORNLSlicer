@@ -30,6 +30,19 @@ namespace {
 //! \brief Small angular tolerance used when a threshold coincides with the end of a path.
 constexpr double kArcSweepTolerance = 1.0e-9;
 
+//! \brief Maximum center drift allowed before a clipped cylindrical arc falls back to a line.
+const Distance kArcGeometryTolerance = 50.0 * micron;
+
+//! \brief Relative tolerance for large cylindrical paths.
+constexpr double kArcGeometryRelativeTolerance = 1.0e-6;
+
+//! \brief Smallest angular span worth emitting as a G2/G3 move.
+constexpr double kMinArcAngularSpan = 1.0e-6;
+
+double radialDistance(const Point& point, const Point& center) {
+    return std::hypot(point.x() - center.x(), point.y() - center.y());
+}
+
 //! \brief Returns the counter-clockwise sweep from start to end in the range [0, 2*pi).
 double counterClockwiseSweep(const Point& start, const Point& end, const Point& center) {
     const double start_x = start.x() - center.x();
@@ -102,6 +115,25 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
 
     arc_points.push_back(polyline.last());
     return arc_points;
+}
+
+bool SlicingUtilities::IsCylindricalArcSegment(const Point& start, const Point& end, const Point& center,
+                                               Distance radius, int arcs_per_revolution) {
+    const double expected_radius = radius();
+    if (expected_radius <= std::numeric_limits<double>::epsilon() || arcs_per_revolution <= 0) {
+        return false;
+    }
+
+    const double tolerance = std::max(kArcGeometryTolerance(), expected_radius * kArcGeometryRelativeTolerance);
+    const double angular_tolerance = std::max(kMinArcAngularSpan, tolerance / expected_radius);
+    const double sweep = counterClockwiseSweep(start, end, center);
+    const double max_sweep = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
+    if (sweep <= angular_tolerance || sweep > max_sweep + angular_tolerance) {
+        return false;
+    }
+
+    const Point arc_center = GetCylindricalArcCenter(start, end, center);
+    return radialDistance(arc_center, center) <= tolerance;
 }
 
 Point SlicingUtilities::GetCylindricalArcCenter(const Point& start, const Point& end, const Point& center) {
