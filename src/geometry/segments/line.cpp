@@ -24,7 +24,8 @@ QSharedPointer<SegmentBase> LineSegment::clone() const { return QSharedPointer<L
 
 QString LineSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     const QString gcode = writer->writeLine(m_start, m_end, this->getSb());
-    writer->setCurrentPosition(m_end);
+    if (!gcode.isEmpty())
+        writer->setCurrentPosition(m_end);
     return gcode;
 }
 
