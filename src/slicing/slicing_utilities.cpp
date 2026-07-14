@@ -120,6 +120,12 @@ bool SlicingUtilities::IsCylindricalArcSegment(const Point& start, const Point& 
 
     const double tolerance = std::max(kArcGeometryTolerance(), expected_radius * kArcGeometryRelativeTolerance);
     const double angular_tolerance = std::max(kMinArcAngularSpan, tolerance / expected_radius);
+    const double planar_chord = std::hypot(end.x() - start.x(), end.y() - start.y());
+    if (planar_chord <= tolerance) {
+        return arcs_per_revolution == 1 && std::abs(radialDistance(start, center) - expected_radius) <= tolerance &&
+               std::abs(radialDistance(end, center) - expected_radius) <= tolerance;
+    }
+
     const double sweep = counterClockwiseSweep(start, end, center);
     const double max_sweep = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
     if (sweep <= angular_tolerance || sweep > max_sweep + angular_tolerance) {
