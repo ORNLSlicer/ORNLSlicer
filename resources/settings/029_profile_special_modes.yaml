@@ -41,6 +41,42 @@ settings:
     namespace: "Profile::SpecialModes"
     symbol: "kSmoothingTolerance"
     local: false
+  - name: "arc_fitting"
+    display: "Enable Arc Fitting"
+    type: "boolean"
+    tooltip: "Fits eligible planar print moves to circular G2/G3 arcs when the selected machine supports G2/G3."
+    depends: {"AND":[{"supports_G2_3":true},{"slicing_mode":0}]}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableArcFitting"
+    local: true
+  - name: "arc_fitting_tolerance"
+    display: "Arc Fitting Tolerance"
+    type: "distance"
+    tooltip: "Maximum radial deviation allowed when replacing a run of line segments with a circular arc."
+    depends: {"arc_fitting":true}
+    options: []
+    default: 50
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kArcFittingTolerance"
+    local: true
+  - name: "arc_fitting_minimum_segment_count"
+    display: "Minimum Arc Fitting Segments"
+    type: "positive_int"
+    tooltip: "Minimum number of consecutive line segments required before arc fitting can replace them with one G2/G3 move."
+    depends: {"arc_fitting":true}
+    options: []
+    default: 3
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kArcFittingMinimumSegmentCount"
+    local: true
   - name: "enable_spiralize_mode"
     display: "Enable Spiralize Mode"
     type: "boolean"
