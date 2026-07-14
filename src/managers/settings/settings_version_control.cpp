@@ -21,10 +21,12 @@ constexpr int kRemovedRadialSyntax = 31;
 constexpr int kArcSpecialtiesSyntax = 31;
 constexpr int kLegacyArcSpecialtiesSyntax = 32;
 constexpr int kPlanarSlicer = 0;
-constexpr int kImageSlicer = 1;
+constexpr int kV4ImageSlicer = 1;
 constexpr int kLegacyRadialSlicer = 2;
 constexpr int kLegacyHelicalSlicer = 3;
-constexpr int kCylindricalSlicer = 2;
+constexpr int kV8CylindricalSlicer = 2;
+constexpr int kV9CylindricalSlicer = 1;
+constexpr int kV9ImageSlicer = 2;
 constexpr int kRadialPathType = 0;
 constexpr int kHelicalPathType = 1;
 constexpr int kClipBoundaryHandling = 0;
@@ -85,7 +87,13 @@ constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
     kPlanarSlicer, // Polymer
     kPlanarSlicer, // Legacy slicer type 1 removed
     kPlanarSlicer, // Legacy slicer type 2 removed
-    kImageSlicer   // Image
+    kV4ImageSlicer // Image
+};
+
+constexpr std::array<int, 3> kSlicerTypeV8ToV9 = {
+    kPlanarSlicer,       // Planar
+    kV9ImageSlicer,      // Image moved after Cylindrical
+    kV9CylindricalSlicer // Cylindrical moved before Image
 };
 
 constexpr std::array<int, 7> kSkinPatternV4ToV5 = {
@@ -211,11 +219,11 @@ void migrateCylindricalSlicingSettings(fifojson& settings_group) {
     const int old_slicer_type = has_slicer_type ? slicer_type.value().get<int>() : kPlanarSlicer;
 
     if (old_slicer_type == kLegacyRadialSlicer) {
-        slicer_type.value() = kCylindricalSlicer;
+        slicer_type.value() = kV8CylindricalSlicer;
         settings_group[path_type_key] = kRadialPathType;
     }
     else if (old_slicer_type == kLegacyHelicalSlicer) {
-        slicer_type.value() = kCylindricalSlicer;
+        slicer_type.value() = kV8CylindricalSlicer;
         settings_group[path_type_key] = kHelicalPathType;
 
         int helical_boundary = kClipBoundaryHandling;
@@ -258,6 +266,8 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
         pre_7_0To7_0(version, settings);
     if (version < 8)
         pre_8_0To8_0(version, settings);
+    if (version < 9)
+        pre_9_0To9_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -440,6 +450,22 @@ void SettingsVersionControl::pre_8_0To8_0(double& version, fifojson& settings) {
     }
 
     version = 8.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_9_0To9_0(double& version, fifojson& settings) {
+    QString dt = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 9.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value())
+            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType, kSlicerTypeV8ToV9);
+    }
+
+    version = 9.0;
     settings = new_format;
 }
 } // namespace ORNL
