@@ -1,10 +1,10 @@
 #include "step/layer/layer.h"
 
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <limits>
 
-#include <CGAL/intersections.h>
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qhashfunctions.h>
@@ -41,14 +41,59 @@ bool isClearanceModifier(PathModifiers modifiers) {
     return (modifiers & clearance_modifiers) != PathModifiers::kNone;
 }
 
-bool intersectsBuildPlate(const Point& start, const Point& end, const MeshTypes::Plane_3& build_plate) {
-    const MeshTypes::Point_3 start_point = start.toCartesian3D();
-    const MeshTypes::Point_3 end_point = end.toCartesian3D();
+bool isBelowBuildPlate(const Point& point, const MeshTypes::Plane_3& build_plate) {
+    return build_plate.oriented_side(point.toCartesian3D()) == CGAL::ON_NEGATIVE_SIDE;
+}
 
-    const bool extends_below_plate = build_plate.oriented_side(start_point) == CGAL::ON_NEGATIVE_SIDE ||
-                                     build_plate.oriented_side(end_point) == CGAL::ON_NEGATIVE_SIDE;
+bool lineIntersectsBuildPlate(const Point& start, const Point& end, const MeshTypes::Plane_3& build_plate) {
+    if (isBelowBuildPlate(start, build_plate) || isBelowBuildPlate(end, build_plate)) {
+        return true;
+    }
 
-    return extends_below_plate && CGAL::do_intersect(MeshTypes::Segment_3(start_point, end_point), build_plate);
+    return false;
+}
+
+bool arcIntersectsBuildPlate(const ArcSegment& arc, const Point& start, const Point& end,
+                             const MeshTypes::Plane_3& build_plate) {
+    const Point center = arc.center();
+    const double start_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const double end_radius = std::hypot(end.x() - center.x(), end.y() - center.y());
+    constexpr double kRadiusTolerance = 1.0e-4;
+    if (start_radius <= kRadiusTolerance || std::abs(start_radius - end_radius) > kRadiusTolerance) {
+        return lineIntersectsBuildPlate(start, end, build_plate);
+    }
+
+    constexpr double kMaxSampleAngle = M_PI / 36.0;
+    const double arc_angle = std::abs(arc.angle()());
+    const int sample_count = std::max(1, static_cast<int>(std::ceil(arc_angle / kMaxSampleAngle)));
+    const double start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const double signed_angle = arc.counterclockwise() ? arc_angle : -arc_angle;
+
+    Point previous = start;
+    for (int sample = 1; sample <= sample_count; ++sample) {
+        const double fraction = static_cast<double>(sample) / sample_count;
+        const double angle = start_angle + (signed_angle * fraction);
+        const Point current(center.x() + (start_radius * std::cos(angle)),
+                            center.y() + (start_radius * std::sin(angle)),
+                            start.z() + ((end.z() - start.z()) * fraction));
+
+        if (lineIntersectsBuildPlate(previous, current, build_plate)) {
+            return true;
+        }
+        previous = current;
+    }
+
+    return false;
+}
+
+bool clearanceMoveIntersectsBuildPlate(const QSharedPointer<SegmentBase>& segment, const Point& start, const Point& end,
+                                       const MeshTypes::Plane_3& build_plate) {
+    const QSharedPointer<ArcSegment> arc = segment.dynamicCast<ArcSegment>();
+    if (!arc.isNull()) {
+        return arcIntersectsBuildPlate(*arc, start, end, build_plate);
+    }
+
+    return lineIntersectsBuildPlate(start, end, build_plate);
 }
 
 Point redirectTipWipeEnd(const Point& start, const QVector3D& original_move, const QVector3D& slicing_normal) {
@@ -493,7 +538,8 @@ void Layer::redirectClearanceMoves() {
                             has_redirected ? redirected_position + Point::fromQVector3D(original_move) : original_end;
                         bool should_rewrite_segment = has_redirected;
 
-                        if (intersectsBuildPlate(redirected_position, candidate_end, build_plate)) {
+                        if (clearanceMoveIntersectsBuildPlate(segment, redirected_position, candidate_end,
+                                                              build_plate)) {
                             candidate_end = redirectTipWipeEnd(redirected_position, original_move, slicing_normal);
                             has_redirected = true;
                             should_rewrite_segment = true;
