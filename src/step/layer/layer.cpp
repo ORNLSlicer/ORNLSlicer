@@ -322,11 +322,13 @@ void Layer::applyMinimumZShift() {
     if (z_component < kMinimumZComponent)
         return;
 
-    const Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    const Distance minimum_print_z = layer_height / z_component;
-    const Distance current_min_z = getMinimumPrintZ();
-    if (current_min_z >= minimum_print_z)
+    const float current_min_z_value = getMinimumPrintZ();
+    if (current_min_z_value == std::numeric_limits<float>::max())
         return;
+
+    const Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    const Distance current_min_z = current_min_z_value;
+    const Distance minimum_print_z = current_min_z + (layer_height / (2.0 * z_component));
 
     m_minimum_z_shift = minimum_print_z - current_min_z;
     const Point shift(0.0f, 0.0f, m_minimum_z_shift());
