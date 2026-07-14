@@ -3,6 +3,7 @@
 #include <GL/gl.h>
 
 #include <cstring>
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -144,9 +145,13 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     const qsizetype segment_count = countSegments(gcode);
     const qsizetype vertex_threshold = true_width_vertex_threshold < 0 ? 0 : true_width_vertex_threshold;
     const bool true_widths_requested = use_true_widths && preview_mode != GCodePreviewMode::kThinLines;
+    const bool auto_threshold_limited = preview_mode != GCodePreviewMode::kTrueWidths;
+    const qsizetype estimate_limit =
+        auto_threshold_limited ? vertex_threshold : std::numeric_limits<qsizetype>::max();
     const qsizetype mesh_vertex_count =
-        true_widths_requested ? estimateTrueWidthVertexCount(gcode, vertex_threshold) : 0;
-    m_lightweight_lines = !true_widths_requested || mesh_vertex_count > vertex_threshold;
+        true_widths_requested ? estimateTrueWidthVertexCount(gcode, estimate_limit) : 0;
+    m_lightweight_lines =
+        !true_widths_requested || (auto_threshold_limited && mesh_vertex_count > vertex_threshold);
     m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
 
     if (m_lightweight_lines) {
