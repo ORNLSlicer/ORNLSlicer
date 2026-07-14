@@ -41,7 +41,8 @@ Point radialLiftedPoint(const Point& point, const QSharedPointer<SettingsBase>& 
     const double length = std::hypot(dx, dy);
 
     if (length <= std::numeric_limits<double>::epsilon()) {
-        return Point(point.x(), point.y(), point.z() + lift_height());
+        // There is no outward radial direction on the cylinder axis.
+        return point;
     }
 
     const double scale = lift_height() / length;
