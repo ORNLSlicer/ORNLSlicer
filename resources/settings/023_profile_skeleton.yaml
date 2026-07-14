@@ -199,6 +199,18 @@ settings:
     namespace: "Profile::Skeleton"
     symbol: "kMinimumPathLength"
     local: true
+  - name: "skeleton_minimum_segment_length"
+    display: "Minimum Skeleton Segment Length"
+    type: "distance"
+    tooltip: "Skeleton path segments shorter than this value are collapsed before extrusion paths are created."
+    depends: {"skeleton":true}
+    options: []
+    default: 0
+    minor: "Skeleton"
+    major: "Profile"
+    namespace: "Profile::Skeleton"
+    symbol: "kMinimumSkeletonSegmentLength"
+    local: true
   - name: "skeleton_prestart"
     display: "Enable Skeleton Prestart"
     type: "boolean"

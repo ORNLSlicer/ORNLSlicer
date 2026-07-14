@@ -100,6 +100,18 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kMinimumPerimeterPathLength"
     local: true
+  - name: "perimeter_minimum_segment_length"
+    display: "Minimum Perimeter Segment Length"
+    type: "distance"
+    tooltip: "Perimeter path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"perimeter":true}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kMinimumPerimeterSegmentLength"
+    local: true
   - name: "perimeter_lead_in"
     display: "Enable Perimeter Lead-In"
     type: "boolean"

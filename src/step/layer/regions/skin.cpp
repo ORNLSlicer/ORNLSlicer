@@ -35,13 +35,15 @@ PolygonList polylineFootprint(const Polyline& line, Distance bead_width, const P
     return footprint & clipping_geometry;
 }
 
-QVector<Polyline> printableLines(const QVector<Polyline>& lines, Distance min_path_length) {
+QVector<Polyline> printableLines(const QVector<Polyline>& lines, Distance min_path_length, Distance min_segment_length,
+                                 bool closed) {
     QVector<Polyline> printable;
     printable.reserve(lines.size());
 
     for (const Polyline& line : lines) {
-        if (line.size() > 1 && line.length() >= min_path_length)
-            printable.push_back(line);
+        Polyline cleaned_line = line.removeShortSegments(min_segment_length, closed);
+        if (cleaned_line.size() > (closed ? 2 : 1) && cleaned_line.length() >= min_path_length)
+            printable.push_back(cleaned_line);
     }
 
     return printable;
@@ -96,6 +98,7 @@ void Skin::compute(uint layer_num) {
 
     Distance beadWidth = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
     Distance minPathLength = m_sb->setting<Distance>(PS::Skin::kMinPathLength);
+    Distance minSegmentLength = m_sb->setting<Distance>(PS::Skin::kMinSegmentLength);
     Angle patternAngle = m_sb->setting<Angle>(PS::Skin::kAngle);
 
     int top_count = m_sb->setting<int>(PS::Skin::kTopCount);
@@ -118,10 +121,11 @@ void Skin::compute(uint layer_num) {
 
     if (!m_skin_geometry.isEmpty()) {
         PolygonList skin_offset = m_skin_geometry.offset(-beadWidth / 2);
+        const InfillPatterns skin_pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
         QVector<Polyline> lines =
-            createPatternForArea(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)), skin_offset,
-                                 beadWidth, beadWidth, patternAngle);
-        m_computed_geometry = printableLines(lines, minPathLength);
+            createPatternForArea(skin_pattern, skin_offset, beadWidth, beadWidth, patternAngle);
+        m_computed_geometry = printableLines(lines, minPathLength, minSegmentLength,
+                                             skin_pattern == InfillPatterns::kConcentric);
         m_geometry -= printableFootprint(m_computed_geometry, beadWidth, m_skin_geometry);
     }
 
@@ -140,7 +144,8 @@ void Skin::compute(uint layer_num) {
                 QVector<Polyline> lines =
                     createPatternForArea(gradualPattern, skin_offset, beadWidth,
                                          beadWidth / (percentage + densityStep * (end - i)), infillPatternAngle);
-                m_gradual_computed_geometry.push_back(printableLines(lines, minPathLength));
+                m_gradual_computed_geometry.push_back(
+                    printableLines(lines, minPathLength, minSegmentLength, gradualPattern == InfillPatterns::kConcentric));
                 m_geometry -=
                     printableFootprint(m_gradual_computed_geometry.back(), beadWidth, m_gradual_skin_geometry[i]);
             }
@@ -309,6 +314,13 @@ void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& cu
 }
 
 Path Skin::createPath(Polyline line) {
+    const InfillPatterns pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
+    const bool is_closed_path = pattern == InfillPatterns::kConcentric;
+
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Skin::kMinSegmentLength), is_closed_path);
+    if (line.size() < (is_closed_path ? 3 : 2)) {
+        return Path();
+    }
 
     Distance width = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
     Distance height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
@@ -335,7 +347,7 @@ Path Skin::createPath(Polyline line) {
     }
 
     //! Creates closing segment if infill pattern is concentric
-    if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric) {
+    if (is_closed_path) {
         QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
         line_segment->getSb()->setSetting(MS::Extruder::kInitialSpeed,

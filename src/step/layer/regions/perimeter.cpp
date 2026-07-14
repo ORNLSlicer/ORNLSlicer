@@ -40,11 +40,12 @@ bool isValidPerimeterLine(const Polyline& line, Distance min_path_length) {
 }
 
 QVector<Polygon> appendValidPathLines(const PolygonList& path_lines, QVector<Polyline>& computed_geometry,
-                                      Distance min_path_length, bool& skipped_path_line) {
+                                      Distance min_path_length, Distance min_segment_length,
+                                      bool& skipped_path_line) {
     QVector<Polygon> valid_path_lines;
 
     for (const Polygon& poly : path_lines) {
-        Polyline line = toOpenPolyline(poly);
+        Polyline line = toOpenPolyline(poly).removeShortSegments(min_segment_length, true);
         if (!isValidPerimeterLine(line, min_path_length)) {
             skipped_path_line = true;
             continue;
@@ -138,6 +139,7 @@ void Perimeter::compute(uint layer_num) {
     Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
     int perimeter_count = m_sb->setting<int>(PS::Perimeter::kCount);
     const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
+    const Distance min_segment_length = m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength);
     const PerimeterBoundarySelection boundary_selection =
         static_cast<PerimeterBoundarySelection>(m_sb->setting<int>(PS::Perimeter::kBoundarySelection));
 
@@ -150,7 +152,8 @@ void Perimeter::compute(uint layer_num) {
              ++perimeter_number) {
             bool skipped_path_line = false;
             QVector<Polygon> valid_path_lines =
-                appendValidPathLines(path_lines, m_computed_geometry, min_path_length, skipped_path_line);
+                appendValidPathLines(path_lines, m_computed_geometry, min_path_length, min_segment_length,
+                                     skipped_path_line);
 
             if (valid_path_lines.isEmpty()) {
                 break;
@@ -195,7 +198,7 @@ void Perimeter::compute(uint layer_num) {
 
         bool skipped_path_line = false;
         QVector<Polygon> valid_path_lines =
-            appendValidPathLines(path_lines, m_computed_geometry, min_path_length, skipped_path_line);
+            appendValidPathLines(path_lines, m_computed_geometry, min_path_length, min_segment_length, skipped_path_line);
 
         if (valid_path_lines.isEmpty()) {
             break;
@@ -388,6 +391,11 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 }
 
 Path Perimeter::createPath(Polyline line) {
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), true);
+    if (line.size() < 3) {
+        return Path();
+    }
+
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;

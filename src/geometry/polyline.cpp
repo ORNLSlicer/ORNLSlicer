@@ -130,6 +130,83 @@ Polyline Polyline::simplify(Distance tol) {
     return simplified;
 }
 
+Polyline Polyline::removeShortSegments(Distance min_segment_length, bool closed) const {
+    if (min_segment_length <= 0 || size() < 2) {
+        return *this;
+    }
+
+    Polyline cleaned(*this);
+    const bool repeats_start = closed && cleaned.size() > 1 && cleaned.first() == cleaned.last();
+    if (repeats_start) {
+        cleaned.removeLast();
+    }
+
+    const int min_points = closed ? 3 : 2;
+    if (cleaned.size() < min_points) {
+        return Polyline();
+    }
+
+    auto pointAfter = [](int index, int point_count) { return (index + 1) % point_count; };
+    auto pointBefore = [](int index, int point_count) { return (index + point_count - 1) % point_count; };
+
+    auto replacementLength = [&](int remove_index) {
+        const int point_count = cleaned.size();
+        return cleaned[pointBefore(remove_index, point_count)].distance(cleaned[pointAfter(remove_index, point_count)]);
+    };
+
+    bool removed_point = true;
+    while (removed_point && cleaned.size() > min_points) {
+        removed_point = false;
+        const int segment_count = closed ? cleaned.size() : cleaned.size() - 1;
+
+        for (int segment_index = 0; segment_index < segment_count; ++segment_index) {
+            const int next_index = pointAfter(segment_index, cleaned.size());
+            if (cleaned[segment_index].distance(cleaned[next_index]) >= min_segment_length) {
+                continue;
+            }
+
+            int remove_index = next_index;
+            if (closed) {
+                remove_index =
+                    replacementLength(segment_index) <= replacementLength(next_index) ? segment_index : next_index;
+            }
+            else if (segment_index == 0) {
+                remove_index = next_index;
+            }
+            else if (next_index == cleaned.size() - 1) {
+                remove_index = segment_index;
+            }
+            else {
+                const Distance remove_segment_start_length = cleaned[segment_index - 1].distance(cleaned[next_index]);
+                const Distance remove_segment_end_length = cleaned[segment_index].distance(cleaned[next_index + 1]);
+                remove_index = remove_segment_start_length <= remove_segment_end_length ? segment_index : next_index;
+            }
+
+            cleaned.removeAt(remove_index);
+            removed_point = true;
+            break;
+        }
+    }
+
+    if (cleaned.size() < min_points) {
+        return Polyline();
+    }
+
+    const int segment_count = closed ? cleaned.size() : cleaned.size() - 1;
+    for (int segment_index = 0; segment_index < segment_count; ++segment_index) {
+        const int next_index = pointAfter(segment_index, cleaned.size());
+        if (cleaned[segment_index].distance(cleaned[next_index]) < min_segment_length) {
+            return Polyline();
+        }
+    }
+
+    if (repeats_start) {
+        cleaned.push_back(cleaned.first());
+    }
+
+    return cleaned;
+}
+
 Polygon Polyline::close() {
     Polygon ret(operator()());
     if (ret.back() == ret.front()) {

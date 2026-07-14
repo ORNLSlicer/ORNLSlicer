@@ -611,6 +611,7 @@ class Constants {
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
             static const QString kEnableLeadIn;
             static const QString kLeadInFirstLayerOnly;
             static const QString kEnableLeadInX;
@@ -631,6 +632,7 @@ class Constants {
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
             static const QString kOverlap;
             static const QString kEnableSpiralInset;
         };
@@ -653,6 +655,7 @@ class Constants {
             static const QString kSkeletonAdaptMaxWidth;
             static const QString kSkeletonAdaptMaxWidthFilter;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
             static const QString kLeadInEnable;
             static const QString kLeadInDistance;
             static const QString kLeadInSpeed;
@@ -675,6 +678,7 @@ class Constants {
             static const QString kExtrusionMultiplier;
             static const QString kOverlap;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
             static const QString kInfillEnable;
             static const QString kInfillSteps;
             static const QString kInfillPattern;
@@ -701,6 +705,7 @@ class Constants {
             static const QString kCombineXLayers;
             static const QString kCombineLayerShift;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
         };
 
         class Support {
@@ -727,6 +732,7 @@ class Constants {
             static const QString kInterfaceRegion;
             static const QString kBaseLayers;
             static const QString kBaseExpansion;
+            static const QString kMinSegmentLength;
             static const QString kBaseRegion;
             static const QString kBridgeSuppression;
             static const QString kBridgeMaxLength;

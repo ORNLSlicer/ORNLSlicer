@@ -713,6 +713,11 @@ LSegmentList Skeleton::createSegments(const Point& start, const Point& end,
 }
 
 Path Skeleton::createPath(Polyline line) {
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Skeleton::kMinSegmentLength));
+    if (line.size() < 2) {
+        return Path();
+    }
+
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;
