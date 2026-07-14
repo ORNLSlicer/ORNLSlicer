@@ -92,6 +92,9 @@ void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, Poi
             }
         }
     }
+
+    for (QSharedPointer<IslandBase> island : m_island_order)
+        island->fitCircularArcs(global_sb);
 }
 
 void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& start, int& start_index,

@@ -95,6 +95,9 @@ class IslandBase {
     //! \param previousRegions: chain of regions visited to allow cross-island and cross-layer transitions
     void calculateMultiMaterialTransitions(QVector<QSharedPointer<RegionBase>>& previousRegions);
 
+    //! \brief Fits eligible planar line segments in this island to G2/G3 arcs.
+    void fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb);
+
   protected:
     //! \brief Geometry of island.
     PolygonList m_geometry;
