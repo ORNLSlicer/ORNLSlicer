@@ -42,7 +42,7 @@
 namespace ORNL {
 namespace {
 bool isRadialCapableSyntax(GcodeSyntax syntax) {
-    return syntax == GcodeSyntax::kRadial3Plus2 || syntax == GcodeSyntax::kArcSpecialties;
+    return syntax == GcodeSyntax::kArcSpecialties;
 }
 } // namespace
 
@@ -519,15 +519,13 @@ bool SessionManager::doSlice() {
     const SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicerType));
 
     if (type == SlicerType::kRadialSlice && !isRadialCapableSyntax(syntax)) {
-        const QString message =
-            "Radial slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2 or Arc Specialties.";
+        const QString message = "Radial slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;
     }
     if (type == SlicerType::kHelicalSlice && !isRadialCapableSyntax(syntax)) {
-        const QString message =
-            "Helical slicing requires Printer > Machine Setup > Syntax to be Radial3Plus2 or Arc Specialties.";
+        const QString message = "Helical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
         return false;

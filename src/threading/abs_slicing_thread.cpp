@@ -36,7 +36,6 @@
 #include "gcode/writers/mvp_writer.h"
 #include "gcode/writers/okuma_writer.h"
 #include "gcode/writers/ornl_writer.h"
-#include "gcode/writers/radial_writer.h"
 #include "gcode/writers/reprap_writer.h"
 #include "gcode/writers/romi_fanuc_writer.h"
 #include "gcode/writers/sandia_writer.h"
@@ -174,9 +173,6 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kORNLMetric:
             m_base = QSharedPointer<ORNLWriter>(new ORNLWriter(GcodeMetaList::ORNLMetricMeta, GSM->getGlobal()));
-            break;
-        case GcodeSyntax::kRadial3Plus2:
-            m_base = QSharedPointer<RadialWriter>(new RadialWriter(GcodeMetaList::RadialMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kArcSpecialties:
             m_base = QSharedPointer<ArcSpecialtiesWriter>(
