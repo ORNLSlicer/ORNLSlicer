@@ -127,6 +127,12 @@ class PreferencesManager : public QObject {
     //! \return if true widths should be used
     bool getUseTrueWidthsPreference();
 
+    //! \brief Returns the preferred g-code preview rendering mode.
+    GCodePreviewMode getGCodePreviewModePreference();
+
+    //! \brief Returns the true-width preview vertex threshold.
+    int getGCodePreviewVertexThresholdPreference();
+
     //! \brief Return the user preference for warning about unsaved projects when closing
     bool getWarnUnsavedProjectOnClosePreference();
 
@@ -342,6 +348,18 @@ class PreferencesManager : public QObject {
     //! \param use if true widths should be used
     void setUseTrueWidthsPreference(bool use);
 
+    //! \brief Sets the preferred g-code preview rendering mode.
+    //! \param mode selected preview mode
+    void setGCodePreviewModePreference(GCodePreviewMode mode);
+
+    //! \brief Sets the preferred g-code preview rendering mode from a UI index.
+    //! \param mode selected preview mode as an integer
+    void setGCodePreviewModePreference(int mode);
+
+    //! \brief Sets the true-width preview vertex threshold.
+    //! \param threshold maximum estimated vertices to build for true-width preview
+    void setGCodePreviewVertexThresholdPreference(int threshold);
+
     //! \brief Sets the preference for warning about unsaved projects when closing
     void setWarnUnsavedProjectOnClosePreference(bool warn);
 
@@ -412,6 +430,8 @@ class PreferencesManager : public QObject {
     bool m_hide_travel_preference;
     bool m_hide_support_preference;
     bool m_use_true_widths_preference;
+    GCodePreviewMode m_gcode_preview_mode_preference;
+    int m_gcode_preview_vertex_threshold_preference;
     bool m_warn_unsaved_project_on_close_preference;
 
     //! \brief Preferences for window size and position

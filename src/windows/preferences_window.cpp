@@ -1,5 +1,7 @@
 #include "windows/preferences_window.h"
 
+#include <algorithm>
+
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QLabel>
@@ -243,6 +245,47 @@ void PreferencesWindow::setupLayout() {
 
     parts_tab_layout->setRowStretch(3, 1);
 
+    // Visualization tab
+    QWidget* visualizationWidget = new QWidget(m_tab_widget);
+    m_tab_widget->addTab(visualizationWidget, "Visualization");
+
+    QGridLayout* visualization_tab_layout = new QGridLayout();
+    visualizationWidget->setLayout(visualization_tab_layout);
+
+    m_gcode_preview_mode_combobox = new QComboBox();
+    m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kAuto),
+                                           static_cast<int>(GCodePreviewMode::kAuto));
+    m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kTrueWidths),
+                                           static_cast<int>(GCodePreviewMode::kTrueWidths));
+    m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kThinLines),
+                                           static_cast<int>(GCodePreviewMode::kThinLines));
+    int previewModeIndex = m_gcode_preview_mode_combobox->findData(
+        static_cast<int>(PreferencesManager::getInstance()->getGCodePreviewModePreference()));
+    m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
+
+    visualization_tab_layout->addWidget(new QLabel("G-code preview mode:"), 0, 0, Qt::AlignTop);
+    visualization_tab_layout->addWidget(m_gcode_preview_mode_combobox, 0, 1, Qt::AlignTop);
+
+    m_gcode_preview_vertex_threshold_spinbox = new QSpinBox();
+    m_gcode_preview_vertex_threshold_spinbox->setMinimum(0);
+    m_gcode_preview_vertex_threshold_spinbox->setMaximum(50000000);
+    m_gcode_preview_vertex_threshold_spinbox->setSingleStep(100000);
+    m_gcode_preview_vertex_threshold_spinbox->setValue(
+        PreferencesManager::getInstance()->getGCodePreviewVertexThresholdPreference());
+    m_gcode_preview_vertex_threshold_spinbox->setToolTip(
+        "Maximum estimated vertices to build for true bead width previews");
+
+    visualization_tab_layout->addWidget(new QLabel("True-width vertex threshold:"), 1, 0, Qt::AlignTop);
+    visualization_tab_layout->addWidget(m_gcode_preview_vertex_threshold_spinbox, 1, 1, Qt::AlignTop);
+    visualization_tab_layout->setRowStretch(2, 1);
+
+    connect(m_gcode_preview_mode_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
+        PreferencesManager::getInstance()->setGCodePreviewModePreference(
+            m_gcode_preview_mode_combobox->currentData().toInt());
+    });
+    connect(m_gcode_preview_vertex_threshold_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            PreferencesManager::getInstance().get(), &PreferencesManager::setGCodePreviewVertexThresholdPreference);
+
     // Visualization Colors tab
     QScrollArea* scrollArea = new QScrollArea(m_tab_widget);
     scrollArea->setWidgetResizable(true);
@@ -416,6 +459,11 @@ void PreferencesWindow::importPreferences() {
         m_mass_unit_combobox->setCurrentText(m_preferences_manager->getMassUnitText());
         m_voltage_unit_combobox->setCurrentText(m_preferences_manager->getVoltageUnitText());
         m_rotation_unit_combobox->setCurrentText(m_preferences_manager->getRotationUnitText());
+        int previewModeIndex = m_gcode_preview_mode_combobox->findData(
+            static_cast<int>(m_preferences_manager->getGCodePreviewModePreference()));
+        m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
+        m_gcode_preview_vertex_threshold_spinbox->setValue(
+            m_preferences_manager->getGCodePreviewVertexThresholdPreference());
 
         setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
         setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());
