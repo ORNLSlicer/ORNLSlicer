@@ -426,6 +426,21 @@ void GCodeView::refreshTrueWidthOverlay() {
     m_gcode_object->adoptChild(m_true_width_overlay_object);
 }
 
+uint GCodeView::pickVisibleSegment(const QPointF& mouse_ndc_pos) {
+    if (!m_true_width_overlay_object.isNull()) {
+        const uint overlay_line_num = this->pickSegment(mouse_ndc_pos, m_true_width_overlay_object);
+        if (overlay_line_num != 0) {
+            return overlay_line_num;
+        }
+    }
+
+    if (m_gcode_object.isNull()) {
+        return 0;
+    }
+
+    return this->pickSegment(mouse_ndc_pos, m_gcode_object);
+}
+
 void GCodeView::updateSegmentWidths(bool use_true_width) {
     clear();
     m_use_true_segment_widths = use_true_width;
@@ -465,7 +480,7 @@ void GCodeView::handleLeftClick(QPointF mouse_ndc_pos) {
     if (m_gcode_object.isNull())
         return;
 
-    uint picked_line_num = this->pickSegment(mouse_ndc_pos, m_gcode_object);
+    uint picked_line_num = this->pickVisibleSegment(mouse_ndc_pos);
 
     if (picked_line_num == 0) {
         if (!m_true_width_overlay_object.isNull()) {
@@ -515,6 +530,9 @@ void GCodeView::handleMouseMove(QPointF mouse_ndc_pos) {
         if (!m_gcode_object.isNull()) {
             m_gcode_object->highlightSegment(0);
         }
+        if (!m_true_width_overlay_object.isNull()) {
+            m_true_width_overlay_object->highlightSegment(0);
+        }
 
         this->setCursor(QCursor(Qt::OpenHandCursor));
         this->update();
@@ -526,7 +544,7 @@ void GCodeView::handleMouseMove(QPointF mouse_ndc_pos) {
     if (m_gcode_object.isNull())
         return;
 
-    uint picked_line_num = this->pickSegment(mouse_ndc_pos, m_gcode_object);
+    uint picked_line_num = this->pickVisibleSegment(mouse_ndc_pos);
 
     m_gcode_object->highlightSegment(picked_line_num);
     if (!m_true_width_overlay_object.isNull()) {
