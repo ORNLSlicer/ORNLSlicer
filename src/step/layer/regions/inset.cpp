@@ -78,6 +78,7 @@ void Inset::compute(uint layer_num) {
 
     Distance overlap = m_sb->setting<Distance>(PS::Inset::kOverlap);
     const Distance min_path_length = m_sb->setting<Distance>(PS::Inset::kMinPathLength);
+    const Distance min_segment_length = m_sb->setting<Distance>(PS::Inset::kMinSegmentLength);
 
     int ring_nr = 0;
     PolygonList path_line = m_geometry.offset(-beadWidth / 2);
@@ -90,7 +91,7 @@ void Inset::compute(uint layer_num) {
         QVector<Polygon> valid_path_lines;
 
         for (const Polygon& poly : path_line) {
-            Polyline line = toOpenPolyline(poly);
+            Polyline line = toOpenPolyline(poly).removeShortSegments(min_segment_length, true);
             if (!isValidInsetLine(line, min_path_length)) {
                 skipped_path_line = true;
                 continue;
@@ -258,6 +259,11 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 }
 
 Path Inset::createPath(Polyline line) {
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Inset::kMinSegmentLength), true);
+    if (line.size() < 3) {
+        return Path();
+    }
+
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;

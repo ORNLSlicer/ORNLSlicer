@@ -188,6 +188,18 @@ settings:
     namespace: "Profile::Infill"
     symbol: "kMinimumInfillPathLength"
     local: true
+  - name: "infill_minimum_segment_length"
+    display: "Minimum Infill Segment Length"
+    type: "distance"
+    tooltip: "Infill path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"infill":true}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kMinimumInfillSegmentLength"
+    local: true
   - name: "infill_maximum_path_length"
     display: "Maximum Infill Path Length"
     type: "distance"

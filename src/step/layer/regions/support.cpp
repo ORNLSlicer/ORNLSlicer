@@ -215,6 +215,12 @@ void Support::calculateModifiers(Path& path, bool supportsG3) {
 }
 
 Path Support::createPath(Polyline line) {
+    const bool is_closed_path = line.size() > 2 && line.first() == line.last();
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Support::kMinSegmentLength), is_closed_path);
+    if (line.size() < (is_closed_path ? 4 : 2)) {
+        return Path();
+    }
+
     Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
     Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
     Velocity speed = m_sb->setting<Velocity>(PS::Layer::kSpeed);

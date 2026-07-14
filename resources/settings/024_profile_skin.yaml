@@ -151,6 +151,18 @@ settings:
     namespace: "Profile::Skin"
     symbol: "kMinimumSkinPathLength"
     local: true
+  - name: "skin_minimum_segment_length"
+    display: "Minimum Skin Segment Length"
+    type: "distance"
+    tooltip: "Skin path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"skin":true}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kMinimumSkinSegmentLength"
+    local: true
   - name: "skin_gradual_infill"
     display: "Enable Gradual Infill Steps"
     type: "boolean"
