@@ -12,6 +12,7 @@ namespace ORNL {
 class Polygon;
 class PolygonList;
 class Polyline;
+class SettingsBase;
 
 /*!
  * \class Path
@@ -107,6 +108,9 @@ class Path {
 
     //! \brief remove only travel segments from path
     void removeTravels();
+
+    //! \brief Replaces eligible line runs with circular arc segments.
+    void fitCircularArcs(const QSharedPointer<SettingsBase>& fallback_settings);
 
     //! \brief Checks whether path is closed
     //! \return Whether path is closed

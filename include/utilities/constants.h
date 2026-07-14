@@ -801,6 +801,9 @@ class Constants {
             static const QString kEnableOversize;
             static const QString kOversizeDistance;
             static const QString kEnableWidthHeight;
+            static const QString kEnableArcFitting;
+            static const QString kArcFittingTolerance;
+            static const QString kArcFittingMinimumSegmentCount;
         };
 
         class Optimizations {

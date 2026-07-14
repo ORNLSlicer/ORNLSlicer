@@ -738,6 +738,10 @@ const QString Constants::ProfileSettings::SpecialModes::kEnableFixModel = "enabl
 const QString Constants::ProfileSettings::SpecialModes::kEnableOversize = "oversize";
 const QString Constants::ProfileSettings::SpecialModes::kOversizeDistance = "oversize_distance";
 const QString Constants::ProfileSettings::SpecialModes::kEnableWidthHeight = "enable_width_height";
+const QString Constants::ProfileSettings::SpecialModes::kEnableArcFitting = "arc_fitting";
+const QString Constants::ProfileSettings::SpecialModes::kArcFittingTolerance = "arc_fitting_tolerance";
+const QString Constants::ProfileSettings::SpecialModes::kArcFittingMinimumSegmentCount =
+    "arc_fitting_minimum_segment_count";
 
 // Optimizations
 const QString Constants::ProfileSettings::Optimizations::kLayerOrdering = "layer_ordering";

@@ -262,4 +262,9 @@ void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<Region
     }
 }
 
+void IslandBase::fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb) {
+    for (QSharedPointer<RegionBase> region : m_regions)
+        region->fitCircularArcs(global_sb);
+}
+
 } // namespace ORNL
