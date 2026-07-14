@@ -434,10 +434,21 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
 
     if (arc_points.size() > 1) {
         for (int i = 1, end = arc_points.size(); i < end; ++i) {
-            const Point arc_center =
-                SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
-            QSharedPointer<ArcSegment> segment =
-                QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
+            if (arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
+                continue;
+            }
+
+            QSharedPointer<SegmentBase> segment;
+            if (SlicingUtilities::IsCylindricalArcSegment(arc_points[i - 1], arc_points[i], center, radius,
+                                                          arcs_per_revolution)) {
+                const Point arc_center =
+                    SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
+                segment = QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
+            }
+            else {
+                segment = QSharedPointer<LineSegment>::create(arc_points[i - 1], arc_points[i]);
+            }
+
             segment->setSb(i == 1 ? region_start_settings : print_settings);
             path.add(segment);
         }
