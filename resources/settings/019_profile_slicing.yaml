@@ -135,7 +135,7 @@ settings:
   - name: "helical_path_length"
     display: "Helical Path Length"
     type: "distance"
-    tooltip: "The maximum length of the helical path before breaking the path "
+    tooltip: "Maximum length of each generated helical path before it is split. Set to 0 to leave helical paths unbroken."
     depends: {"slicer_type":3}
     options: []
     default: 0
