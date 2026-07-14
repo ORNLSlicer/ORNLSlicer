@@ -53,6 +53,9 @@ class Support : public RegionBase {
     //! \brief Holds the computed geometry before it is converted into paths
     //! Vector of vector used to separate perimeter geometry from infill geometry
     QVector<Polyline> m_computed_perimeter_geometry;
-    QVector<Polyline> m_computed_infill_geometry;
+    //! Each entry is an independently linkable hatch direction.  Keeping grid
+    //! directions separate prevents intentional perpendicular lines from
+    //! blocking safe serpentine connectors.
+    QVector<QVector<Polyline>> m_computed_infill_geometry;
 };
 } // namespace ORNL

@@ -16,8 +16,8 @@ settings:
   - name: "minimum_infill_travel_length"
     display: "Minimum Infill Travel Length"
     type: "distance"
-    tooltip: "Travel moves less than this value in the infill and skin regions are replaced with extrusion moves"
-    depends: {"OR":[{"infill":true},{"skin":true}]}
+    tooltip: "Travel moves less than this value in infill, skin, and support fill are replaced with extrusion moves"
+    depends: {"OR":[{"OR":[{"infill":true},{"skin":true}]},{"support":true}]}
     options: []
     default: 25400
     minor: "Travel"

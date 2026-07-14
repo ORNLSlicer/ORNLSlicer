@@ -55,7 +55,8 @@ class BufferedSlicer {
     BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
                    QVector<QSharedPointer<Part>> settings_parts,
                    QMap<uint, QSharedPointer<SettingsRange>> ranges = QMap<uint, QSharedPointer<SettingsRange>>(),
-                   int previous_buffer = 0, int future_buffer = 0, bool use_cgal_cross_section = false);
+                   int previous_buffer = 0, int future_buffer = 0, bool use_cgal_cross_section = false,
+                   bool include_build_plate_gap = false);
 
     //! \brief performs the next slice and returns it
     //! \note if m_future_buffer_size is > 0, then this actually computes N + m_future_buffer_size slice, but still
