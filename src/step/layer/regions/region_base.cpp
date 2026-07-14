@@ -16,6 +16,7 @@
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "geometry/settings_polygon.h"
+#include "optimizers/optimization_anchor.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
@@ -38,6 +39,19 @@ void RegionBase::appendPath(const Path& path) { m_paths.append(path); }
 QSharedPointer<SettingsBase> RegionBase::getSb() const { return m_sb; }
 
 void RegionBase::setSb(const QSharedPointer<SettingsBase>& sb) { m_sb = sb; }
+
+void RegionBase::setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift) {
+    m_optimization_slicing_plane = slicing_plane;
+    m_optimization_shift = optimization_shift;
+}
+
+Point RegionBase::customPathOrderPoint() const {
+    return OptimizationAnchor::customPathOrderPoint(m_sb, m_optimization_slicing_plane, m_optimization_shift);
+}
+
+Point RegionBase::customPointOrderPoint() const {
+    return OptimizationAnchor::customPointOrderPoint(m_sb, m_optimization_slicing_plane, m_optimization_shift);
+}
 
 void RegionBase::transform(QQuaternion rotation, Point shift) {
     // rotate and the shift every path in this region

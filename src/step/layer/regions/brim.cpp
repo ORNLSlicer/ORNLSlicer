@@ -80,8 +80,7 @@ void Brim::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
     PathOrderOptimization pathOrderOptimization =
         static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
     if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
+        Point startOverride = customPathOrderPoint();
 
         poo.setStartOverride(startOverride);
     }
@@ -90,8 +89,7 @@ void Brim::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
     if (usesCustomPointLocation(pointOrderOptimization)) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+        Point startOverride = customPointOrderPoint();
 
         poo.setStartPointOverride(startOverride);
     }

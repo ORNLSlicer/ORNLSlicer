@@ -23,6 +23,7 @@
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
 #include "optimizers/island_order_optimizer.h"
+#include "optimizers/optimization_anchor.h"
 #include "step/layer/island/polymer_island.h"
 #include "step/layer/regions/region_base.h"
 #include "step/step.h"
@@ -166,6 +167,10 @@ void Layer::compute() {
 void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<RegionBase>>& previousRegions) {
     m_island_order.clear();
 
+    for (QSharedPointer<IslandBase> island : m_islands) {
+        island->setOptimizationFrame(m_slicing_plane, m_shift_amount);
+    }
+
     // Optimize the layer.
     IslandOrderOptimization islandOrderOptimization =
         static_cast<IslandOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kIslandOrder));
@@ -175,8 +180,8 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
 
     // seam adjustment
     if (islandOrderOptimization == IslandOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomIslandXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomIslandYLocation));
+        Point startOverride =
+            OptimizationAnchor::customIslandOrderPoint(getSb(), m_slicing_plane, m_shift_amount);
 
         ioo.setStartPoint(startOverride);
     }
