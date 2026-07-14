@@ -169,6 +169,30 @@ settings:
     namespace: "Profile::Slicing"
     symbol: "kArcsPerRevolution"
     local: false
+  - name: "image_resolution_x"
+    display: "Image Resolution X"
+    type: "distance"
+    tooltip: "Resolution in x dimension of images created using the image kernel"
+    depends: {"slicer_type":1}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kImageResolutionX"
+    local: false
+  - name: "image_resolution_y"
+    display: "Image Resolution Y"
+    type: "distance"
+    tooltip: "Resolution in y dimension of images created using the image kernel"
+    depends: {"slicer_type":1}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kImageResolutionY"
+    local: false
 inputs:
   - name: "radial_axis"
     display: "Cylinder Axis"
