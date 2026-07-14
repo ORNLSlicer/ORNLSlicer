@@ -16,8 +16,9 @@ The first radius is half a `Layer Height` outward from `Radial Initial Radius`, 
 6. Set `Radial Initial Radius` if the first helix should begin away from the axis.
 7. Set `Radial Boundary Handling` for helical paths that cross the model boundary.
 8. When boundary handling is `Clip to Model`, set `Helical Clipping Method` to choose how intersections are retained.
-9. Confirm the printer `Syntax` is `Radial3Plus2` or `Arc Specialties`. Selecting `Helical Slice` defaults to `Radial3Plus2` only when the current syntax is not cylindrical-capable.
-10. Enable `Supports G2/G3` to write the helix as arc moves, then set `Number of Arcs per Revolution` to control its angular subdivision. Leave arc support disabled to write segmented G1 moves.
+9. Set `Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
+10. Confirm the printer `Syntax` is `Radial3Plus2` or `Arc Specialties`. Selecting `Helical Slice` defaults to `Radial3Plus2` only when the current syntax is not cylindrical-capable.
+11. Enable `Supports G2/G3` to write the helix as arc moves, then set `Number of Arcs per Revolution` to control its angular subdivision. Leave arc support disabled to write segmented G1 moves.
 
 ## Path Generation
 
@@ -43,6 +44,8 @@ Boundary handling follows the radial slicer behavior:
 When `Highest Z Intersection` finds no boundary crossing, a helix that is wholly inside the model is kept in full and a helix that is wholly outside is omitted. Tangential contacts that do not change the inside/outside classification are not boundary crossings.
 
 `Keep Boundary-Crossing Path` and `Discard Boundary-Crossing Path` do not use `Helical Clipping Method`; their behavior is unchanged.
+
+If `Helical Path Length` is greater than `0`, each generated helical fragment is split into shorter paths before print segments are emitted. Split paths stay contiguous, so no travel move is inserted between adjacent split points. Values of `0` or smaller leave the generated helical fragments unbroken.
 
 ## Output
 
