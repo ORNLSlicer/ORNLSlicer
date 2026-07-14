@@ -57,6 +57,12 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     //! \brief Pastes the previously copied items.
     void copySelection();
 
+    //! \brief Gets the number of items that are instances of this item.
+    int instanceCount(QSharedPointer<PartMetaItem> pm);
+
+    //! \brief Sets the number of items that are instances of this item.
+    void setInstanceCount(QSharedPointer<PartMetaItem> pm, int count);
+
   signals:
     //! \brief Signal that an item was added.
     void itemAddedUpdate(QSharedPointer<PartMetaItem> pm);
@@ -89,5 +95,8 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
 
     //! \brief Copied items.
     QList<QSharedPointer<PartMetaItem>> m_copied_list;
+
+    //! \brief Gets the items that are instances of the supplied item.
+    QList<QSharedPointer<PartMetaItem>> instanceItems(QSharedPointer<PartMetaItem> pm);
 };
 } // namespace ORNL
