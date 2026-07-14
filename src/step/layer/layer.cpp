@@ -478,12 +478,12 @@ void Layer::redirectClearanceMoves() {
                         continue;
                     }
 
-                    Point original_position = segments[index]->start();
+                    Point original_position = index > 0 ? segments[index - 1]->end() : segments[index]->start();
                     Point redirected_position = original_position;
                     bool has_redirected = false;
 
                     // Reconstruct the emitted moves from successive endpoints. Multi-segment wipes and spiral lifts
-                    // store segment starts on the source contour, but the machine moves from the preceding endpoint.
+                    // can store starts on the source contour, but the machine moves from the preceding endpoint.
                     while (index < segments.size() &&
                            isClearanceModifier(segments[index]->getSb()->setting<PathModifiers>(SS::kPathModifiers))) {
                         const QSharedPointer<SegmentBase>& segment = segments[index];
