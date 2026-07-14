@@ -15,6 +15,7 @@
 #include <qtypes.h>
 
 #include "gcode/gcode_meta.h"
+#include "gcode/writers/arc_specialties_writer.h"
 #include "gcode/writers/adamantine_writer.h"
 #include "gcode/writers/aerobasic_writer.h"
 #include "gcode/writers/aml3d_writer.h"
@@ -176,6 +177,10 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kRadial3Plus2:
             m_base = QSharedPointer<RadialWriter>(new RadialWriter(GcodeMetaList::RadialMeta, GSM->getGlobal()));
+            break;
+        case GcodeSyntax::kArcSpecialties:
+            m_base = QSharedPointer<ArcSpecialtiesWriter>(
+                new ArcSpecialtiesWriter(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal()));
             break;
         default:
             m_base =
