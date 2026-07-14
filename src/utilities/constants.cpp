@@ -781,6 +781,7 @@ const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerYOffset
 
 // Slicing
 const QString Constants::ProfileSettings::Slicing::kSlicerType = "slicer_type";
+const QString Constants::ProfileSettings::Slicing::kCylindricalPathType = "cylindrical_path_type";
 const QString Constants::ProfileSettings::Slicing::kSlicingVectorX = "slicing_vector_x";
 const QString Constants::ProfileSettings::Slicing::kSlicingVectorY = "slicing_vector_y";
 const QString Constants::ProfileSettings::Slicing::kSlicingVectorZ = "slicing_vector_z";
@@ -789,7 +790,7 @@ const QString Constants::ProfileSettings::Slicing::kRadialAxisMode = "radial_axi
 const QString Constants::ProfileSettings::Slicing::kRadialAxisX = "radial_axis_x";
 const QString Constants::ProfileSettings::Slicing::kRadialAxisY = "radial_axis_y";
 const QString Constants::ProfileSettings::Slicing::kRadialBoundaryHandling = "radial_boundary_handling";
-const QString Constants::ProfileSettings::Slicing::kHelicalClippingMethod = "helical_clipping_method";
+const QString Constants::ProfileSettings::Slicing::kHelicalBoundaryHandling = "helical_boundary_handling";
 const QString Constants::ProfileSettings::Slicing::kHelicalPathLength = "helical_path_length";
 const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution = "arcs_per_revolution";
 

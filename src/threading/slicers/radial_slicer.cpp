@@ -277,8 +277,8 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
 
     if (m_radial_layers.isEmpty()) {
         const QString message =
-            "Warning: Radial slicing generated no printable paths. Check Radial Initial Radius, Radial Axis Mode, "
-            "clipping meshes, and Radial Boundary Handling.";
+            "Warning: Radial slicing generated no printable paths. Check Initial Radius, Cylinder Axis Mode, clipping "
+            "meshes, and Boundary Handling.";
         qWarning() << message;
         emit statusMessage(message);
         emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);

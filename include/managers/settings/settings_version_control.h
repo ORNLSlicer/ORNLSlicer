@@ -55,5 +55,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_7_0To7_0(double& version, fifojson& settings);
+
+    //! \brief Rolls settings after replacing radial/helical slicer options with cylindrical path type to version 8.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_8_0To8_0(double& version, fifojson& settings);
 };
 } // namespace ORNL

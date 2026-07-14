@@ -31,10 +31,10 @@ class ArcSpecialtiesWriter : public WriterBase {
     ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
     /*!
-     * @brief Supplies the effective part-local helical clipping methods for the settings header.
-     * @param methods Part name and clipping method pairs for parts that produced helical paths.
+     * @brief Supplies the effective part-local helical boundary handling modes for the settings header.
+     * @param methods Part name and boundary handling pairs for parts that produced helical paths.
      */
-    void setHelicalClippingMethods(const QVector<QPair<QString, HelicalClippingMethod>>& methods);
+    void setHelicalBoundaryHandling(const QVector<QPair<QString, HelicalBoundaryHandling>>& methods);
 
     /*!
      * @brief Writes radial or helical geometry and Arc Specialties setup notes.
@@ -194,7 +194,7 @@ class ArcSpecialtiesWriter : public WriterBase {
     //! @brief Tracks layer number.
     int m_current_layer = 0;
 
-    //! @brief Effective part-local clipping methods reported in helical G-code headers.
-    QVector<QPair<QString, HelicalClippingMethod>> m_helical_clipping_methods;
+    //! @brief Effective part-local boundary handling modes reported in helical G-code headers.
+    QVector<QPair<QString, HelicalBoundaryHandling>> m_helical_boundary_handling;
 };
 } // namespace ORNL
