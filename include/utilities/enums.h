@@ -665,6 +665,9 @@ enum class PreferenceChoice : uint8_t { kAsk = 0, kPerformAutomatically = 1, kSk
 /*!
  * \enum GCodePreviewMode
  * \brief Controls how g-code visualization chooses between true bead meshes and lightweight lines.
+ *
+ * Auto uses the configured vertex threshold. True Bead Widths honors the toolbar true-width request without applying the
+ * automatic threshold fallback. Thin Lines disables true-width previews.
  */
 enum class GCodePreviewMode : uint8_t {
     kAuto = 0,
