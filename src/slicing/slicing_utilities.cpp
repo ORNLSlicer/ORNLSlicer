@@ -39,6 +39,13 @@ constexpr double kArcGeometryRelativeTolerance = 1.0e-6;
 //! \brief Smallest angular span worth emitting as a G2/G3 move.
 constexpr double kMinArcAngularSpan = 1.0e-6;
 
+//! \brief Upper bound for user-configured G2/G3 arc subdivision density.
+constexpr int kMaxCylindricalArcsPerRevolution = 360;
+
+int clampArcsPerRevolution(int arcs_per_revolution) {
+    return std::clamp(arcs_per_revolution, 1, kMaxCylindricalArcsPerRevolution);
+}
+
 double radialDistance(const Point& point, const Point& center) {
     return std::hypot(point.x() - center.x(), point.y() - center.y());
 }
@@ -64,6 +71,7 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
     if (polyline.size() < 2 || radius <= 0 || arcs_per_revolution <= 0) {
         return arc_points;
     }
+    arcs_per_revolution = clampArcsPerRevolution(arcs_per_revolution);
 
     QVector<double> cumulative_sweeps;
     cumulative_sweeps.reserve(polyline.size());
@@ -117,6 +125,7 @@ bool SlicingUtilities::IsCylindricalArcSegment(const Point& start, const Point& 
     if (expected_radius <= std::numeric_limits<double>::epsilon() || arcs_per_revolution <= 0) {
         return false;
     }
+    arcs_per_revolution = clampArcsPerRevolution(arcs_per_revolution);
 
     const double tolerance = std::max(kArcGeometryTolerance(), expected_radius * kArcGeometryRelativeTolerance);
     const double angular_tolerance = std::max(kMinArcAngularSpan, tolerance / expected_radius);
