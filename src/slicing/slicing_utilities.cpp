@@ -56,12 +56,6 @@ double counterClockwiseSweep(const Point& start, const Point& end, const Point& 
     }
     return sweep;
 }
-
-//! \brief Projects a sampled point back onto the exact cylindrical radius while preserving its angle and Z.
-Point projectToRadius(const Point& point, const Point& center, Distance radius) {
-    const double angle = std::atan2(point.y() - center.y(), point.x() - center.x());
-    return Point(center.x() + (radius() * std::cos(angle)), center.y() + (radius() * std::sin(angle)), point.z());
-}
 } // namespace
 
 QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polyline, const Point& center, Distance radius,
