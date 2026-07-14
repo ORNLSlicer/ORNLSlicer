@@ -291,6 +291,69 @@ QVector<Polyline> clipHelixAtHighestIntersection(const Polyline& helix, const He
 
     return {clipped_helix};
 }
+
+//! @brief Splits a sampled helical fragment into path-length-limited fragments.
+QVector<Polyline> splitPolylineByLength(const Polyline& polyline, Distance max_path_length) {
+    if (polyline.size() < 2) {
+        return {};
+    }
+
+    if (max_path_length <= kMinPathSegmentLength || polyline.length() <= max_path_length) {
+        return {polyline};
+    }
+
+    QVector<Polyline> split_lines;
+    Polyline current_line;
+    current_line.push_back(polyline.first());
+    Distance current_length = 0;
+
+    for (int i = 1, end = polyline.size(); i < end; ++i) {
+        Point segment_start = polyline[i - 1];
+        const Point segment_end = polyline[i];
+        Distance remaining_segment_length = segment_start.distance(segment_end);
+
+        while (remaining_segment_length > 0) {
+            Distance remaining_path_length = max_path_length - current_length;
+            if (remaining_path_length <= kMinPathSegmentLength && current_line.size() > 1) {
+                split_lines.push_back(current_line);
+                current_line.clear();
+                current_line.push_back(segment_start);
+                current_length = 0;
+                remaining_path_length = max_path_length;
+            }
+
+            if (remaining_segment_length <= remaining_path_length) {
+                if (current_line.last() != segment_end) {
+                    current_line.push_back(segment_end);
+                }
+                current_length += remaining_segment_length;
+                remaining_segment_length = 0;
+            }
+            else {
+                const double split_fraction = remaining_path_length() / remaining_segment_length();
+                const Point split_point = interpolate(segment_start, segment_end, split_fraction);
+                if (current_line.last() != split_point) {
+                    current_line.push_back(split_point);
+                }
+                if (current_line.size() > 1) {
+                    split_lines.push_back(current_line);
+                }
+
+                current_line.clear();
+                current_line.push_back(split_point);
+                segment_start = split_point;
+                current_length = 0;
+                remaining_segment_length = segment_start.distance(segment_end);
+            }
+        }
+    }
+
+    if (current_line.size() > 1) {
+        split_lines.push_back(current_line);
+    }
+
+    return split_lines;
+}
 } // namespace
 
 HelicalSlicer::HelicalSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
@@ -441,14 +504,18 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             }
             QVector<Polyline> candidate_lines = applyBoundaryHandling(helix, clipped_lines, boundary_handling);
 
+            const Distance max_path_length = layer_settings->setting<Distance>(PS::Slicing::kHelicalPathLength);
             for (const Polyline& line : candidate_lines) {
                 if (line.size() < 2) {
                     continue;
                 }
 
-                Path path = createPath(line, layer_settings, center, radius, current_location);
-                if (path.size() > 0) {
-                    helical_layer->addPath(path);
+                const QVector<Polyline> path_lines = splitPolylineByLength(line, max_path_length);
+                for (const Polyline& path_line : path_lines) {
+                    Path path = createPath(path_line, layer_settings, center, radius, current_location);
+                    if (path.size() > 0) {
+                        helical_layer->addPath(path);
+                    }
                 }
             }
 
