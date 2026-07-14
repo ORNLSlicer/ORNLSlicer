@@ -34,6 +34,7 @@
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/adamantine_parser.h"
 #include "gcode/parsers/aerobasic_parser.h"
+#include "gcode/parsers/arc_specialties_parser.h"
 #include "gcode/parsers/beam_parser.h"
 #include "gcode/parsers/cincinnati_parser.h"
 #include "gcode/parsers/common_parser.h"
@@ -532,6 +533,11 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kRadial3Plus2).toUpper())) {
                 m_parser.reset(new RadialParser(GcodeMetaList::RadialMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::RadialMeta;
+            }
+            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kArcSpecialties).toUpper())) {
+                m_parser.reset(
+                    new ArcSpecialtiesParser(GcodeMetaList::ArcSpecialtiesMeta, m_adjust_file, originalLines, lines));
+                m_selected_meta = GcodeMetaList::ArcSpecialtiesMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kRomiFanuc).toUpper())) {
                 m_parser.reset(new CommonParser(GcodeMetaList::RomiFanucMeta, m_adjust_file, originalLines, lines));

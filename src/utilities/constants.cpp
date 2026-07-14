@@ -190,6 +190,7 @@ QString Constants::PrinterSettings::SyntaxString::kAeroBasic = "AeroBasic";
 QString Constants::PrinterSettings::SyntaxString::kAdamantine = "Adamantine";
 QString Constants::PrinterSettings::SyntaxString::kORNLMetric = "ORNL-Metric";
 QString Constants::PrinterSettings::SyntaxString::kRadial3Plus2 = "Radial3Plus2";
+QString Constants::PrinterSettings::SyntaxString::kArcSpecialties = "Arc Specialties";
 
 //================================================================================
 // Optimizations
