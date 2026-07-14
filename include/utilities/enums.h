@@ -53,11 +53,20 @@ enum class SlicerType : uint8_t {
     //! @brief Image-based slicing workflow.
     kImageSlice = 1,
 
-    //! @brief Radial cylinder slicing around each part's XY centroid.
-    kRadialSlice = 2,
+    //! @brief Cylindrical slicing around each part's XY centroid or configured axis.
+    kCylindricalSlice = 2
+};
 
-    //! @brief Helical slicing around each part's XY centroid.
-    kHelicalSlice = 3
+/*!
+ * @enum CylindricalPathType
+ * @brief Selects the cylindrical path family to generate.
+ */
+enum class CylindricalPathType : uint8_t {
+    //! @brief Concentric radial rings or arcs.
+    kRadial = 0,
+
+    //! @brief Rising helical paths.
+    kHelical = 1
 };
 
 //! \brief Function for going from json to SlicerType
@@ -65,6 +74,16 @@ void to_json(json& j, const SlicerType& i);
 
 //! \brief Function for going from SlicerType to json
 void from_json(const json& j, SlicerType& i);
+
+inline QString toString(CylindricalPathType path_type) {
+    switch (path_type) {
+        case CylindricalPathType::kHelical:
+            return "Helical";
+        case CylindricalPathType::kRadial:
+        default:
+            return "Radial";
+    }
+}
 
 /*!
  * @enum RadialBoundaryHandling
@@ -84,34 +103,34 @@ enum class RadialBoundaryHandling : uint8_t {
 inline QString toString(RadialBoundaryHandling handling) {
     switch (handling) {
         case RadialBoundaryHandling::kKeepBoundaryCrossingPath:
-            return "Keep Boundary-Crossing Path";
+            return "Keep";
         case RadialBoundaryHandling::kDiscardBoundaryCrossingPath:
-            return "Discard Boundary-Crossing Path";
+            return "Discard";
         case RadialBoundaryHandling::kClipToModel:
         default:
-            return "Clip to Model";
+            return "Clip";
     }
 }
 
 /*!
- * @enum HelicalClippingMethod
+ * @enum HelicalBoundaryHandling
  * @brief Selects how a helical path is clipped to the model boundary.
  */
-enum class HelicalClippingMethod : uint8_t {
+enum class HelicalBoundaryHandling : uint8_t {
     //! @brief Keep every portion of the helix that lies inside the model.
-    kAllModelIntersections = 0,
+    kClip = 0,
 
     //! @brief Keep the helix through the model intersection with the greatest Z value.
-    kHighestZIntersection = 1
+    kClipZ = 1
 };
 
-inline QString toString(HelicalClippingMethod method) {
-    switch (method) {
-        case HelicalClippingMethod::kHighestZIntersection:
-            return "Highest Z Intersection";
-        case HelicalClippingMethod::kAllModelIntersections:
+inline QString toString(HelicalBoundaryHandling handling) {
+    switch (handling) {
+        case HelicalBoundaryHandling::kClipZ:
+            return "Clip Z";
+        case HelicalBoundaryHandling::kClip:
         default:
-            return "All Model Intersections";
+            return "Clip";
     }
 }
 
@@ -531,7 +550,7 @@ inline QString toString(PathModifiers modifier_type) {
 enum class SmoothingType : uint8_t {
     kDouglasPeucker = 0,
     kRadialDistance = 1,
-    kPerpendicularDistance =2,
+    kPerpendicularDistance = 2,
     kReumannWitkam = 3
 };
 
@@ -700,8 +719,8 @@ inline QString toString(DisabledSettingVisibility visibility) {
  * \enum GCodePreviewMode
  * \brief Controls how g-code visualization chooses between true bead meshes and lightweight lines.
  *
- * Auto uses the configured vertex threshold. True Bead Widths honors the toolbar true-width request without applying the
- * automatic threshold fallback. Thin Lines disables true-width previews.
+ * Auto uses the configured vertex threshold. True Bead Widths honors the toolbar true-width request without applying
+ * the automatic threshold fallback. Thin Lines disables true-width previews.
  */
 enum class GCodePreviewMode : uint8_t {
     kAuto = 0,
