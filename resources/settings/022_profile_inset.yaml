@@ -37,6 +37,42 @@ settings:
     namespace: "Profile::Inset"
     symbol: "kInsetBeadWidth"
     local: true
+  - name: "inset_adapt"
+    display: "Enable Adaptive Inset Bead Widths"
+    type: "boolean"
+    tooltip: "If selected, inset bead widths are adjusted within the configured limits to better fill narrow regions whose remaining contour space is not an exact multiple of the nominal bead width."
+    depends: {"inset":true}
+    options: []
+    default: false
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kEnableAdaptiveBeadWidths"
+    local: true
+  - name: "inset_adapt_min_width"
+    display: "Minimum Adaptive Inset Bead Width"
+    type: "distance"
+    tooltip: "Minimum bead width allowed when adaptive inset bead widths are enabled."
+    depends: {"AND":[{"inset":true},{"inset_adapt":true}]}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kMinimumAdaptiveBeadWidth"
+    local: true
+  - name: "inset_adapt_max_width"
+    display: "Maximum Adaptive Inset Bead Width"
+    type: "distance"
+    tooltip: "Maximum bead width allowed when adaptive inset bead widths are enabled."
+    depends: {"AND":[{"inset":true},{"inset_adapt":true}]}
+    options: []
+    default: 10000
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kMaximumAdaptiveBeadWidth"
+    local: true
   - name: "inset_speed"
     display: "Inset Speed"
     type: "speed"

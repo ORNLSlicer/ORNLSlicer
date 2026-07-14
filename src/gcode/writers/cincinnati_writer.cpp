@@ -589,13 +589,14 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     // Create comment for region type and path modifiers
     QString comment = toString(region_type);
 
-    // If the region type is skeleton, add the bead width to the comment
-    if (region_type == RegionType::kSkeleton) {
-        // If the skeleton has been adapted, prepend "AD-" to the comment
-        if (params->setting<bool>(SS::kAdapted)) {
-            comment = "AD-" % comment;
-        }
-        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth)());
+    // If the bead width has been adapted, include the true width in the comment for reload/visualization.
+    if (params->setting<bool>(SS::kAdapted)) {
+        comment = "AD-" % comment;
+        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
+    }
+    // Skeleton comments have historically included width even when not adapted.
+    else if (region_type == RegionType::kSkeleton) {
+        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
     }
 
     // Add path modifiers to comments
