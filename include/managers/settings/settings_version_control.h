@@ -60,5 +60,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_8_0To8_0(double& version, fifojson& settings);
+
+    //! \brief Rolls settings after reordering Cylindrical before Image slicer type to version 9.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_9_0To9_0(double& version, fifojson& settings);
 };
 } // namespace ORNL

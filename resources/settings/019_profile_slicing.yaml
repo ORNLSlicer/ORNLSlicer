@@ -8,8 +8,8 @@ settings:
     depends: {}
     options:
       - "Planar"
-      - "Image"
       - "Cylindrical"
+      - "Image"
     default: 0
     minor: "Slicing"
     major: "Profile"
@@ -56,7 +56,7 @@ settings:
     display: "Cylinder Axis Mode"
     type: "enumeration"
     tooltip: "Selects the XY axis used for cylindrical slicing. Part Centroid uses each build part's centroid, while Custom XY uses the configured cylinder axis coordinates."
-    depends: {"slicer_type":2}
+    depends: {"slicer_type":1}
     options:
       - "Part Centroid"
       - "Custom XY"
@@ -70,7 +70,7 @@ settings:
     display: "Cylinder Axis X"
     type: "location"
     tooltip: "X coordinate for the cylinder axis when Cylinder Axis Mode is Custom XY."
-    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    depends: {"AND":[{"slicer_type":1},{"radial_axis_mode":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -82,7 +82,7 @@ settings:
     display: "Cylinder Axis Y"
     type: "location"
     tooltip: "Y coordinate for the cylinder axis when Cylinder Axis Mode is Custom XY."
-    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    depends: {"AND":[{"slicer_type":1},{"radial_axis_mode":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -94,7 +94,7 @@ settings:
     display: "Initial Radius"
     type: "distance"
     tooltip: "Starting radius for cylindrical slicing. Values less than or equal to zero use half the layer height."
-    depends: {"slicer_type":2}
+    depends: {"slicer_type":1}
     options: []
     default: 0
     minor: "Slicing"
@@ -106,7 +106,7 @@ settings:
     display: "Path Type"
     type: "enumeration"
     tooltip: "Selects whether cylindrical slicing generates radial rings or helical paths."
-    depends: {"slicer_type":2}
+    depends: {"slicer_type":1}
     options:
       - "Radial"
       - "Helical"
@@ -120,7 +120,7 @@ settings:
     display: "Boundary Handling"
     type: "enumeration"
     tooltip: "Controls radial paths that cross the model boundary. Clip keeps model-retained portions, Keep outputs the original boundary-crossing path when any portion is inside, and Discard omits paths cut by the model boundary."
-    depends: {"AND":[{"slicer_type":2},{"cylindrical_path_type":0}]}
+    depends: {"AND":[{"slicer_type":1},{"cylindrical_path_type":0}]}
     options:
       - "Clip"
       - "Keep"
@@ -135,7 +135,7 @@ settings:
     display: "Boundary Handling"
     type: "enumeration"
     tooltip: "Controls helical paths that cross the model boundary. Clip keeps every retained model intersection, and Clip Z keeps the continuous helix through the highest Z model intersection."
-    depends: {"AND":[{"slicer_type":2},{"cylindrical_path_type":1}]}
+    depends: {"AND":[{"slicer_type":1},{"cylindrical_path_type":1}]}
     options:
       - "Clip"
       - "Clip Z"
@@ -149,7 +149,7 @@ settings:
     display: "Helical Path Length"
     type: "distance"
     tooltip: "Maximum length of each generated helical path before it is split. Set to 0 to leave helical paths unbroken."
-    depends: {"AND":[{"slicer_type":2},{"cylindrical_path_type":1}]}
+    depends: {"AND":[{"slicer_type":1},{"cylindrical_path_type":1}]}
     options: []
     default: 0
     minor: "Slicing"
@@ -160,8 +160,8 @@ settings:
   - name: "arcs_per_revolution"
     display: "Number of Arcs per Revolution"
     type: "positive_int"
-    tooltip: "Total number of arcs per revolution. Values less than one use one arc."
-    depends: {"slicer_type":2}
+    tooltip: "Total number of arcs per revolution (minimum 1)."
+    depends: {"slicer_type":1}
     options: []
     default: 1
     minor: "Slicing"
@@ -173,7 +173,7 @@ settings:
     display: "Image Resolution X"
     type: "distance"
     tooltip: "Resolution in x dimension of images created using the image kernel"
-    depends: {"slicer_type":1}
+    depends: {"slicer_type":2}
     options: []
     default: 0
     minor: "Slicing"
@@ -185,7 +185,7 @@ settings:
     display: "Image Resolution Y"
     type: "distance"
     tooltip: "Resolution in y dimension of images created using the image kernel"
-    depends: {"slicer_type":1}
+    depends: {"slicer_type":2}
     options: []
     default: 0
     minor: "Slicing"
@@ -198,7 +198,7 @@ inputs:
     display: "Image Resolution"
     widget: "vector2"
     tooltip: "Resolution in x and y dimensions of images created using the image kernel"
-    depends: {"slicer_type":1}
+    depends: {"slicer_type":2}
     minor: "Slicing"
     major: "Profile"
     components:
@@ -210,7 +210,7 @@ inputs:
     display: "Cylinder Axis"
     widget: "vector2"
     tooltip: "Defines the custom XY coordinate used as the cylinder axis when Cylinder Axis Mode is Custom XY."
-    depends: {"AND":[{"slicer_type":2},{"radial_axis_mode":1}]}
+    depends: {"AND":[{"slicer_type":1},{"radial_axis_mode":1}]}
     minor: "Slicing"
     major: "Profile"
     components:
