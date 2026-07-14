@@ -1,5 +1,6 @@
 #pragma once
 
+#include <limits>
 #include <utility>
 #include <vector>
 
@@ -34,11 +35,20 @@ class GCodeObject : public GraphicsObject {
     //! \param gcode: GCode segments to visualize.
     //! \param segmentInfoControl: Segment / Bead info display control
     //! \param use_true_widths: If true, draw printable moves as bead meshes when they are small enough to load.
+    //! \param preview_mode: Preview rendering policy to apply.
+    //! \param true_width_vertex_threshold: Maximum estimated vertices to build for true-width preview.
+    //! \param update_segment_info: If true, this object owns the segment info control's backing g-code.
     GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
-                QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths);
+                QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths,
+                GCodePreviewMode preview_mode = GCodePreviewMode::kAuto,
+                qsizetype true_width_vertex_threshold = 5000000, bool update_segment_info = true);
 
     //! \brief Destructor.
     ~GCodeObject();
+
+    //! \brief Estimates vertices required if printable segments are expanded to true-width bead meshes.
+    static qsizetype estimateTrueWidthVertexCount(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
+                                                  qsizetype limit = std::numeric_limits<qsizetype>::max());
 
     //! \brief Hides/Show all segments matching a type.
     //! \param type: Type to hide/show.
@@ -95,6 +105,9 @@ class GCodeObject : public GraphicsObject {
     //! \return Pairs of (line number, segment endpoints) for each line segment.
     const QVector<std::pair<uint, std::pair<QVector3D, QVector3D>>> segmentLines();
 
+    //! \brief Returns true when this object renders printable segments as lightweight lines.
+    bool isLightweight() const;
+
   protected:
     //! \brief Overridden draw call to allow segment hiding.
     void draw();
@@ -149,6 +162,9 @@ class GCodeObject : public GraphicsObject {
 
     //! \brief True when gcode is rendered as lightweight GL lines instead of bead meshes.
     bool m_lightweight_lines = false;
+
+    //! \brief If true, this object updates the segment info control.
+    bool m_updates_segment_info = true;
 
     //! \brief Render mode used by the primary GraphicsObject buffer.
     ushort m_primary_render_mode = GL_TRIANGLES;

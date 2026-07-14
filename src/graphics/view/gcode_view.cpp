@@ -1,5 +1,6 @@
 #include "graphics/view/gcode_view.h"
 
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <tuple>
@@ -140,6 +141,14 @@ void GCodeView::useOrthographic(bool ortho) {
 
 void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     clearGhosts();
+    clearTrueWidthOverlay();
+    if (!m_gcode_object.isNull()) {
+        m_printer->orphanChild(m_gcode_object);
+        m_gcode_object.reset();
+    }
+
+    m_true_width_overlay_key_valid = false;
+    m_gcode = gcode;
 
     if (m_state.ortho) {
         m_state.zoom_factor = 1.0f;
@@ -147,20 +156,36 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     }
 
     if (gcode.isEmpty()) {
-        m_printer->orphanChild(m_gcode_object);
         m_gcode_object = nullptr;
     }
     else {
+        if (m_state.low_layer >= gcode.size()) {
+            m_state.low_layer = gcode.size() - 1;
+        }
         if (m_state.high_layer >= gcode.size()) {
             m_state.high_layer = gcode.size() - 1;
         }
+        if (m_state.high_layer < m_state.low_layer) {
+            m_state.high_layer = m_state.low_layer;
+        }
 
+        QSharedPointer<PreferencesManager> preferences = PreferencesManager::getInstance();
         m_gcode_object = QSharedPointer<GCodeObject>::create(this, gcode, m_segment_info_control,
-                                                             m_use_true_segment_widths);
+                                                             m_use_true_segment_widths,
+                                                             preferences->getGCodePreviewModePreference(),
+                                                             preferences->getGCodePreviewVertexThresholdPreference());
         m_gcode_object->showLayers(m_state.low_layer, m_state.high_layer);
+        if (m_state.high_segment != std::numeric_limits<uint>::max()) {
+            const uint max_segment = m_gcode_object->visibleSegmentCount();
+            if (max_segment > 0) {
+                const uint high_segment = std::min(m_state.high_segment, max_segment - 1);
+                m_gcode_object->showSegments(std::min(m_state.low_segment, high_segment), high_segment);
+            }
+        }
         m_gcode_object->hideSegmentType(m_state.hidden_type, true);
 
         m_printer->adoptChild(m_gcode_object);
+        refreshTrueWidthOverlay();
     }
     updateHoverTracking();
 
@@ -169,7 +194,6 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     }
 
     this->update();
-    m_gcode = gcode;
     updateSegmentInfoViewMatrix();
 }
 
@@ -255,6 +279,9 @@ void GCodeView::hideSegmentType(SegmentDisplayType type, bool hidden) {
         return;
 
     m_gcode_object->hideSegmentType(type, hidden);
+    if (!m_true_width_overlay_object.isNull()) {
+        m_true_width_overlay_object->hideSegmentType(type, hidden);
+    }
 
     this->update();
 }
@@ -298,6 +325,107 @@ void GCodeView::rebuildGhosts() {
     }
 }
 
+void GCodeView::clearTrueWidthOverlay() {
+    if (!m_true_width_overlay_object.isNull()) {
+        if (!m_gcode_object.isNull()) {
+            m_gcode_object->orphanChild(m_true_width_overlay_object);
+        }
+        m_true_width_overlay_object.reset();
+    }
+}
+
+QVector<QVector<QSharedPointer<SegmentBase>>> GCodeView::visiblePrintableGCodeSubset() const {
+    QVector<QVector<QSharedPointer<SegmentBase>>> subset;
+    if (m_gcode.isEmpty()) {
+        return subset;
+    }
+
+    const uint low_layer = std::min(m_state.low_layer, static_cast<uint>(m_gcode.size() - 1));
+    const uint high_layer = std::min(m_state.high_layer, static_cast<uint>(m_gcode.size() - 1));
+    if (low_layer > high_layer) {
+        return subset;
+    }
+
+    const uint high_segment = m_state.high_segment == std::numeric_limits<uint>::max()
+                                  ? std::numeric_limits<uint>::max()
+                                  : std::max(m_state.low_segment, m_state.high_segment);
+    uint visible_segment_index = 0;
+
+    for (uint layer_index = low_layer; layer_index <= high_layer; ++layer_index) {
+        QVector<QSharedPointer<SegmentBase>> layer_subset;
+        const QVector<QSharedPointer<SegmentBase>>& layer = m_gcode[layer_index];
+        layer_subset.reserve(layer.size());
+
+        for (const QSharedPointer<SegmentBase>& segment : layer) {
+            const bool in_segment_range =
+                visible_segment_index >= m_state.low_segment && visible_segment_index <= high_segment;
+            if (in_segment_range && !static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
+                layer_subset.push_back(segment);
+            }
+
+            ++visible_segment_index;
+        }
+
+        if (!layer_subset.isEmpty()) {
+            subset.push_back(layer_subset);
+        }
+    }
+
+    return subset;
+}
+
+void GCodeView::refreshTrueWidthOverlay() {
+    if (m_gcode_object.isNull() || !m_gcode_object->isLightweight() || !m_use_true_segment_widths) {
+        clearTrueWidthOverlay();
+        m_true_width_overlay_key_valid = false;
+        return;
+    }
+
+    QSharedPointer<PreferencesManager> preferences = PreferencesManager::getInstance();
+    const GCodePreviewMode preview_mode = preferences->getGCodePreviewModePreference();
+    const int vertex_threshold = preferences->getGCodePreviewVertexThresholdPreference();
+
+    TrueWidthOverlayKey key;
+    key.low_layer = m_state.low_layer;
+    key.high_layer = m_state.high_layer;
+    key.low_segment = m_state.low_segment;
+    key.high_segment = m_state.high_segment;
+    key.preview_mode = preview_mode;
+    key.vertex_threshold = vertex_threshold;
+    key.use_true_widths = m_use_true_segment_widths;
+
+    if (m_true_width_overlay_key_valid && key == m_true_width_overlay_key) {
+        return;
+    }
+
+    clearTrueWidthOverlay();
+    m_true_width_overlay_key = key;
+    m_true_width_overlay_key_valid = true;
+
+    if (preview_mode == GCodePreviewMode::kThinLines) {
+        return;
+    }
+
+    QVector<QVector<QSharedPointer<SegmentBase>>> visible_gcode = visiblePrintableGCodeSubset();
+    if (visible_gcode.isEmpty()) {
+        return;
+    }
+
+    const qsizetype estimated_vertices =
+        GCodeObject::estimateTrueWidthVertexCount(visible_gcode, static_cast<qsizetype>(vertex_threshold));
+    if (estimated_vertices > vertex_threshold) {
+        return;
+    }
+
+    m_true_width_overlay_object = QSharedPointer<GCodeObject>::create(
+        this, visible_gcode, m_segment_info_control, true, GCodePreviewMode::kTrueWidths, vertex_threshold, false);
+    if (m_state.hidden_type != SegmentDisplayType::kNone) {
+        m_true_width_overlay_object->hideSegmentType(m_state.hidden_type, true);
+    }
+    m_true_width_overlay_object->setOnTop(true);
+    m_gcode_object->adoptChild(m_true_width_overlay_object);
+}
+
 void GCodeView::updateSegmentWidths(bool use_true_width) {
     clear();
     m_use_true_segment_widths = use_true_width;
@@ -339,15 +467,25 @@ void GCodeView::handleLeftClick(QPointF mouse_ndc_pos) {
 
     uint picked_line_num = this->pickSegment(mouse_ndc_pos, m_gcode_object);
 
-    if (picked_line_num == 0)
+    if (picked_line_num == 0) {
+        if (!m_true_width_overlay_object.isNull()) {
+            m_true_width_overlay_object->deselectAll();
+        }
         emit updateSelectedSegments(QList<int>(), m_gcode_object->deselectAll());
+    }
     else {
         if (m_gcode_object->isCurrentlySelected(picked_line_num)) {
             m_gcode_object->deselectSegment(picked_line_num);
+            if (!m_true_width_overlay_object.isNull()) {
+                m_true_width_overlay_object->deselectSegment(picked_line_num);
+            }
             emit updateSelectedSegments(QList<int>(), QList<int> {(int)picked_line_num - 1});
         }
         else {
             m_gcode_object->selectSegment(picked_line_num);
+            if (!m_true_width_overlay_object.isNull()) {
+                m_true_width_overlay_object->selectSegment(picked_line_num);
+            }
             emit updateSelectedSegments(QList<int> {(int)picked_line_num - 1}, QList<int> {});
         }
     }
@@ -391,6 +529,9 @@ void GCodeView::handleMouseMove(QPointF mouse_ndc_pos) {
     uint picked_line_num = this->pickSegment(mouse_ndc_pos, m_gcode_object);
 
     m_gcode_object->highlightSegment(picked_line_num);
+    if (!m_true_width_overlay_object.isNull()) {
+        m_true_width_overlay_object->highlightSegment(picked_line_num);
+    }
 
     this->update();
 }
@@ -592,7 +733,8 @@ void GCodeView::setLowLayer(uint low_layer) {
     uint segment_count = m_gcode_object->visibleSegmentCount();
     updateHoverTracking();
 
-    emit maxSegmentChanged(segment_count - 1);
+    emit maxSegmentChanged(segment_count == 0 ? 0 : segment_count - 1);
+    refreshTrueWidthOverlay();
 
     this->update();
 }
@@ -607,7 +749,8 @@ void GCodeView::setHighLayer(uint high_layer) {
     uint segment_count = m_gcode_object->visibleSegmentCount();
     updateHoverTracking();
 
-    emit maxSegmentChanged(segment_count - 1);
+    emit maxSegmentChanged(segment_count == 0 ? 0 : segment_count - 1);
+    refreshTrueWidthOverlay();
 
     this->update();
 }
@@ -617,8 +760,10 @@ void GCodeView::setLowSegment(uint low_segment) {
         return;
 
     m_gcode_object->showLowSegment(low_segment);
+    m_state.low_segment = low_segment;
 
     updateHoverTracking();
+    refreshTrueWidthOverlay();
 
     this->update();
 }
@@ -628,8 +773,10 @@ void GCodeView::setHighSegment(uint high_segment) {
         return;
 
     m_gcode_object->showHighSegment(high_segment);
+    m_state.high_segment = high_segment;
 
     updateHoverTracking();
+    refreshTrueWidthOverlay();
 
     this->update();
 }
@@ -638,16 +785,27 @@ void GCodeView::updateSegments(QList<int> linesToAdd, QList<int> linesToRemove) 
     if (m_gcode_object.isNull())
         return;
 
-    for (int line_num : linesToAdd)
+    for (int line_num : linesToAdd) {
         m_gcode_object->selectSegment(line_num + 1);
+        if (!m_true_width_overlay_object.isNull()) {
+            m_true_width_overlay_object->selectSegment(line_num + 1);
+        }
+    }
 
-    for (int line_num : linesToRemove)
+    for (int line_num : linesToRemove) {
         m_gcode_object->deselectSegment(line_num + 1);
+        if (!m_true_width_overlay_object.isNull()) {
+            m_true_width_overlay_object->deselectSegment(line_num + 1);
+        }
+    }
 
     this->update();
 }
 
 void GCodeView::clear() {
+    clearTrueWidthOverlay();
+    m_true_width_overlay_key_valid = false;
+
     if (!m_gcode_object.isNull()) {
         m_printer->orphanChild(m_gcode_object);
         m_gcode_object.reset();

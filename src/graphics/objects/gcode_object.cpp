@@ -28,12 +28,6 @@
 
 namespace ORNL {
 namespace {
-//! @brief Segment count where full bead mesh visualization is likely to exceed practical GL buffer sizes.
-constexpr qsizetype kLightweightLineThreshold = 1000000;
-
-//! @brief Estimated mesh vertices where true-width bead rendering becomes too expensive for interactive loading.
-constexpr qsizetype kLightweightMeshVertexThreshold = 5000000;
-
 //! @brief Vertex counts emitted by ShapeFactory for each full bead mesh segment type.
 constexpr qsizetype kLinearBeadVertexCount = 120;
 constexpr qsizetype kCurvedBeadVertexCount = 2376;
@@ -74,32 +68,6 @@ qsizetype countTravelSegments(const QVector<QVector<QSharedPointer<SegmentBase>>
     return count;
 }
 
-//! @brief Estimates vertices required if printable segments are expanded to true-width bead meshes.
-qsizetype estimateMeshVertexCount(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
-    qsizetype count = 0;
-    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
-        for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
-                continue;
-            }
-
-            if (dynamic_cast<ArcSegment*>(segment.data()) != nullptr ||
-                dynamic_cast<BezierSegment*>(segment.data()) != nullptr) {
-                count += kCurvedBeadVertexCount;
-            }
-            else {
-                count += kLinearBeadVertexCount;
-            }
-
-            if (count > kLightweightMeshVertexThreshold) {
-                return count;
-            }
-        }
-    }
-
-    return count;
-}
-
 //! @brief Appends a single GL_LINES segment using the parser's display-space line representation.
 void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vector<float>& vertices,
                            std::vector<float>& normals, std::vector<float>& colors) {
@@ -130,8 +98,36 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
 }
 } // namespace
 
+qsizetype GCodeObject::estimateTrueWidthVertexCount(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
+                                                    qsizetype limit) {
+    qsizetype count = 0;
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+        for (const QSharedPointer<SegmentBase>& segment : layer) {
+            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
+                continue;
+            }
+
+            if (dynamic_cast<ArcSegment*>(segment.data()) != nullptr ||
+                dynamic_cast<BezierSegment*>(segment.data()) != nullptr) {
+                count += kCurvedBeadVertexCount;
+            }
+            else {
+                count += kLinearBeadVertexCount;
+            }
+
+            if (count > limit) {
+                return count;
+            }
+        }
+    }
+
+    return count;
+}
+
 GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
-                         QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths) {
+                         QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths,
+                         GCodePreviewMode preview_mode, qsizetype true_width_vertex_threshold,
+                         bool update_segment_info) {
     std::vector<float> primary_vertices;
     std::vector<float> primary_normals;
     std::vector<float> primary_colors;
@@ -140,12 +136,17 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
     std::vector<float> travel_line_colors;
 
     m_segment_info_control = segmentInfoControl;
-    m_segment_info_control->setGCode(gcode);
+    m_updates_segment_info = update_segment_info;
+    if (m_updates_segment_info && !m_segment_info_control.isNull()) {
+        m_segment_info_control->setGCode(gcode);
+    }
 
     const qsizetype segment_count = countSegments(gcode);
-    const qsizetype mesh_vertex_count = use_true_widths ? estimateMeshVertexCount(gcode) : 0;
-    m_lightweight_lines = !use_true_widths || segment_count > kLightweightLineThreshold ||
-                          mesh_vertex_count > kLightweightMeshVertexThreshold;
+    const qsizetype vertex_threshold = true_width_vertex_threshold < 0 ? 0 : true_width_vertex_threshold;
+    const bool true_widths_requested = use_true_widths && preview_mode != GCodePreviewMode::kThinLines;
+    const qsizetype mesh_vertex_count =
+        true_widths_requested ? estimateTrueWidthVertexCount(gcode, vertex_threshold) : 0;
+    m_lightweight_lines = !true_widths_requested || mesh_vertex_count > vertex_threshold;
     m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
 
     if (m_lightweight_lines) {
@@ -358,7 +359,9 @@ void GCodeObject::selectSegment(uint line_number) {
                 this->paintSegment(seg, QColor(Qt::yellow));
                 m_selected_segments.insert(line_number, seg);
 
-                m_segment_info_control->addSegmentInfo(line_number);
+                if (m_updates_segment_info && !m_segment_info_control.isNull()) {
+                    m_segment_info_control->addSegmentInfo(line_number);
+                }
                 return;
             }
         }
@@ -373,7 +376,9 @@ void GCodeObject::deselectSegment(uint line_number) {
         seg_meta->current_color = seg_meta->original_color;
         this->paintSegment(seg_meta, seg_meta->original_color);
 
-        m_segment_info_control->removeSegmentInfo(line_number);
+        if (m_updates_segment_info && !m_segment_info_control.isNull()) {
+            m_segment_info_control->removeSegmentInfo(line_number);
+        }
     }
 }
 
@@ -385,7 +390,9 @@ QList<int> GCodeObject::deselectAll() {
         this->paintSegment(seg_meta, seg_meta->original_color);
         lines_to_remove.push_back(seg_meta->line - 1);
 
-        m_segment_info_control->removeSegmentInfo(seg_meta->line);
+        if (m_updates_segment_info && !m_segment_info_control.isNull()) {
+            m_segment_info_control->removeSegmentInfo(seg_meta->line);
+        }
     }
     m_selected_segments.clear();
     return lines_to_remove;
@@ -437,6 +444,8 @@ uint GCodeObject::visibleSegmentCount() {
 }
 
 bool GCodeObject::isCurrentlySelected(int line_num) { return m_selected_segments.contains(line_num); }
+
+bool GCodeObject::isLightweight() const { return m_lightweight_lines; }
 
 const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriangles() {
     QVector<std::pair<uint, std::vector<Triangle>>> ret;
