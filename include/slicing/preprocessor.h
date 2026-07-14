@@ -101,7 +101,7 @@ class Preprocessor {
     typedef std::function<void(double percentage)> StatusUpdate;
 
     //! \brief Constructor the fetches and sorts part from the session
-    Preprocessor(bool use_cgal_cross_section = false);
+    Preprocessor(bool use_cgal_cross_section = false, bool include_build_plate_gap = false);
 
     //! \brief Processes all parts, meshes and cross-sections at once
     void processAll();
@@ -150,6 +150,7 @@ class Preprocessor {
     StatusUpdate m_status_update;
 
     bool m_use_cgal_cross_section = false;
+    bool m_include_build_plate_gap = false;
 
     //! \brief Sorted parts
     Parts m_parts;

@@ -8,6 +8,7 @@
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
 #include "geometry/path_modifier.h"
+#include "geometry/pattern_generator.h"
 #include "geometry/point.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
@@ -43,6 +44,8 @@ QString Support::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void Support::compute(uint layer_num) {
     m_paths.clear();
+    m_computed_perimeter_geometry.clear();
+    m_computed_infill_geometry.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
 
@@ -50,76 +53,75 @@ void Support::compute(uint layer_num) {
     Distance line_spacing = m_sb->setting<Distance>(PS::Support::kLineSpacing);
     Area min_infill_area = m_sb->setting<Area>(PS::Support::kMinInfillArea);
     InfillPatterns infill_pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Support::kPattern));
+    const bool is_interface = m_sb->setting<bool>(PS::Support::kInterfaceRegion);
+    const bool is_base = m_sb->setting<bool>(PS::Support::kBaseRegion);
+    const bool is_tube_wall = m_sb->setting<bool>(PS::Support::kTubeWallRegion);
+    const bool is_dense = is_interface || is_base;
+    const Angle interface_rotation = is_dense && layer_num % 2 == 1 ? 90 * deg : 0 * deg;
 
-    PolygonList perimeter_geometry = m_geometry.offset(-(bead_width / 2.0));
+    if (bead_width <= 0)
+        return;
 
-    m_geometry = perimeter_geometry;
-
-    for (Polygon poly : perimeter_geometry) {
-        Polyline line = poly.toPolyline();
-        line.pop_back();
-        m_computed_perimeter_geometry.push_back(line);
+    if (is_tube_wall) {
+        const int contour_count = qMax(1, m_sb->setting<int>(PS::Support::kTaperWallContours));
+        const PolygonList outer_boundaries = m_geometry.externalPolygonBoundaries();
+        for (int contour = 0; contour < contour_count; ++contour) {
+            const Distance inset = bead_width / 2.0 + bead_width * contour;
+            const PolygonList contour_geometry = outer_boundaries.offset(-inset);
+            for (Polygon polygon : contour_geometry) {
+                Polyline line = polygon.toPolyline();
+                if (line.size() > 1)
+                    m_computed_perimeter_geometry.push_back(line);
+            }
+        }
+        return;
     }
+
+    // Invalid spacing previously caused an endless loop in support pattern
+    // generation.  Falling back to two bead widths keeps old/incomplete
+    // profiles printable while preserving sparse support.
+    if (line_spacing <= 0)
+        line_spacing = bead_width * 2.0;
+
+    const PolygonList support_geometry = m_geometry;
+    const int wall_contours = is_dense ? 1 : qMax(1, m_sb->setting<int>(PS::Support::kWallContours));
+    for (int contour = 0; contour < wall_contours; ++contour) {
+        const Distance inset = bead_width / 2.0 + bead_width * contour;
+        for (Polygon poly : support_geometry.offset(-inset)) {
+            Polyline line = poly.toPolyline();
+            if (line.size() > 1)
+                m_computed_perimeter_geometry.push_back(line);
+        }
+    }
+
+    m_geometry = support_geometry.offset(-(bead_width / 2.0 + bead_width * (wall_contours - 1)));
 
     // Determine whether or not to generate support infill
     if (m_geometry.netArea() > min_infill_area) {
         switch (infill_pattern) {
             case InfillPatterns::kLines:
-                computeLine(line_spacing); // Default rotation angle = 0 deg
+                computeLine(line_spacing, interface_rotation);
                 break;
             case InfillPatterns::kGrid:
                 computeGrid(line_spacing); // Default rotation angle = 0 deg
                 break;
-            case InfillPatterns::kConcentric:
-            case InfillPatterns::kTriangles:
-            case InfillPatterns::kHexagonsAndTriangles:
-            case InfillPatterns::kHoneycomb:
-            case InfillPatterns::kRadialHatch:
+            default:
+                // Support exposes Lines and Grid.  Treat stale or malformed
+                // enum values as Grid, the standard support style.
+                computeGrid(line_spacing);
                 break;
         }
     }
 }
 
 void Support::computeLine(Distance line_spacing, Angle rotation) {
-    Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
-
-    //! Create a non-path border for the infill pattern
+    const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
     PolygonList border_polygons = m_geometry.offset(-bead_width);
-
-    PolygonList rotated_polygon = border_polygons.rotate(rotation);
-
-    //! Get the bounding box for the polygons. outline_minimum is the minimum
-    Point outline_minimum = rotated_polygon.min();
-    Point outline_maximum = rotated_polygon.max();
-
-    //! The result we get after intersecting the polygons with the grid lines
-    QVector<Polyline> cutlines;
-
-    //! The space left over after all the max number of cutlines are generated
-    Distance freeSpace = (outline_maximum.toDistance3D().x - outline_minimum.toDistance3D().x) % line_spacing;
-
-    //! start at the bounding box's minimum x value and go all the way to the bounding box's maximum x value.
-    //! As we go along, every "line_spacing" distance we intersect the polygons with the grid lines
-    for (Distance x = outline_minimum.toDistance3D().x + (freeSpace / 2); x < outline_maximum.toDistance3D().x;
-         x += line_spacing) {
-        //! Create the grid lines
-        Polyline cutline;
-        cutline << Point(x(), outline_minimum.y());
-        cutline << Point(x(), outline_maximum.y());
-
-        //! Intersect the polygons and the gridlines and store them
-        //! \note This calls ClipperLib
-        cutlines += rotated_polygon & cutline;
+    if (!border_polygons.isEmpty()) {
+        QVector<Polyline> lines = PatternGenerator::GenerateLines(border_polygons, line_spacing, rotation);
+        if (!lines.isEmpty())
+            m_computed_infill_geometry.push_back(lines);
     }
-
-    //! Unrotate polygons
-    for (int i = 0; i < cutlines.size(); i++) {
-        cutlines[i] = cutlines[i].rotate(-rotation);
-        if (i % 2 == 0)
-            cutlines[i] = cutlines[i].reverse();
-    }
-
-    m_computed_infill_geometry.append(cutlines);
 }
 
 void Support::computeGrid(Distance line_spacing, Angle rotation) {
@@ -166,6 +168,8 @@ void Support::optimize(int layerNumber, Point& current_location, bool& shouldNex
 
     while (poo.getCurrentPolylineCount() > 0) {
         Polyline result = poo.linkNextPolyline();
+        if (result.size() > 2 && result.first() != result.last())
+            result.push_back(result.first());
         Path newPath = createPath(result);
 
         if (newPath.size() > 0) {
@@ -177,23 +181,30 @@ void Support::optimize(int layerNumber, Point& current_location, bool& shouldNex
     }
 
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Support::kPattern)), m_geometry,
-                            getSb()->setting<Distance>(PS::Infill::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength));
+                            Distance(0), getSb()->setting<Distance>(PS::Travel::kInfillMinLength));
 
-    poo.setGeometryToEvaluate(m_computed_infill_geometry, RegionType::kInfill,
-                              static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
+    // The optimizer's region type selects its linking algorithm.  Dense support
+    // interfaces and sparse fill use the same boundary-checked extrusion links
+    // as skin.  The resulting paths and segments remain support for settings
+    // and G-code.  Grid hatch directions are optimized independently so their
+    // intentional crossings do not block safe connectors.
+    for (const QVector<Polyline>& infill_geometry : m_computed_infill_geometry) {
+        poo.setGeometryToEvaluate(
+            infill_geometry, RegionType::kSkin,
+            static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
 
-    QVector<Polyline> previouslyLinkedLines;
-    while (poo.getCurrentPolylineCount() > 0) {
-        Polyline result = poo.linkNextPolyline(previouslyLinkedLines);
-        if (result.size() > 0) {
-            Path newPath = createPath(result);
-            if (newPath.size() > 0) {
-                PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
-                current_location = newPath.back()->end();
-                previouslyLinkedLines.push_back(result);
-                m_paths.push_back(newPath);
+        QVector<Polyline> previouslyLinkedLines;
+        while (poo.getCurrentPolylineCount() > 0) {
+            Polyline result = poo.linkNextPolyline(previouslyLinkedLines);
+            if (result.size() > 0) {
+                Path newPath = createPath(result);
+                if (newPath.size() > 0) {
+                    PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
+                    current_location = newPath.back()->end();
+                    previouslyLinkedLines.push_back(result);
+                    m_paths.push_back(newPath);
+                }
             }
         }
     }
@@ -213,22 +224,27 @@ Path Support::createPath(Polyline line) {
 
     Path newPath;
 
-    QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line.first(), line.last());
+    for (int i = 0; i + 1 < line.size(); ++i) {
+        if (line[i] == line[i + 1]) {
+            continue;
+        }
 
-    segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
-    segment->getSb()->setSetting(SS::kWidth, bead_width);
-    segment->getSb()->setSetting(SS::kHeight, layer_height);
-    segment->getSb()->setSetting(SS::kSpeed, speed);
-    segment->getSb()->setSetting(SS::kAccel, acceleration);
-    segment->getSb()->setSetting(SS::kExtruderSpeed, extruder_speed);
-    segment->getSb()->setSetting(SS::kMaterialNumber, material_number);
-    segment->getSb()->setSetting(SS::kRegionType, RegionType::kSupport);
+        QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line[i], line[i + 1]);
+        segment->getSb()->setSetting(SS::kWidth, bead_width);
+        segment->getSb()->setSetting(SS::kHeight, layer_height);
+        segment->getSb()->setSetting(SS::kSpeed, speed);
+        segment->getSb()->setSetting(SS::kAccel, acceleration);
+        segment->getSb()->setSetting(SS::kExtruderSpeed, extruder_speed);
+        segment->getSb()->setSetting(SS::kMaterialNumber, material_number);
+        segment->getSb()->setSetting(SS::kRegionType, RegionType::kSupport);
+        newPath.append(segment);
+    }
 
-    newPath.append(segment);
-
-    if (newPath.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength))
+    if (newPath.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) {
         return newPath;
-    else
+    }
+    else {
         return Path();
+    }
 }
 } // namespace ORNL

@@ -25,10 +25,38 @@ settings:
     namespace: "Profile::Support"
     symbol: "kPrintSupportFirst"
     local: true
+  - name: "support_structure"
+    display: "Support Structure"
+    type: "enumeration"
+    tooltip: "Generate conventional grid columns or branching organic supports"
+    depends: {"support":true}
+    options:
+      - "Grid"
+      - "Organic / Tree"
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportStructure"
+    local: false
+  - name: "support_placement"
+    display: "Support Placement"
+    type: "enumeration"
+    tooltip: "Allow support to land on the model or retain only support connected to the build plate"
+    depends: {"support":true}
+    options:
+      - "Everywhere"
+      - "Build Plate Only"
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportPlacement"
+    local: false
   - name: "support_tapering"
     display: "Taper Support"
     type: "boolean"
-    tooltip: "If selected, support structures will be tapered inward"
+    tooltip: "Grow support inward toward the interface while retaining a stable vertical outer tube wall"
     depends: {"support":true}
     options: []
     default: false
@@ -36,6 +64,30 @@ settings:
     major: "Profile"
     namespace: "Profile::Support"
     symbol: "kTaperSupport"
+    local: false
+  - name: "support_taper_angle"
+    display: "Support Taper Angle"
+    type: "angle"
+    tooltip: "Angle of inward support growth below the interface; larger angles require less taper height"
+    depends: {"AND":[{"support":true},{"support_tapering":true}]}
+    options: []
+    default: 0.785398163
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportTaperAngle"
+    local: false
+  - name: "support_taper_wall_contours"
+    display: "Minimum Tube Wall Contours"
+    type: "number"
+    tooltip: "Minimum number of bead-width contours retained in the vertical support tube wall"
+    depends: {"AND":[{"support":true},{"support_tapering":true}]}
+    options: []
+    default: 2
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportTaperWallContours"
     local: false
   - name: "support_threshold_angle"
     display: "Support Threshold Angle"
@@ -100,12 +152,12 @@ settings:
   - name: "support_pattern"
     display: "Support Pattern"
     type: "enumeration"
-    tooltip: "Lines or Grid"
+    tooltip: "Infill pattern used inside support structures"
     depends: {"support":true}
     options:
-      - "SUPPORT_TYPE_LINES"
-      - "SUPPORT_TYPE_GRID"
-    default: 0
+      - "Lines"
+      - "Grid"
+    default: 1
     minor: "Support"
     major: "Profile"
     namespace: "Profile::Support"
@@ -123,3 +175,171 @@ settings:
     namespace: "Profile::Support"
     symbol: "kSupportLineSpacing"
     local: true
+  - name: "support_wall_contours"
+    display: "Support Wall Contours"
+    type: "number"
+    tooltip: "Number of perimeter contours around conventional sparse support"
+    depends: {"support":true}
+    options: []
+    default: 1
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportWallContours"
+    local: true
+  - name: "support_interface_layers"
+    display: "Support Interface Layers"
+    type: "number"
+    tooltip: "Number of dense support layers immediately below supported surfaces; zero disables the interface"
+    depends: {"support":true}
+    options: []
+    default: 3
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportInterfaceLayers"
+    local: true
+  - name: "support_interface_line_spacing"
+    display: "Support Interface Line Spacing"
+    type: "distance"
+    tooltip: "Line spacing in dense support interfaces; zero automatically uses one bead width"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportInterfaceLineSpacing"
+    local: true
+  - name: "support_interface_expansion"
+    display: "Support Interface Expansion"
+    type: "distance"
+    tooltip: "Horizontal expansion of dense interface layers beyond the detected overhang"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportInterfaceExpansion"
+    local: true
+  - name: "support_base_layers"
+    display: "Solid Support Base Layers"
+    type: "number"
+    tooltip: "Number of dense stabilization layers at support structures that reach the build plate"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportBaseLayers"
+    local: true
+  - name: "support_base_expansion"
+    display: "Support Base Expansion"
+    type: "distance"
+    tooltip: "Horizontal expansion of build-plate support bases"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportBaseExpansion"
+    local: true
+  - name: "support_bridge_suppression"
+    display: "Suppress Support Under Bridges"
+    type: "boolean"
+    tooltip: "Skip support where an overhang is anchored on opposing sides within the configured bridge length"
+    depends: {"support":true}
+    options: []
+    default: false
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportBridgeSuppression"
+    local: false
+  - name: "support_bridge_max_length"
+    display: "Maximum Unsupported Bridge Length"
+    type: "distance"
+    tooltip: "Longest opposing-edge span that may be printed as a bridge without support"
+    depends: {"AND":[{"support":true},{"support_bridge_suppression":true}]}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kSupportBridgeMaxLength"
+    local: false
+  - name: "support_validation"
+    display: "Validate Support Connectivity"
+    type: "boolean"
+    tooltip: "Remove support components that do not connect to the build plate or an allowed model landing"
+    depends: {"support":true}
+    options: []
+    default: true
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kValidateSupportConnectivity"
+    local: false
+  - name: "support_validation_minimum_overlap"
+    display: "Minimum Support Layer Overlap"
+    type: "percentage100"
+    tooltip: "Minimum percentage of each support component that must overlap valid support or model below"
+    depends: {"AND":[{"support":true},{"support_validation":true}]}
+    options: []
+    default: 5
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kMinimumSupportLayerOverlap"
+    local: false
+  - name: "support_validation_minimum_base_area"
+    display: "Minimum Support Base Area"
+    type: "area"
+    tooltip: "Minimum build-plate contact area for a support component; zero disables this check"
+    depends: {"AND":[{"support":true},{"support_validation":true}]}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kMinimumSupportBaseArea"
+    local: false
+  - name: "support_organic_branch_diameter"
+    display: "Organic Branch Diameter"
+    type: "distance"
+    tooltip: "Minimum branch diameter; zero automatically uses three bead widths"
+    depends: {"AND":[{"support":true},{"support_structure":1}]}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kOrganicSupportBranchDiameter"
+    local: false
+  - name: "support_organic_branch_spacing"
+    display: "Organic Contact Spacing"
+    type: "distance"
+    tooltip: "Spacing between organic contact branches; zero chooses an automatic spacing"
+    depends: {"AND":[{"support":true},{"support_structure":1}]}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kOrganicSupportBranchSpacing"
+    local: false
+  - name: "support_organic_branch_angle"
+    display: "Organic Branch Angle"
+    type: "angle"
+    tooltip: "Maximum branch convergence angle measured from vertical"
+    depends: {"AND":[{"support":true},{"support_structure":1}]}
+    options: []
+    default: 0.436332313
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kOrganicSupportBranchAngle"
+    local: false

@@ -1,5 +1,6 @@
 #include "step/global_layer.h"
 
+#include <algorithm>
 #include <limits>
 
 #include <qassert.h>
@@ -187,9 +188,18 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
     }
     else {
         // check setting, if first, get supports then actual build islands, else the opposite order
-        if (global_sb->setting<bool>(PS::Support::kPrintFirst)) {
-            if (islands_for_layer.values(static_cast<int>(IslandType::kSupport)).size() > 0)
-                ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kSupport)));
+        const QList<QSharedPointer<IslandBase>> support_islands =
+            islands_for_layer.values(static_cast<int>(IslandType::kSupport));
+        bool print_support_first = global_sb->setting<bool>(PS::Support::kPrintFirst);
+        if (!support_islands.isEmpty()) {
+            print_support_first = std::any_of(support_islands.cbegin(), support_islands.cend(), [](const auto& island) {
+                return island->getSb()->template setting<bool>(PS::Support::kPrintFirst);
+            });
+        }
+
+        if (print_support_first) {
+            if (!support_islands.isEmpty())
+                ordered_islands_to_process.push_back(support_islands);
 
             if (islands_for_layer.values(static_cast<int>(IslandType::kPolymer)).size() > 0)
                 ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kPolymer)));
@@ -198,8 +208,8 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
             if (islands_for_layer.values(static_cast<int>(IslandType::kPolymer)).size() > 0)
                 ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kPolymer)));
 
-            if (islands_for_layer.values(static_cast<int>(IslandType::kSupport)).size() > 0)
-                ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kSupport)));
+            if (!support_islands.isEmpty())
+                ordered_islands_to_process.push_back(support_islands);
         }
     }
 

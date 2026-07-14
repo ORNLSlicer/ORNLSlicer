@@ -707,7 +707,13 @@ class Constants {
           public:
             static const QString kEnable;
             static const QString kPrintFirst;
+            static const QString kStructure;
+            static const QString kPlacement;
             static const QString kTaper;
+            static const QString kTaperAngle;
+            static const QString kTaperWallContours;
+            static const QString kTubeWallRegion;
+            static const QString kWallContours;
             static const QString kThresholdAngle;
             static const QString kXYDistance;
             static const QString kLayerOffset;
@@ -715,6 +721,21 @@ class Constants {
             static const QString kMinArea;
             static const QString kPattern;
             static const QString kLineSpacing;
+            static const QString kInterfaceLayers;
+            static const QString kInterfaceLineSpacing;
+            static const QString kInterfaceExpansion;
+            static const QString kInterfaceRegion;
+            static const QString kBaseLayers;
+            static const QString kBaseExpansion;
+            static const QString kBaseRegion;
+            static const QString kBridgeSuppression;
+            static const QString kBridgeMaxLength;
+            static const QString kValidation;
+            static const QString kValidationMinOverlap;
+            static const QString kValidationMinBaseArea;
+            static const QString kOrganicBranchDiameter;
+            static const QString kOrganicBranchSpacing;
+            static const QString kOrganicBranchAngle;
         };
 
         class Travel {
