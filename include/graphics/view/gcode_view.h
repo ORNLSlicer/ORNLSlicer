@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #include <QVector>
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -186,6 +188,15 @@ class GCodeView : public BaseView {
     //! \brief Rebuilds ghosted part meshes when ghost display is enabled.
     void rebuildGhosts();
 
+    //! \brief Removes the visible-range true-width overlay from the G-code object.
+    void clearTrueWidthOverlay();
+
+    //! \brief Rebuilds the visible-range true-width overlay when the current range is below the preference threshold.
+    void refreshTrueWidthOverlay();
+
+    //! \brief Returns a printable-segment subset for the currently visible layer and segment range.
+    QVector<QVector<QSharedPointer<SegmentBase>>> visiblePrintableGCodeSubset() const;
+
     //! \brief Picks a segment based on the mouse position.
     //! \param mouse_ndc_pos: Mouse normalized location.
     //! \param gog: GCode object to search through.
@@ -211,6 +222,8 @@ class GCodeView : public BaseView {
     QSharedPointer<PrinterObject> m_printer;
     //! \brief Main GCodeObject.
     QSharedPointer<GCodeObject> m_gcode_object;
+    //! \brief Optional true-width overlay for the currently visible range when the full preview uses thin lines.
+    QSharedPointer<GCodeObject> m_true_width_overlay_object;
 
     //! \brief m_meta_model tracks the states of the parts and their transformations
     QSharedPointer<PartMetaModel> m_meta_model;
@@ -230,6 +243,11 @@ class GCodeView : public BaseView {
         uint low_layer = 0;
         //! \brief Highest layer shown.
         uint high_layer = 1;
+
+        //! \brief Lowest segment shown inside the visible layer range.
+        uint low_segment = 0;
+        //! \brief Highest segment shown inside the visible layer range.
+        uint high_segment = std::numeric_limits<uint>::max();
 
         //! \brief If using the orthographic projection or not.
         bool ortho = false;
@@ -260,6 +278,27 @@ class GCodeView : public BaseView {
         //! \brief Hidden segment types.
         SegmentDisplayType hidden_type = SegmentDisplayType::kNone;
     } m_state;
+
+    //! \brief Cache key for the visible-range true-width overlay.
+    struct TrueWidthOverlayKey {
+        uint low_layer = 0;
+        uint high_layer = 0;
+        uint low_segment = 0;
+        uint high_segment = 0;
+        GCodePreviewMode preview_mode = GCodePreviewMode::kAuto;
+        int vertex_threshold = 0;
+        bool use_true_widths = false;
+
+        bool operator==(const TrueWidthOverlayKey& other) const {
+            return low_layer == other.low_layer && high_layer == other.high_layer &&
+                   low_segment == other.low_segment && high_segment == other.high_segment &&
+                   preview_mode == other.preview_mode && vertex_threshold == other.vertex_threshold &&
+                   use_true_widths == other.use_true_widths;
+        }
+    };
+
+    TrueWidthOverlayKey m_true_width_overlay_key;
+    bool m_true_width_overlay_key_valid = false;
 
     //! \brief Segment / Bead info display control
     QSharedPointer<GCodeInfoControl> m_segment_info_control;
