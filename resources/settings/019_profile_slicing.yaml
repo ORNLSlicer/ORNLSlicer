@@ -194,6 +194,18 @@ settings:
     symbol: "kImageResolutionY"
     local: false
 inputs:
+  - name: "image_resolution"
+    display: "Image Resolution"
+    widget: "vector2"
+    tooltip: "Resolution in x and y dimensions of images created using the image kernel"
+    depends: {"slicer_type":1}
+    minor: "Slicing"
+    major: "Profile"
+    components:
+      - setting: "image_resolution_x"
+        label: "X"
+      - setting: "image_resolution_y"
+        label: "Y"
   - name: "radial_axis"
     display: "Cylinder Axis"
     widget: "vector2"
