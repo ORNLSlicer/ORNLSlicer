@@ -607,6 +607,9 @@ class Constants {
             static const QString kBoundarySelection;
             static const QString kBeadWidth;
             static const QString kFirstLayerBeadWidth;
+            static const QString kAdaptive;
+            static const QString kAdaptiveMinWidth;
+            static const QString kAdaptiveMaxWidth;
             static const QString kSpeed;
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
@@ -628,6 +631,9 @@ class Constants {
             static const QString kCount;
             static const QString kBeadWidth;
             static const QString kFirstLayerBeadWidth;
+            static const QString kAdaptive;
+            static const QString kAdaptiveMinWidth;
+            static const QString kAdaptiveMaxWidth;
             static const QString kSpeed;
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;

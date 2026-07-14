@@ -58,6 +58,38 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+Distance beadWidthFromRegionComment(const QString& comment, const QString& region_name, Distance fallback_width,
+                                    Distance distance_unit) {
+    const int region_start = comment.indexOf(region_name);
+    if (region_start < 0) {
+        return fallback_width;
+    }
+
+    const int width_start = comment.indexOf('-', region_start + region_name.size());
+
+    if (width_start >= 0) {
+        const int value_start = width_start + 1;
+        int value_end = comment.indexOf(' ', value_start);
+        if (value_end < 0) {
+            value_end = comment.size();
+        }
+
+        bool ok = false;
+        const double parsed_width = comment.mid(value_start, value_end - value_start).toDouble(&ok);
+        if (ok && parsed_width > 0) {
+            return parsed_width * distance_unit;
+        }
+    }
+
+    return fallback_width;
+}
+
+float beadDisplayWidth(Distance bead_width) {
+    return static_cast<float>(bead_width()) * Constants::OpenGL::kObjectToView;
+}
+} // namespace
+
 GCodeLoader::GCodeLoader(QString filename, bool alterFile)
     : m_filename(filename), m_adjust_file(alterFile), m_should_cancel(false) {
     m_sb = GSM->getGlobal();
@@ -696,17 +728,29 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, Se
         comment.contains(Constants::RegionTypeStrings::kHelical)) {
         display_width = m_sb->setting<float>(PS::Layer::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
+    else if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kPerimeter)) {
+        display_width =
+            beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kPerimeter,
+                                                        m_sb->setting<Distance>(PS::Perimeter::kBeadWidth),
+                                                        m_selected_meta.m_distance_unit));
+    }
     else if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
         display_width = m_sb->setting<float>(PS::Perimeter::kBeadWidth) * Constants::OpenGL::kObjectToView;
+    }
+    else if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kInset)) {
+        display_width =
+            beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kInset,
+                                                        m_sb->setting<Distance>(PS::Inset::kBeadWidth),
+                                                        m_selected_meta.m_distance_unit));
     }
     else if (comment.contains("INSET")) {
         display_width = m_sb->setting<float>(PS::Inset::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
     else if (comment.contains("SKELETON")) {
-        int start = comment.indexOf("SKELETON-") + 9;
-        int end = comment.indexOf(" ", start);
-        float bead_width = comment.mid(start, end - start).toFloat();
-        display_width = bead_width * Constants::OpenGL::kObjectToView;
+        display_width =
+            beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kSkeleton,
+                                                        m_sb->setting<Distance>(PS::Skeleton::kBeadWidth),
+                                                        m_selected_meta.m_distance_unit));
     }
     else if (comment.contains("SKIN")) {
         display_width = m_sb->setting<float>(PS::Skin::kBeadWidth) * Constants::OpenGL::kObjectToView;
