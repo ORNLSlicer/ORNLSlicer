@@ -430,15 +430,13 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 
     auto configureOptimizer = [&](PolylineOrderOptimizer& optimizer, PointOrderOptimization point_order) {
         if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-            Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                                getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
+            Point startOverride = customPathOrderPoint();
 
             optimizer.setStartOverride(startOverride);
         }
 
         if (usesCustomPointLocation(point_order)) {
-            Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                                getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+            Point startOverride = customPointOrderPoint();
 
             optimizer.setStartPointOverride(startOverride);
         }

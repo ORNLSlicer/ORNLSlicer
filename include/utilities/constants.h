@@ -799,8 +799,10 @@ class Constants {
             static const QString kPathOrder;
             static const QString kCustomIslandXLocation;
             static const QString kCustomIslandYLocation;
+            static const QString kCustomIslandZLocation;
             static const QString kCustomPathXLocation;
             static const QString kCustomPathYLocation;
+            static const QString kCustomPathZLocation;
             static const QString kPointOrder;
             static const QString kEnablePointOrderSegmentBreaking;
             static const QString kLocalRandomnessEnable;
@@ -810,10 +812,12 @@ class Constants {
             static const QString kConsecutiveDistanceThreshold;
             static const QString kCustomPointXLocation;
             static const QString kCustomPointYLocation;
+            static const QString kCustomPointZLocation;
             static const QString kEnableSecondCustomLocation;
             static const QString kEnableSecondCustomLocationEveryTwo;
             static const QString kCustomPointSecondXLocation;
             static const QString kCustomPointSecondYLocation;
+            static const QString kCustomPointSecondZLocation;
             static const QString kCustomPointXIncrement;
             static const QString kCustomPointYIncrement;
         };

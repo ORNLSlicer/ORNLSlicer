@@ -113,14 +113,13 @@ void PrinterObject::updateSeams() {
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
     bool secondPointEnabled = m_sb->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
-    float bed_z = this->printerCenter().z() * Constants::OpenGL::kViewToObject;
 
     if (islandOrder == IslandOrderOptimization::kCustomPoint) {
         QVector3D translation(m_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
 
                               m_sb->setting<double>(PS::Optimizations::kCustomIslandYLocation),
 
-                              bed_z);
+                              m_sb->setting<double>(PS::Optimizations::kCustomIslandZLocation));
 
         translation *= Constants::OpenGL::kObjectToView;
 
@@ -136,7 +135,7 @@ void PrinterObject::updateSeams() {
 
                               m_sb->setting<double>(PS::Optimizations::kCustomPathYLocation),
 
-                              bed_z);
+                              m_sb->setting<double>(PS::Optimizations::kCustomPathZLocation));
 
         translation *= Constants::OpenGL::kObjectToView;
 
@@ -152,7 +151,7 @@ void PrinterObject::updateSeams() {
 
                               m_sb->setting<double>(PS::Optimizations::kCustomPointYLocation),
 
-                              bed_z);
+                              m_sb->setting<double>(PS::Optimizations::kCustomPointZLocation));
 
         translation *= Constants::OpenGL::kObjectToView;
 
@@ -164,7 +163,7 @@ void PrinterObject::updateSeams() {
 
                                         m_sb->setting<double>(PS::Optimizations::kCustomPointSecondYLocation),
 
-                                        bed_z);
+                                        m_sb->setting<double>(PS::Optimizations::kCustomPointSecondZLocation));
 
             secondTranslation *= Constants::OpenGL::kObjectToView;
 

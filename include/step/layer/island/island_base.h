@@ -7,6 +7,8 @@
 
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "step/layer/regions/region_base.h"
@@ -60,6 +62,9 @@ class IslandBase {
 
     //! \brief Set the settings for the island.
     void setSb(const QSharedPointer<SettingsBase>& sb);
+
+    //! \brief Sets the slicing frame used while optimizing flattened layer geometry.
+    void setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift);
 
     //! \brief returns enum type of this island
     IslandType getType();

@@ -198,6 +198,12 @@ void IslandBase::setSb(const QSharedPointer<SettingsBase>& sb) {
     }
 }
 
+void IslandBase::setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift) {
+    for (auto r : m_regions) {
+        r->setOptimizationFrame(slicing_plane, optimization_shift);
+    }
+}
+
 IslandType IslandBase::getType() { return m_island_type; }
 
 void IslandBase::transform(QQuaternion rotation, Point shift) {

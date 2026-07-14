@@ -7,6 +7,8 @@
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "units/unit.h"
@@ -72,6 +74,9 @@ class RegionBase {
     //! \param sb: Pointer to settings base to set
     void setSb(const QSharedPointer<SettingsBase>& sb);
 
+    //! \brief Sets the slicing frame used while optimizing flattened layer geometry.
+    void setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift);
+
     //! \brief transforms the region by rotating by then quaternion, then shifting
     void transform(QQuaternion rotation, Point shift);
 
@@ -110,6 +115,12 @@ class RegionBase {
     //! \param path: path to append
     void appendPath(const Path& path);
 
+    //! \brief Returns the path-order custom anchor in the current optimization frame.
+    Point customPathOrderPoint() const;
+
+    //! \brief Returns the point-order custom anchor in the current optimization frame.
+    Point customPointOrderPoint() const;
+
     //! \brief adds the modifiers for each region
     //! \param path: path to add modifiers to
     //! \param supportsG3: whether or not the system supports G3 command
@@ -138,5 +149,9 @@ class RegionBase {
 
     //! \brief Uncut geometry to modify pathing
     PolygonList m_uncut_geometry;
+
+    //! \brief Slicing plane and shift for flattened optimization-space custom anchors.
+    Plane m_optimization_slicing_plane;
+    Point m_optimization_shift;
 };
 } // namespace ORNL
