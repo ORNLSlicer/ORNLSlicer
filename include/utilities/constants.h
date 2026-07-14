@@ -305,7 +305,6 @@ class Constants {
             static QString kAeroBasic;
             static QString kAdamantine;
             static QString kORNLMetric;
-            static QString kRadial3Plus2;
             static QString kArcSpecialties;
         };
     };

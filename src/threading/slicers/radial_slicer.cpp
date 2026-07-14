@@ -15,7 +15,6 @@
 #include "cross_section/cross_section.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/arc_specialties_writer.h"
-#include "gcode/writers/radial_writer.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/mesh_vertex.h"
@@ -136,15 +135,8 @@ bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min
 } // namespace
 
 RadialSlicer::RadialSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
-    const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-    if (syntax == GcodeSyntax::kArcSpecialties) {
-        m_syntax = GcodeSyntax::kArcSpecialties;
-        m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
-    }
-    else {
-        m_syntax = GcodeSyntax::kRadial3Plus2;
-        m_base = QSharedPointer<RadialWriter>::create(GcodeMetaList::RadialMeta, GSM->getGlobal());
-    }
+    m_syntax = GcodeSyntax::kArcSpecialties;
+    m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
 }
 
 void RadialSlicer::preProcess(nlohmann::json opt_data) {

@@ -41,7 +41,6 @@
 #include "gcode/parsers/marlin_parser.h"
 #include "gcode/parsers/mazak_parser.h"
 #include "gcode/parsers/mvp_parser.h"
-#include "gcode/parsers/radial_parser.h"
 #include "gcode/parsers/siemens_parser.h"
 #include "gcode/parsers/tormach_parser.h"
 #include "geometry/point.h"
@@ -529,10 +528,6 @@ void GCodeLoader::setParser(QStringList& originalLines, QStringList& lines) {
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kORNL).toUpper())) {
                 m_parser.reset(new CommonParser(GcodeMetaList::ORNLMeta, m_adjust_file, originalLines, lines));
                 m_selected_meta = GcodeMetaList::ORNLMeta;
-            }
-            else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kRadial3Plus2).toUpper())) {
-                m_parser.reset(new RadialParser(GcodeMetaList::RadialMeta, m_adjust_file, originalLines, lines));
-                m_selected_meta = GcodeMetaList::RadialMeta;
             }
             else if (m_lines[m_current_line].contains(toString(GcodeSyntax::kArcSpecialties).toUpper())) {
                 m_parser.reset(

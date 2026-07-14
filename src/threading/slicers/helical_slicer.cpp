@@ -16,7 +16,6 @@
 #include "cross_section/cross_section.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/arc_specialties_writer.h"
-#include "gcode/writers/radial_writer.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/mesh_vertex.h"
@@ -357,15 +356,8 @@ QVector<Polyline> splitPolylineByLength(const Polyline& polyline, Distance max_p
 } // namespace
 
 HelicalSlicer::HelicalSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
-    const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-    if (syntax == GcodeSyntax::kArcSpecialties) {
-        m_syntax = GcodeSyntax::kArcSpecialties;
-        m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
-    }
-    else {
-        m_syntax = GcodeSyntax::kRadial3Plus2;
-        m_base = QSharedPointer<RadialWriter>::create(GcodeMetaList::RadialMeta, GSM->getGlobal());
-    }
+    m_syntax = GcodeSyntax::kArcSpecialties;
+    m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
 }
 
 void HelicalSlicer::preProcess(nlohmann::json opt_data) {
@@ -538,10 +530,6 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                           build_parts.isEmpty() ? 100 : (double)parts_processed / (double)build_parts.size() * 100);
     }
 
-    QSharedPointer<RadialWriter> radial_writer = m_base.dynamicCast<RadialWriter>();
-    if (!radial_writer.isNull()) {
-        radial_writer->setHelicalClippingMethods(effective_clipping_methods);
-    }
     QSharedPointer<ArcSpecialtiesWriter> arc_specialties_writer = m_base.dynamicCast<ArcSpecialtiesWriter>();
     if (!arc_specialties_writer.isNull()) {
         arc_specialties_writer->setHelicalClippingMethods(effective_clipping_methods);

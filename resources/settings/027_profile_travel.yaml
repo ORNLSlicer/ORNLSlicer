@@ -29,7 +29,7 @@ settings:
     display: "Minimum Travel Length"
     type: "distance"
     tooltip: "Travel moves less than this value will leave the extruder enabled"
-    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":11},{"syntax":32}]}]}
+    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":11},{"syntax":31}]}]}
     options: []
     default: 0
     minor: "Travel"

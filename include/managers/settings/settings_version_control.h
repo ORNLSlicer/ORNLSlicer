@@ -50,5 +50,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_6_0To6_0(double& version, fifojson& settings);
+
+    //! \brief Rolls settings after removing the radial testbed syntax to version 7.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_7_0To7_0(double& version, fifojson& settings);
 };
 } // namespace ORNL

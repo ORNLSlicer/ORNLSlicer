@@ -36,7 +36,7 @@ constexpr int kMaxVisibleSettingBaseItems = 16;
 constexpr int kSettingBaseItemHeightFallback = 22;
 
 bool isRadialCapableSyntax(GcodeSyntax syntax) {
-    return syntax == GcodeSyntax::kRadial3Plus2 || syntax == GcodeSyntax::kArcSpecialties;
+    return syntax == GcodeSyntax::kArcSpecialties;
 }
 } // namespace
 
@@ -357,13 +357,13 @@ QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
         if (slicer_type == SlicerType::kRadialSlice && !isRadialCapableSyntax(syntax)) {
             emit settingAboutToChange(PRS::MachineSetup::kSyntax, QList<QSharedPointer<SettingsBase>>());
-            sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kRadial3Plus2));
+            sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kArcSpecialties));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
             synced_keys.push_back(PRS::MachineSetup::kSyntax);
         }
         else if (slicer_type == SlicerType::kHelicalSlice && !isRadialCapableSyntax(syntax)) {
             emit settingAboutToChange(PRS::MachineSetup::kSyntax, QList<QSharedPointer<SettingsBase>>());
-            sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kRadial3Plus2));
+            sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kArcSpecialties));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
             synced_keys.push_back(PRS::MachineSetup::kSyntax);
         }
@@ -371,15 +371,8 @@ QStringList SettingBar::syncRadialSlicingSettings(const QString& setting_key) {
     else if (setting_key == PRS::MachineSetup::kSyntax) {
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
         const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
-        if (syntax == GcodeSyntax::kRadial3Plus2 && slicer_type != SlicerType::kRadialSlice &&
+        if (syntax == GcodeSyntax::kArcSpecialties && slicer_type != SlicerType::kRadialSlice &&
             slicer_type != SlicerType::kHelicalSlice) {
-            emit settingAboutToChange(PS::Slicing::kSlicerType, QList<QSharedPointer<SettingsBase>>());
-            sb->setSetting(PS::Slicing::kSlicerType, static_cast<int>(SlicerType::kRadialSlice));
-            reloadSettingRow(PS::Slicing::kSlicerType);
-            synced_keys.push_back(PS::Slicing::kSlicerType);
-        }
-        else if (syntax == GcodeSyntax::kArcSpecialties && slicer_type != SlicerType::kRadialSlice &&
-                 slicer_type != SlicerType::kHelicalSlice) {
             emit settingAboutToChange(PS::Slicing::kSlicerType, QList<QSharedPointer<SettingsBase>>());
             sb->setSetting(PS::Slicing::kSlicerType, static_cast<int>(SlicerType::kRadialSlice));
             reloadSettingRow(PS::Slicing::kSlicerType);
