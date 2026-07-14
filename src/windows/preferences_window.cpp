@@ -259,6 +259,9 @@ void PreferencesWindow::setupLayout() {
                                            static_cast<int>(GCodePreviewMode::kTrueWidths));
     m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kThinLines),
                                            static_cast<int>(GCodePreviewMode::kThinLines));
+    m_gcode_preview_mode_combobox->setToolTip(
+        "Auto uses the vertex threshold. True Bead Widths bypasses it when the toolbar toggle is enabled. Thin Lines "
+        "disables true-width previews.");
     int previewModeIndex = m_gcode_preview_mode_combobox->findData(
         static_cast<int>(PreferencesManager::getInstance()->getGCodePreviewModePreference()));
     m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
