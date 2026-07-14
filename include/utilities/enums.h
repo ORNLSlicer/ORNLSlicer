@@ -50,11 +50,11 @@ enum class SlicerType : uint8_t {
     //! @brief Standard planar slicing.
     kPlanarSlice = 0,
 
-    //! @brief Image-based slicing workflow.
-    kImageSlice = 1,
-
     //! @brief Cylindrical slicing around each part's XY centroid or configured axis.
-    kCylindricalSlice = 2
+    kCylindricalSlice = 1,
+
+    //! @brief Image-based slicing workflow.
+    kImageSlice = 2
 };
 
 /*!
