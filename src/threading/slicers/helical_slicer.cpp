@@ -641,13 +641,14 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
 
     if (arc_points.size() > 1) {
         for (int i = 1, end = arc_points.size(); i < end; ++i) {
-            if (arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
+            const bool is_arc = SlicingUtilities::IsCylindricalArcSegment(arc_points[i - 1], arc_points[i], center,
+                                                                          radius, arcs_per_revolution);
+            if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
                 continue;
             }
 
             QSharedPointer<SegmentBase> segment;
-            if (SlicingUtilities::IsCylindricalArcSegment(arc_points[i - 1], arc_points[i], center, radius,
-                                                          arcs_per_revolution)) {
+            if (is_arc) {
                 const Point arc_center =
                     SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
                 segment = QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
