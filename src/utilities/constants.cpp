@@ -793,6 +793,8 @@ const QString Constants::ProfileSettings::Slicing::kRadialBoundaryHandling = "ra
 const QString Constants::ProfileSettings::Slicing::kHelicalBoundaryHandling = "helical_boundary_handling";
 const QString Constants::ProfileSettings::Slicing::kHelicalPathLength = "helical_path_length";
 const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution = "arcs_per_revolution";
+const QString Constants::ProfileSettings::Slicing::kImageResolutionX = "image_resolution_x";
+const QString Constants::ProfileSettings::Slicing::kImageResolutionY = "image_resolution_y";
 
 //================================================================================
 // Experimental Settings
@@ -830,10 +832,6 @@ const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels = "mar
 const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput = "simulation_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput = "amcm_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kAMCMDataLogging = "amcm_data_logging";
-
-// Image Resolution
-const QString Constants::ExperimentalSettings::ImageResolution::kImageResolutionX = "image_resolution_x";
-const QString Constants::ExperimentalSettings::ImageResolution::kImageResolutionY = "image_resolution_y";
 
 // Cross-Section
 const QString Constants::ExperimentalSettings::CrossSection::kLargestGap = "cross_section_largest_gap";
