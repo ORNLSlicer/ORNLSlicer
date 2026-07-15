@@ -178,7 +178,6 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
     }
     else if (slicing_settings.contains(setting_key)) {
         m_part_view->updateSlicingSettings(GSM->getGlobal());
-        m_part_view->updateOptimizationSettings(GSM->getGlobal());
     }
     else if (optimization_settings.contains(setting_key)) {
         m_part_view->updateOptimizationSettings(GSM->getGlobal());
