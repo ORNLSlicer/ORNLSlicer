@@ -350,10 +350,10 @@ QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_ke
     QStringList synced_keys;
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
 
-    if (setting_key == PS::Slicing::kSlicerType) {
-        const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
+    if (setting_key == PS::Slicing::kSlicingMode) {
+        const SlicingMode slicing_mode = static_cast<SlicingMode>(sb->setting<int>(PS::Slicing::kSlicingMode));
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-        if (slicer_type == SlicerType::kCylindricalSlice && !isCylindricalCapableSyntax(syntax)) {
+        if (slicing_mode == SlicingMode::kCylindrical && !isCylindricalCapableSyntax(syntax)) {
             emit settingAboutToChange(PRS::MachineSetup::kSyntax, QList<QSharedPointer<SettingsBase>>());
             sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kArcSpecialties));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
@@ -362,12 +362,12 @@ QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_ke
     }
     else if (setting_key == PRS::MachineSetup::kSyntax) {
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-        const SlicerType slicer_type = static_cast<SlicerType>(sb->setting<int>(PS::Slicing::kSlicerType));
-        if (syntax == GcodeSyntax::kArcSpecialties && slicer_type != SlicerType::kCylindricalSlice) {
-            emit settingAboutToChange(PS::Slicing::kSlicerType, QList<QSharedPointer<SettingsBase>>());
-            sb->setSetting(PS::Slicing::kSlicerType, static_cast<int>(SlicerType::kCylindricalSlice));
-            reloadSettingRow(PS::Slicing::kSlicerType);
-            synced_keys.push_back(PS::Slicing::kSlicerType);
+        const SlicingMode slicing_mode = static_cast<SlicingMode>(sb->setting<int>(PS::Slicing::kSlicingMode));
+        if (syntax == GcodeSyntax::kArcSpecialties && slicing_mode != SlicingMode::kCylindrical) {
+            emit settingAboutToChange(PS::Slicing::kSlicingMode, QList<QSharedPointer<SettingsBase>>());
+            sb->setSetting(PS::Slicing::kSlicingMode, static_cast<int>(SlicingMode::kCylindrical));
+            reloadSettingRow(PS::Slicing::kSlicingMode);
+            synced_keys.push_back(PS::Slicing::kSlicingMode);
         }
     }
 

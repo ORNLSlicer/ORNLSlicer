@@ -83,21 +83,22 @@ QString formatAngle(Angle value, Angle unit) { return QString::number(value.to(u
 ArcSpecialtiesWriter::ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
     : WriterBase(meta, sb) {}
 
-void ArcSpecialtiesWriter::setHelicalBoundaryHandling(const QVector<QPair<QString, HelicalBoundaryHandling>>& methods) {
-    m_helical_boundary_handling = methods;
+void ArcSpecialtiesWriter::setHelicalPathBoundaryPolicy(
+    const QVector<QPair<QString, HelicalPathBoundaryPolicy>>& methods) {
+    m_helical_path_boundary_policy = methods;
 }
 
 QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
     QString text;
-    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
-    const CylindricalPathType path_type =
-        static_cast<CylindricalPathType>(m_sb->setting<int>(PS::Slicing::kCylindricalPathType));
-    const bool cylindrical_mode = slicer_type == SlicerType::kCylindricalSlice;
-    const bool helical_mode = path_type == CylindricalPathType::kHelical;
+    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
+    const CylindricalPathPattern path_pattern =
+        static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
+    const bool cylindrical_mode = slicing_mode == SlicingMode::kCylindrical;
+    const bool helical_mode = path_pattern == CylindricalPathPattern::kHelical;
     if (cylindrical_mode) {
         text += commentLine(helical_mode ? "Arc Specialties Helical Slicing Parameters"
                                          : "Arc Specialties Radial Slicing Parameters");
-        text += commentLine("Path Type: " % toString(path_type));
+        text += commentLine("Cylindrical Path Pattern: " % toString(path_pattern));
         text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
                             "offset");
         text += commentLine("Work Offset Setup: manual and probe setup commands are not emitted by this first pass");
@@ -105,16 +106,18 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
         text += commentLine(
-            QString(helical_mode ? "Helical Initial Radius: " : "Initial Radius: ") %
-            formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius), m_meta.m_distance_unit));
-        const RadialAxisMode radial_axis_mode =
-            static_cast<RadialAxisMode>(m_sb->setting<int>(PS::Slicing::kRadialAxisMode));
-        text += commentLine("Cylinder Axis Mode: " % toString(radial_axis_mode));
-        if (radial_axis_mode == RadialAxisMode::kCustomXY) {
-            text += commentLine("Cylinder Axis X: " % formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisX),
-                                                                     m_meta.m_distance_unit));
-            text += commentLine("Cylinder Axis Y: " % formatDistance(m_sb->setting<Distance>(PS::Slicing::kRadialAxisY),
-                                                                     m_meta.m_distance_unit));
+            QString("Cylinder Inner Radius: ") %
+            formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
+        const CylinderAxisSource cylinder_axis_source =
+            static_cast<CylinderAxisSource>(m_sb->setting<int>(PS::Slicing::kCylinderAxisSource));
+        text += commentLine("Cylinder Axis Source: " % toString(cylinder_axis_source));
+        if (cylinder_axis_source == CylinderAxisSource::kCustomXY) {
+            text +=
+                commentLine("Cylinder Axis X: " % formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderAxisX),
+                                                                 m_meta.m_distance_unit));
+            text +=
+                commentLine("Cylinder Axis Y: " % formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderAxisY),
+                                                                 m_meta.m_distance_unit));
         }
         text += commentLine(QString(helical_mode ? "Helical Radial Spacing: " : "Radial Layer Spacing: ") %
                             formatDistance(m_sb->setting<Distance>(PS::Layer::kLayerHeight), m_meta.m_distance_unit));
@@ -128,26 +131,27 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
             text += commentLine("Vertical Bead Spacing: " % formatDistance(bead_width, m_meta.m_distance_unit));
         }
         if (helical_mode) {
-            if (m_helical_boundary_handling.size() == 1) {
-                text +=
-                    commentLine("Helical Boundary Handling: " % toString(m_helical_boundary_handling.first().second));
+            if (m_helical_path_boundary_policy.size() == 1) {
+                text += commentLine("Helical Path Boundary Policy: " %
+                                    toString(m_helical_path_boundary_policy.first().second));
             }
-            else if (m_helical_boundary_handling.size() > 1) {
-                for (const QPair<QString, HelicalBoundaryHandling>& part_method : m_helical_boundary_handling) {
+            else if (m_helical_path_boundary_policy.size() > 1) {
+                for (const QPair<QString, HelicalPathBoundaryPolicy>& part_method : m_helical_path_boundary_policy) {
                     const QString part_name = part_method.first.isEmpty() ? "Unnamed Part" : part_method.first;
-                    text +=
-                        commentLine("Helical Boundary Handling (" % part_name % "): " % toString(part_method.second));
+                    text += commentLine("Helical Path Boundary Policy (" % part_name % "): " %
+                                        toString(part_method.second));
                 }
             }
             else {
-                text += commentLine("Helical Boundary Handling: " %
-                                    toString(static_cast<HelicalBoundaryHandling>(
-                                        m_sb->setting<int>(PS::Slicing::kHelicalBoundaryHandling))));
+                text += commentLine("Helical Path Boundary Policy: " %
+                                    toString(static_cast<HelicalPathBoundaryPolicy>(
+                                        m_sb->setting<int>(PS::Slicing::kHelicalPathBoundaryPolicy))));
             }
         }
         else {
-            text += commentLine("Boundary Handling: " % toString(static_cast<RadialBoundaryHandling>(
-                                                            m_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling))));
+            text += commentLine("Radial Path Boundary Policy: " %
+                                toString(static_cast<RadialPathBoundaryPolicy>(
+                                    m_sb->setting<int>(PS::Slicing::kRadialPathBoundaryPolicy))));
         }
         text += commentLine("Travel Lift Distance: " %
                             formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
@@ -157,7 +161,7 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC), m_meta.m_angle_unit));
         text += commentLine(QString("Arc Feed Moves: ") %
                             (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled" : "G01 segmented"));
-        text += commentLine("Arcs Per Revolution: " %
+        text += commentLine("Arcs per Revolution: " %
                             QString::number(std::max(1, m_sb->setting<int>(PS::Slicing::kArcsPerRevolution))));
         text += m_newline;
     }
@@ -345,11 +349,11 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
         speed = 10.0 * mm / s;
     }
 
-    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
-    const CylindricalPathType path_type =
-        static_cast<CylindricalPathType>(m_sb->setting<int>(PS::Slicing::kCylindricalPathType));
+    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
+    const CylindricalPathPattern path_pattern =
+        static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
     const bool helical_path =
-        slicer_type == SlicerType::kCylindricalSlice && path_type == CylindricalPathType::kHelical;
+        slicing_mode == SlicingMode::kCylindrical && path_pattern == CylindricalPathPattern::kHelical;
     rv += writeMotion("G01", target_point, speed, params,
                       helical_path ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial);
     return rv;
@@ -374,11 +378,11 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     setFeedrate(speed);
     m_layer_start = false;
 
-    const SlicerType slicer_type = static_cast<SlicerType>(m_sb->setting<int>(PS::Slicing::kSlicerType));
-    const CylindricalPathType path_type =
-        static_cast<CylindricalPathType>(m_sb->setting<int>(PS::Slicing::kCylindricalPathType));
+    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
+    const CylindricalPathPattern path_pattern =
+        static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
     const bool helical_path =
-        slicer_type == SlicerType::kCylindricalSlice && path_type == CylindricalPathType::kHelical;
+        slicing_mode == SlicingMode::kCylindrical && path_pattern == CylindricalPathPattern::kHelical;
     rv +=
         QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
         writeArcCenterOffsets(start_point, center_point) % m_f %

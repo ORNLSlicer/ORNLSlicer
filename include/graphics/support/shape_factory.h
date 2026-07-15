@@ -94,7 +94,7 @@ class ShapeFactory final {
     /*! @brief Appends a straight squished-bead triangle mesh between two points.
      *
      *  This is the filled G-code line bead representation, not a round cylinder. The cross-section is clipped/squished
-     *  from @p width and @p height, capped at @p start and @p end, and oriented using the current slicing vector.
+     *  from @p width and @p height, capped at @p start and @p end, and oriented using the current slice plane normal.
      *  Output is suitable for GL_TRIANGLES.
      *
      *  @param width Display bead width across the path.

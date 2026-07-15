@@ -43,25 +43,25 @@ enum MeshGeneratorType {
 enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1 };
 
 /*!
- * @enum SlicerType
- * @brief Selects the type of slice to perform. Pass this to Session Manager to decide.
+ * @enum SlicingMode
+ * @brief Selects the slicing workflow. Pass this to Session Manager to decide.
  */
-enum class SlicerType : uint8_t {
+enum class SlicingMode : uint8_t {
     //! @brief Standard planar slicing.
-    kPlanarSlice = 0,
+    kPlanar = 0,
 
     //! @brief Cylindrical slicing around each part's XY centroid or configured axis.
-    kCylindricalSlice = 1,
+    kCylindrical = 1,
 
     //! @brief Image-based slicing workflow.
-    kImageSlice = 2
+    kImage = 2
 };
 
 /*!
- * @enum CylindricalPathType
- * @brief Selects the cylindrical path family to generate.
+ * @enum CylindricalPathPattern
+ * @brief Selects the cylindrical path pattern to generate.
  */
-enum class CylindricalPathType : uint8_t {
+enum class CylindricalPathPattern : uint8_t {
     //! @brief Concentric radial rings or arcs.
     kRadial = 0,
 
@@ -69,27 +69,27 @@ enum class CylindricalPathType : uint8_t {
     kHelical = 1
 };
 
-//! \brief Function for going from json to SlicerType
-void to_json(json& j, const SlicerType& i);
+//! \brief Function for going from json to SlicingMode
+void to_json(json& j, const SlicingMode& i);
 
-//! \brief Function for going from SlicerType to json
-void from_json(const json& j, SlicerType& i);
+//! \brief Function for going from SlicingMode to json
+void from_json(const json& j, SlicingMode& i);
 
-inline QString toString(CylindricalPathType path_type) {
-    switch (path_type) {
-        case CylindricalPathType::kHelical:
+inline QString toString(CylindricalPathPattern path_pattern) {
+    switch (path_pattern) {
+        case CylindricalPathPattern::kHelical:
             return "Helical";
-        case CylindricalPathType::kRadial:
+        case CylindricalPathPattern::kRadial:
         default:
             return "Radial";
     }
 }
 
 /*!
- * @enum RadialBoundaryHandling
- * @brief Controls how radial paths are handled when they cross the model boundary.
+ * @enum RadialPathBoundaryPolicy
+ * @brief Controls how radial paths are handled when they intersect the model boundary.
  */
-enum class RadialBoundaryHandling : uint8_t {
+enum class RadialPathBoundaryPolicy : uint8_t {
     //! @brief Keep only the portions retained by the model cross section.
     kClipToModel = 0,
 
@@ -100,23 +100,23 @@ enum class RadialBoundaryHandling : uint8_t {
     kDiscardBoundaryCrossingPath = 2
 };
 
-inline QString toString(RadialBoundaryHandling handling) {
+inline QString toString(RadialPathBoundaryPolicy handling) {
     switch (handling) {
-        case RadialBoundaryHandling::kKeepBoundaryCrossingPath:
+        case RadialPathBoundaryPolicy::kKeepBoundaryCrossingPath:
             return "Keep";
-        case RadialBoundaryHandling::kDiscardBoundaryCrossingPath:
+        case RadialPathBoundaryPolicy::kDiscardBoundaryCrossingPath:
             return "Discard";
-        case RadialBoundaryHandling::kClipToModel:
+        case RadialPathBoundaryPolicy::kClipToModel:
         default:
             return "Clip";
     }
 }
 
 /*!
- * @enum HelicalBoundaryHandling
+ * @enum HelicalPathBoundaryPolicy
  * @brief Selects how a helical path is clipped to the model boundary.
  */
-enum class HelicalBoundaryHandling : uint8_t {
+enum class HelicalPathBoundaryPolicy : uint8_t {
     //! @brief Keep every portion of the helix that lies inside the model.
     kClip = 0,
 
@@ -124,33 +124,33 @@ enum class HelicalBoundaryHandling : uint8_t {
     kClipZ = 1
 };
 
-inline QString toString(HelicalBoundaryHandling handling) {
+inline QString toString(HelicalPathBoundaryPolicy handling) {
     switch (handling) {
-        case HelicalBoundaryHandling::kClipZ:
+        case HelicalPathBoundaryPolicy::kClipZ:
             return "Clip Z";
-        case HelicalBoundaryHandling::kClip:
+        case HelicalPathBoundaryPolicy::kClip:
         default:
             return "Clip";
     }
 }
 
 /*!
- * @enum RadialAxisMode
- * @brief Selects the XY cylinder axis used by radial slicing.
+ * @enum CylinderAxisSource
+ * @brief Selects the XY cylinder axis used by cylindrical slicing.
  */
-enum class RadialAxisMode : uint8_t {
+enum class CylinderAxisSource : uint8_t {
     //! @brief Use the build part's XY centroid.
     kPartCentroid = 0,
 
-    //! @brief Use the configured radial_axis_x/radial_axis_y settings.
+    //! @brief Use the configured cylinder_axis_x/cylinder_axis_y settings.
     kCustomXY = 1
 };
 
-inline QString toString(RadialAxisMode mode) {
+inline QString toString(CylinderAxisSource mode) {
     switch (mode) {
-        case RadialAxisMode::kCustomXY:
+        case CylinderAxisSource::kCustomXY:
             return "Custom XY";
-        case RadialAxisMode::kPartCentroid:
+        case CylinderAxisSource::kPartCentroid:
         default:
             return "Part Centroid";
     }
