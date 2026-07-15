@@ -82,6 +82,9 @@ void GCodeWidget::handleModifiedSetting(QString key) {
                                                              PS::Optimizations::kCustomPointSecondXLocation,
                                                              PS::Optimizations::kCustomPointSecondYLocation,
                                                              PS::Optimizations::kCustomPointSecondZLocation,
+                                                             PS::Slicing::kSlicingVectorX,
+                                                             PS::Slicing::kSlicingVectorY,
+                                                             PS::Slicing::kSlicingVectorZ,
                                                              PRS::Dimensions::kXOffset,
                                                              PRS::Dimensions::kYOffset};
 
