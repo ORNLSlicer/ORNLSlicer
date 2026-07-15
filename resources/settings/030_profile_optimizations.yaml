@@ -323,6 +323,42 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kSecondCustomPointZLocation"
     local: true
+  - name: "seam_attractor_vector_x"
+    display: "Seam Attractor Vector - X"
+    type: "unitless_float"
+    tooltip: "X component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSeamAttractorVectorX"
+    local: true
+  - name: "seam_attractor_vector_y"
+    display: "Seam Attractor Vector - Y"
+    type: "unitless_float"
+    tooltip: "Y component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSeamAttractorVectorY"
+    local: true
+  - name: "seam_attractor_vector_z"
+    display: "Seam Attractor Vector - Z"
+    type: "unitless_float"
+    tooltip: "Z component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSeamAttractorVectorZ"
+    local: true
   - name: "custom_point_order_x_increment"
     display: "Custom Point X Increment"
     type: "location"
@@ -347,3 +383,18 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kCustomPointYIncrement"
     local: true
+inputs:
+  - name: "seam_attractor_vector"
+    display: "Seam Attractor Vector"
+    widget: "vector3"
+    tooltip: "Vector used to project seam attractor points onto each slicing plane. Leave all components at 0 to use the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    minor: "Optimizations"
+    major: "Profile"
+    components:
+      - setting: "seam_attractor_vector_x"
+        label: "X"
+      - setting: "seam_attractor_vector_y"
+        label: "Y"
+      - setting: "seam_attractor_vector_z"
+        label: "Z"

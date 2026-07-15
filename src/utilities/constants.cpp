@@ -756,6 +756,9 @@ const QString Constants::ProfileSettings::Optimizations::kCustomPointSecondYLoca
     "custom_second_point_order_y_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointSecondZLocation =
     "custom_second_point_order_z_location";
+const QString Constants::ProfileSettings::Optimizations::kSeamAttractorVectorX = "seam_attractor_vector_x";
+const QString Constants::ProfileSettings::Optimizations::kSeamAttractorVectorY = "seam_attractor_vector_y";
+const QString Constants::ProfileSettings::Optimizations::kSeamAttractorVectorZ = "seam_attractor_vector_z";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointXIncrement = "custom_point_order_x_increment";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointYIncrement = "custom_point_order_y_increment";
 

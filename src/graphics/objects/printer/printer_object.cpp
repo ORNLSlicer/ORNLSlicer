@@ -41,17 +41,20 @@ QSharedPointer<GraphicsObject> createOptimizationGuide(BaseView* view, QColor co
 }
 
 QVector3D optimizationGuideDirection(const QSharedPointer<SettingsBase>& sb) {
-    QVector3D direction(sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                        sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                        sb->setting<float>(PS::Slicing::kSlicingVectorZ));
+    QVector3D direction(sb->setting<float>(PS::Optimizations::kSeamAttractorVectorX),
+                        sb->setting<float>(PS::Optimizations::kSeamAttractorVectorY),
+                        sb->setting<float>(PS::Optimizations::kSeamAttractorVectorZ));
 
     if (direction.isNull()) {
-        direction = QVector3D(0.0f, 0.0f, 1.0f);
-    }
-    else {
-        direction.normalize();
+        direction = QVector3D(sb->setting<float>(PS::Slicing::kSlicingVectorX),
+                              sb->setting<float>(PS::Slicing::kSlicingVectorY),
+                              sb->setting<float>(PS::Slicing::kSlicingVectorZ));
+        if (direction.isNull()) {
+            direction = QVector3D(0.0f, 0.0f, 1.0f);
+        }
     }
 
+    direction.normalize();
     return direction;
 }
 
