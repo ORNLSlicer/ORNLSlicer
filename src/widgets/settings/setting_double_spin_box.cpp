@@ -67,6 +67,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
     // Set setting units
     m_unit_label.reset(new QLabel(unitText));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 SettingRowBase* SettingDoubleSpinBox::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -75,8 +76,8 @@ SettingRowBase* SettingDoubleSpinBox::createInstance(SettingTab* parent, QShared
 }
 
 void SettingDoubleSpinBox::setEnabled(bool enabled) {
-    dynamic_cast<QDoubleSpinBox*>(this)->setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QDoubleSpinBox*>(this));
 }
 
 void SettingDoubleSpinBox::setNotification(QString msg) {
@@ -93,13 +94,13 @@ void SettingDoubleSpinBox::clearNotification() {
 }
 
 void SettingDoubleSpinBox::hide() {
-    dynamic_cast<QDoubleSpinBox*>(this)->hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QDoubleSpinBox*>(this));
 }
 
 void SettingDoubleSpinBox::show() {
-    dynamic_cast<QDoubleSpinBox*>(this)->show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QDoubleSpinBox*>(this));
 }
 
 void SettingDoubleSpinBox::valueChanged(QVariant val) {

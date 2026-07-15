@@ -25,7 +25,8 @@ namespace ORNL {
 
 SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb, QString key, fifojson json,
                                QGridLayout* layout, int index)
-    : m_index(index), m_layout(layout), m_key(key), m_sb(sb), m_row_visible(true), m_row_enabled(true), m_json(json) {
+    : m_index(index), m_layout(layout), m_key(key), m_sb(sb), m_row_visible(true), m_row_enabled(true),
+      m_dependency_enabled(true), m_json(json) {
     m_theme_path = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
 
@@ -135,27 +136,77 @@ void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases
 
 QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() { return m_settings_bases; }
 
-void SettingRowBase::checkDependencies() { setEnabled(checkLogic(m_dependency_logic)); }
+void SettingRowBase::checkDependencies() { setDependencyEnabled(checkLogic(m_dependency_logic)); }
 
 void SettingRowBase::hide() {
     m_row_visible = false;
-    m_key_label->hide();
-    m_unit_label->hide();
-    updateResetButton();
+    applyBaseWidgetState();
 }
 
 void SettingRowBase::show() {
     m_row_visible = true;
-    m_key_label->show();
-    m_unit_label->show();
+    applyBaseWidgetState();
+}
+
+bool SettingRowBase::isShown() const { return rowWidgetsVisible(); }
+
+bool SettingRowBase::rowWidgetsVisible() const {
+    const bool show_disabled =
+        PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
+    return m_row_visible && (m_dependency_enabled || show_disabled);
+}
+
+bool SettingRowBase::rowWidgetsEnabled() const { return m_row_enabled && m_dependency_enabled; }
+
+void SettingRowBase::applyWidgetState(QWidget* widget) const {
+    if (widget == nullptr)
+        return;
+
+    widget->setVisible(rowWidgetsVisible());
+    widget->setEnabled(rowWidgetsEnabled());
+}
+
+void SettingRowBase::applyBaseWidgetState() {
+    const bool visible = rowWidgetsVisible();
+    const bool enabled = rowWidgetsEnabled();
+
+    for (QWidget* widget : m_row_widgets) {
+        if (widget == nullptr)
+            continue;
+
+        widget->setVisible(visible);
+        widget->setEnabled(enabled);
+    }
+
+    if (!m_key_label.isNull()) {
+        m_key_label->setVisible(visible);
+        m_key_label->setEnabled(enabled);
+    }
+
+    if (!m_unit_label.isNull()) {
+        m_unit_label->setVisible(visible);
+        m_unit_label->setEnabled(enabled);
+    }
+
     updateResetButton();
+}
+
+void SettingRowBase::registerRowWidget(QWidget* widget) {
+    if (widget == nullptr || m_row_widgets.contains(widget))
+        return;
+
+    m_row_widgets.push_back(widget);
+    applyWidgetState(widget);
 }
 
 void SettingRowBase::setEnabled(bool enabled) {
     m_row_enabled = enabled;
-    m_key_label->setEnabled(enabled);
-    m_unit_label->setEnabled(enabled);
-    updateResetButton();
+    applyBaseWidgetState();
+}
+
+void SettingRowBase::setDependencyEnabled(bool enabled) {
+    m_dependency_enabled = enabled;
+    applyBaseWidgetState();
 }
 
 void SettingRowBase::setDependencyLogic(DependencyNode root) { m_dependency_logic = root; }
@@ -227,9 +278,9 @@ void SettingRowBase::updateResetButton() {
     if (m_reset_button.isNull())
         return;
 
-    const bool should_show = m_row_visible && hasLocalOverride();
+    const bool should_show = rowWidgetsVisible() && hasLocalOverride();
     m_reset_button->setVisible(should_show);
-    m_reset_button->setEnabled(should_show && m_row_enabled);
+    m_reset_button->setEnabled(should_show && rowWidgetsEnabled());
 }
 
 void SettingRowBase::resetLocalOverrides() {

@@ -41,6 +41,7 @@ SettingCheckBox::SettingCheckBox(SettingTab* parent, QSharedPointer<SettingsBase
     // Set setting units
     m_unit_label.reset(new QLabel(""));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 SettingRowBase* SettingCheckBox::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -49,8 +50,8 @@ SettingRowBase* SettingCheckBox::createInstance(SettingTab* parent, QSharedPoint
 }
 
 void SettingCheckBox::setEnabled(bool enabled) {
-    dynamic_cast<QCheckBox*>(this)->setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QCheckBox*>(this));
 }
 
 void SettingCheckBox::setNotification(QString msg) {
@@ -67,13 +68,13 @@ void SettingCheckBox::clearNotification() {
 }
 
 void SettingCheckBox::hide() {
-    dynamic_cast<QCheckBox*>(this)->hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QCheckBox*>(this));
 }
 
 void SettingCheckBox::show() {
-    dynamic_cast<QCheckBox*>(this)->show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QCheckBox*>(this));
 }
 
 void SettingCheckBox::valueChanged(QVariant val) {

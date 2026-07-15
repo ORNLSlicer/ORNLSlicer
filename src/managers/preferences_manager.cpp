@@ -88,6 +88,7 @@ PreferencesManager::PreferencesManager()
       m_file_shift_preference(PreferenceChoice::kPerformAutomatically), m_align_preference(PreferenceChoice::kAsk),
       m_hide_travel_preference(false), m_hide_support_preference(false), m_use_true_widths_preference(true),
       m_gcode_preview_mode_preference(GCodePreviewMode::kAuto), m_gcode_preview_vertex_threshold_preference(5000000),
+      m_disabled_setting_visibility_preference(DisabledSettingVisibility::kGrey),
       m_warn_unsaved_project_on_close_preference(true), m_themeName(ThemeName::kLightMode),
       m_theme(static_cast<int>(m_themeName)), m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false),
       m_is_maximized(false), m_window_size(-1, -1), m_window_pos(-1, -1), m_use_implicit_transforms(false),
@@ -240,6 +241,9 @@ void PreferencesManager::importPreferences(QString filepath) {
         if (j.contains("gcode_preview_vertex_threshold"))
             setGCodePreviewVertexThresholdPreference(j["gcode_preview_vertex_threshold"].get<int>());
 
+        if (j.contains("disabled_setting_visibility"))
+            setDisabledSettingVisibilityPreference(j["disabled_setting_visibility"].get<int>());
+
         if (j.contains("warn_unsaved_project_on_close"))
             setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
 
@@ -289,6 +293,7 @@ fifojson PreferencesManager::json() {
     j["use_true_widths"] = m_use_true_widths_preference;
     j["gcode_preview_mode"] = static_cast<int>(m_gcode_preview_mode_preference);
     j["gcode_preview_vertex_threshold"] = m_gcode_preview_vertex_threshold_preference;
+    j["disabled_setting_visibility"] = static_cast<int>(m_disabled_setting_visibility_preference);
     j["warn_unsaved_project_on_close"] = m_warn_unsaved_project_on_close_preference;
     j["hidden_settings"] = m_hidden_settings;
     j["rotation"] = m_rotation_unit;
@@ -364,6 +369,10 @@ GCodePreviewMode PreferencesManager::getGCodePreviewModePreference() { return m_
 
 int PreferencesManager::getGCodePreviewVertexThresholdPreference() {
     return m_gcode_preview_vertex_threshold_preference;
+}
+
+DisabledSettingVisibility PreferencesManager::getDisabledSettingVisibilityPreference() {
+    return m_disabled_setting_visibility_preference;
 }
 
 bool PreferencesManager::getWarnUnsavedProjectOnClosePreference() {
@@ -613,6 +622,25 @@ void PreferencesManager::setGCodePreviewModePreference(int mode) {
 void PreferencesManager::setGCodePreviewVertexThresholdPreference(int threshold) {
     m_gcode_preview_vertex_threshold_preference = std::max(0, threshold);
     m_dirty = true;
+}
+
+void PreferencesManager::setDisabledSettingVisibilityPreference(DisabledSettingVisibility visibility) {
+    switch (visibility) {
+        case DisabledSettingVisibility::kGrey:
+        case DisabledSettingVisibility::kHide:
+            m_disabled_setting_visibility_preference = visibility;
+            break;
+        default:
+            m_disabled_setting_visibility_preference = DisabledSettingVisibility::kGrey;
+            break;
+    }
+
+    m_dirty = true;
+    emit disabledSettingVisibilityChanged();
+}
+
+void PreferencesManager::setDisabledSettingVisibilityPreference(int visibility) {
+    setDisabledSettingVisibilityPreference(static_cast<DisabledSettingVisibility>(visibility));
 }
 
 void PreferencesManager::setWarnUnsavedProjectOnClosePreference(bool warn) {

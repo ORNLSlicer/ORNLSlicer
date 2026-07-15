@@ -40,6 +40,7 @@ SettingLineEdit::SettingLineEdit(SettingTab* parent, QSharedPointer<SettingsBase
     // Set setting units
     m_unit_label.reset(new QLabel(""));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 SettingRowBase* SettingLineEdit::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -48,8 +49,8 @@ SettingRowBase* SettingLineEdit::createInstance(SettingTab* parent, QSharedPoint
 }
 
 void SettingLineEdit::setEnabled(bool enabled) {
-    dynamic_cast<QLineEdit*>(this)->setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QLineEdit*>(this));
 }
 
 void SettingLineEdit::setNotification(QString msg) {
@@ -68,13 +69,13 @@ void SettingLineEdit::clearNotification() {
 }
 
 void SettingLineEdit::hide() {
-    dynamic_cast<QLineEdit*>(this)->hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QLineEdit*>(this));
 }
 
 void SettingLineEdit::show() {
-    dynamic_cast<QLineEdit*>(this)->show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QLineEdit*>(this));
 }
 
 void SettingLineEdit::valueChanged(QVariant val) {
