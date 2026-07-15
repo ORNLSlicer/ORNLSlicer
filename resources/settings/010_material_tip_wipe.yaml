@@ -16,7 +16,7 @@ settings:
   - name: "perimeter_wipe_direction"
     display: "Perimeter Wipe Direction"
     type: "enumeration"
-    tooltip: "Direction for all perimeter tip wipes. Optimal does forward for closed loops paths\\nand reverse for open loop paths"
+    tooltip: "Selects the direction for perimeter tip wipes. WIPE_OPTIMAL currently follows the forward path direction, matching WIPE_FORWARD."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
@@ -116,7 +116,7 @@ settings:
   - name: "inset_wipe_direction"
     display: "Inset Wipe Direction"
     type: "enumeration"
-    tooltip: "Direction for all inset tip wipes. Optimal does forward for closed loops paths\\nand reverse for open loop paths"
+    tooltip: "Selects the direction for inset tip wipes. WIPE_OPTIMAL currently follows the forward path direction, matching WIPE_FORWARD."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
@@ -216,7 +216,7 @@ settings:
   - name: "skeleton_wipe_direction"
     display: "Skeleton Wipe Direction"
     type: "enumeration"
-    tooltip: "Direction for all skeleton tip wipes. Optimal does reverse a reverse wipe"
+    tooltip: "Selects the direction for skeleton tip wipes. WIPE_OPTIMAL currently follows the forward path direction, matching WIPE_FORWARD."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
@@ -290,7 +290,7 @@ settings:
     symbol: "kSkeletonWipeCutoffDistance"
     local: true
   - name: "skeleton_wipe_lift_height"
-    display: "Skeleteon Wipe Lift Distance"
+    display: "Skeleton Wipe Lift Height"
     type: "distance"
     tooltip: "Sets the distance to lift during the skeleton tip wipe move"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
@@ -316,7 +316,7 @@ settings:
   - name: "skin_wipe_direction"
     display: "Skin Wipe Direction"
     type: "enumeration"
-    tooltip: "Direction for all skin tip wipes. Optimal does forward for closed loops paths,\\nreverse for open loop paths, and forward over the inset/perimeter when available"
+    tooltip: "Selects the direction for skin tip wipes. WIPE_OPTIMAL uses a forward wipe when inset or perimeter paths are enabled, or when the fill pattern is Concentric; otherwise it uses a reverse wipe."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
@@ -416,7 +416,7 @@ settings:
   - name: "infill_wipe_direction"
     display: "Infill Wipe Direction"
     type: "enumeration"
-    tooltip: "Direction for all infill tip wipes. Optimal does forward for closed loops paths,\\nreverse for open loop paths, and forward over the inset/perimeter when available"
+    tooltip: "Selects the direction for infill tip wipes. WIPE_OPTIMAL uses a forward wipe when inset or perimeter paths are enabled, or when the fill pattern is Concentric; otherwise it uses a reverse wipe."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"

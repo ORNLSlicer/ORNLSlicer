@@ -16,7 +16,7 @@ settings:
   - name: "perimeter_count"
     display: "Number of Perimeters"
     type: "positive_int"
-    tooltip: "Total number of perimeters per layer"
+    tooltip: "Sets the number of exterior contour paths generated per layer. The editor accepts 1 or more; the built-in catalog fallback is 0, so set an explicit value before enabling perimeters."
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: 0

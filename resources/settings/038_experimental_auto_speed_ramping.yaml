@@ -4,7 +4,7 @@ settings:
   - name: "trajectory_angle_slow_down"
     display: "Enable Trajectory Auto Speed Ramping"
     type: "boolean"
-    tooltip: "If selected, will ramp speed for a certain distance at the intersections"
+    tooltip: "Enables speed and extruder ramping around corners whose computed trajectory angle is below Angle Threshold."
     depends: {"slicing_mode":0}
     options: []
     default: false
@@ -16,7 +16,7 @@ settings:
   - name: "trajectory_angle_threshold_slow_down"
     display: "Angle Threshold"
     type: "angle"
-    tooltip: "Based on the threshold for change in angle of trajectory, will ramp speed for a certain distance on a path segment"
+    tooltip: "Sets the trajectory-angle cutoff for auto speed ramping. A corner qualifies when its computed angle is less than this threshold."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 2.3562
@@ -28,7 +28,7 @@ settings:
   - name: "trajectory_angle_distance_slow_down"
     display: "Min Ramp Down Distance"
     type: "distance"
-    tooltip: "Distance for the Auto Speed Ramp Down trajectory move, when angle is over threshold"
+    tooltip: "Sets the minimum path distance before a qualifying corner over which the ramp-down values are applied."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 25400
@@ -40,7 +40,7 @@ settings:
   - name: "trajectory_angle_distance_speed_up"
     display: "Min Ramp Up Distance"
     type: "distance"
-    tooltip: "Distance for the Auto Speed Ramp Up trajectory move, when angle is over threshold"
+    tooltip: "Sets the minimum path distance after a qualifying corner over which the ramp-up values are applied."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 25400
@@ -52,7 +52,7 @@ settings:
   - name: "trajectory_angle_speed_slow_down"
     display: "Ramping Down Speed"
     type: "speed"
-    tooltip: "Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    tooltip: "Sets the reduced gantry speed used while ramping down before a corner whose trajectory angle is below the threshold."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 25400
@@ -64,7 +64,7 @@ settings:
   - name: "trajectory_angle_extruder_speed_slow_down"
     display: "Ramping Down Extruder Speed"
     type: "rpm"
-    tooltip: "Extruder Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    tooltip: "Sets the extruder speed used while ramping down before a corner whose trajectory angle is below the threshold."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 14
@@ -76,7 +76,7 @@ settings:
   - name: "trajectory_angle_speed_up"
     display: "Ramping Up Speed"
     type: "speed"
-    tooltip: "Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    tooltip: "Sets the gantry speed used while ramping up after a corner whose trajectory angle is below the threshold."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 50800
@@ -88,7 +88,7 @@ settings:
   - name: "trajectory_angle_extruder_speed_up"
     display: "Ramping Up Extruder Speed"
     type: "rpm"
-    tooltip: "Extruder Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
+    tooltip: "Sets the extruder speed used while ramping up after a corner whose trajectory angle is below the threshold."
     depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 28
