@@ -113,6 +113,7 @@ void PrinterObject::updateSeams() {
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
     bool secondPointEnabled = m_sb->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
+    const float bed_z = this->printerCenter().z();
 
     if (islandOrder == IslandOrderOptimization::kCustomPoint) {
         QVector3D translation(m_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
@@ -122,6 +123,7 @@ void PrinterObject::updateSeams() {
                               m_sb->setting<double>(PS::Optimizations::kCustomIslandZLocation));
 
         translation *= Constants::OpenGL::kObjectToView;
+        translation.setZ(bed_z + translation.z());
 
         m_seams.custom_island_opt->translateAbsolute(translation);
         m_seams.custom_island_opt->show();
@@ -138,6 +140,7 @@ void PrinterObject::updateSeams() {
                               m_sb->setting<double>(PS::Optimizations::kCustomPathZLocation));
 
         translation *= Constants::OpenGL::kObjectToView;
+        translation.setZ(bed_z + translation.z());
 
         m_seams.custom_path_opt->translateAbsolute(translation);
         m_seams.custom_path_opt->show();
@@ -154,6 +157,7 @@ void PrinterObject::updateSeams() {
                               m_sb->setting<double>(PS::Optimizations::kCustomPointZLocation));
 
         translation *= Constants::OpenGL::kObjectToView;
+        translation.setZ(bed_z + translation.z());
 
         m_seams.custom_point_opt->translateAbsolute(translation);
         m_seams.custom_point_opt->show();
@@ -166,6 +170,7 @@ void PrinterObject::updateSeams() {
                                         m_sb->setting<double>(PS::Optimizations::kCustomPointSecondZLocation));
 
             secondTranslation *= Constants::OpenGL::kObjectToView;
+            secondTranslation.setZ(bed_z + secondTranslation.z());
 
             m_seams.custom_point_second_opt->translateAbsolute(secondTranslation);
             m_seams.custom_point_second_opt->show();
