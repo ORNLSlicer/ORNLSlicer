@@ -1358,7 +1358,7 @@ void PartView::updateLayerSettingsRangePlane() {
 
         QSharedPointer<PlaneObject> range_plane = gop->layerSettingsRangePlane(visible_plane_index);
         range_plane->updateDimensions(max_dim, max_dim, thickness);
-        range_plane->setLockedRotationQuaternion(QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1)));
+        range_plane->setLockedRotationQuaternion(MathUtils::CreateQuaternion(QVector3D(0, 0, 1), slicing_vector));
         range_plane->translateAbsolute(center);
         range_plane->show();
 
