@@ -4,7 +4,7 @@ settings:
   - name: "layer_ordering"
     display: "Layer Ordering"
     type: "enumeration"
-    tooltip: "How to order layers across multiple parts"
+    tooltip: "Selects how layers from multiple parts are grouped and emitted: by physical height, by each part's layer index, or one complete part at a time."
     depends: {"slicing_mode":0}
     options:
       - "By Height"
@@ -31,7 +31,7 @@ settings:
   - name: "island_order_optimization"
     display: "Island Order Optimization"
     type: "enumeration"
-    tooltip: "Type of order optimizer to use on islands"
+    tooltip: "Selects which printable island is visited next, trading travel distance, computation time, thermal distribution, or a user-defined reference point."
     depends: {"slicing_mode":0}
     options:
       - "Next Closest"
@@ -86,7 +86,7 @@ settings:
   - name: "path_order_optimization"
     display: "Path Order Optimization"
     type: "enumeration"
-    tooltip: "Type of order optimizer to use on paths"
+    tooltip: "Selects which path within an island is printed next, using distance, randomness, contour hierarchy, or a user-defined reference point."
     depends: {"slicing_mode":0}
     options:
       - "Next Closest"
@@ -211,7 +211,7 @@ settings:
   - name: "point_order_optimization"
     display: "Point Order Optimization"
     type: "enumeration"
-    tooltip: "Type of order optimizer to use on point selection after a path has been determined"
+    tooltip: "Selects the start point or direction after a path is chosen, using proximity, randomness, layer-to-layer progression, or a user-defined reference point."
     depends: {"slicing_mode":0}
     options:
       - "Next Closest"
