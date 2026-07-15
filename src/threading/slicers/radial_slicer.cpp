@@ -82,18 +82,18 @@ bool crossesModelBoundary(const Polyline& circle, const QVector<Polyline>& clipp
 }
 
 //! @brief Applies the configured radial boundary policy to a candidate radial path.
-QVector<Polyline> applyBoundaryHandling(const Polyline& circle, const QVector<Polyline>& clipped_lines,
-                                        RadialBoundaryHandling handling) {
+QVector<Polyline> applyBoundaryPolicy(const Polyline& circle, const QVector<Polyline>& clipped_lines,
+                                      RadialPathBoundaryPolicy handling) {
     if (clipped_lines.isEmpty()) {
         return {};
     }
 
     switch (handling) {
-        case RadialBoundaryHandling::kKeepBoundaryCrossingPath:
+        case RadialPathBoundaryPolicy::kKeepBoundaryCrossingPath:
             return {circle};
-        case RadialBoundaryHandling::kDiscardBoundaryCrossingPath:
+        case RadialPathBoundaryPolicy::kDiscardBoundaryCrossingPath:
             return crossesModelBoundary(circle, clipped_lines) ? QVector<Polyline>() : clipped_lines;
-        case RadialBoundaryHandling::kClipToModel:
+        case RadialPathBoundaryPolicy::kClipToModel:
         default:
             return clipped_lines;
     }
@@ -178,9 +178,9 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         const Distance layer_height =
             positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kLayerHeight), kDefaultRadialLayerHeight);
         const Distance bead_width = positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kBeadWidth), layer_height);
-        const RadialBoundaryHandling boundary_handling =
-            static_cast<RadialBoundaryHandling>(part_sb->setting<int>(PS::Slicing::kRadialBoundaryHandling));
-        Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius);
+        const RadialPathBoundaryPolicy boundary_policy =
+            static_cast<RadialPathBoundaryPolicy>(part_sb->setting<int>(PS::Slicing::kRadialPathBoundaryPolicy));
+        Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
         if (initial_radius < 0) {
             initial_radius = 0.0 * micron;
         }
@@ -243,7 +243,7 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
                 // current candidate path, then apply the radial boundary
                 // policy for paths intersected by the part boundary.
                 QVector<Polyline> clipped_lines = clipCircleToSection(section.geometry, circle);
-                QVector<Polyline> candidate_lines = applyBoundaryHandling(circle, clipped_lines, boundary_handling);
+                QVector<Polyline> candidate_lines = applyBoundaryPolicy(circle, clipped_lines, boundary_policy);
 
                 for (Polyline line : candidate_lines) {
                     if (line.size() < 2) {
@@ -277,8 +277,8 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
 
     if (m_radial_layers.isEmpty()) {
         const QString message =
-            "Warning: Radial slicing generated no printable paths. Check Initial Radius, Cylinder Axis Mode, clipping "
-            "meshes, and Boundary Handling.";
+            "Warning: Radial slicing generated no printable paths. Check Cylinder Inner Radius, Cylinder Axis Source, "
+            "clipping meshes, and Radial Path Boundary Policy.";
         qWarning() << message;
         emit statusMessage(message);
         emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);
@@ -336,12 +336,13 @@ QSharedPointer<MeshBase> RadialSlicer::copyMesh(const QSharedPointer<MeshBase>& 
 
 Point RadialSlicer::radialCenterForPart(const QSharedPointer<SettingsBase>& part_sb, const QSharedPointer<Part>& part,
                                         Distance base_z) {
-    const RadialAxisMode axis_mode = static_cast<RadialAxisMode>(part_sb->setting<int>(PS::Slicing::kRadialAxisMode));
+    const CylinderAxisSource axis_mode =
+        static_cast<CylinderAxisSource>(part_sb->setting<int>(PS::Slicing::kCylinderAxisSource));
 
     Point center = part->rootMesh()->centroid();
-    if (axis_mode == RadialAxisMode::kCustomXY) {
-        center.x(part_sb->setting<Distance>(PS::Slicing::kRadialAxisX));
-        center.y(part_sb->setting<Distance>(PS::Slicing::kRadialAxisY));
+    if (axis_mode == CylinderAxisSource::kCustomXY) {
+        center.x(part_sb->setting<Distance>(PS::Slicing::kCylinderAxisX));
+        center.y(part_sb->setting<Distance>(PS::Slicing::kCylinderAxisY));
     }
 
     center.z(base_z);

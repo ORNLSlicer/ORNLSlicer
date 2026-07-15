@@ -780,21 +780,21 @@ const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerXOffset
 const QString Constants::ProfileSettings::ThermalScanner::kThermalScannerYOffset = "thermal_scanner_y_offset";
 
 // Slicing
-const QString Constants::ProfileSettings::Slicing::kSlicerType = "slicer_type";
-const QString Constants::ProfileSettings::Slicing::kCylindricalPathType = "cylindrical_path_type";
-const QString Constants::ProfileSettings::Slicing::kSlicingVectorX = "slicing_vector_x";
-const QString Constants::ProfileSettings::Slicing::kSlicingVectorY = "slicing_vector_y";
-const QString Constants::ProfileSettings::Slicing::kSlicingVectorZ = "slicing_vector_z";
-const QString Constants::ProfileSettings::Slicing::kRadialInitialRadius = "radial_initial_radius";
-const QString Constants::ProfileSettings::Slicing::kRadialAxisMode = "radial_axis_mode";
-const QString Constants::ProfileSettings::Slicing::kRadialAxisX = "radial_axis_x";
-const QString Constants::ProfileSettings::Slicing::kRadialAxisY = "radial_axis_y";
-const QString Constants::ProfileSettings::Slicing::kRadialBoundaryHandling = "radial_boundary_handling";
-const QString Constants::ProfileSettings::Slicing::kHelicalBoundaryHandling = "helical_boundary_handling";
-const QString Constants::ProfileSettings::Slicing::kHelicalPathLength = "helical_path_length";
+const QString Constants::ProfileSettings::Slicing::kSlicingMode = "slicing_mode";
+const QString Constants::ProfileSettings::Slicing::kCylindricalPathPattern = "cylindrical_path_pattern";
+const QString Constants::ProfileSettings::Slicing::kSlicePlaneNormalX = "slice_plane_normal_x";
+const QString Constants::ProfileSettings::Slicing::kSlicePlaneNormalY = "slice_plane_normal_y";
+const QString Constants::ProfileSettings::Slicing::kSlicePlaneNormalZ = "slice_plane_normal_z";
+const QString Constants::ProfileSettings::Slicing::kCylinderInnerRadius = "cylinder_inner_radius";
+const QString Constants::ProfileSettings::Slicing::kCylinderAxisSource = "cylinder_axis_source";
+const QString Constants::ProfileSettings::Slicing::kCylinderAxisX = "cylinder_axis_x";
+const QString Constants::ProfileSettings::Slicing::kCylinderAxisY = "cylinder_axis_y";
+const QString Constants::ProfileSettings::Slicing::kRadialPathBoundaryPolicy = "radial_path_boundary_policy";
+const QString Constants::ProfileSettings::Slicing::kHelicalPathBoundaryPolicy = "helical_path_boundary_policy";
+const QString Constants::ProfileSettings::Slicing::kMaxHelicalPathLength = "max_helical_path_length";
 const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution = "arcs_per_revolution";
-const QString Constants::ProfileSettings::Slicing::kImageResolutionX = "image_resolution_x";
-const QString Constants::ProfileSettings::Slicing::kImageResolutionY = "image_resolution_y";
+const QString Constants::ProfileSettings::Slicing::kImagePixelSizeX = "image_pixel_size_x";
+const QString Constants::ProfileSettings::Slicing::kImagePixelSizeY = "image_pixel_size_y";
 
 //================================================================================
 // Experimental Settings

@@ -1385,10 +1385,10 @@ void LayerBar::updateLayers() {
         return;
     }
 
-    // Retrieve the slicing vector
-    QVector3D slicing_vector = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
-                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
-                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    // Retrieve the slice plane normal.
+    QVector3D slicing_vector = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     slicing_vector.normalize();
 
     // Retrieve the part min and max in the slicing plane normal direction
@@ -1601,8 +1601,8 @@ void LayerBar::splitRange(LayerBar::dot_range* range) {
 }
 
 void LayerBar::handleModifiedSetting(QString key) {
-    if (key == PS::Layer::kLayerHeight || key == PS::Slicing::kSlicingVectorX || key == PS::Slicing::kSlicingVectorY ||
-        key == PS::Slicing::kSlicingVectorZ) {
+    if (key == PS::Layer::kLayerHeight || key == PS::Slicing::kSlicePlaneNormalX ||
+        key == PS::Slicing::kSlicePlaneNormalY || key == PS::Slicing::kSlicePlaneNormalZ) {
         updateLayers();
 
         removeInvalidSelections();

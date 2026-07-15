@@ -158,9 +158,9 @@ QString CincinnatiWriter::writeBeforeLayer(float new_min_z, QSharedPointer<Setti
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
     // Retrieve the slicing plane normal
-    QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                                sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                                sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     slicing_vector.normalize();
 
     /*

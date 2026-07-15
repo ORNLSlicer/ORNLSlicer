@@ -678,9 +678,9 @@ QMatrix4x4 ShapeFactory::computeLinearBeadTransform(const QVector3D& start, cons
     }
     tangent.normalize();
 
-    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorX),
-                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorY),
-                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     if (normal.lengthSquared() <= kVectorEpsilonSquared) {
         normal = QVector3D(0.0f, 0.0f, 1.0f);
     }
