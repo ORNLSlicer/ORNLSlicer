@@ -4,6 +4,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <limits>
 
 #include <QMessageBox>
 #include <QStack>
@@ -51,6 +52,7 @@
 namespace ORNL {
 namespace {
 constexpr float kMinimumLayerSettingsRangeThickness = 0.01f;
+constexpr float kMinimumSlicingCylinderHeight = 0.01f;
 } // namespace
 
 PartView::PartView(QSharedPointer<SettingsBase> sb) {
@@ -107,11 +109,8 @@ void PartView::showLabels(bool show) {
 }
 
 void PartView::showSlicingPlanes(bool show) {
-    for (auto& gop : m_part_objects) {
-        gop->plane()->setHidden(!show);
-    }
-
     m_state.planes_shown = show;
+    updateSlicingGeometryPreviews();
 
     this->update();
 }
@@ -170,6 +169,7 @@ void PartView::centerPart(QString name) {
 void PartView::centerPart(QSharedPointer<PartObject> gop) {
     QVector3D printer_center = m_printer->printerCenter();
     gop->translateAbsolute(QVector3D(printer_center.x(), printer_center.y(), gop->translation().z()));
+    updateSlicingGeometryPreview(gop);
 }
 
 void PartView::dropPart(QSharedPointer<PartObject> gop) {
@@ -190,6 +190,7 @@ void PartView::dropPart(QSharedPointer<PartObject> gop) {
     trans.setZ(trans.z() - z_sub);
 
     gop->translateAbsolute(trans, true);
+    updateSlicingGeometryPreview(gop);
 }
 
 void PartView::shiftPart(QSharedPointer<PartObject> gop) {
@@ -198,6 +199,7 @@ restart_check:
     for (auto& egop : m_part_objects) {
         if (egop->doesMBBIntersect(gop)) {
             gop->translate(QVector3D(0.5, 0, 0));
+            updateSlicingGeometryPreview(gop);
             goto restart_check;
         }
     }
@@ -301,6 +303,7 @@ void PartView::centerSelectedParts() {
         QVector3D translation = gop->translation() + offset;
 
         gop->translateAbsolute(translation);
+        updateSlicingGeometryPreview(gop);
 
         this->blockModel();
         m_model->lookupByGraphic(gop)->setTranslation(translation);
@@ -314,6 +317,7 @@ void PartView::centerSelectedParts() {
 void PartView::dropSelectedParts() {
     for (auto& gop : m_selected_objects) {
         dropPart(gop);
+        updateSlicingGeometryPreview(gop);
 
         this->blockModel();
         m_model->lookupByGraphic(gop)->setTranslation(gop->translation() - m_printer->minimum());
@@ -403,6 +407,7 @@ void PartView::updatePrinterSettings(QSharedPointer<SettingsBase> sb) {
 
     m_focus->updateDimensions(m_printer->getDefaultZoom() * 0.1);
 
+    updateSlicingGeometryPreviews();
     this->postTransformCheck();
     this->update();
 }
@@ -428,13 +433,7 @@ void PartView::updateOverhangSettings(QSharedPointer<SettingsBase> sb) {
 void PartView::updateSlicingSettings(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
 
-    // Determine the slicing plane normal
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-    slicing_vector.normalize();
-
-    QQuaternion rotation = QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1));
+    QQuaternion rotation = slicingPlaneRotation();
 
     for (auto& gop : m_part_objects) {
         gop->plane()->setLockedRotationQuaternion(rotation);
@@ -443,6 +442,7 @@ void PartView::updateSlicingSettings(QSharedPointer<SettingsBase> sb) {
         }
     }
 
+    updateSlicingGeometryPreviews();
     updateLayerSettingsRangePlane();
 
     // Changing the plane affects the overhang angle
@@ -601,6 +601,7 @@ void PartView::handleLeftRelease(QPointF mouse_ndc_pos) {
     }
     this->permitModel();
 
+    updateSlicingGeometryPreviews();
     this->postTransformCheck();
     this->update();
 }
@@ -664,6 +665,7 @@ void PartView::handleLeftMove(QPointF mouse_ndc_pos) {
         }
 
         gop->translateAbsolute(v + m_state.part_trans_start[gop]);
+        updateSlicingGeometryPreview(gop);
         m_model->lookupByGraphic(gop)->setTranslation(gop->translation() - m_printer->minimum());
     }
 
@@ -770,6 +772,7 @@ void PartView::handleRightRelease(QPointF mouse_ndc_pos, QPointF global_pos) {
             }
 
             gop->rotateAbsolute(QQuaternion::fromEulerAngles(er));
+            updateSlicingGeometryPreview(gop);
         }
 
         auto tmp_selected = m_selected_objects;
@@ -797,6 +800,7 @@ void PartView::handleRightRelease(QPointF mouse_ndc_pos, QPointF global_pos) {
         }
         this->permitModel();
 
+        updateSlicingGeometryPreviews();
         this->update();
     }
     else {
@@ -923,8 +927,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
     gop->setOverhangAngle(m_sb->setting<Angle>(PS::Support::kThresholdAngle));
     if (m_state.overhangs_shown)
         gop->showOverhang(true);
-    if (m_state.planes_shown)
-        gop->plane()->show();
+    updateSlicingGeometryPreview(gop);
     if (m_state.names_shown)
         gop->label()->show();
     updateLayerSettingsRangePlane();
@@ -950,6 +953,7 @@ void PartView::modelReloadUpdate(QSharedPointer<PartMetaItem> pm) {
 
     gop = pm->graphicsPart();
     pm->setTransformation(tfm);
+    updateSlicingGeometryPreview(gop);
 
     m_selected_objects.insert(gop);
     this->setCursor(QCursor(Qt::OpenHandCursor));
@@ -1039,6 +1043,7 @@ void PartView::modelTranformUpdate(QSharedPointer<PartMetaItem> pm) {
     this->postTransformCheck();
 
     updateLayerSettingsRangePlane();
+    updateSlicingGeometryPreview(gop);
 
     this->update();
 }
@@ -1203,6 +1208,115 @@ QSharedPointer<PartObject> PartView::findObject(QSharedPointer<Part> part) {
     }
 
     return nullptr;
+}
+
+QQuaternion PartView::slicingPlaneRotation() const {
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
+
+    if (slicing_vector.isNull())
+        slicing_vector = QVector3D(0.0f, 0.0f, 1.0f);
+    else
+        slicing_vector.normalize();
+
+    return QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1));
+}
+
+QSharedPointer<SettingsBase> PartView::slicingSettingsForPart(QSharedPointer<Part> part) const {
+    QSharedPointer<SettingsBase> part_sb = QSharedPointer<SettingsBase>::create(*m_sb);
+    if (!part.isNull())
+        part_sb->populate(part->getSb());
+
+    return part_sb;
+}
+
+bool PartView::cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop, QVector3D& base_center, float& radius,
+                                                 float& height) const {
+    if (gop.isNull() || gop->part().isNull() || gop->part()->rootMesh().isNull())
+        return false;
+
+    QSharedPointer<SettingsBase> part_sb = slicingSettingsForPart(gop->part());
+    const CylinderAxisSource axis_mode =
+        static_cast<CylinderAxisSource>(part_sb->setting<int>(PS::Slicing::kCylinderAxisSource));
+
+    QVector3D axis_center;
+    if (axis_mode == CylinderAxisSource::kCustomXY) {
+        axis_center.setX(part_sb->setting<Distance>(PS::Slicing::kCylinderAxisX)() * Constants::OpenGL::kObjectToView);
+        axis_center.setY(part_sb->setting<Distance>(PS::Slicing::kCylinderAxisY)() * Constants::OpenGL::kObjectToView);
+    }
+    else {
+        const QVector3D local_centroid =
+            gop->part()->rootMesh()->originalCentroid().toQVector3D() * Constants::OpenGL::kObjectToView;
+        axis_center = gop->transformation() * local_centroid;
+    }
+
+    const std::vector<Triangle> triangles = gop->triangles();
+    if (triangles.empty())
+        return false;
+
+    float min_z = std::numeric_limits<float>::max();
+    float max_z = std::numeric_limits<float>::lowest();
+    for (const Triangle& triangle : triangles) {
+        for (const QVector3D& point : {triangle.a, triangle.b, triangle.c}) {
+            min_z = std::min(min_z, point.z());
+            max_z = std::max(max_z, point.z());
+        }
+    }
+
+    Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
+    if (initial_radius < 0)
+        initial_radius = 0.0 * micron;
+
+    radius = initial_radius() * Constants::OpenGL::kObjectToView;
+    height = std::max(max_z - min_z, kMinimumSlicingCylinderHeight);
+    base_center = QVector3D(axis_center.x(), axis_center.y(), min_z);
+
+    return radius > 0.0f && height > 0.0f;
+}
+
+void PartView::updateSlicingGeometryPreview(QSharedPointer<PartObject> gop) {
+    if (gop.isNull())
+        return;
+
+    gop->plane()->hide();
+    if (!gop->slicingCylinder().isNull())
+        gop->slicingCylinder()->hide();
+
+    if (!m_state.planes_shown)
+        return;
+
+    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
+    switch (slicing_mode) {
+        case SlicingMode::kCylindrical: {
+            QVector3D base_center;
+            float radius = 0.0f;
+            float height = 0.0f;
+            if (gop->slicingCylinder().isNull() ||
+                !cylindricalSlicingPreviewGeometry(gop, base_center, radius, height)) {
+                return;
+            }
+
+            QMatrix4x4 transform;
+            transform.translate(base_center);
+            transform.scale(QVector3D(radius, radius, height));
+            gop->slicingCylinder()->setTransformation(transform, false);
+            gop->slicingCylinder()->show();
+            break;
+        }
+        case SlicingMode::kPlanar:
+            gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation());
+            gop->plane()->show();
+            break;
+        case SlicingMode::kImage:
+            break;
+    }
+}
+
+void PartView::updateSlicingGeometryPreviews() {
+    for (auto& gop : m_part_objects) {
+        updateSlicingGeometryPreview(gop);
+    }
 }
 
 void PartView::updateLayerSettingsRangePlane() {

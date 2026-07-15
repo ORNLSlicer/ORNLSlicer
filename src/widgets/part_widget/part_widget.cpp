@@ -147,8 +147,10 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                         PRS::Dimensions::kGridYDistance,
                                                         PRS::Dimensions::kGridYOffset};
 
-    static const auto material_settings = QSet<QString> {
-        PS::Slicing::kSlicePlaneNormalX, PS::Slicing::kSlicePlaneNormalY, PS::Slicing::kSlicePlaneNormalZ};
+    static const auto slicing_settings = QSet<QString> {
+        PS::Slicing::kSlicingMode,       PS::Slicing::kSlicePlaneNormalX,  PS::Slicing::kSlicePlaneNormalY,
+        PS::Slicing::kSlicePlaneNormalZ, PS::Slicing::kCylinderAxisSource, PS::Slicing::kCylinderAxisX,
+        PS::Slicing::kCylinderAxisY,     PS::Slicing::kCylinderInnerRadius};
 
     static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
                                                              PS::Optimizations::kCustomIslandXLocation,
@@ -170,7 +172,7 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
     if (printer_settings.contains(setting_key)) {
         m_part_view->updatePrinterSettings(GSM->getGlobal());
     }
-    else if (material_settings.contains(setting_key)) {
+    else if (slicing_settings.contains(setting_key)) {
         m_part_view->updateSlicingSettings(GSM->getGlobal());
     }
     else if (optimization_settings.contains(setting_key)) {

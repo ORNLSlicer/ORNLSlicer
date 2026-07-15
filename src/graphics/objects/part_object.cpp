@@ -11,6 +11,7 @@
 
 #include <qcolor.h>
 #include <qhashfunctions.h>
+#include <qmatrix4x4.h>
 #include <qquaternion.h>
 #include <qset.h>
 #include <qsharedpointer.h>
@@ -24,6 +25,7 @@
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cube/plane_object.h"
 #include "graphics/objects/text_object.h"
+#include "graphics/support/shape_factory.h"
 #include "part/part.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -40,6 +42,8 @@ constexpr float kFeatureEdgeAlpha = 0.35f;
 constexpr size_t kTrianglePositionFloatCount = 9;
 //! \brief Number of floats used by one triangle's three RGBA vertex colors.
 constexpr size_t kTriangleColorFloatCount = 12;
+//! \brief Unit-radius, unit-height local geometry for scaled cylindrical slicing previews.
+constexpr float kSlicingCylinderPreviewBaseSize = 1.0f;
 
 struct EdgeSample {
     int start_index;
@@ -210,6 +214,18 @@ QSharedPointer<GraphicsObject> createFeatureEdgeObject(BaseView* view, QSharedPo
 
     return QSharedPointer<FeatureEdgeObject>::create(view, edge_vertices, edge_normals, edge_colors, GL_LINES);
 }
+
+QSharedPointer<GraphicsObject> createSlicingCylinderPreviewObject(BaseView* view) {
+    QColor color = QColor(127, 0, 255, 102);
+
+    std::vector<float> vertices;
+    std::vector<float> normals;
+    std::vector<float> colors;
+    ShapeFactory::appendCylinder(kSlicingCylinderPreviewBaseSize, kSlicingCylinderPreviewBaseSize, QMatrix4x4(), color,
+                                 vertices, colors, normals);
+
+    return QSharedPointer<GraphicsObject>::create(view, vertices, normals, colors);
+}
 } // namespace
 
 PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mode) {
@@ -305,6 +321,12 @@ PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mod
 
     this->adoptChild(gos);
     m_plane_object = gos;
+
+    auto slicing_cylinder = createSlicingCylinderPreviewObject(this->view());
+    slicing_cylinder->hide();
+
+    this->adoptChild(slicing_cylinder);
+    m_slicing_cylinder_object = slicing_cylinder;
 
     this->createLayerSettingsRangePlane();
 
@@ -452,6 +474,8 @@ QSharedPointer<TextObject> PartObject::label() { return m_label_object; }
 QSharedPointer<AxesObject> PartObject::axes() { return m_axes_object; }
 
 QSharedPointer<PlaneObject> PartObject::plane() { return m_plane_object; }
+
+QSharedPointer<GraphicsObject> PartObject::slicingCylinder() { return m_slicing_cylinder_object; }
 
 QSharedPointer<PlaneObject> PartObject::layerSettingsRangePlane(int index) {
     index = std::max(index, 0);
