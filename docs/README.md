@@ -12,6 +12,14 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
 
+## Architecture
+
+- [Architecture Overview](../ARCHITECTURE.md)
+- [Application Runtime](architecture/application-runtime.md)
+- [Slicing Pipeline](architecture/slicing-pipeline.md)
+- [Settings System](architecture/settings-system.md)
+- [G-code and Visualization](architecture/gcode-and-visualization.md)
+
 ## Contributor Docs
 
 - [Conventional Branch Naming](contributing/conventional-branch.md)
