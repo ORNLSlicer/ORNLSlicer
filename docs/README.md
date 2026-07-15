@@ -33,10 +33,23 @@ The setup guide includes build, test, editor, and troubleshooting instructions.
 
 Add the below pandoc documentation into a seperate contributing md file
 
-The Markdown user guide is the canonical manual source. Regenerate the
-same-stem `ornlslicer-user-guide.pdf` from it for a release rather than editing
-the PDF directly. From the repository root, with Pandoc and a LaTeX engine
-installed, run:
+The Markdown user guide is the canonical manual source. Its exhaustive settings
+appendix is generated from `resources/settings/*.yaml`; choice-level and
+implementation notes that are not part of the UI schema live in
+`scripts/generate_settings_reference.py`. After changing either source, refresh
+and verify the appendix from the repository root:
+
+```bash
+python3 scripts/generate_master_config.py \
+  resources/settings \
+  resources/configs/master.conf \
+  resources/configs/setting_inputs.conf
+python3 -B scripts/generate_settings_reference.py
+python3 -B scripts/generate_settings_reference.py --check
+```
+
+Regenerate the same-stem `ornlslicer-user-guide.pdf` for a release rather than
+editing the PDF directly. With Pandoc and a LaTeX engine installed, run:
 
 ```bash
 pandoc --from=gfm docs/ornlslicer-user-guide.md \

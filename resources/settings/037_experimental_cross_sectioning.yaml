@@ -4,7 +4,7 @@ settings:
   - name: "cross_section_largest_gap"
     display: "Largest Gap Distance"
     type: "distance"
-    tooltip: "Distance to allow cross-section segments to be fused together. Points closer than this distance will be considered neighbors and connected."
+    tooltip: "Sets the primary endpoint-gap tolerance used to connect adjacent cross-section segments. Endpoints closer than this distance are treated as neighbors and joined."
     depends: {}
     options: []
     default: 2540
@@ -16,7 +16,7 @@ settings:
   - name: "max_stitch_distance"
     display: "Max Stitch Distance"
     type: "distance"
-    tooltip: "Distance to allow cross-section segments to be fused together if gap fails. Points closer than this distance will be considered neighbors and connected. A healing step to help guarantee no open polylines."
+    tooltip: "Sets the larger fallback stitching tolerance used when primary gap connection still leaves open cross-section polylines. Remaining endpoints closer than this distance are joined during healing."
     depends: {}
     options: []
     default: 25400
