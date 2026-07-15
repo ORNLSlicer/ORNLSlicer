@@ -168,6 +168,9 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                              PS::Optimizations::kCustomPointSecondXLocation,
                                                              PS::Optimizations::kCustomPointSecondYLocation,
                                                              PS::Optimizations::kCustomPointSecondZLocation,
+                                                             PS::Optimizations::kSeamAttractorVectorX,
+                                                             PS::Optimizations::kSeamAttractorVectorY,
+                                                             PS::Optimizations::kSeamAttractorVectorZ,
                                                              PRS::Dimensions::kXOffset,
                                                              PRS::Dimensions::kYOffset};
 

@@ -818,6 +818,9 @@ class Constants {
             static const QString kCustomPointSecondXLocation;
             static const QString kCustomPointSecondYLocation;
             static const QString kCustomPointSecondZLocation;
+            static const QString kSeamAttractorVectorX;
+            static const QString kSeamAttractorVectorY;
+            static const QString kSeamAttractorVectorZ;
             static const QString kCustomPointXIncrement;
             static const QString kCustomPointYIncrement;
         };
