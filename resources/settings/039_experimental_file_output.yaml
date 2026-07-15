@@ -40,7 +40,7 @@ settings:
   - name: "tormach_mode"
     display: "Tormach Print Mode"
     type: "enumeration"
-    tooltip: "Select the welder print mode for the Tormach system."
+    tooltip: "Reserved Tormach welder-mode identifier. The mode-specific saver code is currently disabled, so Mode_21, Mode_40, Mode_102, Mode_274, and Mode_509 produce no different output."
     depends: {"syntax":24}
     options:
       - "Mode_21"
@@ -69,7 +69,7 @@ settings:
   - name: "aml3d_weave_length"
     display: "AML3D Weave Length"
     type: "distance"
-    tooltip: "Wave length of the weave patten."
+    tooltip: "Sets the wavelength of the weave pattern in the AML3D companion output."
     depends: {"syntax":25}
     options: []
     default: 0
@@ -81,7 +81,7 @@ settings:
   - name: "aml3d_weave_width"
     display: "AML3D Weave Width"
     type: "distance"
-    tooltip: "Amplitude of the weave patten."
+    tooltip: "Sets the amplitude of the weave pattern in the AML3D companion output."
     depends: {"syntax":25}
     options: []
     default: 0

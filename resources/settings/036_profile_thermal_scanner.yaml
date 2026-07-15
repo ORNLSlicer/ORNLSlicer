@@ -40,7 +40,7 @@ settings:
   - name: "thermal_scanner_temperature_cutoff"
     display: "Thermal Scanner Temperature Cutoff"
     type: "temperature"
-    tooltip: "IR Camera Temperature Cutoff (Celsius)"
+    tooltip: "Reserved IR-camera temperature cutoff. The current thermal-scan slicing and writer paths do not read this value, so it has no effect."
     depends: {"thermal_scanner":true}
     options: []
     default: 0
