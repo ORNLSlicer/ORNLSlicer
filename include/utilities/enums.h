@@ -662,6 +662,18 @@ enum class ForceMinimumLayerTime : uint8_t { kUse_Purge_Dwells, kSlow_Feedrate }
 
 enum class PreferenceChoice : uint8_t { kAsk = 0, kPerformAutomatically = 1, kSkipAutomatically = 2 };
 
+enum class DisabledSettingVisibility : uint8_t { kGrey = 0, kHide = 1 };
+
+inline QString toString(DisabledSettingVisibility visibility) {
+    switch (visibility) {
+        case DisabledSettingVisibility::kHide:
+            return "Hide";
+        case DisabledSettingVisibility::kGrey:
+        default:
+            return "Grey";
+    }
+}
+
 /*!
  * \enum GCodePreviewMode
  * \brief Controls how g-code visualization chooses between true bead meshes and lightweight lines.

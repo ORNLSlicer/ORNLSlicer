@@ -245,6 +245,32 @@ void PreferencesWindow::setupLayout() {
 
     parts_tab_layout->setRowStretch(3, 1);
 
+    // Settings tab
+    QWidget* settingsWidget = new QWidget(m_tab_widget);
+    m_tab_widget->addTab(settingsWidget, "Settings");
+
+    QGridLayout* settings_tab_layout = new QGridLayout();
+    settingsWidget->setLayout(settings_tab_layout);
+
+    m_disabled_setting_visibility_combobox = new QComboBox();
+    m_disabled_setting_visibility_combobox->addItem(toString(DisabledSettingVisibility::kGrey),
+                                                    static_cast<int>(DisabledSettingVisibility::kGrey));
+    m_disabled_setting_visibility_combobox->addItem(toString(DisabledSettingVisibility::kHide),
+                                                    static_cast<int>(DisabledSettingVisibility::kHide));
+
+    int disabledSettingVisibilityIndex = m_disabled_setting_visibility_combobox->findData(
+        static_cast<int>(PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference()));
+    m_disabled_setting_visibility_combobox->setCurrentIndex(std::max(0, disabledSettingVisibilityIndex));
+
+    settings_tab_layout->addWidget(new QLabel("Disabled settings:"), 0, 0, Qt::AlignTop);
+    settings_tab_layout->addWidget(m_disabled_setting_visibility_combobox, 0, 1, Qt::AlignTop);
+    settings_tab_layout->setRowStretch(1, 1);
+
+    connect(m_disabled_setting_visibility_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
+        PreferencesManager::getInstance()->setDisabledSettingVisibilityPreference(
+            m_disabled_setting_visibility_combobox->currentData().toInt());
+    });
+
     // Visualization tab
     QWidget* visualizationWidget = new QWidget(m_tab_widget);
     m_tab_widget->addTab(visualizationWidget, "Visualization");
@@ -467,6 +493,9 @@ void PreferencesWindow::importPreferences() {
         m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
         m_gcode_preview_vertex_threshold_spinbox->setValue(
             m_preferences_manager->getGCodePreviewVertexThresholdPreference());
+        int disabledSettingVisibilityIndex = m_disabled_setting_visibility_combobox->findData(
+            static_cast<int>(m_preferences_manager->getDisabledSettingVisibilityPreference()));
+        m_disabled_setting_visibility_combobox->setCurrentIndex(std::max(0, disabledSettingVisibilityIndex));
 
         setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
         setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());

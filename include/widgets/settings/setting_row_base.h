@@ -91,6 +91,9 @@ class SettingRowBase {
     //! \brief Show this row.
     virtual void show();
 
+    //! \brief Returns whether this row's widgets should currently be visible.
+    bool isShown() const;
+
     //! \brief Sets dependency logic for this row
     //! \param root: DependencyNode object that contains all dependency information
     void setDependencyLogic(DependencyNode root);
@@ -297,17 +300,41 @@ class SettingRowBase {
     //! \brief Remove this row's selected local overrides and reload the row.
     void resetLocalOverrides();
 
+    //! \brief Returns whether this row should be visible after all visibility controls are applied.
+    bool rowWidgetsVisible() const;
+
+    //! \brief Returns whether this row should accept input after all enabled controls are applied.
+    bool rowWidgetsEnabled() const;
+
+    //! \brief Applies current row enabled and visibility state to a widget.
+    void applyWidgetState(QWidget* widget) const;
+
+    //! \brief Applies current row enabled and visibility state to base widgets.
+    void applyBaseWidgetState();
+
+    //! \brief Applies current row enabled and visibility state to a row editor widget.
+    void registerRowWidget(QWidget* widget);
+
+    //! \brief Sets dependency-driven enabled state for this row.
+    void setDependencyEnabled(bool enabled);
+
     //! \brief Keys that can make this row locally overridden.
     QList<QString> m_local_override_keys;
 
     //! \brief Button used to remove selected local overrides.
     QScopedPointer<QToolButton> m_reset_button;
 
+    //! \brief Editor widgets that must follow row visibility and enabled state.
+    QList<QWidget*> m_row_widgets;
+
     //! \brief Whether this row is currently visible.
     bool m_row_visible;
 
     //! \brief Whether this row is currently enabled.
     bool m_row_enabled;
+
+    //! \brief Whether this row is currently enabled by dependency logic.
+    bool m_dependency_enabled;
 
     //! \brief Master json that this row was constructed from
     fifojson m_json;

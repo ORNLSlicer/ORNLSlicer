@@ -113,8 +113,10 @@ void SettingBar::filter(QString str) {
                 // Check if the current row's label matches.
                 if (cur_row->getLabelText().contains(str, Qt::CaseInsensitive)) {
                     cur_row->show();
-                    minor_hidden = false;
-                    major_hidden = false;
+                    if (cur_row->isShown()) {
+                        minor_hidden = false;
+                        major_hidden = false;
+                    }
                 }
                 else
                     cur_row->hide();
@@ -543,6 +545,8 @@ void SettingBar::setupEvents() {
     connect(m_tab_widget, &QTabWidget::currentChanged, this, &SettingBar::updateDisplayedLists);
     connect(m_combo_box, QOverload<const QString&>::of(&QComboBox::currentTextChanged), this,
             &SettingBar::updateSettings);
+    connect(PreferencesManager::getInstance().get(), &PreferencesManager::disabledSettingVisibilityChanged, this,
+            &SettingBar::enableDependRows);
 }
 
 // this function iterates through each tab of each pane, and make those rows enabled/disabled
