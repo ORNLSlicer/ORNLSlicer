@@ -133,6 +133,9 @@ class PreferencesManager : public QObject {
     //! \brief Returns the true-width preview vertex threshold.
     int getGCodePreviewVertexThresholdPreference();
 
+    //! \brief Returns how dependency-disabled settings are displayed.
+    DisabledSettingVisibility getDisabledSettingVisibilityPreference();
+
     //! \brief Return the user preference for warning about unsaved projects when closing
     bool getWarnUnsavedProjectOnClosePreference();
 
@@ -264,6 +267,9 @@ class PreferencesManager : public QObject {
     //! \brief Signal that any of the above units have changed
     void themeChanged();
 
+    //! \brief Signal emitted when dependency-disabled setting visibility is changed
+    void disabledSettingVisibilityChanged();
+
   public slots:
     //! \brief sets the unit used to scale when importing models
     //! \param du the unit text
@@ -360,6 +366,14 @@ class PreferencesManager : public QObject {
     //! \param threshold maximum estimated vertices to build for true-width preview
     void setGCodePreviewVertexThresholdPreference(int threshold);
 
+    //! \brief Sets how dependency-disabled settings are displayed.
+    //! \param visibility selected disabled setting visibility
+    void setDisabledSettingVisibilityPreference(DisabledSettingVisibility visibility);
+
+    //! \brief Sets how dependency-disabled settings are displayed from a UI index.
+    //! \param visibility selected visibility as an integer
+    void setDisabledSettingVisibilityPreference(int visibility);
+
     //! \brief Sets the preference for warning about unsaved projects when closing
     void setWarnUnsavedProjectOnClosePreference(bool warn);
 
@@ -432,6 +446,7 @@ class PreferencesManager : public QObject {
     bool m_use_true_widths_preference;
     GCodePreviewMode m_gcode_preview_mode_preference;
     int m_gcode_preview_vertex_threshold_preference;
+    DisabledSettingVisibility m_disabled_setting_visibility_preference;
     bool m_warn_unsaved_project_on_close_preference;
 
     //! \brief Preferences for window size and position

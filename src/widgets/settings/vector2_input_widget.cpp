@@ -84,21 +84,22 @@ Vector2InputWidget::Vector2InputWidget(SettingTab* parent, QSharedPointer<Settin
 
     m_unit_label.reset(new QLabel(PreferencesManager::getInstance()->getDistanceUnitText()));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 void Vector2InputWidget::hide() {
-    QWidget::hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QWidget*>(this));
 }
 
 void Vector2InputWidget::show() {
-    QWidget::show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QWidget*>(this));
 }
 
 void Vector2InputWidget::setEnabled(bool enabled) {
-    QWidget::setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QWidget*>(this));
 }
 
 void Vector2InputWidget::valueChanged(QVariant val) { updateSetting(m_components[0].key, val.toDouble()); }

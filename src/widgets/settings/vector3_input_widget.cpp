@@ -83,21 +83,22 @@ Vector3InputWidget::Vector3InputWidget(SettingTab* parent, QSharedPointer<Settin
 
     m_unit_label.reset(new QLabel(""));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 void Vector3InputWidget::hide() {
-    QWidget::hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QWidget*>(this));
 }
 
 void Vector3InputWidget::show() {
-    QWidget::show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QWidget*>(this));
 }
 
 void Vector3InputWidget::setEnabled(bool enabled) {
-    QWidget::setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QWidget*>(this));
 }
 
 void Vector3InputWidget::valueChanged(QVariant val) { updateSetting(m_components[0].key, val.toDouble()); }

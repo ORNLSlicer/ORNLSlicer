@@ -39,6 +39,7 @@ SettingPlainTextEdit::SettingPlainTextEdit(SettingTab* parent, QSharedPointer<Se
     // Set setting units
     m_unit_label.reset(new QLabel(""));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 SettingRowBase* SettingPlainTextEdit::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -47,8 +48,8 @@ SettingRowBase* SettingPlainTextEdit::createInstance(SettingTab* parent, QShared
 }
 
 void SettingPlainTextEdit::setEnabled(bool enabled) {
-    dynamic_cast<QPlainTextEdit*>(this)->setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QPlainTextEdit*>(this));
 }
 
 void SettingPlainTextEdit::setNotification(QString msg) {
@@ -67,13 +68,13 @@ void SettingPlainTextEdit::clearNotification() {
 }
 
 void SettingPlainTextEdit::hide() {
-    dynamic_cast<QPlainTextEdit*>(this)->hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QPlainTextEdit*>(this));
 }
 
 void SettingPlainTextEdit::show() {
-    dynamic_cast<QPlainTextEdit*>(this)->show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QPlainTextEdit*>(this));
 }
 
 void SettingPlainTextEdit::valueChanged(QVariant val) {

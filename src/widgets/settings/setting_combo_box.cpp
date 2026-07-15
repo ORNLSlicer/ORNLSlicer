@@ -53,6 +53,7 @@ SettingComboBox::SettingComboBox(SettingTab* parent, QSharedPointer<SettingsBase
     // Set setting units
     m_unit_label.reset(new QLabel(""));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 SettingRowBase* SettingComboBox::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -61,8 +62,8 @@ SettingRowBase* SettingComboBox::createInstance(SettingTab* parent, QSharedPoint
 }
 
 void SettingComboBox::setEnabled(bool enabled) {
-    dynamic_cast<QComboBox*>(this)->setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QComboBox*>(this));
 }
 
 void SettingComboBox::setNotification(QString msg) {
@@ -81,13 +82,13 @@ void SettingComboBox::clearNotification() {
 }
 
 void SettingComboBox::hide() {
-    dynamic_cast<QComboBox*>(this)->hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QComboBox*>(this));
 }
 
 void SettingComboBox::show() {
-    dynamic_cast<QComboBox*>(this)->show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QComboBox*>(this));
 }
 
 void SettingComboBox::valueChanged(QVariant val) {

@@ -65,6 +65,7 @@ SettingNumberedList::SettingNumberedList(SettingTab* parent, QSharedPointer<Sett
     // Set setting units
     m_unit_label.reset(new QLabel(""));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
+    registerRowWidget(this);
 }
 
 SettingRowBase* SettingNumberedList::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -73,8 +74,8 @@ SettingRowBase* SettingNumberedList::createInstance(SettingTab* parent, QSharedP
 }
 
 void SettingNumberedList::setEnabled(bool enabled) {
-    dynamic_cast<QTableWidget*>(this)->setEnabled(enabled);
     SettingRowBase::setEnabled(enabled);
+    applyWidgetState(static_cast<QTableWidget*>(this));
 }
 
 void SettingNumberedList::setNotification(QString msg) {
@@ -93,13 +94,13 @@ void SettingNumberedList::clearNotification() {
 }
 
 void SettingNumberedList::hide() {
-    dynamic_cast<QTableWidget*>(this)->hide();
     SettingRowBase::hide();
+    applyWidgetState(static_cast<QTableWidget*>(this));
 }
 
 void SettingNumberedList::show() {
-    dynamic_cast<QTableWidget*>(this)->show();
     SettingRowBase::show();
+    applyWidgetState(static_cast<QTableWidget*>(this));
 }
 
 void SettingNumberedList::valueChanged(QVariant val) {
