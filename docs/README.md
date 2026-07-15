@@ -6,12 +6,23 @@ This directory is the canonical documentation source for ORNLSlicer.
 
 ## Start Here
 
-- [ORNLSlicer User Guide](ornlslicer-user-guide.pdf)
+- [ORNLSlicer User Guide](ornlslicer-user-guide.md)
 - [Getting Started](wiki/Getting-Started.md)
 - [Cylindrical Slicing](slicing/cylindrical-slicing.md)
 - [Arc Specialties G-code](gcode/arc-specialties.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
+
+The Markdown user guide is the canonical manual source. Regenerate the
+same-stem `ornlslicer-user-guide.pdf` from it for a release rather than editing
+the PDF directly. From the repository root, with Pandoc and a LaTeX engine
+installed, run:
+
+```bash
+pandoc --from=gfm docs/ornlslicer-user-guide.md \
+  --metadata title-meta="ORNLSlicer User Guide" \
+  --output=docs/ornlslicer-user-guide.pdf
+```
 
 ## Architecture
 
