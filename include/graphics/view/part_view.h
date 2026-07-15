@@ -313,6 +313,22 @@ class PartView : public BaseView {
     //! \brief Updates the selected layer settings range plane visibility and placement.
     void updateLayerSettingsRangePlane();
 
+    //! \brief Updates all per-part slicing geometry previews for the active slicing mode.
+    void updateSlicingGeometryPreviews();
+
+    //! \brief Updates one per-part slicing geometry preview for the active slicing mode.
+    void updateSlicingGeometryPreview(QSharedPointer<PartObject> gop);
+
+    //! \brief Builds the effective global + local slicing settings for a part.
+    QSharedPointer<SettingsBase> slicingSettingsForPart(QSharedPointer<Part> part) const;
+
+    //! \brief Calculates the visible cylindrical slicing preview geometry for a part.
+    bool cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop, QVector3D& base_center, float& radius,
+                                           float& height) const;
+
+    //! \brief Returns the current planar slicing preview rotation.
+    QQuaternion slicingPlaneRotation() const;
+
     //! \brief Hides all layer settings range planes.
     void hideLayerSettingsRangePlanes();
 

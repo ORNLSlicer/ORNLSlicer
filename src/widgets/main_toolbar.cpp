@@ -80,8 +80,8 @@ void MainToolbar::setupSubWidgets() {
     this->addWidget(m_shape_btn);
     this->addSeparator();
 
-    // Slicing Plane Button
-    m_slicing_planes_btn = buildIconButton(":/icons/slicing_plane.png", "Show slicing plane for each part", true);
+    // Slicing Geometry Button
+    m_slicing_planes_btn = buildIconButton(":/icons/slicing_plane.png", "Show slicing geometry for each part", true);
     this->addWidget(m_slicing_planes_btn);
     connect(m_slicing_planes_btn, &QToolButton::toggled, this,
             [this](bool checked) { emit showSlicingPlanes(checked); });
