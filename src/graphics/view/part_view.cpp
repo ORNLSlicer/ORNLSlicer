@@ -109,6 +109,10 @@ void PartView::showLabels(bool show) {
 }
 
 void PartView::showSlicingPlanes(bool show) {
+    if (show) {
+        updateSlicingSettings(m_sb);
+    }
+
     m_state.planes_shown = show;
     updateSlicingGeometryPreviews();
 
@@ -925,6 +929,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
 
     // Sub object visibility.
     gop->setOverhangAngle(m_sb->setting<Angle>(PS::Support::kThresholdAngle));
+    gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation());
     if (m_state.overhangs_shown)
         gop->showOverhang(true);
     updateSlicingGeometryPreview(gop);
@@ -1342,6 +1347,7 @@ void PartView::updateLayerSettingsRangePlane() {
         return;
     }
     slicing_vector.normalize();
+    const QQuaternion rotation = slicingPlaneRotation();
 
     float length = gop->maximum().x() - gop->minimum().x();
     float width = gop->maximum().y() - gop->minimum().y();
@@ -1358,7 +1364,7 @@ void PartView::updateLayerSettingsRangePlane() {
 
         QSharedPointer<PlaneObject> range_plane = gop->layerSettingsRangePlane(visible_plane_index);
         range_plane->updateDimensions(max_dim, max_dim, thickness);
-        range_plane->setLockedRotationQuaternion(MathUtils::CreateQuaternion(QVector3D(0, 0, 1), slicing_vector));
+        range_plane->setLockedRotationQuaternion(rotation);
         range_plane->translateAbsolute(center);
         range_plane->show();
 
