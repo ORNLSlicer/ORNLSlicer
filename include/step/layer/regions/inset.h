@@ -50,6 +50,12 @@ class Inset : public RegionBase {
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
     void calculateModifiers(Path& path, bool supportsG3) override;
 
+    //! \brief Creates modifiers, optionally treating forward tip wipe as an open-loop wipe.
+    //! \param path Current path to add modifiers to
+    //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
+    //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
+    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
+
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
      * @param[in] line Polyline representing the path.

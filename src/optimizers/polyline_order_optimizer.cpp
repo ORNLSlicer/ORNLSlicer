@@ -439,7 +439,7 @@ Polyline PolylineOrderOptimizer::linkTo() {
 
 int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
     Point queryPoint;
-    if (m_override_used)
+    if (m_optimization == PathOrderOptimization::kCustomPoint && m_override_used)
         queryPoint = m_override_location;
     else
         queryPoint = m_current_location;
