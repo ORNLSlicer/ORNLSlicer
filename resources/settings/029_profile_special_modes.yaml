@@ -16,7 +16,7 @@ settings:
   - name: "smoothing_type"
     display: "Smoothing Type"
     type: "enumeration"
-    tooltip: "Select the smoothing algorithm to be applied"
+    tooltip: "Selects the polyline simplification algorithm applied to sliced contours. The algorithms remove points differently, so compare geometry at the chosen tolerance before production use."
     depends: {"smoothing":true}
     options:
       - "Douglas Peucker"
@@ -32,7 +32,7 @@ settings:
   - name: "smoothing_tolerance"
     display: "Smoothing Tolerance"
     type: "distance"
-    tooltip: "The tolerance for the smoothing algorithm"
+    tooltip: "Sets the distance threshold supplied to the selected contour-smoothing algorithm. Larger values generally remove more vertices and can deviate farther from the original cross-section."
     depends: {"smoothing":true}
     options: []
     default: 0

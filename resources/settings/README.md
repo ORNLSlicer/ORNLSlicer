@@ -5,7 +5,11 @@ These YAML files are the canonical source for ORNL Slicer setting metadata. Edit
 
 ```bash
 python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf
+python3 -B scripts/generate_settings_reference.py
 ```
+
+Detailed choice and implementation notes that are useful in the manual but are not supported by the settings UI
+schema live in `scripts/generate_settings_reference.py`. Regenerate the manual after changing those mappings too.
 
 Files are loaded in sorted path order. Settings inside each file are emitted in file order, which controls the order in
 the generated master settings file and UI.

@@ -4,7 +4,7 @@ settings:
   - name: "initial_purge_duration"
     display: "Initial Purge Duration"
     type: "time"
-    tooltip: "Amount of time extruder will purge\u00a0"
+    tooltip: "Reserved catalog duration for an initial purge before normal deposition. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
     options: []
     default: 0

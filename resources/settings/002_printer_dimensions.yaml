@@ -90,7 +90,7 @@ settings:
   - name: "outer_radius"
     display: "Outer Radius"
     type: "location"
-    tooltip: "Outer radius value"
+    tooltip: "Sets the radius of the cylindrical build volume, measured in the XY plane from the machine Z axis at X=0, Y=0 to the outer boundary."
     depends: {"build_volume_type":1}
     options: []
     default: 1000000
@@ -162,7 +162,7 @@ settings:
   - name: "minimum_w"
     display: "Minimum W"
     type: "location"
-    tooltip: "Minimum W axis value (enter 0 to disable)"
+    tooltip: "Sets the lower W-axis table-travel bound used for positioning and limit checks. Disable W motion with Enable W Axis rather than this value."
     depends: {"enable_w_axis":true}
     options: []
     default: 0
@@ -174,7 +174,7 @@ settings:
   - name: "maximum_w"
     display: "Maximum W"
     type: "location"
-    tooltip: "Minimum W axis value (enter 0 to disable)"
+    tooltip: "Sets the upper W-axis table-travel bound and initial writer position. Disable W motion with Enable W Axis rather than this value."
     depends: {"enable_w_axis":true}
     options: []
     default: 0

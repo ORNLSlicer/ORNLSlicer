@@ -52,7 +52,7 @@ settings:
   - name: "infill_pattern"
     display: "Infill Pattern"
     type: "enumeration"
-    tooltip: "Pattern for the infill"
+    tooltip: "Selects the geometry used to fill interior regions at the configured density or line spacing. Radial Hatch is listed for compatibility but currently generates no infill paths in this region."
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options:
       - "Lines"
