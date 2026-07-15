@@ -20,20 +20,34 @@ constexpr int kRemovedGcodeSyntax = 28;
 constexpr int kRemovedRadialSyntax = 31;
 constexpr int kArcSpecialtiesSyntax = 31;
 constexpr int kLegacyArcSpecialtiesSyntax = 32;
-constexpr int kPlanarSlicer = 0;
-constexpr int kV4ImageSlicer = 1;
-constexpr int kLegacyRadialSlicer = 2;
-constexpr int kLegacyHelicalSlicer = 3;
-constexpr int kV8CylindricalSlicer = 2;
-constexpr int kV9CylindricalSlicer = 1;
-constexpr int kV9ImageSlicer = 2;
+constexpr int kPlanarSlicingMode = 0;
+constexpr int kV4ImageSlicingMode = 1;
+constexpr int kLegacyRadialSlicingMode = 2;
+constexpr int kLegacyHelicalSlicingMode = 3;
+constexpr int kV8CylindricalSlicingMode = 2;
+constexpr int kV9CylindricalSlicingMode = 1;
+constexpr int kV9ImageSlicingMode = 2;
 constexpr int kRadialPathType = 0;
 constexpr int kHelicalPathType = 1;
 constexpr int kClipBoundaryHandling = 0;
-constexpr int kV3LegacySlicerType2 = 2;
-constexpr int kV3ImageSlicer = 3;
+constexpr int kV3LegacySlicingMode2 = 2;
+constexpr int kV3ImageSlicingMode = 3;
 constexpr int kAllPerimeterBoundaries = 0;
 const std::string kLegacyHelicalClippingMethod = "helical_clipping_method";
+const QString kLegacySlicingMode = "slicer_type";
+const QString kLegacySlicePlaneNormalX = "slicing_vector_x";
+const QString kLegacySlicePlaneNormalY = "slicing_vector_y";
+const QString kLegacySlicePlaneNormalZ = "slicing_vector_z";
+const QString kLegacyCylinderAxisSource = "radial_axis_mode";
+const QString kLegacyCylinderAxisX = "radial_axis_x";
+const QString kLegacyCylinderAxisY = "radial_axis_y";
+const QString kLegacyCylinderInnerRadius = "radial_initial_radius";
+const QString kLegacyCylindricalPathPattern = "cylindrical_path_type";
+const QString kLegacyRadialPathBoundaryPolicy = "radial_boundary_handling";
+const QString kLegacyHelicalPathBoundaryPolicy = "helical_boundary_handling";
+const QString kLegacyMaxHelicalPathLength = "helical_path_length";
+const QString kLegacyImagePixelSizeX = "image_resolution_x";
+const QString kLegacyImagePixelSizeY = "image_resolution_y";
 
 constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     0,                 // Beam
@@ -73,27 +87,27 @@ constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     31                 // ORNL Metric
 };
 
-constexpr std::array<int, 7> kSlicerTypeV2ToV3 = {
-    0,                    // Polymer
-    1,                    // Legacy slicer type 1
-    2,                    // Legacy slicer type 2
-    kV3LegacySlicerType2, // RPBF removed
-    kPlanarSlicer,        // Real Time Polymer removed
-    kV3LegacySlicerType2, // Real Time RPBF removed
-    kV3ImageSlicer        // Image
+constexpr std::array<int, 7> kSlicingModeV2ToV3 = {
+    0,                     // Polymer
+    1,                     // Legacy slicing mode 1
+    2,                     // Legacy slicing mode 2
+    kV3LegacySlicingMode2, // RPBF removed
+    kPlanarSlicingMode,    // Real Time Polymer removed
+    kV3LegacySlicingMode2, // Real Time RPBF removed
+    kV3ImageSlicingMode    // Image
 };
 
-constexpr std::array<int, 4> kSlicerTypeV3ToV4 = {
-    kPlanarSlicer, // Polymer
-    kPlanarSlicer, // Legacy slicer type 1 removed
-    kPlanarSlicer, // Legacy slicer type 2 removed
-    kV4ImageSlicer // Image
+constexpr std::array<int, 4> kSlicingModeV3ToV4 = {
+    kPlanarSlicingMode, // Polymer
+    kPlanarSlicingMode, // Legacy slicing mode 1 removed
+    kPlanarSlicingMode, // Legacy slicing mode 2 removed
+    kV4ImageSlicingMode // Image
 };
 
-constexpr std::array<int, 3> kSlicerTypeV8ToV9 = {
-    kPlanarSlicer,       // Planar
-    kV9ImageSlicer,      // Image moved after Cylindrical
-    kV9CylindricalSlicer // Cylindrical moved before Image
+constexpr std::array<int, 3> kSlicingModeV8ToV9 = {
+    kPlanarSlicingMode,       // Planar
+    kV9ImageSlicingMode,      // Image moved after Cylindrical
+    kV9CylindricalSlicingMode // Cylindrical moved before Image
 };
 
 constexpr std::array<int, 7> kSkinPatternV4ToV5 = {
@@ -203,28 +217,42 @@ void migrateRemovedRadialSyntax(fifojson& settings_group) {
         setting.value() = kArcSpecialtiesSyntax;
 }
 
+void renameSettingKey(fifojson& settings_group, const QString& old_key, const QString& new_key) {
+    if (!settings_group.is_object())
+        return;
+
+    const std::string old_key_string = old_key.toStdString();
+    const std::string new_key_string = new_key.toStdString();
+    auto old_setting = settings_group.find(old_key_string);
+    if (old_setting == settings_group.end())
+        return;
+
+    if (settings_group.find(new_key_string) == settings_group.end())
+        settings_group[new_key_string] = old_setting.value();
+
+    settings_group.erase(old_setting);
+}
+
 void migrateCylindricalSlicingSettings(fifojson& settings_group) {
     if (!settings_group.is_object())
         return;
 
-    const std::string slicer_type_key = ORNL::Constants::ProfileSettings::Slicing::kSlicerType.toStdString();
-    const std::string path_type_key = ORNL::Constants::ProfileSettings::Slicing::kCylindricalPathType.toStdString();
-    const std::string radial_boundary_key =
-        ORNL::Constants::ProfileSettings::Slicing::kRadialBoundaryHandling.toStdString();
-    const std::string helical_boundary_key =
-        ORNL::Constants::ProfileSettings::Slicing::kHelicalBoundaryHandling.toStdString();
+    const std::string slicing_mode_key = kLegacySlicingMode.toStdString();
+    const std::string path_pattern_key = kLegacyCylindricalPathPattern.toStdString();
+    const std::string radial_boundary_key = kLegacyRadialPathBoundaryPolicy.toStdString();
+    const std::string helical_boundary_key = kLegacyHelicalPathBoundaryPolicy.toStdString();
 
-    auto slicer_type = settings_group.find(slicer_type_key);
-    const bool has_slicer_type = slicer_type != settings_group.end() && slicer_type.value().is_number_integer();
-    const int old_slicer_type = has_slicer_type ? slicer_type.value().get<int>() : kPlanarSlicer;
+    auto slicing_mode = settings_group.find(slicing_mode_key);
+    const bool has_slicing_mode = slicing_mode != settings_group.end() && slicing_mode.value().is_number_integer();
+    const int old_slicing_mode = has_slicing_mode ? slicing_mode.value().get<int>() : kPlanarSlicingMode;
 
-    if (old_slicer_type == kLegacyRadialSlicer) {
-        slicer_type.value() = kV8CylindricalSlicer;
-        settings_group[path_type_key] = kRadialPathType;
+    if (old_slicing_mode == kLegacyRadialSlicingMode) {
+        slicing_mode.value() = kV8CylindricalSlicingMode;
+        settings_group[path_pattern_key] = kRadialPathType;
     }
-    else if (old_slicer_type == kLegacyHelicalSlicer) {
-        slicer_type.value() = kV8CylindricalSlicer;
-        settings_group[path_type_key] = kHelicalPathType;
+    else if (old_slicing_mode == kLegacyHelicalSlicingMode) {
+        slicing_mode.value() = kV8CylindricalSlicingMode;
+        settings_group[path_pattern_key] = kHelicalPathType;
 
         int helical_boundary = kClipBoundaryHandling;
         auto radial_boundary = settings_group.find(radial_boundary_key);
@@ -238,13 +266,32 @@ void migrateCylindricalSlicingSettings(fifojson& settings_group) {
         }
         settings_group[helical_boundary_key] = helical_boundary;
     }
-    else if (settings_group.find(path_type_key) == settings_group.end()) {
+    else if (settings_group.find(path_pattern_key) == settings_group.end()) {
         auto legacy_helical_boundary = settings_group.find(kLegacyHelicalClippingMethod);
         if (legacy_helical_boundary != settings_group.end() && legacy_helical_boundary.value().is_number_integer())
             settings_group[helical_boundary_key] = legacy_helical_boundary.value();
     }
 
     settings_group.erase(kLegacyHelicalClippingMethod);
+}
+
+void migrateSlicingSettingKeys(fifojson& settings_group) {
+    using Slicing = ORNL::Constants::ProfileSettings::Slicing;
+
+    renameSettingKey(settings_group, kLegacySlicingMode, Slicing::kSlicingMode);
+    renameSettingKey(settings_group, kLegacySlicePlaneNormalX, Slicing::kSlicePlaneNormalX);
+    renameSettingKey(settings_group, kLegacySlicePlaneNormalY, Slicing::kSlicePlaneNormalY);
+    renameSettingKey(settings_group, kLegacySlicePlaneNormalZ, Slicing::kSlicePlaneNormalZ);
+    renameSettingKey(settings_group, kLegacyCylinderAxisSource, Slicing::kCylinderAxisSource);
+    renameSettingKey(settings_group, kLegacyCylinderAxisX, Slicing::kCylinderAxisX);
+    renameSettingKey(settings_group, kLegacyCylinderAxisY, Slicing::kCylinderAxisY);
+    renameSettingKey(settings_group, kLegacyCylinderInnerRadius, Slicing::kCylinderInnerRadius);
+    renameSettingKey(settings_group, kLegacyCylindricalPathPattern, Slicing::kCylindricalPathPattern);
+    renameSettingKey(settings_group, kLegacyRadialPathBoundaryPolicy, Slicing::kRadialPathBoundaryPolicy);
+    renameSettingKey(settings_group, kLegacyHelicalPathBoundaryPolicy, Slicing::kHelicalPathBoundaryPolicy);
+    renameSettingKey(settings_group, kLegacyMaxHelicalPathLength, Slicing::kMaxHelicalPathLength);
+    renameSettingKey(settings_group, kLegacyImagePixelSizeX, Slicing::kImagePixelSizeX);
+    renameSettingKey(settings_group, kLegacyImagePixelSizeY, Slicing::kImagePixelSizeY);
 }
 } // namespace
 
@@ -268,6 +315,8 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
         pre_8_0To8_0(version, settings);
     if (version < 9)
         pre_9_0To9_0(version, settings);
+    if (version < 10)
+        pre_10_0To10_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -361,7 +410,7 @@ void SettingsVersionControl::pre_3_0To3_0(double& version, fifojson& settings) {
         for (auto& settings_group : settings_array.value()) {
             removeV2Settings(settings_group);
             migrateIndexedSetting(settings_group, Constants::PrinterSettings::MachineSetup::kSyntax, kSyntaxV2ToV3);
-            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType, kSlicerTypeV2ToV3);
+            migrateIndexedSetting(settings_group, kLegacySlicingMode, kSlicingModeV2ToV3);
             addV3Settings(settings_group);
         }
     }
@@ -379,7 +428,7 @@ void SettingsVersionControl::pre_4_0To4_0(double& version, fifojson& settings) {
     auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
     if (settings_array != new_format.end() && settings_array.value().is_array()) {
         for (auto& settings_group : settings_array.value()) {
-            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType, kSlicerTypeV3ToV4);
+            migrateIndexedSetting(settings_group, kLegacySlicingMode, kSlicingModeV3ToV4);
         }
     }
 
@@ -462,10 +511,26 @@ void SettingsVersionControl::pre_9_0To9_0(double& version, fifojson& settings) {
     auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
     if (settings_array != new_format.end() && settings_array.value().is_array()) {
         for (auto& settings_group : settings_array.value())
-            migrateIndexedSetting(settings_group, Constants::ProfileSettings::Slicing::kSlicerType, kSlicerTypeV8ToV9);
+            migrateIndexedSetting(settings_group, kLegacySlicingMode, kSlicingModeV8ToV9);
     }
 
     version = 9.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_10_0To10_0(double& version, fifojson& settings) {
+    QString dt = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion] = 10.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value())
+            migrateSlicingSettingKeys(settings_group);
+    }
+
+    version = 10.0;
     settings = new_format;
 }
 } // namespace ORNL

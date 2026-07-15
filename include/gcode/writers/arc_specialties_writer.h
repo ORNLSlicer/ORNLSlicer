@@ -19,7 +19,7 @@ namespace ORNL {
  * offset. Tool-frame rotations are fixed to XR=180, YR=0, and ZR=0; AP comes from the existing Axis A setting; CP is
  * computed from each endpoint's angle around the radial slicing center plus the existing Axis C offset. When the
  * machine Supports G2/G3 setting is enabled, radial and helical print arcs are emitted as G02/G03 with I/J center
- * offsets and are divided according to Number of Arcs per Revolution.
+ * offsets and are divided according to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
   public:
@@ -31,10 +31,10 @@ class ArcSpecialtiesWriter : public WriterBase {
     ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
     /*!
-     * @brief Supplies the effective part-local helical boundary handling modes for the settings header.
-     * @param methods Part name and boundary handling pairs for parts that produced helical paths.
+     * @brief Supplies the effective part-local helical boundary policies for the settings header.
+     * @param methods Part name and boundary policy pairs for parts that produced helical paths.
      */
-    void setHelicalBoundaryHandling(const QVector<QPair<QString, HelicalBoundaryHandling>>& methods);
+    void setHelicalPathBoundaryPolicy(const QVector<QPair<QString, HelicalPathBoundaryPolicy>>& methods);
 
     /*!
      * @brief Writes radial or helical geometry and Arc Specialties setup notes.
@@ -194,7 +194,7 @@ class ArcSpecialtiesWriter : public WriterBase {
     //! @brief Tracks layer number.
     int m_current_layer = 0;
 
-    //! @brief Effective part-local boundary handling modes reported in helical G-code headers.
-    QVector<QPair<QString, HelicalBoundaryHandling>> m_helical_boundary_handling;
+    //! @brief Effective part-local boundary policies reported in helical G-code headers.
+    QVector<QPair<QString, HelicalPathBoundaryPolicy>> m_helical_path_boundary_policy;
 };
 } // namespace ORNL

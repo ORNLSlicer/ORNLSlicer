@@ -850,21 +850,21 @@ class Constants {
 
         class Slicing {
           public:
-            static const QString kSlicerType;
-            static const QString kCylindricalPathType;
-            static const QString kSlicingVectorX;
-            static const QString kSlicingVectorY;
-            static const QString kSlicingVectorZ;
-            static const QString kRadialInitialRadius;
-            static const QString kRadialAxisMode;
-            static const QString kRadialAxisX;
-            static const QString kRadialAxisY;
-            static const QString kRadialBoundaryHandling;
-            static const QString kHelicalBoundaryHandling;
-            static const QString kHelicalPathLength;
+            static const QString kSlicingMode;
+            static const QString kCylindricalPathPattern;
+            static const QString kSlicePlaneNormalX;
+            static const QString kSlicePlaneNormalY;
+            static const QString kSlicePlaneNormalZ;
+            static const QString kCylinderInnerRadius;
+            static const QString kCylinderAxisSource;
+            static const QString kCylinderAxisX;
+            static const QString kCylinderAxisY;
+            static const QString kRadialPathBoundaryPolicy;
+            static const QString kHelicalPathBoundaryPolicy;
+            static const QString kMaxHelicalPathLength;
             static const QString kArcsPerRevolution;
-            static const QString kImageResolutionX;
-            static const QString kImageResolutionY;
+            static const QString kImagePixelSizeX;
+            static const QString kImagePixelSizeY;
         };
     };
 

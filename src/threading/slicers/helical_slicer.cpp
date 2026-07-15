@@ -330,7 +330,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     QVector<QSharedPointer<Part>> build_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
     QVector<QSharedPointer<MeshBase>> clipping_meshes =
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
-    QVector<QPair<QString, HelicalBoundaryHandling>> effective_boundary_handling;
+    QVector<QPair<QString, HelicalPathBoundaryPolicy>> effective_boundary_policy;
 
     int parts_processed = 0;
     for (const QSharedPointer<Part>& part : build_parts) {
@@ -361,10 +361,10 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kLayerHeight), kDefaultHelicalLayerHeight);
         const Distance bead_width = positiveOrFallback(part_sb->setting<Distance>(PS::Layer::kBeadWidth), layer_height);
         const Distance section_spacing = bead_width / 2.0 > kMinSectionSpacing ? bead_width / 2.0 : kMinSectionSpacing;
-        const HelicalBoundaryHandling boundary_handling =
-            static_cast<HelicalBoundaryHandling>(part_sb->setting<int>(PS::Slicing::kHelicalBoundaryHandling));
+        const HelicalPathBoundaryPolicy boundary_policy =
+            static_cast<HelicalPathBoundaryPolicy>(part_sb->setting<int>(PS::Slicing::kHelicalPathBoundaryPolicy));
         bool part_generated_paths = false;
-        Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kRadialInitialRadius);
+        Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
         if (initial_radius < 0) {
             initial_radius = 0.0 * micron;
         }
@@ -448,11 +448,11 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             const HelixClipResult clip_result =
                 clipHelixToSections(helix, cross_sections, first_bead_z, section_spacing);
             QVector<Polyline> clipped_lines = clip_result.fragments;
-            if (boundary_handling == HelicalBoundaryHandling::kClipZ) {
+            if (boundary_policy == HelicalPathBoundaryPolicy::kClipZ) {
                 clipped_lines = clipHelixAtHighestIntersection(helix, clip_result);
             }
 
-            const Distance max_path_length = layer_settings->setting<Distance>(PS::Slicing::kHelicalPathLength);
+            const Distance max_path_length = layer_settings->setting<Distance>(PS::Slicing::kMaxHelicalPathLength);
             for (const Polyline& line : clipped_lines) {
                 if (line.size() < 2) {
                     continue;
@@ -478,8 +478,8 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         if (part_generated_paths) {
-            effective_boundary_handling.push_back(
-                QPair<QString, HelicalBoundaryHandling> {part->name(), boundary_handling});
+            effective_boundary_policy.push_back(
+                QPair<QString, HelicalPathBoundaryPolicy> {part->name(), boundary_policy});
         }
 
         ++parts_processed;
@@ -489,13 +489,13 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
 
     QSharedPointer<ArcSpecialtiesWriter> arc_specialties_writer = m_base.dynamicCast<ArcSpecialtiesWriter>();
     if (!arc_specialties_writer.isNull()) {
-        arc_specialties_writer->setHelicalBoundaryHandling(effective_boundary_handling);
+        arc_specialties_writer->setHelicalPathBoundaryPolicy(effective_boundary_policy);
     }
 
     if (m_helical_layers.isEmpty()) {
         const QString message =
-            "Warning: Helical slicing generated no printable paths. Check Initial Radius, Cylinder Axis Mode, clipping "
-            "meshes, and Boundary Handling.";
+            "Warning: Helical slicing generated no printable paths. Check Cylinder Inner Radius, Cylinder Axis Source, "
+            "clipping meshes, and Helical Path Boundary Policy.";
         qWarning() << message;
         emit statusMessage(message);
         emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);
@@ -553,12 +553,13 @@ QSharedPointer<MeshBase> HelicalSlicer::copyMesh(const QSharedPointer<MeshBase>&
 
 Point HelicalSlicer::helicalCenterForPart(const QSharedPointer<SettingsBase>& part_sb, const QSharedPointer<Part>& part,
                                           Distance base_z) {
-    const RadialAxisMode axis_mode = static_cast<RadialAxisMode>(part_sb->setting<int>(PS::Slicing::kRadialAxisMode));
+    const CylinderAxisSource axis_mode =
+        static_cast<CylinderAxisSource>(part_sb->setting<int>(PS::Slicing::kCylinderAxisSource));
 
     Point center = part->rootMesh()->centroid();
-    if (axis_mode == RadialAxisMode::kCustomXY) {
-        center.x(part_sb->setting<Distance>(PS::Slicing::kRadialAxisX));
-        center.y(part_sb->setting<Distance>(PS::Slicing::kRadialAxisY));
+    if (axis_mode == CylinderAxisSource::kCustomXY) {
+        center.x(part_sb->setting<Distance>(PS::Slicing::kCylinderAxisX));
+        center.y(part_sb->setting<Distance>(PS::Slicing::kCylinderAxisY));
     }
 
     center.z(base_z);

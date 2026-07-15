@@ -67,7 +67,7 @@ class RadialSlicer : public TraditionalAST {
 
     /*!
      * @brief Resolves the radial cylinder center for the part and settings.
-     * @param part_sb Settings that select the radial axis mode and custom XY values.
+     * @param part_sb Settings that select the cylinder axis source and custom XY values.
      * @param part Part whose centroid is used by Part Centroid mode.
      * @param base_z Z value assigned to the resolved center.
      * @return Radial cylinder center.

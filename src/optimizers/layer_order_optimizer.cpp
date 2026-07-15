@@ -31,9 +31,9 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
 
     if (order_method == LayerOrdering::kByHeight) {
         // Retrieve the slicing plane normal
-        QVector3D slicing_vector = {global_sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                                    global_sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                                    global_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+        QVector3D slicing_vector = {global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                    global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                    global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
         slicing_vector.normalize();
 
         bool steps_left = true;

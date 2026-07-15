@@ -29,7 +29,7 @@ namespace ORNL {
 //! \brief Define for easy access to this singleton.
 #define CSM SessionManager::getInstance()
 
-enum class SlicerType : uint8_t;
+enum class SlicingMode : uint8_t;
 class SessionLoader;
 class AbstractSlicingThread;
 
@@ -185,9 +185,9 @@ class SessionManager : public QObject {
     //! \brief Returns the time elapsed for the current slice.
     qint64 getSliceTimeElapsed();
 
-    //! \brief Changes which slicer is used for computation.
-    //!       Both here and in the SlicerType enum. A dialog still needs to be written to run this function.
-    bool changeSlicer(SlicerType type);
+    //! \brief Changes which slicing mode is used for computation.
+    //!       Both here and in the SlicingMode enum. A dialog still needs to be written to run this function.
+    bool changeSlicer(SlicingMode type);
 
     //! \brief Creates a new session loader to save the current session.
     SessionLoader* saveSession(QString path, bool shouldTrack = true, bool notifyOnSuccess = false);
@@ -299,11 +299,11 @@ class SessionManager : public QObject {
     //! \brief bool to track whether additional files need to be considered for export
     bool m_sensor_files_generated;
 
-    //! \brief default slicer is planar
-    SlicerType m_slicer_type = SlicerType::kPlanarSlice;
+    //! \brief Default slicing mode is planar.
+    SlicingMode m_slicing_mode = SlicingMode::kPlanar;
 
-    //! \brief active cylindrical path type when cylindrical slicing is selected
-    CylindricalPathType m_cylindrical_path_type = CylindricalPathType::kRadial;
+    //! \brief Active cylindrical path pattern when cylindrical slicing is selected.
+    CylindricalPathPattern m_cylindrical_path_pattern = CylindricalPathPattern::kRadial;
 
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.

@@ -429,9 +429,9 @@ void PartView::updateSlicingSettings(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
 
     // Determine the slicing plane normal
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     slicing_vector.normalize();
 
     QQuaternion rotation = QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1));
@@ -1220,9 +1220,9 @@ void PartView::updateLayerSettingsRangePlane() {
         return;
     }
 
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     if (slicing_vector.isNull()) {
         this->update();
         return;
@@ -1272,9 +1272,9 @@ bool PartView::layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int lo
     if (low < 0 || high < low)
         return false;
 
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                                m_sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                                m_sb->setting<float>(PS::Slicing::kSlicingVectorZ)};
+    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     if (slicing_vector.isNull())
         return false;
     slicing_vector.normalize();
