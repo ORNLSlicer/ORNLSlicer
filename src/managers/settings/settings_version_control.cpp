@@ -227,10 +227,13 @@ void renameSettingKey(fifojson& settings_group, const QString& old_key, const QS
     if (old_setting == settings_group.end())
         return;
 
-    if (settings_group.find(new_key_string) == settings_group.end())
-        settings_group[new_key_string] = old_setting.value();
-
+    const bool should_insert_new_key = settings_group.find(new_key_string) == settings_group.end();
+    fifojson old_value;
+    if (should_insert_new_key)
+        old_value = old_setting.value();
     settings_group.erase(old_setting);
+    if (should_insert_new_key)
+        settings_group[new_key_string] = old_value;
 }
 
 void migrateCylindricalSlicingSettings(fifojson& settings_group) {
