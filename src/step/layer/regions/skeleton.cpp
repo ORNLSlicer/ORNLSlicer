@@ -969,6 +969,17 @@ void Skeleton::calculateModifiers(Path& path, bool supportsG3) {
         }
     }
 
+    // Prestart
+    if (m_sb->setting<bool>(PS::Skeleton::kPrestartEnable)) {
+        const auto& ps_distance = m_sb->setting<Distance>(PS::Skeleton::kPrestartDistance);
+        const auto& ps_speed = m_sb->setting<Velocity>(PS::Skeleton::kPrestartSpeed);
+        const auto& ps_extruder_speed = m_sb->setting<AngularVelocity>(PS::Skeleton::kPrestartExtruderSpeed);
+        const auto& ps_enable_width_height = m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight);
+        const auto& ps_area_modifier = m_sb->setting<double>(PS::Skeleton::kPrestartAreaModifier);
+        PathModifierGenerator::GeneratePrestart(path, ps_distance, ps_speed, ps_extruder_speed, ps_enable_width_height,
+                                                ps_area_modifier);
+    }
+
     // Lead In
     if (m_sb->setting<bool>(PS::Skeleton::kLeadInEnable)) {
         const auto& li_distance = m_sb->setting<Distance>(PS::Skeleton::kLeadInDistance);

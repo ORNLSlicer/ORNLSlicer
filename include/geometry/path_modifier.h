@@ -31,6 +31,18 @@ class PathModifierGenerator {
                                        double areaMultiplier);
 
     /**
+     * @brief GeneratePrestart generates a prestart path for open loop paths.
+     * @param path: The path to modify.
+     * @param prestartDistance: The prestart distance.
+     * @param prestartSpeed: The prestart speed.
+     * @param prestartExtruderSpeed: The prestart extruder speed.
+     * @param enableWidthHeight: Whether to enable width and height mode.
+     * @param areaMultiplier: The area multiplier.
+     */
+    static void GeneratePrestart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
+                                 AngularVelocity prestartExtruderSpeed, bool enableWidthHeight, double areaMultiplier);
+
+    /**
      * @brief GenerateFlyingStart generates a flying start path which begins motion before enabling extrusion.
      * @param path: The path to modify.
      * @param flyingStartDistance: The length of the flying start motion.
