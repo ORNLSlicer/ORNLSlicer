@@ -247,6 +247,12 @@ const QString Constants::PrinterSettings::MachineSetup::kBaseCoordinate = "base_
 const QString Constants::PrinterSettings::MachineSetup::kAxisA = "axis_a";
 const QString Constants::PrinterSettings::MachineSetup::kAxisB = "axis_b";
 const QString Constants::PrinterSettings::MachineSetup::kAxisC = "axis_c";
+const QString Constants::PrinterSettings::MachineSetup::kGCodeCoordinateFrameRotationX =
+    "gcode_coordinate_frame_rotation_x";
+const QString Constants::PrinterSettings::MachineSetup::kGCodeCoordinateFrameRotationY =
+    "gcode_coordinate_frame_rotation_y";
+const QString Constants::PrinterSettings::MachineSetup::kGCodeCoordinateFrameRotationZ =
+    "gcode_coordinate_frame_rotation_z";
 
 // Dimensions
 const QString Constants::PrinterSettings::Dimensions::kBuildVolumeType = "build_volume_type";

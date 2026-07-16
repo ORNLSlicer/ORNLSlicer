@@ -159,3 +159,39 @@ settings:
     namespace: "Printer::MachineSetup"
     symbol: "kAxisC"
     local: false
+  - name: "gcode_coordinate_frame_rotation_x"
+    display: "G-Code Frame Rotation X"
+    type: "angle"
+    tooltip: "Rotates generated G-Code coordinates about the X axis before output."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kGCodeCoordinateFrameRotationX"
+    local: false
+  - name: "gcode_coordinate_frame_rotation_y"
+    display: "G-Code Frame Rotation Y"
+    type: "angle"
+    tooltip: "Rotates generated G-Code coordinates about the Y axis before output."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kGCodeCoordinateFrameRotationY"
+    local: false
+  - name: "gcode_coordinate_frame_rotation_z"
+    display: "G-Code Frame Rotation Z"
+    type: "angle"
+    tooltip: "Rotates generated G-Code coordinates about the Z axis before output."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kGCodeCoordinateFrameRotationZ"
+    local: false
