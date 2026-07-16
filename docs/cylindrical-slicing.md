@@ -70,7 +70,7 @@ When `Clip Z` finds no boundary crossing, a helix that is wholly inside the mode
 
 ## G-code And Machine Settings
 
-`Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset and emits `XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. The first implementation fixes `XR=180`, `YR=0`, and `ZR=0`; maps `Axis A` to `AP`; and computes `CP` from the endpoint angle plus `Axis C`, normalized to 0-360 degrees.
+`Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset, applies the configured G-code coordinate frame rotation, and emits `XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. The first implementation fixes `XR=180`, `YR=0`, and `ZR=0`; maps `Axis A` to `AP`; and computes `CP` from the transformed endpoint angle plus `Axis C`, normalized to 0-360 degrees. For the Arc Specialties partner frame, set `G-Code Frame Rotation Z` to `-90 deg`.
 
 Enabling `Supports G2/G3` writes radial and helical print paths as G2/G3 moves divided according to `Arcs per Revolution`. Those moves use equals-form `I=`/`J=` offsets and place the feedrate at the end of the motion fields. When arc support is disabled, print paths remain segmented G1 moves.
 
@@ -80,6 +80,7 @@ The generated header reports cylindrical geometry, path pattern, boundary policy
 | --- | --- | --- |
 | `Axis A` | Printer > Machine Setup | Positioner tilt emitted as `AP`. |
 | `Axis C` | Printer > Machine Setup | Added to the endpoint angle around the cylinder axis before writing `CP`. |
+| `G-Code Frame Rotation X/Y/Z` | Printer > Machine Setup | Rotates emitted G-code endpoint coordinates and G2/G3 center offsets. Set Z to `-90 deg` for the Arc Specialties partner frame. |
 | `Supports G2/G3` | Printer > Machine Setup | Enables G2/G3 cylindrical print moves. When disabled, cylindrical print paths use segmented G1 moves. |
 | `Default Print Speed` | Profile > Layer | Print feedrate for cylindrical print segments. |
 | `Travel Speed` | Profile > Travel | Feedrate for non-print travel moves. If unset, the writer falls back to machine max XY speed. |

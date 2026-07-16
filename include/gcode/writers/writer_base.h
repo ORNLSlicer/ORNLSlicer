@@ -171,6 +171,12 @@ class WriterBase {
     //! \brief Gets the segment-local initial extruder speed, falling back to the global setting.
     int getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& params = nullptr) const;
 
+    //! \brief Rotates a generated G-Code coordinate by the configured machine coordinate frame rotation.
+    Point rotateGCodeCoordinateFramePoint(const Point& point) const;
+
+    //! \brief Rotates a generated G-Code coordinate delta by the configured machine coordinate frame rotation.
+    Point rotateGCodeCoordinateFrameDelta(const Point& delta) const;
+
     GcodeMeta m_meta;
 
     //! \brief The settings the region will use.

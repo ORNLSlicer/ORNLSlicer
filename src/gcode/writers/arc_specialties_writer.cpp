@@ -101,6 +101,16 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine("Cylindrical Path Pattern: " % toString(path_pattern));
         text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
                             "offset");
+        text += commentLine("G-Code Coordinate Frame Rotation: X=" %
+                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX),
+                                        m_meta.m_angle_unit) %
+                            " Y=" %
+                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY),
+                                        m_meta.m_angle_unit) %
+                            " Z=" %
+                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ),
+                                        m_meta.m_angle_unit));
+        text += commentLine("Arc Specialties partner frame: set G-Code Frame Rotation Z to -90deg");
         text += commentLine("Work Offset Setup: manual and probe setup commands are not emitted by this first pass");
         text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
@@ -502,25 +512,34 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
 QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params) {
     const double ap_output = m_sb->setting<Angle>(PRS::MachineSetup::kAxisA).to(m_meta.m_angle_unit);
     const double cp_output = Angle(cpAxisForPoint(destination, params) * degree).to(m_meta.m_angle_unit);
+    const Point output_destination = rotateGCodeCoordinateFramePoint(destination);
 
-    return QString(" X=") % QString::number(Distance(destination.x()).to(m_meta.m_distance_unit), 'f', 4) % " Y=" %
-           QString::number(Distance(destination.y()).to(m_meta.m_distance_unit), 'f', 4) % " Z=" %
-           QString::number(Distance(destination.z()).to(m_meta.m_distance_unit), 'f', 4) % " XR=" %
+    return QString(" X=") % QString::number(Distance(output_destination.x()).to(m_meta.m_distance_unit), 'f', 4) %
+           " Y=" % QString::number(Distance(output_destination.y()).to(m_meta.m_distance_unit), 'f', 4) % " Z=" %
+           QString::number(Distance(output_destination.z()).to(m_meta.m_distance_unit), 'f', 4) % " XR=" %
            QString::number(kToolFrameXR, 'f', 4) % " YR=" % QString::number(kToolFrameYR, 'f', 4) % " ZR=" %
            QString::number(kToolFrameZR, 'f', 4) % " AP=" % QString::number(ap_output, 'f', 4) % " CP=" %
            QString::number(cp_output, 'f', 4);
 }
 
 QString ArcSpecialtiesWriter::writeArcCenterOffsets(const Point& start_point, const Point& center_point) {
+    const Point center_offset(center_point.x() - start_point.x(), center_point.y() - start_point.y(),
+                              center_point.z() - start_point.z());
+    const Point output_offset = rotateGCodeCoordinateFrameDelta(center_offset);
+
     return QString(" I=") %
-           QString::number(Distance(center_point.x() - start_point.x()).to(m_meta.m_distance_unit), 'f', 4) % " J=" %
-           QString::number(Distance(center_point.y() - start_point.y()).to(m_meta.m_distance_unit), 'f', 4);
+           QString::number(Distance(output_offset.x()).to(m_meta.m_distance_unit), 'f', 4) % " J=" %
+           QString::number(Distance(output_offset.y()).to(m_meta.m_distance_unit), 'f', 4);
 }
 
 double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSharedPointer<SettingsBase>& params) {
     const double center_x = params->setting<Distance>(kRadialCenterX)();
     const double center_y = params->setting<Distance>(kRadialCenterY)();
-    double cp_degrees = std::atan2(destination.y() - center_y, destination.x() - center_x) * 180.0 / M_PI;
+    const Point transformed_destination = rotateGCodeCoordinateFramePoint(destination);
+    const Point transformed_center = rotateGCodeCoordinateFramePoint(Point(center_x, center_y, destination.z()));
+    double cp_degrees = std::atan2(transformed_destination.y() - transformed_center.y(),
+                                   transformed_destination.x() - transformed_center.x()) *
+                        180.0 / M_PI;
     cp_degrees += m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
 
     cp_degrees = std::fmod(cp_degrees, 360.0);

@@ -13,6 +13,7 @@
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/mathutils.h"
 
 namespace ORNL {
 WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : m_sb(sb) {
@@ -96,6 +97,19 @@ int WriterBase::getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& para
     }
 
     return m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+}
+
+Point WriterBase::rotateGCodeCoordinateFramePoint(const Point& point) const {
+    const QQuaternion rotation =
+        MathUtils::CreateQuaternion(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX),
+                                    m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY),
+                                    m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ),
+                                    QuaternionOrder::kXYZ);
+    return Point::fromQVector3D(rotation.rotatedVector(point.toQVector3D()));
+}
+
+Point WriterBase::rotateGCodeCoordinateFrameDelta(const Point& delta) const {
+    return rotateGCodeCoordinateFramePoint(delta);
 }
 
 QString WriterBase::writeSlicerHeader(const QString& syntax) {
