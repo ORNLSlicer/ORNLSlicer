@@ -184,6 +184,9 @@ class Constants {
             static const QString kAxisA;
             static const QString kAxisB;
             static const QString kAxisC;
+            static const QString kGCodeCoordinateFrameRotationX;
+            static const QString kGCodeCoordinateFrameRotationY;
+            static const QString kGCodeCoordinateFrameRotationZ;
         };
 
         // Categories
