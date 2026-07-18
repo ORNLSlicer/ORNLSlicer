@@ -72,7 +72,7 @@ Run CMake/build, or run the generator directly:
 python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf
 ```
 
-See [Generating the Master Settings File](Generating-the-Master-Settings-File) for more information.
+See [Generating the Master Settings File](Generating-the-Master-Settings-File.md) for more information.
 
 ### 3. Add the setting to the `Constants` class.
 
