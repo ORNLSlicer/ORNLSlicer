@@ -61,6 +61,7 @@ PolygonList futurePerimeterSupport(const PolygonList& current_geometry, const Po
     if (support_width <= 0 || upper_geometry.isEmpty())
         return PolygonList();
 
+    // Extract the upper layer's perimeter band so top skin can support future walls.
     PolygonList support_geometry = upper_geometry - upper_geometry.offset(-support_width);
     return support_geometry & current_geometry;
 }
@@ -180,8 +181,10 @@ QVector<Polyline> Skin::createPatternForArea(InfillPatterns pattern, PolygonList
 }
 
 void Skin::computeTopSkin(const int& top_count) {
-    if (top_count <= 0)
+    if (top_count <= 0) {
+        // A zero top count disables both regular top skin and future-perimeter support.
         return;
+    }
 
     PolygonList temp_geometry = m_geometry;
     const Distance perimeter_support_width =
@@ -191,13 +194,13 @@ void Skin::computeTopSkin(const int& top_count) {
 
     //! If skin is within top_count of top layer, compute common geometry
     if (m_upper_geometry_includes_top && m_upper_geometry.size() < top_count)
-        for (PolygonList poly : m_upper_geometry)
+        for (const PolygonList& poly : m_upper_geometry)
             temp_geometry &= poly;
     else
         temp_geometry.clear();
 
     //! Compute difference geometry
-    for (PolygonList poly : m_upper_geometry) {
+    for (const PolygonList& poly : m_upper_geometry) {
         temp_geometry += m_geometry - poly;
         temp_geometry += futurePerimeterSupport(m_geometry, poly, perimeter_support_width);
     }
@@ -213,13 +216,13 @@ void Skin::computeBottomSkin(const int& bottom_count) {
 
     //! If skin is within bottom_count of botton layer, compute common geometry
     if (m_lower_geometry_includes_bottom && m_lower_geometry.size() < bottom_count)
-        for (PolygonList poly : m_lower_geometry)
+        for (const PolygonList& poly : m_lower_geometry)
             temp_geometry &= poly;
     else
         temp_geometry.clear();
 
     //! Compute difference geometry
-    for (PolygonList poly : m_lower_geometry)
+    for (const PolygonList& poly : m_lower_geometry)
         temp_geometry += m_geometry - poly;
 
     m_skin_geometry += temp_geometry;
@@ -227,7 +230,7 @@ void Skin::computeBottomSkin(const int& bottom_count) {
 
 void Skin::computeGradualSkinSteps(const int& gradual_count) {
     PolygonList currentGradual;
-    for (PolygonList poly : m_gradual_geometry) {
+    for (const PolygonList& poly : m_gradual_geometry) {
         m_gradual_skin_geometry.push_back(m_geometry - m_skin_geometry - currentGradual - poly);
         currentGradual += m_gradual_skin_geometry[m_gradual_skin_geometry.size() - 1];
     }
