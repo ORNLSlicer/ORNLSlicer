@@ -63,7 +63,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kEnableAdaptiveBeadWidths"
-    local: true
+    local: false
   - name: "perimeter_adapt_min_width"
     display: "Minimum Adaptive Perimeter Bead Width"
     type: "distance"
@@ -75,7 +75,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kMinimumAdaptiveBeadWidth"
-    local: true
+    local: false
   - name: "perimeter_adapt_max_width"
     display: "Maximum Adaptive Perimeter Bead Width"
     type: "distance"
@@ -87,7 +87,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kMaximumAdaptiveBeadWidth"
-    local: true
+    local: false
   - name: "perimeter_speed"
     display: "Perimeter Speed"
     type: "speed"
