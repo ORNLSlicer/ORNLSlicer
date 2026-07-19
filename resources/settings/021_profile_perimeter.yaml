@@ -52,6 +52,42 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kPerimeterBeadWidth"
     local: true
+  - name: "perimeter_adapt"
+    display: "Enable Adaptive Perimeter Bead Widths"
+    type: "boolean"
+    tooltip: "If selected, perimeter bead widths are adjusted within the configured limits to better fill narrow regions whose remaining contour space is not an exact multiple of the nominal bead width."
+    depends: {"perimeter":true}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kEnableAdaptiveBeadWidths"
+    local: false
+  - name: "perimeter_adapt_min_width"
+    display: "Minimum Adaptive Perimeter Bead Width"
+    type: "distance"
+    tooltip: "Minimum bead width allowed when adaptive perimeter bead widths are enabled."
+    depends: {"AND":[{"perimeter":true},{"perimeter_adapt":true}]}
+    options: []
+    default: 0
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kMinimumAdaptiveBeadWidth"
+    local: false
+  - name: "perimeter_adapt_max_width"
+    display: "Maximum Adaptive Perimeter Bead Width"
+    type: "distance"
+    tooltip: "Maximum bead width allowed when adaptive perimeter bead widths are enabled."
+    depends: {"AND":[{"perimeter":true},{"perimeter_adapt":true}]}
+    options: []
+    default: 10000
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kMaximumAdaptiveBeadWidth"
+    local: false
   - name: "perimeter_speed"
     display: "Perimeter Speed"
     type: "speed"

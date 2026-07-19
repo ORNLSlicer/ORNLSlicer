@@ -1,7 +1,10 @@
 #include "step/layer/regions/perimeter.h"
 
 #include <algorithm>
+#include <cmath>
 #include <cstddef>
+#include <limits>
+#include <optional>
 
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
@@ -40,7 +43,8 @@ bool isValidPerimeterLine(const Polyline& line, Distance min_path_length) {
 }
 
 QVector<Polygon> appendValidPathLines(const PolygonList& path_lines, QVector<Polyline>& computed_geometry,
-                                      Distance min_path_length, Distance min_segment_length,
+                                      QVector<Distance>& computed_widths, Distance min_path_length, Distance bead_width,
+                                      Distance min_segment_length,
                                       bool& skipped_path_line) {
     QVector<Polygon> valid_path_lines;
 
@@ -52,10 +56,31 @@ QVector<Polygon> appendValidPathLines(const PolygonList& path_lines, QVector<Pol
         }
 
         computed_geometry.push_back(line);
+        computed_widths.push_back(bead_width);
         valid_path_lines.push_back(poly);
     }
 
     return valid_path_lines;
+}
+
+QVector<Polygon> validPathLines(const PolygonList& path_lines, Distance min_path_length, Distance min_segment_length) {
+    QVector<Polygon> valid_path_lines;
+
+    for (const Polygon& poly : path_lines) {
+        if (isValidPerimeterLine(toOpenPolyline(poly).removeShortSegments(min_segment_length, true), min_path_length)) {
+            valid_path_lines.push_back(poly);
+        }
+    }
+
+    return valid_path_lines;
+}
+
+Distance totalPathLineLength(const QVector<Polygon>& path_lines) {
+    Distance total_length;
+    for (const Polygon& poly : path_lines) {
+        total_length += SpiralPath::closedPolylineLength(toOpenPolyline(poly));
+    }
+    return total_length;
 }
 
 PolygonList pathLineFootprint(const Polygon& path_line, Distance bead_width, const PolygonList& clipping_geometry) {
@@ -111,6 +136,217 @@ PolygonList selectedBoundaryPathLines(const PolygonList& geometry, PerimeterBoun
     return selectedBoundaryPathLines(geometry.externalPolygonBoundaries(), geometry.internalPolygonBoundaries(),
                                      selection, bead_width / 2);
 }
+
+double netAreaAbs(PolygonList geometry) { return std::fabs(geometry.netArea()()); }
+
+double negligibleAreaTolerance(double reference_area, Distance nominal_width) {
+    return std::max(reference_area * 1.0e-6, nominal_width() * nominal_width() * 1.0e-4);
+}
+
+bool hasInternalBoundaries(const PolygonList& geometry) { return !geometry.internalPolygonBoundaries().isEmpty(); }
+
+Distance clampedAdaptiveWidth(Distance requested_width, Distance nominal_width, Distance min_width,
+                              Distance max_width) {
+    double requested = requested_width();
+    if (!std::isfinite(requested) || requested <= 0) {
+        requested = nominal_width();
+    }
+
+    double lower = std::max(0.0, min_width());
+    double upper = max_width() > 0 ? max_width() : std::numeric_limits<double>::max();
+    if (upper < lower) {
+        upper = lower;
+    }
+
+    return Distance(std::clamp(requested, lower, upper));
+}
+
+bool geometryClearedByFootprints(PolygonList geometry, const QVector<Polygon>& path_lines, Distance bead_width,
+                                 double reference_area, Distance nominal_width) {
+    if (!subtractPathLineFootprints(geometry, path_lines, bead_width)) {
+        return false;
+    }
+
+    return geometry.isEmpty() || netAreaAbs(geometry) <= negligibleAreaTolerance(reference_area, nominal_width);
+}
+
+bool shellWidthCoversGeometry(PolygonList geometry, const QVector<Polygon>& path_lines, Distance bead_width,
+                              Distance nominal_width) {
+    const Distance path_length = totalPathLineLength(path_lines);
+    if (path_length <= 0) {
+        return false;
+    }
+
+    const Distance full_area_width = Distance(netAreaAbs(geometry) / path_length());
+    return std::fabs(full_area_width() - bead_width()) <= std::max(nominal_width() * 1.0e-4, 1.0e-6);
+}
+
+std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance nominal_width,
+                                                  Distance min_path_length, Distance min_segment_length,
+                                                  PerimeterBoundarySelection selection, Distance min_width,
+                                                  Distance max_width) {
+    const double initial_area = netAreaAbs(geometry);
+    if (initial_area <= 0) {
+        return std::nullopt;
+    }
+    const bool shell_geometry = selection == PerimeterBoundarySelection::kAll && hasInternalBoundaries(geometry);
+
+    Distance candidate_width = nominal_width;
+    QVector<Polygon> candidate_path_lines;
+    for (int i = 0; i < 4; ++i) {
+        candidate_path_lines =
+            validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width), min_path_length,
+                           min_segment_length);
+        const Distance candidate_length = totalPathLineLength(candidate_path_lines);
+        if (candidate_length <= 0) {
+            return std::nullopt;
+        }
+
+        const Distance next_width =
+            clampedAdaptiveWidth(Distance(initial_area / candidate_length()), nominal_width, min_width, max_width);
+        if (std::fabs(next_width() - candidate_width()) <= std::max(nominal_width() * 1.0e-4, 1.0e-6)) {
+            candidate_width = next_width;
+            break;
+        }
+
+        candidate_width = next_width;
+    }
+
+    candidate_path_lines =
+        validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width), min_path_length,
+                       min_segment_length);
+    if (candidate_path_lines.isEmpty()) {
+        return std::nullopt;
+    }
+
+    if (geometryClearedByFootprints(geometry, candidate_path_lines, candidate_width, initial_area, nominal_width)) {
+        return candidate_width;
+    }
+    if (shell_geometry && candidate_path_lines.size() > 1 &&
+        shellWidthCoversGeometry(geometry, candidate_path_lines, candidate_width, nominal_width)) {
+        return candidate_width;
+    }
+
+    return std::nullopt;
+}
+
+Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_width, int remaining_count,
+                                         Distance min_path_length, Distance min_segment_length,
+                                         PerimeterBoundarySelection selection, Distance min_width, Distance max_width) {
+    if (std::optional<Distance> full_width =
+            fullCoverageAdaptiveWidth(geometry, nominal_width, min_path_length, min_segment_length, selection,
+                                      min_width, max_width)) {
+        return *full_width;
+    }
+
+    PolygonList preview_geometry = geometry;
+    Distance preview_length;
+
+    for (int i = 0; i < remaining_count && !preview_geometry.isEmpty(); ++i) {
+        QVector<Polygon> preview_path_lines =
+            validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length,
+                           min_segment_length);
+        if (preview_path_lines.isEmpty()) {
+            break;
+        }
+
+        preview_length += totalPathLineLength(preview_path_lines);
+        if (!subtractPathLineFootprints(preview_geometry, preview_path_lines, nominal_width)) {
+            break;
+        }
+    }
+
+    if (preview_length <= 0) {
+        return nominal_width;
+    }
+
+    const bool more_nominal_paths_fit =
+        !validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length,
+                        min_segment_length)
+             .isEmpty();
+    const double initial_area = netAreaAbs(geometry);
+    const double preview_remaining_area = netAreaAbs(preview_geometry);
+    const double target_area =
+        more_nominal_paths_fit ? std::max(0.0, initial_area - preview_remaining_area) : initial_area;
+
+    return clampedAdaptiveWidth(Distance(target_area / preview_length()), nominal_width, min_width, max_width);
+}
+
+QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance nominal_width, int remaining_count,
+                                               Distance min_path_length, Distance min_segment_length,
+                                               PerimeterBoundarySelection selection, Distance min_width,
+                                               Distance max_width) {
+    QVector<Distance> widths;
+
+    for (int i = 0; i < remaining_count && !geometry.isEmpty(); ++i) {
+        const Distance path_width =
+            adaptiveContourWidthForGeometry(geometry, nominal_width, remaining_count - i, min_path_length,
+                                            min_segment_length, selection, min_width, max_width);
+        PolygonList path_lines = selectedBoundaryPathLines(geometry, selection, path_width);
+        QVector<Polygon> valid_path_lines = validPathLines(path_lines, min_path_length, min_segment_length);
+        if (valid_path_lines.isEmpty()) {
+            break;
+        }
+
+        widths.push_back(path_width);
+
+        const bool clear_shell_geometry =
+            selection == PerimeterBoundarySelection::kAll && hasInternalBoundaries(geometry) &&
+            shellWidthCoversGeometry(geometry, valid_path_lines, path_width, nominal_width);
+
+        if (!subtractPathLineFootprints(geometry, valid_path_lines, path_width)) {
+            break;
+        }
+        if (clear_shell_geometry) {
+            geometry.clear();
+        }
+    }
+
+    return widths;
+}
+
+Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int remaining_count,
+                              Distance min_path_length, Distance min_segment_length,
+                              PerimeterBoundarySelection selection, Distance min_width, Distance max_width) {
+    QVector<Distance> widths =
+        plannedAdaptiveContourWidths(geometry, nominal_width, remaining_count, min_path_length, min_segment_length,
+                                     selection, min_width, max_width);
+    if (widths.isEmpty()) {
+        return nominal_width;
+    }
+
+    return *std::max_element(widths.begin(), widths.end(),
+                             [](const Distance& lhs, const Distance& rhs) { return lhs() < rhs(); });
+}
+
+double distanceXYToSegment(const Point& point, const Point& start, const Point& end) {
+    const double dx = end.x() - start.x();
+    const double dy = end.y() - start.y();
+    const double len_sq = dx * dx + dy * dy;
+    if (len_sq <= std::numeric_limits<double>::epsilon()) {
+        return std::hypot(point.x() - start.x(), point.y() - start.y());
+    }
+
+    const double t = std::clamp(((point.x() - start.x()) * dx + (point.y() - start.y()) * dy) / len_sq, 0.0, 1.0);
+    const double nearest_x = start.x() + t * dx;
+    const double nearest_y = start.y() + t * dy;
+    return std::hypot(point.x() - nearest_x, point.y() - nearest_y);
+}
+
+bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double tolerance) {
+    if (line.size() < 2) {
+        return false;
+    }
+
+    for (int i = 0; i < line.size(); ++i) {
+        if (distanceXYToSegment(point, line[i], line[(i + 1) % line.size()]) <= tolerance) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
 } // namespace
 
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
@@ -134,6 +370,7 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
 void Perimeter::compute(uint layer_num) {
     m_paths.clear();
     m_computed_geometry.clear();
+    m_computed_widths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
@@ -144,6 +381,41 @@ void Perimeter::compute(uint layer_num) {
         static_cast<PerimeterBoundarySelection>(m_sb->setting<int>(PS::Perimeter::kBoundarySelection));
 
     const PolygonList original_geometry = m_geometry;
+    if (m_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
+        const Distance min_adaptive_width = m_sb->setting<Distance>(PS::Perimeter::kAdaptiveMinWidth);
+        const Distance max_adaptive_width = m_sb->setting<Distance>(PS::Perimeter::kAdaptiveMaxWidth);
+
+        for (int perimeter_number = 0; perimeter_number < perimeter_count && !m_geometry.isEmpty();
+             ++perimeter_number) {
+            const int remaining_count = perimeter_count - perimeter_number;
+            const Distance path_width =
+                adaptiveContourWidth(m_geometry, beadWidth, remaining_count, min_path_length, min_segment_length,
+                                     boundary_selection, min_adaptive_width, max_adaptive_width);
+            PolygonList path_lines = selectedBoundaryPathLines(m_geometry, boundary_selection, path_width);
+
+            bool skipped_path_line = false;
+            QVector<Polygon> valid_path_lines = appendValidPathLines(path_lines, m_computed_geometry, m_computed_widths,
+                                                                     min_path_length, path_width, min_segment_length,
+                                                                     skipped_path_line);
+
+            if (valid_path_lines.isEmpty()) {
+                break;
+            }
+
+            const bool clear_shell_geometry =
+                boundary_selection == PerimeterBoundarySelection::kAll && hasInternalBoundaries(m_geometry) &&
+                shellWidthCoversGeometry(m_geometry, valid_path_lines, path_width, beadWidth);
+
+            if (!subtractPathLineFootprints(m_geometry, valid_path_lines, path_width)) {
+                break;
+            }
+            if (clear_shell_geometry) {
+                m_geometry.clear();
+            }
+        }
+        return;
+    }
+
     if (boundary_selection == PerimeterBoundarySelection::kAll) {
         PolygonList path_lines = m_geometry.offset(-beadWidth / 2);
         bool use_footprint_subtraction = false;
@@ -151,9 +423,9 @@ void Perimeter::compute(uint layer_num) {
         for (int perimeter_number = 0; !path_lines.isEmpty() && perimeter_number < perimeter_count;
              ++perimeter_number) {
             bool skipped_path_line = false;
-            QVector<Polygon> valid_path_lines =
-                appendValidPathLines(path_lines, m_computed_geometry, min_path_length, min_segment_length,
-                                     skipped_path_line);
+            QVector<Polygon> valid_path_lines = appendValidPathLines(path_lines, m_computed_geometry, m_computed_widths,
+                                                                     min_path_length, beadWidth, min_segment_length,
+                                                                     skipped_path_line);
 
             if (valid_path_lines.isEmpty()) {
                 break;
@@ -188,8 +460,8 @@ void Perimeter::compute(uint layer_num) {
         }
         else {
             const Distance path_offset = beadWidth * perimeter_number + beadWidth / 2;
-            path_lines = selectedBoundaryPathLines(external_boundaries, internal_boundaries, boundary_selection,
-                                                  path_offset);
+            path_lines =
+                selectedBoundaryPathLines(external_boundaries, internal_boundaries, boundary_selection, path_offset);
         }
 
         if (path_lines.isEmpty()) {
@@ -197,8 +469,9 @@ void Perimeter::compute(uint layer_num) {
         }
 
         bool skipped_path_line = false;
-        QVector<Polygon> valid_path_lines =
-            appendValidPathLines(path_lines, m_computed_geometry, min_path_length, min_segment_length, skipped_path_line);
+        QVector<Polygon> valid_path_lines = appendValidPathLines(path_lines, m_computed_geometry, m_computed_widths,
+                                                                 min_path_length, beadWidth, min_segment_length,
+                                                                 skipped_path_line);
 
         if (valid_path_lines.isEmpty()) {
             break;
@@ -405,10 +678,15 @@ Path Perimeter::createPath(Polyline line) {
         Path path;
 
         for (size_t i = 0; i < line.size(); ++i) {
-            LSegmentPtr segment = LSegmentPtr::create(line[i], line[(i + 1) % line.size()]);
-            populateSegmentSettings(segment->getSb(), m_sb);
+            const Point& start = line[i];
+            const Point& end = line[(i + 1) % line.size()];
+            const Distance bead_width = beadWidthForSegment(start, end, m_sb);
+
+            LSegmentPtr segment = LSegmentPtr::create(start, end);
+            populateSegmentSettings(segment->getSb(), m_sb, bead_width, isAdaptedWidth(bead_width, m_sb));
             path.append(segment);
         }
+        return path;
     }
 
     // ---------- Settings Regions ----------
@@ -534,7 +812,8 @@ Path Perimeter::createPathWithLocalizedSettings(const Polyline& line) {
             }
 
             LSegmentPtr segment = LSegmentPtr::create(p0, p1);
-            populateSegmentSettings(segment->getSb(), parent_sb);
+            const Distance bead_width = beadWidthForSegment(p0, p1, parent_sb);
+            populateSegmentSettings(segment->getSb(), parent_sb, bead_width, isAdaptedWidth(bead_width, parent_sb));
             path.append(segment);
         }
     }
@@ -542,16 +821,59 @@ Path Perimeter::createPathWithLocalizedSettings(const Polyline& line) {
 }
 
 void Perimeter::populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
-                                        const QSharedPointer<SettingsBase>& parent_sb) {
+                                        const QSharedPointer<SettingsBase>& parent_sb, const Distance& bead_width,
+                                        bool adapted) {
     // Populate segment settings with the provided settings base
     segment_sb->populate(parent_sb);
 
-    segment_sb->setSetting(SS::kWidth, parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth));
+    Velocity speed = parent_sb->setting<Velocity>(PS::Perimeter::kSpeed);
+    if (adapted && bead_width > 0) {
+        const Distance ref_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+        const Velocity ref_speed = parent_sb->setting<Velocity>(PS::Perimeter::kSpeed);
+        const double min_speed = ref_speed() * 0.01;
+        speed = Velocity(std::max((ref_speed() * ref_width()) / bead_width(), min_speed));
+    }
+
+    segment_sb->setSetting(SS::kWidth, bead_width);
     segment_sb->setSetting(SS::kHeight, parent_sb->setting<Distance>(PS::Layer::kLayerHeight));
-    segment_sb->setSetting(SS::kSpeed, parent_sb->setting<Velocity>(PS::Perimeter::kSpeed));
+    segment_sb->setSetting(SS::kSpeed, speed);
     segment_sb->setSetting(SS::kAccel, parent_sb->setting<Acceleration>(PRS::Acceleration::kPerimeter));
     segment_sb->setSetting(SS::kExtruderSpeed, parent_sb->setting<AngularVelocity>(PS::Perimeter::kExtruderSpeed));
     segment_sb->setSetting(SS::kMaterialNumber, parent_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     segment_sb->setSetting(SS::kRegionType, RegionType::kPerimeter);
+    segment_sb->setSetting(SS::kAdapted, adapted);
+}
+
+Distance Perimeter::beadWidthForSegment(const Point& start, const Point& end,
+                                        const QSharedPointer<SettingsBase>& parent_sb) const {
+    const Distance fallback_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+    if (!parent_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
+        return fallback_width;
+    }
+
+    Point midpoint = (start + end) * 0.5;
+    const Distance tolerance(std::max(fallback_width() * 1.0e-3, 1.0e-6));
+    for (int i = 0; i < m_computed_geometry.size() && i < m_computed_widths.size(); ++i) {
+        if (pointOnClosedPolylineXY(midpoint, m_computed_geometry[i], tolerance())) {
+            return m_computed_widths[i];
+        }
+    }
+    if (!m_computed_widths.isEmpty()) {
+        const Distance first_width = m_computed_widths.first();
+        const bool uniform_width = std::all_of(m_computed_widths.begin(), m_computed_widths.end(),
+                                               [first_width, tolerance](const Distance& width) {
+                                                   return std::fabs(width() - first_width()) <= tolerance();
+                                               });
+        if (uniform_width) {
+            return first_width;
+        }
+    }
+
+    return fallback_width;
+}
+
+bool Perimeter::isAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb) {
+    const Distance nominal_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+    return std::fabs(width() - nominal_width()) > std::max(nominal_width() * 1.0e-3, 1.0e-6);
 }
 } // namespace ORNL

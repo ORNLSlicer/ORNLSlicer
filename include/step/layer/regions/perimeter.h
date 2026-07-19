@@ -67,10 +67,30 @@ class Perimeter : public RegionBase {
      * @param[in] parent_sb: The settings base to apply.
      */
     static void populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
-                                        const QSharedPointer<SettingsBase>& parent_sb);
+                                        const QSharedPointer<SettingsBase>& parent_sb, const Distance& bead_width,
+                                        bool adapted);
+
+    /**
+     * @brief Returns the computed adaptive width for a generated contour segment.
+     * @param[in] start Segment start point.
+     * @param[in] end Segment end point.
+     * @param[in] parent_sb Settings used for the fallback nominal width.
+     */
+    Distance beadWidthForSegment(const Point& start, const Point& end,
+                                 const QSharedPointer<SettingsBase>& parent_sb) const;
+
+    /**
+     * @brief Returns whether the supplied width differs from the parent bead width enough to be treated as adapted.
+     * @param[in] width Bead width being applied.
+     * @param[in] parent_sb Settings containing the nominal bead width.
+     */
+    static bool isAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb);
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
+
+    //! \brief Holds the bead width associated with each computed contour in m_computed_geometry
+    QVector<Distance> m_computed_widths;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;

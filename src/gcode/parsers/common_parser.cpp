@@ -127,22 +127,11 @@ bool CommonParser::fileBoolSetting(const QString& key) const {
 
 Distance CommonParser::beadWidthForComment(const QString& comment) const {
     const Distance default_width = fileDistanceSetting(PS::Layer::kBeadWidth);
-    const QString adapted_skeleton_prefix = QStringLiteral("AD-") % Constants::RegionTypeStrings::kSkeleton;
+    const QString adapted_prefix = QStringLiteral("AD-");
 
-    if (comment.startsWith(Constants::RegionTypeStrings::kRadial) ||
-        comment.startsWith(Constants::RegionTypeStrings::kHelical)) {
-        return default_width;
-    }
-    else if (comment.startsWith(Constants::RegionTypeStrings::kPerimeter)) {
-        return fileDistanceSetting(PS::Perimeter::kBeadWidth);
-    }
-    else if (comment.startsWith(Constants::RegionTypeStrings::kInset)) {
-        return fileDistanceSetting(PS::Inset::kBeadWidth);
-    }
-    else if (comment.startsWith(adapted_skeleton_prefix) ||
-             comment.startsWith(Constants::RegionTypeStrings::kSkeleton)) {
-        const int skeleton_start = comment.indexOf(Constants::RegionTypeStrings::kSkeleton);
-        const int width_start = comment.indexOf('-', skeleton_start + Constants::RegionTypeStrings::kSkeleton.size());
+    auto widthForRegionComment = [&](const QString& region_name, Distance fallback_width) -> Distance {
+        const int region_start = comment.indexOf(region_name);
+        const int width_start = comment.indexOf('-', region_start + region_name.size());
 
         if (width_start >= 0) {
             const int value_start = width_start + 1;
@@ -154,11 +143,34 @@ Distance CommonParser::beadWidthForComment(const QString& comment) const {
             bool ok = false;
             const double parsed_width = comment.mid(value_start, value_end - value_start).toDouble(&ok);
             if (ok && parsed_width > 0) {
-                return Distance(parsed_width);
+                return parsed_width * m_distance_unit;
             }
         }
 
-        return fileDistanceSetting(PS::Skeleton::kBeadWidth);
+        return fallback_width;
+    };
+
+    if (comment.startsWith(Constants::RegionTypeStrings::kRadial) ||
+        comment.startsWith(Constants::RegionTypeStrings::kHelical)) {
+        return default_width;
+    }
+    else if (comment.startsWith(adapted_prefix % Constants::RegionTypeStrings::kPerimeter)) {
+        return widthForRegionComment(Constants::RegionTypeStrings::kPerimeter,
+                                     fileDistanceSetting(PS::Perimeter::kBeadWidth));
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kPerimeter)) {
+        return fileDistanceSetting(PS::Perimeter::kBeadWidth);
+    }
+    else if (comment.startsWith(adapted_prefix % Constants::RegionTypeStrings::kInset)) {
+        return widthForRegionComment(Constants::RegionTypeStrings::kInset, fileDistanceSetting(PS::Inset::kBeadWidth));
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kInset)) {
+        return fileDistanceSetting(PS::Inset::kBeadWidth);
+    }
+    else if (comment.startsWith(adapted_prefix % Constants::RegionTypeStrings::kSkeleton) ||
+             comment.startsWith(Constants::RegionTypeStrings::kSkeleton)) {
+        return widthForRegionComment(Constants::RegionTypeStrings::kSkeleton,
+                                     fileDistanceSetting(PS::Skeleton::kBeadWidth));
     }
     else if (comment.startsWith(Constants::RegionTypeStrings::kSkin)) {
         return fileDistanceSetting(PS::Skin::kBeadWidth);
