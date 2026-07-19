@@ -46,9 +46,9 @@ QVector3D optimizationGuideDirection(const QSharedPointer<SettingsBase>& sb) {
                         sb->setting<float>(PS::Optimizations::kSeamAttractorVectorZ));
 
     if (direction.isNull()) {
-        direction = QVector3D(sb->setting<float>(PS::Slicing::kSlicingVectorX),
-                              sb->setting<float>(PS::Slicing::kSlicingVectorY),
-                              sb->setting<float>(PS::Slicing::kSlicingVectorZ));
+        direction = QVector3D(sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                              sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                              sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ));
         if (direction.isNull()) {
             direction = QVector3D(0.0f, 0.0f, 1.0f);
         }

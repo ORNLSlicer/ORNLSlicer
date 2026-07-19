@@ -134,9 +134,9 @@ set(ORNLSLICER_INCLUDE_DIRS ${RESULT_INCLUDE_DIRS})
 set(ORNLSLICER_LIBRARY_DIRS ${RESULT_LIBRARY_DIRS})
 
 # Find all project files.
-file(GLOB_RECURSE SOURCES "src/**.cpp")
-file(GLOB_RECURSE HEADERS "include/**.h")
-file(GLOB_RECURSE RESOURCES "resources/**.qrc")
+file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/**.cpp")
+file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/**.h")
+file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS "resources/**.qrc")
 
 add_library(${PROJECT_NAME}_obj OBJECT)
 target_include_directories(
