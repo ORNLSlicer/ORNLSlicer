@@ -272,6 +272,10 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
             // Create path from polyline
             Path newPath = createPath(result);
+            if (newPath.size() == 0) {
+                return;
+            }
+
             newPath.setCCW(result.orientation()); // Set orientation of path
             newPath.getSegments().removeLast();   // Remove last segment of path to enable spiral path linking
 
