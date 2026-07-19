@@ -122,7 +122,7 @@ void Brim::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
 }
 
 void Brim::calculateModifiers(Path& path, bool supportsG3) {
-    // NOP
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
 }
 
 Path Brim::createPath(Polyline line) {

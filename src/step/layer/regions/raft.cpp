@@ -90,6 +90,7 @@ void Raft::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
         if (result.size() > 0) {
             Path newPath = createPath(result);
             if (newPath.size() > 0) {
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                       m_sb->setting<Velocity>(PS::Travel::kSpeed));
                 current_location = newPath.back()->end();
@@ -101,7 +102,7 @@ void Raft::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
 }
 
 void Raft::calculateModifiers(Path& path, bool supportsG3) {
-    // NOP
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
 }
 
 Path Raft::createPath(Polyline line) {

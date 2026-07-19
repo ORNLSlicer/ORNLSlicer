@@ -799,6 +799,9 @@ class Constants {
             static const QString kSmoothing;
             static const QString kSmoothingType;
             static const QString kSmoothingTolerance;
+            static const QString kEnableSharpCornerExtension;
+            static const QString kSharpCornerExtensionAngle;
+            static const QString kSharpCornerExtensionDistance;
             static const QString kEnableSpiralize;
             static const QString kEnableFixModel;
             static const QString kEnableOversize;
