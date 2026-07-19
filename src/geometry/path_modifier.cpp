@@ -5,6 +5,7 @@
 #include <cmath>
 
 #include <QtMath>
+#include <QVector>
 #include <qcontainerfwd.h>
 #include <qminmax.h>
 #include <qnumeric.h>
@@ -36,6 +37,10 @@ void copyAdaptedWidthFlag(const QSharedPointer<SettingsBase>& destination, const
     if (source->contains(SS::kAdapted)) {
         destination->setSetting(SS::kAdapted, source->setting<bool>(SS::kAdapted));
     }
+}
+
+bool isExtendableLineSegment(const QSharedPointer<SegmentBase>& segment) {
+    return segment->isPrintingSegment() && dynamic_cast<LineSegment*>(segment.data()) != nullptr;
 }
 } // namespace
 
@@ -595,6 +600,92 @@ void PathModifierGenerator::GenerateTrajectorySlowdown(Path& path, QSharedPointe
                 ++end;
             }
         }
+    }
+}
+
+void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPointer<SettingsBase> sb) {
+    if (!sb->setting<bool>(PS::SpecialModes::kEnableSharpCornerExtension))
+        return;
+
+    const Angle threshold = sb->setting<Angle>(PS::SpecialModes::kSharpCornerExtensionAngle);
+    const Distance extensionDistance = sb->setting<Distance>(PS::SpecialModes::kSharpCornerExtensionDistance);
+
+    if (threshold <= 0 || extensionDistance <= 0 || path.size() < 2)
+        return;
+
+    const int segmentCount = path.size();
+    QVector<Point> starts;
+    QVector<Point> ends;
+    starts.reserve(segmentCount);
+    ends.reserve(segmentCount);
+
+    for (const QSharedPointer<SegmentBase>& segment : path) {
+        starts.push_back(segment->start());
+        ends.push_back(segment->end());
+    }
+
+    const bool isClosed = starts.front() == ends.back();
+    const int junctionCount = isClosed ? segmentCount : segmentCount - 1;
+    const double thresholdRadians = qMin(M_PI, threshold());
+    constexpr double kMinLength = 1.0e-6;
+
+    QVector<Point> extendedJunctions(segmentCount);
+    QVector<bool> hasExtendedJunction(segmentCount, false);
+
+    for (int previousIndex = 0; previousIndex < junctionCount; ++previousIndex) {
+        const int nextIndex = (previousIndex + 1) % segmentCount;
+
+        if (!isExtendableLineSegment(path[previousIndex]) || !isExtendableLineSegment(path[nextIndex]))
+            continue;
+
+        const Point& corner = ends[previousIndex];
+        if (corner != starts[nextIndex])
+            continue;
+
+        const double previousX = corner.x() - starts[previousIndex].x();
+        const double previousY = corner.y() - starts[previousIndex].y();
+        const double nextX = ends[nextIndex].x() - corner.x();
+        const double nextY = ends[nextIndex].y() - corner.y();
+
+        const double previousLength = qSqrt(previousX * previousX + previousY * previousY);
+        const double nextLength = qSqrt(nextX * nextX + nextY * nextY);
+
+        if (previousLength < kMinLength || nextLength < kMinLength)
+            continue;
+
+        const double previousUnitX = previousX / previousLength;
+        const double previousUnitY = previousY / previousLength;
+        const double nextUnitX = nextX / nextLength;
+        const double nextUnitY = nextY / nextLength;
+
+        double cosTheta = previousUnitX * nextUnitX + previousUnitY * nextUnitY;
+        cosTheta = qMin(1.0, cosTheta);
+        cosTheta = qMax(-1.0, cosTheta);
+
+        const double cornerAngle = M_PI - qAcos(cosTheta);
+        if (cornerAngle > thresholdRadians)
+            continue;
+
+        const double extensionX = previousUnitX - nextUnitX;
+        const double extensionY = previousUnitY - nextUnitY;
+        const double extensionLength = qSqrt(extensionX * extensionX + extensionY * extensionY);
+
+        if (extensionLength < kMinLength)
+            continue;
+
+        extendedJunctions[previousIndex] =
+            Point(corner.x() + (extensionX / extensionLength * extensionDistance()),
+                  corner.y() + (extensionY / extensionLength * extensionDistance()), corner.z());
+        hasExtendedJunction[previousIndex] = true;
+    }
+
+    for (int segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
+        const int startJunctionIndex = segmentIndex == 0 ? segmentCount - 1 : segmentIndex - 1;
+        if ((segmentIndex > 0 || isClosed) && hasExtendedJunction[startJunctionIndex])
+            path[segmentIndex]->setStart(extendedJunctions[startJunctionIndex]);
+
+        if (hasExtendedJunction[segmentIndex])
+            path[segmentIndex]->setEnd(extendedJunctions[segmentIndex]);
     }
 }
 

@@ -110,6 +110,13 @@ class PathModifierGenerator {
     static void GenerateTrajectorySlowdown(Path& path, QSharedPointer<SettingsBase> sb);
 
     /**
+     * @brief GenerateSharpCornerExtension moves sharp path junctions outward to compensate for corner rounding.
+     * @param path: The path to modify.
+     * @param sb: The settings base.
+     */
+    static void GenerateSharpCornerExtension(Path& path, QSharedPointer<SettingsBase> sb);
+
+    /**
      * @brief GenerateTipWipe generates a tip wipe path for closed contours.
      * @param path: The path to modify.
      * @param modifiers: The path modifiers.

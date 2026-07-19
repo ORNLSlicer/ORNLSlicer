@@ -945,6 +945,8 @@ void Skeleton::optimize(int layerNumber, Point& current_location, bool& shouldNe
 }
 
 void Skeleton::calculateModifiers(Path& path, bool supportsG3) {
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
+
     // Ramping
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);

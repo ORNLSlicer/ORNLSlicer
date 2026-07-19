@@ -812,6 +812,8 @@ QVector<Polyline> Perimeter::getComputedGeometry() { return m_computed_geometry;
 void Perimeter::calculateModifiers(Path& path, bool supportsG3) { calculateModifiers(path, supportsG3, false); }
 
 void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe) {
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
+
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
