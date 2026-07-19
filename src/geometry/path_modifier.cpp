@@ -42,6 +42,12 @@ void copyAdaptedWidthFlag(const QSharedPointer<SettingsBase>& destination, const
 bool isExtendableLineSegment(const QSharedPointer<SegmentBase>& segment) {
     return segment->isPrintingSegment() && dynamic_cast<LineSegment*>(segment.data()) != nullptr;
 }
+
+bool pointsCoincident(const Point& lhs, const Point& rhs) { return lhs.distance(rhs)() <= 1.0e-4; }
+
+Point midpoint(const Point& lhs, const Point& rhs) {
+    return Point((lhs.x() + rhs.x()) / 2.0f, (lhs.y() + rhs.y()) / 2.0f, (lhs.z() + rhs.z()) / 2.0f);
+}
 } // namespace
 
 void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, Velocity velocity) {
@@ -624,7 +630,7 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
         ends.push_back(segment->end());
     }
 
-    const bool isClosed = starts.front() == ends.back();
+    const bool isClosed = pointsCoincident(starts.front(), ends.back());
     const int junctionCount = isClosed ? segmentCount : segmentCount - 1;
     const double thresholdRadians = qMin(M_PI, threshold());
     constexpr double kMinLength = 1.0e-6;
@@ -638,10 +644,10 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
         if (!isExtendableLineSegment(path[previousIndex]) || !isExtendableLineSegment(path[nextIndex]))
             continue;
 
-        const Point& corner = ends[previousIndex];
-        if (corner != starts[nextIndex])
+        if (!pointsCoincident(ends[previousIndex], starts[nextIndex]))
             continue;
 
+        const Point corner = midpoint(ends[previousIndex], starts[nextIndex]);
         const double previousX = corner.x() - starts[previousIndex].x();
         const double previousY = corner.y() - starts[previousIndex].y();
         const double nextX = ends[nextIndex].x() - corner.x();
