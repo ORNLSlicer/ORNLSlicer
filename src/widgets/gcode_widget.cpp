@@ -85,9 +85,9 @@ void GCodeWidget::handleModifiedSetting(QString key) {
                                                              PS::Optimizations::kSeamAttractorVectorX,
                                                              PS::Optimizations::kSeamAttractorVectorY,
                                                              PS::Optimizations::kSeamAttractorVectorZ,
-                                                             PS::Slicing::kSlicingVectorX,
-                                                             PS::Slicing::kSlicingVectorY,
-                                                             PS::Slicing::kSlicingVectorZ,
+                                                             PS::Slicing::kSlicePlaneNormalX,
+                                                             PS::Slicing::kSlicePlaneNormalY,
+                                                             PS::Slicing::kSlicePlaneNormalZ,
                                                              PRS::Dimensions::kXOffset,
                                                              PRS::Dimensions::kYOffset};
 

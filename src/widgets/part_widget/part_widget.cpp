@@ -152,6 +152,10 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
         PS::Slicing::kSlicePlaneNormalZ, PS::Slicing::kCylinderAxisSource, PS::Slicing::kCylinderAxisX,
         PS::Slicing::kCylinderAxisY,     PS::Slicing::kCylinderInnerRadius};
 
+    static const auto slice_plane_normal_settings = QSet<QString> {PS::Slicing::kSlicePlaneNormalX,
+                                                                   PS::Slicing::kSlicePlaneNormalY,
+                                                                   PS::Slicing::kSlicePlaneNormalZ};
+
     static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
                                                              PS::Optimizations::kCustomIslandXLocation,
                                                              PS::Optimizations::kCustomIslandYLocation,
@@ -181,6 +185,9 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
     }
     else if (slicing_settings.contains(setting_key)) {
         m_part_view->updateSlicingSettings(GSM->getGlobal());
+        if (slice_plane_normal_settings.contains(setting_key)) {
+            m_part_view->updateOptimizationSettings(GSM->getGlobal());
+        }
     }
     else if (optimization_settings.contains(setting_key)) {
         m_part_view->updateOptimizationSettings(GSM->getGlobal());
