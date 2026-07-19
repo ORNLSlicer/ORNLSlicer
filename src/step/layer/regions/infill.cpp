@@ -201,6 +201,13 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
 }
 
 Path Infill::createPath(Polyline line) {
+    const InfillPatterns pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern));
+    const bool is_closed_path = pattern == InfillPatterns::kConcentric;
+
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Infill::kMinSegmentLength), is_closed_path);
+    if (line.size() < (is_closed_path ? 3 : 2)) {
+        return Path();
+    }
 
     Distance width = m_sb->setting<Distance>(PS::Infill::kBeadWidth);
     Distance height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
@@ -227,7 +234,7 @@ Path Infill::createPath(Polyline line) {
     }
 
     //! Creates closing segment if infill pattern is concentric
-    if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kConcentric) {
+    if (is_closed_path) {
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
         segment->getSb()->setSetting(MS::Extruder::kInitialSpeed,

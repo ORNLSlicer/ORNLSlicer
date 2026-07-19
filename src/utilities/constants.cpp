@@ -560,6 +560,7 @@ const QString Constants::ProfileSettings::Perimeter::kSpeed = "perimeter_speed";
 const QString Constants::ProfileSettings::Perimeter::kExtruderSpeed = "perimeter_extruder_speed";
 const QString Constants::ProfileSettings::Perimeter::kExtrusionMultiplier = "perimeter_extrusion_multiplier";
 const QString Constants::ProfileSettings::Perimeter::kMinPathLength = "perimeter_minimum_path_length";
+const QString Constants::ProfileSettings::Perimeter::kMinSegmentLength = "perimeter_minimum_segment_length";
 const QString Constants::ProfileSettings::Perimeter::kEnableLeadIn = "perimeter_lead_in";
 const QString Constants::ProfileSettings::Perimeter::kLeadInFirstLayerOnly = "perimeter_lead_in_first_layer";
 const QString Constants::ProfileSettings::Perimeter::kEnableLeadInX = "perimeter_lead_in_x";
@@ -577,6 +578,7 @@ const QString Constants::ProfileSettings::Inset::kSpeed = "inset_speed";
 const QString Constants::ProfileSettings::Inset::kExtruderSpeed = "inset_extruder_speed";
 const QString Constants::ProfileSettings::Inset::kExtrusionMultiplier = "inset_extrusion_multiplier";
 const QString Constants::ProfileSettings::Inset::kMinPathLength = "inset_minimum_path_length";
+const QString Constants::ProfileSettings::Inset::kMinSegmentLength = "inset_minimum_segment_length";
 const QString Constants::ProfileSettings::Inset::kOverlap = "inset_overlap_distance";
 const QString Constants::ProfileSettings::Inset::kEnableSpiralInset = "spiral_inset";
 
@@ -598,6 +600,7 @@ const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMinWidthFilter
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidth = "skeleton_adapt_max_width";
 const QString Constants::ProfileSettings::Skeleton::kSkeletonAdaptMaxWidthFilter = "skeleton_adapt_max_width_filter";
 const QString Constants::ProfileSettings::Skeleton::kMinPathLength = "skeleton_minimum_path_length";
+const QString Constants::ProfileSettings::Skeleton::kMinSegmentLength = "skeleton_minimum_segment_length";
 const QString Constants::ProfileSettings::Skeleton::kLeadInEnable = "skeleton_lead_in";
 const QString Constants::ProfileSettings::Skeleton::kLeadInDistance = "skeleton_lead_in_distance";
 const QString Constants::ProfileSettings::Skeleton::kLeadInSpeed = "skeleton_lead_in_speed";
@@ -618,6 +621,7 @@ const QString Constants::ProfileSettings::Skin::kExtruderSpeed = "skin_extruder_
 const QString Constants::ProfileSettings::Skin::kExtrusionMultiplier = "skin_extrusion_multiplier";
 const QString Constants::ProfileSettings::Skin::kOverlap = "skin_exterior_overlap";
 const QString Constants::ProfileSettings::Skin::kMinPathLength = "skin_minimum_path_length";
+const QString Constants::ProfileSettings::Skin::kMinSegmentLength = "skin_minimum_segment_length";
 const QString Constants::ProfileSettings::Skin::kInfillEnable = "skin_gradual_infill";
 const QString Constants::ProfileSettings::Skin::kInfillSteps = "skin_gradual_infill_steps";
 const QString Constants::ProfileSettings::Skin::kInfillPattern = "skin_gradual_infill_pattern";
@@ -642,6 +646,7 @@ const QString Constants::ProfileSettings::Infill::kExtrusionMultiplier = "infill
 const QString Constants::ProfileSettings::Infill::kCombineXLayers = "infill_combine_every_x_layers";
 const QString Constants::ProfileSettings::Infill::kCombineLayerShift = "infill_combine_layer_shift";
 const QString Constants::ProfileSettings::Infill::kMinPathLength = "infill_minimum_path_length";
+const QString Constants::ProfileSettings::Infill::kMinSegmentLength = "infill_minimum_segment_length";
 
 // Support
 const QString Constants::ProfileSettings::Support::kEnable = "support";
@@ -666,6 +671,7 @@ const QString Constants::ProfileSettings::Support::kInterfaceExpansion = "suppor
 const QString Constants::ProfileSettings::Support::kInterfaceRegion = "support_interface_region";
 const QString Constants::ProfileSettings::Support::kBaseLayers = "support_base_layers";
 const QString Constants::ProfileSettings::Support::kBaseExpansion = "support_base_expansion";
+const QString Constants::ProfileSettings::Support::kMinSegmentLength = "support_minimum_segment_length";
 const QString Constants::ProfileSettings::Support::kBaseRegion = "support_base_region";
 const QString Constants::ProfileSettings::Support::kBridgeSuppression = "support_bridge_suppression";
 const QString Constants::ProfileSettings::Support::kBridgeMaxLength = "support_bridge_max_length";

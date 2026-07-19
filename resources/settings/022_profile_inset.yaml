@@ -85,6 +85,18 @@ settings:
     namespace: "Profile::Inset"
     symbol: "kMinimumInsetPathLength"
     local: true
+  - name: "inset_minimum_segment_length"
+    display: "Minimum Inset Segment Length"
+    type: "distance"
+    tooltip: "Inset path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"inset":true}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kMinimumInsetSegmentLength"
+    local: true
   - name: "inset_overlap_distance"
     display: "Inset Overlap Distance"
     type: "distance"

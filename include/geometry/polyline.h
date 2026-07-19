@@ -95,6 +95,17 @@ class Polyline : public QVector<Point> {
      */
     Polyline simplify(Distance tol);
 
+    /*!
+     * \brief Collapses segments shorter than \p min_segment_length.
+     *
+     * \param min_segment_length Minimum allowed segment length. A value less than or equal to zero leaves the polyline
+     * unchanged.
+     * \param closed Whether to evaluate the segment from the final point back to the first point.
+     * \returns A cleaned polyline, or an empty polyline when the segment-length requirement cannot be met without
+     * degenerating the path.
+     */
+    Polyline removeShortSegments(Distance min_segment_length, bool closed = false) const;
+
     Polyline cleanPolygon(const Distance distance = 10);
 
     /*!

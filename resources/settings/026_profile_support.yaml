@@ -175,6 +175,18 @@ settings:
     namespace: "Profile::Support"
     symbol: "kSupportLineSpacing"
     local: true
+  - name: "support_minimum_segment_length"
+    display: "Minimum Support Segment Length"
+    type: "distance"
+    tooltip: "Support path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"support":true}
+    options: []
+    default: 0
+    minor: "Support"
+    major: "Profile"
+    namespace: "Profile::Support"
+    symbol: "kMinimumSupportSegmentLength"
+    local: true
   - name: "support_wall_contours"
     display: "Support Wall Contours"
     type: "number"
