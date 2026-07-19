@@ -82,6 +82,12 @@ class Skin : public RegionBase {
     void optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
                         QVector<Polyline> lines, PolygonList geometry);
 
+    //! \brief Creates paths for the skin region using the selected pattern.
+    //! \param line polyline representing path
+    //! \param pattern selected pattern for the path
+    //! \return Polyline converted to path
+    Path createPath(Polyline line, InfillPatterns pattern);
+
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift

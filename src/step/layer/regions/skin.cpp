@@ -300,7 +300,7 @@ void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& cu
     while (poo.getCurrentPolylineCount() > 0) {
         Polyline result = poo.linkNextPolyline(previouslyLinkedLines);
         if (result.size() > 0) {
-            Path newPath = createPath(result);
+            Path newPath = createPath(result, pattern);
             if (newPath.size() > 0) {
                 calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
@@ -315,6 +315,10 @@ void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& cu
 
 Path Skin::createPath(Polyline line) {
     const InfillPatterns pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
+    return createPath(line, pattern);
+}
+
+Path Skin::createPath(Polyline line, InfillPatterns pattern) {
     const bool is_closed_path = pattern == InfillPatterns::kConcentric;
 
     line = line.removeShortSegments(m_sb->setting<Distance>(PS::Skin::kMinSegmentLength), is_closed_path);
