@@ -243,7 +243,6 @@ bool PartView::updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish) {
     }
 
     QVector3D translation = bed_intersection + m_state.dragged_seam_offset;
-    translation.setZ(m_printer->printerCenter().z());
     m_state.dragged_seam->translateAbsolute(translation);
 
     const double x = translation.x() * Constants::OpenGL::kViewToObject;
