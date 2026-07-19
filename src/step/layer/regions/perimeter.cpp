@@ -573,17 +573,102 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
         if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
+            if (!m_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
+                Point spiral_query_location = current_location;
+                PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
+                configureOptimizer(spiral_poo, pointOrderOptimization);
+                spiral_poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
+
+                QVector<Polyline> ordered_perimeters;
+                const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
+                const Distance bead_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+
+                while (spiral_poo.getCurrentPolylineCount() > 0) {
+                    if (!ordered_perimeters.isEmpty()) {
+                        spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0,
+                                                      false);
+                    }
+
+                    Polyline result = spiral_poo.linkNextPolyline();
+
+                    if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) {
+                        continue;
+                    }
+
+                    spiral_query_location = SpiralPath::transitionStartPoint(result, bead_width);
+                    ordered_perimeters.push_back(result);
+                }
+
+                if (ordered_perimeters.isEmpty()) {
+                    return;
+                }
+
+                if (ordered_perimeters.size() == 1) {
+                    Polyline result = ordered_perimeters.first();
+
+                    Path newPath = createPath(result);
+                    newPath.setCCW(result.orientation());
+
+                    if (newPath.calculateLength() < min_path_length) {
+                        return;
+                    }
+
+                    if (newPath.size() > 0) {
+                        calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                        PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                              m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                        current_location = newPath.back()->end();
+                        m_paths.push_back(newPath);
+                    }
+
+                    return;
+                }
+
+                Polyline result = SpiralPath::linkClosedPolylines(ordered_perimeters, bead_width);
+
+                if (result.size() < 3) {
+                    return;
+                }
+
+                Path newPath = createPath(result);
+                newPath.setCCW(ordered_perimeters.front().orientation());
+
+                if (newPath.size() > 0) {
+                    newPath.getSegments().removeLast();
+                }
+
+                if (newPath.calculateLength() < min_path_length) {
+                    return;
+                }
+
+                if (newPath.size() > 0) {
+                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+                    PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                    current_location = newPath.back()->end();
+                    m_paths.push_back(newPath);
+                }
+
+                return;
+            }
+
             Point spiral_query_location = current_location;
             PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
             configureOptimizer(spiral_poo, pointOrderOptimization);
             spiral_poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
 
             QVector<Polyline> ordered_perimeters;
+            QVector<Distance> ordered_perimeter_widths;
+            bool has_spiral_orientation = false;
+            bool spiral_orientation = false;
             const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
 
             while (spiral_poo.getCurrentPolylineCount() > 0) {
                 if (!ordered_perimeters.isEmpty()) {
-                    spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0, true);
+                    spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0,
+                                                  false);
                 }
 
                 Polyline result = spiral_poo.linkNextPolyline();
@@ -592,17 +677,57 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     continue;
                 }
 
-                // Keep loop choice near the local seam to avoid jumping across the island on the next transition.
-                spiral_query_location = result.front();
+                if (!has_spiral_orientation) {
+                    spiral_orientation = result.orientation();
+                    has_spiral_orientation = true;
+                }
+                else if (result.orientation() != spiral_orientation) {
+                    result = result.reverse();
+                    result.move(result.size() - 1, 0);
+                }
+
+                const Distance result_width = beadWidthForSegment(result.front(), result[1], m_sb);
+                ordered_perimeter_widths.push_back(result_width);
                 ordered_perimeters.push_back(result);
+                spiral_query_location = SpiralPath::transitionStartPoint(result, result_width);
             }
 
             if (ordered_perimeters.isEmpty()) {
                 return;
             }
 
+            if (ordered_perimeters.size() == 1) {
+                PolylineOrderOptimizer first_loop_poo(current_location, layerNumber);
+                configureOptimizer(first_loop_poo, pointOrderOptimization);
+                first_loop_poo.setGeometryToEvaluate({ordered_perimeters.first()}, RegionType::kPerimeter,
+                                                     PathOrderOptimization::kNextClosest);
+                Polyline result = first_loop_poo.linkNextPolyline();
+                if (result.size() < 3) {
+                    result = ordered_perimeters.first();
+                }
+
+                Path newPath = createPath(result);
+                newPath.setCCW(result.orientation());
+
+                if (newPath.calculateLength() < min_path_length) {
+                    return;
+                }
+
+                if (newPath.size() > 0) {
+                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                    PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                    current_location = newPath.back()->end();
+                    m_paths.push_back(newPath);
+                }
+
+                return;
+            }
+
+            const Distance nominal_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
             Polyline result =
-                SpiralPath::linkClosedPolylines(ordered_perimeters, m_sb->setting<Distance>(PS::Perimeter::kBeadWidth));
+                SpiralPath::linkClosedPolylines(ordered_perimeters, ordered_perimeter_widths, nominal_width);
 
             if (result.size() < 3) {
                 return;
@@ -620,7 +745,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
             if (newPath.size() > 0) {
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                       m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
@@ -693,7 +818,9 @@ Path Perimeter::createPath(Polyline line) {
 
 QVector<Polyline> Perimeter::getComputedGeometry() { return m_computed_geometry; }
 
-void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
+void Perimeter::calculateModifiers(Path& path, bool supportsG3) { calculateModifiers(path, supportsG3, false); }
+
+void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe) {
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
@@ -708,19 +835,29 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
     }
     if (m_sb->setting<bool>(MS::TipWipe::kPerimeterEnable)) {
-        if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection)) ==
-                TipWipeDirection::kForward ||
-            static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection)) ==
-                TipWipeDirection::kOptimal)
-            PathModifierGenerator::GenerateTipWipe(path, PathModifiers::kForwardTipWipe,
-                                                   m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance),
-                                                   m_sb->setting<Velocity>(MS::TipWipe::kPerimeterSpeed),
-                                                   m_sb->setting<Angle>(MS::TipWipe::kPerimeterAngle),
-                                                   m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed),
-                                                   m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
-                                                   m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
-        else if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection)) ==
-                 TipWipeDirection::kAngled) {
+        const TipWipeDirection wipe_direction =
+            static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection));
+        if (wipe_direction == TipWipeDirection::kForward ||
+            (!open_loop_tip_wipe && wipe_direction == TipWipeDirection::kOptimal)) {
+            if (open_loop_tip_wipe && wipe_direction == TipWipeDirection::kForward) {
+                PathModifierGenerator::GenerateForwardTipWipeOpenLoop(
+                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance),
+                    m_sb->setting<Velocity>(MS::TipWipe::kPerimeterSpeed),
+                    m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed),
+                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
+                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
+            }
+            else {
+                PathModifierGenerator::GenerateTipWipe(
+                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance),
+                    m_sb->setting<Velocity>(MS::TipWipe::kPerimeterSpeed),
+                    m_sb->setting<Angle>(MS::TipWipe::kPerimeterAngle),
+                    m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed),
+                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
+                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
+            }
+        }
+        else if (wipe_direction == TipWipeDirection::kAngled) {
             PathModifierGenerator::GenerateTipWipe(path, PathModifiers::kAngledTipWipe,
                                                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance),
                                                    m_sb->setting<Velocity>(MS::TipWipe::kPerimeterSpeed),
