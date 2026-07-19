@@ -152,18 +152,29 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
         PS::Slicing::kSlicePlaneNormalZ, PS::Slicing::kCylinderAxisSource, PS::Slicing::kCylinderAxisX,
         PS::Slicing::kCylinderAxisY,     PS::Slicing::kCylinderInnerRadius};
 
+    static const auto slice_plane_normal_settings = QSet<QString> {PS::Slicing::kSlicePlaneNormalX,
+                                                                   PS::Slicing::kSlicePlaneNormalY,
+                                                                   PS::Slicing::kSlicePlaneNormalZ};
+
     static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
                                                              PS::Optimizations::kCustomIslandXLocation,
                                                              PS::Optimizations::kCustomIslandYLocation,
+                                                             PS::Optimizations::kCustomIslandZLocation,
                                                              PS::Optimizations::kPathOrder,
                                                              PS::Optimizations::kCustomPathXLocation,
                                                              PS::Optimizations::kCustomPathYLocation,
+                                                             PS::Optimizations::kCustomPathZLocation,
                                                              PS::Optimizations::kPointOrder,
                                                              PS::Optimizations::kCustomPointXLocation,
                                                              PS::Optimizations::kCustomPointYLocation,
+                                                             PS::Optimizations::kCustomPointZLocation,
                                                              PS::Optimizations::kEnableSecondCustomLocation,
                                                              PS::Optimizations::kCustomPointSecondXLocation,
                                                              PS::Optimizations::kCustomPointSecondYLocation,
+                                                             PS::Optimizations::kCustomPointSecondZLocation,
+                                                             PS::Optimizations::kSeamAttractorVectorX,
+                                                             PS::Optimizations::kSeamAttractorVectorY,
+                                                             PS::Optimizations::kSeamAttractorVectorZ,
                                                              PRS::Dimensions::kXOffset,
                                                              PRS::Dimensions::kYOffset};
 
@@ -174,6 +185,9 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
     }
     else if (slicing_settings.contains(setting_key)) {
         m_part_view->updateSlicingSettings(GSM->getGlobal());
+        if (slice_plane_normal_settings.contains(setting_key)) {
+            m_part_view->updateOptimizationSettings(GSM->getGlobal());
+        }
     }
     else if (optimization_settings.contains(setting_key)) {
         m_part_view->updateOptimizationSettings(GSM->getGlobal());

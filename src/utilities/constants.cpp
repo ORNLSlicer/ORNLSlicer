@@ -730,8 +730,10 @@ const QString Constants::ProfileSettings::Optimizations::kIslandOrder = "island_
 const QString Constants::ProfileSettings::Optimizations::kPathOrder = "path_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kCustomIslandXLocation = "custom_island_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomIslandYLocation = "custom_island_order_y_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomIslandZLocation = "custom_island_order_z_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPathXLocation = "custom_path_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPathYLocation = "custom_path_order_y_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomPathZLocation = "custom_path_order_z_location";
 const QString Constants::ProfileSettings::Optimizations::kPointOrder = "point_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kEnablePointOrderSegmentBreaking =
     "enable_point_order_segment_breaking";
@@ -743,6 +745,7 @@ const QString Constants::ProfileSettings::Optimizations::kConsecutiveDistanceThr
     "consecutive_path_distance_threshold";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointXLocation = "custom_point_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointYLocation = "custom_point_order_y_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomPointZLocation = "custom_point_order_z_location";
 const QString Constants::ProfileSettings::Optimizations::kEnableSecondCustomLocation =
     "enable_second_custom_point_location";
 const QString Constants::ProfileSettings::Optimizations::kEnableSecondCustomLocationEveryTwo =
@@ -751,6 +754,11 @@ const QString Constants::ProfileSettings::Optimizations::kCustomPointSecondXLoca
     "custom_second_point_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointSecondYLocation =
     "custom_second_point_order_y_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomPointSecondZLocation =
+    "custom_second_point_order_z_location";
+const QString Constants::ProfileSettings::Optimizations::kSeamAttractorVectorX = "seam_attractor_vector_x";
+const QString Constants::ProfileSettings::Optimizations::kSeamAttractorVectorY = "seam_attractor_vector_y";
+const QString Constants::ProfileSettings::Optimizations::kSeamAttractorVectorZ = "seam_attractor_vector_z";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointXIncrement = "custom_point_order_x_increment";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointYIncrement = "custom_point_order_y_increment";
 

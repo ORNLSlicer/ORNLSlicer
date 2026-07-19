@@ -17,6 +17,7 @@
 #include "geometry/path_modifier.h"
 #include "geometry/point.h"
 #include "optimizers/island_order_optimizer.h"
+#include "optimizers/optimization_anchor.h"
 #include "part/part.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
@@ -97,6 +98,13 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
                                QVector<QSharedPointer<RegionBase>>& previous_regions) {
     // this function "connects" paths by inserting travels between disconnected pathing. Also orders parts & islands.
 
+    for (auto i = m_step_pairs.constBegin(); i != m_step_pairs.constEnd(); ++i) {
+        QSharedPointer<Layer> printing_layer = i.value()->printing_layer;
+        for (QSharedPointer<IslandBase> island : printing_layer->getIslands()) {
+            island->setOptimizationFrame(printing_layer->getSlicingPlane(), printing_layer->getShift());
+        }
+    }
+
     // get the island order method from the settings
     IslandOrderOptimization islandOrderMethod =
         static_cast<IslandOrderOptimization>(global_sb->setting<int>(PS::Optimizations::kIslandOrder));
@@ -123,8 +131,12 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
         // 1.1.2) Get the right start point for the Island Order Optimizer part ordering
         Point start_point = start;
         if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
-            start_point = Point(global_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
-                                global_sb->setting<double>(PS::Optimizations::kCustomIslandYLocation));
+            const auto first_step_pair = m_step_pairs.constBegin();
+            if (first_step_pair != m_step_pairs.constEnd()) {
+                QSharedPointer<Layer> printing_layer = first_step_pair.value()->printing_layer;
+                start_point = OptimizationAnchor::customIslandOrderPoint(global_sb, printing_layer->getSlicingPlane(),
+                                                                         printing_layer->getShift());
+            }
         }
 
         // 1.1.3) Make the IOO and get the order results
@@ -161,8 +173,13 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
 
     // Do seam adjustment if necessary
     if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
-        Point start_override(global_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
-                             global_sb->setting<double>(PS::Optimizations::kCustomIslandYLocation));
+        Point start_override = start;
+        const auto first_step_pair = m_step_pairs.constBegin();
+        if (first_step_pair != m_step_pairs.constEnd()) {
+            QSharedPointer<Layer> printing_layer = first_step_pair.value()->printing_layer;
+            start_override = OptimizationAnchor::customIslandOrderPoint(global_sb, printing_layer->getSlicingPlane(),
+                                                                        printing_layer->getShift());
+        }
 
         island_optimizer.setStartPoint(start_override);
     }

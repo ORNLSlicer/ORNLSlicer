@@ -110,6 +110,10 @@ class PrinterObject : public GraphicsObject {
         QSharedPointer<SeamObject> custom_path_opt;
         QSharedPointer<SeamObject> custom_point_opt;
         QSharedPointer<SeamObject> custom_point_second_opt;
+        QSharedPointer<GraphicsObject> custom_island_guide;
+        QSharedPointer<GraphicsObject> custom_path_guide;
+        QSharedPointer<GraphicsObject> custom_point_guide;
+        QSharedPointer<GraphicsObject> custom_point_second_guide;
     } m_seams;
 };
 } // namespace ORNL

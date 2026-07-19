@@ -71,6 +71,18 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kCustomIslandPointYLocation"
     local: true
+  - name: "custom_island_order_z_location"
+    display: "Custom Island Point Z Location"
+    type: "location"
+    tooltip: "Z Coordinate for Custom Point Optimization Location"
+    depends: {"island_order_optimization":6}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomIslandPointZLocation"
+    local: true
   - name: "path_order_optimization"
     display: "Path Order Optimization"
     type: "enumeration"
@@ -112,6 +124,18 @@ settings:
     major: "Profile"
     namespace: "Profile::Optimizations"
     symbol: "kCustomPathPointYLocation"
+    local: true
+  - name: "custom_path_order_z_location"
+    display: "Custom Path Point Z Location"
+    type: "location"
+    tooltip: "Z Coordinate for Custom Point Optimization Location"
+    depends: {"path_order_optimization":5}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPathPointZLocation"
     local: true
   - name: "point_order_optimization"
     display: "Point Order Optimization"
@@ -227,6 +251,18 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kCustomPointYLocation"
     local: true
+  - name: "custom_point_order_z_location"
+    display: "Custom Point Z Location"
+    type: "location"
+    tooltip: "Z Coordinate for Custom Point for Point Optimization Scheme"
+    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCustomPointZLocation"
+    local: true
   - name: "enable_second_custom_point_location"
     display: "Add Second Custom Location"
     type: "boolean"
@@ -275,6 +311,54 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kSecondCustomPointYLocation"
     local: true
+  - name: "custom_second_point_order_z_location"
+    display: "Second Custom Point Z Location"
+    type: "location"
+    tooltip: "Z Coordinate for Second Custom Point for Point Optimization Scheme"
+    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSecondCustomPointZLocation"
+    local: true
+  - name: "seam_attractor_vector_x"
+    display: "Seam Attractor Vector - X"
+    type: "unitless_float"
+    tooltip: "X component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSeamAttractorVectorX"
+    local: true
+  - name: "seam_attractor_vector_y"
+    display: "Seam Attractor Vector - Y"
+    type: "unitless_float"
+    tooltip: "Y component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSeamAttractorVectorY"
+    local: true
+  - name: "seam_attractor_vector_z"
+    display: "Seam Attractor Vector - Z"
+    type: "unitless_float"
+    tooltip: "Z component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    options: []
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSeamAttractorVectorZ"
+    local: true
   - name: "custom_point_order_x_increment"
     display: "Custom Point X Increment"
     type: "location"
@@ -299,3 +383,18 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kCustomPointYIncrement"
     local: true
+inputs:
+  - name: "seam_attractor_vector"
+    display: "Seam Attractor Vector"
+    widget: "vector3"
+    tooltip: "Vector used to project seam attractor points onto each slicing plane. Leave all components at 0 to use the slicing vector automatically."
+    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    minor: "Optimizations"
+    major: "Profile"
+    components:
+      - setting: "seam_attractor_vector_x"
+        label: "X"
+      - setting: "seam_attractor_vector_y"
+        label: "Y"
+      - setting: "seam_attractor_vector_z"
+        label: "Z"

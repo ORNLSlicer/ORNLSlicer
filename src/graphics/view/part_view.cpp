@@ -109,6 +109,10 @@ void PartView::showLabels(bool show) {
 }
 
 void PartView::showSlicingPlanes(bool show) {
+    if (show) {
+        updateSlicingSettings(m_sb);
+    }
+
     m_state.planes_shown = show;
     updateSlicingGeometryPreviews();
 
@@ -239,7 +243,6 @@ bool PartView::updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish) {
     }
 
     QVector3D translation = bed_intersection + m_state.dragged_seam_offset;
-    translation.setZ(m_printer->printerCenter().z());
     m_state.dragged_seam->translateAbsolute(translation);
 
     const double x = translation.x() * Constants::OpenGL::kViewToObject;
@@ -925,6 +928,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
 
     // Sub object visibility.
     gop->setOverhangAngle(m_sb->setting<Angle>(PS::Support::kThresholdAngle));
+    gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation());
     if (m_state.overhangs_shown)
         gop->showOverhang(true);
     updateSlicingGeometryPreview(gop);
@@ -1342,6 +1346,7 @@ void PartView::updateLayerSettingsRangePlane() {
         return;
     }
     slicing_vector.normalize();
+    const QQuaternion rotation = slicingPlaneRotation();
 
     float length = gop->maximum().x() - gop->minimum().x();
     float width = gop->maximum().y() - gop->minimum().y();
@@ -1358,7 +1363,7 @@ void PartView::updateLayerSettingsRangePlane() {
 
         QSharedPointer<PlaneObject> range_plane = gop->layerSettingsRangePlane(visible_plane_index);
         range_plane->updateDimensions(max_dim, max_dim, thickness);
-        range_plane->setLockedRotationQuaternion(QQuaternion::fromDirection(slicing_vector, QVector3D(0, 0, 1)));
+        range_plane->setLockedRotationQuaternion(rotation);
         range_plane->translateAbsolute(center);
         range_plane->show();
 
