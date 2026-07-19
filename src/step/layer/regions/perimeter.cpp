@@ -319,21 +319,6 @@ Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int 
                              [](const Distance& lhs, const Distance& rhs) { return lhs() < rhs(); });
 }
 
-double closedPolylineAreaAbs(const Polyline& line) {
-    if (line.size() < 3) {
-        return 0.0;
-    }
-
-    double area = 0.0;
-    for (int i = 0, end = line.size(); i < end; ++i) {
-        const Point& current = line[i];
-        const Point& next = line[(i + 1) % line.size()];
-        area += (current.x() * next.y()) - (next.x() * current.y());
-    }
-
-    return std::fabs(area) * 0.5;
-}
-
 double distanceXYToSegment(const Point& point, const Point& start, const Point& end) {
     const double dx = end.x() - start.x();
     const double dy = end.y() - start.y();
@@ -346,26 +331,6 @@ double distanceXYToSegment(const Point& point, const Point& start, const Point& 
     const double nearest_x = start.x() + t * dx;
     const double nearest_y = start.y() + t * dy;
     return std::hypot(point.x() - nearest_x, point.y() - nearest_y);
-}
-
-double closedPolylineMinDistance(const Polyline& lhs, const Polyline& rhs) {
-    if (lhs.isEmpty() || rhs.isEmpty()) {
-        return std::numeric_limits<double>::max();
-    }
-
-    double min_distance = std::numeric_limits<double>::max();
-    for (const Point& point : lhs) {
-        for (int i = 0, end = rhs.size(); i < end; ++i) {
-            min_distance = std::min(min_distance, distanceXYToSegment(point, rhs[i], rhs[(i + 1) % rhs.size()]));
-        }
-    }
-    for (const Point& point : rhs) {
-        for (int i = 0, end = lhs.size(); i < end; ++i) {
-            min_distance = std::min(min_distance, distanceXYToSegment(point, lhs[i], lhs[(i + 1) % lhs.size()]));
-        }
-    }
-
-    return min_distance;
 }
 
 bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double tolerance) {
@@ -689,13 +654,25 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 return;
             }
 
+            Point spiral_query_location = current_location;
+            PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
+            configureOptimizer(spiral_poo, pointOrderOptimization);
+            spiral_poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
+
             QVector<Polyline> ordered_perimeters;
             QVector<Distance> ordered_perimeter_widths;
             bool has_spiral_orientation = false;
             bool spiral_orientation = false;
             const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
 
-            for (Polyline result : m_computed_geometry) {
+            while (spiral_poo.getCurrentPolylineCount() > 0) {
+                if (!ordered_perimeters.isEmpty()) {
+                    spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0,
+                                                  false);
+                }
+
+                Polyline result = spiral_poo.linkNextPolyline();
+
                 if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) {
                     continue;
                 }
@@ -712,6 +689,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 const Distance result_width = beadWidthForSegment(result.front(), result[1], m_sb);
                 ordered_perimeter_widths.push_back(result_width);
                 ordered_perimeters.push_back(result);
+                spiral_query_location = SpiralPath::transitionStartPoint(result, result_width);
             }
 
             if (ordered_perimeters.isEmpty()) {
@@ -745,64 +723,6 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 }
 
                 return;
-            }
-
-            QVector<Polyline> remaining_perimeters = ordered_perimeters;
-            QVector<Distance> remaining_widths = ordered_perimeter_widths;
-            QVector<Polyline> outside_in_perimeters;
-            QVector<Distance> outside_in_widths;
-            outside_in_perimeters.reserve(ordered_perimeters.size());
-            outside_in_widths.reserve(ordered_perimeter_widths.size());
-
-            int next_index = 0;
-            double next_area = closedPolylineAreaAbs(remaining_perimeters.first());
-            for (int i = 1, end = remaining_perimeters.size(); i < end; ++i) {
-                const double area = closedPolylineAreaAbs(remaining_perimeters[i]);
-                if (area > next_area) {
-                    next_area = area;
-                    next_index = i;
-                }
-            }
-
-            outside_in_perimeters.push_back(remaining_perimeters.takeAt(next_index));
-            outside_in_widths.push_back(remaining_widths.takeAt(next_index));
-
-            while (!remaining_perimeters.isEmpty()) {
-                next_index = 0;
-                double next_distance = closedPolylineMinDistance(outside_in_perimeters.back(),
-                                                                 remaining_perimeters.first());
-                double next_area_delta =
-                    std::fabs(closedPolylineAreaAbs(outside_in_perimeters.back()) -
-                              closedPolylineAreaAbs(remaining_perimeters.first()));
-
-                for (int i = 1, end = remaining_perimeters.size(); i < end; ++i) {
-                    const double distance =
-                        closedPolylineMinDistance(outside_in_perimeters.back(), remaining_perimeters[i]);
-                    const double area_delta =
-                        std::fabs(closedPolylineAreaAbs(outside_in_perimeters.back()) -
-                                  closedPolylineAreaAbs(remaining_perimeters[i]));
-                    if (distance < next_distance ||
-                        (std::fabs(distance - next_distance) <= 1.0e-6 && area_delta < next_area_delta)) {
-                        next_distance = distance;
-                        next_area_delta = area_delta;
-                        next_index = i;
-                    }
-                }
-
-                outside_in_perimeters.push_back(remaining_perimeters.takeAt(next_index));
-                outside_in_widths.push_back(remaining_widths.takeAt(next_index));
-            }
-
-            ordered_perimeters = outside_in_perimeters;
-            ordered_perimeter_widths = outside_in_widths;
-
-            PolylineOrderOptimizer first_loop_poo(current_location, layerNumber);
-            configureOptimizer(first_loop_poo, pointOrderOptimization);
-            first_loop_poo.setGeometryToEvaluate({ordered_perimeters.first()}, RegionType::kPerimeter,
-                                                 PathOrderOptimization::kNextClosest);
-            Polyline first_loop = first_loop_poo.linkNextPolyline();
-            if (first_loop.size() >= 3) {
-                ordered_perimeters[0] = first_loop;
             }
 
             const Distance nominal_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
