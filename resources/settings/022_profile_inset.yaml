@@ -48,7 +48,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Inset"
     symbol: "kEnableAdaptiveBeadWidths"
-    local: true
+    local: false
   - name: "inset_adapt_min_width"
     display: "Minimum Adaptive Inset Bead Width"
     type: "distance"
@@ -60,7 +60,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Inset"
     symbol: "kMinimumAdaptiveBeadWidth"
-    local: true
+    local: false
   - name: "inset_adapt_max_width"
     display: "Maximum Adaptive Inset Bead Width"
     type: "distance"
@@ -72,7 +72,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Inset"
     symbol: "kMaximumAdaptiveBeadWidth"
-    local: true
+    local: false
   - name: "inset_speed"
     display: "Inset Speed"
     type: "speed"

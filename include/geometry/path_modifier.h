@@ -156,7 +156,7 @@ class PathModifierGenerator {
      */
     static void writeSegment(Path& path, Point start, Point end, Distance width, Distance height, Velocity speed,
                              Acceleration acceleration, AngularVelocity extruder_speed, RegionType regionType,
-                             PathModifiers pathModifiers, int materialNumber);
+                             PathModifiers pathModifiers, int materialNumber, bool adapted = false);
 
     /**
      * @brief writeArcSegment writes an arc segment to the path.
@@ -178,7 +178,7 @@ class PathModifierGenerator {
     static void writeArcSegment(Path& path, Point start, Point end, Point center, Angle angle, bool ccw, Distance width,
                                 Distance height, Velocity speed, Acceleration acceleration,
                                 AngularVelocity extruder_speed, RegionType regionType, PathModifiers pathModifiers,
-                                int materialNumber);
+                                int materialNumber, bool adapted = false);
 
     /**
      * @brief GenerateRamp generates a ramp path.
@@ -197,7 +197,7 @@ class PathModifierGenerator {
     static void generateTipWipeSegment(Path& path, Point start, Point end, Distance width, Distance height,
                                        Velocity speed, Acceleration acceleration, AngularVelocity extruder_speed,
                                        RegionType regionType, PathModifiers pathModifiers, int materialNumber,
-                                       Distance tipWipeCutoffDistance);
+                                       Distance tipWipeCutoffDistance, bool adapted);
 
     //! \brief track the distance already covered
     static Distance tipWipeDistanceCovered;

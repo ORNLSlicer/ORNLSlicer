@@ -63,11 +63,11 @@ QVector<Polygon> appendValidPathLines(const PolygonList& path_lines, QVector<Pol
     return valid_path_lines;
 }
 
-QVector<Polygon> validPathLines(const PolygonList& path_lines, Distance min_path_length) {
+QVector<Polygon> validPathLines(const PolygonList& path_lines, Distance min_path_length, Distance min_segment_length) {
     QVector<Polygon> valid_path_lines;
 
     for (const Polygon& poly : path_lines) {
-        if (isValidPerimeterLine(toOpenPolyline(poly), min_path_length)) {
+        if (isValidPerimeterLine(toOpenPolyline(poly).removeShortSegments(min_segment_length, true), min_path_length)) {
             valid_path_lines.push_back(poly);
         }
     }
@@ -182,8 +182,9 @@ bool shellWidthCoversGeometry(PolygonList geometry, const QVector<Polygon>& path
 }
 
 std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance nominal_width,
-                                                  Distance min_path_length, PerimeterBoundarySelection selection,
-                                                  Distance min_width, Distance max_width) {
+                                                  Distance min_path_length, Distance min_segment_length,
+                                                  PerimeterBoundarySelection selection, Distance min_width,
+                                                  Distance max_width) {
     const double initial_area = netAreaAbs(geometry);
     if (initial_area <= 0) {
         return std::nullopt;
@@ -194,7 +195,8 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
     QVector<Polygon> candidate_path_lines;
     for (int i = 0; i < 4; ++i) {
         candidate_path_lines =
-            validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width), min_path_length);
+            validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width), min_path_length,
+                           min_segment_length);
         const Distance candidate_length = totalPathLineLength(candidate_path_lines);
         if (candidate_length <= 0) {
             return std::nullopt;
@@ -211,7 +213,8 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
     }
 
     candidate_path_lines =
-        validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width), min_path_length);
+        validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width), min_path_length,
+                       min_segment_length);
     if (candidate_path_lines.isEmpty()) {
         return std::nullopt;
     }
@@ -228,10 +231,11 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
 }
 
 Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_width, int remaining_count,
-                                         Distance min_path_length, PerimeterBoundarySelection selection,
-                                         Distance min_width, Distance max_width) {
+                                         Distance min_path_length, Distance min_segment_length,
+                                         PerimeterBoundarySelection selection, Distance min_width, Distance max_width) {
     if (std::optional<Distance> full_width =
-            fullCoverageAdaptiveWidth(geometry, nominal_width, min_path_length, selection, min_width, max_width)) {
+            fullCoverageAdaptiveWidth(geometry, nominal_width, min_path_length, min_segment_length, selection,
+                                      min_width, max_width)) {
         return *full_width;
     }
 
@@ -240,7 +244,8 @@ Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_
 
     for (int i = 0; i < remaining_count && !preview_geometry.isEmpty(); ++i) {
         QVector<Polygon> preview_path_lines =
-            validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length);
+            validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length,
+                           min_segment_length);
         if (preview_path_lines.isEmpty()) {
             break;
         }
@@ -256,7 +261,8 @@ Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_
     }
 
     const bool more_nominal_paths_fit =
-        !validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length)
+        !validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length,
+                        min_segment_length)
              .isEmpty();
     const double initial_area = netAreaAbs(geometry);
     const double preview_remaining_area = netAreaAbs(preview_geometry);
@@ -267,16 +273,17 @@ Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_
 }
 
 QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance nominal_width, int remaining_count,
-                                               Distance min_path_length, PerimeterBoundarySelection selection,
-                                               Distance min_width, Distance max_width) {
+                                               Distance min_path_length, Distance min_segment_length,
+                                               PerimeterBoundarySelection selection, Distance min_width,
+                                               Distance max_width) {
     QVector<Distance> widths;
 
     for (int i = 0; i < remaining_count && !geometry.isEmpty(); ++i) {
         const Distance path_width =
-            adaptiveContourWidthForGeometry(geometry, nominal_width, remaining_count - i, min_path_length, selection,
-                                            min_width, max_width);
+            adaptiveContourWidthForGeometry(geometry, nominal_width, remaining_count - i, min_path_length,
+                                            min_segment_length, selection, min_width, max_width);
         PolygonList path_lines = selectedBoundaryPathLines(geometry, selection, path_width);
-        QVector<Polygon> valid_path_lines = validPathLines(path_lines, min_path_length);
+        QVector<Polygon> valid_path_lines = validPathLines(path_lines, min_path_length, min_segment_length);
         if (valid_path_lines.isEmpty()) {
             break;
         }
@@ -299,11 +306,11 @@ QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance no
 }
 
 Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int remaining_count,
-                              Distance min_path_length, PerimeterBoundarySelection selection, Distance min_width,
-                              Distance max_width) {
+                              Distance min_path_length, Distance min_segment_length,
+                              PerimeterBoundarySelection selection, Distance min_width, Distance max_width) {
     QVector<Distance> widths =
-        plannedAdaptiveContourWidths(geometry, nominal_width, remaining_count, min_path_length, selection, min_width,
-                                     max_width);
+        plannedAdaptiveContourWidths(geometry, nominal_width, remaining_count, min_path_length, min_segment_length,
+                                     selection, min_width, max_width);
     if (widths.isEmpty()) {
         return nominal_width;
     }
@@ -382,8 +389,8 @@ void Perimeter::compute(uint layer_num) {
              ++perimeter_number) {
             const int remaining_count = perimeter_count - perimeter_number;
             const Distance path_width =
-                adaptiveContourWidth(m_geometry, beadWidth, remaining_count, min_path_length, boundary_selection,
-                                     min_adaptive_width, max_adaptive_width);
+                adaptiveContourWidth(m_geometry, beadWidth, remaining_count, min_path_length, min_segment_length,
+                                     boundary_selection, min_adaptive_width, max_adaptive_width);
             PolygonList path_lines = selectedBoundaryPathLines(m_geometry, boundary_selection, path_width);
 
             bool skipped_path_line = false;
@@ -840,7 +847,7 @@ void Perimeter::populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
 Distance Perimeter::beadWidthForSegment(const Point& start, const Point& end,
                                         const QSharedPointer<SettingsBase>& parent_sb) const {
     const Distance fallback_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-    if (!m_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
+    if (!parent_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
         return fallback_width;
     }
 
