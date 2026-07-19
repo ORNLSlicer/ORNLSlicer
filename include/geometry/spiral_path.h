@@ -194,12 +194,23 @@ inline Distance transitionDistance(Distance current_width, Distance next_width, 
 }
 
 inline Point prepareConnector(const Polyline& current_loop, Polyline& next_loop, Distance stop_distance) {
-    Point connector_start = stopPointOnClosingSegment(current_loop, stop_distance);
+    const Point rough_connector_start = stopPointOnClosingSegment(current_loop, stop_distance);
+    const bool smooth_closing_segment = hasSmoothClosingSegment(current_loop);
     if (next_loop.size() >= 3) {
-        rotateToClosestForwardExistingPoint(next_loop, connector_start, current_loop.back(), current_loop.front());
+        if (smooth_closing_segment) {
+            rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, current_loop.back(),
+                                                current_loop.front());
+        }
+        else {
+            rotateToClosestPoint(next_loop, rough_connector_start);
+        }
     }
 
-    return connector_start;
+    if (smooth_closing_segment || next_loop.isEmpty()) {
+        return rough_connector_start;
+    }
+
+    return MathUtils::nearestPointOnSegment(current_loop.back(), current_loop.front(), next_loop.front()).first;
 }
 
 struct StitchLoop {
@@ -316,10 +327,16 @@ inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, Dist
         if (loop_index + 1 < end) {
             Polyline next_loop = loops[loop_index + 1];
             Point rough_connector_start = detail::stopPointOnClosingSegment(loop, final_stop_distance);
-            detail::rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, loop.back(), loop.front());
+            const bool smooth_closing_segment = detail::hasSmoothClosingSegment(loop);
+            if (smooth_closing_segment) {
+                detail::rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, loop.back(), loop.front());
+            }
+            else {
+                detail::rotateToClosestPoint(next_loop, rough_connector_start);
+            }
             const Point next_start = next_loop.front();
             Point connector_start;
-            if (detail::hasSmoothClosingSegment(loop)) {
+            if (smooth_closing_segment) {
                 connector_start = rough_connector_start;
             }
             else {
