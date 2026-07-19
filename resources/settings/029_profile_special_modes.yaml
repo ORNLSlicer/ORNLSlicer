@@ -77,6 +77,42 @@ settings:
     namespace: "Profile::SpecialModes"
     symbol: "kArcFittingMinimumSegmentCount"
     local: true
+  - name: "sharp_corner_extension"
+    display: "Enable Sharp Corner Extension"
+    type: "boolean"
+    tooltip: "If selected, sharp toolpath junctions are extended outward to compensate for corner rounding during printing."
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableSharpCornerExtension"
+    local: false
+  - name: "sharp_corner_extension_angle"
+    display: "Sharp Corner Extension Angle"
+    type: "angle"
+    tooltip: "Toolpath junctions with a corner angle less than or equal to this threshold will be extended."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 1.570796327
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerExtensionAngle"
+    local: false
+  - name: "sharp_corner_extension_distance"
+    display: "Sharp Corner Extension Distance"
+    type: "distance"
+    tooltip: "Distance to move each detected sharp corner outward along the local corner bisector."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerExtensionDistance"
+    local: false
   - name: "enable_spiralize_mode"
     display: "Enable Spiralize Mode"
     type: "boolean"

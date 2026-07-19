@@ -737,6 +737,10 @@ const QString Constants::ProfileSettings::GCode::kSupportEnd = "support_end_code
 const QString Constants::ProfileSettings::SpecialModes::kSmoothing = "smoothing";
 const QString Constants::ProfileSettings::SpecialModes::kSmoothingType = "smoothing_type";
 const QString Constants::ProfileSettings::SpecialModes::kSmoothingTolerance = "smoothing_tolerance";
+const QString Constants::ProfileSettings::SpecialModes::kEnableSharpCornerExtension = "sharp_corner_extension";
+const QString Constants::ProfileSettings::SpecialModes::kSharpCornerExtensionAngle = "sharp_corner_extension_angle";
+const QString Constants::ProfileSettings::SpecialModes::kSharpCornerExtensionDistance =
+    "sharp_corner_extension_distance";
 const QString Constants::ProfileSettings::SpecialModes::kEnableSpiralize = "enable_spiralize_mode";
 const QString Constants::ProfileSettings::SpecialModes::kEnableFixModel = "enable_fix_model";
 const QString Constants::ProfileSettings::SpecialModes::kEnableOversize = "oversize";
