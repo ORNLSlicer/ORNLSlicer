@@ -18,9 +18,10 @@ namespace ORNL {
  * This first pass reuses radial path coordinates as user-frame endpoint coordinates relative to the active work
  * offset, then applies the configured G-Code coordinate frame rotation before output. Tool-frame rotations are fixed to
  * XR=180, YR=0, and ZR=0; AP comes from the existing Axis A setting; CP is computed from each transformed endpoint's
- * angle around the transformed radial slicing center plus the existing Axis C offset. When the machine Supports G2/G3
- * setting is enabled, radial and helical print arcs are emitted as G02/G03 with I/J center offsets and are divided
- * according to Arcs per Revolution.
+ * angle around the transformed radial slicing center plus the existing Axis C offset. Helical paths report CP as the
+ * positive angular sweep from the transformed helical start angle plus Axis C. When the machine Supports G2/G3 setting
+ * is enabled, radial and helical print arcs are emitted as G02/G03 with I/J center offsets and are divided according
+ * to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
   public:
@@ -188,6 +189,19 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @return CP value in degrees.
      */
     double cpAxisForPoint(const Point& destination, const QSharedPointer<SettingsBase>& params);
+
+    /*!
+     * @brief Returns the transformed helical start angle used as the CP sweep reference.
+     * @param params Segment settings containing helical start-angle metadata.
+     * @return Start angle in degrees.
+     */
+    double helicalStartAngle(const QSharedPointer<SettingsBase>& params) const;
+
+    /*!
+     * @brief Returns whether the active cylindrical path pattern is helical.
+     * @return True when the writer is emitting cylindrical helical paths.
+     */
+    bool isHelicalPathPattern() const;
 
     //! @brief Tracks whether any travel move has been emitted.
     bool m_first_travel = true;
