@@ -89,9 +89,10 @@ class RadialSlicer : public TraditionalAST {
      * @param radius Radius of the candidate cylindrical layer.
      * @param z Z height of this bead centerline.
      * @param bead_width Width used to choose a practical circle segment length.
+     * @param start_angle Angular start position around the cylinder axis.
      * @return Closed polyline approximation of the candidate bead.
      */
-    Polyline createCircle(const Point& center, Distance radius, Distance z, Distance bead_width);
+    Polyline createCircle(const Point& center, Distance radius, Distance z, Distance bead_width, Angle start_angle);
 
     /*!
      * @brief Creates segment settings required by the path writer.

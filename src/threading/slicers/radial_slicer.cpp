@@ -237,7 +237,8 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
                 QSharedPointer<RadialLayer>::create(radial_layer_number + 1, layer_settings);
 
             for (RadialCrossSection& section : cross_sections) {
-                Polyline circle = createCircle(center, radius, section.z, bead_width);
+                Polyline circle = createCircle(center, radius, section.z, bead_width,
+                                               layer_settings->setting<Angle>(PS::Slicing::kRadialPathStartAngle));
 
                 // Intersect the horizontal model cross section with the
                 // current candidate path, then apply the radial boundary
@@ -365,7 +366,8 @@ double RadialSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>&
     return max_radius;
 }
 
-Polyline RadialSlicer::createCircle(const Point& center, Distance radius, Distance z, Distance bead_width) {
+Polyline RadialSlicer::createCircle(const Point& center, Distance radius, Distance z, Distance bead_width,
+                                    Angle start_angle) {
     const double circumference = 2.0 * M_PI * radius();
     const Distance target_segment_length =
         bead_width / 2.0 > kMinCircleSegmentLength ? bead_width / 2.0 : kMinCircleSegmentLength;
@@ -374,7 +376,7 @@ Polyline RadialSlicer::createCircle(const Point& center, Distance radius, Distan
     Polyline circle;
     circle.reserve(segments + 1);
     for (int i = 0; i <= segments; ++i) {
-        const double theta = 2.0 * M_PI * static_cast<double>(i) / static_cast<double>(segments);
+        const double theta = start_angle() + (2.0 * M_PI * static_cast<double>(i) / static_cast<double>(segments));
         circle.push_back(Point(center.x() + radius() * std::cos(theta), center.y() + radius() * std::sin(theta), z()));
     }
 

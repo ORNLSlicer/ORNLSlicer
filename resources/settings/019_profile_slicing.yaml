@@ -131,6 +131,18 @@ settings:
     namespace: "Profile::Slicing"
     symbol: "kRadialPathBoundaryPolicy"
     local: true
+  - name: "radial_path_start_angle"
+    display: "Radial Path Start Angle"
+    type: "angle"
+    tooltip: "Sets the angular start position for generated radial paths around the cylinder axis. 0 degrees starts on +X and 90 degrees starts on +Y."
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":0}]}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kRadialPathStartAngle"
+    local: true
   - name: "helical_path_boundary_policy"
     display: "Helical Path Boundary Policy"
     type: "enumeration"
@@ -158,6 +170,18 @@ settings:
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kHelicalPathHandedness"
+    local: true
+  - name: "helical_path_start_angle"
+    display: "Helical Path Start Angle"
+    type: "angle"
+    tooltip: "Sets the angular start position for generated helical paths around the cylinder axis. 0 degrees starts on +X and 90 degrees starts on +Y."
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 90
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kHelicalPathStartAngle"
     local: true
   - name: "max_helical_path_length"
     display: "Max Helical Path Length"

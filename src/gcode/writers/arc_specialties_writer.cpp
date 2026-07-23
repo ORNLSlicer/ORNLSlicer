@@ -135,11 +135,17 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             formatDistance(m_sb->setting<Distance>(PS::Layer::kLayerHeight), m_meta.m_distance_unit));
         const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
         if (helical_mode) {
+            text += commentLine(
+                "Helical Path Start Angle: " %
+                formatAngle(m_sb->setting<Angle>(PS::Slicing::kHelicalPathStartAngle), m_meta.m_angle_unit));
             text += commentLine("Helical Rise Per Revolution: " % formatDistance(bead_width, m_meta.m_distance_unit));
             text += commentLine("Helical Rise Per Radian: " %
                                 formatDistance(bead_width / (2.0 * M_PI), m_meta.m_distance_unit));
         }
         else {
+            text +=
+                commentLine("Radial Path Start Angle: " %
+                            formatAngle(m_sb->setting<Angle>(PS::Slicing::kRadialPathStartAngle), m_meta.m_angle_unit));
             text += commentLine("Vertical Bead Spacing: " % formatDistance(bead_width, m_meta.m_distance_unit));
         }
         if (helical_mode) {
@@ -393,13 +399,9 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
         speed = 10.0 * mm / s;
     }
 
-    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
-    const CylindricalPathPattern path_pattern =
-        static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
-    const bool helical_path =
-        slicing_mode == SlicingMode::kCylindrical && path_pattern == CylindricalPathPattern::kHelical;
     rv += writeMotion("G01", target_point, speed, params,
-                      helical_path ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial);
+                      isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical
+                                             : Constants::RegionTypeStrings::kRadial);
     return rv;
 }
 
@@ -422,16 +424,11 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     setFeedrate(speed);
     m_layer_start = false;
 
-    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
-    const CylindricalPathPattern path_pattern =
-        static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
-    const bool helical_path =
-        slicing_mode == SlicingMode::kCylindrical && path_pattern == CylindricalPathPattern::kHelical;
-    rv +=
-        QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
-        writeArcCenterOffsets(start_point, center_point) % m_f %
-        QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
-        commentSpaceLine(helical_path ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial);
+    rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
+          writeArcCenterOffsets(start_point, center_point) % m_f %
+          QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
+          commentSpaceLine(isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical
+                                                  : Constants::RegionTypeStrings::kRadial);
     return rv;
 }
 
@@ -573,6 +570,15 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
     double cp_degrees = std::atan2(transformed_destination.y() - transformed_center.y(),
                                    transformed_destination.x() - transformed_center.x()) *
                         180.0 / M_PI;
+
+    if (isHelicalPathPattern()) {
+        const HelicalPathHandedness handedness =
+            static_cast<HelicalPathHandedness>(params->setting<int>(PS::Slicing::kHelicalPathHandedness));
+        const double start_angle = helicalStartAngle(params);
+        cp_degrees =
+            handedness == HelicalPathHandedness::kLeftHanded ? start_angle - cp_degrees : cp_degrees - start_angle;
+    }
+
     cp_degrees += m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
 
     cp_degrees = std::fmod(cp_degrees, 360.0);
@@ -581,5 +587,24 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
     }
 
     return cp_degrees;
+}
+
+double ArcSpecialtiesWriter::helicalStartAngle(const QSharedPointer<SettingsBase>& params) const {
+    const Angle start_angle = params->setting<Angle>(PS::Slicing::kHelicalPathStartAngle);
+    const Point start_direction(std::cos(start_angle()), std::sin(start_angle()), 0.0);
+    const Point transformed_start_direction = rotateGCodeCoordinateFrameDelta(start_direction);
+    if (std::hypot(transformed_start_direction.x(), transformed_start_direction.y()) <=
+        std::numeric_limits<double>::epsilon()) {
+        return 90.0;
+    }
+
+    return std::atan2(transformed_start_direction.y(), transformed_start_direction.x()) * 180.0 / M_PI;
+}
+
+bool ArcSpecialtiesWriter::isHelicalPathPattern() const {
+    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
+    const CylindricalPathPattern path_pattern =
+        static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
+    return slicing_mode == SlicingMode::kCylindrical && path_pattern == CylindricalPathPattern::kHelical;
 }
 } // namespace ORNL
