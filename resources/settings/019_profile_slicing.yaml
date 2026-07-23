@@ -145,6 +145,20 @@ settings:
     namespace: "Profile::Slicing"
     symbol: "kHelicalPathBoundaryPolicy"
     local: true
+  - name: "helical_path_handedness"
+    display: "Helical Path Handedness"
+    type: "enumeration"
+    tooltip: "Selects the handedness for generated helical paths. Right Handed uses a counter-clockwise XY sweep as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z rise."
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options:
+      - "Right Handed"
+      - "Left Handed"
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kHelicalPathHandedness"
+    local: true
   - name: "max_helical_path_length"
     display: "Max Helical Path Length"
     type: "distance"

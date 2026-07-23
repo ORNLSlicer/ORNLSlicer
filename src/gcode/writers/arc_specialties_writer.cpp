@@ -88,6 +88,10 @@ void ArcSpecialtiesWriter::setHelicalPathBoundaryPolicy(
     m_helical_path_boundary_policy = methods;
 }
 
+void ArcSpecialtiesWriter::setHelicalPathHandedness(const QVector<QPair<QString, HelicalPathHandedness>>& handedness) {
+    m_helical_path_handedness = handedness;
+}
+
 QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
     QString text;
     const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
@@ -154,6 +158,22 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                 text += commentLine("Helical Path Boundary Policy: " %
                                     toString(static_cast<HelicalPathBoundaryPolicy>(
                                         m_sb->setting<int>(PS::Slicing::kHelicalPathBoundaryPolicy))));
+            }
+
+            if (m_helical_path_handedness.size() == 1) {
+                text += commentLine("Helical Path Handedness: " % toString(m_helical_path_handedness.first().second));
+            }
+            else if (m_helical_path_handedness.size() > 1) {
+                for (const QPair<QString, HelicalPathHandedness>& part_handedness : m_helical_path_handedness) {
+                    const QString part_name = part_handedness.first.isEmpty() ? "Unnamed Part" : part_handedness.first;
+                    text +=
+                        commentLine("Helical Path Handedness (" % part_name % "): " % toString(part_handedness.second));
+                }
+            }
+            else {
+                text += commentLine("Helical Path Handedness: " %
+                                    toString(static_cast<HelicalPathHandedness>(
+                                        m_sb->setting<int>(PS::Slicing::kHelicalPathHandedness))));
             }
         }
         else {

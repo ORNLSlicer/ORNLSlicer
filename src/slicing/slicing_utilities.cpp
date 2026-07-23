@@ -63,10 +63,19 @@ double counterClockwiseSweep(const Point& start, const Point& end, const Point& 
     }
     return sweep;
 }
+
+//! \brief Returns the sweep from start to end in the selected angular direction.
+double directedSweep(const Point& start, const Point& end, const Point& center, bool counterclockwise) {
+    const double ccw_sweep = counterClockwiseSweep(start, end, center);
+    if (counterclockwise || ccw_sweep <= kArcSweepTolerance) {
+        return ccw_sweep;
+    }
+    return (2.0 * M_PI) - ccw_sweep;
+}
 } // namespace
 
 QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polyline, const Point& center, Distance radius,
-                                                         int arcs_per_revolution) {
+                                                         int arcs_per_revolution, bool counterclockwise) {
     QVector<Point> arc_points;
     if (polyline.size() < 2 || radius <= 0 || arcs_per_revolution <= 0) {
         return arc_points;
@@ -79,7 +88,7 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
 
     double total_sweep = 0.0;
     for (int i = 1, end = polyline.size(); i < end; ++i) {
-        total_sweep += counterClockwiseSweep(polyline[i - 1], polyline[i], center);
+        total_sweep += directedSweep(polyline[i - 1], polyline[i], center, counterclockwise);
         cumulative_sweeps.push_back(total_sweep);
     }
 
@@ -108,7 +117,8 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
         const Point& source_start = polyline[source_segment - 1];
         const Point& source_end = polyline[source_segment];
         const double start_angle = std::atan2(source_start.y() - center.y(), source_start.x() - center.x());
-        const double angle = start_angle + segment_sweep * fraction;
+        const double direction = counterclockwise ? 1.0 : -1.0;
+        const double angle = start_angle + direction * segment_sweep * fraction;
         const double z = source_start.z() + ((source_end.z() - source_start.z()) * fraction);
 
         arc_points.push_back(
@@ -120,7 +130,7 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
 }
 
 bool SlicingUtilities::IsCylindricalArcSegment(const Point& start, const Point& end, const Point& center,
-                                               Distance radius, int arcs_per_revolution) {
+                                               Distance radius, int arcs_per_revolution, bool counterclockwise) {
     const double expected_radius = radius();
     if (expected_radius <= std::numeric_limits<double>::epsilon() || arcs_per_revolution <= 0) {
         return false;
@@ -135,7 +145,7 @@ bool SlicingUtilities::IsCylindricalArcSegment(const Point& start, const Point& 
                std::abs(radialDistance(end, center) - expected_radius) <= tolerance;
     }
 
-    const double sweep = counterClockwiseSweep(start, end, center);
+    const double sweep = directedSweep(start, end, center, counterclockwise);
     const double max_sweep = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
     if (sweep <= angular_tolerance || sweep > max_sweep + angular_tolerance) {
         return false;

@@ -331,6 +331,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     QVector<QSharedPointer<MeshBase>> clipping_meshes =
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
     QVector<QPair<QString, HelicalPathBoundaryPolicy>> effective_boundary_policy;
+    QVector<QPair<QString, HelicalPathHandedness>> effective_handedness;
 
     int parts_processed = 0;
     for (const QSharedPointer<Part>& part : build_parts) {
@@ -363,6 +364,9 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         const Distance section_spacing = bead_width / 2.0 > kMinSectionSpacing ? bead_width / 2.0 : kMinSectionSpacing;
         const HelicalPathBoundaryPolicy boundary_policy =
             static_cast<HelicalPathBoundaryPolicy>(part_sb->setting<int>(PS::Slicing::kHelicalPathBoundaryPolicy));
+        const HelicalPathHandedness handedness =
+            static_cast<HelicalPathHandedness>(part_sb->setting<int>(PS::Slicing::kHelicalPathHandedness));
+        const bool helix_counterclockwise = handedness == HelicalPathHandedness::kRightHanded;
         bool part_generated_paths = false;
         Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
         if (initial_radius < 0) {
@@ -444,7 +448,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             QSharedPointer<HelicalLayer> helical_layer =
                 QSharedPointer<HelicalLayer>::create(helical_layer_number + 1, layer_settings);
 
-            Polyline helix = createHelix(center, radius, first_bead_z, top_z, bead_width);
+            Polyline helix = createHelix(center, radius, first_bead_z, top_z, bead_width, handedness);
             const HelixClipResult clip_result =
                 clipHelixToSections(helix, cross_sections, first_bead_z, section_spacing);
             QVector<Polyline> clipped_lines = clip_result.fragments;
@@ -460,7 +464,8 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
 
                 const QVector<Polyline> path_lines = splitPolylineByLength(line, max_path_length);
                 for (const Polyline& path_line : path_lines) {
-                    Path path = createPath(path_line, layer_settings, center, radius, current_location);
+                    Path path =
+                        createPath(path_line, layer_settings, center, radius, helix_counterclockwise, current_location);
                     if (path.size() > 0) {
                         helical_layer->addPath(path);
                     }
@@ -480,6 +485,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         if (part_generated_paths) {
             effective_boundary_policy.push_back(
                 QPair<QString, HelicalPathBoundaryPolicy> {part->name(), boundary_policy});
+            effective_handedness.push_back(QPair<QString, HelicalPathHandedness> {part->name(), handedness});
         }
 
         ++parts_processed;
@@ -490,6 +496,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     QSharedPointer<ArcSpecialtiesWriter> arc_specialties_writer = m_base.dynamicCast<ArcSpecialtiesWriter>();
     if (!arc_specialties_writer.isNull()) {
         arc_specialties_writer->setHelicalPathBoundaryPolicy(effective_boundary_policy);
+        arc_specialties_writer->setHelicalPathHandedness(effective_handedness);
     }
 
     if (m_helical_layers.isEmpty()) {
@@ -583,7 +590,7 @@ double HelicalSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>
 }
 
 Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distance start_z, Distance top_z,
-                                    Distance bead_width) {
+                                    Distance bead_width, HelicalPathHandedness handedness) {
     Polyline helix;
     if (top_z <= start_z || bead_width <= 0) {
         return helix;
@@ -602,9 +609,10 @@ Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distan
         std::clamp(static_cast<int>(std::ceil(max_t * length_per_radian / target_segment_length())), 1, 20000);
 
     helix.reserve(segments + 1);
+    const double direction = handedness == HelicalPathHandedness::kLeftHanded ? -1.0 : 1.0;
     for (int i = 0; i <= segments; ++i) {
         const double t = max_t * static_cast<double>(i) / static_cast<double>(segments);
-        helix.push_back(Point(center.x() + radius() * std::cos(t), center.y() + radius() * std::sin(t),
+        helix.push_back(Point(center.x() + radius() * std::cos(t), center.y() + radius() * std::sin(direction * t),
                               start_z() + vertical_rise_per_radian * t));
     }
 
@@ -629,7 +637,7 @@ QSharedPointer<SettingsBase> HelicalSlicer::createSegmentSettings(const QSharedP
 }
 
 Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings,
-                               const Point& center, Distance radius, Point& current_location) {
+                               const Point& center, Distance radius, bool counterclockwise, Point& current_location) {
     Path path;
     if (polyline.size() < 2) {
         return path;
@@ -638,8 +646,9 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
     const bool write_arcs = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
     const int arcs_per_revolution = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
     const QVector<Point> arc_points =
-        write_arcs ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution)
-                   : QVector<Point>();
+        write_arcs
+            ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution, counterclockwise)
+            : QVector<Point>();
     const Point path_start = arc_points.size() > 1 ? arc_points.first() : polyline.first();
     const Point path_end = arc_points.size() > 1 ? arc_points.last() : polyline.last();
 
@@ -654,8 +663,8 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
 
     if (arc_points.size() > 1) {
         for (int i = 1, end = arc_points.size(); i < end; ++i) {
-            const bool is_arc = SlicingUtilities::IsCylindricalArcSegment(arc_points[i - 1], arc_points[i], center,
-                                                                          radius, arcs_per_revolution);
+            const bool is_arc = SlicingUtilities::IsCylindricalArcSegment(
+                arc_points[i - 1], arc_points[i], center, radius, arcs_per_revolution, counterclockwise);
             if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
                 continue;
             }
@@ -664,7 +673,8 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
             if (is_arc) {
                 const Point arc_center =
                     SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
-                segment = QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
+                segment =
+                    QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, counterclockwise);
             }
             else {
                 segment = QSharedPointer<LineSegment>::create(arc_points[i - 1], arc_points[i]);

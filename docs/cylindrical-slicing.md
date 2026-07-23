@@ -15,10 +15,11 @@ This slicer is intended for `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP output. It do
 7. Set `Cylinder Axis Source` if the cylinder axis should use a custom XY coordinate instead of the part centroid.
 8. Set `Cylinder Inner Radius` if the first cylinder or helix should begin away from the axis.
 9. Set the path boundary policy for the selected `Cylindrical Path Pattern`.
-10. For `Helical`, set `Max Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
-11. Confirm the printer `Syntax` is `Arc Specialties`. Selecting `Cylindrical` defaults to `Arc Specialties` when the current syntax is not cylindrical-capable.
-12. Set `Axis A` to the desired positioner tilt and set `Axis C` if the machine coordinate frame needs an angular offset.
-13. Slice and inspect the generated G-code preview before running the machine.
+10. For `Helical`, set `Helical Path Handedness` if the helix should sweep clockwise rather than the default counter-clockwise direction as Z rises.
+11. For `Helical`, set `Max Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
+12. Confirm the printer `Syntax` is `Arc Specialties`. Selecting `Cylindrical` defaults to `Arc Specialties` when the current syntax is not cylindrical-capable.
+13. Set `Axis A` to the desired positioner tilt and set `Axis C` if the machine coordinate frame needs an angular offset.
+14. Slice and inspect the generated G-code preview before running the machine.
 
 ## Path Patterns
 
@@ -29,6 +30,8 @@ This slicer is intended for `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP output. It do
 `x(t) = r cos(t)`, `y(t) = r sin(t)`, `z(t) = z0 + (bead_width / (2 * pi)) * t`
 
 The first radius is half a `Layer Height` outward from `Cylinder Inner Radius`, and later radii advance by `Layer Height`. `Default Bead Width` is the rise per full revolution.
+
+`Helical Path Handedness` selects the angular sweep while Z rises. `Right Handed` is the default and uses the existing counter-clockwise XY sweep. `Left Handed` mirrors the helix to a clockwise XY sweep without changing the first point, Z rise, or radius spacing.
 
 If `Max Helical Path Length` is greater than `0`, each generated helical fragment is split into shorter paths before print segments are emitted. Split paths stay contiguous, so no travel move is inserted between adjacent split points. Values of `0` or smaller leave the generated helical fragments unbroken.
 
@@ -44,10 +47,11 @@ If `Max Helical Path Length` is greater than `0`, each generated helical fragmen
 | `Cylinder Axis Source` | Profile > Slicing | Selects whether the cylinder axis is centered on each part's centroid or on a custom XY coordinate. |
 | `Cylinder Axis - X` / `Cylinder Axis - Y` | Profile > Slicing | Custom cylinder axis coordinates when `Cylinder Axis Source` is `Custom XY`. |
 | `Cylinder Inner Radius` | Profile > Slicing | Inner radial boundary before the half-layer offset is applied. |
+| `Helical Path Handedness` | Profile > Slicing | For `Helical`, selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
 | `Max Helical Path Length` | Profile > Slicing | For `Helical`, maximum length of each generated helical path segment before it is split. |
 | `Arcs per Revolution` | Profile > Slicing | Sets how many G2/G3 moves represent one complete revolution when `Supports G2/G3` is enabled. |
 
-Only relevant settings are shown for the selected path pattern. `Radial` shows `Radial Path Boundary Policy` with `Clip`, `Keep`, and `Discard`. `Helical` shows `Helical Path Boundary Policy` with `Clip` and `Clip Z`, plus helical-only controls.
+Only relevant settings are shown for the selected path pattern. `Radial` shows `Radial Path Boundary Policy` with `Clip`, `Keep`, and `Discard`. `Helical` shows `Helical Path Boundary Policy` with `Clip` and `Clip Z`, plus helical-only controls such as `Helical Path Handedness`.
 
 ## Boundary Policies
 
@@ -72,9 +76,9 @@ When `Clip Z` finds no boundary crossing, a helix that is wholly inside the mode
 
 `Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset, applies the configured G-code coordinate frame rotation, and emits `XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. The first implementation fixes `XR=180`, `YR=0`, and `ZR=0`; maps `Axis A` to `AP`; and computes `CP` from the transformed endpoint angle plus `Axis C`, normalized to 0-360 degrees. For the Arc Specialties partner frame, set `G-Code Frame Rotation Z` to `-90 deg`.
 
-Enabling `Supports G2/G3` writes radial and helical print paths as G2/G3 moves divided according to `Arcs per Revolution`. Those moves use equals-form `I=`/`J=` offsets and place the feedrate at the end of the motion fields. When arc support is disabled, print paths remain segmented G1 moves.
+Enabling `Supports G2/G3` writes radial and helical print paths as G2/G3 moves divided according to `Arcs per Revolution`. Right-handed helical arcs are emitted as counter-clockwise moves, and left-handed helical arcs are emitted as clockwise moves. Those moves use equals-form `I=`/`J=` offsets and place the feedrate at the end of the motion fields. When arc support is disabled, print paths remain segmented G1 moves.
 
-The generated header reports cylindrical geometry, path pattern, boundary policy, travel lift distance, and positioner settings. Print moves are marked with `RADIAL` or `HELICAL`, and the Arc Specialties parser strips orientation fields for XYZ preview visualization.
+The generated header reports cylindrical geometry, path pattern, helical handedness, boundary policy, travel lift distance, and positioner settings. Print moves are marked with `RADIAL` or `HELICAL`, and the Arc Specialties parser strips orientation fields for XYZ preview visualization.
 
 | Setting | Location | Effect |
 | --- | --- | --- |
@@ -102,6 +106,7 @@ The generated header reports cylindrical geometry, path pattern, boundary policy
 After slicing, verify that:
 
 - The G-code header identifies `Arc Specialties` and the selected `Cylindrical Path Pattern`.
+- For `Helical`, the G-code header identifies the selected `Helical Path Handedness`.
 - Motion lines use `G00`/`G01`, or `G02`/`G03` when `Supports G2/G3` is enabled. They contain `X=`, `Y=`, `Z=`, `XR=`, `YR=`, `ZR=`, `AP=`, and `CP=`.
 - A complete radial ring or helical revolution contains the configured `Arcs per Revolution`; clipped or partial paths may include a shorter final arc.
 - Printed paths lie on the part rather than above or below it.
