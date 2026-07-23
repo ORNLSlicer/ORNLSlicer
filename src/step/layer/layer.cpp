@@ -35,9 +35,9 @@
 namespace ORNL {
 namespace {
 bool isClearanceModifier(PathModifiers modifiers) {
-    constexpr PathModifiers clearance_modifiers =
-        PathModifiers::kForwardTipWipe | PathModifiers::kReverseTipWipe | PathModifiers::kAngledTipWipe |
-        PathModifiers::kPerimeterTipWipe | PathModifiers::kSpiralLift;
+    constexpr PathModifiers clearance_modifiers = PathModifiers::kForwardTipWipe | PathModifiers::kReverseTipWipe |
+                                                  PathModifiers::kAngledTipWipe | PathModifiers::kPerimeterTipWipe |
+                                                  PathModifiers::kSpiralLift;
 
     return (modifiers & clearance_modifiers) != PathModifiers::kNone;
 }
@@ -180,8 +180,7 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
 
     // seam adjustment
     if (islandOrderOptimization == IslandOrderOptimization::kCustomPoint) {
-        Point startOverride =
-            OptimizationAnchor::customIslandOrderPoint(getSb(), m_slicing_plane, m_shift_amount);
+        Point startOverride = OptimizationAnchor::customIslandOrderPoint(getSb(), m_slicing_plane, m_shift_amount);
 
         ioo.setStartPoint(startOverride);
     }

@@ -333,8 +333,8 @@ class PartView : public BaseView {
     void hideLayerSettingsRangePlanes();
 
     //! \brief Calculates selected layer settings range geometry for display.
-    bool layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int low_layer, int high_layer,
-                                    QVector3D& center, float& thickness) const;
+    bool layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int low_layer, int high_layer, QVector3D& center,
+                                    float& thickness) const;
 
     //! \brief Blocks the model from modifying the view. Useful when making model changes in the view to prevent
     //! feedback.

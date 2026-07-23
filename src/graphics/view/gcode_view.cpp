@@ -170,10 +170,9 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
         }
 
         QSharedPointer<PreferencesManager> preferences = PreferencesManager::getInstance();
-        m_gcode_object = QSharedPointer<GCodeObject>::create(this, gcode, m_segment_info_control,
-                                                             m_use_true_segment_widths,
-                                                             preferences->getGCodePreviewModePreference(),
-                                                             preferences->getGCodePreviewVertexThresholdPreference());
+        m_gcode_object = QSharedPointer<GCodeObject>::create(
+            this, gcode, m_segment_info_control, m_use_true_segment_widths,
+            preferences->getGCodePreviewModePreference(), preferences->getGCodePreviewVertexThresholdPreference());
         m_gcode_object->showLayers(m_state.low_layer, m_state.high_layer);
         if (m_state.high_segment != std::numeric_limits<uint>::max()) {
             const uint max_segment = m_gcode_object->visibleSegmentCount();
@@ -256,10 +255,9 @@ void GCodeView::finishOptimizationPointDrag(QPointF mouse_ndc_pos) {
 
     if (!updateOptimizationPointDrag(mouse_ndc_pos, true) && !m_state.dragged_seam.isNull()) {
         const QVector3D translation = m_state.dragged_seam->translation();
-        emit optimizationPointDragFinished(m_state.dragged_seam_x_setting,
-                                           translation.x() * Constants::OpenGL::kViewToObject,
-                                           m_state.dragged_seam_y_setting,
-                                           translation.y() * Constants::OpenGL::kViewToObject);
+        emit optimizationPointDragFinished(
+            m_state.dragged_seam_x_setting, translation.x() * Constants::OpenGL::kViewToObject,
+            m_state.dragged_seam_y_setting, translation.y() * Constants::OpenGL::kViewToObject);
     }
 
     m_state.dragging_seam = false;

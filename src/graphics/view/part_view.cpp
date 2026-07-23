@@ -265,10 +265,9 @@ void PartView::finishOptimizationPointDrag(QPointF mouse_ndc_pos) {
 
     if (!updateOptimizationPointDrag(mouse_ndc_pos, true) && !m_state.dragged_seam.isNull()) {
         const QVector3D translation = m_state.dragged_seam->translation();
-        emit optimizationPointDragFinished(m_state.dragged_seam_x_setting,
-                                           translation.x() * Constants::OpenGL::kViewToObject,
-                                           m_state.dragged_seam_y_setting,
-                                           translation.y() * Constants::OpenGL::kViewToObject);
+        emit optimizationPointDragFinished(
+            m_state.dragged_seam_x_setting, translation.x() * Constants::OpenGL::kViewToObject,
+            m_state.dragged_seam_y_setting, translation.y() * Constants::OpenGL::kViewToObject);
     }
 
     m_state.dragging_seam = false;
@@ -1436,9 +1435,7 @@ bool PartView::layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int lo
     else
         base_layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
 
-    const auto normal_height = [](Distance layer_height) {
-        return layer_height() * Constants::OpenGL::kObjectToView;
-    };
+    const auto normal_height = [](Distance layer_height) { return layer_height() * Constants::OpenGL::kObjectToView; };
 
     const double base_layer_normal_height = normal_height(base_layer_height);
     if (base_layer_normal_height <= 0.0)

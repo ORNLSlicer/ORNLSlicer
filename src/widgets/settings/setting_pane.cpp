@@ -83,8 +83,7 @@ void SettingPane::paneWarning(int count) {
     }
 }
 
-void SettingPane::forwardSettingAboutToChange(QString setting_key,
-                                              QList<QSharedPointer<SettingsBase>> settings_bases) {
+void SettingPane::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
     emit settingAboutToChange(setting_key, settings_bases);
 }
 

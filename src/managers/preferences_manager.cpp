@@ -375,9 +375,7 @@ DisabledSettingVisibility PreferencesManager::getDisabledSettingVisibilityPrefer
     return m_disabled_setting_visibility_preference;
 }
 
-bool PreferencesManager::getWarnUnsavedProjectOnClosePreference() {
-    return m_warn_unsaved_project_on_close_preference;
-}
+bool PreferencesManager::getWarnUnsavedProjectOnClosePreference() { return m_warn_unsaved_project_on_close_preference; }
 
 bool PreferencesManager::getWindowMaximizedPreference() { return m_is_maximized; }
 

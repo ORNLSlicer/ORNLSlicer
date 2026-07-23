@@ -729,28 +729,25 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, Se
         display_width = m_sb->setting<float>(PS::Layer::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
     else if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kPerimeter)) {
-        display_width =
-            beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kPerimeter,
-                                                        m_sb->setting<Distance>(PS::Perimeter::kBeadWidth),
-                                                        m_selected_meta.m_distance_unit));
+        display_width = beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kPerimeter,
+                                                                    m_sb->setting<Distance>(PS::Perimeter::kBeadWidth),
+                                                                    m_selected_meta.m_distance_unit));
     }
     else if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
         display_width = m_sb->setting<float>(PS::Perimeter::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
     else if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kInset)) {
-        display_width =
-            beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kInset,
-                                                        m_sb->setting<Distance>(PS::Inset::kBeadWidth),
-                                                        m_selected_meta.m_distance_unit));
+        display_width = beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kInset,
+                                                                    m_sb->setting<Distance>(PS::Inset::kBeadWidth),
+                                                                    m_selected_meta.m_distance_unit));
     }
     else if (comment.contains("INSET")) {
         display_width = m_sb->setting<float>(PS::Inset::kBeadWidth) * Constants::OpenGL::kObjectToView;
     }
     else if (comment.contains("SKELETON")) {
-        display_width =
-            beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kSkeleton,
-                                                        m_sb->setting<Distance>(PS::Skeleton::kBeadWidth),
-                                                        m_selected_meta.m_distance_unit));
+        display_width = beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kSkeleton,
+                                                                    m_sb->setting<Distance>(PS::Skeleton::kBeadWidth),
+                                                                    m_selected_meta.m_distance_unit));
     }
     else if (comment.contains("SKIN")) {
         display_width = m_sb->setting<float>(PS::Skin::kBeadWidth) * Constants::OpenGL::kObjectToView;
