@@ -135,6 +135,28 @@ inline QString toString(HelicalPathBoundaryPolicy handling) {
 }
 
 /*!
+ * @enum HelicalPathHandedness
+ * @brief Selects the angular direction of rising helical paths.
+ */
+enum class HelicalPathHandedness : uint8_t {
+    //! @brief Counter-clockwise XY sweep while Z increases.
+    kRightHanded = 0,
+
+    //! @brief Clockwise XY sweep while Z increases.
+    kLeftHanded = 1
+};
+
+inline QString toString(HelicalPathHandedness handedness) {
+    switch (handedness) {
+        case HelicalPathHandedness::kLeftHanded:
+            return "Left Handed";
+        case HelicalPathHandedness::kRightHanded:
+        default:
+            return "Right Handed";
+    }
+}
+
+/*!
  * @enum CylinderAxisSource
  * @brief Selects the XY cylinder axis used by cylindrical slicing.
  */

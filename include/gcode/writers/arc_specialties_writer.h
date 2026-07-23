@@ -38,6 +38,12 @@ class ArcSpecialtiesWriter : public WriterBase {
     void setHelicalPathBoundaryPolicy(const QVector<QPair<QString, HelicalPathBoundaryPolicy>>& methods);
 
     /*!
+     * @brief Supplies the effective part-local helical handedness values for the settings header.
+     * @param handedness Part name and handedness pairs for parts that produced helical paths.
+     */
+    void setHelicalPathHandedness(const QVector<QPair<QString, HelicalPathHandedness>>& handedness);
+
+    /*!
      * @brief Writes radial or helical geometry and Arc Specialties setup notes.
      * @param syntax Gcode syntax being written. Currently informational only.
      * @return Header comments for cylindrical geometry and Arc Specialties motion assumptions.
@@ -197,5 +203,8 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Effective part-local boundary policies reported in helical G-code headers.
     QVector<QPair<QString, HelicalPathBoundaryPolicy>> m_helical_path_boundary_policy;
+
+    //! @brief Effective part-local handedness values reported in helical G-code headers.
+    QVector<QPair<QString, HelicalPathHandedness>> m_helical_path_handedness;
 };
 } // namespace ORNL

@@ -822,6 +822,7 @@ const QString Constants::ProfileSettings::Slicing::kCylinderAxisX = "cylinder_ax
 const QString Constants::ProfileSettings::Slicing::kCylinderAxisY = "cylinder_axis_y";
 const QString Constants::ProfileSettings::Slicing::kRadialPathBoundaryPolicy = "radial_path_boundary_policy";
 const QString Constants::ProfileSettings::Slicing::kHelicalPathBoundaryPolicy = "helical_path_boundary_policy";
+const QString Constants::ProfileSettings::Slicing::kHelicalPathHandedness = "helical_path_handedness";
 const QString Constants::ProfileSettings::Slicing::kMaxHelicalPathLength = "max_helical_path_length";
 const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution = "arcs_per_revolution";
 const QString Constants::ProfileSettings::Slicing::kImagePixelSizeX = "image_pixel_size_x";

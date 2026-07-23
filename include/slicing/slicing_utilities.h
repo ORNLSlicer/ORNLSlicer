@@ -27,14 +27,15 @@ class SlicingUtilities {
   public:
     /*!
      * \brief Resamples a retained cylindrical path at G2/G3 arc boundaries.
-     * \param polyline: densely sampled radial or helical path in counter-clockwise order
+     * \param polyline: densely sampled radial or helical path in the selected angular direction
      * \param center: center of the cylindrical path
      * \param radius: exact radius of the generated circle or helix
      * \param arcs_per_revolution: number of equal angular arc spans in one revolution
+     * \param counterclockwise: true when the path sweeps counter-clockwise around the cylinder axis
      * \return path points preserving clipped start/end locations with intermediate points on the exact radius
      */
     static QVector<Point> GetCylindricalArcPoints(const Polyline& polyline, const Point& center, Distance radius,
-                                                  int arcs_per_revolution);
+                                                  int arcs_per_revolution, bool counterclockwise);
 
     /*!
      * \brief Checks whether two endpoints can be represented as a cylindrical G2/G3 arc.
@@ -43,10 +44,11 @@ class SlicingUtilities {
      * \param center: cylindrical axis center
      * \param radius: expected cylindrical path radius
      * \param arcs_per_revolution: configured maximum arc subdivisions per revolution
+     * \param counterclockwise: true when the candidate sweeps counter-clockwise around the cylinder axis
      * \return true when the segment has a valid angular span and produces an arc center near the axis
      */
     static bool IsCylindricalArcSegment(const Point& start, const Point& end, const Point& center, Distance radius,
-                                        int arcs_per_revolution);
+                                        int arcs_per_revolution, bool counterclockwise);
 
     /*!
      * \brief Finds the closest XY arc center to a cylindrical axis that is equidistant from both endpoints.

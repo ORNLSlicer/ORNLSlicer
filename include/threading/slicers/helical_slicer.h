@@ -9,6 +9,7 @@
 #include "geometry/point.h"
 #include "threading/traditional_ast.h"
 #include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 class HelicalLayer;
@@ -21,7 +22,7 @@ class SettingsBase;
  *
  * Helical slicing uses the same vertical axis settings as radial slicing.  For
  * each generated radius, it creates a helix around that axis using
- * x(t)=r*cos(t), y(t)=r*sin(t), and z(t)=z0+(bead_width/(2*pi))*t.  Successive
+ * x(t)=r*cos(t), y(t)=r*sin(+/-t), and z(t)=z0+(bead_width/(2*pi))*t.  Successive
  * radii are spaced by the configured layer height, starting half a layer height
  * outward from the configured radial initial radius.  The sampled helix is
  * clipped against horizontal model cross sections before being emitted as
@@ -89,9 +90,11 @@ class HelicalSlicer : public TraditionalAST {
      * @param start_z First bead centerline Z.
      * @param top_z Retained mesh maximum Z.
      * @param bead_width Vertical rise per full revolution and sampling scale.
+     * @param handedness Angular handedness of the generated helix.
      * @return Open polyline approximation of the candidate bead.
      */
-    Polyline createHelix(const Point& center, Distance radius, Distance start_z, Distance top_z, Distance bead_width);
+    Polyline createHelix(const Point& center, Distance radius, Distance start_z, Distance top_z, Distance bead_width,
+                         HelicalPathHandedness handedness);
 
     /*!
      * @brief Creates segment settings required by the path writer.
@@ -109,11 +112,12 @@ class HelicalSlicer : public TraditionalAST {
      * @param layer_settings Settings for generated segment metadata.
      * @param center Helical center stored on each segment for the writer.
      * @param radius Exact radius of the generated helical path.
+     * @param counterclockwise True when this path should be emitted as counter-clockwise arcs.
      * @param current_location Last emitted endpoint, updated when a path is generated.
      * @return Path containing travel and print segments for this clipped fragment.
      */
     Path createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings, const Point& center,
-                    Distance radius, Point& current_location);
+                    Distance radius, bool counterclockwise, Point& current_location);
 
     //! @brief Ordered helical layers generated during preprocessing.
     QList<QSharedPointer<HelicalLayer>> m_helical_layers;
