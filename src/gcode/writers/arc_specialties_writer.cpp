@@ -23,14 +23,14 @@ const QString kRadialCenterX = "radial_center_x";
 //! @brief Segment setting key used to recover the cylinder center Y.
 const QString kRadialCenterY = "radial_center_y";
 
-//! @brief Fixed tool-frame XR used by the first Arc Specialties radial implementation.
+//! @brief Fixed tool-frame XR.
 constexpr double kToolFrameXR = 180.0;
 
-//! @brief Fixed tool-frame YR used by the first Arc Specialties radial implementation.
+//! @brief Fixed tool-frame YR.
 constexpr double kToolFrameYR = 0.0;
 
-//! @brief Fixed tool-frame ZR used by the first Arc Specialties radial implementation.
-constexpr double kToolFrameZR = 0.0;
+//! @brief Fixed tool-frame ZR.
+constexpr double kToolFrameZR = -135.0;
 
 //! @brief Returns a point offset away from the radial cylinder axis by the configured lift height.
 Point radialLiftedPoint(const Point& point, const QSharedPointer<SettingsBase>& params, Distance lift_height) {
