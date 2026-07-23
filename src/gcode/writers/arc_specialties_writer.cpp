@@ -71,6 +71,9 @@ double shortestAngularDelta(double start_angle, double end_angle) {
 //! @brief Smallest travel arc segment used to keep arc-like travel output bounded.
 const Distance kMinTravelArcSegmentLength = 100.0 * micron;
 
+//! @brief Machine setup setting value for relative G02/G03 center interpretation.
+constexpr int kRelativeArcCenterMode = 1;
+
 //! @brief Formats a distance using the output unit declared by the active gcode metadata.
 QString formatDistance(Distance value, Distance unit) {
     return QString::number(value.to(unit), 'f', 4) % unit.toString();
@@ -195,6 +198,18 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC), m_meta.m_angle_unit));
         text += commentLine(QString("Arc Feed Moves: ") %
                             (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled" : "G01 segmented"));
+        if (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3)) {
+            text += commentLine(QString("G02/G03 Center Point Interpretation: ") %
+                                (usesAbsoluteArcCenters() ? "Absolute" : "Relative"));
+            if (usesAbsoluteArcCenters()) {
+                text += commentLine("G02/G03 Absolute Center: I=" %
+                                    formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteI),
+                                                   m_meta.m_distance_unit) %
+                                    " J=" %
+                                    formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteJ),
+                                                   m_meta.m_distance_unit));
+            }
+        }
         text += commentLine("Arcs per Revolution: " %
                             QString::number(std::max(1, m_sb->setting<int>(PS::Slicing::kArcsPerRevolution))));
         text += m_newline;
@@ -243,7 +258,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "#FLUSH WAIT" % m_newline;
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
     rv += "#FLUSH WAIT" % m_newline;
-    rv += "G161" % m_newline;
+    rv += QString(usesAbsoluteArcCenters() ? "G161" : "G162") % m_newline;
 
     if (m_sb->setting<int>(PRS::GCode::kEnableBoundingBox)) {
         rv += commentLine(QString("Bounding Box: X=") % QString::number(minimum_x.to(m_meta.m_distance_unit), 'f', 4) %
@@ -425,7 +440,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     m_layer_start = false;
 
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
-          writeArcCenterOffsets(start_point, center_point) % m_f %
+          writeArcCenterParameters(start_point, center_point) % m_f %
           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
           commentSpaceLine(isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical
                                                   : Constants::RegionTypeStrings::kRadial);
@@ -553,13 +568,26 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
            QString::number(cp_output, 'f', 4);
 }
 
-QString ArcSpecialtiesWriter::writeArcCenterOffsets(const Point& start_point, const Point& center_point) {
+QString ArcSpecialtiesWriter::writeArcCenterParameters(const Point& start_point, const Point& center_point) {
+    if (usesAbsoluteArcCenters()) {
+        return QString(" I=") %
+               QString::number(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteI).to(m_meta.m_distance_unit),
+                               'f', 4) %
+               " J=" %
+               QString::number(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteJ).to(m_meta.m_distance_unit),
+                               'f', 4);
+    }
+
     const Point center_offset(center_point.x() - start_point.x(), center_point.y() - start_point.y(),
                               center_point.z() - start_point.z());
     const Point output_offset = rotateGCodeCoordinateFrameDelta(center_offset);
 
     return QString(" I=") % QString::number(Distance(output_offset.x()).to(m_meta.m_distance_unit), 'f', 4) % " J=" %
            QString::number(Distance(output_offset.y()).to(m_meta.m_distance_unit), 'f', 4);
+}
+
+bool ArcSpecialtiesWriter::usesAbsoluteArcCenters() const {
+    return m_sb->setting<int>(PRS::MachineSetup::kG2G3CenterPointInterpretation) != kRelativeArcCenterMode;
 }
 
 double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSharedPointer<SettingsBase>& params) {

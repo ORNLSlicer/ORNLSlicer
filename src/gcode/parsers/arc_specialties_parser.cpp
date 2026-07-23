@@ -1,5 +1,7 @@
 #include "gcode/parsers/arc_specialties_parser.h"
 
+#include <functional>
+
 #include <QRegularExpression>
 #include <QTextStream>
 #include <qcontainerfwd.h>
@@ -20,7 +22,9 @@ const QRegularExpression kG03CommandPattern("(^\\s*)G03(?=\\s|;|\\(|$)");
 
 ArcSpecialtiesParser::ArcSpecialtiesParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines,
                                            QStringList& upperLines)
-    : CommonParser(meta, allowLayerAlter, lines, upperLines) {}
+    : CommonParser(meta, allowLayerAlter, lines, upperLines) {
+    config();
+}
 
 GcodeCommand ArcSpecialtiesParser::parseCommand(QString command_string, int line_number) {
     command_string.replace(kG00CommandPattern, "\\1G0");
@@ -28,6 +32,17 @@ GcodeCommand ArcSpecialtiesParser::parseCommand(QString command_string, int line
     command_string.replace(kG02CommandPattern, "\\1G2");
     command_string.replace(kG03CommandPattern, "\\1G3");
     return CommonParser::parseCommand(command_string, line_number);
+}
+
+void ArcSpecialtiesParser::config() {
+    CommonParser::config();
+    addCommandMapping("G0", std::bind(&ArcSpecialtiesParser::G0Handler, this, std::placeholders::_1));
+    addCommandMapping("G1", std::bind(&ArcSpecialtiesParser::G1Handler, this, std::placeholders::_1));
+    addCommandMapping("G2", std::bind(&ArcSpecialtiesParser::G2Handler, this, std::placeholders::_1));
+    addCommandMapping("G3", std::bind(&ArcSpecialtiesParser::G3Handler, this, std::placeholders::_1));
+    addCommandMapping("G161", std::bind(&ArcSpecialtiesParser::G161Handler, this, std::placeholders::_1));
+    addCommandMapping("G162", std::bind(&ArcSpecialtiesParser::G162Handler, this, std::placeholders::_1));
+    addCommandMapping("G164", std::bind(&ArcSpecialtiesParser::G164Handler, this, std::placeholders::_1));
 }
 
 void ArcSpecialtiesParser::G0Handler(QVector<QString> params) {
@@ -58,6 +73,12 @@ void ArcSpecialtiesParser::G1Handler(QVector<QString> params) {
 void ArcSpecialtiesParser::G2Handler(QVector<QString> params) { handleArcFeedMove(params, false); }
 
 void ArcSpecialtiesParser::G3Handler(QVector<QString> params) { handleArcFeedMove(params, true); }
+
+void ArcSpecialtiesParser::G161Handler(QVector<QString>) { m_use_absolute_arc_centers = true; }
+
+void ArcSpecialtiesParser::G162Handler(QVector<QString>) { m_use_absolute_arc_centers = false; }
+
+void ArcSpecialtiesParser::G164Handler(QVector<QString>) { m_use_absolute_arc_centers = false; }
 
 QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<QString> params) {
     QVector<QString> filtered_params;
@@ -163,6 +184,34 @@ bool ArcSpecialtiesParser::isCommentedPrintMove() const {
            !comment.contains(Constants::RegionTypeStrings::kTravel);
 }
 
+QVector<QString> ArcSpecialtiesParser::convertAbsoluteArcCenterParams(const QVector<QString>& params) {
+    if (!m_use_absolute_arc_centers) {
+        return params;
+    }
+
+    QVector<QString> converted_params;
+    converted_params.reserve(params.size());
+
+    for (const QString& param : params) {
+        const QString key = param.left(1).toUpper();
+        if (key == "I" || key == "J") {
+            bool no_error = false;
+            const double absolute_value = param.mid(1).toDouble(&no_error);
+            if (!no_error) {
+                throwFloatConversionErrorException();
+            }
+
+            const double current_position = key == "I" ? getXPos() : getYPos();
+            converted_params.push_back(key % QString::number(absolute_value - current_position, 'g', 17));
+        }
+        else {
+            converted_params.push_back(param);
+        }
+    }
+
+    return converted_params;
+}
+
 void ArcSpecialtiesParser::setExtruderActive(bool on) { m_extruder_on = on; }
 
 void ArcSpecialtiesParser::handleArcFeedMove(QVector<QString> params, bool ccw) {
@@ -170,6 +219,8 @@ void ArcSpecialtiesParser::handleArcFeedMove(QVector<QString> params, bool ccw) 
     if (filtered_params.isEmpty()) {
         return;
     }
+
+    filtered_params = convertAbsoluteArcCenterParams(filtered_params);
 
     const bool force_print_state = isCommentedPrintMove();
     if (force_print_state) {
