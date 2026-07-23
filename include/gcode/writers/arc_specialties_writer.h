@@ -175,12 +175,18 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params);
 
     /*!
-     * @brief Formats I/J arc center offsets from the arc start point.
+     * @brief Formats I/J arc center parameters for the selected center interpretation mode.
      * @param start_point Arc start point.
      * @param center_point Arc center point.
-     * @return Arc center offset parameter string.
+     * @return Arc center parameter string.
      */
-    QString writeArcCenterOffsets(const Point& start_point, const Point& center_point);
+    QString writeArcCenterParameters(const Point& start_point, const Point& center_point);
+
+    /*!
+     * @brief Returns whether G02/G03 I/J values should be written as absolute coordinates.
+     * @return True for absolute center mode, false for relative center mode.
+     */
+    bool usesAbsoluteArcCenters() const;
 
     /*!
      * @brief Computes CP angle for a transformed point around the transformed radial center, normalized to [0, 360).

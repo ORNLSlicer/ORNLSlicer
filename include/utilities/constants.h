@@ -178,6 +178,9 @@ class Constants {
             static const QString kMachineType;
             static const QString kForceG1;
             static const QString kSupportG3;
+            static const QString kG2G3CenterPointInterpretation;
+            static const QString kG2G3AbsoluteI;
+            static const QString kG2G3AbsoluteJ;
             static const QString kToolNumber;
             static const QString kToolCoordinate;
             static const QString kBaseCoordinate;
