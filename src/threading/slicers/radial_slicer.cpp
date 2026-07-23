@@ -410,7 +410,7 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
     const bool write_arcs = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
     const int arcs_per_revolution = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
     const QVector<Point> arc_points =
-        write_arcs ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution)
+        write_arcs ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution, true)
                    : QVector<Point>();
     const Point path_start = arc_points.size() > 1 ? arc_points.first() : polyline.first();
     const Point path_end = arc_points.size() > 1 ? arc_points.last() : polyline.last();
@@ -428,7 +428,7 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
     if (arc_points.size() > 1) {
         for (int i = 1, end = arc_points.size(); i < end; ++i) {
             const bool is_arc = SlicingUtilities::IsCylindricalArcSegment(arc_points[i - 1], arc_points[i], center,
-                                                                          radius, arcs_per_revolution);
+                                                                          radius, arcs_per_revolution, true);
             if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
                 continue;
             }
