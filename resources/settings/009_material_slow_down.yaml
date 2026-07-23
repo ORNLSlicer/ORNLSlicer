@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of a perimeter path"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -17,7 +17,7 @@ settings:
     display: "Perimeter Slow Down Distance"
     type: "distance"
     tooltip: "Distance for the perimeter slow down move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -29,7 +29,7 @@ settings:
     display: "Perimeter Slow Down Lift Distance"
     type: "distance"
     tooltip: "Distance to lift during the perimeter slow down move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -41,7 +41,7 @@ settings:
     display: "Perimeter Slow Down Speed"
     type: "speed"
     tooltip: "Speed for the perimeter slow down move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -53,7 +53,7 @@ settings:
     display: "Perimeter Slow Down Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the perimeter slow down move"
-    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_slow_down":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -65,7 +65,7 @@ settings:
     display: "Perimeter Slow Down Extruder Cutoff Distance"
     type: "distance"
     tooltip: "Distance from the end of the perimeter slow down move to turn the extruder off"
-    depends: {"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -77,7 +77,7 @@ settings:
     display: "Enable Inset Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of an inset path"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -89,7 +89,7 @@ settings:
     display: "Inset Slow Down Distance"
     type: "distance"
     tooltip: "Distance for the inset slow down move"
-    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -101,7 +101,7 @@ settings:
     display: "Inset Slow Down Lift Distance"
     type: "distance"
     tooltip: "Distance to lift during the inset slow down move"
-    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -113,7 +113,7 @@ settings:
     display: "Inset Slow Down Speed"
     type: "speed"
     tooltip: "Speed for the inset slow down move"
-    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -125,7 +125,7 @@ settings:
     display: "Inset Slow Down Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the inset slow down move"
-    depends: {"AND":[{"inset":true},{"AND":[{"inset_slow_down":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -137,7 +137,7 @@ settings:
     display: "Inset Slow Down Extruder Cutoff Distance"
     type: "distance"
     tooltip: "Distance from the end of the inset slow down move to turn the extruder off"
-    depends: {"AND":[{"inset":true},{"inset_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -149,7 +149,7 @@ settings:
     display: "Enable Skin Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of a skin path"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -161,7 +161,7 @@ settings:
     display: "Skin Slow Down Distance"
     type: "distance"
     tooltip: "Distance for the skin slow down move"
-    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -173,7 +173,7 @@ settings:
     display: "Skin Slow Down Lift Distance"
     type: "distance"
     tooltip: "Distance to lift during the skin slow down move"
-    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -185,7 +185,7 @@ settings:
     display: "Skin Slow Down Speed"
     type: "speed"
     tooltip: "Speed for the skin slow down move"
-    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -197,7 +197,7 @@ settings:
     display: "Skin Slow Down Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the skin slow down move"
-    depends: {"AND":[{"skin":true},{"AND":[{"skin_slow_down":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -209,7 +209,7 @@ settings:
     display: "Skin Slow Down Extruder Cutoff Distance"
     type: "distance"
     tooltip: "Distance from the end of the skin slow down move to turn the extruder off"
-    depends: {"AND":[{"skin":true},{"skin_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -221,7 +221,7 @@ settings:
     display: "Enable Infill Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of an infill path"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -233,7 +233,7 @@ settings:
     display: "Infill Slow Down Distance"
     type: "distance"
     tooltip: "Distance for the infill slow down move"
-    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -245,7 +245,7 @@ settings:
     display: "Infill Slow Down Lift Distance"
     type: "distance"
     tooltip: "Distance to lift during the infill slow down move"
-    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -257,7 +257,7 @@ settings:
     display: "Infill Slow Down Speed"
     type: "speed"
     tooltip: "Speed for the infill slow down move"
-    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -269,7 +269,7 @@ settings:
     display: "Infill Slow Down Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the infill slow down move"
-    depends: {"AND":[{"infill":true},{"AND":[{"infill_slow_down":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -281,7 +281,7 @@ settings:
     display: "Infill Slow Down Extruder Cutoff Distance"
     type: "distance"
     tooltip: "Distance from the end of the infill slow down move to turn the extruder off"
-    depends: {"AND":[{"infill":true},{"infill_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -293,7 +293,7 @@ settings:
     display: "Enable Skeleton Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of a skeleton path"
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -305,7 +305,7 @@ settings:
     display: "Skeleton Slow Down Distance"
     type: "distance"
     tooltip: "Distance for the skeleton slow down move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -317,7 +317,7 @@ settings:
     display: "Skeleton Slow Down Lift Distance"
     type: "distance"
     tooltip: "Distance to lift during the skeleton slow down move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -329,7 +329,7 @@ settings:
     display: "Skeleton Slow Down Speed"
     type: "speed"
     tooltip: "Speed for the skeleton slow down move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -341,7 +341,7 @@ settings:
     display: "Skeleton Slow Down Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the skeleton slow down move"
-    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_slow_down":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -353,7 +353,7 @@ settings:
     display: "Skeleton Slow Down Extruder Cutoff Distance"
     type: "distance"
     tooltip: "Distance from the end of the skeleton slow down move to turn the extruder off"
-    depends: {"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_slow_down":true}]}]}
     options: []
     default: 0
     minor: "Slow Down"
@@ -365,7 +365,7 @@ settings:
     display: "Slow Down Bead Area Modifier"
     type: "percentage"
     tooltip: "Percent multiplier for bead area of slow down paths"
-    depends: {"AND":[{"enable_width_height":true},{"OR":[{"perimeter_slow_down":true},{"OR":[{"inset_slow_down":true},{"OR":[{"skin_slow_down":true},{"OR":[{"infill_slow_down":true},{"skeleton_slow_down":true}]}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":true},{"OR":[{"perimeter_slow_down":true},{"OR":[{"inset_slow_down":true},{"OR":[{"skin_slow_down":true},{"OR":[{"infill_slow_down":true},{"skeleton_slow_down":true}]}]}]}]}]}]}
     options: []
     default: 100
     minor: "Slow Down"
@@ -377,7 +377,7 @@ settings:
     display: "Disable Feedrate Scaling for Slow Down"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change slow down path speeds."
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Slow Down"

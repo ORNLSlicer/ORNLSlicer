@@ -5,7 +5,7 @@ settings:
     display: "Layer Ordering"
     type: "enumeration"
     tooltip: "How to order layers across multiple parts"
-    depends: {}
+    depends: {"slicing_mode":0}
     options:
       - "By Height"
       - "By Layer Number"
@@ -20,7 +20,7 @@ settings:
     display: "Layer Grouping Tolerance"
     type: "distance"
     tooltip: "Layers with the same plane normal that are separated by a distance less than this value will be assigned to the same global layer."
-    depends: {"layer_ordering":0}
+    depends: {"AND":[{"slicing_mode":0},{"layer_ordering":0}]}
     options: []
     default: 1
     minor: "Optimizations"
@@ -32,7 +32,7 @@ settings:
     display: "Island Order Optimization"
     type: "enumeration"
     tooltip: "Type of order optimizer to use on islands"
-    depends: {}
+    depends: {"slicing_mode":0}
     options:
       - "Next Closest"
       - "Next Farthest"
@@ -51,7 +51,7 @@ settings:
     display: "Custom Island Point X Location"
     type: "location"
     tooltip: "X Coordinate for Custom Point Optimization Location"
-    depends: {"island_order_optimization":6}
+    depends: {"AND":[{"slicing_mode":0},{"island_order_optimization":6}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -63,7 +63,7 @@ settings:
     display: "Custom Island Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Custom Point Optimization Location"
-    depends: {"island_order_optimization":6}
+    depends: {"AND":[{"slicing_mode":0},{"island_order_optimization":6}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -75,7 +75,7 @@ settings:
     display: "Custom Island Point Z Location"
     type: "location"
     tooltip: "Z Coordinate for Custom Point Optimization Location"
-    depends: {"island_order_optimization":6}
+    depends: {"AND":[{"slicing_mode":0},{"island_order_optimization":6}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -87,7 +87,7 @@ settings:
     display: "Path Order Optimization"
     type: "enumeration"
     tooltip: "Type of order optimizer to use on paths"
-    depends: {}
+    depends: {"slicing_mode":0}
     options:
       - "Next Closest"
       - "Next Farthest"
@@ -105,7 +105,7 @@ settings:
     display: "Custom Path Point X Location"
     type: "location"
     tooltip: "X Coordinate for Custom Point Optimization Location"
-    depends: {"path_order_optimization":5}
+    depends: {"AND":[{"slicing_mode":0},{"path_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -117,7 +117,7 @@ settings:
     display: "Custom Path Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Custom Point Optimization Location"
-    depends: {"path_order_optimization":5}
+    depends: {"AND":[{"slicing_mode":0},{"path_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -129,7 +129,7 @@ settings:
     display: "Custom Path Point Z Location"
     type: "location"
     tooltip: "Z Coordinate for Custom Point Optimization Location"
-    depends: {"path_order_optimization":5}
+    depends: {"AND":[{"slicing_mode":0},{"path_order_optimization":5}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -141,7 +141,7 @@ settings:
     display: "Point Order Optimization"
     type: "enumeration"
     tooltip: "Type of order optimizer to use on point selection after a path has been determined"
-    depends: {}
+    depends: {"slicing_mode":0}
     options:
       - "Next Closest"
       - "Next Farthest"
@@ -159,7 +159,7 @@ settings:
     display: "Enable Point Order Segment Breaking"
     type: "boolean"
     tooltip: "Allows point order optimization to split a closed contour segment so the seam can start at the closest point along an edge."
-    depends: {"OR":[{"point_order_optimization":0},{"point_order_optimization":4}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":0},{"point_order_optimization":4}]}]}
     options: []
     default: false
     minor: "Optimizations"
@@ -171,7 +171,7 @@ settings:
     display: "Enable Local Randomness"
     type: "boolean"
     tooltip: "Enables local randomness within a specified radius after the selected point optimization scheme"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Optimizations"
@@ -183,7 +183,7 @@ settings:
     display: "Local Randomness Radius"
     type: "distance"
     tooltip: "Radius within which the travel connection will be randomized after having computed connectivity via point optimization scheme"
-    depends: {"local_randomness_enable":true}
+    depends: {"AND":[{"slicing_mode":0},{"local_randomness_enable":true}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -195,7 +195,7 @@ settings:
     display: "Enable Minimum Distance"
     type: "boolean"
     tooltip: "Enables a minimum distance threshold when using next closest point optimization"
-    depends: {"point_order_optimization":0}
+    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":0}]}
     options: []
     default: false
     minor: "Optimizations"
@@ -207,7 +207,7 @@ settings:
     display: "Minimum Distance Threshold"
     type: "distance"
     tooltip: "Minimum distance that a point must be when selected via next closest point optimization. If none are found, furthest point is selected."
-    depends: {"AND":[{"point_order_optimization":0},{"enable_min_distance":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"point_order_optimization":0},{"enable_min_distance":true}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -219,7 +219,7 @@ settings:
     display: "Consecutive Distance Threshold"
     type: "distance"
     tooltip: "Sets minimum distance to rotate consecutive point layer to layer"
-    depends: {"point_order_optimization":3}
+    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":3}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -231,7 +231,7 @@ settings:
     display: "Custom Point X Location"
     type: "location"
     tooltip: "X Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -243,7 +243,7 @@ settings:
     display: "Custom Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -255,7 +255,7 @@ settings:
     display: "Custom Point Z Location"
     type: "location"
     tooltip: "Z Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -267,7 +267,7 @@ settings:
     display: "Add Second Custom Location"
     type: "boolean"
     tooltip: "Enables a second custom point location so that points alternate layer to layer. The second point is used for even numbered layers."
-    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: false
     minor: "Optimizations"
@@ -279,7 +279,7 @@ settings:
     display: "Enable Second Custom Location Every Two Layers"
     type: "boolean"
     tooltip: "Enables the second custom point, but custom points are alternated every two layers. I.e. layers 1 and 2 use the original point and layers 3 and 4 use the second point."
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: false
     minor: "Optimizations"
@@ -291,7 +291,7 @@ settings:
     display: "Second Custom Point X Location"
     type: "location"
     tooltip: "X Coordinate for Second Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -303,7 +303,7 @@ settings:
     display: "Second Custom Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Second Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -315,7 +315,7 @@ settings:
     display: "Second Custom Point Z Location"
     type: "location"
     tooltip: "Z Coordinate for Second Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_second_custom_point_location":true},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -327,7 +327,7 @@ settings:
     display: "Seam Attractor Vector - X"
     type: "unitless_float"
     tooltip: "X component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -339,7 +339,7 @@ settings:
     display: "Seam Attractor Vector - Y"
     type: "unitless_float"
     tooltip: "Y component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -351,7 +351,7 @@ settings:
     display: "Seam Attractor Vector - Z"
     type: "unitless_float"
     tooltip: "Z component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -363,7 +363,7 @@ settings:
     display: "Custom Point X Increment"
     type: "location"
     tooltip: "Distance to increment the custom point X location from layer to layer. This is used for angled printing to move the seam along with the slicing plane."
-    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -375,7 +375,7 @@ settings:
     display: "Custom Point Y Increment"
     type: "location"
     tooltip: "Distance to increment the custom point Y location from layer to layer. This is used for angled printing to move the seam along with the slicing plane."
-    depends: {"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -388,7 +388,7 @@ inputs:
     display: "Seam Attractor Vector"
     widget: "vector3"
     tooltip: "Vector used to project seam attractor points onto each slicing plane. Leave all components at 0 to use the slicing vector automatically."
-    depends: {"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
     minor: "Optimizations"
     major: "Profile"
     components:

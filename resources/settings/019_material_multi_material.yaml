@@ -5,7 +5,7 @@ settings:
     display: "Enable Multi-material"
     type: "boolean"
     tooltip: "If selected, enables the use of multiple printing materials"
-    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":10},{"syntax":11}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"syntax":1},{"OR":[{"syntax":10},{"syntax":11}]}]}]}
     options: []
     default: false
     minor: "Multi-Material"
@@ -17,7 +17,7 @@ settings:
     display: "Perimeter Material Number"
     type: "number"
     tooltip: "Sets the material number to be used during perimeter, brim, skeleton, and skirt paths"
-    depends: {"AND":[{"enable_multi_material":true},{"OR":[{"perimeter":true},{"OR":[{"brim":true},{"OR":[{"skeleton":true},{"skirt":true}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_multi_material":true},{"OR":[{"perimeter":true},{"OR":[{"brim":true},{"OR":[{"skeleton":true},{"skirt":true}]}]}]}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -29,7 +29,7 @@ settings:
     display: "Inset Material Number"
     type: "number"
     tooltip: "Sets the material number to be used during inset paths"
-    depends: {"AND":[{"inset":true},{"enable_multi_material":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"enable_multi_material":true}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -41,7 +41,7 @@ settings:
     display: "Skeleton Material Number"
     type: "number"
     tooltip: "Sets the material number to be used for skeleton paths."
-    depends: {"AND":[{"skeleton":true},{"enable_multi_material":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"enable_multi_material":true}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -53,7 +53,7 @@ settings:
     display: "Skin Material Number"
     type: "number"
     tooltip: "Sets the material number to be used during skin paths"
-    depends: {"AND":[{"skin":true},{"enable_multi_material":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"enable_multi_material":true}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -65,7 +65,7 @@ settings:
     display: "Infill Material Number"
     type: "number"
     tooltip: "Sets the material number to be used during infill paths"
-    depends: {"AND":[{"infill":true},{"enable_multi_material":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"enable_multi_material":true}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -77,7 +77,7 @@ settings:
     display: "Support Material Number"
     type: "number"
     tooltip: "Sets the material number to be used during support and raft paths"
-    depends: {"AND":[{"enable_multi_material":true},{"OR":[{"support":true},{"raft":true}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_multi_material":true},{"OR":[{"support":true},{"raft":true}]}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -89,7 +89,7 @@ settings:
     display: "Transition Distance"
     type: "distance"
     tooltip: "The distance needed to transition between materials"
-    depends: {"enable_multi_material":true}
+    depends: {"AND":[{"slicing_mode":0},{"enable_multi_material":true}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -101,7 +101,7 @@ settings:
     display: "Enable Second Transition Distance"
     type: "boolean"
     tooltip: "If selected, Transition Distance will be used to transition from 1 to 2 and Second Transition Distance will be used for 2 to 1"
-    depends: {"enable_multi_material":true}
+    depends: {"AND":[{"slicing_mode":0},{"enable_multi_material":true}]}
     options: []
     default: false
     minor: "Multi-Material"
@@ -113,7 +113,7 @@ settings:
     display: "Second Transition Distance"
     type: "distance"
     tooltip: "Distance used for transition from material 2 to material 1"
-    depends: {"AND":[{"enable_multi_material":true},{"enable_second_transition_distance":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_multi_material":true},{"enable_second_transition_distance":true}]}]}
     options: []
     default: 0
     minor: "Multi-Material"
@@ -125,7 +125,7 @@ settings:
     display: "Use M222 Code"
     type: "boolean"
     tooltip: "Uses the M222 code for material transitions rather than the standard M237"
-    depends: {"enable_multi_material":true}
+    depends: {"AND":[{"slicing_mode":0},{"enable_multi_material":true}]}
     options: []
     default: false
     minor: "Multi-Material"

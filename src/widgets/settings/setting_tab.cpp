@@ -115,6 +115,15 @@ int SettingTab::getIndex() { return m_index; }
 
 QString SettingTab::getName() { return m_name; }
 
+bool SettingTab::hasShownRows() const {
+    for (const QSharedPointer<SettingRowBase>& row : m_rows) {
+        if (row->isShown())
+            return true;
+    }
+
+    return false;
+}
+
 void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input) {
     if (m_row_aliases.contains(key))
         return;

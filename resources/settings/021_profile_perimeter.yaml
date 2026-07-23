@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter"
     type: "boolean"
     tooltip: "If selected, perimeters will be generated"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Perimeter"
@@ -17,7 +17,7 @@ settings:
     display: "Number of Perimeters"
     type: "positive_int"
     tooltip: "Total number of perimeters per layer"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -29,7 +29,7 @@ settings:
     display: "Perimeter Boundaries"
     type: "enumeration"
     tooltip: "Selects which polygon boundaries are used to generate perimeter paths."
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options:
       - "All Boundaries"
       - "Internal Boundaries"
@@ -44,7 +44,7 @@ settings:
     display: "Perimeter Bead Width"
     type: "distance"
     tooltip: "Bead width for perimeter paths"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -56,7 +56,7 @@ settings:
     display: "Enable Adaptive Perimeter Bead Widths"
     type: "boolean"
     tooltip: "If selected, perimeter bead widths are adjusted within the configured limits to better fill narrow regions whose remaining contour space is not an exact multiple of the nominal bead width."
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Perimeter"
@@ -68,7 +68,7 @@ settings:
     display: "Minimum Adaptive Perimeter Bead Width"
     type: "distance"
     tooltip: "Minimum bead width allowed when adaptive perimeter bead widths are enabled."
-    depends: {"AND":[{"perimeter":true},{"perimeter_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_adapt":true}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -80,7 +80,7 @@ settings:
     display: "Maximum Adaptive Perimeter Bead Width"
     type: "distance"
     tooltip: "Maximum bead width allowed when adaptive perimeter bead widths are enabled."
-    depends: {"AND":[{"perimeter":true},{"perimeter_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_adapt":true}]}]}
     options: []
     default: 10000
     minor: "Perimeter"
@@ -92,7 +92,7 @@ settings:
     display: "Perimeter Speed"
     type: "speed"
     tooltip: "Speed for perimeter paths"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -104,7 +104,7 @@ settings:
     display: "Perimeter Extruder Speed"
     type: "rpm"
     tooltip: "Extruder speed for perimeter paths"
-    depends: {"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -116,7 +116,7 @@ settings:
     display: "Perimeter Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for perimeter paths for systems without RPM control"
-    depends: {"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
     options: []
     default: 1
     minor: "Perimeter"
@@ -128,7 +128,7 @@ settings:
     display: "Minimum Perimeter Path Length"
     type: "distance"
     tooltip: "Perimeter extrusion paths less than this value are deleted"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -140,7 +140,7 @@ settings:
     display: "Minimum Perimeter Segment Length"
     type: "distance"
     tooltip: "Perimeter path segments shorter than this value are collapsed before extrusion paths are created"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -152,7 +152,7 @@ settings:
     display: "Enable Perimeter Lead-In"
     type: "boolean"
     tooltip: "If selected, a lead-in path segment is added to the first perimeter path that can be used to prime the extruder"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Perimeter"
@@ -164,7 +164,7 @@ settings:
     display: "Lead-In on First Layer Only"
     type: "boolean"
     tooltip: "If selected, lead-in is only applied to layer 1."
-    depends: {"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}]}
     options: []
     default: true
     minor: "Perimeter"
@@ -176,7 +176,7 @@ settings:
     display: "Lead-In Point X Position"
     type: "distance"
     tooltip: "X Position for the start of the perimeter lead-in segment"
-    depends: {"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -188,7 +188,7 @@ settings:
     display: "Lead-In Point Y Position"
     type: "distance"
     tooltip: "Y Position for the start of the perimeter lead-in segment"
-    depends: {"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_lead_in":true}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -200,7 +200,7 @@ settings:
     display: "Enable Perimeter Flying Start"
     type: "boolean"
     tooltip: "If selected, motions are created prior to the first extrusion move such that the end effector is in motion at the start of the path."
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Perimeter"
@@ -212,7 +212,7 @@ settings:
     display: "Perimeter Flying Start Distance"
     type: "distance"
     tooltip: "Distance away from the start of the extrusion path to begin the flying start motion."
-    depends: {"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -224,7 +224,7 @@ settings:
     display: "Perimeter Flying Start Speed"
     type: "speed"
     tooltip: "Speed for the flying start motion."
-    depends: {"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_flying_start":true}]}]}
     options: []
     default: 0
     minor: "Perimeter"
@@ -236,7 +236,7 @@ settings:
     display: "Enable Spiral Perimeter"
     type: "boolean"
     tooltip: "If selected, spiral perimeters will be generated"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Perimeter"

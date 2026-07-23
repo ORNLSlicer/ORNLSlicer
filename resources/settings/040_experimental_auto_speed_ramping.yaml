@@ -5,7 +5,7 @@ settings:
     display: "Enable Trajectory Auto Speed Ramping"
     type: "boolean"
     tooltip: "If selected, will ramp speed for a certain distance at the intersections"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Auto Speed Ramping"
@@ -17,7 +17,7 @@ settings:
     display: "Angle Threshold"
     type: "angle"
     tooltip: "Based on the threshold for change in angle of trajectory, will ramp speed for a certain distance on a path segment"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 2.3562
     minor: "Auto Speed Ramping"
@@ -29,7 +29,7 @@ settings:
     display: "Min Ramp Down Distance"
     type: "distance"
     tooltip: "Distance for the Auto Speed Ramp Down trajectory move, when angle is over threshold"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 25400
     minor: "Auto Speed Ramping"
@@ -41,7 +41,7 @@ settings:
     display: "Min Ramp Up Distance"
     type: "distance"
     tooltip: "Distance for the Auto Speed Ramp Up trajectory move, when angle is over threshold"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 25400
     minor: "Auto Speed Ramping"
@@ -53,7 +53,7 @@ settings:
     display: "Ramping Down Speed"
     type: "speed"
     tooltip: "Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 25400
     minor: "Auto Speed Ramping"
@@ -65,7 +65,7 @@ settings:
     display: "Ramping Down Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 14
     minor: "Auto Speed Ramping"
@@ -77,7 +77,7 @@ settings:
     display: "Ramping Up Speed"
     type: "speed"
     tooltip: "Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 50800
     minor: "Auto Speed Ramping"
@@ -89,7 +89,7 @@ settings:
     display: "Ramping Up Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the Auto Speed Ramping trajectory move, when angle is over threshold"
-    depends: {"trajectory_angle_slow_down":true}
+    depends: {"AND":[{"slicing_mode":0},{"trajectory_angle_slow_down":true}]}
     options: []
     default: 28
     minor: "Auto Speed Ramping"

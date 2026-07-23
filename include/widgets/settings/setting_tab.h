@@ -71,6 +71,9 @@ class SettingTab : public QWidget {
     //! \return Name of tab
     QString getName();
 
+    //! \brief Returns whether any row in this tab is currently visible.
+    bool hasShownRows() const;
+
   public slots:
     //! \brief Expand the current tab.
     void expandTab();

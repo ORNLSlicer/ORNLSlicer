@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for perimeter moves to prevent material from sticking up"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -17,7 +17,7 @@ settings:
     display: "Perimeter Wipe Direction"
     type: "enumeration"
     tooltip: "Direction for all perimeter tip wipes. Optimal does forward for closed loops paths\\nand reverse for open loop paths"
-    depends: {"AND":[{"perimeter":true},{"perimeter_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
       - "WIPE_FORWARD"
@@ -33,7 +33,7 @@ settings:
     display: "Perimeter Wipe Distance"
     type: "distance"
     tooltip: "Sets the travel distance for perimeter tip wiping. If using an incrementing wipe, this is the initial distance."
-    depends: {"AND":[{"perimeter":true},{"perimeter_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -45,7 +45,7 @@ settings:
     display: "Perimeter Wipe Speed"
     type: "speed"
     tooltip: "Sets the speed for the perimeter tip wipe move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -57,7 +57,7 @@ settings:
     display: "Perimeter Wipe Extruder Speed"
     type: "rpm"
     tooltip: "Sets the extruder speed for the perimeter tip wipe move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -69,7 +69,7 @@ settings:
     display: "Perimeter Wipe Angle"
     type: "angle"
     tooltip: "Sets the angle of the perimeter tip wipe"
-    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_wipe":true},{"perimeter_wipe_direction":3}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_wipe":true},{"perimeter_wipe_direction":3}]}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -81,7 +81,7 @@ settings:
     display: "Perimeter Wipe Cutoff Distance"
     type: "distance"
     tooltip: "Sets the distance from the end of the perimeter tip wipe to turn the extruder off"
-    depends: {"AND":[{"perimeter":true},{"perimeter_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -93,7 +93,7 @@ settings:
     display: "Perimeter Wipe Lift Height"
     type: "distance"
     tooltip: "Sets the distance to lift during the perimeter tip wipe move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -105,7 +105,7 @@ settings:
     display: "Enable Inset Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for inset moves to prevent material from sticking up"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -117,7 +117,7 @@ settings:
     display: "Inset Wipe Direction"
     type: "enumeration"
     tooltip: "Direction for all inset tip wipes. Optimal does forward for closed loops paths\\nand reverse for open loop paths"
-    depends: {"AND":[{"inset":true},{"inset_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
       - "WIPE_FORWARD"
@@ -133,7 +133,7 @@ settings:
     display: "Inset Wipe Distance"
     type: "distance"
     tooltip: "Sets the travel distance for inset tip wiping. If using an incrementing wipe, this is the initial distance."
-    depends: {"AND":[{"inset":true},{"inset_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -145,7 +145,7 @@ settings:
     display: "Inset Wipe Speed"
     type: "speed"
     tooltip: "Sets the speed for the inset tip wipe move"
-    depends: {"AND":[{"inset":true},{"inset_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -157,7 +157,7 @@ settings:
     display: "Inset Wipe Extruder Speed"
     type: "rpm"
     tooltip: "Sets the extruder speed for the inset tip wipe move"
-    depends: {"AND":[{"inset":true},{"inset_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -169,7 +169,7 @@ settings:
     display: "Inset Wipe Angle"
     type: "angle"
     tooltip: "Sets the angle of the inset tip wipe"
-    depends: {"AND":[{"inset":true},{"AND":[{"inset_wipe":true},{"inset_wipe_direction":3}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_wipe":true},{"inset_wipe_direction":3}]}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -181,7 +181,7 @@ settings:
     display: "Inset Wipe Cutoff Distance"
     type: "distance"
     tooltip: "Sets the distance from the end of the inset tip wipe to turn the extruder off"
-    depends: {"AND":[{"inset":true},{"inset_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -193,7 +193,7 @@ settings:
     display: "Inset Wipe Lift Height"
     type: "distance"
     tooltip: "Sets the distance to lift during the inset tip wipe move"
-    depends: {"AND":[{"inset":true},{"inset_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -205,7 +205,7 @@ settings:
     display: "Enable Skeleton Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for skeleton moves to prevent material from sticking up"
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -217,7 +217,7 @@ settings:
     display: "Skeleton Wipe Direction"
     type: "enumeration"
     tooltip: "Direction for all skeleton tip wipes. Optimal does reverse a reverse wipe"
-    depends: {"AND":[{"skeleton":true},{"skeleton_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
       - "WIPE_FORWARD"
@@ -233,7 +233,7 @@ settings:
     display: "Skeleton Wipe Distance"
     type: "distance"
     tooltip: "Sets the travel distance for skeleton tip wiping. If using an incrementing wipe, this is the initial distance."
-    depends: {"AND":[{"skeleton":true},{"skeleton_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -245,7 +245,7 @@ settings:
     display: "Skeleton Wipe Speed"
     type: "speed"
     tooltip: "Sets the speed for the skeleton tip wipe move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -257,7 +257,7 @@ settings:
     display: "Skeleton Wipe Extruder Speed"
     type: "rpm"
     tooltip: "Sets the extruder speed for the skeleton tip wipe move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -269,7 +269,7 @@ settings:
     display: "Skeleton Wipe Angle"
     type: "angle"
     tooltip: "Sets the angle of the skeleton tip wipe"
-    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_wipe":true},{"skeleton_wipe_direction":3}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_wipe":true},{"skeleton_wipe_direction":3}]}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -281,7 +281,7 @@ settings:
     display: "Skeleton Wipe Cutoff Distance"
     type: "distance"
     tooltip: "Sets the distance from the end of the skeleton tip wipe to turn the extruder off"
-    depends: {"AND":[{"skeleton":true},{"skeleton_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -293,7 +293,7 @@ settings:
     display: "Skeleteon Wipe Lift Distance"
     type: "distance"
     tooltip: "Sets the distance to lift during the skeleton tip wipe move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -305,7 +305,7 @@ settings:
     display: "Enable Skin Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for skin moves to prevent material from sticking up"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -317,7 +317,7 @@ settings:
     display: "Skin Wipe Direction"
     type: "enumeration"
     tooltip: "Direction for all skin tip wipes. Optimal does forward for closed loops paths,\\nreverse for open loop paths, and forward over the inset/perimeter when available"
-    depends: {"AND":[{"skin":true},{"skin_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
       - "WIPE_FORWARD"
@@ -333,7 +333,7 @@ settings:
     display: "Skin Wipe Distance"
     type: "distance"
     tooltip: "Sets the travel distance for skin tip wiping. If using an incrementing wipe, this is the initial distance."
-    depends: {"AND":[{"skin":true},{"skin_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -345,7 +345,7 @@ settings:
     display: "Skin Wipe Speed"
     type: "speed"
     tooltip: "Sets the speed for the skin tip wipe move"
-    depends: {"AND":[{"skin":true},{"skin_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -357,7 +357,7 @@ settings:
     display: "Skin Wipe Extruder Speed"
     type: "rpm"
     tooltip: "Sets the extruder speed for the skin tip wipe move"
-    depends: {"AND":[{"skin":true},{"skin_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -369,7 +369,7 @@ settings:
     display: "Skin Wipe Angle"
     type: "angle"
     tooltip: "Sets the angle of the skin tip wipe"
-    depends: {"AND":[{"skin":true},{"AND":[{"skin_wipe":true},{"skin_wipe_direction":3}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_wipe":true},{"skin_wipe_direction":3}]}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -381,7 +381,7 @@ settings:
     display: "Skin Wipe Cutoff Distance"
     type: "distance"
     tooltip: "Sets the distance from the end of the skin tip wipe to turn the extruder off"
-    depends: {"AND":[{"skin":true},{"skin_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -393,7 +393,7 @@ settings:
     display: "Skin Wipe Lift Height"
     type: "distance"
     tooltip: "Sets the distance to lift during the skin tip wipe move"
-    depends: {"AND":[{"skin":true},{"skin_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -405,7 +405,7 @@ settings:
     display: "Enable Infill Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for infill moves to prevent material from sticking up"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -417,7 +417,7 @@ settings:
     display: "Infill Wipe Direction"
     type: "enumeration"
     tooltip: "Direction for all infill tip wipes. Optimal does forward for closed loops paths,\\nreverse for open loop paths, and forward over the inset/perimeter when available"
-    depends: {"AND":[{"infill":true},{"infill_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options:
       - "WIPE_OPTIMAL"
       - "WIPE_FORWARD"
@@ -433,7 +433,7 @@ settings:
     display: "Infill Wipe Distance"
     type: "distance"
     tooltip: "Sets the travel distance for infill tip wiping. If using an incrementing wipe, this is the initial distance."
-    depends: {"AND":[{"infill":true},{"infill_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -445,7 +445,7 @@ settings:
     display: "Infill Wipe Speed"
     type: "speed"
     tooltip: "Sets the speed for the infill tip wipe move"
-    depends: {"AND":[{"infill":true},{"infill_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -457,7 +457,7 @@ settings:
     display: "Infill Wipe Extruder Speed"
     type: "rpm"
     tooltip: "Sets the extruder speed for the infill tip wipe move"
-    depends: {"AND":[{"infill":true},{"infill_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -469,7 +469,7 @@ settings:
     display: "Infill Wipe Angle"
     type: "angle"
     tooltip: "Sets the angle of the infill tip wipe"
-    depends: {"AND":[{"infill":true},{"AND":[{"infill_wipe":true},{"infill_wipe_direction":3}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_wipe":true},{"infill_wipe_direction":3}]}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -481,7 +481,7 @@ settings:
     display: "Infill Wipe Cutoff Distance"
     type: "distance"
     tooltip: "Sets the distance from the end of the infill tip wipe move to turn the extruder off"
-    depends: {"AND":[{"infill":true},{"infill_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -493,7 +493,7 @@ settings:
     display: "Infill Wipe Lift Height"
     type: "distance"
     tooltip: "Sets the distance to lift during the infill tip wipe move"
-    depends: {"AND":[{"infill":true},{"infill_wipe":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -505,7 +505,7 @@ settings:
     display: "Tip Wipe Voltage"
     type: "voltage"
     tooltip: "Sets welder voltage during tip wipe motions"
-    depends: {"syntax":24}
+    depends: {"AND":[{"slicing_mode":0},{"syntax":24}]}
     options: []
     default: 0
     minor: "Tip Wipe"
@@ -517,7 +517,7 @@ settings:
     display: "Disable Feedrate Scaling for Tip Wipes"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change tip wipe path speeds."
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Tip Wipe"
