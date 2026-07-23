@@ -241,6 +241,10 @@ const QString Constants::PrinterSettings::MachineSetup::kSyntax = "syntax";
 const QString Constants::PrinterSettings::MachineSetup::kMachineType = "machine_type";
 const QString Constants::PrinterSettings::MachineSetup::kForceG1 = "force_G1";
 const QString Constants::PrinterSettings::MachineSetup::kSupportG3 = "supports_G2_3";
+const QString Constants::PrinterSettings::MachineSetup::kG2G3CenterPointInterpretation =
+    "g2_g3_center_point_interpretation";
+const QString Constants::PrinterSettings::MachineSetup::kG2G3AbsoluteI = "g2_g3_absolute_i";
+const QString Constants::PrinterSettings::MachineSetup::kG2G3AbsoluteJ = "g2_g3_absolute_j";
 const QString Constants::PrinterSettings::MachineSetup::kToolNumber = "tool_number";
 const QString Constants::PrinterSettings::MachineSetup::kToolCoordinate = "tool_coordinate";
 const QString Constants::PrinterSettings::MachineSetup::kBaseCoordinate = "base_coordinate";

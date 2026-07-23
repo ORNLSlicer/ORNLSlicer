@@ -87,6 +87,44 @@ settings:
     namespace: "Printer::MachineSetup"
     symbol: "kSupportsG2G3"
     local: false
+  - name: "g2_g3_center_point_interpretation"
+    display: "G2/G3 Center Point Interpretation"
+    type: "enumeration"
+    tooltip: "Selects whether G2/G3 I and J arc center coordinates are absolute positions or relative distances from the arc start point."
+    depends: {"AND":[{"syntax":31},{"supports_G2_3":true}]}
+    options:
+      - "Absolute"
+      - "Relative"
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kG2G3CenterPointInterpretation"
+    local: false
+  - name: "g2_g3_absolute_i"
+    display: "G2/G3 Absolute I"
+    type: "location"
+    tooltip: "Absolute I coordinate used for Arc Specialties G2/G3 arc centers."
+    depends: {"AND":[{"g2_g3_center_point_interpretation":0},{"AND":[{"syntax":31},{"supports_G2_3":true}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kG2G3AbsoluteI"
+    local: false
+  - name: "g2_g3_absolute_j"
+    display: "G2/G3 Absolute J"
+    type: "location"
+    tooltip: "Absolute J coordinate used for Arc Specialties G2/G3 arc centers."
+    depends: {"AND":[{"g2_g3_center_point_interpretation":0},{"AND":[{"syntax":31},{"supports_G2_3":true}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kG2G3AbsoluteJ"
+    local: false
   - name: "tool_number"
     display: "Tool Number"
     type: "number"
@@ -195,3 +233,16 @@ settings:
     namespace: "Printer::MachineSetup"
     symbol: "kGCodeCoordinateFrameRotationZ"
     local: false
+inputs:
+  - name: "g2_g3_absolute_center"
+    display: "G2/G3 Absolute Center"
+    widget: "vector2"
+    tooltip: "Absolute I and J coordinates used for Arc Specialties G2/G3 arc centers."
+    depends: {"AND":[{"g2_g3_center_point_interpretation":0},{"AND":[{"syntax":31},{"supports_G2_3":true}]}]}
+    minor: "Machine Setup"
+    major: "Printer"
+    components:
+      - setting: "g2_g3_absolute_i"
+        label: "I"
+      - setting: "g2_g3_absolute_j"
+        label: "J"

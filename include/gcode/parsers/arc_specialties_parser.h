@@ -34,6 +34,9 @@ class ArcSpecialtiesParser : public CommonParser {
      */
     GcodeCommand parseCommand(QString command_string, int line_number) override;
 
+    //! @brief Registers Arc Specialties command handlers and modal arc-center commands.
+    void config() override;
+
   protected:
     /*!
      * @brief Handles Arc Specialties travel moves after validating and stripping orientation axes.
@@ -58,6 +61,15 @@ class ArcSpecialtiesParser : public CommonParser {
      * @param params Raw G3/G03 parameters.
      */
     void G3Handler(QVector<QString> params) override;
+
+    //! @brief Enables absolute I/J arc-center parsing.
+    void G161Handler(QVector<QString> params);
+
+    //! @brief Enables relative I/J arc-center parsing.
+    void G162Handler(QVector<QString> params);
+
+    //! @brief Disables absolute I/J arc-center parsing.
+    void G164Handler(QVector<QString> params);
 
   private:
     /*!
@@ -115,6 +127,13 @@ class ArcSpecialtiesParser : public CommonParser {
     bool isCommentedPrintMove() const;
 
     /*!
+     * @brief Converts absolute I/J arc-center parameters to CommonParser relative offsets when G161 is active.
+     * @param params Common-parser-compatible Arc Specialties arc parameters.
+     * @return Relative-center parameters to delegate to CommonParser.
+     */
+    QVector<QString> convertAbsoluteArcCenterParams(const QVector<QString>& params);
+
+    /*!
      * @brief Sets the extruder state used by CommonParser motion estimation.
      * @param on True to mark the extruder as printing.
      */
@@ -126,5 +145,8 @@ class ArcSpecialtiesParser : public CommonParser {
      * @param ccw True for G3/G03, false for G2/G02.
      */
     void handleArcFeedMove(QVector<QString> params, bool ccw);
+
+    //! @brief Tracks whether G161 absolute-center mode is active while parsing Arc Specialties G-code.
+    bool m_use_absolute_arc_centers = false;
 };
 } // namespace ORNL
