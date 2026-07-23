@@ -113,7 +113,7 @@ QString WolfWriter::writeBeforePath(RegionType type) {
         }
         else {}
     }
-    m_bead_count ++;
+    m_bead_count++;
     rv += commentLine("BEAD NUMBER: " % QString::number(m_bead_count));
     return rv;
 }
@@ -150,8 +150,9 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
         Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
 
-        rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
+        rv += m_G1 % m_f %
+              QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+              writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
@@ -165,7 +166,7 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
         travel_destination = travel_destination + travel_lift; // travel destination is above the target point
 
     rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
-        writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
+          writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
     if (m_first_travel)         // if this is the first travel
@@ -173,8 +174,9 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-            writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
+        rv += m_G1 % m_f %
+              QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+              writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
@@ -193,8 +195,9 @@ QString WolfWriter::writeLine(const Point& start_point, const Point& target_poin
 
     QString rv;
 
-    if ((path_modifiers == PathModifiers::kAngledTipWipe || path_modifiers == PathModifiers::kForwardTipWipe || path_modifiers == PathModifiers::kPerimeterTipWipe
-        || path_modifiers == PathModifiers::kReverseTipWipe) && m_wolf_path_type != 6) {
+    if ((path_modifiers == PathModifiers::kAngledTipWipe || path_modifiers == PathModifiers::kForwardTipWipe ||
+         path_modifiers == PathModifiers::kPerimeterTipWipe || path_modifiers == PathModifiers::kReverseTipWipe) &&
+        m_wolf_path_type != 6) {
         rv += "M6" % commentSpaceLine("TIP WIPE START");
     }
 
@@ -372,8 +375,8 @@ QString WolfWriter::writeCoordinates(Point destination) {
     QString rv;
     // always specify X, Y, I, J, K, and L
     rv += m_x % QString::number(Distance(destination.x()).to(m_meta.m_distance_unit), 'f', 4) % m_y %
-            QString::number(Distance(destination.y()).to(m_meta.m_distance_unit), 'f', 4)
-            % " I0.0000 J0.0000 K1.0000 L0.0000";
+          QString::number(Distance(destination.y()).to(m_meta.m_distance_unit), 'f', 4) %
+          " I0.0000 J0.0000 K1.0000 L0.0000";
 
     // write vertical coordinate along the correct axis (Z or W) according to printer settings
     // only output Z/W coordinate if there was a change in Z/W

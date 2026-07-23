@@ -148,8 +148,7 @@ class WriterBase {
     QVector3D getLiftVector(Distance lift_height) const;
 
     //! \brief emits a final lift move for point-based writers when configured
-    template <typename MoveEmitter>
-    QString writeFinalTravelLift(MoveEmitter&& emit_move, const QString& comment) {
+    template <typename MoveEmitter> QString writeFinalTravelLift(MoveEmitter&& emit_move, const QString& comment) {
         const Distance final_lift = m_sb->setting<Distance>(PS::Travel::kFinalLiftDistance);
         if (final_lift <= 0 || !m_has_current_position)
             return QString();

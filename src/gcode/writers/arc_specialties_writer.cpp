@@ -101,15 +101,13 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine("Cylindrical Path Pattern: " % toString(path_pattern));
         text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
                             "offset");
-        text += commentLine("G-Code Coordinate Frame Rotation: X=" %
-                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX),
-                                        m_meta.m_angle_unit) %
-                            " Y=" %
-                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY),
-                                        m_meta.m_angle_unit) %
-                            " Z=" %
-                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ),
-                                        m_meta.m_angle_unit));
+        text += commentLine(
+            "G-Code Coordinate Frame Rotation: X=" %
+            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX), m_meta.m_angle_unit) %
+            " Y=" %
+            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY), m_meta.m_angle_unit) %
+            " Z=" %
+            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ), m_meta.m_angle_unit));
         text += commentLine("Arc Specialties partner frame: set G-Code Frame Rotation Z to -90deg");
         text += commentLine("Work Offset Setup: manual and probe setup commands are not emitted by this first pass");
         text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
@@ -527,8 +525,7 @@ QString ArcSpecialtiesWriter::writeArcCenterOffsets(const Point& start_point, co
                               center_point.z() - start_point.z());
     const Point output_offset = rotateGCodeCoordinateFrameDelta(center_offset);
 
-    return QString(" I=") %
-           QString::number(Distance(output_offset.x()).to(m_meta.m_distance_unit), 'f', 4) % " J=" %
+    return QString(" I=") % QString::number(Distance(output_offset.x()).to(m_meta.m_distance_unit), 'f', 4) % " J=" %
            QString::number(Distance(output_offset.y()).to(m_meta.m_distance_unit), 'f', 4);
 }
 

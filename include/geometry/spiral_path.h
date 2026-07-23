@@ -329,7 +329,8 @@ inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, Dist
             Point rough_connector_start = detail::stopPointOnClosingSegment(loop, final_stop_distance);
             const bool smooth_closing_segment = detail::hasSmoothClosingSegment(loop);
             if (smooth_closing_segment) {
-                detail::rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, loop.back(), loop.front());
+                detail::rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, loop.back(),
+                                                            loop.front());
             }
             else {
                 detail::rotateToClosestPoint(next_loop, rough_connector_start);

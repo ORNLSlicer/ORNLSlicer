@@ -32,8 +32,7 @@ void copyInitialExtruderSpeed(const QSharedPointer<SettingsBase>& destination,
     }
 }
 
-void copyAdaptedWidthFlag(const QSharedPointer<SettingsBase>& destination,
-                          const QSharedPointer<SettingsBase>& source) {
+void copyAdaptedWidthFlag(const QSharedPointer<SettingsBase>& destination, const QSharedPointer<SettingsBase>& source) {
     if (source->contains(SS::kAdapted)) {
         destination->setSetting(SS::kAdapted, source->setting<bool>(SS::kAdapted));
     }
@@ -46,8 +45,7 @@ void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, V
     QSharedPointer<SettingsBase> next_segment_settings = path.front()->getSb();
 
     copyInitialExtruderSpeed(travel_segment->getSb(), next_segment_settings);
-    travel_segment->getSb()->setSetting(SS::kRegionType,
-                                        next_segment_settings->setting<RegionType>(SS::kRegionType));
+    travel_segment->getSb()->setSetting(SS::kRegionType, next_segment_settings->setting<RegionType>(SS::kRegionType));
     travel_segment->getSb()->setSetting(SS::kExtruderSpeed,
                                         next_segment_settings->setting<AngularVelocity>(SS::kExtruderSpeed));
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
@@ -749,13 +747,12 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
                      path.back()->getSb()->setting<int>(SS::kMaterialNumber),
                      path.back()->getSb()->setting<bool>(SS::kAdapted));
 
-        writeArcSegment(path, spiral_start_point, spiral_end_point, center_point, spiral_angle, false,
-                        path.back()->getSb()->setting<Distance>(SS::kWidth),
-                        path.back()->getSb()->setting<Distance>(SS::kHeight), spiralLiftVelocity,
-                        path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
-                        path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
-                        path.back()->getSb()->setting<int>(SS::kMaterialNumber),
-                        path.back()->getSb()->setting<bool>(SS::kAdapted));
+        writeArcSegment(
+            path, spiral_start_point, spiral_end_point, center_point, spiral_angle, false,
+            path.back()->getSb()->setting<Distance>(SS::kWidth), path.back()->getSb()->setting<Distance>(SS::kHeight),
+            spiralLiftVelocity, path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
+            path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
+            path.back()->getSb()->setting<int>(SS::kMaterialNumber), path.back()->getSb()->setting<bool>(SS::kAdapted));
     }
     else {
         float currentZ = startPoint.z();

@@ -418,15 +418,15 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
 
     auto makeRectangle = [](double minimum_x, double minimum_y, double maximum_x, double maximum_y) {
         Polygon rectangle;
-        rectangle << Point(minimum_x, minimum_y) << Point(maximum_x, minimum_y)
-                  << Point(maximum_x, maximum_y) << Point(minimum_x, maximum_y);
+        rectangle << Point(minimum_x, minimum_y) << Point(maximum_x, minimum_y) << Point(maximum_x, maximum_y)
+                  << Point(minimum_x, maximum_y);
         PolygonList result;
         result += rectangle;
         return result;
     };
 
-    auto isBridgeable = [&makeRectangle](PolygonList component, const PolygonList& model_below,
-                                         Distance maximum_length, Distance anchor_width) {
+    auto isBridgeable = [&makeRectangle](PolygonList component, const PolygonList& model_below, Distance maximum_length,
+                                         Distance anchor_width) {
         if (component.isEmpty() || model_below.isEmpty() || maximum_length <= 0)
             return false;
 
@@ -442,19 +442,19 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         };
 
         if (Distance(width) <= maximum_length) {
-            const PolygonList left = makeRectangle(minimum.x() - anchor, minimum.y() - anchor,
-                                                   minimum.x() + anchor, maximum.y() + anchor);
-            const PolygonList right = makeRectangle(maximum.x() - anchor, minimum.y() - anchor,
-                                                    maximum.x() + anchor, maximum.y() + anchor);
+            const PolygonList left =
+                makeRectangle(minimum.x() - anchor, minimum.y() - anchor, minimum.x() + anchor, maximum.y() + anchor);
+            const PolygonList right =
+                makeRectangle(maximum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
             if (intersectsModel(left) && intersectsModel(right))
                 return true;
         }
 
         if (Distance(height) <= maximum_length) {
-            const PolygonList bottom = makeRectangle(minimum.x() - anchor, minimum.y() - anchor,
-                                                     maximum.x() + anchor, minimum.y() + anchor);
-            const PolygonList top = makeRectangle(minimum.x() - anchor, maximum.y() - anchor,
-                                                  maximum.x() + anchor, maximum.y() + anchor);
+            const PolygonList bottom =
+                makeRectangle(minimum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, minimum.y() + anchor);
+            const PolygonList top =
+                makeRectangle(minimum.x() - anchor, maximum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
             if (intersectsModel(bottom) && intersectsModel(top))
                 return true;
         }
@@ -506,8 +506,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         overhang = removeSmallAreas(overhang, minimum_area);
 
         const bool suppress_bridges = upper_layer->getSb()->setting<bool>(PS::Support::kBridgeSuppression);
-        const Distance maximum_bridge_length =
-            upper_layer->getSb()->setting<Distance>(PS::Support::kBridgeMaxLength);
+        const Distance maximum_bridge_length = upper_layer->getSb()->setting<Distance>(PS::Support::kBridgeMaxLength);
         if (suppress_bridges && maximum_bridge_length > 0 && !overhang.isEmpty()) {
             PolygonList unsupported_overhang;
             const Distance anchor_width = upper_layer->getSb()->setting<Distance>(PS::Layer::kBeadWidth);
@@ -538,8 +537,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         const int interface_layers = qMax(0, upper_layer->getSb()->setting<int>(PS::Support::kInterfaceLayers));
         const Distance interface_expansion =
             max(Distance(0), upper_layer->getSb()->setting<Distance>(PS::Support::kInterfaceExpansion));
-        const PolygonList interface_contact =
-            interface_expansion > 0 ? overhang.offset(interface_expansion) : overhang;
+        const PolygonList interface_contact = interface_expansion > 0 ? overhang.offset(interface_expansion) : overhang;
         for (int depth = 0; depth < interface_layers && target_layer - depth >= 0; ++depth)
             interface_geometry[target_layer - depth] |= interface_contact;
 
@@ -784,8 +782,8 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
     if (!organic) {
         for (int layer_index = layer_count - 1; layer_index >= 0; --layer_index) {
             const auto& settings = layers[layer_index]->getSb();
-            const bool hollow_taper = settings->setting<bool>(PS::Support::kTaper) &&
-                                      settings->setting<int>(PS::Support::kStructure) == 0;
+            const bool hollow_taper =
+                settings->setting<bool>(PS::Support::kTaper) && settings->setting<int>(PS::Support::kStructure) == 0;
             if (!hollow_taper || support_geometry[layer_index].isEmpty())
                 continue;
 
@@ -884,8 +882,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             settings->setSetting(PS::Support::kBaseRegion, true);
             settings->setSetting(PS::Support::kTubeWallRegion, false);
             settings->setSetting(PS::Support::kPattern, static_cast<int>(InfillPatterns::kLines));
-            settings->setSetting(PS::Support::kLineSpacing,
-                                 settings->setting<Distance>(PS::Layer::kBeadWidth));
+            settings->setSetting(PS::Support::kLineSpacing, settings->setting<Distance>(PS::Layer::kBeadWidth));
             settings->setSetting(PS::Support::kMinInfillArea, Area(0));
             support_islands.push_back(
                 QSharedPointer<SupportIsland>::create(geometry, settings, layers[layer_index]->getSettingsPolygons()));

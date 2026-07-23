@@ -113,10 +113,10 @@ PrinterObject::OptimizationPointPick PrinterObject::pickOptimizationPoint(const 
     QVector<OptimizationPointPick> candidates;
     candidates.push_back({m_seams.custom_island_opt, PS::Optimizations::kCustomIslandXLocation,
                           PS::Optimizations::kCustomIslandYLocation});
-    candidates.push_back({m_seams.custom_path_opt, PS::Optimizations::kCustomPathXLocation,
-                          PS::Optimizations::kCustomPathYLocation});
-    candidates.push_back({m_seams.custom_point_opt, PS::Optimizations::kCustomPointXLocation,
-                          PS::Optimizations::kCustomPointYLocation});
+    candidates.push_back(
+        {m_seams.custom_path_opt, PS::Optimizations::kCustomPathXLocation, PS::Optimizations::kCustomPathYLocation});
+    candidates.push_back(
+        {m_seams.custom_point_opt, PS::Optimizations::kCustomPointXLocation, PS::Optimizations::kCustomPointYLocation});
     candidates.push_back({m_seams.custom_point_second_opt, PS::Optimizations::kCustomPointSecondXLocation,
                           PS::Optimizations::kCustomPointSecondYLocation});
 
@@ -194,10 +194,9 @@ void PrinterObject::updateSeams() {
         std::max(kMinimumOptimizationGuideLength, max_printer_dimension * kOptimizationGuidePrinterScale);
 
     if (islandOrder == IslandOrderOptimization::kCustomPoint) {
-        const QVector3D translation =
-            optimizationPointTranslation(m_sb, PS::Optimizations::kCustomIslandXLocation,
-                                         PS::Optimizations::kCustomIslandYLocation,
-                                         PS::Optimizations::kCustomIslandZLocation, bed_z);
+        const QVector3D translation = optimizationPointTranslation(m_sb, PS::Optimizations::kCustomIslandXLocation,
+                                                                   PS::Optimizations::kCustomIslandYLocation,
+                                                                   PS::Optimizations::kCustomIslandZLocation, bed_z);
 
         showOptimizationAnchor(m_seams.custom_island_opt, m_seams.custom_island_guide, translation, guide_direction,
                                guide_length);
@@ -207,10 +206,9 @@ void PrinterObject::updateSeams() {
     }
 
     if (pathOrder == PathOrderOptimization::kCustomPoint) {
-        const QVector3D translation =
-            optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPathXLocation,
-                                         PS::Optimizations::kCustomPathYLocation,
-                                         PS::Optimizations::kCustomPathZLocation, bed_z);
+        const QVector3D translation = optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPathXLocation,
+                                                                   PS::Optimizations::kCustomPathYLocation,
+                                                                   PS::Optimizations::kCustomPathZLocation, bed_z);
 
         showOptimizationAnchor(m_seams.custom_path_opt, m_seams.custom_path_guide, translation, guide_direction,
                                guide_length);
@@ -220,19 +218,17 @@ void PrinterObject::updateSeams() {
     }
 
     if (usesCustomPointLocation(pointOrder)) {
-        const QVector3D translation =
-            optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPointXLocation,
-                                         PS::Optimizations::kCustomPointYLocation,
-                                         PS::Optimizations::kCustomPointZLocation, bed_z);
+        const QVector3D translation = optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPointXLocation,
+                                                                   PS::Optimizations::kCustomPointYLocation,
+                                                                   PS::Optimizations::kCustomPointZLocation, bed_z);
 
         showOptimizationAnchor(m_seams.custom_point_opt, m_seams.custom_point_guide, translation, guide_direction,
                                guide_length);
 
         if (secondPointEnabled) {
-            const QVector3D secondTranslation =
-                optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPointSecondXLocation,
-                                             PS::Optimizations::kCustomPointSecondYLocation,
-                                             PS::Optimizations::kCustomPointSecondZLocation, bed_z);
+            const QVector3D secondTranslation = optimizationPointTranslation(
+                m_sb, PS::Optimizations::kCustomPointSecondXLocation, PS::Optimizations::kCustomPointSecondYLocation,
+                PS::Optimizations::kCustomPointSecondZLocation, bed_z);
 
             showOptimizationAnchor(m_seams.custom_point_second_opt, m_seams.custom_point_second_guide,
                                    secondTranslation, guide_direction, guide_length);

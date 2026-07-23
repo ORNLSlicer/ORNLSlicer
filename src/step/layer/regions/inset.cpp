@@ -44,8 +44,7 @@ bool isValidInsetLine(const Polyline& line, Distance min_path_length) {
 
 QVector<Polygon> appendValidPathLines(const PolygonList& path_lines, QVector<Polyline>& computed_geometry,
                                       QVector<Distance>& computed_widths, Distance min_path_length, Distance bead_width,
-                                      Distance min_segment_length,
-                                      bool& skipped_path_line) {
+                                      Distance min_segment_length, bool& skipped_path_line) {
     QVector<Polygon> valid_path_lines;
 
     for (const Polygon& poly : path_lines) {
@@ -207,9 +206,8 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
 Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_width, int remaining_count,
                                          Distance overlap, Distance min_path_length, Distance min_segment_length,
                                          Distance min_width, Distance max_width) {
-    if (std::optional<Distance> full_width =
-            fullCoverageAdaptiveWidth(geometry, nominal_width, overlap, min_path_length, min_segment_length, min_width,
-                                      max_width)) {
+    if (std::optional<Distance> full_width = fullCoverageAdaptiveWidth(
+            geometry, nominal_width, overlap, min_path_length, min_segment_length, min_width, max_width)) {
         return *full_width;
     }
 
@@ -217,9 +215,8 @@ Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_
     Distance preview_length;
 
     for (int i = 0; i < remaining_count && !preview_geometry.isEmpty(); ++i) {
-        QVector<Polygon> preview_path_lines =
-            validPathLines(insetPathLines(preview_geometry, nominal_width, overlap), min_path_length,
-                           min_segment_length);
+        QVector<Polygon> preview_path_lines = validPathLines(insetPathLines(preview_geometry, nominal_width, overlap),
+                                                             min_path_length, min_segment_length);
         if (preview_path_lines.isEmpty()) {
             break;
         }
@@ -251,9 +248,9 @@ QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance no
     QVector<Distance> widths;
 
     for (int i = 0; i < remaining_count && !geometry.isEmpty(); ++i) {
-        const Distance path_width = adaptiveContourWidthForGeometry(
-            geometry, nominal_width, remaining_count - i, overlap, min_path_length, min_segment_length, min_width,
-            max_width);
+        const Distance path_width =
+            adaptiveContourWidthForGeometry(geometry, nominal_width, remaining_count - i, overlap, min_path_length,
+                                            min_segment_length, min_width, max_width);
         PolygonList path_lines = insetPathLines(geometry, path_width, overlap);
         QVector<Polygon> valid_path_lines = validPathLines(path_lines, min_path_length, min_segment_length);
         if (valid_path_lines.isEmpty()) {
@@ -262,9 +259,9 @@ QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance no
 
         widths.push_back(path_width);
 
-        const bool clear_shell_geometry = hasInternalBoundaries(geometry) &&
-                                          shellWidthCoversGeometry(geometry, valid_path_lines, path_width,
-                                                                   nominal_width);
+        const bool clear_shell_geometry =
+            hasInternalBoundaries(geometry) &&
+            shellWidthCoversGeometry(geometry, valid_path_lines, path_width, nominal_width);
 
         if (!subtractPathLineFootprints(geometry, valid_path_lines, path_width)) {
             break;
@@ -365,15 +362,15 @@ void Inset::compute(uint layer_num) {
 
         while (!m_geometry.isEmpty() && ring_nr < rings) {
             const int remaining_count = rings - ring_nr;
-            const Distance path_width = adaptiveContourWidth(m_geometry, beadWidth, remaining_count, overlap,
-                                                             min_path_length, min_segment_length, min_adaptive_width,
-                                                             max_adaptive_width);
+            const Distance path_width =
+                adaptiveContourWidth(m_geometry, beadWidth, remaining_count, overlap, min_path_length,
+                                     min_segment_length, min_adaptive_width, max_adaptive_width);
             path_line = insetPathLines(m_geometry, path_width, overlap);
 
             bool skipped_path_line = false;
-            QVector<Polygon> valid_path_lines = appendValidPathLines(path_line, m_computed_geometry, m_computed_widths,
-                                                                     min_path_length, path_width, min_segment_length,
-                                                                     skipped_path_line);
+            QVector<Polygon> valid_path_lines =
+                appendValidPathLines(path_line, m_computed_geometry, m_computed_widths, min_path_length, path_width,
+                                     min_segment_length, skipped_path_line);
 
             if (valid_path_lines.isEmpty()) {
                 break;
@@ -382,8 +379,8 @@ void Inset::compute(uint layer_num) {
             ring_nr++;
 
             const bool clear_shell_geometry =
-                hasInternalBoundaries(m_geometry) && shellWidthCoversGeometry(m_geometry, valid_path_lines, path_width,
-                                                                              beadWidth);
+                hasInternalBoundaries(m_geometry) &&
+                shellWidthCoversGeometry(m_geometry, valid_path_lines, path_width, beadWidth);
 
             if (!subtractPathLineFootprints(m_geometry, valid_path_lines, path_width)) {
                 break;
@@ -397,9 +394,9 @@ void Inset::compute(uint layer_num) {
 
     while (!path_line.isEmpty() && ring_nr < rings) {
         bool skipped_path_line = false;
-        QVector<Polygon> valid_path_lines = appendValidPathLines(path_line, m_computed_geometry, m_computed_widths,
-                                                                 min_path_length, beadWidth, min_segment_length,
-                                                                 skipped_path_line);
+        QVector<Polygon> valid_path_lines =
+            appendValidPathLines(path_line, m_computed_geometry, m_computed_widths, min_path_length, beadWidth,
+                                 min_segment_length, skipped_path_line);
 
         if (valid_path_lines.isEmpty()) {
             break;
@@ -474,8 +471,7 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 
             while (spiral_poo.getCurrentPolylineCount() > 0) {
                 if (!ordered_insets.isEmpty()) {
-                    spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0,
-                                                  false);
+                    spiral_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0, false);
                 }
 
                 Polyline result = spiral_poo.linkNextPolyline();
@@ -614,8 +610,7 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         }
 
         const Distance nominal_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
-        Polyline result =
-            SpiralPath::linkClosedPolylines(ordered_insets, ordered_inset_widths, nominal_width);
+        Polyline result = SpiralPath::linkClosedPolylines(ordered_insets, ordered_inset_widths, nominal_width);
 
         if (result.size() < 3) {
             return;
@@ -735,8 +730,7 @@ void Inset::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_w
             else {
                 PathModifierGenerator::GenerateTipWipe(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInsetDistance),
-                    m_sb->setting<Velocity>(MS::TipWipe::kInsetSpeed),
-                    m_sb->setting<Angle>(MS::TipWipe::kInsetAngle),
+                    m_sb->setting<Velocity>(MS::TipWipe::kInsetSpeed), m_sb->setting<Angle>(MS::TipWipe::kInsetAngle),
                     m_sb->setting<AngularVelocity>(MS::TipWipe::kInsetExtruderSpeed),
                     m_sb->setting<Distance>(MS::TipWipe::kInsetLiftHeight),
                     m_sb->setting<Distance>(MS::TipWipe::kInsetCutoffDistance));

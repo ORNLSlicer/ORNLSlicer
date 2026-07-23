@@ -117,7 +117,7 @@ QString JuggerBotWriter::writeBeforePath(RegionType type) {
 }
 
 QString JuggerBotWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
-                                        QSharedPointer<SettingsBase> params) {
+                                     QSharedPointer<SettingsBase> params) {
     QString rv;
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
@@ -204,7 +204,7 @@ QString JuggerBotWriter::writeLine(const Point& start_point, const Point& target
     Distance width = params->setting<Distance>(SS::kWidth);
     Distance height = params->setting<Distance>(SS::kHeight);
     Area bead_area = (width - height) * height +
-                    (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
+                     (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
 
     QString rv;
 
@@ -411,7 +411,7 @@ QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance widt
     m_extruder_on = true;
     QString rv;
     Area bead_area = (width - height) * height +
-                    (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
+                     (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
     int initial_rpm = getInitialExtruderSpeed(params);
 
     if (!m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {

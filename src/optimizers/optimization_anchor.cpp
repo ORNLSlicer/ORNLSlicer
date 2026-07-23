@@ -25,9 +25,9 @@ QVector3D settingVector(const QSharedPointer<SettingsBase>& sb, const QString& x
 }
 
 QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane) {
-    QVector3D direction = settingVector(sb, PS::Optimizations::kSeamAttractorVectorX,
-                                        PS::Optimizations::kSeamAttractorVectorY,
-                                        PS::Optimizations::kSeamAttractorVectorZ);
+    QVector3D direction =
+        settingVector(sb, PS::Optimizations::kSeamAttractorVectorX, PS::Optimizations::kSeamAttractorVectorY,
+                      PS::Optimizations::kSeamAttractorVectorZ);
 
     if (direction.isNull()) {
         direction = slicing_plane.normal();
