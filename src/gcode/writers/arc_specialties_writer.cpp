@@ -185,19 +185,19 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
 
     QString rv;
 
-    rv += "V.E.Preflow = 3  ;Preflow Time in Seconds" % m_newline;
-    rv += "V.E.TravelDelay = 0  ;Travel Start Delay in Seconds" % m_newline;
-    rv += "V.E.Postflow = 10   ;Stationary Postflow Time" % m_newline;
-    rv += "V.E.PostPurge = 0   ;Postflow Time after moving away (can reduce preflow delay)" % m_newline;
-    rv += "V.E.Weld.Program = 4   ;Program/Mode in Main Weld" % m_newline;
-    rv += "V.E.Weld.WFS = 250   ;IPM Wire Feed Speed in Main Weld" % m_newline;
-    rv += "V.E.Weld.Volts = 65   ;Trim or Volts in Main Weld" % m_newline;
-    rv += "V.E.Weld.Control = 25   ;Arc Control in Main Weld" % m_newline;
-    rv += "V.E.Crater.Program = 4   ;Program/Mode in Crater Fill" % m_newline;
-    rv += "V.E.Crater.WFS = 250   ;IPM Wire Feed Speed in Crater Fill" % m_newline;
-    rv += "V.E.Crater.Volts = 70   ;Trim or Volts in Crater Fill" % m_newline;
-    rv += "V.E.Crater.Control = 25   ;Arc Control in Crater Fill" % m_newline;
-    rv += "V.E.Crater.Time = .5   ;Crater Fill Time in Seconds" % m_newline;
+    rv += "V.E.Sch.Preflow = 3  ;Preflow Time in Seconds" % m_newline;
+    rv += "V.E.Sch.TravelDelay = 0  ;Travel Start Delay in Seconds" % m_newline;
+    rv += "V.E.Sch.Postflow = 10   ;Stationary Postflow Time" % m_newline;
+    rv += "V.E.Sch.PostPurge = 0   ;Postflow Time after moving away (can reduce preflow delay)" % m_newline;
+    rv += "V.E.Sch.Weld.Program = 4   ;Program/Mode in Main Weld" % m_newline;
+    rv += "V.E.Sch.Weld.WFS = 250   ;IPM Wire Feed Speed in Main Weld" % m_newline;
+    rv += "V.E.Sch.Weld.Volts = 65   ;Trim or Volts in Main Weld" % m_newline;
+    rv += "V.E.Sch.Weld.Control = 25   ;Arc Control in Main Weld" % m_newline;
+    rv += "V.E.Sch.Crater.Program = 4   ;Program/Mode in Crater Fill" % m_newline;
+    rv += "V.E.Sch.Crater.WFS = 250   ;IPM Wire Feed Speed in Crater Fill" % m_newline;
+    rv += "V.E.Sch.Crater.Volts = 70   ;Trim or Volts in Crater Fill" % m_newline;
+    rv += "V.E.Sch.Crater.Control = 25   ;Arc Control in Crater Fill" % m_newline;
+    rv += "V.E.Sch.Crater.Time = .5   ;Crater Fill Time in Seconds" % m_newline;
     rv += "#CONTOUR MODE [DEV PATH_DEV=2 CONST_VEL=1]" % m_newline;
     rv += "M06 T1   ;Select Tool 1" % m_newline;
     rv += "M49 ;Send Robot Home" % m_newline;
