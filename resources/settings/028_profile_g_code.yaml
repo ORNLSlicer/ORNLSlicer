@@ -5,7 +5,7 @@ settings:
     display: "Perimeter Start G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the start of perimeter paths"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -17,7 +17,7 @@ settings:
     display: "Perimeter End G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the end of perimeter paths"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -29,7 +29,7 @@ settings:
     display: "Inset Start G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the start of inset paths"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -41,7 +41,7 @@ settings:
     display: "Inset End G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the end of inset paths"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -53,7 +53,7 @@ settings:
     display: "Skeleton Start G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the start of skeleton paths"
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -65,7 +65,7 @@ settings:
     display: "Skeleton End G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the end of skeleton paths"
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -77,7 +77,7 @@ settings:
     display: "Skin Start G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the start of skin paths"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -89,7 +89,7 @@ settings:
     display: "Skin End G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the end of skin paths"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -101,7 +101,7 @@ settings:
     display: "Infill Start G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the start of infill paths"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -113,7 +113,7 @@ settings:
     display: "Infill End G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the end of infill paths"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -125,7 +125,7 @@ settings:
     display: "Support Start G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the start of support paths"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: ""
     minor: "G-Code"
@@ -137,7 +137,7 @@ settings:
     display: "Support End G-Code"
     type: "multiline_text"
     tooltip: "Code to be executed at the end of support paths"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: ""
     minor: "G-Code"

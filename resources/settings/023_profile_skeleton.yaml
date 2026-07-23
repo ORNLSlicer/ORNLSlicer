@@ -5,7 +5,7 @@ settings:
     display: "Enable Skeletons"
     type: "boolean"
     tooltip: "If selected, skeletons will allow for an open loop path to fill a space that is too thin to use concentric paths"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Skeleton"
@@ -17,7 +17,7 @@ settings:
     display: "Input Geometry"
     type: "enumeration"
     tooltip: "Specifies how the bounding geometry is provided to the Skeleton Voronoi Diagram generator. The geometry is fed into the generator as either segments or points. This input method influences how the skeleton paths are constructed."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options:
       - "SEGMENT"
       - "POINT"
@@ -31,7 +31,7 @@ settings:
     display: "Input Cleaning Distance"
     type: "distance"
     tooltip: "Specifies the distance threshold used to clean and simplify the input geometry before generating the skeleton. The cleaning process involves: Removing vertices that connect co-linear or nearly co-linear edges: If moving a vertex by no more than this distance would make the connected edges co-linear, the vertex is removed to simplify the geometry. Eliminating vertices that are too close to adjacent vertices: Vertices within this distance of an adjacent vertex are removed to prevent redundant points and overlaps. Removing vertices near semi-adjacent vertices along with their outlying vertices: If a vertex is within this distance of a semi-adjacent vertex, both the vertex and its connected outlying vertices are removed to simplify complex connections. By adjusting this cleaning distance, you can optimize the input geometry by merging or removing unnecessary vertices. This leads to improved accuracy and performance of the skeleton generation process, resulting in cleaner and more efficient skeleton paths."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -43,7 +43,7 @@ settings:
     display: "Input Chamfering Angle"
     type: "angle"
     tooltip: "Specifies the angle threshold used to chamfer (flatten) sharp corners in the input geometry during skeleton generation. Corners with internal angles less than this value will be automatically chamfered to smooth out acute angles. This chamfering process helps to simplify the geometry, improving the accuracy of the skeleton pruning process."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -55,7 +55,7 @@ settings:
     display: "Output Cleaning Distance"
     type: "distance"
     tooltip: "Specifies the distance threshold used to clean and simplify the the generated skeleton. The cleaning process involves: Removing vertices that connect co-linear or nearly co-linear edges: If moving a vertex by no more than this distance would make the connected edges co-linear, the vertex is removed to simplify the skeleton. Eliminating vertices that are too close to adjacent vertices: Vertices within this distance of an adjacent vertex are removed to prevent redundant points and overlaps. Removing vertices near semi-adjacent vertices along with their outlying vertices: If a vertex is within this distance of a semi-adjacent vertex, both the vertex and its connected outlying vertices are removed to simplify complex connections. By adjusting this cleaning distance, you can simplify the skeleton by merging or removing unnecessary vertices."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -67,7 +67,7 @@ settings:
     display: "Bead Width"
     type: "distance"
     tooltip: "Bead width for skeleton paths."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -79,7 +79,7 @@ settings:
     display: "Speed"
     type: "speed"
     tooltip: "Speed of skeleton printing paths."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -91,7 +91,7 @@ settings:
     display: "Extruder Speed"
     type: "rpm"
     tooltip: "Extruder speed for skeletons."
-    depends: {"AND":[{"skeleton":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -103,7 +103,7 @@ settings:
     display: "Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for skeleton paths for systems without RPM control."
-    depends: {"AND":[{"skeleton":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
     options: []
     default: 1
     minor: "Skeleton"
@@ -115,7 +115,7 @@ settings:
     display: "Enable Adaptive Bead Widths"
     type: "boolean"
     tooltip: "If selected, skeleton bead widths will dynamically adjust to better fill their surrounding regions, minimizing both under- and over-filling. This adaptation is achieved by inversely adjusting the speed relative to the desired bead width using the formula: Adjusted Speed = (Reference Speed \u00d7 Reference Bead Width) / Desired Bead Width. When wider bead widths are needed to fill larger areas, the traversal speed decreases, allowing more material to be deposited. Conversely, in tighter spaces requiring narrower bead widths, the speed increases, depositing less material."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Skeleton"
@@ -127,7 +127,7 @@ settings:
     display: "Adaptivity Step Size"
     type: "distance"
     tooltip: "Specifies the distance used to divide skeleton segments into smaller subsegments for adaptive bead width adjustment. A smaller step size allows for finer adaptation to geometric variations."
-    depends: {"AND":[{"skeleton":true},{"skeleton_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_adapt":true}]}]}
     options: []
     default: 1
     minor: "Skeleton"
@@ -139,7 +139,7 @@ settings:
     display: "Minimum Adaptive Bead Width"
     type: "distance"
     tooltip: "Specifies the minimum allowable bead width for adaptive skeletons. Skeletons with adapted bead widths less than this value will be removed."
-    depends: {"AND":[{"skeleton":true},{"skeleton_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_adapt":true}]}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -151,7 +151,7 @@ settings:
     display: "Minimum Adaptive Bead Width Filter"
     type: "enumeration"
     tooltip: "Specifies how to handle adaptive skeleton segments with bead widths below the minimum threshold. Clamp: Assigns the minimum bead width to segments with adapted widths below the threshold. Prune: Removes segments with adapted widths below the threshold."
-    depends: {"AND":[{"skeleton":true},{"skeleton_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_adapt":true}]}]}
     options:
       - "CLAMP"
       - "PRUNE"
@@ -165,7 +165,7 @@ settings:
     display: "Maximum Adaptive Bead Width"
     type: "distance"
     tooltip: "Specifies the maximum allowable bead width for adaptive skeletons. Skeletons with adapted bead widths greater than this value will be assigned this value as their bead width."
-    depends: {"AND":[{"skeleton":true},{"skeleton_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_adapt":true}]}]}
     options: []
     default: 10000
     minor: "Skeleton"
@@ -177,7 +177,7 @@ settings:
     display: "Maximum Adaptive Bead Width Filter"
     type: "enumeration"
     tooltip: "Specifies how to handle adaptive skeleton segments with bead widths above the maximum threshold. Clamp: Assigns the maximum bead width to segments with adapted widths above the threshold. Prune: Removes segments with adapted widths above the threshold."
-    depends: {"AND":[{"skeleton":true},{"skeleton_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_adapt":true}]}]}
     options:
       - "CLAMP"
       - "PRUNE"
@@ -191,7 +191,7 @@ settings:
     display: "Minimum Path Length"
     type: "distance"
     tooltip: "Skeleton extrusion paths whose length is less than this value are removed."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -203,7 +203,7 @@ settings:
     display: "Minimum Skeleton Segment Length"
     type: "distance"
     tooltip: "Skeleton path segments shorter than this value are collapsed before extrusion paths are created."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -215,7 +215,7 @@ settings:
     display: "Enable Skeleton Prestart"
     type: "boolean"
     tooltip: "If selected, a prestart motion is added to the front of the skeleton to give it more time to deposit material. This prestart is along the same vector as the first segment of the skeleton."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Skeleton"
@@ -227,7 +227,7 @@ settings:
     display: "Skeleton Prestart Distance"
     type: "distance"
     tooltip: "Length of the skeleton prestart move."
-    depends: {"AND":[{"skeleton":true},{"skeleton_prestart":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_prestart":true}]}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -239,7 +239,7 @@ settings:
     display: "Skeleton Prestart Speed"
     type: "speed"
     tooltip: "Speed of skeleton prestart paths."
-    depends: {"AND":[{"skeleton":true},{"skeleton_prestart":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_prestart":true}]}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -251,7 +251,7 @@ settings:
     display: "Skeleton Prestart Extruder Speed"
     type: "rpm"
     tooltip: "Extruder speed for skeleton prestart paths."
-    depends: {"AND":[{"skeleton":true},{"skeleton_prestart":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_prestart":true}]}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -263,7 +263,7 @@ settings:
     display: "Skeleton Prestart Bead Area Modifier"
     type: "percentage"
     tooltip: "Percent multiplier for bead area of skeleton prestart paths."
-    depends: {"AND":[{"skeleton":true},{"skeleton_prestart":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_prestart":true}]}]}
     options: []
     default: 100
     minor: "Skeleton"
@@ -275,7 +275,7 @@ settings:
     display: "Use Skin M-Code for Skeletons"
     type: "boolean"
     tooltip: "If selected, the skin m-code override (M15) will be issued rather than the default inset m-code override (M13) on BAAM."
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Skeleton"

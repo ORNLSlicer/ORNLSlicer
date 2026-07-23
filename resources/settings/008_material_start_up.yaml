@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a perimeter path"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -17,7 +17,7 @@ settings:
     display: "Perimeter Start-Up Distance"
     type: "distance"
     tooltip: "Distance for the perimeter start-up move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -29,7 +29,7 @@ settings:
     display: "Perimeter Start-Up Speed"
     type: "speed"
     tooltip: "Speed for the perimeter start-up move"
-    depends: {"AND":[{"perimeter":true},{"perimeter_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -41,7 +41,7 @@ settings:
     display: "Perimeter Start-Up Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the perimeter start-up move"
-    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -53,7 +53,7 @@ settings:
     display: "Enable Perimeter Start-Up Ramp-Up"
     type: "boolean"
     tooltip: "If selected, will ramp-up the extruder speed from the Perimeter Start-Up Extruder Speed to the Perimeter Speed using short segments of increasing RPM"
-    depends: {"AND":[{"perimeter":true},{"perimeter_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_start-up":true}]}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -65,7 +65,7 @@ settings:
     display: "Perimeter Start-Up Ramp-Up Steps"
     type: "positive_int"
     tooltip: "Numbers of steps to take while ramping up the extruder speed during perimeter start-up paths"
-    depends: {"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up_ramp-up":true},{"perimeter_start-up":true}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up_ramp-up":true},{"perimeter_start-up":true}]}]}]}
     options: []
     default: 1
     minor: "Start-Up"
@@ -77,7 +77,7 @@ settings:
     display: "Enable Inset Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of an inset path"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -89,7 +89,7 @@ settings:
     display: "Inset Start-Up Distance"
     type: "distance"
     tooltip: "Distance for the inset start-up move"
-    depends: {"AND":[{"inset":true},{"inset_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -101,7 +101,7 @@ settings:
     display: "Inset Start-Up Speed"
     type: "speed"
     tooltip: "Speed for the inset start-up move"
-    depends: {"AND":[{"inset":true},{"inset_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -113,7 +113,7 @@ settings:
     display: "Inset Start-Up Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the inset start-up move"
-    depends: {"AND":[{"inset":true},{"AND":[{"inset_start-up":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -125,7 +125,7 @@ settings:
     display: "Enable Inset Start-Up Ramp-Up"
     type: "boolean"
     tooltip: "If selected, will ramp-up the extruder speed from the Inset Start-Up Extruder Speed to the Inset Speed using short segments of increasing RPM"
-    depends: {"AND":[{"inset":true},{"inset_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_start-up":true}]}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -137,7 +137,7 @@ settings:
     display: "Inset Start-Up Ramp-Up Steps"
     type: "positive_int"
     tooltip: "Numbers of steps to take while ramping up the extruder speed during inset start-up paths"
-    depends: {"AND":[{"inset":true},{"AND":[{"inset_start-up_ramp-up":true},{"inset_start-up":true}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_start-up_ramp-up":true},{"inset_start-up":true}]}]}]}
     options: []
     default: 1
     minor: "Start-Up"
@@ -149,7 +149,7 @@ settings:
     display: "Enable Skin Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a skin path"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -161,7 +161,7 @@ settings:
     display: "Skin Start-Up Distance"
     type: "distance"
     tooltip: "Distance for the skin start-up move"
-    depends: {"AND":[{"skin":true},{"skin_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -173,7 +173,7 @@ settings:
     display: "Skin Start-Up Speed"
     type: "speed"
     tooltip: "Speed for the skin start-up move"
-    depends: {"AND":[{"skin":true},{"skin_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -185,7 +185,7 @@ settings:
     display: "Skin Start-Up Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the skin start-up move"
-    depends: {"AND":[{"skin":true},{"AND":[{"skin_start-up":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -197,7 +197,7 @@ settings:
     display: "Enable Skin Start-Up Ramp-Up"
     type: "boolean"
     tooltip: "If selected, will ramp-up the extruder speed from the Skin Start-Up Extruder Speed to the Skin Speed using short segments of increasing RPM"
-    depends: {"AND":[{"skin":true},{"skin_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_start-up":true}]}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -209,7 +209,7 @@ settings:
     display: "Skin Start-Up Ramp-Up Steps"
     type: "positive_int"
     tooltip: "Numbers of steps to take while ramping up the extruder speed during skin start-up paths"
-    depends: {"AND":[{"skin":true},{"AND":[{"skin_start-up_ramp-up":true},{"skin_start-up":true}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_start-up_ramp-up":true},{"skin_start-up":true}]}]}]}
     options: []
     default: 1
     minor: "Start-Up"
@@ -221,7 +221,7 @@ settings:
     display: "Enable Infill Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of an infill path"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -233,7 +233,7 @@ settings:
     display: "Infill Start-Up Distance"
     type: "distance"
     tooltip: "Distance for the infill start-up move"
-    depends: {"AND":[{"infill":true},{"infill_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -245,7 +245,7 @@ settings:
     display: "Infill Start-Up Speed"
     type: "speed"
     tooltip: "Speed for the infill start-up move"
-    depends: {"AND":[{"infill":true},{"infill_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -257,7 +257,7 @@ settings:
     display: "Infill Start-Up Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the infill start-up move"
-    depends: {"AND":[{"infill":true},{"AND":[{"infill_start-up":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -269,7 +269,7 @@ settings:
     display: "Enable Infill Start-Up Ramp-Up"
     type: "boolean"
     tooltip: "If selected, will ramp-up the extruder speed from the Infill Start-Up Extruder Speed to the Infill Speed using short segments of increasing RPM"
-    depends: {"AND":[{"infill":true},{"infill_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_start-up":true}]}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -281,7 +281,7 @@ settings:
     display: "Infill Start-Up Ramp-Up Steps"
     type: "positive_int"
     tooltip: "Numbers of steps to take while ramping up the extruder speed during infill start-up paths"
-    depends: {"AND":[{"infill":true},{"AND":[{"infill_start-up_ramp-up":true},{"infill_start-up":true}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_start-up_ramp-up":true},{"infill_start-up":true}]}]}]}
     options: []
     default: 1
     minor: "Start-Up"
@@ -293,7 +293,7 @@ settings:
     display: "Enable Skeleton Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a skeleton path"
-    depends: {"skeleton":true}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -305,7 +305,7 @@ settings:
     display: "Skeleton Start-Up Distance"
     type: "distance"
     tooltip: "Distance for the skeleton start-up move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -317,7 +317,7 @@ settings:
     display: "Skeleton Start-Up Speed"
     type: "speed"
     tooltip: "Speed for the skeleton start-up move"
-    depends: {"AND":[{"skeleton":true},{"skeleton_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_start-up":true}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -329,7 +329,7 @@ settings:
     display: "Skeleton Start-Up Extruder Speed"
     type: "rpm"
     tooltip: "Extruder Speed for the skeleton start-up move"
-    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up":true},{"enable_width_height":false}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
     minor: "Start-Up"
@@ -341,7 +341,7 @@ settings:
     display: "Enable Skeleton Start-Up Ramp-Up"
     type: "boolean"
     tooltip: "If selected, will ramp-up the extruder speed from the Skeleton Start-Up Extruder Speed to the Skeleton Speed using short segments of increasing RPM"
-    depends: {"AND":[{"skeleton":true},{"skeleton_start-up":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_start-up":true}]}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -353,7 +353,7 @@ settings:
     display: "Skeleton Start-Up Ramp-Up Steps"
     type: "positive_int"
     tooltip: "Numbers of steps to take while ramping up the extruder speed during skeleton start-up paths"
-    depends: {"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up_ramp-up":true},{"skeleton_start-up":true}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up_ramp-up":true},{"skeleton_start-up":true}]}]}]}
     options: []
     default: 1
     minor: "Start-Up"
@@ -365,7 +365,7 @@ settings:
     display: "Start-Up Bead Area Modifier"
     type: "percentage"
     tooltip: "Percent multiplier for bead area of start-up paths"
-    depends: {"AND":[{"enable_width_height":true},{"OR":[{"perimeter_start-up":true},{"OR":[{"inset_start-up":true},{"OR":[{"skin_start-up":true},{"OR":[{"infill_start-up":true},{"skeleton_start-up":true}]}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":true},{"OR":[{"perimeter_start-up":true},{"OR":[{"inset_start-up":true},{"OR":[{"skin_start-up":true},{"OR":[{"infill_start-up":true},{"skeleton_start-up":true}]}]}]}]}]}]}
     options: []
     default: 100
     minor: "Start-Up"
@@ -377,7 +377,7 @@ settings:
     display: "Disable Feedrate Scaling for Start-Up"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change start-up path speeds."
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Start-Up"

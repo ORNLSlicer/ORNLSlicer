@@ -214,6 +214,9 @@ class SettingBar : public QWidget {
     //! \brief Enables appropriate rows after all settings have been loaded
     void enableDependRows();
 
+    //! \brief Hides dependency-empty setting groups when disabled settings are hidden.
+    void refreshDependencyVisibility();
+
     //! \brief Keeps the settings-base combo popup compact across application themes.
     void updateSettingBasePopupHeight();
 

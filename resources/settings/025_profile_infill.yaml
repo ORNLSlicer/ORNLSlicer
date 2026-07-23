@@ -5,7 +5,7 @@ settings:
     display: "Enable Infill"
     type: "boolean"
     tooltip: "If selected, infill will be generated"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Infill"
@@ -17,7 +17,7 @@ settings:
     display: "Infill Density"
     type: "percentage100"
     tooltip: "Percent of area to be covered by infill"
-    depends: {"AND":[{"infill":true},{"infill_manual_spacing":false}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_manual_spacing":false}]}]}
     options: []
     default: 0
     minor: "Infill"
@@ -29,7 +29,7 @@ settings:
     display: "Enable Manual Infill Line Spacing"
     type: "boolean"
     tooltip: "Override infill density and manually define distance between beads on infill"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Infill"
@@ -41,7 +41,7 @@ settings:
     display: "Infill Line Spacing"
     type: "distance"
     tooltip: "Distance between beads on sparse infill"
-    depends: {"AND":[{"infill":true},{"infill_manual_spacing":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_manual_spacing":true}]}]}
     options: []
     default: 0
     minor: "Infill"
@@ -53,7 +53,7 @@ settings:
     display: "Infill Pattern"
     type: "enumeration"
     tooltip: "Pattern for the infill"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options:
       - "Lines"
       - "Grid"
@@ -72,7 +72,7 @@ settings:
     display: "Apply Path and Point Ordering to Infill Lines"
     type: "boolean"
     tooltip: "If enabled and the Infill Pattern is Lines, travel-separated infill segments are selected using Path Order Optimization and oriented using Point Order Optimization. If disabled, they retain the existing monotonic ordering."
-    depends: {"AND":[{"infill":true},{"infill_pattern":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_pattern":0}]}]}
     options: []
     default: false
     minor: "Infill"
@@ -84,7 +84,7 @@ settings:
     display: "Infill Based on Printer Area"
     type: "boolean"
     tooltip: "If selected, infill pattern is generated based on the printer area rather than the object. This means the infill pattern is specific to where the object is within the printer."
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Infill"
@@ -96,7 +96,7 @@ settings:
     display: "Infill Angle"
     type: "angle"
     tooltip: "Sets the angle for the infill"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -108,7 +108,7 @@ settings:
     display: "Infill Angle Rotation"
     type: "angle"
     tooltip: "Determines how much the infill angle rotates on every layer, default 90 degree"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 1.570796327
     minor: "Infill"
@@ -120,7 +120,7 @@ settings:
     display: "Infill Overlap Distance"
     type: "location"
     tooltip: "Width of the infill overlaps with exterior"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -132,7 +132,7 @@ settings:
     display: "Infill Bead Width"
     type: "distance"
     tooltip: "Width of the bead for the infill print moves"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -144,7 +144,7 @@ settings:
     display: "Infill Speed"
     type: "speed"
     tooltip: "Speed for the infill paths"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -156,7 +156,7 @@ settings:
     display: "Infill Extruder Speed"
     type: "rpm"
     tooltip: "Extruder speed for the infill"
-    depends: {"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
     options: []
     default: 0
     minor: "Infill"
@@ -168,7 +168,7 @@ settings:
     display: "Infill Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for infill paths for systems without RPM control"
-    depends: {"AND":[{"infill":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
     options: []
     default: 1
     minor: "Infill"
@@ -180,7 +180,7 @@ settings:
     display: "Minimum Infill Path Length"
     type: "distance"
     tooltip: "Infill extrusion paths less than this value are deleted"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -192,7 +192,7 @@ settings:
     display: "Minimum Infill Segment Length"
     type: "distance"
     tooltip: "Infill path segments shorter than this value are collapsed before extrusion paths are created"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -204,7 +204,7 @@ settings:
     display: "Maximum Infill Path Length"
     type: "distance"
     tooltip: "Infill extrusion paths greater than this are split"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -216,7 +216,7 @@ settings:
     display: "Combine Infill Every X Layers"
     type: "number"
     tooltip: "Prints perimeter for X amount of layers then goes back and prints all of the infill for those layers as one thicker layer, saves time"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"
@@ -228,7 +228,7 @@ settings:
     display: "Shift Combine Infill Start Layer"
     type: "number"
     tooltip: "Shift the first starting layer of infill when using combine infill every X layers. A shift value of 1 paired with a combine value of 4 would mean infill on layers 5, 9, 13 and so on."
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: 0
     minor: "Infill"

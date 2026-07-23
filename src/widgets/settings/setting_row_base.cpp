@@ -124,7 +124,11 @@ bool SettingRowBase::isLocal() { return m_json[Constants::Settings::Master::kLoc
 
 fifojson SettingRowBase::getDependencies() { return m_json[Constants::Settings::Master::kDepends]; }
 
-void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) { m_rows_to_notify.push_back(row); }
+void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) {
+    if (!m_rows_to_notify.contains(row)) {
+        m_rows_to_notify.push_back(row);
+    }
+}
 
 void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases,
                               QList<QSharedPointer<SettingsBase>> inherited_bases) {
@@ -205,8 +209,15 @@ void SettingRowBase::setEnabled(bool enabled) {
 }
 
 void SettingRowBase::setDependencyEnabled(bool enabled) {
+    const bool changed = m_dependency_enabled != enabled;
     m_dependency_enabled = enabled;
     applyBaseWidgetState();
+
+    if (changed) {
+        for (QSharedPointer<SettingRowBase> row : m_rows_to_notify) {
+            row->checkDependencies();
+        }
+    }
 }
 
 void SettingRowBase::setDependencyLogic(DependencyNode root) { m_dependency_logic = root; }

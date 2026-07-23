@@ -5,7 +5,7 @@ settings:
     display: "Enable Inset"
     type: "boolean"
     tooltip: "If selected, insets will be generated"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Inset"
@@ -17,7 +17,7 @@ settings:
     display: "Number of Insets"
     type: "positive_int"
     tooltip: "Number of insets"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0
     minor: "Inset"
@@ -29,7 +29,7 @@ settings:
     display: "Inset Bead Width"
     type: "distance"
     tooltip: "Bead width for inset paths"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0
     minor: "Inset"
@@ -41,7 +41,7 @@ settings:
     display: "Enable Adaptive Inset Bead Widths"
     type: "boolean"
     tooltip: "If selected, inset bead widths are adjusted within the configured limits to better fill narrow regions whose remaining contour space is not an exact multiple of the nominal bead width."
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Inset"
@@ -53,7 +53,7 @@ settings:
     display: "Minimum Adaptive Inset Bead Width"
     type: "distance"
     tooltip: "Minimum bead width allowed when adaptive inset bead widths are enabled."
-    depends: {"AND":[{"inset":true},{"inset_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_adapt":true}]}]}
     options: []
     default: 0
     minor: "Inset"
@@ -65,7 +65,7 @@ settings:
     display: "Maximum Adaptive Inset Bead Width"
     type: "distance"
     tooltip: "Maximum bead width allowed when adaptive inset bead widths are enabled."
-    depends: {"AND":[{"inset":true},{"inset_adapt":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_adapt":true}]}]}
     options: []
     default: 10000
     minor: "Inset"
@@ -77,7 +77,7 @@ settings:
     display: "Inset Speed"
     type: "speed"
     tooltip: "Speed for inset paths"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0
     minor: "Inset"
@@ -89,7 +89,7 @@ settings:
     display: "Inset Extruder Speed"
     type: "rpm"
     tooltip: "Extruder speed for inset paths"
-    depends: {"AND":[{"inset":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
     options: []
     default: 0
     minor: "Inset"
@@ -101,7 +101,7 @@ settings:
     display: "Inset Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for inset paths for systems without RPM control"
-    depends: {"AND":[{"inset":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
     options: []
     default: 1
     minor: "Inset"
@@ -113,7 +113,7 @@ settings:
     display: "Minimum Inset Path Length"
     type: "distance"
     tooltip: "Inset extrusion paths less than this value are deleted"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0
     minor: "Inset"
@@ -125,7 +125,7 @@ settings:
     display: "Minimum Inset Segment Length"
     type: "distance"
     tooltip: "Inset path segments shorter than this value are collapsed before extrusion paths are created"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0
     minor: "Inset"
@@ -137,7 +137,7 @@ settings:
     display: "Inset Overlap Distance"
     type: "distance"
     tooltip: "Width of the inset overlaps with exterior"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0
     minor: "Inset"
@@ -149,7 +149,7 @@ settings:
     display: "Enable Spiral Inset"
     type: "boolean"
     tooltip: "If selected, spiral insets will be generated"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Inset"

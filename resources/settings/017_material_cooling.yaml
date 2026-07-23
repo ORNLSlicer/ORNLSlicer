@@ -5,7 +5,7 @@ settings:
     display: "Fan Control"
     type: "boolean"
     tooltip: "Sets how and when the fan will operate"
-    depends: {"machine_type":1}
+    depends: {"AND":[{"slicing_mode":0},{"machine_type":1}]}
     options: []
     default: false
     minor: "Cooling"
@@ -17,7 +17,7 @@ settings:
     display: "Min Fan Speed"
     type: "percentage100"
     tooltip: "Minimum speed the fan will be on"
-    depends: {"AND":[{"machine_type":1},{"fan":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"machine_type":1},{"fan":true}]}]}
     options: []
     default: 0
     minor: "Cooling"
@@ -29,7 +29,7 @@ settings:
     display: "Max Fan Speed"
     type: "percentage100"
     tooltip: "Maximum speed the fan will be on"
-    depends: {"AND":[{"machine_type":1},{"fan":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"machine_type":1},{"fan":true}]}]}
     options: []
     default: 0
     minor: "Cooling"
@@ -41,7 +41,7 @@ settings:
     display: "Force Min / Max Layer Time"
     type: "boolean"
     tooltip: "If selected, a min / max layer time is reinforced for each layer so that there is adequate time for cooling"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Cooling"
@@ -53,7 +53,7 @@ settings:
     display: "Min / Max Layer Time Method"
     type: "enumeration"
     tooltip: "Choose one of two ways to meet the min / max layer time requirement: either add dwell time or adjust feed rate in G0 G1 lines"
-    depends: {"force_minimum_layer_time":true}
+    depends: {"AND":[{"slicing_mode":0},{"force_minimum_layer_time":true}]}
     options:
       - "ADD DWELL TIME"
       - "MODIFY FEEDRATE"
@@ -67,7 +67,7 @@ settings:
     display: "Minimum Layer Time"
     type: "time"
     tooltip: "The minimum layer time required to meet the cooling need"
-    depends: {"force_minimum_layer_time":true}
+    depends: {"AND":[{"slicing_mode":0},{"force_minimum_layer_time":true}]}
     options: []
     default: 0
     minor: "Cooling"
@@ -79,7 +79,7 @@ settings:
     display: "Maximum Layer Time"
     type: "time"
     tooltip: "The maximum layer time required to meet the cooling need"
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: 0
     minor: "Cooling"
@@ -91,7 +91,7 @@ settings:
     display: "Extruder Scale Factor"
     type: "unitless_float"
     tooltip: "Scale factor to be applied to extruder commands when adjusting feedrate. Value of 1 has no effect, greater than 1 increases extruder speed, and less than 1 decreases speed."
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: 1
     minor: "Cooling"
@@ -103,7 +103,7 @@ settings:
     display: "Pre Pause G-Code"
     type: "multiline_text"
     tooltip: "G-Code to be executed before the minimum layer time pause command, such as moving to a location to purge"
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":0}]}]}
     options: []
     default: ""
     minor: "Cooling"
@@ -115,7 +115,7 @@ settings:
     display: "Post Pause G-Code"
     type: "multiline_text"
     tooltip: "G-Code to be executed after the minimum layer time pause command, such as turning an extruder off"
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":0}]}]}
     options: []
     default: ""
     minor: "Cooling"

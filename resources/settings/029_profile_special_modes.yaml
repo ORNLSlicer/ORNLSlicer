@@ -45,7 +45,7 @@ settings:
     display: "Enable Spiralize Mode"
     type: "boolean"
     tooltip: "If selected, extruder will never lift and part will be made in one continuous path without infill"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Special Modes"
@@ -69,7 +69,7 @@ settings:
     display: "Oversize Part"
     type: "boolean"
     tooltip: "If selected, the part can be oversized in the X and Y dimensions to allow for a machining tolerance"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Special Modes"
@@ -81,7 +81,7 @@ settings:
     display: "Oversize Distance"
     type: "location"
     tooltip: "Distance to oversize the part in the X and Y directions"
-    depends: {"oversize":true}
+    depends: {"AND":[{"slicing_mode":0},{"oversize":true}]}
     options: []
     default: 0
     minor: "Special Modes"
@@ -93,7 +93,7 @@ settings:
     display: "Use Width and Height"
     type: "boolean"
     tooltip: "If selected, G-Code will not command feeds and speed and instead send desired bead geometry for the HMI to interpret"
-    depends: {"syntax":11}
+    depends: {"AND":[{"slicing_mode":0},{"syntax":11}]}
     options: []
     default: false
     minor: "Special Modes"

@@ -5,7 +5,7 @@ settings:
     display: "Region Order"
     type: "numbered_list"
     tooltip: "Order that region paths will be connected"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: ["Perimeter","Inset","Skin","Infill","Skeleton"]
     minor: "Ordering"
@@ -17,7 +17,7 @@ settings:
     display: "Reverse Perimeter Direction"
     type: "enumeration"
     tooltip: "Reverse the printing direction of the perimeters (CW vs CCW)"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options:
       - "REVERSE_OFF"
       - "REVERSE_ALL_LAYERS"
@@ -32,7 +32,7 @@ settings:
     display: "Reverse Inset Direction"
     type: "enumeration"
     tooltip: "Reverse the printing direction of the insets (CW vs CCW)"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options:
       - "REVERSE_OFF"
       - "REVERSE_ALL_LAYERS"

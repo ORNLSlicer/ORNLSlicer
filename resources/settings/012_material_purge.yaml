@@ -5,7 +5,7 @@ settings:
     display: "Initial Purge Duration"
     type: "time"
     tooltip: "Amount of time extruder will purge\u00a0"
-    depends: {"AND":[{"enable_material_load":true},{"syntax":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -17,7 +17,7 @@ settings:
     display: "Initial Purge Screw RPM"
     type: "rpm"
     tooltip: "Speed for the screw during the initial purge"
-    depends: {"AND":[{"enable_material_load":true},{"syntax":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -29,7 +29,7 @@ settings:
     display: "Initial Purge Tip Wipe Delay"
     type: "time"
     tooltip: "Amount of time the extruder will pause before moving to wipe the tip during the initial purge"
-    depends: {"AND":[{"enable_material_load":true},{"syntax":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -41,7 +41,7 @@ settings:
     display: "Purge During Dwell"
     type: "boolean"
     tooltip: "If selected, a purge command is issued during dwells forced by the minimum layer time cooling settings"
-    depends: {"minimum_layer_time_method":0}
+    depends: {"AND":[{"slicing_mode":0},{"minimum_layer_time_method":0}]}
     options: []
     default: false
     minor: "Purge"
@@ -53,7 +53,7 @@ settings:
     display: "Purge Dwell Duration"
     type: "time"
     tooltip: "Duration to run the extruder during a purge dwell"
-    depends: {"AND":[{"purge_during_dwell":true},{"machine_type":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"machine_type":0}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -65,7 +65,7 @@ settings:
     display: "Purge Dwell Screw RPM"
     type: "rpm"
     tooltip: "Speed for the screw during purge dwells"
-    depends: {"AND":[{"purge_during_dwell":true},{"machine_type":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"machine_type":0}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -77,7 +77,7 @@ settings:
     display: "Purge Dwell Tip Wipe Delay"
     type: "time"
     tooltip: "Amount of time the extruder will pause before moving to wipe the tip during a purge dwell"
-    depends: {"AND":[{"purge_during_dwell":true},{"machine_type":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"machine_type":0}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -89,7 +89,7 @@ settings:
     display: "Purge Length"
     type: "distance"
     tooltip: "Length of filament, or screw rotation distance, for purges issued between layers"
-    depends: {"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}]}
     options: []
     default: 0
     minor: "Purge"
@@ -101,7 +101,7 @@ settings:
     display: "Purge Feedrate"
     type: "speed"
     tooltip: "Feedrate for extrusion used for the purge between layers"
-    depends: {"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}]}
     options: []
     default: 0
     minor: "Purge"

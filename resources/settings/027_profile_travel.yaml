@@ -17,7 +17,7 @@ settings:
     display: "Minimum Infill Travel Length"
     type: "distance"
     tooltip: "Travel moves less than this value in infill, skin, and support fill are replaced with extrusion moves"
-    depends: {"OR":[{"OR":[{"infill":true},{"skin":true}]},{"support":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"infill":true},{"skin":true}]},{"support":true}]}]}
     options: []
     default: 25400
     minor: "Travel"
@@ -65,7 +65,7 @@ settings:
     display: "Final Lift Distance"
     type: "distance"
     tooltip: "Distance to lift the tool at the end of the print along the slicing plane normal before shutdown."
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Travel"
@@ -77,7 +77,7 @@ settings:
     display: "Pause During Travel"
     type: "boolean"
     tooltip: "Allows for a pause command to be issued after the travel lift but before the travel XY motion. The centroid move can be added and issued before the pause."
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Travel"
@@ -89,7 +89,7 @@ settings:
     display: "Move to Centroid During Pause"
     type: "boolean"
     tooltip: "Moves to the XY centroid of the object before the travel pause."
-    depends: {"enable_travel_pause":true}
+    depends: {"AND":[{"slicing_mode":0},{"enable_travel_pause":true}]}
     options: []
     default: false
     minor: "Travel"
@@ -101,7 +101,7 @@ settings:
     display: "Travel Pause Duration"
     type: "time"
     tooltip: "Duration of the pause during travel motion."
-    depends: {"enable_travel_pause":true}
+    depends: {"AND":[{"slicing_mode":0},{"enable_travel_pause":true}]}
     options: []
     default: 0
     minor: "Travel"

@@ -5,7 +5,7 @@ settings:
     display: "Spiral Perimeters"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on perimeters"
-    depends: {"perimeter":true}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -17,7 +17,7 @@ settings:
     display: "Spiral Insets"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on insets"
-    depends: {"inset":true}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -29,7 +29,7 @@ settings:
     display: "Spiral Skins"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on skin"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -41,7 +41,7 @@ settings:
     display: "Spiral Infill"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on infill"
-    depends: {"infill":true}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -53,7 +53,7 @@ settings:
     display: "End of Layer"
     type: "boolean"
     tooltip: "If selected, will perform a spiral list on the last path in a layer"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -65,7 +65,7 @@ settings:
     display: "Spiral Lift Height"
     type: "distance"
     tooltip: "Sets the distance the extruder lifts before starting the spiral"
-    depends: {"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
     options: []
     default: 0
     minor: "Spiral Lift"
@@ -77,7 +77,7 @@ settings:
     display: "Number of Points"
     type: "number"
     tooltip: "Number of small line segments in the spiral move"
-    depends: {"AND":[{"supports_G2_3":false},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"supports_G2_3":false},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}]}
     options: []
     default: 0
     minor: "Spiral Lift"
@@ -89,7 +89,7 @@ settings:
     display: "Spiral Lift Radius"
     type: "distance"
     tooltip: "Sets maximum distance from starting point that the extruder will spiral outward to"
-    depends: {"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
     options: []
     default: 0
     minor: "Spiral Lift"
@@ -101,7 +101,7 @@ settings:
     display: "Spiral Lift Speed"
     type: "speed"
     tooltip: "Sets the speed for spiral lift moves"
-    depends: {"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
     options: []
     default: 0
     minor: "Spiral Lift"
@@ -113,7 +113,7 @@ settings:
     display: "Disable Feedrate Scaling for Spiral Lift"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change spiral lift path speeds."
-    depends: {"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Spiral Lift"

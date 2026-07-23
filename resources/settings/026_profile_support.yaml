@@ -5,7 +5,7 @@ settings:
     display: "Enable Support"
     type: "boolean"
     tooltip: "If selected, support structures will be generated for overhangs"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Support"
@@ -17,7 +17,7 @@ settings:
     display: "Print Support First"
     type: "boolean"
     tooltip: "If selected, support material will be printed first"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: false
     minor: "Support"
@@ -29,7 +29,7 @@ settings:
     display: "Support Structure"
     type: "enumeration"
     tooltip: "Generate conventional grid columns or branching organic supports"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options:
       - "Grid"
       - "Organic / Tree"
@@ -43,7 +43,7 @@ settings:
     display: "Support Placement"
     type: "enumeration"
     tooltip: "Allow support to land on the model or retain only support connected to the build plate"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options:
       - "Everywhere"
       - "Build Plate Only"
@@ -57,7 +57,7 @@ settings:
     display: "Taper Support"
     type: "boolean"
     tooltip: "Grow support inward toward the interface while retaining a stable vertical outer tube wall"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: false
     minor: "Support"
@@ -69,7 +69,7 @@ settings:
     display: "Support Taper Angle"
     type: "angle"
     tooltip: "Angle of inward support growth below the interface; larger angles require less taper height"
-    depends: {"AND":[{"support":true},{"support_tapering":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_tapering":true}]}]}
     options: []
     default: 0.785398163
     minor: "Support"
@@ -81,7 +81,7 @@ settings:
     display: "Minimum Tube Wall Contours"
     type: "number"
     tooltip: "Minimum number of bead-width contours retained in the vertical support tube wall"
-    depends: {"AND":[{"support":true},{"support_tapering":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_tapering":true}]}]}
     options: []
     default: 2
     minor: "Support"
@@ -93,7 +93,7 @@ settings:
     display: "Support Threshold Angle"
     type: "angle"
     tooltip: "Overhangs exceeding this angle will generate support"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -105,7 +105,7 @@ settings:
     display: "Support XY Distance"
     type: "distance"
     tooltip: "XY distance from the part to generate support"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -117,7 +117,7 @@ settings:
     display: "Support Layer Offset"
     type: "number"
     tooltip: "Number of vertical layers to offset support from model surface"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -129,7 +129,7 @@ settings:
     display: "Minimum Support Infill Area"
     type: "area"
     tooltip: "Support structures smaller than this will not generate infill"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -141,7 +141,7 @@ settings:
     display: "Minimum Support Area"
     type: "area"
     tooltip: "Areas of the part smaller than this will not have supports generated"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -153,7 +153,7 @@ settings:
     display: "Support Pattern"
     type: "enumeration"
     tooltip: "Infill pattern used inside support structures"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options:
       - "Lines"
       - "Grid"
@@ -167,7 +167,7 @@ settings:
     display: "Support Line Spacing"
     type: "distance"
     tooltip: "Distance between beads on sparse support fill"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 10000
     minor: "Support"
@@ -179,7 +179,7 @@ settings:
     display: "Minimum Support Segment Length"
     type: "distance"
     tooltip: "Support path segments shorter than this value are collapsed before extrusion paths are created"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -191,7 +191,7 @@ settings:
     display: "Support Wall Contours"
     type: "number"
     tooltip: "Number of perimeter contours around conventional sparse support"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 1
     minor: "Support"
@@ -203,7 +203,7 @@ settings:
     display: "Support Interface Layers"
     type: "number"
     tooltip: "Number of dense support layers immediately below supported surfaces; zero disables the interface"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 3
     minor: "Support"
@@ -215,7 +215,7 @@ settings:
     display: "Support Interface Line Spacing"
     type: "distance"
     tooltip: "Line spacing in dense support interfaces; zero automatically uses one bead width"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -227,7 +227,7 @@ settings:
     display: "Support Interface Expansion"
     type: "distance"
     tooltip: "Horizontal expansion of dense interface layers beyond the detected overhang"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -239,7 +239,7 @@ settings:
     display: "Solid Support Base Layers"
     type: "number"
     tooltip: "Number of dense stabilization layers at support structures that reach the build plate"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -251,7 +251,7 @@ settings:
     display: "Support Base Expansion"
     type: "distance"
     tooltip: "Horizontal expansion of build-plate support bases"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: 0
     minor: "Support"
@@ -263,7 +263,7 @@ settings:
     display: "Suppress Support Under Bridges"
     type: "boolean"
     tooltip: "Skip support where an overhang is anchored on opposing sides within the configured bridge length"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: false
     minor: "Support"
@@ -275,7 +275,7 @@ settings:
     display: "Maximum Unsupported Bridge Length"
     type: "distance"
     tooltip: "Longest opposing-edge span that may be printed as a bridge without support"
-    depends: {"AND":[{"support":true},{"support_bridge_suppression":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_bridge_suppression":true}]}]}
     options: []
     default: 0
     minor: "Support"
@@ -287,7 +287,7 @@ settings:
     display: "Validate Support Connectivity"
     type: "boolean"
     tooltip: "Remove support components that do not connect to the build plate or an allowed model landing"
-    depends: {"support":true}
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
     options: []
     default: true
     minor: "Support"
@@ -299,7 +299,7 @@ settings:
     display: "Minimum Support Layer Overlap"
     type: "percentage100"
     tooltip: "Minimum percentage of each support component that must overlap valid support or model below"
-    depends: {"AND":[{"support":true},{"support_validation":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_validation":true}]}]}
     options: []
     default: 5
     minor: "Support"
@@ -311,7 +311,7 @@ settings:
     display: "Minimum Support Base Area"
     type: "area"
     tooltip: "Minimum build-plate contact area for a support component; zero disables this check"
-    depends: {"AND":[{"support":true},{"support_validation":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_validation":true}]}]}
     options: []
     default: 0
     minor: "Support"
@@ -323,7 +323,7 @@ settings:
     display: "Organic Branch Diameter"
     type: "distance"
     tooltip: "Minimum branch diameter; zero automatically uses three bead widths"
-    depends: {"AND":[{"support":true},{"support_structure":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_structure":1}]}]}
     options: []
     default: 0
     minor: "Support"
@@ -335,7 +335,7 @@ settings:
     display: "Organic Contact Spacing"
     type: "distance"
     tooltip: "Spacing between organic contact branches; zero chooses an automatic spacing"
-    depends: {"AND":[{"support":true},{"support_structure":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_structure":1}]}]}
     options: []
     default: 0
     minor: "Support"
@@ -347,7 +347,7 @@ settings:
     display: "Organic Branch Angle"
     type: "angle"
     tooltip: "Maximum branch convergence angle measured from vertical"
-    depends: {"AND":[{"support":true},{"support_structure":1}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"support":true},{"support_structure":1}]}]}
     options: []
     default: 0.436332313
     minor: "Support"
