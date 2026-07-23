@@ -202,6 +202,22 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "M06 T1   ;Select Tool 1" % m_newline;
     rv += "M49 ;Send Robot Home" % m_newline;
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
+    rv += "" % m_newline;
+    rv += "G90" % m_newline;
+    rv += "#KIN ID [9]" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += "" % m_newline;
+    rv += "V.G.KIN[9].PROGRAMMING_MODE            = -1" % m_newline;
+    rv += "V.G.KIN[9].RTCP                        = 0" % m_newline;
+    rv += "#ORI MODE [ANGLE]" % m_newline;
+    rv += "V.G.WZ_AKT.L = 0" % m_newline;
+    rv += "M01" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += "#TRAFO ON" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += "G161" % m_newline;
 
     if (m_sb->setting<int>(PRS::GCode::kEnableBoundingBox)) {
         rv += commentLine(QString("Bounding Box: X=") % QString::number(minimum_x.to(m_meta.m_distance_unit), 'f', 4) %
