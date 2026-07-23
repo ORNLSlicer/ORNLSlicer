@@ -448,7 +448,8 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             QSharedPointer<HelicalLayer> helical_layer =
                 QSharedPointer<HelicalLayer>::create(helical_layer_number + 1, layer_settings);
 
-            Polyline helix = createHelix(center, radius, first_bead_z, top_z, bead_width, handedness);
+            Polyline helix = createHelix(center, radius, first_bead_z, top_z, bead_width, handedness,
+                                         layer_settings->setting<Angle>(PS::Slicing::kHelicalPathStartAngle));
             const HelixClipResult clip_result =
                 clipHelixToSections(helix, cross_sections, first_bead_z, section_spacing);
             QVector<Polyline> clipped_lines = clip_result.fragments;
@@ -590,7 +591,7 @@ double HelicalSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>
 }
 
 Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distance start_z, Distance top_z,
-                                    Distance bead_width, HelicalPathHandedness handedness) {
+                                    Distance bead_width, HelicalPathHandedness handedness, Angle start_angle) {
     Polyline helix;
     if (top_z <= start_z || bead_width <= 0) {
         return helix;
@@ -612,7 +613,8 @@ Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distan
     const double direction = handedness == HelicalPathHandedness::kLeftHanded ? -1.0 : 1.0;
     for (int i = 0; i <= segments; ++i) {
         const double t = max_t * static_cast<double>(i) / static_cast<double>(segments);
-        helix.push_back(Point(center.x() + radius() * std::cos(t), center.y() + radius() * std::sin(direction * t),
+        const double angle = start_angle() + direction * t;
+        helix.push_back(Point(center.x() + radius() * std::cos(angle), center.y() + radius() * std::sin(angle),
                               start_z() + vertical_rise_per_radian * t));
     }
 
