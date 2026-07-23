@@ -17,7 +17,7 @@ settings:
     display: "Nozzle Diameter"
     type: "distance"
     tooltip: "The diameter of the main extruder nozzle"
-    depends: {"OR":[{"machine_type":0},{"OR":[{"machine_type":1},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"machine_type":0},{"OR":[{"machine_type":1},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
     minor: "Layer"
@@ -53,7 +53,7 @@ settings:
     display: "Default Extruder Speed"
     type: "rpm"
     tooltip: "Default extruder speed for paths that don't have a defined extruder speed"
-    depends: {"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
     minor: "Layer"
@@ -65,7 +65,7 @@ settings:
     display: "Minimum Extrude Length"
     type: "distance"
     tooltip: "Default minimum extrusion length. Paths less than this are eliminated. Currently used for brim, raft, and support paths."
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Layer"

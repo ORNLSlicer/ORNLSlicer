@@ -104,6 +104,7 @@ void SettingBar::filter(QString str) {
             m_tab_widget->setTabEnabled(cur_pane->getIndex(), true);
         }
 
+        refreshDependencyVisibility();
         return;
     }
 
@@ -213,6 +214,7 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
             for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows())
                 cur_row->checkDependencies();
 
+    refreshDependencyVisibility();
     this->blockSignals(false);
 }
 
@@ -339,6 +341,9 @@ void SettingBar::forwardModifiedSetting(QString setting_key) {
 
     if (modified_keys.size() > 1) {
         enableDependRows();
+    }
+    else {
+        refreshDependencyVisibility();
     }
 
     for (const QString& modified_key : modified_keys) {
@@ -566,6 +571,37 @@ void SettingBar::enableDependRows() {
                 }
             }
         }
+    }
+
+    refreshDependencyVisibility();
+}
+
+void SettingBar::refreshDependencyVisibility() {
+    if (!m_filter_bar->text().isEmpty()) {
+        filter(m_filter_bar->text());
+        return;
+    }
+
+    for (QString key : m_panes.keys()) {
+        QList<QString> hidden_settings = PreferencesManager::getInstance()->getHiddenSettings(key);
+        SettingPane* cur_pane = m_panes.value(key);
+        bool pane_has_visible_tab = false;
+
+        for (SettingTab* cur_tab : cur_pane->getTabs()) {
+            if (hidden_settings.contains(cur_tab->getName())) {
+                continue;
+            }
+
+            if (cur_tab->hasShownRows()) {
+                cur_tab->show();
+                pane_has_visible_tab = true;
+            }
+            else {
+                cur_tab->hide();
+            }
+        }
+
+        m_tab_widget->setTabEnabled(cur_pane->getIndex(), pane_has_visible_tab);
     }
 }
 

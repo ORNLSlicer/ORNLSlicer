@@ -53,6 +53,8 @@ If `Max Helical Path Length` is greater than `0`, each generated helical fragmen
 
 Only relevant settings are shown for the selected path pattern. `Radial` shows `Radial Path Boundary Policy` with `Clip`, `Keep`, and `Discard`. `Helical` shows `Helical Path Boundary Policy` with `Clip` and `Clip Z`, plus helical-only controls such as `Helical Path Handedness`.
 
+Planar-only path settings, including Perimeter, Inset, Skeleton, Skin, Infill, Support, Ordering, Platform Adhesion, and their region-specific material modifiers, are hidden or disabled while `Slicing Mode` is `Cylindrical`.
+
 ## Boundary Policies
 
 For `Radial`, model clipping can split a path into one or more retained arcs:

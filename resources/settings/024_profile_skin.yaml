@@ -5,7 +5,7 @@ settings:
     display: "Enable Skin"
     type: "boolean"
     tooltip: "If selected, skins will be generated"
-    depends: {}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Skin"
@@ -17,7 +17,7 @@ settings:
     display: "Top Skin Count"
     type: "number"
     tooltip: "Number of skin layers at the top of a print"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -29,7 +29,7 @@ settings:
     display: "Bottom Skin Count"
     type: "number"
     tooltip: "Number of skin layers at the bottom of a print"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -41,7 +41,7 @@ settings:
     display: "Skin Pattern"
     type: "enumeration"
     tooltip: "Pattern for the skins"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options:
       - "Lines"
       - "Grid"
@@ -59,7 +59,7 @@ settings:
     display: "Skin Fill Angle"
     type: "angle"
     tooltip: "Sets the angle for the skin infill"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -71,7 +71,7 @@ settings:
     display: "Skin Fill Angle Rotation"
     type: "angle"
     tooltip: "Sets the amount the skin fill rotates layer to layer"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -83,7 +83,7 @@ settings:
     display: "Skin Exterior Overlap"
     type: "location"
     tooltip: "Width of the skin overlaps with the exterior"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -95,7 +95,7 @@ settings:
     display: "Skin Bead Width"
     type: "distance"
     tooltip: "Bead width for skin paths"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -107,7 +107,7 @@ settings:
     display: "Skin Speed"
     type: "speed"
     tooltip: "Speed for skin paths"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -119,7 +119,7 @@ settings:
     display: "Skin Extruder Speed"
     type: "rpm"
     tooltip: "Extruder speed for skin paths"
-    depends: {"AND":[{"skin":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
     options: []
     default: 0
     minor: "Skin"
@@ -131,7 +131,7 @@ settings:
     display: "Skin Extrusion Multiplier"
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for skin paths for systems without RPM control"
-    depends: {"AND":[{"skin":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
     options: []
     default: 1
     minor: "Skin"
@@ -143,7 +143,7 @@ settings:
     display: "Minimum Skin Path Length"
     type: "distance"
     tooltip: "Skin extrusion paths less than this value are deleted"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -155,7 +155,7 @@ settings:
     display: "Minimum Skin Segment Length"
     type: "distance"
     tooltip: "Skin path segments shorter than this value are collapsed before extrusion paths are created"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: 0
     minor: "Skin"
@@ -167,7 +167,7 @@ settings:
     display: "Enable Gradual Infill Steps"
     type: "boolean"
     tooltip: "If selected, gradual infill steps will be generated"
-    depends: {"skin":true}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Skin"
@@ -179,7 +179,7 @@ settings:
     display: "Number of Gradual Infill Steps"
     type: "number"
     tooltip: "Number of gradual infill steps between top skin and infill"
-    depends: {"AND":[{"skin":true},{"skin_gradual_infill":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
     options: []
     default: 0
     minor: "Skin"
@@ -191,7 +191,7 @@ settings:
     display: "Gradual Infill Pattern"
     type: "enumeration"
     tooltip: "Pattern for the gradual infill steps"
-    depends: {"AND":[{"skin":true},{"skin_gradual_infill":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
     options:
       - "Lines"
       - "Grid"
@@ -209,7 +209,7 @@ settings:
     display: "Gradual Infill Angle"
     type: "angle"
     tooltip: "Sets the angle for the gradual infill"
-    depends: {"AND":[{"skin":true},{"skin_gradual_infill":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
     options: []
     default: 0
     minor: "Skin"
@@ -221,7 +221,7 @@ settings:
     display: "Gradual Infill Angle Rotation"
     type: "angle"
     tooltip: "Sets the angle for the gradual infill rotation layer to layer"
-    depends: {"AND":[{"skin":true},{"skin_gradual_infill":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
     options: []
     default: 0
     minor: "Skin"
