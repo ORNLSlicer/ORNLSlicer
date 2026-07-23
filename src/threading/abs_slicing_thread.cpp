@@ -15,10 +15,10 @@
 #include <qtypes.h>
 
 #include "gcode/gcode_meta.h"
-#include "gcode/writers/arc_specialties_writer.h"
 #include "gcode/writers/adamantine_writer.h"
 #include "gcode/writers/aerobasic_writer.h"
 #include "gcode/writers/aml3d_writer.h"
+#include "gcode/writers/arc_specialties_writer.h"
 #include "gcode/writers/cincinnati_writer.h"
 #include "gcode/writers/dmg_dmu_writer.h"
 #include "gcode/writers/gudel_writer.h"
@@ -116,8 +116,7 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             m_base = QSharedPointer<MarlinWriter>(new MarlinWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kJuggerBot:
-            m_base =
-                QSharedPointer<JuggerBotWriter>(new JuggerBotWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
+            m_base = QSharedPointer<JuggerBotWriter>(new JuggerBotWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kMazak:
             m_base = QSharedPointer<MazakWriter>(new MazakWriter(GcodeMetaList::MazakMeta, GSM->getGlobal()));

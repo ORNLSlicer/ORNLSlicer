@@ -65,9 +65,7 @@ QString WriterBase::commentSpaceLine(const QString& text) {
                    m_newline);
 }
 
-QVector3D WriterBase::getTravelLift() {
-    return getLiftVector(m_sb->setting<Distance>(PS::Travel::kLiftHeight));
-}
+QVector3D WriterBase::getTravelLift() { return getLiftVector(m_sb->setting<Distance>(PS::Travel::kLiftHeight)); }
 
 QVector3D WriterBase::getLiftVector(Distance lift_height) const {
     // Retrieve the slicing plane normal
@@ -100,11 +98,10 @@ int WriterBase::getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& para
 }
 
 Point WriterBase::rotateGCodeCoordinateFramePoint(const Point& point) const {
-    const QQuaternion rotation =
-        MathUtils::CreateQuaternion(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX),
-                                    m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY),
-                                    m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ),
-                                    QuaternionOrder::kXYZ);
+    const QQuaternion rotation = MathUtils::CreateQuaternion(
+        m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX),
+        m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY),
+        m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ), QuaternionOrder::kXYZ);
     return Point::fromQVector3D(rotation.rotatedVector(point.toQVector3D()));
 }
 
@@ -148,7 +145,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
             QString("Nozzle Diameter: %0mm").arg(m_sb->setting<Distance>(PS::Layer::kNozzleDiameter).to(mm)));
     }
     else if (syntax == GcodeSyntax::kCincinnati || syntax == GcodeSyntax::kHaasInch || syntax == GcodeSyntax::kMeld ||
-        syntax == GcodeSyntax::kORNL || syntax == GcodeSyntax::kSiemens){
+             syntax == GcodeSyntax::kORNL || syntax == GcodeSyntax::kSiemens) {
         text += commentLine(
             QString("Nozzle Diameter: %0in").arg(m_sb->setting<Distance>(PS::Layer::kNozzleDiameter).to(in)));
     }

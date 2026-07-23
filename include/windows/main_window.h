@@ -6,8 +6,8 @@
 #include <QFile>
 #include <QLabel>
 #include <QMainWindow>
-#include <QMenuBar>
 #include <QMatrix4x4>
+#include <QMenuBar>
 #include <QTextEdit>
 #include <QToolBar>
 #include <QUdpSocket>
@@ -30,8 +30,8 @@
 #include <qtypes.h>
 #include <qwidget.h>
 
-#include "dialogs/slice_dialog.h"
 #include "configs/settings_base.h"
+#include "dialogs/slice_dialog.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
@@ -330,8 +330,8 @@ class MainWindow : public QMainWindow {
     void applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, const PartTransformSnapshot& snapshot);
 
     //! \brief Takes setting value snapshots for a set of target bases.
-    QVector<SettingValueSnapshot> settingValueSnapshots(
-        const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const;
+    QVector<SettingValueSnapshot>
+    settingValueSnapshots(const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const;
 
     //! \brief Applies setting value snapshots as an undo/redo operation.
     void applySettingValueSnapshots(const QVector<SettingValueSnapshot>& snapshots);

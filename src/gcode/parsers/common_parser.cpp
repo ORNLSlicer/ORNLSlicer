@@ -89,9 +89,8 @@ Distance CommonParser::getCurrentGXDistance() {
 
     updateCurrentBeadGeometry();
 
-    const bool include_feedrate_adjustable_time =
-        m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
-        !feedrateScalingDisabledForCommand(m_current_gcode_command);
+    const bool include_feedrate_adjustable_time = m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
+                                                  !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
     const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
     const Distance distance = MotionEstimation::calculateTimeAndVolume(
@@ -1092,16 +1091,16 @@ void CommonParser::G1Handler(QVector<QString> params) {
             case ('l'):
                 break;
 
-            case('I'):
-            case('i'):
+            case ('I'):
+            case ('i'):
                 break;
 
-            case('J'):
-            case('j'):
+            case ('J'):
+            case ('j'):
                 break;
 
-            case('K'):
-            case('k'):
+            case ('K'):
+            case ('k'):
                 break;
 
             case ('A'):
@@ -1162,7 +1161,6 @@ void CommonParser::G1Handler(QVector<QString> params) {
         MotionEstimation::m_printing_distance += temp;
     else
         MotionEstimation::m_travel_distance += temp;
-
 }
 
 void CommonParser::G1HandlerHelper(QVector<QString> params, QVector<QString> optionalParams) {

@@ -1021,8 +1021,7 @@ void MainWindow::setupEvents() {
             &SettingBar::updatePairedGlobalSetting);
     connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragFinished, m_settingbar,
             &SettingBar::finishPairedGlobalSettingChange);
-    connect(m_settingbar, &SettingBar::settingsBaseChanged, this,
-            [this](QString) { this->markProjectModified(); });
+    connect(m_settingbar, &SettingBar::settingsBaseChanged, this, [this](QString) { this->markProjectModified(); });
     connect(m_settingbar, &SettingBar::tabHidden, this, &MainWindow::addHiddenSetting);
     connect(GSM.get(), &SettingsManager::globalLoaded, this, &MainWindow::updateSettings);
 
@@ -1033,8 +1032,7 @@ void MainWindow::setupEvents() {
     // Toolbar -> Part Widget
     connect(m_main_toolbar, &MainToolbar::slice, m_part_widget, &PartWidget::preSliceUpdate);
     connect(m_main_toolbar, &MainToolbar::showSlicingPlanes, m_part_widget, &PartWidget::showSlicingPlanes);
-    connect(m_main_toolbar, &MainToolbar::showLayerSettingsRange, m_part_widget,
-            &PartWidget::showLayerSettingsRange);
+    connect(m_main_toolbar, &MainToolbar::showLayerSettingsRange, m_part_widget, &PartWidget::showLayerSettingsRange);
     connect(m_main_toolbar, &MainToolbar::showLabels, m_part_widget, &PartWidget::showLabels);
     connect(m_main_toolbar, &MainToolbar::showSeams, m_part_widget, &PartWidget::showSeams);
     connect(m_main_toolbar, &MainToolbar::showOverhang, m_part_widget, &PartWidget::showOverhang);
@@ -1108,8 +1106,7 @@ MainWindow::PartTransformSnapshot MainWindow::partTransformSnapshot(QSharedPoint
     return snapshot;
 }
 
-void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item,
-                                            const PartTransformSnapshot& snapshot) {
+void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, const PartTransformSnapshot& snapshot) {
     if (item.isNull() || !m_part_transform_snapshots.contains(item)) {
         return;
     }
@@ -1121,8 +1118,8 @@ void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item,
     m_applying_undo_redo = false;
 }
 
-QVector<MainWindow::SettingValueSnapshot> MainWindow::settingValueSnapshots(
-    const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const {
+QVector<MainWindow::SettingValueSnapshot>
+MainWindow::settingValueSnapshots(const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const {
     QList<QSharedPointer<SettingsBase>> targets = settings_bases;
     if (targets.isEmpty()) {
         targets.push_back(GSM->getGlobal());
@@ -1182,8 +1179,7 @@ void MainWindow::applySettingValueSnapshots(const QVector<SettingValueSnapshot>&
     m_applying_undo_redo = false;
 }
 
-bool MainWindow::partTransformSnapshotsEqual(const PartTransformSnapshot& lhs,
-                                             const PartTransformSnapshot& rhs) const {
+bool MainWindow::partTransformSnapshotsEqual(const PartTransformSnapshot& lhs, const PartTransformSnapshot& rhs) const {
     return lhs.scale_unit_index == rhs.scale_unit_index && lhs.transformation == rhs.transformation;
 }
 

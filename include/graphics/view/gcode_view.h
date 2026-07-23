@@ -295,10 +295,9 @@ class GCodeView : public BaseView {
         bool use_true_widths = false;
 
         bool operator==(const TrueWidthOverlayKey& other) const {
-            return low_layer == other.low_layer && high_layer == other.high_layer &&
-                   low_segment == other.low_segment && high_segment == other.high_segment &&
-                   preview_mode == other.preview_mode && vertex_threshold == other.vertex_threshold &&
-                   use_true_widths == other.use_true_widths;
+            return low_layer == other.low_layer && high_layer == other.high_layer && low_segment == other.low_segment &&
+                   high_segment == other.high_segment && preview_mode == other.preview_mode &&
+                   vertex_threshold == other.vertex_threshold && use_true_widths == other.use_true_widths;
         }
     };
 

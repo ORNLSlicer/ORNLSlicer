@@ -146,25 +146,25 @@ PolygonList CrossSectionObject::makePolygons() {
             result.reserve(polyline.size());
             SmoothingType smoothingType =
                 static_cast<SmoothingType>(m_sb->setting<int>(PS::SpecialModes::kSmoothingType));
-            if(smoothingType == SmoothingType::kDouglasPeucker) {
+            if (smoothingType == SmoothingType::kDouglasPeucker) {
                 psimpl::simplify_douglas_peucker<2>(polyline.begin(), polyline.end(), tolerance(),
-                                                std::back_inserter(result));
+                                                    std::back_inserter(result));
             }
-            else if(smoothingType == SmoothingType::kRadialDistance){
+            else if (smoothingType == SmoothingType::kRadialDistance) {
                 psimpl::simplify_radial_distance<2>(polyline.begin(), polyline.end(), tolerance(),
-                                                std::back_inserter(result));
+                                                    std::back_inserter(result));
             }
-            else if(smoothingType == SmoothingType::kPerpendicularDistance){
+            else if (smoothingType == SmoothingType::kPerpendicularDistance) {
                 psimpl::simplify_perpendicular_distance<2>(polyline.begin(), polyline.end(), tolerance(),
-                                                std::back_inserter(result));
+                                                           std::back_inserter(result));
             }
-            else if(smoothingType == SmoothingType::kReumannWitkam){
+            else if (smoothingType == SmoothingType::kReumannWitkam) {
                 psimpl::simplify_reumann_witkam<2>(polyline.begin(), polyline.end(), tolerance(),
-                                                std::back_inserter(result));
+                                                   std::back_inserter(result));
             }
-            else{
+            else {
                 psimpl::simplify_douglas_peucker<2>(polyline.begin(), polyline.end(), tolerance(),
-                                                std::back_inserter(result));
+                                                    std::back_inserter(result));
             }
 
             Polygon newPolygon;
