@@ -32,6 +32,9 @@ constexpr double kToolFrameYR = 0.0;
 //! @brief Fixed tool-frame ZR.
 constexpr double kToolFrameZR = -135.0;
 
+//! @brief Tool-frame ZR used for rapid travel moves.
+constexpr double kRapidTravelToolFrameZR = -90.0;
+
 //! @brief Returns a point offset away from the radial cylinder axis by the configured lift height.
 Point radialLiftedPoint(const Point& point, const QSharedPointer<SettingsBase>& params, Distance lift_height) {
     const double center_x = params->setting<Distance>(kRadialCenterX)();
@@ -120,6 +123,10 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
+        text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") %
+                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
+                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
+                            QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
@@ -439,7 +446,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     setFeedrate(speed);
     m_layer_start = false;
 
-    rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params) %
+    rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
           commentSpaceLine(isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical
@@ -547,15 +554,16 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
                                           const QSharedPointer<SettingsBase>& params, const QString& comment) {
     setFeedrate(speed);
     if (command == "G00") {
-        return command % writeCoordinates(destination, params) % commentSpaceLine(comment);
+        return command % writeCoordinates(destination, params, kRapidTravelToolFrameZR) % commentSpaceLine(comment);
     }
     else {
-        return command % writeCoordinates(destination, params) % m_f %
+        return command % writeCoordinates(destination, params, kToolFrameZR) % m_f %
                QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(comment);
     }
 }
 
-QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params) {
+QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
+                                               double tool_frame_zr) {
     const double ap_output = m_sb->setting<Angle>(PRS::MachineSetup::kAxisA).to(m_meta.m_angle_unit);
     const double cp_output = Angle(cpAxisForPoint(destination, params) * degree).to(m_meta.m_angle_unit);
     const Point output_destination = rotateGCodeCoordinateFramePoint(destination);
@@ -564,7 +572,7 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
            " Y=" % QString::number(Distance(output_destination.y()).to(m_meta.m_distance_unit), 'f', 4) % " Z=" %
            QString::number(Distance(output_destination.z()).to(m_meta.m_distance_unit), 'f', 4) % " XR=" %
            QString::number(kToolFrameXR, 'f', 4) % " YR=" % QString::number(kToolFrameYR, 'f', 4) % " ZR=" %
-           QString::number(kToolFrameZR, 'f', 4) % " AP=" % QString::number(ap_output, 'f', 4) % " CP=" %
+           QString::number(tool_frame_zr, 'f', 4) % " AP=" % QString::number(ap_output, 'f', 4) % " CP=" %
            QString::number(cp_output, 'f', 4);
 }
 
