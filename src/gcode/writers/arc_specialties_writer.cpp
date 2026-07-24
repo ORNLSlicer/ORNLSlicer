@@ -1,14 +1,19 @@
 #include "gcode/writers/arc_specialties_writer.h"
 
+#include <math.h>
+
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
 #include <QStringBuilder>
+#include <qcontainerfwd.h>
 #include <qsharedpointer.h>
+#include <qvectornd.h>
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
+#include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
 #include "units/unit.h"
@@ -123,9 +128,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
-        text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") %
-                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
-                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
+        text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) %
+                            "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
@@ -209,12 +213,11 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
             text += commentLine(QString("G02/G03 Center Point Interpretation: ") %
                                 (usesAbsoluteArcCenters() ? "Absolute" : "Relative"));
             if (usesAbsoluteArcCenters()) {
-                text += commentLine("G02/G03 Absolute Center: I=" %
-                                    formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteI),
-                                                   m_meta.m_distance_unit) %
-                                    " J=" %
-                                    formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteJ),
-                                                   m_meta.m_distance_unit));
+                text += commentLine(
+                    "G02/G03 Absolute Center: I=" %
+                    formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteI), m_meta.m_distance_unit) %
+                    " J=" %
+                    formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteJ), m_meta.m_distance_unit));
             }
         }
         text += commentLine("Arcs per Revolution: " %
@@ -296,12 +299,7 @@ QString ArcSpecialtiesWriter::writeBeforeIsland() { return QString(); }
 
 QString ArcSpecialtiesWriter::writeBeforeRegion(RegionType type, int pathSize) { return QString(); }
 
-QString ArcSpecialtiesWriter::writeBeforePath(RegionType type) {
-    QString rv;
-    // rv += commentLine(QString("BEGINNING BEAD: ") % QString::number(m_current_layer) % "." %
-    // QString::number(m_current_bead)); m_current_bead++; rv += "G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
-    return rv;
-}
+QString ArcSpecialtiesWriter::writeBeforePath(RegionType type) { return QString(); }
 
 QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                           QSharedPointer<SettingsBase> params) {

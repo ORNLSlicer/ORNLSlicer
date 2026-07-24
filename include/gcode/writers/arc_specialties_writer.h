@@ -2,8 +2,12 @@
 
 #include <QPair>
 #include <QVector>
+#include <qcontainerfwd.h>
+#include <qhashfunctions.h>
 #include <qsharedpointer.h>
+#include <qvectornd.h>
 
+#include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
