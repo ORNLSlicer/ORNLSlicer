@@ -19,13 +19,13 @@ namespace ORNL {
  * @class ArcSpecialtiesWriter
  * @brief Arc Specialties writer using X/Y/Z and XR/YR/ZR/AP/CP motion fields.
  *
- * This first pass reuses radial path coordinates as user-frame endpoint coordinates relative to the active work
- * offset, then applies the configured G-Code coordinate frame rotation before output. Feed moves use tool-frame
- * rotations XR=180, YR=0, and ZR=-135; rapid travel moves use ZR=-90. AP comes from the existing Axis A setting; CP is
- * computed from each transformed endpoint's angle around the transformed radial slicing center plus the existing Axis C
- * offset. Helical paths report CP as the positive angular sweep from the transformed helical start angle plus Axis C.
- * When the machine Supports G2/G3 setting is enabled, radial and helical print arcs are emitted as G02/G03 with I/J
- * center offsets and are divided according to Arcs per Revolution.
+ * Arc Specialties output keeps generated path coordinates as user-frame endpoints relative to the active work offset,
+ * then applies the configured G-Code coordinate frame rotation before output. Feed moves use tool-frame rotations
+ * XR=180, YR=0, and ZR=-135; rapid travel moves use ZR=-90. AP comes from the existing Axis A setting. Planar paths use
+ * Axis C as a fixed CP positioner value, while cylindrical paths compute CP from each transformed endpoint's angle
+ * around the transformed radial slicing center plus Axis C. Helical paths report CP as the positive angular sweep from
+ * the transformed helical start angle plus Axis C. When Supports G2/G3 is enabled, print arcs are emitted as G02/G03
+ * with I/J center parameters; cylindrical radial and helical arcs are divided according to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
   public:
@@ -75,16 +75,16 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     QString writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit a separate part prologue.
+    //! @brief Arc Specialties slicing does not emit a separate part prologue.
     QString writeBeforePart(QVector3D normal) override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit island prologue commands.
+    //! @brief Arc Specialties slicing does not emit island prologue commands.
     QString writeBeforeIsland() override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit region prologue commands.
+    //! @brief Arc Specialties slicing does not emit region prologue commands.
     QString writeBeforeRegion(RegionType type, int pathSize) override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit path prologue commands.
+    //! @brief Tracks the active path type without emitting path prologue commands.
     QString writeBeforePath(RegionType type) override;
 
     /*!
@@ -92,7 +92,7 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @param start_location Start point for the travel.
      * @param target_location End point for the travel.
      * @param lType Travel lift mode used to expand the travel into lift, traverse, and lower moves.
-     * @param params Segment settings containing radial center metadata.
+     * @param params Segment settings containing speed and, for cylindrical paths, radial center metadata.
      * @return G00 travel command block.
      */
     QString writeTravel(Point start_location, Point target_location, TravelLiftType lType,
@@ -102,7 +102,7 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @brief Writes a printing move with Arc Specialties coordinates and orientation fields.
      * @param start_point Start point for the line. Currently informational only.
      * @param target_point End point for the line.
-     * @param params Segment settings containing speed and radial center metadata.
+     * @param params Segment settings containing speed and, for cylindrical paths, radial center metadata.
      * @return G01 print command.
      */
     QString writeLine(const Point& start_point, const Point& target_point,
@@ -115,22 +115,22 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @param center_point Arc center point.
      * @param angle Arc sweep angle. Currently informational only.
      * @param ccw True for counter-clockwise G03 output, false for clockwise G02 output.
-     * @param params Segment settings containing speed and radial center metadata.
+     * @param params Segment settings containing speed and, for cylindrical paths, radial center metadata.
      * @return G02/G03 print command, or a G01 move when arc output is disabled.
      */
     QString writeArc(const Point& start_point, const Point& end_point, const Point& center_point, const Angle& angle,
                      const bool& ccw, const QSharedPointer<SettingsBase> params) override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit path epilogue commands.
+    //! @brief Writes configured path epilogue commands for compatible region types.
     QString writeAfterPath(RegionType type) override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit region epilogue commands.
+    //! @brief Arc Specialties slicing does not emit region epilogue commands.
     QString writeAfterRegion(RegionType type) override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit island epilogue commands.
+    //! @brief Arc Specialties slicing does not emit island epilogue commands.
     QString writeAfterIsland() override;
 
-    //! @brief Arc Specialties cylindrical slicing does not emit a separate part epilogue.
+    //! @brief Arc Specialties slicing does not emit a separate part epilogue.
     QString writeAfterPart() override;
 
     /*!
@@ -163,7 +163,7 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @param command G-code command string.
      * @param destination Endpoint being written.
      * @param speed Feedrate to emit.
-     * @param params Segment settings containing radial center metadata.
+     * @param params Segment settings containing speed and, for cylindrical paths, radial center metadata.
      * @param comment Motion comment.
      * @return Complete motion line.
      */
@@ -173,7 +173,7 @@ class ArcSpecialtiesWriter : public WriterBase {
     /*!
      * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields for a point.
      * @param destination Point being written.
-     * @param params Segment settings containing radial center metadata.
+     * @param params Segment settings containing, for cylindrical paths, radial center metadata.
      * @param tool_frame_zr ZR orientation value to emit.
      * @return Coordinate parameter string.
      */
@@ -195,9 +195,9 @@ class ArcSpecialtiesWriter : public WriterBase {
     bool usesAbsoluteArcCenters() const;
 
     /*!
-     * @brief Computes CP angle for a transformed point around the transformed radial center, normalized to [0, 360).
+     * @brief Computes the CP value for the active slicing mode, normalized to [0, 360).
      * @param destination Point whose angular position is being written.
-     * @param params Segment settings containing radial center metadata.
+     * @param params Segment settings containing, for cylindrical paths, radial center metadata.
      * @return CP value in degrees.
      */
     double cpAxisForPoint(const Point& destination, const QSharedPointer<SettingsBase>& params);
@@ -215,11 +215,29 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     bool isHelicalPathPattern() const;
 
+    /*!
+     * @brief Returns the print-move comment for the active slicing mode and path type.
+     * @return Region, radial, or helical comment text.
+     */
+    QString printMoveComment() const;
+
+    /*!
+     * @brief Returns whether the writer is emitting cylindrical radial or helical paths.
+     * @return True when Slicing Mode is Cylindrical.
+     */
+    bool isCylindricalSlicingMode() const;
+
     //! @brief Tracks whether any travel move has been emitted.
     bool m_first_travel = true;
 
-    //! @brief Forces feedrate output at the start of each radial layer.
+    //! @brief Forces feedrate output at the start of each layer.
     bool m_layer_start = true;
+
+    //! @brief Tracks whether G161 absolute-center mode was enabled during setup.
+    bool m_absolute_arc_center_mode_enabled = false;
+
+    //! @brief Active region type used for planar print-move comments.
+    RegionType m_region_type = RegionType::kUnknown;
 
     //! @brief Tracks current bead number.
     int m_current_bead = 0;
