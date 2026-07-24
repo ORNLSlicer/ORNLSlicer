@@ -5,7 +5,7 @@ settings:
     display: "Printing Material"
     type: "enumeration"
     tooltip: "Material type used to calculate approximate weight\u00a0"
-    depends: {"slicing_mode":0}
+    depends: {}
     options:
       - "ABS20CF"
       - "ABS"
@@ -28,7 +28,7 @@ settings:
     display: "Other Density"
     type: "density"
     tooltip: "Density of material being used to print"
-    depends: {"AND":[{"slicing_mode":0},{"printing_material":10}]}
+    depends: {"printing_material":10}
     options: []
     default: 0
     minor: "Density"
