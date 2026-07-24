@@ -391,7 +391,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     rv += writeRadialArcTravel(travel_start, travel_destination, speed);
 
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        rv += writeMotion("G00", target_location, lift_speed, params, "TRAVEL LOWER");
+        rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
     }
 
     m_first_travel = false;
