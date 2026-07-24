@@ -47,6 +47,17 @@ bool isDisableFeedrateScalingSetting(const QString& key) {
     return key == MS::Startup::kDisableFeedrateScaling || key == MS::Slowdown::kDisableFeedrateScaling ||
            key == MS::TipWipe::kDisableFeedrateScaling || key == MS::SpiralLift::kDisableFeedrateScaling;
 }
+
+double positiveSweep(double sweep) {
+    const double full_circle = 2.0 * M_PI;
+    while (sweep < 0.0) {
+        sweep += full_circle;
+    }
+    while (sweep >= full_circle) {
+        sweep -= full_circle;
+    }
+    return sweep;
+}
 } // namespace
 
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
@@ -103,6 +114,132 @@ Distance CommonParser::getCurrentGXDistance() {
     }
 
     return distance;
+}
+
+Distance CommonParser::getCurrentArcDistance(Distance start_x, Distance start_y, Distance start_z, bool has_i,
+                                             bool has_j, bool has_r, bool ccw) {
+    updateCurrentBeadGeometry();
+
+    Distance start_direction_x;
+    Distance start_direction_y;
+    Distance start_direction_z;
+    Distance end_direction_x;
+    Distance end_direction_y;
+    Distance end_direction_z;
+    const Distance path_length =
+        arcPathLength(start_x, start_y, start_z, MotionEstimation::m_current_x, MotionEstimation::m_current_y,
+                      MotionEstimation::m_current_z, has_i, has_j, has_r, ccw, start_direction_x, start_direction_y,
+                      start_direction_z, end_direction_x, end_direction_y, end_direction_z);
+
+    const bool include_feedrate_adjustable_time = m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
+                                                  !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
+    const Distance distance = MotionEstimation::calculatePathTimeAndVolume(
+        path_length, start_direction_x, start_direction_y, start_direction_z, end_direction_x, end_direction_y,
+        end_direction_z, include_feedrate_adjustable_time, false, m_extruder_on, m_layer_G1F_times[m_current_layer],
+        m_layer_times[m_current_layer], m_layer_volumes[m_current_layer]);
+
+    const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
+    if (command_adjustable_time > 0) {
+        m_command_G1F_times[m_current_gcode_command.getLineNumber()] += command_adjustable_time;
+    }
+
+    return distance;
+}
+
+Distance CommonParser::arcPathLength(Distance start_x, Distance start_y, Distance start_z, Distance end_x,
+                                     Distance end_y, Distance end_z, bool has_i, bool has_j, bool has_r, bool ccw,
+                                     Distance& start_direction_x, Distance& start_direction_y,
+                                     Distance& start_direction_z, Distance& end_direction_x, Distance& end_direction_y,
+                                     Distance& end_direction_z) const {
+    const Distance dx = end_x - start_x;
+    const Distance dy = end_y - start_y;
+    const Distance dz = end_z - start_z;
+    const Distance chord_length = sqrt(dx * dx + dy * dy + dz * dz);
+    const Distance planar_chord_length = sqrt(dx * dx + dy * dy);
+
+    auto set_linear_direction = [&](Distance path_length) {
+        if (chord_length > 0) {
+            const double scale = path_length() / chord_length();
+            start_direction_x = dx * scale;
+            start_direction_y = dy * scale;
+            start_direction_z = dz * scale;
+        }
+        else {
+            start_direction_x = path_length;
+            start_direction_y = 0;
+            start_direction_z = 0;
+        }
+        end_direction_x = start_direction_x;
+        end_direction_y = start_direction_y;
+        end_direction_z = start_direction_z;
+    };
+
+    const bool has_center = has_i && has_j;
+    Distance radius;
+    Distance planar_arc_length;
+    double sweep = 0.0;
+
+    if (has_center) {
+        const Distance start_radius_x = start_x - m_current_arc_center_x;
+        const Distance start_radius_y = start_y - m_current_arc_center_y;
+        const Distance end_radius_x = end_x - m_current_arc_center_x;
+        const Distance end_radius_y = end_y - m_current_arc_center_y;
+        const Distance start_radius = sqrt(start_radius_x * start_radius_x + start_radius_y * start_radius_y);
+        const Distance end_radius = sqrt(end_radius_x * end_radius_x + end_radius_y * end_radius_y);
+        radius = (start_radius + end_radius) / 2.0;
+
+        if (radius <= 0) {
+            set_linear_direction(chord_length);
+            return chord_length;
+        }
+
+        const double start_angle = qAtan2(start_radius_y(), start_radius_x());
+        const double end_angle = qAtan2(end_radius_y(), end_radius_x());
+        sweep = positiveSweep(ccw ? end_angle - start_angle : start_angle - end_angle);
+
+        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) {
+            sweep = 2.0 * M_PI;
+        }
+
+        planar_arc_length = radius * sweep;
+        const Distance path_length = sqrt(planar_arc_length * planar_arc_length + dz * dz);
+
+        const double direction = ccw ? 1.0 : -1.0;
+        start_direction_x = planar_arc_length * (-direction * start_radius_y() / radius());
+        start_direction_y = planar_arc_length * (direction * start_radius_x() / radius());
+        start_direction_z = dz;
+        end_direction_x = planar_arc_length * (-direction * end_radius_y() / radius());
+        end_direction_y = planar_arc_length * (direction * end_radius_x() / radius());
+        end_direction_z = dz;
+        return path_length;
+    }
+
+    if (has_r) {
+        radius = qAbs(m_current_arc_radius);
+        if (radius <= 0) {
+            set_linear_direction(chord_length);
+            return chord_length;
+        }
+
+        const double chord_ratio = std::clamp((planar_chord_length / (2.0 * radius))(), 0.0, 1.0);
+        sweep = 2.0 * qAsin(chord_ratio);
+        if (m_current_arc_radius < 0) {
+            sweep = 2.0 * M_PI - sweep;
+        }
+        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) {
+            sweep = 2.0 * M_PI;
+        }
+
+        planar_arc_length = radius * sweep;
+        const Distance path_length = sqrt(planar_arc_length * planar_arc_length + dz * dz);
+        set_linear_direction(path_length);
+        return path_length;
+    }
+
+    set_linear_direction(chord_length);
+    return chord_length;
 }
 
 void CommonParser::updateCurrentBeadGeometry() {
@@ -1190,7 +1327,10 @@ void CommonParser::G2Handler(QVector<QString> params) {
 
     char current_parameter;
     NT current_value;
-    NT temp_x = getXPos(), temp_y = getYPos(), temp_z = getZPos();
+    const Distance start_x = MotionEstimation::m_current_x;
+    const Distance start_y = MotionEstimation::m_current_y;
+    const Distance start_z = MotionEstimation::m_current_z;
+    NT temp_x = start_x(), temp_y = start_y(), temp_z = start_z();
     bool no_error, x_not_used = true, y_not_used = true, z_not_used = true, i_not_used = true, j_not_used = true,
                    k_not_used = true, f_not_used = true, s_not_used = true, w_not_used = true, e_not_used = true,
                    r_not_used = true;
@@ -1261,7 +1401,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('I'):
             case ('i'):
                 if (i_not_used) {
-                    setArcXPos(getXPos() + current_value);
+                    setArcXPos(start_x() + current_value);
                     i_not_used = false;
                 }
                 else {
@@ -1272,7 +1412,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('J'):
             case ('j'):
                 if (j_not_used) {
-                    setArcYPos(getYPos() + current_value);
+                    setArcYPos(start_y() + current_value);
                     j_not_used = false;
                 }
                 else {
@@ -1283,7 +1423,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('K'):
             case ('k'):
                 if (k_not_used) {
-                    setArcZPos(getZPos() + current_value);
+                    setArcZPos(start_z() + current_value);
                     k_not_used = false;
                 }
                 else {
@@ -1373,6 +1513,15 @@ void CommonParser::G2Handler(QVector<QString> params) {
     setXPos(temp_x);
     setYPos(temp_y);
     setZPos(temp_z);
+
+    m_with_F_value = m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    Distance temp = getCurrentArcDistance(start_x, start_y, start_z, !i_not_used, !j_not_used, !r_not_used, false);
+    MotionEstimation::m_total_distance += temp;
+    if (m_extruder_on)
+        MotionEstimation::m_printing_distance += temp;
+    else
+        MotionEstimation::m_travel_distance += temp;
 }
 
 void CommonParser::G3Handler(QVector<QString> params) {
@@ -1387,7 +1536,10 @@ void CommonParser::G3Handler(QVector<QString> params) {
 
     char current_parameter;
     NT current_value;
-    NT temp_x = getXPos(), temp_y = getYPos(), temp_z = getZPos();
+    const Distance start_x = MotionEstimation::m_current_x;
+    const Distance start_y = MotionEstimation::m_current_y;
+    const Distance start_z = MotionEstimation::m_current_z;
+    NT temp_x = start_x(), temp_y = start_y(), temp_z = start_z();
     bool no_error, x_not_used = true, y_not_used = true, z_not_used = true, i_not_used = true, j_not_used = true,
                    k_not_used = true, f_not_used = true, s_not_used = true, w_not_used = true, e_not_used = true,
                    r_not_used = true;
@@ -1461,7 +1613,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('I'):
             case ('i'):
                 if (i_not_used) {
-                    setArcXPos(getXPos() + current_value);
+                    setArcXPos(start_x() + current_value);
                     i_not_used = false;
                 }
                 else {
@@ -1472,7 +1624,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('J'):
             case ('j'):
                 if (j_not_used) {
-                    setArcYPos(getYPos() + current_value);
+                    setArcYPos(start_y() + current_value);
                     j_not_used = false;
                 }
                 else {
@@ -1483,7 +1635,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('K'):
             case ('k'):
                 if (k_not_used) {
-                    setArcZPos(getZPos() + current_value);
+                    setArcZPos(start_z() + current_value);
                     k_not_used = false;
                 }
                 else {
@@ -1579,6 +1731,15 @@ void CommonParser::G3Handler(QVector<QString> params) {
     setXPos(temp_x);
     setYPos(temp_y);
     setZPos(temp_z);
+
+    m_with_F_value = m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    Distance temp = getCurrentArcDistance(start_x, start_y, start_z, !i_not_used, !j_not_used, !r_not_used, true);
+    MotionEstimation::m_total_distance += temp;
+    if (m_extruder_on)
+        MotionEstimation::m_printing_distance += temp;
+    else
+        MotionEstimation::m_travel_distance += temp;
 }
 
 void CommonParser::G4Handler(QVector<QString> params) {

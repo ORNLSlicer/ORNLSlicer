@@ -22,6 +22,14 @@ class MotionEstimation {
     static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
                                            Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b);
 
+    //! \brief Calculate time and volume contribution for a non-linear path with a known path length.
+    static Distance calculatePathTimeAndVolume(Distance path_length, Distance start_direction_x,
+                                               Distance start_direction_y, Distance start_direction_z,
+                                               Distance end_direction_x, Distance end_direction_y,
+                                               Distance end_direction_z, bool isFIncluded, bool isGOCommand,
+                                               bool extruder_on, Time& G1F_time, Time& layer_time,
+                                               Volume& layer_volume);
+
     //! \brief Set the bead dimensions to use for the next extrusion volume estimate.
     //! \param bead_width Total bead width.
     //! \param bead_height Nominal bead height.
@@ -115,6 +123,8 @@ class MotionEstimation {
     //! \param isFIncluded, if the current command statement include velocity / speed
     static Time continuousXYMove(double theta, Distance d, Distance dx, Distance dy, Distance dz, Time& G1F_time,
                                  bool isFIncluded);
+
+    static void setPreviousVelocityVector(Velocity velocity, Distance dx, Distance dy, Distance dz);
 
     static bool m_previous_vertical; // Z or W move
 

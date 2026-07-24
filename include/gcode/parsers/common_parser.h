@@ -487,6 +487,16 @@ class CommonParser : public ParserBase {
     //! \brief calculates distance for the current motion segment
     Distance getCurrentGXDistance();
 
+    //! \brief Calculates distance for the current arc motion segment.
+    Distance getCurrentArcDistance(Distance start_x, Distance start_y, Distance start_z, bool has_i, bool has_j,
+                                   bool has_r, bool ccw);
+
+    //! \brief Calculates arc path length and direction vectors in parser distance units.
+    Distance arcPathLength(Distance start_x, Distance start_y, Distance start_z, Distance end_x, Distance end_y,
+                           Distance end_z, bool has_i, bool has_j, bool has_r, bool ccw, Distance& start_direction_x,
+                           Distance& start_direction_y, Distance& start_direction_z, Distance& end_direction_x,
+                           Distance& end_direction_y, Distance& end_direction_z) const;
+
     //! \brief Sets the current bead geometry used by motion volume estimation.
     void updateCurrentBeadGeometry();
 
