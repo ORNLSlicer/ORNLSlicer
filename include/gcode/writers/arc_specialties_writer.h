@@ -17,7 +17,7 @@
 namespace ORNL {
 /*!
  * @class ArcSpecialtiesWriter
- * @brief Arc Specialties radial and helical writer using X/Y/Z and XR/YR/ZR/AP/CP motion fields.
+ * @brief Arc Specialties writer using X/Y/Z and XR/YR/ZR/AP/CP motion fields.
  *
  * This first pass reuses radial path coordinates as user-frame endpoint coordinates relative to the active work
  * offset, then applies the configured G-Code coordinate frame rotation before output. Feed moves use tool-frame
@@ -30,7 +30,7 @@ namespace ORNL {
 class ArcSpecialtiesWriter : public WriterBase {
   public:
     /*!
-     * @brief Constructs an Arc Specialties radial or helical writer.
+     * @brief Constructs an Arc Specialties writer.
      * @param meta Gcode syntax metadata for output units and comments.
      * @param sb Global settings used while writing.
      */
@@ -49,29 +49,29 @@ class ArcSpecialtiesWriter : public WriterBase {
     void setHelicalPathHandedness(const QVector<QPair<QString, HelicalPathHandedness>>& handedness);
 
     /*!
-     * @brief Writes radial or helical geometry and Arc Specialties setup notes.
+     * @brief Writes Arc Specialties setup notes for the selected slicing workflow.
      * @param syntax Gcode syntax being written. Currently informational only.
-     * @return Header comments for cylindrical geometry and Arc Specialties motion assumptions.
+     * @return Header comments for Arc Specialties motion assumptions.
      */
     QString writeSettingsHeader(GcodeSyntax syntax) override;
 
     /*!
-     * @brief Writes startup comments, optional user start code, and radial layer count.
+     * @brief Writes startup comments, optional user start code, and layer count.
      * @param minimum_x Build minimum X.
      * @param minimum_y Build minimum Y.
      * @param maximum_x Build maximum X.
      * @param maximum_y Build maximum Y.
-     * @param num_layers Number of radial layers to report in the header.
+     * @param num_layers Number of layers to report in the header.
      * @return Initial gcode block.
      */
     QString writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                               int num_layers) override;
 
     /*!
-     * @brief Resets per-layer writer state before a radial layer.
+     * @brief Resets per-layer writer state before a layer.
      * @param min_z Minimum layer Z. Currently informational only.
      * @param sb Layer settings. Currently informational only.
-     * @return Empty string because radial layers do not require layer prologue commands.
+     * @return Empty string because Arc Specialties layers do not require layer prologue commands.
      */
     QString writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) override;
 

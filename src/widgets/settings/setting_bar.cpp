@@ -35,7 +35,7 @@ namespace {
 constexpr int kMaxVisibleSettingBaseItems = 16;
 constexpr int kSettingBaseItemHeightFallback = 22;
 
-bool isCylindricalCapableSyntax(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
+bool supportsCylindricalSlicing(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
 } // namespace
 
 SettingBar::SettingBar(QHash<QString, QString> selectedSettingBases)
@@ -358,21 +358,11 @@ QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_ke
     if (setting_key == PS::Slicing::kSlicingMode) {
         const SlicingMode slicing_mode = static_cast<SlicingMode>(sb->setting<int>(PS::Slicing::kSlicingMode));
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-        if (slicing_mode == SlicingMode::kCylindrical && !isCylindricalCapableSyntax(syntax)) {
+        if (slicing_mode == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
             emit settingAboutToChange(PRS::MachineSetup::kSyntax, QList<QSharedPointer<SettingsBase>>());
             sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kArcSpecialties));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
             synced_keys.push_back(PRS::MachineSetup::kSyntax);
-        }
-    }
-    else if (setting_key == PRS::MachineSetup::kSyntax) {
-        const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-        const SlicingMode slicing_mode = static_cast<SlicingMode>(sb->setting<int>(PS::Slicing::kSlicingMode));
-        if (syntax == GcodeSyntax::kArcSpecialties && slicing_mode != SlicingMode::kCylindrical) {
-            emit settingAboutToChange(PS::Slicing::kSlicingMode, QList<QSharedPointer<SettingsBase>>());
-            sb->setSetting(PS::Slicing::kSlicingMode, static_cast<int>(SlicingMode::kCylindrical));
-            reloadSettingRow(PS::Slicing::kSlicingMode);
-            synced_keys.push_back(PS::Slicing::kSlicingMode);
         }
     }
 
