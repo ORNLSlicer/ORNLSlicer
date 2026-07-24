@@ -2,7 +2,7 @@
 
 Cylindrical slicing generates direct toolpaths around a selected vertical cylinder axis. `Cylindrical Path Pattern` selects whether those paths are radial rings/arcs or rising helices. The axis uses each build part's XY centroid by default, but it can also be set to a custom XY coordinate.
 
-This slicer is intended for `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP output. It does not run the standard perimeter, infill, skin, support, or raft generation logic.
+This slicer is intended for `Arc Specialties` X/Y/Z/XR/YR/ZR/AP/CP output. It does not run the standard perimeter, infill, skin, support, or raft generation logic. The same Arc Specialties syntax can also format normal planar output; this page describes only cylindrical mode.
 
 ## Basic Workflow
 
@@ -79,7 +79,9 @@ When `Clip Z` finds no boundary crossing, a helix that is wholly inside the mode
 
 ## G-code And Machine Settings
 
-`Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset, applies the configured G-code coordinate frame rotation, and emits `XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. The first implementation fixes `XR=180`, `YR=0`, and `ZR=0`; maps `Axis A` to `AP`; and computes `CP` from the transformed endpoint angle plus `Axis C`, normalized to 0-360 degrees. For helical output, `CP` reports positive angular sweep from the transformed `Helical Path Start Angle` plus `Axis C`; with the default `90 deg` start angle, four equal arc endpoints advance as `90`, `180`, `270`, `0` degrees. For the Arc Specialties partner frame, set `G-Code Frame Rotation Z` to `-90 deg`.
+`Arc Specialties` output keeps X, Y, and Z as user-frame endpoint coordinates relative to the active work offset, applies the configured G-code coordinate frame rotation, and emits `XR`, `YR`, `ZR`, `AP`, and `CP` fields on every travel and print move. Feed moves use `XR=180`, `YR=0`, and `ZR=-135`; rapid travel moves use `ZR=-90`. The writer maps `Axis A` to `AP` and computes cylindrical `CP` from the transformed endpoint angle plus `Axis C`, normalized to 0-360 degrees. For helical output, `CP` reports positive angular sweep from the transformed `Helical Path Start Angle` plus `Axis C`; with the default `90 deg` start angle, four equal arc endpoints advance as `90`, `180`, `270`, `0` degrees. For the Arc Specialties partner frame, set `G-Code Frame Rotation Z` to `-90 deg`.
+
+For planar slicing with the Arc Specialties syntax, the normal planar regions and segment stream are preserved. Planar motion still emits the Arc Specialties orientation fields, uses the slice-plane normal for travel lift, and writes `CP` as the configured `Axis C` value rather than deriving it from a cylinder axis.
 
 Enabling `Supports G2/G3` writes radial and helical print paths as G2/G3 moves divided according to `Arcs per Revolution`. Right-handed helical arcs are emitted as counter-clockwise moves, and left-handed helical arcs are emitted as clockwise moves. Those moves use equals-form `I=`/`J=` offsets and place the feedrate at the end of the motion fields. When arc support is disabled, print paths remain segmented G1 moves.
 
@@ -88,7 +90,7 @@ The generated header reports cylindrical geometry, path pattern, helical handedn
 | Setting | Location | Effect |
 | --- | --- | --- |
 | `Axis A` | Printer > Machine Setup | Positioner tilt emitted as `AP`. |
-| `Axis C` | Printer > Machine Setup | Added to the endpoint angle around the cylinder axis before writing `CP`; helical output starts at this value at the configured start angle. |
+| `Axis C` | Printer > Machine Setup | Added to the endpoint angle around the cylinder axis before writing cylindrical `CP`; planar Arc Specialties output writes it as the fixed `CP` value. |
 | `G-Code Frame Rotation X/Y/Z` | Printer > Machine Setup | Rotates emitted G-code endpoint coordinates and G2/G3 center offsets. Set Z to `-90 deg` for the Arc Specialties partner frame. |
 | `Supports G2/G3` | Printer > Machine Setup | Enables G2/G3 cylindrical print moves. When disabled, cylindrical print paths use segmented G1 moves. |
 | `Default Print Speed` | Profile > Layer | Print feedrate for cylindrical print segments. |

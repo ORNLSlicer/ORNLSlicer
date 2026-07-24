@@ -76,6 +76,16 @@ double shortestAngularDelta(double start_angle, double end_angle) {
     return delta;
 }
 
+//! @brief Normalizes an angle in degrees to [0, 360).
+double normalizeDegrees(double degrees) {
+    degrees = std::fmod(degrees, 360.0);
+    if (degrees < 0.0) {
+        degrees += 360.0;
+    }
+
+    return degrees;
+}
+
 //! @brief Smallest travel arc segment used to keep arc-like travel output bounded.
 const Distance kMinTravelArcSegmentLength = 100.0 * micron;
 
@@ -224,6 +234,51 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             QString::number(std::max(1, m_sb->setting<int>(PS::Slicing::kArcsPerRevolution))));
         text += m_newline;
     }
+    else if (slicing_mode == SlicingMode::kPlanar) {
+        text += commentLine("Arc Specialties Planar Slicing Parameters");
+        text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
+                            "offset");
+        text += commentLine(QString("Slice Plane Normal: X=") %
+                            QString::number(m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX), 'f', 4) % " Y=" %
+                            QString::number(m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY), 'f', 4) % " Z=" %
+                            QString::number(m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ), 'f', 4));
+        text += commentLine(
+            "G-Code Coordinate Frame Rotation: X=" %
+            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX), m_meta.m_angle_unit) %
+            " Y=" %
+            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY), m_meta.m_angle_unit) %
+            " Z=" %
+            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ), m_meta.m_angle_unit));
+        text += commentLine("Arc Specialties partner frame: set G-Code Frame Rotation Z to -90deg");
+        text += commentLine("Work Offset Setup: manual and probe setup commands are not emitted by this first pass");
+        text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
+                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
+                            "deg");
+        text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) %
+                            "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
+                            QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
+        text += commentLine("Travel Lift Direction: slice plane normal");
+        text += commentLine("Travel Lift Distance: " %
+                            formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
+        text += commentLine("AP Positioner Tilt: " %
+                            formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kAxisA), m_meta.m_angle_unit));
+        text += commentLine(
+            "Planar CP Positioner: " %
+            formatAngle(Angle(normalizeDegrees(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree)) * degree),
+                        m_meta.m_angle_unit));
+        text += commentLine(QString("Arc Feed Moves: ") %
+                            (m_sb->setting<bool>(PRS::MachineSetup::kSupportG3) ? "G02/G03 enabled" : "G01 fallback"));
+        text += commentLine(QString("G02/G03 Center Point Interpretation: ") %
+                            (usesAbsoluteArcCenters() ? "Absolute" : "Relative"));
+        if (usesAbsoluteArcCenters()) {
+            text += commentLine(
+                "G02/G03 Absolute Center: I=" %
+                formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteI), m_meta.m_distance_unit) %
+                " J=" %
+                formatDistance(m_sb->setting<Distance>(PRS::MachineSetup::kG2G3AbsoluteJ), m_meta.m_distance_unit));
+        }
+        text += m_newline;
+    }
 
     return text;
 }
@@ -232,6 +287,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
                                                 Distance maximum_y, int num_layers) {
     m_first_travel = true;
     m_layer_start = true;
+    m_absolute_arc_center_mode_enabled = usesAbsoluteArcCenters();
     setFeedrate(0.0);
 
     QString rv;
@@ -268,7 +324,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "#FLUSH WAIT" % m_newline;
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
     rv += "#FLUSH WAIT" % m_newline;
-    rv += QString(usesAbsoluteArcCenters() ? "G161" : "G162") % m_newline;
+    rv += QString(m_absolute_arc_center_mode_enabled ? "G161" : "G162") % m_newline;
 
     if (m_sb->setting<int>(PRS::GCode::kEnableBoundingBox)) {
         rv += commentLine(QString("Bounding Box: X=") % QString::number(minimum_x.to(m_meta.m_distance_unit), 'f', 4) %
@@ -299,7 +355,10 @@ QString ArcSpecialtiesWriter::writeBeforeIsland() { return QString(); }
 
 QString ArcSpecialtiesWriter::writeBeforeRegion(RegionType type, int pathSize) { return QString(); }
 
-QString ArcSpecialtiesWriter::writeBeforePath(RegionType type) { return QString(); }
+QString ArcSpecialtiesWriter::writeBeforePath(RegionType type) {
+    m_region_type = type;
+    return QString();
+}
 
 QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                           QSharedPointer<SettingsBase> params) {
@@ -330,6 +389,8 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
+
+    const bool cylindrical_mode = isCylindricalSlicingMode();
 
     auto writeRadialArcTravel = [this, &params](Point start, Point end, Velocity move_speed) -> QString {
         QString rv;
@@ -380,20 +441,38 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         return rv;
     };
 
+    auto writeLinearTravel = [this, &params](Point end, Velocity move_speed) -> QString {
+        QString rv;
+        rv += writeMotion("G00", end, move_speed, params, "TRAVEL");
+        rv += commentLine(QString("BEGINNING BEAD: ") % QString::number(m_current_layer) % "." %
+                          QString::number(m_current_bead));
+        m_current_bead++;
+        return rv;
+    };
+
+    auto liftPoint = [this, &params, cylindrical_mode, lift_height](const Point& point) -> Point {
+        if (cylindrical_mode) {
+            return radialLiftedPoint(point, params, lift_height);
+        }
+
+        return point + Point::fromQVector3D(getLiftVector(lift_height));
+    };
+
     Point travel_start = start_location;
 
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        travel_start = radialLiftedPoint(start_location, params, lift_height);
+        travel_start = liftPoint(start_location);
         rv += writeMotion("G00", travel_start, lift_speed, params, "TRAVEL LIFT");
     }
 
     Point travel_destination = target_location;
     if (travel_lift_required) {
-        travel_destination = radialLiftedPoint(target_location, params, lift_height);
+        travel_destination = liftPoint(target_location);
     }
 
-    rv += writeRadialArcTravel(travel_start, travel_destination, speed);
+    rv += cylindrical_mode ? writeRadialArcTravel(travel_start, travel_destination, speed)
+                           : writeLinearTravel(travel_destination, speed);
 
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
         rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
@@ -419,9 +498,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
         speed = 10.0 * mm / s;
     }
 
-    rv += writeMotion("G01", target_point, speed, params,
-                      isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical
-                                             : Constants::RegionTypeStrings::kRadial);
+    rv += writeMotion("G01", target_point, speed, params, printMoveComment());
     return rv;
 }
 
@@ -446,9 +523,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
 
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
-          QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) %
-          commentSpaceLine(isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical
-                                                  : Constants::RegionTypeStrings::kRadial);
+          QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(printMoveComment());
     return rv;
 }
 
@@ -506,6 +581,9 @@ QString ArcSpecialtiesWriter::writeShutdown() {
     rv += writeExtruderOff();
     if (!m_sb->setting<QString>(PRS::GCode::kEndCode).isEmpty()) {
         rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;
+    }
+    if (m_absolute_arc_center_mode_enabled) {
+        rv += "G164" % m_newline;
     }
     rv += "M49" % commentSpaceLine("ROBOT GO HOME");
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
@@ -597,6 +675,10 @@ bool ArcSpecialtiesWriter::usesAbsoluteArcCenters() const {
 }
 
 double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSharedPointer<SettingsBase>& params) {
+    if (!isCylindricalSlicingMode()) {
+        return normalizeDegrees(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree));
+    }
+
     const double center_x = params->setting<Distance>(kRadialCenterX)();
     const double center_y = params->setting<Distance>(kRadialCenterY)();
     const Point transformed_destination = rotateGCodeCoordinateFramePoint(destination);
@@ -615,12 +697,7 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
 
     cp_degrees += m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
 
-    cp_degrees = std::fmod(cp_degrees, 360.0);
-    if (cp_degrees < 0.0) {
-        cp_degrees += 360.0;
-    }
-
-    return cp_degrees;
+    return normalizeDegrees(cp_degrees);
 }
 
 double ArcSpecialtiesWriter::helicalStartAngle(const QSharedPointer<SettingsBase>& params) const {
@@ -636,9 +713,21 @@ double ArcSpecialtiesWriter::helicalStartAngle(const QSharedPointer<SettingsBase
 }
 
 bool ArcSpecialtiesWriter::isHelicalPathPattern() const {
-    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
     const CylindricalPathPattern path_pattern =
         static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
-    return slicing_mode == SlicingMode::kCylindrical && path_pattern == CylindricalPathPattern::kHelical;
+    return isCylindricalSlicingMode() && path_pattern == CylindricalPathPattern::kHelical;
+}
+
+QString ArcSpecialtiesWriter::printMoveComment() const {
+    if (isCylindricalSlicingMode()) {
+        return isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial;
+    }
+
+    return toString(m_region_type);
+}
+
+bool ArcSpecialtiesWriter::isCylindricalSlicingMode() const {
+    const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
+    return slicing_mode == SlicingMode::kCylindrical;
 }
 } // namespace ORNL
