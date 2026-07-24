@@ -41,7 +41,7 @@
 
 namespace ORNL {
 namespace {
-bool isCylindricalCapableSyntax(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
+bool supportsCylindricalSlicing(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
 } // namespace
 
 QSharedPointer<SessionManager> SessionManager::m_singleton = QSharedPointer<SessionManager>();
@@ -518,7 +518,7 @@ bool SessionManager::doSlice() {
     const CylindricalPathPattern path_pattern =
         static_cast<CylindricalPathPattern>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathPattern));
 
-    if (type == SlicingMode::kCylindrical && !isCylindricalCapableSyntax(syntax)) {
+    if (type == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
         const QString message = "Cylindrical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
         qWarning() << message;
         emit forwardStatusUpdate(message);
