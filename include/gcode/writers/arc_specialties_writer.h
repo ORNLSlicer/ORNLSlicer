@@ -16,12 +16,12 @@ namespace ORNL {
  * @brief Arc Specialties radial and helical writer using X/Y/Z and XR/YR/ZR/AP/CP motion fields.
  *
  * This first pass reuses radial path coordinates as user-frame endpoint coordinates relative to the active work
- * offset, then applies the configured G-Code coordinate frame rotation before output. Tool-frame rotations are fixed to
- * XR=180, YR=0, and ZR=0; AP comes from the existing Axis A setting; CP is computed from each transformed endpoint's
- * angle around the transformed radial slicing center plus the existing Axis C offset. Helical paths report CP as the
- * positive angular sweep from the transformed helical start angle plus Axis C. When the machine Supports G2/G3 setting
- * is enabled, radial and helical print arcs are emitted as G02/G03 with I/J center offsets and are divided according
- * to Arcs per Revolution.
+ * offset, then applies the configured G-Code coordinate frame rotation before output. Feed moves use tool-frame
+ * rotations XR=180, YR=0, and ZR=-135; rapid travel moves use ZR=-90. AP comes from the existing Axis A setting; CP is
+ * computed from each transformed endpoint's angle around the transformed radial slicing center plus the existing Axis C
+ * offset. Helical paths report CP as the positive angular sweep from the transformed helical start angle plus Axis C.
+ * When the machine Supports G2/G3 setting is enabled, radial and helical print arcs are emitted as G02/G03 with I/J
+ * center offsets and are divided according to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
   public:
@@ -170,9 +170,11 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields for a point.
      * @param destination Point being written.
      * @param params Segment settings containing radial center metadata.
+     * @param tool_frame_zr ZR orientation value to emit.
      * @return Coordinate parameter string.
      */
-    QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params);
+    QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
+                             double tool_frame_zr);
 
     /*!
      * @brief Formats I/J arc center parameters for the selected center interpretation mode.
