@@ -9,7 +9,7 @@
 namespace ORNL {
 /*!
  * @class ArcSpecialtiesParser
- * @brief Parser for Arc Specialties radial and helical gcode with X/Y/Z/XR/YR/ZR/AP/CP motion fields.
+ * @brief Parser for Arc Specialties gcode with X/Y/Z/XR/YR/ZR/AP/CP motion fields.
  *
  * The visualization path only models XYZ. This parser accepts Arc Specialties `KEY=value` motion fields, validates and
  * strips the orientation-only fields, normalizes X/Y/Z/I/J/K/R/F into the shared parser's single-letter parameter

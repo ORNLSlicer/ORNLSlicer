@@ -293,7 +293,7 @@ static GcodeMeta MeltioMeta = {GcodeSyntax::kMarlin,
 static GcodeMeta AdamantineMeta = {
     GcodeSyntax::kAdamantine, QString("("), QString(")"), m, s, degree, lbm, m / s, m / s / s, rev / s, ".txt"};
 
-//! @brief Metadata for Arc Specialties radial and helical gcode.
+//! @brief Metadata for Arc Specialties gcode.
 static GcodeMeta ArcSpecialtiesMeta = {GcodeSyntax::kArcSpecialties,
                                        QString(";"), // starting_delim
                                        QString(),    // ending_delim
