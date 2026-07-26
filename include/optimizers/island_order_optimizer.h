@@ -112,6 +112,12 @@ class IslandBaseOrderOptimizer {
      */
     int computeNextClosest();
 
+    /*! \brief Computes the island order with following logic:
+     *          Each time move to the farthest polygon from current position
+     *  \return Index of next island
+     */
+    int computeNextFarthest();
+
     /*! \brief The index of the island that has the nearest end point from a start point
      *  \return Index of next island
      *  \param start_point Starting point to consider for calculation
