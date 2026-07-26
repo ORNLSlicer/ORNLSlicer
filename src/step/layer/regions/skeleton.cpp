@@ -83,6 +83,9 @@ void Skeleton::compute(uint layer_num) {
     m_layer_num = layer_num;
 
     m_paths.clear();
+    m_skeleton_geometry.clear();
+    m_skeleton_graph.clear();
+    m_computed_geometry.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kSkeletonNum));
 
@@ -570,31 +573,45 @@ void Skeleton::extractSimplePaths() {
 }
 
 void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
+    if (path_.isEmpty())
+        return;
+
     Polyline path;
+    QVector<QPair<SkeletonVertex, SkeletonVertex>> edges_to_remove;
+    QVector<SkeletonVertex> touched_vertices;
+
+    auto trackVertex = [&touched_vertices](SkeletonVertex vertex) {
+        if (!touched_vertices.contains(vertex))
+            touched_vertices.push_back(vertex);
+    };
 
     SkeletonEdge e = path_.takeFirst();
-    path << m_skeleton_graph[e.m_source] << m_skeleton_graph[e.m_target];
-    remove_edge(e, m_skeleton_graph);
-
-    //! Remove isolated vertices
-    if (boost::degree(e.m_source, m_skeleton_graph) == 0) {
-        remove_vertex(e.m_source, m_skeleton_graph);
-    }
-    if (boost::degree(e.m_target, m_skeleton_graph) == 0) {
-        remove_vertex(e.m_target, m_skeleton_graph);
-    }
+    SkeletonVertex source = boost::source(e, m_skeleton_graph);
+    SkeletonVertex target = boost::target(e, m_skeleton_graph);
+    path << m_skeleton_graph[source] << m_skeleton_graph[target];
+    edges_to_remove.push_back({source, target});
+    trackVertex(source);
+    trackVertex(target);
 
     for (SkeletonEdge& e : path_) {
-        path << m_skeleton_graph[e.m_target];
-        remove_edge(e, m_skeleton_graph);
+        source = boost::source(e, m_skeleton_graph);
+        target = boost::target(e, m_skeleton_graph);
+        path << m_skeleton_graph[target];
+        edges_to_remove.push_back({source, target});
+        trackVertex(source);
+        trackVertex(target);
+    }
 
-        //! Remove isolated vertices
-        if (boost::degree(e.m_source, m_skeleton_graph) == 0) {
-            remove_vertex(e.m_source, m_skeleton_graph);
-        }
-        if (boost::degree(e.m_target, m_skeleton_graph) == 0) {
-            remove_vertex(e.m_target, m_skeleton_graph);
-        }
+    // Edge descriptors from the collected path can become stale as soon as the graph is mutated.
+    // Remove by endpoint pair after all path points have been copied, then prune isolated vertices.
+    for (const auto& edge : edges_to_remove) {
+        if (boost::edge(edge.first, edge.second, m_skeleton_graph).second)
+            boost::remove_edge(edge.first, edge.second, m_skeleton_graph);
+    }
+
+    for (SkeletonVertex vertex : touched_vertices) {
+        if (boost::degree(vertex, m_skeleton_graph) == 0)
+            boost::remove_vertex(vertex, m_skeleton_graph);
     }
 
     m_computed_geometry.append(path);

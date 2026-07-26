@@ -41,14 +41,19 @@ IslandBaseOrderOptimizer::IslandBaseOrderOptimizer(Point current_positon,
     m_island_list = m_part_island_list.keys();
 }
 
-void IslandBaseOrderOptimizer::setStartPoint(Point start_point) { m_start = start_point; }
+void IslandBaseOrderOptimizer::setStartPoint(Point start_point) {
+    m_start = start_point;
+    m_tsp_result.clear();
+}
 
 void IslandBaseOrderOptimizer::setIslands(QList<QSharedPointer<IslandBase>> island_list) {
     m_island_list = island_list;
+    m_tsp_result.clear();
 }
 
 void IslandBaseOrderOptimizer::setOrderOptimization(IslandOrderOptimization order_optimization) {
     m_order_optimization = order_optimization;
+    m_tsp_result.clear();
 }
 
 int IslandBaseOrderOptimizer::getLastIslandBaseVisited() { return m_last_island_visited; }
@@ -72,9 +77,9 @@ int IslandBaseOrderOptimizer::computeNextIndex() {
             index = this->computeNextClosest();
             break;
 
-        //! Brute force approach for Traveling Salesman Problem (but finding the largest distance)
+        //! Keep finding the farthest island from the current one
         case IslandOrderOptimization::kNextFarthest:
-            index = this->computeExtremumDistance(false);
+            index = this->computeNextFarthest();
             break;
 
         //! An approximate algorithm (Christofides) for Traveling Salesman Problem, much faster than brute force & DP
@@ -224,6 +229,12 @@ void IslandBaseOrderOptimizer::removeValue(QVector<int>& index_list, int value) 
 int IslandBaseOrderOptimizer::computeNextClosest() {
     //! \note Start with the polygon that is closest to starting point
     int first_island_index = this->extremumIslandBase(m_start, true);
+    return first_island_index;
+}
+
+int IslandBaseOrderOptimizer::computeNextFarthest() {
+    //! \note Start with the polygon that is farthest from starting point
+    int first_island_index = this->extremumIslandBase(m_start, false);
     return first_island_index;
 }
 
