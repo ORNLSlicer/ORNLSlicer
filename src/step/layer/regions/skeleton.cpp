@@ -577,7 +577,7 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
         return;
 
     Polyline path;
-    QVector<QPair<SkeletonVertex, SkeletonVertex>> edges_to_remove;
+    QVector<SkeletonEdge> edges_to_remove;
     QVector<SkeletonVertex> touched_vertices;
 
     auto trackVertex = [&touched_vertices](SkeletonVertex vertex) {
@@ -589,7 +589,7 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
     SkeletonVertex source = boost::source(e, m_skeleton_graph);
     SkeletonVertex target = boost::target(e, m_skeleton_graph);
     path << m_skeleton_graph[source] << m_skeleton_graph[target];
-    edges_to_remove.push_back({source, target});
+    edges_to_remove.push_back(e);
     trackVertex(source);
     trackVertex(target);
 
@@ -597,16 +597,14 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
         source = boost::source(e, m_skeleton_graph);
         target = boost::target(e, m_skeleton_graph);
         path << m_skeleton_graph[target];
-        edges_to_remove.push_back({source, target});
+        edges_to_remove.push_back(e);
         trackVertex(source);
         trackVertex(target);
     }
 
-    // Edge descriptors from the collected path can become stale as soon as the graph is mutated.
-    // Remove by endpoint pair after all path points have been copied, then prune isolated vertices.
-    for (const auto& edge : edges_to_remove) {
-        if (boost::edge(edge.first, edge.second, m_skeleton_graph).second)
-            boost::remove_edge(edge.first, edge.second, m_skeleton_graph);
+    // Remove the exact collected edges after all path points have been copied, then prune isolated vertices.
+    for (const SkeletonEdge& edge : edges_to_remove) {
+        boost::remove_edge(edge, m_skeleton_graph);
     }
 
     for (SkeletonVertex vertex : touched_vertices) {
