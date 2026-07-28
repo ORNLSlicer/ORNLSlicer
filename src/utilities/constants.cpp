@@ -241,6 +241,7 @@ const QString Constants::PrinterSettings::MachineSetup::kSyntax = "syntax";
 const QString Constants::PrinterSettings::MachineSetup::kMachineType = "machine_type";
 const QString Constants::PrinterSettings::MachineSetup::kForceG1 = "force_G1";
 const QString Constants::PrinterSettings::MachineSetup::kSupportG3 = "supports_G2_3";
+const QString Constants::PrinterSettings::MachineSetup::kEnableTrafo = "enable_trafo";
 const QString Constants::PrinterSettings::MachineSetup::kG2G3CenterPointInterpretation =
     "g2_g3_center_point_interpretation";
 const QString Constants::PrinterSettings::MachineSetup::kG2G3AbsoluteI = "g2_g3_absolute_i";
