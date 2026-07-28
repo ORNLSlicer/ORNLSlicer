@@ -348,6 +348,22 @@ void GCodeLoader::run() {
             // Create the layers
             QVector<QVector<QSharedPointer<SegmentBase>>> layers;
 
+            qint64 total_commands = 0;
+            for (const QList<GcodeCommand>& layer_commands : m_motion_commands) {
+                total_commands += layer_commands.size();
+            }
+
+            qint64 commands_processed = 0;
+            int last_visualization_progress = -1;
+            auto emitVisualizationProgress = [this, &last_visualization_progress](int progress) {
+                progress = qBound(0, progress, 99);
+                if (progress != last_visualization_progress) {
+                    emit updateDialog(StatusUpdateStepType::kVisualization, progress);
+                    last_visualization_progress = progress;
+                }
+            };
+            emitVisualizationProgress(0);
+
             // Generate the segments for each layer
             int current_layer = 0;
             for (const QList<GcodeCommand>& layer_commands : m_motion_commands) {
@@ -385,16 +401,23 @@ void GCodeLoader::run() {
                             command.getComment(), command.getOptionalParameters());
                     }
                     layer.append(generated_segments);
+
+                    ++commands_processed;
+                    if (total_commands > 0) {
+                        emitVisualizationProgress(static_cast<int>(
+                            (static_cast<double>(commands_processed) / static_cast<double>(total_commands)) * 100.0));
+                    }
+
+                    if (m_should_cancel) {
+                        return;
+                    }
                 }
                 layers.push_back(layer);
                 ++current_layer;
 
-                int visualization_progress = 99;
-                if (total_layer > 0) {
-                    visualization_progress =
-                        qMin(99, static_cast<int>((double)current_layer / (double)total_layer * 100.0));
+                if (total_commands == 0) {
+                    emitVisualizationProgress(static_cast<int>((double)current_layer / (double)total_layer * 100.0));
                 }
-                emit updateDialog(StatusUpdateStepType::kVisualization, visualization_progress);
 
                 if (m_should_cancel) {
                     return;
