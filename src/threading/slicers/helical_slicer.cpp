@@ -60,6 +60,9 @@ const Distance kMinSectionSpacing = 100.0 * micron;
 //! @brief Minimum path segment length kept after clipping candidate helices.
 const Distance kMinPathSegmentLength = 10.0 * micron;
 
+//! @brief Preprocess fraction reserved for building cached horizontal cross sections.
+constexpr double kCrossSectionProgressSpan = 0.5;
+
 //! @brief Cached horizontal section of the model used to clip helical points.
 struct HelicalCrossSection {
     Distance z;
@@ -313,6 +316,15 @@ QVector<Polyline> splitPolylineByLength(const Polyline& polyline, Distance max_p
 
     return split_lines;
 }
+
+//! @brief Estimates progress loop iterations for an inclusive Distance range.
+int estimateInclusiveCount(Distance start, Distance end, Distance step) {
+    if (step <= 0 || start > end) {
+        return 1;
+    }
+
+    return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
+}
 } // namespace
 
 HelicalSlicer::HelicalSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
@@ -323,6 +335,7 @@ HelicalSlicer::HelicalSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocati
 void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     m_helical_layers.clear();
     this->setMaxSteps(0);
+    emit statusUpdate(StatusUpdateStepType::kPreProcess, 0);
 
     QSharedPointer<SettingsBase> global_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
     global_sb->makeGlobalAdjustments();
@@ -332,6 +345,19 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
     QVector<QPair<QString, HelicalPathBoundaryPolicy>> effective_boundary_policy;
     QVector<QPair<QString, HelicalPathHandedness>> effective_handedness;
+
+    int last_preprocess_percent = 0;
+    auto emitPartProgress = [this, &build_parts, &last_preprocess_percent](int part_index, double part_fraction) {
+        const double total_parts = std::max(1, static_cast<int>(build_parts.size()));
+        const double bounded_part_fraction = std::clamp(part_fraction, 0.0, 1.0);
+        const int percent =
+            std::clamp(static_cast<int>(((part_index + bounded_part_fraction) / total_parts) * 100.0), 0, 99);
+
+        if (percent > last_preprocess_percent) {
+            emit statusUpdate(StatusUpdateStepType::kPreProcess, percent);
+            last_preprocess_percent = percent;
+        }
+    };
 
     int parts_processed = 0;
     for (const QSharedPointer<Part>& part : build_parts) {
@@ -349,12 +375,16 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         if (meshes.isEmpty()) {
+            ++parts_processed;
+            emitPartProgress(parts_processed, 0.0);
             continue;
         }
 
         Point mesh_min;
         Point mesh_max;
         if (!meshBounds(meshes, mesh_min, mesh_max)) {
+            ++parts_processed;
+            emitPartProgress(parts_processed, 0.0);
             continue;
         }
 
@@ -381,11 +411,15 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         const Distance first_radius = initial_radius + (layer_height / 2.0);
         const Distance first_bead_z = base_z + (bead_width / 2.0);
         if (first_bead_z >= top_z) {
+            ++parts_processed;
+            emitPartProgress(parts_processed, 0.0);
             continue;
         }
 
         QVector<HelicalCrossSection> cross_sections;
         bool has_geometry = false;
+        const int estimated_section_count = estimateInclusiveCount(first_bead_z, top_z, section_spacing);
+        int sections_processed = 0;
         for (Distance z = first_bead_z; z <= top_z; z += section_spacing) {
             Plane slicing_plane(Point(center.x(), center.y(), z()), QVector3D(0, 0, 1));
             PolygonList combined_geometry;
@@ -409,6 +443,10 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
 
             has_geometry = has_geometry || !combined_geometry.isEmpty();
             cross_sections.push_back(HelicalCrossSection {z, combined_geometry});
+            ++sections_processed;
+            emitPartProgress(parts_processed,
+                             (static_cast<double>(sections_processed) / static_cast<double>(estimated_section_count)) *
+                                 kCrossSectionProgressSpan);
         }
 
         if (cross_sections.isEmpty() || cross_sections.last().z < top_z) {
@@ -434,13 +472,18 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             has_geometry = has_geometry || !combined_geometry.isEmpty();
             cross_sections.push_back(HelicalCrossSection {top_z, combined_geometry});
         }
+        emitPartProgress(parts_processed, kCrossSectionProgressSpan);
 
         if (!has_geometry) {
+            ++parts_processed;
+            emitPartProgress(parts_processed, 0.0);
             continue;
         }
 
         Point current_location(center.x(), center.y(), first_bead_z());
         int helical_layer_number = 0;
+        const int estimated_radius_count = estimateInclusiveCount(first_radius, max_radius, layer_height);
+        int radii_processed = 0;
         for (Distance radius = first_radius; radius <= max_radius; radius += layer_height) {
             QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
             layer_settings->makeLocalAdjustments(helical_layer_number);
@@ -481,6 +524,11 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             }
 
             ++helical_layer_number;
+            ++radii_processed;
+            emitPartProgress(parts_processed,
+                             kCrossSectionProgressSpan +
+                                 ((static_cast<double>(radii_processed) / static_cast<double>(estimated_radius_count)) *
+                                  (1.0 - kCrossSectionProgressSpan)));
         }
 
         if (part_generated_paths) {
@@ -490,8 +538,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         ++parts_processed;
-        emit statusUpdate(StatusUpdateStepType::kPreProcess,
-                          build_parts.isEmpty() ? 100 : (double)parts_processed / (double)build_parts.size() * 100);
+        emitPartProgress(parts_processed, 0.0);
     }
 
     QSharedPointer<ArcSpecialtiesWriter> arc_specialties_writer = m_base.dynamicCast<ArcSpecialtiesWriter>();
@@ -506,8 +553,9 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             "clipping meshes, and Helical Path Boundary Policy.";
         qWarning() << message;
         emit statusMessage(message);
-        emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);
     }
+
+    emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);
 }
 
 void HelicalSlicer::postProcess(nlohmann::json opt_data) {
