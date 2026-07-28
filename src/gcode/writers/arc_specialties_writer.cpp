@@ -320,7 +320,9 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "V.G.WZ_AKT.L = 0" % m_newline;
     rv += "M01" % m_newline;
     rv += "#FLUSH WAIT" % m_newline;
-    rv += "#TRAFO ON" % m_newline;
+    const bool enable_trafo =
+        !m_sb->contains(PRS::MachineSetup::kEnableTrafo) || m_sb->setting<bool>(PRS::MachineSetup::kEnableTrafo);
+    rv += QString(enable_trafo ? "#TRAFO ON" : "#TRAFO OFF") % m_newline;
     rv += "#FLUSH WAIT" % m_newline;
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
     rv += "#FLUSH WAIT" % m_newline;
