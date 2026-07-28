@@ -39,6 +39,14 @@ class RadialSlicer : public TraditionalAST {
      */
     RadialSlicer(QString gcodeLocation);
 
+    /*!
+     * @brief Runs radial slicing with stage reporting that matches direct path generation.
+     *
+     * Radial slicing generates printable paths directly instead of using StepThread computation, so it bypasses the
+     * TraditionalAST compute queue to avoid reporting a second no-op compute stage.
+     */
+    void doSlice() override;
+
   protected:
     /*!
      * @brief Builds radial layers by clipping cylindrical ring candidates against each model cross section.
@@ -116,7 +124,7 @@ class RadialSlicer : public TraditionalAST {
     Path createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings, const Point& center,
                     Distance radius, Point& current_location);
 
-    //! @brief Ordered radial layers generated during preprocessing.
+    //! @brief Ordered radial layers generated during radial path computation.
     QList<QSharedPointer<RadialLayer>> m_radial_layers;
 };
 } // namespace ORNL
