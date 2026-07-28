@@ -39,6 +39,14 @@ class HelicalSlicer : public TraditionalAST {
      */
     HelicalSlicer(QString gcodeLocation);
 
+    /*!
+     * @brief Runs helical slicing with stage reporting that matches direct path generation.
+     *
+     * Helical slicing generates its printable paths directly instead of using StepThread computation, so it bypasses
+     * the TraditionalAST compute queue to avoid reporting a second no-op compute stage.
+     */
+    void doSlice() override;
+
   protected:
     /*!
      * @brief Builds helical layers by clipping helix candidates against each model cross section.
@@ -120,7 +128,7 @@ class HelicalSlicer : public TraditionalAST {
     Path createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings, const Point& center,
                     Distance radius, bool counterclockwise, Point& current_location);
 
-    //! @brief Ordered helical layers generated during preprocessing.
+    //! @brief Ordered helical layers generated during helical path computation.
     QList<QSharedPointer<HelicalLayer>> m_helical_layers;
 };
 } // namespace ORNL
