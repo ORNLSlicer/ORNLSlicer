@@ -12,7 +12,6 @@
 #include "geometry/point.h"
 #include "geometry/segment_base.h"
 #include "geometry/segments/travel.h"
-#include "optimizers/path_order_optimizer.h"
 #include "step/layer/layer.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -44,12 +43,6 @@ QSharedPointer<SettingsBase> firstPrintSettings(const Path& path, const QSharedP
     }
 
     return fallback;
-}
-
-//! @brief Returns the helical center stored on the path's printable segment settings.
-Point helicalCenter(const Path& path) {
-    QSharedPointer<SettingsBase> settings = firstPrintSettings(path, QSharedPointer<SettingsBase>::create());
-    return Point(settings->setting<Distance>(kRadialCenterX), settings->setting<Distance>(kRadialCenterY), 0);
 }
 
 //! @brief Restores helical print metadata and gives optimizer-created travels center settings.
@@ -121,21 +114,19 @@ void HelicalLayer::calculateModifiers(Point& currentLocation) {
         return;
     }
 
-    QVector<Path> optimized_paths;
-    optimized_paths.reserve(print_paths.size());
-    PathOrderOptimizer path_optimizer(currentLocation, getLayerNumber(), m_sb);
-    path_optimizer.setPathsToEvaluate(print_paths);
-    const Point center = helicalCenter(print_paths.front());
-
-    while (path_optimizer.getCurrentPathCount() > 0) {
-        Path next_path = path_optimizer.linkNextRadialPath(center);
-        if (next_path.size() > 0) {
-            restoreHelicalPathSettings(next_path, m_sb);
-            optimized_paths.push_back(next_path);
-        }
+    QVector<Path> ordered_paths;
+    ordered_paths.reserve(print_paths.size());
+    for (Path path : print_paths) {
+        // Helical fragments encode angular and Z progression; keep their generated direction and order.
+        QSharedPointer<TravelSegment> travel =
+            QSharedPointer<TravelSegment>::create(currentLocation, path.front()->start());
+        path.prepend(travel);
+        restoreHelicalPathSettings(path, m_sb);
+        currentLocation = path.back()->end();
+        ordered_paths.push_back(path);
     }
 
-    m_paths = optimized_paths;
+    m_paths = ordered_paths;
 }
 
 Point HelicalLayer::getStartLocation() const {
