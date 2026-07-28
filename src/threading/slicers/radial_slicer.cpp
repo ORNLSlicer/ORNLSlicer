@@ -132,11 +132,55 @@ bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min
 
     return has_bounds;
 }
+
+//! @brief Estimates progress loop iterations for an inclusive Distance range.
+int estimateInclusiveCount(Distance start, Distance end, Distance step) {
+    if (step <= 0 || start > end) {
+        return 1;
+    }
+
+    return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
+}
 } // namespace
 
 RadialSlicer::RadialSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
     m_syntax = GcodeSyntax::kArcSpecialties;
     m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
+}
+
+void RadialSlicer::doSlice() {
+    if (CSM->parts().empty()) {
+        qWarning() << "Attempted to start a slice when no data has been loaded.";
+        return;
+    }
+
+    m_timer.start();
+
+    this->setMaxSteps(0);
+    this->preProcess();
+
+    if (this->shouldCancel()) {
+        return;
+    }
+
+    this->postProcess();
+    m_elapsed_time = m_timer.elapsed();
+
+    if (this->shouldCancel()) {
+        return;
+    }
+
+    if (!m_skip_gcode) {
+        this->writeGCodeSetup();
+        this->writeGCode();
+        this->writeGCodeShutdown();
+    }
+
+    if (this->shouldCancel()) {
+        return;
+    }
+
+    emit sliceComplete();
 }
 
 void RadialSlicer::preProcess(nlohmann::json opt_data) {
@@ -150,7 +194,29 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
     QVector<QSharedPointer<MeshBase>> clipping_meshes =
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
 
+    int last_preprocess_percent = -1;
+    int last_compute_percent = -1;
+    auto emitPartProgress = [this, &build_parts](StatusUpdateStepType type, int part_index, double part_fraction,
+                                                 int& last_percent) {
+        const double total_parts = std::max(1, static_cast<int>(build_parts.size()));
+        const double bounded_part_fraction = std::clamp(part_fraction, 0.0, 1.0);
+        const int percent =
+            std::clamp(static_cast<int>(((part_index + bounded_part_fraction) / total_parts) * 100.0), 0, 100);
+
+        if (percent > last_percent) {
+            emit statusUpdate(type, percent);
+            last_percent = percent;
+        }
+    };
+    auto emitPreProcessProgress = [&emitPartProgress, &last_preprocess_percent](int part_index, double part_fraction) {
+        emitPartProgress(StatusUpdateStepType::kPreProcess, part_index, part_fraction, last_preprocess_percent);
+    };
+    auto emitComputeProgress = [&emitPartProgress, &last_compute_percent](int part_index, double part_fraction) {
+        emitPartProgress(StatusUpdateStepType::kCompute, part_index, part_fraction, last_compute_percent);
+    };
+
     int parts_processed = 0;
+    emitPreProcessProgress(parts_processed, 0.0);
     for (const QSharedPointer<Part>& part : build_parts) {
         QSharedPointer<SettingsBase> part_sb = QSharedPointer<SettingsBase>::create(*global_sb);
         part_sb->populate(part->getSb());
@@ -166,12 +232,18 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         if (meshes.isEmpty()) {
+            ++parts_processed;
+            emitPreProcessProgress(parts_processed, 0.0);
+            emitComputeProgress(parts_processed, 0.0);
             continue;
         }
 
         Point mesh_min;
         Point mesh_max;
         if (!meshBounds(meshes, mesh_min, mesh_max)) {
+            ++parts_processed;
+            emitPreProcessProgress(parts_processed, 0.0);
+            emitComputeProgress(parts_processed, 0.0);
             continue;
         }
 
@@ -198,6 +270,8 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         Point current_location(center.x(), center.y(), first_bead_z());
 
         QVector<RadialCrossSection> cross_sections;
+        const int estimated_section_count = estimateInclusiveCount(first_bead_z, top_z, bead_width);
+        int sections_processed = 0;
         for (Distance z = first_bead_z; z <= top_z; z += bead_width) {
             Plane slicing_plane(Point(center.x(), center.y(), z()), QVector3D(0, 0, 1));
             PolygonList combined_geometry;
@@ -222,13 +296,23 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
             if (!combined_geometry.isEmpty()) {
                 cross_sections.push_back(RadialCrossSection {z, combined_geometry});
             }
+
+            ++sections_processed;
+            emitPreProcessProgress(parts_processed, static_cast<double>(sections_processed) /
+                                                        static_cast<double>(estimated_section_count));
         }
+        emitPreProcessProgress(parts_processed, 1.0);
 
         if (cross_sections.isEmpty()) {
+            ++parts_processed;
+            emitComputeProgress(parts_processed, 0.0);
             continue;
         }
 
+        emitComputeProgress(parts_processed, 0.0);
         int radial_layer_number = 0;
+        const int estimated_radius_count = estimateInclusiveCount(first_radius, max_radius, layer_height);
+        int radii_processed = 0;
         for (Distance radius = first_radius; radius <= max_radius; radius += layer_height) {
             QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
             layer_settings->makeLocalAdjustments(radial_layer_number);
@@ -269,11 +353,14 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
             }
 
             ++radial_layer_number;
+            ++radii_processed;
+            emitComputeProgress(parts_processed,
+                                static_cast<double>(radii_processed) / static_cast<double>(estimated_radius_count));
         }
 
         ++parts_processed;
-        emit statusUpdate(StatusUpdateStepType::kPreProcess,
-                          build_parts.isEmpty() ? 100 : (double)parts_processed / (double)build_parts.size() * 100);
+        emitPreProcessProgress(parts_processed, 0.0);
+        emitComputeProgress(parts_processed, 0.0);
     }
 
     if (m_radial_layers.isEmpty()) {
@@ -282,8 +369,10 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
             "clipping meshes, and Radial Path Boundary Policy.";
         qWarning() << message;
         emit statusMessage(message);
-        emit statusUpdate(StatusUpdateStepType::kPreProcess, 100);
     }
+
+    emitPreProcessProgress(static_cast<int>(build_parts.size()), 0.0);
+    emitComputeProgress(static_cast<int>(build_parts.size()), 0.0);
 }
 
 void RadialSlicer::postProcess(nlohmann::json opt_data) {
