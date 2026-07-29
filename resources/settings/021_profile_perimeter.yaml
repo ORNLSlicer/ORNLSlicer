@@ -235,7 +235,7 @@ settings:
   - name: "spiral_perimeter"
     display: "Enable Spiral Perimeter"
     type: "boolean"
-    tooltip: "If selected, spiral perimeters will be generated"
+    tooltip: "If selected, spiral perimeters will be generated.<br><br><img src=':/tooltips/profile/spiral_perimeter.png' width='260' height='146'>"
     depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
