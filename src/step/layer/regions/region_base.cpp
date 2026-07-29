@@ -24,11 +24,26 @@
 
 namespace ORNL {
 namespace {
+bool selectedSyntaxSupportsArcFitting(const QSharedPointer<SettingsBase>& global_sb) {
+    const GcodeSyntax syntax = global_sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    switch (syntax) {
+        // These writers inherit WriterBase::writeArc(), which emits no motion.
+        case GcodeSyntax::kAdamantine:
+        case GcodeSyntax::kMVP:
+            return false;
+        default:
+            return true;
+    }
+}
+
 bool planarArcFittingAllowed(const QSharedPointer<SettingsBase>& global_sb) {
     if (global_sb == nullptr)
         return false;
 
     if (!global_sb->setting<bool>(PRS::MachineSetup::kSupportG3))
+        return false;
+
+    if (!selectedSyntaxSupportsArcFitting(global_sb))
         return false;
 
     if (static_cast<SlicingMode>(global_sb->setting<int>(PS::Slicing::kSlicingMode)) != SlicingMode::kPlanar)
