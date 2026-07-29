@@ -18,5 +18,6 @@ The canonical documentation entry point is the [Documentation Index](../README.m
 - [Troubleshooting](Troubleshooting.md)
 - [Generating the Master Settings File](Generating-the-Master-Settings-File.md)
 - [Adding a New User Setting](Adding-a-New-User-Setting.md)
+- [Adding Images to Settings Tooltips](Adding-Images-to-Settings-Tooltips.md)
 - [Conventional Commits](../contributing/conventional-commits.md)
 - [Issue Submissions](../contributing/issue-submissions.md)
