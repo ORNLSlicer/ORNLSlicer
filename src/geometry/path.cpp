@@ -34,6 +34,8 @@ struct CircleFit {
     bool ccw = false;
 };
 
+enum class ArcFitResult { kInvalid, kNeedsMoreSweep, kValid };
+
 double normalizedAngleDelta(double delta) {
     while (delta <= -kPi)
         delta += 2.0 * kPi;
@@ -199,20 +201,20 @@ bool fitCircle(const QVector<Point>& points, CircleFit& fit) {
     return std::isfinite(fit.radius);
 }
 
-bool validateArcFit(const QVector<Point>& points, double tolerance, CircleFit& fit) {
+ArcFitResult validateArcFit(const QVector<Point>& points, double tolerance, CircleFit& fit) {
     const double allowed_error = std::max(tolerance, kNumericalTolerance);
     const float reference_z = points.front().z();
     for (const Point& point : points) {
         if (std::abs(point.z() - reference_z) > kPlanarZTolerance)
-            return false;
+            return ArcFitResult::kInvalid;
 
         const double point_radius = std::hypot(point.x() - fit.center.x(), point.y() - fit.center.y());
         if (std::abs(point_radius - fit.radius) > allowed_error)
-            return false;
+            return ArcFitResult::kInvalid;
     }
 
     if (points.front().distance(points.back()) <= kNumericalTolerance)
-        return false;
+        return ArcFitResult::kInvalid;
 
     double sweep = 0.0;
     int direction = 0;
@@ -229,7 +231,7 @@ bool validateArcFit(const QVector<Point>& points, double tolerance, CircleFit& f
         if (direction == 0)
             direction = delta_direction;
         else if (direction != delta_direction)
-            return false;
+            return ArcFitResult::kInvalid;
 
         sweep += delta;
     }
@@ -237,13 +239,25 @@ bool validateArcFit(const QVector<Point>& points, double tolerance, CircleFit& f
     fit.sweep = std::abs(sweep);
     fit.ccw = sweep > 0.0;
 
-    return direction != 0 && fit.sweep >= kMinimumArcSweep && fit.sweep <= kMaximumArcSweep;
+    if (direction == 0)
+        return ArcFitResult::kInvalid;
+
+    if (fit.sweep < kMinimumArcSweep)
+        return ArcFitResult::kNeedsMoreSweep;
+
+    if (fit.sweep > kMaximumArcSweep)
+        return ArcFitResult::kInvalid;
+
+    return ArcFitResult::kValid;
 }
 
-bool tryFitArc(const QList<QSharedPointer<SegmentBase>>& segments, int begin, int end, double tolerance,
-               CircleFit& fit) {
+ArcFitResult tryFitArc(const QList<QSharedPointer<SegmentBase>>& segments, int begin, int end, double tolerance,
+                       CircleFit& fit) {
     const QVector<Point> points = collectPoints(segments, begin, end);
-    return fitCircle(points, fit) && validateArcFit(points, tolerance, fit);
+    if (!fitCircle(points, fit))
+        return ArcFitResult::kInvalid;
+
+    return validateArcFit(points, tolerance, fit);
 }
 
 QSharedPointer<ArcSegment> createArcSegment(const QSharedPointer<SegmentBase>& source, const Point& start,
@@ -407,8 +421,10 @@ void Path::fitCircularArcs(const QSharedPointer<SettingsBase>& fallback_settings
 
             for (int candidate_end = run_index + minimum_segments; candidate_end <= run_end; ++candidate_end) {
                 CircleFit candidate_fit;
-                if (!tryFitArc(m_segments, run_index, candidate_end, tolerance(), candidate_fit)) {
-                    if (best_end >= 0)
+                const ArcFitResult fit_result =
+                    tryFitArc(m_segments, run_index, candidate_end, tolerance(), candidate_fit);
+                if (fit_result != ArcFitResult::kValid) {
+                    if (best_end >= 0 || fit_result == ArcFitResult::kInvalid)
                         break;
 
                     continue;
