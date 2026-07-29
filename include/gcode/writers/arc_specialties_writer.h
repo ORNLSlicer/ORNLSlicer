@@ -171,6 +171,12 @@ class ArcSpecialtiesWriter : public WriterBase {
                         const QSharedPointer<SettingsBase>& params, const QString& comment);
 
     /*!
+     * @brief Writes the Arc Specialties kinematics and TRAFO setup block once.
+     * @return Startup kinematics block, or an empty string after it has already been emitted.
+     */
+    QString writeStartupKinematics();
+
+    /*!
      * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields for a point.
      * @param destination Point being written.
      * @param params Segment settings containing, for cylindrical paths, radial center metadata.
@@ -235,6 +241,9 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Tracks whether G161 absolute-center mode was enabled during setup.
     bool m_absolute_arc_center_mode_enabled = false;
+
+    //! @brief Tracks whether startup kinematics setup has been emitted.
+    bool m_startup_kinematics_written = false;
 
     //! @brief Active region type used for planar print-move comments.
     RegionType m_region_type = RegionType::kUnknown;
