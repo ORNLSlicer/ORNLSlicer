@@ -291,6 +291,7 @@ void SettingBar::updateSettings(QString text) {
         mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]] = text;
         CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
+        refreshDynamicDependencies();
         emit settingsBaseChanged(text);
     }
 }
@@ -322,6 +323,7 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
         }
     }
     enableDependRows();
+    refreshDynamicDependencies();
 }
 
 void SettingBar::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
@@ -345,6 +347,8 @@ void SettingBar::forwardModifiedSetting(QString setting_key) {
     else {
         refreshDependencyVisibility();
     }
+
+    refreshDynamicDependencies();
 
     for (const QString& modified_key : modified_keys) {
         emit settingModified(modified_key);
@@ -388,12 +392,22 @@ void SettingBar::reloadSettingRow(const QString& setting_key) {
     }
 }
 
+void SettingBar::refreshDynamicDependencies() {
+    for (SettingPane* cur_pane : m_panes) {
+        for (SettingTab* cur_tab : cur_pane->getTabs()) {
+            for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows())
+                cur_row->checkDynamicDependencies();
+        }
+    }
+}
+
 void SettingBar::restoreSettingValue(QString setting_key) {
     m_restoring_settings = true;
     reloadSettingRow(setting_key);
     m_restoring_settings = false;
 
     enableDependRows();
+    refreshDynamicDependencies();
     emit settingModified(setting_key);
 }
 
@@ -418,6 +432,7 @@ void SettingBar::finishPairedGlobalSettingChange(QString first_key, double first
                                                  double second_value) {
     updatePairedGlobalSetting(first_key, first_value, second_key, second_value);
     enableDependRows();
+    refreshDynamicDependencies();
 
     emit settingModified(first_key);
     emit settingModified(second_key);
@@ -558,6 +573,9 @@ void SettingBar::enableDependRows() {
                     DependencyNode root = createNodes(master_json, row, depends);
                     row->setDependencyLogic(root);
                     row->checkDependencies();
+                }
+                else {
+                    row->checkDynamicDependencies();
                 }
             }
         }

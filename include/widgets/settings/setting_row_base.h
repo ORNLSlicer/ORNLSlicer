@@ -85,6 +85,9 @@ class SettingRowBase {
     //! \brief Check dependencies and enable/disable as appropriate
     void checkDependencies();
 
+    //! \brief Check dependencies enforced through dynamic feedback.
+    virtual void checkDynamicDependencies();
+
     //! \brief Hide this row.
     virtual void hide();
 
@@ -131,9 +134,6 @@ class SettingRowBase {
   protected:
     //! \brief Function to handle value changes for each widget type
     virtual void valueChanged(QVariant val) = 0;
-
-    //! \brief Check dependencies enforced through dynamic feedback
-    void checkDynamicDependencies();
 
     //! \brief Notify before a setting key is written by this row.
     void notifyValueAboutToChange(const QString& key);

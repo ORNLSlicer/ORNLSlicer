@@ -3,6 +3,7 @@
 #include <qgridlayout.h>
 #include <qobject.h>
 #include <qsharedpointer.h>
+#include <qstring.h>
 #include <qtmetamacros.h>
 #include <qvariant.h>
 
@@ -46,5 +47,18 @@ class SettingSpeedSpinBox : public SettingDoubleSpinBox {
     //! \brief Slot to handle setting reload when user changes units or
     //! selects new setting profile
     virtual void reloadValue() override;
+
+    //! \brief Checks speed-specific dynamic dependencies.
+    void checkDynamicDependencies() override;
+
+  private:
+    //! \brief Returns this row's effective speed value in base units.
+    Velocity effectiveSpeed() const;
+
+    //! \brief Returns whether selected settings bases agree on this row's effective value.
+    bool hasConsistentEffectiveSpeed() const;
+
+    //! \brief Returns a warning message when this row violates the active XY speed range.
+    QString speedLimitWarning() const;
 };
 } // namespace ORNL
