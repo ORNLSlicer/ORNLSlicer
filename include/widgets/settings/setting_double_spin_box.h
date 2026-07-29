@@ -68,6 +68,9 @@ class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
     //! selects new setting profile
     virtual void reloadValue() override;
 
+    //! \brief Checks double-based setting dependencies enforced through warnings.
+    void checkDynamicDependencies() override;
+
   protected:
     //! \brief Sets error notification when dynamic dependency check fails
     //! \param msg: Message to display
@@ -79,6 +82,24 @@ class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
     //! \brief Overridden behavior to prevent wheel event from changing the value when not focused
     //! \param event: captured wheel event
     void wheelEvent(QWheelEvent* event) override;
+
+    //! \brief Returns this row's effective value in base units.
+    double effectiveDouble() const;
+
+    //! \brief Returns another setting's effective value in base units.
+    double effectiveDouble(const QString& key) const;
+
+    //! \brief Returns another boolean setting's effective value.
+    bool effectiveBool(const QString& key) const;
+
+    //! \brief Returns another integer setting's effective value.
+    int effectiveInt(const QString& key) const;
+
+    //! \brief Returns whether selected settings bases agree on this row's effective value.
+    bool hasConsistentEffectiveDouble() const;
+
+    //! \brief Returns a warning message when this row violates a dynamic dependency.
+    QString dynamicDependencyWarning() const;
 
     //! \brief Number of units of precision for child derived types with units
     //! Currently, all the same

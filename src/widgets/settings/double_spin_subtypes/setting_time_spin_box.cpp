@@ -68,6 +68,6 @@ void SettingTimeSpinBox::reloadValue() {
     this->blockSignals(false);
     emit modified(m_key);
 
-    emit warnParent(warningCountDelta(!consistent, m_warn));
+    checkDynamicDependencies();
 }
 } // namespace ORNL

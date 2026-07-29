@@ -196,6 +196,9 @@ class SettingBar : public QWidget {
      */
     void reloadSettingRow(const QString& setting_key);
 
+    //! \brief Rechecks warning-only dependencies that are not part of row visibility logic.
+    void refreshDynamicDependencies();
+
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
