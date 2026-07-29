@@ -306,7 +306,10 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "V.E.Sch.Crater.Control = 25   ;Arc Control in Crater Fill" % m_newline;
     rv += "V.E.Sch.Crater.Time = .5   ;Crater Fill Time in Seconds" % m_newline;
     rv += "#CONTOUR MODE [DEV PATH_DEV=2 CONST_VEL=1]" % m_newline;
-    rv += "M06 T1   ;Select Tool 1" % m_newline;
+    /// TODO: M06 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M06
+    /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
+    /// same effect.
+    rv += ";M06 T1   ;Select Tool 1" % m_newline;
     rv += "M49 ;Send Robot Home" % m_newline;
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
     rv += "" % m_newline;
@@ -384,7 +387,10 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         rv += writeExtruderOn();
     }
 
-    rv += "G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
+    /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
+    /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
+    /// same effect.
+    rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
     bool travel_lift_required = lift_height > 0 && lType != TravelLiftType::kNoLift;
@@ -618,7 +624,10 @@ QString ArcSpecialtiesWriter::writeExtruderOff() {
         QString rv;
         rv += "G260" % commentSpaceLine("BLENDING OFF");
         rv += "M151" % commentSpaceLine("WIRE ARC WELDER OFF");
-        rv += "M160" % commentSpaceLine("CLIP WIRE");
+        /// TODO: M160 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M160
+        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
+        /// same effect.
+        rv += ";M160" % commentSpaceLine("CLIP WIRE");
         rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
         m_extruder_on = false;
         return rv;
