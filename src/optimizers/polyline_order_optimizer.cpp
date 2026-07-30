@@ -18,6 +18,10 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+const Distance kLinkOverlapContainmentTolerance = 1 * micron;
+} // namespace
+
 PolylineOrderOptimizer::PolylineOrderOptimizer(Point& start, uint layer_number)
     : m_current_location(start), m_layer_number(layer_number), m_override_used(false) {
     m_layer_num = layer_number;
@@ -37,12 +41,20 @@ void PolylineOrderOptimizer::setGeometryToEvaluate(QVector<Polyline> polylines, 
 
 void PolylineOrderOptimizer::setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry,
                                                  Distance minInfillPathDistance, Distance minTravelDistance,
-                                                 bool enable_partitioned_linking) {
+                                                 bool enable_partitioned_linking, bool avoid_link_overlap,
+                                                 Distance link_core_width, PolygonList link_overlap_geometry) {
     m_pattern = infillPattern;
     m_border_geometry = border_geometry;
     m_min_distance = minInfillPathDistance;
     m_min_travel_distance = minTravelDistance;
     m_enable_partitioned_linking = enable_partitioned_linking && m_pattern == InfillPatterns::kLines;
+    m_avoid_link_overlap = avoid_link_overlap;
+    m_link_core_width = link_core_width;
+    // Links generated from offset geometry can legally touch the allowed boundary; relax by one internal unit so
+    // Clipper slivers from exact boundary contact do not turn safe links into travels.
+    m_link_overlap_geometry = m_avoid_link_overlap && !link_overlap_geometry.isEmpty()
+                                  ? link_overlap_geometry.offset(kLinkOverlapContainmentTolerance)
+                                  : link_overlap_geometry;
 }
 
 void PolylineOrderOptimizer::setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
@@ -173,7 +185,8 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
                 // or currently constructed polylines AND must be shorter than travel distance. Otherwise, a travel must
                 // be used.
                 if (link_distance < m_min_travel_distance &&
-                    !(linkIntersects(link_start, link_end, empty_polylines, m_border_geometry) ||
+                    !(linkOverlapsContour(link_start, link_end) ||
+                      linkIntersects(link_start, link_end, empty_polylines, m_border_geometry) ||
                       linkIntersects(link_start, link_end, m_polylines, empty_polygon_list) ||
                       linkIntersects(link_start, link_end, polylines, empty_polygon_list) ||
                       linkIntersects(link_start, link_end, QVector<Polyline> {new_polyline}, empty_polygon_list))) {
@@ -296,6 +309,18 @@ bool PolylineOrderOptimizer::linkIntersects(Point link_start, Point link_end, QV
     }
 
     return false;
+}
+
+bool PolylineOrderOptimizer::linkOverlapsContour(Point link_start, Point link_end) const {
+    if (!m_avoid_link_overlap || m_link_core_width <= 0 || m_link_overlap_geometry.isEmpty() ||
+        link_start == link_end) {
+        return false;
+    }
+
+    PolygonList link_core;
+    link_core += Polyline({link_start, link_end}).makeReal(m_link_core_width);
+
+    return !(link_core - m_link_overlap_geometry).isEmpty();
 }
 
 QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> polylines, Point currentLocation) {

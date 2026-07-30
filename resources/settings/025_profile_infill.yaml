@@ -80,6 +80,18 @@ settings:
     namespace: "Profile::Infill"
     symbol: "kInfillLinesPartitionedLinking"
     local: true
+  - name: "infill_avoid_link_overlap"
+    display: "Avoid Infill Link Contour Overlap"
+    type: "boolean"
+    tooltip: "If enabled, infill linking segments whose bead core would exceed the configured infill overlap are replaced by travel moves."
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kAvoidInfillLinkOverlap"
+    local: true
   - name: "infill_based_on_printer"
     display: "Infill Based on Printer Area"
     type: "boolean"

@@ -47,8 +47,9 @@ void Infill::compute(uint layer_num) {
 
     m_paths.clear();
 
-    // keep around unaltered m_geometry for later connections for travels
-    m_geometry_copy = m_geometry.offset(m_sb->setting<Distance>(PS::Infill::kOverlap));
+    // Keep around the overlapped geometry for later connections/travels.
+    const Distance overlap = m_sb->setting<Distance>(PS::Infill::kOverlap);
+    m_geometry_copy = m_geometry.offset(overlap);
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kInfillNum));
 
@@ -163,10 +164,14 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
 
         poo.setStartPointOverride(startOverride);
     }
+    const Distance bead_width = getSb()->setting<Distance>(PS::Infill::kBeadWidth);
+    const Distance overlap = getSb()->setting<Distance>(PS::Infill::kOverlap);
+    const Distance link_core_width = bead_width - 2 * overlap;
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)), m_geometry_copy,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
                             getSb()->setting<Distance>(PS::Travel::kInfillMinLength),
-                            getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking));
+                            getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking),
+                            getSb()->setting<bool>(PS::Infill::kAvoidLinkOverlap), link_core_width, m_geometry_copy);
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
