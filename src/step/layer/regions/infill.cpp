@@ -165,12 +165,11 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
         poo.setStartPointOverride(startOverride);
     }
     const Distance bead_width = getSb()->setting<Distance>(PS::Infill::kBeadWidth);
-    const Distance link_overlap_width = bead_width - 2 * getSb()->setting<Distance>(PS::Infill::kOverlap);
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)), m_geometry_copy,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
                             getSb()->setting<Distance>(PS::Travel::kInfillMinLength),
                             getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking),
-                            getSb()->setting<bool>(PS::Infill::kAvoidLinkOverlap), link_overlap_width, m_geometry_copy);
+                            getSb()->setting<bool>(PS::Infill::kAvoidLinkOverlap), bead_width, m_geometry_copy);
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
