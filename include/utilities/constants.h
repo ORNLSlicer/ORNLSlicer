@@ -267,6 +267,7 @@ class Constants {
             static const QString kEnableWaitForUser;
             static const QString kEnableBoundingBox;
             static const QString kEnableSettingsFooter;
+            static const QString kLayerTimeComments;
             static const QString kStartCode;
             static const QString kLayerCodeChange;
             static const QString kEndCode;
