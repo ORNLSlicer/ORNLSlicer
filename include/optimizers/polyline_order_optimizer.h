@@ -52,12 +52,12 @@ class PolylineOrderOptimizer {
     /// @param minTravelDistance: minimum distance for travel to be used instead of link
     /// @param enable_partitioned_linking: whether to enable partitioned linking of line infill
     /// @param avoid_link_overlap: whether infill print-link footprints must stay inside link_overlap_geometry
-    /// @param link_overlap_width: overlap-adjusted bead core width to use when checking infill print-link footprints
+    /// @param link_footprint_width: bead footprint width to use when checking infill print-link footprints
     /// @param link_overlap_geometry: overlap-expanded geometry that linked infill print-segment cores must remain
     /// inside
     void setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry, Distance minInfillPathDistance,
                              Distance minTravelDistance, bool enable_partitioned_linking = false,
-                             bool avoid_link_overlap = false, Distance link_overlap_width = 0,
+                             bool avoid_link_overlap = false, Distance link_footprint_width = 0,
                              PolygonList link_overlap_geometry = PolygonList());
 
     void setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
@@ -239,8 +239,8 @@ class PolylineOrderOptimizer {
     /// @brief Whether linked infill print segments should be rejected when their bead footprint overlaps contours
     bool m_avoid_link_overlap = false;
 
-    /// @brief Overlap-adjusted bead core width used to test linked infill print-segment footprints
-    Distance m_link_overlap_width = 0;
+    /// @brief Bead footprint width used to test linked infill print-segment footprints
+    Distance m_link_footprint_width = 0;
 
     /// @brief Overlap-expanded geometry that linked infill print-segment cores must remain inside
     PolygonList m_link_overlap_geometry;

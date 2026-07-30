@@ -83,7 +83,7 @@ settings:
   - name: "infill_avoid_link_overlap"
     display: "Avoid Infill Link Contour Overlap"
     type: "boolean"
-    tooltip: "If enabled, infill linking segments whose bead core would exceed the configured infill overlap are replaced by travel moves."
+    tooltip: "If enabled, infill linking segments whose bead footprint would exceed the configured infill overlap are replaced by travel moves."
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
