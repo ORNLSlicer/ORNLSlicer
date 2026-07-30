@@ -157,11 +157,16 @@ void SettingDoubleSpinBox::setEnabled(bool enabled) {
 }
 
 void SettingDoubleSpinBox::setNotification(QString msg) {
+    applyNotification(msg, true);
+}
+
+void SettingDoubleSpinBox::applyNotification(QString msg, bool show_tooltip) {
     // apply checkbox stylesheet
     // set pop-up/tooltip
     this->setStyleFromFile(this, m_theme_path + "setting_rows_warning.qss");
     this->setToolTip(msg);
-    QToolTip::showText(this->mapToGlobal(QPoint(0, 0)), msg, nullptr, QRect(), 30000);
+    if (show_tooltip)
+        QToolTip::showText(this->mapToGlobal(QPoint(0, 0)), msg, nullptr, QRect(), 30000);
 }
 
 void SettingDoubleSpinBox::clearNotification() {
@@ -217,7 +222,7 @@ void SettingDoubleSpinBox::checkDynamicDependencies() {
     }
 
     if (!hasConsistentEffectiveDouble()) {
-        setNotification("Multiple Values");
+        applyNotification("Multiple Values", false);
         styleLabel(false);
         emit warnParent(warningCountDelta(true, m_warn));
         return;
@@ -226,7 +231,7 @@ void SettingDoubleSpinBox::checkDynamicDependencies() {
     const QString warning = dynamicDependencyWarning();
     const bool warning_active = !warning.isEmpty();
     if (warning_active) {
-        setNotification(warning);
+        applyNotification(warning, false);
         styleLabel(false);
         m_key_label->setToolTip("<html><body><p><b>" + warning + "</b></p><p>" +
                                 QString::fromStdString(m_json.at(Constants::Settings::Master::kToolTip)) +
@@ -240,39 +245,51 @@ void SettingDoubleSpinBox::checkDynamicDependencies() {
     emit warnParent(warningCountDelta(warning_active, m_warn));
 }
 
-double SettingDoubleSpinBox::effectiveDouble() const {
+int SettingDoubleSpinBox::effectiveSettingsBaseCount() const {
+    return m_settings_bases.isEmpty() ? 1 : m_settings_bases.size();
+}
+
+double SettingDoubleSpinBox::effectiveDouble() const { return effectiveDouble(0); }
+
+double SettingDoubleSpinBox::effectiveDouble(int settings_base_index) const {
     const double default_value = m_json[Constants::Settings::Master::kDefault].get<double>();
     const double global_value = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
 
     if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<double>(m_key, 0, global_value);
+        return effectiveValueHelper<double>(m_key, settings_base_index, global_value);
 
     return global_value;
 }
 
-double SettingDoubleSpinBox::effectiveDouble(const QString& key) const {
+double SettingDoubleSpinBox::effectiveDouble(const QString& key) const { return effectiveDouble(key, 0); }
+
+double SettingDoubleSpinBox::effectiveDouble(const QString& key, int settings_base_index) const {
     const double global_value = m_sb->contains(key) ? m_sb->setting<double>(key) : 0.0;
 
     if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<double>(key, 0, global_value);
+        return effectiveValueHelper<double>(key, settings_base_index, global_value);
 
     return global_value;
 }
 
-bool SettingDoubleSpinBox::effectiveBool(const QString& key) const {
+bool SettingDoubleSpinBox::effectiveBool(const QString& key) const { return effectiveBool(key, 0); }
+
+bool SettingDoubleSpinBox::effectiveBool(const QString& key, int settings_base_index) const {
     const bool global_value = m_sb->contains(key) ? m_sb->setting<bool>(key) : false;
 
     if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<bool>(key, 0, global_value);
+        return effectiveValueHelper<bool>(key, settings_base_index, global_value);
 
     return global_value;
 }
 
-int SettingDoubleSpinBox::effectiveInt(const QString& key) const {
+int SettingDoubleSpinBox::effectiveInt(const QString& key) const { return effectiveInt(key, 0); }
+
+int SettingDoubleSpinBox::effectiveInt(const QString& key, int settings_base_index) const {
     const int global_value = m_sb->contains(key) ? m_sb->setting<int>(key) : 0;
 
     if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<int>(key, 0, global_value);
+        return effectiveValueHelper<int>(key, settings_base_index, global_value);
 
     return global_value;
 }
@@ -294,15 +311,25 @@ bool SettingDoubleSpinBox::hasConsistentEffectiveDouble() const {
 }
 
 QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
+    for (int index = 0, end = effectiveSettingsBaseCount(); index < end; ++index) {
+        const QString warning = dynamicDependencyWarning(index);
+        if (!warning.isEmpty())
+            return warning;
+    }
+
+    return QString();
+}
+
+QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) const {
     if (m_sb.isNull())
         return QString();
 
     const QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
     const QString type = masterString(m_json, Constants::Settings::Master::kType);
-    const double value = effectiveDouble();
+    const double value = effectiveDouble(settings_base_index);
 
-    const double min_extruder_speed = effectiveDouble(PRS::MachineSpeed::kMinExtruderSpeed);
-    const double max_extruder_speed = effectiveDouble(PRS::MachineSpeed::kMaxExtruderSpeed);
+    const double min_extruder_speed = effectiveDouble(PRS::MachineSpeed::kMinExtruderSpeed, settings_base_index);
+    const double max_extruder_speed = effectiveDouble(PRS::MachineSpeed::kMaxExtruderSpeed, settings_base_index);
     const bool has_min_extruder_speed = min_extruder_speed > 0;
     const bool has_max_extruder_speed = max_extruder_speed > 0;
     const bool invalid_extruder_range =
@@ -323,14 +350,14 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
                    formatRpm(max_extruder_speed) + ").";
     }
 
-    const double x_min = effectiveDouble(PRS::Dimensions::kXMin);
-    const double x_max = effectiveDouble(PRS::Dimensions::kXMax);
-    const double y_min = effectiveDouble(PRS::Dimensions::kYMin);
-    const double y_max = effectiveDouble(PRS::Dimensions::kYMax);
-    const double z_min = effectiveDouble(PRS::Dimensions::kZMin);
-    const double z_max = effectiveDouble(PRS::Dimensions::kZMax);
-    const double w_min = effectiveDouble(PRS::Dimensions::kWMin);
-    const double w_max = effectiveDouble(PRS::Dimensions::kWMax);
+    const double x_min = effectiveDouble(PRS::Dimensions::kXMin, settings_base_index);
+    const double x_max = effectiveDouble(PRS::Dimensions::kXMax, settings_base_index);
+    const double y_min = effectiveDouble(PRS::Dimensions::kYMin, settings_base_index);
+    const double y_max = effectiveDouble(PRS::Dimensions::kYMax, settings_base_index);
+    const double z_min = effectiveDouble(PRS::Dimensions::kZMin, settings_base_index);
+    const double z_max = effectiveDouble(PRS::Dimensions::kZMax, settings_base_index);
+    const double w_min = effectiveDouble(PRS::Dimensions::kWMin, settings_base_index);
+    const double w_max = effectiveDouble(PRS::Dimensions::kWMax, settings_base_index);
 
     QString warning = dimensionRangeWarning(m_key, PRS::Dimensions::kXMin, PRS::Dimensions::kXMax, x_min, x_max,
                                             "Minimum X", "Maximum X");
@@ -380,7 +407,7 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
     };
 
     if (isOneOf(m_key, bead_width_keys)) {
-        const double layer_height = effectiveDouble(PS::Layer::kLayerHeight);
+        const double layer_height = effectiveDouble(PS::Layer::kLayerHeight, settings_base_index);
         if (value <= 0)
             return display + " must be greater than zero (currently " + formatDistance(value) + ").";
 
@@ -390,8 +417,8 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
     }
 
     if (m_key == PS::Infill::kMinPathLength || m_key == kInfillMaximumPathLength) {
-        const double min_path_length = effectiveDouble(PS::Infill::kMinPathLength);
-        const double max_path_length = effectiveDouble(kInfillMaximumPathLength);
+        const double min_path_length = effectiveDouble(PS::Infill::kMinPathLength, settings_base_index);
+        const double max_path_length = effectiveDouble(kInfillMaximumPathLength, settings_base_index);
         if (min_path_length > 0 && max_path_length > 0 && min_path_length > max_path_length)
             return "Minimum Infill Path Length (" + formatDistance(min_path_length) +
                    ") is greater than Maximum Infill Path Length (" + formatDistance(max_path_length) + ").";
@@ -408,7 +435,7 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
     };
 
     if (isOneOf(m_key, lift_distance_keys) && value > 0) {
-        const double z_speed = effectiveDouble(PRS::MachineSpeed::kZSpeed);
+        const double z_speed = effectiveDouble(PRS::MachineSpeed::kZSpeed, settings_base_index);
         if (z_speed <= 0)
             return display + " requires Z Speed to be greater than zero.";
 
@@ -417,20 +444,21 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
                    formatDistance(z_max - z_min) + ").";
     }
 
-    if (m_key == PS::Travel::kMinTravelForLift && value > 0 && effectiveDouble(PS::Travel::kLiftHeight) <= 0)
+    if (m_key == PS::Travel::kMinTravelForLift && value > 0 &&
+        effectiveDouble(PS::Travel::kLiftHeight, settings_base_index) <= 0)
         return display + " is set, but Travel Lift Height is zero.";
 
-    const double fan_min_speed = effectiveDouble(MS::Cooling::kMinSpeed);
-    const double fan_max_speed = effectiveDouble(MS::Cooling::kMaxSpeed);
+    const double fan_min_speed = effectiveDouble(MS::Cooling::kMinSpeed, settings_base_index);
+    const double fan_max_speed = effectiveDouble(MS::Cooling::kMaxSpeed, settings_base_index);
     if ((m_key == MS::Cooling::kMinSpeed || m_key == MS::Cooling::kMaxSpeed) && fan_min_speed > fan_max_speed)
         return "Min Fan Speed (" + formatTypedValue(fan_min_speed, type) + ") is greater than Max Fan Speed (" +
                formatTypedValue(fan_max_speed, type) + ").";
 
-    const bool force_layer_time = effectiveBool(MS::Cooling::kForceMinLayerTime);
+    const bool force_layer_time = effectiveBool(MS::Cooling::kForceMinLayerTime, settings_base_index);
     const bool use_feedrate_layer_time =
-        effectiveInt(MS::Cooling::kForceMinLayerTimeMethod) == kModifyFeedrateLayerTimeMethod;
-    const double min_layer_time = effectiveDouble(MS::Cooling::kMinLayerTime);
-    const double max_layer_time = effectiveDouble(MS::Cooling::kMaxLayerTime);
+        effectiveInt(MS::Cooling::kForceMinLayerTimeMethod, settings_base_index) == kModifyFeedrateLayerTimeMethod;
+    const double min_layer_time = effectiveDouble(MS::Cooling::kMinLayerTime, settings_base_index);
+    const double max_layer_time = effectiveDouble(MS::Cooling::kMaxLayerTime, settings_base_index);
 
     if (force_layer_time && m_key == MS::Cooling::kMinLayerTime) {
         if (value <= 0)
