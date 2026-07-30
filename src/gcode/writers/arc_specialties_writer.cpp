@@ -293,6 +293,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     m_layer_start = true;
     m_absolute_arc_center_mode_enabled = usesAbsoluteArcCenters();
     m_startup_kinematics_written = false;
+    m_pending_layer_change.clear();
     setFeedrate(0.0);
 
     QString rv;
@@ -333,8 +334,18 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
         rv += m_sb->setting<QString>(PRS::GCode::kStartCode) % m_newline;
     }
 
-    rv += m_newline % commentLine(m_meta.m_layer_count_delimiter % ":" % QString::number(num_layers));
+    rv += m_newline % commentLine(m_meta.m_layer_count_delimiter % ":" % QString::number(num_layers)) % m_newline;
     return rv;
+}
+
+QString ArcSpecialtiesWriter::writeLayerChange(uint layer_number) {
+    const QString layer_change = WriterBase::writeLayerChange(layer_number);
+    if (!m_startup_kinematics_written) {
+        m_pending_layer_change += layer_change;
+        return QString();
+    }
+
+    return layer_change;
 }
 
 QString ArcSpecialtiesWriter::writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) {
@@ -377,11 +388,6 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOn();
     }
-
-    /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
-    /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
-    /// same effect.
-    rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
     bool travel_lift_required = lift_height > 0 && lType != TravelLiftType::kNoLift;
@@ -476,9 +482,13 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     if (m_first_travel && !m_startup_kinematics_written) {
+        rv += commentLine("INITIAL WORLD APPROACH");
         rv += writeMotion("G00", travel_destination, speed, params, "WORLD APPROACH TRAVEL");
         rv += "#FLUSH WAIT" % m_newline;
+        rv += m_newline;
+        rv += commentLine("ENABLE WORK-OBJECT KINEMATICS");
         rv += writeStartupKinematics();
+        rv += writePendingLayerChange();
         rv += writeBeginningBead();
     }
     else {
@@ -487,6 +497,10 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
+        /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
+        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
+        /// same effect.
+        rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
         rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
     }
 
@@ -499,6 +513,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
     QString rv;
 
     rv += writeStartupKinematics();
+    rv += writePendingLayerChange();
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
@@ -524,6 +539,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
 
     QString rv;
     rv += writeStartupKinematics();
+    rv += writePendingLayerChange();
 
     if (!m_extruder_on) {
         rv += writeExtruderOn();
@@ -681,6 +697,17 @@ QString ArcSpecialtiesWriter::writeStartupKinematics() {
     rv += QString(m_absolute_arc_center_mode_enabled ? "G161" : "G162") % m_newline;
 
     m_startup_kinematics_written = true;
+    return rv;
+}
+
+QString ArcSpecialtiesWriter::writePendingLayerChange() {
+    if (m_pending_layer_change.isEmpty()) {
+        return QString();
+    }
+
+    m_pending_layer_change.prepend(m_newline);
+    QString rv = m_pending_layer_change;
+    m_pending_layer_change.clear();
     return rv;
 }
 

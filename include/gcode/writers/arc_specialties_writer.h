@@ -67,6 +67,9 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                               int num_layers) override;
 
+    //! @brief Writes or defers the layer marker so Arc Specialties startup positioning stays outside the layer block.
+    QString writeLayerChange(uint layer_number) override;
+
     /*!
      * @brief Resets per-layer writer state before a layer.
      * @param min_z Minimum layer Z. Currently informational only.
@@ -177,6 +180,12 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeStartupKinematics();
 
     /*!
+     * @brief Writes any layer marker deferred until after startup kinematics are enabled.
+     * @return Deferred layer marker, or an empty string when none is pending.
+     */
+    QString writePendingLayerChange();
+
+    /*!
      * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields for a point.
      * @param destination Point being written.
      * @param params Segment settings containing, for cylindrical paths, radial center metadata.
@@ -244,6 +253,9 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Tracks whether startup kinematics setup has been emitted.
     bool m_startup_kinematics_written = false;
+
+    //! @brief Layer marker held until the initial world approach and kinematics block are complete.
+    QString m_pending_layer_change;
 
     //! @brief Active region type used for planar print-move comments.
     RegionType m_region_type = RegionType::kUnknown;
