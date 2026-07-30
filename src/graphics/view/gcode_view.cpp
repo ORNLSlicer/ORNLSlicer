@@ -613,18 +613,16 @@ void GCodeView::resizeGL(int width, int height) {
     // (Re)Initalize camera projection.
     QMatrix4x4 projection;
 
-    float aspect = (float)width / (float)height;
+    if (width <= 0 || height <= 0) {
+        return;
+    }
 
-    if (aspect >= 1)
-        width *= (aspect);
-    else
-        height *= (1 / aspect);
-
-    int quater_width = width / (std::pow(24, m_state.zoom_factor));
-    int quater_height = height / (std::pow(24, m_state.zoom_factor));
+    const float scale = std::pow(24.0f, m_state.zoom_factor);
+    const float half_width = static_cast<float>(width) / scale;
+    const float half_height = static_cast<float>(height) / scale;
 
     projection.setToIdentity();
-    projection.ortho(-quater_width, quater_width, -quater_height, quater_height, -Constants::OpenGL::kFarPlane,
+    projection.ortho(-half_width, half_width, -half_height, half_height, -Constants::OpenGL::kFarPlane,
                      2 * Constants::OpenGL::kFarPlane);
 
     this->setProjectionMatrix(projection);

@@ -3,6 +3,7 @@
 #include <QFile>
 #include <QGraphicsDropShadowEffect>
 #include <QLayout>
+#include <QSignalBlocker>
 #include <QToolButton>
 #include <qfiledevice.h>
 #include <qicon.h>
@@ -17,7 +18,13 @@
 #include "utilities/constants.h"
 
 namespace ORNL {
-ViewControlsToolbar::ViewControlsToolbar(QWidget* parent) : m_parent(parent), QToolBar(parent) {
+namespace {
+constexpr int kOrthographicButtonWidth = 70;
+} // namespace
+
+ViewControlsToolbar::ViewControlsToolbar(QWidget* parent, bool show_orthographic_button)
+    : QToolBar(parent), m_parent(parent), m_show_orthographic_button(show_orthographic_button), m_iso_btn(nullptr),
+      m_front_btn(nullptr), m_side_btn(nullptr), m_top_btn(nullptr), m_ortho_btn(nullptr) {
     setupWidget();
     setupSubWidgets();
 }
@@ -51,9 +58,7 @@ void ViewControlsToolbar::setupSubWidgets() {
 
     this->makeSpace();
     this->addWidget(m_iso_btn);
-    this->makeSpace();
-    this->addSeparator();
-    this->makeSpace();
+    this->makeSpacedSeparator();
 
     m_front_btn = new QToolButton(this);
     m_front_btn->setIcon(QIcon(":/icons/view_front.png"));
@@ -61,9 +66,7 @@ void ViewControlsToolbar::setupSubWidgets() {
     connect(m_front_btn, &QToolButton::clicked, this, [this]() { emit setFrontView(); });
 
     this->addWidget(m_front_btn);
-    this->makeSpace();
-    this->addSeparator();
-    this->makeSpace();
+    this->makeSpacedSeparator();
 
     m_side_btn = new QToolButton(this);
     m_side_btn->setIcon(QIcon(":/icons/view_left.png"));
@@ -71,9 +74,7 @@ void ViewControlsToolbar::setupSubWidgets() {
     connect(m_side_btn, &QToolButton::clicked, this, [this]() { emit setSideView(); });
 
     this->addWidget(m_side_btn);
-    this->makeSpace();
-    this->addSeparator();
-    this->makeSpace();
+    this->makeSpacedSeparator();
 
     m_top_btn = new QToolButton(this);
     m_top_btn->setIcon(QIcon(":/icons/view_top.png"));
@@ -82,6 +83,22 @@ void ViewControlsToolbar::setupSubWidgets() {
 
     this->addWidget(m_top_btn);
     this->makeSpace();
+
+    if (m_show_orthographic_button) {
+        this->addSeparator();
+        this->makeSpace();
+
+        m_ortho_btn = new QToolButton(this);
+        m_ortho_btn->setIcon(QIcon(":/icons/orthogonal_view.png"));
+        m_ortho_btn->setToolTip("Overhead Orthographic Projection");
+        m_ortho_btn->setCheckable(true);
+        connect(m_ortho_btn, &QToolButton::toggled, this, [this](bool checked) {
+            emit setOrthographicView(checked);
+        });
+
+        this->addWidget(m_ortho_btn);
+        this->makeSpace();
+    }
 }
 
 void ViewControlsToolbar::setupStyle() {
@@ -98,12 +115,19 @@ void ViewControlsToolbar::makeSpace() {
     this->addWidget(spacer);
 }
 
+void ViewControlsToolbar::makeSpacedSeparator() {
+    this->makeSpace();
+    this->addSeparator();
+    this->makeSpace();
+}
+
 void ViewControlsToolbar::resize(QSize new_size) {
     // Update position
     auto parent_size = m_parent->size();
+    const int toolbar_width = Constants::UI::ViewControlsToolbar::kWidth +
+                              (m_show_orthographic_button ? kOrthographicButtonWidth : 0);
 
-    this->move(parent_size.width() - Constants::UI::ViewControlsToolbar::kWidth -
-                   Constants::UI::ViewControlsToolbar::kRightOffset,
+    this->move(parent_size.width() - toolbar_width - Constants::UI::ViewControlsToolbar::kRightOffset,
                parent_size.height() - Constants::UI::ViewControlsToolbar::kHeight -
                    Constants::UI::ViewControlsToolbar::kBottomOffset);
 
@@ -111,14 +135,32 @@ void ViewControlsToolbar::resize(QSize new_size) {
     this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
     this->setMinimumHeight(Constants::UI::ViewControlsToolbar::kHeight);
     this->setMaximumHeight(Constants::UI::ViewControlsToolbar::kHeight);
-    this->setMinimumWidth(Constants::UI::ViewControlsToolbar::kWidth);
-    this->setMaximumWidth(Constants::UI::ViewControlsToolbar::kWidth);
+    this->setMinimumWidth(toolbar_width);
+    this->setMaximumWidth(toolbar_width);
 }
 
-void ViewControlsToolbar::setEnabled(bool status) {
+void ViewControlsToolbar::setProjectionControlsEnabled(bool status) {
     m_iso_btn->setEnabled(status);
     m_front_btn->setEnabled(status);
     m_side_btn->setEnabled(status);
     m_top_btn->setEnabled(status);
+}
+
+void ViewControlsToolbar::setOrthographicViewChecked(bool status) {
+    if (m_ortho_btn == nullptr) {
+        return;
+    }
+
+    const QSignalBlocker blocker(m_ortho_btn);
+    m_ortho_btn->setChecked(status);
+}
+
+void ViewControlsToolbar::setEnabled(bool status) {
+    QToolBar::setEnabled(status);
+    setProjectionControlsEnabled(status);
+
+    if (m_ortho_btn != nullptr) {
+        m_ortho_btn->setEnabled(status);
+    }
 }
 } // namespace ORNL
