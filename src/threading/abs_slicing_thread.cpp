@@ -407,18 +407,29 @@ void AbstractSlicingThread::writeLayerTimeComments() {
                                                   "\\s*BEGINNING\\s+LAYER\\s*:\\s*(\\d+)\\b",
                                               QRegularExpression::CaseInsensitiveOption);
 
-        int layer_time_index = 1;
         QStringList annotated_lines = text.split('\n');
-        for (int line_index = 0; line_index < annotated_lines.size() && layer_time_index < adjusted_layer_times.size();
-             ++line_index) {
+        int layer_marker_count = 0;
+        for (const QString& line : annotated_lines) {
+            if (layer_marker.match(line).hasMatch()) {
+                ++layer_marker_count;
+            }
+        }
+
+        const int layer_time_offset = adjusted_layer_times.size() > layer_marker_count ? 1 : 0;
+        for (int line_index = 0; line_index < annotated_lines.size(); ++line_index) {
             const QRegularExpressionMatch match = layer_marker.match(annotated_lines[line_index]);
             if (!match.hasMatch()) {
                 continue;
             }
 
+            bool converted = false;
+            const int layer_time_index = match.captured(1).toInt(&converted) - 1 + layer_time_offset;
+            if (!converted || layer_time_index < 0 || layer_time_index >= adjusted_layer_times.size()) {
+                continue;
+            }
+
             annotated_lines.insert(line_index + 1, layerTimeComment(meta, adjusted_layer_times[layer_time_index]));
             ++line_index;
-            ++layer_time_index;
         }
 
         if (!m_temp_gcode_output_file.resize(0) || !m_temp_gcode_output_file.seek(0)) {
