@@ -559,6 +559,9 @@ class CommonParser : public ParserBase {
     // List of all calculated times/volumes for layers as well as total distance
     QList<Time> m_layer_times;
 
+    //! \brief Additional layer time inserted by dwell-based minimum layer time enforcement.
+    QList<Time> m_layer_dwell_adjustments;
+
     //! \brief layer "G1 F" lines feedrate modifier
     QList<double> m_layer_FR_modifiers;
 
