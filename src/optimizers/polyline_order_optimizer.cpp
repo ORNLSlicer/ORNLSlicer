@@ -18,6 +18,10 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+const Distance kLinkOverlapContainmentTolerance = 1 * micron;
+} // namespace
+
 PolylineOrderOptimizer::PolylineOrderOptimizer(Point& start, uint layer_number)
     : m_current_location(start), m_layer_number(layer_number), m_override_used(false) {
     m_layer_num = layer_number;
@@ -46,7 +50,11 @@ void PolylineOrderOptimizer::setInfillParameters(InfillPatterns infillPattern, P
     m_enable_partitioned_linking = enable_partitioned_linking && m_pattern == InfillPatterns::kLines;
     m_avoid_link_overlap = avoid_link_overlap;
     m_link_footprint_width = link_footprint_width;
-    m_link_overlap_geometry = link_overlap_geometry;
+    // Links generated from offset geometry can legally touch the allowed boundary; relax by one internal unit so
+    // Clipper slivers from exact boundary contact do not turn safe links into travels.
+    m_link_overlap_geometry = m_avoid_link_overlap && !link_overlap_geometry.isEmpty()
+                                  ? link_overlap_geometry.offset(kLinkOverlapContainmentTolerance)
+                                  : link_overlap_geometry;
 }
 
 void PolylineOrderOptimizer::setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
