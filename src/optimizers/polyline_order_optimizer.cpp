@@ -42,14 +42,14 @@ void PolylineOrderOptimizer::setGeometryToEvaluate(QVector<Polyline> polylines, 
 void PolylineOrderOptimizer::setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry,
                                                  Distance minInfillPathDistance, Distance minTravelDistance,
                                                  bool enable_partitioned_linking, bool avoid_link_overlap,
-                                                 Distance link_footprint_width, PolygonList link_overlap_geometry) {
+                                                 Distance link_core_width, PolygonList link_overlap_geometry) {
     m_pattern = infillPattern;
     m_border_geometry = border_geometry;
     m_min_distance = minInfillPathDistance;
     m_min_travel_distance = minTravelDistance;
     m_enable_partitioned_linking = enable_partitioned_linking && m_pattern == InfillPatterns::kLines;
     m_avoid_link_overlap = avoid_link_overlap;
-    m_link_footprint_width = link_footprint_width;
+    m_link_core_width = link_core_width;
     // Links generated from offset geometry can legally touch the allowed boundary; relax by one internal unit so
     // Clipper slivers from exact boundary contact do not turn safe links into travels.
     m_link_overlap_geometry = m_avoid_link_overlap && !link_overlap_geometry.isEmpty()
@@ -312,15 +312,15 @@ bool PolylineOrderOptimizer::linkIntersects(Point link_start, Point link_end, QV
 }
 
 bool PolylineOrderOptimizer::linkOverlapsContour(Point link_start, Point link_end) const {
-    if (!m_avoid_link_overlap || m_link_footprint_width <= 0 || m_link_overlap_geometry.isEmpty() ||
+    if (!m_avoid_link_overlap || m_link_core_width <= 0 || m_link_overlap_geometry.isEmpty() ||
         link_start == link_end) {
         return false;
     }
 
-    PolygonList link_footprint;
-    link_footprint += Polyline({link_start, link_end}).makeReal(m_link_footprint_width);
+    PolygonList link_core;
+    link_core += Polyline({link_start, link_end}).makeReal(m_link_core_width);
 
-    return !(link_footprint - m_link_overlap_geometry).isEmpty();
+    return !(link_core - m_link_overlap_geometry).isEmpty();
 }
 
 QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> polylines, Point currentLocation) {
