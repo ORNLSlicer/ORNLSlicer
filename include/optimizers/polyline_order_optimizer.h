@@ -51,8 +51,14 @@ class PolylineOrderOptimizer {
     /// @param minDistance: minimum distance of resulting polyline
     /// @param minTravelDistance: minimum distance for travel to be used instead of link
     /// @param enable_partitioned_linking: whether to enable partitioned linking of line infill
+    /// @param avoid_link_overlap: whether infill print-link footprints must stay inside link_overlap_geometry
+    /// @param link_overlap_width: overlap-adjusted bead core width to use when checking infill print-link footprints
+    /// @param link_overlap_geometry: overlap-expanded geometry that linked infill print-segment cores must remain
+    /// inside
     void setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry, Distance minInfillPathDistance,
-                             Distance minTravelDistance, bool enable_partitioned_linking = false);
+                             Distance minTravelDistance, bool enable_partitioned_linking = false,
+                             bool avoid_link_overlap = false, Distance link_overlap_width = 0,
+                             PolygonList link_overlap_geometry = PolygonList());
 
     void setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
                             Distance minDistanceThreshold, Distance consecutiveThreshold, bool randomnessEnable,
@@ -127,6 +133,12 @@ class PolylineOrderOptimizer {
     //! \return whether or not intersection occurs
     bool linkIntersects(Point link_start, Point link_end, QVector<Polyline> infill_geometry,
                         PolygonList border_geometry);
+
+    //! \brief Determines whether the overlap-adjusted footprint of an infill link exits the allowed geometry
+    //! \param link_start: Start of link
+    //! \param link_end: End of link
+    //! \return whether the printed link would overlap contour space beyond the allowed overlap
+    bool linkOverlapsContour(Point link_start, Point link_end) const;
 
     //! \brief Finds the index and end of the the closest Polyline to m_current_location
     //! \param polylines: vector of polylines to test for closeness
@@ -223,6 +235,15 @@ class PolylineOrderOptimizer {
     /// @brief Whether to enable partitioned linking of line infill, which links lines in the same partition before
     /// linking between partitions
     bool m_enable_partitioned_linking = false;
+
+    /// @brief Whether linked infill print segments should be rejected when their bead footprint overlaps contours
+    bool m_avoid_link_overlap = false;
+
+    /// @brief Overlap-adjusted bead core width used to test linked infill print-segment footprints
+    Distance m_link_overlap_width = 0;
+
+    /// @brief Overlap-expanded geometry that linked infill print-segment cores must remain inside
+    PolygonList m_link_overlap_geometry;
 
     /// @brief Selection state used to alternate the two exterior edges when ordering open lines outside-in
     int m_open_path_selection_count = 0;
