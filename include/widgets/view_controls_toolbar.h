@@ -16,7 +16,7 @@ class ViewControlsToolbar : public QToolBar {
   public:
     //! \brief Constructor
     //! \param parent optional parent widget
-    ViewControlsToolbar(QWidget* parent = nullptr);
+    ViewControlsToolbar(QWidget* parent = nullptr, bool show_orthographic_button = false);
 
   signals:
     //! \brief sets the camera to iso view
@@ -27,6 +27,8 @@ class ViewControlsToolbar : public QToolBar {
     void setSideView();
     //! \brief sets the camera to top view
     void setTopView();
+    //! \brief toggles overhead orthographic g-code projection
+    void setOrthographicView(bool enabled);
 
   public slots:
     //! \brief sets the style of the widget according to current theme
@@ -35,6 +37,12 @@ class ViewControlsToolbar : public QToolBar {
     //! \brief adjusts size and position based on parent redraw
     //! \param new_size the new parent's new size
     void resize(QSize new_size);
+
+    //! \brief enables/ disables the camera orientation buttons
+    void setProjectionControlsEnabled(bool status);
+
+    //! \brief updates the optional orthographic button without emitting its toggle signal
+    void setOrthographicViewChecked(bool status);
 
     void setEnabled(bool status);
 
@@ -48,12 +56,18 @@ class ViewControlsToolbar : public QToolBar {
     //! \brief Constructs a flexible space between buttons
     void makeSpace();
 
+    //! \brief Constructs a separator with surrounding flexible spacing
+    void makeSpacedSeparator();
+
     //! \brief the parent
     QWidget* m_parent;
+
+    bool m_show_orthographic_button;
 
     QToolButton* m_iso_btn;
     QToolButton* m_front_btn;
     QToolButton* m_side_btn;
     QToolButton* m_top_btn;
+    QToolButton* m_ortho_btn;
 };
 } // namespace ORNL

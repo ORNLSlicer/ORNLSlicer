@@ -96,6 +96,10 @@ class MainToolbar : public QToolBar {
     //! \param setting_key: the new settings
     void handleModifiedSetting(const QString& setting_key);
 
+    //! \brief updates the 2D g-code button without re-emitting the toggle signal
+    //! \param status if the g-code view is using orthographic projection
+    void setOrthoGcodeChecked(bool status);
+
   private:
     //! \brief sets up the widget
     void setup();

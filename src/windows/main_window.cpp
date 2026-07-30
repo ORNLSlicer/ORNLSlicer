@@ -1040,6 +1040,7 @@ void MainWindow::setupEvents() {
     // Toolbar -> GCode Widget
     connect(m_main_toolbar, &MainToolbar::showSegmentInfo, m_gcode_widget, &GCodeWidget::showSegmentInfo);
     connect(m_main_toolbar, &MainToolbar::setOrthoGcode, m_gcode_widget, &GCodeWidget::setOrthoView);
+    connect(m_gcode_widget, &GCodeWidget::orthographicViewChanged, m_main_toolbar, &MainToolbar::setOrthoGcodeChecked);
     connect(m_main_toolbar, &MainToolbar::showGhosts, m_gcode_widget, &GCodeWidget::showGhosts);
     connect(m_main_toolbar, &MainToolbar::showSeams, m_gcode_widget, &GCodeWidget::showSeams);
     connect(m_main_toolbar, &MainToolbar::exportGCode, m_export_window, [this] {
