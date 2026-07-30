@@ -37,6 +37,10 @@ class GCodeWidget : public QWidget {
     //! \param size
     void resized(QSize size);
 
+    //! \brief signals when the overhead orthographic g-code view is enabled or disabled
+    //! \param status if the view is using orthographic projection
+    void orthographicViewChanged(bool status);
+
   public slots:
     //! \brief Adds the GCode to the view after it has been loaded.
     void addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode);
@@ -103,5 +107,8 @@ class GCodeWidget : public QWidget {
 
     //! \brief Segment / Bead info control
     QSharedPointer<GCodeInfoControl> m_segment_info_control;
+
+    //! \brief Current overhead orthographic projection state.
+    bool m_ortho_enabled = false;
 };
 } // namespace ORNL

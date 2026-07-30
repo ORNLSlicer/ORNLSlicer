@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QLayout>
 #include <QMenu>
+#include <QSignalBlocker>
 #include <qaction.h>
 #include <qfiledevice.h>
 #include <qicon.h>
@@ -515,6 +516,11 @@ void MainToolbar::setLayerSettingsRangeAbility(bool status) {
     }
 
     enableCorrectOptions();
+}
+
+void MainToolbar::setOrthoGcodeChecked(bool status) {
+    const QSignalBlocker blocker(m_2d_gcode_btn);
+    m_2d_gcode_btn->setChecked(status);
 }
 
 void MainToolbar::handleModifiedSetting(const QString& setting_key) {

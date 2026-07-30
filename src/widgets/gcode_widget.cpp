@@ -35,8 +35,16 @@ void GCodeWidget::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) 
 void GCodeWidget::clear() { m_gcode_view->clear(); }
 
 void GCodeWidget::setOrthoView(bool status) {
-    m_view_controls->setEnabled(!status);
+    const bool changed = m_ortho_enabled != status;
+    m_ortho_enabled = status;
+
+    m_view_controls->setProjectionControlsEnabled(!status);
+    m_view_controls->setOrthographicViewChecked(status);
     m_gcode_view->useOrthographic(status);
+
+    if (changed) {
+        emit orthographicViewChanged(status);
+    }
 }
 
 void GCodeWidget::showSegmentInfo(bool show) { m_segment_info_control->setVisible(show); }
@@ -140,7 +148,7 @@ void GCodeWidget::setupSubWidgets() {
     m_gcode_view->hideSegmentType(types, true);
 
     // View Controls
-    m_view_controls = new ViewControlsToolbar(this);
+    m_view_controls = new ViewControlsToolbar(this, true);
     m_view_controls->raise();
 }
 
@@ -164,6 +172,7 @@ void GCodeWidget::setupEvents() {
     connect(m_view_controls, &ViewControlsToolbar::setFrontView, m_gcode_view, &GCodeView::setFrontView);
     connect(m_view_controls, &ViewControlsToolbar::setSideView, m_gcode_view, &GCodeView::setSideView);
     connect(m_view_controls, &ViewControlsToolbar::setTopView, m_gcode_view, &GCodeView::setTopView);
+    connect(m_view_controls, &ViewControlsToolbar::setOrthographicView, this, &GCodeWidget::setOrthoView);
 }
 
 void GCodeWidget::resizeEvent(QResizeEvent* event) {
