@@ -196,6 +196,12 @@ class SettingBar : public QWidget {
      */
     void reloadSettingRow(const QString& setting_key);
 
+    //! \brief Rechecks warning-only dependencies that are not part of row visibility logic.
+    void refreshDynamicDependencies();
+
+    //! \brief Reloads rows after unit changes and refreshes dynamic warnings once.
+    void reloadRowsForUnitChange();
+
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -256,5 +262,8 @@ class SettingBar : public QWidget {
 
     //! \brief Prevents restored undo/redo values from being treated like fresh row edits.
     bool m_restoring_settings = false;
+
+    //! \brief Defers full dynamic warning refreshes while rows are reloaded in bulk.
+    bool m_suppress_dynamic_dependency_refresh = false;
 };
 } // Namespace ORNL

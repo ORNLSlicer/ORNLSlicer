@@ -140,7 +140,10 @@ void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases
 
 QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() { return m_settings_bases; }
 
-void SettingRowBase::checkDependencies() { setDependencyEnabled(checkLogic(m_dependency_logic)); }
+void SettingRowBase::checkDependencies() {
+    setDependencyEnabled(checkLogic(m_dependency_logic));
+    checkDynamicDependencies();
+}
 
 void SettingRowBase::hide() {
     m_row_visible = false;
