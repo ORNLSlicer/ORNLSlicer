@@ -61,6 +61,18 @@ settings:
     namespace: "Printer::GCode"
     symbol: "kSettingsFooter"
     local: false
+  - name: "enable_layer_time_comments"
+    display: "Layer Time Comments"
+    type: "boolean"
+    tooltip: "If selected, each layer marker in the G-Code includes the estimated layer time in seconds."
+    depends: {}
+    options: []
+    default: false
+    minor: "G-Code"
+    major: "Printer"
+    namespace: "Printer::GCode"
+    symbol: "kLayerTimeComments"
+    local: false
   - name: "start_code"
     display: "Start Code"
     type: "multiline_text"
