@@ -33,7 +33,9 @@ Each setting entry has these fields:
   - time
   - unitless_float
   - voltage
-* `tooltip`: Short description of what the setting does.
+* `tooltip`: Short description of what the setting does. Tooltips can include a
+  small Qt resource image using rich-text markup; see
+  [Adding Images to Settings Tooltips](Adding-Images-to-Settings-Tooltips.md).
 * `depends`: Structured dependency object used to decide when a setting is enabled or disabled. Use `{}` for no
   dependency.
 

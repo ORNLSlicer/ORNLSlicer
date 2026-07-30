@@ -37,6 +37,7 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [Troubleshooting](wiki/Troubleshooting.md)
 - [Generating the Master Settings File](wiki/Generating-the-Master-Settings-File.md)
 - [Adding a New User Setting](wiki/Adding-a-New-User-Setting.md)
+- [Adding Images to Settings Tooltips](wiki/Adding-Images-to-Settings-Tooltips.md)
 - [Relevant Papers](wiki/Relevant-Papers.md)
 - [License and Library Licenses](wiki/License-and-Library-Licenses.md)
 - [Citation and Copyright Information](wiki/Citation-and-Copyright-Information.md)

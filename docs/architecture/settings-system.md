@@ -144,6 +144,13 @@ the corresponding grouped widget while retaining the scalar component keys.
 `SettingBar` separately builds dependency trees from the `depends` metadata and
 connects parent rows to rows that must be re-evaluated.
 
+Tooltip text is passed through the generated metadata and wrapped as Qt rich
+text by `SettingRowBase`, so small bundled images can be embedded in the
+existing `tooltip` field for `Printer`, `Material`, `Profile`, and
+`Experimental` settings. Use the
+[settings tooltip image procedure](../wiki/Adding-Images-to-Settings-Tooltips.md)
+when adding those assets.
+
 This separation matters when extending the UI:
 
 - A new setting using an existing scalar type usually requires YAML and a C++
