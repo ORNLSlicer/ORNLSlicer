@@ -86,20 +86,41 @@ class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
     //! \brief Returns this row's effective value in base units.
     double effectiveDouble() const;
 
+    //! \brief Returns this row's effective value for one selected base in base units.
+    double effectiveDouble(int settings_base_index) const;
+
     //! \brief Returns another setting's effective value in base units.
     double effectiveDouble(const QString& key) const;
+
+    //! \brief Returns another setting's effective value for one selected base in base units.
+    double effectiveDouble(const QString& key, int settings_base_index) const;
 
     //! \brief Returns another boolean setting's effective value.
     bool effectiveBool(const QString& key) const;
 
+    //! \brief Returns another boolean setting's effective value for one selected base.
+    bool effectiveBool(const QString& key, int settings_base_index) const;
+
     //! \brief Returns another integer setting's effective value.
     int effectiveInt(const QString& key) const;
+
+    //! \brief Returns another integer setting's effective value for one selected base.
+    int effectiveInt(const QString& key, int settings_base_index) const;
 
     //! \brief Returns whether selected settings bases agree on this row's effective value.
     bool hasConsistentEffectiveDouble() const;
 
+    //! \brief Returns the number of effective settings contexts to evaluate.
+    int effectiveSettingsBaseCount() const;
+
     //! \brief Returns a warning message when this row violates a dynamic dependency.
     QString dynamicDependencyWarning() const;
+
+    //! \brief Returns a warning message for one selected base when this row violates a dynamic dependency.
+    QString dynamicDependencyWarning(int settings_base_index) const;
+
+    //! \brief Applies warning styling and optionally shows the transient tooltip.
+    void applyNotification(QString msg, bool show_tooltip);
 
     //! \brief Number of units of precision for child derived types with units
     //! Currently, all the same
