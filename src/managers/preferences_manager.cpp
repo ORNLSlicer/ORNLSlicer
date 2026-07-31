@@ -70,6 +70,44 @@ QColor parseVisualizationColor(const std::string& colorText, bool& valid) {
 
     return color;
 }
+
+bool visualizationColorMatches(const std::string& colorText, const QColor& expectedColor) {
+    bool validColor;
+    QColor parsedColor = parseVisualizationColor(colorText, validColor);
+    return validColor && parsedColor == expectedColor;
+}
+
+bool replaceStaleVisualizationColor(std::unordered_map<std::string, std::string>& visualizationColorsHex,
+                                    VisualizationColors color, const std::vector<QColor>& staleColors) {
+    const std::string name = VisualizationColorsName(color).toStdString();
+    auto colorIt = visualizationColorsHex.find(name);
+    if (colorIt == visualizationColorsHex.end()) {
+        return false;
+    }
+
+    for (const QColor& staleColor : staleColors) {
+        if (visualizationColorMatches(colorIt->second, staleColor)) {
+            colorIt->second = VisualizationColorsDefaults(color).name().toStdString();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool migrateVisualizationColorDefaults(std::unordered_map<std::string, std::string>& visualizationColorsHex) {
+    bool migrated = false;
+
+    // Carry forward revised arc defaults for users who ran pre-release builds with these stale values persisted.
+    migrated |= replaceStaleVisualizationColor(
+        visualizationColorsHex, VisualizationColors::kInsetArc,
+        {QColor(255, 179, 0, 255), QColor(102, 224, 255, 255)});
+    migrated |= replaceStaleVisualizationColor(
+        visualizationColorsHex, VisualizationColors::kPerimeterArc,
+        {QColor(255, 0, 204, 255), QColor(0, 85, 255, 255)});
+
+    return migrated;
+}
 } // namespace
 
 QSharedPointer<PreferencesManager> PreferencesManager::m_singleton = QSharedPointer<PreferencesManager>();
@@ -153,6 +191,11 @@ std::map<std::string, std::string> PreferencesManager::getVisualizationHexColors
 
 void PreferencesManager::setDefaultVisualizationColors(
     const std::unordered_map<std::string, std::string>& visualizationColorsHex) {
+    std::unordered_map<std::string, std::string> migratedVisualizationColorsHex = visualizationColorsHex;
+    if (migrateVisualizationColorDefaults(migratedVisualizationColorsHex)) {
+        m_dirty = true;
+    }
+
     m_visualization_qcolors.clear();
     int visualizationColorsLength = (int)VisualizationColors::Length;
     for (int i = 0; i < visualizationColorsLength; ++i) {
@@ -161,7 +204,7 @@ void PreferencesManager::setDefaultVisualizationColors(
             VisualizationColorsDefaults(colorEnum);
     }
 
-    for (const auto& color : visualizationColorsHex) {
+    for (const auto& color : migratedVisualizationColorsHex) {
         VisualizationColors colorEnum;
         if (!visualizationColorFromName(color.first, colorEnum)) {
             continue;
