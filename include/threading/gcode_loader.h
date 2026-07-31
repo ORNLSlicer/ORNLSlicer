@@ -101,6 +101,12 @@ class GCodeLoader : public QThread {
     //! \return color based on comment keywords
     QColor determineFontColor(const QString& comment);
 
+    //! \brief determine visualization color based on motion command and comment keywords
+    //! \param command_id: Parsed G-code motion command ID.
+    //! \param comment: Comment to parse
+    //! \return color based on command type and comment keywords
+    QColor determineSegmentColor(int command_id, const QString& comment);
+
     //! \brief determine display type based on comment keywords
     //! \param comment: Comment to parse
     //! \return semantic display type used for visibility and selection behavior
