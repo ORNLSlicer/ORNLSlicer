@@ -5,6 +5,7 @@
 #include <exception>
 #include <iterator>
 #include <list>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -54,6 +55,64 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+using PolyhedronFaceDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor;
+using PolyhedronHalfedgeDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor;
+using PolyhedronVertexDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::vertex_descriptor;
+
+std::optional<PolyhedronHalfedgeDescriptor> firstBorderHalfedge(MeshTypes::Polyhedron& polyhedron) {
+    for (PolyhedronHalfedgeDescriptor h : halfedges(polyhedron)) {
+        if (CGAL::is_border(h, polyhedron))
+            return h;
+    }
+
+    return std::nullopt;
+}
+
+bool fillBorderHole(MeshTypes::Polyhedron& polyhedron, PolyhedronHalfedgeDescriptor border_halfedge) {
+    std::vector<PolyhedronFaceDescriptor> patch_facets;
+    std::vector<PolyhedronVertexDescriptor> patch_vertices;
+
+    return std::get<0>(CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole(
+        polyhedron, border_halfedge, std::back_inserter(patch_facets), std::back_inserter(patch_vertices),
+        CGAL::parameters::vertex_point_map(get(CGAL::vertex_point, polyhedron)).geom_traits(MeshTypes::Kernel())));
+}
+
+bool fillBorderHoles(MeshTypes::Polyhedron& polyhedron) {
+    std::size_t remaining_attempts = polyhedron.size_of_halfedges();
+
+    while (!polyhedron.is_closed()) {
+        if (remaining_attempts == 0) {
+            qWarning() << "CGAL hole filling exceeded the available boundary halfedges; continuing with the unrepaired mesh.";
+            return false;
+        }
+
+        std::optional<PolyhedronHalfedgeDescriptor> border_halfedge = firstBorderHalfedge(polyhedron);
+        if (!border_halfedge.has_value()) {
+            qWarning() << "CGAL hole filling found no border halfedge on an open mesh; continuing with the unrepaired mesh.";
+            return false;
+        }
+
+        --remaining_attempts;
+
+        try {
+            if (!fillBorderHole(polyhedron, *border_halfedge)) {
+                qWarning() << "CGAL hole filling failed; continuing with the unrepaired mesh.";
+                return false;
+            }
+        } catch (const CGAL::Failure_exception& error) {
+            qWarning() << "CGAL hole filling failed; continuing with the unrepaired mesh:" << error.what();
+            return false;
+        } catch (const std::exception& error) {
+            qWarning() << "Hole filling failed; continuing with the unrepaired mesh:" << error.what();
+            return false;
+        }
+    }
+
+    return true;
+}
+} // namespace
+
 ClosedMesh::ClosedMesh() : MeshBase() { m_is_closed = true; }
 
 ClosedMesh::ClosedMesh(const QVector<MeshVertex>& vertices, const QVector<MeshFace>& faces)
@@ -441,8 +500,7 @@ bool ClosedMesh::CleanPolyhedron(MeshTypes::Polyhedron& polyhedron) {
 
     // If the mesh is not closed, fill holes.
     if (!polyhedron.is_closed()) {
-        typedef boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor halfedge_descriptor;
-        std::vector<halfedge_descriptor> non_manifold_vertices;
+        std::vector<PolyhedronHalfedgeDescriptor> non_manifold_vertices;
         CGAL::Polygon_mesh_processing::non_manifold_vertices(polyhedron, std::back_inserter(non_manifold_vertices));
 
         if (!non_manifold_vertices.empty()) {
@@ -450,20 +508,8 @@ bool ClosedMesh::CleanPolyhedron(MeshTypes::Polyhedron& polyhedron) {
             return false;
         }
 
-        for (boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor h : halfedges(polyhedron)) {
-            if (CGAL::is_border(h, polyhedron)) {
-                std::vector<boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor> patch_facets;
-                std::vector<boost::graph_traits<MeshTypes::Polyhedron>::vertex_descriptor> patch_vertices;
-                const bool success = std::get<0>(CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole(
-                    polyhedron, h, std::back_inserter(patch_facets), std::back_inserter(patch_vertices),
-                    CGAL::parameters::vertex_point_map(get(CGAL::vertex_point, polyhedron))
-                        .geom_traits(MeshTypes::Kernel())));
-                if (!success) {
-                    qWarning() << "CGAL hole filling failed; continuing with the unrepaired mesh.";
-                    return false;
-                }
-            }
-        }
+        if (!fillBorderHoles(polyhedron))
+            return false;
     }
 
     if (!polyhedron.is_closed()) {
