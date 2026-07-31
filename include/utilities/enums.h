@@ -883,7 +883,7 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
         case VisualizationColors::kInset:
             return QColor(0, 204, 255, 255);
         case VisualizationColors::kInsetArc:
-            return QColor(102, 224, 255, 255);
+            return QColor(0, 184, 255, 255);
         case VisualizationColors::kLaserScan:
             return QColor(90, 255, 90, 255);
         case VisualizationColors::kLeadIn:
@@ -893,7 +893,7 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
         case VisualizationColors::kPerimeter:
             return QColor(0, 0, 255, 255);
         case VisualizationColors::kPerimeterArc:
-            return QColor(0, 85, 255, 255);
+            return QColor(32, 64, 255, 255);
         case VisualizationColors::kPrestart:
             return QColor(204, 0, 255, 255);
         case VisualizationColors::kRaft:
