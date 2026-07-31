@@ -634,6 +634,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
     m_layer_start_lines.push_back(1);
 
     m_layer_times.push_back(Time());
+    m_layer_dwell_adjustments.push_back(Time());
     m_layer_FR_modifiers.push_back(1.0);
     m_layer_G1F_times.push_back(Time());
     m_layer_volumes.push_back(Volume());
@@ -786,6 +787,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
 
                 // add empty slots to arrays for this layer
                 m_layer_times.push_back(Time());
+                m_layer_dwell_adjustments.push_back(Time());
                 m_layer_FR_modifiers.push_back(1.0);
                 m_layer_G1F_times.push_back(Time());
                 m_layer_volumes.push_back(Volume());
@@ -902,12 +904,17 @@ void CommonParser::reset() {
     m_command_modal_feedrates.clear();
     m_explicit_modal_feedrates.clear();
     m_command_G1F_times.clear();
+    m_layer_dwell_adjustments.clear();
 }
 
 QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
 
 QList<Time> CommonParser::getAdjustedLayerTimes() {
     QList<Time> adjusted_layer_times = m_layer_times;
+    for (int layer = 0; layer < adjusted_layer_times.size() && layer < m_layer_dwell_adjustments.size(); ++layer) {
+        adjusted_layer_times[layer] += m_layer_dwell_adjustments[layer];
+    }
+
     const bool has_adjusted_feedrates = std::any_of(m_layer_FR_modifiers.cbegin(), m_layer_FR_modifiers.cend(),
                                                     [](double modifier) { return modifier > 0 && modifier != 1.0; });
     if (!has_adjusted_feedrates)
@@ -2048,6 +2055,9 @@ void CommonParser::M5Handler(QVector<QString> params) {
 void CommonParser::AddDwell(double dwellTime) {
     int insertIndex = m_current_line - 1 + m_insertions;
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
+    if (m_current_layer >= 0 && m_current_layer < m_layer_dwell_adjustments.size()) {
+        m_layer_dwell_adjustments[m_current_layer] += Time(dwellTime);
+    }
 
     if (sb->setting<bool>(MS::Purge::kEnablePurgeDwell)) {
         QString rv;

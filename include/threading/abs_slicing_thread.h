@@ -98,6 +98,9 @@ class AbstractSlicingThread : public QObject {
     //! \param base: WriterBase to do the appropriate gcode writing
     void writeGCodeShutdown();
 
+    //! \brief Adds estimated layer-time comments to the generated G-Code when enabled.
+    void writeLayerTimeComments();
+
     //! \brief Returns max steps among all sliced parts
     int getMaxSteps();
 
