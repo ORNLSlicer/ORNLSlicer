@@ -10,6 +10,7 @@ The canonical documentation entry point is the [Documentation Index](../README.m
 - [Relevant Papers](Relevant-Papers.md)
 - [Citation and Copyright Information](Citation-and-Copyright-Information.md)
 - [License and Library Licenses](License-and-Library-Licenses.md)
+- [SLUG Archive](SLUG.md)
 
 ## Developers
 
