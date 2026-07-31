@@ -477,6 +477,9 @@ class PreferencesManager : public QObject {
     //! \brief bool to determine if a save is necessary
     int m_dirty;
 
+    //! \brief Version of one-time visualization color migrations applied to this preferences file.
+    int m_visualization_color_migration_version;
+
     //! Std construct to make it easier to write out to json for hidden settings
     //! Construct limited to this class.  All input/output converted to Qt structures.
     std::unordered_map<std::string, std::list<std::string>> m_hidden_settings;

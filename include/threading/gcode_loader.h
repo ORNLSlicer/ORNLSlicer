@@ -107,6 +107,11 @@ class GCodeLoader : public QThread {
     //! \return color based on command type and comment keywords
     QColor determineSegmentColor(int command_id, const QString& comment);
 
+    //! \brief Checks whether a comment contains a path modifier with color precedence.
+    //! \param comment: Comment to parse
+    //! \return True when modifier coloring should not be overridden by region-specific arc colors.
+    bool containsColorPriorityModifier(const QString& comment) const;
+
     //! \brief determine display type based on comment keywords
     //! \param comment: Comment to parse
     //! \return semantic display type used for visibility and selection behavior

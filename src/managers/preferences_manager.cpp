@@ -30,6 +30,9 @@
 
 namespace ORNL {
 namespace {
+constexpr int kVisualizationColorMigrationVersion = 1;
+constexpr const char* kVisualizationColorMigrationVersionKey = "visualization_color_migration_version";
+
 /*!
  * \brief Resolve a persisted visualization color name to its enum value.
  * \param name Persisted visualization color name.
@@ -130,7 +133,8 @@ PreferencesManager::PreferencesManager()
       m_warn_unsaved_project_on_close_preference(true), m_themeName(ThemeName::kLightMode),
       m_theme(static_cast<int>(m_themeName)), m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false),
       m_is_maximized(false), m_window_size(-1, -1), m_window_pos(-1, -1), m_use_implicit_transforms(false),
-      m_always_drop_parts(false), m_layer_lag(100), m_segment_lag(10) {
+      m_always_drop_parts(false), m_layer_lag(100), m_segment_lag(10),
+      m_visualization_color_migration_version(kVisualizationColorMigrationVersion) {
     m_hidden_settings["Printer"] = std::list<std::string>();
     m_hidden_settings["Material"] = std::list<std::string>();
     m_hidden_settings["Profile"] = std::list<std::string>();
@@ -192,7 +196,9 @@ std::map<std::string, std::string> PreferencesManager::getVisualizationHexColors
 void PreferencesManager::setDefaultVisualizationColors(
     const std::unordered_map<std::string, std::string>& visualizationColorsHex) {
     std::unordered_map<std::string, std::string> migratedVisualizationColorsHex = visualizationColorsHex;
-    if (migrateVisualizationColorDefaults(migratedVisualizationColorsHex)) {
+    if (m_visualization_color_migration_version < kVisualizationColorMigrationVersion) {
+        migrateVisualizationColorDefaults(migratedVisualizationColorsHex);
+        m_visualization_color_migration_version = kVisualizationColorMigrationVersion;
         m_dirty = true;
     }
 
@@ -290,6 +296,8 @@ void PreferencesManager::importPreferences(QString filepath) {
         if (j.contains("warn_unsaved_project_on_close"))
             setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
 
+        m_visualization_color_migration_version = j.value(kVisualizationColorMigrationVersionKey, 0);
+
         std::unordered_map<std::string, std::string> visualizationColorsHex;
         if (j.find("visualization_colors") != j.end())
             visualizationColorsHex = j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
@@ -348,6 +356,7 @@ fifojson PreferencesManager::json() {
     j["use_implicit_transforms"] = m_use_implicit_transforms;
     j["always_drop_parts"] = m_always_drop_parts;
     j["visualization_colors"] = getVisualizationHexColors();
+    j[kVisualizationColorMigrationVersionKey] = m_visualization_color_migration_version;
     j["layer_lag"] = m_layer_lag;
     j["segment_lag"] = m_segment_lag;
 

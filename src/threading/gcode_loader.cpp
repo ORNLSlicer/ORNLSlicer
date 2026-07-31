@@ -729,7 +729,7 @@ QColor GCodeLoader::determineSegmentColor(int command_id, const QString& comment
         return color;
     }
 
-    if (m_modifier_colors.contains(color)) {
+    if (containsColorPriorityModifier(comment)) {
         return color;
     }
 
@@ -742,6 +742,16 @@ QColor GCodeLoader::determineSegmentColor(int command_id, const QString& comment
     }
 
     return color;
+}
+
+bool GCodeLoader::containsColorPriorityModifier(const QString& comment) const {
+    return m_prestart.indexIn(comment) != -1 || m_initial_startup.indexIn(comment) != -1 ||
+           m_slowdown.indexIn(comment) != -1 || m_forward_tipwipe.indexIn(comment) != -1 ||
+           m_reverse_tipwipe.indexIn(comment) != -1 || m_angled_tipwipe.indexIn(comment) != -1 ||
+           m_coasting.indexIn(comment) != -1 || m_spirallift.indexIn(comment) != -1 ||
+           m_rampingup.indexIn(comment) != -1 || m_rampingdown.indexIn(comment) != -1 ||
+           m_leadin.indexIn(comment) != -1 ||
+           comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe);
 }
 
 SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comment) {
