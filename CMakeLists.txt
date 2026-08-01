@@ -14,6 +14,8 @@ project(
     HOMEPAGE_URL "https://github.com/ORNLSlicer/ORNLSlicer"
 )
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -223,7 +225,7 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
 endif()
 
-option(ORNLSLICER_BUILD_TESTS "Build ORNLSlicer test executables" ON)
+option(ORNLSLICER_BUILD_TESTS "Build ORNLSlicer test executables" ${BUILD_TESTING})
 if(ORNLSLICER_BUILD_TESTS)
     enable_testing()
     add_executable(${PROJECT_NAME}_mesh_repair_tests tests/mesh_repair_tests.cpp)
