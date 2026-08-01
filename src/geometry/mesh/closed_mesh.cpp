@@ -1,10 +1,12 @@
 #include "geometry/mesh/closed_mesh.h"
 
+#include <algorithm>
 #include <array>
 #include <cstddef>
 #include <exception>
 #include <iterator>
 #include <list>
+#include <optional>
 #include <utility>
 #include <vector>
 
@@ -20,6 +22,7 @@
 #include <CGAL/Polygon_mesh_processing/measure.h>
 #include <CGAL/Polygon_mesh_processing/repair.h>
 #include <CGAL/Polygon_mesh_processing/repair_degeneracies.h>
+#include <CGAL/Polygon_mesh_processing/self_intersections.h>
 #include <CGAL/Polygon_mesh_processing/transform.h>
 #include <CGAL/Polygon_mesh_processing/triangulate_hole.h>
 #include <CGAL/Polygon_mesh_slicer.h>
@@ -54,6 +57,97 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+using PolyhedronFaceDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor;
+using PolyhedronHalfedgeDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor;
+
+constexpr std::size_t kMaxSmallModelBoundaryHalfedgesForHoleFilling = 32;
+constexpr std::size_t kMaxBoundaryHalfedgesForHoleFilling = 512;
+constexpr std::size_t kMaxBoundaryHalfedgeToFacetRatio = 8;
+
+std::size_t countBorderHalfedges(MeshTypes::Polyhedron& polyhedron) {
+    std::size_t count = 0;
+    for (PolyhedronHalfedgeDescriptor h : halfedges(polyhedron)) {
+        if (CGAL::is_border(h, polyhedron))
+            ++count;
+    }
+
+    return count;
+}
+
+ClosedMesh::RepairResult holeFillingPreflightResult(MeshTypes::Polyhedron& polyhedron, std::size_t border_halfedges) {
+    if (border_halfedges > kMaxBoundaryHalfedgesForHoleFilling) {
+        return ClosedMesh::RepairResult::kSkippedLargeBoundary;
+    }
+
+    const std::size_t max_boundary_halfedges = std::max(kMaxSmallModelBoundaryHalfedgesForHoleFilling,
+                                                        polyhedron.size_of_facets() / kMaxBoundaryHalfedgeToFacetRatio);
+
+    if (border_halfedges > max_boundary_halfedges) {
+        return ClosedMesh::RepairResult::kSkippedLargeBoundary;
+    }
+
+    return ClosedMesh::RepairResult::kSuccess;
+}
+
+std::optional<PolyhedronHalfedgeDescriptor> firstBorderHalfedge(MeshTypes::Polyhedron& polyhedron) {
+    for (PolyhedronHalfedgeDescriptor h : halfedges(polyhedron)) {
+        if (CGAL::is_border(h, polyhedron))
+            return h;
+    }
+
+    return std::nullopt;
+}
+
+bool fillBorderHole(MeshTypes::Polyhedron& polyhedron, PolyhedronHalfedgeDescriptor border_halfedge) {
+    std::vector<PolyhedronFaceDescriptor> patch_facets;
+
+    CGAL::Polygon_mesh_processing::triangulate_hole(
+        polyhedron, border_halfedge,
+        CGAL::parameters::face_output_iterator(std::back_inserter(patch_facets))
+            .vertex_point_map(get(CGAL::vertex_point, polyhedron))
+            .geom_traits(MeshTypes::Kernel())
+            .do_not_use_cubic_algorithm(true));
+
+    return !patch_facets.empty();
+}
+
+ClosedMesh::RepairResult fillBorderHoles(MeshTypes::Polyhedron& polyhedron) {
+    const std::size_t border_halfedges = countBorderHalfedges(polyhedron);
+    ClosedMesh::RepairResult preflight_result = holeFillingPreflightResult(polyhedron, border_halfedges);
+    if (preflight_result != ClosedMesh::RepairResult::kSuccess)
+        return preflight_result;
+
+    std::size_t remaining_attempts = border_halfedges;
+
+    while (!polyhedron.is_closed()) {
+        if (remaining_attempts == 0) {
+            return ClosedMesh::RepairResult::kFailedHoleFilling;
+        }
+
+        std::optional<PolyhedronHalfedgeDescriptor> border_halfedge = firstBorderHalfedge(polyhedron);
+        if (!border_halfedge.has_value()) {
+            return ClosedMesh::RepairResult::kFailedHoleFilling;
+        }
+
+        --remaining_attempts;
+
+        try {
+            if (!fillBorderHole(polyhedron, *border_halfedge))
+                return ClosedMesh::RepairResult::kFailedHoleFilling;
+        } catch (const CGAL::Failure_exception& error) {
+            qWarning() << "CGAL hole filling failed:" << error.what();
+            return ClosedMesh::RepairResult::kFailedHoleFilling;
+        } catch (const std::exception& error) {
+            qWarning() << "Hole filling failed:" << error.what();
+            return ClosedMesh::RepairResult::kFailedHoleFilling;
+        }
+    }
+
+    return ClosedMesh::RepairResult::kSuccess;
+}
+} // namespace
+
 ClosedMesh::ClosedMesh() : MeshBase() { m_is_closed = true; }
 
 ClosedMesh::ClosedMesh(const QVector<MeshVertex>& vertices, const QVector<MeshFace>& faces)
@@ -418,60 +512,86 @@ ClosedMesh::FacesAndVerticesFromPolyhedron(MeshTypes::Polyhedron& mesh) {
     return std::pair<QVector<MeshVertex>, QVector<MeshFace>>(mesh_vertices, mesh_faces);
 }
 
-bool ClosedMesh::CleanPolyhedron(MeshTypes::Polyhedron& polyhedron) {
+ClosedMesh::RepairResult ClosedMesh::CleanPolyhedronWithStatus(MeshTypes::Polyhedron& polyhedron) {
     CGAL::Polygon_mesh_processing::remove_degenerate_faces(polyhedron);
     CGAL::Polygon_mesh_processing::remove_isolated_vertices(polyhedron);
     CGAL::Polygon_mesh_processing::remove_connected_components_of_negligible_size(polyhedron);
+
+    // If the mesh is not closed, fill holes.
+    if (!polyhedron.is_closed()) {
+        std::vector<PolyhedronHalfedgeDescriptor> non_manifold_vertices;
+        CGAL::Polygon_mesh_processing::non_manifold_vertices(polyhedron, std::back_inserter(non_manifold_vertices));
+
+        if (!non_manifold_vertices.empty()) {
+            return RepairResult::kSkippedNonManifoldBoundary;
+        }
+
+        RepairResult hole_filling_result = fillBorderHoles(polyhedron);
+        if (hole_filling_result != RepairResult::kSuccess)
+            return hole_filling_result;
+    }
+
+    if (!polyhedron.is_closed())
+        return RepairResult::kRepairLeftOpen;
+
+    try {
+        if (!CGAL::Polygon_mesh_processing::does_self_intersect(
+                polyhedron, CGAL::parameters::vertex_point_map(get(CGAL::vertex_point, polyhedron))
+                                .geom_traits(MeshTypes::Kernel()))) {
+            return RepairResult::kSuccess;
+        }
+    } catch (const CGAL::Failure_exception& error) {
+        qWarning() << "CGAL self-intersection check failed:" << error.what();
+        return RepairResult::kFailedSelfIntersectionCheck;
+    } catch (const std::exception& error) {
+        qWarning() << "Self-intersection check failed:" << error.what();
+        return RepairResult::kFailedSelfIntersectionCheck;
+    }
 
     MeshTypes::Polyhedron self_intersection_repair = polyhedron;
     try {
         if (!CGAL::Polygon_mesh_processing::experimental::autorefine_and_remove_self_intersections(
                 self_intersection_repair)) {
-            qWarning() << "CGAL could not repair all self-intersections; continuing with the unrepaired mesh.";
-            return false;
+            return RepairResult::kFailedSelfIntersectionRepair;
         }
     } catch (const CGAL::Failure_exception& error) {
-        qWarning() << "CGAL self-intersection repair failed; continuing with the unrepaired mesh:" << error.what();
-        return false;
+        qWarning() << "CGAL self-intersection repair failed:" << error.what();
+        return RepairResult::kFailedSelfIntersectionRepair;
     } catch (const std::exception& error) {
-        qWarning() << "Self-intersection repair failed; continuing with the unrepaired mesh:" << error.what();
-        return false;
+        qWarning() << "Self-intersection repair failed:" << error.what();
+        return RepairResult::kFailedSelfIntersectionRepair;
     }
     polyhedron = self_intersection_repair;
 
-    // If the mesh is not closed, fill holes.
-    if (!polyhedron.is_closed()) {
-        typedef boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor halfedge_descriptor;
-        std::vector<halfedge_descriptor> non_manifold_vertices;
-        CGAL::Polygon_mesh_processing::non_manifold_vertices(polyhedron, std::back_inserter(non_manifold_vertices));
+    if (!polyhedron.is_closed())
+        return RepairResult::kRepairLeftOpen;
 
-        if (!non_manifold_vertices.empty()) {
-            qWarning() << "Skipping hole filling because the mesh has non-manifold boundary vertices.";
-            return false;
-        }
+    return RepairResult::kSuccess;
+}
 
-        for (boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor h : halfedges(polyhedron)) {
-            if (CGAL::is_border(h, polyhedron)) {
-                std::vector<boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor> patch_facets;
-                std::vector<boost::graph_traits<MeshTypes::Polyhedron>::vertex_descriptor> patch_vertices;
-                const bool success = std::get<0>(CGAL::Polygon_mesh_processing::triangulate_refine_and_fair_hole(
-                    polyhedron, h, std::back_inserter(patch_facets), std::back_inserter(patch_vertices),
-                    CGAL::parameters::vertex_point_map(get(CGAL::vertex_point, polyhedron))
-                        .geom_traits(MeshTypes::Kernel())));
-                if (!success) {
-                    qWarning() << "CGAL hole filling failed; continuing with the unrepaired mesh.";
-                    return false;
-                }
-            }
-        }
+bool ClosedMesh::CleanPolyhedron(MeshTypes::Polyhedron& polyhedron) {
+    return CleanPolyhedronWithStatus(polyhedron) == RepairResult::kSuccess;
+}
+
+QString ClosedMesh::RepairResultDescription(RepairResult result) {
+    switch (result) {
+        case RepairResult::kSuccess:
+            return "model repair completed successfully.";
+        case RepairResult::kSkippedLargeBoundary:
+            return "model has too much open boundary for safe automatic repair.";
+        case RepairResult::kSkippedNonManifoldBoundary:
+            return "model has non-manifold boundary vertices.";
+        case RepairResult::kFailedHoleFilling:
+            return "CGAL hole filling failed.";
+        case RepairResult::kFailedSelfIntersectionCheck:
+            return "CGAL self-intersection check failed.";
+        case RepairResult::kFailedSelfIntersectionRepair:
+            return "CGAL self-intersection repair failed.";
+        case RepairResult::kRepairLeftOpen:
+            return "model repair left the mesh open.";
     }
 
-    if (!polyhedron.is_closed()) {
-        qWarning() << "CGAL mesh repair left the mesh open; continuing with the unrepaired mesh.";
-        return false;
-    }
-
-    return true;
+    return "model repair did not complete.";
 }
 
 void ClosedMesh::convert() {

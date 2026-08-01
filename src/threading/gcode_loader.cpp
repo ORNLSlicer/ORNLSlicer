@@ -380,7 +380,7 @@ void GCodeLoader::run() {
                         line_color = fontColors[command.getComment()].foreground().color();
                     }
                     else if (!command.getComment().isEmpty()) {
-                        line_color = determineFontColor(command.getComment());
+                        line_color = determineSegmentColor(command.getCommandID(), command.getComment());
                         QTextCharFormat format;
                         format.setForeground(line_color);
                         fontColors.insert(m_original_lines[command.getLineNumber()], format);
@@ -721,6 +721,37 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     }
 
     return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kUnknown);
+}
+
+QColor GCodeLoader::determineSegmentColor(int command_id, const QString& comment) {
+    QColor color = determineFontColor(comment);
+    if (command_id != 2 && command_id != 3) {
+        return color;
+    }
+
+    if (containsColorPriorityModifier(comment)) {
+        return color;
+    }
+
+    if (m_perimeter.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kPerimeterArc);
+    }
+
+    if (m_inset.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kInsetArc);
+    }
+
+    return color;
+}
+
+bool GCodeLoader::containsColorPriorityModifier(const QString& comment) const {
+    return m_prestart.indexIn(comment) != -1 || m_initial_startup.indexIn(comment) != -1 ||
+           m_slowdown.indexIn(comment) != -1 || m_forward_tipwipe.indexIn(comment) != -1 ||
+           m_reverse_tipwipe.indexIn(comment) != -1 || m_angled_tipwipe.indexIn(comment) != -1 ||
+           m_coasting.indexIn(comment) != -1 || m_spirallift.indexIn(comment) != -1 ||
+           m_rampingup.indexIn(comment) != -1 || m_rampingdown.indexIn(comment) != -1 ||
+           m_leadin.indexIn(comment) != -1 ||
+           comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe);
 }
 
 SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comment) {

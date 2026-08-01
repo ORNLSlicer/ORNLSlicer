@@ -768,10 +768,12 @@ enum class VisualizationColors {
     kInfill,
     kInitialStartup,
     kInset,
+    kInsetArc,
     kLaserScan,
     kLeadIn,
     kFlyingStart,
     kPerimeter,
+    kPerimeterArc,
     kPrestart,
     kRaft,
     kRadial,
@@ -806,6 +808,8 @@ inline QString VisualizationColorsName(VisualizationColors color) {
             return "InitialStartup";
         case VisualizationColors::kInset:
             return "Inset";
+        case VisualizationColors::kInsetArc:
+            return "InsetArc";
         case VisualizationColors::kLaserScan:
             return "LaserScan";
         case VisualizationColors::kLeadIn:
@@ -814,6 +818,8 @@ inline QString VisualizationColorsName(VisualizationColors color) {
             return "FlyingStart";
         case VisualizationColors::kPerimeter:
             return "Perimeter";
+        case VisualizationColors::kPerimeterArc:
+            return "PerimeterArc";
         case VisualizationColors::kPrestart:
             return "Prestart";
         case VisualizationColors::kRaft:
@@ -876,6 +882,8 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
             return QColor(135, 222, 205, 255);
         case VisualizationColors::kInset:
             return QColor(0, 204, 255, 255);
+        case VisualizationColors::kInsetArc:
+            return QColor(0, 184, 255, 255);
         case VisualizationColors::kLaserScan:
             return QColor(90, 255, 90, 255);
         case VisualizationColors::kLeadIn:
@@ -884,6 +892,8 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
             return QColor(120, 150, 250);
         case VisualizationColors::kPerimeter:
             return QColor(0, 0, 255, 255);
+        case VisualizationColors::kPerimeterArc:
+            return QColor(32, 64, 255, 255);
         case VisualizationColors::kPrestart:
             return QColor(204, 0, 255, 255);
         case VisualizationColors::kRaft:

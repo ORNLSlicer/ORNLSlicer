@@ -30,6 +30,9 @@
 
 namespace ORNL {
 namespace {
+constexpr int kVisualizationColorMigrationVersion = 1;
+constexpr const char* kVisualizationColorMigrationVersionKey = "visualization_color_migration_version";
+
 /*!
  * \brief Resolve a persisted visualization color name to its enum value.
  * \param name Persisted visualization color name.
@@ -70,6 +73,44 @@ QColor parseVisualizationColor(const std::string& colorText, bool& valid) {
 
     return color;
 }
+
+bool visualizationColorMatches(const std::string& colorText, const QColor& expectedColor) {
+    bool validColor;
+    QColor parsedColor = parseVisualizationColor(colorText, validColor);
+    return validColor && parsedColor == expectedColor;
+}
+
+bool replaceStaleVisualizationColor(std::unordered_map<std::string, std::string>& visualizationColorsHex,
+                                    VisualizationColors color, const std::vector<QColor>& staleColors) {
+    const std::string name = VisualizationColorsName(color).toStdString();
+    auto colorIt = visualizationColorsHex.find(name);
+    if (colorIt == visualizationColorsHex.end()) {
+        return false;
+    }
+
+    for (const QColor& staleColor : staleColors) {
+        if (visualizationColorMatches(colorIt->second, staleColor)) {
+            colorIt->second = VisualizationColorsDefaults(color).name().toStdString();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool migrateVisualizationColorDefaults(std::unordered_map<std::string, std::string>& visualizationColorsHex) {
+    bool migrated = false;
+
+    // Carry forward revised arc defaults for users who ran pre-release builds with these stale values persisted.
+    migrated |= replaceStaleVisualizationColor(
+        visualizationColorsHex, VisualizationColors::kInsetArc,
+        {QColor(255, 179, 0, 255), QColor(102, 224, 255, 255)});
+    migrated |= replaceStaleVisualizationColor(
+        visualizationColorsHex, VisualizationColors::kPerimeterArc,
+        {QColor(255, 0, 204, 255), QColor(0, 85, 255, 255)});
+
+    return migrated;
+}
 } // namespace
 
 QSharedPointer<PreferencesManager> PreferencesManager::m_singleton = QSharedPointer<PreferencesManager>();
@@ -92,7 +133,8 @@ PreferencesManager::PreferencesManager()
       m_warn_unsaved_project_on_close_preference(true), m_themeName(ThemeName::kLightMode),
       m_theme(static_cast<int>(m_themeName)), m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false),
       m_is_maximized(false), m_window_size(-1, -1), m_window_pos(-1, -1), m_use_implicit_transforms(false),
-      m_always_drop_parts(false), m_layer_lag(100), m_segment_lag(10) {
+      m_always_drop_parts(false), m_layer_lag(100), m_segment_lag(10),
+      m_visualization_color_migration_version(kVisualizationColorMigrationVersion) {
     m_hidden_settings["Printer"] = std::list<std::string>();
     m_hidden_settings["Material"] = std::list<std::string>();
     m_hidden_settings["Profile"] = std::list<std::string>();
@@ -153,6 +195,13 @@ std::map<std::string, std::string> PreferencesManager::getVisualizationHexColors
 
 void PreferencesManager::setDefaultVisualizationColors(
     const std::unordered_map<std::string, std::string>& visualizationColorsHex) {
+    std::unordered_map<std::string, std::string> migratedVisualizationColorsHex = visualizationColorsHex;
+    if (m_visualization_color_migration_version < kVisualizationColorMigrationVersion) {
+        migrateVisualizationColorDefaults(migratedVisualizationColorsHex);
+        m_visualization_color_migration_version = kVisualizationColorMigrationVersion;
+        m_dirty = true;
+    }
+
     m_visualization_qcolors.clear();
     int visualizationColorsLength = (int)VisualizationColors::Length;
     for (int i = 0; i < visualizationColorsLength; ++i) {
@@ -161,7 +210,7 @@ void PreferencesManager::setDefaultVisualizationColors(
             VisualizationColorsDefaults(colorEnum);
     }
 
-    for (const auto& color : visualizationColorsHex) {
+    for (const auto& color : migratedVisualizationColorsHex) {
         VisualizationColors colorEnum;
         if (!visualizationColorFromName(color.first, colorEnum)) {
             continue;
@@ -247,6 +296,8 @@ void PreferencesManager::importPreferences(QString filepath) {
         if (j.contains("warn_unsaved_project_on_close"))
             setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
 
+        m_visualization_color_migration_version = j.value(kVisualizationColorMigrationVersionKey, 0);
+
         std::unordered_map<std::string, std::string> visualizationColorsHex;
         if (j.find("visualization_colors") != j.end())
             visualizationColorsHex = j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
@@ -305,6 +356,7 @@ fifojson PreferencesManager::json() {
     j["use_implicit_transforms"] = m_use_implicit_transforms;
     j["always_drop_parts"] = m_always_drop_parts;
     j["visualization_colors"] = getVisualizationHexColors();
+    j[kVisualizationColorMigrationVersionKey] = m_visualization_color_migration_version;
     j["layer_lag"] = m_layer_lag;
     j["segment_lag"] = m_segment_lag;
 

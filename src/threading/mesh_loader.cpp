@@ -167,8 +167,25 @@ QSharedPointer<MeshBase> buildMeshFromStepSurfaceMesh(MeshTypes::SurfaceMesh& su
         MeshTypes::Polyhedron polyhedron;
         CGAL::copy_face_graph(surface_mesh, polyhedron);
 
-        if (GSM->getGlobal()->setting<bool>(PS::SpecialModes::kEnableFixModel))
-            ClosedMesh::CleanPolyhedron(polyhedron);
+        if (GSM->getGlobal()->setting<bool>(PS::SpecialModes::kEnableFixModel)) {
+            MeshTypes::Polyhedron repaired_polyhedron = polyhedron;
+            try {
+                ClosedMesh::RepairResult repair_result = ClosedMesh::CleanPolyhedronWithStatus(repaired_polyhedron);
+                if (repair_result == ClosedMesh::RepairResult::kSuccess) {
+                    polyhedron = repaired_polyhedron;
+                }
+                else {
+                    qWarning() << "Model repair did not complete for" << file_info.fileName() << "-"
+                               << ClosedMesh::RepairResultDescription(repair_result) << "Importing unrepaired mesh.";
+                }
+            } catch (const CGAL::Failure_exception& error) {
+                qWarning() << "CGAL model repair failed for" << file_info.fileName()
+                           << "- importing unrepaired mesh:" << error.what();
+            } catch (const std::exception& error) {
+                qWarning() << "Model repair failed for" << file_info.fileName()
+                           << "- importing unrepaired mesh:" << error.what();
+            }
+        }
 
         if (polyhedron.is_closed())
             mesh = QSharedPointer<ClosedMesh>::create(polyhedron, file_info.baseName(), file_info.fileName());
@@ -320,12 +337,15 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
                 if (!builder.wasError() && GSM->getGlobal()->setting<bool>(PS::SpecialModes::kEnableFixModel)) {
                     MeshTypes::Polyhedron repaired_polyhedron = polyhedron;
                     try {
-                        if (ClosedMesh::CleanPolyhedron(repaired_polyhedron)) {
+                        ClosedMesh::RepairResult repair_result =
+                            ClosedMesh::CleanPolyhedronWithStatus(repaired_polyhedron);
+                        if (repair_result == ClosedMesh::RepairResult::kSuccess) {
                             polyhedron = repaired_polyhedron;
                         }
                         else {
-                            qWarning() << "Model repair did not complete for" << file_info.fileName()
-                                       << "- importing unrepaired mesh.";
+                            qWarning() << "Model repair did not complete for" << file_info.fileName() << "-"
+                                       << ClosedMesh::RepairResultDescription(repair_result)
+                                       << "Importing unrepaired mesh.";
                         }
                     } catch (const CGAL::Failure_exception& error) {
                         qWarning() << "CGAL model repair failed for" << file_info.fileName()

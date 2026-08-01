@@ -14,6 +14,8 @@ project(
     HOMEPAGE_URL "https://github.com/ORNLSlicer/ORNLSlicer"
 )
 
+include(CTest)
+
 set(CMAKE_CXX_STANDARD 23)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
@@ -137,6 +139,7 @@ set(ORNLSLICER_LIBRARY_DIRS ${RESULT_LIBRARY_DIRS})
 file(GLOB_RECURSE SOURCES CONFIGURE_DEPENDS "src/**.cpp")
 file(GLOB_RECURSE HEADERS CONFIGURE_DEPENDS "include/**.h")
 file(GLOB_RECURSE RESOURCES CONFIGURE_DEPENDS "resources/**.qrc")
+list(REMOVE_ITEM SOURCES "${CMAKE_CURRENT_SOURCE_DIR}/src/main.cpp")
 
 add_library(${PROJECT_NAME}_obj OBJECT)
 target_include_directories(
@@ -208,6 +211,8 @@ if(ORNLSLICER_ENABLE_UNITY_BUILD)
 endif()
 
 add_executable(${PROJECT_NAME})
+target_sources(${PROJECT_NAME} PRIVATE src/main.cpp)
+target_include_directories(${PROJECT_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated/include)
 target_link_libraries(${PROJECT_NAME} ${PROJECT_NAME}_obj)
 
 if(WIN32)
@@ -215,7 +220,24 @@ if(WIN32)
     set_target_properties(${PROJECT_NAME} PROPERTIES LINK_FLAGS "-mwindows")
 
     add_executable(${PROJECT_NAME}_cli)
+    target_sources(${PROJECT_NAME}_cli PRIVATE src/main.cpp)
+    target_include_directories(${PROJECT_NAME}_cli PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/generated/include)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
+endif()
+
+option(ORNLSLICER_BUILD_TESTS "Build ORNLSlicer test executables" ${BUILD_TESTING})
+if(ORNLSLICER_BUILD_TESTS)
+    enable_testing()
+    add_executable(${PROJECT_NAME}_mesh_repair_tests tests/mesh_repair_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_mesh_repair_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_mesh_repair_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME mesh_repair_tests COMMAND ${PROJECT_NAME}_mesh_repair_tests)
 endif()
 
 function(CreateSettingsTarget)
