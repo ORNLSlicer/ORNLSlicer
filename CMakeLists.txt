@@ -238,6 +238,17 @@ if(ORNLSLICER_BUILD_TESTS)
     )
     target_link_libraries(${PROJECT_NAME}_mesh_repair_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME mesh_repair_tests COMMAND ${PROJECT_NAME}_mesh_repair_tests)
+
+    add_executable(${PROJECT_NAME}_point_order_optimizer_tests tests/point_order_optimizer_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_point_order_optimizer_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_point_order_optimizer_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME point_order_optimizer_tests COMMAND ${PROJECT_NAME}_point_order_optimizer_tests)
 endif()
 
 function(CreateSettingsTarget)

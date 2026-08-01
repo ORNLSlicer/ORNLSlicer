@@ -1,6 +1,7 @@
 #include "step/layer/island/island_base.h"
 
 #include <limits>
+#include <optional>
 #include <utility>
 
 #include <qcontainerfwd.h>
@@ -238,6 +239,27 @@ bool IslandBase::getAnyValidPaths() {
 }
 
 QVector<SettingsPolygon> IslandBase::getSettingsPolygons() { return m_settings_polygons; }
+
+void IslandBase::prepareRegionForOptimization(const QSharedPointer<RegionBase>& region, int layerNumber,
+                                              QVector<QSharedPointer<RegionBase>>& previousRegions) {
+    std::optional<Point> previous_start;
+
+    for (int i = previousRegions.size() - 1; i >= 0; --i) {
+        const QSharedPointer<RegionBase>& previous_region = previousRegions[i];
+        if (previous_region->getRegionType() != region->getRegionType())
+            continue;
+
+        if (previous_region->getOptimizedLayerNumber() >= layerNumber)
+            continue;
+
+        previous_start = previous_region->getFirstPrintingStartPoint();
+        if (previous_start.has_value())
+            break;
+    }
+
+    region->setOptimizedLayerNumber(layerNumber);
+    region->setPreviousLayerStartPoint(previous_start);
+}
 
 void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<RegionBase>>& previousRegions) {
     if (previousRegions.size() > 1) {

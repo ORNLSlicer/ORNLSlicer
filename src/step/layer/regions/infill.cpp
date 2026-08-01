@@ -24,7 +24,7 @@
 namespace ORNL {
 Infill::Infill(const QSharedPointer<SettingsBase>& sb, const int index,
                const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, index, settings_polygons) {
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kInfill) {
     // NOP
 }
 
@@ -179,6 +179,7 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                            getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                            getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     for (QVector<Polyline> lines : m_computed_geometry) {
         poo.setGeometryToEvaluate(

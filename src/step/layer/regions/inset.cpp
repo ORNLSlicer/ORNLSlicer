@@ -318,7 +318,7 @@ bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double to
 } // namespace
 
 Inset::Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, index, settings_polygons) {
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kInset) {
     // NOP
 }
 
@@ -444,6 +444,7 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
                                      getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                                      getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                                      getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+        optimizer.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
     };
 
     PolylineOrderOptimizer poo(current_location, layerNumber);

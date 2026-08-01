@@ -19,7 +19,7 @@
 
 namespace ORNL {
 LaserScan::LaserScan(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kLaserScan) {
     // NOP
 }
 

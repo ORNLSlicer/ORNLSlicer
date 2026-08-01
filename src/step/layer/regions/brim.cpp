@@ -26,7 +26,7 @@
 
 namespace ORNL {
 Brim::Brim(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kBrim) {
     // NOP
 }
 
@@ -100,6 +100,7 @@ void Brim::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                            getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                            getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     m_paths.clear();
 
