@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <QObject>
 #include <qcontainerfwd.h>
 #include <qtypes.h>
@@ -12,6 +14,7 @@
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
 #include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 class PathOrderOptimizer;
@@ -27,12 +30,14 @@ class RegionBase {
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
     RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
-               const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry = PolygonList());
+               const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry = PolygonList(),
+               RegionType region_type = RegionType::kUnknown);
 
     //! \brief Constructor
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
-    RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons);
+    RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons,
+               RegionType region_type = RegionType::kUnknown);
 
     //! \brief Destructor
     virtual ~RegionBase() = default;
@@ -54,6 +59,15 @@ class RegionBase {
     //! \brief Get the paths generated from this region.
     //! \return Reference to region paths
     QVector<Path>& getPaths();
+
+    //! \brief Returns the first material-depositing start point in the region, if one exists.
+    std::optional<Point> getFirstPrintingStartPoint();
+
+    //! \brief Sets the prior layer's start point for consecutive point ordering.
+    void setPreviousLayerStartPoint(const std::optional<Point>& point);
+
+    //! \brief Gets the prior layer's start point for consecutive point ordering.
+    std::optional<Point> getPreviousLayerStartPoint() const;
 
     //! \brief Reverse path ordering in this region.
     void reversePaths();
@@ -87,6 +101,15 @@ class RegionBase {
     //! \brief return index that represents region order
     //! \return region order index
     int getIndex();
+
+    //! \brief Returns the concrete region type.
+    RegionType getRegionType() const;
+
+    //! \brief Records the layer number used for the last optimization pass.
+    void setOptimizedLayerNumber(int layer_number);
+
+    //! \brief Returns the layer number used for the last optimization pass.
+    int getOptimizedLayerNumber() const;
 
     //! \brief returns the material number of a region
     //! \return material number
@@ -146,6 +169,15 @@ class RegionBase {
 
     //! \brief Index for order
     int m_index;
+
+    //! \brief Concrete type for matching regions across layers.
+    RegionType m_region_type;
+
+    //! \brief Layer number used for the last optimization pass.
+    int m_optimized_layer_number = -1;
+
+    //! \brief Previous layer's physical start point for consecutive point ordering.
+    std::optional<Point> m_previous_layer_start_point;
 
     //! \brief Whether last region was spiralized
     bool m_was_last_region_spiral;

@@ -63,7 +63,7 @@ template <> struct boost::polygon::segment_traits<ORNL::Polyline> {
 namespace ORNL {
 Skeleton::Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
                    const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, index, settings_polygons) {}
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kSkeleton) {}
 
 QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
@@ -898,6 +898,7 @@ void Skeleton::optimize(int layerNumber, Point& current_location, bool& shouldNe
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                            getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                            getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kSkeleton,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));

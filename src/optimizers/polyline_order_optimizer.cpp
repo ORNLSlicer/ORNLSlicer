@@ -70,6 +70,10 @@ void PolylineOrderOptimizer::setPointParameters(PointOrderOptimization pointOpti
     m_segment_breaking_enable = enableSegmentBreaking;
 }
 
+void PolylineOrderOptimizer::setConsecutiveReferencePoint(const std::optional<Point>& point) {
+    m_consecutive_reference_point = point;
+}
+
 void PolylineOrderOptimizer::setStartOverride(Point pt) {
     m_override_location = pt;
     m_override_used = true;
@@ -262,7 +266,8 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
         auto pointSelection =
             PointOrderOptimizer::linkToPoint(queryPoint, new_polyline, m_layer_num, m_point_optimization,
                                              m_min_point_distance_enable, m_min_point_distance, m_consecutive_threshold,
-                                             m_randomness_enable, m_randomness_radius, m_segment_breaking_enable);
+                                             m_randomness_enable, m_randomness_radius, m_segment_breaking_enable,
+                                             m_consecutive_reference_point);
 
         applyPointOrderSelection(new_polyline, pointSelection);
 
@@ -455,7 +460,8 @@ Polyline PolylineOrderOptimizer::linkTo() {
 
     auto pointSelection = PointOrderOptimizer::linkToPoint(
         queryPoint, nextPolyline, m_layer_num, m_point_optimization, m_min_point_distance_enable, m_min_point_distance,
-        m_consecutive_threshold, m_randomness_enable, m_randomness_radius, m_segment_breaking_enable);
+        m_consecutive_threshold, m_randomness_enable, m_randomness_radius, m_segment_breaking_enable,
+        m_consecutive_reference_point);
 
     applyPointOrderSelection(nextPolyline, pointSelection);
 
@@ -594,18 +600,20 @@ Polyline PolylineOrderOptimizer::linkSpiralPolyline2D(bool last_spiral, Distance
     m_polylines.removeAt(polylineIndex);
     auto pointSelection = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num,
                                                            PointOrderOptimization::kNextClosest, false, 0, 0, false, 0,
-                                                           m_segment_breaking_enable);
+                                                           m_segment_breaking_enable, m_consecutive_reference_point);
 
     // Define which point to start layer one - all other layers must use next closest
     if (m_layer_num == 0) {
         if (usesCustomPointLocation(pointOrder)) {
             Point startOverride = m_point_override_location;
             pointSelection = PointOrderOptimizer::linkToPoint(startOverride, newPolyline, m_layer_num, pointOrder,
-                                                              false, 0, 0, false, 0, m_segment_breaking_enable);
+                                                              false, 0, 0, false, 0, m_segment_breaking_enable,
+                                                              m_consecutive_reference_point);
         }
         else {
             pointSelection = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num, pointOrder,
-                                                              false, 0, 0, false, 0, m_segment_breaking_enable);
+                                                              false, 0, 0, false, 0, m_segment_breaking_enable,
+                                                              m_consecutive_reference_point);
         }
     }
 

@@ -28,6 +28,7 @@ void SupportIsland::optimize(int layerNumber, Point& currentLocation,
                              QVector<QSharedPointer<RegionBase>>& previousRegions) {
     bool unused = true;
     for (QSharedPointer<RegionBase> r : m_regions) {
+        prepareRegionForOptimization(r, layerNumber, previousRegions);
         r->optimize(layerNumber, currentLocation, unused);
 
         if (r->getPaths().size() > 0)

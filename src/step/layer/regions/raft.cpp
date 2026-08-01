@@ -22,7 +22,7 @@
 
 namespace ORNL {
 Raft::Raft(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kRaft) {
     // NOP
 }
 
@@ -79,6 +79,7 @@ void Raft::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                            getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                            getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kInfill,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));

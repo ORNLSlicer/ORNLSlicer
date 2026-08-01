@@ -99,6 +99,10 @@ class IslandBase {
     void fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb);
 
   protected:
+    //! \brief Prepares a region for optimization with layer metadata and previous-layer seam context.
+    void prepareRegionForOptimization(const QSharedPointer<RegionBase>& region, int layerNumber,
+                                      QVector<QSharedPointer<RegionBase>>& previousRegions);
+
     //! \brief Geometry of island.
     PolygonList m_geometry;
 

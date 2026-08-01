@@ -2,7 +2,9 @@
 
 #include <algorithm>
 #include <cfloat>
+#include <cmath>
 #include <limits>
+#include <optional>
 
 #include <QRandomGenerator>
 #include <qcontainerfwd.h>
@@ -15,13 +17,51 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+constexpr double kDistanceTolerance = 1.0e-6;
+
+Distance planarDistance(const Point& lhs, const Point& rhs) {
+    return Distance(std::hypot(static_cast<double>(lhs.x() - rhs.x()), static_cast<double>(lhs.y() - rhs.y())));
+}
+
+std::optional<Point> pointAtPlanarDistance(const Point& start, const Point& end, const Point& reference,
+                                           Distance distance) {
+    const double dx = static_cast<double>(end.x() - start.x());
+    const double dy = static_cast<double>(end.y() - start.y());
+    const double a = (dx * dx) + (dy * dy);
+    if (a <= kDistanceTolerance)
+        return std::nullopt;
+
+    const double fx = static_cast<double>(start.x() - reference.x());
+    const double fy = static_cast<double>(start.y() - reference.y());
+    const double b = 2.0 * ((fx * dx) + (fy * dy));
+    const double c = (fx * fx) + (fy * fy) - (distance() * distance());
+    const double discriminant = (b * b) - (4.0 * a * c);
+    if (discriminant < -kDistanceTolerance)
+        return std::nullopt;
+
+    const double root = std::sqrt(std::max(0.0, discriminant));
+    double candidates[2] = {(-b - root) / (2.0 * a), (-b + root) / (2.0 * a)};
+    std::sort(candidates, candidates + 2);
+
+    for (double t : candidates) {
+        if (t < -kDistanceTolerance || t > 1.0 + kDistanceTolerance)
+            continue;
+
+        t = std::clamp(t, 0.0, 1.0);
+        return Point(start.x() + (dx * t), start.y() + (dy * t), start.z() + ((end.z() - start.z()) * t));
+    }
+
+    return std::nullopt;
+}
+} // namespace
 
 PointOrderOptimizer::PointOrderSelection
 PointOrderOptimizer::linkToPoint(const Point& current_location, const Polyline& polyline, uint layer_number,
                                  PointOrderOptimization pointOptimization, bool min_dist_enabled,
                                  Distance min_dist_threshold, Distance consecutive_dist_threshold,
                                  bool local_randomness_enable, Distance randomness_radius,
-                                 bool allow_segment_breaking) {
+                                 bool allow_segment_breaking, const std::optional<Point>& consecutive_reference) {
     PointOrderSelection result;
 
     bool use_segment_breaking = allow_segment_breaking && polyline.size() > 1 && !min_dist_enabled &&
@@ -47,7 +87,7 @@ PointOrderOptimizer::linkToPoint(const Point& current_location, const Polyline& 
             result = selectionFromIndex(linkToRandom(polyline));
             break;
         case PointOrderOptimization::kConsecutive:
-            result = selectionFromIndex(linkToConsecutive(polyline, layer_number, consecutive_dist_threshold));
+            result = linkToConsecutive(polyline, layer_number, consecutive_dist_threshold, consecutive_reference);
             break;
         case PointOrderOptimization::kCustomPoint:
             result = selectionFromIndex(findShortestOrLongestDistance(polyline, current_location, false, Distance(0)));
@@ -61,8 +101,10 @@ PointOrderOptimizer::linkToPoint(const Point& current_location, const Polyline& 
             break;
     }
 
-    if (local_randomness_enable)
-        result = selectionFromIndex(computePerturbation(polyline, polyline[result.rotation_index], randomness_radius));
+    if (local_randomness_enable && !polyline.isEmpty()) {
+        const Point random_origin = result.insert_split_point ? result.split_point : polyline[result.rotation_index];
+        result = selectionFromIndex(computePerturbation(polyline, random_origin, randomness_radius));
+    }
 
     return result;
 }
@@ -201,12 +243,76 @@ int PointOrderOptimizer::linkToRandom(const Polyline& polyline) {
     return QRandomGenerator::global()->bounded(polyline.size());
 }
 
-int PointOrderOptimizer::linkToConsecutive(const Polyline& polyline, uint layer_number, Distance minDist) {
-    int startIndex = layer_number - 2;
+PointOrderOptimizer::PointOrderSelection
+PointOrderOptimizer::linkToConsecutive(const Polyline& polyline, uint layer_number, Distance minDist,
+                                       const std::optional<Point>& previous_start) {
+    if (polyline.isEmpty())
+        return PointOrderSelection();
+
+    if (polyline.size() == 1)
+        return selectionFromIndex(0);
+
+    if (!previous_start.has_value() || minDist <= 0)
+        return selectionFromIndex(linkToConsecutiveByIndex(polyline, layer_number, minDist));
+
+    Point reference(previous_start->x(), previous_start->y(), polyline.front().z());
+    PointOrderSelection nearest_selection = findClosestPointOnClosedLoop(polyline, reference);
+
+    Point segment_start;
+    int segment_end_index;
+    if (nearest_selection.insert_split_point) {
+        segment_start = nearest_selection.split_point;
+        segment_end_index = nearest_selection.insertion_index;
+    }
+    else {
+        const int start_index = nearest_selection.rotation_index % polyline.size();
+        segment_start = polyline[start_index];
+        segment_end_index = (start_index + 1) % polyline.size();
+    }
+
+    if (planarDistance(segment_start, reference) >= minDist)
+        return nearest_selection;
+
+    Distance farthest_distance = Distance(-1.0);
+    int farthest_index = 0;
+
+    for (int segment_count = 0; segment_count < polyline.size(); ++segment_count) {
+        const Point& segment_end = polyline[segment_end_index];
+        const Distance end_distance = planarDistance(segment_end, reference);
+
+        if (end_distance > farthest_distance) {
+            farthest_distance = end_distance;
+            farthest_index = segment_end_index;
+        }
+
+        if (end_distance >= minDist) {
+            std::optional<Point> split_point = pointAtPlanarDistance(segment_start, segment_end, reference, minDist);
+            if (split_point.has_value() && *split_point != segment_start && *split_point != segment_end) {
+                PointOrderSelection selection;
+                selection.rotation_index = segment_end_index;
+                selection.insert_split_point = true;
+                selection.split_point = *split_point;
+                selection.insertion_index = segment_end_index;
+                return selection;
+            }
+
+            return selectionFromIndex(segment_end_index);
+        }
+
+        segment_start = segment_end;
+        segment_end_index = (segment_end_index + 1) % polyline.size();
+    }
+
+    return selectionFromIndex(farthest_index);
+}
+
+int PointOrderOptimizer::linkToConsecutiveByIndex(const Polyline& polyline, uint layer_number, Distance minDist) {
+    if (polyline.isEmpty())
+        return 0;
+
+    int startIndex = (static_cast<int>(layer_number) - 2) % polyline.size();
     if (startIndex < 0)
         startIndex += polyline.size();
-    else
-        startIndex %= polyline.size();
 
     int previousIndex = startIndex;
 
