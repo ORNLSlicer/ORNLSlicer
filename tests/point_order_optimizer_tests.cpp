@@ -44,6 +44,17 @@ int main() {
                          closeTo(physical_selection.split_point.y(), 0.0),
                      "Expected consecutive split point at (5, 0).");
 
+    const auto randomized_split_selection = ORNL::PointOrderOptimizer::linkToPoint(
+        ORNL::Point(999.0f, 999.0f, 0.0f), polyline, 4, ORNL::PointOrderOptimization::kConsecutive, false,
+        ORNL::Distance(0.0), ORNL::Distance(5.0), true, ORNL::Distance(4.0), false,
+        std::optional<ORNL::Point>(ORNL::Point(0.0f, 0.0f, 20.0f)));
+
+    passed &= expect(randomized_split_selection.insert_split_point,
+                     "Expected local randomness with no candidates to preserve the split selection.");
+    passed &= expect(closeTo(randomized_split_selection.split_point.x(), 5.0) &&
+                         closeTo(randomized_split_selection.split_point.y(), 0.0),
+                     "Expected preserved randomized split point at (5, 0).");
+
     const auto middle_reference_selection = ORNL::PointOrderOptimizer::linkToPoint(
         ORNL::Point(999.0f, 999.0f, 0.0f), polyline, 4, ORNL::PointOrderOptimization::kConsecutive, false,
         ORNL::Distance(0.0), ORNL::Distance(5.0), false, ORNL::Distance(0.0), false,
