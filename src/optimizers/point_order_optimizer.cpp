@@ -103,7 +103,9 @@ PointOrderOptimizer::linkToPoint(const Point& current_location, const Polyline& 
 
     if (local_randomness_enable && !polyline.isEmpty()) {
         const Point random_origin = result.insert_split_point ? result.split_point : polyline[result.rotation_index];
-        result = selectionFromIndex(computePerturbation(polyline, random_origin, randomness_radius));
+        const int randomized_index = computePerturbation(polyline, random_origin, randomness_radius);
+        if (randomized_index >= 0)
+            result = selectionFromIndex(randomized_index);
     }
 
     return result;
@@ -338,6 +340,9 @@ int PointOrderOptimizer::computePerturbation(const Polyline& polyline, const Poi
         if (polyline[i].distance(current_start) < radius)
             candidates.push_back(i);
     }
+
+    if (candidates.isEmpty())
+        return -1;
 
     return candidates[QRandomGenerator::global()->bounded(candidates.size())];
 }
