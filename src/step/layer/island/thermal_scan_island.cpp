@@ -26,6 +26,7 @@ void ThermalScanIsland::optimize(int layerNumber, Point& currentLocation,
                                  QVector<QSharedPointer<RegionBase>>& previousRegions) {
     bool unused = true;
     for (QSharedPointer<RegionBase> r : m_regions) {
+        prepareRegionForOptimization(r, layerNumber, previousRegions);
         r->optimize(layerNumber, currentLocation, unused);
     }
 }

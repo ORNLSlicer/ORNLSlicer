@@ -76,6 +76,7 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
             wasLastSpiral = previousRegions.last()->getSb()->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
         r->setLastSpiral(wasLastSpiral);
+        prepareRegionForOptimization(r, layerNumber, previousRegions);
 
         r->optimize(layerNumber, currentLocation, shouldNextPathBeCCW);
 

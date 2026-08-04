@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <qtypes.h>
 
 #include "geometry/point.h"
@@ -44,7 +46,8 @@ class PointOrderOptimizer {
                                            PointOrderOptimization pointOptimization, bool min_dist_enabled,
                                            Distance min_dist_threshold, Distance consecutive_dist_threshold,
                                            bool local_randomness_enable, Distance randomness_radius,
-                                           bool allow_segment_breaking = false);
+                                           bool allow_segment_breaking = false,
+                                           const std::optional<Point>& consecutive_reference = std::nullopt);
 
     //! \brief Constructor
     //! \param current_location: The current location
@@ -91,12 +94,21 @@ class PointOrderOptimizer {
     //! \return The index of the point to link to
     static int linkToRandom(const Polyline& polyline);
 
-    //! \brief Links to the next consecutive point in the polyline based on the layer number
+    //! \brief Links to the next consecutive point in the polyline based on the previous layer's start point
     //! \param polyline: The polyline to link to
     //! \param layer_number: The layer number of the current polyline
     //! \param minDist: The minimum distance the consecutive point must be from the previous layer's start point
+    //! \param previous_start: Previous layer start point, when available
+    //! \return Point selection details for rotating and optionally splitting the polyline
+    static PointOrderSelection linkToConsecutive(const Polyline& polyline, uint layer_number, Distance minDist,
+                                                 const std::optional<Point>& previous_start);
+
+    //! \brief Legacy consecutive point selection based only on layer number
+    //! \param polyline: The polyline to link to
+    //! \param layer_number: The layer number of the current polyline
+    //! \param minDist: The minimum distance to walk along the polyline
     //! \return The index of the point to link to
-    static int linkToConsecutive(const Polyline& polyline, uint layer_number, Distance minDist);
+    static int linkToConsecutiveByIndex(const Polyline& polyline, uint layer_number, Distance minDist);
 
     //! \brief Computes the perturbation of the point after the current optimization scheme is run
     //! \param polyline: The polyline to select candidates for perturbation

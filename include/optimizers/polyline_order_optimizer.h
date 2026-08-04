@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
@@ -63,6 +65,9 @@ class PolylineOrderOptimizer {
     void setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
                             Distance minDistanceThreshold, Distance consecutiveThreshold, bool randomnessEnable,
                             Distance randomnessRadius, bool enableSegmentBreaking);
+
+    //! \brief Sets the previous layer's physical start point for consecutive point ordering.
+    void setConsecutiveReferencePoint(const std::optional<Point>& point);
 
     //! \brief Gets remaining Polylines
     //! \return current Polylines remaining
@@ -215,6 +220,9 @@ class PolylineOrderOptimizer {
 
     //! \brief Override location to use for linking instead of current location (Polyline and point optimizer)
     Point m_override_location, m_point_override_location;
+
+    //! \brief Previous layer's physical start point for consecutive point ordering.
+    std::optional<Point> m_consecutive_reference_point;
 
     //! \brief Current region type for Polyline. Determines which version of link is called
     RegionType m_current_region_type;

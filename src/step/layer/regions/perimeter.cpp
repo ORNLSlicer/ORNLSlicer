@@ -345,7 +345,7 @@ bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double to
 
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
                      const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
-    : RegionBase(sb, index, settings_polygons, uncut_geometry) {}
+    : RegionBase(sb, index, settings_polygons, uncut_geometry, RegionType::kPerimeter) {}
 
 QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
@@ -513,6 +513,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                                      getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                                      getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                                      getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+        optimizer.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
     };
 
     PolylineOrderOptimizer poo(current_location, layerNumber);

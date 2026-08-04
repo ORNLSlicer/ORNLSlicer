@@ -70,7 +70,7 @@ PolygonList futurePerimeterSupport(const PolygonList& current_geometry, const Po
 } // namespace
 
 Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, index, settings_polygons) {
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kSkin) {
     // NOP
 }
 
@@ -272,6 +272,7 @@ void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                            getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                            getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     m_paths.clear();
     bool supportsG3 = m_sb->setting<bool>(PRS::MachineSetup::kSupportG3);

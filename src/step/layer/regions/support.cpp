@@ -24,7 +24,7 @@
 
 namespace ORNL {
 Support::Support(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kSupport) {
     // NOP
 }
 
@@ -158,6 +158,7 @@ void Support::optimize(int layerNumber, Point& current_location, bool& shouldNex
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
                            getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
                            getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     m_paths.clear();
 
