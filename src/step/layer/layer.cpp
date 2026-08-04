@@ -9,6 +9,7 @@
 #include <qhash.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
+#include <qlogging.h>
 #include <qquaternion.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
@@ -168,7 +169,8 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
     m_island_order.clear();
 
     for (QSharedPointer<IslandBase> island : m_islands) {
-        island->setOptimizationFrame(m_slicing_plane, m_shift_amount);
+        if (!island.isNull())
+            island->setOptimizationFrame(m_slicing_plane, m_shift_amount);
     }
 
     // Optimize the layer.
@@ -238,6 +240,12 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
 
         while (islandSet.size() > 0) {
             int index = ioo.computeNextIndex();
+            if (index < 0 || index >= islandSet.size()) {
+                qWarning() << "Skipping invalid layer island optimizer index" << index << "for" << islandSet.size()
+                           << "islands";
+                break;
+            }
+
             QSharedPointer<IslandBase> currentIsland = islandSet[index];
 
             if (!alreadyVisited.contains(currentIsland)) {
@@ -251,6 +259,12 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
 
                 while (childrenSet.size() > 0) {
                     int index = ioo.computeNextIndex();
+                    if (index < 0 || index >= childrenSet.size()) {
+                        qWarning() << "Skipping invalid layer child island optimizer index" << index << "for"
+                                   << childrenSet.size() << "islands";
+                        break;
+                    }
+
                     QSharedPointer<IslandBase> currentIsland = childrenSet[index];
                     currentIsland->optimize(m_layer_nr, start, previousRegions);
                     m_island_order.push_back(currentIsland);
@@ -268,6 +282,12 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
 
         while (currentIslands.size() > 0) {
             int index = ioo.computeNextIndex();
+            if (index < 0 || index >= currentIslands.size()) {
+                qWarning() << "Skipping invalid thermal-scan layer island optimizer index" << index << "for"
+                           << currentIslands.size() << "islands";
+                break;
+            }
+
             QSharedPointer<IslandBase> isl = currentIslands[index];
             currentIslands.removeAt(index);
             isl->optimize(m_layer_nr, start, previousRegions);
@@ -307,6 +327,10 @@ Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSha
             for (int i = 0; i < children_size; ++i) {
                 QList<QSharedPointer<IslandBase>> islandSet = children[i];
                 for (QSharedPointer<IslandBase> isl : islandSet) {
+                    if (brim.isNull() || isl.isNull() || brim->getGeometry().isEmpty() ||
+                        isl->getGeometry().isEmpty() || isl->getGeometry().first().isEmpty())
+                        continue;
+
                     if (brim->getGeometry().first().inside(isl->getGeometry().first().first())) {
                         result[i][brim].append(isl);
                     }

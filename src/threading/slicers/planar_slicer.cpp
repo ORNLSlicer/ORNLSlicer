@@ -34,6 +34,7 @@
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/runtime_diagnostics.h"
 
 namespace ORNL {
 
@@ -908,7 +909,13 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
 }
 
 void PlanarSlicer::postProcess(nlohmann::json opt_data) {
-    if (anythingDirty()) {
+    const bool dirty = anythingDirty();
+    Diagnostics::logLine(QString("Planar postprocess starting dirty=%1 global_layers=%2")
+                             .arg(dirty ? QStringLiteral("true") : QStringLiteral("false"))
+                             .arg(m_global_layers.size()));
+    emit statusUpdate(StatusUpdateStepType::kPostProcess, 0);
+
+    if (dirty) {
         QSharedPointer<SettingsBase> global_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
         global_sb->makeGlobalAdjustments();
 
@@ -919,6 +926,27 @@ void PlanarSlicer::postProcess(nlohmann::json opt_data) {
         QVector<QSharedPointer<RegionBase>> previous_regions;
 
         for (int g_layer_num = 0, max_layers = m_global_layers.size(); g_layer_num < max_layers; ++g_layer_num) {
+            auto islands = m_global_layers[g_layer_num]->getIslands();
+            int region_count = 0;
+            int path_count = 0;
+            for (const auto& island : islands) {
+                if (island.isNull())
+                    continue;
+
+                const auto regions = island->getRegions();
+                region_count += regions.size();
+                for (const auto& region : regions) {
+                    if (!region.isNull())
+                        path_count += region->getPaths().size();
+                }
+            }
+            Diagnostics::logLine(QString("Planar postprocess layer %1/%2 islands=%3 regions=%4 paths=%5")
+                                     .arg(g_layer_num + 1)
+                                     .arg(max_layers)
+                                     .arg(islands.size())
+                                     .arg(region_count)
+                                     .arg(path_count));
+
             m_global_layers[g_layer_num]->unorient();
 
             // current_point, start_index, & previous_regions are updated during method execution
@@ -937,6 +965,8 @@ void PlanarSlicer::postProcess(nlohmann::json opt_data) {
     else {
         emit statusUpdate(StatusUpdateStepType::kPostProcess, 100); // Mark layerbar as done
     }
+
+    Diagnostics::logLine(QStringLiteral("Planar postprocess finished"));
 }
 
 void PlanarSlicer::writeGCode() {

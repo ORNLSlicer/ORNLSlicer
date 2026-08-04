@@ -27,8 +27,10 @@
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "utilities/runtime_diagnostics.h"
 #include "windows/main_window.h"
 
 int main(int argc, char* argv[]) {
@@ -80,6 +82,7 @@ int main(int argc, char* argv[]) {
         bool setupResult = clc.convertOptions(parser, options);
 
         if (setupResult) {
+            ORNL::Diagnostics::logRuntimeSummary(QStringLiteral("cli"));
             ORNL::MainControl* control = new ORNL::MainControl(options);
             QObject::connect(control, &ORNL::MainControl::finished, &ca, &QCoreApplication::quit, Qt::QueuedConnection);
 
@@ -89,7 +92,7 @@ int main(int argc, char* argv[]) {
             delete control;
             return ret;
         }
-        return 1;
+        return parser.isSet(ORNL::Constants::ConsoleOptionStrings::kVersion) ? 0 : 1;
     }
     else {
         QApplication a(argc, argv);
@@ -99,6 +102,7 @@ int main(int argc, char* argv[]) {
         QApplication::setOrganizationName("ornl");
         QApplication::setApplicationVersion(QString::fromUtf8(ORNL::BuildInfo::Version));
         QApplication::setApplicationDisplayName(QString("ORNLSlicer-") + QString::fromUtf8(ORNL::BuildInfo::Version));
+        ORNL::Diagnostics::logRuntimeSummary(QStringLiteral("gui"));
 
         Q_INIT_RESOURCE(icons);
         Q_INIT_RESOURCE(shaders);

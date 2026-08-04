@@ -37,6 +37,7 @@
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "utilities/runtime_diagnostics.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
@@ -550,6 +551,7 @@ bool SessionManager::doSlice() {
 
 bool SessionManager::sliceComplete() {
 
+    Diagnostics::logLine(QString("SessionManager slice complete: %1").arg(tempGcodeFile));
     emit forwardSliceComplete(tempGcodeFile, true);
     return true;
 }

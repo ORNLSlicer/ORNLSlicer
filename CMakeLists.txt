@@ -26,6 +26,7 @@ set(CMAKE_AUTOUIC OFF)
 set(CMAKE_AUTORCC ON)
 
 include(build_info)
+set(ORNLSLICER_PACKAGE_TYPE "local" CACHE STRING "Package/distribution type reported in runtime diagnostics.")
 FetchBuildInfo()
 set(ORNLSLICER_BUILD_VERSION "${RESULT_VAR}")
 configure_file(
@@ -249,6 +250,31 @@ if(ORNLSLICER_BUILD_TESTS)
     )
     target_link_libraries(${PROJECT_NAME}_point_order_optimizer_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME point_order_optimizer_tests COMMAND ${PROJECT_NAME}_point_order_optimizer_tests)
+
+    add_executable(${PROJECT_NAME}_optimizer_empty_input_tests tests/optimizer_empty_input_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_optimizer_empty_input_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_optimizer_empty_input_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME optimizer_empty_input_tests COMMAND ${PROJECT_NAME}_optimizer_empty_input_tests)
+
+    set(ORNLSLICER_NEW_IMPACT_PROJECT "/home/rhc/develop/new-impact.s2p" CACHE FILEPATH
+        "Optional local project used for the new-impact planar slicing regression test.")
+    if(EXISTS "${ORNLSLICER_NEW_IMPACT_PROJECT}")
+        add_test(
+            NAME new_impact_project_regression
+            COMMAND
+                ${CMAKE_COMMAND}
+                -DORNLSLICER_EXECUTABLE=$<TARGET_FILE:${PROJECT_NAME}>
+                -DPROJECT_FILE=${ORNLSLICER_NEW_IMPACT_PROJECT}
+                -DOUTPUT_PREFIX=${CMAKE_CURRENT_BINARY_DIR}/Testing/new-impact-regression/new-impact
+                -P ${CMAKE_CURRENT_SOURCE_DIR}/tests/run_project_slice_regression.cmake
+        )
+    endif()
 endif()
 
 function(CreateSettingsTarget)
