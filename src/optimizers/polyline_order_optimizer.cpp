@@ -32,10 +32,16 @@ int PolylineOrderOptimizer::getCurrentPolylineCount() { return m_polylines.size(
 void PolylineOrderOptimizer::setGeometryToEvaluate(QVector<Polyline> polylines, RegionType type,
                                                    PathOrderOptimization optimization) {
     m_polylines = polylines;
+    for (int i = m_polylines.size() - 1; i >= 0; --i) {
+        if (m_polylines[i].size() < 2)
+            m_polylines.removeAt(i);
+    }
+
     m_current_region_type = type;
     m_optimization = optimization;
     m_has_computed_heirarchy = false;
     m_topo_level = 0;
+    m_topo_order.clear();
     m_open_path_selection_count = 0;
 }
 
@@ -159,6 +165,8 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
                 closestOpenPolyline({m_polylines.front(), m_polylines.back()}, temp_current_location);
             index = (endpoint_index == 0) ? 0 : (m_polylines.size() - 1);
         }
+        if (index < 0 || index >= m_polylines.size())
+            return new_polyline;
 
         // if false, indicates index is closest if you start at the end point, so reverse
         if (start == false) {
@@ -175,6 +183,8 @@ Polyline PolylineOrderOptimizer::linkNextInfillLines(QVector<Polyline>& polyline
         for (int i = 0, end = m_polylines.size(); i < end; ++i) {
             if (m_polylines.size() > 0) {
                 const auto& [index, start] = closestOpenPolyline(m_polylines, temp_current_location);
+                if (index < 0 || index >= m_polylines.size())
+                    break;
 
                 // if false, indicates index is closest if you start at the end point, so reverse
                 if (start == false) {
@@ -244,6 +254,8 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
     Polyline new_polyline;
     if (!m_polylines.isEmpty()) {
         const auto& [index, start] = closestOpenPolyline(m_polylines, m_current_location);
+        if (index < 0 || index >= m_polylines.size())
+            return new_polyline;
 
         new_polyline = m_polylines[index];
         if (!start) {
@@ -257,6 +269,9 @@ Polyline PolylineOrderOptimizer::linkNextSkeletonPolyline() {
         queryPoint = m_point_override_location;
     else
         queryPoint = m_current_location;
+
+    if (new_polyline.isEmpty())
+        return new_polyline;
 
     // If polyline is closed loop, apply point optimization strategies for a closed-loop path not a skeleton
     if (new_polyline.front() == new_polyline.back()) {
@@ -334,6 +349,9 @@ QPair<int, bool> PolylineOrderOptimizer::closestOpenPolyline(QVector<Polyline> p
 
 QPair<int, bool> PolylineOrderOptimizer::extremumOpenPolyline(QVector<Polyline> polylines, Point currentLocation,
                                                               bool closest) {
+    if (polylines.isEmpty())
+        return QPair<int, bool>(-1, true);
+
     Distance selected_distance;
 
     int index = 0;
@@ -362,6 +380,9 @@ QPair<int, bool> PolylineOrderOptimizer::extremumOpenPolyline(QVector<Polyline> 
 }
 
 QPair<int, bool> PolylineOrderOptimizer::orderedOpenPolyline(QVector<Polyline> polylines, Point currentLocation) {
+    if (polylines.isEmpty())
+        return QPair<int, bool>(-1, true);
+
     Point query_point = currentLocation;
     if (m_optimization == PathOrderOptimization::kCustomPoint && m_override_used)
         query_point = m_override_location;
@@ -427,6 +448,9 @@ void PolylineOrderOptimizer::applyPointOrderSelection(Polyline& polyline,
 }
 
 Polyline PolylineOrderOptimizer::linkTo() {
+    if (m_polylines.isEmpty())
+        return Polyline();
+
     int polylineIndex;
     switch (m_optimization) {
         case PathOrderOptimization::kNextClosest:
@@ -448,9 +472,13 @@ Polyline PolylineOrderOptimizer::linkTo() {
             polylineIndex = findShortestOrLongestDistance();
             break;
     }
+    if (polylineIndex < 0 || polylineIndex >= m_polylines.size())
+        return Polyline();
 
     Polyline nextPolyline = m_polylines[polylineIndex];
     m_polylines.removeAt(polylineIndex);
+    if (nextPolyline.size() < 2)
+        return Polyline();
 
     Point queryPoint;
     if (usesCustomPointLocation(m_point_optimization))
@@ -469,16 +497,21 @@ Polyline PolylineOrderOptimizer::linkTo() {
 }
 
 int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
+    if (m_polylines.isEmpty())
+        return -1;
+
     Point queryPoint;
     if (m_optimization == PathOrderOptimization::kCustomPoint && m_override_used)
         queryPoint = m_override_location;
     else
         queryPoint = m_current_location;
 
-    int polylineIndex;
+    int polylineIndex = -1;
     Distance closest;
     if (shortest)
         closest = Distance(DBL_MAX);
+    else
+        closest = Distance(0);
 
     for (int i = 0, end = m_polylines.size(); i < end; ++i) {
         if (m_polylines[i].size() < 2)
@@ -506,9 +539,17 @@ int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
     return polylineIndex;
 }
 
-int PolylineOrderOptimizer::linkToRandom() { return QRandomGenerator::global()->bounded(m_polylines.size()); }
+int PolylineOrderOptimizer::linkToRandom() {
+    if (m_polylines.isEmpty())
+        return -1;
+
+    return QRandomGenerator::global()->bounded(m_polylines.size());
+}
 
 int PolylineOrderOptimizer::findInteriorExterior(bool ExtToInt) {
+    if (m_polylines.isEmpty())
+        return -1;
+
     if (!m_has_computed_heirarchy && m_polylines.size() > 0) {
         QSharedPointer<TopologicalNode> root = computeTopologicalHeirarchy();
         // inOrderTraversal(root);
@@ -522,6 +563,9 @@ int PolylineOrderOptimizer::findInteriorExterior(bool ExtToInt) {
 
         m_has_computed_heirarchy = true;
     }
+
+    if (m_topo_order.isEmpty() || m_topo_order.first().isEmpty())
+        return findShortestOrLongestDistance();
 
     int result = m_topo_order.first().first();
     m_topo_order.first().pop_front();
@@ -540,8 +584,14 @@ QSharedPointer<PolylineOrderOptimizer::TopologicalNode> PolylineOrderOptimizer::
     QVector<QSharedPointer<TopologicalNode>> all_nodes;
     all_nodes.reserve(m_polylines.size());
 
-    for (int i = 0, end = m_polylines.size(); i < end; ++i)
+    for (int i = 0, end = m_polylines.size(); i < end; ++i) {
+        if (m_polylines[i].size() < 2)
+            continue;
+
         all_nodes.push_back(QSharedPointer<TopologicalNode>::create(TopologicalNode(i, m_polylines[i])));
+    }
+    if (all_nodes.isEmpty())
+        return QSharedPointer<TopologicalNode>();
 
     // assume first Polyline is outer contour
     QSharedPointer<TopologicalNode> root;
@@ -580,6 +630,9 @@ void PolylineOrderOptimizer::insert(QSharedPointer<TopologicalNode> root, QShare
 }
 
 void PolylineOrderOptimizer::levelOrder(QSharedPointer<TopologicalNode> root) {
+    if (root.isNull())
+        return;
+
     if (m_topo_order.size() == m_topo_level)
         m_topo_order.push_back({root->m_Polyline_index});
     else
@@ -596,6 +649,9 @@ void PolylineOrderOptimizer::levelOrder(QSharedPointer<TopologicalNode> root) {
 Polyline PolylineOrderOptimizer::linkSpiralPolyline2D(bool last_spiral, Distance layerHeight,
                                                       PointOrderOptimization pointOrder) {
     int polylineIndex = findShortestOrLongestDistance();
+    if (polylineIndex < 0 || polylineIndex >= m_polylines.size())
+        return Polyline();
+
     Polyline newPolyline = m_polylines[polylineIndex];
     m_polylines.removeAt(polylineIndex);
     auto pointSelection = PointOrderOptimizer::linkToPoint(m_current_location, newPolyline, m_layer_num,

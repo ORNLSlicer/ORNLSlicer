@@ -576,8 +576,28 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
     if (path_.isEmpty())
         return;
 
+    struct EdgeEndpoints {
+        SkeletonVertex source;
+        SkeletonVertex target;
+    };
+
+    auto sameUndirectedEdge = [](const EdgeEndpoints& lhs, const EdgeEndpoints& rhs) {
+        return (lhs.source == rhs.source && lhs.target == rhs.target) ||
+               (lhs.source == rhs.target && lhs.target == rhs.source);
+    };
+
+    auto trackEdge = [&sameUndirectedEdge](QVector<EdgeEndpoints>& edges, SkeletonVertex source,
+                                           SkeletonVertex target) {
+        EdgeEndpoints endpoints {source, target};
+        const auto duplicate = std::any_of(edges.cbegin(), edges.cend(), [&sameUndirectedEdge, &endpoints](const auto& edge) {
+            return sameUndirectedEdge(edge, endpoints);
+        });
+        if (!duplicate)
+            edges.push_back(endpoints);
+    };
+
     Polyline path;
-    QVector<SkeletonEdge> edges_to_remove;
+    QVector<EdgeEndpoints> edges_to_remove;
     QVector<SkeletonVertex> touched_vertices;
 
     auto trackVertex = [&touched_vertices](SkeletonVertex vertex) {
@@ -589,7 +609,7 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
     SkeletonVertex source = boost::source(e, m_skeleton_graph);
     SkeletonVertex target = boost::target(e, m_skeleton_graph);
     path << m_skeleton_graph[source] << m_skeleton_graph[target];
-    edges_to_remove.push_back(e);
+    trackEdge(edges_to_remove, source, target);
     trackVertex(source);
     trackVertex(target);
 
@@ -597,14 +617,17 @@ void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
         source = boost::source(e, m_skeleton_graph);
         target = boost::target(e, m_skeleton_graph);
         path << m_skeleton_graph[target];
-        edges_to_remove.push_back(e);
+        trackEdge(edges_to_remove, source, target);
         trackVertex(source);
         trackVertex(target);
     }
 
-    // Remove the exact collected edges after all path points have been copied, then prune isolated vertices.
-    for (const SkeletonEdge& edge : edges_to_remove) {
-        boost::remove_edge(edge, m_skeleton_graph);
+    // Re-resolve each edge before removal. A DFS path can contain the same undirected edge more than once; removing
+    // by a stale descriptor a second time corrupts Boost's list-backed edge container.
+    for (const EdgeEndpoints& edge : edges_to_remove) {
+        auto [edge_descriptor, found] = boost::edge(edge.source, edge.target, m_skeleton_graph);
+        if (found)
+            boost::remove_edge(edge_descriptor, m_skeleton_graph);
     }
 
     for (SkeletonVertex vertex : touched_vertices) {
