@@ -335,6 +335,10 @@ void SettingsVersionControl::formatSettings(double version, fifojson& settings) 
     settings = new_format;
 }
 
+void SettingsVersionControl::migrateLegacySettingKeys(fifojson& settings_group) {
+    migrateSlicingSettingKeys(settings_group);
+}
+
 void SettingsVersionControl::pre_1_0To1_0(double& version, fifojson& settings) {
     QString dt = QDateTime::currentDateTime().toString();
     fifojson new_format;

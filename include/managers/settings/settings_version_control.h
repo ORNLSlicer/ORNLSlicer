@@ -20,6 +20,10 @@ class SettingsVersionControl {
     //! \param settings: settings to modify
     static void formatSettings(double version, fifojson& settings);
 
+    //! \brief Migrate known legacy setting keys to their current names without changing values
+    //! \param settings_group: a single settings object to modify
+    static void migrateLegacySettingKeys(fifojson& settings_group);
+
   private:
     //! \brief Rolls initial settings templates without a version to version 1.0
     //! \param version: current version in settings file

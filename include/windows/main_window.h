@@ -162,6 +162,9 @@ class MainWindow : public QMainWindow {
     //! \brief Load a template.
     void loadTemplate();
 
+    //! \brief Create and load an S2C settings file from a G-Code settings footer.
+    void convertGcodeToS2C();
+
     //! \brief Set setting folder to load from.
     void setSettingFolder();
 
@@ -238,6 +241,9 @@ class MainWindow : public QMainWindow {
 
     //! \brief Check whether the project has unsaved changes.
     bool hasUnsavedProjectChanges();
+
+    //! \brief Load a template file from a known path.
+    void loadTemplateFile(const QString& filename);
 
   private:
     //! \brief Struct to retain action information efficiently.

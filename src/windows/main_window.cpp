@@ -72,6 +72,7 @@
 #include "windows/dialogs/template_save.h"
 #include "windows/flowratecalc.h"
 #include "windows/gcode_export.h"
+#include "windows/gcode_to_s2c.h"
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
 #include "windows/xtrudecalc.h"
@@ -550,6 +551,7 @@ void MainWindow::setupActions() {
                                   QKeySequence(tr("Ctrl+t")), nullptr};
     m_actions["template_save"] = {"Save as Template", ":/icons/settings_save_black.png", false,
                                   QKeySequence(tr("Ctrl+Shift+t")), nullptr};
+    m_actions["gcode_to_s2c"] = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
     m_actions["setting_folder"] = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
                                    QKeySequence(), nullptr};
     m_actions["layer_bar_setting_folder"] = {"Additional Layer Bar Setting Location",
@@ -676,6 +678,7 @@ void MainWindow::setupActions() {
     // Settings
     m_menu_settings->addAction(m_actions["template_load"].action);
     m_menu_settings->addAction(m_actions["template_save"].action);
+    m_menu_settings->addAction(m_actions["gcode_to_s2c"].action);
     m_menu_settings->addSeparator();
     m_menu_settings->addAction(m_actions["setting_folder"].action);
     m_menu_settings->addAction(m_actions["layer_bar_setting_folder"].action);
@@ -862,6 +865,7 @@ void MainWindow::setupEvents() {
 
     connect(m_actions["template_load"].action, &QAction::triggered, this, &MainWindow::loadTemplate);
     connect(m_actions["template_save"].action, &QAction::triggered, this, &MainWindow::saveTemplate);
+    connect(m_actions["gcode_to_s2c"].action, &QAction::triggered, this, &MainWindow::convertGcodeToS2C);
     connect(m_actions["setting_folder"].action, &QAction::triggered, this, &MainWindow::setSettingFolder);
     connect(m_actions["layer_bar_setting_folder"].action, &QAction::triggered, this,
             &MainWindow::setLayerBarSettingFolder);
@@ -1711,8 +1715,14 @@ void MainWindow::loadTemplate() {
     if (filename.isEmpty())
         return;
 
-    GSM->loadGlobalJson(filename);
+    loadTemplateFile(filename);
+}
 
+void MainWindow::loadTemplateFile(const QString& filename) {
+    if (filename.isEmpty())
+        return;
+
+    GSM->loadGlobalJson(filename);
     QFileInfo fileInfo(filename);
     QString actualFilename = fileInfo.completeBaseName();
     QStringList tabs {Constants::Settings::SettingTab::kPrinter, Constants::Settings::SettingTab::kMaterial,
@@ -1728,6 +1738,14 @@ void MainWindow::loadTemplate() {
     }
     m_settingbar->displayNewSetting(tabs, actualFilename);
     markProjectModified();
+}
+
+void MainWindow::convertGcodeToS2C() {
+    GcodeToS2CDialog dialog(this);
+    if (!dialog.exec())
+        return;
+
+    loadTemplateFile(dialog.outputFilePath());
 }
 
 void MainWindow::setSettingFolder() {
