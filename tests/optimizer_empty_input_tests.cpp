@@ -10,10 +10,12 @@
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polyline.h"
+#include "geometry/segments/line.h"
 #include "optimizers/island_order_optimizer.h"
 #include "optimizers/path_order_optimizer.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/island/island_base.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace {
@@ -42,6 +44,22 @@ int main() {
     passed &= expect(path_optimizer.getCurrentPathCount() == 0, "Expected empty paths to be filtered.");
     passed &= expect(path_optimizer.linkNextPath().size() == 0, "Expected empty path optimizer result.");
 
+    settings->setSetting(ORNL::PS::Optimizations::kPathOrder,
+                         static_cast<int>(ORNL::PathOrderOptimization::kNextFarthest));
+    settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                         static_cast<int>(ORNL::PointOrderOptimization::kNextClosest));
+    settings->setSetting(ORNL::PS::Optimizations::kMinDistanceEnabled, false);
+    settings->setSetting(ORNL::PS::Optimizations::kLocalRandomnessEnable, false);
+
+    ORNL::Path zero_distance_path;
+    zero_distance_path.append(QSharedPointer<ORNL::LineSegment>::create(start, start));
+    ORNL::PathOrderOptimizer farthest_path_optimizer(start, 0, settings);
+    farthest_path_optimizer.setPathsToEvaluate({zero_distance_path});
+    passed &= expect(farthest_path_optimizer.linkNextPath().size() > 0,
+                     "Expected farthest path optimizer to consume a zero-distance path.");
+    passed &= expect(farthest_path_optimizer.getCurrentPathCount() == 0,
+                     "Expected farthest path optimizer to make progress.");
+
     ORNL::PolylineOrderOptimizer polyline_optimizer(start, 0);
     ORNL::Polyline one_point_polyline;
     one_point_polyline.append(ORNL::Point(1.0f, 0.0f, 0.0f));
@@ -52,6 +70,19 @@ int main() {
                                              ORNL::PathOrderOptimization::kNextClosest);
     passed &= expect(polyline_optimizer.getCurrentPolylineCount() == 0, "Expected degenerate polylines to be filtered.");
     passed &= expect(polyline_optimizer.linkNextPolyline().isEmpty(), "Expected empty polyline optimizer result.");
+
+    ORNL::Polyline zero_distance_polyline;
+    zero_distance_polyline.append(start);
+    zero_distance_polyline.append(start);
+    ORNL::PolylineOrderOptimizer farthest_polyline_optimizer(start, 0);
+    farthest_polyline_optimizer.setPointParameters(ORNL::PointOrderOptimization::kNextClosest, false, ORNL::Distance(),
+                                                   ORNL::Distance(), false, ORNL::Distance(), false);
+    farthest_polyline_optimizer.setGeometryToEvaluate({zero_distance_polyline}, ORNL::RegionType::kInset,
+                                                      ORNL::PathOrderOptimization::kNextFarthest);
+    passed &= expect(!farthest_polyline_optimizer.linkNextPolyline().isEmpty(),
+                     "Expected farthest polyline optimizer to consume a zero-distance polyline.");
+    passed &= expect(farthest_polyline_optimizer.getCurrentPolylineCount() == 0,
+                     "Expected farthest polyline optimizer to make progress.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
