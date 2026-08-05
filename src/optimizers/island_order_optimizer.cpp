@@ -61,6 +61,9 @@ int IslandBaseOrderOptimizer::getLastIslandBaseVisited() { return m_last_island_
 int IslandBaseOrderOptimizer::getFirstIndexSelected() { return m_first_index; }
 
 int IslandBaseOrderOptimizer::computeNextIndex() {
+    if (m_island_list.isEmpty())
+        return -1;
+
     //! \note No need to optimize if we only have a single island
     if (m_island_list.size() < 2)
         return 0;
@@ -103,6 +106,9 @@ int IslandBaseOrderOptimizer::computeNextIndex() {
             break;
     }
 
+    if (index < 0 || index >= m_island_list.size())
+        return -1;
+
     m_island_list.removeAt(index);
 
     return index;
@@ -112,9 +118,15 @@ QList<QUuid> IslandBaseOrderOptimizer::computePartOrder() {
     QList<QUuid> result;
 
     while (m_part_island_list.size() > 0) {
+        if (m_island_list.isEmpty())
+            break;
+
         // make a copy of the island list to get reference to island from result of computeNext()
         QList<QSharedPointer<IslandBase>> islandSave = m_island_list;
         int index = computeNextIndex();
+        if (index < 0 || index >= islandSave.size())
+            break;
+
         QSharedPointer<IslandBase> next_island = islandSave[index];
 
         // The next part is the one who owns the next island. Save the next part to the results list
@@ -163,11 +175,16 @@ int IslandBaseOrderOptimizer::computeLeastRecentlyVisited() {
 
 int IslandBaseOrderOptimizer::extremumIslandBase(Point start_point, bool closest) {
     Distance start_point_distance = closest ? Distance(std::numeric_limits<float>::max()) : Distance(0);
-    int extremum_island_index = 0;
+    int extremum_island_index = -1;
     for (int i = 0, end = m_island_list.size(); i < end; ++i) {
         QSharedPointer<IslandBase> isl = m_island_list[i];
+        if (isl.isNull() || isl->getGeometry().isEmpty())
+            continue;
 
         Polygon polygon = isl->getGeometry()[0];
+        if (polygon.isEmpty())
+            continue;
+
         for (Point point : polygon) {
             Distance dis = point.distance(start_point);
             if (closest) {
@@ -205,8 +222,8 @@ int IslandBaseOrderOptimizer::computeExtremumDistance(bool shortest) {
         m_tsp_result = tsp.getOptimizedIslandBases();
     }
 
-    if (m_tsp_result.size() <= 0)
-        return 0;
+    if (first_island_index < 0 || m_tsp_result.size() <= 0)
+        return -1;
 
     for (int i = 0, end = m_island_list.size(); i < end; ++i) {
 
@@ -215,7 +232,7 @@ int IslandBaseOrderOptimizer::computeExtremumDistance(bool shortest) {
             return i;
         }
     }
-    return 0;
+    return -1;
 }
 
 void IslandBaseOrderOptimizer::removeValue(QVector<int>& index_list, int value) {
@@ -241,8 +258,13 @@ int IslandBaseOrderOptimizer::computeNextFarthest() {
 int IslandBaseOrderOptimizer::computeApproximate() {
     QVector<Point> center_list;
     for (QSharedPointer<IslandBase>& island : m_island_list) {
+        if (island.isNull() || island.data()->getGeometry().isEmpty())
+            continue;
+
         center_list += island.data()->getGeometry()[0].boundingRectCenter();
     }
+    if (center_list.size() != m_island_list.size())
+        return computeNextClosest();
 
     //! \note Find the minimal spanning tree, represented with an adjacency matrix
     QVector<QVector<int>> minimal_spanning_tree = minimalSpanningTree(center_list);

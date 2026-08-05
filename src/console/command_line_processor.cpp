@@ -15,6 +15,7 @@
 #include "ornlslicer/build_info.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/runtime_diagnostics.h"
 
 namespace ORNL {
 namespace {
@@ -113,7 +114,7 @@ void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
 
 bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSharedPointer<SettingsBase> options) {
     if (parser.isSet(Constants::ConsoleOptionStrings::kVersion)) {
-        qInfo() << QString::fromUtf8(ORNL::BuildInfo::Version);
+        Diagnostics::logRuntimeSummary(QStringLiteral("cli-version"));
         return false;
     }
 

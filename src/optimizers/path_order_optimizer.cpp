@@ -1,7 +1,6 @@
 #include "optimizers/path_order_optimizer.h"
 
 #include <algorithm>
-#include <cfloat>
 #include <cmath>
 #include <limits>
 
@@ -42,13 +41,19 @@ void PathOrderOptimizer::setPathsToEvaluate(QVector<Path> paths) {
     for (Path& path : m_paths)
         path.removeTravels();
 
-    if (paths.size() > 0)
-        m_current_region_type = paths.front().getSegments().front()->getSb()->setting<RegionType>(SS::kRegionType);
+    for (int i = m_paths.size() - 1; i >= 0; --i) {
+        if (m_paths[i].size() == 0)
+            m_paths.removeAt(i);
+    }
+
+    if (m_paths.size() > 0 && !m_paths.front().getSegments().front().isNull())
+        m_current_region_type = m_paths.front().getSegments().front()->getSb()->setting<RegionType>(SS::kRegionType);
     else
         m_current_region_type = RegionType::kUnknown;
 
     m_has_computed_heirarchy = false;
     m_topo_level = 0;
+    m_topo_order.clear();
 }
 
 void PathOrderOptimizer::setParameters(InfillPatterns infillPattern, PolygonList border_geometry) {
@@ -119,6 +124,11 @@ Path PathOrderOptimizer::linkNextInfillPath(QVector<Path>& paths) {
             break;
     }
 
+    if (nextPath.size() == 0) {
+        m_current_location = savedLocation;
+        return nextPath;
+    }
+
     Distance minDist;
     if (nextPath.back()->getSb()->setting<RegionType>(SS::kRegionType) == RegionType::kInfill)
         minDist = m_sb->setting<Distance>(PS::Infill::kMinPathLength);
@@ -138,6 +148,9 @@ Path PathOrderOptimizer::linkNextInfillPath(QVector<Path>& paths) {
 }
 
 Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths) {
+    if (m_paths.isEmpty())
+        return Path();
+
     //! Gather settings for line segment links
     Distance bead_width = m_paths.front().front()->getSb()->setting<Distance>(SS::kWidth);
     Distance layer_height = m_paths.front().front()->getSb()->setting<Distance>(SS::kHeight);
@@ -148,6 +161,8 @@ Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths) {
     Path new_path;
     QPair<int, bool> indexAndStart = closestOpenPath(m_paths);
     int index = indexAndStart.first;
+    if (index < 0 || index >= m_paths.size())
+        return Path();
 
     // if false, indicates index is closest if you start at the end point, so reverse
     if (indexAndStart.second == false)
@@ -175,6 +190,9 @@ Path PathOrderOptimizer::linkNextInfillLines(QVector<Path>& paths) {
             if (m_paths.size() > 0) {
                 indexAndStart = closestOpenPath(m_paths);
                 index = indexAndStart.first;
+                if (index < 0 || index >= m_paths.size())
+                    break;
+
                 // if false, indicates index is closest if you start at the end point, so reverse
                 if (indexAndStart.second == false)
                     m_paths[index].reverseSegments();
@@ -238,6 +256,8 @@ Path PathOrderOptimizer::linkNextSkeletonPath() {
         QPair<int, bool> location = closestOpenPath(m_paths);
         int index = location.first;
         bool start = location.second;
+        if (index < 0 || index >= m_paths.size())
+            return new_path;
 
         new_path.setCCW(m_paths[index].getCCW());
 
@@ -282,6 +302,8 @@ Path PathOrderOptimizer::linkNextRadialPath(const Point& center) {
     QPair<int, bool> location = radialOpenPath(center);
     int index = location.first;
     bool start = location.second;
+    if (index < 0 || index >= m_paths.size())
+        return new_path;
 
     new_path.setCCW(m_paths[index].getCCW());
 
@@ -312,6 +334,9 @@ Path PathOrderOptimizer::linkNextRadialPath(const Point& center) {
 }
 
 QPair<int, bool> PathOrderOptimizer::radialOpenPath(const Point& center) {
+    if (m_paths.isEmpty())
+        return QPair<int, bool>(-1, true);
+
     PathOrderOptimization path_order =
         static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder));
     Point query_point = radialPathQueryPoint(path_order);
@@ -469,10 +494,14 @@ bool PathOrderOptimizer::linkIntersects(Point link_start, Point link_end, QVecto
 }
 
 QPair<int, bool> PathOrderOptimizer::closestOpenPath(QVector<Path> paths) {
+    if (paths.isEmpty())
+        return QPair<int, bool>(-1, true);
+
     Distance shortest = Distance(std::numeric_limits<float>::max());
 
     int index = 0;
-    bool start;
+    bool start = true;
+    bool found_path = false;
 
     Point queryPoint;
     if (m_override_used)
@@ -481,18 +510,26 @@ QPair<int, bool> PathOrderOptimizer::closestOpenPath(QVector<Path> paths) {
         queryPoint = m_current_location;
 
     for (int i = 0, end = paths.size(); i < end; ++i) {
+        if (paths[i].size() == 0)
+            continue;
+
         if (queryPoint.distance(paths[i].front()->start()) < shortest) {
             shortest = queryPoint.distance(paths[i].front()->start());
             index = i;
             start = true;
+            found_path = true;
         }
 
         if (queryPoint.distance(paths[i].back()->end()) < shortest) {
             shortest = queryPoint.distance(paths[i].back()->end());
             index = i;
             start = false;
+            found_path = true;
         }
     }
+    if (!found_path)
+        return QPair<int, bool>(-1, true);
+
     return QPair<int, bool>(index, start);
 }
 
@@ -510,6 +547,9 @@ void PathOrderOptimizer::addTravel(int index, Path& path) {
 }
 
 Path PathOrderOptimizer::linkTo() {
+    if (m_paths.isEmpty())
+        return Path();
+
     int pathIndex;
     PathOrderOptimization orderOptimization =
         static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder));
@@ -533,9 +573,13 @@ Path PathOrderOptimizer::linkTo() {
             pathIndex = findShortestOrLongestDistance();
             break;
     }
+    if (pathIndex < 0 || pathIndex >= m_paths.size())
+        return Path();
 
     Path nextPath = m_paths[pathIndex];
     m_paths.removeAt(pathIndex);
+    if (nextPath.size() == 0)
+        return Path();
 
     Point queryPoint;
     PointOrderOptimization pointOrderOptimization =
@@ -566,32 +610,29 @@ Path PathOrderOptimizer::linkTo() {
 }
 
 int PathOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
+    if (m_paths.isEmpty())
+        return -1;
+
     Point queryPoint;
     if (m_override_used)
         queryPoint = m_override_location;
     else
         queryPoint = m_current_location;
 
-    int pathIndex;
-    Distance closest;
-    if (shortest)
-        closest = Distance(DBL_MAX);
+    int pathIndex = -1;
+    Distance selected_distance;
 
     for (int i = 0, end = m_paths.size(); i < end; ++i) {
         for (int j = 0, end2 = m_paths[i].size(); j < end2; ++j) {
             QSharedPointer<SegmentBase> seg = m_paths[i][j];
+            if (seg.isNull())
+                continue;
+
             Distance closestSegment = MathUtils::distanceFromLineSegSqrd(queryPoint, seg->start(), seg->end());
-            if (shortest) {
-                if (closestSegment < closest) {
-                    closest = closestSegment;
-                    pathIndex = i;
-                }
-            }
-            else {
-                if (closestSegment > closest) {
-                    closest = closestSegment;
-                    pathIndex = i;
-                }
+            if (pathIndex < 0 || (shortest && closestSegment < selected_distance) ||
+                (!shortest && closestSegment > selected_distance)) {
+                selected_distance = closestSegment;
+                pathIndex = i;
             }
         }
     }
@@ -599,9 +640,17 @@ int PathOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
     return pathIndex;
 }
 
-int PathOrderOptimizer::linkToRandom() { return QRandomGenerator::global()->bounded(m_paths.size()); }
+int PathOrderOptimizer::linkToRandom() {
+    if (m_paths.isEmpty())
+        return -1;
+
+    return QRandomGenerator::global()->bounded(m_paths.size());
+}
 
 int PathOrderOptimizer::findInteriorExterior(bool ExtToInt) {
+    if (m_paths.isEmpty())
+        return -1;
+
     if (!m_has_computed_heirarchy && m_paths.size() > 0) {
         QSharedPointer<TopologicalNode> root = computeTopologicalHeirarchy();
         // inOrderTraversal(root);
@@ -611,6 +660,9 @@ int PathOrderOptimizer::findInteriorExterior(bool ExtToInt) {
 
         m_has_computed_heirarchy = true;
     }
+
+    if (m_topo_order.isEmpty() || m_topo_order.first().isEmpty())
+        return findShortestOrLongestDistance();
 
     int result = m_topo_order.first().first();
     m_topo_order.first().pop_front();
@@ -630,13 +682,19 @@ QSharedPointer<PathOrderOptimizer::TopologicalNode> PathOrderOptimizer::computeT
     all_nodes.reserve(m_paths.size());
 
     for (int i = 0, end = m_paths.size(); i < end; ++i) {
+        if (m_paths[i].size() == 0)
+            continue;
+
         Polygon poly;
         poly.reserve(m_paths[i].size());
         for (QSharedPointer<SegmentBase> seg : m_paths[i].getSegments())
             poly.push_back(Point(seg->start()));
 
-        all_nodes.push_back(QSharedPointer<TopologicalNode>::create(TopologicalNode(i, poly)));
+        if (!poly.isEmpty())
+            all_nodes.push_back(QSharedPointer<TopologicalNode>::create(TopologicalNode(i, poly)));
     }
+    if (all_nodes.isEmpty())
+        return QSharedPointer<TopologicalNode>();
 
     // assume first path is outer contour
     QSharedPointer<TopologicalNode> root;
@@ -675,6 +733,9 @@ void PathOrderOptimizer::insert(QSharedPointer<TopologicalNode> root, QSharedPoi
 }
 
 void PathOrderOptimizer::levelOrder(QSharedPointer<TopologicalNode> root) {
+    if (root.isNull())
+        return;
+
     if (m_topo_order.size() == m_topo_level)
         m_topo_order.push_back({root->m_path_index});
     else
@@ -690,6 +751,9 @@ void PathOrderOptimizer::levelOrder(QSharedPointer<TopologicalNode> root) {
 
 Path PathOrderOptimizer::linkSpiralPath2D(bool last_spiral) {
     int pathIndex = findShortestOrLongestDistance();
+    if (pathIndex < 0 || pathIndex >= m_paths.size())
+        return Path();
+
     Path newPath = m_paths[pathIndex];
     m_paths.removeAt(pathIndex);
 
