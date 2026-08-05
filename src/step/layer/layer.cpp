@@ -313,7 +313,17 @@ Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSha
         result.append(QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>());
     }
 
-    if (parent.size() == 0) {
+    auto hasSequenceGeometry = [](const QSharedPointer<IslandBase>& island) {
+        return !island.isNull() && !island->getGeometry().isEmpty() && !island->getGeometry().first().isEmpty();
+    };
+
+    QList<QSharedPointer<IslandBase>> validParent;
+    for (const QSharedPointer<IslandBase>& brim : parent) {
+        if (hasSequenceGeometry(brim))
+            validParent.append(brim);
+    }
+
+    if (validParent.size() == 0) {
         for (int i = 0; i < children_size; ++i) {
             QList<QSharedPointer<IslandBase>> islandSet = children[i];
 
@@ -323,12 +333,11 @@ Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSha
         }
     }
     else {
-        for (QSharedPointer<IslandBase> brim : parent) {
+        for (QSharedPointer<IslandBase> brim : validParent) {
             for (int i = 0; i < children_size; ++i) {
                 QList<QSharedPointer<IslandBase>> islandSet = children[i];
                 for (QSharedPointer<IslandBase> isl : islandSet) {
-                    if (brim.isNull() || isl.isNull() || brim->getGeometry().isEmpty() ||
-                        isl->getGeometry().isEmpty() || isl->getGeometry().first().isEmpty())
+                    if (!hasSequenceGeometry(isl))
                         continue;
 
                     if (brim->getGeometry().first().inside(isl->getGeometry().first().first())) {

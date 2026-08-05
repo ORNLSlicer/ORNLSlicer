@@ -1,7 +1,6 @@
 #include "optimizers/polyline_order_optimizer.h"
 
 #include <algorithm>
-#include <cfloat>
 #include <tuple>
 
 #include <QRandomGenerator>
@@ -507,11 +506,7 @@ int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
         queryPoint = m_current_location;
 
     int polylineIndex = -1;
-    Distance closest;
-    if (shortest)
-        closest = Distance(DBL_MAX);
-    else
-        closest = Distance(0);
+    Distance selected_distance;
 
     for (int i = 0, end = m_polylines.size(); i < end; ++i) {
         if (m_polylines[i].size() < 2)
@@ -521,17 +516,10 @@ int PolylineOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
             int next_index = (j + 1) % m_polylines[i].size();
             Distance closestSegment =
                 MathUtils::distanceFromLineSegSqrd(queryPoint, m_polylines[i][j], m_polylines[i][next_index]);
-            if (shortest) {
-                if (closestSegment < closest) {
-                    closest = closestSegment;
-                    polylineIndex = i;
-                }
-            }
-            else {
-                if (closestSegment > closest) {
-                    closest = closestSegment;
-                    polylineIndex = i;
-                }
+            if (polylineIndex < 0 || (shortest && closestSegment < selected_distance) ||
+                (!shortest && closestSegment > selected_distance)) {
+                selected_distance = closestSegment;
+                polylineIndex = i;
             }
         }
     }

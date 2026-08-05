@@ -88,7 +88,7 @@ void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, Poi
             QList<QSharedPointer<RegionBase>> regions = lastIsland->getRegions();
             QSharedPointer<RegionBase> lastRegion = regions.back();
             if (!lastRegion.isNull() && !lastRegion->getPaths().isEmpty() && lastRegion->getPaths().back().size() > 0) {
-                Path finalPath = lastRegion->getPaths().back();
+                Path& finalPath = lastRegion->getPaths().back();
 
                 if (finalPath.back()->getSb()->setting<PathModifiers>(SS::kPathModifiers) !=
                     PathModifiers::kSpiralLift) {
@@ -345,7 +345,17 @@ GlobalLayer::createSequence(QList<QSharedPointer<IslandBase>> parent,
     result.reserve(children_size);
     for (int i = 0; i < children_size; ++i)
         result.append(QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>());
-    if (parent.size() == 0) {
+    auto hasSequenceGeometry = [](const QSharedPointer<IslandBase>& island) {
+        return !island.isNull() && !island->getGeometry().isEmpty() && !island->getGeometry().first().isEmpty();
+    };
+
+    QList<QSharedPointer<IslandBase>> valid_parent;
+    for (const QSharedPointer<IslandBase>& brim : parent) {
+        if (hasSequenceGeometry(brim))
+            valid_parent.append(brim);
+    }
+
+    if (valid_parent.size() == 0) {
         for (int i = 0; i < children_size; ++i) {
             QList<QSharedPointer<IslandBase>> islandSet = children[i];
             for (QSharedPointer<IslandBase> isl : islandSet)
@@ -353,12 +363,11 @@ GlobalLayer::createSequence(QList<QSharedPointer<IslandBase>> parent,
         }
     }
     else {
-        for (QSharedPointer<IslandBase> brim : parent) {
+        for (QSharedPointer<IslandBase> brim : valid_parent) {
             for (int i = 0; i < children_size; ++i) {
                 QList<QSharedPointer<IslandBase>> islandSet = children[i];
                 for (QSharedPointer<IslandBase> isl : islandSet) {
-                    if (brim.isNull() || isl.isNull() || brim->getGeometry().isEmpty() ||
-                        isl->getGeometry().isEmpty() || isl->getGeometry().first().isEmpty())
+                    if (!hasSequenceGeometry(isl))
                         continue;
 
                     if (brim->getGeometry().first().inside(isl->getGeometry().first().first())) {

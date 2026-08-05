@@ -1,7 +1,6 @@
 #include "optimizers/path_order_optimizer.h"
 
 #include <algorithm>
-#include <cfloat>
 #include <cmath>
 #include <limits>
 
@@ -621,11 +620,7 @@ int PathOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
         queryPoint = m_current_location;
 
     int pathIndex = -1;
-    Distance closest;
-    if (shortest)
-        closest = Distance(DBL_MAX);
-    else
-        closest = Distance(0);
+    Distance selected_distance;
 
     for (int i = 0, end = m_paths.size(); i < end; ++i) {
         for (int j = 0, end2 = m_paths[i].size(); j < end2; ++j) {
@@ -634,17 +629,10 @@ int PathOrderOptimizer::findShortestOrLongestDistance(bool shortest) {
                 continue;
 
             Distance closestSegment = MathUtils::distanceFromLineSegSqrd(queryPoint, seg->start(), seg->end());
-            if (shortest) {
-                if (closestSegment < closest) {
-                    closest = closestSegment;
-                    pathIndex = i;
-                }
-            }
-            else {
-                if (closestSegment > closest) {
-                    closest = closestSegment;
-                    pathIndex = i;
-                }
+            if (pathIndex < 0 || (shortest && closestSegment < selected_distance) ||
+                (!shortest && closestSegment > selected_distance)) {
+                selected_distance = closestSegment;
+                pathIndex = i;
             }
         }
     }
