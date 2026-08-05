@@ -5,7 +5,7 @@
 
 #include <QFile>
 #include <QHash>
-#include <QRegularExpression>
+#include <QIODevice>
 #include <qchar.h>
 #include <qcontainerfwd.h>
 
@@ -129,12 +129,11 @@ int firstSpaceIndex(const QString& value) {
     return -1;
 }
 
-bool parseFooterSettings(const QString& contents, QHash<QString, QString>& raw_values, QStringList& warnings) {
-    const QStringList lines = contents.split(QRegularExpression("\r\n|\n|\r"));
+bool parseFooterSettings(QIODevice& contents, QHash<QString, QString>& raw_values, QStringList& warnings) {
     bool in_footer = false;
 
-    for (const QString& line : lines) {
-        const QString text = commentText(line);
+    while (!contents.atEnd()) {
+        const QString text = commentText(QString::fromUtf8(contents.readLine()));
         if (text.isEmpty())
             continue;
 
@@ -165,6 +164,21 @@ bool parseFooterSettings(const QString& contents, QHash<QString, QString>& raw_v
     }
 
     return in_footer;
+}
+
+void migrateLegacyRawSettingKeys(QHash<QString, QString>& raw_values) {
+    fifojson raw_settings = fifojson::object();
+    for (auto raw = raw_values.constBegin(); raw != raw_values.constEnd(); ++raw) {
+        raw_settings[raw.key().toStdString()] = raw.value().toStdString();
+    }
+
+    SettingsVersionControl::migrateLegacySettingKeys(raw_settings);
+
+    raw_values.clear();
+    for (const auto& item : raw_settings.items()) {
+        if (item.value().is_string())
+            raw_values[QString::fromStdString(item.key())] = QString::fromStdString(item.value().get<std::string>());
+    }
 }
 
 bool parseRawValue(const QString& key, const fifojson& master_entry, const QString& raw_value, fifojson& parsed_value,
@@ -602,7 +616,7 @@ GcodeSettingsImporter::importFile(const QString& gcode_path, bool use_defaults_f
     }
 
     QHash<QString, QString> raw_values;
-    const bool footer_found = parseFooterSettings(QString::fromUtf8(gcode_file.readAll()), raw_values, result.warnings);
+    const bool footer_found = parseFooterSettings(gcode_file, raw_values, result.warnings);
     if (!footer_found) {
         result.errors.append("The selected G-Code file does not contain a Settings Footer.");
         return result;
@@ -612,6 +626,7 @@ GcodeSettingsImporter::importFile(const QString& gcode_path, bool use_defaults_f
         result.errors.append("The Settings Footer did not contain any setting values.");
         return result;
     }
+    migrateLegacyRawSettingKeys(raw_values);
 
     const fifojson master = GSM->getMaster()->json();
     fifojson settings = fifojson::object();
@@ -652,7 +667,7 @@ GcodeSettingsImporter::importFile(const QString& gcode_path, bool use_defaults_f
             const std::optional<fifojson> prompted_value = missing_value_callback(key, master_entry);
             if (!prompted_value.has_value()) {
                 result.errors.append("Import canceled while prompting for missing setting " + key + ".");
-                continue;
+                return result;
             }
 
             candidate = prompted_value.value();

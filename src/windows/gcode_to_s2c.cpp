@@ -21,6 +21,25 @@ QString errorPreview(const QStringList& errors) {
         preview.append(QString("...and %1 more.").arg(errors.size() - kMaxErrors));
     return preview.join("\n");
 }
+
+QString comparableFilePath(const QString& path) {
+    QFileInfo info(path);
+    const QString canonical = info.canonicalFilePath();
+    return canonical.isEmpty() ? info.absoluteFilePath() : canonical;
+}
+
+bool pathsReferToSameFile(const QString& first, const QString& second) {
+    if (first.isEmpty() || second.isEmpty())
+        return false;
+
+    const QString first_path = comparableFilePath(first);
+    const QString second_path = comparableFilePath(second);
+#ifdef Q_OS_WIN
+    return first_path.compare(second_path, Qt::CaseInsensitive) == 0;
+#else
+    return first_path == second_path;
+#endif
+}
 } // namespace
 
 GcodeToS2CDialog::GcodeToS2CDialog(QWidget* parent) : QDialog(parent) { setupUi(); }
@@ -109,12 +128,20 @@ void GcodeToS2CDialog::accept() {
     m_status_label->setText("Creating settings file...");
     QApplication::processEvents();
 
+    const QString gcode_path = m_gcode_edit->text().trimmed();
+    const QString output_path = outputFilePath();
+    if (pathsReferToSameFile(gcode_path, output_path)) {
+        m_status_label->setText("Choose a different settings file path.");
+        QMessageBox::critical(this, "G-Code to S2C", "The settings file cannot overwrite the selected G-Code file.");
+        return;
+    }
+
     auto missing_callback = [this](const QString& key, const fifojson& master_entry) {
         return promptForMissingValue(key, master_entry);
     };
 
-    GcodeSettingsImporter::ImportResult result = GcodeSettingsImporter::importFile(
-        m_gcode_edit->text().trimmed(), m_use_defaults->isChecked(), missing_callback);
+    GcodeSettingsImporter::ImportResult result =
+        GcodeSettingsImporter::importFile(gcode_path, m_use_defaults->isChecked(), missing_callback);
 
     if (!result.errors.isEmpty()) {
         m_status_label->setText("Could not create settings file.");
@@ -122,10 +149,10 @@ void GcodeToS2CDialog::accept() {
         return;
     }
 
-    QFile output_file(outputFilePath());
+    QFile output_file(output_path);
     if (!output_file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
         m_status_label->setText("Could not write settings file.");
-        QMessageBox::critical(this, "G-Code to S2C", "Could not write settings file:\n" + outputFilePath());
+        QMessageBox::critical(this, "G-Code to S2C", "Could not write settings file:\n" + output_path);
         return;
     }
 
@@ -133,7 +160,7 @@ void GcodeToS2CDialog::accept() {
     output_file.close();
 
     QString message = QString("Created %1 from %2 footer values.")
-                          .arg(QFileInfo(outputFilePath()).fileName())
+                          .arg(QFileInfo(output_path).fileName())
                           .arg(result.imported_keys.size());
     if (!result.defaulted_keys.isEmpty())
         message += QString(" Used defaults for %1 missing settings.").arg(result.defaulted_keys.size());
