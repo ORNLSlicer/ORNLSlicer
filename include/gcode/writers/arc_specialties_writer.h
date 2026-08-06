@@ -174,6 +174,19 @@ class ArcSpecialtiesWriter : public WriterBase {
                         const QSharedPointer<SettingsBase>& params, const QString& comment);
 
     /*!
+     * @brief Writes a single Arc Specialties motion command while computing CP from a reference point.
+     * @param command G-code command string.
+     * @param destination Endpoint being written.
+     * @param speed Feedrate to emit.
+     * @param params Segment settings containing speed and, for cylindrical paths, radial center metadata.
+     * @param comment Motion comment.
+     * @param cp_reference Point used to compute the CP orientation field.
+     * @return Complete motion line.
+     */
+    QString writeMotion(const QString& command, const Point& destination, Velocity speed,
+                        const QSharedPointer<SettingsBase>& params, const QString& comment, const Point& cp_reference);
+
+    /*!
      * @brief Writes the Arc Specialties kinematics and TRAFO setup block once.
      * @return Startup kinematics block, or an empty string after it has already been emitted.
      */
@@ -194,6 +207,26 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
                              double tool_frame_zr);
+
+    /*!
+     * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields with CP computed from a reference point.
+     * @param destination Point being written.
+     * @param params Segment settings containing, for cylindrical paths, radial center metadata.
+     * @param tool_frame_zr ZR orientation value to emit.
+     * @param cp_reference Point used to compute the CP orientation field.
+     * @return Coordinate parameter string.
+     */
+    QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params, double tool_frame_zr,
+                             const Point& cp_reference);
+
+    /*!
+     * @brief Returns the safe world-space startup approach point for the first travel.
+     * @param travel_destination Computed first travel destination in the active part/work frame.
+     * @param params Segment settings containing, for cylindrical paths, radial center metadata.
+     * @return First TRAFO-off world approach point.
+     */
+    Point safeStartupWorldApproachPoint(const Point& travel_destination,
+                                        const QSharedPointer<SettingsBase>& params) const;
 
     /*!
      * @brief Formats I/J arc center parameters for the selected center interpretation mode.

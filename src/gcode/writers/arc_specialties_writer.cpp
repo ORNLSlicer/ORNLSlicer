@@ -142,7 +142,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
-            "Initial Approach: first lifted travel is emitted with TRAFO off before work-object kinematics");
+            "Initial Approach: TRAFO-off world approach uses cylinder center XY and safe Z before work-object "
+            "kinematics");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
@@ -260,7 +261,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
-            "Initial Approach: first lifted travel is emitted with TRAFO off before work-object kinematics");
+            "Initial Approach: TRAFO-off world approach uses the first travel XY and safe Z before work-object "
+            "kinematics");
         text += commentLine("Travel Lift Direction: slice plane normal");
         text += commentLine("Travel Lift Distance: " %
                             formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
@@ -482,13 +484,15 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     if (m_first_travel && !m_startup_kinematics_written) {
+        const Point startup_world_approach = safeStartupWorldApproachPoint(travel_destination, params);
         rv += commentLine("INITIAL WORLD APPROACH");
-        rv += writeMotion("G00", travel_destination, speed, params, "WORLD APPROACH TRAVEL");
+        rv += writeMotion("G00", startup_world_approach, speed, params, "WORLD APPROACH TRAVEL", travel_destination);
         rv += "#FLUSH WAIT" % m_newline;
         rv += m_newline;
         rv += commentLine("ENABLE WORK-OBJECT KINEMATICS");
         rv += writeStartupKinematics();
         rv += writePendingLayerChange();
+        rv += writeMotion("G00", travel_destination, speed, params, "TRAVEL");
         rv += writeBeginningBead();
     }
     else {
@@ -663,12 +667,19 @@ QString ArcSpecialtiesWriter::writeExtruderOff() {
 
 QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& destination, Velocity speed,
                                           const QSharedPointer<SettingsBase>& params, const QString& comment) {
+    return writeMotion(command, destination, speed, params, comment, destination);
+}
+
+QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& destination, Velocity speed,
+                                          const QSharedPointer<SettingsBase>& params, const QString& comment,
+                                          const Point& cp_reference) {
     setFeedrate(speed);
     if (command == "G00") {
-        return command % writeCoordinates(destination, params, kRapidTravelToolFrameZR) % commentSpaceLine(comment);
+        return command % writeCoordinates(destination, params, kRapidTravelToolFrameZR, cp_reference) %
+               commentSpaceLine(comment);
     }
     else {
-        return command % writeCoordinates(destination, params, kToolFrameZR) % m_f %
+        return command % writeCoordinates(destination, params, kToolFrameZR, cp_reference) % m_f %
                QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(comment);
     }
 }
@@ -713,8 +724,13 @@ QString ArcSpecialtiesWriter::writePendingLayerChange() {
 
 QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
                                                double tool_frame_zr) {
+    return writeCoordinates(destination, params, tool_frame_zr, destination);
+}
+
+QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
+                                               double tool_frame_zr, const Point& cp_reference) {
     const double ap_output = m_sb->setting<Angle>(PRS::MachineSetup::kAxisA).to(m_meta.m_angle_unit);
-    const double cp_output = Angle(cpAxisForPoint(destination, params) * degree).to(m_meta.m_angle_unit);
+    const double cp_output = Angle(cpAxisForPoint(cp_reference, params) * degree).to(m_meta.m_angle_unit);
     const Point output_destination = rotateGCodeCoordinateFramePoint(destination);
 
     return QString(" X=") % QString::number(Distance(output_destination.x()).to(m_meta.m_distance_unit), 'f', 4) %
@@ -723,6 +739,23 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
            QString::number(kToolFrameXR, 'f', 4) % " YR=" % QString::number(kToolFrameYR, 'f', 4) % " ZR=" %
            QString::number(tool_frame_zr, 'f', 4) % " AP=" % QString::number(ap_output, 'f', 4) % " CP=" %
            QString::number(cp_output, 'f', 4);
+}
+
+Point ArcSpecialtiesWriter::safeStartupWorldApproachPoint(const Point& travel_destination,
+                                                          const QSharedPointer<SettingsBase>& params) const {
+    Point approach = travel_destination;
+    if (isCylindricalSlicingMode()) {
+        approach.x(params->setting<Distance>(kRadialCenterX));
+        approach.y(params->setting<Distance>(kRadialCenterY));
+    }
+
+    double safe_z = travel_destination.z();
+    if (m_sb->contains(PRS::Dimensions::kZMax)) {
+        safe_z = std::max(safe_z, m_sb->setting<Distance>(PRS::Dimensions::kZMax)());
+    }
+    approach.z(static_cast<float>(safe_z));
+
+    return approach;
 }
 
 QString ArcSpecialtiesWriter::writeArcCenterParameters(const Point& start_point, const Point& center_point) {
