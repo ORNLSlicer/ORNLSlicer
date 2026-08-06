@@ -157,6 +157,8 @@ void SettingBar::filter(QString str) {
 void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
                                        QList<QSharedPointer<SettingsBase>> inherited_bases) {
     auto settings_bases = name_and_bases.second;
+    m_selected_settings_bases = settings_bases;
+    m_selected_inherited_settings_bases = inherited_bases;
 
     // here we clear any warnings if a new settings base has been selected, or do nothing if the settings base remains
     // the same
@@ -232,6 +234,7 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
 
     refreshDependencyVisibility();
     this->blockSignals(false);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::closeAll() {
@@ -311,6 +314,7 @@ void SettingBar::updateSettings(QString text) {
         CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
         emit settingsBaseChanged(text);
+        emitSelectedVisualizationSettings();
     }
 }
 
@@ -344,6 +348,7 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
         }
     }
     enableDependRows();
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
@@ -375,6 +380,8 @@ void SettingBar::forwardModifiedSetting(QString setting_key) {
     for (const QString& modified_key : modified_keys) {
         emit settingModified(modified_key);
     }
+
+    emitSelectedVisualizationSettings();
 }
 
 QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_key) {
@@ -421,6 +428,23 @@ void SettingBar::refreshDynamicDependencies() {
                 cur_row->checkDynamicDependencies();
         }
     }
+}
+
+QSharedPointer<SettingsBase> SettingBar::selectedVisualizationSettings() const {
+    if (m_selected_settings_bases.isEmpty() || m_selected_settings_bases.first().isNull())
+        return GSM->getGlobal();
+
+    QSharedPointer<SettingsBase> effective_settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+
+    if (!m_selected_inherited_settings_bases.isEmpty() && !m_selected_inherited_settings_bases.first().isNull())
+        effective_settings->populate(m_selected_inherited_settings_bases.first());
+
+    effective_settings->populate(m_selected_settings_bases.first());
+    return effective_settings;
+}
+
+void SettingBar::emitSelectedVisualizationSettings() {
+    emit selectedVisualizationSettingsChanged(selectedVisualizationSettings());
 }
 
 void SettingBar::reloadRowsForUnitChange() {
