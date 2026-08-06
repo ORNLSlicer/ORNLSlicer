@@ -443,6 +443,16 @@ QSharedPointer<SettingsBase> SettingBar::selectedVisualizationSettings() const {
     return effective_settings;
 }
 
+QList<QSharedPointer<SettingsBase>> SettingBar::selectedEditableSettingsBases() const {
+    QList<QSharedPointer<SettingsBase>> settings_bases;
+    for (const QSharedPointer<SettingsBase>& settings_base : m_selected_settings_bases) {
+        if (!settings_base.isNull())
+            settings_bases.append(settings_base);
+    }
+
+    return settings_bases;
+}
+
 void SettingBar::emitSelectedVisualizationSettings() {
     emit selectedVisualizationSettingsChanged(selectedVisualizationSettings());
 }
@@ -464,18 +474,25 @@ void SettingBar::restoreSettingValue(QString setting_key) {
 
     enableDependRows();
     emit settingModified(setting_key);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::beginPairedGlobalSettingChange(QString first_key, QString second_key) {
-    emit settingAboutToChange(first_key, QList<QSharedPointer<SettingsBase>>());
-    emit settingAboutToChange(second_key, QList<QSharedPointer<SettingsBase>>());
+    const QList<QSharedPointer<SettingsBase>> settings_bases = selectedEditableSettingsBases();
+    emit settingAboutToChange(first_key, settings_bases);
+    emit settingAboutToChange(second_key, settings_bases);
 }
 
 void SettingBar::updatePairedGlobalSetting(QString first_key, double first_value, QString second_key,
                                            double second_value) {
-    QSharedPointer<SettingsBase> sb = GSM->getGlobal();
-    sb->setSetting(first_key, first_value);
-    sb->setSetting(second_key, second_value);
+    QList<QSharedPointer<SettingsBase>> settings_bases = selectedEditableSettingsBases();
+    if (settings_bases.isEmpty())
+        settings_bases.append(GSM->getGlobal());
+
+    for (QSharedPointer<SettingsBase> settings_base : settings_bases) {
+        settings_base->setSetting(first_key, first_value);
+        settings_base->setSetting(second_key, second_value);
+    }
 
     m_restoring_settings = true;
     reloadSettingRow(first_key);
@@ -490,6 +507,7 @@ void SettingBar::finishPairedGlobalSettingChange(QString first_key, double first
 
     emit settingModified(first_key);
     emit settingModified(second_key);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::forwardHideTab(QString pane, QString category) { emit tabHidden(pane, category); }

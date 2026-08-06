@@ -149,13 +149,13 @@ class SettingBar : public QWidget {
     //! \brief Reloads a restored setting row and forwards normal modified-setting notifications.
     void restoreSettingValue(QString setting_key);
 
-    //! \brief Starts a paired global setting edit driven by a view interaction.
+    //! \brief Starts a paired setting edit driven by a view interaction.
     void beginPairedGlobalSettingChange(QString first_key, QString second_key);
 
-    //! \brief Updates paired global setting values without committing a modified-setting notification.
+    //! \brief Updates paired setting values without committing a modified-setting notification.
     void updatePairedGlobalSetting(QString first_key, double first_value, QString second_key, double second_value);
 
-    //! \brief Finishes a paired global setting edit and emits normal modified-setting notifications.
+    //! \brief Finishes a paired setting edit and emits normal modified-setting notifications.
     void finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
                                          double second_value);
 
@@ -207,6 +207,9 @@ class SettingBar : public QWidget {
 
     //! \brief Builds the effective settings for the first selected local target, or global settings if none is selected.
     QSharedPointer<SettingsBase> selectedVisualizationSettings() const;
+
+    //! \brief Returns non-null selected local settings bases; empty means global settings should be edited.
+    QList<QSharedPointer<SettingsBase>> selectedEditableSettingsBases() const;
 
     //! \brief Emits the current effective visualization settings.
     void emitSelectedVisualizationSettings();
