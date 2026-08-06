@@ -82,6 +82,12 @@ class SettingBar : public QWidget {
      */
     void settingsBaseChanged(QString setting_base);
 
+    /*!
+     * \brief Signals the effective settings that should drive selected-setting visualization.
+     * \param settings Effective selected settings, or global settings when no local target is selected.
+     */
+    void selectedVisualizationSettingsChanged(QSharedPointer<SettingsBase> settings);
+
     //! \brief Signal for main window to notify that a setting tab has been hidden
     //! \param pane Pane that setting is contained in
     //! \param category Setting header to add
@@ -199,6 +205,12 @@ class SettingBar : public QWidget {
     //! \brief Rechecks warning-only dependencies that are not part of row visibility logic.
     void refreshDynamicDependencies();
 
+    //! \brief Builds the effective settings for the first selected local target, or global settings if none is selected.
+    QSharedPointer<SettingsBase> selectedVisualizationSettings() const;
+
+    //! \brief Emits the current effective visualization settings.
+    void emitSelectedVisualizationSettings();
+
     //! \brief Reloads rows after unit changes and refreshes dynamic warnings once.
     void reloadRowsForUnitChange();
 
@@ -256,6 +268,12 @@ class SettingBar : public QWidget {
 
     //! \brief Whether or not ranges are currently selected
     bool m_range_selected;
+
+    //! \brief Currently selected local settings bases, if any.
+    QList<QSharedPointer<SettingsBase>> m_selected_settings_bases;
+
+    //! \brief Parent settings inherited by the corresponding selected local settings bases.
+    QList<QSharedPointer<SettingsBase>> m_selected_inherited_settings_bases;
 
     //! \brief Prevents recursive setting sync while paired radial settings are reloaded.
     bool m_syncing_radial_settings = false;

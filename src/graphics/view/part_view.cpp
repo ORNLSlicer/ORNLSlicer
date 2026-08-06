@@ -415,9 +415,7 @@ void PartView::updatePrinterSettings(QSharedPointer<SettingsBase> sb) {
 }
 
 void PartView::updateOptimizationSettings(QSharedPointer<SettingsBase> sb) {
-    m_sb = sb;
-
-    m_printer->updateFromSettings(m_sb);
+    m_printer->updateFromSettings(sb);
 
     this->update();
 }
