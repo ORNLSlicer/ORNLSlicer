@@ -367,6 +367,7 @@ QString ArcSpecialtiesWriter::writeBeforeLayer(float min_z, QSharedPointer<Setti
     m_layer_start = true;
     m_current_bead = 1;
     m_current_layer++;
+    m_first_deposition = true;
     return rv;
 }
 
@@ -549,6 +550,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
     }
 
     rv += writeMotion("G01", target_point, speed, params, printMoveComment());
+    m_first_deposition = false;
     return rv;
 }
 
@@ -566,6 +568,10 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
         rv += writeWelderOn();
     }
 
+    if(!m_first_deposition) {
+        rv += "G81" % commentSpaceLine("OPTIONAL STOP ROUTINE");
+    }
+
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
     if (speed <= 0) {
         speed = 10.0 * mm / s;
@@ -577,6 +583,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(printMoveComment());
+    m_first_deposition = false;
     return rv;
 }
 
