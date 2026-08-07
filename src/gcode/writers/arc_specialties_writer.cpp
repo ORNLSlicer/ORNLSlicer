@@ -670,11 +670,6 @@ QString ArcSpecialtiesWriter::writeWelderOff(int mode) {
         const int g83_mode = validatedG83Mode(mode);
         rv += "G260" % commentSpaceLine("BLENDING OFF");
         rv += "G83 [" % QString::number(g83_mode) % "]" % commentSpaceLine("WIRE ARC WELDER OFF");
-        /// TODO: M160 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M160
-        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
-        /// same effect.
-        rv += ";M160" % commentSpaceLine("CLIP WIRE");
-        rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
         m_deposition_active = false;
         return rv;
     }
