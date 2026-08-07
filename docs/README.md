@@ -8,7 +8,8 @@ This directory is the canonical documentation source for ORNLSlicer.
 
 - [ORNLSlicer User Guide](ornlslicer-user-guide.pdf)
 - [Getting Started](wiki/Getting-Started.md)
-- [Cylindrical Slicing](cylindrical-slicing.md)
+- [Cylindrical Slicing](slicing/cylindrical-slicing.md)
+- [Arc Specialties G-code](gcode/arc-specialties.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
 

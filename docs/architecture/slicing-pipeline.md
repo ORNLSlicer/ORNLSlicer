@@ -23,7 +23,8 @@ Cylindrical slicing currently requires the Arc Specialties G-code syntax. The
 guard lives in `SessionManager::doSlice()`, and the cylindrical slicers select
 `ArcSpecialtiesWriter` directly. Planar slicing can also use Arc Specialties
 through the common writer selection path. User-facing cylindrical behavior is
-documented in [Cylindrical Slicing](../cylindrical-slicing.md).
+documented in [Cylindrical Slicing](../slicing/cylindrical-slicing.md), and the
+controller dialect is documented in [Arc Specialties](../gcode/arc-specialties.md).
 
 `SessionManager::changeSlicer()` replaces the slicer when the mode or
 cylindrical pattern changes, clears existing part steps, and reconnects

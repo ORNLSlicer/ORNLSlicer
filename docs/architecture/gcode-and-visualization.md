@@ -38,9 +38,9 @@ formatting and lifecycle hooks; subclasses override only the behavior that
 differs for a controller or machine family.
 
 `ArcSpecialtiesWriter` supports both the normal planar segment stream and the
-direct radial/helical cylindrical streams. Planar output keeps the active planar
-regions and uses `Axis C` as a fixed `CP` positioner value; cylindrical output
-keeps its cylinder-axis `CP` calculations and radial travel-lift behavior.
+direct radial/helical cylindrical streams. Its controller-specific motion fields
+and positioner behavior are documented in
+[Arc Specialties](../gcode/arc-specialties.md).
 
 ## Parse and Fan-Out Flow
 
