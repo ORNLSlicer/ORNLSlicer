@@ -512,10 +512,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     if (travel_lower_required) {
-        /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
-        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
-        /// same effect.
-        rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
+        rv += "G81" % commentSpaceLine("OPTIONAL STOP ROUTINE");
         rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
     }
 
