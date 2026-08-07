@@ -48,6 +48,8 @@ WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) :
     m_start_point = Point(0, 0, 0);
     m_current_position = Point(0, 0, 0);
     m_has_current_position = false;
+    m_build_maximum_z = Distance(0.0);
+    m_has_build_maximum_z = false;
 
     m_extruder_on = false;
 }
@@ -298,5 +300,14 @@ QString WriterBase::writeCommentLine(QString comment) { return "\n" + commentLin
 void WriterBase::setFeedrate(Velocity feedrate) { m_feedrate = feedrate; }
 
 Velocity WriterBase::getFeedrate() const { return m_feedrate; }
+
+void WriterBase::setBuildMaximumZ(Distance maximum_z) {
+    m_build_maximum_z = maximum_z;
+    m_has_build_maximum_z = true;
+}
+
+bool WriterBase::hasBuildMaximumZ() const { return m_has_build_maximum_z; }
+
+Distance WriterBase::getBuildMaximumZ() const { return m_build_maximum_z; }
 
 } // namespace ORNL
