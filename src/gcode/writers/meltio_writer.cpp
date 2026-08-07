@@ -30,7 +30,7 @@ QString MeltioWriter::writeSettingsHeader(GcodeSyntax syntax) {
 QString MeltioWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                         int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -204,7 +204,7 @@ QString MeltioWriter::writeLine(const Point& start_point, const Point& target_po
 
     QString rv;
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0);
         setFeedrate(0);
     }
@@ -248,7 +248,7 @@ QString MeltioWriter::writeArc(const Point& start_point, const Point& end_point,
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0);
     }
 
@@ -363,7 +363,7 @@ QString MeltioWriter::writeDwell(Time time) {
 
 QString MeltioWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     rv += "M64 P8" % commentSpaceLine("LASER ON");
     rv += "M66 P1 L3 Q10" % commentSpaceLine("WAIT FOR CONFIRMATION");
     rv += "M65 P8" % commentSpaceLine("TURN RELAY OFF");
@@ -372,7 +372,7 @@ QString MeltioWriter::writeExtruderOn(RegionType type, int rpm, int extruder_num
 
 QString MeltioWriter::writeExtruderOff(int extruder_number) {
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     rv += "M64 P9" % commentSpaceLine("LASER OFF");
     rv += "M66 P1 L3 Q10" % commentSpaceLine("WAIT FOR CONFIRMATION");
     rv += "M65 P9" % commentSpaceLine("TURN RELAY OFF");

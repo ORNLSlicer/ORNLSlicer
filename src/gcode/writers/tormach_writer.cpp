@@ -31,7 +31,7 @@ QString TormachWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
                                          int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -225,7 +225,7 @@ QString TormachWriter::writeLine(const Point& start_point, const Point& target_p
 
     QString rv;
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0);
         setFeedrate(0);
     }
@@ -351,7 +351,7 @@ QString TormachWriter::writeDwell(Time time) {
 
 QString TormachWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
 
     if (type == RegionType::kInset) {
         if (m_sb->setting<Time>(MS::Extruder::kOnDelayInset) > 0) {
@@ -387,7 +387,7 @@ QString TormachWriter::writeExtruderOn(RegionType type, int rpm, int extruder_nu
 
 QString TormachWriter::writeExtruderOff(int extruder_number) {
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

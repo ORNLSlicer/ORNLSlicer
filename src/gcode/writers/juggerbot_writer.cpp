@@ -22,7 +22,7 @@ QString JuggerBotWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
     m_current_bead_area = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_material_number = -1;
     m_first_print = true;
     m_first_travel = true;
@@ -123,9 +123,9 @@ QString JuggerBotWriter::writeTravel(Point start_location, Point target_location
 
     m_current_bead_area = 0;
 
-    // Determine if travel length is short enough to keep extruder on
+    // Determine if travel length is short enough to keep deposition active.
     Distance travel_distance = start_location.distance(target_location);
-    if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    if (m_deposition_active && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOff();
     }
     else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
@@ -215,7 +215,7 @@ QString JuggerBotWriter::writeLine(const Point& start_point, const Point& target
     }
 
     // determine if writeExtruderOn is necessary
-    bool requiresWriteExtruderOn = !m_extruder_on;
+    bool requiresWriteExtruderOn = !m_deposition_active;
 
     if (requiresWriteExtruderOn && rpm > 0) // && !m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight))
     {
@@ -284,7 +284,7 @@ QString JuggerBotWriter::writeArc(const Point& start_point, const Point& end_poi
     }
 
     // determine if writeExtruderOn is necessary
-    bool requiresWriteExtruderOn = !m_extruder_on;
+    bool requiresWriteExtruderOn = !m_deposition_active;
 
     if (requiresWriteExtruderOn && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, width, height, params);
@@ -408,7 +408,7 @@ QString JuggerBotWriter::writeDwell(Time time) {
 
 QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height,
                                          const QSharedPointer<SettingsBase>& params) {
-    m_extruder_on = true;
+    m_deposition_active = true;
     QString rv;
     Area bead_area = (width - height) * height +
                      (pi() * (height / 2) * (height / 2)); // Rectangle with two half circles used as cross-section
@@ -488,7 +488,7 @@ QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance widt
 }
 
 QString JuggerBotWriter::writeExtruderOff() {
-    m_extruder_on = false;
+    m_deposition_active = false;
 
     QString rv;
 

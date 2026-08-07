@@ -391,13 +391,13 @@ void GCodeLoader::run() {
                     if (m_selected_meta.hasTravels) {
                         generated_segments = generateVisualSegment(
                             command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
-                            command.getParameters(), command.getExtruderOn(), command.getExtruderSpeed(), true,
+                            command.getParameters(), command.getDepositionActive(), command.getExtruderSpeed(), true,
                             command.getComment());
                     }
                     else {
                         generated_segments = generateVisualSegment(
                             command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
-                            command.getParameters(), command.getExtruderOn(), command.getExtruderSpeed(), false,
+                            command.getParameters(), command.getDepositionActive(), command.getExtruderSpeed(), false,
                             command.getComment(), command.getOptionalParameters());
                     }
                     layer.append(generated_segments);
@@ -819,7 +819,7 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, Se
 }
 
 void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const QString& comment,
-                                     QVector3D& info_end_pos, const bool& extruder_on, const bool& info_speed_set,
+                                     QVector3D& info_end_pos, const bool& deposition_active, const bool& info_speed_set,
                                      const double& extruder_speed) {
     // Set the type info of the segment
     segment->m_segment_info_meta.type = comment;
@@ -828,16 +828,16 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
     segment->m_segment_info_meta.start = m_info_start_pos;
     segment->m_segment_info_meta.end = info_end_pos;
 
-    // If the extruder is on, set the speed info
-    if (!extruder_on && !info_speed_set) {
+    // If deposition is active, retain the current speed metadata for the segment.
+    if (!deposition_active && !info_speed_set) {
         segment->m_segment_info_meta.speed = "";
     }
     else {
         segment->m_segment_info_meta.speed = m_info_speed;
     }
 
-    // If the extruder is on, set the extruder speed info
-    if (extruder_on) {
+    // If deposition is active, set the material feed speed metadata.
+    if (deposition_active) {
         if (m_info_extruder_speed.isEmpty()) {
             segment->m_segment_info_meta.extruderSpeed = QString().asprintf("%0.4f", extruder_speed) % " rpm";
         }
@@ -859,8 +859,8 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
 
 QVector<QSharedPointer<SegmentBase>>
 GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
-                                   const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
-                                   bool include_non_extruding_moves, QString comment,
+                                   const QMap<char, double>& parameters, bool deposition_active, double extruder_speed,
+                                   bool include_non_deposition_moves, QString comment,
                                    const QMap<char, double>& optional_parameters) {
     // Parameters for drawing and placing each segment in the world correctly
     QVector3D end_pos = m_start_pos;
@@ -937,7 +937,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
 
     QVector<QSharedPointer<SegmentBase>> generated_segments;
 
-    if (extruder_on || include_non_extruding_moves) {
+    if (deposition_active || include_non_deposition_moves) {
         QSharedPointer<SegmentBase> segment;
 
         // Builds and draws segments according to their type (Line, Arc, Spline)
@@ -1011,7 +1011,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
                               line_num, layer_num);
 
         // Set the segment's meta info
-        setSegmentMetaInfo(segment, comment, info_end_pos, extruder_on, info_speed_set, extruder_speed);
+        setSegmentMetaInfo(segment, comment, info_end_pos, deposition_active, info_speed_set, extruder_speed);
 
         // Add the segment to the list of generated segments
         generated_segments.append(segment);
