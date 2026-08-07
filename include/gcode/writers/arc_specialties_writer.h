@@ -158,8 +158,13 @@ class ArcSpecialtiesWriter : public WriterBase {
   private:
     //! \brief Writes G-Code to enable the welder
     QString writeWelderOn();
-    //! \brief Writes G-Code to disable the welder
-    QString writeWelderOff();
+    /*!
+     * @brief Writes G-Code to disable the welder.
+     * @param mode Arc Specialties G83 mode: 0 stops welding, 1 retracts, 2 clips wire and homes, 3 moves linearly to
+     * the retract position, and 4 moves linearly back to the previous programmed position.
+     * @return Welder shutdown block.
+     */
+    QString writeWelderOff(int mode = 0);
 
     /*!
      * @brief Writes a single Arc Specialties motion command.

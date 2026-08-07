@@ -95,6 +95,15 @@ const Distance kMinTravelArcSegmentLength = 100.0 * micron;
 //! @brief Machine setup setting value for relative G02/G03 center interpretation.
 constexpr int kRelativeArcCenterMode = 1;
 
+//! @brief Default G83 mode: stop welding only.
+constexpr int kDefaultG83Mode = 0;
+
+//! @brief Highest supported Arc Specialties G83 mode.
+constexpr int kMaxG83Mode = 4;
+
+//! @brief Returns a supported G83 mode, falling back to weld-stop-only behavior for invalid input.
+int validatedG83Mode(int mode) { return mode >= kDefaultG83Mode && mode <= kMaxG83Mode ? mode : kDefaultG83Mode; }
+
 //! @brief Formats a distance using the output unit declared by the active gcode metadata.
 QString formatDistance(Distance value, Distance unit) {
     return QString::number(value.to(unit), 'f', 4) % unit.toString();
@@ -655,11 +664,12 @@ QString ArcSpecialtiesWriter::writeWelderOn() {
     }
 }
 
-QString ArcSpecialtiesWriter::writeWelderOff() {
+QString ArcSpecialtiesWriter::writeWelderOff(int mode) {
     if (m_deposition_active) {
         QString rv;
+        const int g83_mode = validatedG83Mode(mode);
         rv += "G260" % commentSpaceLine("BLENDING OFF");
-        rv += "G83" % commentSpaceLine("WIRE ARC WELDER OFF");
+        rv += "G83 [" % QString::number(g83_mode) % "]" % commentSpaceLine("WIRE ARC WELDER OFF");
         /// TODO: M160 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M160
         /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
         /// same effect.
