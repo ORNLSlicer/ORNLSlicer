@@ -388,10 +388,10 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     // Determine if travel length is short enough to keep extruder on
     Distance travel_distance = start_location.distance(target_location);
     if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
-        rv += writeExtruderOff();
+        rv += writeWelderOff();
     }
     else if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
-        rv += writeExtruderOn();
+        rv += writeWelderOn();
     }
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
@@ -532,7 +532,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
     m_layer_start = false;
 
     if (!m_extruder_on) {
-        rv += writeExtruderOn();
+        rv += writeWelderOn();
     }
 
     if (speed <= 0) {
@@ -554,7 +554,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     rv += writePendingLayerChange();
 
     if (!m_extruder_on) {
-        rv += writeExtruderOn();
+        rv += writeWelderOn();
     }
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
@@ -574,7 +574,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
 QString ArcSpecialtiesWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        // rv += writeExtruderOff(); // update to turn off the extruder
+        // rv += writeWelderOff(); // update to turn off the welder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty()) {
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -622,7 +622,7 @@ QString ArcSpecialtiesWriter::writeAfterLayer() {
 
 QString ArcSpecialtiesWriter::writeShutdown() {
     QString rv;
-    rv += writeExtruderOff();
+    rv += writeWelderOff();
     if (!m_sb->setting<QString>(PRS::GCode::kEndCode).isEmpty()) {
         rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;
     }
@@ -642,7 +642,7 @@ QString ArcSpecialtiesWriter::writeDwell(Time time) {
     return QString();
 }
 
-QString ArcSpecialtiesWriter::writeExtruderOn() {
+QString ArcSpecialtiesWriter::writeWelderOn() {
     if (!m_extruder_on) {
         QString rv;
         rv += "M150" % commentSpaceLine("WIRE ARC WELDER ON");
@@ -655,7 +655,7 @@ QString ArcSpecialtiesWriter::writeExtruderOn() {
     }
 }
 
-QString ArcSpecialtiesWriter::writeExtruderOff() {
+QString ArcSpecialtiesWriter::writeWelderOff() {
     if (m_extruder_on) {
         QString rv;
         rv += "G260" % commentSpaceLine("BLENDING OFF");

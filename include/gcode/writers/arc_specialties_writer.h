@@ -156,10 +156,10 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeDwell(Time time) override;
 
   private:
-    //! \brief Writes G-Code to enable extrusion
-    QString writeExtruderOn();
-    //! \brief Writes G-Code to disable extrusion
-    QString writeExtruderOff();
+    //! \brief Writes G-Code to enable the welder
+    QString writeWelderOn();
+    //! \brief Writes G-Code to disable the welder
+    QString writeWelderOff();
 
     /*!
      * @brief Writes a single Arc Specialties motion command.
