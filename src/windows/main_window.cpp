@@ -1013,6 +1013,10 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_main_toolbar, &MainToolbar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
+    connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_part_widget->view(),
+            &PartView::updateOptimizationSettings);
+    connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_gcode_widget->view(),
+            &GCodeView::updateOptimizationSettings);
     connect(m_part_widget->view(), &PartView::optimizationPointDragStarted, m_settingbar,
             &SettingBar::beginPairedGlobalSettingChange);
     connect(m_part_widget->view(), &PartView::optimizationPointDragged, m_settingbar,

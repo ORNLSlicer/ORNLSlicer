@@ -157,6 +157,8 @@ void SettingBar::filter(QString str) {
 void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
                                        QList<QSharedPointer<SettingsBase>> inherited_bases) {
     auto settings_bases = name_and_bases.second;
+    m_selected_settings_bases = settings_bases;
+    m_selected_inherited_settings_bases = inherited_bases;
 
     // here we clear any warnings if a new settings base has been selected, or do nothing if the settings base remains
     // the same
@@ -232,6 +234,7 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
 
     refreshDependencyVisibility();
     this->blockSignals(false);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::closeAll() {
@@ -311,6 +314,7 @@ void SettingBar::updateSettings(QString text) {
         CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
         emit settingsBaseChanged(text);
+        emitSelectedVisualizationSettings();
     }
 }
 
@@ -344,6 +348,7 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
         }
     }
     enableDependRows();
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
@@ -375,6 +380,8 @@ void SettingBar::forwardModifiedSetting(QString setting_key) {
     for (const QString& modified_key : modified_keys) {
         emit settingModified(modified_key);
     }
+
+    emitSelectedVisualizationSettings();
 }
 
 QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_key) {
@@ -423,6 +430,65 @@ void SettingBar::refreshDynamicDependencies() {
     }
 }
 
+QSharedPointer<SettingsBase> SettingBar::selectedVisualizationSettings() const {
+    if (m_selected_settings_bases.isEmpty() || m_selected_settings_bases.first().isNull())
+        return GSM->getGlobal();
+
+    QSharedPointer<SettingsBase> effective_settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+
+    if (!m_selected_inherited_settings_bases.isEmpty() && !m_selected_inherited_settings_bases.first().isNull())
+        effective_settings->populate(m_selected_inherited_settings_bases.first());
+
+    effective_settings->populate(m_selected_settings_bases.first());
+    return effective_settings;
+}
+
+QList<QSharedPointer<SettingsBase>> SettingBar::selectedEditableSettingsBases() const {
+    QList<QSharedPointer<SettingsBase>> settings_bases;
+    for (const QSharedPointer<SettingsBase>& settings_base : m_selected_settings_bases) {
+        if (!settings_base.isNull())
+            settings_bases.append(settings_base);
+    }
+
+    return settings_bases;
+}
+
+void SettingBar::removeRedundantSelectedLocalOverride(const QString& setting_key) {
+    if (m_selected_settings_bases.isEmpty())
+        return;
+
+    double global_value = 0.0;
+    if (GSM->getGlobal()->contains(setting_key)) {
+        global_value = GSM->getGlobal()->setting<double>(setting_key);
+    }
+    else {
+        fifojson& master_json = GSM->getMaster()->json();
+        auto setting = master_json.find(setting_key.toStdString());
+        if (setting != master_json.end() && setting.value().contains(Constants::Settings::Master::kDefault))
+            global_value = setting.value()[Constants::Settings::Master::kDefault].get<double>();
+    }
+
+    for (int index = 0, end = m_selected_settings_bases.size(); index < end; ++index) {
+        QSharedPointer<SettingsBase> settings_base = m_selected_settings_bases[index];
+        if (settings_base.isNull() || !settings_base->contains(setting_key))
+            continue;
+
+        double inherited_value = global_value;
+        if (index < m_selected_inherited_settings_bases.size()) {
+            const QSharedPointer<SettingsBase>& inherited_base = m_selected_inherited_settings_bases[index];
+            if (!inherited_base.isNull() && inherited_base->contains(setting_key))
+                inherited_value = inherited_base->setting<double>(setting_key);
+        }
+
+        if (settings_base->setting<double>(setting_key) == inherited_value)
+            settings_base->remove(setting_key);
+    }
+}
+
+void SettingBar::emitSelectedVisualizationSettings() {
+    emit selectedVisualizationSettingsChanged(selectedVisualizationSettings());
+}
+
 void SettingBar::reloadRowsForUnitChange() {
     {
         DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
@@ -440,18 +506,28 @@ void SettingBar::restoreSettingValue(QString setting_key) {
 
     enableDependRows();
     emit settingModified(setting_key);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::beginPairedGlobalSettingChange(QString first_key, QString second_key) {
-    emit settingAboutToChange(first_key, QList<QSharedPointer<SettingsBase>>());
-    emit settingAboutToChange(second_key, QList<QSharedPointer<SettingsBase>>());
+    const QList<QSharedPointer<SettingsBase>> settings_bases = selectedEditableSettingsBases();
+    emit settingAboutToChange(first_key, settings_bases);
+    emit settingAboutToChange(second_key, settings_bases);
 }
 
 void SettingBar::updatePairedGlobalSetting(QString first_key, double first_value, QString second_key,
                                            double second_value) {
-    QSharedPointer<SettingsBase> sb = GSM->getGlobal();
-    sb->setSetting(first_key, first_value);
-    sb->setSetting(second_key, second_value);
+    QList<QSharedPointer<SettingsBase>> settings_bases = selectedEditableSettingsBases();
+    if (settings_bases.isEmpty())
+        settings_bases.append(GSM->getGlobal());
+
+    for (QSharedPointer<SettingsBase> settings_base : settings_bases) {
+        settings_base->setSetting(first_key, first_value);
+        settings_base->setSetting(second_key, second_value);
+    }
+
+    removeRedundantSelectedLocalOverride(first_key);
+    removeRedundantSelectedLocalOverride(second_key);
 
     m_restoring_settings = true;
     reloadSettingRow(first_key);
@@ -466,6 +542,7 @@ void SettingBar::finishPairedGlobalSettingChange(QString first_key, double first
 
     emit settingModified(first_key);
     emit settingModified(second_key);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::forwardHideTab(QString pane, QString category) { emit tabHidden(pane, category); }

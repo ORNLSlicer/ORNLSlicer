@@ -82,6 +82,12 @@ class SettingBar : public QWidget {
      */
     void settingsBaseChanged(QString setting_base);
 
+    /*!
+     * \brief Signals the effective settings that should drive selected-setting visualization.
+     * \param settings Effective selected settings, or global settings when no local target is selected.
+     */
+    void selectedVisualizationSettingsChanged(QSharedPointer<SettingsBase> settings);
+
     //! \brief Signal for main window to notify that a setting tab has been hidden
     //! \param pane Pane that setting is contained in
     //! \param category Setting header to add
@@ -143,13 +149,13 @@ class SettingBar : public QWidget {
     //! \brief Reloads a restored setting row and forwards normal modified-setting notifications.
     void restoreSettingValue(QString setting_key);
 
-    //! \brief Starts a paired global setting edit driven by a view interaction.
+    //! \brief Starts a paired setting edit driven by a view interaction.
     void beginPairedGlobalSettingChange(QString first_key, QString second_key);
 
-    //! \brief Updates paired global setting values without committing a modified-setting notification.
+    //! \brief Updates paired setting values without committing a modified-setting notification.
     void updatePairedGlobalSetting(QString first_key, double first_value, QString second_key, double second_value);
 
-    //! \brief Finishes a paired global setting edit and emits normal modified-setting notifications.
+    //! \brief Finishes a paired setting edit and emits normal modified-setting notifications.
     void finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
                                          double second_value);
 
@@ -198,6 +204,18 @@ class SettingBar : public QWidget {
 
     //! \brief Rechecks warning-only dependencies that are not part of row visibility logic.
     void refreshDynamicDependencies();
+
+    //! \brief Builds the effective settings for the first selected local target, or global settings if none is selected.
+    QSharedPointer<SettingsBase> selectedVisualizationSettings() const;
+
+    //! \brief Returns non-null selected local settings bases; empty means global settings should be edited.
+    QList<QSharedPointer<SettingsBase>> selectedEditableSettingsBases() const;
+
+    //! \brief Removes a selected local override when its value matches the inherited value.
+    void removeRedundantSelectedLocalOverride(const QString& setting_key);
+
+    //! \brief Emits the current effective visualization settings.
+    void emitSelectedVisualizationSettings();
 
     //! \brief Reloads rows after unit changes and refreshes dynamic warnings once.
     void reloadRowsForUnitChange();
@@ -256,6 +274,12 @@ class SettingBar : public QWidget {
 
     //! \brief Whether or not ranges are currently selected
     bool m_range_selected;
+
+    //! \brief Currently selected local settings bases, if any.
+    QList<QSharedPointer<SettingsBase>> m_selected_settings_bases;
+
+    //! \brief Parent settings inherited by the corresponding selected local settings bases.
+    QList<QSharedPointer<SettingsBase>> m_selected_inherited_settings_bases;
 
     //! \brief Prevents recursive setting sync while paired radial settings are reloaded.
     bool m_syncing_radial_settings = false;
