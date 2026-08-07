@@ -29,7 +29,7 @@ QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plan
     QVector3D direction;
     const PointOrderOptimization point_order =
         static_cast<PointOrderOptimization>(sb->setting<int>(PS::Optimizations::kPointOrder));
-    if (point_order == PointOrderOptimization::kCustomPoint) {
+    if (usesCustomPointLocation(point_order)) {
         direction = settingVector(sb, PS::Optimizations::kSeamAttractorVectorX,
                                   PS::Optimizations::kSeamAttractorVectorY,
                                   PS::Optimizations::kSeamAttractorVectorZ);

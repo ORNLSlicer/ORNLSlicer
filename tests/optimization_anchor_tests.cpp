@@ -52,9 +52,9 @@ int main() {
     const ORNL::Point custom_farthest_anchor = ORNL::OptimizationAnchor::customPointOrderPoint(
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kCustomFarthestPoint), slicing_plane,
         optimization_shift);
-    passed &= expect(closeTo(custom_farthest_anchor.x(), 2.0) && closeTo(custom_farthest_anchor.y(), 3.0) &&
+    passed &= expect(closeTo(custom_farthest_anchor.x(), 12.0) && closeTo(custom_farthest_anchor.y(), 3.0) &&
                          closeTo(custom_farthest_anchor.z(), 10.0),
-                     "Expected seam attractor vector to be ignored for Custom Farthest Location point order.");
+                     "Expected seam attractor vector to project the anchor for Custom Farthest Location point order.");
 
     const ORNL::Point custom_anchor = ORNL::OptimizationAnchor::customPointOrderPoint(
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kCustomPoint), slicing_plane, optimization_shift);
