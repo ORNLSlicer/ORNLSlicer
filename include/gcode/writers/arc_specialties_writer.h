@@ -294,6 +294,9 @@ class ArcSpecialtiesWriter : public WriterBase {
     //! @brief Tracks whether any travel move has been emitted.
     bool m_first_travel = true;
 
+    //! @brief Tracks whether any deposition move has been emitted on the current layer.
+    bool m_first_deposition = true;
+
     //! @brief Forces feedrate output at the start of each layer.
     bool m_layer_start = true;
 
