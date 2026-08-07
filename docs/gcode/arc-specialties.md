@@ -118,7 +118,7 @@ M151 ;WIRE ARC WELDER OFF
 #CHANNEL INIT [CMDPOS]
 ```
 
-`M06` and `M160` are currently emitted as comments because the inline writer TODOs identify controller issues with those commands as of 2026-07-29. They should be re-enabled or replaced only after the controller behavior is resolved.
+`M06` is currently emitted as a comment because the inline writer TODOs identify controller issues with that command as of 2026-08-07. It should be re-enabled or replaced only after the controller behavior is resolved.
 
 Shutdown writes any configured end code, emits `G164` when absolute center mode was active, sends the robot home, initializes the channel, and ends the program with `M02`.
 

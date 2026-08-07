@@ -326,7 +326,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "V.E.Sch.Crater.Control = 25   ;Arc Control in Crater Fill" % m_newline;
     rv += "V.E.Sch.Crater.Time = .5   ;Crater Fill Time in Seconds" % m_newline;
     rv += "#CONTOUR MODE [DEV PATH_DEV=2 CONST_VEL=1]" % m_newline;
-    /// TODO: M06 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M06
+    /// TODO: M06 command does not work as of 2026-08-07 and is disabled for now. Must be re-enabled when the M06
     /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
     /// same effect.
     rv += ";M06 T1   ;Select Tool 1" % m_newline;
