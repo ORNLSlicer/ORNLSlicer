@@ -390,7 +390,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOff();
     }
-    else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    else if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOn();
     }
 

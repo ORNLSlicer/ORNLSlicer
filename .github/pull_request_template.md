@@ -31,7 +31,7 @@ Focus on the behavior change, structural change, optimization strategy, or workf
 <!--
 Describe the impact of this change on the project. Consider functionality, workflows, performance, maintainability, and user experience.
 If the change is intended to have no impact on behavior, state that explicitly.
-If this change is a performance improvement, include any measured impact here or in the Testing strategy details.
+If this change is a performance improvement, include any measured impact here or in the Validation details.
 Describe the overall risk level of these changes (High / Medium / Low) and the rationale for that assessment.
 -->
 
