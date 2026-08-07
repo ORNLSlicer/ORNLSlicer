@@ -107,6 +107,14 @@ Point WriterBase::rotateGCodeCoordinateFramePoint(const Point& point) const {
     return Point::fromQVector3D(rotation.rotatedVector(point.toQVector3D()));
 }
 
+Point WriterBase::inverseRotateGCodeCoordinateFramePoint(const Point& point) const {
+    const QQuaternion rotation = MathUtils::CreateQuaternion(
+        m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX),
+        m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationY),
+        m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationZ), QuaternionOrder::kXYZ);
+    return Point::fromQVector3D(rotation.conjugated().rotatedVector(point.toQVector3D()));
+}
+
 Point WriterBase::rotateGCodeCoordinateFrameDelta(const Point& delta) const {
     return rotateGCodeCoordinateFramePoint(delta);
 }

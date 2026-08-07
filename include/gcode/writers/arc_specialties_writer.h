@@ -220,6 +220,17 @@ class ArcSpecialtiesWriter : public WriterBase {
                              const Point& cp_reference);
 
     /*!
+     * @brief Returns the first post-kinematics travel point above the first-layer lower point.
+     * @param travel_destination Current first travel destination before the first-layer lower adjustment.
+     * @param travel_lower_destination First-layer point written by the TRAVEL LOWER command.
+     * @param travel_lift_height Configured travel lift height used as the emitted Z buffer.
+     * @return First TRAVEL destination with emitted Y aligned to the lower point and emitted Z buffered above it.
+     */
+    Point firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
+                                                      const Point& travel_lower_destination,
+                                                      Distance travel_lift_height) const;
+
+    /*!
      * @brief Returns the safe world-space startup approach point for the first travel.
      * @param travel_destination Computed first travel destination in the active part/work frame.
      * @param params Segment settings containing, for cylindrical paths, radial center metadata.

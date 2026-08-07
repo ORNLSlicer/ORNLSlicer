@@ -182,6 +182,9 @@ class WriterBase {
     //! \brief Rotates a generated G-Code coordinate by the configured machine coordinate frame rotation.
     Point rotateGCodeCoordinateFramePoint(const Point& point) const;
 
+    //! \brief Inverse-rotates an emitted G-Code coordinate into the generated coordinate frame.
+    Point inverseRotateGCodeCoordinateFramePoint(const Point& point) const;
+
     //! \brief Rotates a generated G-Code coordinate delta by the configured machine coordinate frame rotation.
     Point rotateGCodeCoordinateFrameDelta(const Point& delta) const;
 
