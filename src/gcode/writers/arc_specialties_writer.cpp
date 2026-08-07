@@ -486,16 +486,24 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         travel_destination = liftPoint(target_location);
     }
 
+    const bool travel_lower_required =
+        travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly);
+
     if (m_first_travel && !m_startup_kinematics_written) {
-        const Point startup_world_approach = safeStartupWorldApproachPoint(travel_destination, params);
+        const Point first_travel_destination =
+            travel_lower_required
+                ? firstTravelPointAboveTravelLowerDestination(travel_destination, target_location, lift_height)
+                : travel_destination;
+        const Point startup_world_approach = safeStartupWorldApproachPoint(first_travel_destination, params);
         rv += commentLine("INITIAL WORLD APPROACH");
-        rv += writeMotion("G00", startup_world_approach, speed, params, "WORLD APPROACH TRAVEL", travel_destination);
+        rv += writeMotion("G00", startup_world_approach, speed, params, "WORLD APPROACH TRAVEL",
+                          first_travel_destination);
         rv += "#FLUSH WAIT" % m_newline;
         rv += m_newline;
         rv += commentLine("ENABLE WORK-OBJECT KINEMATICS");
         rv += writeStartupKinematics();
         rv += writePendingLayerChange();
-        rv += writeMotion("G00", travel_destination, speed, params, "TRAVEL");
+        rv += writeMotion("G00", first_travel_destination, speed, params, "TRAVEL");
         rv += writeBeginningBead();
     }
     else {
@@ -503,7 +511,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
                                : writeLinearTravel(travel_destination, speed);
     }
 
-    if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
+    if (travel_lower_required) {
         /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
         /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
         /// same effect.
@@ -742,6 +750,17 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
            QString::number(kToolFrameXR, 'f', 4) % " YR=" % QString::number(kToolFrameYR, 'f', 4) % " ZR=" %
            QString::number(tool_frame_zr, 'f', 4) % " AP=" % QString::number(ap_output, 'f', 4) % " CP=" %
            QString::number(cp_output, 'f', 4);
+}
+
+Point ArcSpecialtiesWriter::firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
+                                                                        const Point& travel_lower_destination,
+                                                                        Distance travel_lift_height) const {
+    const Point lower_output_destination = rotateGCodeCoordinateFramePoint(travel_lower_destination);
+    Point first_travel_output_destination = rotateGCodeCoordinateFramePoint(travel_destination);
+    first_travel_output_destination.y(lower_output_destination.y());
+    first_travel_output_destination.z(Distance(lower_output_destination.z()) + travel_lift_height);
+
+    return inverseRotateGCodeCoordinateFramePoint(first_travel_output_destination);
 }
 
 Point ArcSpecialtiesWriter::safeStartupWorldApproachPoint(const Point& travel_destination,
