@@ -40,10 +40,25 @@ QSharedPointer<GraphicsObject> createOptimizationGuide(BaseView* view, QColor co
     return guide;
 }
 
+bool usesSeamAttractorVector(const QSharedPointer<SettingsBase>& sb) {
+    const IslandOrderOptimization island_order =
+        static_cast<IslandOrderOptimization>(sb->setting<int>(PS::Optimizations::kIslandOrder));
+    const PathOrderOptimization path_order =
+        static_cast<PathOrderOptimization>(sb->setting<int>(PS::Optimizations::kPathOrder));
+    const PointOrderOptimization point_order =
+        static_cast<PointOrderOptimization>(sb->setting<int>(PS::Optimizations::kPointOrder));
+
+    return island_order == IslandOrderOptimization::kCustomPoint || path_order == PathOrderOptimization::kCustomPoint ||
+           usesCustomPointLocation(point_order);
+}
+
 QVector3D optimizationGuideDirection(const QSharedPointer<SettingsBase>& sb) {
-    QVector3D direction(sb->setting<float>(PS::Optimizations::kSeamAttractorVectorX),
-                        sb->setting<float>(PS::Optimizations::kSeamAttractorVectorY),
-                        sb->setting<float>(PS::Optimizations::kSeamAttractorVectorZ));
+    QVector3D direction;
+    if (usesSeamAttractorVector(sb)) {
+        direction = QVector3D(sb->setting<float>(PS::Optimizations::kSeamAttractorVectorX),
+                              sb->setting<float>(PS::Optimizations::kSeamAttractorVectorY),
+                              sb->setting<float>(PS::Optimizations::kSeamAttractorVectorZ));
+    }
 
     if (direction.isNull()) {
         direction = QVector3D(sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
