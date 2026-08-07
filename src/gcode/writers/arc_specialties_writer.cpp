@@ -659,7 +659,7 @@ QString ArcSpecialtiesWriter::writeWelderOff() {
     if (m_deposition_active) {
         QString rv;
         rv += "G260" % commentSpaceLine("BLENDING OFF");
-        rv += "M151" % commentSpaceLine("WIRE ARC WELDER OFF");
+        rv += "G83" % commentSpaceLine("WIRE ARC WELDER OFF");
         /// TODO: M160 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M160
         /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
         /// same effect.
