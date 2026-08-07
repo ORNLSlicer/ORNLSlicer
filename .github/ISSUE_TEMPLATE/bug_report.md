@@ -25,7 +25,7 @@ assignees: ''
 
 
 ## Environment
-<!-- Describe the setup where the issue occurred, including OS, shell, Python version, Myna version, install method, and any other relevant environment details. -->
+<!-- Describe the setup where the issue occurred, including OS, software versions, and any relevant configuration details. -->
 
 
 ## Possible solution
