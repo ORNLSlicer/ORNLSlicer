@@ -43,6 +43,8 @@ void ArcSpecialtiesParser::config() {
     addCommandMapping("G161", std::bind(&ArcSpecialtiesParser::G161Handler, this, std::placeholders::_1));
     addCommandMapping("G162", std::bind(&ArcSpecialtiesParser::G162Handler, this, std::placeholders::_1));
     addCommandMapping("G164", std::bind(&ArcSpecialtiesParser::G164Handler, this, std::placeholders::_1));
+    addCommandMapping("G82", std::bind(&ArcSpecialtiesParser::G82Handler, this, std::placeholders::_1));
+    addCommandMapping("G83", std::bind(&ArcSpecialtiesParser::G83Handler, this, std::placeholders::_1));
 }
 
 void ArcSpecialtiesParser::G0Handler(QVector<QString> params) {
@@ -79,6 +81,10 @@ void ArcSpecialtiesParser::G161Handler(QVector<QString>) { m_use_absolute_arc_ce
 void ArcSpecialtiesParser::G162Handler(QVector<QString>) { m_use_absolute_arc_centers = false; }
 
 void ArcSpecialtiesParser::G164Handler(QVector<QString>) { m_use_absolute_arc_centers = false; }
+
+void ArcSpecialtiesParser::G82Handler(QVector<QString>) { setDepositionActive(true); }
+
+void ArcSpecialtiesParser::G83Handler(QVector<QString>) { setDepositionActive(false); }
 
 QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<QString> params) {
     QVector<QString> filtered_params;

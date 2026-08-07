@@ -71,6 +71,12 @@ class ArcSpecialtiesParser : public CommonParser {
     //! @brief Disables absolute I/J arc-center parsing.
     void G164Handler(QVector<QString> params);
 
+    //! @brief Marks Arc Specialties welder output as active deposition.
+    void G82Handler(QVector<QString> params);
+
+    //! @brief Marks Arc Specialties welder output as inactive deposition.
+    void G83Handler(QVector<QString> params);
+
   private:
     /*!
      * @brief Validates Arc Specialties parameters and returns common-parser-compatible linear parameters.
