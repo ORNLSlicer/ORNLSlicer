@@ -645,7 +645,7 @@ QString ArcSpecialtiesWriter::writeDwell(Time time) {
 QString ArcSpecialtiesWriter::writeWelderOn() {
     if (!m_deposition_active) {
         QString rv;
-        rv += "M150" % commentSpaceLine("WIRE ARC WELDER ON");
+        rv += "G82" % commentSpaceLine("WIRE ARC WELDER ON");
         rv += "G261" % commentSpaceLine("BLENDING ON");
         m_deposition_active = true;
         return rv;
