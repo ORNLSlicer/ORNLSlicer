@@ -327,7 +327,7 @@ settings:
     display: "Seam Attractor Vector - X"
     type: "unitless_float"
     tooltip: "X component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":4}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -339,7 +339,7 @@ settings:
     display: "Seam Attractor Vector - Y"
     type: "unitless_float"
     tooltip: "Y component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":4}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -351,7 +351,7 @@ settings:
     display: "Seam Attractor Vector - Z"
     type: "unitless_float"
     tooltip: "Z component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":4}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -388,7 +388,7 @@ inputs:
     display: "Seam Attractor Vector"
     widget: "vector3"
     tooltip: "Vector used to project seam attractor points onto each slicing plane. Leave all components at 0 to use the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":4}]}
     minor: "Optimizations"
     major: "Profile"
     components:
