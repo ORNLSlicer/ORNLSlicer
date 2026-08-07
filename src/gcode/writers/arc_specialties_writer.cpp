@@ -40,6 +40,9 @@ constexpr double kToolFrameZR = -135.0;
 //! @brief Tool-frame ZR used for rapid travel moves.
 constexpr double kRapidTravelToolFrameZR = -90.0;
 
+//! @brief First-pass clearance above the highest point of the build parts for the startup world approach.
+static const Distance kStartupWorldApproachZBuffer = 100.0 * mm;
+
 //! @brief Returns a point offset away from the radial cylinder axis by the configured lift height.
 Point radialLiftedPoint(const Point& point, const QSharedPointer<SettingsBase>& params, Distance lift_height) {
     const double center_x = params->setting<Distance>(kRadialCenterX)();
@@ -141,6 +144,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) %
                             "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
+        text += commentLine(
+            "Initial Approach: TRAFO-off world approach uses cylinder center XY and part maximum Z plus " %
+            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
@@ -257,6 +263,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) %
                             "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
+        text += commentLine(
+            "Initial Approach: TRAFO-off world approach uses the first travel XY and part maximum Z plus " %
+            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
         text += commentLine("Travel Lift Direction: slice plane normal");
         text += commentLine("Travel Lift Distance: " %
                             formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
@@ -288,6 +297,8 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     m_first_travel = true;
     m_layer_start = true;
     m_absolute_arc_center_mode_enabled = usesAbsoluteArcCenters();
+    m_startup_kinematics_written = false;
+    m_pending_layer_change.clear();
     setFeedrate(0.0);
 
     QString rv;
@@ -314,22 +325,8 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
     rv += "" % m_newline;
     rv += "G90" % m_newline;
-    rv += "#KIN ID [9]" % m_newline;
+    rv += "#TRAFO OFF" % m_newline;
     rv += "#FLUSH WAIT" % m_newline;
-    rv += "" % m_newline;
-    rv += "V.G.KIN[9].PROGRAMMING_MODE            = -1" % m_newline;
-    rv += "V.G.KIN[9].RTCP                        = 0" % m_newline;
-    rv += "#ORI MODE [ANGLE]" % m_newline;
-    rv += "V.G.WZ_AKT.L = 0" % m_newline;
-    rv += "M01" % m_newline;
-    rv += "#FLUSH WAIT" % m_newline;
-    const bool enable_trafo =
-        !m_sb->contains(PRS::MachineSetup::kEnableTrafo) || m_sb->setting<bool>(PRS::MachineSetup::kEnableTrafo);
-    rv += QString(enable_trafo ? "#TRAFO ON" : "#TRAFO OFF") % m_newline;
-    rv += "#FLUSH WAIT" % m_newline;
-    rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
-    rv += "#FLUSH WAIT" % m_newline;
-    rv += QString(m_absolute_arc_center_mode_enabled ? "G161" : "G162") % m_newline;
 
     if (m_sb->setting<int>(PRS::GCode::kEnableBoundingBox)) {
         rv += commentLine(QString("Bounding Box: X=") % QString::number(minimum_x.to(m_meta.m_distance_unit), 'f', 4) %
@@ -342,8 +339,18 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
         rv += m_sb->setting<QString>(PRS::GCode::kStartCode) % m_newline;
     }
 
-    rv += m_newline % commentLine(m_meta.m_layer_count_delimiter % ":" % QString::number(num_layers));
+    rv += m_newline % commentLine(m_meta.m_layer_count_delimiter % ":" % QString::number(num_layers)) % m_newline;
     return rv;
+}
+
+QString ArcSpecialtiesWriter::writeLayerChange(uint layer_number) {
+    const QString layer_change = WriterBase::writeLayerChange(layer_number);
+    if (!m_startup_kinematics_written) {
+        m_pending_layer_change += layer_change;
+        return QString();
+    }
+
+    return layer_change;
 }
 
 QString ArcSpecialtiesWriter::writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) {
@@ -383,14 +390,9 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOff();
     }
-    else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    else if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOn();
     }
-
-    /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
-    /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
-    /// same effect.
-    rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
     bool travel_lift_required = lift_height > 0 && lType != TravelLiftType::kNoLift;
@@ -400,7 +402,16 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
 
     const bool cylindrical_mode = isCylindricalSlicingMode();
 
-    auto writeRadialArcTravel = [this, &params](Point start, Point end, Velocity move_speed) -> QString {
+    auto writeBeginningBead = [this]() -> QString {
+        QString rv;
+        rv += commentLine(QString("BEGINNING BEAD: ") % QString::number(m_current_layer) % "." %
+                          QString::number(m_current_bead));
+        m_current_bead++;
+        return rv;
+    };
+
+    auto writeRadialArcTravel = [this, &params, &writeBeginningBead](Point start, Point end,
+                                                                     Velocity move_speed) -> QString {
         QString rv;
         const double center_x = params->setting<Distance>(kRadialCenterX)();
         const double center_y = params->setting<Distance>(kRadialCenterY)();
@@ -442,19 +453,15 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
             }
         }
 
-        rv += commentLine(QString("BEGINNING BEAD: ") % QString::number(m_current_layer) % "." %
-                          QString::number(m_current_bead));
-        m_current_bead++;
+        rv += writeBeginningBead();
 
         return rv;
     };
 
-    auto writeLinearTravel = [this, &params](Point end, Velocity move_speed) -> QString {
+    auto writeLinearTravel = [this, &params, &writeBeginningBead](Point end, Velocity move_speed) -> QString {
         QString rv;
         rv += writeMotion("G00", end, move_speed, params, "TRAVEL");
-        rv += commentLine(QString("BEGINNING BEAD: ") % QString::number(m_current_layer) % "." %
-                          QString::number(m_current_bead));
-        m_current_bead++;
+        rv += writeBeginningBead();
         return rv;
     };
 
@@ -479,10 +486,36 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         travel_destination = liftPoint(target_location);
     }
 
-    rv += cylindrical_mode ? writeRadialArcTravel(travel_start, travel_destination, speed)
-                           : writeLinearTravel(travel_destination, speed);
+    const bool travel_lower_required =
+        travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly);
 
-    if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
+    if (m_first_travel && !m_startup_kinematics_written) {
+        const Point first_travel_destination =
+            travel_lower_required
+                ? firstTravelPointAboveTravelLowerDestination(travel_destination, target_location, lift_height)
+                : travel_destination;
+        const Point startup_world_approach = safeStartupWorldApproachPoint(first_travel_destination, params);
+        rv += commentLine("INITIAL WORLD APPROACH");
+        rv += writeMotion("G00", startup_world_approach, speed, params, "WORLD APPROACH TRAVEL",
+                          first_travel_destination);
+        rv += "#FLUSH WAIT" % m_newline;
+        rv += m_newline;
+        rv += commentLine("ENABLE WORK-OBJECT KINEMATICS");
+        rv += writeStartupKinematics();
+        rv += writePendingLayerChange();
+        rv += writeMotion("G00", first_travel_destination, speed, params, "TRAVEL");
+        rv += writeBeginningBead();
+    }
+    else {
+        rv += cylindrical_mode ? writeRadialArcTravel(travel_start, travel_destination, speed)
+                               : writeLinearTravel(travel_destination, speed);
+    }
+
+    if (travel_lower_required) {
+        /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
+        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
+        /// same effect.
+        rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
         rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
     }
 
@@ -493,6 +526,9 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
 QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
                                         const QSharedPointer<SettingsBase> params) {
     QString rv;
+
+    rv += writeStartupKinematics();
+    rv += writePendingLayerChange();
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
@@ -517,6 +553,9 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     }
 
     QString rv;
+    rv += writeStartupKinematics();
+    rv += writePendingLayerChange();
+
     if (!m_extruder_on) {
         rv += writeExtruderOn();
     }
@@ -590,7 +629,7 @@ QString ArcSpecialtiesWriter::writeShutdown() {
     if (!m_sb->setting<QString>(PRS::GCode::kEndCode).isEmpty()) {
         rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;
     }
-    if (m_absolute_arc_center_mode_enabled) {
+    if (m_startup_kinematics_written && m_absolute_arc_center_mode_enabled) {
         rv += "G164" % m_newline;
     }
     rv += "M49" % commentSpaceLine("ROBOT GO HOME");
@@ -639,20 +678,70 @@ QString ArcSpecialtiesWriter::writeExtruderOff() {
 
 QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& destination, Velocity speed,
                                           const QSharedPointer<SettingsBase>& params, const QString& comment) {
+    return writeMotion(command, destination, speed, params, comment, destination);
+}
+
+QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& destination, Velocity speed,
+                                          const QSharedPointer<SettingsBase>& params, const QString& comment,
+                                          const Point& cp_reference) {
     setFeedrate(speed);
     if (command == "G00") {
-        return command % writeCoordinates(destination, params, kRapidTravelToolFrameZR) % commentSpaceLine(comment);
+        return command % writeCoordinates(destination, params, kRapidTravelToolFrameZR, cp_reference) %
+               commentSpaceLine(comment);
     }
     else {
-        return command % writeCoordinates(destination, params, kToolFrameZR) % m_f %
+        return command % writeCoordinates(destination, params, kToolFrameZR, cp_reference) % m_f %
                QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(comment);
     }
 }
 
+QString ArcSpecialtiesWriter::writeStartupKinematics() {
+    if (m_startup_kinematics_written) {
+        return QString();
+    }
+
+    QString rv;
+    rv += "#KIN ID [9]" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += "" % m_newline;
+    rv += "V.G.KIN[9].PROGRAMMING_MODE            = -1" % m_newline;
+    rv += "V.G.KIN[9].RTCP                        = 0" % m_newline;
+    rv += "#ORI MODE [ANGLE]" % m_newline;
+    rv += "V.G.WZ_AKT.L = 0" % m_newline;
+    rv += "M01" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    const bool enable_trafo =
+        !m_sb->contains(PRS::MachineSetup::kEnableTrafo) || m_sb->setting<bool>(PRS::MachineSetup::kEnableTrafo);
+    rv += QString(enable_trafo ? "#TRAFO ON" : "#TRAFO OFF") % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
+    rv += "#FLUSH WAIT" % m_newline;
+    rv += QString(m_absolute_arc_center_mode_enabled ? "G161" : "G162") % m_newline;
+
+    m_startup_kinematics_written = true;
+    return rv;
+}
+
+QString ArcSpecialtiesWriter::writePendingLayerChange() {
+    if (m_pending_layer_change.isEmpty()) {
+        return QString();
+    }
+
+    m_pending_layer_change.prepend(m_newline);
+    QString rv = m_pending_layer_change;
+    m_pending_layer_change.clear();
+    return rv;
+}
+
 QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
                                                double tool_frame_zr) {
+    return writeCoordinates(destination, params, tool_frame_zr, destination);
+}
+
+QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
+                                               double tool_frame_zr, const Point& cp_reference) {
     const double ap_output = m_sb->setting<Angle>(PRS::MachineSetup::kAxisA).to(m_meta.m_angle_unit);
-    const double cp_output = Angle(cpAxisForPoint(destination, params) * degree).to(m_meta.m_angle_unit);
+    const double cp_output = Angle(cpAxisForPoint(cp_reference, params) * degree).to(m_meta.m_angle_unit);
     const Point output_destination = rotateGCodeCoordinateFramePoint(destination);
 
     return QString(" X=") % QString::number(Distance(output_destination.x()).to(m_meta.m_distance_unit), 'f', 4) %
@@ -661,6 +750,34 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
            QString::number(kToolFrameXR, 'f', 4) % " YR=" % QString::number(kToolFrameYR, 'f', 4) % " ZR=" %
            QString::number(tool_frame_zr, 'f', 4) % " AP=" % QString::number(ap_output, 'f', 4) % " CP=" %
            QString::number(cp_output, 'f', 4);
+}
+
+Point ArcSpecialtiesWriter::firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
+                                                                        const Point& travel_lower_destination,
+                                                                        Distance travel_lift_height) const {
+    const Point lower_output_destination = rotateGCodeCoordinateFramePoint(travel_lower_destination);
+    Point first_travel_output_destination = rotateGCodeCoordinateFramePoint(travel_destination);
+    first_travel_output_destination.y(lower_output_destination.y());
+    first_travel_output_destination.z(Distance(lower_output_destination.z()) + travel_lift_height);
+
+    return inverseRotateGCodeCoordinateFramePoint(first_travel_output_destination);
+}
+
+Point ArcSpecialtiesWriter::safeStartupWorldApproachPoint(const Point& travel_destination,
+                                                          const QSharedPointer<SettingsBase>& params) const {
+    Point approach = travel_destination;
+    if (isCylindricalSlicingMode()) {
+        approach.x(params->setting<Distance>(kRadialCenterX));
+        approach.y(params->setting<Distance>(kRadialCenterY));
+    }
+
+    Distance safe_z(travel_destination.z());
+    if (hasBuildMaximumZ()) {
+        safe_z = getBuildMaximumZ() + kStartupWorldApproachZBuffer;
+    }
+    approach.z(static_cast<float>(safe_z()));
+
+    return approach;
 }
 
 QString ArcSpecialtiesWriter::writeArcCenterParameters(const Point& start_point, const Point& center_point) {

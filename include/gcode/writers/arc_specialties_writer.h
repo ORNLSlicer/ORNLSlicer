@@ -67,6 +67,9 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                               int num_layers) override;
 
+    //! @brief Writes or defers the layer marker so Arc Specialties startup positioning stays outside the layer block.
+    QString writeLayerChange(uint layer_number) override;
+
     /*!
      * @brief Resets per-layer writer state before a layer.
      * @param min_z Minimum layer Z. Currently informational only.
@@ -171,6 +174,31 @@ class ArcSpecialtiesWriter : public WriterBase {
                         const QSharedPointer<SettingsBase>& params, const QString& comment);
 
     /*!
+     * @brief Writes a single Arc Specialties motion command while computing CP from a reference point.
+     * @param command G-code command string.
+     * @param destination Endpoint being written.
+     * @param speed Feedrate to emit.
+     * @param params Segment settings containing speed and, for cylindrical paths, radial center metadata.
+     * @param comment Motion comment.
+     * @param cp_reference Point used to compute the CP orientation field.
+     * @return Complete motion line.
+     */
+    QString writeMotion(const QString& command, const Point& destination, Velocity speed,
+                        const QSharedPointer<SettingsBase>& params, const QString& comment, const Point& cp_reference);
+
+    /*!
+     * @brief Writes the Arc Specialties kinematics and TRAFO setup block once.
+     * @return Startup kinematics block, or an empty string after it has already been emitted.
+     */
+    QString writeStartupKinematics();
+
+    /*!
+     * @brief Writes any layer marker deferred until after startup kinematics are enabled.
+     * @return Deferred layer marker, or an empty string when none is pending.
+     */
+    QString writePendingLayerChange();
+
+    /*!
      * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields for a point.
      * @param destination Point being written.
      * @param params Segment settings containing, for cylindrical paths, radial center metadata.
@@ -179,6 +207,37 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
                              double tool_frame_zr);
+
+    /*!
+     * @brief Formats X/Y/Z/XR/YR/ZR/AP/CP coordinate fields with CP computed from a reference point.
+     * @param destination Point being written.
+     * @param params Segment settings containing, for cylindrical paths, radial center metadata.
+     * @param tool_frame_zr ZR orientation value to emit.
+     * @param cp_reference Point used to compute the CP orientation field.
+     * @return Coordinate parameter string.
+     */
+    QString writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params, double tool_frame_zr,
+                             const Point& cp_reference);
+
+    /*!
+     * @brief Returns the first post-kinematics travel point above the first-layer lower point.
+     * @param travel_destination Current first travel destination before the first-layer lower adjustment.
+     * @param travel_lower_destination First-layer point written by the TRAVEL LOWER command.
+     * @param travel_lift_height Configured travel lift height used as the emitted Z buffer.
+     * @return First TRAVEL destination with emitted Y aligned to the lower point and emitted Z buffered above it.
+     */
+    Point firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
+                                                      const Point& travel_lower_destination,
+                                                      Distance travel_lift_height) const;
+
+    /*!
+     * @brief Returns the safe world-space startup approach point for the first travel.
+     * @param travel_destination Computed first travel destination in the active part/work frame.
+     * @param params Segment settings containing, for cylindrical paths, radial center metadata.
+     * @return First TRAFO-off world approach point, with Z set above the maximum part Z.
+     */
+    Point safeStartupWorldApproachPoint(const Point& travel_destination,
+                                        const QSharedPointer<SettingsBase>& params) const;
 
     /*!
      * @brief Formats I/J arc center parameters for the selected center interpretation mode.
@@ -235,6 +294,12 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Tracks whether G161 absolute-center mode was enabled during setup.
     bool m_absolute_arc_center_mode_enabled = false;
+
+    //! @brief Tracks whether startup kinematics setup has been emitted.
+    bool m_startup_kinematics_written = false;
+
+    //! @brief Layer marker held until the initial world approach and kinematics block are complete.
+    QString m_pending_layer_change;
 
     //! @brief Active region type used for planar print-move comments.
     RegionType m_region_type = RegionType::kUnknown;
