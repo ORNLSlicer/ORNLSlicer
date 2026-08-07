@@ -112,6 +112,15 @@ class WriterBase {
     //! \brief Return current feedrate
     Velocity getFeedrate() const;
 
+    //! \brief Records the maximum Z value of all non-clipping parts in the build.
+    void setBuildMaximumZ(Distance maximum_z);
+
+    //! \brief Returns whether the build maximum Z has been recorded.
+    bool hasBuildMaximumZ() const;
+
+    //! \brief Returns the recorded maximum Z value of all non-clipping parts in the build.
+    Distance getBuildMaximumZ() const;
+
     //! \brief Records the current output position after a segment is emitted.
     void setCurrentPosition(const Point& point);
 
@@ -203,6 +212,12 @@ class WriterBase {
 
     //! \brief whether or not layer should be spiralized
     bool m_spiral_layer;
+
+    //! \brief maximum Z value of all non-clipping parts in the build
+    Distance m_build_maximum_z;
+
+    //! \brief whether or not the build maximum Z value has been recorded
+    bool m_has_build_maximum_z;
 
   private:
 }; // class WriterBase

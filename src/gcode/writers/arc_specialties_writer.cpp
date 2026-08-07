@@ -40,6 +40,9 @@ constexpr double kToolFrameZR = -135.0;
 //! @brief Tool-frame ZR used for rapid travel moves.
 constexpr double kRapidTravelToolFrameZR = -90.0;
 
+//! @brief First-pass clearance above the highest point of the build parts for the startup world approach.
+static const Distance kStartupWorldApproachZBuffer = 100.0 * mm;
+
 //! @brief Returns a point offset away from the radial cylinder axis by the configured lift height.
 Point radialLiftedPoint(const Point& point, const QSharedPointer<SettingsBase>& params, Distance lift_height) {
     const double center_x = params->setting<Distance>(kRadialCenterX)();
@@ -142,8 +145,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
-            "Initial Approach: TRAFO-off world approach uses cylinder center XY and safe Z before work-object "
-            "kinematics");
+            "Initial Approach: TRAFO-off world approach uses cylinder center XY and part maximum Z plus " %
+            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
@@ -261,8 +264,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
-            "Initial Approach: TRAFO-off world approach uses the first travel XY and safe Z before work-object "
-            "kinematics");
+            "Initial Approach: TRAFO-off world approach uses the first travel XY and part maximum Z plus " %
+            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
         text += commentLine("Travel Lift Direction: slice plane normal");
         text += commentLine("Travel Lift Distance: " %
                             formatDistance(m_sb->setting<Distance>(PS::Travel::kLiftHeight), m_meta.m_distance_unit));
@@ -749,11 +752,11 @@ Point ArcSpecialtiesWriter::safeStartupWorldApproachPoint(const Point& travel_de
         approach.y(params->setting<Distance>(kRadialCenterY));
     }
 
-    double safe_z = travel_destination.z();
-    if (m_sb->contains(PRS::Dimensions::kZMax)) {
-        safe_z = std::max(safe_z, m_sb->setting<Distance>(PRS::Dimensions::kZMax)());
+    Distance safe_z(travel_destination.z());
+    if (hasBuildMaximumZ()) {
+        safe_z = getBuildMaximumZ() + kStartupWorldApproachZBuffer;
     }
-    approach.z(static_cast<float>(safe_z));
+    approach.z(static_cast<float>(safe_z()));
 
     return approach;
 }

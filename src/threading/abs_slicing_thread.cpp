@@ -341,7 +341,9 @@ void AbstractSlicingThread::writeGCodeSetup() {
     QTextStream stream(&m_temp_gcode_output_file);
 
     float minimum_x(std::numeric_limits<float>::max()), minimum_y(std::numeric_limits<float>::max()),
-        maximum_x(std::numeric_limits<float>::min()), maximum_y(std::numeric_limits<float>::min());
+        maximum_x(std::numeric_limits<float>::min()), maximum_y(std::numeric_limits<float>::min()),
+        maximum_z(std::numeric_limits<float>::lowest());
+    bool has_part_bounds = false;
 
     for (QSharedPointer<Part> curr_part : CSM->parts()) {
         if (curr_part->rootMesh()->type() == MeshType::kClipping) // Skip parts that were used for clipping
@@ -351,6 +353,12 @@ void AbstractSlicingThread::writeGCodeSetup() {
         minimum_y = std::min(minimum_y, curr_part->rootMesh()->min().y());
         maximum_x = std::max(maximum_x, curr_part->rootMesh()->max().x());
         maximum_y = std::max(maximum_y, curr_part->rootMesh()->max().y());
+        maximum_z = std::max(maximum_z, curr_part->rootMesh()->max().z());
+        has_part_bounds = true;
+    }
+
+    if (has_part_bounds) {
+        m_base->setBuildMaximumZ(Distance(maximum_z));
     }
 
     stream << m_base->writeSlicerHeader(toString(m_syntax));

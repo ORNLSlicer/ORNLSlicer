@@ -223,7 +223,7 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @brief Returns the safe world-space startup approach point for the first travel.
      * @param travel_destination Computed first travel destination in the active part/work frame.
      * @param params Segment settings containing, for cylindrical paths, radial center metadata.
-     * @return First TRAFO-off world approach point.
+     * @return First TRAFO-off world approach point, with Z set above the maximum part Z.
      */
     Point safeStartupWorldApproachPoint(const Point& travel_destination,
                                         const QSharedPointer<SettingsBase>& params) const;
