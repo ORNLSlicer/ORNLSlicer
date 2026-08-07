@@ -26,7 +26,17 @@ bool closeTo(double lhs, double rhs) { return std::abs(lhs - rhs) <= 1.0e-5; }
 
 QSharedPointer<ORNL::SettingsBase> settingsWithSeamAttractor(ORNL::PointOrderOptimization point_order) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
+    settings->setSetting(ORNL::PS::Optimizations::kIslandOrder,
+                         static_cast<int>(ORNL::IslandOrderOptimization::kNextClosest));
+    settings->setSetting(ORNL::PS::Optimizations::kPathOrder,
+                         static_cast<int>(ORNL::PathOrderOptimization::kNextClosest));
     settings->setSetting(ORNL::PS::Optimizations::kPointOrder, static_cast<int>(point_order));
+    settings->setSetting(ORNL::PS::Optimizations::kCustomIslandXLocation, 2.0);
+    settings->setSetting(ORNL::PS::Optimizations::kCustomIslandYLocation, 3.0);
+    settings->setSetting(ORNL::PS::Optimizations::kCustomIslandZLocation, 0.0);
+    settings->setSetting(ORNL::PS::Optimizations::kCustomPathXLocation, 2.0);
+    settings->setSetting(ORNL::PS::Optimizations::kCustomPathYLocation, 3.0);
+    settings->setSetting(ORNL::PS::Optimizations::kCustomPathZLocation, 0.0);
     settings->setSetting(ORNL::PS::Optimizations::kCustomPointXLocation, 2.0);
     settings->setSetting(ORNL::PS::Optimizations::kCustomPointYLocation, 3.0);
     settings->setSetting(ORNL::PS::Optimizations::kCustomPointZLocation, 0.0);
@@ -48,6 +58,26 @@ int main() {
     passed &= expect(closeTo(next_closest_anchor.x(), 2.0) && closeTo(next_closest_anchor.y(), 3.0) &&
                          closeTo(next_closest_anchor.z(), 10.0),
                      "Expected seam attractor vector to be ignored outside Custom Location point order.");
+
+    QSharedPointer<ORNL::SettingsBase> custom_island_settings =
+        settingsWithSeamAttractor(ORNL::PointOrderOptimization::kNextClosest);
+    custom_island_settings->setSetting(ORNL::PS::Optimizations::kIslandOrder,
+                                       static_cast<int>(ORNL::IslandOrderOptimization::kCustomPoint));
+    const ORNL::Point custom_island_anchor = ORNL::OptimizationAnchor::customIslandOrderPoint(
+        custom_island_settings, slicing_plane, optimization_shift);
+    passed &= expect(closeTo(custom_island_anchor.x(), 12.0) && closeTo(custom_island_anchor.y(), 3.0) &&
+                         closeTo(custom_island_anchor.z(), 10.0),
+                     "Expected seam attractor vector to project the anchor for Custom Island Location order.");
+
+    QSharedPointer<ORNL::SettingsBase> custom_path_settings =
+        settingsWithSeamAttractor(ORNL::PointOrderOptimization::kNextClosest);
+    custom_path_settings->setSetting(ORNL::PS::Optimizations::kPathOrder,
+                                     static_cast<int>(ORNL::PathOrderOptimization::kCustomPoint));
+    const ORNL::Point custom_path_anchor =
+        ORNL::OptimizationAnchor::customPathOrderPoint(custom_path_settings, slicing_plane, optimization_shift);
+    passed &= expect(closeTo(custom_path_anchor.x(), 12.0) && closeTo(custom_path_anchor.y(), 3.0) &&
+                         closeTo(custom_path_anchor.z(), 10.0),
+                     "Expected seam attractor vector to project the anchor for Custom Path Location order.");
 
     const ORNL::Point custom_farthest_anchor = ORNL::OptimizationAnchor::customPointOrderPoint(
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kCustomFarthestPoint), slicing_plane,

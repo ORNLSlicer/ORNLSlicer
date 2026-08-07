@@ -453,6 +453,38 @@ QList<QSharedPointer<SettingsBase>> SettingBar::selectedEditableSettingsBases() 
     return settings_bases;
 }
 
+void SettingBar::removeRedundantSelectedLocalOverride(const QString& setting_key) {
+    if (m_selected_settings_bases.isEmpty())
+        return;
+
+    double global_value = 0.0;
+    if (GSM->getGlobal()->contains(setting_key)) {
+        global_value = GSM->getGlobal()->setting<double>(setting_key);
+    }
+    else {
+        fifojson& master_json = GSM->getMaster()->json();
+        auto setting = master_json.find(setting_key.toStdString());
+        if (setting != master_json.end() && setting.value().contains(Constants::Settings::Master::kDefault))
+            global_value = setting.value()[Constants::Settings::Master::kDefault].get<double>();
+    }
+
+    for (int index = 0, end = m_selected_settings_bases.size(); index < end; ++index) {
+        QSharedPointer<SettingsBase> settings_base = m_selected_settings_bases[index];
+        if (settings_base.isNull() || !settings_base->contains(setting_key))
+            continue;
+
+        double inherited_value = global_value;
+        if (index < m_selected_inherited_settings_bases.size()) {
+            const QSharedPointer<SettingsBase>& inherited_base = m_selected_inherited_settings_bases[index];
+            if (!inherited_base.isNull() && inherited_base->contains(setting_key))
+                inherited_value = inherited_base->setting<double>(setting_key);
+        }
+
+        if (settings_base->setting<double>(setting_key) == inherited_value)
+            settings_base->remove(setting_key);
+    }
+}
+
 void SettingBar::emitSelectedVisualizationSettings() {
     emit selectedVisualizationSettingsChanged(selectedVisualizationSettings());
 }
@@ -493,6 +525,9 @@ void SettingBar::updatePairedGlobalSetting(QString first_key, double first_value
         settings_base->setSetting(first_key, first_value);
         settings_base->setSetting(second_key, second_value);
     }
+
+    removeRedundantSelectedLocalOverride(first_key);
+    removeRedundantSelectedLocalOverride(second_key);
 
     m_restoring_settings = true;
     reloadSettingRow(first_key);

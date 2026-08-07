@@ -25,11 +25,28 @@ QVector3D settingVector(const QSharedPointer<SettingsBase>& sb, const QString& x
     return QVector3D(sb->setting<float>(x_key), sb->setting<float>(y_key), sb->setting<float>(z_key));
 }
 
-QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane) {
-    QVector3D direction;
+bool usesCustomIslandLocation(const QSharedPointer<SettingsBase>& sb) {
+    const IslandOrderOptimization island_order =
+        static_cast<IslandOrderOptimization>(sb->setting<int>(PS::Optimizations::kIslandOrder));
+    return island_order == IslandOrderOptimization::kCustomPoint;
+}
+
+bool usesCustomPathLocation(const QSharedPointer<SettingsBase>& sb) {
+    const PathOrderOptimization path_order =
+        static_cast<PathOrderOptimization>(sb->setting<int>(PS::Optimizations::kPathOrder));
+    return path_order == PathOrderOptimization::kCustomPoint;
+}
+
+bool usesCustomPointOrderLocation(const QSharedPointer<SettingsBase>& sb) {
     const PointOrderOptimization point_order =
         static_cast<PointOrderOptimization>(sb->setting<int>(PS::Optimizations::kPointOrder));
-    if (usesCustomPointLocation(point_order)) {
+    return usesCustomPointLocation(point_order);
+}
+
+QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
+                              bool use_seam_attractor_vector) {
+    QVector3D direction;
+    if (use_seam_attractor_vector) {
         direction = settingVector(sb, PS::Optimizations::kSeamAttractorVectorX,
                                   PS::Optimizations::kSeamAttractorVectorY,
                                   PS::Optimizations::kSeamAttractorVectorZ);
@@ -84,10 +101,11 @@ Point flattenIntoOptimizationFrame(const Point& point, const Plane& slicing_plan
 }
 
 Point customOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
-                       const Point& optimization_shift, const QString& x_key, const QString& y_key,
-                       const QString& z_key) {
+                       const Point& optimization_shift, bool use_seam_attractor_vector, const QString& x_key,
+                       const QString& y_key, const QString& z_key) {
     return flattenIntoOptimizationFrame(projectAlongVector(settingPoint(sb, x_key, y_key, z_key), slicing_plane,
-                                                           seamAttractorVector(sb, slicing_plane)),
+                                                           seamAttractorVector(sb, slicing_plane,
+                                                                               use_seam_attractor_vector)),
                                         slicing_plane, optimization_shift);
 }
 } // namespace
@@ -95,20 +113,23 @@ Point customOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slic
 namespace OptimizationAnchor {
 Point customIslandOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
                              const Point& optimization_shift) {
-    return customOrderPoint(sb, slicing_plane, optimization_shift, PS::Optimizations::kCustomIslandXLocation,
-                            PS::Optimizations::kCustomIslandYLocation, PS::Optimizations::kCustomIslandZLocation);
+    return customOrderPoint(sb, slicing_plane, optimization_shift, usesCustomIslandLocation(sb),
+                            PS::Optimizations::kCustomIslandXLocation, PS::Optimizations::kCustomIslandYLocation,
+                            PS::Optimizations::kCustomIslandZLocation);
 }
 
 Point customPathOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
                            const Point& optimization_shift) {
-    return customOrderPoint(sb, slicing_plane, optimization_shift, PS::Optimizations::kCustomPathXLocation,
-                            PS::Optimizations::kCustomPathYLocation, PS::Optimizations::kCustomPathZLocation);
+    return customOrderPoint(sb, slicing_plane, optimization_shift, usesCustomPathLocation(sb),
+                            PS::Optimizations::kCustomPathXLocation, PS::Optimizations::kCustomPathYLocation,
+                            PS::Optimizations::kCustomPathZLocation);
 }
 
 Point customPointOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
                             const Point& optimization_shift) {
-    return customOrderPoint(sb, slicing_plane, optimization_shift, PS::Optimizations::kCustomPointXLocation,
-                            PS::Optimizations::kCustomPointYLocation, PS::Optimizations::kCustomPointZLocation);
+    return customOrderPoint(sb, slicing_plane, optimization_shift, usesCustomPointOrderLocation(sb),
+                            PS::Optimizations::kCustomPointXLocation, PS::Optimizations::kCustomPointYLocation,
+                            PS::Optimizations::kCustomPointZLocation);
 }
 } // namespace OptimizationAnchor
 } // namespace ORNL

@@ -211,6 +211,9 @@ class SettingBar : public QWidget {
     //! \brief Returns non-null selected local settings bases; empty means global settings should be edited.
     QList<QSharedPointer<SettingsBase>> selectedEditableSettingsBases() const;
 
+    //! \brief Removes a selected local override when its value matches the inherited value.
+    void removeRedundantSelectedLocalOverride(const QString& setting_key);
+
     //! \brief Emits the current effective visualization settings.
     void emitSelectedVisualizationSettings();
 
