@@ -8,6 +8,7 @@
 
 #include "configs/settings_base.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/mathutils.h"
 
 namespace ORNL {
@@ -25,9 +26,14 @@ QVector3D settingVector(const QSharedPointer<SettingsBase>& sb, const QString& x
 }
 
 QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane) {
-    QVector3D direction =
-        settingVector(sb, PS::Optimizations::kSeamAttractorVectorX, PS::Optimizations::kSeamAttractorVectorY,
-                      PS::Optimizations::kSeamAttractorVectorZ);
+    QVector3D direction;
+    const PointOrderOptimization point_order =
+        static_cast<PointOrderOptimization>(sb->setting<int>(PS::Optimizations::kPointOrder));
+    if (point_order == PointOrderOptimization::kCustomPoint) {
+        direction = settingVector(sb, PS::Optimizations::kSeamAttractorVectorX,
+                                  PS::Optimizations::kSeamAttractorVectorY,
+                                  PS::Optimizations::kSeamAttractorVectorZ);
+    }
 
     if (direction.isNull()) {
         direction = slicing_plane.normal();

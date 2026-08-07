@@ -251,6 +251,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_point_order_optimizer_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME point_order_optimizer_tests COMMAND ${PROJECT_NAME}_point_order_optimizer_tests)
 
+    add_executable(${PROJECT_NAME}_optimization_anchor_tests tests/optimization_anchor_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_optimization_anchor_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_optimization_anchor_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME optimization_anchor_tests COMMAND ${PROJECT_NAME}_optimization_anchor_tests)
+
     add_executable(${PROJECT_NAME}_optimizer_empty_input_tests tests/optimizer_empty_input_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_optimizer_empty_input_tests
