@@ -106,6 +106,9 @@ G81 ;OPTIONAL STOP ROUTINE
 G01 X=... Y=... Z=... XR=180.0000 YR=0.0000 ZR=-135.0000 AP=... CP=... F... ;TRAVEL LOWER
 ```
 
+When `Arc Specialties G2/G3 Optional Stop` is selected, non-initial `G02`/`G03` print arcs also emit `G81` before
+the arc move.
+
 The writer turns welding and blending on before print motion and off before longer travel or shutdown:
 
 ```gcode

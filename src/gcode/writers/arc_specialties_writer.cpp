@@ -568,7 +568,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
         rv += writeWelderOn();
     }
 
-    if(!m_first_deposition) {
+    if (m_sb->setting<bool>(PRS::GCode::kArcSpecialtiesG2G3OptionalStop) && !m_first_deposition) {
         rv += "G81" % commentSpaceLine("OPTIONAL STOP ROUTINE");
     }
 
