@@ -102,7 +102,7 @@ The layer marker is held until after the initial world approach and kinematics b
 Travel moves use `G00`. Cylindrical travel lift moves outward from the cylinder axis; planar travel lift follows the slice-plane normal. Non-first cylindrical travel may be split into `TRAVEL ARC` waypoints around the cylinder axis when the angular move is long enough. Travel lower is emitted as a feed move:
 
 ```gcode
-;G80 ;OPTIONAL STOP ROUTINE
+G81 ;OPTIONAL STOP ROUTINE
 G01 X=... Y=... Z=... XR=180.0000 YR=0.0000 ZR=-135.0000 AP=... CP=... F... ;TRAVEL LOWER
 ```
 
@@ -118,7 +118,7 @@ M151 ;WIRE ARC WELDER OFF
 #CHANNEL INIT [CMDPOS]
 ```
 
-`M06`, `G80`, and `M160` are currently emitted as comments because the inline writer TODOs identify controller issues with those commands as of 2026-07-29. They should be re-enabled or replaced only after the controller behavior is resolved.
+`M06` and `M160` are currently emitted as comments because the inline writer TODOs identify controller issues with those commands as of 2026-07-29. They should be re-enabled or replaced only after the controller behavior is resolved.
 
 Shutdown writes any configured end code, emits `G164` when absolute center mode was active, sends the robot home, initializes the channel, and ends the program with `M02`.
 
