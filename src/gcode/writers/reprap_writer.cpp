@@ -24,7 +24,7 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
                                         int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_print = true;
     m_first_travel = true;
     m_layer_start = true;
@@ -170,7 +170,7 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
     Point new_start_location;
-    m_extruder_on = false;
+    m_deposition_active = false;
 
     // Update Acceleration
     if (m_sb->setting<bool>(PRS::Acceleration::kEnableDynamic)) {
@@ -243,11 +243,11 @@ QString RepRapWriter::writeLine(const Point& start_point, const Point& target_po
     QString rv;
 
     // check if extruder needs priming
-    bool needs_prime = !m_extruder_on;
-    m_extruder_on = true;
+    bool needs_prime = !m_deposition_active;
+    m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
-    // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
+    // First segment of the path is signified by inactive deposition and the modifier isn't one of five ending modifiers
     if (needs_prime && path_modifiers != PathModifiers::kSlowDown && path_modifiers != PathModifiers::kForwardTipWipe &&
         path_modifiers != PathModifiers::kReverseTipWipe && path_modifiers != PathModifiers::kCoasting &&
         path_modifiers != PathModifiers::kSpiralLift) {

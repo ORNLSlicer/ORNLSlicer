@@ -104,11 +104,11 @@ class GcodeCommand : public QObject {
     //! \brief Clears the comment string.
     void clearComment();
 
-    //! \brief sets whether the extruder is on for this command
-    void setExtruderOn(bool extruder_on);
+    //! \brief Sets whether deposition is active for this command.
+    void setDepositionActive(bool deposition_active);
 
-    //! \brief gets whether the extruder is on for this command
-    bool getExtruderOn() const;
+    //! \brief Gets whether deposition is active for this command.
+    bool getDepositionActive() const;
 
     //! \brief sets extruder speed for this command
     //! \param extruder_speed
@@ -135,7 +135,7 @@ class GcodeCommand : public QObject {
     int m_command_id;
     QMap<char, double> m_parameters;
     QMap<char, double> m_optional_parameters;
-    bool m_extruder_on;
+    bool m_deposition_active;
     double m_extruder_speed;
     QString m_comment;
     QString m_commandLine;

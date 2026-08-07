@@ -32,7 +32,7 @@ QString WolfWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
     m_current_rpm = 0;
     m_current_robot = 1;
     m_machine_type = m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType);
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -201,7 +201,7 @@ QString WolfWriter::writeLine(const Point& start_point, const Point& target_poin
         rv += "M6" % commentSpaceLine("TIP WIPE START");
     }
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0);
         setFeedrate(0);
     }
@@ -321,7 +321,7 @@ QString WolfWriter::writeDwell(Time time) {
 
 QString WolfWriter::writeExtruderOn(RegionType region_type, int rpm, int extruder_number) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
 
     rv += "M101" % commentSpaceLine("TURN PUMP ON");
 
@@ -357,7 +357,7 @@ QString WolfWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
 
 QString WolfWriter::writeExtruderOff(int extruder_number) {
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
 
     // Retrieve relevant settings
     Time off_delay = m_sb->setting<Time>(MS::Extruder::kOffDelay);

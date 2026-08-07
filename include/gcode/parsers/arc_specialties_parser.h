@@ -134,10 +134,10 @@ class ArcSpecialtiesParser : public CommonParser {
     QVector<QString> convertAbsoluteArcCenterParams(const QVector<QString>& params);
 
     /*!
-     * @brief Sets the extruder state used by CommonParser motion estimation.
-     * @param on True to mark the extruder as printing.
+     * @brief Sets the deposition state used by CommonParser motion estimation.
+     * @param on True to mark the parser as depositing material.
      */
-    void setExtruderActive(bool on);
+    void setDepositionActive(bool on);
 
     /*!
      * @brief Runs a CommonParser arc handler with optional cylindrical print classification.

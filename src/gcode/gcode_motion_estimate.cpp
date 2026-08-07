@@ -45,7 +45,7 @@ void MotionEstimation::setBeadGeometry(Distance bead_width, Distance bead_height
 
 void MotionEstimation::resetBeadHeight() { m_current_bead_height = 0; }
 
-Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
+Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
                                                   Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b) {
     static_cast<void>(layer);
 
@@ -120,14 +120,14 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
     // the rest is for a predominantly XY move
     Distance length = sqrt(dx * dx + dy * dy + dz * dz);
     return MotionEstimation::calculatePathTimeAndVolume(length, dx, dy, dz, dx, dy, dz, isFIncluded, isGOCommand,
-                                                        extruder_on, G1F_time, layer_time, layer_volume);
+                                                        deposition_active, G1F_time, layer_time, layer_volume);
 }
 
 Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Distance start_direction_x,
                                                       Distance start_direction_y, Distance start_direction_z,
                                                       Distance end_direction_x, Distance end_direction_y,
                                                       Distance end_direction_z, bool isFIncluded, bool isGOCommand,
-                                                      bool extruder_on, Time& G1F_time, Time& layer_time,
+                                                      bool deposition_active, Time& G1F_time, Time& layer_time,
                                                       Volume& layer_volume) {
     // minimum distance to be considered move for estimate calculation
     double m_min_threshold = 10;
@@ -175,8 +175,8 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
             MotionEstimation::setPreviousVelocityVector(m_incomingV, end_direction_x, end_direction_y, end_direction_z);
         }
 
-        // if the extruder is on, calculate the extruded volume
-        if (extruder_on) {
+        // If deposition is active, calculate the deposited volume.
+        if (deposition_active) {
             Distance height = m_current_bead_height > 0 ? m_current_bead_height : m_nominal_bead_height;
             Distance bead_width = m_current_bead_width > 0 ? m_current_bead_width : extrusionWidth;
 

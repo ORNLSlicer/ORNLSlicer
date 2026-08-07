@@ -31,7 +31,7 @@ QString AML3DWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
                                        int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -214,13 +214,13 @@ QString AML3DWriter::writeLine(const Point& start_point, const Point& target_poi
 
     QString rv;
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0, params);
         setFeedrate(0);
     }
     if ((path_modifiers == PathModifiers::kForwardTipWipe || path_modifiers == PathModifiers::kReverseTipWipe ||
          path_modifiers == PathModifiers::kPerimeterTipWipe) &&
-        m_extruder_on && !m_tip_wipe) {
+        m_deposition_active && !m_tip_wipe) {
         m_tip_wipe = true;
         rv += commentLine("UPDATE VOLTAGE FOR TIP WIPE");
     }
@@ -273,7 +273,7 @@ QString AML3DWriter::writeArc(const Point& start_point, const Point& end_point, 
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0, params);
     }
 
@@ -412,7 +412,7 @@ QString AML3DWriter::writeTamperOff() {
 QString AML3DWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number,
                                      const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
 
@@ -470,7 +470,7 @@ QString AML3DWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

@@ -51,7 +51,7 @@ WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) :
     m_build_maximum_z = Distance(0.0);
     m_has_build_maximum_z = false;
 
-    m_extruder_on = false;
+    m_deposition_active = false;
 }
 
 QString WriterBase::comment(const QString& text) {

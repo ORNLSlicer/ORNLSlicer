@@ -385,9 +385,9 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         lift_speed = speed;
     }
 
-    // Determine if travel length is short enough to keep extruder on
+    // Determine if travel length is short enough to keep welder on
     Distance travel_distance = start_location.distance(target_location);
-    if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    if (m_deposition_active && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeWelderOff();
     }
     else if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
@@ -531,7 +531,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
 
     m_layer_start = false;
 
-    if (!m_extruder_on) {
+    if (!m_deposition_active) {
         rv += writeWelderOn();
     }
 
@@ -553,7 +553,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     rv += writeStartupKinematics();
     rv += writePendingLayerChange();
 
-    if (!m_extruder_on) {
+    if (!m_deposition_active) {
         rv += writeWelderOn();
     }
 
@@ -643,11 +643,11 @@ QString ArcSpecialtiesWriter::writeDwell(Time time) {
 }
 
 QString ArcSpecialtiesWriter::writeWelderOn() {
-    if (!m_extruder_on) {
+    if (!m_deposition_active) {
         QString rv;
         rv += "M150" % commentSpaceLine("WIRE ARC WELDER ON");
         rv += "G261" % commentSpaceLine("BLENDING ON");
-        m_extruder_on = true;
+        m_deposition_active = true;
         return rv;
     }
     else {
@@ -656,7 +656,7 @@ QString ArcSpecialtiesWriter::writeWelderOn() {
 }
 
 QString ArcSpecialtiesWriter::writeWelderOff() {
-    if (m_extruder_on) {
+    if (m_deposition_active) {
         QString rv;
         rv += "G260" % commentSpaceLine("BLENDING OFF");
         rv += "M151" % commentSpaceLine("WIRE ARC WELDER OFF");
@@ -665,7 +665,7 @@ QString ArcSpecialtiesWriter::writeWelderOff() {
         /// same effect.
         rv += ";M160" % commentSpaceLine("CLIP WIRE");
         rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
-        m_extruder_on = false;
+        m_deposition_active = false;
         return rv;
     }
     else {

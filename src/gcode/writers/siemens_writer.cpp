@@ -24,7 +24,7 @@ QString SiemensWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_print = true;
     m_first_travel = true;
     m_layer_start = true;
@@ -95,11 +95,11 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
                                    QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    // If extruder is left on because of no end of path modifier, turn it off using Perimeter end of path G-Code
-    // This syntax doesn't currently issue extruder on/off commands because they are manually input to the
+    // If deposition is left active because of no end of path modifier, turn it off using Perimeter end of path G-Code
+    // This syntax doesn't currently issue deposition on/off commands because they are manually input to the
     // start/end G-Code of the settings
-    if (m_extruder_on) {
-        m_extruder_on = false;
+    if (m_deposition_active) {
+        m_deposition_active = false;
         if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
             rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
     }
@@ -162,14 +162,14 @@ QString SiemensWriter::writeLine(const Point& start_point, const Point& target_p
 
     QString rv;
 
-    // This syntax doesn't currently issue extruder on/off commands because they are manually input to the
+    // This syntax doesn't currently issue deposition on/off commands because they are manually input to the
     // start/end G-Code of the setting
     // Write out the region starting G-Code if this is the first segment of the path
-    // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
-    if (m_extruder_on == false && path_modifiers != PathModifiers::kSlowDown &&
+    // First segment of the path is signified by inactive deposition and the modifier isn't one of five ending modifiers
+    if (m_deposition_active == false && path_modifiers != PathModifiers::kSlowDown &&
         path_modifiers != PathModifiers::kForwardTipWipe && path_modifiers != PathModifiers::kReverseTipWipe &&
         path_modifiers != PathModifiers::kCoasting && path_modifiers != PathModifiers::kSpiralLift) {
-        m_extruder_on = true;
+        m_deposition_active = true;
         if (region_type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterStart).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterStart) % m_newline;
@@ -197,11 +197,11 @@ QString SiemensWriter::writeLine(const Point& start_point, const Point& target_p
     }
     // Write out the region ending G-Code if this is the first segment of the ending path modifiers
     // First segment is signified by extruder being on and the modifier is one of five ending modifiers
-    else if (m_extruder_on == true &&
+    else if (m_deposition_active == true &&
              (path_modifiers == PathModifiers::kSlowDown || path_modifiers == PathModifiers::kForwardTipWipe ||
               path_modifiers == PathModifiers::kReverseTipWipe || path_modifiers == PathModifiers::kCoasting ||
               path_modifiers == PathModifiers::kSpiralLift)) {
-        m_extruder_on = false;
+        m_deposition_active = false;
         if (region_type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -261,7 +261,7 @@ QString SiemensWriter::writeArc(const Point& start_point, const Point& end_point
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
 

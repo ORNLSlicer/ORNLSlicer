@@ -9,13 +9,13 @@
 namespace ORNL {
 GcodeCommand::GcodeCommand()
     : m_line_number(-1), m_command(0), m_command_id(-1), m_is_motion_command(false), m_is_end_of_layer(false),
-      m_extruder_on(false), m_extruder_speed(0) {}
+      m_deposition_active(false), m_extruder_speed(0) {}
 
 GcodeCommand::GcodeCommand(const GcodeCommand& other)
     : m_line_number(other.m_line_number), m_command(other.m_command), m_command_id(other.m_command_id),
       m_parameters(other.m_parameters), m_optional_parameters(other.m_optional_parameters), m_comment(other.m_comment),
       m_is_motion_command(other.m_is_motion_command), m_is_end_of_layer(other.m_is_end_of_layer),
-      m_extruder_on(other.m_extruder_on), m_extruder_speed(other.m_extruder_speed) {}
+      m_deposition_active(other.m_deposition_active), m_extruder_speed(other.m_extruder_speed) {}
 
 //! \brief Retrieves the line number of the command
 const int& GcodeCommand::getLineNumber() const { return m_line_number; }
@@ -97,9 +97,9 @@ GcodeCommand& GcodeCommand::operator=(const GcodeCommand& other) {
     return *this;
 }
 
-void GcodeCommand::setExtruderOn(bool extruder_on) { m_extruder_on = extruder_on; }
+void GcodeCommand::setDepositionActive(bool deposition_active) { m_deposition_active = deposition_active; }
 
-bool GcodeCommand::getExtruderOn() const { return m_extruder_on; }
+bool GcodeCommand::getDepositionActive() const { return m_deposition_active; }
 
 void GcodeCommand::setExtruderSpeed(double extruder_speed) { m_extruder_speed = extruder_speed; }
 

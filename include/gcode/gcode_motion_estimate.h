@@ -13,13 +13,13 @@ class MotionEstimation {
     //! \brief Calculate time and volume contribution from motion
     //! \param layer, current layer number
     //! \param isFIncluded, if the current command statement include velocity / speed
-    //! \param isGOCommand, if the current command statement is the fast non extruding move (G0)
-    //! \param extruder_on, whether the extruder is on currently
+    //! \param isGOCommand, if the current command statement is the fast non-deposition move (G0)
+    //! \param deposition_active, whether deposition is active currently
     //! \param G1F_time, G1 commands execution time estimates
     //! \param layer_time, accumulated time estimate for the entire layer
     //! \param layer_volume, accumulated volume estimate for the entire layer
     //! \param use_b, if using B filament axis, time calculation is based on extrusion not X/Y/Z distance
-    static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool extruder_on,
+    static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
                                            Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b);
 
     //! \brief Calculate time and volume contribution for a non-linear path with a known path length.
@@ -27,10 +27,10 @@ class MotionEstimation {
                                                Distance start_direction_y, Distance start_direction_z,
                                                Distance end_direction_x, Distance end_direction_y,
                                                Distance end_direction_z, bool isFIncluded, bool isGOCommand,
-                                               bool extruder_on, Time& G1F_time, Time& layer_time,
+                                               bool deposition_active, Time& G1F_time, Time& layer_time,
                                                Volume& layer_volume);
 
-    //! \brief Set the bead dimensions to use for the next extrusion volume estimate.
+    //! \brief Set the bead dimensions to use for the next deposited volume estimate.
     //! \param bead_width Total bead width.
     //! \param bead_height Nominal bead height.
     static void setBeadGeometry(Distance bead_width, Distance bead_height);

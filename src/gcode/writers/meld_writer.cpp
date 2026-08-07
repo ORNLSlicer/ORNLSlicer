@@ -22,7 +22,7 @@ QString MeldWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -188,11 +188,11 @@ QString MeldWriter::writeLine(const Point& start_point, const Point& target_poin
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruder_on == false && rpm > 0) {
+    if (m_deposition_active == false && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
     }
 
-    if (rpm == 0 && m_extruder_on == true) {
+    if (rpm == 0 && m_deposition_active == true) {
         rv += writeExtruderOff();
     }
 
@@ -229,7 +229,7 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
     }
 
@@ -352,7 +352,7 @@ QString MeldWriter::writeDwell(Time time) {
 
 QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
     output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
@@ -409,7 +409,7 @@ QString MeldWriter::writeExtruderOff() {
     QString rv;
     if (m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
         rv += "M25" % commentSpaceLine("TURN ACTUATOR OFF");
-        m_extruder_on = false;
+        m_deposition_active = false;
     }
     return rv;
 }

@@ -464,8 +464,8 @@ class CommonParser : public ParserBase {
     //! an integer conversion occurs. \throws IllegalParameterException
     void throwIntegerConversionErrorException();
 
-    //! \brief maintains whether the extruder is on or off
-    bool m_extruder_on = false;
+    //! \brief Tracks whether the parsed command stream is actively depositing material.
+    bool m_deposition_active = false;
 
     bool m_dynamic_spindle_control; // true if on, false if off.
     bool m_park;                    // true if parking, false if not.
@@ -532,8 +532,8 @@ class CommonParser : public ParserBase {
     //! for use in visualization construction.
     void preallocateVisualCommands();
 
-    //! \brief sets whether the extruder is on
-    void setExtruderOn(bool on);
+    //! \brief Sets the current deposition-active state.
+    void setDepositionActive(bool on);
 
     // STATE VARIABLES
 
