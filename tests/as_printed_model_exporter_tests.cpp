@@ -18,6 +18,7 @@
 
 #include "gcode/as_printed_model_exporter.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -69,6 +70,10 @@ bool near(float actual, float expected, float tolerance = kTolerance) {
 QSharedPointer<ORNL::SegmentBase> makeLineSegment(ORNL::SegmentDisplayType type, uint line_number,
                                                   float y_offset = 0.0f, bool deposition_active = true);
 
+QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const ORNL::Point& end,
+                                                 const ORNL::Point& center, uint line_number,
+                                                 bool deposition_active = true);
+
 QSharedPointer<ORNL::SegmentBase> makeLineSegment(const ORNL::Point& start, const ORNL::Point& end, uint line_number,
                                                   ORNL::SegmentDisplayType type = ORNL::SegmentDisplayType::kLine,
                                                   bool deposition_active = true) {
@@ -84,6 +89,17 @@ QSharedPointer<ORNL::SegmentBase> makeLineSegment(ORNL::SegmentDisplayType type,
                                                   bool deposition_active) {
     return makeLineSegment(pointFromMm(0.0f, y_offset), pointFromMm(kLength, y_offset), line_number, type,
                            deposition_active);
+}
+
+QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const ORNL::Point& end,
+                                                 const ORNL::Point& center, uint line_number, bool deposition_active) {
+    const float scale = ORNL::Constants::OpenGL::kObjectToView;
+    auto segment = QSharedPointer<ORNL::ArcSegment>::create(start * scale, end * scale, center * scale, true);
+    segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale,
+                            kHeight * ORNL::mm() * scale, ORNL::SegmentDisplayType::kLine, QColor(255, 255, 255),
+                            line_number, 0);
+    segment->setDepositionActive(deposition_active);
+    return segment;
 }
 
 int countFacets(const QString& text) { return text.count(QStringLiteral("facet normal")); }
@@ -173,6 +189,13 @@ int main(int argc, char* argv[]) {
     const Bounds filtered_bounds = boundsFor(filtered_triangles);
     passed &= expect(near(filtered_bounds.max.x() - filtered_bounds.min.x(), kLength),
                      "Expected skipped segments not to expand the exported bounds.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> full_circle_arc_segments;
+    const ORNL::Point arc_start = pointFromMm(10.0f, 0.0f);
+    full_circle_arc_segments.push_back({makeArcSegment(arc_start, arc_start, pointFromMm(0.0f, 0.0f), 1)});
+    const auto full_circle_arc_triangles = ORNL::AsPrintedModelExporter::generateTriangles(full_circle_arc_segments);
+    passed &= expect(!full_circle_arc_triangles.empty(),
+                     "Expected same-endpoint full-circle arcs to be exported as bead mesh triangles.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> corner_segments;
     corner_segments.push_back(

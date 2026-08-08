@@ -1,5 +1,7 @@
 #include "windows/gcode_export.h"
 
+#include <algorithm>
+
 #include <QApplication>
 #include <QDir>
 #include <QDirIterator>
@@ -47,9 +49,14 @@ QString removeModelFileExtension(QString name) {
 
     return name;
 }
+
+bool hasVisualizationSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    return std::any_of(gcode.cbegin(), gcode.cend(),
+                       [](const QVector<QSharedPointer<SegmentBase>>& layer) { return !layer.isEmpty(); });
+}
 } // namespace
 
-GcodeExport::GcodeExport(QWidget* parent) {
+GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
 
     QIcon icon;
@@ -79,6 +86,7 @@ GcodeExport::GcodeExport(QWidget* parent) {
     m_auxiliary_file_checkbox = new QCheckBox("Save Auxiliary files (if applicable)");
     m_auxiliary_file_checkbox->setChecked(true);
     m_as_printed_model_checkbox = new QCheckBox("Save As-Printed STL model");
+    m_as_printed_model_checkbox->setEnabled(false);
     m_project_file_checkbox = new QCheckBox("Save Project file");
     m_bundle_files_checkbox = new QCheckBox("Create subdirectory to bundle files");
 
@@ -106,10 +114,23 @@ void GcodeExport::setDefaultName(QString name) { m_default_name = removeModelFil
 void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
     m_location = tempLocation;
     m_most_recent_meta = meta;
+    clearVisualizationInformation();
 }
 
 void GcodeExport::updateVisualizationInformation(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     m_gcode = gcode;
+    m_has_gcode_visualization = hasVisualizationSegments(m_gcode);
+    m_as_printed_model_checkbox->setEnabled(m_has_gcode_visualization);
+    if (!m_has_gcode_visualization) {
+        m_as_printed_model_checkbox->setChecked(false);
+    }
+}
+
+void GcodeExport::clearVisualizationInformation() {
+    m_gcode.clear();
+    m_has_gcode_visualization = false;
+    m_as_printed_model_checkbox->setChecked(false);
+    m_as_printed_model_checkbox->setEnabled(false);
 }
 
 void GcodeExport::closeEvent(QCloseEvent* event) {
@@ -118,6 +139,7 @@ void GcodeExport::closeEvent(QCloseEvent* event) {
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox->setChecked(true);
     m_as_printed_model_checkbox->setChecked(false);
+    m_as_printed_model_checkbox->setEnabled(m_has_gcode_visualization);
     m_project_file_checkbox->setChecked(false);
     m_bundle_files_checkbox->setChecked(false);
 }
@@ -293,7 +315,11 @@ void GcodeExport::exportGcode() {
         if (m_as_printed_model_checkbox->isChecked()) {
             QString error;
             const QString asPrintedFileName = filepath % '/' % partName % "_as_printed.stl";
-            if (!AsPrintedModelExporter::writeStl(asPrintedFileName, m_gcode, &error)) {
+            if (!m_has_gcode_visualization) {
+                QMessageBox::warning(this, "As-Printed Model",
+                                     "Could not save the as-printed STL model: G-code visualization is still loading.");
+            }
+            else if (!AsPrintedModelExporter::writeStl(asPrintedFileName, m_gcode, &error)) {
                 QMessageBox::warning(this, "As-Printed Model",
                                      "Could not save the as-printed STL model: " % error);
             }
