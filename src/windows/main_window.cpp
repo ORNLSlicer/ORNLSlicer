@@ -1484,6 +1484,8 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
             &LayerTimesWindow::updateTimeInformation);
     connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, m_export_window,
             &GcodeExport::updateOutputInformation);
+    connect(loader, &GCodeLoader::gcodeLoadedVisualization, m_export_window,
+            &GcodeExport::updateVisualizationInformation);
 
     connect(loader, &GCodeLoader::gcodeLoadedVisualization, this,
             [this](QVector<QVector<QSharedPointer<SegmentBase>>> segments) {
