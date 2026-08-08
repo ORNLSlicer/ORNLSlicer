@@ -1316,13 +1316,15 @@ bool PartView::handleMeasurementClick(QPointF mouse_ndc_pos) {
 
 void PartView::updateMeasurementPreview(QPointF mouse_ndc_pos) {
     if (!m_state.has_measurement_start) {
-        clearMeasurementPreview();
+        if (clearMeasurementPreview())
+            this->update();
         return;
     }
 
     QVector3D picked_point;
     if (!pickMeasurementPoint(mouse_ndc_pos, picked_point)) {
-        clearMeasurementPreview();
+        if (clearMeasurementPreview())
+            this->update();
         emit measurementReadoutChanged("Select second measurement point");
         return;
     }
@@ -1340,9 +1342,10 @@ void PartView::updateMeasurementPreview(QPointF mouse_ndc_pos) {
     this->update();
 }
 
-void PartView::clearMeasurementPreview() {
-    removeMeasurementObject(m_state.measurement_preview_line);
-    removeMeasurementObject(m_state.measurement_preview_label);
+bool PartView::clearMeasurementPreview() {
+    bool removed = removeMeasurementObject(m_state.measurement_preview_line);
+    removed = removeMeasurementObject(m_state.measurement_preview_label) || removed;
+    return removed;
 }
 
 bool PartView::pickMeasurementPoint(const QPointF& mouse_ndc_pos, QVector3D& point) {
@@ -1371,23 +1374,27 @@ bool PartView::pickMeasurementPoint(const QPointF& mouse_ndc_pos, QVector3D& poi
 }
 
 void PartView::clearMeasurement() {
-    clearMeasurementPreview();
-    removeMeasurementObject(m_state.measurement_start_marker);
-    removeMeasurementObject(m_state.measurement_end_marker);
-    removeMeasurementObject(m_state.measurement_line);
-    removeMeasurementObject(m_state.measurement_label);
+    bool removed = clearMeasurementPreview();
+    removed = removeMeasurementObject(m_state.measurement_start_marker) || removed;
+    removed = removeMeasurementObject(m_state.measurement_end_marker) || removed;
+    removed = removeMeasurementObject(m_state.measurement_line) || removed;
+    removed = removeMeasurementObject(m_state.measurement_label) || removed;
 
     m_state.has_measurement_start = false;
     m_state.measurement_start = QVector3D();
     emit measurementReadoutChanged(QString());
+
+    if (removed)
+        this->update();
 }
 
-void PartView::removeMeasurementObject(QSharedPointer<GraphicsObject>& object) {
+bool PartView::removeMeasurementObject(QSharedPointer<GraphicsObject>& object) {
     if (object.isNull())
-        return;
+        return false;
 
     removeObject(object);
     object.reset();
+    return true;
 }
 
 QSharedPointer<GraphicsObject> PartView::createMeasurementMarker(const QVector3D& point) {

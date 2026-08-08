@@ -359,13 +359,13 @@ class PartView : public BaseView {
     void updateMeasurementPreview(QPointF mouse_ndc_pos);
 
     //! \brief Clears the live measurement preview.
-    void clearMeasurementPreview();
+    bool clearMeasurementPreview();
 
     //! \brief Picks a point on any part for measurement.
     bool pickMeasurementPoint(const QPointF& mouse_ndc_pos, QVector3D& point);
 
     //! \brief Removes one measurement annotation object from the render set.
-    void removeMeasurementObject(QSharedPointer<GraphicsObject>& object);
+    bool removeMeasurementObject(QSharedPointer<GraphicsObject>& object);
 
     //! \brief Creates a marker at a picked measurement point.
     QSharedPointer<GraphicsObject> createMeasurementMarker(const QVector3D& point);
