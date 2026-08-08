@@ -1464,6 +1464,7 @@ void MainWindow::importGCode() {
 
 void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
     m_gcode_widget->clear();
+    m_export_window->clearVisualizationInformation();
     disconnect(m_slice_dialog.get(), &SliceDialog::cancelSlice, CSM.get(), &SessionManager::cancelSlice);
 
     GCodeLoader* loader = new GCodeLoader(filepath, alterFile);

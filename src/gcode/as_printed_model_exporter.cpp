@@ -13,6 +13,7 @@
 #include <QTextStream>
 #include <QVector3D>
 
+#include "geometry/segments/line.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -86,6 +87,10 @@ float viewToOutputScale(const Distance& output_unit) {
 QVector3D viewToOutput(const QVector3D& vertex, float output_scale) { return vertex * output_scale; }
 
 bool isDegenerateSegment(const QSharedPointer<SegmentBase>& segment) {
+    if (dynamic_cast<LineSegment*>(segment.data()) == nullptr) {
+        return false;
+    }
+
     return (segment->end().toQVector3D() - segment->start().toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
 }
 
