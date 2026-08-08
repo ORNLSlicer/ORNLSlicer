@@ -914,6 +914,7 @@ void MainWindow::setupEvents() {
 
     // Connect slice button
     connect(m_part_widget, &PartWidget::slice, this, &MainWindow::doSlice);
+    connect(m_part_widget->view(), &PartView::measurementCompleted, this, &MainWindow::updateStatus);
     // connect(m_part_widget->m_slice_btn, &QToolButton::clicked, this, &MainWindow::doSlice);
 
     // Session connections.

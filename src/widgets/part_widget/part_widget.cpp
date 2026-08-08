@@ -12,6 +12,7 @@
 #include <qquaternion.h>
 #include <qset.h>
 #include <qsharedpointer.h>
+#include <qstyle.h>
 #include <qsurfaceformat.h>
 #include <qtmetamacros.h>
 #include <qvectornd.h>
@@ -315,6 +316,32 @@ void PartWidget::setStatusSelection(QString name) {
 
 void PartWidget::setStatusIssue(QString issue) { m_status_state.issues = issue; }
 
+void PartWidget::setMeasurementReadout(QString readout) {
+    if (readout.isEmpty()) {
+        m_measurement_label->hide();
+        m_measurement_clear_btn->hide();
+        return;
+    }
+
+    m_measurement_label->setText(readout);
+    m_measurement_label->adjustSize();
+    m_measurement_label->show();
+    m_measurement_label->raise();
+    m_measurement_clear_btn->show();
+    m_measurement_clear_btn->raise();
+    positionMeasurementReadout();
+}
+
+void PartWidget::positionMeasurementReadout() {
+    double toolbar_y = (this->height() / 3.0) - (Constants::UI::PartToolbar::kHeight / 2.0);
+    if (toolbar_y <= Constants::UI::PartToolbar::kMinTopOffset)
+        toolbar_y = Constants::UI::PartToolbar::kMinTopOffset;
+
+    const int readout_x = Constants::UI::PartToolbar::kLeftOffset + Constants::UI::PartToolbar::kWidth + 8;
+    m_measurement_label->move(readout_x, toolbar_y);
+    m_measurement_clear_btn->move(readout_x + m_measurement_label->width() + 3, toolbar_y);
+}
+
 void PartWidget::resizeEvent(QResizeEvent* event) {
     QPoint new_size = QPoint(event->size().width(), event->size().height());
 
@@ -324,6 +351,7 @@ void PartWidget::resizeEvent(QResizeEvent* event) {
     m_selection_label->move(Constants::UI::PartControl::kLeftOffset + 10,
                             event->size().height() -
                                 (Constants::UI::PartControl::kSize.height() + 10 + m_selection_label->height()));
+    positionMeasurementReadout();
 
     emit resized(event->size());
 }
@@ -366,6 +394,16 @@ void PartWidget::setupSubWidgets() {
     this->setStatusSelection("None");
     m_selection_label->show();
 
+    // Measurement readout
+    m_measurement_label = new QLabel(this);
+    m_measurement_label->hide();
+    m_measurement_clear_btn = new QToolButton(this);
+    m_measurement_clear_btn->setAutoRaise(true);
+    m_measurement_clear_btn->setFixedSize(22, 22);
+    m_measurement_clear_btn->setIcon(this->style()->standardIcon(QStyle::SP_DialogCloseButton));
+    m_measurement_clear_btn->setToolTip("Clear Measurement");
+    m_measurement_clear_btn->hide();
+
     // Part Control
     m_part_control = new PartControl(this);
     m_part_control->resize(Constants::UI::PartControl::kSize);
@@ -382,6 +420,12 @@ void PartWidget::setupStyle() {
     QString status = "Currently Manipulating: <font color=\"" % m_accentColor % "\">%1</font>";
     status = status.arg(m_status_state.selected_part);
     m_selection_label->setText(status);
+
+    m_measurement_label->setStyleSheet(QString("QLabel { background: rgba(245, 245, 245, 220); color: %1; "
+                                               "border: 1px solid rgba(0, 0, 0, 80); padding: 4px 7px; }")
+                                           .arg(m_accentColor));
+    m_measurement_clear_btn->setStyleSheet("QToolButton { background: rgba(245, 245, 245, 220); "
+                                           "border: 1px solid rgba(0, 0, 0, 80); padding: 1px; }");
 }
 
 void PartWidget::setupLayouts() {
@@ -393,6 +437,7 @@ void PartWidget::setupPosition() {
     // Status
     m_selection_label->move(300, this->height() -
                                      (Constants::UI::PartControl::kSize.height() + 15 + m_selection_label->height()));
+    positionMeasurementReadout();
 
     // Projection Buttons
     QPoint new_size = QPoint(this->width(), this->height());
@@ -427,6 +472,9 @@ void PartWidget::setupEvents() {
     connect(m_toolbar, &PartToolbar::centerParts, m_part_view, &PartView::centerSelectedParts);
     connect(m_toolbar, &PartToolbar::dropPartsToFloor, m_part_view, &PartView::dropSelectedParts);
     connect(m_toolbar, &PartToolbar::setupAlignment, m_part_view, &PartView::setupAlignment);
+    connect(m_toolbar, &PartToolbar::measureModeChanged, m_part_view, &PartView::setMeasurementMode);
+    connect(m_part_view, &PartView::measurementReadoutChanged, this, &PartWidget::setMeasurementReadout);
+    connect(m_measurement_clear_btn, &QToolButton::pressed, m_part_view, &PartView::clearMeasurement);
 
     connect(this, &PartWidget::resized, m_toolbar, &PartToolbar::resize);
     connect(this, &PartWidget::resized, m_view_controls, &ViewControlsToolbar::resize);

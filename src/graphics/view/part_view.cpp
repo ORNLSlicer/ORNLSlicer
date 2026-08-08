@@ -5,12 +5,14 @@
 #include <algorithm>
 #include <cmath>
 #include <limits>
+#include <vector>
 
 #include <QMessageBox>
 #include <QStack>
 #include <QToolTip>
 #include <qcolor.h>
 #include <qcursor.h>
+#include <qevent.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
 #include <qmath.h>
@@ -35,6 +37,7 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 #include "graphics/objects/printer/printer_object.h"
+#include "graphics/objects/sphere_object.h"
 #include "graphics/objects/sphere/seam_object.h"
 #include "graphics/objects/text_object.h"
 #include "graphics/support/part_picker.h"
@@ -53,6 +56,20 @@ namespace ORNL {
 namespace {
 constexpr float kMinimumLayerSettingsRangeThickness = 0.01f;
 constexpr float kMinimumSlicingCylinderHeight = 0.01f;
+constexpr float kMeasurementMarkerRadius = 0.025f;
+constexpr float kMeasurementLabelLift = 0.08f;
+constexpr float kMeasurementLabelScale = 0.08f;
+
+QString asciiDistanceUnitText(QString unit_text) {
+    unit_text.replace(Constants::Units::kMicron, "um");
+    unit_text.replace(QString(QChar(0x00b5)), "u");
+    unit_text.replace(QString(QChar(0x03bc)), "u");
+    return unit_text;
+}
+
+bool isFinitePoint(const QVector3D& point) {
+    return std::isfinite(point.x()) && std::isfinite(point.y()) && std::isfinite(point.z());
+}
 } // namespace
 
 PartView::PartView(QSharedPointer<SettingsBase> sb) {
@@ -153,6 +170,23 @@ void PartView::setupAlignment(QVector3D plane) {
     this->setCursor(Qt::PointingHandCursor);
 
     m_state.aligning = true;
+}
+
+void PartView::setMeasurementMode(bool enabled) {
+    m_state.measuring = enabled;
+    m_state.aligning = false;
+    m_state.has_measurement_start = false;
+
+    if (enabled) {
+        this->setCursor(QCursor(Qt::CrossCursor));
+        emit measurementReadoutChanged("Click first measurement point");
+    }
+    else {
+        this->clearMeasurement();
+        this->setCursor(QCursor(Qt::ArrowCursor));
+    }
+
+    this->update();
 }
 
 void PartView::centerPart(QString name) {
@@ -495,6 +529,10 @@ void PartView::initView() {
 }
 
 void PartView::handleLeftClick(QPointF mouse_ndc_pos) {
+    if (m_state.measuring && handleMeasurementClick(mouse_ndc_pos)) {
+        return;
+    }
+
     if (beginOptimizationPointDrag(mouse_ndc_pos)) {
         return;
     }
@@ -809,6 +847,18 @@ void PartView::handleRightRelease(QPointF mouse_ndc_pos, QPointF global_pos) {
 }
 
 void PartView::handleMouseMove(QPointF mouse_ndc_pos) {
+    if (m_state.measuring) {
+        if (!m_state.highlighted_part.isNull()) {
+            m_state.highlighted_part->unhighlight();
+            m_state.highlighted_part.reset();
+            this->update();
+        }
+
+        updateMeasurementPreview(mouse_ndc_pos);
+        this->setCursor(QCursor(Qt::CrossCursor));
+        return;
+    }
+
     auto picked_seam = m_printer->pickOptimizationPoint(this->projectionMatrix(), this->viewMatrix(), mouse_ndc_pos);
     if (picked_seam.isValid()) {
         if (!m_state.highlighted_part.isNull()) {
@@ -866,6 +916,16 @@ void PartView::handleWheelBackward(QPointF mouse_ndc_pos, float delta) {
 void PartView::handleMidClick(QPointF mouse_ndc_pos) { this->BaseView::handleMidClick(mouse_ndc_pos); }
 
 void PartView::handleMidRelease(QPointF mouse_ndc_pos) { this->BaseView::handleMidRelease(mouse_ndc_pos); }
+
+bool PartView::handleKeyPress(QKeyEvent* e) {
+    if (!m_state.measuring || e->key() != Qt::Key_Escape)
+        return false;
+
+    clearMeasurement();
+    emit measurementReadoutChanged("Measurement cleared");
+    this->update();
+    return true;
+}
 
 void PartView::resetCamera() {
     // Reset rotation and zoom
@@ -970,6 +1030,8 @@ void PartView::modelReloadUpdate(QSharedPointer<PartMetaItem> pm) {
 
 void PartView::modelRemovalUpdate(QSharedPointer<PartMetaItem> pm) {
     QSharedPointer<PartObject> gop = pm->graphicsPart();
+
+    clearMeasurement();
 
     m_part_objects.remove(gop);
     m_selected_objects.remove(gop);
@@ -1209,6 +1271,163 @@ QSharedPointer<PartObject> PartView::findObject(QSharedPointer<Part> part) {
     }
 
     return nullptr;
+}
+
+bool PartView::handleMeasurementClick(QPointF mouse_ndc_pos) {
+    QVector3D picked_point;
+    if (!pickMeasurementPoint(mouse_ndc_pos, picked_point)) {
+        QToolTip::showText(QCursor::pos(), "Click an object surface to measure.", nullptr, QRect(), 3000);
+        return true;
+    }
+
+    if (!m_state.has_measurement_start) {
+        clearMeasurement();
+
+        m_state.measurement_start = picked_point;
+        m_state.has_measurement_start = true;
+        m_state.measurement_start_marker = createMeasurementMarker(picked_point);
+        addObject(m_state.measurement_start_marker);
+
+        emit measurementReadoutChanged("Select second measurement point");
+        this->update();
+        return true;
+    }
+
+    clearMeasurementPreview();
+
+    m_state.measurement_end_marker = createMeasurementMarker(picked_point);
+    m_state.measurement_line = createMeasurementLine(m_state.measurement_start, picked_point);
+    m_state.measurement_label = createMeasurementLabel(m_state.measurement_start, picked_point);
+
+    addObject(m_state.measurement_line);
+    addObject(m_state.measurement_end_marker);
+    addObject(m_state.measurement_label);
+
+    const double distance_microns =
+        m_state.measurement_start.distanceToPoint(picked_point) * Constants::OpenGL::kViewToObject;
+    const QString readout = formatMeasurementDistance(distance_microns, false);
+    emit measurementReadoutChanged(readout);
+    emit measurementCompleted(QString("Measurement: %1").arg(readout));
+
+    m_state.has_measurement_start = false;
+    this->update();
+    return true;
+}
+
+void PartView::updateMeasurementPreview(QPointF mouse_ndc_pos) {
+    if (!m_state.has_measurement_start) {
+        clearMeasurementPreview();
+        return;
+    }
+
+    QVector3D picked_point;
+    if (!pickMeasurementPoint(mouse_ndc_pos, picked_point)) {
+        clearMeasurementPreview();
+        emit measurementReadoutChanged("Select second measurement point");
+        return;
+    }
+
+    clearMeasurementPreview();
+
+    m_state.measurement_preview_line = createMeasurementLine(m_state.measurement_start, picked_point);
+    m_state.measurement_preview_label = createMeasurementLabel(m_state.measurement_start, picked_point);
+    addObject(m_state.measurement_preview_line);
+    addObject(m_state.measurement_preview_label);
+
+    const double distance_microns =
+        m_state.measurement_start.distanceToPoint(picked_point) * Constants::OpenGL::kViewToObject;
+    emit measurementReadoutChanged(formatMeasurementDistance(distance_microns, false));
+    this->update();
+}
+
+void PartView::clearMeasurementPreview() {
+    removeMeasurementObject(m_state.measurement_preview_line);
+    removeMeasurementObject(m_state.measurement_preview_label);
+}
+
+bool PartView::pickMeasurementPoint(const QPointF& mouse_ndc_pos, QVector3D& point) {
+    float min_dist = std::numeric_limits<float>::infinity();
+    QVector3D closest_point;
+
+    for (auto& gop : m_part_objects) {
+        auto pick = PartPicker::pickDistanceTriangleAndIntersection(this->projectionMatrix(), this->viewMatrix(),
+                                                                    mouse_ndc_pos, gop->triangles());
+        const float dist = std::get<0>(pick);
+        const QVector3D intersect = std::get<2>(pick);
+        if (!std::isfinite(dist) || !isFinitePoint(intersect))
+            continue;
+
+        if (dist < min_dist) {
+            min_dist = dist;
+            closest_point = intersect;
+        }
+    }
+
+    if (!std::isfinite(min_dist))
+        return false;
+
+    point = closest_point;
+    return true;
+}
+
+void PartView::clearMeasurement() {
+    clearMeasurementPreview();
+    removeMeasurementObject(m_state.measurement_start_marker);
+    removeMeasurementObject(m_state.measurement_end_marker);
+    removeMeasurementObject(m_state.measurement_line);
+    removeMeasurementObject(m_state.measurement_label);
+
+    m_state.has_measurement_start = false;
+    m_state.measurement_start = QVector3D();
+    emit measurementReadoutChanged(QString());
+}
+
+void PartView::removeMeasurementObject(QSharedPointer<GraphicsObject>& object) {
+    if (object.isNull())
+        return;
+
+    removeObject(object);
+    object.reset();
+}
+
+QSharedPointer<GraphicsObject> PartView::createMeasurementMarker(const QVector3D& point) {
+    auto marker = QSharedPointer<SphereObject>::create(this, kMeasurementMarkerRadius, Constants::Colors::kYellow);
+    marker->translateAbsolute(point);
+    marker->setOnTop(true);
+    return marker;
+}
+
+QSharedPointer<GraphicsObject> PartView::createMeasurementLine(const QVector3D& start, const QVector3D& end) {
+    std::vector<float> vertices = {start.x(), start.y(), start.z(), end.x(), end.y(), end.z()};
+    std::vector<float> normals = {0.0f, 0.0f, 1.0f, 0.0f, 0.0f, 1.0f};
+
+    QColor color = Constants::Colors::kYellow;
+    std::vector<float> colors = {color.redF(), color.greenF(), color.blueF(), color.alphaF(),
+                                 color.redF(), color.greenF(), color.blueF(), color.alphaF()};
+
+    auto line = QSharedPointer<GraphicsObject>::create(this, vertices, normals, colors, GL_LINES);
+    line->setOnTop(true);
+    return line;
+}
+
+QSharedPointer<GraphicsObject> PartView::createMeasurementLabel(const QVector3D& start, const QVector3D& end) {
+    const QVector3D midpoint = (start + end) / 2.0f + QVector3D(0.0f, 0.0f, kMeasurementLabelLift);
+    const double distance_microns = start.distanceToPoint(end) * Constants::OpenGL::kViewToObject;
+
+    auto label = QSharedPointer<TextObject>::create(this, formatMeasurementDistance(distance_microns, true),
+                                                    kMeasurementLabelScale, true);
+    label->translateAbsolute(midpoint);
+    label->setOnTop(true);
+    return label;
+}
+
+QString PartView::formatMeasurementDistance(double microns, bool ascii_units) const {
+    const Distance unit = PreferencesManager::getInstance()->getDistanceUnit();
+    QString unit_text = PreferencesManager::getInstance()->getDistanceUnitText();
+    if (ascii_units)
+        unit_text = asciiDistanceUnitText(unit_text);
+
+    return QString("%1 %2").arg(QString::number(Distance(microns).to(unit), 'f', 3), unit_text);
 }
 
 QQuaternion PartView::slicingPlaneRotation() const {

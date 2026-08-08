@@ -73,6 +73,7 @@ OpenMesh::OpenMesh(MeshTypes::SurfaceMesh poly, QString name, QString file) : Me
     m_faces_original = m_faces = m_faces_aligned = vertices_and_faces.second;
     m_original_representation = m_representation;
     updateDims();
+    m_original_dimensions = m_dimensions;
 }
 
 OpenMesh::OpenMesh(QSharedPointer<OpenMesh> mesh) : MeshBase(mesh) {
