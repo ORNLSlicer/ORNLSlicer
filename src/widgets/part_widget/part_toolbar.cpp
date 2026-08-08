@@ -6,10 +6,14 @@
 #include <QInputDialog>
 #include <QLayout>
 #include <QMenu>
+#include <QPainter>
+#include <QPixmap>
 #include <qcontainerfwd.h>
 #include <qevent.h>
 #include <qicon.h>
 #include <qnamespace.h>
+#include <qpen.h>
+#include <qpoint.h>
 #include <qsharedpointer.h>
 #include <qsizepolicy.h>
 #include <qtmetamacros.h>
@@ -26,6 +30,25 @@
 #include "widgets/part_widget/input/tool_bar_input.h"
 
 namespace ORNL {
+namespace {
+QIcon measurementIcon() {
+    QPixmap pixmap(32, 32);
+    pixmap.fill(Qt::transparent);
+
+    QPainter painter(&pixmap);
+    painter.setRenderHint(QPainter::Antialiasing);
+    painter.setPen(QPen(Qt::black, 2.4, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin));
+
+    painter.drawLine(QPointF(9, 23), QPointF(23, 9));
+    painter.drawLine(QPointF(18, 8), QPointF(24, 8));
+    painter.drawLine(QPointF(24, 8), QPointF(24, 14));
+    painter.drawLine(QPointF(8, 18), QPointF(8, 24));
+    painter.drawLine(QPointF(8, 24), QPointF(14, 24));
+
+    return QIcon(pixmap);
+}
+} // namespace
+
 PartToolbar::PartToolbar(QSharedPointer<PartMetaModel> model, QWidget* parent)
     : m_model(model), m_parent(parent), QToolBar(parent) {
     m_translation_controls = new ToolbarInput(m_parent, false);
@@ -140,6 +163,8 @@ void PartToolbar::setEnabled(bool status) {
     m_scale_btn->setEnabled(status);
     // Align works even if a part is not selected. It should always be enabled.
     // m_align_btn->setEnabled(status);
+    // Measurement works on any visible part and does not require an active selection.
+    m_measure_btn->setEnabled(true);
     m_center_btn->setEnabled(status);
     m_drop_to_floor_btn->setEnabled(status);
 }
@@ -179,6 +204,11 @@ void PartToolbar::setupSubWidgets() {
     this->makeSpace();
 
     setupAlign();
+    this->makeSpace();
+    this->addSeparator();
+    this->makeSpace();
+
+    setupMeasurement();
     this->makeSpace();
     this->addSeparator();
     this->makeSpace();
@@ -287,7 +317,18 @@ void PartToolbar::setupAlign() {
     m_align_controls = new ToolbarAlignInput(m_parent);
     connect(m_align_btn, &QToolButton::pressed, m_align_controls, &ToolbarAlignInput::toggleInput);
     connect(m_align_controls, &ToolbarAlignInput::setAlignment, this,
-            [this](QVector3D dir) { emit setupAlignment(dir); });
+            [this](QVector3D dir) {
+                if (m_measure_btn != nullptr)
+                    m_measure_btn->setChecked(false);
+                emit setupAlignment(dir);
+            });
+}
+
+void PartToolbar::setupMeasurement() {
+    m_measure_btn = buildIconButton(QString(), "Measure Object Distances", true);
+    m_measure_btn->setIcon(measurementIcon());
+    this->addWidget(m_measure_btn);
+    connect(m_measure_btn, &QToolButton::toggled, this, [this](bool checked) { emit measureModeChanged(checked); });
 }
 
 void PartToolbar::setupCenter() {

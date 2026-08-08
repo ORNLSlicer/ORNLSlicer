@@ -47,6 +47,9 @@ class PartToolbar : public QToolBar {
     //! \param plane the plane the align in on
     void setupAlignment(QVector3D plane);
 
+    //! \brief toggles point-to-point measurement mode
+    void measureModeChanged(bool enabled);
+
   public slots:
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
@@ -84,6 +87,9 @@ class PartToolbar : public QToolBar {
     //! \brief sets up align button and controls
     void setupAlign();
 
+    //! \brief sets up measure button
+    void setupMeasurement();
+
     //! \brief sets up center button
     void setupCenter();
 
@@ -118,6 +124,9 @@ class PartToolbar : public QToolBar {
     // Align
     QToolButton* m_align_btn;
     ToolbarAlignInput* m_align_controls;
+
+    // Measure
+    QToolButton* m_measure_btn = nullptr;
 
     // Center
     QToolButton* m_center_btn;

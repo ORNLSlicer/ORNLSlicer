@@ -183,6 +183,11 @@ void BaseView::wheelEvent(QWheelEvent* e) {
 }
 
 void BaseView::keyPressEvent(QKeyEvent* e) {
+    if (handleKeyPress(e)) {
+        e->accept();
+        return;
+    }
+
     if (!isArrowKey(e->key())) {
         QOpenGLWidget::keyPressEvent(e);
         return;
@@ -352,6 +357,11 @@ void BaseView::handleWheelBackward(QPointF mouse_ndc_pos, float delta) {
     float focus_scale = m_camera->getZoom() / m_camera->getDefaultZoom();
     m_focus->scaleAbsolute(QVector3D(focus_scale, focus_scale, focus_scale));
     this->update();
+}
+
+bool BaseView::handleKeyPress(QKeyEvent* e) {
+    Q_UNUSED(e);
+    return false;
 }
 
 void BaseView::translateCamera(QVector3D v, bool absolute) {

@@ -79,6 +79,12 @@ class PartView : public BaseView {
     //! \param plane: Plane normal to align to.
     void setupAlignment(QVector3D plane);
 
+    //! \brief Enables or disables point-to-point measurement mode.
+    void setMeasurementMode(bool enabled);
+
+    //! \brief Removes the visible measurement annotation.
+    void clearMeasurement();
+
     //! \brief Centers a part in the build volume by name.
     //! \param name: Name of part to drop.
     //! \todo This should be done using the selected parts instead.
@@ -124,6 +130,12 @@ class PartView : public BaseView {
     //! \brief Notification that a draggable optimization point setting edit has finished.
     void optimizationPointDragFinished(QString x_setting, double x, QString y_setting, double y);
 
+    //! \brief Emitted when a measurement readout should update or clear.
+    void measurementReadoutChanged(QString readout);
+
+    //! \brief Emitted when a measurement is committed by choosing the second point.
+    void measurementCompleted(QString readout);
+
   protected:
     //! \brief Initalizes the view with the printer and the associated objects.
     void initView() override;
@@ -163,6 +175,9 @@ class PartView : public BaseView {
 
     //! \brief Handles the following: Overhang enable
     void handleMidRelease(QPointF mouse_ndc_pos) override;
+
+    //! \brief Handles measurement keyboard commands.
+    bool handleKeyPress(QKeyEvent* e) override;
 
     //! \brief centers a graphics part in the printer volume
     //! \param gop the graphics part object
@@ -248,6 +263,33 @@ class PartView : public BaseView {
         //! \brief If the view is aligning or not.
         bool aligning = false;
 
+        //! \brief If point-to-point measurement mode is active.
+        bool measuring = false;
+
+        //! \brief If the first point of the active measurement has been selected.
+        bool has_measurement_start = false;
+
+        //! \brief World-space first point of the active measurement.
+        QVector3D measurement_start;
+
+        //! \brief Rendered marker for the first measurement point.
+        QSharedPointer<GraphicsObject> measurement_start_marker;
+
+        //! \brief Rendered marker for the second measurement point.
+        QSharedPointer<GraphicsObject> measurement_end_marker;
+
+        //! \brief Rendered line between measurement points.
+        QSharedPointer<GraphicsObject> measurement_line;
+
+        //! \brief Rendered measurement label.
+        QSharedPointer<GraphicsObject> measurement_label;
+
+        //! \brief Rendered live-preview measurement line.
+        QSharedPointer<GraphicsObject> measurement_preview_line;
+
+        //! \brief Rendered live-preview measurement label.
+        QSharedPointer<GraphicsObject> measurement_preview_label;
+
         //! \brief If overhangs are shown.
         bool overhangs_shown = false;
 
@@ -309,6 +351,33 @@ class PartView : public BaseView {
 
     //! \brief Finds an object based on its part pointer.
     QSharedPointer<PartObject> findObject(QSharedPointer<Part> part);
+
+    //! \brief Handles one click while in measurement mode.
+    bool handleMeasurementClick(QPointF mouse_ndc_pos);
+
+    //! \brief Updates the live measurement preview while a start point is active.
+    void updateMeasurementPreview(QPointF mouse_ndc_pos);
+
+    //! \brief Clears the live measurement preview.
+    void clearMeasurementPreview();
+
+    //! \brief Picks a point on any part for measurement.
+    bool pickMeasurementPoint(const QPointF& mouse_ndc_pos, QVector3D& point);
+
+    //! \brief Removes one measurement annotation object from the render set.
+    void removeMeasurementObject(QSharedPointer<GraphicsObject>& object);
+
+    //! \brief Creates a marker at a picked measurement point.
+    QSharedPointer<GraphicsObject> createMeasurementMarker(const QVector3D& point);
+
+    //! \brief Creates a rendered line between measurement points.
+    QSharedPointer<GraphicsObject> createMeasurementLine(const QVector3D& start, const QVector3D& end);
+
+    //! \brief Creates a billboarded label for the completed measurement.
+    QSharedPointer<GraphicsObject> createMeasurementLabel(const QVector3D& start, const QVector3D& end);
+
+    //! \brief Formats a measurement distance for display using user-preferred distance units.
+    QString formatMeasurementDistance(double microns, bool ascii_units) const;
 
     //! \brief Updates the selected layer settings range plane visibility and placement.
     void updateLayerSettingsRangePlane();

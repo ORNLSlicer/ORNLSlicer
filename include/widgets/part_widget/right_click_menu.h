@@ -40,7 +40,11 @@ class RightClickMenu : public QMenu {
     //! \brief disables actions/ buttons in the menu depending on nullability and mesh type
     void disableActions();
 
+    //! \brief shows object information for the selected part
+    void showInfoDialog();
+
     //! \brief actions to display
+    QAction* m_info_action;
     QAction* m_switch_to_clipper_action;
     QAction* m_switch_to_build_action;
     QAction* m_switch_to_setting_action;
