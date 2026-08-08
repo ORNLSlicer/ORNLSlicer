@@ -18,7 +18,8 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
-SegmentBase::SegmentBase(Point start, Point end) : m_start(start), m_end(end), m_sb(new SettingsBase()) {
+SegmentBase::SegmentBase(Point start, Point end)
+    : m_start(start), m_end(end), m_sb(new SettingsBase()), m_deposition_active(true) {
     m_sb->setSetting(SS::kIsRegionStartSegment, false);
 
     m_sb->setSetting(SS::kRegionType, RegionType::kUnknown);
@@ -46,6 +47,10 @@ float SegmentBase::displayHeight() { return m_display_height; }
 SegmentDisplayType SegmentBase::displayType() { return m_display_type; }
 
 QColor SegmentBase::color() { return m_color; }
+
+bool SegmentBase::depositionActive() const { return m_deposition_active; }
+
+void SegmentBase::setDepositionActive(bool deposition_active) { m_deposition_active = deposition_active; }
 
 void SegmentBase::setDisplayInfo(float display_width, float display_length, float display_height,
                                  SegmentDisplayType type, QColor color, uint line_num, uint layer_num) {
@@ -93,7 +98,7 @@ void SegmentBase::shift(Point shift) {
 }
 
 bool SegmentBase::isPrintingSegment() {
-    if (dynamic_cast<TravelSegment*>(this) != nullptr ||
+    if (!m_deposition_active || dynamic_cast<TravelSegment*>(this) != nullptr ||
         (int)(m_sb->setting<uint>(SS::kPathModifiers) & (uint)m_non_build_modifiers) != 0)
         return false;
 

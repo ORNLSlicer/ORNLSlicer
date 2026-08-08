@@ -21,6 +21,7 @@
 #include <qtextedit.h>
 #include <qwidget.h>
 
+#include "gcode/as_printed_model_exporter.h"
 #include "gcode/gcode_meta.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
@@ -77,11 +78,13 @@ GcodeExport::GcodeExport(QWidget* parent) {
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox = new QCheckBox("Save Auxiliary files (if applicable)");
     m_auxiliary_file_checkbox->setChecked(true);
+    m_as_printed_model_checkbox = new QCheckBox("Save As-Printed STL model");
     m_project_file_checkbox = new QCheckBox("Save Project file");
     m_bundle_files_checkbox = new QCheckBox("Create subdirectory to bundle files");
 
     optionsGrid->addWidget(m_gcode_file_checkbox);
     optionsGrid->addWidget(m_auxiliary_file_checkbox);
+    optionsGrid->addWidget(m_as_printed_model_checkbox);
     optionsGrid->addWidget(m_project_file_checkbox);
     optionsGrid->addWidget(m_bundle_files_checkbox);
     optionsBox->setLayout(optionsGrid);
@@ -105,11 +108,16 @@ void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta) 
     m_most_recent_meta = meta;
 }
 
+void GcodeExport::updateVisualizationInformation(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
+    m_gcode = gcode;
+}
+
 void GcodeExport::closeEvent(QCloseEvent* event) {
     m_operator_input->clear();
     m_description_input->clear();
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox->setChecked(true);
+    m_as_printed_model_checkbox->setChecked(false);
     m_project_file_checkbox->setChecked(false);
     m_bundle_files_checkbox->setChecked(false);
 }
@@ -279,6 +287,15 @@ void GcodeExport::exportGcode() {
                     }
                     ++i;
                 }
+            }
+        }
+
+        if (m_as_printed_model_checkbox->isChecked()) {
+            QString error;
+            const QString asPrintedFileName = filepath % '/' % partName % "_as_printed.stl";
+            if (!AsPrintedModelExporter::writeStl(asPrintedFileName, m_gcode, &error)) {
+                QMessageBox::warning(this, "As-Printed Model",
+                                     "Could not save the as-printed STL model: " % error);
             }
         }
 

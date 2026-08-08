@@ -1006,6 +1006,8 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
             segment = QSharedPointer<LineSegment>::create(m_start_pos, end_pos);
         }
 
+        segment->setDepositionActive(deposition_active);
+
         // Set the segment's display info
         setSegmentDisplayInfo(segment, determineSegmentDisplayType(comment), color, comment, m_start_pos, end_pos,
                               line_num, layer_num);
