@@ -62,6 +62,12 @@ class SegmentBase {
     //! \brief Gets the display color.
     QColor color();
 
+    //! \brief Returns whether material deposition is active for this segment.
+    bool depositionActive() const;
+
+    //! \brief Sets whether material deposition is active for this segment.
+    void setDepositionActive(bool deposition_active);
+
     //! \brief Sets the display info for this segment corresponding to a loaded GCode file.
     //! \param display_width: Width of segment in display units.
     //! \param display_length: Length of segment in display units.
@@ -208,5 +214,8 @@ class SegmentBase {
 
     //! \brief The height of the segment in display units.
     float m_display_height;
+
+    //! \brief Whether material deposition is active for this segment.
+    bool m_deposition_active;
 };
 } // namespace ORNL

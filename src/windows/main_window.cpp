@@ -1464,6 +1464,7 @@ void MainWindow::importGCode() {
 
 void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
     m_gcode_widget->clear();
+    m_export_window->clearVisualizationInformation();
     disconnect(m_slice_dialog.get(), &SliceDialog::cancelSlice, CSM.get(), &SessionManager::cancelSlice);
 
     GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
@@ -1484,6 +1485,8 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
             &LayerTimesWindow::updateTimeInformation);
     connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, m_export_window,
             &GcodeExport::updateOutputInformation);
+    connect(loader, &GCodeLoader::gcodeLoadedVisualization, m_export_window,
+            &GcodeExport::updateVisualizationInformation);
 
     connect(loader, &GCodeLoader::gcodeLoadedVisualization, this,
             [this](QVector<QVector<QSharedPointer<SegmentBase>>> segments) {
