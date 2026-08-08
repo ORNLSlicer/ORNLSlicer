@@ -22,7 +22,7 @@ QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
                                            Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -209,12 +209,12 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
 
     QString rv;
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0, params);
         m_current_rpm = rpm;
     }
     // Update extruder speed if needed
-    if (m_extruder_on && rpm != m_current_rpm) {
+    if (m_deposition_active && rpm != m_current_rpm) {
         rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
         m_current_rpm = rpm;
     }
@@ -252,11 +252,11 @@ QString IngersollWriter::writeArc(const Point& start_point, const Point& end_poi
     auto region_type = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0, params);
     }
     // Update extruder speed if needed
-    if (m_extruder_on && rpm != m_current_rpm) {
+    if (m_deposition_active && rpm != m_current_rpm) {
         rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
         m_current_rpm = rpm;
     }
@@ -378,7 +378,7 @@ QString IngersollWriter::writeExtruderOn(RegionType type, float rpm, int extrude
 
     rv += commentLine("Bead Start");
 
-    m_extruder_on = true;
+    m_deposition_active = true;
 
     // write dwell and initial extruder turn on depending on region type
     if (initial_rpm > 0) {
@@ -420,7 +420,7 @@ QString IngersollWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

@@ -102,29 +102,30 @@ The layer marker is held until after the initial world approach and kinematics b
 Travel moves use `G00`. Cylindrical travel lift moves outward from the cylinder axis; planar travel lift follows the slice-plane normal. Non-first cylindrical travel may be split into `TRAVEL ARC` waypoints around the cylinder axis when the angular move is long enough. Travel lower is emitted as a feed move:
 
 ```gcode
-;G80 ;OPTIONAL STOP ROUTINE
+G81 ;OPTIONAL STOP ROUTINE
 G01 X=... Y=... Z=... XR=180.0000 YR=0.0000 ZR=-135.0000 AP=... CP=... F... ;TRAVEL LOWER
 ```
+
+When `Arc Specialties G2/G3 Optional Stop` is selected, non-initial `G02`/`G03` print arcs also emit `G81` before
+the arc move.
 
 The writer turns welding and blending on before print motion and off before longer travel or shutdown:
 
 ```gcode
-M150 ;WIRE ARC WELDER ON
+G82 ;WIRE ARC WELDER ON
 G261 ;BLENDING ON
 ...
 G260 ;BLENDING OFF
-M151 ;WIRE ARC WELDER OFF
-;M160 ;CLIP WIRE
-#CHANNEL INIT [CMDPOS]
+G83 [0] ;WIRE ARC WELDER OFF
 ```
 
-`M06`, `G80`, and `M160` are currently emitted as comments because the inline writer TODOs identify controller issues with those commands as of 2026-07-29. They should be re-enabled or replaced only after the controller behavior is resolved.
+`M06` is currently emitted as a comment because the inline writer TODOs identify controller issues with that command as of 2026-08-07. It should be re-enabled or replaced only after the controller behavior is resolved.
 
 Shutdown writes any configured end code, emits `G164` when absolute center mode was active, sends the robot home, initializes the channel, and ends the program with `M02`.
 
 ## Parser Behavior
 
-`ArcSpecialtiesParser` is selected for generated or imported files whose header identifies the `Arc Specialties` syntax. It normalizes `G00`, `G01`, `G02`, and `G03` to the shared parser's `G0`, `G1`, `G2`, and `G3` handlers after Arc Specialties-specific preprocessing.
+`ArcSpecialtiesParser` is selected for generated or imported files whose header identifies the `Arc Specialties` syntax. It normalizes `G00`, `G01`, `G02`, and `G03` to the shared parser's `G0`, `G1`, `G2`, and `G3` handlers after Arc Specialties-specific preprocessing. `G82` marks deposition active for subsequent motion metadata, and `G83` marks deposition inactive.
 
 The parser accepts:
 

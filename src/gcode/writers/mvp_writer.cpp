@@ -23,7 +23,7 @@ QString MVPWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Dis
                                      int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -183,7 +183,7 @@ QString MVPWriter::writeLine(const Point& start_point, const Point& target_point
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruder_on == false && rpm > 0) {
+    if (m_deposition_active == false && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
     }
 
@@ -299,7 +299,7 @@ QString MVPWriter::writeDwell(Time time) {
 
 QString MVPWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
 
@@ -344,7 +344,7 @@ QString MVPWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointe
 
 QString MVPWriter::writeExtruderOff() {
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

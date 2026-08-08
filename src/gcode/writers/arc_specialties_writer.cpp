@@ -95,6 +95,15 @@ const Distance kMinTravelArcSegmentLength = 100.0 * micron;
 //! @brief Machine setup setting value for relative G02/G03 center interpretation.
 constexpr int kRelativeArcCenterMode = 1;
 
+//! @brief Default G83 mode: stop welding only.
+constexpr int kDefaultG83Mode = 0;
+
+//! @brief Highest supported Arc Specialties G83 mode.
+constexpr int kMaxG83Mode = 4;
+
+//! @brief Returns a supported G83 mode, falling back to weld-stop-only behavior for invalid input.
+int validatedG83Mode(int mode) { return mode >= kDefaultG83Mode && mode <= kMaxG83Mode ? mode : kDefaultG83Mode; }
+
 //! @brief Formats a distance using the output unit declared by the active gcode metadata.
 QString formatDistance(Distance value, Distance unit) {
     return QString::number(value.to(unit), 'f', 4) % unit.toString();
@@ -317,7 +326,7 @@ QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance min
     rv += "V.E.Sch.Crater.Control = 25   ;Arc Control in Crater Fill" % m_newline;
     rv += "V.E.Sch.Crater.Time = .5   ;Crater Fill Time in Seconds" % m_newline;
     rv += "#CONTOUR MODE [DEV PATH_DEV=2 CONST_VEL=1]" % m_newline;
-    /// TODO: M06 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M06
+    /// TODO: M06 command does not work as of 2026-08-07 and is disabled for now. Must be re-enabled when the M06
     /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
     /// same effect.
     rv += ";M06 T1   ;Select Tool 1" % m_newline;
@@ -358,6 +367,7 @@ QString ArcSpecialtiesWriter::writeBeforeLayer(float min_z, QSharedPointer<Setti
     m_layer_start = true;
     m_current_bead = 1;
     m_current_layer++;
+    m_first_deposition = true;
     return rv;
 }
 
@@ -385,13 +395,13 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
         lift_speed = speed;
     }
 
-    // Determine if travel length is short enough to keep extruder on
+    // Determine if travel length is short enough to keep welder on
     Distance travel_distance = start_location.distance(target_location);
-    if (m_extruder_on && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
-        rv += writeExtruderOff();
+    if (m_deposition_active && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+        rv += writeWelderOff();
     }
     else if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
-        rv += writeExtruderOn();
+        rv += writeWelderOn();
     }
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
@@ -512,10 +522,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     if (travel_lower_required) {
-        /// TODO: G80 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the G80
-        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
-        /// same effect.
-        rv += ";G80" % commentSpaceLine("OPTIONAL STOP ROUTINE");
+        rv += "G81" % commentSpaceLine("OPTIONAL STOP ROUTINE");
         rv += writeMotion("G01", target_location, lift_speed, params, "TRAVEL LOWER");
     }
 
@@ -534,8 +541,8 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
 
     m_layer_start = false;
 
-    if (!m_extruder_on) {
-        rv += writeExtruderOn();
+    if (!m_deposition_active) {
+        rv += writeWelderOn();
     }
 
     if (speed <= 0) {
@@ -543,6 +550,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
     }
 
     rv += writeMotion("G01", target_point, speed, params, printMoveComment());
+    m_first_deposition = false;
     return rv;
 }
 
@@ -556,8 +564,12 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     rv += writeStartupKinematics();
     rv += writePendingLayerChange();
 
-    if (!m_extruder_on) {
-        rv += writeExtruderOn();
+    if (!m_deposition_active) {
+        rv += writeWelderOn();
+    }
+
+    if (m_sb->setting<bool>(PRS::GCode::kArcSpecialtiesG2G3OptionalStop) && !m_first_deposition) {
+        rv += "G81" % commentSpaceLine("OPTIONAL STOP ROUTINE");
     }
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
@@ -571,13 +583,14 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(printMoveComment());
+    m_first_deposition = false;
     return rv;
 }
 
 QString ArcSpecialtiesWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        // rv += writeExtruderOff(); // update to turn off the extruder
+        // rv += writeWelderOff(); // update to turn off the welder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty()) {
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -625,7 +638,7 @@ QString ArcSpecialtiesWriter::writeAfterLayer() {
 
 QString ArcSpecialtiesWriter::writeShutdown() {
     QString rv;
-    rv += writeExtruderOff();
+    rv += writeWelderOff();
     if (!m_sb->setting<QString>(PRS::GCode::kEndCode).isEmpty()) {
         rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;
     }
@@ -645,12 +658,12 @@ QString ArcSpecialtiesWriter::writeDwell(Time time) {
     return QString();
 }
 
-QString ArcSpecialtiesWriter::writeExtruderOn() {
-    if (!m_extruder_on) {
+QString ArcSpecialtiesWriter::writeWelderOn() {
+    if (!m_deposition_active) {
         QString rv;
-        rv += "M150" % commentSpaceLine("WIRE ARC WELDER ON");
+        rv += "G82" % commentSpaceLine("WIRE ARC WELDER ON");
         rv += "G261" % commentSpaceLine("BLENDING ON");
-        m_extruder_on = true;
+        m_deposition_active = true;
         return rv;
     }
     else {
@@ -658,17 +671,13 @@ QString ArcSpecialtiesWriter::writeExtruderOn() {
     }
 }
 
-QString ArcSpecialtiesWriter::writeExtruderOff() {
-    if (m_extruder_on) {
+QString ArcSpecialtiesWriter::writeWelderOff(int mode) {
+    if (m_deposition_active) {
         QString rv;
+        const int g83_mode = validatedG83Mode(mode);
         rv += "G260" % commentSpaceLine("BLENDING OFF");
-        rv += "M151" % commentSpaceLine("WIRE ARC WELDER OFF");
-        /// TODO: M160 command does not work as of 2026-07-29 and is disabled for now. Must be re-enabled when the M160
-        /// command is fixed in the Arc Specialties controller or be replaced with a different command that achieves the
-        /// same effect.
-        rv += ";M160" % commentSpaceLine("CLIP WIRE");
-        rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
-        m_extruder_on = false;
+        rv += "G83 [" % QString::number(g83_mode) % "]" % commentSpaceLine("WIRE ARC WELDER OFF");
+        m_deposition_active = false;
         return rv;
     }
     else {

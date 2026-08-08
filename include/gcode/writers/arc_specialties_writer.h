@@ -156,10 +156,15 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString writeDwell(Time time) override;
 
   private:
-    //! \brief Writes G-Code to enable extrusion
-    QString writeExtruderOn();
-    //! \brief Writes G-Code to disable extrusion
-    QString writeExtruderOff();
+    //! \brief Writes G-Code to enable the welder
+    QString writeWelderOn();
+    /*!
+     * @brief Writes G-Code to disable the welder.
+     * @param mode Arc Specialties G83 mode: 0 stops welding, 1 retracts, 2 clips wire and homes, 3 moves linearly to
+     * the retract position, and 4 moves linearly back to the previous programmed position.
+     * @return Welder shutdown block.
+     */
+    QString writeWelderOff(int mode = 0);
 
     /*!
      * @brief Writes a single Arc Specialties motion command.
@@ -288,6 +293,9 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Tracks whether any travel move has been emitted.
     bool m_first_travel = true;
+
+    //! @brief Tracks whether any deposition move has been emitted on the current layer.
+    bool m_first_deposition = true;
 
     //! @brief Forces feedrate output at the start of each layer.
     bool m_layer_start = true;

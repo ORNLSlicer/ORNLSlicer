@@ -18,7 +18,7 @@
 namespace ORNL {
 AeroBasicWriter::AeroBasicWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {
     // Set to one extruder that is off
-    m_extruder_on = false;
+    m_deposition_active = false;
 }
 
 QString AeroBasicWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
@@ -132,7 +132,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     QString rv;
 
     // Disable extruder for travels
-    if (m_extruder_on)
+    if (m_deposition_active)
         rv += "$DO[0].X=0" % commentLine("Extruder Off for travel");
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
@@ -188,7 +188,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     }
 
     // Enable extruder after travel
-    if (m_extruder_on)
+    if (m_deposition_active)
         rv += "$DO[0].X=1" % commentLine("Extruder On after travel");
 
     m_first_travel = false;

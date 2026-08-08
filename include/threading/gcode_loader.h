@@ -135,11 +135,11 @@ class GCodeLoader : public QThread {
     //! \param segment: Segment to set meta info for.
     //! \param comment: Comment to parse for the segment type.
     //! \param info_end_pos: The end position of the segment.
-    //! \param extruder_on: Indicates if the extruder is on or off.
+    //! \param deposition_active: Indicates if the command is actively depositing material.
     //! \param info_speed_set: Indicates if the speed is set.
     //! \param extruder_speed: The speed of the extruder.
     void setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const QString& comment, QVector3D& info_end_pos,
-                            const bool& extruder_on, const bool& info_speed_set, const double& extruder_speed);
+                            const bool& deposition_active, const bool& info_speed_set, const double& extruder_speed);
 
     //! \brief generate additional export comments
     //! \return string
@@ -151,15 +151,15 @@ class GCodeLoader : public QThread {
     //! \param color: Color of segment based on comments from gcode
     //! \param command_id: the id of the gcode command for th segment
     //! \param parameters: Parameters of gcodecommand end (x, y, z, w, i, j, p, q)
-    //! \param extruder_on: whether the extruder is on
+    //! \param deposition_active: whether the command is actively depositing material
     //! \param extruder_speed: double value read from gcode
-    //! \param include_non_extruding_moves: if true, generates visual segments when the extruder is off
+    //! \param include_non_deposition_moves: if true, generates visual segments when deposition is inactive
     //! \param optional_parameters: Parameters of gcodecommand for start (x, y, z, w)
     //! \return List of generated visual segments.
     QVector<QSharedPointer<SegmentBase>>
     generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
-                          const QMap<char, double>& parameters, bool extruder_on, double extruder_speed,
-                          bool include_non_extruding_moves, const QString comment,
+                          const QMap<char, double>& parameters, bool deposition_active, double extruder_speed,
+                          bool include_non_deposition_moves, const QString comment,
                           const QMap<char, double>& optional_parameters = QMap<char, double>());
 
     //! \brief Filename.

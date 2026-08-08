@@ -33,7 +33,7 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
     m_current_rpm = 0;
     m_current_robot = 1;
     m_machine_type = m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType);
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -239,7 +239,7 @@ QString ORNLWriter::writeLine(const Point& start_point, const Point& target_poin
 
     QString rv;
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0, params);
         setFeedrate(0);
     }
@@ -297,7 +297,7 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
     Distance z_offset = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, 0, params);
     }
 
@@ -418,7 +418,7 @@ QString ORNLWriter::writeDwell(Time time) {
 QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extruder_number,
                                     const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     float output_rpm;
 
     if (m_machine_type == MachineType::kWire_Arc) {
@@ -498,7 +498,7 @@ QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
 
 QString ORNLWriter::writeExtruderOff(int extruder_number) {
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
 
     // Retrieve relevant settings
     Time off_delay = m_sb->setting<Time>(MS::Extruder::kOffDelay);

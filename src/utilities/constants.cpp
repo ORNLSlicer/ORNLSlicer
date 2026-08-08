@@ -319,6 +319,8 @@ const QString Constants::PrinterSettings::GCode::kEnableWaitForUser = "enable_wa
 const QString Constants::PrinterSettings::GCode::kEnableBoundingBox = "enable_bounding_box";
 const QString Constants::PrinterSettings::GCode::kEnableSettingsFooter = "enable_settings_footer";
 const QString Constants::PrinterSettings::GCode::kLayerTimeComments = "enable_layer_time_comments";
+const QString Constants::PrinterSettings::GCode::kArcSpecialtiesG2G3OptionalStop =
+    "arc_specialties_g2_g3_optional_stop";
 const QString Constants::PrinterSettings::GCode::kStartCode = "start_code";
 const QString Constants::PrinterSettings::GCode::kLayerCodeChange = "layer_change_code";
 const QString Constants::PrinterSettings::GCode::kEndCode = "end_code";

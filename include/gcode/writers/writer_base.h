@@ -197,7 +197,9 @@ class WriterBase {
     Velocity m_feedrate;
     Distance m_current_z, m_current_w, m_last_z, m_last_w;
     Point m_start_point;
-    bool m_extruder_on;
+
+    //! \brief Tracks whether the material deposition process is active.
+    bool m_deposition_active;
 
     //! \brief maintains the min z of the last layer so that we can determine if/when to move the table
     float m_min_z;

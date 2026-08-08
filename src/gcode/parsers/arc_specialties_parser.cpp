@@ -43,6 +43,8 @@ void ArcSpecialtiesParser::config() {
     addCommandMapping("G161", std::bind(&ArcSpecialtiesParser::G161Handler, this, std::placeholders::_1));
     addCommandMapping("G162", std::bind(&ArcSpecialtiesParser::G162Handler, this, std::placeholders::_1));
     addCommandMapping("G164", std::bind(&ArcSpecialtiesParser::G164Handler, this, std::placeholders::_1));
+    addCommandMapping("G82", std::bind(&ArcSpecialtiesParser::G82Handler, this, std::placeholders::_1));
+    addCommandMapping("G83", std::bind(&ArcSpecialtiesParser::G83Handler, this, std::placeholders::_1));
 }
 
 void ArcSpecialtiesParser::G0Handler(QVector<QString> params) {
@@ -59,13 +61,13 @@ void ArcSpecialtiesParser::G1Handler(QVector<QString> params) {
     if (!filtered_params.isEmpty()) {
         const bool force_print_state = isCommentedPrintMove();
         if (force_print_state) {
-            setExtruderActive(true);
+            setDepositionActive(true);
         }
 
         CommonParser::G1Handler(filtered_params);
 
         if (force_print_state) {
-            setExtruderActive(false);
+            setDepositionActive(false);
         }
     }
 }
@@ -79,6 +81,10 @@ void ArcSpecialtiesParser::G161Handler(QVector<QString>) { m_use_absolute_arc_ce
 void ArcSpecialtiesParser::G162Handler(QVector<QString>) { m_use_absolute_arc_centers = false; }
 
 void ArcSpecialtiesParser::G164Handler(QVector<QString>) { m_use_absolute_arc_centers = false; }
+
+void ArcSpecialtiesParser::G82Handler(QVector<QString>) { setDepositionActive(true); }
+
+void ArcSpecialtiesParser::G83Handler(QVector<QString>) { setDepositionActive(false); }
 
 QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<QString> params) {
     QVector<QString> filtered_params;
@@ -212,7 +218,7 @@ QVector<QString> ArcSpecialtiesParser::convertAbsoluteArcCenterParams(const QVec
     return converted_params;
 }
 
-void ArcSpecialtiesParser::setExtruderActive(bool on) { m_extruder_on = on; }
+void ArcSpecialtiesParser::setDepositionActive(bool on) { m_deposition_active = on; }
 
 void ArcSpecialtiesParser::handleArcFeedMove(QVector<QString> params, bool ccw) {
     QVector<QString> filtered_params = normalizeAndStripOrientationAxes(params);
@@ -224,7 +230,7 @@ void ArcSpecialtiesParser::handleArcFeedMove(QVector<QString> params, bool ccw) 
 
     const bool force_print_state = isCommentedPrintMove();
     if (force_print_state) {
-        setExtruderActive(true);
+        setDepositionActive(true);
     }
 
     if (ccw) {
@@ -235,7 +241,7 @@ void ArcSpecialtiesParser::handleArcFeedMove(QVector<QString> params, bool ccw) 
     }
 
     if (force_print_state) {
-        setExtruderActive(false);
+        setDepositionActive(false);
     }
 }
 } // namespace ORNL

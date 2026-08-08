@@ -32,7 +32,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_is_lift = false;
     m_is_travel = false;
@@ -326,7 +326,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     RegionType rType = params->setting<RegionType>(SS::kRegionType);
     bool w_active_first_travel = false;
 
-    // Determine if travel length is short enough to keep extruder on
+    // Determine if travel length is short enough to keep deposition active.
     Distance travel_distance = start_location.distance(target_location);
     if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         int rpm = params->contains(SS::kExtruderSpeed) ? params->setting<int>(SS::kExtruderSpeed)
@@ -547,7 +547,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
         }
     }
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
         setFeedrate(0);
     }
@@ -642,7 +642,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
         }
     }
 
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
     }
 
@@ -858,7 +858,7 @@ QString CincinnatiWriter::writeTamperOff() {
 
 QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
 
@@ -935,7 +935,7 @@ QString CincinnatiWriter::writeExtruderOff() {
     // update to use extruder number
 
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

@@ -21,7 +21,7 @@ QString ThermwoodWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
                                            Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruder_on = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -197,7 +197,7 @@ QString ThermwoodWriter::writeLine(const Point& start_point, const Point& target
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
     }
 
@@ -250,7 +250,7 @@ QString ThermwoodWriter::writeArc(const Point& start_point, const Point& end_poi
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruder_on && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm, params);
     }
 
@@ -370,7 +370,7 @@ QString ThermwoodWriter::writeDwell(Time time) {
 
 QString ThermwoodWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruder_on = true;
+    m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
 
@@ -423,7 +423,7 @@ QString ThermwoodWriter::writeExtruderOn(RegionType type, int rpm, const QShared
 
 QString ThermwoodWriter::writeExtruderOff() {
     QString rv;
-    m_extruder_on = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }
