@@ -113,12 +113,13 @@ class ShapeFactory final {
                                  const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                  std::vector<float>& normals, unsigned int quads_per_side = 4);
 
-    /*! @brief Appends a circular-arc bead triangle mesh.
+    /*! @brief Appends a circular-arc squished-bead triangle mesh.
      *
      *  The bead follows the XY arc defined by @p start, @p center, @p end, and @p is_ccw. Z is linearly interpolated
-     *  from start to end. Output is suitable for GL_TRIANGLES.
+     *  from start to end. The cross-section matches appendLinearBead. Output is suitable for GL_TRIANGLES.
      *
-     *  @param bead_diameter Diameter of the circular bead cross-section.
+     *  @param width Display bead width across the path.
+     *  @param height Display bead height.
      *  @param start Arc start point.
      *  @param center Arc center point.
      *  @param end Arc end point.
@@ -128,16 +129,17 @@ class ShapeFactory final {
      *  @param colors Destination rgba color buffer to append to.
      *  @param normals Destination xyz normal buffer to append to.
      */
-    static void appendArcBead(float bead_diameter, const Point& start, const Point& center, const Point& end,
+    static void appendArcBead(float width, float height, const Point& start, const Point& center, const Point& end,
                               bool is_ccw, const QColor& color, std::vector<float>& vertices,
                               std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! @brief Appends a cubic Bezier bead triangle mesh.
+    /*! @brief Appends a cubic Bezier squished-bead triangle mesh.
      *
-     *  The bead follows the cubic Bezier curve defined by start, two controls, and end. Output is suitable for
-     *  GL_TRIANGLES.
+     *  The bead follows the cubic Bezier curve defined by start, two controls, and end. The cross-section matches
+     *  appendLinearBead. Output is suitable for GL_TRIANGLES.
      *
-     *  @param bead_diameter Diameter of the circular bead cross-section.
+     *  @param width Display bead width across the path.
+     *  @param height Display bead height.
      *  @param start Curve start point.
      *  @param control_a First Bezier control point.
      *  @param control_b Second Bezier control point.
@@ -147,7 +149,7 @@ class ShapeFactory final {
      *  @param colors Destination rgba color buffer to append to.
      *  @param normals Destination xyz normal buffer to append to.
      */
-    static void appendSplineBead(float bead_diameter, const Point& start, const Point& control_a,
+    static void appendSplineBead(float width, float height, const Point& start, const Point& control_a,
                                  const Point& control_b, const Point& end, const QColor& color,
                                  std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
