@@ -196,6 +196,9 @@ int main(int argc, char* argv[]) {
     const auto full_circle_arc_triangles = ORNL::AsPrintedModelExporter::generateTriangles(full_circle_arc_segments);
     passed &= expect(!full_circle_arc_triangles.empty(),
                      "Expected same-endpoint full-circle arcs to be exported as bead mesh triangles.");
+    const Bounds full_circle_arc_bounds = boundsFor(full_circle_arc_triangles);
+    passed &= expect(near(full_circle_arc_bounds.max.z() - full_circle_arc_bounds.min.z(), kHeight),
+                     "Expected arc bead mesh height to match the display bead height.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> corner_segments;
     corner_segments.push_back(

@@ -24,8 +24,8 @@ BezierSegment::BezierSegment(const Point& start, const Point& control_a, const P
 
 void BezierSegment::createGraphic(std::vector<float>& vertices, std::vector<float>& normals,
                                   std::vector<float>& colors) {
-    ShapeFactory::appendSplineBead(m_display_width, m_start, m_control_a, m_control_b, m_end, m_color, vertices, colors,
-                                   normals);
+    ShapeFactory::appendSplineBead(m_display_width, m_display_height, m_start, m_control_a, m_control_b, m_end, m_color,
+                                   vertices, colors, normals);
 }
 
 Point BezierSegment::getPointAlong(double t) {
