@@ -188,6 +188,8 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     virtual void handleWheelForward(QPointF mouse_ndc_pos, float delta);
     //! \brief Respond to a mouse wheel backward movement
     virtual void handleWheelBackward(QPointF mouse_ndc_pos, float delta);
+    //! \brief Gives derived views first chance at non-camera key presses.
+    virtual bool handleKeyPress(QKeyEvent* e);
     //! \brief Applies a pan request from mouse or keyboard navigation.
     //! \param v World-space translation vector to apply.
     //! \param absolute If true, set the camera pan target to \p v; otherwise apply \p v as a relative pan.

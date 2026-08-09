@@ -1,8 +1,15 @@
 #include "widgets/part_widget/right_click_menu.h"
 
+#include <algorithm>
+#include <cmath>
+
+#include <QDir>
 #include <QFileDialog>
+#include <QFileInfo>
 #include <QInputDialog>
 #include <QLabel>
+#include <QLocale>
+#include <QMessageBox>
 #include <QWidgetAction>
 #include <qaction.h>
 #include <qicon.h>
@@ -15,17 +22,123 @@
 #include <qslider.h>
 #include <qwidget.h>
 
+#include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
+namespace {
+QString meshTypeText(MeshType type) {
+    switch (type) {
+        case MeshType::kBuild:
+            return "Build";
+        case MeshType::kClipping:
+            return "Clipper";
+        case MeshType::kSettings:
+            return "Setting";
+        case MeshType::kSupport:
+            return "Support";
+    }
+
+    return "Unknown";
+}
+
+QString sourceFilePath(QSharedPointer<Part> part) {
+    if (part.isNull())
+        return QString();
+
+    if (!part->sourceFilePath().isEmpty())
+        return part->sourceFilePath();
+
+    if (!part->rootMesh().isNull())
+        return part->rootMesh()->path();
+
+    return QString();
+}
+
+QString fileTypeText(const QString& path) {
+    if (path.isEmpty())
+        return "Generated";
+
+    const QString suffix = QFileInfo(path).suffix().toUpper();
+    return suffix.isEmpty() ? "Unknown" : suffix;
+}
+
+int triangleCount(QSharedPointer<Part> part) {
+    if (part.isNull())
+        return 0;
+
+    int count = 0;
+    for (auto mesh : part->meshes()) {
+        if (mesh.isNull())
+            continue;
+
+        count += mesh->originalFaces().size();
+    }
+
+    return count;
+}
+
+bool originalMeshDimensions(QSharedPointer<Part> part, Distance3D& dimensions) {
+    if (part.isNull())
+        return false;
+
+    bool found_vertex = false;
+    QVector3D minimum;
+    QVector3D maximum;
+
+    for (auto mesh : part->meshes()) {
+        if (mesh.isNull())
+            continue;
+
+        const QVector<MeshVertex> vertices = mesh->originalVertices();
+        for (const MeshVertex& vertex : vertices) {
+            if (!found_vertex) {
+                minimum = vertex.location;
+                maximum = vertex.location;
+                found_vertex = true;
+                continue;
+            }
+
+            minimum.setX(std::min(minimum.x(), vertex.location.x()));
+            minimum.setY(std::min(minimum.y(), vertex.location.y()));
+            minimum.setZ(std::min(minimum.z(), vertex.location.z()));
+            maximum.setX(std::max(maximum.x(), vertex.location.x()));
+            maximum.setY(std::max(maximum.y(), vertex.location.y()));
+            maximum.setZ(std::max(maximum.z(), vertex.location.z()));
+        }
+    }
+
+    if (!found_vertex)
+        return false;
+
+    dimensions = Distance3D(Distance(maximum.x() - minimum.x()), Distance(maximum.y() - minimum.y()),
+                            Distance(maximum.z() - minimum.z()));
+    return true;
+}
+
+QString formatDistance(double microns) {
+    const Distance unit = PreferencesManager::getInstance()->getDistanceUnit();
+    return QString("%1 %2")
+        .arg(QString::number(Distance(microns).to(unit), 'f', 3),
+             PreferencesManager::getInstance()->getDistanceUnitText());
+}
+
+QString dimensionsText(double x_microns, double y_microns, double z_microns) {
+    return QString("X %1, Y %2, Z %3")
+        .arg(formatDistance(x_microns), formatDistance(y_microns), formatDistance(z_microns));
+}
+} // namespace
+
 RightClickMenu::RightClickMenu(QWidget* parent) : QMenu(("Context menu"), parent) {
     this->setupActions();
     this->setupEvents();
 }
 
 void RightClickMenu::setupActions() {
+    m_info_action = new QAction("Info", this);
     m_switch_to_build_action = new QAction("Switch to Build", this);
     m_switch_to_clipper_action = new QAction("Switch to Clipper", this);
     m_switch_to_setting_action = new QAction("Switch to Setting", this);
@@ -36,6 +149,7 @@ void RightClickMenu::setupActions() {
     m_lock_part_action = new QAction("Toggle Part Lock(s)", this);
     m_set_instances_action = new QAction("Set Number of Instances", this);
 
+    m_info_action->setIcon(QIcon(":/icons/info.png"));
     m_switch_to_clipper_action->setIcon(QIcon(":/icons/clip.png"));
     m_switch_to_build_action->setIcon(QIcon(":/icons/print_head.png"));
     m_switch_to_setting_action->setIcon(QIcon(":/icons/settings_black.png"));
@@ -46,6 +160,8 @@ void RightClickMenu::setupActions() {
     m_lock_part_action->setIcon(QIcon(":/icons/lock.png"));
     m_set_instances_action->setIcon(QIcon(":/icons/copy_black.png"));
 
+    this->addAction(m_info_action);
+    this->addSeparator();
     this->addAction(m_switch_to_build_action);
     this->addAction(m_switch_to_clipper_action);
     this->addAction(m_switch_to_setting_action);
@@ -87,6 +203,8 @@ void RightClickMenu::setupActions() {
 }
 
 void RightClickMenu::setupEvents() {
+    connect(m_info_action, &QAction::triggered, this, &RightClickMenu::showInfoDialog);
+
     connect(m_switch_to_clipper_action, &QAction::triggered, this, [this]() {
         m_switch_to_build_action->setDisabled(false);
         m_switch_to_setting_action->setDisabled(false);
@@ -190,6 +308,40 @@ void RightClickMenu::setupEvents() {
     });
 }
 
+void RightClickMenu::showInfoDialog() {
+    if (m_selected_items.size() != 1)
+        return;
+
+    QSharedPointer<PartMetaItem> item = m_selected_items.first();
+    if (item.isNull() || item->part().isNull() || item->graphicsPart().isNull())
+        return;
+
+    QSharedPointer<Part> part = item->part();
+    QSharedPointer<PartObject> graphics_part = item->graphicsPart();
+    const QString source_path = sourceFilePath(part);
+
+    const QVector3D current_dimensions = graphics_part->maximum() - graphics_part->minimum();
+    QStringList lines;
+    lines << QString("Name: %1").arg(part->name());
+    lines << QString("File type: %1").arg(fileTypeText(source_path));
+    lines << QString("Mesh role: %1").arg(meshTypeText(item->meshType()));
+    lines << QString("Triangles: %1").arg(QLocale().toString(triangleCount(part)));
+    lines << QString("Current dimensions: %1")
+                 .arg(dimensionsText(std::fabs(current_dimensions.x()) * Constants::OpenGL::kViewToObject,
+                                     std::fabs(current_dimensions.y()) * Constants::OpenGL::kViewToObject,
+                                     std::fabs(current_dimensions.z()) * Constants::OpenGL::kViewToObject));
+
+    Distance3D original_dimensions;
+    if (originalMeshDimensions(part, original_dimensions)) {
+        lines << QString("Original mesh dimensions: %1")
+                     .arg(dimensionsText(original_dimensions.x(), original_dimensions.y(), original_dimensions.z()));
+    }
+
+    lines << QString("Source: %1").arg(source_path.isEmpty() ? "Generated part" : QDir::toNativeSeparators(source_path));
+
+    QMessageBox::information(this, "Object Info", lines.join("\n"));
+}
+
 void RightClickMenu::show(const QPointF& pos, QList<QSharedPointer<PartMetaItem>> items) {
     m_selected_items = items;
     this->disableActions();
@@ -248,6 +400,7 @@ void RightClickMenu::disableActions() {
         m_transparency_menu->setDisabled(false);
         m_wireframe_action->setDisabled(false);
         m_solidwireframe_action->setDisabled(false);
+        m_info_action->setDisabled(m_selected_items.size() != 1);
 
         if (m_selected_items.size() == 1) {
             m_replace_part_action->setDisabled(false);
@@ -268,6 +421,7 @@ void RightClickMenu::disableActions() {
         m_reload_part_action->setDisabled(true);
         m_delete_part_action->setDisabled(true);
         m_set_instances_action->setDisabled(true);
+        m_info_action->setDisabled(true);
         m_transparency_menu->setDisabled(true);
         m_wireframe_action->setDisabled(true);
         m_solidwireframe_action->setDisabled(true);
