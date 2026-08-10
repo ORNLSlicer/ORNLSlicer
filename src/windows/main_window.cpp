@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QProcess>
 #include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
@@ -81,6 +82,11 @@
 #include "windows/xtrudecalc.h"
 
 namespace {
+struct FileOpener {
+    QString program;
+    QStringList arguments;
+};
+
 QString userManualPath() {
     const QString manual_file = QStringLiteral("ornlslicer-user-guide.pdf");
     const QString relative_doc_path = QStringLiteral("doc/ornlslicer/") + manual_file;
@@ -109,6 +115,46 @@ QString userManualPath() {
     }
 
     return {};
+}
+
+bool startDetachedFileOpener(const FileOpener& opener) {
+    const bool explicit_path = opener.program.contains(QChar('/')) || opener.program.contains(QChar('\\'));
+    const QString executable = explicit_path ? opener.program : QStandardPaths::findExecutable(opener.program);
+
+    if (executable.isEmpty())
+        return false;
+
+    return QProcess::startDetached(executable, opener.arguments);
+}
+
+bool openLocalFile(const QString& path) {
+    if (QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
+        return true;
+
+    const QString native_path = QDir::toNativeSeparators(path);
+    const QList<FileOpener> fallback_openers = {
+#ifdef Q_OS_WIN
+        {QStringLiteral("cmd"), {QStringLiteral("/C"), QStringLiteral("start"), QString(), native_path}},
+#elif defined(Q_OS_MACOS)
+        {QStringLiteral("open"), {path}},
+#else
+        {QStringLiteral("gio"), {QStringLiteral("open"), path}},
+        {QStringLiteral("/usr/bin/gio"), {QStringLiteral("open"), path}},
+        {QStringLiteral("xdg-open"), {path}},
+        {QStringLiteral("/usr/bin/xdg-open"), {path}},
+        {QStringLiteral("kde-open5"), {path}},
+        {QStringLiteral("kde-open"), {path}},
+        {QStringLiteral("gnome-open"), {path}},
+        {QStringLiteral("wslview"), {path}},
+#endif
+    };
+
+    for (const FileOpener& opener : fallback_openers) {
+        if (startDetachedFileOpener(opener))
+            return true;
+    }
+
+    return false;
 }
 } // namespace
 
@@ -916,7 +962,7 @@ void MainWindow::setupEvents() {
             return;
         }
 
-        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(manual_path))) {
+        if (!openLocalFile(manual_path)) {
             QMessageBox::warning(this, "User Guide", "Could not open the user guide:\n" + manual_path);
         }
     });
