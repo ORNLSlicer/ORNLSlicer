@@ -307,7 +307,7 @@
             "retraction_layer_change": false,
             "filament_prime_speed": 0,
             "filament_prime_length": 0,
-            "skeleton": true,
+            "skeleton": false,
             "skeleton_input": 0,
             "skeleton_input_cleaning_distance": 25.39999905079604,
             "skeleton_input_chamfering_angle": 0.43633230961859226,

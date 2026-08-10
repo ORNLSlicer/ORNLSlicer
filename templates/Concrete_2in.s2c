@@ -4,7 +4,7 @@
         "created_on": "Mon Aug 10 13:15:11 2026",
         "last_modified": "Mon Aug 10 13:15:11 2026",
         "version": 10.0,
-        "lock": "false"
+        "lock": "true"
     },
     "settings": [
         {
@@ -386,8 +386,8 @@
             "enable_width_height": false,
             "enable_spiral_perimeter": false,
             "enable_spiral_inset": false,
-            "enable_spiral_skin": true,
-            "enable_spiral_infill": true,
+            "enable_spiral_skin": false,
+            "enable_spiral_infill": false,
             "spiral_end_of_layer": false,
             "spiral_lift_height": 990.6,
             "spiral_lift_points": 20,
