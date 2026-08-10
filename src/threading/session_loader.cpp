@@ -22,7 +22,8 @@
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
-SessionLoader::SessionLoader(QString filename, bool save) : m_filename(filename), m_save(save) {
+SessionLoader::SessionLoader(QString filename, bool save)
+    : m_filename(filename), m_save(save), m_has_new_json(false), m_should_write_new_json(false) {
     // NOP
 }
 
@@ -137,11 +138,15 @@ fifojson SessionLoader::getSettingsFromZip() {
     return result;
 }
 
-void SessionLoader::updateSettingsJson(fifojson j) { m_new_json = j; }
+void SessionLoader::updateSettingsJson(fifojson j, bool writeToProject) {
+    m_new_json = j;
+    m_has_new_json = true;
+    m_should_write_new_json = writeToProject;
+}
 
 void SessionLoader::loadSession() {
 
-    if (!m_new_json.empty()) {
+    if (m_has_new_json && m_should_write_new_json) {
         struct zip_t* zip = zip_open(m_filename.toUtf8(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'd');
         if (zip == nullptr)
             return;
@@ -189,7 +194,11 @@ void SessionLoader::loadSession() {
     }
 
     // Load global settings
-    GSM->loadGlobalJson(fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal)));
+    fifojson global_settings = m_has_new_json
+                                   ? m_new_json
+                                   : fifojson::parse(
+                                         loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal));
+    GSM->loadGlobalJson(global_settings);
 
     // Load transforms
     CSM->loadPartsJson(fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kSession)));

@@ -196,7 +196,8 @@ class SessionManager : public QObject {
     //! \param shouldDelete Whether or not to delete current parts/settings before
     //! loading the session
     //! \param path The path to the project to load
-    SessionLoader* loadSession(bool shouldDelete, QString path = QString());
+    //! \param promptForSettingsUpdate Whether to prompt before rolling forward embedded project settings
+    SessionLoader* loadSession(bool shouldDelete, QString path = QString(), bool promptForSettingsUpdate = true);
 
     //! \brief Slot to receive slicing updates from.  Info to be forwarded to slice dialog
     //! \param type The current section of the step being completed

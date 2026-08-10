@@ -258,6 +258,11 @@ void SettingsManager::constructLayerBarTemplate(QHash<QString, QString> settingT
 }
 
 int SettingsManager::checkVersion(QString filename, fifojson& settings_data, bool gui) {
+    return checkVersion(filename, settings_data,
+                        gui ? SettingsVersionUpdateMode::kGuiPrompt : SettingsVersionUpdateMode::kConsolePrompt);
+}
+
+int SettingsManager::checkVersion(QString filename, fifojson& settings_data, SettingsVersionUpdateMode update_mode) {
     fifojson header;
     double version = 0;
     auto item = settings_data.find(Constants::SettingFileStrings::kHeader);
@@ -271,7 +276,12 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, boo
     }
 
     if (version < m_current_master_version) {
-        if (gui) {
+        if (update_mode == SettingsVersionUpdateMode::kAutoUpdate) {
+            qInfo() << filename + " is outdated. Loading it with the newest compatible version.";
+            SettingsVersionControl::rollSettingsForward(version, settings_data);
+            return 1;
+        }
+        else if (update_mode == SettingsVersionUpdateMode::kGuiPrompt) {
             int ret = m_yes_to_all_update;
             if (!ret)
                 ret = QMessageBox::warning(
