@@ -34,6 +34,7 @@ editing the PDF directly. With Pandoc and a LaTeX engine installed, run:
 ```bash
 pandoc --from=gfm docs/ornlslicer-user-guide.md \
   --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
+  --include-in-header=docs/pandoc/user-guide-header.tex \
   --metadata title-meta="ORNLSlicer User Guide" \
   --output=docs/ornlslicer-user-guide.pdf
 ```
