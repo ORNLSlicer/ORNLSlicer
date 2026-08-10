@@ -28,11 +28,11 @@ const QString kRadialCenterX = "radial_center_x";
 //! @brief Segment setting key used to recover the cylinder center Y.
 const QString kRadialCenterY = "radial_center_y";
 
-//! @brief Helical comment field used by the preview to recover the cylinder axis X.
-const QString kHelicalAxisXComment = "AXIS_X=";
+//! @brief Cylindrical comment field used by the preview to recover the cylinder axis X.
+const QString kCylindricalAxisXComment = "AXIS_X=";
 
-//! @brief Helical comment field used by the preview to recover the cylinder axis Y.
-const QString kHelicalAxisYComment = "AXIS_Y=";
+//! @brief Cylindrical comment field used by the preview to recover the cylinder axis Y.
+const QString kCylindricalAxisYComment = "AXIS_Y=";
 
 //! @brief Fixed tool-frame XR.
 constexpr double kToolFrameXR = 180.0;
@@ -863,14 +863,12 @@ bool ArcSpecialtiesWriter::isHelicalPathPattern() const {
 
 QString ArcSpecialtiesWriter::printMoveComment(const QSharedPointer<SettingsBase>& params) const {
     if (isCylindricalSlicingMode()) {
-        if (isHelicalPathPattern()) {
-            return Constants::RegionTypeStrings::kHelical % " " % kHelicalAxisXComment %
-                   QString::number(params->setting<Distance>(kRadialCenterX).to(m_meta.m_distance_unit), 'f', 4) % " " %
-                   kHelicalAxisYComment %
-                   QString::number(params->setting<Distance>(kRadialCenterY).to(m_meta.m_distance_unit), 'f', 4);
-        }
-
-        return Constants::RegionTypeStrings::kRadial;
+        const QString region =
+            isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial;
+        return region % " " % kCylindricalAxisXComment %
+               QString::number(params->setting<Distance>(kRadialCenterX).to(m_meta.m_distance_unit), 'f', 4) % " " %
+               kCylindricalAxisYComment %
+               QString::number(params->setting<Distance>(kRadialCenterY).to(m_meta.m_distance_unit), 'f', 4);
     }
 
     return toString(m_region_type);
