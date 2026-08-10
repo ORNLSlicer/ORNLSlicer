@@ -33,7 +33,7 @@ namespace ORNL {
 namespace {
 //! @brief Vertex counts emitted by ShapeFactory for each full bead mesh segment type.
 constexpr qsizetype kLinearBeadVertexCount = 120;
-constexpr qsizetype kCurvedBeadVertexCount = 2376;
+constexpr qsizetype kCurvedBeadVertexCount = 1980;
 constexpr double kLightweightArcSegmentAngle = (2.0 * 3.14159265358979323846) / 48.0;
 constexpr double kLightweightArcEpsilon = 1.0e-6;
 

@@ -25,7 +25,6 @@ constexpr int kCylinderSegments = 50;
 constexpr int kConeSlices = 50;
 constexpr int kSphereMinSectorCount = 3;
 constexpr int kSphereMinStackCount = 2;
-constexpr int kTubeCrossSectionResolution = 12;
 constexpr int kCurveSegments = 32;
 constexpr int kBuildVolumeCylinderSegments = 100;
 constexpr int kBuildVolumeVerticalLines = 6;
@@ -127,20 +126,164 @@ std::size_t countLoopValues(float value, float limit, float step) {
     return count;
 }
 
-const std::array<QVector2D, kTubeCrossSectionResolution>& circleTable() {
-    static const std::array<QVector2D, kTubeCrossSectionResolution> table = [] {
-        std::array<QVector2D, kTubeCrossSectionResolution> values;
-        const float step = kTwoPi / static_cast<float>(kTubeCrossSectionResolution);
+std::vector<QVector2D> squishedBeadProfile(float width, float height, unsigned int quads_per_side) {
+    if (width <= kVectorEpsilon || height <= kVectorEpsilon) {
+        return {};
+    }
 
-        for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-            const float theta = static_cast<float>(i) * step;
-            values[i] = QVector2D(std::cos(theta), std::sin(theta));
+    const bool rectangular_prism = height > width;
+    const float radius = rectangular_prism
+                             ? std::sqrt(((width / 2.0f) * (width / 2.0f)) + ((height / 2.0f) * (height / 2.0f)))
+                             : width / 2.0f;
+    if (radius <= kVectorEpsilon) {
+        return {};
+    }
+
+    const unsigned int resolved_quads_per_side = rectangular_prism ? 1 : std::max(1u, quads_per_side);
+    const unsigned int vertices_per_arc = resolved_quads_per_side + 1;
+    const float theta_start = -std::asin(std::clamp((height / 2.0f) / radius, -1.0f, 1.0f));
+    const float theta_end = -theta_start;
+    const float theta_increment = (theta_end - theta_start) / static_cast<float>(resolved_quads_per_side);
+
+    std::vector<QVector2D> profile;
+    profile.reserve(static_cast<std::size_t>(vertices_per_arc) * 2);
+
+    for (unsigned int i = 0; i < vertices_per_arc; ++i) {
+        const float theta = theta_start + (static_cast<float>(i) * theta_increment);
+        const float x = radius * std::cos(theta);
+        const float y = radius * std::sin(theta);
+
+        profile.emplace_back(x, y);
+    }
+
+    for (unsigned int i = 0; i < vertices_per_arc; ++i) {
+        profile.emplace_back(-profile[i].x(), -profile[i].y());
+    }
+
+    return profile;
+}
+
+QVector3D displaySliceNormal() {
+    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
+    if (normal.lengthSquared() <= kVectorEpsilonSquared) {
+        normal = QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    else {
+        normal.normalize();
+    }
+
+    return normal;
+}
+
+bool beadFrameForTangentAndNormal(QVector3D tangent, QVector3D normal_hint, QVector3D& binormal, QVector3D& normal) {
+    if (tangent.lengthSquared() <= kVectorEpsilonSquared) {
+        return false;
+    }
+    tangent.normalize();
+
+    if (normal_hint.lengthSquared() <= kVectorEpsilonSquared) {
+        normal_hint = displaySliceNormal();
+    }
+    else {
+        normal_hint.normalize();
+    }
+
+    binormal = QVector3D::crossProduct(tangent, normal_hint);
+    if (binormal.lengthSquared() <= kVectorEpsilonSquared) {
+        normal = (std::fabs(tangent.x()) < 0.9f) ? QVector3D(1.0f, 0.0f, 0.0f) : QVector3D(0.0f, 1.0f, 0.0f);
+        binormal = QVector3D::crossProduct(tangent, normal);
+    }
+    if (binormal.lengthSquared() <= kVectorEpsilonSquared) {
+        return false;
+    }
+    binormal.normalize();
+
+    normal = QVector3D::crossProduct(binormal, tangent);
+    if (normal.lengthSquared() <= kVectorEpsilonSquared) {
+        return false;
+    }
+    normal.normalize();
+
+    return true;
+}
+
+bool beadFrameForTangent(QVector3D tangent, QVector3D& binormal, QVector3D& normal) {
+    return beadFrameForTangentAndNormal(tangent, displaySliceNormal(), binormal, normal);
+}
+
+QVector3D radialNormalForPoint(const QVector3D& point, const QVector3D& cylinder_axis) {
+    QVector3D normal(point.x() - cylinder_axis.x(), point.y() - cylinder_axis.y(), 0.0f);
+    if (normal.lengthSquared() > kVectorEpsilonSquared) {
+        normal.normalize();
+    }
+
+    return normal;
+}
+
+template <typename CenterAt, typename TangentAt, typename NormalAt>
+void appendSweptBeadMesh(float width, float height, CenterAt center_at, TangentAt tangent_at, NormalAt normal_at,
+                         const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
+                         std::vector<float>& normals) {
+    const std::vector<QVector2D> profile = squishedBeadProfile(width, height, 4);
+    if (profile.empty()) {
+        return;
+    }
+
+    const std::size_t profile_size = profile.size();
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, profile_size * (2 + (2 * static_cast<std::size_t>(kCurveSegments))));
+
+    std::vector<QVector3D> centers(static_cast<std::size_t>(kCurveSegments) + 1);
+    std::vector<std::vector<QVector3D>> ring_vertices(static_cast<std::size_t>(kCurveSegments) + 1,
+                                                      std::vector<QVector3D>(profile_size));
+
+    for (int ring_index = 0; ring_index <= kCurveSegments; ++ring_index) {
+        const float t = static_cast<float>(ring_index) / static_cast<float>(kCurveSegments);
+        const QVector3D center = center_at(t);
+        QVector3D binormal;
+        QVector3D normal;
+        if (!beadFrameForTangentAndNormal(tangent_at(t), normal_at(t), binormal, normal)) {
+            return;
         }
 
-        return values;
-    }();
+        centers[ring_index] = center;
+        for (std::size_t i = 0; i < profile_size; ++i) {
+            ring_vertices[ring_index][i] = center + (binormal * profile[i].x()) + (normal * profile[i].y());
+        }
+    }
 
-    return table;
+    for (std::size_t i = 0; i < profile_size; ++i) {
+        const std::size_t next = (i + 1) % profile_size;
+        appendTriangleData(centers.front(), ring_vertices.front()[i], ring_vertices.front()[next], rgba, vertices,
+                           colors, normals);
+    }
+
+    for (int slice_index = 0; slice_index < kCurveSegments; ++slice_index) {
+        const int next_slice = slice_index + 1;
+        for (std::size_t vertex_index = 0; vertex_index < profile_size; ++vertex_index) {
+            const std::size_t next_vertex = (vertex_index + 1) % profile_size;
+
+            appendTriangleData(ring_vertices[next_slice][vertex_index], ring_vertices[slice_index][next_vertex],
+                               ring_vertices[slice_index][vertex_index], rgba, vertices, colors, normals);
+            appendTriangleData(ring_vertices[next_slice][vertex_index], ring_vertices[next_slice][next_vertex],
+                               ring_vertices[slice_index][next_vertex], rgba, vertices, colors, normals);
+        }
+    }
+
+    for (std::size_t i = 0; i < profile_size; ++i) {
+        const std::size_t next = (i + 1) % profile_size;
+        appendTriangleData(centers.back(), ring_vertices.back()[next], ring_vertices.back()[i], rgba, vertices, colors,
+                           normals);
+    }
+}
+
+template <typename CenterAt, typename TangentAt>
+void appendSweptBeadMesh(float width, float height, CenterAt center_at, TangentAt tangent_at, const QColor& color,
+                         std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
+    auto normal_at = [](float) { return displaySliceNormal(); };
+    appendSweptBeadMesh(width, height, center_at, tangent_at, normal_at, color, vertices, colors, normals);
 }
 
 float arcSweepAngle(const Point& start, const Point& center, const Point& end, bool counterclockwise) {
@@ -158,92 +301,6 @@ float arcSweepAngle(const Point& start, const Point& center, const Point& end, b
     }
 
     return angle;
-}
-
-void appendArcBeadMesh(float bead_diameter, const Point& start, const Point& center, const Point& end,
-                       const QMatrix4x4& transform, bool counterclockwise, const QColor& color,
-                       std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals) {
-    const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const float minor_radius = bead_diameter / 2.0f;
-    if (major_radius <= kVectorEpsilon || minor_radius <= kVectorEpsilon) {
-        return;
-    }
-
-    const float angle = arcSweepAngle(start, center, end, counterclockwise);
-    const float phi_increment = angle / static_cast<float>(kCurveSegments);
-    const float height_increment = (end.z() - start.z()) / static_cast<float>(kCurveSegments);
-    const auto& circle = circleTable();
-    const Rgba rgba(color);
-
-    reserveTriangleMesh(vertices, colors, normals,
-                        kTubeCrossSectionResolution * (2 + (2 * static_cast<std::size_t>(kCurveSegments))));
-
-    std::array<std::array<QVector3D, kTubeCrossSectionResolution>, kCurveSegments + 1> tube_vertices;
-
-    float phi = counterclockwise ? 0.0f : kTwoPi;
-    float height = 0.0f;
-    for (auto& ring_vertices : tube_vertices) {
-        const float cos_phi = std::cos(phi);
-        const float sin_phi = std::sin(phi);
-
-        for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-            const float local_radius = major_radius + (minor_radius * circle[i].x());
-            ring_vertices[i] = transform * QVector3D(cos_phi * local_radius, sin_phi * local_radius,
-                                                     (circle[i].y() * minor_radius) + height);
-        }
-
-        height += height_increment;
-        phi += counterclockwise ? phi_increment : -phi_increment;
-    }
-
-    const QVector3D start_center = transform * QVector3D(major_radius, 0.0f, 0.0f);
-    const float end_phi = counterclockwise ? angle : -angle;
-    const QVector3D end_center =
-        transform * QVector3D(major_radius * std::cos(end_phi), major_radius * std::sin(end_phi), end.z() - start.z());
-
-    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-        const int next = (i + 1) % kTubeCrossSectionResolution;
-        if (counterclockwise) {
-            appendTriangleData(start_center, tube_vertices[0][i], tube_vertices[0][next], rgba, vertices, colors,
-                               normals);
-        }
-        else {
-            appendTriangleData(tube_vertices[0][next], tube_vertices[0][i], start_center, rgba, vertices, colors,
-                               normals);
-        }
-    }
-
-    for (int slice_index = 0; slice_index < kCurveSegments; ++slice_index) {
-        const int next_slice = slice_index + 1;
-        for (int vertex_index = 0; vertex_index < kTubeCrossSectionResolution; ++vertex_index) {
-            const int next_vertex = (vertex_index + 1) % kTubeCrossSectionResolution;
-
-            if (counterclockwise) {
-                appendTriangleData(tube_vertices[slice_index][vertex_index], tube_vertices[next_slice][vertex_index],
-                                   tube_vertices[slice_index][next_vertex], rgba, vertices, colors, normals);
-                appendTriangleData(tube_vertices[next_slice][next_vertex], tube_vertices[slice_index][next_vertex],
-                                   tube_vertices[next_slice][vertex_index], rgba, vertices, colors, normals);
-            }
-            else {
-                appendTriangleData(tube_vertices[slice_index][next_vertex], tube_vertices[next_slice][vertex_index],
-                                   tube_vertices[slice_index][vertex_index], rgba, vertices, colors, normals);
-                appendTriangleData(tube_vertices[next_slice][vertex_index], tube_vertices[slice_index][next_vertex],
-                                   tube_vertices[next_slice][next_vertex], rgba, vertices, colors, normals);
-            }
-        }
-    }
-
-    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-        const int next = (i + 1) % kTubeCrossSectionResolution;
-        if (counterclockwise) {
-            appendTriangleData(tube_vertices[kCurveSegments][next], tube_vertices[kCurveSegments][i], end_center, rgba,
-                               vertices, colors, normals);
-        }
-        else {
-            appendTriangleData(end_center, tube_vertices[kCurveSegments][i], tube_vertices[kCurveSegments][next], rgba,
-                               vertices, colors, normals);
-        }
-    }
 }
 } // namespace
 
@@ -288,66 +345,20 @@ void ShapeFactory::appendBox(float length, float width, float height, const QMat
     }
 }
 
-void ShapeFactory::appendSplineBead(float bead_diameter, const Point& start, const Point& control_a,
+void ShapeFactory::appendSplineBead(float width, float height, const Point& start, const Point& control_a,
                                     const Point& control_b, const Point& end, const QColor& color,
                                     std::vector<float>& vertices, std::vector<float>& colors,
                                     std::vector<float>& normals) {
-    const float radius = bead_diameter / 2.0f;
-    if (radius <= kVectorEpsilon) {
-        return;
-    }
-
-    const auto& circle = circleTable();
-    const Rgba rgba(color);
-    reserveTriangleMesh(vertices, colors, normals,
-                        kTubeCrossSectionResolution * (2 + (2 * static_cast<std::size_t>(kCurveSegments))));
-
-    std::array<std::array<QVector3D, kTubeCrossSectionResolution>, kCurveSegments + 1> tube_vertices;
-
     BezierSegment curve(start, control_a, control_b, end);
     const double increment = 1.0 / static_cast<double>(kCurveSegments);
-    double t = 0.0;
+    auto center_at = [&curve](float t) { return curve.getPointAlong(t).toQVector3D(); };
+    auto tangent_at = [&curve, increment](float t) {
+        const double previous = std::max(0.0, static_cast<double>(t) - increment);
+        const double next = std::min(1.0, static_cast<double>(t) + increment);
+        return curve.getPointAlong(next).toQVector3D() - curve.getPointAlong(previous).toQVector3D();
+    };
 
-    for (auto& ring_vertices : tube_vertices) {
-        const Point center_point = curve.getPointAlong(t);
-        const Point next_center = curve.getPointAlong(t + increment);
-        const Angle tangent_angle = MathUtils::signedInternalAngle(
-            Point(center_point.x(), center_point.y() + 10.0f, center_point.z()), center_point, next_center);
-
-        for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-            Point point(center_point.x() + (radius * circle[i].x()), center_point.y(),
-                        center_point.z() + (radius * circle[i].y()));
-            point = point.rotateAround(center_point, tangent_angle);
-            ring_vertices[i] = point.toQVector3D();
-        }
-
-        t += increment;
-    }
-
-    const QVector3D start_center = curve.getPointAlong(0.0).toQVector3D();
-    const QVector3D end_center = curve.getPointAlong(1.0).toQVector3D();
-
-    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-        appendTriangleData(start_center, tube_vertices[0][i], tube_vertices[0][(i + 1) % kTubeCrossSectionResolution],
-                           rgba, vertices, colors, normals);
-    }
-
-    for (int slice_index = 0; slice_index < kCurveSegments; ++slice_index) {
-        const int next_slice = slice_index + 1;
-        for (int vertex_index = 0; vertex_index < kTubeCrossSectionResolution; ++vertex_index) {
-            const int next_vertex = (vertex_index + 1) % kTubeCrossSectionResolution;
-
-            appendTriangleData(tube_vertices[slice_index][vertex_index], tube_vertices[next_slice][vertex_index],
-                               tube_vertices[slice_index][next_vertex], rgba, vertices, colors, normals);
-            appendTriangleData(tube_vertices[next_slice][next_vertex], tube_vertices[slice_index][next_vertex],
-                               tube_vertices[next_slice][vertex_index], rgba, vertices, colors, normals);
-        }
-    }
-
-    for (int i = 0; i < kTubeCrossSectionResolution; ++i) {
-        appendTriangleData(tube_vertices[kCurveSegments][(i + 1) % kTubeCrossSectionResolution],
-                           tube_vertices[kCurveSegments][i], end_center, rgba, vertices, colors, normals);
-    }
+    appendSweptBeadMesh(width, height, center_at, tangent_at, color, vertices, colors, normals);
 }
 
 void ShapeFactory::appendCylinder(float radius, float height, const QMatrix4x4& transform, const QColor& color,
@@ -446,44 +457,75 @@ void ShapeFactory::appendLinearBead(float width, float length, float height, con
         return;
     }
 
-    const QMatrix4x4 transform = computeLinearBeadTransform(start, end);
-
-    const bool rectangular_prism = height > width;
-    const float radius = rectangular_prism
-                             ? std::sqrt(((width / 2.0f) * (width / 2.0f)) + ((height / 2.0f) * (height / 2.0f)))
-                             : width / 2.0f;
-    if (radius <= kVectorEpsilon) {
+    const std::vector<QVector2D> profile = squishedBeadProfile(width, height, quads_per_side);
+    if (profile.empty()) {
         return;
     }
 
-    const unsigned int resolved_quads_per_side = rectangular_prism ? 1 : std::max(1u, quads_per_side);
-    const unsigned int vertices_per_arc = resolved_quads_per_side + 1;
-    const unsigned int vertices_per_side = 2 * vertices_per_arc;
-    const float theta_start = -std::asin(std::clamp((height / 2.0f) / radius, -1.0f, 1.0f));
-    const float theta_end = -theta_start;
-    const float theta_increment = (theta_end - theta_start) / static_cast<float>(resolved_quads_per_side);
+    const QMatrix4x4 transform = computeLinearBeadTransform(start, end);
 
+    const std::size_t vertices_per_side = profile.size();
     std::vector<QVector3D> top_vertices(vertices_per_side);
     std::vector<QVector3D> bottom_vertices(vertices_per_side);
 
-    for (unsigned int i = 0; i < vertices_per_arc; ++i) {
-        const float theta = theta_start + (static_cast<float>(i) * theta_increment);
-        const float x = radius * std::cos(theta);
-        const float y = radius * std::sin(theta);
-
-        top_vertices[i] = transform * QVector3D(x, y, length);
-        bottom_vertices[i] = transform * QVector3D(x, y, 0.0f);
-        top_vertices[i + vertices_per_arc] = transform * QVector3D(-x, -y, length);
-        bottom_vertices[i + vertices_per_arc] = transform * QVector3D(-x, -y, 0.0f);
+    for (std::size_t i = 0; i < vertices_per_side; ++i) {
+        top_vertices[i] = transform * QVector3D(profile[i].x(), profile[i].y(), length);
+        bottom_vertices[i] = transform * QVector3D(profile[i].x(), profile[i].y(), 0.0f);
     }
 
     const QVector3D top_center = transform * QVector3D(0.0f, 0.0f, length);
     const QVector3D bottom_center = transform * QVector3D(0.0f, 0.0f, 0.0f);
     const Rgba rgba(color);
-    reserveTriangleMesh(vertices, colors, normals, static_cast<std::size_t>(vertices_per_side) * 4);
+    reserveTriangleMesh(vertices, colors, normals, vertices_per_side * 4);
 
-    for (unsigned int i = 0; i < vertices_per_side; ++i) {
-        const unsigned int next = (i + 1) % vertices_per_side;
+    for (std::size_t i = 0; i < vertices_per_side; ++i) {
+        const std::size_t next = (i + 1) % vertices_per_side;
+        appendTriangleData(top_center, top_vertices[next], top_vertices[i], rgba, vertices, colors, normals);
+        appendTriangleData(top_vertices[i], bottom_vertices[next], bottom_vertices[i], rgba, vertices, colors, normals);
+        appendTriangleData(top_vertices[i], top_vertices[next], bottom_vertices[next], rgba, vertices, colors, normals);
+        appendTriangleData(bottom_center, bottom_vertices[i], bottom_vertices[next], rgba, vertices, colors, normals);
+    }
+}
+
+void ShapeFactory::appendRadialLinearBead(float width, float length, float height, const QVector3D& start,
+                                          const QVector3D& end, const QVector3D& cylinder_axis, const QColor& color,
+                                          std::vector<float>& vertices, std::vector<float>& colors,
+                                          std::vector<float>& normals, unsigned int quads_per_side) {
+    const QVector3D midpoint = (start + end) / 2.0f;
+    const QVector3D radial_normal = radialNormalForPoint(midpoint, cylinder_axis);
+    if (radial_normal.lengthSquared() <= kVectorEpsilonSquared) {
+        appendLinearBead(width, length, height, start, end, color, vertices, colors, normals, quads_per_side);
+        return;
+    }
+
+    if (width <= kVectorEpsilon || height <= kVectorEpsilon || length <= kVectorEpsilon ||
+        (end - start).lengthSquared() <= kVectorEpsilonSquared) {
+        return;
+    }
+
+    const std::vector<QVector2D> profile = squishedBeadProfile(width, height, quads_per_side);
+    if (profile.empty()) {
+        return;
+    }
+
+    const QMatrix4x4 transform = computeLinearBeadTransform(start, end, radial_normal);
+
+    const std::size_t vertices_per_side = profile.size();
+    std::vector<QVector3D> top_vertices(vertices_per_side);
+    std::vector<QVector3D> bottom_vertices(vertices_per_side);
+
+    for (std::size_t i = 0; i < vertices_per_side; ++i) {
+        top_vertices[i] = transform * QVector3D(profile[i].x(), profile[i].y(), length);
+        bottom_vertices[i] = transform * QVector3D(profile[i].x(), profile[i].y(), 0.0f);
+    }
+
+    const QVector3D top_center = transform * QVector3D(0.0f, 0.0f, length);
+    const QVector3D bottom_center = transform * QVector3D(0.0f, 0.0f, 0.0f);
+    const Rgba rgba(color);
+    reserveTriangleMesh(vertices, colors, normals, vertices_per_side * 4);
+
+    for (std::size_t i = 0; i < vertices_per_side; ++i) {
+        const std::size_t next = (i + 1) % vertices_per_side;
         appendTriangleData(top_center, top_vertices[next], top_vertices[i], rgba, vertices, colors, normals);
         appendTriangleData(top_vertices[i], bottom_vertices[next], bottom_vertices[i], rgba, vertices, colors, normals);
         appendTriangleData(top_vertices[i], top_vertices[next], bottom_vertices[next], rgba, vertices, colors, normals);
@@ -669,34 +711,22 @@ void ShapeFactory::appendBuildVolumeCylinderLines(float radius, float height, fl
 }
 
 QMatrix4x4 ShapeFactory::computeLinearBeadTransform(const QVector3D& start, const QVector3D& end) {
+    return computeLinearBeadTransform(start, end, displaySliceNormal());
+}
+
+QMatrix4x4 ShapeFactory::computeLinearBeadTransform(const QVector3D& start, const QVector3D& end,
+                                                    const QVector3D& normal_hint) {
     QMatrix4x4 transform;
     transform.translate(start);
 
     QVector3D tangent = end - start;
-    if (tangent.lengthSquared() <= kVectorEpsilonSquared) {
+    QVector3D binormal;
+    QVector3D normal;
+    if (!beadFrameForTangentAndNormal(tangent, normal_hint, binormal, normal)) {
         return transform;
     }
+
     tangent.normalize();
-
-    QVector3D normal = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                        GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-    if (normal.lengthSquared() <= kVectorEpsilonSquared) {
-        normal = QVector3D(0.0f, 0.0f, 1.0f);
-    }
-    else {
-        normal.normalize();
-    }
-
-    QVector3D binormal = QVector3D::crossProduct(tangent, normal);
-    if (binormal.lengthSquared() <= kVectorEpsilonSquared) {
-        normal = (std::fabs(tangent.x()) < 0.9f) ? QVector3D(1.0f, 0.0f, 0.0f) : QVector3D(0.0f, 1.0f, 0.0f);
-        binormal = QVector3D::crossProduct(tangent, normal);
-    }
-    binormal.normalize();
-
-    normal = QVector3D::crossProduct(binormal, tangent);
-    normal.normalize();
 
     QMatrix4x4 rotation;
     rotation.setColumn(0, QVector4D(binormal, 0.0f));
@@ -708,24 +738,60 @@ QMatrix4x4 ShapeFactory::computeLinearBeadTransform(const QVector3D& start, cons
     return transform;
 }
 
-void ShapeFactory::appendArcBead(float bead_diameter, const Point& start, const Point& center, const Point& end,
+void ShapeFactory::appendArcBead(float width, float height, const Point& start, const Point& center, const Point& end,
                                  bool is_ccw, const QColor& color, std::vector<float>& vertices,
                                  std::vector<float>& colors, std::vector<float>& normals) {
     const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    if (major_radius <= kVectorEpsilon || bead_diameter <= kVectorEpsilon) {
+    if (major_radius <= kVectorEpsilon || width <= kVectorEpsilon || height <= kVectorEpsilon) {
         return;
     }
 
-    const Point display_center(center.x(), center.y(), start.z());
+    const float start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const float sweep_angle = arcSweepAngle(start, center, end, is_ccw);
+    const float signed_sweep = is_ccw ? sweep_angle : -sweep_angle;
+    const float z_delta = end.z() - start.z();
 
-    QMatrix4x4 transform;
-    transform.translate(display_center.toQVector3D());
+    auto center_at = [start, center, major_radius, start_angle, signed_sweep, z_delta](float t) {
+        const float angle = start_angle + (signed_sweep * t);
+        return QVector3D(center.x() + (major_radius * std::cos(angle)), center.y() + (major_radius * std::sin(angle)),
+                         start.z() + (z_delta * t));
+    };
+    auto tangent_at = [major_radius, start_angle, signed_sweep, z_delta](float t) {
+        const float angle = start_angle + (signed_sweep * t);
+        return QVector3D(-major_radius * std::sin(angle) * signed_sweep, major_radius * std::cos(angle) * signed_sweep,
+                         z_delta);
+    };
 
-    const double start_angle_degrees =
-        std::atan2(start.y() - display_center.y(), start.x() - display_center.x()) * 180.0 / kPi;
-    transform.rotate(static_cast<float>(start_angle_degrees), 0.0f, 0.0f, 1.0f);
+    appendSweptBeadMesh(width, height, center_at, tangent_at, color, vertices, colors, normals);
+}
 
-    appendArcBeadMesh(bead_diameter, start, center, end, transform, is_ccw, color, vertices, colors, normals);
+void ShapeFactory::appendRadialArcBead(float width, float height, const Point& start, const Point& center,
+                                       const Point& end, const QVector3D& cylinder_axis, bool is_ccw,
+                                       const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
+                                       std::vector<float>& normals) {
+    const float major_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
+    if (major_radius <= kVectorEpsilon || width <= kVectorEpsilon || height <= kVectorEpsilon) {
+        return;
+    }
+
+    const float start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const float sweep_angle = arcSweepAngle(start, center, end, is_ccw);
+    const float signed_sweep = is_ccw ? sweep_angle : -sweep_angle;
+    const float z_delta = end.z() - start.z();
+
+    auto center_at = [start, center, major_radius, start_angle, signed_sweep, z_delta](float t) {
+        const float angle = start_angle + (signed_sweep * t);
+        return QVector3D(center.x() + (major_radius * std::cos(angle)), center.y() + (major_radius * std::sin(angle)),
+                         start.z() + (z_delta * t));
+    };
+    auto tangent_at = [major_radius, start_angle, signed_sweep, z_delta](float t) {
+        const float angle = start_angle + (signed_sweep * t);
+        return QVector3D(-major_radius * std::sin(angle) * signed_sweep, major_radius * std::cos(angle) * signed_sweep,
+                         z_delta);
+    };
+    auto normal_at = [center_at, cylinder_axis](float t) { return radialNormalForPoint(center_at(t), cylinder_axis); };
+
+    appendSweptBeadMesh(width, height, center_at, tangent_at, normal_at, color, vertices, colors, normals);
 }
 
 } // namespace ORNL

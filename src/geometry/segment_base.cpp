@@ -52,6 +52,17 @@ bool SegmentBase::depositionActive() const { return m_deposition_active; }
 
 void SegmentBase::setDepositionActive(bool deposition_active) { m_deposition_active = deposition_active; }
 
+void SegmentBase::setCylindricalBeadCenter(const Point& center) {
+    m_cylindrical_bead_center = center;
+    m_has_cylindrical_bead_center = true;
+}
+
+void SegmentBase::clearCylindricalBeadCenter() { m_has_cylindrical_bead_center = false; }
+
+bool SegmentBase::hasCylindricalBeadCenter() const { return m_has_cylindrical_bead_center; }
+
+Point SegmentBase::cylindricalBeadCenter() const { return m_cylindrical_bead_center; }
+
 void SegmentBase::setDisplayInfo(float display_width, float display_length, float display_height,
                                  SegmentDisplayType type, QColor color, uint line_num, uint layer_num) {
     m_display_width = display_width;
@@ -90,11 +101,20 @@ void SegmentBase::rotate(QQuaternion rotation) {
     QVector3D end_vec = m_end.toQVector3D();
     QVector3D result_end = rotation.rotatedVector(end_vec);
     m_end = Point(result_end);
+
+    if (m_has_cylindrical_bead_center) {
+        QVector3D center_vec = m_cylindrical_bead_center.toQVector3D();
+        QVector3D result_center = rotation.rotatedVector(center_vec);
+        m_cylindrical_bead_center = Point(result_center);
+    }
 }
 
 void SegmentBase::shift(Point shift) {
     m_start = m_start + shift;
     m_end = m_end + shift;
+    if (m_has_cylindrical_bead_center) {
+        m_cylindrical_bead_center = m_cylindrical_bead_center + shift;
+    }
 }
 
 bool SegmentBase::isPrintingSegment() {

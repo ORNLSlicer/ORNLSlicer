@@ -28,6 +28,12 @@ const QString kRadialCenterX = "radial_center_x";
 //! @brief Segment setting key used to recover the cylinder center Y.
 const QString kRadialCenterY = "radial_center_y";
 
+//! @brief Cylindrical comment field used by the preview to recover the cylinder axis X.
+const QString kCylindricalAxisXComment = "AXIS_X=";
+
+//! @brief Cylindrical comment field used by the preview to recover the cylinder axis Y.
+const QString kCylindricalAxisYComment = "AXIS_Y=";
+
 //! @brief Fixed tool-frame XR.
 constexpr double kToolFrameXR = 180.0;
 
@@ -549,7 +555,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
         speed = 10.0 * mm / s;
     }
 
-    rv += writeMotion("G01", target_point, speed, params, printMoveComment());
+    rv += writeMotion("G01", target_point, speed, params, printMoveComment(params));
     m_first_deposition = false;
     return rv;
 }
@@ -582,7 +588,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
 
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
-          QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(printMoveComment());
+          QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % commentSpaceLine(printMoveComment(params));
     m_first_deposition = false;
     return rv;
 }
@@ -855,9 +861,16 @@ bool ArcSpecialtiesWriter::isHelicalPathPattern() const {
     return isCylindricalSlicingMode() && path_pattern == CylindricalPathPattern::kHelical;
 }
 
-QString ArcSpecialtiesWriter::printMoveComment() const {
+QString ArcSpecialtiesWriter::printMoveComment(const QSharedPointer<SettingsBase>& params) const {
     if (isCylindricalSlicingMode()) {
-        return isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial;
+        const QString region =
+            isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial;
+        const Point output_center = rotateGCodeCoordinateFramePoint(
+            Point(params->setting<Distance>(kRadialCenterX), params->setting<Distance>(kRadialCenterY)));
+        return region % " " % kCylindricalAxisXComment %
+               QString::number(Distance(output_center.x()).to(m_meta.m_distance_unit), 'f', 4) % " " %
+               kCylindricalAxisYComment %
+               QString::number(Distance(output_center.y()).to(m_meta.m_distance_unit), 'f', 4);
     }
 
     return toString(m_region_type);

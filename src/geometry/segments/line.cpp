@@ -16,6 +16,13 @@ LineSegment::LineSegment(Point start, Point end) : SegmentBase(start, end) {
 }
 
 void LineSegment::createGraphic(std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
+    if (m_has_cylindrical_bead_center) {
+        ShapeFactory::appendRadialLinearBead(m_display_width, m_display_length, m_display_height, m_start.toQVector3D(),
+                                             m_end.toQVector3D(), m_cylindrical_bead_center.toQVector3D(), m_color,
+                                             vertices, colors, normals);
+        return;
+    }
+
     ShapeFactory::appendLinearBead(m_display_width, m_display_length, m_display_height, m_start.toQVector3D(),
                                    m_end.toQVector3D(), m_color, vertices, colors, normals);
 }

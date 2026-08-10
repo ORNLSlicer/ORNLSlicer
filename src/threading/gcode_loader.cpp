@@ -88,6 +88,47 @@ Distance beadWidthFromRegionComment(const QString& comment, const QString& regio
 float beadDisplayWidth(Distance bead_width) {
     return static_cast<float>(bead_width()) * Constants::OpenGL::kObjectToView;
 }
+
+const QString kCylindricalAxisXComment = "AXIS_X=";
+const QString kCylindricalAxisYComment = "AXIS_Y=";
+
+bool commentFieldValue(const QString& comment, const QString& field, double& value) {
+    const int field_start = comment.indexOf(field, 0, Qt::CaseInsensitive);
+    if (field_start < 0) {
+        return false;
+    }
+
+    const int value_start = field_start + field.size();
+    int value_end = value_start;
+    while (value_end < comment.size() && !comment[value_end].isSpace()) {
+        ++value_end;
+    }
+
+    bool ok = false;
+    value = comment.mid(value_start, value_end - value_start).toDouble(&ok);
+    return ok;
+}
+
+bool cylindricalAxisFromComment(const QString& comment, Distance distance_unit, float x_offset, float y_offset,
+                                Point& center) {
+    double axis_x = 0.0;
+    double axis_y = 0.0;
+    if (!commentFieldValue(comment, kCylindricalAxisXComment, axis_x) ||
+        !commentFieldValue(comment, kCylindricalAxisYComment, axis_y)) {
+        return false;
+    }
+
+    center.x((axis_x * distance_unit() + x_offset) * Constants::OpenGL::kObjectToView);
+    center.y((axis_y * distance_unit() + y_offset) * Constants::OpenGL::kObjectToView);
+    center.z(0.0);
+    return true;
+}
+
+bool isCylindricalPrintComment(const QString& comment) {
+    return (comment.contains(Constants::RegionTypeStrings::kRadial, Qt::CaseInsensitive) ||
+            comment.contains(Constants::RegionTypeStrings::kHelical, Qt::CaseInsensitive)) &&
+           !comment.contains(Constants::RegionTypeStrings::kTravel, Qt::CaseInsensitive);
+}
 } // namespace
 
 GCodeLoader::GCodeLoader(QString filename, bool alterFile)
@@ -750,8 +791,7 @@ bool GCodeLoader::containsColorPriorityModifier(const QString& comment) const {
            m_reverse_tipwipe.indexIn(comment) != -1 || m_angled_tipwipe.indexIn(comment) != -1 ||
            m_coasting.indexIn(comment) != -1 || m_spirallift.indexIn(comment) != -1 ||
            m_rampingup.indexIn(comment) != -1 || m_rampingdown.indexIn(comment) != -1 ||
-           m_leadin.indexIn(comment) != -1 ||
-           comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe);
+           m_leadin.indexIn(comment) != -1 || comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe);
 }
 
 SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comment) {
@@ -1011,6 +1051,17 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
         // Set the segment's display info
         setSegmentDisplayInfo(segment, determineSegmentDisplayType(comment), color, comment, m_start_pos, end_pos,
                               line_num, layer_num);
+
+        if (isCylindricalPrintComment(comment)) {
+            Point cylindrical_axis;
+            if (cylindricalAxisFromComment(comment, m_selected_meta.m_distance_unit, m_x_offset, m_y_offset,
+                                           cylindrical_axis)) {
+                segment->setCylindricalBeadCenter(cylindrical_axis);
+            }
+            else if (ArcSegment* arc_segment = dynamic_cast<ArcSegment*>(segment.data())) {
+                segment->setCylindricalBeadCenter(arc_segment->center());
+            }
+        }
 
         // Set the segment's meta info
         setSegmentMetaInfo(segment, comment, info_end_pos, deposition_active, info_speed_set, extruder_speed);

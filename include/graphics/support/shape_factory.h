@@ -113,12 +113,36 @@ class ShapeFactory final {
                                  const QColor& color, std::vector<float>& vertices, std::vector<float>& colors,
                                  std::vector<float>& normals, unsigned int quads_per_side = 4);
 
-    /*! @brief Appends a circular-arc bead triangle mesh.
+    /*! @brief Appends a straight squished-bead mesh whose flat side faces a cylindrical axis.
+     *
+     *  This matches appendLinearBead, but orients the bead cross-section so local "up" points radially outward from
+     *  @p cylinder_axis. The profile's flat bottom therefore sits toward the cylinder/hollow center.
+     *
+     *  @param width Display bead width across the path.
+     *  @param length Display bead length along the path.
+     *  @param height Display bead radial height.
+     *  @param start Segment start point.
+     *  @param end Segment end point.
+     *  @param cylinder_axis XY center of the cylindrical build axis, in display coordinates.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
+     *  @param quads_per_side Number of quads used to approximate each rounded side of the bead cross-section. Defaults
+     *                         to 4.
+     */
+    static void appendRadialLinearBead(float width, float length, float height, const QVector3D& start,
+                                       const QVector3D& end, const QVector3D& cylinder_axis, const QColor& color,
+                                       std::vector<float>& vertices, std::vector<float>& colors,
+                                       std::vector<float>& normals, unsigned int quads_per_side = 4);
+
+    /*! @brief Appends a circular-arc squished-bead triangle mesh.
      *
      *  The bead follows the XY arc defined by @p start, @p center, @p end, and @p is_ccw. Z is linearly interpolated
-     *  from start to end. Output is suitable for GL_TRIANGLES.
+     *  from start to end. The cross-section matches appendLinearBead. Output is suitable for GL_TRIANGLES.
      *
-     *  @param bead_diameter Diameter of the circular bead cross-section.
+     *  @param width Display bead width across the path.
+     *  @param height Display bead height.
      *  @param start Arc start point.
      *  @param center Arc center point.
      *  @param end Arc end point.
@@ -128,16 +152,39 @@ class ShapeFactory final {
      *  @param colors Destination rgba color buffer to append to.
      *  @param normals Destination xyz normal buffer to append to.
      */
-    static void appendArcBead(float bead_diameter, const Point& start, const Point& center, const Point& end,
+    static void appendArcBead(float width, float height, const Point& start, const Point& center, const Point& end,
                               bool is_ccw, const QColor& color, std::vector<float>& vertices,
                               std::vector<float>& colors, std::vector<float>& normals);
 
-    /*! @brief Appends a cubic Bezier bead triangle mesh.
+    /*! @brief Appends a circular-arc squished-bead mesh whose flat side faces a cylindrical axis.
      *
-     *  The bead follows the cubic Bezier curve defined by start, two controls, and end. Output is suitable for
-     *  GL_TRIANGLES.
+     *  This matches appendArcBead, but orients each sampled cross-section radially around @p cylinder_axis so the
+     *  profile's flat bottom sits toward the cylinder/hollow center.
      *
-     *  @param bead_diameter Diameter of the circular bead cross-section.
+     *  @param width Display bead width across the path.
+     *  @param height Display bead radial height.
+     *  @param start Arc start point.
+     *  @param center Arc center point used for path geometry.
+     *  @param end Arc end point.
+     *  @param cylinder_axis XY center of the cylindrical build axis, in display coordinates.
+     *  @param is_ccw True when the arc travels counter-clockwise.
+     *  @param color RGBA color applied to every generated vertex.
+     *  @param vertices Destination xyz vertex buffer to append to.
+     *  @param colors Destination rgba color buffer to append to.
+     *  @param normals Destination xyz normal buffer to append to.
+     */
+    static void appendRadialArcBead(float width, float height, const Point& start, const Point& center,
+                                    const Point& end, const QVector3D& cylinder_axis, bool is_ccw, const QColor& color,
+                                    std::vector<float>& vertices, std::vector<float>& colors,
+                                    std::vector<float>& normals);
+
+    /*! @brief Appends a cubic Bezier squished-bead triangle mesh.
+     *
+     *  The bead follows the cubic Bezier curve defined by start, two controls, and end. The cross-section matches
+     *  appendLinearBead. Output is suitable for GL_TRIANGLES.
+     *
+     *  @param width Display bead width across the path.
+     *  @param height Display bead height.
      *  @param start Curve start point.
      *  @param control_a First Bezier control point.
      *  @param control_b Second Bezier control point.
@@ -147,7 +194,7 @@ class ShapeFactory final {
      *  @param colors Destination rgba color buffer to append to.
      *  @param normals Destination xyz normal buffer to append to.
      */
-    static void appendSplineBead(float bead_diameter, const Point& start, const Point& control_a,
+    static void appendSplineBead(float width, float height, const Point& start, const Point& control_a,
                                  const Point& control_b, const Point& end, const QColor& color,
                                  std::vector<float>& vertices, std::vector<float>& colors, std::vector<float>& normals);
 
@@ -215,5 +262,14 @@ class ShapeFactory final {
      *  @return Transform that translates to @p start and rotates local +Z toward @p end.
      */
     static QMatrix4x4 computeLinearBeadTransform(const QVector3D& start, const QVector3D& end);
+
+    /*! @brief Computes the transform that places a local +Z bead mesh using a preferred profile normal.
+     *  @param start Segment start point.
+     *  @param end Segment end point.
+     *  @param normal_hint Preferred local +Y profile direction.
+     *  @return Transform that translates to @p start and rotates local +Z toward @p end.
+     */
+    static QMatrix4x4 computeLinearBeadTransform(const QVector3D& start, const QVector3D& end,
+                                                 const QVector3D& normal_hint);
 };
 } // namespace ORNL
