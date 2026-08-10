@@ -1507,7 +1507,7 @@ operate on text; otherwise they operate on selected parts where supported.
 <!-- BEGIN GENERATED SETTINGS REFERENCE -->
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 498 scalar manufacturing settings exposed by the canonical catalog. The 3 grouped controls combine related scalar values, producing 494 visible setting rows across 37 categories.
+This generated appendix documents all 533 scalar manufacturing settings exposed by the canonical catalog. The 5 grouped controls combine related scalar values, producing 526 visible setting rows across 37 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1535,12 +1535,12 @@ The catalog is organized as follows:
 
 | Panel | Category | Scalar settings |
 | --- | --- | ---: |
-| [Printer](#e2-printer-settings) | [Machine Setup](#settings-printer-machine-setup) | 10 |
+| [Printer](#e2-printer-settings) | [Machine Setup](#settings-printer-machine-setup) | 17 |
 | [Printer](#e2-printer-settings) | [Dimensions](#settings-printer-dimensions) | 28 |
 | [Printer](#e2-printer-settings) | [Auxiliary](#settings-printer-auxiliary) | 2 |
 | [Printer](#e2-printer-settings) | [Machine Speeds](#settings-printer-machine-speeds) | 7 |
 | [Printer](#e2-printer-settings) | [Acceleration](#settings-printer-acceleration) | 8 |
-| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 8 |
+| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 10 |
 | [Material](#e3-material-settings) | [Density](#settings-material-density) | 2 |
 | [Material](#e3-material-settings) | [Start-Up](#settings-material-start-up) | 32 |
 | [Material](#e3-material-settings) | [Slow Down](#settings-material-slow-down) | 32 |
@@ -1554,18 +1554,18 @@ The catalog is organized as follows:
 | [Material](#e3-material-settings) | [Cooling](#settings-material-cooling) | 10 |
 | [Material](#e3-material-settings) | [Platform Adhesion](#settings-material-platform-adhesion) | 14 |
 | [Material](#e3-material-settings) | [Multi-Material](#settings-material-multi-material) | 11 |
-| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 15 |
+| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 18 |
 | [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 6 |
-| [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 16 |
-| [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 9 |
-| [Profile](#e4-profile-settings) | [Skeleton](#settings-profile-skeleton) | 22 |
-| [Profile](#e4-profile-settings) | [Skin](#settings-profile-skin) | 17 |
-| [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 18 |
-| [Profile](#e4-profile-settings) | [Support](#settings-profile-support) | 28 |
+| [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 20 |
+| [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 13 |
+| [Profile](#e4-profile-settings) | [Skeleton](#settings-profile-skeleton) | 23 |
+| [Profile](#e4-profile-settings) | [Skin](#settings-profile-skin) | 18 |
+| [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 20 |
+| [Profile](#e4-profile-settings) | [Support](#settings-profile-support) | 29 |
 | [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 9 |
 | [Profile](#e4-profile-settings) | [G-Code](#settings-profile-g-code) | 12 |
-| [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 8 |
-| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 23 |
+| [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 11 |
+| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 30 |
 | [Profile](#e4-profile-settings) | [Ordering](#settings-profile-ordering) | 3 |
 | [Profile](#e4-profile-settings) | [Laser Scanner](#settings-profile-laser-scanner) | 23 |
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
@@ -1698,6 +1698,49 @@ approximated with G1 line segments.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
 
+<a id="setting-enable_trafo"></a>
+
+##### Enable TRAFO (`enable_trafo`)
+
+Controls whether generated G-code enables the machine TRAFO transformation mode during initial
+setup.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Enabled` (`true`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Syntax is `Arc Specialties`.
+
+<a id="setting-g2_g3_center_point_interpretation"></a>
+
+##### G2/G3 Center Point Interpretation (`g2_g3_center_point_interpretation`)
+
+Selects whether G2/G3 I and J arc center coordinates are absolute positions or relative distances
+from the arc start point.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Absolute`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and Supports G2/G3 is enabled).
+- **Choices:**
+  - `Absolute`
+  - `Relative`
+
+<a id="setting-g2_g3_absolute_center"></a>
+<a id="setting-g2_g3_absolute_i"></a>
+<a id="setting-g2_g3_absolute_j"></a>
+
+##### G2/G3 Absolute Center (`g2_g3_absolute_center`)
+
+Absolute I and J coordinates used for Arc Specialties G2/G3 arc centers.
+
+- **Input:** `vector2` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (G2/G3 Center Point Interpretation is `Absolute` and (Syntax is `Arc
+  Specialties` and Supports G2/G3 is enabled)).
+- **Components and master defaults:**
+  - **I:** `g2_g3_absolute_i` — `0 mm`
+  - **J:** `g2_g3_absolute_j` — `0 mm`
+
 <a id="setting-tool_number"></a>
 
 ##### Tool Number (`tool_number`)
@@ -1766,6 +1809,39 @@ Sets the printing angle for the C axis.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Syntax is `Arc Specialties` or (Syntax is `ORNL Metric` or Syntax is
   `ORNL`)).
+
+<a id="setting-gcode_coordinate_frame_rotation_x"></a>
+
+##### G-Code Frame Rotation X (`gcode_coordinate_frame_rotation_x`)
+
+Rotates generated G-Code coordinates about the X axis before output.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
+<a id="setting-gcode_coordinate_frame_rotation_y"></a>
+
+##### G-Code Frame Rotation Y (`gcode_coordinate_frame_rotation_y`)
+
+Rotates generated G-Code coordinates about the Y axis before output.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
+<a id="setting-gcode_coordinate_frame_rotation_z"></a>
+
+##### G-Code Frame Rotation Z (`gcode_coordinate_frame_rotation_z`)
+
+Rotates generated G-Code coordinates about the Z axis before output.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
 
 <a id="settings-printer-dimensions"></a>
 
@@ -2364,6 +2440,29 @@ If selected, will write all settings values at the end of the g-code file as com
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
 
+<a id="setting-enable_layer_time_comments"></a>
+
+##### Layer Time Comments (`enable_layer_time_comments`)
+
+If selected, each layer marker in the G-Code includes the estimated layer time in seconds.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
+<a id="setting-arc_specialties_g2_g3_optional_stop"></a>
+
+##### Arc Specialties G2/G3 Optional Stop (`arc_specialties_g2_g3_optional_stop`)
+
+If selected, Arc Specialties G-Code emits a G81 optional stop routine before each non-initial G2/G3
+arc move.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and Supports G2/G3 is enabled).
+
 <a id="setting-start_code"></a>
 
 ##### Start Code (`start_code`)
@@ -2463,7 +2562,7 @@ path.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_start-up_distance"></a>
 
@@ -2475,7 +2574,8 @@ Distance for the perimeter start-up move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Start-Up is enabled)).
 
 <a id="setting-perimeter_start-up_speed"></a>
 
@@ -2487,7 +2587,8 @@ Speed for the perimeter start-up move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Start-Up is enabled)).
 
 <a id="setting-perimeter_start-up_extruder_speed"></a>
 
@@ -2499,8 +2600,8 @@ Extruder Speed for the perimeter start-up move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Enable Perimeter Start-Up is enabled and Use
-  Width and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Enable
+  Perimeter Start-Up is enabled and Use Width and Height is disabled))).
 
 <a id="setting-perimeter_start-up_ramp-up"></a>
 
@@ -2513,7 +2614,8 @@ Perimeter Speed using short segments of increasing RPM.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Start-Up is enabled)).
 
 <a id="setting-perimeter_start-up_steps"></a>
 
@@ -2525,8 +2627,8 @@ Numbers of steps to take while ramping up the extruder speed during perimeter st
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Enable Perimeter Start-Up Ramp-Up is enabled
-  and Enable Perimeter Start-Up is enabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Enable
+  Perimeter Start-Up Ramp-Up is enabled and Enable Perimeter Start-Up is enabled))).
 
 <a id="setting-inset_start-up"></a>
 
@@ -2538,7 +2640,7 @@ If selected, will move at a slower speed for a certain distance at the beginning
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_start-up_distance"></a>
 
@@ -2550,7 +2652,8 @@ Distance for the inset start-up move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset
+  Start-Up is enabled)).
 
 <a id="setting-inset_start-up_speed"></a>
 
@@ -2562,7 +2665,8 @@ Speed for the inset start-up move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset
+  Start-Up is enabled)).
 
 <a id="setting-inset_start-up_extruder_speed"></a>
 
@@ -2574,8 +2678,8 @@ Extruder Speed for the inset start-up move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Enable Inset Start-Up is enabled and Use Width
-  and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Enable Inset
+  Start-Up is enabled and Use Width and Height is disabled))).
 
 <a id="setting-inset_start-up_ramp-up"></a>
 
@@ -2588,7 +2692,8 @@ Speed using short segments of increasing RPM.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset
+  Start-Up is enabled)).
 
 <a id="setting-inset_start-up_steps"></a>
 
@@ -2600,8 +2705,8 @@ Numbers of steps to take while ramping up the extruder speed during inset start-
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Enable Inset Start-Up Ramp-Up is enabled and
-  Enable Inset Start-Up is enabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Enable Inset
+  Start-Up Ramp-Up is enabled and Enable Inset Start-Up is enabled))).
 
 <a id="setting-skin_start-up"></a>
 
@@ -2613,7 +2718,7 @@ If selected, will move at a slower speed for a certain distance at the beginning
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_start-up_distance"></a>
 
@@ -2625,7 +2730,8 @@ Distance for the skin start-up move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Start-Up
+  is enabled)).
 
 <a id="setting-skin_start-up_speed"></a>
 
@@ -2637,7 +2743,8 @@ Speed for the skin start-up move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Start-Up
+  is enabled)).
 
 <a id="setting-skin_start-up_extruder_speed"></a>
 
@@ -2649,8 +2756,8 @@ Extruder Speed for the skin start-up move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Enable Skin Start-Up is enabled and Use Width and
-  Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Enable Skin
+  Start-Up is enabled and Use Width and Height is disabled))).
 
 <a id="setting-skin_start-up_ramp-up"></a>
 
@@ -2663,7 +2770,8 @@ using short segments of increasing RPM.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Start-Up
+  is enabled)).
 
 <a id="setting-skin_start-up_steps"></a>
 
@@ -2675,8 +2783,8 @@ Numbers of steps to take while ramping up the extruder speed during skin start-u
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Enable Skin Start-Up Ramp-Up is enabled and
-  Enable Skin Start-Up is enabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Enable Skin
+  Start-Up Ramp-Up is enabled and Enable Skin Start-Up is enabled))).
 
 <a id="setting-infill_start-up"></a>
 
@@ -2688,7 +2796,7 @@ If selected, will move at a slower speed for a certain distance at the beginning
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_start-up_distance"></a>
 
@@ -2700,7 +2808,8 @@ Distance for the infill start-up move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill
+  Start-Up is enabled)).
 
 <a id="setting-infill_start-up_speed"></a>
 
@@ -2712,7 +2821,8 @@ Speed for the infill start-up move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill
+  Start-Up is enabled)).
 
 <a id="setting-infill_start-up_extruder_speed"></a>
 
@@ -2724,8 +2834,8 @@ Extruder Speed for the infill start-up move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Enable Infill Start-Up is enabled and Use Width
-  and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Enable Infill
+  Start-Up is enabled and Use Width and Height is disabled))).
 
 <a id="setting-infill_start-up_ramp-up"></a>
 
@@ -2738,7 +2848,8 @@ Speed using short segments of increasing RPM.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill
+  Start-Up is enabled)).
 
 <a id="setting-infill_start-up_steps"></a>
 
@@ -2750,8 +2861,8 @@ Numbers of steps to take while ramping up the extruder speed during infill start
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Enable Infill Start-Up Ramp-Up is enabled and
-  Enable Infill Start-Up is enabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Enable Infill
+  Start-Up Ramp-Up is enabled and Enable Infill Start-Up is enabled))).
 
 <a id="setting-skeleton_start-up"></a>
 
@@ -2763,7 +2874,7 @@ If selected, will move at a slower speed for a certain distance at the beginning
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_start-up_distance"></a>
 
@@ -2775,7 +2886,8 @@ Distance for the skeleton start-up move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Start-Up is enabled)).
 
 <a id="setting-skeleton_start-up_speed"></a>
 
@@ -2787,7 +2899,8 @@ Speed for the skeleton start-up move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Start-Up is enabled)).
 
 <a id="setting-skeleton_start-up_extruder_speed"></a>
 
@@ -2799,8 +2912,8 @@ Extruder Speed for the skeleton start-up move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Enable Skeleton Start-Up is enabled and Use
-  Width and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Enable
+  Skeleton Start-Up is enabled and Use Width and Height is disabled))).
 
 <a id="setting-skeleton_start-up_ramp-up"></a>
 
@@ -2813,7 +2926,8 @@ Skeleton Speed using short segments of increasing RPM.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Start-Up is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Start-Up is enabled)).
 
 <a id="setting-skeleton_start-up_steps"></a>
 
@@ -2825,8 +2939,8 @@ Numbers of steps to take while ramping up the extruder speed during skeleton sta
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Enable Skeleton Start-Up Ramp-Up is enabled
-  and Enable Skeleton Start-Up is enabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Enable
+  Skeleton Start-Up Ramp-Up is enabled and Enable Skeleton Start-Up is enabled))).
 
 <a id="setting-start-up_area_modifier"></a>
 
@@ -2838,9 +2952,9 @@ Percent multiplier for bead area of start-up paths.
 - **Master default:** `100%`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Use Width and Height is enabled and (Enable Perimeter Start-Up is enabled or
-  (Enable Inset Start-Up is enabled or (Enable Skin Start-Up is enabled or (Enable Infill Start-Up
-  is enabled or Enable Skeleton Start-Up is enabled))))).
+- **Available when:** (Slicing Mode is `Planar` and (Use Width and Height is enabled and (Enable
+  Perimeter Start-Up is enabled or (Enable Inset Start-Up is enabled or (Enable Skin Start-Up is
+  enabled or (Enable Infill Start-Up is enabled or Enable Skeleton Start-Up is enabled)))))).
 
 <a id="setting-disable_start-up_feedrate_scaling"></a>
 
@@ -2851,8 +2965,8 @@ If selected, minimum layer time feedrate adjustments will not change start-up pa
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is
-  `MODIFY FEEDRATE`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="settings-material-slow-down"></a>
 
@@ -2870,7 +2984,7 @@ If selected, will move at a slower speed for a certain distance at the end of a 
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_slow_down_distance"></a>
 
@@ -2882,7 +2996,8 @@ Distance for the perimeter slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Slow Down is enabled)).
 
 <a id="setting-perimeter_slow_down_lift_distance"></a>
 
@@ -2894,7 +3009,8 @@ Distance to lift during the perimeter slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Slow Down is enabled)).
 
 <a id="setting-perimeter_slow_down_speed"></a>
 
@@ -2906,7 +3022,8 @@ Speed for the perimeter slow down move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Slow Down is enabled)).
 
 <a id="setting-perimeter_slow_down_extruder_speed"></a>
 
@@ -2918,8 +3035,8 @@ Extruder Speed for the perimeter slow down move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Enable Perimeter Slow Down is enabled and
-  Use Width and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Enable
+  Perimeter Slow Down is enabled and Use Width and Height is disabled))).
 
 <a id="setting-perimeter_slow_down_extruder_off_distance"></a>
 
@@ -2931,7 +3048,8 @@ Distance from the end of the perimeter slow down move to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Slow Down is enabled)).
 
 <a id="setting-inset_slow_down"></a>
 
@@ -2943,7 +3061,7 @@ If selected, will move at a slower speed for a certain distance at the end of an
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_slow_down_distance"></a>
 
@@ -2955,7 +3073,8 @@ Distance for the inset slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Slow
+  Down is enabled)).
 
 <a id="setting-inset_slow_down_lift_distance"></a>
 
@@ -2967,7 +3086,8 @@ Distance to lift during the inset slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Slow
+  Down is enabled)).
 
 <a id="setting-inset_slow_down_speed"></a>
 
@@ -2979,7 +3099,8 @@ Speed for the inset slow down move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Slow
+  Down is enabled)).
 
 <a id="setting-inset_slow_down_extruder_speed"></a>
 
@@ -2991,8 +3112,8 @@ Extruder Speed for the inset slow down move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Enable Inset Slow Down is enabled and Use Width
-  and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Enable Inset Slow
+  Down is enabled and Use Width and Height is disabled))).
 
 <a id="setting-inset_slow_down_extruder_off_distance"></a>
 
@@ -3004,7 +3125,8 @@ Distance from the end of the inset slow down move to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Slow
+  Down is enabled)).
 
 <a id="setting-skin_slow_down"></a>
 
@@ -3016,7 +3138,7 @@ If selected, will move at a slower speed for a certain distance at the end of a 
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_slow_down_distance"></a>
 
@@ -3028,7 +3150,8 @@ Distance for the skin slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Slow
+  Down is enabled)).
 
 <a id="setting-skin_slow_down_lift_distance"></a>
 
@@ -3040,7 +3163,8 @@ Distance to lift during the skin slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Slow
+  Down is enabled)).
 
 <a id="setting-skin_slow_down_speed"></a>
 
@@ -3052,7 +3176,8 @@ Speed for the skin slow down move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Slow
+  Down is enabled)).
 
 <a id="setting-skin_slow_down_extruder_speed"></a>
 
@@ -3064,8 +3189,8 @@ Extruder Speed for the skin slow down move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Enable Skin Slow Down is enabled and Use Width
-  and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Enable Skin Slow
+  Down is enabled and Use Width and Height is disabled))).
 
 <a id="setting-skin_slow_down_extruder_off_distance"></a>
 
@@ -3077,7 +3202,8 @@ Distance from the end of the skin slow down move to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Slow
+  Down is enabled)).
 
 <a id="setting-infill_slow_down"></a>
 
@@ -3089,7 +3215,7 @@ If selected, will move at a slower speed for a certain distance at the end of an
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_slow_down_distance"></a>
 
@@ -3101,7 +3227,8 @@ Distance for the infill slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Slow
+  Down is enabled)).
 
 <a id="setting-infill_slow_down_lift_distance"></a>
 
@@ -3113,7 +3240,8 @@ Distance to lift during the infill slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Slow
+  Down is enabled)).
 
 <a id="setting-infill_slow_down_speed"></a>
 
@@ -3125,7 +3253,8 @@ Speed for the infill slow down move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Slow
+  Down is enabled)).
 
 <a id="setting-infill_slow_down_extruder_speed"></a>
 
@@ -3137,8 +3266,8 @@ Extruder Speed for the infill slow down move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Enable Infill Slow Down is enabled and Use
-  Width and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Enable Infill
+  Slow Down is enabled and Use Width and Height is disabled))).
 
 <a id="setting-infill_slow_down_extruder_off_distance"></a>
 
@@ -3150,7 +3279,8 @@ Distance from the end of the infill slow down move to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Slow
+  Down is enabled)).
 
 <a id="setting-skeleton_slow_down"></a>
 
@@ -3162,7 +3292,7 @@ If selected, will move at a slower speed for a certain distance at the end of a 
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_slow_down_distance"></a>
 
@@ -3174,7 +3304,8 @@ Distance for the skeleton slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Slow Down is enabled)).
 
 <a id="setting-skeleton_slow_down_lift_distance"></a>
 
@@ -3186,7 +3317,8 @@ Distance to lift during the skeleton slow down move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Slow Down is enabled)).
 
 <a id="setting-skeleton_slow_down_speed"></a>
 
@@ -3198,7 +3330,8 @@ Speed for the skeleton slow down move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Slow Down is enabled)).
 
 <a id="setting-skeleton_slow_down_extruder_speed"></a>
 
@@ -3210,8 +3343,8 @@ Extruder Speed for the skeleton slow down move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Enable Skeleton Slow Down is enabled and Use
-  Width and Height is disabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Enable
+  Skeleton Slow Down is enabled and Use Width and Height is disabled))).
 
 <a id="setting-skeleton_slow_down_extruder_off_distance"></a>
 
@@ -3223,7 +3356,8 @@ Distance from the end of the skeleton slow down move to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Slow Down is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Slow Down is enabled)).
 
 <a id="setting-slow_down_area_modifier"></a>
 
@@ -3235,9 +3369,9 @@ Percent multiplier for bead area of slow down paths.
 - **Master default:** `100%`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Use Width and Height is enabled and (Enable Perimeter Slow Down is enabled or
-  (Enable Inset Slow Down is enabled or (Enable Skin Slow Down is enabled or (Enable Infill Slow
-  Down is enabled or Enable Skeleton Slow Down is enabled))))).
+- **Available when:** (Slicing Mode is `Planar` and (Use Width and Height is enabled and (Enable
+  Perimeter Slow Down is enabled or (Enable Inset Slow Down is enabled or (Enable Skin Slow Down is
+  enabled or (Enable Infill Slow Down is enabled or Enable Skeleton Slow Down is enabled)))))).
 
 <a id="setting-disable_slow_down_feedrate_scaling"></a>
 
@@ -3248,8 +3382,8 @@ If selected, minimum layer time feedrate adjustments will not change slow down p
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is
-  `MODIFY FEEDRATE`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="settings-material-tip-wipe"></a>
 
@@ -3267,7 +3401,7 @@ If selected, will do a tip wipe for perimeter moves to prevent material from sti
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_wipe_direction"></a>
 
@@ -3280,7 +3414,8 @@ direction, matching WIPE_FORWARD.
 - **Master default:** `WIPE_OPTIMAL`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Tip Wipe is enabled)).
 - **Choices:**
   - `WIPE_OPTIMAL`
   - `WIPE_FORWARD`
@@ -3298,7 +3433,8 @@ initial distance.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Tip Wipe is enabled)).
 
 <a id="setting-perimeter_wipe_speed"></a>
 
@@ -3310,7 +3446,8 @@ Sets the speed for the perimeter tip wipe move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Tip Wipe is enabled)).
 
 <a id="setting-perimeter_wipe_extruder_speed"></a>
 
@@ -3322,7 +3459,8 @@ Sets the extruder speed for the perimeter tip wipe move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Tip Wipe is enabled)).
 
 <a id="setting-perimeter_wipe_angle"></a>
 
@@ -3334,8 +3472,8 @@ Sets the angle of the perimeter tip wipe.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Enable Perimeter Tip Wipe is enabled and
-  Perimeter Wipe Direction is `WIPE_ANGLED`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Enable
+  Perimeter Tip Wipe is enabled and Perimeter Wipe Direction is `WIPE_ANGLED`))).
 
 <a id="setting-perimeter_wipe_cutoff_distance"></a>
 
@@ -3347,7 +3485,8 @@ Sets the distance from the end of the perimeter tip wipe to turn the extruder of
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Tip Wipe is enabled)).
 
 <a id="setting-perimeter_wipe_lift_height"></a>
 
@@ -3359,7 +3498,8 @@ Sets the distance to lift during the perimeter tip wipe move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Tip Wipe is enabled)).
 
 <a id="setting-inset_wipe"></a>
 
@@ -3371,7 +3511,7 @@ If selected, will do a tip wipe for inset moves to prevent material from stickin
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_wipe_direction"></a>
 
@@ -3384,7 +3524,8 @@ direction, matching WIPE_FORWARD.
 - **Master default:** `WIPE_OPTIMAL`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Tip
+  Wipe is enabled)).
 - **Choices:**
   - `WIPE_OPTIMAL`
   - `WIPE_FORWARD`
@@ -3402,7 +3543,8 @@ distance.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Tip
+  Wipe is enabled)).
 
 <a id="setting-inset_wipe_speed"></a>
 
@@ -3414,7 +3556,8 @@ Sets the speed for the inset tip wipe move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Tip
+  Wipe is enabled)).
 
 <a id="setting-inset_wipe_extruder_speed"></a>
 
@@ -3426,7 +3569,8 @@ Sets the extruder speed for the inset tip wipe move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Tip
+  Wipe is enabled)).
 
 <a id="setting-inset_wipe_angle"></a>
 
@@ -3438,8 +3582,8 @@ Sets the angle of the inset tip wipe.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Enable Inset Tip Wipe is enabled and Inset Wipe
-  Direction is `WIPE_ANGLED`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Enable Inset Tip
+  Wipe is enabled and Inset Wipe Direction is `WIPE_ANGLED`))).
 
 <a id="setting-inset_wipe_cutoff_distance"></a>
 
@@ -3451,7 +3595,8 @@ Sets the distance from the end of the inset tip wipe to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Tip
+  Wipe is enabled)).
 
 <a id="setting-inset_wipe_lift_height"></a>
 
@@ -3463,7 +3608,8 @@ Sets the distance to lift during the inset tip wipe move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Inset Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Inset Tip
+  Wipe is enabled)).
 
 <a id="setting-skeleton_wipe"></a>
 
@@ -3475,7 +3621,7 @@ If selected, will do a tip wipe for skeleton moves to prevent material from stic
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_wipe_direction"></a>
 
@@ -3488,7 +3634,8 @@ direction, matching WIPE_FORWARD.
 - **Master default:** `WIPE_OPTIMAL`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Tip Wipe is enabled)).
 - **Choices:**
   - `WIPE_OPTIMAL`
   - `WIPE_FORWARD`
@@ -3506,7 +3653,8 @@ distance.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Tip Wipe is enabled)).
 
 <a id="setting-skeleton_wipe_speed"></a>
 
@@ -3518,7 +3666,8 @@ Sets the speed for the skeleton tip wipe move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Tip Wipe is enabled)).
 
 <a id="setting-skeleton_wipe_extruder_speed"></a>
 
@@ -3530,7 +3679,8 @@ Sets the extruder speed for the skeleton tip wipe move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Tip Wipe is enabled)).
 
 <a id="setting-skeleton_wipe_angle"></a>
 
@@ -3542,8 +3692,8 @@ Sets the angle of the skeleton tip wipe.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Enable Skeleton Tip Wipe is enabled and
-  Skeleton Wipe Direction is `WIPE_ANGLED`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Enable
+  Skeleton Tip Wipe is enabled and Skeleton Wipe Direction is `WIPE_ANGLED`))).
 
 <a id="setting-skeleton_wipe_cutoff_distance"></a>
 
@@ -3555,7 +3705,8 @@ Sets the distance from the end of the skeleton tip wipe to turn the extruder off
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Tip Wipe is enabled)).
 
 <a id="setting-skeleton_wipe_lift_height"></a>
 
@@ -3567,7 +3718,8 @@ Sets the distance to lift during the skeleton tip wipe move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Tip Wipe is enabled)).
 
 <a id="setting-skin_wipe"></a>
 
@@ -3579,7 +3731,7 @@ If selected, will do a tip wipe for skin moves to prevent material from sticking
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_wipe_direction"></a>
 
@@ -3592,7 +3744,8 @@ paths are enabled, or when the fill pattern is Concentric; otherwise it uses a r
 - **Master default:** `WIPE_OPTIMAL`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Tip Wipe
+  is enabled)).
 - **Choices:**
   - `WIPE_OPTIMAL`
   - `WIPE_FORWARD`
@@ -3610,7 +3763,8 @@ distance.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Tip Wipe
+  is enabled)).
 
 <a id="setting-skin_wipe_speed"></a>
 
@@ -3622,7 +3776,8 @@ Sets the speed for the skin tip wipe move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Tip Wipe
+  is enabled)).
 
 <a id="setting-skin_wipe_extruder_speed"></a>
 
@@ -3634,7 +3789,8 @@ Sets the extruder speed for the skin tip wipe move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Tip Wipe
+  is enabled)).
 
 <a id="setting-skin_wipe_angle"></a>
 
@@ -3646,8 +3802,8 @@ Sets the angle of the skin tip wipe.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Enable Skin Tip Wipe is enabled and Skin Wipe
-  Direction is `WIPE_ANGLED`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Enable Skin Tip
+  Wipe is enabled and Skin Wipe Direction is `WIPE_ANGLED`))).
 
 <a id="setting-skin_wipe_cutoff_distance"></a>
 
@@ -3659,7 +3815,8 @@ Sets the distance from the end of the skin tip wipe to turn the extruder off.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Tip Wipe
+  is enabled)).
 
 <a id="setting-skin_wipe_lift_height"></a>
 
@@ -3671,7 +3828,8 @@ Sets the distance to lift during the skin tip wipe move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Skin Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Skin Tip Wipe
+  is enabled)).
 
 <a id="setting-infill_wipe"></a>
 
@@ -3683,7 +3841,7 @@ If selected, will do a tip wipe for infill moves to prevent material from sticki
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_wipe_direction"></a>
 
@@ -3696,7 +3854,8 @@ paths are enabled, or when the fill pattern is Concentric; otherwise it uses a r
 - **Master default:** `WIPE_OPTIMAL`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Tip
+  Wipe is enabled)).
 - **Choices:**
   - `WIPE_OPTIMAL`
   - `WIPE_FORWARD`
@@ -3714,7 +3873,8 @@ distance.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Tip
+  Wipe is enabled)).
 
 <a id="setting-infill_wipe_speed"></a>
 
@@ -3726,7 +3886,8 @@ Sets the speed for the infill tip wipe move.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Tip
+  Wipe is enabled)).
 
 <a id="setting-infill_wipe_extruder_speed"></a>
 
@@ -3738,7 +3899,8 @@ Sets the extruder speed for the infill tip wipe move.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Tip
+  Wipe is enabled)).
 
 <a id="setting-infill_wipe_angle"></a>
 
@@ -3750,8 +3912,8 @@ Sets the angle of the infill tip wipe.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Enable Infill Tip Wipe is enabled and Infill
-  Wipe Direction is `WIPE_ANGLED`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Enable Infill Tip
+  Wipe is enabled and Infill Wipe Direction is `WIPE_ANGLED`))).
 
 <a id="setting-infill_wipe_cutoff_distance"></a>
 
@@ -3763,7 +3925,8 @@ Sets the distance from the end of the infill tip wipe move to turn the extruder 
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Tip
+  Wipe is enabled)).
 
 <a id="setting-infill_wipe_lift_height"></a>
 
@@ -3775,7 +3938,8 @@ Sets the distance to lift during the infill tip wipe move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Infill Tip Wipe is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Infill Tip
+  Wipe is enabled)).
 
 <a id="setting-tip_wipe_voltage"></a>
 
@@ -3787,7 +3951,7 @@ Sets welder voltage during tip wipe motions.
 - **Master default:** `0 V`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Syntax is `Tormach`.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `Tormach`).
 
 <a id="setting-disable_tip_wipe_feedrate_scaling"></a>
 
@@ -3798,8 +3962,8 @@ If selected, minimum layer time feedrate adjustments will not change tip wipe pa
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is
-  `MODIFY FEEDRATE`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="settings-material-spiral-lift"></a>
 
@@ -3816,7 +3980,7 @@ If selected, will perform a spiral lift on perimeters.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-enable_spiral_inset"></a>
 
@@ -3827,7 +3991,7 @@ If selected, will perform a spiral lift on insets.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-enable_spiral_skin"></a>
 
@@ -3838,7 +4002,7 @@ If selected, will perform a spiral lift on skin.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-enable_spiral_infill"></a>
 
@@ -3849,7 +4013,7 @@ If selected, will perform a spiral lift on infill.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-spiral_end_of_layer"></a>
 
@@ -3861,7 +4025,7 @@ slicing and writer paths do not read this value, so it has no effect.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-spiral_lift_height"></a>
 
@@ -3872,8 +4036,9 @@ Sets the distance the extruder lifts before starting the spiral.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Spiral Perimeters is enabled or (Spiral Insets is enabled or (Spiral Skins is
-  enabled or (Spiral Infill is enabled or End of Layer is enabled)))).
+- **Available when:** (Slicing Mode is `Planar` and (Spiral Perimeters is enabled or (Spiral Insets
+  is enabled or (Spiral Skins is enabled or (Spiral Infill is enabled or End of Layer is
+  enabled))))).
 
 <a id="setting-spiral_lift_points"></a>
 
@@ -3884,9 +4049,9 @@ Number of small line segments in the spiral move.
 - **Input:** `number` — Integer value.
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Supports G2/G3 is disabled and (Spiral Perimeters is enabled or (Spiral
-  Insets is enabled or (Spiral Skins is enabled or (Spiral Infill is enabled or End of Layer is
-  enabled))))).
+- **Available when:** (Slicing Mode is `Planar` and (Supports G2/G3 is disabled and (Spiral
+  Perimeters is enabled or (Spiral Insets is enabled or (Spiral Skins is enabled or (Spiral Infill
+  is enabled or End of Layer is enabled)))))).
 
 <a id="setting-spiral_lift_radius"></a>
 
@@ -3897,8 +4062,9 @@ Sets maximum distance from starting point that the extruder will spiral outward 
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Spiral Perimeters is enabled or (Spiral Insets is enabled or (Spiral Skins is
-  enabled or (Spiral Infill is enabled or End of Layer is enabled)))).
+- **Available when:** (Slicing Mode is `Planar` and (Spiral Perimeters is enabled or (Spiral Insets
+  is enabled or (Spiral Skins is enabled or (Spiral Infill is enabled or End of Layer is
+  enabled))))).
 
 <a id="setting-spiral_lift_speed"></a>
 
@@ -3909,8 +4075,9 @@ Sets the speed for spiral lift moves.
 - **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
 - **Master default:** `0 mm/s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Spiral Perimeters is enabled or (Spiral Insets is enabled or (Spiral Skins is
-  enabled or (Spiral Infill is enabled or End of Layer is enabled)))).
+- **Available when:** (Slicing Mode is `Planar` and (Spiral Perimeters is enabled or (Spiral Insets
+  is enabled or (Spiral Skins is enabled or (Spiral Infill is enabled or End of Layer is
+  enabled))))).
 
 <a id="setting-disable_spiral_lift_feedrate_scaling"></a>
 
@@ -3921,8 +4088,8 @@ If selected, minimum layer time feedrate adjustments will not change spiral lift
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is
-  `MODIFY FEEDRATE`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="settings-material-purge"></a>
 
@@ -3940,7 +4107,8 @@ writer paths do not read this value, so it has no effect.
 - **Input:** `time` — Duration; displayed in the preferred time unit.
 - **Master default:** `0 s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Material Load is enabled and Syntax is `Cincinnati`).
+- **Available when:** (Slicing Mode is `Planar` and (Material Load is enabled and Syntax is
+  `Cincinnati`)).
 
 <a id="setting-initial_purge_dwell_screw_rpm"></a>
 
@@ -3951,7 +4119,8 @@ Speed for the screw during the initial purge.
 - **Input:** `rpm` — Rotational speed in revolutions per minute.
 - **Master default:** `0 rpm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Material Load is enabled and Syntax is `Cincinnati`).
+- **Available when:** (Slicing Mode is `Planar` and (Material Load is enabled and Syntax is
+  `Cincinnati`)).
 
 <a id="setting-initial_purge_tip_wipe_delay"></a>
 
@@ -3962,7 +4131,8 @@ Amount of time the extruder will pause before moving to wipe the tip during the 
 - **Input:** `time` — Duration; displayed in the preferred time unit.
 - **Master default:** `0 s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Material Load is enabled and Syntax is `Cincinnati`).
+- **Available when:** (Slicing Mode is `Planar` and (Material Load is enabled and Syntax is
+  `Cincinnati`)).
 
 <a id="setting-purge_during_dwell"></a>
 
@@ -3974,7 +4144,8 @@ settings.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Min / Max Layer Time Method is `ADD DWELL TIME`.
+- **Available when:** (Slicing Mode is `Planar` and Min / Max Layer Time Method is `ADD DWELL
+  TIME`).
 
 <a id="setting-purge_dwell_duration"></a>
 
@@ -3985,7 +4156,8 @@ Duration to run the extruder during a purge dwell.
 - **Input:** `time` — Duration; displayed in the preferred time unit.
 - **Master default:** `0 s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Purge During Dwell is enabled and Machine Type is `Pellet`).
+- **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and Machine Type
+  is `Pellet`)).
 
 <a id="setting-purge_dwell_screw_rpm"></a>
 
@@ -3996,7 +4168,8 @@ Speed for the screw during purge dwells.
 - **Input:** `rpm` — Rotational speed in revolutions per minute.
 - **Master default:** `0 rpm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Purge During Dwell is enabled and Machine Type is `Pellet`).
+- **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and Machine Type
+  is `Pellet`)).
 
 <a id="setting-purge_tip_wipe_delay"></a>
 
@@ -4007,7 +4180,8 @@ Amount of time the extruder will pause before moving to wipe the tip during a pu
 - **Input:** `time` — Duration; displayed in the preferred time unit.
 - **Master default:** `0 s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Purge During Dwell is enabled and Machine Type is `Pellet`).
+- **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and Machine Type
+  is `Pellet`)).
 
 <a id="setting-purge_length"></a>
 
@@ -4018,8 +4192,8 @@ Length of filament, or screw rotation distance, for purges issued between layers
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Purge During Dwell is enabled and (Syntax is `Marlin` or Machine Type is
-  `Filament`)).
+- **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and (Syntax is
+  `Marlin` or Machine Type is `Filament`))).
 
 <a id="setting-purge_feedrate"></a>
 
@@ -4030,8 +4204,8 @@ Feedrate for extrusion used for the purge between layers.
 - **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
 - **Master default:** `0 mm/s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Purge During Dwell is enabled and (Syntax is `Marlin` or Machine Type is
-  `Filament`)).
+- **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and (Syntax is
+  `Marlin` or Machine Type is `Filament`))).
 
 <a id="settings-material-extruder"></a>
 
@@ -4050,8 +4224,8 @@ Sets the initial extruder speed that is used during the specific extruder on del
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Use Width and Height is disabled and (Machine Type is `Pellet` or (Machine
-  Type is `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Use Width and Height is disabled and (Machine
+  Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-extruder_prime_volume"></a>
 
@@ -4063,7 +4237,7 @@ Sets the volume of material to purge during priming. Used for pellet extruder wi
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Syntax is `KraussMaffei`.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `KraussMaffei`).
 
 <a id="setting-extruder_prime_speed"></a>
 
@@ -4075,7 +4249,7 @@ Sets the speed of the extruder during priming. Used for pellet extruder without 
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Syntax is `KraussMaffei`.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `KraussMaffei`).
 
 <a id="setting-extruder_on_delay_perimeter"></a>
 
@@ -4088,8 +4262,8 @@ this value, so it has no effect.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Machine Type is `Pellet` or (Machine Type is
-  `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Machine Type
+  is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-extruder_on_delay_inset"></a>
 
@@ -4102,8 +4276,8 @@ value, so it has no effect.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Machine Type is `Pellet` or (Machine Type is
-  `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Machine Type is
+  `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-extruder_on_delay_skin"></a>
 
@@ -4116,8 +4290,8 @@ value, so it has no effect.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Machine Type is `Pellet` or (Machine Type is
-  `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Machine Type is
+  `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-extruder_on_delay_infill"></a>
 
@@ -4130,8 +4304,8 @@ value, so it has no effect.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Machine Type is `Pellet` or (Machine Type is
-  `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Machine Type is
+  `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-extruder_on_delay_skeleton"></a>
 
@@ -4144,8 +4318,8 @@ value, so it has no effect.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Machine Type is `Pellet` or (Machine Type is
-  `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Machine Type
+  is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-extruder_off_delay"></a>
 
@@ -4158,8 +4332,8 @@ read this value, so it has no effect.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
-  `Thermoset`)).
+- **Available when:** (Slicing Mode is `Planar` and (Machine Type is `Pellet` or (Machine Type is
+  `Concrete` or Machine Type is `Thermoset`))).
 
 <a id="setting-servo_extruder_to_travel_speed"></a>
 
@@ -4170,7 +4344,7 @@ If selected, the speed of the extruder will servo with the speed of the gantry.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Syntax is `Cincinnati`.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `Cincinnati`).
 
 <a id="setting-enable_m3s"></a>
 
@@ -4182,7 +4356,7 @@ using arc welder, but prevents feedrate scaling from working.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Syntax is `Cincinnati`.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `Cincinnati`).
 
 <a id="settings-material-filament"></a>
 
@@ -4516,7 +4690,7 @@ Speed and turn it off at shutdown.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Machine Type is `Filament`.
+- **Available when:** (Slicing Mode is `Planar` and Machine Type is `Filament`).
 
 <a id="setting-fan_min_speed"></a>
 
@@ -4528,7 +4702,8 @@ value, so it has no effect.
 - **Input:** `percentage100` — Percentage input with an allowed range of 0–100%.
 - **Master default:** `0%`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Machine Type is `Filament` and Fan Control is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Machine Type is `Filament` and Fan Control is
+  enabled)).
 
 <a id="setting-fan_max_speed"></a>
 
@@ -4539,7 +4714,8 @@ Sets the cooling-fan percentage emitted by supported writers when Fan Control is
 - **Input:** `percentage100` — Percentage input with an allowed range of 0–100%.
 - **Master default:** `0%`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Machine Type is `Filament` and Fan Control is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Machine Type is `Filament` and Fan Control is
+  enabled)).
 
 <a id="setting-force_minimum_layer_time"></a>
 
@@ -4551,7 +4727,7 @@ cooling.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-minimum_layer_time_method"></a>
 
@@ -4563,7 +4739,7 @@ feed rate in G0 G1 lines.
 - **Input:** `enumeration` — Choice from the listed values.
 - **Master default:** `ADD DWELL TIME`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Force Min / Max Layer Time is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Force Min / Max Layer Time is enabled).
 - **Choices:**
   - `ADD DWELL TIME`
   - `MODIFY FEEDRATE`
@@ -4577,7 +4753,7 @@ The minimum layer time required to meet the cooling need.
 - **Input:** `time` — Duration; displayed in the preferred time unit.
 - **Master default:** `0 s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Force Min / Max Layer Time is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Force Min / Max Layer Time is enabled).
 
 <a id="setting-maximum_layer_time"></a>
 
@@ -4588,8 +4764,8 @@ The maximum layer time required to meet the cooling need.
 - **Input:** `time` — Duration; displayed in the preferred time unit.
 - **Master default:** `0 s`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is
-  `MODIFY FEEDRATE`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="setting-extruder_scale_factor"></a>
 
@@ -4601,8 +4777,8 @@ greater than 1 increases extruder speed, and less than 1 decreases speed.
 - **Input:** `unitless_float` — Decimal value without a physical unit.
 - **Master default:** `1`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is
-  `MODIFY FEEDRATE`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="setting-pre_pause_code"></a>
 
@@ -4614,8 +4790,8 @@ purge.
 - **Input:** `multiline_text` — Multi-line G-code or text block.
 - **Master default:** `empty`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is `ADD
-  DWELL TIME`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `ADD DWELL TIME`)).
 
 <a id="setting-post_pause_code"></a>
 
@@ -4626,8 +4802,8 @@ G-Code to be executed after the minimum layer time pause command, such as turnin
 - **Input:** `multiline_text` — Multi-line G-code or text block.
 - **Master default:** `empty`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Force Min / Max Layer Time is enabled and Min / Max Layer Time Method is `ADD
-  DWELL TIME`).
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `ADD DWELL TIME`)).
 
 <a id="settings-material-platform-adhesion"></a>
 
@@ -4644,7 +4820,7 @@ If selected, a raft will be printed below the part to help account for an unleve
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-raft_offset"></a>
 
@@ -4655,7 +4831,7 @@ Determines how far beyond the base of the part the raft extends.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Raft is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Raft is enabled).
 
 <a id="setting-raft_layer_count"></a>
 
@@ -4666,7 +4842,7 @@ Determines how many layers of raft are created.
 - **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
 - **Master default:** `1`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Raft is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Raft is enabled).
 
 <a id="setting-raft_bead_width"></a>
 
@@ -4677,7 +4853,7 @@ Bead width for raft paths.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Raft is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Raft is enabled).
 
 <a id="setting-brim"></a>
 
@@ -4688,7 +4864,7 @@ If selected, a brim will be attached to the part at the base to help with platfo
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-brim_width"></a>
 
@@ -4699,7 +4875,7 @@ Width of the brim.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Brim is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Brim is enabled).
 
 <a id="setting-brim_layer_count"></a>
 
@@ -4710,7 +4886,7 @@ Number of layers to print the brim starting with layer 1.
 - **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
 - **Master default:** `1`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Brim is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Brim is enabled).
 
 <a id="setting-brim_bead_width"></a>
 
@@ -4721,7 +4897,7 @@ Bead width for brim paths.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Brim is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Brim is enabled).
 
 <a id="setting-skirt"></a>
 
@@ -4732,7 +4908,7 @@ If selected, a skirt will be printed around the object to prime the extruder.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-skirt_loops"></a>
 
@@ -4743,7 +4919,7 @@ Sets the number of closed skirt loops printed around the part to prime the extru
 - **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
 - **Master default:** `1`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Skirt is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
 <a id="setting-skirt_distance_from_object"></a>
 
@@ -4754,7 +4930,7 @@ Sets the horizontal distance between the part and the innermost skirt loop.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Skirt is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
 <a id="setting-skirt_layer_count"></a>
 
@@ -4765,7 +4941,7 @@ Determines how many layers the skirt contains.
 - **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
 - **Master default:** `1`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Skirt is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
 <a id="setting-skirt_minimum_length"></a>
 
@@ -4776,7 +4952,7 @@ The minimum extrusion length for the skirt.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Skirt is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
 <a id="setting-skirt_bead_width"></a>
 
@@ -4787,7 +4963,7 @@ Bead width for skirt paths.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Add Skirt is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
 <a id="settings-material-multi-material"></a>
 
@@ -4805,7 +4981,8 @@ If selected, enables the use of multiple printing materials.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Syntax is `Cincinnati` or (Syntax is `Marlin` or Syntax is `JuggerBot3D`)).
+- **Available when:** (Slicing Mode is `Planar` and (Syntax is `Cincinnati` or (Syntax is `Marlin`
+  or Syntax is `JuggerBot3D`))).
 
 <a id="setting-perimeter_material_num"></a>
 
@@ -4817,8 +4994,9 @@ Sets the material number to be used during perimeter, brim, skeleton, and skirt 
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Multi-material is enabled and (Enable Perimeter is enabled or (Add
-  Brim is enabled or (Enable Skeletons is enabled or Add Skirt is enabled)))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Multi-material is enabled and (Enable
+  Perimeter is enabled or (Add Brim is enabled or (Enable Skeletons is enabled or Add Skirt is
+  enabled))))).
 
 <a id="setting-inset_material_num"></a>
 
@@ -4830,7 +5008,8 @@ Sets the material number to be used during inset paths.
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and Enable Multi-material is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable
+  Multi-material is enabled)).
 
 <a id="setting-skeleton_material_num"></a>
 
@@ -4842,7 +5021,8 @@ Sets the material number to be used for skeleton paths.
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Multi-material is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable
+  Multi-material is enabled)).
 
 <a id="setting-skin_material_num"></a>
 
@@ -4854,7 +5034,8 @@ Sets the material number to be used during skin paths.
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Multi-material is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable
+  Multi-material is enabled)).
 
 <a id="setting-infill_material_num"></a>
 
@@ -4866,7 +5047,8 @@ Sets the material number to be used during infill paths.
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Multi-material is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable
+  Multi-material is enabled)).
 
 <a id="setting-support_material_num"></a>
 
@@ -4878,8 +5060,8 @@ Sets the material number to be used during support and raft paths.
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Multi-material is enabled and (Enable Support is enabled or Add Raft
-  is enabled)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Multi-material is enabled and (Enable
+  Support is enabled or Add Raft is enabled))).
 
 <a id="setting-material_transition_distance"></a>
 
@@ -4891,7 +5073,7 @@ The distance needed to transition between materials.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Multi-material is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Multi-material is enabled).
 
 <a id="setting-enable_second_transition_distance"></a>
 
@@ -4904,7 +5086,7 @@ Distance will be used for 2 to 1.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Multi-material is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Multi-material is enabled).
 
 <a id="setting-second_transition_distance"></a>
 
@@ -4916,8 +5098,8 @@ Distance used for transition from material 2 to material 1.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Multi-material is enabled and Enable Second Transition Distance is
-  enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Multi-material is enabled and Enable
+  Second Transition Distance is enabled)).
 
 <a id="setting-enable_m222"></a>
 
@@ -4929,7 +5111,7 @@ Uses the M222 code for material transitions rather than the standard M237.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Multi-material is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Multi-material is enabled).
 
 ### E.4 Profile settings
 
@@ -5059,6 +5241,19 @@ the boundary.
   - `Keep`
   - `Discard`
 
+<a id="setting-radial_path_start_angle"></a>
+
+##### Radial Path Start Angle (`radial_path_start_angle`)
+
+Sets the angular start position for generated radial paths around the cylinder axis. 0 degrees
+starts on +X and 90 degrees starts on +Y.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Radial`).
+
 <a id="setting-helical_path_boundary_policy"></a>
 
 ##### Helical Path Boundary Policy (`helical_path_boundary_policy`)
@@ -5074,6 +5269,35 @@ the model. Clip Z keeps the continuous helix through the highest Z intersection.
 - **Choices:**
   - `Clip`
   - `Clip Z`
+
+<a id="setting-helical_path_handedness"></a>
+
+##### Helical Path Handedness (`helical_path_handedness`)
+
+Selects the handedness for generated helical paths. Right Handed uses a counter-clockwise XY sweep
+as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z rise.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Right Handed`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Right Handed`
+  - `Left Handed`
+
+<a id="setting-helical_path_start_angle"></a>
+
+##### Helical Path Start Angle (`helical_path_start_angle`)
+
+Sets the angular start position for generated helical paths around the cylinder axis. 0 degrees
+starts on +X and 90 degrees starts on +Y.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `5,156.62°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
 
 <a id="setting-max_helical_path_length"></a>
 
@@ -5140,8 +5364,8 @@ The diameter of the main extruder nozzle.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Machine Type is `Pellet` or (Machine Type is `Filament` or (Machine Type is
-  `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Machine Type is `Pellet` or (Machine Type is
+  `Filament` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-default_width"></a>
 
@@ -5177,8 +5401,8 @@ Default extruder speed for paths that don't have a defined extruder speed.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Use Width and Height is disabled and (Machine Type is `Pellet` or (Machine
-  Type is `Concrete` or Machine Type is `Thermoset`))).
+- **Available when:** (Slicing Mode is `Planar` and (Use Width and Height is disabled and (Machine
+  Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
 
 <a id="setting-minimum_extrude_length"></a>
 
@@ -5191,7 +5415,7 @@ raft, and support paths.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="settings-profile-perimeter"></a>
 
@@ -5209,7 +5433,7 @@ If selected, perimeters will be generated.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-perimeter_count"></a>
 
@@ -5222,7 +5446,7 @@ built-in catalog fallback is 0, so set an explicit value before enabling perimet
 - **Master default:** `0` (below the current input minimum of `1`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_boundary_selection"></a>
 
@@ -5234,7 +5458,7 @@ Selects which polygon boundaries are used to generate perimeter paths.
 - **Master default:** `All Boundaries`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 - **Choices:**
   - `All Boundaries`
   - `Internal Boundaries`
@@ -5250,7 +5474,43 @@ Bead width for perimeter paths.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+
+<a id="setting-perimeter_adapt"></a>
+
+##### Enable Adaptive Perimeter Bead Widths (`perimeter_adapt`)
+
+If selected, perimeter bead widths are adjusted within the configured limits to better fill narrow
+regions whose remaining contour space is not an exact multiple of the nominal bead width.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+
+<a id="setting-perimeter_adapt_min_width"></a>
+
+##### Minimum Adaptive Perimeter Bead Width (`perimeter_adapt_min_width`)
+
+Minimum bead width allowed when adaptive perimeter bead widths are enabled.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable Adaptive
+  Perimeter Bead Widths is enabled)).
+
+<a id="setting-perimeter_adapt_max_width"></a>
+
+##### Maximum Adaptive Perimeter Bead Width (`perimeter_adapt_max_width`)
+
+Maximum bead width allowed when adaptive perimeter bead widths are enabled.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `10 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable Adaptive
+  Perimeter Bead Widths is enabled)).
 
 <a id="setting-perimeter_speed"></a>
 
@@ -5262,7 +5522,7 @@ Speed for perimeter paths.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_extruder_speed"></a>
 
@@ -5274,8 +5534,9 @@ Extruder speed for perimeter paths.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Use Width and Height is disabled and
-  (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
 
 <a id="setting-perimeter_extrusion_multiplier"></a>
 
@@ -5288,8 +5549,8 @@ control.
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and (Machine Type is `Filament` or Syntax is
-  `KraussMaffei`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Machine Type
+  is `Filament` or Syntax is `KraussMaffei`))).
 
 <a id="setting-perimeter_minimum_path_length"></a>
 
@@ -5301,7 +5562,19 @@ Perimeter extrusion paths less than this value are deleted.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+
+<a id="setting-perimeter_minimum_segment_length"></a>
+
+##### Minimum Perimeter Segment Length (`perimeter_minimum_segment_length`)
+
+Perimeter path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_lead_in"></a>
 
@@ -5314,7 +5587,7 @@ the extruder.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_lead_in_first_layer"></a>
 
@@ -5325,7 +5598,8 @@ If selected, lead-in is only applied to layer 1.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Enabled` (`true`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Lead-In is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Lead-In is enabled)).
 
 <a id="setting-perimeter_lead_in_x"></a>
 
@@ -5337,7 +5611,8 @@ X Position for the start of the perimeter lead-in segment.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Lead-In is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Lead-In is enabled)).
 
 <a id="setting-perimeter_lead_in_y"></a>
 
@@ -5349,7 +5624,8 @@ Y Position for the start of the perimeter lead-in segment.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Lead-In is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Lead-In is enabled)).
 
 <a id="setting-perimeter_flying_start"></a>
 
@@ -5362,7 +5638,7 @@ motion at the start of the path.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_flying_start_distance"></a>
 
@@ -5374,7 +5650,8 @@ Distance away from the start of the extrusion path to begin the flying start mot
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Flying Start is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Flying Start is enabled)).
 
 <a id="setting-perimeter_flying_start_speed"></a>
 
@@ -5386,19 +5663,21 @@ Speed for the flying start motion.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Perimeter is enabled and Enable Perimeter Flying Start is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
+  Perimeter Flying Start is enabled)).
 
 <a id="setting-spiral_perimeter"></a>
 
 ##### Enable Spiral Perimeter (`spiral_perimeter`)
 
-If selected, spiral perimeters will be generated.
+If selected, spiral perimeters will be generated.&lt;br&gt;&lt;br&gt;&lt;img
+src=':/tooltips/profile/spiral_perimeter.png' width='260' height='146'&gt;
 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="settings-profile-inset"></a>
 
@@ -5416,7 +5695,7 @@ If selected, insets will be generated.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-inset_count"></a>
 
@@ -5429,7 +5708,7 @@ the built-in catalog fallback is 0, so set an explicit value before enabling ins
 - **Master default:** `0` (below the current input minimum of `1`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_width"></a>
 
@@ -5441,7 +5720,43 @@ Bead width for inset paths.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+
+<a id="setting-inset_adapt"></a>
+
+##### Enable Adaptive Inset Bead Widths (`inset_adapt`)
+
+If selected, inset bead widths are adjusted within the configured limits to better fill narrow
+regions whose remaining contour space is not an exact multiple of the nominal bead width.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+
+<a id="setting-inset_adapt_min_width"></a>
+
+##### Minimum Adaptive Inset Bead Width (`inset_adapt_min_width`)
+
+Minimum bead width allowed when adaptive inset bead widths are enabled.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Adaptive
+  Inset Bead Widths is enabled)).
+
+<a id="setting-inset_adapt_max_width"></a>
+
+##### Maximum Adaptive Inset Bead Width (`inset_adapt_max_width`)
+
+Maximum bead width allowed when adaptive inset bead widths are enabled.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `10 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Enable Adaptive
+  Inset Bead Widths is enabled)).
 
 <a id="setting-inset_speed"></a>
 
@@ -5453,7 +5768,7 @@ Speed for inset paths.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_extruder_speed"></a>
 
@@ -5465,8 +5780,9 @@ Extruder speed for inset paths.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Use Width and Height is disabled and (Machine
-  Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
 
 <a id="setting-inset_extrusion_multiplier"></a>
 
@@ -5478,8 +5794,8 @@ Extrusion multiplier to increase/decrease flowrate for inset paths for systems w
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Inset is enabled and (Machine Type is `Filament` or Syntax is
-  `KraussMaffei`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Machine Type is
+  `Filament` or Syntax is `KraussMaffei`))).
 
 <a id="setting-inset_minimum_path_length"></a>
 
@@ -5491,7 +5807,19 @@ Inset extrusion paths less than this value are deleted.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+
+<a id="setting-inset_minimum_segment_length"></a>
+
+##### Minimum Inset Segment Length (`inset_minimum_segment_length`)
+
+Inset path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_overlap_distance"></a>
 
@@ -5503,7 +5831,7 @@ Width of the inset overlaps with exterior.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-spiral_inset"></a>
 
@@ -5515,7 +5843,7 @@ If selected, spiral insets will be generated.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="settings-profile-skeleton"></a>
 
@@ -5535,7 +5863,7 @@ concentric paths.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-skeleton_input"></a>
 
@@ -5549,7 +5877,7 @@ the skeleton paths are constructed.
 - **Master default:** `SEGMENT`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 - **Choices:**
   - `SEGMENT`
   - `POINT`
@@ -5574,7 +5902,7 @@ cleaner and more efficient skeleton paths.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_input_chamfering_angle"></a>
 
@@ -5589,7 +5917,7 @@ improving the accuracy of the skeleton pruning process.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_output_cleaning_distance"></a>
 
@@ -5602,7 +5930,7 @@ adjacent, or semi-adjacent redundant vertices.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_width"></a>
 
@@ -5614,7 +5942,7 @@ Bead width for skeleton paths.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_speed"></a>
 
@@ -5626,7 +5954,7 @@ Speed of skeleton printing paths.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_extruder_speed"></a>
 
@@ -5638,8 +5966,9 @@ Extruder speed for skeletons.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Use Width and Height is disabled and
-  (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
 
 <a id="setting-skeleton_extrusion_multiplier"></a>
 
@@ -5652,8 +5981,8 @@ control.
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and (Machine Type is `Filament` or Syntax is
-  `KraussMaffei`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Machine Type
+  is `Filament` or Syntax is `KraussMaffei`))).
 
 <a id="setting-skeleton_adapt"></a>
 
@@ -5670,7 +5999,7 @@ requiring narrower bead widths, the speed increases, depositing less material.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_adapt_step_size"></a>
 
@@ -5683,7 +6012,8 @@ width adjustment. A smaller step size allows for finer adaptation to geometric v
 - **Master default:** `0.001 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Adaptive Bead Widths is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
 
 <a id="setting-skeleton_adapt_min_width"></a>
 
@@ -5696,7 +6026,8 @@ widths less than this value will be removed.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Adaptive Bead Widths is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
 
 <a id="setting-skeleton_adapt_min_width_filter"></a>
 
@@ -5710,7 +6041,8 @@ Removes segments with adapted widths below the threshold.
 - **Master default:** `CLAMP`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Adaptive Bead Widths is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
 - **Choices:**
   - `CLAMP`
   - `PRUNE`
@@ -5726,7 +6058,8 @@ widths greater than this value will be assigned this value as their bead width.
 - **Master default:** `10 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Adaptive Bead Widths is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
 
 <a id="setting-skeleton_adapt_max_width_filter"></a>
 
@@ -5740,7 +6073,8 @@ Removes segments with adapted widths above the threshold.
 - **Master default:** `CLAMP`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Adaptive Bead Widths is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
 - **Choices:**
   - `CLAMP`
   - `PRUNE`
@@ -5755,7 +6089,19 @@ Skeleton extrusion paths whose length is less than this value are removed.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_minimum_segment_length"></a>
+
+##### Minimum Skeleton Segment Length (`skeleton_minimum_segment_length`)
+
+Skeleton path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_prestart"></a>
 
@@ -5768,7 +6114,7 @@ material. This prestart is along the same vector as the first segment of the ske
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_prestart_distance"></a>
 
@@ -5780,7 +6126,8 @@ Length of the skeleton prestart move.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Prestart is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
 
 <a id="setting-skeleton_prestart_speed"></a>
 
@@ -5792,7 +6139,8 @@ Speed of skeleton prestart paths.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Prestart is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
 
 <a id="setting-skeleton_prestart_extruder_speed"></a>
 
@@ -5804,7 +6152,8 @@ Extruder speed for skeleton prestart paths.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Prestart is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
 
 <a id="setting-skeleton_prestart_area_modifier"></a>
 
@@ -5816,7 +6165,8 @@ Percent multiplier for bead area of skeleton prestart paths.
 - **Master default:** `100%`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skeletons is enabled and Enable Skeleton Prestart is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
 
 <a id="setting-skeleton_skin_mcode"></a>
 
@@ -5828,7 +6178,7 @@ override (M13) on BAAM.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="settings-profile-skin"></a>
 
@@ -5847,7 +6197,7 @@ If selected, skins will be generated.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-skin_top_count"></a>
 
@@ -5858,7 +6208,7 @@ Number of skin layers at the top of a print.
 - **Input:** `number` — Integer value.
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_bottom_count"></a>
 
@@ -5869,7 +6219,7 @@ Number of skin layers at the bottom of a print.
 - **Input:** `number` — Integer value.
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_pattern"></a>
 
@@ -5882,7 +6232,7 @@ rotation orient non-concentric patterns.
 - **Master default:** `Lines`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 - **Choices:**
   - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
   - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
@@ -5905,7 +6255,7 @@ Sets the angle for the skin infill.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_angle_rotation"></a>
 
@@ -5917,7 +6267,7 @@ Sets the amount the skin fill rotates layer to layer.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_exterior_overlap"></a>
 
@@ -5929,7 +6279,7 @@ Width of the skin overlaps with the exterior.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_width"></a>
 
@@ -5941,7 +6291,7 @@ Bead width for skin paths.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_speed"></a>
 
@@ -5953,7 +6303,7 @@ Speed for skin paths.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_extruder_speed"></a>
 
@@ -5965,8 +6315,9 @@ Extruder speed for skin paths.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Use Width and Height is disabled and (Machine
-  Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
 
 <a id="setting-skin_extrusion_multiplier"></a>
 
@@ -5978,8 +6329,8 @@ Extrusion multiplier to increase/decrease flowrate for skin paths for systems wi
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and (Machine Type is `Filament` or Syntax is
-  `KraussMaffei`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Machine Type is
+  `Filament` or Syntax is `KraussMaffei`))).
 
 <a id="setting-skin_minimum_path_length"></a>
 
@@ -5991,7 +6342,19 @@ Skin extrusion paths less than this value are deleted.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_minimum_segment_length"></a>
+
+##### Minimum Skin Segment Length (`skin_minimum_segment_length`)
+
+Skin path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_gradual_infill"></a>
 
@@ -6003,7 +6366,7 @@ If selected, gradual infill steps will be generated.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_gradual_infill_steps"></a>
 
@@ -6015,7 +6378,8 @@ Number of gradual infill steps between top skin and infill.
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Gradual Infill Steps is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
 
 <a id="setting-skin_gradual_infill_pattern"></a>
 
@@ -6028,7 +6392,8 @@ step changes spacing while retaining this pattern.
 - **Master default:** `Lines`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Gradual Infill Steps is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
 - **Choices:**
   - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
   - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
@@ -6051,7 +6416,8 @@ Sets the angle for the gradual infill.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Gradual Infill Steps is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
 
 <a id="setting-skin_gradual_infill_angle_rotation"></a>
 
@@ -6063,7 +6429,8 @@ Sets the angle for the gradual infill rotation layer to layer.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Skin is enabled and Enable Gradual Infill Steps is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
 
 <a id="settings-profile-infill"></a>
 
@@ -6082,7 +6449,7 @@ If selected, infill will be generated.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-infill_density"></a>
 
@@ -6094,7 +6461,8 @@ Percent of area to be covered by infill.
 - **Master default:** `0%`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Manual Infill Line Spacing is disabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Manual
+  Infill Line Spacing is disabled)).
 
 <a id="setting-infill_manual_spacing"></a>
 
@@ -6106,7 +6474,7 @@ Override infill density and manually define distance between beads on infill.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_line_spacing"></a>
 
@@ -6118,7 +6486,8 @@ Distance between beads on sparse infill.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Enable Manual Infill Line Spacing is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Enable Manual
+  Infill Line Spacing is enabled)).
 
 <a id="setting-infill_pattern"></a>
 
@@ -6131,7 +6500,7 @@ Hatch is listed for compatibility but currently generates no infill paths in thi
 - **Master default:** `Lines`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 - **Choices:**
   - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
   - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
@@ -6158,7 +6527,21 @@ existing monotonic ordering.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and Infill Pattern is `Lines`).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and Infill Pattern is
+  `Lines`)).
+
+<a id="setting-infill_avoid_link_overlap"></a>
+
+##### Avoid Infill Link Contour Overlap (`infill_avoid_link_overlap`)
+
+If enabled, infill linking segments whose bead core would exceed the configured infill overlap are
+replaced by travel moves.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_based_on_printer"></a>
 
@@ -6171,7 +6554,7 @@ means the infill pattern is specific to where the object is within the printer.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_angle"></a>
 
@@ -6183,7 +6566,7 @@ Sets the angle for the infill.
 - **Master default:** `0°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_angle_rotation"></a>
 
@@ -6195,7 +6578,7 @@ Determines how much the infill angle rotates on every layer, default 90 degree.
 - **Master default:** `90°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_overlap_distance"></a>
 
@@ -6207,7 +6590,7 @@ Width of the infill overlaps with exterior.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_width"></a>
 
@@ -6219,7 +6602,7 @@ Width of the bead for the infill print moves.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_speed"></a>
 
@@ -6231,7 +6614,7 @@ Speed for the infill paths.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_extruder_speed"></a>
 
@@ -6243,8 +6626,9 @@ Extruder speed for the infill.
 - **Master default:** `0 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Use Width and Height is disabled and (Machine
-  Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is `Thermoset`)))).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
 
 <a id="setting-infill_extrusion_multiplier"></a>
 
@@ -6256,8 +6640,8 @@ Extrusion multiplier to increase/decrease flowrate for infill paths for systems 
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Enable Infill is enabled and (Machine Type is `Filament` or Syntax is
-  `KraussMaffei`)).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Machine Type is
+  `Filament` or Syntax is `KraussMaffei`))).
 
 <a id="setting-infill_minimum_path_length"></a>
 
@@ -6269,7 +6653,19 @@ Infill extrusion paths less than this value are deleted.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
+
+<a id="setting-infill_minimum_segment_length"></a>
+
+##### Minimum Infill Segment Length (`infill_minimum_segment_length`)
+
+Infill path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_maximum_path_length"></a>
 
@@ -6281,7 +6677,7 @@ Infill extrusion paths greater than this are split.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_combine_every_x_layers"></a>
 
@@ -6293,7 +6689,7 @@ as one thicker layer, saves time.
 - **Input:** `number` — Integer value.
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_combine_layer_shift"></a>
 
@@ -6305,7 +6701,7 @@ Shift the first starting layer of infill when using combine infill every X layer
 - **Input:** `number` — Integer value.
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="settings-profile-support"></a>
 
@@ -6323,7 +6719,7 @@ If selected, support structures will be generated for overhangs.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-support_print_first"></a>
 
@@ -6335,7 +6731,7 @@ If selected, support material will be printed first.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_structure"></a>
 
@@ -6346,7 +6742,7 @@ Generate conventional grid columns or branching organic supports.
 - **Input:** `enumeration` — Choice from the listed values.
 - **Master default:** `Grid`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 - **Choices:**
   - `Grid`
   - `Organic / Tree`
@@ -6360,7 +6756,7 @@ Allow support to land on the model or retain only support connected to the build
 - **Input:** `enumeration` — Choice from the listed values.
 - **Master default:** `Everywhere`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 - **Choices:**
   - `Everywhere`
   - `Build Plate Only`
@@ -6374,7 +6770,7 @@ Grow support inward toward the interface while retaining a stable vertical outer
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_taper_angle"></a>
 
@@ -6385,7 +6781,8 @@ Angle of inward support growth below the interface; larger angles require less t
 - **Input:** `angle` — Angle; displayed in the preferred angle unit.
 - **Master default:** `45°`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Taper Support is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Taper Support is
+  enabled)).
 
 <a id="setting-support_taper_wall_contours"></a>
 
@@ -6396,7 +6793,8 @@ Minimum number of bead-width contours retained in the vertical support tube wall
 - **Input:** `number` — Integer value.
 - **Master default:** `2`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Taper Support is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Taper Support is
+  enabled)).
 
 <a id="setting-support_threshold_angle"></a>
 
@@ -6407,7 +6805,7 @@ Overhangs exceeding this angle will generate support.
 - **Input:** `angle` — Angle; displayed in the preferred angle unit.
 - **Master default:** `0°`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_xy_distance"></a>
 
@@ -6418,7 +6816,7 @@ XY distance from the part to generate support.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_layer_offset"></a>
 
@@ -6429,7 +6827,7 @@ Number of vertical layers to offset support from model surface.
 - **Input:** `number` — Integer value.
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_minimum_infill_area"></a>
 
@@ -6441,7 +6839,7 @@ Support structures smaller than this will not generate infill.
 - **Master default:** `0 mm²`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_minimum_area"></a>
 
@@ -6453,7 +6851,7 @@ Areas of the part smaller than this will not have supports generated.
 - **Master default:** `0 mm²`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_pattern"></a>
 
@@ -6465,7 +6863,7 @@ Infill pattern used inside support structures.
 - **Master default:** `Grid`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 - **Choices:**
   - `Lines`
   - `Grid`
@@ -6480,7 +6878,19 @@ Distance between beads on sparse support fill.
 - **Master default:** `10 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
+
+<a id="setting-support_minimum_segment_length"></a>
+
+##### Minimum Support Segment Length (`support_minimum_segment_length`)
+
+Support path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_wall_contours"></a>
 
@@ -6492,7 +6902,7 @@ Number of perimeter contours around conventional sparse support.
 - **Master default:** `1`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_interface_layers"></a>
 
@@ -6504,7 +6914,7 @@ Number of dense support layers immediately below supported surfaces; zero disabl
 - **Master default:** `3`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_interface_line_spacing"></a>
 
@@ -6516,7 +6926,7 @@ Line spacing in dense support interfaces; zero automatically uses one bead width
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_interface_expansion"></a>
 
@@ -6528,7 +6938,7 @@ Horizontal expansion of dense interface layers beyond the detected overhang.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_base_layers"></a>
 
@@ -6540,7 +6950,7 @@ Number of dense stabilization layers at support structures that reach the build 
 - **Master default:** `0`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_base_expansion"></a>
 
@@ -6552,7 +6962,7 @@ Horizontal expansion of build-plate support bases.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_bridge_suppression"></a>
 
@@ -6563,7 +6973,7 @@ Skip support where an overhang is anchored on opposing sides within the configur
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_bridge_max_length"></a>
 
@@ -6574,7 +6984,8 @@ Longest opposing-edge span that may be printed as a bridge without support.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Suppress Support Under Bridges is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Suppress Support
+  Under Bridges is enabled)).
 
 <a id="setting-support_validation"></a>
 
@@ -6585,7 +6996,7 @@ Remove support components that do not connect to the build plate or an allowed m
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Enabled` (`true`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_validation_minimum_overlap"></a>
 
@@ -6596,7 +7007,8 @@ Minimum percentage of each support component that must overlap valid support or 
 - **Input:** `percentage100` — Percentage input with an allowed range of 0–100%.
 - **Master default:** `5%`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Validate Support Connectivity is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Validate Support
+  Connectivity is enabled)).
 
 <a id="setting-support_validation_minimum_base_area"></a>
 
@@ -6607,7 +7019,8 @@ Minimum build-plate contact area for a support component; zero disables this che
 - **Input:** `area` — Area; displayed as the square of the preferred distance unit.
 - **Master default:** `0 mm²`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Validate Support Connectivity is enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Validate Support
+  Connectivity is enabled)).
 
 <a id="setting-support_organic_branch_diameter"></a>
 
@@ -6618,7 +7031,8 @@ Minimum branch diameter; zero automatically uses three bead widths.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Support Structure is `Organic / Tree`).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Support Structure
+  is `Organic / Tree`)).
 
 <a id="setting-support_organic_branch_spacing"></a>
 
@@ -6629,7 +7043,8 @@ Spacing between organic contact branches; zero chooses an automatic spacing.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Support Structure is `Organic / Tree`).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Support Structure
+  is `Organic / Tree`)).
 
 <a id="setting-support_organic_branch_angle"></a>
 
@@ -6640,7 +7055,8 @@ Maximum branch convergence angle measured from vertical.
 - **Input:** `angle` — Angle; displayed in the preferred angle unit.
 - **Master default:** `25°`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Enable Support is enabled and Support Structure is `Organic / Tree`).
+- **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Support Structure
+  is `Organic / Tree`)).
 
 <a id="settings-profile-travel"></a>
 
@@ -6671,8 +7087,8 @@ moves.
 - **Master default:** `25.4 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** ((Enable Infill is enabled or Enable Skin is enabled) or Enable Support is
-  enabled).
+- **Available when:** (Slicing Mode is `Planar` and ((Enable Infill is enabled or Enable Skin is
+  enabled) or Enable Support is enabled)).
 
 <a id="setting-min_travel_length"></a>
 
@@ -6719,7 +7135,7 @@ Distance to lift the tool at the end of the print along the slicing plane normal
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-enable_travel_pause"></a>
 
@@ -6732,7 +7148,7 @@ centroid move can be added and issued before the pause.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-travel_centroid_move"></a>
 
@@ -6744,7 +7160,7 @@ Moves to the XY centroid of the object before the travel pause.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Pause During Travel is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Pause During Travel is enabled).
 
 <a id="setting-travel_pause_duration"></a>
 
@@ -6756,7 +7172,7 @@ Duration of the pause during travel motion.
 - **Master default:** `0 s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Pause During Travel is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Pause During Travel is enabled).
 
 <a id="settings-profile-g-code"></a>
 
@@ -6774,7 +7190,7 @@ Code to be executed at the start of perimeter paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-perimeter_end_code"></a>
 
@@ -6786,7 +7202,7 @@ Code to be executed at the end of perimeter paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
 <a id="setting-inset_start_code"></a>
 
@@ -6798,7 +7214,7 @@ Code to be executed at the start of inset paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-inset_end_code"></a>
 
@@ -6810,7 +7226,7 @@ Code to be executed at the end of inset paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
 <a id="setting-skeleton_start_code"></a>
 
@@ -6822,7 +7238,7 @@ Code to be executed at the start of skeleton paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skeleton_end_code"></a>
 
@@ -6834,7 +7250,7 @@ Code to be executed at the end of skeleton paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skeletons is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
 <a id="setting-skin_start_code"></a>
 
@@ -6846,7 +7262,7 @@ Code to be executed at the start of skin paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-skin_end_code"></a>
 
@@ -6858,7 +7274,7 @@ Code to be executed at the end of skin paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Skin is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
 
 <a id="setting-infill_start_code"></a>
 
@@ -6870,7 +7286,7 @@ Code to be executed at the start of infill paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-infill_end_code"></a>
 
@@ -6882,7 +7298,7 @@ Code to be executed at the end of infill paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Infill is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
 <a id="setting-support_start_code"></a>
 
@@ -6894,7 +7310,7 @@ Code to be executed at the start of support paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="setting-support_end_code"></a>
 
@@ -6906,7 +7322,7 @@ Code to be executed at the end of support paths.
 - **Master default:** `empty`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Support is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
 <a id="settings-profile-special-modes"></a>
 
@@ -6959,6 +7375,45 @@ generally remove more vertices and can deviate farther from the original cross-s
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Smoothing is enabled.
 
+<a id="setting-arc_fitting"></a>
+
+##### Enable Arc Fitting (`arc_fitting`)
+
+Fits eligible planar print moves to circular G2/G3 arcs when the selected machine and syntax support
+G2/G3.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Supports G2/G3 is enabled and (Slicing Mode is `Planar` and (Not (Syntax is
+  `MVP`) and Not (Syntax is `Adamantine`)))).
+
+<a id="setting-arc_fitting_tolerance"></a>
+
+##### Arc Fitting Tolerance (`arc_fitting_tolerance`)
+
+Maximum radial deviation allowed when replacing a run of line segments with a circular arc.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0.05 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Arc Fitting is enabled.
+
+<a id="setting-arc_fitting_minimum_segment_count"></a>
+
+##### Minimum Arc Fitting Segments (`arc_fitting_minimum_segment_count`)
+
+Minimum number of consecutive line segments required before arc fitting can replace them with one
+G2/G3 move.
+
+- **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
+- **Master default:** `3`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Arc Fitting is enabled.
+
 <a id="setting-enable_spiralize_mode"></a>
 
 ##### Enable Spiralize Mode (`enable_spiralize_mode`)
@@ -6969,7 +7424,7 @@ If selected, extruder will never lift and part will be made in one continuous pa
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-enable_fix_model"></a>
 
@@ -6991,7 +7446,7 @@ If selected, the part can be oversized in the X and Y dimensions to allow for a 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-oversize_distance"></a>
 
@@ -7002,7 +7457,7 @@ Distance to oversize the part in the X and Y directions.
 - **Input:** `location` — Signed position or offset in the preferred distance unit.
 - **Master default:** `0 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Oversize Part is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Oversize Part is enabled).
 
 <a id="setting-enable_width_height"></a>
 
@@ -7014,7 +7469,7 @@ HMI to interpret.
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Syntax is `JuggerBot3D`.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `JuggerBot3D`).
 
 <a id="settings-profile-optimizations"></a>
 
@@ -7032,7 +7487,7 @@ layer index, or one complete part at a time.
 - **Input:** `enumeration` — Choice from the listed values.
 - **Master default:** `By Height`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 - **Choices:**
   - `By Height` — Merges compatible part layers by projected physical height; Layer Grouping
     Tolerance controls when nearby planes share a global layer.
@@ -7049,7 +7504,7 @@ assigned to the same global layer.
 - **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
 - **Master default:** `0.001 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Layer Ordering is `By Height`.
+- **Available when:** (Slicing Mode is `Planar` and Layer Ordering is `By Height`).
 
 <a id="setting-island_order_optimization"></a>
 
@@ -7062,7 +7517,7 @@ distribution, or a user-defined reference point.
 - **Master default:** `Next Closest`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 - **Choices:**
   - `Next Closest` — Greedily selects the island with the boundary point nearest the current
     position.
@@ -7088,7 +7543,7 @@ X Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Island Order Optimization is `Custom Location`.
+- **Available when:** (Slicing Mode is `Planar` and Island Order Optimization is `Custom Location`).
 
 <a id="setting-custom_island_order_y_location"></a>
 
@@ -7100,7 +7555,19 @@ Y Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Island Order Optimization is `Custom Location`.
+- **Available when:** (Slicing Mode is `Planar` and Island Order Optimization is `Custom Location`).
+
+<a id="setting-custom_island_order_z_location"></a>
+
+##### Custom Island Point Z Location (`custom_island_order_z_location`)
+
+Z Coordinate for Custom Point Optimization Location.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Island Order Optimization is `Custom Location`).
 
 <a id="setting-path_order_optimization"></a>
 
@@ -7113,7 +7580,7 @@ or a user-defined reference point.
 - **Master default:** `Next Closest`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 - **Choices:**
   - `Next Closest` — Selects the path whose available start is nearest the current position.
   - `Next Farthest` — Selects the path whose available start is farthest from the current position.
@@ -7132,7 +7599,7 @@ X Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Path Order Optimization is `Custom Location`.
+- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
 
 <a id="setting-custom_path_order_y_location"></a>
 
@@ -7144,7 +7611,19 @@ Y Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Path Order Optimization is `Custom Location`.
+- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+
+<a id="setting-custom_path_order_z_location"></a>
+
+##### Custom Path Point Z Location (`custom_path_order_z_location`)
+
+Z Coordinate for Custom Point Optimization Location.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
 
 <a id="setting-point_order_optimization"></a>
 
@@ -7157,7 +7636,7 @@ layer-to-layer progression, or a user-defined reference point.
 - **Master default:** `Next Closest`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 - **Choices:**
   - `Next Closest` — Starts at the path point nearest the current tool position.
   - `Next Farthest` — Starts at the path point farthest from the current tool position.
@@ -7178,8 +7657,8 @@ closest point along an edge.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Next Closest` or Point Order Optimization is
-  `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Next Closest` or
+  Point Order Optimization is `Custom Location`)).
 
 <a id="setting-local_randomness_enable"></a>
 
@@ -7191,7 +7670,7 @@ Enables local randomness within a specified radius after the selected point opti
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-local_randomness_radius"></a>
 
@@ -7204,7 +7683,7 @@ point optimization scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Local Randomness is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Local Randomness is enabled).
 
 <a id="setting-enable_min_distance"></a>
 
@@ -7216,7 +7695,7 @@ Enables a minimum distance threshold when using next closest point optimization.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Point Order Optimization is `Next Closest`.
+- **Available when:** (Slicing Mode is `Planar` and Point Order Optimization is `Next Closest`).
 
 <a id="setting-min_distance_threshold"></a>
 
@@ -7229,8 +7708,8 @@ found, furthest point is selected.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Next Closest` and Enable Minimum Distance is
-  enabled).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Next Closest` and
+  Enable Minimum Distance is enabled)).
 
 <a id="setting-consecutive_distance_threshold"></a>
 
@@ -7242,7 +7721,7 @@ Sets minimum distance to rotate consecutive point layer to layer.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Point Order Optimization is `Consecutive`.
+- **Available when:** (Slicing Mode is `Planar` and Point Order Optimization is `Consecutive`).
 
 <a id="setting-custom_point_order_x_location"></a>
 
@@ -7254,8 +7733,8 @@ X Coordinate for Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Custom Location` or Point Order Optimization is
-  `Custom Farthest Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`)).
 
 <a id="setting-custom_point_order_y_location"></a>
 
@@ -7267,8 +7746,21 @@ Y Coordinate for Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Custom Location` or Point Order Optimization is
-  `Custom Farthest Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`)).
+
+<a id="setting-custom_point_order_z_location"></a>
+
+##### Custom Point Z Location (`custom_point_order_z_location`)
+
+Z Coordinate for Custom Point for Point Optimization Scheme.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`)).
 
 <a id="setting-enable_second_custom_point_location"></a>
 
@@ -7281,8 +7773,8 @@ used for even numbered layers.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Custom Location` or Point Order Optimization is
-  `Custom Farthest Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`)).
 
 <a id="setting-enable_second_point_every_two"></a>
 
@@ -7295,8 +7787,9 @@ and 2 use the original point and layers 3 and 4 use the second point.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Add Second Custom Location is enabled and (Point Order Optimization is
-  `Custom Location` or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** (Slicing Mode is `Planar` and (Add Second Custom Location is enabled and
+  (Point Order Optimization is `Custom Location` or Point Order Optimization is `Custom Farthest
+  Location`))).
 
 <a id="setting-custom_second_point_order_x_location"></a>
 
@@ -7308,8 +7801,9 @@ X Coordinate for Second Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Add Second Custom Location is enabled and (Point Order Optimization is
-  `Custom Location` or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** (Slicing Mode is `Planar` and (Add Second Custom Location is enabled and
+  (Point Order Optimization is `Custom Location` or Point Order Optimization is `Custom Farthest
+  Location`))).
 
 <a id="setting-custom_second_point_order_y_location"></a>
 
@@ -7321,8 +7815,44 @@ Y Coordinate for Second Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Add Second Custom Location is enabled and (Point Order Optimization is
-  `Custom Location` or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** (Slicing Mode is `Planar` and (Add Second Custom Location is enabled and
+  (Point Order Optimization is `Custom Location` or Point Order Optimization is `Custom Farthest
+  Location`))).
+
+<a id="setting-custom_second_point_order_z_location"></a>
+
+##### Second Custom Point Z Location (`custom_second_point_order_z_location`)
+
+Z Coordinate for Second Custom Point for Point Optimization Scheme.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Add Second Custom Location is enabled and
+  (Point Order Optimization is `Custom Location` or Point Order Optimization is `Custom Farthest
+  Location`))).
+
+<a id="setting-seam_attractor_vector"></a>
+<a id="setting-seam_attractor_vector_x"></a>
+<a id="setting-seam_attractor_vector_y"></a>
+<a id="setting-seam_attractor_vector_z"></a>
+
+##### Seam Attractor Vector (`seam_attractor_vector`)
+
+Vector used to project seam attractor points onto each slicing plane. Leave all components at 0 to
+use the slicing vector automatically.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Local-capable. Each component can be overridden through this grouped row at supported
+  narrower scopes.
+- **Available when:** (Slicing Mode is `Planar` and ((Island Order Optimization is `Custom Location`
+  or Path Order Optimization is `Custom Location`) or (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`))).
+- **Components and master defaults:**
+  - **X:** `seam_attractor_vector_x` — `0`
+  - **Y:** `seam_attractor_vector_y` — `0`
+  - **Z:** `seam_attractor_vector_z` — `0`
 
 <a id="setting-custom_point_order_x_increment"></a>
 
@@ -7335,8 +7865,8 @@ printing to move the seam along with the slicing plane.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Custom Location` or Point Order Optimization is
-  `Custom Farthest Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`)).
 
 <a id="setting-custom_point_order_y_increment"></a>
 
@@ -7349,8 +7879,8 @@ printing to move the seam along with the slicing plane.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Point Order Optimization is `Custom Location` or Point Order Optimization is
-  `Custom Farthest Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
+  or Point Order Optimization is `Custom Farthest Location`)).
 
 <a id="settings-profile-ordering"></a>
 
@@ -7368,7 +7898,7 @@ Order that region paths will be connected.
 - **Master default:** `Perimeter`, `Inset`, `Skin`, `Infill`, `Skeleton`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-perimeter_reverse_direction"></a>
 
@@ -7380,7 +7910,7 @@ Reverse the printing direction of the perimeters (CW vs CCW)
 - **Master default:** `REVERSE_OFF`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Perimeter is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 - **Choices:**
   - `REVERSE_OFF`
   - `REVERSE_ALL_LAYERS`
@@ -7396,7 +7926,7 @@ Reverse the printing direction of the insets (CW vs CCW)
 - **Master default:** `REVERSE_OFF`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Inset is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 - **Choices:**
   - `REVERSE_OFF`
   - `REVERSE_ALL_LAYERS`
@@ -7754,7 +8284,7 @@ Threshold.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Always available.
+- **Available when:** Slicing Mode is `Planar`.
 
 <a id="setting-trajectory_angle_threshold_slow_down"></a>
 
@@ -7767,7 +8297,8 @@ is less than this threshold.
 - **Master default:** `135°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="setting-trajectory_angle_distance_slow_down"></a>
 
@@ -7780,7 +8311,8 @@ applied.
 - **Master default:** `25.4 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="setting-trajectory_angle_distance_speed_up"></a>
 
@@ -7792,7 +8324,8 @@ Sets the minimum path distance after a qualifying corner over which the ramp-up 
 - **Master default:** `25.4 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="setting-trajectory_angle_speed_slow_down"></a>
 
@@ -7805,7 +8338,8 @@ below the threshold.
 - **Master default:** `25.4 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="setting-trajectory_angle_extruder_speed_slow_down"></a>
 
@@ -7818,7 +8352,8 @@ threshold.
 - **Master default:** `14 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="setting-trajectory_angle_speed_up"></a>
 
@@ -7831,7 +8366,8 @@ threshold.
 - **Master default:** `50.8 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="setting-trajectory_angle_extruder_speed_up"></a>
 
@@ -7844,7 +8380,8 @@ threshold.
 - **Master default:** `28 rpm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Enable Trajectory Auto Speed Ramping is enabled.
+- **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
+  enabled).
 
 <a id="settings-experimental-file-output"></a>
 
