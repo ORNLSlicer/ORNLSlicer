@@ -89,8 +89,8 @@ float beadDisplayWidth(Distance bead_width) {
     return static_cast<float>(bead_width()) * Constants::OpenGL::kObjectToView;
 }
 
-const QString kHelicalAxisXComment = "AXIS_X=";
-const QString kHelicalAxisYComment = "AXIS_Y=";
+const QString kCylindricalAxisXComment = "AXIS_X=";
+const QString kCylindricalAxisYComment = "AXIS_Y=";
 
 bool commentFieldValue(const QString& comment, const QString& field, double& value) {
     const int field_start = comment.indexOf(field, 0, Qt::CaseInsensitive);
@@ -109,12 +109,12 @@ bool commentFieldValue(const QString& comment, const QString& field, double& val
     return ok;
 }
 
-bool helicalAxisFromComment(const QString& comment, Distance distance_unit, float x_offset, float y_offset,
-                            Point& center) {
+bool cylindricalAxisFromComment(const QString& comment, Distance distance_unit, float x_offset, float y_offset,
+                                Point& center) {
     double axis_x = 0.0;
     double axis_y = 0.0;
-    if (!commentFieldValue(comment, kHelicalAxisXComment, axis_x) ||
-        !commentFieldValue(comment, kHelicalAxisYComment, axis_y)) {
+    if (!commentFieldValue(comment, kCylindricalAxisXComment, axis_x) ||
+        !commentFieldValue(comment, kCylindricalAxisYComment, axis_y)) {
         return false;
     }
 
@@ -124,8 +124,9 @@ bool helicalAxisFromComment(const QString& comment, Distance distance_unit, floa
     return true;
 }
 
-bool isHelicalPrintComment(const QString& comment) {
-    return comment.contains(Constants::RegionTypeStrings::kHelical, Qt::CaseInsensitive) &&
+bool isCylindricalPrintComment(const QString& comment) {
+    return (comment.contains(Constants::RegionTypeStrings::kRadial, Qt::CaseInsensitive) ||
+            comment.contains(Constants::RegionTypeStrings::kHelical, Qt::CaseInsensitive)) &&
            !comment.contains(Constants::RegionTypeStrings::kTravel, Qt::CaseInsensitive);
 }
 } // namespace
@@ -1051,11 +1052,11 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
         setSegmentDisplayInfo(segment, determineSegmentDisplayType(comment), color, comment, m_start_pos, end_pos,
                               line_num, layer_num);
 
-        if (isHelicalPrintComment(comment)) {
-            Point helical_axis;
-            if (helicalAxisFromComment(comment, m_selected_meta.m_distance_unit, m_x_offset, m_y_offset,
-                                       helical_axis)) {
-                segment->setCylindricalBeadCenter(helical_axis);
+        if (isCylindricalPrintComment(comment)) {
+            Point cylindrical_axis;
+            if (cylindricalAxisFromComment(comment, m_selected_meta.m_distance_unit, m_x_offset, m_y_offset,
+                                           cylindrical_axis)) {
+                segment->setCylindricalBeadCenter(cylindrical_axis);
             }
             else if (ArcSegment* arc_segment = dynamic_cast<ArcSegment*>(segment.data())) {
                 segment->setCylindricalBeadCenter(arc_segment->center());
