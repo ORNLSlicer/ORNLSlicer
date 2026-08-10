@@ -52,6 +52,17 @@ bool SegmentBase::depositionActive() const { return m_deposition_active; }
 
 void SegmentBase::setDepositionActive(bool deposition_active) { m_deposition_active = deposition_active; }
 
+void SegmentBase::setCylindricalBeadCenter(const Point& center) {
+    m_cylindrical_bead_center = center;
+    m_has_cylindrical_bead_center = true;
+}
+
+void SegmentBase::clearCylindricalBeadCenter() { m_has_cylindrical_bead_center = false; }
+
+bool SegmentBase::hasCylindricalBeadCenter() const { return m_has_cylindrical_bead_center; }
+
+Point SegmentBase::cylindricalBeadCenter() const { return m_cylindrical_bead_center; }
+
 void SegmentBase::setDisplayInfo(float display_width, float display_length, float display_height,
                                  SegmentDisplayType type, QColor color, uint line_num, uint layer_num) {
     m_display_width = display_width;

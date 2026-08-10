@@ -55,6 +55,13 @@ ArcSegment::ArcSegment(Point start, Point end, Point center, bool ccw)
 }
 
 void ArcSegment::createGraphic(std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
+    if (m_has_cylindrical_bead_center) {
+        ShapeFactory::appendRadialArcBead(m_display_width, m_display_height, m_start, m_center, m_end,
+                                          m_cylindrical_bead_center.toQVector3D(), m_ccw, m_color, vertices, colors,
+                                          normals);
+        return;
+    }
+
     ShapeFactory::appendArcBead(m_display_width, m_display_height, m_start, m_center, m_end, m_ccw, m_color, vertices,
                                 colors, normals);
 }
