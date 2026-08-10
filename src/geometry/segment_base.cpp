@@ -101,11 +101,20 @@ void SegmentBase::rotate(QQuaternion rotation) {
     QVector3D end_vec = m_end.toQVector3D();
     QVector3D result_end = rotation.rotatedVector(end_vec);
     m_end = Point(result_end);
+
+    if (m_has_cylindrical_bead_center) {
+        QVector3D center_vec = m_cylindrical_bead_center.toQVector3D();
+        QVector3D result_center = rotation.rotatedVector(center_vec);
+        m_cylindrical_bead_center = Point(result_center);
+    }
 }
 
 void SegmentBase::shift(Point shift) {
     m_start = m_start + shift;
     m_end = m_end + shift;
+    if (m_has_cylindrical_bead_center) {
+        m_cylindrical_bead_center = m_cylindrical_bead_center + shift;
+    }
 }
 
 bool SegmentBase::isPrintingSegment() {

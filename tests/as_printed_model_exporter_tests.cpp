@@ -10,6 +10,7 @@
 #include <QCoreApplication>
 #include <QFile>
 #include <QFileInfo>
+#include <QQuaternion>
 #include <QSharedPointer>
 #include <QString>
 #include <QTemporaryDir>
@@ -176,6 +177,17 @@ int main(int argc, char* argv[]) {
                      "Expected cylindrical bead radial thickness to match bead height.");
     passed &= expect(near(radial_bounds.max.z() - radial_bounds.min.z(), kWidth),
                      "Expected cylindrical bead vertical span to match bead width.");
+
+    QSharedPointer<ORNL::SegmentBase> transformed_axis_segment =
+        makeLineSegment(pointFromMm(0.0f, 0.0f), pointFromMm(0.0f, 10.0f), 5);
+    transformed_axis_segment->setCylindricalBeadCenter(pointFromMm(1.0f, 2.0f) *
+                                                       ORNL::Constants::OpenGL::kObjectToView);
+    transformed_axis_segment->rotate(QQuaternion::fromAxisAndAngle(QVector3D(0.0f, 0.0f, 1.0f), 90.0f));
+    transformed_axis_segment->shift(pointFromMm(3.0f, 4.0f) * ORNL::Constants::OpenGL::kObjectToView);
+    const ORNL::Point transformed_axis = transformed_axis_segment->cylindricalBeadCenter();
+    const ORNL::Point expected_axis = pointFromMm(1.0f, 5.0f) * ORNL::Constants::OpenGL::kObjectToView;
+    passed &= expect(near(transformed_axis.x(), expected_axis.x()) && near(transformed_axis.y(), expected_axis.y()),
+                     "Expected transformed segments to carry the cylindrical bead center.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> lfam_style_segments;
     const ORNL::Point lfam_start(120.0f * ORNL::in(), 42.5f * ORNL::in(), -15.25f * ORNL::in());

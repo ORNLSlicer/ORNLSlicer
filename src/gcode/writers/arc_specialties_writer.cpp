@@ -865,10 +865,12 @@ QString ArcSpecialtiesWriter::printMoveComment(const QSharedPointer<SettingsBase
     if (isCylindricalSlicingMode()) {
         const QString region =
             isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial;
+        const Point output_center = rotateGCodeCoordinateFramePoint(
+            Point(params->setting<Distance>(kRadialCenterX), params->setting<Distance>(kRadialCenterY)));
         return region % " " % kCylindricalAxisXComment %
-               QString::number(params->setting<Distance>(kRadialCenterX).to(m_meta.m_distance_unit), 'f', 4) % " " %
+               QString::number(Distance(output_center.x()).to(m_meta.m_distance_unit), 'f', 4) % " " %
                kCylindricalAxisYComment %
-               QString::number(params->setting<Distance>(kRadialCenterY).to(m_meta.m_distance_unit), 'f', 4);
+               QString::number(Distance(output_center.y()).to(m_meta.m_distance_unit), 'f', 4);
     }
 
     return toString(m_region_type);
