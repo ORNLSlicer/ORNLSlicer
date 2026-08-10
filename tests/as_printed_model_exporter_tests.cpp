@@ -79,8 +79,8 @@ QSharedPointer<ORNL::SegmentBase> makeLineSegment(const ORNL::Point& start, cons
                                                   bool deposition_active = true) {
     const float scale = ORNL::Constants::OpenGL::kObjectToView;
     auto segment = QSharedPointer<ORNL::LineSegment>::create(start * scale, end * scale);
-    segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale,
-                            kHeight * ORNL::mm() * scale, type, QColor(255, 255, 255), line_number, 0);
+    segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale, kHeight * ORNL::mm() * scale,
+                            type, QColor(255, 255, 255), line_number, 0);
     segment->setDepositionActive(deposition_active);
     return segment;
 }
@@ -95,9 +95,8 @@ QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const
                                                  const ORNL::Point& center, uint line_number, bool deposition_active) {
     const float scale = ORNL::Constants::OpenGL::kObjectToView;
     auto segment = QSharedPointer<ORNL::ArcSegment>::create(start * scale, end * scale, center * scale, true);
-    segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale,
-                            kHeight * ORNL::mm() * scale, ORNL::SegmentDisplayType::kLine, QColor(255, 255, 255),
-                            line_number, 0);
+    segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale, kHeight * ORNL::mm() * scale,
+                            ORNL::SegmentDisplayType::kLine, QColor(255, 255, 255), line_number, 0);
     segment->setDepositionActive(deposition_active);
     return segment;
 }
@@ -166,6 +165,18 @@ int main(int argc, char* argv[]) {
     passed &= expect(near(printable_bounds.max.x() - printable_bounds.min.x(), kLength),
                      "Expected bead length to be written in millimeters.");
 
+    QSharedPointer<ORNL::SegmentBase> radial_segment =
+        makeLineSegment(pointFromMm(10.0f, -5.0f), pointFromMm(10.0f, 5.0f), 4);
+    radial_segment->setCylindricalBeadCenter(pointFromMm(0.0f, 0.0f) * ORNL::Constants::OpenGL::kObjectToView);
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> radial_segments;
+    radial_segments.push_back({radial_segment});
+    const auto radial_triangles = ORNL::AsPrintedModelExporter::generateTriangles(radial_segments);
+    const Bounds radial_bounds = boundsFor(radial_triangles);
+    passed &= expect(near(radial_bounds.max.x() - radial_bounds.min.x(), kHeight),
+                     "Expected cylindrical bead radial thickness to match bead height.");
+    passed &= expect(near(radial_bounds.max.z() - radial_bounds.min.z(), kWidth),
+                     "Expected cylindrical bead vertical span to match bead width.");
+
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> lfam_style_segments;
     const ORNL::Point lfam_start(120.0f * ORNL::in(), 42.5f * ORNL::in(), -15.25f * ORNL::in());
     const ORNL::Point lfam_end(136.0f * ORNL::in(), 42.5f * ORNL::in(), -15.25f * ORNL::in());
@@ -180,8 +191,8 @@ int main(int argc, char* argv[]) {
     filtered_segments.push_back(
         {makeLineSegment(pointFromMm(1000.0f, 1000.0f, 1000.0f), pointFromMm(1000.0f, 1000.0f, 1000.0f), 1,
                          ORNL::SegmentDisplayType::kLine, false),
-         makeLineSegment(pointFromMm(-500.0f, 0.0f), pointFromMm(-400.0f, 0.0f), 2,
-                         ORNL::SegmentDisplayType::kLine, false),
+         makeLineSegment(pointFromMm(-500.0f, 0.0f), pointFromMm(-400.0f, 0.0f), 2, ORNL::SegmentDisplayType::kLine,
+                         false),
          makeLineSegment(ORNL::SegmentDisplayType::kLine, 3)});
     const auto filtered_triangles = ORNL::AsPrintedModelExporter::generateTriangles(filtered_segments);
     passed &= expect(filtered_triangles.size() == printable_triangles.size(),
@@ -201,9 +212,8 @@ int main(int argc, char* argv[]) {
                      "Expected arc bead mesh height to match the display bead height.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> corner_segments;
-    corner_segments.push_back(
-        {makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(10.0f, 0.0f, 0.0f), 1),
-         makeLineSegment(pointFromMm(10.0f, 0.0f, 0.0f), pointFromMm(10.0f, 10.0f, 0.0f), 2)});
+    corner_segments.push_back({makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(10.0f, 0.0f, 0.0f), 1),
+                               makeLineSegment(pointFromMm(10.0f, 0.0f, 0.0f), pointFromMm(10.0f, 10.0f, 0.0f), 2)});
 
     ORNL::AsPrintedModelExporter::Options without_blends;
     without_blends.blend_corners = false;
