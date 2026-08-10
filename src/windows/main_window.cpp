@@ -1,5 +1,6 @@
 #include "windows/main_window.h"
 
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -40,6 +41,7 @@
 #include <qsizepolicy.h>
 #include <qstandardpaths.h>
 #include <qstringliteral.h>
+#include <qstringlist.h>
 #include <qtabbar.h>
 #include <qtabwidget.h>
 #include <qtextedit.h>
@@ -77,6 +79,38 @@
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
 #include "windows/xtrudecalc.h"
+
+namespace {
+QString userManualPath() {
+    const QString manual_file = QStringLiteral("ornlslicer-user-guide.pdf");
+    const QString relative_doc_path = QStringLiteral("doc/ornlslicer/") + manual_file;
+    const QString app_dir = qApp->applicationDirPath();
+
+    QStringList candidates = {
+        app_dir + QStringLiteral("/../share/") + relative_doc_path,
+        app_dir + QStringLiteral("/share/") + relative_doc_path,
+        app_dir + QStringLiteral("/../") + relative_doc_path,
+    };
+
+    const QString data_path = QStandardPaths::locate(QStandardPaths::GenericDataLocation, relative_doc_path);
+    if (!data_path.isEmpty())
+        candidates.prepend(data_path);
+
+    QString source_tree_candidate = app_dir;
+    for (int depth = 0; depth < 6; ++depth) {
+        candidates.append(source_tree_candidate + QStringLiteral("/docs/") + manual_file);
+        source_tree_candidate += QStringLiteral("/..");
+    }
+
+    for (const QString& candidate : candidates) {
+        const QFileInfo file_info(QDir::cleanPath(candidate));
+        if (file_info.exists() && file_info.isFile())
+            return file_info.absoluteFilePath();
+    }
+
+    return {};
+}
+} // namespace
 
 namespace ORNL {
 constexpr int kPartTransformUndoCommandId = 1;
@@ -874,8 +908,17 @@ void MainWindow::setupEvents() {
     });
 
     connect(m_actions["manual"].action, &QAction::triggered, this, [this] {
-        QDesktopServices::openUrl(
-            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/ornlslicer/ornlslicer-user-guide.pdf"));
+        const QString manual_path = userManualPath();
+        if (manual_path.isEmpty()) {
+            QMessageBox::warning(this, "User Guide",
+                                 "Could not find ornlslicer-user-guide.pdf in the installed documentation or source "
+                                 "documentation directories.");
+            return;
+        }
+
+        if (!QDesktopServices::openUrl(QUrl::fromLocalFile(manual_path))) {
+            QMessageBox::warning(this, "User Guide", "Could not open the user guide:\n" + manual_path);
+        }
     });
     connect(m_actions["repo"].action, &QAction::triggered, this,
             [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/ORNLSlicer")); });
