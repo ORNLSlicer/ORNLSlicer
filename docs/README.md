@@ -53,9 +53,13 @@ editing the PDF directly. With Pandoc and a LaTeX engine installed, run:
 
 ```bash
 pandoc --from=gfm docs/ornlslicer-user-guide.md \
+  --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
   --metadata title-meta="ORNLSlicer User Guide" \
   --output=docs/ornlslicer-user-guide.pdf
 ```
+
+The Lua filter colors diagram-placeholder callouts red in generated PDF/HTML
+outputs so unreplaced manual figures are easy to spot before release.
 
 For source-grounded architecture, runtime flows, ownership boundaries, extension
 points, and validation paths, start with the [OpenWiki quickstart](../openwiki/quickstart.md).
