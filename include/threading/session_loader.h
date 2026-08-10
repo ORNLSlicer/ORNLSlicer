@@ -29,7 +29,8 @@ class SessionLoader : public QThread {
 
     //! \brief Set global settings
     //! \param j: json to override when opening zip
-    void updateSettingsJson(fifojson j);
+    //! \param writeToProject: if true, persist the override back into the project file
+    void updateSettingsJson(fifojson j, bool writeToProject = true);
 
     //! \brief Start the thread.
     void run() override;
@@ -64,6 +65,12 @@ class SessionLoader : public QThread {
 
     //! \brief json to override global when opening zip
     fifojson m_new_json;
+
+    //! \brief If enabled, m_new_json replaces the archived global settings during load.
+    bool m_has_new_json;
+
+    //! \brief If enabled, m_new_json is also written back into the project file.
+    bool m_should_write_new_json;
 
 }; // class SessionLoader
 } // namespace ORNL

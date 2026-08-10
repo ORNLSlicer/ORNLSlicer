@@ -99,7 +99,8 @@ void MainControl::run() {
     }
     else {
         connect(CSM.get(), &SessionManager::totalPartsInProject, this, &MainControl::partsInProject);
-        CSM->loadSession(false, m_options->setting<QString>(Constants::ConsoleOptionStrings::kInputProjectFile));
+        CSM->loadSession(false, m_options->setting<QString>(Constants::ConsoleOptionStrings::kInputProjectFile),
+                         false);
     }
 }
 

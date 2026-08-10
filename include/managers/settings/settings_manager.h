@@ -21,6 +21,12 @@ class SettingsBase;
 //! \brief Define for easy access to this singleton.
 #define GSM SettingsManager::getInstance()
 
+enum class SettingsVersionUpdateMode {
+    kGuiPrompt,
+    kConsolePrompt,
+    kAutoUpdate,
+};
+
 /*!
  *  \class SettingsManager
  *  \brief Singleton manager class that contains all currently active settings.
@@ -146,6 +152,14 @@ class SettingsManager : public QObject {
     //! \return 0 - nothing to update, 1 - something to update and successfully rolled forward,
     //! -1 something to update and prevented from rolling forward
     int checkVersion(QString filename, fifojson& settings_data, bool gui);
+
+    //! \brief Check settings file version
+    //! \param filename Name of the settings source
+    //! \param settings_data Settings to validate
+    //! \param update_mode How to request or apply version updates
+    //! \return 0 - nothing to update, 1 - something to update and successfully rolled forward,
+    //! -1 something to update and prevented from rolling forward
+    int checkVersion(QString filename, fifojson& settings_data, SettingsVersionUpdateMode update_mode);
 
     // ---- Template Configurations ----
 

@@ -657,7 +657,7 @@ SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack, bool 
     return loader;
 }
 
-SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path) {
+SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path, bool promptForSettingsUpdate) {
     // Clear out old data if necessary.
     if (shouldDelete) {
         for (model_data file : m_models)
@@ -677,9 +677,12 @@ SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path) {
     QString filename =
         QString::fromStdString(Constants::Settings::Session::Files::kGlobal) + " in project file: " + path + " ";
     fifojson settings = loader->getSettingsFromZip();
-    int result = GSM->checkVersion(filename, settings, true);
+    int result =
+        GSM->checkVersion(filename, settings,
+                          promptForSettingsUpdate ? SettingsVersionUpdateMode::kGuiPrompt
+                                                  : SettingsVersionUpdateMode::kAutoUpdate);
     if (result == 1)
-        loader->updateSettingsJson(settings);
+        loader->updateSettingsJson(settings, promptForSettingsUpdate);
 
     if (result >= 0) {
         connect(loader, &SessionLoader::finished, loader, &SessionLoader::deleteLater);
