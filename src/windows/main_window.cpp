@@ -8,6 +8,7 @@
 #include <QFileInfo>
 #include <QIODevice>
 #include <QProcess>
+#include <QRegularExpression>
 #include <QSettings>
 #include <QStatusBar>
 #include <QTextBrowser>
@@ -217,6 +218,67 @@ bool openLocalFile(const QString& path) {
     return false;
 }
 
+QString markdownHeadingAnchor(const QString& heading_text) {
+    QString anchor;
+    bool previous_was_separator = false;
+
+    for (const QChar& character : heading_text.toLower()) {
+        if (character.isLetterOrNumber()) {
+            anchor.append(character);
+            previous_was_separator = false;
+        }
+        else if (character.isSpace() || character == QChar('-')) {
+            if (!anchor.isEmpty() && !previous_was_separator) {
+                anchor.append(QChar('-'));
+                previous_was_separator = true;
+            }
+        }
+    }
+
+    if (anchor.endsWith(QChar('-')))
+        anchor.chop(1);
+
+    return anchor;
+}
+
+QSet<QString> localMarkdownLinkTargets(const QString& markdown) {
+    QSet<QString> targets;
+    const QRegularExpression local_link_pattern(QStringLiteral("\\]\\(#([^\\)]+)\\)"));
+    QRegularExpressionMatchIterator matches = local_link_pattern.globalMatch(markdown);
+
+    while (matches.hasNext()) {
+        const QRegularExpressionMatch match = matches.next();
+        targets.insert(match.captured(1));
+    }
+
+    return targets;
+}
+
+QString markdownWithHeadingAnchors(const QString& markdown) {
+    const QSet<QString> linked_targets = localMarkdownLinkTargets(markdown);
+    const QRegularExpression heading_pattern(QStringLiteral("^\\s{0,3}#{1,6}\\s+(.+?)\\s*#*\\s*$"));
+    QStringList output;
+    QSet<QString> emitted_targets;
+
+    const QStringList lines = markdown.split(QChar('\n'));
+    output.reserve(lines.size() + linked_targets.size());
+
+    for (const QString& line : lines) {
+        const QRegularExpressionMatch match = heading_pattern.match(line);
+        if (match.hasMatch()) {
+            const QString anchor = markdownHeadingAnchor(match.captured(1).trimmed());
+            if (linked_targets.contains(anchor) && !emitted_targets.contains(anchor)) {
+                output.append(QStringLiteral("<a id=\"%1\"></a>").arg(anchor.toHtmlEscaped()));
+                emitted_targets.insert(anchor);
+            }
+        }
+
+        output.append(line);
+    }
+
+    return output.join(QChar('\n'));
+}
+
 bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
     QFile file(path);
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
@@ -229,9 +291,17 @@ bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
 
     auto layout = new QVBoxLayout(dialog);
     auto browser = new QTextBrowser(dialog);
-    browser->setOpenExternalLinks(true);
+    browser->setOpenLinks(false);
     browser->setSearchPaths({QFileInfo(path).absolutePath()});
-    browser->setMarkdown(QString::fromUtf8(file.readAll()));
+    QObject::connect(browser, &QTextBrowser::anchorClicked, browser, [browser](const QUrl& url) {
+        if (!url.fragment().isEmpty() && (url.isRelative() || url.path().isEmpty())) {
+            browser->scrollToAnchor(url.fragment());
+            return;
+        }
+
+        QDesktopServices::openUrl(url);
+    });
+    browser->setMarkdown(markdownWithHeadingAnchors(QString::fromUtf8(file.readAll())));
     layout->addWidget(browser);
 
     auto buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
