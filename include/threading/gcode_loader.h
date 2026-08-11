@@ -226,6 +226,18 @@ class GCodeLoader : public QThread {
     //! \brief Current Gcode extruder speed for info display
     QString m_info_extruder_speed;
 
+    //! \brief Last known Arc Specialties cylinder axis for radial/helical true-width bead visualization.
+    Point m_arc_specialties_cylindrical_axis;
+
+    //! \brief Whether an Arc Specialties cylinder axis has been recovered from parsing.
+    bool m_has_arc_specialties_cylindrical_axis = false;
+
+    //! \brief Last parsed Arc Specialties CP value used to infer cylindrical centers from linearized beads.
+    double m_previous_arc_specialties_cp = 0.0;
+
+    //! \brief Whether a previous Arc Specialties CP value has been parsed.
+    bool m_has_previous_arc_specialties_cp = false;
+
     //! \brief Current settings for gcode loader
     QSharedPointer<SettingsBase> m_sb;
 }; // class GCodeLoader

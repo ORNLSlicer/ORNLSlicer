@@ -18,6 +18,7 @@ const QRegularExpression kG00CommandPattern("(^\\s*)G00(?=\\s|;|\\(|$)");
 const QRegularExpression kG01CommandPattern("(^\\s*)G01(?=\\s|;|\\(|$)");
 const QRegularExpression kG02CommandPattern("(^\\s*)G02(?=\\s|;|\\(|$)");
 const QRegularExpression kG03CommandPattern("(^\\s*)G03(?=\\s|;|\\(|$)");
+constexpr char kCpOptionalParameter = 'C';
 } // namespace
 
 ArcSpecialtiesParser::ArcSpecialtiesParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines,
@@ -115,6 +116,9 @@ QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<
         if (isOrientationKey(key)) {
             validateUniqueKey(key, used_keys);
             validateNumericValue(value);
+            if (key == "CP") {
+                m_current_gcode_command.addOptionalParameter(kCpOptionalParameter, value.toDouble());
+            }
             continue;
         }
 
