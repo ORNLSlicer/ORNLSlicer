@@ -28,6 +28,7 @@ namespace {
 constexpr float kLength = 10.0f;
 constexpr float kWidth = 2.0f;
 constexpr float kHeight = 1.0f;
+constexpr float kCenterlineDiameter = 0.1f;
 constexpr float kTolerance = 0.001f;
 
 struct Bounds {
@@ -62,6 +63,14 @@ Bounds boundsFor(const std::vector<ORNL::AsPrintedModelExporter::Triangle>& tria
         }
     }
     return bounds;
+}
+
+QVector3D normalFor(const ORNL::AsPrintedModelExporter::Triangle& triangle) {
+    QVector3D normal = QVector3D::crossProduct(triangle.b - triangle.a, triangle.c - triangle.a);
+    if (normal.lengthSquared() > std::numeric_limits<float>::epsilon()) {
+        normal.normalize();
+    }
+    return normal;
 }
 
 bool near(float actual, float expected, float tolerance = kTolerance) {
@@ -166,6 +175,42 @@ int main(int argc, char* argv[]) {
     passed &= expect(near(printable_bounds.max.x() - printable_bounds.min.x(), kLength),
                      "Expected bead length to be written in millimeters.");
 
+    ORNL::AsPrintedModelExporter::Options centerline_options;
+    centerline_options.geometry_mode = ORNL::AsPrintedModelExporter::GeometryMode::kCenterlines;
+    const auto centerline_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(printable_only, centerline_options);
+    passed &= expect(!centerline_triangles.empty(), "Expected centerline STL triangles.");
+    passed &= expect(centerline_triangles.size() < printable_triangles.size(),
+                     "Expected centerline STL to use less geometry than true bead-width STL for a straight segment.");
+    const Bounds centerline_bounds = boundsFor(centerline_triangles);
+    passed &= expect(near(centerline_bounds.max.x() - centerline_bounds.min.x(), kLength),
+                     "Expected centerline STL length to follow the toolpath centerline.");
+    passed &= expect(near(centerline_bounds.max.y() - centerline_bounds.min.y(), kCenterlineDiameter),
+                     "Expected centerline STL width to ignore the true bead width.");
+    passed &= expect(near(centerline_bounds.max.z() - centerline_bounds.min.z(), kCenterlineDiameter),
+                     "Expected centerline STL height to use the centerline tube diameter.");
+    bool checked_centerline_side_normal = false;
+    for (const ORNL::AsPrintedModelExporter::Triangle& triangle : centerline_triangles) {
+        const QVector3D normal = normalFor(triangle);
+        if (normal.lengthSquared() <= std::numeric_limits<float>::epsilon() || std::abs(normal.x()) > 0.5f) {
+            continue;
+        }
+
+        const QVector3D centroid = (triangle.a + triangle.b + triangle.c) / 3.0f;
+        QVector3D outward(0.0f, centroid.y() - (kCenterlineDiameter / 2.0f),
+                          centroid.z() - (kCenterlineDiameter / 2.0f));
+        if (outward.lengthSquared() <= std::numeric_limits<float>::epsilon()) {
+            continue;
+        }
+        outward.normalize();
+
+        passed &= expect(QVector3D::dotProduct(normal, outward) > 0.0f,
+                         "Expected centerline STL side-wall normals to point outward.");
+        checked_centerline_side_normal = true;
+        break;
+    }
+    passed &= expect(checked_centerline_side_normal, "Expected a centerline STL side-wall normal to test.");
+
     QSharedPointer<ORNL::SegmentBase> radial_segment =
         makeLineSegment(pointFromMm(10.0f, -5.0f), pointFromMm(10.0f, 5.0f), 4);
     radial_segment->setCylindricalBeadCenter(pointFromMm(0.0f, 0.0f) * ORNL::Constants::OpenGL::kObjectToView);
@@ -222,6 +267,10 @@ int main(int argc, char* argv[]) {
     const Bounds full_circle_arc_bounds = boundsFor(full_circle_arc_triangles);
     passed &= expect(near(full_circle_arc_bounds.max.z() - full_circle_arc_bounds.min.z(), kHeight),
                      "Expected arc bead mesh height to match the display bead height.");
+    const auto centerline_full_circle_arc_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(full_circle_arc_segments, centerline_options);
+    passed &= expect(!centerline_full_circle_arc_triangles.empty(),
+                     "Expected same-endpoint full-circle arcs to be exported as centerline STL triangles.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> corner_segments;
     corner_segments.push_back({makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(10.0f, 0.0f, 0.0f), 1),
@@ -278,6 +327,15 @@ int main(int argc, char* argv[]) {
                          "Generated ASCII STL facet count did not match generated triangles.");
         passed &= expect(QFileInfo(binary_stl_path).size() < QFileInfo(ascii_stl_path).size(),
                          "Expected binary STL to be smaller than ASCII STL.");
+
+        const QString centerline_stl_path = temp_dir.path() + "/as_printed_centerline.stl";
+        passed &= expect(
+            ORNL::AsPrintedModelExporter::writeStl(centerline_stl_path, printable_only, &error, centerline_options),
+            ("Could not write centerline STL: " + error.toStdString()));
+        QByteArray centerline_stl_bytes;
+        passed &= expect(readBytes(centerline_stl_path, centerline_stl_bytes), "Could not read centerline STL.");
+        passed &= expect(binaryFacetCount(centerline_stl_bytes) == static_cast<quint32>(centerline_triangles.size()),
+                         "Generated centerline STL facet count did not match generated centerline triangles.");
     }
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
