@@ -81,9 +81,11 @@ class ArcSpecialtiesParser : public CommonParser {
     /*!
      * @brief Validates Arc Specialties parameters and returns common-parser-compatible linear parameters.
      * @param params Raw gcode parameters for a motion command.
+     * @param ignore_inline_arc_optional_stop Whether to drop inline G81 tokens on G2/G3 moves.
      * @return Parameters to pass to the common parser.
      */
-    QVector<QString> normalizeAndStripOrientationAxes(QVector<QString> params);
+    QVector<QString> normalizeAndStripOrientationAxes(QVector<QString> params,
+                                                      bool ignore_inline_arc_optional_stop = false);
 
     /*!
      * @brief Parses a raw Arc Specialties parameter into a key/value pair.
