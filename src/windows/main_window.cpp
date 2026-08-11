@@ -1,15 +1,19 @@
 #include "windows/main_window.h"
 
+#include <QDialog>
+#include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QIODevice>
 #include <QProcess>
 #include <QSettings>
 #include <QStatusBar>
+#include <QTextBrowser>
 #include <QTimer>
 #include <QUndoCommand>
-
+#include <QVBoxLayout>
 #include <qaction.h>
 #include <qapplication.h>
 #include <qcontainerfwd.h>
@@ -41,8 +45,8 @@
 #include <qsize.h>
 #include <qsizepolicy.h>
 #include <qstandardpaths.h>
-#include <qstringliteral.h>
 #include <qstringlist.h>
+#include <qstringliteral.h>
 #include <qtabbar.h>
 #include <qtabwidget.h>
 #include <qtextedit.h>
@@ -87,8 +91,7 @@ struct FileOpener {
     QStringList arguments;
 };
 
-QString userManualPath() {
-    const QString manual_file = QStringLiteral("ornlslicer-user-guide.pdf");
+QString userGuidePath(const QString& manual_file) {
     const QString relative_doc_path = QStringLiteral("doc/ornlslicer/") + manual_file;
     const QString app_dir = qApp->applicationDirPath();
 
@@ -117,9 +120,20 @@ QString userManualPath() {
     return {};
 }
 
+QString fileOpenerExecutable(const QString& program) {
+    if (program.contains(QChar('/')) || program.contains(QChar('\\'))) {
+        const QFileInfo file_info(program);
+        if (file_info.exists() && file_info.isExecutable())
+            return file_info.absoluteFilePath();
+
+        return {};
+    }
+
+    return QStandardPaths::findExecutable(program);
+}
+
 bool startDetachedFileOpener(const FileOpener& opener) {
-    const bool explicit_path = opener.program.contains(QChar('/')) || opener.program.contains(QChar('\\'));
-    const QString executable = explicit_path ? opener.program : QStandardPaths::findExecutable(opener.program);
+    const QString executable = fileOpenerExecutable(opener.program);
 
     if (executable.isEmpty())
         return false;
@@ -127,12 +141,33 @@ bool startDetachedFileOpener(const FileOpener& opener) {
     return QProcess::startDetached(executable, opener.arguments);
 }
 
+bool runFileLauncher(const FileOpener& opener) {
+    const QString executable = fileOpenerExecutable(opener.program);
+
+    if (executable.isEmpty())
+        return false;
+
+    QProcess process;
+    process.start(executable, opener.arguments);
+
+    if (!process.waitForStarted(1000))
+        return false;
+
+    if (!process.waitForFinished(3000)) {
+        process.kill();
+        process.waitForFinished(1000);
+        return false;
+    }
+
+    return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0;
+}
+
 bool openLocalFile(const QString& path) {
     if (QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
         return true;
 
     const QString native_path = QDir::toNativeSeparators(path);
-    const QList<FileOpener> fallback_openers = {
+    const QList<FileOpener> file_launchers = {
 #ifdef Q_OS_WIN
         {QStringLiteral("cmd"), {QStringLiteral("/C"), QStringLiteral("start"), QString(), native_path}},
 #elif defined(Q_OS_MACOS)
@@ -149,12 +184,64 @@ bool openLocalFile(const QString& path) {
 #endif
     };
 
-    for (const FileOpener& opener : fallback_openers) {
+    for (const FileOpener& opener : file_launchers) {
+        if (runFileLauncher(opener))
+            return true;
+    }
+
+    const QList<FileOpener> direct_openers = {
+#if !defined(Q_OS_WIN) && !defined(Q_OS_MACOS)
+        {QStringLiteral("evince"), {path}},
+        {QStringLiteral("okular"), {path}},
+        {QStringLiteral("atril"), {path}},
+        {QStringLiteral("xreader"), {path}},
+        {QStringLiteral("mupdf"), {path}},
+        {QStringLiteral("mupdf-gl"), {path}},
+        {QStringLiteral("qpdfview"), {path}},
+        {QStringLiteral("zathura"), {path}},
+        {QStringLiteral("firefox"), {path}},
+        {QStringLiteral("google-chrome"), {path}},
+        {QStringLiteral("google-chrome-stable"), {path}},
+        {QStringLiteral("chromium"), {path}},
+        {QStringLiteral("chromium-browser"), {path}},
+        {QStringLiteral("brave-browser"), {path}},
+        {QStringLiteral("microsoft-edge"), {path}},
+#endif
+    };
+
+    for (const FileOpener& opener : direct_openers) {
         if (startDetachedFileOpener(opener))
             return true;
     }
 
     return false;
+}
+
+bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        return false;
+
+    auto dialog = new QDialog(parent);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowTitle(QStringLiteral("User Guide"));
+    dialog->resize(1000, 750);
+
+    auto layout = new QVBoxLayout(dialog);
+    auto browser = new QTextBrowser(dialog);
+    browser->setOpenExternalLinks(true);
+    browser->setSearchPaths({QFileInfo(path).absolutePath()});
+    browser->setMarkdown(QString::fromUtf8(file.readAll()));
+    layout->addWidget(browser);
+
+    auto buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
+    layout->addWidget(buttons);
+
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+    return true;
 }
 } // namespace
 
@@ -954,17 +1041,26 @@ void MainWindow::setupEvents() {
     });
 
     connect(m_actions["manual"].action, &QAction::triggered, this, [this] {
-        const QString manual_path = userManualPath();
-        if (manual_path.isEmpty()) {
+        const QString manual_path = userGuidePath(QStringLiteral("ornlslicer-user-guide.pdf"));
+        const QString markdown_path = userGuidePath(QStringLiteral("ornlslicer-user-guide.md"));
+
+        if (!manual_path.isEmpty() && openLocalFile(manual_path))
+            return;
+
+        if (!markdown_path.isEmpty() && showMarkdownUserGuide(this, markdown_path))
+            return;
+
+        if (manual_path.isEmpty() && markdown_path.isEmpty()) {
             QMessageBox::warning(this, "User Guide",
-                                 "Could not find ornlslicer-user-guide.pdf in the installed documentation or source "
-                                 "documentation directories.");
+                                 "Could not find the user guide in the installed documentation or source documentation "
+                                 "directories.");
             return;
         }
 
-        if (!openLocalFile(manual_path)) {
-            QMessageBox::warning(this, "User Guide", "Could not open the user guide:\n" + manual_path);
-        }
+        const QString found_path = manual_path.isEmpty() ? markdown_path : manual_path;
+        QMessageBox::warning(this, "User Guide",
+                             "Could not open the user guide. Install a PDF viewer or set a default PDF application.\n" +
+                                 found_path);
     });
     connect(m_actions["repo"].action, &QAction::triggered, this,
             [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/ORNLSlicer")); });
