@@ -40,8 +40,8 @@ pandoc --from=gfm docs/ornlslicer-user-guide.md \
   --output=docs/ornlslicer-user-guide.pdf
 ```
 
-CI uses the same stable timestamp and timezone so generated PDF comparisons do
-not fail because of build-time metadata churn.
+CI uses the same stable timestamp and timezone when building generated PDF
+artifacts to reduce build-time metadata churn.
 
 The Lua filter colors diagram-placeholder callouts red in generated PDF/HTML
 outputs so unreplaced manual figures are easy to spot before release.
