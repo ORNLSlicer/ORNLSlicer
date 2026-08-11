@@ -417,6 +417,7 @@ void GCodeLoader::run() {
             m_table_offset = 0.0f;
             m_prev_table_offset = 0.0f;
             m_has_arc_specialties_cylindrical_axis = false;
+            m_arc_specialties_cylindrical_axis_matches_current_path = false;
             m_has_previous_arc_specialties_cp = false;
 
             // reserve more memory than the hash will need to guarantee no reallocation
@@ -1039,13 +1040,19 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
         m_prev_table_offset = m_table_offset;
     }
 
-    if (is_arc_specialties && comment.compare(kWorldApproachTravelComment, Qt::CaseInsensitive) == 0 &&
-        parameters.contains('X') && parameters.contains('Y')) {
+    const bool is_world_approach_travel =
+        is_arc_specialties && comment.compare(kWorldApproachTravelComment, Qt::CaseInsensitive) == 0;
+    if (is_world_approach_travel && parameters.contains('X') && parameters.contains('Y')) {
         m_arc_specialties_cylindrical_axis = Point(end_pos.x(), end_pos.y(), 0.0);
         m_has_arc_specialties_cylindrical_axis = true;
+        m_arc_specialties_cylindrical_axis_matches_current_path = true;
     }
 
     QVector<QSharedPointer<SegmentBase>> generated_segments;
+    const bool is_cylindrical_print = isCylindricalPrintComment(comment);
+    if (is_arc_specialties && has_current_cp && !is_cylindrical_print && !is_world_approach_travel) {
+        m_arc_specialties_cylindrical_axis_matches_current_path = false;
+    }
 
     if (deposition_active || include_non_deposition_moves) {
         QSharedPointer<SegmentBase> segment;
@@ -1122,7 +1129,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
         setSegmentDisplayInfo(segment, determineSegmentDisplayType(comment), color, comment, m_start_pos, end_pos,
                               line_num, layer_num);
 
-        if (isCylindricalPrintComment(comment)) {
+        if (is_cylindrical_print) {
             Point cylindrical_axis;
             bool has_cylindrical_axis = false;
             if (cylindricalAxisFromComment(comment, m_selected_meta.m_distance_unit, m_x_offset, m_y_offset,
@@ -1135,14 +1142,15 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
             }
             else if (is_arc_specialties && m_has_previous_arc_specialties_cp && has_current_cp) {
                 const std::optional<Point> reference_axis =
-                    m_has_arc_specialties_cylindrical_axis
+                    m_has_arc_specialties_cylindrical_axis && m_arc_specialties_cylindrical_axis_matches_current_path
                         ? std::optional<Point>(m_arc_specialties_cylindrical_axis)
                         : std::nullopt;
                 has_cylindrical_axis =
                     cylindricalAxisFromCpDelta(m_start_pos, end_pos, m_previous_arc_specialties_cp, current_cp,
                                                reference_axis, cylindrical_axis);
             }
-            if (!has_cylindrical_axis && is_arc_specialties && m_has_arc_specialties_cylindrical_axis) {
+            if (!has_cylindrical_axis && is_arc_specialties && m_has_arc_specialties_cylindrical_axis &&
+                m_arc_specialties_cylindrical_axis_matches_current_path) {
                 cylindrical_axis = m_arc_specialties_cylindrical_axis;
                 has_cylindrical_axis = true;
             }
@@ -1152,6 +1160,7 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
                 if (is_arc_specialties) {
                     m_arc_specialties_cylindrical_axis = cylindrical_axis;
                     m_has_arc_specialties_cylindrical_axis = true;
+                    m_arc_specialties_cylindrical_axis_matches_current_path = true;
                 }
             }
         }

@@ -232,6 +232,9 @@ class GCodeLoader : public QThread {
     //! \brief Whether an Arc Specialties cylinder axis has been recovered from parsing.
     bool m_has_arc_specialties_cylindrical_axis = false;
 
+    //! \brief Whether the recovered Arc Specialties cylinder axis belongs to the active print path.
+    bool m_arc_specialties_cylindrical_axis_matches_current_path = false;
+
     //! \brief Last parsed Arc Specialties CP value used to infer cylindrical centers from linearized beads.
     double m_previous_arc_specialties_cp = 0.0;
 
