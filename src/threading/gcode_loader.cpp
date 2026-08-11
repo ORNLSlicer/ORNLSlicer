@@ -2,6 +2,7 @@
 
 #include <cmath>
 #include <limits>
+#include <optional>
 #include <tuple>
 
 #include <QDebug>
@@ -91,6 +92,26 @@ float beadDisplayWidth(Distance bead_width) {
 
 const QString kCylindricalAxisXComment = "AXIS_X=";
 const QString kCylindricalAxisYComment = "AXIS_Y=";
+const QString kWorldApproachTravelComment = "WORLD APPROACH TRAVEL";
+constexpr char kArcSpecialtiesCpOptionalParameter = 'C';
+
+double signedShortestDeltaDegrees(double start_degrees, double end_degrees) {
+    double delta_degrees = end_degrees - start_degrees;
+    while (delta_degrees > 180.0) {
+        delta_degrees -= 360.0;
+    }
+    while (delta_degrees < -180.0) {
+        delta_degrees += 360.0;
+    }
+
+    return delta_degrees;
+}
+
+double planarDistanceSquared(const Point& a, const Point& b) {
+    const double dx = a.x() - b.x();
+    const double dy = a.y() - b.y();
+    return (dx * dx) + (dy * dy);
+}
 
 bool commentFieldValue(const QString& comment, const QString& field, double& value) {
     const int field_start = comment.indexOf(field, 0, Qt::CaseInsensitive);
@@ -121,6 +142,44 @@ bool cylindricalAxisFromComment(const QString& comment, Distance distance_unit, 
     center.x((axis_x * distance_unit() + x_offset) * Constants::OpenGL::kObjectToView);
     center.y((axis_y * distance_unit() + y_offset) * Constants::OpenGL::kObjectToView);
     center.z(0.0);
+    return true;
+}
+
+bool cylindricalAxisFromCpDelta(const QVector3D& start_pos, const QVector3D& end_pos, double start_cp_degrees,
+                                double end_cp_degrees, const std::optional<Point>& reference_axis, Point& center) {
+    const double dx = end_pos.x() - start_pos.x();
+    const double dy = end_pos.y() - start_pos.y();
+    const double chord_length = std::hypot(dx, dy);
+    if (chord_length <= std::numeric_limits<double>::epsilon()) {
+        return false;
+    }
+
+    const double delta_radians = qDegreesToRadians(signedShortestDeltaDegrees(start_cp_degrees, end_cp_degrees));
+    const double half_delta = std::abs(delta_radians) / 2.0;
+    const double tan_half_delta = std::tan(half_delta);
+    if (std::abs(tan_half_delta) <= std::numeric_limits<double>::epsilon()) {
+        return false;
+    }
+
+    const double center_offset = chord_length / (2.0 * tan_half_delta);
+    const double mid_x = (start_pos.x() + end_pos.x()) / 2.0;
+    const double mid_y = (start_pos.y() + end_pos.y()) / 2.0;
+    const double left_normal_x = -dy / chord_length;
+    const double left_normal_y = dx / chord_length;
+
+    const Point positive_center(mid_x + (left_normal_x * center_offset), mid_y + (left_normal_y * center_offset), 0.0);
+    const Point negative_center(mid_x - (left_normal_x * center_offset), mid_y - (left_normal_y * center_offset), 0.0);
+
+    if (reference_axis.has_value()) {
+        center = planarDistanceSquared(positive_center, *reference_axis) <=
+                         planarDistanceSquared(negative_center, *reference_axis)
+                     ? positive_center
+                     : negative_center;
+    }
+    else {
+        center = delta_radians >= 0.0 ? positive_center : negative_center;
+    }
+
     return true;
 }
 
@@ -357,6 +416,8 @@ void GCodeLoader::run() {
             m_origin = QVector3D(m_x_offset, m_y_offset, 0.0f);
             m_table_offset = 0.0f;
             m_prev_table_offset = 0.0f;
+            m_has_arc_specialties_cylindrical_axis = false;
+            m_has_previous_arc_specialties_cp = false;
 
             // reserve more memory than the hash will need to guarantee no reallocation
             QHash<QString, QTextCharFormat> fontColors;
@@ -433,7 +494,7 @@ void GCodeLoader::run() {
                         generated_segments = generateVisualSegment(
                             command.getLineNumber() + 1, current_layer, line_color, command.getCommandID(),
                             command.getParameters(), command.getDepositionActive(), command.getExtruderSpeed(), true,
-                            command.getComment());
+                            command.getComment(), command.getOptionalParameters());
                     }
                     else {
                         generated_segments = generateVisualSegment(
@@ -906,6 +967,9 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
     QVector3D end_pos = m_start_pos;
     QVector3D info_end_pos = m_info_start_pos;
     bool info_speed_set = false;
+    const bool is_arc_specialties = m_selected_meta.m_syntax_id == GcodeSyntax::kArcSpecialties;
+    const bool has_current_cp = optional_parameters.contains(kArcSpecialtiesCpOptionalParameter);
+    const double current_cp = has_current_cp ? optional_parameters.value(kArcSpecialtiesCpOptionalParameter) : 0.0;
 
     if (parameters.contains('F')) {
         info_speed_set = true;
@@ -973,6 +1037,12 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
 
         // we've accounted for the change in w, don't want to do it again until the table moves (w_offset changes) again
         m_prev_table_offset = m_table_offset;
+    }
+
+    if (is_arc_specialties && comment.compare(kWorldApproachTravelComment, Qt::CaseInsensitive) == 0 &&
+        parameters.contains('X') && parameters.contains('Y')) {
+        m_arc_specialties_cylindrical_axis = Point(end_pos.x(), end_pos.y(), 0.0);
+        m_has_arc_specialties_cylindrical_axis = true;
     }
 
     QVector<QSharedPointer<SegmentBase>> generated_segments;
@@ -1054,12 +1124,35 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
 
         if (isCylindricalPrintComment(comment)) {
             Point cylindrical_axis;
+            bool has_cylindrical_axis = false;
             if (cylindricalAxisFromComment(comment, m_selected_meta.m_distance_unit, m_x_offset, m_y_offset,
                                            cylindrical_axis)) {
-                segment->setCylindricalBeadCenter(cylindrical_axis);
+                has_cylindrical_axis = true;
             }
             else if (ArcSegment* arc_segment = dynamic_cast<ArcSegment*>(segment.data())) {
-                segment->setCylindricalBeadCenter(arc_segment->center());
+                cylindrical_axis = arc_segment->center();
+                has_cylindrical_axis = true;
+            }
+            else if (is_arc_specialties && m_has_previous_arc_specialties_cp && has_current_cp) {
+                const std::optional<Point> reference_axis =
+                    m_has_arc_specialties_cylindrical_axis
+                        ? std::optional<Point>(m_arc_specialties_cylindrical_axis)
+                        : std::nullopt;
+                has_cylindrical_axis =
+                    cylindricalAxisFromCpDelta(m_start_pos, end_pos, m_previous_arc_specialties_cp, current_cp,
+                                               reference_axis, cylindrical_axis);
+            }
+            if (!has_cylindrical_axis && is_arc_specialties && m_has_arc_specialties_cylindrical_axis) {
+                cylindrical_axis = m_arc_specialties_cylindrical_axis;
+                has_cylindrical_axis = true;
+            }
+
+            if (has_cylindrical_axis) {
+                segment->setCylindricalBeadCenter(cylindrical_axis);
+                if (is_arc_specialties) {
+                    m_arc_specialties_cylindrical_axis = cylindrical_axis;
+                    m_has_arc_specialties_cylindrical_axis = true;
+                }
             }
         }
 
@@ -1072,6 +1165,10 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
     // Update our start position for the next command
     m_start_pos = end_pos;
     m_info_start_pos = info_end_pos;
+    if (is_arc_specialties && has_current_cp) {
+        m_previous_arc_specialties_cp = current_cp;
+        m_has_previous_arc_specialties_cp = true;
+    }
 
     return generated_segments;
 }
