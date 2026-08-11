@@ -11,7 +11,11 @@
 #include <QRegularExpression>
 #include <QSettings>
 #include <QStatusBar>
+#include <QTextBlock>
+#include <QTextBlockFormat>
 #include <QTextBrowser>
+#include <QTextCursor>
+#include <QTextDocument>
 #include <QTimer>
 #include <QUndoCommand>
 #include <QVBoxLayout>
@@ -268,7 +272,7 @@ QString markdownWithHeadingAnchors(const QString& markdown) {
         if (match.hasMatch()) {
             const QString anchor = markdownHeadingAnchor(match.captured(1).trimmed());
             if (linked_targets.contains(anchor) && !emitted_targets.contains(anchor)) {
-                output.append(QStringLiteral("<a id=\"%1\"></a>").arg(anchor.toHtmlEscaped()));
+                output.append(QStringLiteral("<a name=\"%1\"></a>").arg(anchor.toHtmlEscaped()));
                 emitted_targets.insert(anchor);
             }
         }
@@ -277,6 +281,21 @@ QString markdownWithHeadingAnchors(const QString& markdown) {
     }
 
     return output.join(QChar('\n'));
+}
+
+QMap<QString, int> markdownHeadingPositions(const QTextDocument* document, const QSet<QString>& linked_targets) {
+    QMap<QString, int> positions;
+
+    for (QTextBlock block = document->begin(); block != document->end(); block = block.next()) {
+        if (block.blockFormat().headingLevel() == 0)
+            continue;
+
+        const QString anchor = markdownHeadingAnchor(block.text().trimmed());
+        if (linked_targets.contains(anchor) && !positions.contains(anchor))
+            positions.insert(anchor, block.position());
+    }
+
+    return positions;
 }
 
 bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
@@ -293,15 +312,29 @@ bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
     auto browser = new QTextBrowser(dialog);
     browser->setOpenLinks(false);
     browser->setSearchPaths({QFileInfo(path).absolutePath()});
-    QObject::connect(browser, &QTextBrowser::anchorClicked, browser, [browser](const QUrl& url) {
+
+    const QString markdown = QString::fromUtf8(file.readAll());
+    const QSet<QString> linked_targets = localMarkdownLinkTargets(markdown);
+    browser->setMarkdown(markdownWithHeadingAnchors(markdown));
+
+    auto heading_positions =
+        QSharedPointer<QMap<QString, int>>::create(markdownHeadingPositions(browser->document(), linked_targets));
+    QObject::connect(browser, &QTextBrowser::anchorClicked, browser, [browser, heading_positions](const QUrl& url) {
         if (!url.fragment().isEmpty() && (url.isRelative() || url.path().isEmpty())) {
+            const auto position = heading_positions->constFind(url.fragment());
+            if (position != heading_positions->cend()) {
+                QTextCursor cursor(browser->document()->findBlock(*position));
+                browser->setTextCursor(cursor);
+                browser->ensureCursorVisible();
+                return;
+            }
+
             browser->scrollToAnchor(url.fragment());
             return;
         }
 
         QDesktopServices::openUrl(url);
     });
-    browser->setMarkdown(markdownWithHeadingAnchors(QString::fromUtf8(file.readAll())));
     layout->addWidget(browser);
 
     auto buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
