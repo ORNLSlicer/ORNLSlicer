@@ -135,7 +135,6 @@
           pkgs.nsis
           pkgs.cntr
           pkgs.clazy
-          pkgs.mupdf
         ];
 
         inputsFrom = [
