@@ -123,6 +123,8 @@ The application can:
 - save complete projects and export controller files with optional companion
   and project files.
 
+![Figure 01 placeholder: Overview](user-guide-images/figure01.png)
+
 > **Diagram placeholder — Overview:** Add a representative image showing a
 > model in Part View beside its generated toolpath in G-Code View.
 
@@ -153,6 +155,8 @@ same slicing implementation.
 For implementation-level ownership and extension points, see the
 [architecture overview](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/ARCHITECTURE.md).
 
+![Figure 02 placeholder: Structure](user-guide-images/figure02.png)
+
 > **Diagram placeholder — Structure:** Add a component diagram showing GUI and
 > CLI entry points sharing session, settings, and slicers, with a toolpath
 > branch through writers/parsers and a direct Image-output branch.
@@ -174,6 +178,8 @@ A normal toolpath workflow moves through these stages:
 Image slicing branches after preprocessing: it creates numbered image slices
 and a part-ID map instead of ordinary machine G-code. Cylindrical slicing also
 uses specialized radial or helical paths rather than the planar region stack.
+
+![Figure 03 placeholder: Processing flow](user-guide-images/figure03.png)
 
 > **Diagram placeholder — Processing flow:** Add an import-to-export flowchart
 > with separate planar, cylindrical, and image branches.
@@ -197,6 +203,8 @@ Developers building from source should follow the
 [development environment guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/wiki/Getting-Started.md)
 instead of the release steps.
 
+![Figure 04 placeholder: Installation](user-guide-images/figure04.png)
+
 > **Diagram placeholder — Installation:** Add one Windows package-selection
 > screenshot and one Linux AppImage launch example.
 
@@ -217,6 +225,8 @@ Before loading a production part:
 
 Changing display units changes how values are shown. The selected controller
 syntax and template determine the units and conventions used in output.
+
+![Figure 05 placeholder: First launch](user-guide-images/figure05.png)
 
 > **Diagram placeholder — First launch:** Add an annotated Preferences window
 > and the Printer > Machine Setup settings panel.
@@ -247,6 +257,8 @@ syntax and template determine the units and conventions used in output.
 
 Always verify the generated file independently before running it on a machine.
 
+![Figure 06 placeholder: Quick start](user-guide-images/figure06.png)
+
 > **Diagram placeholder — Quick start:** Add a numbered, eight-panel workflow
 > from model load through export, combining adjacent inspection steps where
 > needed.
@@ -267,6 +279,8 @@ Always verify the generated file independently before running it on a machine.
 File extensions describe the accepted container or input route, not guaranteed
 compatibility with every producer. Validate complex CAD imports, third-party
 G-code, and controller-specific files after loading.
+
+![Figure 07 placeholder: File types](user-guide-images/figure07.png)
 
 > **Diagram placeholder — File types:** Add an input/output diagram grouping
 > model, project, settings, G-code, and image files around ORNLSlicer.
@@ -290,6 +304,8 @@ The main window has these primary areas:
 The Settings, G-Code Editor, and Layer Times panels share a dock area by
 default. Select their tabs to bring one to the front.
 
+![Figure 08 placeholder: Main window](user-guide-images/figure08.png)
+
 > **Diagram placeholder — Main window:** Add a current, numbered screenshot
 > identifying all six main-window areas.
 
@@ -308,6 +324,8 @@ include:
 Once G-code is loaded, the toolbar also enables tools for segment information,
 orthographic 2-D preview, ghosted source models, and G-code export. A disabled
 tool normally means that the active view or loaded data does not support it.
+
+![Figure 09 placeholder: Main toolbar](user-guide-images/figure09.png)
 
 > **Diagram placeholder — Main toolbar:** Add separate annotated toolbar strips
 > for Part View and G-Code View, including enabled and disabled examples.
@@ -333,6 +351,8 @@ and the wheel zooms. Arrow keys rotate the camera; modified arrow keys pan it.
 When a part is selected, left-drag moves it in XY and a right-drag rotates it
 with angle snapping. Use **View > Reset Camera** if the model is lost from view.
 
+![Figure 10 placeholder: Part View](user-guide-images/figure10.png)
+
 > **Diagram placeholder — Part View:** Add a labeled screenshot with the
 > printer volume, object tree, transform toolbar, view controls, and three model
 > roles visible.
@@ -354,6 +374,8 @@ G-Code View renders generated or imported motion. It supports:
 The preview is a verification aid. Controller state, macros, work offsets, and
 commands that do not map to geometric motion may not be represented visually.
 
+![Figure 11 placeholder: G-Code View](user-guide-images/figure11.png)
+
 > **Diagram placeholder — G-Code View:** Add one screenshot showing colored
 > paths and another showing the selected segment synchronized with its text
 > line.
@@ -369,6 +391,8 @@ commands that do not map to geometric motion may not be represented visually.
 
 Selecting an object, layer marker, range, or settings region changes the scope
 shown by the Settings panel. Confirm the active scope before editing.
+
+![Figure 12 placeholder: Dock panels](user-guide-images/figure12.png)
 
 > **Diagram placeholder — Dock panels:** Add a four-part figure showing each
 > panel with its scope or key controls highlighted.
@@ -392,6 +416,8 @@ The main menus are:
 See [Appendix C](#appendix-c-shortcut-reference) for the current application
 shortcuts.
 
+![Figure 13 placeholder: Menus](user-guide-images/figure13.png)
+
 > **Diagram placeholder — Menus:** Add a composite screenshot of File,
 > Settings, Project, and View menus; use captions for the remaining menus.
 
@@ -405,6 +431,8 @@ Settings panel.
 
 Workspace layout is separate from process settings. Moving a dock does not
 change a project or generated toolpath.
+
+![Figure 14 placeholder: Workspace layout](user-guide-images/figure14.png)
 
 > **Diagram placeholder — Workspace layout:** Add before-and-after screenshots
 > of the default dock layout and a customized two-column layout.
@@ -421,6 +449,8 @@ Use **File > Load Point Cloud** for `.matrix` or `.xyz` point data. Model import
 uses the **Imported Model Unit** preference, so set it before loading files that
 do not carry reliable unit metadata. Additional models may be shifted on load
 to avoid collisions, according to the notification preferences.
+
+![Figure 15 placeholder: Model import](user-guide-images/figure15.png)
 
 > **Diagram placeholder — Model import:** Add the model-role menu, supported
 > file dialog, and imported-model-unit preference in a three-panel figure.
@@ -439,6 +469,8 @@ Every scene object has a role:
 Right-click selected objects and choose **Switch to Build**, **Switch to
 Clipper**, or **Switch to Setting** to change the role. The same model can serve
 different purposes without being re-imported.
+
+![Figure 16 placeholder: Model roles](user-guide-images/figure16.png)
 
 > **Diagram placeholder — Model roles:** Add one build object intersected by a
 > clipping object and a settings object, followed by the resulting sliced
@@ -459,6 +491,8 @@ The shape menu can create geometry without an external CAD file:
 Enter the requested dimensions and a unique name. Generated build primitives
 can be transformed and sliced like imported models. The box settings region is
 created with the Settings role.
+
+![Figure 17 placeholder: Primitive geometry](user-guide-images/figure17.png)
 
 > **Diagram placeholder — Primitive geometry:** Add a labeled grid showing all
 > generated shape types and the box settings region.
@@ -492,6 +526,8 @@ back to the top level to remove the relationship.
 Copy and paste duplicate selected parts. Reload keeps the scene object but
 re-reads its source geometry; replace selects a different source file.
 
+![Figure 18 placeholder: Part organization](user-guide-images/figure18.png)
+
 > **Diagram placeholder — Part organization:** Add an object-tree example with
 > multiple selection, a parent/child group, role icons, and the context menu.
 
@@ -511,6 +547,8 @@ The Part View transform toolbar provides:
 Confirm transformed geometry remains inside the printer volume. If a model
 loads at the wrong size, correct the import-unit preference and reload it where
 possible instead of relying on an unexplained scale factor.
+
+![Figure 19 placeholder: Transform tools](user-guide-images/figure19.png)
 
 > **Diagram placeholder — Transform tools:** Add a six-panel sequence showing
 > translation, rotation, scale, align, center, and drop-to-floor results.
@@ -533,6 +571,8 @@ Use the Part View overlays before slicing:
 These overlays are visual aids and are not written as manufacturing paths.
 Use **File > Take Screenshot** to save the current Part View framebuffer as
 PNG, JPG, GIF, or TIF; PNG is used when no extension is entered.
+
+![Figure 20 placeholder: Model inspection](user-guide-images/figure20.png)
 
 > **Diagram placeholder — Model inspection:** Add one labeled screenshot per
 > overlay, using the same model and camera position for comparison.
@@ -557,6 +597,8 @@ Image slicing reads active global values.
 
 Confirm the active scope label in the Settings panel before making a change.
 
+![Figure 21 placeholder: Settings precedence](user-guide-images/figure21.png)
+
 > **Diagram placeholder — Settings precedence:** Add a stacked diagram from
 > defaults through global, part, layer/range, and spatial-region values, with
 > mode-specific exceptions called out.
@@ -579,6 +621,8 @@ For every setting's purpose, input type, fallback default, scope, dependency,
 and choices, see the generated
 [detailed settings reference](#appendix-e-detailed-settings-reference).
 
+![Figure 22 placeholder: Settings panels](user-guide-images/figure22.png)
+
 > **Diagram placeholder — Settings panels:** Add one screenshot of each major
 > settings panel with its category tabs labeled.
 
@@ -598,6 +642,8 @@ greyed out or hidden.
 
 Individual category tabs can be hidden. Restore them with
 **View > Hidden Settings**, or use **Show All Settings**.
+
+![Figure 23 placeholder: Setting dependencies](user-guide-images/figure23.png)
 
 > **Diagram placeholder — Setting dependencies:** Add a before-and-after image
 > showing settings enabled by changing Slicing Mode and the hidden-settings
@@ -620,6 +666,8 @@ A template is not a substitute for machine validation. Review dimensions,
 coordinates, syntax, speeds, and startup/shutdown commands whenever a template
 moves between systems.
 
+![Figure 24 placeholder: Templates](user-guide-images/figure24.png)
+
 > **Diagram placeholder — Templates:** Add the template load dialog, save
 > dialog with panel selection, and additional-location chooser.
 
@@ -632,6 +680,8 @@ scope. Part settings travel with the part inside an `.s2p` project.
 Use part settings when separate build objects need different bead widths,
 speeds, infill, path options, or other locally supported values. Keep machine
 configuration global unless the UI explicitly permits a local override.
+
+![Figure 25 placeholder: Part settings](user-guide-images/figure25.png)
 
 > **Diagram placeholder — Part settings:** Add two adjacent parts using
 > different local infill or speed values, with the active part scope visible.
@@ -653,6 +703,8 @@ Reusable layer-bar templates use `.s2l`. Place site-provided templates in an
 installed or additional layer-bar settings location when the same process
 transition is used repeatedly.
 
+![Figure 26 placeholder: Layer settings](user-guide-images/figure26.png)
+
 > **Diagram placeholder — Layer settings:** Add a layer bar with one single
 > layer and one paired range, plus the corresponding 3-D range overlay.
 
@@ -670,6 +722,8 @@ with a build part by using parent/child relationships when appropriate.
 
 Spatial settings regions are a planar-slicing feature; do not assume that
 cylindrical or image modes apply them.
+
+![Figure 27 placeholder: Settings regions](user-guide-images/figure27.png)
 
 > **Diagram placeholder — Settings regions:** Add a transparent settings box
 > intersecting a part and a preview showing the changed path density or speed
@@ -689,6 +743,8 @@ Set **Profile > Slicing > Slicing Mode**:
 
 Changing the mode reveals its specific controls. Confirm all dependent values
 before slicing.
+
+![Figure 28 placeholder: Slicing modes](user-guide-images/figure28.png)
 
 > **Diagram placeholder — Slicing modes:** Add a decision tree and one sample
 > result for Planar, Cylindrical/Radial, Cylindrical/Helical, and Image.
@@ -711,6 +767,8 @@ enable it before import or reload the model after changing it. Use smoothing,
 spiralize, or oversize options only after confirming how they change the
 intended geometry.
 
+![Figure 29 placeholder: Planar slicing](user-guide-images/figure29.png)
+
 > **Diagram placeholder — Planar slicing:** Add a model cut into planes, one
 > polygon cross-section, and the resulting ordered regions for a single layer.
 
@@ -732,6 +790,8 @@ Each enabled region can have its own bead width, speed, extrusion value,
 minimum path length, start/end G-code, and supported path modifiers. The
 **Region Order** setting controls their requested order within an island.
 
+![Figure 30 placeholder: Path regions](user-guide-images/figure30.png)
+
 > **Diagram placeholder — Path regions:** Add one color-coded layer containing
 > perimeter, inset, skeleton, skin, infill, support, and scan examples with a
 > legend.
@@ -751,6 +811,8 @@ transitional dense layers below skin where enabled.
 Pattern availability and behavior depend on geometry and other settings.
 Inspect narrow features, small islands, overlaps, and short-path filtering in
 the preview.
+
+![Figure 31 placeholder: Fill patterns](user-guide-images/figure31.png)
 
 > **Diagram placeholder — Fill patterns:** Add a comparison grid for every
 > infill pattern and a cutaway showing skin plus gradual-infill layers.
@@ -775,6 +837,8 @@ G-Code View to compare the build paths with and without support. Generated
 planar support is distinct from support-role model files, which are currently
 consumed only by Image mode.
 
+![Figure 32 placeholder: Support](user-guide-images/figure32.png)
+
 > **Diagram placeholder — Support:** Add the overhang overlay and side-by-side
 > grid and organic support previews, labeling interface and base layers.
 
@@ -791,6 +855,8 @@ consumed only by Image mode.
 These structures change first-layer geometry and may change required bed area,
 material use, start position, and removal procedure. Confirm they remain inside
 the build volume.
+
+![Figure 33 placeholder: Adhesion](user-guide-images/figure33.png)
 
 > **Diagram placeholder — Adhesion:** Add one first-layer comparison showing
 > raft, brim, and skirt with dimensions labeled.
@@ -816,6 +882,8 @@ Their availability also depends on machine type and syntax. Inspect the G-code
 text as well as the geometric preview because some modifier effects are
 controller commands rather than visible paths.
 
+![Figure 34 placeholder: Travel and modifiers](user-guide-images/figure34.png)
+
 > **Diagram placeholder — Travel and modifiers:** Add an annotated path showing
 > prestart, print, slowdown, tip wipe, lift, travel, retract, and prime phases.
 
@@ -839,6 +907,8 @@ Optimization changes travel and seam placement. Compare travel distance,
 surface starts, thermal sequence, collision risk, and machine kinematics rather
 than assuming the shortest path is always the best process path.
 
+![Figure 35 placeholder: Optimization](user-guide-images/figure35.png)
+
 > **Diagram placeholder — Optimization:** Add the same multi-island layer
 > before and after path ordering, with custom optimization points and travels
 > visible.
@@ -855,6 +925,8 @@ Optional scan settings can add measurement motion to planar workflows:
 Scanner paths and auxiliary data depend on the selected syntax, hardware, and
 export options. Confirm the writer emits the expected machine commands and
 save auxiliary files when applicable.
+
+![Figure 36 placeholder: Scanning](user-guide-images/figure36.png)
 
 > **Diagram placeholder — Scanning:** Add one print/scan layer pair showing the
 > scanner footprint, offsets, scan direction, and generated auxiliary data.
@@ -884,6 +956,8 @@ the dedicated
 [Cylindrical Slicing guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/cylindrical-slicing.md)
 for settings, boundary policies, output fields, limitations, and checks.
 
+![Figure 37 placeholder: Cylindrical slicing](user-guide-images/figure37.png)
+
 > **Diagram placeholder — Cylindrical slicing:** Add axis/radius notation and
 > side-by-side radial and helical paths, including clipped boundary examples.
 
@@ -904,6 +978,8 @@ requested location; verify the generated directory before using the files.
 Check image dimensions, origin, resolution, layer numbering, and ID mapping in
 the downstream consumer.
 
+![Figure 38 placeholder: Image slicing](user-guide-images/figure38.png)
+
 > **Diagram placeholder — Image slicing:** Add a 3-D model, two labeled raster
 > layers, pixel-ID legend, and example `idFileLinks.dat` mapping.
 
@@ -918,6 +994,8 @@ Toolpath modes automatically load the generated file and switch to G-Code View
 when successful. A failed validation or load reports details in the status
 area. Correct the model, syntax, or settings and slice again. Each slice
 currently rebuilds the selected mode's path data.
+
+![Figure 39 placeholder: Slice progress](user-guide-images/figure39.png)
 
 > **Diagram placeholder — Slice progress:** Add the progress dialog with every
 > stage labeled and a successful transition to G-Code View.
@@ -937,6 +1015,8 @@ a common writer or parser while others have specialized behavior.
 
 Switching syntax is a machine-level change. Reload the correct template and
 review all dependent settings, commands, units, and output fields.
+
+![Figure 40 placeholder: Controller syntax](user-guide-images/figure40.png)
 
 > **Diagram placeholder — Controller syntax:** Add a flow from machine-neutral
 > paths through three example writers to differently formatted controller
@@ -963,6 +1043,8 @@ True Bead Widths can bypass that threshold when the toolbar toggle is enabled;
 Thin Lines disables true-width rendering. Large files may use a lightweight
 base with true-width detail only for a smaller visible range.
 
+![Figure 41 placeholder: Preview modes](user-guide-images/figure41.png)
+
 > **Diagram placeholder — Preview modes:** Add the same layer rendered as thin
 > lines, true bead widths, orthographic 2-D, and a ghosted 3-D view.
 
@@ -980,6 +1062,8 @@ controller macros.
 Keep an external, reviewed copy of important manual edits. Reslicing replaces
 the current generated text.
 
+![Figure 42 placeholder: G-code editor](user-guide-images/figure42.png)
+
 > **Diagram placeholder — G-code editor:** Add a search result, an edited line
 > with Refresh enabled, and the synchronized preview selection.
 
@@ -994,6 +1078,8 @@ Estimates depend on configured speeds, acceleration assumptions, command
 interpretation, density, and controller behavior. Treat them as planning
 values, not guaranteed cycle times or material measurements.
 
+![Figure 43 placeholder: Timing](user-guide-images/figure43.png)
+
 > **Diagram placeholder — Timing:** Add the Layer Times plot/table and the
 > corresponding status summary for a multi-layer file.
 
@@ -1007,6 +1093,8 @@ not have deterministic export units or naming.
 
 Review parser warnings, path scale, coordinates, layer boundaries, travels,
 arcs, extrusion state, and timing before relying on an imported preview.
+
+![Figure 44 placeholder: G-code import](user-guide-images/figure44.png)
 
 > **Diagram placeholder — G-code import:** Add a recognized-header file and an
 > unrecognized-header warning, each with its resulting preview.
@@ -1028,6 +1116,8 @@ Sensor workflows may create numbered `.dat` files. Inspect every file in a
 bundle and preserve their relative naming when the controller workflow depends
 on it.
 
+![Figure 45 placeholder: Export](user-guide-images/figure45.png)
+
 > **Diagram placeholder — Export:** Add the export dialog and an expanded
 > output bundle showing G-code, project, sensor, and syntax-specific companion
 > files.
@@ -1046,6 +1136,8 @@ it after application, template, or machine changes. When loading an older
 project, ORNLSlicer may migrate settings or ask how to handle part positions.
 Review the scene and settings before slicing.
 
+![Figure 46 placeholder: Project archive](user-guide-images/figure46.png)
+
 > **Diagram placeholder — Project archive:** Add a cutaway of an `.s2p` ZIP
 > showing models, session data, global settings, local settings, and version
 > metadata.
@@ -1060,6 +1152,8 @@ retained; load a different template if the next setup needs different settings.
 Save reusable machine and process values as a template; save a complete
 arrangement, including geometry and local overrides, as a project.
 
+![Figure 47 placeholder: New project](user-guide-images/figure47.png)
+
 > **Diagram placeholder — New project:** Add the populated scene before the
 > action and the empty scene afterward, with unchanged active settings called
 > out.
@@ -1073,6 +1167,8 @@ autosaved state after closing or restarting the application.
 Autosave is a recovery aid, not a versioned backup. Save named projects at
 meaningful milestones and retain exported machine files through the site's
 normal revision and approval process.
+
+![Figure 48 placeholder: Recovery](user-guide-images/figure48.png)
 
 > **Diagram placeholder — Recovery:** Add a restore-last-session sequence from
 > application start to the recovered model, settings, and project title.
@@ -1186,6 +1282,8 @@ listed as 8-bit RGB values.
 | Tip Wipe Reverse | 179, 128, 255 | Travel | 233, 175, 198 |
 | Unknown | 0, 0, 0 |  |  |
 
+![Figure 49 placeholder: Preferences](user-guide-images/figure49.png)
+
 > **Diagram placeholder — Preferences:** Add the tab strip and a representative
 > control from every preference area.
 
@@ -1199,6 +1297,8 @@ The calculator is a process-planning aid. Transfer results to the appropriate
 settings deliberately and validate them with material characterization and
 machine trials.
 
+![Figure 50 placeholder: Flowrate Calculator](user-guide-images/figure50.png)
+
 > **Diagram placeholder — Flowrate Calculator:** Add a completed example with
 > input and calculated fields distinguished by color or callouts.
 
@@ -1210,6 +1310,8 @@ material density and two-minute test mass.
 
 The calculator uses the preferred units. Confirm units before copying a result
 to a template or machine program.
+
+![Figure 51 placeholder: Xtrude Calculator](user-guide-images/figure51.png)
 
 > **Diagram placeholder — Xtrude Calculator:** Add one completed example for
 > each of the three calculation modes.
@@ -1243,6 +1345,8 @@ supplied with model input but not with a project, because the project already
 contains global settings. For reproducible machine output, supply a `.s2c` or
 `.s2p`; model-only input uses the embedded master defaults, not the GUI's last
 active template.
+
+![Figure 52 placeholder: CLI structure](user-guide-images/figure52.png)
 
 > **Diagram placeholder — CLI structure:** Add a terminal-to-pipeline diagram
 > showing model/template and project alternatives converging on output.
@@ -1300,6 +1404,8 @@ PNG layers and `idFileLinks.dat` are written into the output location. Do not
 use a project-based Image run when exact CLI output routing is required in the
 current implementation.
 
+![Figure 53 placeholder: CLI examples](user-guide-images/figure53.png)
+
 > **Diagram placeholder — CLI examples:** Add terminal captures for a normal
 > G-code run and an Image-mode output directory.
 
@@ -1325,6 +1431,8 @@ table. Although `--help` currently advertises export-control options and
 `--slice_bounds`, the command-line controller does not apply them. Use the GUI
 export dialog when header text, project copies, auxiliary files, bundled
 output, or explicit slice bounds are required.
+
+![Figure 54 placeholder: CLI options](user-guide-images/figure54.png)
 
 > **Diagram placeholder — CLI options:** Add a command anatomy figure labeling
 > executable, primary input, template, placement, output, and advanced options.
@@ -1354,6 +1462,8 @@ Include the application version from **Help > About**, operating system,
 template or project details, exact steps, status/error text, and a minimal
 reproducer when possible. Do not attach proprietary geometry or machine files
 to a public issue without authorization.
+
+![Figure 55 placeholder: Troubleshooting](user-guide-images/figure55.png)
 
 > **Diagram placeholder — Troubleshooting:** Add a decision flow for load,
 > setup, slice, preview, and export failures, pointing to the Status panel and
@@ -1406,6 +1516,8 @@ every individual setting.
 | Experimental | File Output | Syntax-specific companion and simulation outputs |
 | Experimental | Cross-Sectioning | Gap and stitch tolerances |
 
+![Figure 56 placeholder: Settings map](user-guide-images/figure56.png)
+
 > **Diagram placeholder — Settings map:** Add a foldout-style map of the four
 > panels and their categories, suitable for both Markdown and PDF navigation.
 
@@ -1450,6 +1562,8 @@ This list indicates selectable output integrations, not identical feature
 support. Confirm units, suffix, comments, arcs, axes, startup/shutdown behavior,
 parser support, and companion outputs for the chosen machine.
 
+![Figure 57 placeholder: Syntaxes](user-guide-images/figure57.png)
+
 > **Diagram placeholder — Syntaxes:** Add a compatibility matrix grouping
 > syntaxes by controller/machine family, normal units, suffix, arc support, and
 > companion output. Populate it from verified writer/parser behavior.
@@ -1478,6 +1592,8 @@ parser support, and companion outputs for the chosen machine.
 Shortcuts are application-wide. When focus is in a text field, copy and paste
 operate on text; otherwise they operate on selected parts where supported.
 
+![Figure 58 placeholder: Shortcuts](user-guide-images/figure58.png)
+
 > **Diagram placeholder — Shortcuts:** Add a keyboard layout highlighting the
 > most common model, template, project, view, and slicing shortcuts.
 
@@ -1500,6 +1616,8 @@ operate on text; otherwise they operate on selected parts where supported.
 | Slicing mode | Planar, Cylindrical, or Image processing workflow. |
 | Template | Reusable `.s2c` global or `.s2l` layer settings file. |
 | Travel | Non-print motion connecting printable or scan paths. |
+
+![Figure 59 placeholder: Glossary](user-guide-images/figure59.png)
 
 > **Diagram placeholder — Glossary:** Add a labeled single-layer toolpath that
 > identifies island, region, path, segment, bead, and travel terms.
@@ -1527,6 +1645,8 @@ Use the browser or PDF search for either a visible label or an internal key. Eve
 | Scope | Whether the setting is global-only or eligible for supported local overrides. |
 | Available when | The selections or toggles that enable the setting. |
 | Choices | Every selectable value for enumeration settings, in stored order. |
+
+![Figure 60 placeholder: Setting anatomy](user-guide-images/figure60.png)
 
 > **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,
 > tooltip, disabled state, local-override indicator, and corresponding reference entry.
@@ -1578,6 +1698,8 @@ The catalog is organized as follows:
 Printer settings describe the controller, coordinate system, build envelope, machine limits, and
 machine-level G-code. Treat them as machine configuration and verify them against the physical
 system.
+
+![Figure 61 placeholder: Printer settings](user-guide-images/figure61.png)
 
 > **Diagram placeholder — Printer settings:** Add an annotated Printer panel with its
 > category tabs, search field, and one enabled/disabled dependency example.
@@ -2500,6 +2622,8 @@ Input G-Code to be executed after the end of the print.
 
 Material settings control process behavior tied to the feedstock and deposition system, including
 startup, extrusion, retraction, temperature, cooling, and first-layer adhesion.
+
+![Figure 62 placeholder: Material settings](user-guide-images/figure62.png)
 
 > **Diagram placeholder — Material settings:** Add an annotated Material panel with its
 > category tabs, search field, and one enabled/disabled dependency example.
@@ -5117,6 +5241,8 @@ Uses the M222 code for material transitions rather than the standard M237.
 
 Profile settings define how geometry becomes layers and ordered toolpaths. Many are local-capable so
 different parts, layers, ranges, or spatial regions can use different values in supported modes.
+
+![Figure 63 placeholder: Profile settings](user-guide-images/figure63.png)
 
 > **Diagram placeholder — Profile settings:** Add an annotated Profile panel with its
 > category tabs, search field, and one enabled/disabled dependency example.
@@ -8263,6 +8389,8 @@ this value, so it has no effect.
 
 Experimental settings expose specialized path and file-generation controls. Confirm writer and
 machine support before depending on them in a production workflow.
+
+![Figure 64 placeholder: Experimental settings](user-guide-images/figure64.png)
 
 > **Diagram placeholder — Experimental settings:** Add an annotated Experimental panel with its
 > category tabs, search field, and one enabled/disabled dependency example.

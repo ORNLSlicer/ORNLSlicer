@@ -114,6 +114,14 @@ MAJOR_NUMBERS = {
     "Experimental": "E.5",
 }
 
+GENERATED_FIGURE_NUMBERS = {
+    "Setting anatomy": 60,
+    "Printer settings": 61,
+    "Material settings": 62,
+    "Profile settings": 63,
+    "Experimental settings": 64,
+}
+
 PATTERN_CHOICE_DESCRIPTIONS = {
     "Lines": "One family of parallel hatch lines at the configured angle and spacing.",
     "Grid": "Two perpendicular families of parallel lines at the configured angle and 90 degrees from it.",
@@ -441,6 +449,10 @@ def wrap_paragraph(value: str) -> list[str]:
     return textwrap.wrap(value, width=100, break_long_words=False, break_on_hyphens=False)
 
 
+def figure_placeholder(number: int, title: str) -> str:
+    return f"![Figure {number:02d} placeholder: {title}](user-guide-images/figure{number:02d}.png)"
+
+
 def load_catalog(source_dir: Path) -> tuple[
     OrderedDict[str, OrderedDict[str, Any]], OrderedDict[str, OrderedDict[str, Any]]
 ]:
@@ -674,6 +686,8 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
         "| Available when | The selections or toggles that enable the setting. |",
         "| Choices | Every selectable value for enumeration settings, in stored order. |",
         "",
+        figure_placeholder(GENERATED_FIGURE_NUMBERS["Setting anatomy"], "Setting anatomy"),
+        "",
         "> **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,",
         "> tooltip, disabled state, local-override indicator, and corresponding reference entry.",
         "",
@@ -693,6 +707,8 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
         lines.append(f"### {MAJOR_NUMBERS[major]} {major} settings")
         lines.append("")
         lines.extend(wrap_paragraph(MAJOR_DESCRIPTIONS[major]))
+        lines.append("")
+        lines.append(figure_placeholder(GENERATED_FIGURE_NUMBERS[f"{major} settings"], f"{major} settings"))
         lines.append("")
         lines.append(f"> **Diagram placeholder — {major} settings:** Add an annotated {major} panel with its")
         lines.append("> category tabs, search field, and one enabled/disabled dependency example.")
