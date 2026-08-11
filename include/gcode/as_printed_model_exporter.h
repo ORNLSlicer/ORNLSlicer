@@ -4,8 +4,8 @@
 
 #include <QSharedPointer>
 #include <QString>
-#include <QVector>
 #include <QVector3D>
+#include <QVector>
 
 #include "geometry/segment_base.h"
 #include "units/unit.h"
@@ -16,13 +16,16 @@ class AsPrintedModelExporter final {
   public:
     enum class StlFormat { kBinary, kAscii };
     enum class OriginMode { kPreserve, kLocalOrigin };
+    enum class GeometryMode { kTrueBeadWidths, kCenterlines };
 
     struct Options {
         Options(bool include_support = false, bool include_travel = false, bool blend_corners = true,
                 StlFormat format = StlFormat::kBinary, Distance output_unit = mm,
-                OriginMode origin_mode = OriginMode::kLocalOrigin)
+                OriginMode origin_mode = OriginMode::kLocalOrigin,
+                GeometryMode geometry_mode = GeometryMode::kTrueBeadWidths, Distance centerline_diameter = 0.1 * mm)
             : include_support(include_support), include_travel(include_travel), blend_corners(blend_corners),
-              format(format), output_unit(output_unit), origin_mode(origin_mode) {}
+              format(format), output_unit(output_unit), origin_mode(origin_mode), geometry_mode(geometry_mode),
+              centerline_diameter(centerline_diameter) {}
 
         bool include_support;
         bool include_travel;
@@ -30,6 +33,8 @@ class AsPrintedModelExporter final {
         StlFormat format;
         Distance output_unit;
         OriginMode origin_mode;
+        GeometryMode geometry_mode;
+        Distance centerline_diameter;
     };
 
     struct Triangle {
