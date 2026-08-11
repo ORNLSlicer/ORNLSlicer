@@ -77,9 +77,10 @@ jobs:
 
       - name: Verify generated guide is committed
         run: |
+          # The PDF is uploaded as an artifact; TeX can still produce byte-level
+          # churn even with stable timestamps, so gate on deterministic sources.
           git diff --exit-code -- \
             docs/ornlslicer-user-guide.md \
-            docs/ornlslicer-user-guide.pdf \
             resources/configs/master.conf \
             resources/configs/setting_inputs.conf
 
@@ -91,6 +92,7 @@ jobs:
     steps:
       - uses: actions/checkout@v5
         with:
+          fetch-depth: 2
           lfs: true
 
       - name: Install documentation toolchain
@@ -125,11 +127,27 @@ jobs:
 
       - name: Commit regenerated guide
         run: |
-          if git diff --quiet -- \
+          guide_inputs_changed=false
+          if git rev-parse HEAD^ >/dev/null 2>&1 && \
+            git diff --name-only HEAD^ HEAD -- \
+              docs/ornlslicer-user-guide.md \
+              resources/configs/master.conf \
+              resources/configs/setting_inputs.conf \
+              resources/settings \
+              scripts/generate_master_config.py \
+              scripts/generate_settings_reference.py | grep -q .; then
+            guide_inputs_changed=true
+          fi
+
+          generated_sources_changed=false
+          if ! git diff --quiet -- \
             docs/ornlslicer-user-guide.md \
-            docs/ornlslicer-user-guide.pdf \
             resources/configs/master.conf \
             resources/configs/setting_inputs.conf; then
+            generated_sources_changed=true
+          fi
+
+          if [ "$guide_inputs_changed" != true ] && [ "$generated_sources_changed" != true ]; then
             echo "User guide is already current."
             exit 0
           fi
@@ -138,8 +156,8 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add \
             docs/ornlslicer-user-guide.md \
-            docs/ornlslicer-user-guide.pdf \
             resources/configs/master.conf \
             resources/configs/setting_inputs.conf
+          git add docs/ornlslicer-user-guide.pdf
           git commit -m "docs: regenerate user guide"
           git push
