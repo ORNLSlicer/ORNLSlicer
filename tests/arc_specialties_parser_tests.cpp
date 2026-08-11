@@ -58,6 +58,36 @@ bool writesInlineArcOptionalStop() {
            !first_arc.contains("G81 ;OPTIONAL STOP ROUTINE") &&
            !second_arc.contains("G81 ;OPTIONAL STOP ROUTINE");
 }
+
+QString lineContaining(const QString& block, const QString& marker) {
+    for (const QString& line : block.split('\n', Qt::SkipEmptyParts)) {
+        if (line.contains(marker)) {
+            return line;
+        }
+    }
+
+    return QString();
+}
+
+bool writesFirstTravelWithWorkObjectToolFrame() {
+    QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
+    settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelLength, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 0.0 * ORNL::mm);
+
+    ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+    const QString travel_block = writer.writeTravel(ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                    ORNL::Point(1.0 * ORNL::mm, 2.0 * ORNL::mm, 3.0 * ORNL::mm),
+                                                    ORNL::TravelLiftType::kNoLift, settings);
+
+    const QString world_approach_line = lineContaining(travel_block, ";WORLD APPROACH TRAVEL");
+    const QString first_travel_line = lineContaining(travel_block, ";TRAVEL");
+
+    return world_approach_line.contains("ZR=-90.0000") && first_travel_line.contains("ZR=-135.0000");
+}
 } // namespace
 
 int main(int argc, char* argv[]) {
@@ -74,6 +104,8 @@ int main(int argc, char* argv[]) {
     passed &= expect(parsesArcLine(clockwise_arc), "Arc Specialties G02 did not ignore inline G81.");
     passed &= expect(parsesArcLine(counter_clockwise_arc), "Arc Specialties G03 did not ignore inline G81.");
     passed &= expect(writesInlineArcOptionalStop(), "Arc Specialties writer did not emit inline G81 on G02/G03.");
+    passed &= expect(writesFirstTravelWithWorkObjectToolFrame(),
+                     "Arc Specialties first travel did not use ZR=-135.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
