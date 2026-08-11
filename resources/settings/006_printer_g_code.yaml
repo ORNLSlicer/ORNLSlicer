@@ -76,7 +76,7 @@ settings:
   - name: "arc_specialties_g2_g3_optional_stop"
     display: "Arc Specialties G2/G3 Optional Stop"
     type: "boolean"
-    tooltip: "If selected, Arc Specialties G-Code emits a G81 optional stop routine before each non-initial G2/G3 arc move."
+    tooltip: "If selected, Arc Specialties G-Code adds an inline G81 optional stop routine to each G2/G3 arc move."
     depends: {"AND":[{"syntax":31},{"supports_G2_3":true}]}
     options: []
     default: false
