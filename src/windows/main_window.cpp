@@ -197,8 +197,6 @@ bool openLocalFile(const QString& path) {
         {QStringLiteral("okular"), {path}},
         {QStringLiteral("atril"), {path}},
         {QStringLiteral("xreader"), {path}},
-        {QStringLiteral("mupdf"), {path}},
-        {QStringLiteral("mupdf-gl"), {path}},
         {QStringLiteral("qpdfview"), {path}},
         {QStringLiteral("zathura"), {path}},
         {QStringLiteral("firefox"), {path}},
