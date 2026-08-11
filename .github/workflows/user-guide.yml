@@ -26,6 +26,7 @@ permissions:
   contents: read
 
 env:
+  FORCE_SOURCE_DATE: "1"
   SOURCE_DATE_EPOCH: "1735689600"
   TZ: UTC
 
