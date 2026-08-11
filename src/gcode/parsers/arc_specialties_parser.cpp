@@ -86,13 +86,18 @@ void ArcSpecialtiesParser::G82Handler(QVector<QString>) { setDepositionActive(tr
 
 void ArcSpecialtiesParser::G83Handler(QVector<QString>) { setDepositionActive(false); }
 
-QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<QString> params) {
+QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<QString> params,
+                                                                        bool ignore_inline_arc_optional_stop) {
     QVector<QString> filtered_params;
     QSet<QString> used_keys;
 
     for (const QString& raw_param : params) {
         const QString param = raw_param.trimmed();
         if (param.isEmpty()) {
+            continue;
+        }
+
+        if (ignore_inline_arc_optional_stop && param.compare("G81", Qt::CaseInsensitive) == 0) {
             continue;
         }
 
@@ -221,7 +226,7 @@ QVector<QString> ArcSpecialtiesParser::convertAbsoluteArcCenterParams(const QVec
 void ArcSpecialtiesParser::setDepositionActive(bool on) { m_deposition_active = on; }
 
 void ArcSpecialtiesParser::handleArcFeedMove(QVector<QString> params, bool ccw) {
-    QVector<QString> filtered_params = normalizeAndStripOrientationAxes(params);
+    QVector<QString> filtered_params = normalizeAndStripOrientationAxes(params, true);
     if (filtered_params.isEmpty()) {
         return;
     }
