@@ -163,8 +163,10 @@ bool runFileLauncher(const FileOpener& opener) {
 }
 
 bool openLocalFile(const QString& path) {
+#if !defined(Q_OS_LINUX)
     if (QDesktopServices::openUrl(QUrl::fromLocalFile(path)))
         return true;
+#endif
 
     const QString native_path = QDir::toNativeSeparators(path);
     const QList<FileOpener> file_launchers = {
