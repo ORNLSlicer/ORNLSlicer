@@ -1,19 +1,24 @@
 #include "windows/main_window.h"
 
+#include <QColor>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QHBoxLayout>
 #include <QIODevice>
 #include <QProcess>
+#include <QPushButton>
 #include <QRegularExpression>
+#include <QScrollBar>
 #include <QSettings>
 #include <QStatusBar>
 #include <QTextBlock>
 #include <QTextBlockFormat>
 #include <QTextBrowser>
+#include <QTextCharFormat>
 #include <QTextCursor>
 #include <QTextDocument>
 #include <QTimer>
@@ -94,6 +99,11 @@ namespace {
 struct FileOpener {
     QString program;
     QStringList arguments;
+};
+
+struct GuideNavigationState {
+    QList<int> back_positions;
+    QList<int> forward_positions;
 };
 
 QString userGuidePath(const QString& manual_file) {
@@ -261,6 +271,8 @@ QSet<QString> localMarkdownLinkTargets(const QString& markdown) {
 QString markdownWithHeadingAnchors(const QString& markdown) {
     const QSet<QString> linked_targets = localMarkdownLinkTargets(markdown);
     const QRegularExpression heading_pattern(QStringLiteral("^\\s{0,3}#{1,6}\\s+(.+?)\\s*#*\\s*$"));
+    const QRegularExpression explicit_anchor_pattern(
+        QStringLiteral("^\\s*<a\\s+(?:id|name)=\"([^\"]+)\"\\s*></a>\\s*$"));
     QStringList output;
     QSet<QString> emitted_targets;
 
@@ -268,6 +280,12 @@ QString markdownWithHeadingAnchors(const QString& markdown) {
     output.reserve(lines.size() + linked_targets.size());
 
     for (const QString& line : lines) {
+        const QRegularExpressionMatch explicit_anchor_match = explicit_anchor_pattern.match(line);
+        if (explicit_anchor_match.hasMatch()) {
+            output.append(QStringLiteral("<a name=\"%1\"></a>").arg(explicit_anchor_match.captured(1).toHtmlEscaped()));
+            continue;
+        }
+
         const QRegularExpressionMatch match = heading_pattern.match(line);
         if (match.hasMatch()) {
             const QString anchor = markdownHeadingAnchor(match.captured(1).trimmed());
@@ -283,19 +301,138 @@ QString markdownWithHeadingAnchors(const QString& markdown) {
     return output.join(QChar('\n'));
 }
 
-QMap<QString, int> markdownHeadingPositions(const QTextDocument* document, const QSet<QString>& linked_targets) {
+QMap<QString, QString> explicitMarkdownAnchorAliases(const QString& markdown) {
+    const QRegularExpression explicit_anchor_pattern(
+        QStringLiteral("^\\s*<a\\s+(?:id|name)=\"([^\"]+)\"\\s*></a>\\s*$"));
+    const QRegularExpression heading_pattern(QStringLiteral("^\\s{0,3}#{1,6}\\s+(.+?)\\s*#*\\s*$"));
+    QMap<QString, QString> aliases;
+    QStringList pending_anchors;
+
+    const QStringList lines = markdown.split(QChar('\n'));
+    for (const QString& line : lines) {
+        const QRegularExpressionMatch explicit_anchor_match = explicit_anchor_pattern.match(line);
+        if (explicit_anchor_match.hasMatch()) {
+            pending_anchors.append(explicit_anchor_match.captured(1));
+            continue;
+        }
+
+        const QRegularExpressionMatch heading_match = heading_pattern.match(line);
+        if (heading_match.hasMatch()) {
+            const QString heading_anchor = markdownHeadingAnchor(heading_match.captured(1).trimmed());
+            for (const QString& anchor : pending_anchors)
+                aliases.insert(anchor, heading_anchor);
+            pending_anchors.clear();
+            continue;
+        }
+
+        if (!line.trimmed().isEmpty())
+            pending_anchors.clear();
+    }
+
+    return aliases;
+}
+
+QMap<QString, int> markdownTargetPositions(const QTextDocument* document, const QSet<QString>& linked_targets,
+                                           const QMap<QString, QString>& explicit_anchor_aliases) {
     QMap<QString, int> positions;
+    QSet<QString> heading_targets = linked_targets;
+
+    for (auto alias = explicit_anchor_aliases.cbegin(); alias != explicit_anchor_aliases.cend(); ++alias) {
+        if (linked_targets.contains(alias.key()))
+            heading_targets.insert(alias.value());
+    }
 
     for (QTextBlock block = document->begin(); block != document->end(); block = block.next()) {
         if (block.blockFormat().headingLevel() == 0)
             continue;
 
         const QString anchor = markdownHeadingAnchor(block.text().trimmed());
-        if (linked_targets.contains(anchor) && !positions.contains(anchor))
+        if (heading_targets.contains(anchor) && !positions.contains(anchor))
             positions.insert(anchor, block.position());
     }
 
+    for (auto alias = explicit_anchor_aliases.cbegin(); alias != explicit_anchor_aliases.cend(); ++alias) {
+        if (!linked_targets.contains(alias.key()) || !positions.contains(alias.value()))
+            continue;
+
+        positions.insert(alias.key(), positions[alias.value()]);
+    }
+
     return positions;
+}
+
+void styleGuideDiagramPlaceholders(QTextDocument* document) {
+    QTextCharFormat placeholder_format;
+    placeholder_format.setForeground(QColor(Qt::red));
+
+    for (QTextBlock block = document->begin(); block != document->end(); block = block.next()) {
+        if (!block.text().contains(QStringLiteral("Diagram placeholder")))
+            continue;
+
+        QTextCursor cursor(block);
+        cursor.select(QTextCursor::BlockUnderCursor);
+        cursor.mergeCharFormat(placeholder_format);
+    }
+}
+
+void updateGuideNavigationButtons(const GuideNavigationState& state, QPushButton* back_button,
+                                  QPushButton* forward_button) {
+    back_button->setEnabled(!state.back_positions.isEmpty());
+    forward_button->setEnabled(!state.forward_positions.isEmpty());
+}
+
+int guideScrollPosition(const QTextBrowser* browser) { return browser->verticalScrollBar()->value(); }
+
+void pushGuideHistoryPosition(QList<int>& positions, int position) {
+    if (!positions.isEmpty() && positions.last() == position)
+        return;
+
+    positions.append(position);
+    if (positions.size() > 100)
+        positions.removeFirst();
+}
+
+void restoreGuideScrollPosition(QTextBrowser* browser, int position) {
+    QScrollBar* scroll_bar = browser->verticalScrollBar();
+    scroll_bar->setValue(qBound(scroll_bar->minimum(), position, scroll_bar->maximum()));
+}
+
+bool jumpToGuideTarget(QTextBrowser* browser, const QMap<QString, int>& target_positions, const QString& target) {
+    const auto position = target_positions.constFind(target);
+    if (position != target_positions.cend()) {
+        const QTextBlock block = browser->document()->findBlock(*position);
+        if (block.isValid()) {
+            QTextCursor cursor(block);
+            browser->setTextCursor(cursor);
+            browser->ensureCursorVisible();
+            return true;
+        }
+    }
+
+    browser->scrollToAnchor(target);
+    return false;
+}
+
+void findGuideText(QTextBrowser* browser, const QString& term, bool backward) {
+    if (term.trimmed().isEmpty())
+        return;
+
+    QTextDocument::FindFlags flags;
+    if (backward)
+        flags |= QTextDocument::FindBackward;
+
+    QTextCursor cursor = browser->document()->find(term, browser->textCursor(), flags);
+    if (cursor.isNull()) {
+        QTextCursor boundary(browser->document());
+        boundary.movePosition(backward ? QTextCursor::End : QTextCursor::Start);
+        cursor = browser->document()->find(term, boundary, flags);
+    }
+
+    if (cursor.isNull())
+        return;
+
+    browser->setTextCursor(cursor);
+    browser->ensureCursorVisible();
 }
 
 bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
@@ -309,6 +446,26 @@ bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
     dialog->resize(1000, 750);
 
     auto layout = new QVBoxLayout(dialog);
+    auto toolbar_layout = new QHBoxLayout();
+    auto back_button = new QPushButton(QStringLiteral("Back"), dialog);
+    auto forward_button = new QPushButton(QStringLiteral("Forward"), dialog);
+    auto search_edit = new QLineEdit(dialog);
+    auto previous_match_button = new QPushButton(QStringLiteral("Previous"), dialog);
+    auto next_match_button = new QPushButton(QStringLiteral("Next"), dialog);
+
+    search_edit->setClearButtonEnabled(true);
+    search_edit->setPlaceholderText(QStringLiteral("Find in guide"));
+    back_button->setEnabled(false);
+    forward_button->setEnabled(false);
+
+    toolbar_layout->addWidget(back_button);
+    toolbar_layout->addWidget(forward_button);
+    toolbar_layout->addStretch();
+    toolbar_layout->addWidget(search_edit, 1);
+    toolbar_layout->addWidget(previous_match_button);
+    toolbar_layout->addWidget(next_match_button);
+    layout->addLayout(toolbar_layout);
+
     auto browser = new QTextBrowser(dialog);
     browser->setOpenLinks(false);
     browser->setSearchPaths({QFileInfo(path).absolutePath()});
@@ -316,25 +473,52 @@ bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
     const QString markdown = QString::fromUtf8(file.readAll());
     const QSet<QString> linked_targets = localMarkdownLinkTargets(markdown);
     browser->setMarkdown(markdownWithHeadingAnchors(markdown));
+    styleGuideDiagramPlaceholders(browser->document());
 
-    auto heading_positions =
-        QSharedPointer<QMap<QString, int>>::create(markdownHeadingPositions(browser->document(), linked_targets));
-    QObject::connect(browser, &QTextBrowser::anchorClicked, browser, [browser, heading_positions](const QUrl& url) {
-        if (!url.fragment().isEmpty() && (url.isRelative() || url.path().isEmpty())) {
-            const auto position = heading_positions->constFind(url.fragment());
-            if (position != heading_positions->cend()) {
-                QTextCursor cursor(browser->document()->findBlock(*position));
-                browser->setTextCursor(cursor);
-                browser->ensureCursorVisible();
-                return;
-            }
+    const QMap<QString, QString> explicit_anchor_aliases = explicitMarkdownAnchorAliases(markdown);
+    auto target_positions = QSharedPointer<QMap<QString, int>>::create(
+        markdownTargetPositions(browser->document(), linked_targets, explicit_anchor_aliases));
+    auto navigation_state = QSharedPointer<GuideNavigationState>::create();
+    QObject::connect(back_button, &QPushButton::clicked, browser,
+                     [browser, navigation_state, back_button, forward_button] {
+                         if (navigation_state->back_positions.isEmpty())
+                             return;
 
-            browser->scrollToAnchor(url.fragment());
-            return;
-        }
+                         pushGuideHistoryPosition(navigation_state->forward_positions, guideScrollPosition(browser));
+                         const int position = navigation_state->back_positions.takeLast();
+                         restoreGuideScrollPosition(browser, position);
+                         updateGuideNavigationButtons(*navigation_state, back_button, forward_button);
+                     });
+    QObject::connect(forward_button, &QPushButton::clicked, browser,
+                     [browser, navigation_state, back_button, forward_button] {
+                         if (navigation_state->forward_positions.isEmpty())
+                             return;
 
-        QDesktopServices::openUrl(url);
-    });
+                         pushGuideHistoryPosition(navigation_state->back_positions, guideScrollPosition(browser));
+                         const int position = navigation_state->forward_positions.takeLast();
+                         restoreGuideScrollPosition(browser, position);
+                         updateGuideNavigationButtons(*navigation_state, back_button, forward_button);
+                     });
+    QObject::connect(search_edit, &QLineEdit::returnPressed, browser,
+                     [browser, search_edit] { findGuideText(browser, search_edit->text(), false); });
+    QObject::connect(previous_match_button, &QPushButton::clicked, browser,
+                     [browser, search_edit] { findGuideText(browser, search_edit->text(), true); });
+    QObject::connect(next_match_button, &QPushButton::clicked, browser,
+                     [browser, search_edit] { findGuideText(browser, search_edit->text(), false); });
+    QObject::connect(browser, &QTextBrowser::anchorClicked, browser,
+                     [browser, target_positions, navigation_state, back_button, forward_button](const QUrl& url) {
+                         if (!url.fragment().isEmpty() && (url.isRelative() || url.path().isEmpty())) {
+                             const int previous_position = guideScrollPosition(browser);
+                             if (jumpToGuideTarget(browser, *target_positions, url.fragment())) {
+                                 pushGuideHistoryPosition(navigation_state->back_positions, previous_position);
+                                 navigation_state->forward_positions.clear();
+                                 updateGuideNavigationButtons(*navigation_state, back_button, forward_button);
+                             }
+                             return;
+                         }
+
+                         QDesktopServices::openUrl(url);
+                     });
     layout->addWidget(browser);
 
     auto buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
