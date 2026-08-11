@@ -65,6 +65,14 @@ Bounds boundsFor(const std::vector<ORNL::AsPrintedModelExporter::Triangle>& tria
     return bounds;
 }
 
+QVector3D normalFor(const ORNL::AsPrintedModelExporter::Triangle& triangle) {
+    QVector3D normal = QVector3D::crossProduct(triangle.b - triangle.a, triangle.c - triangle.a);
+    if (normal.lengthSquared() > std::numeric_limits<float>::epsilon()) {
+        normal.normalize();
+    }
+    return normal;
+}
+
 bool near(float actual, float expected, float tolerance = kTolerance) {
     return std::abs(actual - expected) <= tolerance;
 }
@@ -181,6 +189,27 @@ int main(int argc, char* argv[]) {
                      "Expected centerline STL width to ignore the true bead width.");
     passed &= expect(near(centerline_bounds.max.z() - centerline_bounds.min.z(), kCenterlineDiameter),
                      "Expected centerline STL height to use the centerline tube diameter.");
+    bool checked_centerline_side_normal = false;
+    for (const ORNL::AsPrintedModelExporter::Triangle& triangle : centerline_triangles) {
+        const QVector3D normal = normalFor(triangle);
+        if (normal.lengthSquared() <= std::numeric_limits<float>::epsilon() || std::abs(normal.x()) > 0.5f) {
+            continue;
+        }
+
+        const QVector3D centroid = (triangle.a + triangle.b + triangle.c) / 3.0f;
+        QVector3D outward(0.0f, centroid.y() - (kCenterlineDiameter / 2.0f),
+                          centroid.z() - (kCenterlineDiameter / 2.0f));
+        if (outward.lengthSquared() <= std::numeric_limits<float>::epsilon()) {
+            continue;
+        }
+        outward.normalize();
+
+        passed &= expect(QVector3D::dotProduct(normal, outward) > 0.0f,
+                         "Expected centerline STL side-wall normals to point outward.");
+        checked_centerline_side_normal = true;
+        break;
+    }
+    passed &= expect(checked_centerline_side_normal, "Expected a centerline STL side-wall normal to test.");
 
     QSharedPointer<ORNL::SegmentBase> radial_segment =
         makeLineSegment(pointFromMm(10.0f, -5.0f), pointFromMm(10.0f, 5.0f), 4);

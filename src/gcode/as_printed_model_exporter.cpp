@@ -306,8 +306,8 @@ void appendCenterlineTube(std::vector<AsPrintedModelExporter::Triangle>& triangl
     for (std::size_t i = 0; i + 1 < points.size(); ++i) {
         for (int j = 0; j < kCenterlineTubeSides; ++j) {
             const int next = (j + 1) % kCenterlineTubeSides;
-            appendOutputTriangle(triangles, rings[i][j], rings[i + 1][j], rings[i][next], output_scale);
-            appendOutputTriangle(triangles, rings[i][next], rings[i + 1][j], rings[i + 1][next], output_scale);
+            appendOutputTriangle(triangles, rings[i][j], rings[i][next], rings[i + 1][j], output_scale);
+            appendOutputTriangle(triangles, rings[i][next], rings[i + 1][next], rings[i + 1][j], output_scale);
         }
     }
 
