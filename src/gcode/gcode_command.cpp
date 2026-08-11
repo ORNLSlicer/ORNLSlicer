@@ -69,7 +69,10 @@ void GcodeCommand::addOptionalParameter(const char param_key, const double param
 
 bool GcodeCommand::removeParameter(const char param_key) { return m_parameters.remove(param_key) > 0; }
 
-void GcodeCommand::clearParameters() { m_parameters.clear(); }
+void GcodeCommand::clearParameters() {
+    m_parameters.clear();
+    m_optional_parameters.clear();
+}
 
 void GcodeCommand::clearComment() { m_comment.clear(); }
 
@@ -93,7 +96,12 @@ GcodeCommand& GcodeCommand::operator=(const GcodeCommand& other) {
     m_command = other.m_command;
     m_command_id = other.m_command_id;
     m_parameters = other.m_parameters;
+    m_optional_parameters = other.m_optional_parameters;
     m_comment = other.m_comment;
+    m_is_motion_command = other.m_is_motion_command;
+    m_is_end_of_layer = other.m_is_end_of_layer;
+    m_deposition_active = other.m_deposition_active;
+    m_extruder_speed = other.m_extruder_speed;
     return *this;
 }
 

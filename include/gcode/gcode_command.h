@@ -98,7 +98,7 @@ class GcodeCommand : public QObject {
     //! was not in the mapping.
     bool removeParameter(const char param_key);
 
-    //! \brief Clears all parameters from the mapping.
+    //! \brief Clears regular and optional parameters from their mappings.
     void clearParameters();
 
     //! \brief Clears the comment string.
