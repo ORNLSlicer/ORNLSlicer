@@ -34,7 +34,9 @@ The writer emits `G00` for rapid travel, `G01` for feed moves, and `G02`/`G03` f
 | `I`, `J` | G2/G3 arc center parameters. The values are absolute center coordinates in G161 mode and relative start-to-center offsets in G162 mode. |
 | `F` | Feedrate in millimeters per minute. It is emitted on `G01`, `G02`, and `G03`; rapid `G00` moves do not include `F`. |
 
-Feed moves use `ZR=-135.0000`. Rapid travel moves use `ZR=-90.0000`. For the Arc Specialties partner frame, set `Printer > Machine Setup > G-Code Frame Rotation Z` to `-90 deg`.
+The initial TRAFO-off world approach uses `ZR=-90.0000`. Work-object moves, including the first travel after kinematics
+are enabled, use `ZR=-135.0000`. For the Arc Specialties partner frame, set `Printer > Machine Setup > G-Code Frame
+Rotation Z` to `-90 deg`.
 
 ## AP And CP
 

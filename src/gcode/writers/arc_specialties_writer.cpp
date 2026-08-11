@@ -34,6 +34,9 @@ const QString kCylindricalAxisXComment = "AXIS_X=";
 //! @brief Cylindrical comment field used by the preview to recover the cylinder axis Y.
 const QString kCylindricalAxisYComment = "AXIS_Y=";
 
+//! @brief First TRAFO-off move comment used to keep the approach orientation distinct from work-object motion.
+const QString kWorldApproachTravelComment = "WORLD APPROACH TRAVEL";
+
 //! @brief Fixed tool-frame XR.
 constexpr double kToolFrameXR = 180.0;
 
@@ -156,8 +159,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
-        text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) %
-                            "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
+        text += commentLine(QString("Initial World Approach Tool Frame Rotation: XR=") %
+                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
+                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
             "Initial Approach: TRAFO-off world approach uses cylinder center XY and part maximum Z plus " %
@@ -275,8 +279,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
-        text += commentLine(QString("Rapid Travel Tool Frame Rotation: XR=") % QString::number(kToolFrameXR, 'f', 4) %
-                            "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
+        text += commentLine(QString("Initial World Approach Tool Frame Rotation: XR=") %
+                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
+                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                             QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
             "Initial Approach: TRAFO-off world approach uses the first travel XY and part maximum Z plus " %
@@ -511,7 +516,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
                 : travel_destination;
         const Point startup_world_approach = safeStartupWorldApproachPoint(first_travel_destination, params);
         rv += commentLine("INITIAL WORLD APPROACH");
-        rv += writeMotion("G00", startup_world_approach, speed, params, "WORLD APPROACH TRAVEL",
+        rv += writeMotion("G00", startup_world_approach, speed, params, kWorldApproachTravelComment,
                           first_travel_destination);
         rv += "#FLUSH WAIT" % m_newline;
         rv += m_newline;
@@ -698,8 +703,9 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
                                           const Point& cp_reference) {
     setFeedrate(speed);
     if (command == "G00") {
-        return command % writeCoordinates(destination, params, kRapidTravelToolFrameZR, cp_reference) %
-               commentSpaceLine(comment);
+        const double tool_frame_zr =
+            comment == kWorldApproachTravelComment ? kRapidTravelToolFrameZR : kToolFrameZR;
+        return command % writeCoordinates(destination, params, tool_frame_zr, cp_reference) % commentSpaceLine(comment);
     }
     else {
         return command % writeCoordinates(destination, params, kToolFrameZR, cp_reference) % m_f %
