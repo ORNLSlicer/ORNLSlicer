@@ -19,7 +19,7 @@ class SettingTab;
 
 //! \brief Widget to provide custom double spin box
 //! Based on QDoubleSpinBox with overridden wheelEvent functionality
-//! Supports the following settig types: unitless_float, rpm, density, percentage
+//! Supports the following setting types: unitless_float, rpm, deposition_rate, density, percentage
 class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
     Q_OBJECT
 
@@ -107,6 +107,15 @@ class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
 
     //! \brief Returns another integer setting's effective value for one selected base.
     int effectiveInt(const QString& key, int settings_base_index) const;
+
+    //! \brief Returns whether this row should present deposition control as a unitless integer.
+    bool usesUnitlessDepositionRate() const;
+
+    //! \brief Returns whether one selected base should present deposition control as a unitless integer.
+    bool usesUnitlessDepositionRate(int settings_base_index) const;
+
+    //! \brief Updates deposition-rate decimals and unit text for the selected machine type.
+    void updateDepositionRatePresentation();
 
     //! \brief Returns whether selected settings bases agree on this row's effective value.
     bool hasConsistentEffectiveDouble() const;

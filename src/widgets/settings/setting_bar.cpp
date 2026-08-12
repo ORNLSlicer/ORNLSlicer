@@ -354,6 +354,7 @@ void SettingBar::forwardModifiedSetting(QString setting_key) {
 
     m_syncing_radial_settings = true;
     modified_keys.append(syncCylindricalSlicingSettings(setting_key));
+    modified_keys.append(syncFrictionStirMachineTypeSettings(setting_key));
     m_syncing_radial_settings = false;
 
     const bool dependencies_refreshed = modified_keys.size() > 1;
@@ -379,6 +380,26 @@ QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_ke
             sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kArcSpecialties));
             reloadSettingRow(PRS::MachineSetup::kSyntax);
             synced_keys.push_back(PRS::MachineSetup::kSyntax);
+        }
+    }
+
+    return synced_keys;
+}
+
+QStringList SettingBar::syncFrictionStirMachineTypeSettings(const QString& setting_key) {
+    QStringList synced_keys;
+    QSharedPointer<SettingsBase> sb = GSM->getGlobal();
+
+    if (setting_key == PRS::MachineSetup::kSyntax) {
+        const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+        const int machine_type = sb->setting<int>(PRS::MachineSetup::kMachineType);
+        const int friction_stir = static_cast<int>(MachineType::kFrictionStir);
+
+        if (syntax == GcodeSyntax::kMeld && machine_type != friction_stir) {
+            emit settingAboutToChange(PRS::MachineSetup::kMachineType, QList<QSharedPointer<SettingsBase>>());
+            sb->setSetting(PRS::MachineSetup::kMachineType, friction_stir);
+            reloadSettingRow(PRS::MachineSetup::kMachineType);
+            synced_keys.push_back(PRS::MachineSetup::kMachineType);
         }
     }
 

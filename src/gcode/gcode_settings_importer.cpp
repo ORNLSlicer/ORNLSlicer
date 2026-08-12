@@ -12,6 +12,7 @@
 #include "managers/settings/settings_manager.h"
 #include "managers/settings/settings_version_control.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 namespace {
@@ -195,10 +196,18 @@ bool validateDoubleRange(const QString& key, const QString& type, double value, 
         minimum = Constants::Limits::Minimums::kMinUnitlessFloat;
         maximum = Constants::Limits::Maximums::kMaxUnitlessFloat;
     }
-    else if (type == "percentage") { maximum = 500.0; }
-    else if (type == "percentage100") { maximum = 100.0; }
-    else if (type == "rpm") { maximum = 9999.99; }
-    else if (type == "density") { maximum = 9999.9999; }
+    else if (type == "percentage") {
+        maximum = 500.0;
+    }
+    else if (type == "percentage100") {
+        maximum = 100.0;
+    }
+    else if (type == "rpm" || type == "deposition_rate") {
+        maximum = 9999.99;
+    }
+    else if (type == "density") {
+        maximum = 9999.9999;
+    }
     else if (type == "angle") {
         minimum = Constants::Limits::Minimums::kMinAngle();
         maximum = Constants::Limits::Maximums::kMaxAngle();
@@ -215,9 +224,9 @@ bool validateDoubleRange(const QString& key, const QString& type, double value, 
 
 bool isDoubleType(const QString& type) {
     return type == "location" || type == "distance" || type == "unitless_float" || type == "voltage" ||
-           type == "speed" || type == "rpm" || type == "accel" || type == "density" || type == "ang_vel" ||
-           type == "time" || type == "percentage" || type == "percentage100" || type == "temperature" ||
-           type == "angle" || type == "area";
+           type == "speed" || type == "rpm" || type == "deposition_rate" || type == "accel" || type == "density" ||
+           type == "ang_vel" || type == "time" || type == "percentage" || type == "percentage100" ||
+           type == "temperature" || type == "angle" || type == "area";
 }
 
 double settingDouble(const fifojson& settings, const QString& key) {
@@ -393,8 +402,10 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
     const bool has_max_extruder_speed = max_extruder_speed > 0.0;
     const bool invalid_extruder_range =
         has_min_extruder_speed && has_max_extruder_speed && min_extruder_speed > max_extruder_speed;
+    const bool unitless_deposition =
+        settingInt(settings, PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
 
-    if (invalid_extruder_range) {
+    if (!unitless_deposition && invalid_extruder_range) {
         errors.append("Minimum Extruder Speed (" + numberText(min_extruder_speed) +
                       ") is greater than Maximum Extruder Speed (" + numberText(max_extruder_speed) + ").");
     }
@@ -414,7 +425,13 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
         const double value    = settingDouble(settings, key);
         const QString display = settingDisplay(key, master);
 
-        if (type == "rpm" && key != PRS::MachineSpeed::kMinExtruderSpeed &&
+        if (type == "deposition_rate" && unitless_deposition &&
+            std::abs(value - std::round(value)) > kIntegerTolerance) {
+            errors.append(display + " must be a whole-number deposition value for Friction Stir.");
+        }
+
+        const bool rpm_based_deposition = type == "rpm" || (type == "deposition_rate" && !unitless_deposition);
+        if (rpm_based_deposition && key != PRS::MachineSpeed::kMinExtruderSpeed &&
             key != PRS::MachineSpeed::kMaxExtruderSpeed && !invalid_extruder_range) {
             if (has_min_extruder_speed && value < min_extruder_speed) {
                 errors.append(display + " (" + numberText(value) + ") is below Minimum Extruder Speed (" +

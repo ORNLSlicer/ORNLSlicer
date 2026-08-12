@@ -166,9 +166,9 @@ settings:
     local: true
   - name: "infill_extruder_speed"
     display: "Infill Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder speed for the infill"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the infill. Friction Stir uses a unitless integer; other machine types use RPM."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}]}
     options: []
     default: 0
     minor: "Infill"

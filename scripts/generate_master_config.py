@@ -57,6 +57,7 @@ VALID_TYPES = {
     "area",
     "boolean",
     "density",
+    "deposition_rate",
     "distance",
     "enumeration",
     "location",

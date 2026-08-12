@@ -170,6 +170,8 @@ bool SettingRowBase::isShown() const {
     return rowWidgetsVisible();
 }
 
+bool SettingRowBase::dependencyEnabled() const { return m_dependency_enabled; }
+
 bool SettingRowBase::rowWidgetsVisible() const {
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
@@ -338,6 +340,9 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
     else if (root.key == "NOT") { return !checkLogic(root.children[0]); }
     else {
         if (root.dependentRow.isNull()) return true;
+
+        if (!root.dependentRow->dependencyEnabled())
+            return false;
 
         if (QCheckBox* checkBox = dynamic_cast<QCheckBox*>(root.dependentRow.get())) {
             for (auto& el : root.val.items()) {

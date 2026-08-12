@@ -5,7 +5,7 @@ settings:
     display: "Spiral Perimeters"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on perimeters"
-    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"NOT":[{"machine_type":6}]}]}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -17,7 +17,7 @@ settings:
     display: "Spiral Insets"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on insets"
-    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"NOT":[{"machine_type":6}]}]}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -29,7 +29,7 @@ settings:
     display: "Spiral Skins"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on skin"
-    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"NOT":[{"machine_type":6}]}]}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -41,7 +41,7 @@ settings:
     display: "Spiral Infill"
     type: "boolean"
     tooltip: "If selected, will perform a spiral lift on infill"
-    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"NOT":[{"machine_type":6}]}]}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -53,7 +53,7 @@ settings:
     display: "End of Layer"
     type: "boolean"
     tooltip: "If selected, will perform a spiral list on the last path in a layer"
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: false
     minor: "Spiral Lift"
@@ -113,7 +113,7 @@ settings:
     display: "Disable Feedrate Scaling for Spiral Lift"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change spiral lift path speeds."
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"AND":[{"minimum_layer_time_method":1},{"NOT":[{"machine_type":6}]}]}]}]}
     options: []
     default: false
     minor: "Spiral Lift"

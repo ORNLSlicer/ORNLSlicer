@@ -668,8 +668,9 @@ enum class MachineType : uint8_t {
     kFilament   = 1,
     kWire_Arc   = 2,
     kLaser_Wire = 3,
-    kConcrete   = 4,
-    kThermoset  = 5
+    kConcrete = 4,
+    kThermoset = 5,
+    kFrictionStir = 6
 };
 
 enum class PrintMaterial : uint8_t {

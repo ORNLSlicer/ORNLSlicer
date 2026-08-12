@@ -96,6 +96,9 @@ class SettingRowBase {
     //! \brief Returns whether this row's widgets should currently be visible.
     bool isShown() const;
 
+    //! \brief Returns whether this row's own dependencies are currently satisfied.
+    bool dependencyEnabled() const;
+
     //! \brief Sets dependency logic for this row
     //! \param root: DependencyNode object that contains all dependency information
     void setDependencyLogic(DependencyNode root);

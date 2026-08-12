@@ -5,7 +5,7 @@ settings:
     display: "Enable Support"
     type: "boolean"
     tooltip: "If selected, support structures will be generated for overhangs"
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: false
     minor: "Support"

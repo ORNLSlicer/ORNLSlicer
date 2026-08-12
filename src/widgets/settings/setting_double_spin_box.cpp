@@ -17,12 +17,14 @@
 #include "configs/settings_base.h"
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
 namespace {
 constexpr int kModifyFeedrateLayerTimeMethod = 1;
+constexpr int kFrictionStirMachineType = static_cast<int>(MachineType::kFrictionStir);
 
 const QString kInfillMaximumPathLength = "infill_maximum_path_length";
 
@@ -115,7 +117,18 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
         this->setMaximum(9999.99);
         unitText = "rpm";
     }
-    else if (type == "percentage100")  // Percentage values with a maximum value of 100
+    else if (type == "deposition_rate") {
+        this->setMinimum(0);
+        this->setMaximum(9999.99);
+        if (usesUnitlessDepositionRate()) {
+            this->setDecimals(0);
+            unitText = "unitless";
+        }
+        else {
+            unitText = "rpm";
+        }
+    }
+    else if (type == "percentage100") // Percentage values with a maximum value of 100
     {
         this->setMinimum(0);
         this->setMaximum(100);
@@ -144,6 +157,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
     m_unit_label.reset(new QLabel(unitText));
     layout->addWidget(m_unit_label.get(), index, 2, Qt::AlignLeft);
     registerRowWidget(this);
+    updateDepositionRatePresentation();
 }
 
 SettingRowBase* SettingDoubleSpinBox::createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
@@ -194,6 +208,7 @@ void SettingDoubleSpinBox::valueChanged(QVariant val) {
 
 void SettingDoubleSpinBox::reloadValue() {
     this->blockSignals(true);
+    updateDepositionRatePresentation();
     bool consistent = true;
     double cur      = reloadValueHelper<double>(consistent);
     if (consistent) setValue(cur);
@@ -212,6 +227,8 @@ void SettingDoubleSpinBox::wheelEvent(QWheelEvent* event) {
 }
 
 void SettingDoubleSpinBox::checkDynamicDependencies() {
+    updateDepositionRatePresentation();
+
     if (!m_dependency_enabled) {
         clearNotification();
         styleLabel(true);
@@ -296,6 +313,36 @@ int SettingDoubleSpinBox::effectiveInt(const QString& key, int settings_base_ind
     return global_value;
 }
 
+bool SettingDoubleSpinBox::usesUnitlessDepositionRate() const { return usesUnitlessDepositionRate(0); }
+
+bool SettingDoubleSpinBox::usesUnitlessDepositionRate(int settings_base_index) const {
+    return effectiveInt(PRS::MachineSetup::kMachineType, settings_base_index) == kFrictionStirMachineType;
+}
+
+void SettingDoubleSpinBox::updateDepositionRatePresentation() {
+    const QString type = masterString(m_json, Constants::Settings::Master::kType);
+    if (type != "deposition_rate")
+        return;
+
+    if (usesUnitlessDepositionRate()) {
+        setDecimals(0);
+        if (!m_key_label.isNull()) {
+            QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
+            display.replace("Extruder Speed", "Deposition Value");
+            m_key_label->setText(display);
+        }
+        if (!m_unit_label.isNull())
+            m_unit_label->setText("unitless");
+    }
+    else {
+        setDecimals(2);
+        if (!m_key_label.isNull())
+            m_key_label->setText(masterString(m_json, Constants::Settings::Master::kDisplay));
+        if (!m_unit_label.isNull())
+            m_unit_label->setText("rpm");
+    }
+}
+
 bool SettingDoubleSpinBox::hasConsistentEffectiveDouble() const {
     if (m_settings_bases.size() <= 1) return true;
 
@@ -323,8 +370,10 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
     if (m_sb.isNull()) return QString();
 
     const QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
-    const QString type    = masterString(m_json, Constants::Settings::Master::kType);
-    const double value    = effectiveDouble(settings_base_index);
+    const QString type = masterString(m_json, Constants::Settings::Master::kType);
+    const double value = effectiveDouble(settings_base_index);
+    const bool rpm_based_deposition =
+        type == "rpm" || (type == "deposition_rate" && !usesUnitlessDepositionRate(settings_base_index));
 
     const double min_extruder_speed   = effectiveDouble(PRS::MachineSpeed::kMinExtruderSpeed, settings_base_index);
     const double max_extruder_speed   = effectiveDouble(PRS::MachineSpeed::kMaxExtruderSpeed, settings_base_index);
@@ -338,7 +387,7 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
             return "Minimum Extruder Speed (" + formatRpm(min_extruder_speed) +
                    ") is greater than Maximum Extruder Speed (" + formatRpm(max_extruder_speed) + ").";
     }
-    else if (type == "rpm" && !invalid_extruder_range) {
+    else if (rpm_based_deposition && !invalid_extruder_range) {
         if (has_min_extruder_speed && value < min_extruder_speed)
             return display + " (" + formatRpm(value) + ") is below Minimum Extruder Speed (" +
                    formatRpm(min_extruder_speed) + ").";

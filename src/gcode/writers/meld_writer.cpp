@@ -183,7 +183,6 @@ QString MeldWriter::writeLine(const Point& start_point, const Point& target_poin
     int rpm                      = params->setting<int>(SS::kExtruderSpeed);
     RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
@@ -349,7 +348,7 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPoint
     m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
-    output_rpm      = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
+    output_rpm = depositionOutputValue(initial_rpm);
 
     if (!m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
         rv += "M4" % m_s % QString::number(output_rpm) % " @714" % commentSpaceLine("TURN SPINDLE ON");
@@ -384,7 +383,7 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPoint
             }
         }
         else {
-            output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * rpm;
+            output_rpm = depositionOutputValue(rpm);
             rv += "M24 S" % QString::number(output_rpm) % commentSpaceLine("TURN ACTUATOR ON");
             // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
             // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't
@@ -406,6 +405,13 @@ QString MeldWriter::writeExtruderOff() {
         m_deposition_active = false;
     }
     return rv;
+}
+
+float MeldWriter::depositionOutputValue(int deposition_value) const {
+    if (m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFrictionStir)
+        return deposition_value;
+
+    return deposition_value * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 }
 
 QString MeldWriter::writeCoordinates(Point destination) {

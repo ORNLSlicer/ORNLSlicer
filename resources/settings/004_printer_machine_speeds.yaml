@@ -29,7 +29,7 @@ settings:
     display: "Minimum Extruder Speed"
     type: "rpm"
     tooltip: "Minimum speed of the extruder"
-    depends: {}
+    depends: {"NOT":[{"machine_type":6}]}
     options: []
     default: 0
     minor: "Machine Speeds"
@@ -41,7 +41,7 @@ settings:
     display: "Maximum Extruder Speed"
     type: "rpm"
     tooltip: "Maximum speed of the extruder"
-    depends: {}
+    depends: {"NOT":[{"machine_type":6}]}
     options: []
     default: 0
     minor: "Machine Speeds"

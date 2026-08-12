@@ -81,6 +81,9 @@ class MeldWriter : public WriterBase {
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
 
+    //! \brief Returns the machine-specific value to write for deposition control.
+    float depositionOutputValue(int deposition_value) const;
+
     //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
     QString writeCoordinates(Point destination);
 

@@ -87,9 +87,9 @@ settings:
     local: true
   - name: "inset_extruder_speed"
     display: "Inset Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder speed for inset paths"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    type: "deposition_rate"
+    tooltip: "Deposition control value for inset paths. Friction Stir uses a unitless integer; other machine types use RPM."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}]}
     options: []
     default: 0
     minor: "Inset"

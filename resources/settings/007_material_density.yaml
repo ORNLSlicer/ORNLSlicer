@@ -5,7 +5,7 @@ settings:
     display: "Printing Material"
     type: "enumeration"
     tooltip: "Material type used to calculate approximate weight\u00a0"
-    depends: {}
+    depends: {"NOT":[{"machine_type":6}]}
     options:
       - "ABS20CF"
       - "ABS"
