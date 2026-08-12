@@ -599,6 +599,30 @@ enum class PathOrderOptimization : uint8_t {
     kCustomPoint = 5
 };
 
+inline PathOrderOptimization optionalPathOrderOptimization(int optimization,
+                                                           PathOrderOptimization default_optimization) {
+    switch (optimization) {
+        case 1:
+            return PathOrderOptimization::kNextClosest;
+        case 2:
+            return PathOrderOptimization::kNextFarthest;
+        case 3:
+            return PathOrderOptimization::kRandom;
+        case 4:
+            return PathOrderOptimization::kOutsideIn;
+        case 5:
+            return PathOrderOptimization::kInsideOut;
+        case 6:
+            return PathOrderOptimization::kCustomPoint;
+        default:
+            return default_optimization;
+    }
+}
+
+inline bool optionalPathOrderUsesCustomLocation(int optimization) {
+    return optimization == static_cast<int>(PathOrderOptimization::kCustomPoint) + 1;
+}
+
 enum class PointOrderOptimization : uint8_t {
     kNextClosest = 0,
     kNextFarthest = 1,

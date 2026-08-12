@@ -34,7 +34,10 @@ bool usesCustomIslandLocation(const QSharedPointer<SettingsBase>& sb) {
 bool usesCustomPathLocation(const QSharedPointer<SettingsBase>& sb) {
     const PathOrderOptimization path_order =
         static_cast<PathOrderOptimization>(sb->setting<int>(PS::Optimizations::kPathOrder));
-    return path_order == PathOrderOptimization::kCustomPoint;
+    return path_order == PathOrderOptimization::kCustomPoint ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kPerimeterPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kSkinPathOrder));
 }
 
 bool usesCustomPointOrderLocation(const QSharedPointer<SettingsBase>& sb) {
