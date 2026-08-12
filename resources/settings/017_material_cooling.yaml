@@ -41,7 +41,7 @@ settings:
     display: "Force Min / Max Layer Time"
     type: "boolean"
     tooltip: "If selected, a min / max layer time is reinforced for each layer so that there is adequate time for cooling"
-    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
+    depends: {"slicing_mode":0}
     options: []
     default: false
     minor: "Cooling"
