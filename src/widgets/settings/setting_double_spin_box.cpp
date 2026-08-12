@@ -25,6 +25,7 @@ namespace ORNL {
 namespace {
 constexpr int kModifyFeedrateLayerTimeMethod = 1;
 constexpr int kFrictionStirMachineType = static_cast<int>(MachineType::kFrictionStir);
+constexpr double kMaximumDepositionRate = 10000.0;
 
 const QString kInfillMaximumPathLength = "infill_maximum_path_length";
 
@@ -119,7 +120,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
     }
     else if (type == "deposition_rate") {
         this->setMinimum(0);
-        this->setMaximum(9999.99);
+        this->setMaximum(kMaximumDepositionRate);
         if (usesIntegerDepositionRate()) {
             this->setDecimals(0);
         }
@@ -325,7 +326,7 @@ void SettingDoubleSpinBox::updateDepositionRatePresentation() {
 
     if (usesIntegerDepositionRate()) {
         setDecimals(0);
-        setMaximum(9999);
+        setMaximum(kMaximumDepositionRate);
         if (!m_key_label.isNull()) {
             QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
             display.replace("Extruder Speed", "Deposition Value");
@@ -336,7 +337,7 @@ void SettingDoubleSpinBox::updateDepositionRatePresentation() {
     }
     else {
         setDecimals(2);
-        setMaximum(9999.99);
+        setMaximum(kMaximumDepositionRate);
         if (!m_key_label.isNull())
             m_key_label->setText(masterString(m_json, Constants::Settings::Master::kDisplay));
         if (!m_unit_label.isNull())

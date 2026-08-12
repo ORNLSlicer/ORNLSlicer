@@ -202,8 +202,11 @@ bool validateDoubleRange(const QString& key, const QString& type, double value, 
     else if (type == "percentage100") {
         maximum = 100.0;
     }
-    else if (type == "rpm" || type == "deposition_rate") {
+    else if (type == "rpm") {
         maximum = 9999.99;
+    }
+    else if (type == "deposition_rate") {
+        maximum = 10000.0;
     }
     else if (type == "density") {
         maximum = 9999.9999;

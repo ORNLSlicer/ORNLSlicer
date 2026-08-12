@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for perimeter moves to prevent material from sticking up"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -55,8 +55,8 @@ settings:
     local: true
   - name: "perimeter_wipe_extruder_speed"
     display: "Perimeter Wipe Extruder Speed"
-    type: "rpm"
-    tooltip: "Sets the extruder speed for the perimeter tip wipe move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the perimeter tip wipe move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
     options: []
     default: 0
@@ -105,7 +105,7 @@ settings:
     display: "Enable Inset Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for inset moves to prevent material from sticking up"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -155,8 +155,8 @@ settings:
     local: true
   - name: "inset_wipe_extruder_speed"
     display: "Inset Wipe Extruder Speed"
-    type: "rpm"
-    tooltip: "Sets the extruder speed for the inset tip wipe move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the inset tip wipe move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
     options: []
     default: 0
@@ -205,7 +205,7 @@ settings:
     display: "Enable Skeleton Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for skeleton moves to prevent material from sticking up"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -255,8 +255,8 @@ settings:
     local: true
   - name: "skeleton_wipe_extruder_speed"
     display: "Skeleton Wipe Extruder Speed"
-    type: "rpm"
-    tooltip: "Sets the extruder speed for the skeleton tip wipe move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the skeleton tip wipe move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
     options: []
     default: 0
@@ -305,7 +305,7 @@ settings:
     display: "Enable Skin Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for skin moves to prevent material from sticking up"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -355,8 +355,8 @@ settings:
     local: true
   - name: "skin_wipe_extruder_speed"
     display: "Skin Wipe Extruder Speed"
-    type: "rpm"
-    tooltip: "Sets the extruder speed for the skin tip wipe move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the skin tip wipe move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
     options: []
     default: 0
@@ -405,7 +405,7 @@ settings:
     display: "Enable Infill Tip Wipe"
     type: "boolean"
     tooltip: "If selected, will do a tip wipe for infill moves to prevent material from sticking up"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Tip Wipe"
@@ -455,8 +455,8 @@ settings:
     local: true
   - name: "infill_wipe_extruder_speed"
     display: "Infill Wipe Extruder Speed"
-    type: "rpm"
-    tooltip: "Sets the extruder speed for the infill tip wipe move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the infill tip wipe move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
     options: []
     default: 0
@@ -517,7 +517,7 @@ settings:
     display: "Disable Feedrate Scaling for Tip Wipes"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change tip wipe path speeds."
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"AND":[{"minimum_layer_time_method":1},{"NOT":[{"machine_type":6}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Tip Wipe"

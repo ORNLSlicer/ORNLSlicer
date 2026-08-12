@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of a perimeter path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -51,8 +51,8 @@ settings:
     local: true
   - name: "perimeter_slow_down_extruder_speed"
     display: "Perimeter Slow Down Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the perimeter slow down move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the perimeter slow down move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -77,7 +77,7 @@ settings:
     display: "Enable Inset Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of an inset path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -123,8 +123,8 @@ settings:
     local: true
   - name: "inset_slow_down_extruder_speed"
     display: "Inset Slow Down Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the inset slow down move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the inset slow down move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -149,7 +149,7 @@ settings:
     display: "Enable Skin Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of a skin path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -195,8 +195,8 @@ settings:
     local: true
   - name: "skin_slow_down_extruder_speed"
     display: "Skin Slow Down Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the skin slow down move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the skin slow down move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -221,7 +221,7 @@ settings:
     display: "Enable Infill Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of an infill path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -267,8 +267,8 @@ settings:
     local: true
   - name: "infill_slow_down_extruder_speed"
     display: "Infill Slow Down Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the infill slow down move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the infill slow down move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -293,7 +293,7 @@ settings:
     display: "Enable Skeleton Slow Down"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the end of a skeleton path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Slow Down"
@@ -339,8 +339,8 @@ settings:
     local: true
   - name: "skeleton_slow_down_extruder_speed"
     display: "Skeleton Slow Down Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the skeleton slow down move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the skeleton slow down move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -377,7 +377,7 @@ settings:
     display: "Disable Feedrate Scaling for Slow Down"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change slow down path speeds."
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"AND":[{"minimum_layer_time_method":1},{"NOT":[{"machine_type":6}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Slow Down"

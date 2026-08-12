@@ -5,7 +5,7 @@ settings:
     display: "Enable Perimeter Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a perimeter path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -39,8 +39,8 @@ settings:
     local: true
   - name: "perimeter_start-up_extruder_speed"
     display: "Perimeter Start-Up Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the perimeter start-up move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the perimeter start-up move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -52,7 +52,7 @@ settings:
   - name: "perimeter_start-up_ramp-up"
     display: "Enable Perimeter Start-Up Ramp-Up"
     type: "boolean"
-    tooltip: "If selected, will ramp-up the extruder speed from the Perimeter Start-Up Extruder Speed to the Perimeter Speed using short segments of increasing RPM"
+    tooltip: "If selected, will ramp-up the deposition control value from the Perimeter Start-Up Extruder Speed to the Perimeter Speed using short segments of increasing values"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_start-up":true}]}]}
     options: []
     default: false
@@ -77,7 +77,7 @@ settings:
     display: "Enable Inset Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of an inset path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -111,8 +111,8 @@ settings:
     local: true
   - name: "inset_start-up_extruder_speed"
     display: "Inset Start-Up Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the inset start-up move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the inset start-up move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -124,7 +124,7 @@ settings:
   - name: "inset_start-up_ramp-up"
     display: "Enable Inset Start-Up Ramp-Up"
     type: "boolean"
-    tooltip: "If selected, will ramp-up the extruder speed from the Inset Start-Up Extruder Speed to the Inset Speed using short segments of increasing RPM"
+    tooltip: "If selected, will ramp-up the deposition control value from the Inset Start-Up Extruder Speed to the Inset Speed using short segments of increasing values"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_start-up":true}]}]}
     options: []
     default: false
@@ -149,7 +149,7 @@ settings:
     display: "Enable Skin Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a skin path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -183,8 +183,8 @@ settings:
     local: true
   - name: "skin_start-up_extruder_speed"
     display: "Skin Start-Up Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the skin start-up move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the skin start-up move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -196,7 +196,7 @@ settings:
   - name: "skin_start-up_ramp-up"
     display: "Enable Skin Start-Up Ramp-Up"
     type: "boolean"
-    tooltip: "If selected, will ramp-up the extruder speed from the Skin Start-Up Extruder Speed to the Skin Speed using short segments of increasing RPM"
+    tooltip: "If selected, will ramp-up the deposition control value from the Skin Start-Up Extruder Speed to the Skin Speed using short segments of increasing values"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_start-up":true}]}]}
     options: []
     default: false
@@ -221,7 +221,7 @@ settings:
     display: "Enable Infill Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of an infill path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -255,8 +255,8 @@ settings:
     local: true
   - name: "infill_start-up_extruder_speed"
     display: "Infill Start-Up Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the infill start-up move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the infill start-up move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -268,7 +268,7 @@ settings:
   - name: "infill_start-up_ramp-up"
     display: "Enable Infill Start-Up Ramp-Up"
     type: "boolean"
-    tooltip: "If selected, will ramp-up the extruder speed from the Infill Start-Up Extruder Speed to the Infill Speed using short segments of increasing RPM"
+    tooltip: "If selected, will ramp-up the deposition control value from the Infill Start-Up Extruder Speed to the Infill Speed using short segments of increasing values"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_start-up":true}]}]}
     options: []
     default: false
@@ -293,7 +293,7 @@ settings:
     display: "Enable Skeleton Start-Up"
     type: "boolean"
     tooltip: "If selected, will move at a slower speed for a certain distance at the beginning of a skeleton path"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"NOT":[{"machine_type":6}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: false
     minor: "Start-Up"
@@ -327,8 +327,8 @@ settings:
     local: true
   - name: "skeleton_start-up_extruder_speed"
     display: "Skeleton Start-Up Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder Speed for the skeleton start-up move"
+    type: "deposition_rate"
+    tooltip: "Deposition control value for the skeleton start-up move. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -340,7 +340,7 @@ settings:
   - name: "skeleton_start-up_ramp-up"
     display: "Enable Skeleton Start-Up Ramp-Up"
     type: "boolean"
-    tooltip: "If selected, will ramp-up the extruder speed from the Skeleton Start-Up Extruder Speed to the Skeleton Speed using short segments of increasing RPM"
+    tooltip: "If selected, will ramp-up the deposition control value from the Skeleton Start-Up Extruder Speed to the Skeleton Speed using short segments of increasing values"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_start-up":true}]}]}
     options: []
     default: false
@@ -377,7 +377,7 @@ settings:
     display: "Disable Feedrate Scaling for Start-Up"
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change start-up path speeds."
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"AND":[{"minimum_layer_time_method":1},{"NOT":[{"machine_type":6}]}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
     options: []
     default: false
     minor: "Start-Up"
