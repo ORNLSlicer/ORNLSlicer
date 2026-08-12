@@ -346,9 +346,11 @@ QString MeldWriter::writeDwell(Time time) {
 QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
     m_deposition_active = true;
-    float output_rpm;
-    int initial_rpm = getInitialExtruderSpeed(params);
-    output_rpm = depositionOutputValue(initial_rpm);
+    const bool friction_stir =
+        m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFrictionStir;
+    const int initial_rpm = friction_stir ? 0 : getInitialExtruderSpeed(params);
+    const int actuator_deposition_value = initial_rpm > 0 ? initial_rpm : rpm;
+    const float output_rpm = depositionOutputValue(actuator_deposition_value);
 
     if (!m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
         rv += "M4" % m_s % QString::number(output_rpm) % " @714" % commentSpaceLine("TURN SPINDLE ON");
@@ -383,7 +385,6 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPoint
             }
         }
         else {
-            output_rpm = depositionOutputValue(rpm);
             rv += "M24 S" % QString::number(output_rpm) % commentSpaceLine("TURN ACTUATOR ON");
             // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
             // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't
