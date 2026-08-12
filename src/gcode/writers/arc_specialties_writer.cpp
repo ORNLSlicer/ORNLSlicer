@@ -92,9 +92,6 @@ double normalizeDegrees(double degrees) {
     return degrees;
 }
 
-//! @brief Smallest travel arc segment used to keep arc-like travel output bounded.
-const Distance kMinTravelArcSegmentLength = 100.0 * micron;
-
 //! @brief Machine setup setting value for relative G02/G03 center interpretation.
 constexpr int kRelativeArcCenterMode = 1;
 
@@ -440,17 +437,19 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
             const double start_angle = std::atan2(start.y() - center_y, start.x() - center_x);
             const double end_angle = std::atan2(end.y() - center_y, end.x() - center_x);
             const double delta_angle = shortestAngularDelta(start_angle, end_angle);
-            const double max_radius = std::max(start_radius, end_radius);
-            const double arc_length = std::abs(delta_angle) * max_radius;
-            const double target_segment_length =
-                std::max(params->setting<Distance>(SS::kWidth)() / 2.0, kMinTravelArcSegmentLength());
+            const int arcs_per_revolution =
+                std::max(1, params->contains(PS::Slicing::kArcsPerRevolution)
+                                 ? params->setting<int>(PS::Slicing::kArcsPerRevolution)
+                                 : m_sb->setting<int>(PS::Slicing::kArcsPerRevolution));
+            const double target_segment_angle = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
+            const double travel_angle = std::abs(delta_angle);
 
-            if (arc_length <= target_segment_length) {
+            if (travel_angle <= target_segment_angle) {
                 rv += writeMotion("G00", end, move_speed, params, "TRAVEL");
             }
             else {
                 const int segments =
-                    std::clamp(static_cast<int>(std::ceil(arc_length / target_segment_length)), 2, 180);
+                    std::clamp(static_cast<int>(std::ceil(travel_angle / target_segment_angle)), 2, 180);
 
                 for (int i = 1; i <= segments; ++i) {
                     const double t = static_cast<double>(i) / static_cast<double>(segments);
