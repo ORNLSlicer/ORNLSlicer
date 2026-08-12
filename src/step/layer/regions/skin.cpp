@@ -288,7 +288,8 @@ void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
 
 void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
                           QVector<Polyline> lines, PolygonList geometry, PathOrderOptimization path_order) {
-    const bool order_open_lines = pattern == InfillPatterns::kLines;
+    const bool order_open_lines =
+        pattern == InfillPatterns::kLines && getSb()->setting<int>(PS::Optimizations::kSkinPathOrder) != 0;
     poo.setInfillParameters(pattern, geometry, getSb()->setting<Distance>(PS::Skin::kMinPathLength),
                             getSb()->setting<Distance>(PS::Travel::kInfillMinLength), order_open_lines);
 
