@@ -31,6 +31,7 @@
 
 #include "configs/settings_range.h"
 #include "exceptions/exceptions.h"
+#include "gcode/arc_specialties_axis_inference.h"
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/adamantine_parser.h"
@@ -95,24 +96,6 @@ const QString kCylindricalAxisYComment = "AXIS_Y=";
 const QString kWorldApproachTravelComment = "WORLD APPROACH TRAVEL";
 constexpr char kArcSpecialtiesCpOptionalParameter = 'C';
 
-double signedShortestDeltaDegrees(double start_degrees, double end_degrees) {
-    double delta_degrees = end_degrees - start_degrees;
-    while (delta_degrees > 180.0) {
-        delta_degrees -= 360.0;
-    }
-    while (delta_degrees < -180.0) {
-        delta_degrees += 360.0;
-    }
-
-    return delta_degrees;
-}
-
-double planarDistanceSquared(const Point& a, const Point& b) {
-    const double dx = a.x() - b.x();
-    const double dy = a.y() - b.y();
-    return (dx * dx) + (dy * dy);
-}
-
 bool commentFieldValue(const QString& comment, const QString& field, double& value) {
     const int field_start = comment.indexOf(field, 0, Qt::CaseInsensitive);
     if (field_start < 0) {
@@ -142,44 +125,6 @@ bool cylindricalAxisFromComment(const QString& comment, Distance distance_unit, 
     center.x((axis_x * distance_unit() + x_offset) * Constants::OpenGL::kObjectToView);
     center.y((axis_y * distance_unit() + y_offset) * Constants::OpenGL::kObjectToView);
     center.z(0.0);
-    return true;
-}
-
-bool cylindricalAxisFromCpDelta(const QVector3D& start_pos, const QVector3D& end_pos, double start_cp_degrees,
-                                double end_cp_degrees, const std::optional<Point>& reference_axis, Point& center) {
-    const double dx = end_pos.x() - start_pos.x();
-    const double dy = end_pos.y() - start_pos.y();
-    const double chord_length = std::hypot(dx, dy);
-    if (chord_length <= std::numeric_limits<double>::epsilon()) {
-        return false;
-    }
-
-    const double delta_radians = qDegreesToRadians(signedShortestDeltaDegrees(start_cp_degrees, end_cp_degrees));
-    const double half_delta = std::abs(delta_radians) / 2.0;
-    const double tan_half_delta = std::tan(half_delta);
-    if (std::abs(tan_half_delta) <= std::numeric_limits<double>::epsilon()) {
-        return false;
-    }
-
-    const double center_offset = chord_length / (2.0 * tan_half_delta);
-    const double mid_x = (start_pos.x() + end_pos.x()) / 2.0;
-    const double mid_y = (start_pos.y() + end_pos.y()) / 2.0;
-    const double left_normal_x = -dy / chord_length;
-    const double left_normal_y = dx / chord_length;
-
-    const Point positive_center(mid_x + (left_normal_x * center_offset), mid_y + (left_normal_y * center_offset), 0.0);
-    const Point negative_center(mid_x - (left_normal_x * center_offset), mid_y - (left_normal_y * center_offset), 0.0);
-
-    if (reference_axis.has_value()) {
-        center = planarDistanceSquared(positive_center, *reference_axis) <=
-                         planarDistanceSquared(negative_center, *reference_axis)
-                     ? positive_center
-                     : negative_center;
-    }
-    else {
-        center = delta_radians >= 0.0 ? positive_center : negative_center;
-    }
-
     return true;
 }
 
@@ -1145,9 +1090,13 @@ GCodeLoader::generateVisualSegment(int line_num, int layer_num, const QColor& co
                     m_has_arc_specialties_cylindrical_axis && m_arc_specialties_cylindrical_axis_matches_current_path
                         ? std::optional<Point>(m_arc_specialties_cylindrical_axis)
                         : std::nullopt;
-                has_cylindrical_axis =
-                    cylindricalAxisFromCpDelta(m_start_pos, end_pos, m_previous_arc_specialties_cp, current_cp,
-                                               reference_axis, cylindrical_axis);
+                const bool reverse_cp_delta =
+                    comment.contains(Constants::RegionTypeStrings::kHelical, Qt::CaseInsensitive) &&
+                    static_cast<HelicalPathHandedness>(m_sb->setting<int>(PS::Slicing::kHelicalPathHandedness)) ==
+                        HelicalPathHandedness::kLeftHanded;
+                has_cylindrical_axis = ArcSpecialtiesAxisInference::cylindricalAxisFromCpDelta(
+                    m_start_pos, end_pos, m_previous_arc_specialties_cp, current_cp, reverse_cp_delta, reference_axis,
+                    cylindrical_axis);
             }
             if (!has_cylindrical_axis && is_arc_specialties && m_has_arc_specialties_cylindrical_axis &&
                 m_arc_specialties_cylindrical_axis_matches_current_path) {
