@@ -138,6 +138,8 @@ QString lineContaining(const QString& block, const QString& marker) {
     return QString();
 }
 
+int occurrenceCount(const QString& block, const QString& marker) { return block.count(marker); }
+
 bool writesFirstTravelWithWorkObjectToolFrame() {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
     settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
@@ -156,6 +158,39 @@ bool writesFirstTravelWithWorkObjectToolFrame() {
     const QString first_travel_line = lineContaining(travel_block, ";TRAVEL");
 
     return world_approach_line.contains("ZR=-90.0000") && first_travel_line.contains("ZR=-135.0000");
+}
+
+bool writesCylindricalTravelWithConfiguredArcDensity() {
+    QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kCylindrical));
+    settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern,
+                         static_cast<int>(ORNL::CylindricalPathPattern::kRadial));
+    settings->setSetting(ORNL::PS::Slicing::kArcsPerRevolution, 8);
+    settings->setSetting(ORNL::PRS::MachineSetup::kAxisA, 0.0 * ORNL::degree);
+    settings->setSetting(ORNL::PRS::MachineSetup::kAxisC, 0.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelLength, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 0.0 * ORNL::mm);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = QSharedPointer<ORNL::SettingsBase>::create(*settings);
+    segment_settings->setSetting(ORNL::SS::kWidth, 1.0 * ORNL::mm);
+    segment_settings->setSetting(QStringLiteral("radial_center_x"), 0.0 * ORNL::mm);
+    segment_settings->setSetting(QStringLiteral("radial_center_y"), 0.0 * ORNL::mm);
+
+    ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+    writer.writeTravel(ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                       ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                       ORNL::TravelLiftType::kNoLift, segment_settings);
+
+    const QString travel_block =
+        writer.writeTravel(ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                           ORNL::Point(-100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                           ORNL::TravelLiftType::kNoLift, segment_settings);
+
+    return occurrenceCount(travel_block, ";TRAVEL ARC") == 4;
 }
 } // namespace
 
@@ -181,6 +216,8 @@ int main(int argc, char* argv[]) {
                      "Arc Specialties writer did not emit compact cylindrical comments.");
     passed &= expect(writesFirstTravelWithWorkObjectToolFrame(),
                      "Arc Specialties first travel did not use ZR=-135.");
+    passed &= expect(writesCylindricalTravelWithConfiguredArcDensity(),
+                     "Arc Specialties cylindrical travel did not honor Arcs per Revolution.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

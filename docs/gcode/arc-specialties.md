@@ -101,7 +101,7 @@ The layer marker is held until after the initial world approach and kinematics b
 
 ## Travel And Welding Commands
 
-Travel moves use `G00`. Cylindrical travel lift moves outward from the cylinder axis; planar travel lift follows the slice-plane normal. Non-first cylindrical travel may be split into `TRAVEL ARC` waypoints around the cylinder axis when the angular move is long enough. Travel lower is emitted as a feed move:
+Travel moves use `G00`. Cylindrical travel lift moves outward from the cylinder axis; planar travel lift follows the slice-plane normal. Non-first cylindrical travel may be split into `TRAVEL ARC` waypoints around the cylinder axis when the angular move is longer than the configured `Arcs per Revolution` spacing. Travel lower is emitted as a feed move:
 
 ```gcode
 G81 ;OPTIONAL STOP ROUTINE
