@@ -96,6 +96,15 @@ class GCodeInfoControl : public QWidget {
     //! \param lineNo: select the line number
     void fillSegmentInfo(uint lineNo);
 
+    //! \brief Finds the display segment for a G-Code line number.
+    QSharedPointer<SegmentBase> segmentForLine(uint lineNo);
+
+    //! \brief Updates the centerline distance readout for the selected segment pair.
+    void updateCenterDistanceInfo(uint lineNo);
+
+    //! \brief Formats a distance for display using the preferred distance unit.
+    QString formatDistance(double microns) const;
+
     //! \brief list of segments
     QVector<QVector<QSharedPointer<SegmentBase>>> m_gcode;
 
@@ -116,6 +125,7 @@ class GCodeInfoControl : public QWidget {
     QLabel* m_infolbl_speed;
     QLabel* m_infolbl_extruder_speed;
     QLabel* m_infolbl_length;
+    QLabel* m_infolbl_center_distance;
     QLabel* m_infolbl_layer_no;
     QLabel* m_infolbl_line_no;
     QLabel* m_infolbl_direction;
