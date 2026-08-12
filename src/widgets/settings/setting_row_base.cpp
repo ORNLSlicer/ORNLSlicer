@@ -20,21 +20,16 @@
 #include "gcode/writers/writer_base.h"
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 
 SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb, QString key, fifojson json,
                                QGridLayout* layout, int index)
-    : m_index(index),
-      m_layout(layout),
-      m_key(key),
-      m_sb(sb),
-      m_row_visible(true),
-      m_row_enabled(true),
-      m_dependency_enabled(true),
-      m_json(json) {
-    m_theme_path          = PreferencesManager::getInstance()->getTheme().getFolderPath();
+    : m_index(index), m_layout(layout), m_key(key), m_sb(sb), m_row_visible(true), m_row_enabled(true),
+      m_dependency_enabled(true), m_hidden_by_process_dependency(false), m_json(json) {
+    m_theme_path = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
 
     m_key_label.reset(new QLabel());
@@ -152,6 +147,7 @@ QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() {
 }
 
 void SettingRowBase::checkDependencies() {
+    m_hidden_by_process_dependency = false;
     setDependencyEnabled(checkLogic(m_dependency_logic));
     checkDynamicDependencies();
 }
@@ -172,7 +168,14 @@ bool SettingRowBase::isShown() const {
 
 bool SettingRowBase::dependencyEnabled() const { return m_dependency_enabled; }
 
+bool SettingRowBase::hiddenByProcessDependency() const {
+    return m_hidden_by_process_dependency && !m_dependency_enabled;
+}
+
 bool SettingRowBase::rowWidgetsVisible() const {
+    if (hiddenByProcessDependency())
+        return false;
+
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
     return m_row_visible && (m_dependency_enabled || show_disabled);
@@ -335,11 +338,32 @@ void SettingRowBase::resetLocalOverrides() {
 }
 
 bool SettingRowBase::checkLogic(DependencyNode root) {
-    if (root.key == "AND") { return checkLogic(root.children[0]) && checkLogic(root.children[1]); }
-    else if (root.key == "OR") { return checkLogic(root.children[0]) || checkLogic(root.children[1]); }
-    else if (root.key == "NOT") { return !checkLogic(root.children[0]); }
+    if (root.key == "AND") {
+        const bool left = checkLogic(root.children[0]);
+        const bool right = checkLogic(root.children[1]);
+        return left && right;
+    }
+    else if (root.key == "OR") {
+        const bool left = checkLogic(root.children[0]);
+        const bool right = checkLogic(root.children[1]);
+        return left || right;
+    }
+    else if (root.key == "NOT") {
+        const bool child_result = checkLogic(root.children[0]);
+        if (child_result && isActiveProcessDependency(root.children[0]))
+            m_hidden_by_process_dependency = true;
+
+        return !child_result;
+    }
     else {
         if (root.dependentRow.isNull()) return true;
+
+        auto trackProcessMismatch = [this, &root](bool matched) {
+            if (!matched && (isActiveProcessDependency(root) || root.dependentRow->hiddenByProcessDependency()))
+                m_hidden_by_process_dependency = true;
+
+            return matched;
+        };
 
         if (QCheckBox* checkBox = dynamic_cast<QCheckBox*>(root.dependentRow.get())) {
             for (auto& el : root.val.items()) {
@@ -349,10 +373,7 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
                     checked = root.dependentRow->m_json[Constants::Settings::Master::kDefault].get<bool>();
                 }
 
-                if (checked != static_cast<bool>(el.value()))
-                    return false;
-                else
-                    return true;
+                return trackProcessMismatch(checked == static_cast<bool>(el.value()));
             }
         }
         else if (QComboBox* comboBox = dynamic_cast<QComboBox*>(root.dependentRow.get())) {
@@ -363,10 +384,7 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
                     current_index = root.dependentRow->m_json[Constants::Settings::Master::kDefault].get<int>();
                 }
 
-                if (current_index != el.value())
-                    return false;
-                else
-                    return true;
+                return trackProcessMismatch(current_index == el.value());
             }
         }
         else if (QSpinBox* spinBox = dynamic_cast<QSpinBox*>(root.dependentRow.get())) {
@@ -377,15 +395,27 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
                     value = root.dependentRow->m_json[Constants::Settings::Master::kDefault].get<int>();
                 }
 
-                if (value != el.value())
-                    return false;
-                else
-                    return true;
+                return trackProcessMismatch(value == el.value());
             }
         }
     }
 
     // Default return in case none of the conditions match
+    return false;
+}
+
+bool SettingRowBase::isActiveProcessDependency(const DependencyNode& root) const {
+    if (root.dependentRow.isNull())
+        return false;
+
+    if (root.dependentRow->m_key == PRS::MachineSetup::kMachineType) {
+        return m_sb->setting<int>(PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
+    }
+
+    if (root.dependentRow->m_key == PRS::MachineSetup::kSyntax) {
+        return m_sb->setting<int>(PRS::MachineSetup::kSyntax) == static_cast<int>(GcodeSyntax::kMeld);
+    }
+
     return false;
 }
 

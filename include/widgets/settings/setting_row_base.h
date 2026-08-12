@@ -99,6 +99,9 @@ class SettingRowBase {
     //! \brief Returns whether this row's own dependencies are currently satisfied.
     bool dependencyEnabled() const;
 
+    //! \brief Returns whether this row is hidden because it is not valid for the active process.
+    bool hiddenByProcessDependency() const;
+
     //! \brief Sets dependency logic for this row
     //! \param root: DependencyNode object that contains all dependency information
     void setDependencyLogic(DependencyNode root);
@@ -180,6 +183,9 @@ class SettingRowBase {
     //! \brief Recursive check of dependencynode logic
     //! \param root: Dependency logic to check
     bool checkLogic(DependencyNode root);
+
+    //! \brief Returns true if this dependency checks syntax or machine type for Meld/Friction Stir.
+    bool isActiveProcessDependency(const DependencyNode& root) const;
 
     //! \brief Templated helper for all widget types when value is changed
     template <class T>
@@ -339,6 +345,9 @@ class SettingRowBase {
 
     //! \brief Whether this row is currently enabled by dependency logic.
     bool m_dependency_enabled;
+
+    //! \brief Whether this row should hide even when disabled settings are shown.
+    bool m_hidden_by_process_dependency;
 
     //! \brief Master json that this row was constructed from
     fifojson m_json;
