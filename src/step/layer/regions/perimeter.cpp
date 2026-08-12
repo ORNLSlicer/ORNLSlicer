@@ -488,8 +488,7 @@ void Perimeter::compute(uint layer_num) {
 void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     Q_UNUSED(shouldNextPathBeCCW)
 
-    PathOrderOptimization pathOrderOptimization =
-        static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
+    PathOrderOptimization pathOrderOptimization = this->pathOrderOptimization();
 
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
@@ -524,8 +523,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
     if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
         if (m_computed_geometry.size() > 0) {
             poo.setGeometryToEvaluate(
-                m_computed_geometry, RegionType::kPerimeter,
-                static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
+                m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
 
             Polyline result = poo.linkSpiralPolyline2D(m_was_last_region_spiral,
                                                        m_sb->setting<Distance>(PS::Layer::Layer::kLayerHeight),
@@ -751,8 +749,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
         }
 
         poo.setGeometryToEvaluate(
-            m_computed_geometry, RegionType::kPerimeter,
-            static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
+            m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
 
         while (poo.getCurrentPolylineCount() > 0) {
             Polyline result = poo.linkNextPolyline();

@@ -419,8 +419,7 @@ void Inset::compute(uint layer_num) {
 }
 
 void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
-    PathOrderOptimization pathOrderOptimization =
-        static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
+    PathOrderOptimization pathOrderOptimization = this->pathOrderOptimization();
 
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
@@ -640,8 +639,7 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         return;
     }
 
-    poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kInset,
-                              static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
+    poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kInset, pathOrderOptimization);
 
     while (poo.getCurrentPolylineCount() > 0) {
         Polyline result = poo.linkNextPolyline();

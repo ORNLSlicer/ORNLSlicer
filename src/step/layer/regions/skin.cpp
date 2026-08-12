@@ -249,8 +249,7 @@ void Skin::computeGradualSkinSteps(const int& gradual_count) {
 void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
-    PathOrderOptimization pathOrderOptimization =
-        static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
+    PathOrderOptimization pathOrderOptimization = this->pathOrderOptimization();
     if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
         Point startOverride = customPathOrderPoint();
 
@@ -277,22 +276,23 @@ void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
     m_paths.clear();
     bool supportsG3 = m_sb->setting<bool>(PRS::MachineSetup::kSupportG3);
     InfillPatterns skinPattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
-    optimizeHelper(poo, supportsG3, current_location, skinPattern, m_computed_geometry, m_skin_geometry);
+    optimizeHelper(poo, supportsG3, current_location, skinPattern, m_computed_geometry, m_skin_geometry,
+                   pathOrderOptimization);
 
     InfillPatterns gradualPattern = InfillPatterns::kLines;
     for (int i = 0, end = m_gradual_computed_geometry.size(); i < end; ++i) {
         optimizeHelper(poo, supportsG3, current_location, gradualPattern, m_gradual_computed_geometry[i],
-                       m_gradual_skin_geometry[i]);
+                       m_gradual_skin_geometry[i], pathOrderOptimization);
     }
 }
 
 void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
-                          QVector<Polyline> lines, PolygonList geometry) {
+                          QVector<Polyline> lines, PolygonList geometry, PathOrderOptimization path_order) {
+    const bool order_open_lines = pattern == InfillPatterns::kLines;
     poo.setInfillParameters(pattern, geometry, getSb()->setting<Distance>(PS::Skin::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength));
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength), order_open_lines);
 
-    poo.setGeometryToEvaluate(lines, RegionType::kSkin,
-                              static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
+    poo.setGeometryToEvaluate(lines, RegionType::kSkin, path_order);
 
     QVector<Polyline> previouslyLinkedLines;
     while (poo.getCurrentPolylineCount() > 0) {

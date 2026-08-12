@@ -79,6 +79,17 @@ int main() {
                          closeTo(custom_path_anchor.z(), 10.0),
                      "Expected seam attractor vector to project the anchor for Custom Path Location order.");
 
+    QSharedPointer<ORNL::SettingsBase> custom_region_path_settings =
+        settingsWithSeamAttractor(ORNL::PointOrderOptimization::kNextClosest);
+    custom_region_path_settings->setSetting(
+        ORNL::PS::Optimizations::kSkinPathOrder,
+        static_cast<int>(ORNL::PathOrderOptimization::kCustomPoint) + 1);
+    const ORNL::Point custom_region_path_anchor =
+        ORNL::OptimizationAnchor::customPathOrderPoint(custom_region_path_settings, slicing_plane, optimization_shift);
+    passed &= expect(closeTo(custom_region_path_anchor.x(), 12.0) && closeTo(custom_region_path_anchor.y(), 3.0) &&
+                         closeTo(custom_region_path_anchor.z(), 10.0),
+                     "Expected seam attractor vector to project the anchor for region Custom Path Location order.");
+
     const ORNL::Point custom_farthest_anchor = ORNL::OptimizationAnchor::customPointOrderPoint(
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kCustomFarthestPoint), slicing_plane,
         optimization_shift);

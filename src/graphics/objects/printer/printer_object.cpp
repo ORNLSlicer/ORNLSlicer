@@ -49,6 +49,9 @@ bool usesSeamAttractorVector(const QSharedPointer<SettingsBase>& sb) {
         static_cast<PointOrderOptimization>(sb->setting<int>(PS::Optimizations::kPointOrder));
 
     return island_order == IslandOrderOptimization::kCustomPoint || path_order == PathOrderOptimization::kCustomPoint ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kPerimeterPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kSkinPathOrder)) ||
            usesCustomPointLocation(point_order);
 }
 
@@ -200,6 +203,11 @@ void PrinterObject::updateSeams() {
         static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder));
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
+    const bool path_order_uses_custom =
+        pathOrder == PathOrderOptimization::kCustomPoint ||
+        optionalPathOrderUsesCustomLocation(m_sb->setting<int>(PS::Optimizations::kPerimeterPathOrder)) ||
+        optionalPathOrderUsesCustomLocation(m_sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
+        optionalPathOrderUsesCustomLocation(m_sb->setting<int>(PS::Optimizations::kSkinPathOrder));
     bool secondPointEnabled = m_sb->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
     const float bed_z = this->printerCenter().z();
     const QVector3D guide_direction = optimizationGuideDirection(m_sb);
@@ -220,7 +228,7 @@ void PrinterObject::updateSeams() {
         hideOptimizationAnchor(m_seams.custom_island_opt, m_seams.custom_island_guide);
     }
 
-    if (pathOrder == PathOrderOptimization::kCustomPoint) {
+    if (path_order_uses_custom) {
         const QVector3D translation = optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPathXLocation,
                                                                    PS::Optimizations::kCustomPathYLocation,
                                                                    PS::Optimizations::kCustomPathZLocation, bed_z);

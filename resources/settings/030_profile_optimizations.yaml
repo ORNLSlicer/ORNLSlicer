@@ -101,11 +101,68 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kPathOrderOptimization"
     local: true
+  - name: "perimeter_path_order_optimization"
+    display: "Perimeter Path Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of order optimizer to use on perimeter paths. Use Global follows Path Order Optimization."
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    options:
+      - "Use Global"
+      - "Next Closest"
+      - "Next Farthest"
+      - "Random"
+      - "Outside In"
+      - "Inside Out"
+      - "Custom Location"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kPerimeterPathOrderOptimization"
+    local: true
+  - name: "inset_path_order_optimization"
+    display: "Inset Path Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of order optimizer to use on inset paths. Use Global follows Path Order Optimization."
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    options:
+      - "Use Global"
+      - "Next Closest"
+      - "Next Farthest"
+      - "Random"
+      - "Outside In"
+      - "Inside Out"
+      - "Custom Location"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kInsetPathOrderOptimization"
+    local: true
+  - name: "skin_path_order_optimization"
+    display: "Skin Path Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of order optimizer to use on skin paths. Use Global follows Path Order Optimization."
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options:
+      - "Use Global"
+      - "Next Closest"
+      - "Next Farthest"
+      - "Random"
+      - "Outside In"
+      - "Inside Out"
+      - "Custom Location"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kSkinPathOrderOptimization"
+    local: true
   - name: "custom_path_order_x_location"
     display: "Custom Path Point X Location"
     type: "location"
     tooltip: "X Coordinate for Custom Point Optimization Location"
-    depends: {"AND":[{"slicing_mode":0},{"path_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -117,7 +174,7 @@ settings:
     display: "Custom Path Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Custom Point Optimization Location"
-    depends: {"AND":[{"slicing_mode":0},{"path_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -129,7 +186,7 @@ settings:
     display: "Custom Path Point Z Location"
     type: "location"
     tooltip: "Z Coordinate for Custom Point Optimization Location"
-    depends: {"AND":[{"slicing_mode":0},{"path_order_optimization":5}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -327,7 +384,7 @@ settings:
     display: "Seam Attractor Vector - X"
     type: "unitless_float"
     tooltip: "X component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"island_order_optimization":6},{"OR":[{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -339,7 +396,7 @@ settings:
     display: "Seam Attractor Vector - Y"
     type: "unitless_float"
     tooltip: "Y component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"island_order_optimization":6},{"OR":[{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -351,7 +408,7 @@ settings:
     display: "Seam Attractor Vector - Z"
     type: "unitless_float"
     tooltip: "Z component of the vector used to project seam attractor points onto each slicing plane. A zero vector uses the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"island_order_optimization":6},{"OR":[{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -388,7 +445,7 @@ inputs:
     display: "Seam Attractor Vector"
     widget: "vector3"
     tooltip: "Vector used to project seam attractor points onto each slicing plane. Leave all components at 0 to use the slicing vector automatically."
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"island_order_optimization":6},{"path_order_optimization":5}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"island_order_optimization":6},{"OR":[{"OR":[{"path_order_optimization":5},{"OR":[{"perimeter_path_order_optimization":6},{"OR":[{"inset_path_order_optimization":6},{"skin_path_order_optimization":6}]}]}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}]}]}
     minor: "Optimizations"
     major: "Profile"
     components:

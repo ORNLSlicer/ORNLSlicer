@@ -120,6 +120,25 @@ Point RegionBase::customPathOrderPoint() const {
     return OptimizationAnchor::customPathOrderPoint(m_sb, m_optimization_slicing_plane, m_optimization_shift);
 }
 
+PathOrderOptimization RegionBase::pathOrderOptimization() const {
+    const PathOrderOptimization default_optimization =
+        static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder));
+
+    switch (m_region_type) {
+        case RegionType::kPerimeter:
+            return optionalPathOrderOptimization(m_sb->setting<int>(PS::Optimizations::kPerimeterPathOrder),
+                                                 default_optimization);
+        case RegionType::kInset:
+            return optionalPathOrderOptimization(m_sb->setting<int>(PS::Optimizations::kInsetPathOrder),
+                                                 default_optimization);
+        case RegionType::kSkin:
+            return optionalPathOrderOptimization(m_sb->setting<int>(PS::Optimizations::kSkinPathOrder),
+                                                 default_optimization);
+        default:
+            return default_optimization;
+    }
+}
+
 Point RegionBase::customPointOrderPoint() const {
     return OptimizationAnchor::customPointOrderPoint(m_sb, m_optimization_slicing_plane, m_optimization_shift);
 }
