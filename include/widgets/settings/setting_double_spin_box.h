@@ -108,11 +108,11 @@ class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
     //! \brief Returns another integer setting's effective value for one selected base.
     int effectiveInt(const QString& key, int settings_base_index) const;
 
-    //! \brief Returns whether this row should present deposition control as a unitless integer.
-    bool usesUnitlessDepositionRate() const;
+    //! \brief Returns whether this row should present deposition control as an integer value.
+    bool usesIntegerDepositionRate() const;
 
-    //! \brief Returns whether one selected base should present deposition control as a unitless integer.
-    bool usesUnitlessDepositionRate(int settings_base_index) const;
+    //! \brief Returns whether one selected base should present deposition control as an integer value.
+    bool usesIntegerDepositionRate(int settings_base_index) const;
 
     //! \brief Updates deposition-rate decimals and unit text for the selected machine type.
     void updateDepositionRatePresentation();

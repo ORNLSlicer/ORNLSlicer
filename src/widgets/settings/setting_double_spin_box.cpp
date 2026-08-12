@@ -120,9 +120,8 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
     else if (type == "deposition_rate") {
         this->setMinimum(0);
         this->setMaximum(9999.99);
-        if (usesUnitlessDepositionRate()) {
+        if (usesIntegerDepositionRate()) {
             this->setDecimals(0);
-            unitText = "unitless";
         }
         else {
             unitText = "rpm";
@@ -313,9 +312,9 @@ int SettingDoubleSpinBox::effectiveInt(const QString& key, int settings_base_ind
     return global_value;
 }
 
-bool SettingDoubleSpinBox::usesUnitlessDepositionRate() const { return usesUnitlessDepositionRate(0); }
+bool SettingDoubleSpinBox::usesIntegerDepositionRate() const { return usesIntegerDepositionRate(0); }
 
-bool SettingDoubleSpinBox::usesUnitlessDepositionRate(int settings_base_index) const {
+bool SettingDoubleSpinBox::usesIntegerDepositionRate(int settings_base_index) const {
     return effectiveInt(PRS::MachineSetup::kMachineType, settings_base_index) == kFrictionStirMachineType;
 }
 
@@ -324,18 +323,20 @@ void SettingDoubleSpinBox::updateDepositionRatePresentation() {
     if (type != "deposition_rate")
         return;
 
-    if (usesUnitlessDepositionRate()) {
+    if (usesIntegerDepositionRate()) {
         setDecimals(0);
+        setMaximum(9999);
         if (!m_key_label.isNull()) {
             QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
             display.replace("Extruder Speed", "Deposition Value");
             m_key_label->setText(display);
         }
         if (!m_unit_label.isNull())
-            m_unit_label->setText("unitless");
+            m_unit_label->setText("");
     }
     else {
         setDecimals(2);
+        setMaximum(9999.99);
         if (!m_key_label.isNull())
             m_key_label->setText(masterString(m_json, Constants::Settings::Master::kDisplay));
         if (!m_unit_label.isNull())
@@ -373,7 +374,7 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
     const QString type = masterString(m_json, Constants::Settings::Master::kType);
     const double value = effectiveDouble(settings_base_index);
     const bool rpm_based_deposition =
-        type == "rpm" || (type == "deposition_rate" && !usesUnitlessDepositionRate(settings_base_index));
+        type == "rpm" || (type == "deposition_rate" && !usesIntegerDepositionRate(settings_base_index));
 
     const double min_extruder_speed   = effectiveDouble(PRS::MachineSpeed::kMinExtruderSpeed, settings_base_index);
     const double max_extruder_speed   = effectiveDouble(PRS::MachineSpeed::kMaxExtruderSpeed, settings_base_index);

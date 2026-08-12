@@ -402,10 +402,10 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
     const bool has_max_extruder_speed = max_extruder_speed > 0.0;
     const bool invalid_extruder_range =
         has_min_extruder_speed && has_max_extruder_speed && min_extruder_speed > max_extruder_speed;
-    const bool unitless_deposition =
+    const bool integer_deposition =
         settingInt(settings, PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
 
-    if (!unitless_deposition && invalid_extruder_range) {
+    if (!integer_deposition && invalid_extruder_range) {
         errors.append("Minimum Extruder Speed (" + numberText(min_extruder_speed) +
                       ") is greater than Maximum Extruder Speed (" + numberText(max_extruder_speed) + ").");
     }
@@ -425,12 +425,12 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
         const double value    = settingDouble(settings, key);
         const QString display = settingDisplay(key, master);
 
-        if (type == "deposition_rate" && unitless_deposition &&
+        if (type == "deposition_rate" && integer_deposition &&
             std::abs(value - std::round(value)) > kIntegerTolerance) {
             errors.append(display + " must be a whole-number deposition value for Friction Stir.");
         }
 
-        const bool rpm_based_deposition = type == "rpm" || (type == "deposition_rate" && !unitless_deposition);
+        const bool rpm_based_deposition = type == "rpm" || (type == "deposition_rate" && !integer_deposition);
         if (rpm_based_deposition && key != PRS::MachineSpeed::kMinExtruderSpeed &&
             key != PRS::MachineSpeed::kMaxExtruderSpeed && !invalid_extruder_range) {
             if (has_min_extruder_speed && value < min_extruder_speed) {

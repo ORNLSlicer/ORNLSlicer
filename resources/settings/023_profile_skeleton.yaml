@@ -90,7 +90,7 @@ settings:
   - name: "skeleton_extruder_speed"
     display: "Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for skeletons. Friction Stir uses a unitless integer; other machine types use RPM."
+    tooltip: "Deposition control value for skeletons. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}]}
     options: []
     default: 0
@@ -250,7 +250,7 @@ settings:
   - name: "skeleton_prestart_extruder_speed"
     display: "Skeleton Prestart Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for skeleton prestart paths. Friction Stir uses a unitless integer; other machine types use RPM."
+    tooltip: "Deposition control value for skeleton prestart paths. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_prestart":true}]}]}
     options: []
     default: 0

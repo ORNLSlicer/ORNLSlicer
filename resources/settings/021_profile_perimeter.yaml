@@ -103,7 +103,7 @@ settings:
   - name: "perimeter_extruder_speed"
     display: "Perimeter Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for perimeter paths. Friction Stir uses a unitless integer; other machine types use RPM."
+    tooltip: "Deposition control value for perimeter paths. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}]}
     options: []
     default: 0

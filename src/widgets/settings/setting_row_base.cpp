@@ -341,12 +341,15 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
     else {
         if (root.dependentRow.isNull()) return true;
 
-        if (!root.dependentRow->dependencyEnabled())
-            return false;
-
         if (QCheckBox* checkBox = dynamic_cast<QCheckBox*>(root.dependentRow.get())) {
             for (auto& el : root.val.items()) {
-                if (checkBox->isChecked() != static_cast<bool>(el.value()))
+                bool checked = checkBox->isChecked();
+                if (!root.dependentRow->dependencyEnabled() &&
+                    root.dependentRow->m_json.contains(Constants::Settings::Master::kDefault)) {
+                    checked = root.dependentRow->m_json[Constants::Settings::Master::kDefault].get<bool>();
+                }
+
+                if (checked != static_cast<bool>(el.value()))
                     return false;
                 else
                     return true;
@@ -354,7 +357,13 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
         }
         else if (QComboBox* comboBox = dynamic_cast<QComboBox*>(root.dependentRow.get())) {
             for (auto& el : root.val.items()) {
-                if (comboBox->currentIndex() != el.value())
+                int current_index = comboBox->currentIndex();
+                if (!root.dependentRow->dependencyEnabled() &&
+                    root.dependentRow->m_json.contains(Constants::Settings::Master::kDefault)) {
+                    current_index = root.dependentRow->m_json[Constants::Settings::Master::kDefault].get<int>();
+                }
+
+                if (current_index != el.value())
                     return false;
                 else
                     return true;
@@ -362,7 +371,13 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
         }
         else if (QSpinBox* spinBox = dynamic_cast<QSpinBox*>(root.dependentRow.get())) {
             for (auto& el : root.val.items()) {
-                if (spinBox->value() != el.value())
+                int value = spinBox->value();
+                if (!root.dependentRow->dependencyEnabled() &&
+                    root.dependentRow->m_json.contains(Constants::Settings::Master::kDefault)) {
+                    value = root.dependentRow->m_json[Constants::Settings::Master::kDefault].get<int>();
+                }
+
+                if (value != el.value())
                     return false;
                 else
                     return true;

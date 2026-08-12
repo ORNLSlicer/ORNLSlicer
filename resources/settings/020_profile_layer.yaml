@@ -52,7 +52,7 @@ settings:
   - name: "default_extruder_speed"
     display: "Default Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Default deposition control value for paths that don't have a defined value. Friction Stir uses a unitless integer; other machine types use RPM."
+    tooltip: "Default deposition control value for paths that don't have a defined value. Friction Stir uses an integer value; other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}
     options: []
     default: 0
