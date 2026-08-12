@@ -93,6 +93,18 @@ int main() {
     far_line.append(ORNL::Point(10.0f, 0.0f, 0.0f));
     far_line.append(ORNL::Point(10.0f, 1.0f, 0.0f));
 
+    ORNL::PolylineOrderOptimizer monotonic_open_polyline_optimizer(start, 0);
+    monotonic_open_polyline_optimizer.setPointParameters(ORNL::PointOrderOptimization::kNextClosest, false,
+                                                         ORNL::Distance(), ORNL::Distance(), false, ORNL::Distance(),
+                                                         false);
+    monotonic_open_polyline_optimizer.setInfillParameters(ORNL::InfillPatterns::kLines, ORNL::PolygonList(),
+                                                          ORNL::Distance(), ORNL::Distance(), false);
+    monotonic_open_polyline_optimizer.setGeometryToEvaluate({near_line, far_line}, ORNL::RegionType::kSkin,
+                                                            ORNL::PathOrderOptimization::kNextFarthest);
+    ORNL::Polyline monotonic_result = monotonic_open_polyline_optimizer.linkNextPolyline();
+    passed &= expect(!monotonic_result.isEmpty() && monotonic_result.front().x() == 1.0f,
+                     "Expected default line linking to keep monotonic front/back selection.");
+
     ORNL::PolylineOrderOptimizer ordered_open_polyline_optimizer(start, 0);
     ordered_open_polyline_optimizer.setPointParameters(ORNL::PointOrderOptimization::kNextClosest, false,
                                                        ORNL::Distance(), ORNL::Distance(), false, ORNL::Distance(),
