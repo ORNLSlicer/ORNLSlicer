@@ -80,7 +80,7 @@ class Skin : public RegionBase {
     //! \param supportsG3 whether or not G2/G3 is supported for subsequent path modifiers
     //! \param current_location updating to most recent location
     void optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
-                        QVector<Polyline> lines, PolygonList geometry);
+                        QVector<Polyline> lines, PolygonList geometry, PathOrderOptimization path_order);
 
     //! \brief Creates paths for the skin region using the selected pattern.
     //! \param line polyline representing path

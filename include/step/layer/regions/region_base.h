@@ -144,6 +144,9 @@ class RegionBase {
     //! \brief Returns the path-order custom anchor in the current optimization frame.
     Point customPathOrderPoint() const;
 
+    //! \brief Returns this region's path order, falling back to the global path order.
+    PathOrderOptimization pathOrderOptimization() const;
+
     //! \brief Returns the point-order custom anchor in the current optimization frame.
     Point customPointOrderPoint() const;
 

@@ -33,6 +33,18 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+bool usesCustomPathOrderLocation(const QSharedPointer<SettingsBase>& sb) {
+    const PathOrderOptimization path_order =
+        static_cast<PathOrderOptimization>(sb->setting<int>(PS::Optimizations::kPathOrder));
+
+    return path_order == PathOrderOptimization::kCustomPoint ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kPerimeterPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kSkinPathOrder));
+}
+} // namespace
+
 MainToolbar::MainToolbar(QWidget* parent) : m_parent(parent), QToolBar(parent) {
     setup();
     setupSubWidgets();
@@ -526,13 +538,11 @@ void MainToolbar::setOrthoGcodeChecked(bool status) {
 void MainToolbar::handleModifiedSetting(const QString& setting_key) {
     IslandOrderOptimization islandOrder =
         static_cast<IslandOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kIslandOrder));
-    PathOrderOptimization pathOrder =
-        static_cast<PathOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kPathOrder));
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kPointOrder));
 
     // Disable button.
-    if (islandOrder != IslandOrderOptimization::kCustomPoint && pathOrder != PathOrderOptimization::kCustomPoint &&
+    if (islandOrder != IslandOrderOptimization::kCustomPoint && !usesCustomPathOrderLocation(GSM->getGlobal()) &&
         !usesCustomPointLocation(pointOrder)) {
         m_seam_btn->setDisabled(true);
         m_seam_btn->setToolTip("Custom optimization points are not set");
