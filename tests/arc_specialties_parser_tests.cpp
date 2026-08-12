@@ -1,12 +1,16 @@
+#include <cmath>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <optional>
 
 #include <QCoreApplication>
 #include <QSharedPointer>
 #include <QStringList>
+#include <QVector3D>
 
 #include "configs/settings_base.h"
+#include "gcode/arc_specialties_axis_inference.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/arc_specialties_parser.h"
 #include "gcode/writers/arc_specialties_writer.h"
@@ -22,24 +26,23 @@ bool expect(bool condition, const char* message) {
 }
 
 bool parsesArcLine(const QString& line) {
-    QStringList original_lines{line};
-    QStringList upper_lines{line.toUpper()};
+    QStringList original_lines {line};
+    QStringList upper_lines {line.toUpper()};
     ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, original_lines, upper_lines);
 
     try {
         const QList<QList<ORNL::GcodeCommand>> commands = parser.parseLines();
         return commands.size() == 1 && commands.first().size() == 1 &&
                !commands.first().first().getParameters().contains('G');
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception& ex) {
         std::cerr << ex.what() << '\n';
         return false;
     }
 }
 
 bool parsedArcKeepsCpForVisualization(const QString& line) {
-    QStringList original_lines{line};
-    QStringList upper_lines{line.toUpper()};
+    QStringList original_lines {line};
+    QStringList upper_lines {line.toUpper()};
     ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, original_lines, upper_lines);
 
     try {
@@ -47,18 +50,17 @@ bool parsedArcKeepsCpForVisualization(const QString& line) {
         return commands.size() == 1 && commands.first().size() == 1 &&
                commands.first().first().getOptionalParameters().contains('C') &&
                commands.first().first().getOptionalParameters().value('C') == 0.0;
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception& ex) {
         std::cerr << ex.what() << '\n';
         return false;
     }
 }
 
 bool parsedLineKeepsCpForVisualization() {
-    QStringList original_lines{
+    QStringList original_lines {
         "G01 X=0.0000 Y=1.0000 Z=0.0000 XR=180.0000 YR=0.0000 ZR=-135.0000 AP=0.0000 CP=90.0000 "
         "F600.0000 ;RADIAL"};
-    QStringList upper_lines{original_lines.first().toUpper()};
+    QStringList upper_lines {original_lines.first().toUpper()};
     ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, original_lines, upper_lines);
 
     try {
@@ -66,8 +68,7 @@ bool parsedLineKeepsCpForVisualization() {
         return commands.size() == 1 && commands.first().size() == 1 &&
                commands.first().first().getOptionalParameters().contains('C') &&
                commands.first().first().getOptionalParameters().value('C') == 90.0;
-    }
-    catch (const std::exception& ex) {
+    } catch (const std::exception& ex) {
         std::cerr << ex.what() << '\n';
         return false;
     }
@@ -91,8 +92,7 @@ bool writesInlineArcOptionalStop() {
     const QString second_arc = writer.writeArc(start, end, center, 180.0 * ORNL::degree, false, segment_settings);
 
     return first_arc.contains("F600.0000 G81 ;") && second_arc.contains("F600.0000 G81 ;") &&
-           !first_arc.contains("G81 ;OPTIONAL STOP ROUTINE") &&
-           !second_arc.contains("G81 ;OPTIONAL STOP ROUTINE");
+           !first_arc.contains("G81 ;OPTIONAL STOP ROUTINE") && !second_arc.contains("G81 ;OPTIONAL STOP ROUTINE");
 }
 
 bool writesCompactCylindricalPrintComments() {
@@ -109,9 +109,8 @@ bool writesCompactCylindricalPrintComments() {
     segment_settings->setSetting(QStringLiteral("radial_center_y"), 0.0 * ORNL::mm);
 
     ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
-    const QString radial_line =
-        writer.writeLine(ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm),
-                         ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
+    const QString radial_line = writer.writeLine(ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
 
     settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern,
                          static_cast<int>(ORNL::CylindricalPathPattern::kHelical));
@@ -119,13 +118,12 @@ bool writesCompactCylindricalPrintComments() {
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
     segment_settings->setSetting(ORNL::PS::Slicing::kHelicalPathStartAngle, 0.0 * ORNL::degree);
     ORNL::ArcSpecialtiesWriter helical_writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
-    const QString helical_line =
-        helical_writer.writeLine(ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm),
-                                 ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
+    const QString helical_line = helical_writer.writeLine(
+        ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm), ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
 
     return radial_line.contains(";RADIAL\n") && helical_line.contains(";HELICAL\n") &&
-           !radial_line.contains("AXIS_X") && !radial_line.contains("AXIS_Y") &&
-           !helical_line.contains("AXIS_X") && !helical_line.contains("AXIS_Y");
+           !radial_line.contains("AXIS_X") && !radial_line.contains("AXIS_Y") && !helical_line.contains("AXIS_X") &&
+           !helical_line.contains("AXIS_Y");
 }
 
 QString lineContaining(const QString& block, const QString& marker) {
@@ -139,6 +137,24 @@ QString lineContaining(const QString& block, const QString& marker) {
 }
 
 int occurrenceCount(const QString& block, const QString& marker) { return block.count(marker); }
+
+bool near(double actual, double expected) { return std::abs(actual - expected) <= 1e-6; }
+
+bool infersLeftHandedHelicalAxisFromReversedCpDelta() {
+    ORNL::Point center;
+    const bool inferred = ORNL::ArcSpecialtiesAxisInference::cylindricalAxisFromCpDelta(
+        QVector3D(1.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0), 0.0, 270.0, true, std::nullopt, center);
+
+    return inferred && near(center.x(), 0.0) && near(center.y(), 0.0);
+}
+
+bool rightHandedCpDeltaDoesNotMirrorAxis() {
+    ORNL::Point center;
+    const bool inferred = ORNL::ArcSpecialtiesAxisInference::cylindricalAxisFromCpDelta(
+        QVector3D(1.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0), 0.0, 270.0, false, std::nullopt, center);
+
+    return inferred && !near(center.x(), 0.0) && !near(center.y(), 0.0);
+}
 
 bool writesFirstTravelWithWorkObjectToolFrame() {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
@@ -182,13 +198,12 @@ bool writesCylindricalTravelWithConfiguredArcDensity() {
 
     ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     writer.writeTravel(ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
-                       ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
-                       ORNL::TravelLiftType::kNoLift, segment_settings);
+                       ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm), ORNL::TravelLiftType::kNoLift,
+                       segment_settings);
 
-    const QString travel_block =
-        writer.writeTravel(ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
-                           ORNL::Point(-100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
-                           ORNL::TravelLiftType::kNoLift, segment_settings);
+    const QString travel_block = writer.writeTravel(ORNL::Point(100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                    ORNL::Point(-100.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                    ORNL::TravelLiftType::kNoLift, segment_settings);
 
     return occurrenceCount(travel_block, ";TRAVEL ARC") == 4;
 }
@@ -211,11 +226,14 @@ int main(int argc, char* argv[]) {
                      "Arc Specialties parser did not retain CP for visualization.");
     passed &= expect(parsedLineKeepsCpForVisualization(),
                      "Arc Specialties parser did not retain linear CP for visualization.");
+    passed &= expect(infersLeftHandedHelicalAxisFromReversedCpDelta(),
+                     "Arc Specialties loader did not reverse left-handed helical CP delta.");
+    passed &= expect(rightHandedCpDeltaDoesNotMirrorAxis(),
+                     "Arc Specialties loader unexpectedly reversed right-handed CP delta.");
     passed &= expect(writesInlineArcOptionalStop(), "Arc Specialties writer did not emit inline G81 on G02/G03.");
     passed &= expect(writesCompactCylindricalPrintComments(),
                      "Arc Specialties writer did not emit compact cylindrical comments.");
-    passed &= expect(writesFirstTravelWithWorkObjectToolFrame(),
-                     "Arc Specialties first travel did not use ZR=-135.");
+    passed &= expect(writesFirstTravelWithWorkObjectToolFrame(), "Arc Specialties first travel did not use ZR=-135.");
     passed &= expect(writesCylindricalTravelWithConfiguredArcDensity(),
                      "Arc Specialties cylindrical travel did not honor Arcs per Revolution.");
 
