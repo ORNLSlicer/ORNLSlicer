@@ -802,6 +802,8 @@ class Constants {
             static const QString kEnableSharpCornerExtension;
             static const QString kSharpCornerExtensionAngle;
             static const QString kSharpCornerExtensionDistance;
+            static const QString kSharpCornerClosePointsThreshold;
+            static const QString kSharpCornerSharpeningLegLength;
             static const QString kEnableSpiralize;
             static const QString kEnableFixModel;
             static const QString kEnableOversize;

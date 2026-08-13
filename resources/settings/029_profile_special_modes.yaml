@@ -90,9 +90,9 @@ settings:
     symbol: "kEnableSharpCornerExtension"
     local: false
   - name: "sharp_corner_extension_angle"
-    display: "Sharp Corner Extension Angle"
+    display: "Sharp Corner Angle Threshold"
     type: "angle"
-    tooltip: "Toolpath junctions with a corner angle less than or equal to this threshold will be extended."
+    tooltip: "Maximum corner angle that can be sharpened."
     depends: {"sharp_corner_extension":true}
     options: []
     default: 1.570796327
@@ -102,9 +102,9 @@ settings:
     symbol: "kSharpCornerExtensionAngle"
     local: false
   - name: "sharp_corner_extension_distance"
-    display: "Sharp Corner Extension Distance"
+    display: "Sharp Corner Extension Length"
     type: "distance"
-    tooltip: "Distance to move each detected sharp corner outward along the local corner bisector."
+    tooltip: "Distance to extend the corner merge point along the corner bisector."
     depends: {"sharp_corner_extension":true}
     options: []
     default: 0
@@ -112,6 +112,30 @@ settings:
     major: "Profile"
     namespace: "Profile::SpecialModes"
     symbol: "kSharpCornerExtensionDistance"
+    local: false
+  - name: "sharp_corner_close_points_threshold"
+    display: "Sharp Corner Close Points Threshold"
+    type: "distance"
+    tooltip: "Maximum length of a bead segment connecting two corner legs that can be removed before sharpening."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerClosePointsThreshold"
+    local: false
+  - name: "sharp_corner_sharpening_leg_length"
+    display: "Sharp Corner Sharpening Leg Length"
+    type: "distance"
+    tooltip: "Distance along each original corner leg to replace with sharpened geometry. A value of 0 uses the extension length."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerSharpeningLegLength"
     local: false
   - name: "enable_spiralize_mode"
     display: "Enable Spiralize Mode"
