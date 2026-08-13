@@ -738,7 +738,7 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRadial);
     }
     if (m_helical.indexIn(comment) != -1) {
-        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRadial);
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kHelical);
     }
     if (m_inset.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kInset);
