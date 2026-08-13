@@ -801,6 +801,7 @@ enum class VisualizationColors {
     kPrestart,
     kRaft,
     kRadial,
+    kHelical,
     kRampingDown,
     kRampingUp,
     kSkeleton,
@@ -850,6 +851,8 @@ inline QString VisualizationColorsName(VisualizationColors color) {
             return "Raft";
         case VisualizationColors::kRadial:
             return "Radial";
+        case VisualizationColors::kHelical:
+            return "Helical";
         case VisualizationColors::kRampingDown:
             return "RampingDown";
         case VisualizationColors::kRampingUp:
@@ -924,6 +927,8 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
             return QColor(102, 102, 102, 255);
         case VisualizationColors::kRadial:
             return QColor(47, 82, 102, 255);
+        case VisualizationColors::kHelical:
+            return QColor(127, 0, 255, 255);
         case VisualizationColors::kRampingDown:
             return QColor(22, 99, 137, 255);
         case VisualizationColors::kRampingUp:
