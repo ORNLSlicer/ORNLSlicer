@@ -32,9 +32,9 @@ void appendLine(ORNL::Path& path, const ORNL::Point& start, const ORNL::Point& e
     path.append(QSharedPointer<ORNL::LineSegment>::create(start, end));
 }
 
-QSharedPointer<ORNL::SettingsBase> sharpCornerSettings(ORNL::Distance close_points_threshold) {
+QSharedPointer<ORNL::SettingsBase> sharpCornerSettings(ORNL::Distance close_points_threshold, bool enabled = true) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
-    settings->setSetting(ORNL::PS::SpecialModes::kEnableSharpCornerExtension, true);
+    settings->setSetting(ORNL::PS::SpecialModes::kEnableSharpCornerExtension, enabled);
     settings->setSetting(ORNL::PS::SpecialModes::kSharpCornerExtensionAngle, ORNL::Angle(M_PI / 3.0));
     settings->setSetting(ORNL::PS::SpecialModes::kSharpCornerExtensionDistance, ORNL::Distance(2.0));
     settings->setSetting(ORNL::PS::SpecialModes::kSharpCornerClosePointsThreshold, close_points_threshold);
@@ -92,6 +92,19 @@ int main() {
                                                               sharpCornerSettings(ORNL::Distance(0.5)));
     passed &= expect(threshold_rejected_corner.size() == 3,
                      "Expected connector longer than close-points threshold to remain unchanged.");
+
+    ORNL::Path local_corner;
+    appendLine(local_corner, ORNL::Point(-10.0f, 5.0f, 0.0f), ORNL::Point(0.0f, 0.0f, 0.0f));
+    appendLine(local_corner, ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(-10.0f, -5.0f, 0.0f));
+
+    QSharedPointer<ORNL::SettingsBase> local_settings = sharpCornerSettings(ORNL::Distance());
+    local_corner[0]->getSb()->populate(local_settings);
+    local_corner[1]->getSb()->populate(local_settings);
+
+    ORNL::PathModifierGenerator::GenerateSharpCornerExtension(local_corner,
+                                                              sharpCornerSettings(ORNL::Distance(), false));
+    passed &= expect(local_corner.size() == 4,
+                     "Expected segment-local sharp-corner settings to override disabled fallback settings.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

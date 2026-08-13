@@ -88,7 +88,7 @@ settings:
     major: "Profile"
     namespace: "Profile::SpecialModes"
     symbol: "kEnableSharpCornerExtension"
-    local: false
+    local: true
   - name: "sharp_corner_extension_angle"
     display: "Sharp Corner Angle Threshold"
     type: "angle"
@@ -100,7 +100,7 @@ settings:
     major: "Profile"
     namespace: "Profile::SpecialModes"
     symbol: "kSharpCornerExtensionAngle"
-    local: false
+    local: true
   - name: "sharp_corner_extension_distance"
     display: "Sharp Corner Extension Length"
     type: "distance"
@@ -112,7 +112,7 @@ settings:
     major: "Profile"
     namespace: "Profile::SpecialModes"
     symbol: "kSharpCornerExtensionDistance"
-    local: false
+    local: true
   - name: "sharp_corner_close_points_threshold"
     display: "Sharp Corner Close Points Threshold"
     type: "distance"
@@ -124,7 +124,7 @@ settings:
     major: "Profile"
     namespace: "Profile::SpecialModes"
     symbol: "kSharpCornerClosePointsThreshold"
-    local: false
+    local: true
   - name: "sharp_corner_sharpening_leg_length"
     display: "Sharp Corner Sharpening Leg Length"
     type: "distance"
@@ -136,7 +136,7 @@ settings:
     major: "Profile"
     namespace: "Profile::SpecialModes"
     symbol: "kSharpCornerSharpeningLegLength"
-    local: false
+    local: true
   - name: "enable_spiralize_mode"
     display: "Enable Spiralize Mode"
     type: "boolean"
