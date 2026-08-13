@@ -741,6 +741,10 @@ const QString Constants::ProfileSettings::SpecialModes::kEnableSharpCornerExtens
 const QString Constants::ProfileSettings::SpecialModes::kSharpCornerExtensionAngle = "sharp_corner_extension_angle";
 const QString Constants::ProfileSettings::SpecialModes::kSharpCornerExtensionDistance =
     "sharp_corner_extension_distance";
+const QString Constants::ProfileSettings::SpecialModes::kSharpCornerClosePointsThreshold =
+    "sharp_corner_close_points_threshold";
+const QString Constants::ProfileSettings::SpecialModes::kSharpCornerSharpeningLegLength =
+    "sharp_corner_sharpening_leg_length";
 const QString Constants::ProfileSettings::SpecialModes::kEnableSpiralize = "enable_spiralize_mode";
 const QString Constants::ProfileSettings::SpecialModes::kEnableFixModel = "enable_fix_model";
 const QString Constants::ProfileSettings::SpecialModes::kEnableOversize = "oversize";

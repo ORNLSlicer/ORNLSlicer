@@ -4,8 +4,8 @@
 
 #include <cmath>
 
-#include <QtMath>
 #include <QVector>
+#include <QtMath>
 #include <qcontainerfwd.h>
 #include <qminmax.h>
 #include <qnumeric.h>
@@ -45,8 +45,172 @@ bool isExtendableLineSegment(const QSharedPointer<SegmentBase>& segment) {
 
 bool pointsCoincident(const Point& lhs, const Point& rhs) { return lhs.distance(rhs)() <= 1.0e-4; }
 
-Point midpoint(const Point& lhs, const Point& rhs) {
-    return Point((lhs.x() + rhs.x()) / 2.0f, (lhs.y() + rhs.y()) / 2.0f, (lhs.z() + rhs.z()) / 2.0f);
+struct Vector2D {
+    double x = 0.0;
+    double y = 0.0;
+};
+
+struct SharpCornerGeometry {
+    Point previous_cut;
+    Point sharp_point;
+    Point next_cut;
+    double previous_cut_parameter = 1.0;
+    double next_cut_parameter = 0.0;
+};
+
+struct SegmentEndpointUpdates {
+    bool has_start = false;
+    bool has_end = false;
+    Point start;
+    Point end;
+    double start_parameter = 0.0;
+    double end_parameter = 1.0;
+};
+
+double crossProduct(const Vector2D& lhs, const Vector2D& rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
+
+bool normalizedDirection(const Point& start, const Point& end, Vector2D& direction, double& length) {
+    const double x = end.x() - start.x();
+    const double y = end.y() - start.y();
+    length = std::hypot(x, y);
+    constexpr double kMinLength = 1.0e-6;
+    if (length < kMinLength)
+        return false;
+
+    direction = {x / length, y / length};
+    return true;
+}
+
+Point pointOnSegment(const Point& start, const Point& end, double parameter) {
+    return Point(start.x() + ((end.x() - start.x()) * parameter), start.y() + ((end.y() - start.y()) * parameter),
+                 start.z() + ((end.z() - start.z()) * parameter));
+}
+
+bool lineIntersection(const Point& first_start, const Point& first_end, const Point& second_start,
+                      const Point& second_end, Point& intersection) {
+    const Vector2D first_axis = {first_end.x() - first_start.x(), first_end.y() - first_start.y()};
+    const Vector2D second_axis = {second_end.x() - second_start.x(), second_end.y() - second_start.y()};
+    const double denominator = crossProduct(first_axis, second_axis);
+    constexpr double kParallelTolerance = 1.0e-8;
+    if (std::abs(denominator) < kParallelTolerance)
+        return false;
+
+    const Vector2D start_delta = {second_start.x() - first_start.x(), second_start.y() - first_start.y()};
+    const double first_parameter = crossProduct(start_delta, second_axis) / denominator;
+
+    const double x = first_start.x() + (first_axis.x * first_parameter);
+    const double y = first_start.y() + (first_axis.y * first_parameter);
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return false;
+
+    intersection = Point(x, y, (first_end.z() + second_start.z()) / 2.0f);
+    return true;
+}
+
+QSharedPointer<SegmentBase> cloneSegmentWithEndpoints(const QSharedPointer<SegmentBase>& source, const Point& start,
+                                                      const Point& end) {
+    QSharedPointer<SegmentBase> segment = source->clone();
+    segment->setStart(start);
+    segment->setEnd(end);
+
+    if (!source->getSb().isNull())
+        segment->setSb(QSharedPointer<SettingsBase>::create(*source->getSb()));
+
+    return segment;
+}
+
+bool calculateSharpCornerGeometry(const QSharedPointer<SegmentBase>& previous_segment,
+                                  const QSharedPointer<SegmentBase>& next_segment, double threshold_radians,
+                                  double extension_length, double sharpening_leg_length,
+                                  SharpCornerGeometry& geometry) {
+    Vector2D previous_direction;
+    Vector2D next_direction;
+    double previous_length = 0.0;
+    double next_length = 0.0;
+
+    if (!normalizedDirection(previous_segment->start(), previous_segment->end(), previous_direction, previous_length) ||
+        !normalizedDirection(next_segment->start(), next_segment->end(), next_direction, next_length)) {
+        return false;
+    }
+
+    if (previous_length <= sharpening_leg_length || next_length <= sharpening_leg_length)
+        return false;
+
+    double cos_theta = (previous_direction.x * next_direction.x) + (previous_direction.y * next_direction.y);
+    cos_theta = qMin(1.0, cos_theta);
+    cos_theta = qMax(-1.0, cos_theta);
+
+    const double corner_angle = M_PI - std::acos(cos_theta);
+    if (corner_angle > threshold_radians)
+        return false;
+
+    Point merge_point;
+    if (!lineIntersection(previous_segment->start(), previous_segment->end(), next_segment->start(),
+                          next_segment->end(), merge_point)) {
+        return false;
+    }
+
+    const Vector2D extension_direction = {previous_direction.x - next_direction.x,
+                                          previous_direction.y - next_direction.y};
+    const double extension_direction_length = std::hypot(extension_direction.x, extension_direction.y);
+    constexpr double kMinLength = 1.0e-6;
+    if (extension_direction_length < kMinLength)
+        return false;
+
+    geometry.previous_cut_parameter = 1.0 - (sharpening_leg_length / previous_length);
+    geometry.next_cut_parameter = sharpening_leg_length / next_length;
+    geometry.previous_cut =
+        pointOnSegment(previous_segment->start(), previous_segment->end(), geometry.previous_cut_parameter);
+    geometry.next_cut = pointOnSegment(next_segment->start(), next_segment->end(), geometry.next_cut_parameter);
+    geometry.sharp_point = Point(
+        merge_point.x() + (extension_direction.x / extension_direction_length * extension_length),
+        merge_point.y() + (extension_direction.y / extension_direction_length * extension_length), merge_point.z());
+
+    return true;
+}
+
+bool canApplyEndUpdate(int segment_index, double parameter, const QVector<bool>& skip_segment,
+                       const QVector<SegmentEndpointUpdates>& updates) {
+    constexpr double kParameterTolerance = 1.0e-6;
+    if (skip_segment[segment_index] || updates[segment_index].has_end)
+        return false;
+
+    return !updates[segment_index].has_start ||
+           updates[segment_index].start_parameter < parameter - kParameterTolerance;
+}
+
+bool canApplyStartUpdate(int segment_index, double parameter, const QVector<bool>& skip_segment,
+                         const QVector<SegmentEndpointUpdates>& updates) {
+    constexpr double kParameterTolerance = 1.0e-6;
+    if (skip_segment[segment_index] || updates[segment_index].has_start)
+        return false;
+
+    return !updates[segment_index].has_end || parameter < updates[segment_index].end_parameter - kParameterTolerance;
+}
+
+bool applySharpCornerGeometry(Path& path, int previous_index, int next_index, const SharpCornerGeometry& geometry,
+                              QVector<bool>& skip_segment, QVector<SegmentEndpointUpdates>& updates,
+                              QVector<QVector<QSharedPointer<SegmentBase>>>& insertions_after) {
+    if (!canApplyEndUpdate(previous_index, geometry.previous_cut_parameter, skip_segment, updates) ||
+        !canApplyStartUpdate(next_index, geometry.next_cut_parameter, skip_segment, updates) ||
+        !insertions_after[previous_index].isEmpty()) {
+        return false;
+    }
+
+    updates[previous_index].has_end = true;
+    updates[previous_index].end = geometry.previous_cut;
+    updates[previous_index].end_parameter = geometry.previous_cut_parameter;
+
+    updates[next_index].has_start = true;
+    updates[next_index].start = geometry.next_cut;
+    updates[next_index].start_parameter = geometry.next_cut_parameter;
+
+    insertions_after[previous_index].push_back(
+        cloneSegmentWithEndpoints(path[previous_index], geometry.previous_cut, geometry.sharp_point));
+    insertions_after[previous_index].push_back(
+        cloneSegmentWithEndpoints(path[next_index], geometry.sharp_point, geometry.next_cut));
+
+    return true;
 }
 } // namespace
 
@@ -615,84 +779,103 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
 
     const Angle threshold = sb->setting<Angle>(PS::SpecialModes::kSharpCornerExtensionAngle);
     const Distance extensionDistance = sb->setting<Distance>(PS::SpecialModes::kSharpCornerExtensionDistance);
+    const Distance closePointsThreshold = sb->setting<Distance>(PS::SpecialModes::kSharpCornerClosePointsThreshold);
+    Distance sharpeningLegLength = sb->setting<Distance>(PS::SpecialModes::kSharpCornerSharpeningLegLength);
+    if (sharpeningLegLength <= 0)
+        sharpeningLegLength = extensionDistance;
 
-    if (threshold <= 0 || extensionDistance <= 0 || path.size() < 2)
+    if (threshold <= 0 || extensionDistance <= 0 || sharpeningLegLength <= 0 || path.size() < 2)
         return;
 
     const int segmentCount = path.size();
-    QVector<Point> starts;
-    QVector<Point> ends;
-    starts.reserve(segmentCount);
-    ends.reserve(segmentCount);
+    const bool isClosed = pointsCoincident(path.front()->start(), path.back()->end());
+    const double thresholdRadians = qMin(M_PI, threshold());
 
-    for (const QSharedPointer<SegmentBase>& segment : path) {
-        starts.push_back(segment->start());
-        ends.push_back(segment->end());
+    QVector<bool> skipSegment(segmentCount, false);
+    QVector<SegmentEndpointUpdates> endpointUpdates(segmentCount);
+    QVector<QVector<QSharedPointer<SegmentBase>>> insertionsAfter(segmentCount);
+
+    bool modifiedPath = false;
+    if (closePointsThreshold > 0 && segmentCount >= 3) {
+        const int firstConnectorIndex = isClosed ? 0 : 1;
+        const int connectorLimit = isClosed ? segmentCount : segmentCount - 1;
+
+        for (int connectorIndex = firstConnectorIndex; connectorIndex < connectorLimit; ++connectorIndex) {
+            if (skipSegment[connectorIndex] || !isExtendableLineSegment(path[connectorIndex]) ||
+                path[connectorIndex]->length() > closePointsThreshold) {
+                continue;
+            }
+
+            const int previousIndex = (connectorIndex + segmentCount - 1) % segmentCount;
+            const int nextIndex = (connectorIndex + 1) % segmentCount;
+
+            if (skipSegment[previousIndex] || skipSegment[nextIndex] || previousIndex == nextIndex ||
+                !isExtendableLineSegment(path[previousIndex]) || !isExtendableLineSegment(path[nextIndex])) {
+                continue;
+            }
+
+            if (!pointsCoincident(path[previousIndex]->end(), path[connectorIndex]->start()) ||
+                !pointsCoincident(path[connectorIndex]->end(), path[nextIndex]->start())) {
+                continue;
+            }
+
+            SharpCornerGeometry geometry;
+            if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], thresholdRadians,
+                                              extensionDistance(), sharpeningLegLength(), geometry)) {
+                continue;
+            }
+
+            if (!applySharpCornerGeometry(path, previousIndex, nextIndex, geometry, skipSegment, endpointUpdates,
+                                          insertionsAfter)) {
+                continue;
+            }
+
+            skipSegment[connectorIndex] = true;
+            modifiedPath = true;
+        }
     }
 
-    const bool isClosed = pointsCoincident(starts.front(), ends.back());
     const int junctionCount = isClosed ? segmentCount : segmentCount - 1;
-    const double thresholdRadians = qMin(M_PI, threshold());
-    constexpr double kMinLength = 1.0e-6;
-
-    QVector<Point> extendedJunctions(segmentCount);
-    QVector<bool> hasExtendedJunction(segmentCount, false);
-
     for (int previousIndex = 0; previousIndex < junctionCount; ++previousIndex) {
         const int nextIndex = (previousIndex + 1) % segmentCount;
+        if (skipSegment[previousIndex] || skipSegment[nextIndex] || !isExtendableLineSegment(path[previousIndex]) ||
+            !isExtendableLineSegment(path[nextIndex])) {
+            continue;
+        }
 
-        if (!isExtendableLineSegment(path[previousIndex]) || !isExtendableLineSegment(path[nextIndex]))
+        if (!pointsCoincident(path[previousIndex]->end(), path[nextIndex]->start()))
             continue;
 
-        if (!pointsCoincident(ends[previousIndex], starts[nextIndex]))
+        SharpCornerGeometry geometry;
+        if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], thresholdRadians, extensionDistance(),
+                                          sharpeningLegLength(), geometry)) {
             continue;
+        }
 
-        const Point corner = midpoint(ends[previousIndex], starts[nextIndex]);
-        const double previousX = corner.x() - starts[previousIndex].x();
-        const double previousY = corner.y() - starts[previousIndex].y();
-        const double nextX = ends[nextIndex].x() - corner.x();
-        const double nextY = ends[nextIndex].y() - corner.y();
-
-        const double previousLength = qSqrt(previousX * previousX + previousY * previousY);
-        const double nextLength = qSqrt(nextX * nextX + nextY * nextY);
-
-        if (previousLength < kMinLength || nextLength < kMinLength)
-            continue;
-
-        const double previousUnitX = previousX / previousLength;
-        const double previousUnitY = previousY / previousLength;
-        const double nextUnitX = nextX / nextLength;
-        const double nextUnitY = nextY / nextLength;
-
-        double cosTheta = previousUnitX * nextUnitX + previousUnitY * nextUnitY;
-        cosTheta = qMin(1.0, cosTheta);
-        cosTheta = qMax(-1.0, cosTheta);
-
-        const double cornerAngle = M_PI - qAcos(cosTheta);
-        if (cornerAngle > thresholdRadians)
-            continue;
-
-        const double extensionX = previousUnitX - nextUnitX;
-        const double extensionY = previousUnitY - nextUnitY;
-        const double extensionLength = qSqrt(extensionX * extensionX + extensionY * extensionY);
-
-        if (extensionLength < kMinLength)
-            continue;
-
-        extendedJunctions[previousIndex] =
-            Point(corner.x() + (extensionX / extensionLength * extensionDistance()),
-                  corner.y() + (extensionY / extensionLength * extensionDistance()), corner.z());
-        hasExtendedJunction[previousIndex] = true;
+        modifiedPath |= applySharpCornerGeometry(path, previousIndex, nextIndex, geometry, skipSegment, endpointUpdates,
+                                                 insertionsAfter);
     }
 
+    if (!modifiedPath)
+        return;
+
+    Path sharpenedPath;
     for (int segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
-        const int startJunctionIndex = segmentIndex == 0 ? segmentCount - 1 : segmentIndex - 1;
-        if ((segmentIndex > 0 || isClosed) && hasExtendedJunction[startJunctionIndex])
-            path[segmentIndex]->setStart(extendedJunctions[startJunctionIndex]);
+        if (skipSegment[segmentIndex])
+            continue;
 
-        if (hasExtendedJunction[segmentIndex])
-            path[segmentIndex]->setEnd(extendedJunctions[segmentIndex]);
+        Point start =
+            endpointUpdates[segmentIndex].has_start ? endpointUpdates[segmentIndex].start : path[segmentIndex]->start();
+        Point end =
+            endpointUpdates[segmentIndex].has_end ? endpointUpdates[segmentIndex].end : path[segmentIndex]->end();
+
+        sharpenedPath.append(cloneSegmentWithEndpoints(path[segmentIndex], start, end));
+        for (const QSharedPointer<SegmentBase>& insertion : insertionsAfter[segmentIndex])
+            sharpenedPath.append(insertion);
     }
+
+    path.clear();
+    path.append(sharpenedPath);
 }
 
 // to generate tip wipe
