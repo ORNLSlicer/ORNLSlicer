@@ -22,7 +22,6 @@
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
-#include "utilities/mathutils.h"
 
 namespace ORNL {
 namespace {
