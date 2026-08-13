@@ -67,6 +67,59 @@ struct SegmentEndpointUpdates {
     double end_parameter = 1.0;
 };
 
+struct SharpCornerSettings {
+    bool enabled = false;
+    double threshold_radians = 0.0;
+    double extension_length = 0.0;
+    double close_points_threshold = 0.0;
+    double sharpening_leg_length = 0.0;
+};
+
+template <typename T>
+T settingWithFallback(const QSharedPointer<SettingsBase>& settings, const QSharedPointer<SettingsBase>& fallback,
+                      const QString& key) {
+    if (!settings.isNull() && settings->contains(key))
+        return settings->setting<T>(key);
+
+    if (!fallback.isNull())
+        return fallback->setting<T>(key);
+
+    return T();
+}
+
+SharpCornerSettings sharpCornerSettingsForSegment(const QSharedPointer<SegmentBase>& segment,
+                                                  const QSharedPointer<SettingsBase>& fallback) {
+    const QSharedPointer<SettingsBase> segment_settings = segment->getSb();
+    const Angle threshold =
+        settingWithFallback<Angle>(segment_settings, fallback, PS::SpecialModes::kSharpCornerExtensionAngle);
+    const Distance extension_distance =
+        settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerExtensionDistance);
+    const Distance close_points_threshold =
+        settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerClosePointsThreshold);
+    Distance sharpening_leg_length =
+        settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerSharpeningLegLength);
+    if (sharpening_leg_length <= 0)
+        sharpening_leg_length = extension_distance;
+
+    return {
+        settingWithFallback<bool>(segment_settings, fallback, PS::SpecialModes::kEnableSharpCornerExtension),
+        qMin(M_PI, threshold()),
+        extension_distance(),
+        close_points_threshold(),
+        sharpening_leg_length(),
+    };
+}
+
+bool sharpCornerEnabledForBothLegs(const QSharedPointer<SegmentBase>& previous_segment,
+                                   const QSharedPointer<SegmentBase>& next_segment,
+                                   const QSharedPointer<SettingsBase>& fallback, SharpCornerSettings& settings) {
+    settings = sharpCornerSettingsForSegment(previous_segment, fallback);
+    const SharpCornerSettings next_settings = sharpCornerSettingsForSegment(next_segment, fallback);
+
+    return settings.enabled && next_settings.enabled && settings.threshold_radians > 0.0 &&
+           settings.extension_length > 0.0 && settings.sharpening_leg_length > 0.0;
+}
+
 double crossProduct(const Vector2D& lhs, const Vector2D& rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
 
 bool normalizedDirection(const Point& start, const Point& end, Vector2D& direction, double& length) {
@@ -774,35 +827,23 @@ void PathModifierGenerator::GenerateTrajectorySlowdown(Path& path, QSharedPointe
 }
 
 void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPointer<SettingsBase> sb) {
-    if (!sb->setting<bool>(PS::SpecialModes::kEnableSharpCornerExtension))
-        return;
-
-    const Angle threshold = sb->setting<Angle>(PS::SpecialModes::kSharpCornerExtensionAngle);
-    const Distance extensionDistance = sb->setting<Distance>(PS::SpecialModes::kSharpCornerExtensionDistance);
-    const Distance closePointsThreshold = sb->setting<Distance>(PS::SpecialModes::kSharpCornerClosePointsThreshold);
-    Distance sharpeningLegLength = sb->setting<Distance>(PS::SpecialModes::kSharpCornerSharpeningLegLength);
-    if (sharpeningLegLength <= 0)
-        sharpeningLegLength = extensionDistance;
-
-    if (threshold <= 0 || extensionDistance <= 0 || sharpeningLegLength <= 0 || path.size() < 2)
+    if (path.size() < 2)
         return;
 
     const int segmentCount = path.size();
     const bool isClosed = pointsCoincident(path.front()->start(), path.back()->end());
-    const double thresholdRadians = qMin(M_PI, threshold());
 
     QVector<bool> skipSegment(segmentCount, false);
     QVector<SegmentEndpointUpdates> endpointUpdates(segmentCount);
     QVector<QVector<QSharedPointer<SegmentBase>>> insertionsAfter(segmentCount);
 
     bool modifiedPath = false;
-    if (closePointsThreshold > 0 && segmentCount >= 3) {
+    if (segmentCount >= 3) {
         const int firstConnectorIndex = isClosed ? 0 : 1;
         const int connectorLimit = isClosed ? segmentCount : segmentCount - 1;
 
         for (int connectorIndex = firstConnectorIndex; connectorIndex < connectorLimit; ++connectorIndex) {
-            if (skipSegment[connectorIndex] || !isExtendableLineSegment(path[connectorIndex]) ||
-                path[connectorIndex]->length() > closePointsThreshold) {
+            if (skipSegment[connectorIndex] || !isExtendableLineSegment(path[connectorIndex])) {
                 continue;
             }
 
@@ -819,9 +860,17 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
                 continue;
             }
 
+            SharpCornerSettings settings;
+            const SharpCornerSettings connector_settings = sharpCornerSettingsForSegment(path[connectorIndex], sb);
+            if (!sharpCornerEnabledForBothLegs(path[previousIndex], path[nextIndex], sb, settings) ||
+                !connector_settings.enabled || settings.close_points_threshold <= 0.0 ||
+                path[connectorIndex]->length() > settings.close_points_threshold) {
+                continue;
+            }
+
             SharpCornerGeometry geometry;
-            if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], thresholdRadians,
-                                              extensionDistance(), sharpeningLegLength(), geometry)) {
+            if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], settings.threshold_radians,
+                                              settings.extension_length, settings.sharpening_leg_length, geometry)) {
                 continue;
             }
 
@@ -846,9 +895,13 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
         if (!pointsCoincident(path[previousIndex]->end(), path[nextIndex]->start()))
             continue;
 
+        SharpCornerSettings settings;
+        if (!sharpCornerEnabledForBothLegs(path[previousIndex], path[nextIndex], sb, settings))
+            continue;
+
         SharpCornerGeometry geometry;
-        if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], thresholdRadians, extensionDistance(),
-                                          sharpeningLegLength(), geometry)) {
+        if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], settings.threshold_radians,
+                                          settings.extension_length, settings.sharpening_leg_length, geometry)) {
             continue;
         }
 
