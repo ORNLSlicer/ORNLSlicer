@@ -295,6 +295,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_common_parser_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME common_parser_tests COMMAND ${PROJECT_NAME}_common_parser_tests)
 
+    add_executable(${PROJECT_NAME}_settings_base_adjustments_tests tests/settings_base_adjustments_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_settings_base_adjustments_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_settings_base_adjustments_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME settings_base_adjustments_tests COMMAND ${PROJECT_NAME}_settings_base_adjustments_tests)
+
     add_executable(${PROJECT_NAME}_arc_specialties_parser_tests tests/arc_specialties_parser_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_arc_specialties_parser_tests
