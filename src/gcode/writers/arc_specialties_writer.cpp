@@ -151,12 +151,12 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
         text += commentLine(QString("Initial World Approach Tool Frame Rotation: XR=") %
-                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
-                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
-                            QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
-        text += commentLine(
-            "Initial Approach: TRAFO-off world approach uses cylinder center XY and part maximum Z plus " %
-            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
+                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" % QString::number(kToolFrameYR, 'f', 4) %
+                            "deg ZR=" % QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
+        text += commentLine("Initial Approach: TRAFO-off world approach uses cylinder center XY and the greater of "
+                            "part maximum Z and Cylinder Height plus " %
+                            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) %
+                            " before work-object kinematics");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
@@ -274,9 +274,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" % QString::number(kToolFrameZR, 'f', 4) %
                             "deg");
         text += commentLine(QString("Initial World Approach Tool Frame Rotation: XR=") %
-                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" %
-                            QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
-                            QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
+                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" % QString::number(kToolFrameYR, 'f', 4) %
+                            "deg ZR=" % QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
         text += commentLine(
             "Initial Approach: TRAFO-off world approach uses the first travel XY and part maximum Z plus " %
             formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
@@ -440,10 +439,9 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
             const double start_angle = std::atan2(start.y() - center_y, start.x() - center_x);
             const double end_angle = std::atan2(end.y() - center_y, end.x() - center_x);
             const double delta_angle = shortestAngularDelta(start_angle, end_angle);
-            const int arcs_per_revolution =
-                std::max(1, params->contains(PS::Slicing::kArcsPerRevolution)
-                                 ? params->setting<int>(PS::Slicing::kArcsPerRevolution)
-                                 : m_sb->setting<int>(PS::Slicing::kArcsPerRevolution));
+            const int arcs_per_revolution = std::max(1, params->contains(PS::Slicing::kArcsPerRevolution)
+                                                            ? params->setting<int>(PS::Slicing::kArcsPerRevolution)
+                                                            : m_sb->setting<int>(PS::Slicing::kArcsPerRevolution));
             const double target_segment_angle = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
             const double travel_angle = std::abs(delta_angle);
 
@@ -581,8 +579,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     setFeedrate(speed);
     m_layer_start = false;
 
-    const QString inline_optional_stop =
-        m_sb->setting<bool>(PRS::GCode::kArcSpecialtiesG2G3OptionalStop) ? " G81" : "";
+    const QString inline_optional_stop = m_sb->setting<bool>(PRS::GCode::kArcSpecialtiesG2G3OptionalStop) ? " G81" : "";
 
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
@@ -699,8 +696,7 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
                                           const Point& cp_reference) {
     setFeedrate(speed);
     if (command == "G00") {
-        const double tool_frame_zr =
-            comment == kWorldApproachTravelComment ? kRapidTravelToolFrameZR : kToolFrameZR;
+        const double tool_frame_zr = comment == kWorldApproachTravelComment ? kRapidTravelToolFrameZR : kToolFrameZR;
         return command % writeCoordinates(destination, params, tool_frame_zr, cp_reference) % commentSpaceLine(comment);
     }
     else {
@@ -786,8 +782,22 @@ Point ArcSpecialtiesWriter::safeStartupWorldApproachPoint(const Point& travel_de
     }
 
     Distance safe_z(travel_destination.z());
+    bool apply_startup_buffer = false;
     if (hasBuildMaximumZ()) {
-        safe_z = getBuildMaximumZ() + kStartupWorldApproachZBuffer;
+        safe_z = getBuildMaximumZ();
+        apply_startup_buffer = true;
+    }
+
+    if (isCylindricalSlicingMode()) {
+        const Distance cylinder_height = m_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
+        if (cylinder_height > safe_z) {
+            safe_z = cylinder_height;
+        }
+        apply_startup_buffer = apply_startup_buffer || cylinder_height > 0;
+    }
+
+    if (apply_startup_buffer) {
+        safe_z += kStartupWorldApproachZBuffer;
     }
     approach.z(static_cast<float>(safe_z()));
 
