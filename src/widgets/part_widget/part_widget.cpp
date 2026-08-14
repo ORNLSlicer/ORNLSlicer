@@ -149,9 +149,9 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                         PRS::Dimensions::kGridYOffset};
 
     static const auto slicing_settings = QSet<QString> {
-        PS::Slicing::kSlicingMode,       PS::Slicing::kSlicePlaneNormalX,  PS::Slicing::kSlicePlaneNormalY,
-        PS::Slicing::kSlicePlaneNormalZ, PS::Slicing::kCylinderAxisSource, PS::Slicing::kCylinderAxisX,
-        PS::Slicing::kCylinderAxisY,     PS::Slicing::kCylinderInnerRadius};
+        PS::Slicing::kSlicingMode,       PS::Slicing::kSlicePlaneNormalX,   PS::Slicing::kSlicePlaneNormalY,
+        PS::Slicing::kSlicePlaneNormalZ, PS::Slicing::kCylinderAxisSource,  PS::Slicing::kCylinderAxisX,
+        PS::Slicing::kCylinderAxisY,     PS::Slicing::kCylinderInnerRadius, PS::Slicing::kCylinderHeight};
 
     static const auto slice_plane_normal_settings = QSet<QString> {
         PS::Slicing::kSlicePlaneNormalX, PS::Slicing::kSlicePlaneNormalY, PS::Slicing::kSlicePlaneNormalZ};

@@ -141,6 +141,17 @@ int estimateInclusiveCount(Distance start, Distance end, Distance step) {
 
     return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
 }
+
+//! @brief Returns the upper Z limit for generated cylindrical candidates.
+Distance cylindricalTopZ(const QSharedPointer<SettingsBase>& part_sb, Distance base_z, Distance mesh_top_z) {
+    const Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
+    if (cylinder_height <= 0) {
+        return mesh_top_z;
+    }
+
+    const Distance capped_top_z(base_z + cylinder_height);
+    return capped_top_z < mesh_top_z ? capped_top_z : mesh_top_z;
+}
 } // namespace
 
 RadialSlicer::RadialSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
@@ -258,11 +269,11 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         const Distance base_z(mesh_min.z());
-        const Distance top_z(mesh_max.z());
+        const Distance top_z = cylindricalTopZ(part_sb, base_z, mesh_max.z());
         Point center = radialCenterForPart(part_sb, part, base_z);
         const Distance max_radius(maxRadiusForMeshes(meshes, center));
 
-        // Match polymer slicing's centerline convention: the first layer sits
+        // Match planar slicing's centerline convention: the first layer sits
         // half a step inside the printable band, then subsequent layers advance
         // by the full configured spacing.
         const Distance first_radius = initial_radius + (layer_height / 2.0);

@@ -356,6 +356,7 @@
             "cylinder_axis_x": 0,
             "cylinder_axis_y": 0,
             "cylinder_inner_radius": 0,
+            "cylinder_height": 0,
             "cylindrical_path_pattern": 0,
             "radial_path_boundary_policy": 0,
             "radial_path_start_angle": 0,

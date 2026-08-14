@@ -1496,7 +1496,9 @@ bool PartView::cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop,
         initial_radius = 0.0 * micron;
 
     radius = initial_radius() * Constants::OpenGL::kObjectToView;
-    height = std::max(max_z - min_z, kMinimumSlicingCylinderHeight);
+    Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
+    height = cylinder_height > 0 ? cylinder_height() * Constants::OpenGL::kObjectToView : max_z - min_z;
+    height = std::max(height, kMinimumSlicingCylinderHeight);
     base_center = QVector3D(axis_center.x(), axis_center.y(), min_z);
 
     return radius > 0.0f && height > 0.0f;

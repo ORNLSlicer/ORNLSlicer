@@ -842,6 +842,7 @@ const QString Constants::ProfileSettings::Slicing::kSlicePlaneNormalX = "slice_p
 const QString Constants::ProfileSettings::Slicing::kSlicePlaneNormalY = "slice_plane_normal_y";
 const QString Constants::ProfileSettings::Slicing::kSlicePlaneNormalZ = "slice_plane_normal_z";
 const QString Constants::ProfileSettings::Slicing::kCylinderInnerRadius = "cylinder_inner_radius";
+const QString Constants::ProfileSettings::Slicing::kCylinderHeight = "cylinder_height";
 const QString Constants::ProfileSettings::Slicing::kCylinderAxisSource = "cylinder_axis_source";
 const QString Constants::ProfileSettings::Slicing::kCylinderAxisX = "cylinder_axis_x";
 const QString Constants::ProfileSettings::Slicing::kCylinderAxisY = "cylinder_axis_y";

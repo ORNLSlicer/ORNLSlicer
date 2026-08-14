@@ -322,6 +322,17 @@ int estimateInclusiveCount(Distance start, Distance end, Distance step) {
 
     return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
 }
+
+//! @brief Returns the upper Z limit for generated cylindrical candidates.
+Distance cylindricalTopZ(const QSharedPointer<SettingsBase>& part_sb, Distance base_z, Distance mesh_top_z) {
+    const Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
+    if (cylinder_height <= 0) {
+        return mesh_top_z;
+    }
+
+    const Distance capped_top_z(base_z + cylinder_height);
+    return capped_top_z < mesh_top_z ? capped_top_z : mesh_top_z;
+}
 } // namespace
 
 HelicalSlicer::HelicalSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
@@ -446,7 +457,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         const Distance base_z(mesh_min.z());
-        const Distance top_z(mesh_max.z());
+        const Distance top_z = cylindricalTopZ(part_sb, base_z, mesh_max.z());
         Point center = helicalCenterForPart(part_sb, part, base_z);
         const Distance max_radius(maxRadiusForMeshes(meshes, center));
 
