@@ -901,6 +901,7 @@ class Constants {
             static const QString kSlicePlaneNormalY;
             static const QString kSlicePlaneNormalZ;
             static const QString kCylinderInnerRadius;
+            static const QString kCylinderHeight;
             static const QString kCylinderAxisSource;
             static const QString kCylinderAxisX;
             static const QString kCylinderAxisY;

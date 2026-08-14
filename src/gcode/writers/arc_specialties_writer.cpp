@@ -160,6 +160,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
+        text +=
+            commentLine(QString("Cylinder Height: ") %
+                        formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderHeight), m_meta.m_distance_unit));
         const CylinderAxisSource cylinder_axis_source =
             static_cast<CylinderAxisSource>(m_sb->setting<int>(PS::Slicing::kCylinderAxisSource));
         text += commentLine("Cylinder Axis Source: " % toString(cylinder_axis_source));

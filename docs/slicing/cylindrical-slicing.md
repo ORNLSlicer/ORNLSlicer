@@ -14,13 +14,14 @@ This slicer currently requires the `Arc Specialties` G-code syntax, but this pag
 6. For `Helical`, set helical rise per full revolution with `Default Bead Width`.
 7. Set `Cylinder Axis Source` if the cylinder axis should use a custom XY coordinate instead of the part centroid.
 8. Set `Cylinder Inner Radius` if the first cylinder or helix should begin away from the axis.
-9. Set the path boundary policy for the selected `Cylindrical Path Pattern`.
-10. Set the radial or helical path start angle if the first point should begin somewhere other than the default.
-11. For `Helical`, set `Helical Path Handedness` if the helix should sweep clockwise rather than the default counter-clockwise direction as Z rises.
-12. For `Helical`, set `Max Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
-13. Confirm the printer `Syntax` is `Arc Specialties`. Selecting `Cylindrical` defaults to `Arc Specialties` when the current syntax is not cylindrical-capable.
-14. Configure the required Arc Specialties machine output settings, including positioner axes, frame rotation, `TRAFO`, and G2/G3 center mode, using the [Arc Specialties](../gcode/arc-specialties.md) syntax documentation.
-15. Slice and inspect the generated G-code preview before running the machine.
+9. Set `Cylinder Height` to limit generated cylindrical paths above the part base. Leave it at `0` to use the part height.
+10. Set the path boundary policy for the selected `Cylindrical Path Pattern`.
+11. Set the radial or helical path start angle if the first point should begin somewhere other than the default.
+12. For `Helical`, set `Helical Path Handedness` if the helix should sweep clockwise rather than the default counter-clockwise direction as Z rises.
+13. For `Helical`, set `Max Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
+14. Confirm the printer `Syntax` is `Arc Specialties`. Selecting `Cylindrical` defaults to `Arc Specialties` when the current syntax is not cylindrical-capable.
+15. Configure the required Arc Specialties machine output settings, including positioner axes, frame rotation, `TRAFO`, and G2/G3 center mode, using the [Arc Specialties](../gcode/arc-specialties.md) syntax documentation.
+16. Slice and inspect the generated G-code preview before running the machine.
 
 ## Path Patterns
 
@@ -36,6 +37,8 @@ The first radius is half a `Layer Height` outward from `Cylinder Inner Radius`, 
 
 If `Max Helical Path Length` is greater than `0`, each generated helical fragment is split into shorter paths before print segments are emitted. Split paths stay contiguous, so no travel move is inserted between adjacent split points. Values of `0` or smaller leave the generated helical fragments unbroken.
 
+`Cylinder Height` limits radial and helical candidate paths above the retained part base. Values of `0` or smaller use the retained part height, preserving the default model-bounded behavior.
+
 ## Required Settings
 
 | Setting | Location | Effect |
@@ -48,6 +51,7 @@ If `Max Helical Path Length` is greater than `0`, each generated helical fragmen
 | `Cylinder Axis Source` | Profile > Slicing | Selects whether the cylinder axis is centered on each part's centroid or on a custom XY coordinate. |
 | `Cylinder Axis - X` / `Cylinder Axis - Y` | Profile > Slicing | Custom cylinder axis coordinates when `Cylinder Axis Source` is `Custom XY`. |
 | `Cylinder Inner Radius` | Profile > Slicing | Inner radial boundary before the half-layer offset is applied. |
+| `Cylinder Height` | Profile > Slicing | Upper height limit for generated cylindrical paths above the part base. Values less than or equal to `0` use the retained part height. |
 | `Radial Path Start Angle` | Profile > Slicing | For `Radial`, angular start position around the cylinder axis. |
 | `Helical Path Start Angle` | Profile > Slicing | For `Helical`, angular start position around the cylinder axis. Defaults to `90 deg` for a +Y start. |
 | `Helical Path Handedness` | Profile > Slicing | For `Helical`, selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |

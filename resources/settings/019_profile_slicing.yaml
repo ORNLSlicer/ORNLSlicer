@@ -102,6 +102,18 @@ settings:
     namespace: "Profile::Slicing"
     symbol: "kCylinderInnerRadius"
     local: true
+  - name: "cylinder_height"
+    display: "Cylinder Height"
+    type: "distance"
+    tooltip: "Limits cylindrical path generation to this height above the part base. Values less than or equal to zero use the part height."
+    depends: {"slicing_mode":1}
+    options: []
+    default: 0
+    minor: "Slicing"
+    major: "Profile"
+    namespace: "Profile::Slicing"
+    symbol: "kCylinderHeight"
+    local: true
   - name: "cylindrical_path_pattern"
     display: "Cylindrical Path Pattern"
     type: "enumeration"
