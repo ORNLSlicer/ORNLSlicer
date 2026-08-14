@@ -37,8 +37,8 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 #include "graphics/objects/printer/printer_object.h"
-#include "graphics/objects/sphere_object.h"
 #include "graphics/objects/sphere/seam_object.h"
+#include "graphics/objects/sphere_object.h"
 #include "graphics/objects/text_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
@@ -1460,7 +1460,7 @@ QSharedPointer<SettingsBase> PartView::slicingSettingsForPart(QSharedPointer<Par
 
 bool PartView::cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop, QVector3D& base_center, float& radius,
                                                  float& height) const {
-    if (gop.isNull() || gop->part().isNull() || gop->part()->rootMesh().isNull())
+    if (gop.isNull() || gop->part().isNull() || gop->part()->rootMesh().isNull() || m_printer.isNull())
         return false;
 
     QSharedPointer<SettingsBase> part_sb = slicingSettingsForPart(gop->part());
@@ -1482,11 +1482,9 @@ bool PartView::cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop,
     if (triangles.empty())
         return false;
 
-    float min_z = std::numeric_limits<float>::max();
     float max_z = std::numeric_limits<float>::lowest();
     for (const Triangle& triangle : triangles) {
         for (const QVector3D& point : {triangle.a, triangle.b, triangle.c}) {
-            min_z = std::min(min_z, point.z());
             max_z = std::max(max_z, point.z());
         }
     }
@@ -1497,9 +1495,10 @@ bool PartView::cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop,
 
     radius = initial_radius() * Constants::OpenGL::kObjectToView;
     Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
-    height = cylinder_height > 0 ? cylinder_height() * Constants::OpenGL::kObjectToView : max_z - min_z;
+    const float build_volume_min_z = m_printer->minimum().z();
+    height = cylinder_height > 0 ? cylinder_height() * Constants::OpenGL::kObjectToView : max_z - build_volume_min_z;
     height = std::max(height, kMinimumSlicingCylinderHeight);
-    base_center = QVector3D(axis_center.x(), axis_center.y(), min_z);
+    base_center = QVector3D(axis_center.x(), axis_center.y(), build_volume_min_z);
 
     return radius > 0.0f && height > 0.0f;
 }
