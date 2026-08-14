@@ -97,3 +97,15 @@ settings:
     namespace: "Printer::MachineSpeeds"
     symbol: "kMeldDepositionRateScaling"
     local: false
+  - name: "meld_discrete_feed_commands"
+    display: "Enable Meld Discrete Feed Commands"
+    type: "boolean"
+    tooltip: "Uses discrete feed commands for g-code output"
+    depends: {"syntax":21}
+    options: []
+    default: false
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMeldDiscrete"
+    local: false

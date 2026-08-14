@@ -302,6 +302,7 @@ const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed = "w_table_
 const QString Constants::PrinterSettings::MachineSpeed::kZSpeed = "z_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kGearRatio = "extruder_gear_ratio";
 const QString Constants::PrinterSettings::MachineSpeed::kMeldDepositionRateScaling = "meld_deposition_rate_scaling";
+const QString Constants::PrinterSettings::MachineSpeed::kMeldDiscrete = "meld_discrete_feed_commands";
 
 // Acceleration
 const QString Constants::PrinterSettings::Acceleration::kEnableDynamic = "enable_dynamic_acceleration";
@@ -880,20 +881,19 @@ const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleExtruder
 
 // File Output
 const QString Constants::ExperimentalSettings::FileOutput::kMeldCompanionOutput = "additional_meld_output";
-const QString Constants::ExperimentalSettings::FileOutput::kMeldDiscrete        = "meld_discrete_feed_commands";
-const QString Constants::ExperimentalSettings::FileOutput::kTormachOutput       = "tormach_file_output";
-const QString Constants::ExperimentalSettings::FileOutput::kTormachMode         = "tormach_mode";
-const QString Constants::ExperimentalSettings::FileOutput::kAML3DOutput         = "aml3d_file_output";
-const QString Constants::ExperimentalSettings::FileOutput::kAML3DWeaveLength    = "aml3d_weave_length";
-const QString Constants::ExperimentalSettings::FileOutput::kAML3DWeaveWidth     = "aml3d_weave_width";
-const QString Constants::ExperimentalSettings::FileOutput::kSandiaOutput        = "sandia_file_output";
-const QString Constants::ExperimentalSettings::FileOutput::kSandiaMetalFile     = "sandia_metal_file";
-const QString Constants::ExperimentalSettings::FileOutput::kSandiaCVEL          = "sandia_cvel";
-const QString Constants::ExperimentalSettings::FileOutput::kMarlinOutput        = "marlin_file_output";
-const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels       = "marlin_include_travels";
-const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput    = "simulation_file_output";
-const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput          = "amcm_file_output";
-const QString Constants::ExperimentalSettings::FileOutput::kAMCMDataLogging     = "amcm_data_logging";
+const QString Constants::ExperimentalSettings::FileOutput::kTormachOutput = "tormach_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kTormachMode = "tormach_mode";
+const QString Constants::ExperimentalSettings::FileOutput::kAML3DOutput = "aml3d_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kAML3DWeaveLength = "aml3d_weave_length";
+const QString Constants::ExperimentalSettings::FileOutput::kAML3DWeaveWidth = "aml3d_weave_width";
+const QString Constants::ExperimentalSettings::FileOutput::kSandiaOutput = "sandia_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kSandiaMetalFile = "sandia_metal_file";
+const QString Constants::ExperimentalSettings::FileOutput::kSandiaCVEL = "sandia_cvel";
+const QString Constants::ExperimentalSettings::FileOutput::kMarlinOutput = "marlin_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kMarlinTravels = "marlin_include_travels";
+const QString Constants::ExperimentalSettings::FileOutput::kSimulationOutput = "simulation_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kAMCMOutput = "amcm_file_output";
+const QString Constants::ExperimentalSettings::FileOutput::kAMCMDataLogging = "amcm_data_logging";
 
 // Cross-Section
 const QString Constants::ExperimentalSettings::CrossSection::kLargestGap = "cross_section_largest_gap";

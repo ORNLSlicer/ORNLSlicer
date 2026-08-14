@@ -403,7 +403,7 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPoint
     const int actuator_deposition_value = initial_rpm > 0 ? initial_rpm : rpm;
     const float output_rpm = depositionOutputValue(actuator_deposition_value, params, start_point, target_point);
 
-    if (!m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
+    if (!m_sb->setting<int>(PRS::MachineSpeed::kMeldDiscrete)) {
         rv += "M4" % m_s % QString::number(output_rpm) % " @714" % commentSpaceLine("TURN SPINDLE ON");
         rv += "M34" % m_s % QString::number(output_rpm) % " @714" % commentSpaceLine("TURN EXTRUDER ON");
         rv += "M54" % commentSpaceLine("HOLD FOR DEPOSITION START");
@@ -458,7 +458,7 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPoint
 
 QString MeldWriter::writeExtruderOff() {
     QString rv;
-    if (m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
+    if (m_sb->setting<int>(PRS::MachineSpeed::kMeldDiscrete)) {
         rv += "M25" % commentSpaceLine("TURN ACTUATOR OFF");
         m_deposition_active = false;
         setCurrentDepositionValue(0, 0.0f);
@@ -478,7 +478,7 @@ QString MeldWriter::writeDepositionUpdate(int rpm, float output_value) {
 }
 
 bool MeldWriter::depositionUpdateUsesActuatorCommand() const {
-    return m_sb->setting<int>(ES::FileOutput::kMeldDiscrete) &&
+    return m_sb->setting<int>(PRS::MachineSpeed::kMeldDiscrete) &&
            m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFrictionStir;
 }
 

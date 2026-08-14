@@ -30,7 +30,7 @@ QSharedPointer<ORNL::SettingsBase> globalSettings(bool scaling_enabled) {
     settings->setSetting(ORNL::PRS::Dimensions::kWMax, ORNL::Distance(0.0));
     settings->setSetting(ORNL::PRS::GCode::kEnableStartupCode, false);
     settings->setSetting(ORNL::PRS::GCode::kEnableBoundingBox, false);
-    settings->setSetting(ORNL::ES::FileOutput::kMeldDiscrete, true);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kMeldDiscrete, true);
     settings->setSetting(ORNL::MS::Cooling::kForceMinLayerTime, false);
     settings->setSetting(ORNL::MS::Extruder::kInitialSpeed, 0);
     return settings;
