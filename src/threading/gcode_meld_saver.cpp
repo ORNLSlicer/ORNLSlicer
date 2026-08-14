@@ -71,6 +71,8 @@ void GCodeMeldSaver::run() {
                         zval = params[i].mid(1);
                     else if (params[i].startsWith(f))
                         velocity = params[i].mid(1);
+                    else if (params[i].startsWith(s))
+                        feedrate = params[i].mid(1);
                 }
             }
             if (params[0] == M24) {

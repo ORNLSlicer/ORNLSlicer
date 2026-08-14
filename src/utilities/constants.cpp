@@ -298,9 +298,10 @@ const QString Constants::PrinterSettings::MachineSpeed::kMinXYSpeed       = "min
 const QString Constants::PrinterSettings::MachineSpeed::kMaxXYSpeed       = "max_xy_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kMinExtruderSpeed = "min_extruder_speed";
 const QString Constants::PrinterSettings::MachineSpeed::kMaxExtruderSpeed = "max_extruder_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed      = "w_table_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kZSpeed           = "z_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kGearRatio        = "extruder_gear_ratio";
+const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed = "w_table_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kZSpeed = "z_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kGearRatio = "extruder_gear_ratio";
+const QString Constants::PrinterSettings::MachineSpeed::kMeldDepositionRateScaling = "meld_deposition_rate_scaling";
 
 // Acceleration
 const QString Constants::PrinterSettings::Acceleration::kEnableDynamic = "enable_dynamic_acceleration";

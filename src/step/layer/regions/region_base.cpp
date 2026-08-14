@@ -62,7 +62,16 @@ Point flattenIntoOptimizationFrame(const Point& point, const Plane& slicing_plan
     const QVector3D shifted    = (point - optimization_shift).toQVector3D();
     return Point::fromQVector3D(rotation.rotatedVector(shifted)) + optimization_shift;
 }
-}  // namespace
+
+//! @brief Segment setting key used by MeldWriter to recover the path center X.
+const QString kMeldScalingCenterX = "meld_scaling_center_x";
+
+//! @brief Segment setting key used by MeldWriter to recover the path center Y.
+const QString kMeldScalingCenterY = "meld_scaling_center_y";
+
+//! @brief Segment setting key used by MeldWriter to recover the path radius.
+const QString kMeldScalingRadius = "meld_scaling_radius";
+} // namespace
 
 RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
                        const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry,
@@ -261,7 +270,84 @@ void RegionBase::fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb) 
     for (Path& path : m_paths) path.fitCircularArcs(m_sb);
 }
 
-void RegionBase::setLastSpiral(bool spiral) {
-    m_was_last_region_spiral = spiral;
+void RegionBase::setLastSpiral(bool spiral) { m_was_last_region_spiral = spiral; }
+
+QString RegionBase::writeRegionGCode(QSharedPointer<WriterBase> writer, RegionType region_type) {
+    QString gcode;
+    gcode += writer->writeBeforeRegion(region_type);
+    for (Path path : m_paths) {
+        annotateMeldDepositionRateScalingPath(path);
+        gcode += writer->writeBeforePath(region_type);
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
+            gcode += segment->writeGCode(writer);
+        }
+        gcode += writer->writeAfterPath(region_type);
+    }
+    gcode += writer->writeAfterRegion(region_type);
+    return gcode;
 }
-}  // namespace ORNL
+
+void RegionBase::annotateMeldDepositionRateScalingPath(Path& path) const {
+    if (m_sb == nullptr)
+        return;
+
+    if (m_sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax) != GcodeSyntax::kMeld)
+        return;
+
+    if (m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) != MachineType::kFrictionStir)
+        return;
+
+    if (!m_sb->setting<bool>(PRS::MachineSpeed::kMeldDepositionRateScaling))
+        return;
+
+    QVector<QSharedPointer<SegmentBase>> print_segments;
+    QVector<Point> print_points;
+    for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
+        if (segment == nullptr || !segment->isPrintingSegment())
+            continue;
+
+        print_segments.push_back(segment);
+        print_points.push_back(segment->start());
+        print_points.push_back(segment->end());
+    }
+
+    if (print_segments.isEmpty() || print_points.size() < 2)
+        return;
+
+    double min_x = print_points.first().x();
+    double max_x = min_x;
+    double min_y = print_points.first().y();
+    double max_y = min_y;
+    for (const Point& point : print_points) {
+        min_x = std::min(min_x, static_cast<double>(point.x()));
+        max_x = std::max(max_x, static_cast<double>(point.x()));
+        min_y = std::min(min_y, static_cast<double>(point.y()));
+        max_y = std::max(max_y, static_cast<double>(point.y()));
+    }
+
+    const Point center((min_x + max_x) / 2.0, (min_y + max_y) / 2.0, print_points.first().z());
+    double radius_sum = 0.0;
+    int radius_count = 0;
+    for (const Point& point : print_points) {
+        const double radius = std::hypot(point.x() - center.x(), point.y() - center.y());
+        if (std::isfinite(radius)) {
+            radius_sum += radius;
+            ++radius_count;
+        }
+    }
+
+    if (radius_count == 0)
+        return;
+
+    const Distance radius(radius_sum / static_cast<double>(radius_count));
+    for (const QSharedPointer<SegmentBase>& segment : print_segments) {
+        QSharedPointer<SettingsBase> segment_settings = segment->getSb();
+        if (segment_settings == nullptr)
+            continue;
+
+        segment_settings->setSetting(kMeldScalingCenterX, Distance(center.x()));
+        segment_settings->setSetting(kMeldScalingCenterY, Distance(center.y()));
+        segment_settings->setSetting(kMeldScalingRadius, radius);
+    }
+}
+} // namespace ORNL

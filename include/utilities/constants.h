@@ -246,6 +246,7 @@ class Constants {
             static const QString kWTableSpeed;
             static const QString kZSpeed;
             static const QString kGearRatio;
+            static const QString kMeldDepositionRateScaling;
         };
 
         class Acceleration {

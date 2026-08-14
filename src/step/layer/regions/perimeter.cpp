@@ -310,15 +310,7 @@ Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
     : RegionBase(sb, index, settings_polygons, uncut_geometry, RegionType::kPerimeter) {}
 
 QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kPerimeter);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kPerimeter);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kPerimeter);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kPerimeter);
-    return gcode;
+    return writeRegionGCode(writer, RegionType::kPerimeter);
 }
 
 void Perimeter::compute(uint layer_num) {

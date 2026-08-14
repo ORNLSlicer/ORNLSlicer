@@ -77,17 +77,34 @@ class MeldWriter : public WriterBase {
 
    private:
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
+    QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params,
+                            const Point& start_point, const Point& target_point);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
 
+    //! \brief Writes G-Code to update the active deposition control value.
+    QString writeDepositionUpdate(int rpm, float output_value);
+
+    //! \brief Returns true when an active deposition update should be written as a discrete actuator command.
+    bool depositionUpdateUsesActuatorCommand() const;
+
     //! \brief Returns the machine-specific value to write for deposition control.
-    float depositionOutputValue(int deposition_value) const;
+    float depositionOutputValue(int deposition_value, const QSharedPointer<SettingsBase>& params,
+                                const Point& start_point, const Point& target_point) const;
+
+    //! \brief Returns true when a deposition output update should be emitted.
+    bool depositionOutputChanged(float deposition_value) const;
+
+    //! \brief Tracks the most recently emitted deposition control values.
+    void setCurrentDepositionValue(int commanded_value, float output_value);
 
     //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
     QString writeCoordinates(Point destination);
 
     AngularVelocity m_current_rpm;
+
+    //! \brief Current machine-specific deposition control value emitted to G-Code.
+    float m_current_deposition_output_value = 0.0f;
 
     //! \brief true if first travel, false for subsequent travels
     bool m_first_travel;

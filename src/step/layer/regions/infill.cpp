@@ -28,17 +28,7 @@ Infill::Infill(const QSharedPointer<SettingsBase>& sb, const int index,
     // NOP
 }
 
-QString Infill::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kInfill);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kInfill);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kInfill);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kInfill);
-    return gcode;
-}
+QString Infill::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kInfill); }
 
 void Infill::compute(uint layer_num) {
     m_layer_num = layer_num;
