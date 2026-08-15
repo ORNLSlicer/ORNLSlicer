@@ -458,6 +458,34 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         }
     }
 
+    auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
+        for (const Polyline& spiral_group : spiral_groups) {
+            if (spiral_group.size() < 3) {
+                continue;
+            }
+
+            Path newPath = createPath(spiral_group);
+            newPath.setCCW(ccw);
+
+            if (newPath.size() > 0) {
+                newPath.getSegments().removeLast();
+            }
+
+            if (newPath.calculateLength() < min_path_length) {
+                continue;
+            }
+
+            if (newPath.size() > 0) {
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+                PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                current_location = newPath.back()->end();
+                m_paths.push_back(newPath);
+            }
+        }
+    };
+
     if (m_sb->setting<bool>(PS::Inset::kEnableSpiralInset)) {
         if (!m_sb->setting<bool>(PS::Inset::kAdaptive)) {
             Point spiral_query_location = current_location;
@@ -510,31 +538,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
                 return;
             }
 
-            Polyline result = SpiralPath::linkClosedPolylines(ordered_insets, bead_width);
-
-            if (result.size() < 3) {
-                return;
-            }
-
-            Path newPath = createPath(result);
-            newPath.setCCW(ordered_insets.front().orientation());
-
-            if (newPath.size() > 0) {
-                newPath.getSegments().removeLast();
-            }
-
-            if (newPath.calculateLength() < min_path_length) {
-                return;
-            }
-
-            if (newPath.size() > 0) {
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
-                PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
-
-                current_location = newPath.back()->end();
-                m_paths.push_back(newPath);
-            }
+            appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_insets, bead_width),
+                              ordered_insets.front().orientation(), min_path_length);
 
             return;
         }
@@ -610,31 +615,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         }
 
         const Distance nominal_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
-        Polyline result = SpiralPath::linkClosedPolylines(ordered_insets, ordered_inset_widths, nominal_width);
-
-        if (result.size() < 3) {
-            return;
-        }
-
-        Path newPath = createPath(result);
-        newPath.setCCW(ordered_insets.front().orientation());
-
-        if (newPath.size() > 0) {
-            newPath.getSegments().removeLast();
-        }
-
-        if (newPath.calculateLength() < min_path_length) {
-            return;
-        }
-
-        if (newPath.size() > 0) {
-            calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
-            PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                  m_sb->setting<Velocity>(PS::Travel::kSpeed));
-
-            current_location = newPath.back()->end();
-            m_paths.push_back(newPath);
-        }
+        appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_insets, ordered_inset_widths, nominal_width),
+                          ordered_insets.front().orientation(), min_path_length);
 
         return;
     }
