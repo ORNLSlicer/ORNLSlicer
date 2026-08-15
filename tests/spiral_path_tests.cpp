@@ -80,6 +80,10 @@ int main() {
 
     passed &= expect(nested_gap_groups.size() == 2,
                      "Expected nested loops separated by more than the transition width to be split.");
+    if (nested_gap_groups.size() == 2) {
+        passed &= expectPoint(nested_gap_groups.front().back(), 0.0, 1.0,
+                              "Expected rejected nested-gap group to end at the normal final stop.");
+    }
 
     QVector<ORNL::Polyline> separated_nested_loops;
     separated_nested_loops.push_back(square(0.0, 0.0, 12.0, 18.0));
