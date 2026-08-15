@@ -337,14 +337,19 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
             const Point connector_start =
                 detail::prepareConnector(current_loop.loop, prepared_next_loop.loop, stop_distance);
 
-            if (spiral.back() != connector_start) {
-                spiral += connector_start;
-            }
-
             if (detail::canConnectLoops(current_loop, prepared_next_loop, connector_start, stop_distance)) {
+                if (spiral.back() != connector_start) {
+                    spiral += connector_start;
+                }
                 current_loop = prepared_next_loop;
             }
             else {
+                const Point final_stop = detail::stopPointOnClosingSegment(
+                    current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width));
+
+                if (spiral.back() != final_stop) {
+                    spiral += final_stop;
+                }
                 spiral_groups.push_back(spiral);
                 spiral.clear();
                 current_loop = next_loop;
