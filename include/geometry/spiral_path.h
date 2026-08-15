@@ -1,5 +1,6 @@
 #pragma once
 
+#include <algorithm>
 #include <limits>
 
 #include <qcontainerfwd.h>
@@ -39,7 +40,8 @@ inline bool hasSmoothClosingSegment(const Polyline& line) {
         return false;
     }
 
-    return MathUtils::nearCollinear(line[line.size() - 2], line.back(), line.front(), 45 * deg);
+    const Angle closing_angle = MathUtils::internalAngle(line[line.size() - 2], line.back(), line.front());
+    return closing_angle >= (pi - (45 * deg));
 }
 
 inline Polyline reversePreservingStart(const Polyline& line) {
@@ -217,6 +219,43 @@ struct StitchLoop {
     Polyline loop;
     Distance width;
 };
+
+inline bool closedPolylineContainsAnyPoint(Polyline container, const Polyline& points) {
+    if (container.size() < 3 || points.isEmpty()) {
+        return false;
+    }
+
+    if (container.front() != container.back()) {
+        container.push_back(container.front());
+    }
+
+    for (const Point& point : points) {
+        if (container.inside(point, true)) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+inline bool loopsAreNested(const Polyline& lhs, const Polyline& rhs) {
+    if (lhs.size() < 3 || rhs.size() < 3) {
+        return false;
+    }
+
+    return closedPolylineContainsAnyPoint(lhs, rhs) || closedPolylineContainsAnyPoint(rhs, lhs);
+}
+
+inline bool canConnectLoops(const StitchLoop& current_loop, const StitchLoop& next_loop, const Point& connector_start,
+                            Distance stop_distance) {
+    if (!loopsAreNested(current_loop.loop, next_loop.loop)) {
+        return false;
+    }
+
+    const Distance connector_length = connector_start.distance(next_loop.loop.front());
+    const double max_connector_length = std::max(stop_distance() * 2.0, 1.0e-6);
+    return connector_length() <= max_connector_length;
+}
 } // namespace detail
 
 /*!
@@ -235,6 +274,106 @@ inline Distance closedPolylineLength(const Polyline& line) {
  */
 inline Point transitionStartPoint(const Polyline& line, Distance distance_before_start) {
     return detail::stopPointOnClosingSegment(line, distance_before_start);
+}
+
+/*!
+ * \brief Links ordered closed loops into open spiral-style polyline groups.
+ *
+ * Adjacent loops are joined with an extruding connector. When the candidate connector would jump between unrelated or
+ * non-adjacent loops, the current group ends at the connector start so the caller can emit a travel to the next group.
+ *
+ * \param ordered_loops Closed loops without a repeated final point.
+ * \param loop_widths Bead widths for the ordered loops.
+ * \param fallback_width Width used when a per-loop width is not supplied.
+ * \return One or more polylines, each representing a connectable spiral group.
+ */
+inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops,
+                                                  const QVector<Distance>& loop_widths, Distance fallback_width) {
+    QVector<detail::StitchLoop> loops;
+    loops.reserve(ordered_loops.size());
+    for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
+        loops.push_back({ordered_loops[i], i < loop_widths.size() ? loop_widths[i] : fallback_width});
+    }
+
+    bool has_reference_orientation = false;
+    bool reference_orientation = false;
+    for (const detail::StitchLoop& stitch_loop : loops) {
+        if (stitch_loop.loop.size() >= 3) {
+            reference_orientation = stitch_loop.loop.orientation();
+            has_reference_orientation = true;
+            break;
+        }
+    }
+    if (has_reference_orientation) {
+        for (detail::StitchLoop& stitch_loop : loops) {
+            detail::alignOrientation(stitch_loop.loop, reference_orientation);
+        }
+    }
+
+    QVector<Polyline> spiral_groups;
+    Polyline spiral;
+
+    while (!loops.isEmpty() && loops.front().loop.size() < 3) {
+        loops.removeFirst();
+    }
+
+    if (loops.isEmpty()) {
+        return spiral_groups;
+    }
+
+    detail::StitchLoop current_loop = loops.takeFirst();
+    while (true) {
+        spiral += current_loop.loop;
+
+        while (!loops.isEmpty() && loops.front().loop.size() < 3) {
+            loops.removeFirst();
+        }
+
+        if (!loops.isEmpty()) {
+            detail::StitchLoop next_loop = loops.takeFirst();
+            detail::StitchLoop prepared_next_loop = next_loop;
+            const Distance stop_distance =
+                detail::transitionDistance(current_loop.width, next_loop.width, fallback_width);
+            const Point connector_start =
+                detail::prepareConnector(current_loop.loop, prepared_next_loop.loop, stop_distance);
+
+            if (spiral.back() != connector_start) {
+                spiral += connector_start;
+            }
+
+            if (detail::canConnectLoops(current_loop, prepared_next_loop, connector_start, stop_distance)) {
+                current_loop = prepared_next_loop;
+            }
+            else {
+                spiral_groups.push_back(spiral);
+                spiral.clear();
+                current_loop = next_loop;
+            }
+        }
+        else {
+            const Point final_stop = detail::stopPointOnClosingSegment(
+                current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width));
+
+            if (spiral.back() != final_stop) {
+                spiral += final_stop;
+            }
+            spiral_groups.push_back(spiral);
+            break;
+        }
+    }
+
+    return spiral_groups;
+}
+
+inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops,
+                                                  Distance final_stop_distance) {
+    QVector<Distance> loop_widths;
+    loop_widths.reserve(ordered_loops.size());
+    for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
+        loop_widths.push_back(final_stop_distance);
+    }
+
+    return linkClosedPolylineGroups(ordered_loops, loop_widths, final_stop_distance);
 }
 
 /*!

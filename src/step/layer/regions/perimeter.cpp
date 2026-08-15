@@ -565,6 +565,34 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 line = line.reverse();
             }
 
+        auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
+            for (const Polyline& spiral_group : spiral_groups) {
+                if (spiral_group.size() < 3) {
+                    continue;
+                }
+
+                Path newPath = createPath(spiral_group);
+                newPath.setCCW(ccw);
+
+                if (newPath.size() > 0) {
+                    newPath.getSegments().removeLast();
+                }
+
+                if (newPath.calculateLength() < min_path_length) {
+                    continue;
+                }
+
+                if (newPath.size() > 0) {
+                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+                    PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                    current_location = newPath.back()->end();
+                    m_paths.push_back(newPath);
+                }
+            }
+        };
+
         if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
             if (!m_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
                 Point spiral_query_location = current_location;
@@ -618,31 +646,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     return;
                 }
 
-                Polyline result = SpiralPath::linkClosedPolylines(ordered_perimeters, bead_width);
-
-                if (result.size() < 3) {
-                    return;
-                }
-
-                Path newPath = createPath(result);
-                newPath.setCCW(ordered_perimeters.front().orientation());
-
-                if (newPath.size() > 0) {
-                    newPath.getSegments().removeLast();
-                }
-
-                if (newPath.calculateLength() < min_path_length) {
-                    return;
-                }
-
-                if (newPath.size() > 0) {
-                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
-                    PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
-
-                    current_location = newPath.back()->end();
-                    m_paths.push_back(newPath);
-                }
+                appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_perimeters, bead_width),
+                                  ordered_perimeters.front().orientation(), min_path_length);
 
                 return;
             }
@@ -718,32 +723,9 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
             const Distance nominal_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-            Polyline result =
-                SpiralPath::linkClosedPolylines(ordered_perimeters, ordered_perimeter_widths, nominal_width);
-
-            if (result.size() < 3) {
-                return;
-            }
-
-            Path newPath = createPath(result);
-            newPath.setCCW(ordered_perimeters.front().orientation());
-
-            if (newPath.size() > 0) {
-                newPath.getSegments().removeLast();
-            }
-
-            if (newPath.calculateLength() < min_path_length) {
-                return;
-            }
-
-            if (newPath.size() > 0) {
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
-                PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
-
-                current_location = newPath.back()->end();
-                m_paths.push_back(newPath);
-            }
+            appendSpiralPaths(
+                SpiralPath::linkClosedPolylineGroups(ordered_perimeters, ordered_perimeter_widths, nominal_width),
+                ordered_perimeters.front().orientation(), min_path_length);
 
             return;
         }
