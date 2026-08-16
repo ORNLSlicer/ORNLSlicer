@@ -98,8 +98,11 @@ class MeldWriter : public WriterBase {
     //! \brief Tracks the most recently emitted deposition control values.
     void setCurrentDepositionValue(double commanded_value, double output_value);
 
+    //! \brief Writes gcode coordinates XY for a move or travel to the destination point
+    QString writeXYCoordinates(Point destination);
+
     //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
-    QString writeCoordinates(Point destination);
+    QString writeCoordinates(Point destination, bool force_z = false);
 
     //! \brief Current commanded deposition value carried through path settings.
     double m_current_deposition_commanded_value = 0.0;

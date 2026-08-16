@@ -194,13 +194,21 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
     else if (travel_lift_required)
         travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
-    rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
-          commentSpaceLine("TRAVEL");
-    setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
+    if (m_first_travel) {
+        rv += m_G0 % writeXYCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
+        // Meld expects L003 after the initial XY rapid and before any actuator command.
+        rv += "L003" % m_newline;
+    }
+    else {
+        rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
+              commentSpaceLine("TRAVEL");
+        setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
+    }
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        rv += m_G1 % m_f % QString::number(zSpeed.to(m_meta.m_velocity_unit)) % writeCoordinates(target_location) %
+        rv += m_G1 % m_f % QString::number(zSpeed.to(m_meta.m_velocity_unit)) %
+              writeCoordinates(target_location, true) %
               commentSpaceLine("TRAVEL LOWER Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
@@ -545,19 +553,24 @@ void MeldWriter::setCurrentDepositionValue(double commanded_value, double output
     m_current_deposition_output_value = output_value;
 }
 
-QString MeldWriter::writeCoordinates(Point destination) {
+QString MeldWriter::writeXYCoordinates(Point destination) {
     QString rv;
 
     // always specify X and Y
     rv += m_x % QString::number(Distance(destination.x()).to(m_meta.m_distance_unit), 'f', 4) % m_y %
           QString::number(Distance(destination.y()).to(m_meta.m_distance_unit), 'f', 4);
+    return rv;
+}
+
+QString MeldWriter::writeCoordinates(Point destination, bool force_z) {
+    QString rv = writeXYCoordinates(destination);
 
     // write vertical coordinate along the correct axis (Z or W) according to printer settings
     // only output Z/W coordinate if there was a change in Z/W
     Distance z_offset = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
 
     Distance target_z = destination.z() + z_offset;
-    if (qAbs(target_z - m_last_z) > 10) {
+    if (force_z || qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
         m_last_z    = target_z;
