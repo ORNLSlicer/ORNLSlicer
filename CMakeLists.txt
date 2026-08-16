@@ -328,6 +328,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_path_modifier_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME path_modifier_tests COMMAND ${PROJECT_NAME}_path_modifier_tests)
 
+    add_executable(${PROJECT_NAME}_spiral_path_tests tests/spiral_path_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_spiral_path_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_spiral_path_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME spiral_path_tests COMMAND ${PROJECT_NAME}_spiral_path_tests)
+
     set(ORNLSLICER_NEW_IMPACT_PROJECT "/home/rhc/develop/new-impact.s2p" CACHE FILEPATH
         "Optional local project used for the new-impact planar slicing regression test.")
     if(EXISTS "${ORNLSLICER_NEW_IMPACT_PROJECT}")
