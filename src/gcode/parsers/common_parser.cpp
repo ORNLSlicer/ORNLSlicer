@@ -107,7 +107,7 @@ Distance CommonParser::getCurrentGXDistance() {
     const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
     const Distance distance = MotionEstimation::calculateTimeAndVolume(
         m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0,
-        m_deposition_active, m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer],
+        currentMotionDepositsMaterial(), m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer],
         m_layer_volumes[m_current_layer], uses_b);
 
     const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
@@ -139,7 +139,7 @@ Distance CommonParser::getCurrentArcDistance(Distance start_x, Distance start_y,
     const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
     const Distance distance = MotionEstimation::calculatePathTimeAndVolume(
         path_length, start_direction_x, start_direction_y, start_direction_z, end_direction_x, end_direction_y,
-        end_direction_z, include_feedrate_adjustable_time, false, m_deposition_active,
+        end_direction_z, include_feedrate_adjustable_time, false, currentMotionDepositsMaterial(),
         m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer]);
 
     const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
@@ -356,6 +356,11 @@ bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command
 
     return fileBoolSetting(MS::SpiralLift::kDisableFeedrateScaling) &&
            comment.contains(Constants::PathModifierStrings::kSpiralLift);
+}
+
+bool CommonParser::currentMotionDepositsMaterial() const {
+    return m_deposition_active && !m_current_gcode_command.getComment().contains(Constants::RegionTypeStrings::kTravel,
+                                                                                 Qt::CaseInsensitive);
 }
 
 void CommonParser::recordModalFeedrateForCommand(const GcodeCommand& command) {
@@ -992,7 +997,7 @@ void CommonParser::setModified() { m_was_modified = true; }
 void CommonParser::recordMotionEstimate(Distance distance, Time time_delta) {
     MotionEstimation::m_total_distance += distance;
 
-    if (m_deposition_active) {
+    if (currentMotionDepositsMaterial()) {
         MotionEstimation::m_printing_distance += distance;
     }
     else {
@@ -1110,7 +1115,7 @@ void CommonParser::G0Handler(QVector<QString> params) {
                 break;
         }
     }
-    m_current_gcode_command.setDepositionActive(m_deposition_active);
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (is_motion_command) {
@@ -1298,7 +1303,7 @@ void CommonParser::G1Handler(QVector<QString> params) {
         }
         m_current_gcode_command.addParameter(current_parameter, current_value);
     }
-    m_current_gcode_command.setDepositionActive(m_deposition_active);
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (!f_not_used)
@@ -1510,7 +1515,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
-    m_current_gcode_command.setDepositionActive(m_deposition_active);
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (!f_not_used)
@@ -1719,7 +1724,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
-    m_current_gcode_command.setDepositionActive(m_deposition_active);
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (!f_not_used)
@@ -2011,7 +2016,7 @@ void CommonParser::G5Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
-    m_current_gcode_command.setDepositionActive(m_deposition_active);
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (!f_not_used)
