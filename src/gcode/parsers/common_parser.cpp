@@ -92,6 +92,7 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
     MotionEstimation::m_total_distance = 0;
     MotionEstimation::m_printing_distance = 0;
     MotionEstimation::m_travel_distance = 0;
+    m_travel_time = 0 * m_time_unit;
 }
 
 Distance CommonParser::getCurrentGXDistance() {
@@ -895,6 +896,7 @@ void CommonParser::reset() {
     m_purge_time = 0 * m_time_unit;
     m_wait_to_wipe_time = 0 * m_time_unit;
     m_wait_time_to_start_purge = 0 * m_time_unit;
+    m_travel_time = 0 * m_time_unit;
 
     m_deposition_active = false;
     m_dynamic_spindle_control = false;
@@ -973,6 +975,8 @@ Distance CommonParser::getPrintingDistance() { return MotionEstimation::m_printi
 
 Distance CommonParser::getTravelDistance() { return MotionEstimation::m_travel_distance; }
 
+Time CommonParser::getTravelTime() { return m_travel_time; }
+
 bool CommonParser::getWasModified() { return m_was_modified; }
 
 void CommonParser::cancelSlice() { m_should_cancel = true; }
@@ -984,6 +988,18 @@ int CommonParser::getCurrentLine() { return m_current_line; }
 void CommonParser::alterCurrentEndLine(int count) { m_current_end_line += count; }
 
 void CommonParser::setModified() { m_was_modified = true; }
+
+void CommonParser::recordMotionEstimate(Distance distance, Time time_delta) {
+    MotionEstimation::m_total_distance += distance;
+
+    if (m_deposition_active) {
+        MotionEstimation::m_printing_distance += distance;
+    }
+    else {
+        MotionEstimation::m_travel_distance += distance;
+        m_travel_time += time_delta;
+    }
+}
 
 void CommonParser::setXPos(NT value) { MotionEstimation::m_current_x = value; }
 
@@ -1101,13 +1117,9 @@ void CommonParser::G0Handler(QVector<QString> params) {
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
     }
 
+    const Time layer_time_before = m_layer_times[m_current_layer];
     Distance temp = getCurrentGXDistance();
-    MotionEstimation::m_total_distance += temp;
-
-    if (m_deposition_active)
-        MotionEstimation::m_printing_distance += temp;
-    else
-        MotionEstimation::m_travel_distance += temp;
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G1Handler(QVector<QString> params) {
@@ -1300,12 +1312,9 @@ void CommonParser::G1Handler(QVector<QString> params) {
     m_with_F_value =
         is_motion_command && m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
+    const Time layer_time_before = m_layer_times[m_current_layer];
     Distance temp = getCurrentGXDistance();
-    MotionEstimation::m_total_distance += temp;
-    if (m_deposition_active)
-        MotionEstimation::m_printing_distance += temp;
-    else
-        MotionEstimation::m_travel_distance += temp;
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G1HandlerHelper(QVector<QString> params, QVector<QString> optionalParams) {
@@ -1524,12 +1533,9 @@ void CommonParser::G2Handler(QVector<QString> params) {
 
     m_with_F_value = m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
+    const Time layer_time_before = m_layer_times[m_current_layer];
     Distance temp = getCurrentArcDistance(start_x, start_y, start_z, !i_not_used, !j_not_used, !r_not_used, false);
-    MotionEstimation::m_total_distance += temp;
-    if (m_deposition_active)
-        MotionEstimation::m_printing_distance += temp;
-    else
-        MotionEstimation::m_travel_distance += temp;
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G3Handler(QVector<QString> params) {
@@ -1742,12 +1748,9 @@ void CommonParser::G3Handler(QVector<QString> params) {
 
     m_with_F_value = m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
+    const Time layer_time_before = m_layer_times[m_current_layer];
     Distance temp = getCurrentArcDistance(start_x, start_y, start_z, !i_not_used, !j_not_used, !r_not_used, true);
-    MotionEstimation::m_total_distance += temp;
-    if (m_deposition_active)
-        MotionEstimation::m_printing_distance += temp;
-    else
-        MotionEstimation::m_travel_distance += temp;
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G4Handler(QVector<QString> params) {

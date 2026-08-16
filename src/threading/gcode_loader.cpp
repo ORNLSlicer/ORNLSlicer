@@ -339,7 +339,9 @@ void GCodeLoader::run() {
                       QString::number(printingDistanceValue) % " " %
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Travel Distance: " %
                       QString::number(travelDistanceValue) % " " %
-                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Total Distance: " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
+                      "Total Travel Time Estimate: " % MathUtils::formattedTimeSpan(m_parser->getTravelTime()()) %
+                      "\n" % "Total Distance: " %
                       QString::number(distanceValue) % " " %
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Approximate Weight (" %
                       toString(m_material) % "): " % QString::number(massValue) % " " %
