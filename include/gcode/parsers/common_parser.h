@@ -516,6 +516,9 @@ class CommonParser : public ParserBase {
     //! \brief Returns whether feedrate scaling should be skipped for the parsed motion command.
     bool feedrateScalingDisabledForCommand(const GcodeCommand& command) const;
 
+    //! \brief Returns whether the current motion command deposits material.
+    bool currentMotionDepositsMaterial() const;
+
     //! \brief Records the authored modal feedrate for a parsed motion command.
     void recordModalFeedrateForCommand(const GcodeCommand& command);
 
