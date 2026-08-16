@@ -263,6 +263,11 @@ int settingInt(const fifojson& settings, const QString& key) {
     return static_cast<int>(settingDouble(settings, key));
 }
 
+bool usesMeldVelocityDepositionRate(const fifojson& settings) {
+    return settingInt(settings, PRS::MachineSetup::kSyntax) == static_cast<int>(GcodeSyntax::kMeld) &&
+           settingInt(settings, PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
+}
+
 bool jsonValuesMatch(const fifojson& actual, const fifojson& expected) {
     if (expected.is_boolean()) {
         bool actual_bool = false;
@@ -384,7 +389,9 @@ void validateActiveStaticSettings(const fifojson& settings, const fifojson& mast
 
         fifojson normalized;
         QString error;
-        if (!GcodeSettingsImporter::validateValue(key, item.value(), value.value(), normalized, error, true))
+        const bool enforce_ranges =
+            !(settingType(item.value()) == "deposition_rate" && usesMeldVelocityDepositionRate(settings));
+        if (!GcodeSettingsImporter::validateValue(key, item.value(), value.value(), normalized, error, enforce_ranges))
             errors.append(error);
     }
 }
@@ -407,6 +414,7 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
         has_min_extruder_speed && has_max_extruder_speed && min_extruder_speed > max_extruder_speed;
     const bool integer_deposition =
         settingInt(settings, PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
+    const bool meld_velocity_deposition = usesMeldVelocityDepositionRate(settings);
 
     if (!integer_deposition && invalid_extruder_range) {
         errors.append("Minimum Extruder Speed (" + numberText(min_extruder_speed) +
@@ -428,7 +436,7 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
         const double value    = settingDouble(settings, key);
         const QString display = settingDisplay(key, master);
 
-        if (type == "deposition_rate" && integer_deposition &&
+        if (type == "deposition_rate" && integer_deposition && !meld_velocity_deposition &&
             std::abs(value - std::round(value)) > kIntegerTolerance) {
             errors.append(display + " must be a whole-number deposition value for Friction Stir.");
         }

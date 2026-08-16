@@ -52,7 +52,7 @@ settings:
   - name: "perimeter_slow_down_extruder_speed"
     display: "Perimeter Slow Down Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the perimeter slow down move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the perimeter slow down move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -124,7 +124,7 @@ settings:
   - name: "inset_slow_down_extruder_speed"
     display: "Inset Slow Down Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the inset slow down move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the inset slow down move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -196,7 +196,7 @@ settings:
   - name: "skin_slow_down_extruder_speed"
     display: "Skin Slow Down Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the skin slow down move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the skin slow down move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -268,7 +268,7 @@ settings:
   - name: "infill_slow_down_extruder_speed"
     display: "Infill Slow Down Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the infill slow down move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the infill slow down move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -340,7 +340,7 @@ settings:
   - name: "skeleton_slow_down_extruder_speed"
     display: "Skeleton Slow Down Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the skeleton slow down move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the skeleton slow down move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_slow_down":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0

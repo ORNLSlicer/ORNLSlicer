@@ -40,7 +40,7 @@ settings:
   - name: "perimeter_start-up_extruder_speed"
     display: "Perimeter Start-Up Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the perimeter start-up move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the perimeter start-up move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -112,7 +112,7 @@ settings:
   - name: "inset_start-up_extruder_speed"
     display: "Inset Start-Up Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the inset start-up move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the inset start-up move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -184,7 +184,7 @@ settings:
   - name: "skin_start-up_extruder_speed"
     display: "Skin Start-Up Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the skin start-up move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the skin start-up move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -256,7 +256,7 @@ settings:
   - name: "infill_start-up_extruder_speed"
     display: "Infill Start-Up Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the infill start-up move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the infill start-up move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0
@@ -328,7 +328,7 @@ settings:
   - name: "skeleton_start-up_extruder_speed"
     display: "Skeleton Start-Up Extruder Speed"
     type: "deposition_rate"
-    tooltip: "Deposition control value for the skeleton start-up move. Friction Stir uses an integer value; other machine types use RPM."
+    tooltip: "Deposition control value for the skeleton start-up move. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_start-up":true},{"enable_width_height":false}]}]}]}
     options: []
     default: 0

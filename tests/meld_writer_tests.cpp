@@ -15,13 +15,17 @@
 namespace {
 const QString kMeldScalingRadius = "meld_scaling_radius";
 
+ORNL::Velocity depositionRate(double inches_per_minute) {
+    return ORNL::Velocity(inches_per_minute * ORNL::in / ORNL::minute);
+}
+
 bool expect(bool condition, const char* message) {
     if (!condition)
         std::cerr << message << '\n';
     return condition;
 }
 
-QSharedPointer<ORNL::SettingsBase> globalSettings(bool scaling_enabled) {
+QSharedPointer<ORNL::SettingsBase> globalSettings(bool scaling_enabled, bool force_feedrate_scaling = false) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
     settings->setSetting(ORNL::PRS::MachineSetup::kSyntax, static_cast<int>(ORNL::GcodeSyntax::kMeld));
     settings->setSetting(ORNL::PRS::MachineSetup::kMachineType, static_cast<int>(ORNL::MachineType::kFrictionStir));
@@ -31,7 +35,9 @@ QSharedPointer<ORNL::SettingsBase> globalSettings(bool scaling_enabled) {
     settings->setSetting(ORNL::PRS::GCode::kEnableStartupCode, false);
     settings->setSetting(ORNL::PRS::GCode::kEnableBoundingBox, false);
     settings->setSetting(ORNL::PRS::MachineSpeed::kMeldDiscrete, true);
-    settings->setSetting(ORNL::MS::Cooling::kForceMinLayerTime, false);
+    settings->setSetting(ORNL::MS::Cooling::kForceMinLayerTime, force_feedrate_scaling);
+    settings->setSetting(ORNL::MS::Cooling::kForceMinLayerTimeMethod,
+                         static_cast<int>(ORNL::ForceMinimumLayerTime::kSlow_Feedrate));
     settings->setSetting(ORNL::MS::Extruder::kInitialSpeed, 0);
     return settings;
 }
@@ -39,7 +45,7 @@ QSharedPointer<ORNL::SettingsBase> globalSettings(bool scaling_enabled) {
 QSharedPointer<ORNL::SettingsBase> segmentSettings(ORNL::Distance radius) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
     settings->setSetting(ORNL::SS::kSpeed, ORNL::Velocity(1.0));
-    settings->setSetting(ORNL::SS::kExtruderSpeed, 100);
+    settings->setSetting(ORNL::SS::kExtruderSpeed, depositionRate(10.0));
     settings->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
     settings->setSetting(ORNL::SS::kPathModifiers, ORNL::PathModifiers::kNone);
     settings->setSetting(ORNL::SS::kWidth, ORNL::Distance(10.0));
@@ -47,8 +53,8 @@ QSharedPointer<ORNL::SettingsBase> segmentSettings(ORNL::Distance radius) {
     return settings;
 }
 
-QString firstLineForRadius(bool scaling_enabled, ORNL::Distance radius) {
-    QSharedPointer<ORNL::SettingsBase> settings = globalSettings(scaling_enabled);
+QString firstLineForRadius(bool scaling_enabled, ORNL::Distance radius, bool force_feedrate_scaling = false) {
+    QSharedPointer<ORNL::SettingsBase> settings = globalSettings(scaling_enabled, force_feedrate_scaling);
     ORNL::MeldWriter writer(ORNL::GcodeMetaList::MeldMeta, settings);
     writer.writeInitialSetup(ORNL::Distance(), ORNL::Distance(), ORNL::Distance(), ORNL::Distance(), 1);
     return writer.writeLine(ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(1.0f, 0.0f, 0.0f), segmentSettings(radius));
@@ -59,13 +65,22 @@ int main() {
     bool passed = true;
 
     const QString scaled_line = firstLineForRadius(true, ORNL::Distance(2.0));
-    passed &= expect(scaled_line.contains("M24 S40"), "Expected 100 * min(1, 2*2/10) to emit M24 S40.");
+    passed &= expect(scaled_line.contains("M24 S4000"),
+                     "Expected 10 in/min * 1000 * min(1, 2*2/10) to emit M24 S4000.");
 
     const QString capped_line = firstLineForRadius(true, ORNL::Distance(8.0));
-    passed &= expect(capped_line.contains("M24 S100"), "Expected scaling to cap at the commanded value.");
+    passed &= expect(capped_line.contains("M24 S10000"),
+                     "Expected scaling to cap at the commanded 10 in/min value.");
 
     const QString disabled_line = firstLineForRadius(false, ORNL::Distance(2.0));
-    passed &= expect(disabled_line.contains("M24 S100"), "Expected disabled scaling to emit the commanded value.");
+    passed &= expect(disabled_line.contains("M24 S10000"),
+                     "Expected disabled scaling to emit M24 S10000 for 10 in/min.");
+
+    const QString forced_feedrate_line = firstLineForRadius(false, ORNL::Distance(2.0), true);
+    passed &= expect(forced_feedrate_line.count("M24 S10000") == 1,
+                     "Expected force-feedrate output to avoid a duplicate M24 S10000 update.");
+    passed &= expect(!forced_feedrate_line.contains("UPDATE ACTUATOR"),
+                     "Expected no redundant actuator update immediately after turning the actuator on.");
 
     QSharedPointer<ORNL::SettingsBase> settings = globalSettings(true);
     ORNL::MeldWriter spiralize_writer(ORNL::GcodeMetaList::MeldMeta, settings);
@@ -75,8 +90,9 @@ int main() {
     const QString next_spiralized_line = spiralize_writer.writeLine(
         ORNL::Point(1.0f, 0.0f, 0.0f), ORNL::Point(2.0f, 0.0f, 0.0f), segmentSettings(ORNL::Distance(1.0)));
 
-    passed &= expect(first_spiralized_line.contains("M24 S40"), "Expected first active line to emit scaled M24 S40.");
-    passed &= expect(next_spiralized_line.contains("M24 S20"),
+    passed &= expect(first_spiralized_line.contains("M24 S4000"),
+                     "Expected first active line to emit scaled M24 S4000.");
+    passed &= expect(next_spiralized_line.contains("M24 S2000"),
                      "Expected active Meld actuator output to refresh with M24 when scaled deposition changes.");
     passed &= expect(!next_spiralized_line.contains("M25"),
                      "Expected active Meld actuator refresh to avoid cycling the actuator off.");
