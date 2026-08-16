@@ -206,6 +206,10 @@ class CommonParser : public ParserBase {
     //! \return travel distance in gcode file
     Distance getTravelDistance();
 
+    //! \brief Returns the estimated total travel time for the gcode file
+    //! \return travel time in gcode file
+    Time getTravelTime();
+
     //! \brief Returns whether or not any lines were altered to enforce minimum layer times or expand/contract
     bool getWasModified();
 
@@ -512,8 +516,14 @@ class CommonParser : public ParserBase {
     //! \brief Returns whether feedrate scaling should be skipped for the parsed motion command.
     bool feedrateScalingDisabledForCommand(const GcodeCommand& command) const;
 
+    //! \brief Returns whether the current motion command deposits material.
+    bool currentMotionDepositsMaterial() const;
+
     //! \brief Records the authored modal feedrate for a parsed motion command.
     void recordModalFeedrateForCommand(const GcodeCommand& command);
+
+    //! \brief Records motion distance and non-deposition time after estimating a parsed command.
+    void recordMotionEstimate(Distance distance, Time time_delta);
 
     //! \brief Replaces an existing F token or inserts one before the command comment.
     void setCommandFeedrate(QString& line, double feedrate);
@@ -564,6 +574,9 @@ class CommonParser : public ParserBase {
 
     //! \brief layer "G1 F" lines feedrate modifier
     QList<double> m_layer_FR_modifiers;
+
+    //! \brief Estimated time spent on non-deposition motion.
+    Time m_travel_time;
 
     //! \brief layer time from "G1 F" lines
     QList<Time> m_layer_G1F_times;
