@@ -196,8 +196,6 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
 
     if (m_first_travel) {
         rv += m_G0 % writeXYCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
-        // Meld expects L003 after the initial XY rapid and before any actuator command.
-        rv += "L003" % m_newline;
     }
     else {
         rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
@@ -213,8 +211,13 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)          // if this is the first travel
-        m_first_travel = false;  // update for next one
+    if (m_first_travel) {
+        // Meld expects L003 after the initial positioning moves and before any actuator command.
+        rv += "L003" % m_newline;
+    }
+
+    if (m_first_travel)         // if this is the first travel
+        m_first_travel = false; // update for next one
 
     return rv;
 }

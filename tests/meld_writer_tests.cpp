@@ -103,7 +103,7 @@ int main() {
     const QString first_line_after_travel = travel_writer.writeLine(
         ORNL::Point(4.0f, 5.0f, 0.0f), ORNL::Point(5.0f, 5.0f, 0.0f), segmentSettings(ORNL::Distance(8.0)));
     const QString first_travel_line = first_travel.section('\n', 0, 0);
-    const QString first_lower_line = first_travel.section('\n', 2, 2);
+    const QString first_lower_line = first_travel.section('\n', 1, 1);
     const QString travel_sequence = first_travel + second_travel + first_line_after_travel;
 
     passed &= expect(first_travel_line.startsWith("G0 X"), "Expected first Meld travel to use G0.");
@@ -114,8 +114,8 @@ int main() {
                      "Expected L003 after the first Meld travel.");
     passed &= expect(first_lower_line.startsWith("G1 F") && first_lower_line.contains(" Z0.0000"),
                      "Expected first Meld travel lower to force output of unchanged Z.");
-    passed &= expect(first_travel.indexOf("L003") < first_travel.indexOf("TRAVEL LOWER Z"),
-                     "Expected first Meld travel lower after L003.");
+    passed &= expect(first_travel.indexOf("L003") > first_travel.indexOf("TRAVEL LOWER Z"),
+                     "Expected L003 after the first Meld travel lower.");
     passed &= expect(second_travel.startsWith("G1 F"), "Expected subsequent Meld travel to keep G1 feed moves.");
     passed &= expect(!second_travel.contains("L003"), "Expected L003 only after the first Meld travel.");
     passed &= expect(travel_sequence.indexOf("L003") < travel_sequence.indexOf("M24 S10000"),
