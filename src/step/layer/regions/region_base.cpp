@@ -97,8 +97,8 @@ std::optional<Point> RegionBase::getFirstPrintingStartPoint() {
 
 void RegionBase::setPreviousLayerStartPoint(const std::optional<Point>& point) {
     if (point.has_value())
-        m_previous_layer_start_point = flattenIntoOptimizationFrame(*point, m_optimization_slicing_plane,
-                                                                    m_optimization_shift);
+        m_previous_layer_start_point =
+            flattenIntoOptimizationFrame(*point, m_optimization_slicing_plane, m_optimization_shift);
     else
         m_previous_layer_start_point = std::nullopt;
 }
@@ -237,11 +237,22 @@ void RegionBase::calculateMultiMaterialTransition(Distance& transition_distance,
 }
 
 void RegionBase::fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb) {
-    if (!planarArcFittingAllowed(global_sb))
+    if (global_sb == nullptr) {
         return;
+    }
 
-    for (Path& path : m_paths)
+    QSharedPointer<SettingsBase> arc_settings = QSharedPointer<SettingsBase>::create(*global_sb);
+    if (m_sb != nullptr) {
+        arc_settings->populate(m_sb);
+    }
+
+    if (!planarArcFittingAllowed(arc_settings)) {
+        return;
+    }
+
+    for (Path& path : m_paths) {
         path.fitCircularArcs(m_sb);
+    }
 }
 
 void RegionBase::setLastSpiral(bool spiral) { m_was_last_region_spiral = spiral; }

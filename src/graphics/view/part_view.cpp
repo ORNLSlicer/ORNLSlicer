@@ -467,9 +467,8 @@ void PartView::updateOverhangSettings(QSharedPointer<SettingsBase> sb) {
 void PartView::updateSlicingSettings(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
 
-    QQuaternion rotation = slicingPlaneRotation();
-
     for (auto& gop : m_part_objects) {
+        const QQuaternion rotation = slicingPlaneRotation(slicingSettingsForPart(gop->part()));
         gop->plane()->setLockedRotationQuaternion(rotation);
         for (auto& range_plane : gop->layerSettingsRangePlanes()) {
             range_plane->setLockedRotationQuaternion(rotation);
@@ -985,7 +984,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
 
     // Sub object visibility.
     gop->setOverhangAngle(m_sb->setting<Angle>(PS::Support::kThresholdAngle));
-    gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation());
+    gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation(slicingSettingsForPart(gop->part())));
     if (m_state.overhangs_shown)
         gop->showOverhang(true);
     updateSlicingGeometryPreview(gop);
@@ -1437,10 +1436,10 @@ QString PartView::formatMeasurementDistance(double microns, bool ascii_units) co
     return QString("%1 %2").arg(QString::number(Distance(microns).to(unit), 'f', 3), unit_text);
 }
 
-QQuaternion PartView::slicingPlaneRotation() const {
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
+QQuaternion PartView::slicingPlaneRotation(const QSharedPointer<SettingsBase>& sb) const {
+    QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
 
     if (slicing_vector.isNull())
         slicing_vector = QVector3D(0.0f, 0.0f, 1.0f);
@@ -1533,7 +1532,7 @@ void PartView::updateSlicingGeometryPreview(QSharedPointer<PartObject> gop) {
             break;
         }
         case SlicingMode::kPlanar:
-            gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation());
+            gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation(slicingSettingsForPart(gop->part())));
             gop->plane()->show();
             break;
         case SlicingMode::kImage:
@@ -1562,15 +1561,8 @@ void PartView::updateLayerSettingsRangePlane() {
         return;
     }
 
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-    if (slicing_vector.isNull()) {
-        this->update();
-        return;
-    }
-    slicing_vector.normalize();
-    const QQuaternion rotation = slicingPlaneRotation();
+    QSharedPointer<SettingsBase> part_sb = slicingSettingsForPart(gop->part());
+    const QQuaternion rotation = slicingPlaneRotation(part_sb);
 
     float length = gop->maximum().x() - gop->minimum().x();
     float width = gop->maximum().y() - gop->minimum().y();
@@ -1615,12 +1607,14 @@ bool PartView::layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int lo
     if (low < 0 || high < low)
         return false;
 
-    QVector3D slicing_vector = {m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
+    QSharedPointer<SettingsBase> part_sb = slicingSettingsForPart(gop->part());
+    QVector3D slicing_vector = {part_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                part_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                part_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     if (slicing_vector.isNull())
-        return false;
-    slicing_vector.normalize();
+        slicing_vector = QVector3D(0.0f, 0.0f, 1.0f);
+    else
+        slicing_vector.normalize();
 
     std::vector<Triangle> triangles = gop->triangles();
     if (triangles.empty())
@@ -1654,11 +1648,7 @@ bool PartView::layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int lo
     if (part_height <= 0.0)
         return false;
 
-    Distance base_layer_height;
-    if (gop->part()->getSb()->contains(PS::Layer::kLayerHeight))
-        base_layer_height = gop->part()->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-    else
-        base_layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    Distance base_layer_height = part_sb->setting<Distance>(PS::Layer::kLayerHeight);
 
     const auto normal_height = [](Distance layer_height) { return layer_height() * Constants::OpenGL::kObjectToView; };
 

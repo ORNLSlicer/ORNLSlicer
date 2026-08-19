@@ -1385,11 +1385,19 @@ void LayerBar::updateLayers() {
         return;
     }
 
+    QSharedPointer<SettingsBase> part_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+    part_sb->populate(m_part->getSb());
+
     // Retrieve the slice plane normal.
-    QVector3D slicing_vector = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-    slicing_vector.normalize();
+    QVector3D slicing_vector = {part_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                part_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                part_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
+    if (slicing_vector.isNull()) {
+        slicing_vector = QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    else {
+        slicing_vector.normalize();
+    }
 
     // Retrieve the part min and max in the slicing plane normal direction
     auto [part_min, part_max] = m_part->rootMesh()->getAxisExtrema(slicing_vector);
@@ -1397,18 +1405,11 @@ void LayerBar::updateLayers() {
     // Create the slicing plane
     Plane slicing_plane(part_min, slicing_vector);
 
-    Distance global_layer_height;
-    if (m_part->getSb()->contains(PS::Layer::kLayerHeight)) {
-        global_layer_height = m_part->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-    }
-    else {
-        global_layer_height = GSM->getGlobal()->setting<Distance>(PS::Layer::kLayerHeight);
-    }
+    Distance global_layer_height = part_sb->setting<Distance>(PS::Layer::kLayerHeight);
 
     int layer_count = 0;
     // if valid config ( normal and axis not perpendicular)
     if (global_layer_height > 0) {
-        Point part_min, part_max;
         std::tie(part_min, part_max) = m_part->rootMesh()->getAxisExtrema(slicing_plane.normal());
 
         // move slicing plane to start at min on the part

@@ -27,7 +27,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kSlicePlaneNormalX"
-    local: false
+    local: true
   - name: "slice_plane_normal_y"
     display: "Slice Plane Normal - Y"
     type: "unitless_float"
@@ -39,7 +39,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kSlicePlaneNormalY"
-    local: false
+    local: true
   - name: "slice_plane_normal_z"
     display: "Slice Plane Normal - Z"
     type: "unitless_float"
@@ -51,7 +51,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Slicing"
     symbol: "kSlicePlaneNormalZ"
-    local: false
+    local: true
   - name: "cylinder_axis_source"
     display: "Cylinder Axis Source"
     type: "enumeration"

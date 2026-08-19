@@ -7,7 +7,6 @@
 #include <qminmax.h>
 #include <qsharedpointer.h>
 #include <quuid.h>
-#include <qvectornd.h>
 
 #include "configs/settings_base.h"
 #include "geometry/plane.h"
@@ -30,12 +29,6 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
     LayerOrdering order_method = global_sb->setting<LayerOrdering>(PS::Optimizations::kLayerOrdering);
 
     if (order_method == LayerOrdering::kByHeight) {
-        // Retrieve the slicing plane normal
-        QVector3D slicing_vector = {global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                    global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                    global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-        slicing_vector.normalize();
-
         bool steps_left = true;
         int num_global_steps = 0;
 
@@ -69,7 +62,7 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
                 layer_plane.shiftAlongNormal(layer_height() / 2.0);
 
                 Distance layer_dist =
-                    MathUtils::linePlaneIntersection(Point(0, 0, 0), slicing_vector, layer_plane).distance();
+                    MathUtils::linePlaneIntersection(Point(0, 0, 0), layer_plane.normal(), layer_plane).distance();
 
                 // If this is the first plane in this loop, or its lower than the current min, set this layer as the min
                 if (part_with_min_plane.isNull() || layer_dist < min_dist) {

@@ -222,7 +222,12 @@ std::tuple<Plane, Point, Point> SlicingUtilities::GetDefaultSlicingAxis(QSharedP
     QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
                                 sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
                                 sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-    slicing_vector.normalize();
+    if (slicing_vector.isNull()) {
+        slicing_vector = QVector3D(0.0f, 0.0f, 1.0f);
+    }
+    else {
+        slicing_vector.normalize();
+    }
 
     // Retrieve the mesh extrema along the slicing plane normal
     auto [min, max] = mesh->getAxisExtrema(slicing_vector);

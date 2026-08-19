@@ -395,8 +395,8 @@ class PartView : public BaseView {
     bool cylindricalSlicingPreviewGeometry(QSharedPointer<PartObject> gop, QVector3D& base_center, float& radius,
                                            float& height) const;
 
-    //! \brief Returns the current planar slicing preview rotation.
-    QQuaternion slicingPlaneRotation() const;
+    //! \brief Returns the planar slicing preview rotation for the given settings.
+    QQuaternion slicingPlaneRotation(const QSharedPointer<SettingsBase>& sb) const;
 
     //! \brief Hides all layer settings range planes.
     void hideLayerSettingsRangePlanes();
