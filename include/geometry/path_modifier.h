@@ -15,7 +15,6 @@ namespace ORNL {
  */
 class PathModifierGenerator {
   public:
-    static void GenerateRotationAndTilt(Path& path, Point origin, bool rotate, bool& next_ccw, bool tilt);
     static void GenerateTravel(Path& path, Point current_location, Velocity velocity);
 
     /**
@@ -30,6 +29,18 @@ class PathModifierGenerator {
     static void GenerateOpenLoopLeadIn(Path& path, Distance leadInDistance, Velocity leadInSpeed,
                                        AngularVelocity leadInExtruderSpeed, bool enableWidthHeight,
                                        double areaMultiplier);
+
+    /**
+     * @brief GeneratePrestart generates a prestart path for open loop paths.
+     * @param path: The path to modify.
+     * @param prestartDistance: The prestart distance.
+     * @param prestartSpeed: The prestart speed.
+     * @param prestartExtruderSpeed: The prestart extruder speed.
+     * @param enableWidthHeight: Whether to enable width and height mode.
+     * @param areaMultiplier: The area multiplier.
+     */
+    static void GeneratePrestart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
+                                 AngularVelocity prestartExtruderSpeed, bool enableWidthHeight, double areaMultiplier);
 
     /**
      * @brief GenerateFlyingStart generates a flying start path which begins motion before enabling extrusion.
@@ -99,6 +110,13 @@ class PathModifierGenerator {
     static void GenerateTrajectorySlowdown(Path& path, QSharedPointer<SettingsBase> sb);
 
     /**
+     * @brief GenerateSharpCornerExtension moves sharp path junctions outward to compensate for corner rounding.
+     * @param path: The path to modify.
+     * @param sb: The settings base.
+     */
+    static void GenerateSharpCornerExtension(Path& path, QSharedPointer<SettingsBase> sb);
+
+    /**
      * @brief GenerateTipWipe generates a tip wipe path for closed contours.
      * @param path: The path to modify.
      * @param modifiers: The path modifiers.
@@ -112,22 +130,6 @@ class PathModifierGenerator {
     static void GenerateTipWipe(Path& path, PathModifiers modifiers, Distance wipeDistance, Velocity wipeSpeed,
                                 Angle wipeAngle, AngularVelocity extruderSpeed, Distance tipWipeLiftDistance,
                                 Distance tipWipeCutoffDistance);
-
-    /**
-     * @brief GenerateTipWipe generates a tip wipe path for skin/infill patterns.
-     * @param path: The path to modify.
-     * @param modifiers: The path modifiers.
-     * @param wipeDistance: The wipe distance.
-     * @param wipeSpeed: The wipe speed.
-     * @param outerPath: The outer path to connect to
-     * @param wipeAngle: The wipe angle.
-     * @param extruderSpeed: The extruder speed.
-     * @param tipWipeLiftDistance: The tip wipe lift distance.
-     * @param tipWipeCutoffDistance: The tip wipe cutoff distance.
-     */
-    static void GenerateTipWipe(Path& path, PathModifiers modifiers, Distance wipeDistance, Velocity wipeSpeed,
-                                QVector<Path>& outerPath, Angle wipeAngle, AngularVelocity extruderSpeed,
-                                Distance tipWipeLiftDistance, Distance tipWipeCutoffDistance);
 
     /**
      * @brief GenerateForwardTipWipeOpenLoop generates a forward tip wipe path for open loop paths.
@@ -170,11 +172,10 @@ class PathModifierGenerator {
      * @param regionType: The region type.
      * @param pathModifiers: The path modifiers.
      * @param materialNumber: The material number.
-     * @param extruders: The extruders.
      */
     static void writeSegment(Path& path, Point start, Point end, Distance width, Distance height, Velocity speed,
                              Acceleration acceleration, AngularVelocity extruder_speed, RegionType regionType,
-                             PathModifiers pathModifiers, int materialNumber, QVector<int> extruders);
+                             PathModifiers pathModifiers, int materialNumber, bool adapted = false);
 
     /**
      * @brief writeArcSegment writes an arc segment to the path.
@@ -192,12 +193,11 @@ class PathModifierGenerator {
      * @param regionType: The region type.
      * @param pathModifiers: The path modifiers.
      * @param materialNumber: The material number.
-     * @param extruders: The extruders.
      */
     static void writeArcSegment(Path& path, Point start, Point end, Point center, Angle angle, bool ccw, Distance width,
                                 Distance height, Velocity speed, Acceleration acceleration,
                                 AngularVelocity extruder_speed, RegionType regionType, PathModifiers pathModifiers,
-                                int materialNumber, QVector<int> extruders);
+                                int materialNumber, bool adapted = false);
 
     /**
      * @brief GenerateRamp generates a ramp path.
@@ -216,7 +216,7 @@ class PathModifierGenerator {
     static void generateTipWipeSegment(Path& path, Point start, Point end, Distance width, Distance height,
                                        Velocity speed, Acceleration acceleration, AngularVelocity extruder_speed,
                                        RegionType regionType, PathModifiers pathModifiers, int materialNumber,
-                                       QVector<int> extruders, Distance tipWipeCutoffDistance);
+                                       Distance tipWipeCutoffDistance, bool adapted);
 
     //! \brief track the distance already covered
     static Distance tipWipeDistanceCovered;

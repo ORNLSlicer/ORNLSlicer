@@ -86,7 +86,8 @@ class IngersollWriter : public WriterBase {
 
   private:
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, float rpm, int extruder_number);
+    QString writeExtruderOn(RegionType type, float rpm, int extruder_number,
+                            const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff(int extruder_number);
 
@@ -110,13 +111,6 @@ class IngersollWriter : public WriterBase {
 
     //! \brief preallocated prefixs commonly used in this syntax
     int m_material_number;
-
-    //! \brief state for wire feed. Whether or not pathing is in the middle of feed or not
-    //! and whether or not the current segment is the final one before cutoff.
-    bool m_wire_feed;
-    // bool m_final_wire_feed;
-    bool m_next_to_last;
-    Distance m_wire_feed_total;
 
 }; // class IngersollWriter
 } // namespace ORNL

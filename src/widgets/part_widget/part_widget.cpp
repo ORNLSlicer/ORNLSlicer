@@ -12,6 +12,7 @@
 #include <qquaternion.h>
 #include <qset.h>
 #include <qsharedpointer.h>
+#include <qstyle.h>
 #include <qsurfaceformat.h>
 #include <qtmetamacros.h>
 #include <qvectornd.h>
@@ -59,6 +60,11 @@ QSet<QSharedPointer<Part>> PartWidget::parts() {
 QSharedPointer<PartMetaModel> PartWidget::getPartMeta() { return m_model; }
 
 QString PartWidget::getFirstPartName() { return m_part_control->nameOfFirstPart(); }
+
+PartView* PartWidget::view() {
+    m_view_controls->raise();
+    return m_part_view;
+}
 
 void PartWidget::takeScreenshot() {
     QString filepath;
@@ -133,7 +139,6 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                         PRS::Dimensions::kWMin,
                                                         PRS::Dimensions::kWMax,
                                                         PRS::Dimensions::kBuildVolumeType,
-                                                        PRS::Dimensions::kInnerRadius,
                                                         PRS::Dimensions::kOuterRadius,
                                                         PRS::Dimensions::kEnableW,
                                                         PRS::Dimensions::kEnableGridX,
@@ -143,20 +148,36 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                         PRS::Dimensions::kGridYDistance,
                                                         PRS::Dimensions::kGridYOffset};
 
-    static const auto material_settings = QSet<QString> {
-        PS::SlicingVector::kSlicingVectorX, PS::SlicingVector::kSlicingVectorY, PS::SlicingVector::kSlicingVectorZ};
+    static const auto slicing_settings = QSet<QString> {
+        PS::Slicing::kSlicingMode,       PS::Slicing::kSlicePlaneNormalX,   PS::Slicing::kSlicePlaneNormalY,
+        PS::Slicing::kSlicePlaneNormalZ, PS::Slicing::kCylinderAxisSource,  PS::Slicing::kCylinderAxisX,
+        PS::Slicing::kCylinderAxisY,     PS::Slicing::kCylinderInnerRadius, PS::Slicing::kCylinderHeight};
+
+    static const auto slice_plane_normal_settings = QSet<QString> {
+        PS::Slicing::kSlicePlaneNormalX, PS::Slicing::kSlicePlaneNormalY, PS::Slicing::kSlicePlaneNormalZ};
 
     static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
                                                              PS::Optimizations::kCustomIslandXLocation,
                                                              PS::Optimizations::kCustomIslandYLocation,
+                                                             PS::Optimizations::kCustomIslandZLocation,
                                                              PS::Optimizations::kPathOrder,
+                                                             PS::Optimizations::kPerimeterPathOrder,
+                                                             PS::Optimizations::kInsetPathOrder,
+                                                             PS::Optimizations::kSkinPathOrder,
                                                              PS::Optimizations::kCustomPathXLocation,
                                                              PS::Optimizations::kCustomPathYLocation,
+                                                             PS::Optimizations::kCustomPathZLocation,
+                                                             PS::Optimizations::kPointOrder,
                                                              PS::Optimizations::kCustomPointXLocation,
                                                              PS::Optimizations::kCustomPointYLocation,
+                                                             PS::Optimizations::kCustomPointZLocation,
                                                              PS::Optimizations::kEnableSecondCustomLocation,
                                                              PS::Optimizations::kCustomPointSecondXLocation,
                                                              PS::Optimizations::kCustomPointSecondYLocation,
+                                                             PS::Optimizations::kCustomPointSecondZLocation,
+                                                             PS::Optimizations::kSeamAttractorVectorX,
+                                                             PS::Optimizations::kSeamAttractorVectorY,
+                                                             PS::Optimizations::kSeamAttractorVectorZ,
                                                              PRS::Dimensions::kXOffset,
                                                              PRS::Dimensions::kYOffset};
 
@@ -165,8 +186,11 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
     if (printer_settings.contains(setting_key)) {
         m_part_view->updatePrinterSettings(GSM->getGlobal());
     }
-    else if (material_settings.contains(setting_key)) {
+    else if (slicing_settings.contains(setting_key)) {
         m_part_view->updateSlicingSettings(GSM->getGlobal());
+        if (slice_plane_normal_settings.contains(setting_key)) {
+            m_part_view->updateOptimizationSettings(GSM->getGlobal());
+        }
     }
     else if (optimization_settings.contains(setting_key)) {
         m_part_view->updateOptimizationSettings(GSM->getGlobal());
@@ -191,6 +215,12 @@ void PartWidget::preSliceUpdate() {
 }
 
 void PartWidget::showSlicingPlanes(bool show) { m_part_view->showSlicingPlanes(show); }
+
+void PartWidget::showLayerSettingsRange(bool show) { m_part_view->showLayerSettingsRange(show); }
+
+void PartWidget::setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges) {
+    m_part_view->setLayerSettingsRanges(part, layer_ranges);
+}
 
 void PartWidget::showLabels(bool show) { m_part_view->showLabels(show); }
 
@@ -289,6 +319,32 @@ void PartWidget::setStatusSelection(QString name) {
 
 void PartWidget::setStatusIssue(QString issue) { m_status_state.issues = issue; }
 
+void PartWidget::setMeasurementReadout(QString readout) {
+    if (readout.isEmpty()) {
+        m_measurement_label->hide();
+        m_measurement_clear_btn->hide();
+        return;
+    }
+
+    m_measurement_label->setText(readout);
+    m_measurement_label->adjustSize();
+    m_measurement_label->show();
+    m_measurement_label->raise();
+    m_measurement_clear_btn->show();
+    m_measurement_clear_btn->raise();
+    positionMeasurementReadout();
+}
+
+void PartWidget::positionMeasurementReadout() {
+    double toolbar_y = (this->height() / 3.0) - (Constants::UI::PartToolbar::kHeight / 2.0);
+    if (toolbar_y <= Constants::UI::PartToolbar::kMinTopOffset)
+        toolbar_y = Constants::UI::PartToolbar::kMinTopOffset;
+
+    const int readout_x = Constants::UI::PartToolbar::kLeftOffset + Constants::UI::PartToolbar::kWidth + 8;
+    m_measurement_label->move(readout_x, toolbar_y);
+    m_measurement_clear_btn->move(readout_x + m_measurement_label->width() + 3, toolbar_y);
+}
+
 void PartWidget::resizeEvent(QResizeEvent* event) {
     QPoint new_size = QPoint(event->size().width(), event->size().height());
 
@@ -298,6 +354,7 @@ void PartWidget::resizeEvent(QResizeEvent* event) {
     m_selection_label->move(Constants::UI::PartControl::kLeftOffset + 10,
                             event->size().height() -
                                 (Constants::UI::PartControl::kSize.height() + 10 + m_selection_label->height()));
+    positionMeasurementReadout();
 
     emit resized(event->size());
 }
@@ -340,6 +397,16 @@ void PartWidget::setupSubWidgets() {
     this->setStatusSelection("None");
     m_selection_label->show();
 
+    // Measurement readout
+    m_measurement_label = new QLabel(this);
+    m_measurement_label->hide();
+    m_measurement_clear_btn = new QToolButton(this);
+    m_measurement_clear_btn->setAutoRaise(true);
+    m_measurement_clear_btn->setFixedSize(22, 22);
+    m_measurement_clear_btn->setIcon(this->style()->standardIcon(QStyle::SP_DialogCloseButton));
+    m_measurement_clear_btn->setToolTip("Clear Measurement");
+    m_measurement_clear_btn->hide();
+
     // Part Control
     m_part_control = new PartControl(this);
     m_part_control->resize(Constants::UI::PartControl::kSize);
@@ -356,6 +423,12 @@ void PartWidget::setupStyle() {
     QString status = "Currently Manipulating: <font color=\"" % m_accentColor % "\">%1</font>";
     status = status.arg(m_status_state.selected_part);
     m_selection_label->setText(status);
+
+    m_measurement_label->setStyleSheet(QString("QLabel { background: rgba(245, 245, 245, 220); color: %1; "
+                                               "border: 1px solid rgba(0, 0, 0, 80); padding: 4px 7px; }")
+                                           .arg(m_accentColor));
+    m_measurement_clear_btn->setStyleSheet("QToolButton { background: rgba(245, 245, 245, 220); "
+                                           "border: 1px solid rgba(0, 0, 0, 80); padding: 1px; }");
 }
 
 void PartWidget::setupLayouts() {
@@ -367,6 +440,7 @@ void PartWidget::setupPosition() {
     // Status
     m_selection_label->move(300, this->height() -
                                      (Constants::UI::PartControl::kSize.height() + 15 + m_selection_label->height()));
+    positionMeasurementReadout();
 
     // Projection Buttons
     QPoint new_size = QPoint(this->width(), this->height());
@@ -401,6 +475,9 @@ void PartWidget::setupEvents() {
     connect(m_toolbar, &PartToolbar::centerParts, m_part_view, &PartView::centerSelectedParts);
     connect(m_toolbar, &PartToolbar::dropPartsToFloor, m_part_view, &PartView::dropSelectedParts);
     connect(m_toolbar, &PartToolbar::setupAlignment, m_part_view, &PartView::setupAlignment);
+    connect(m_toolbar, &PartToolbar::measureModeChanged, m_part_view, &PartView::setMeasurementMode);
+    connect(m_part_view, &PartView::measurementReadoutChanged, this, &PartWidget::setMeasurementReadout);
+    connect(m_measurement_clear_btn, &QToolButton::pressed, m_part_view, &PartView::clearMeasurement);
 
     connect(this, &PartWidget::resized, m_toolbar, &PartToolbar::resize);
     connect(this, &PartWidget::resized, m_view_controls, &ViewControlsToolbar::resize);

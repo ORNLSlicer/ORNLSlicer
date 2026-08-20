@@ -30,8 +30,7 @@ QString MeltioWriter::writeSettingsHeader(GcodeSyntax syntax) {
 QString MeltioWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                         int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
-        m_extruders_on[ext] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -205,15 +204,9 @@ QString MeltioWriter::writeLine(const Point& start_point, const Point& target_po
 
     QString rv;
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            // Set Feedrate to 0 if turning extruder on so that an F parameter
-            // is issued with the first G1 of the path
-            setFeedrate(0);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
+        setFeedrate(0);
     }
 
     rv += m_G1;
@@ -255,12 +248,8 @@ QString MeltioWriter::writeArc(const Point& start_point, const Point& end_point,
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -298,7 +287,7 @@ QString MeltioWriter::writeArc(const Point& start_point, const Point& end_point,
 QString MeltioWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -350,6 +339,8 @@ QString MeltioWriter::writeAfterLayer() {
 
 QString MeltioWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     rv += "M5\n";
     rv += "G0 G90 G53 Z0.0\n";
     rv += "G53 Y0.0\n";
@@ -372,7 +363,7 @@ QString MeltioWriter::writeDwell(Time time) {
 
 QString MeltioWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
     QString rv;
-    m_extruders_on[extruder_number] = true;
+    m_deposition_active = true;
     rv += "M64 P8" % commentSpaceLine("LASER ON");
     rv += "M66 P1 L3 Q10" % commentSpaceLine("WAIT FOR CONFIRMATION");
     rv += "M65 P8" % commentSpaceLine("TURN RELAY OFF");
@@ -381,7 +372,7 @@ QString MeltioWriter::writeExtruderOn(RegionType type, int rpm, int extruder_num
 
 QString MeltioWriter::writeExtruderOff(int extruder_number) {
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_deposition_active = false;
     rv += "M64 P9" % commentSpaceLine("LASER OFF");
     rv += "M66 P1 L3 Q10" % commentSpaceLine("WAIT FOR CONFIRMATION");
     rv += "M65 P9" % commentSpaceLine("TURN RELAY OFF");

@@ -87,17 +87,21 @@ void LayerBar::addSingle(int layer) {
 
     LayerDot* new_dot = addDot(layer, false);  // visually add dot. Not from template
     m_part->createSettingsRange(layer, layer); // add range to part
+    updateLayerSettingsRangeAvailability();
     selectDot(new_dot);
     m_last_clicked_dot = new_dot;
+    changeSelectedSettings();
     update();
 }
 
 void LayerBar::addSingleFromTemplate(int layer, QSharedPointer<SettingsBase> sb) {
     LayerDot* new_dot = addDot(layer, true);       // visually add dot. From template
     m_part->createSettingsRange(layer, layer, sb); // add range to part with settings base
+    updateLayerSettingsRangeAvailability();
     new_dot->isFromTemplate();
     selectDot(new_dot);
     m_last_clicked_dot = new_dot;
+    changeSelectedSettings();
     update();
 }
 
@@ -114,6 +118,7 @@ void LayerBar::addRange(int lower, int upper) {
         b->setRange(range);
 
         m_part->createSettingsRange(lower, upper);
+        updateLayerSettingsRangeAvailability();
 
         update();
     }
@@ -135,6 +140,7 @@ void LayerBar::addRangeFromTemplate(int lower, int upper, QSharedPointer<Setting
         b->setRange(range);
 
         m_part->createSettingsRange(lower, upper, sb);
+        updateLayerSettingsRangeAvailability();
 
         update();
     }
@@ -239,10 +245,13 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
         // Set selected settings to be part
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(item->part()->getSb());
-        emit setSelectedSettings(qMakePair(item->part()->name(), ranges));
+        emit setSelectedSettings(qMakePair(item->part()->name(), ranges), {QSharedPointer<SettingsBase>()});
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     else {
-        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()));
+        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()),
+                                 QList<QSharedPointer<SettingsBase>>());
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
     // Check if new part selected and if that part's template equals the currently selected template from drop down
     // menu. If need to change part template.
@@ -263,8 +272,10 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
         loadTemplateLayers();
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(item->part()->getSb());
-        emit setSelectedSettings(qMakePair(item->part()->name(), ranges));
+        emit setSelectedSettings(qMakePair(item->part()->name(), ranges), {QSharedPointer<SettingsBase>()});
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
+    updateLayerSettingsRangeAvailability();
     update();
 }
 
@@ -282,6 +293,7 @@ void LayerBar::reselectPart() { // If no part selected
         m_part->setCurrentPartTemplate("<no template selected>");
         m_part->clearSettingsRanges();
         clearTemplate();
+        updateLayerSettingsRangeAvailability();
         return;
     }
 
@@ -361,10 +373,14 @@ void LayerBar::reselectPart() { // If no part selected
         // Set selected settings to be part
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(m_part->getSb());
-        emit setSelectedSettings(qMakePair(m_part->name(), ranges));
+        emit setSelectedSettings(qMakePair(m_part->name(), ranges), {QSharedPointer<SettingsBase>()});
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
-    else
-        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()));
+    else {
+        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()),
+                                 QList<QSharedPointer<SettingsBase>>());
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
+    }
     // Check if new part selected and if that part's template equals the currently selected template from drop down menu
     if (!(m_part->getCurrentPartTemplate() == GSM->getCurrentTemplate())) {
         m_part->clearSettingsRanges();
@@ -378,8 +394,10 @@ void LayerBar::reselectPart() { // If no part selected
         loadTemplateLayers();
         QList<QSharedPointer<SettingsBase>> ranges;
         ranges.append(m_part->getSb());
-        emit setSelectedSettings(qMakePair(m_part->name(), ranges));
+        emit setSelectedSettings(qMakePair(m_part->name(), ranges), {QSharedPointer<SettingsBase>()});
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
     }
+    updateLayerSettingsRangeAvailability();
     update();
 }
 
@@ -404,6 +422,7 @@ void LayerBar::removePart(QSharedPointer<Part> part) {
     clearSelection();
     qDeleteAll(m_position);
     m_part = nullptr;
+    updateLayerSettingsRangeAvailability();
 }
 
 void LayerBar::deleteSelection() {
@@ -446,6 +465,8 @@ void LayerBar::setLayer() {
 void LayerBar::setPairLayers() {
     LayerDot* first_layer = m_selection.back();
     LayerDot* second_layer = m_selection.front();
+    if (first_layer->getLayer() > second_layer->getLayer())
+        std::swap(first_layer, second_layer);
 
     // Dialog prompt to get user input for range start and end
     QDialog dialog(this);
@@ -489,12 +510,20 @@ void LayerBar::setPairLayers() {
             break;
         }
 
-        if ((this->layerValid(first_val) || m_position[first_val] == first_layer) &&
+        if (first_val < second_val &&
+            !m_part->getSettingsRange(first_layer->getLayer(), second_layer->getLayer()).isNull() &&
+            (this->layerValid(first_val) || m_position[first_val] == first_layer) &&
             (this->layerValid(second_val) || m_position[second_val] == second_layer)) {
             m_part->updateSettingsRangeLimits(first_layer->getLayer(), second_layer->getLayer(), first_val, second_val);
 
-            this->moveDotToLayer(first_layer, first_val);
-            this->moveDotToLayer(second_layer, second_val);
+            if (first_layer->getLayer() != first_val)
+                this->moveDotToLayer(first_layer, first_val);
+
+            if (second_layer->getLayer() != second_val)
+                this->moveDotToLayer(second_layer, second_val);
+
+            updateLayers();
+            removeInvalidSelections();
             break;
         }
 
@@ -655,6 +684,7 @@ void LayerBar::addPair() {
                 // make new combined range
                 m_part->createSettingsRange(a->getLayer(), b->getLayer());
 
+                updateLayerSettingsRangeAvailability();
                 clearSelection();
                 update();
             }
@@ -770,6 +800,7 @@ void LayerBar::addGroup() {
                 m_part->createSettingsRange(dot->getLayer(), dot->getLayer(), group_name);
             }
         }
+        updateLayerSettingsRangeAvailability();
     }
 }
 
@@ -794,6 +825,7 @@ void LayerBar::groupDots() {
         }
     }
 
+    updateLayerSettingsRangeAvailability();
     clearSelection();
 }
 
@@ -875,6 +907,7 @@ void LayerBar::makePair() {
     // make new combined range
     m_part->createSettingsRange(a->getLayer(), b->getLayer());
 
+    updateLayerSettingsRangeAvailability();
     clearSelection();
     update();
 }
@@ -1318,6 +1351,8 @@ void LayerBar::deleteSingle(LayerDot* dot) {
     {
         m_part->removeSettingsRange(dot->getLayer(), dot->getLayer());
     }
+
+    updateLayerSettingsRangeAvailability();
 }
 
 void LayerBar::removeFromGrp(LayerDot* dot) {
@@ -1350,10 +1385,10 @@ void LayerBar::updateLayers() {
         return;
     }
 
-    // Retrieve the slicing vector
-    QVector3D slicing_vector = {GSM->getGlobal()->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                GSM->getGlobal()->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                GSM->getGlobal()->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    // Retrieve the slice plane normal.
+    QVector3D slicing_vector = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     slicing_vector.normalize();
 
     // Retrieve the part min and max in the slicing plane normal direction
@@ -1463,6 +1498,10 @@ void LayerBar::updateLayers() {
     if (layer_count < m_position.size()) {
         for (int i = m_position.size() - 1; i >= layer_count; --i) {
             if (m_position[i] != nullptr) {
+                if (clampRangeToLayerCount(m_position[i], layer_count)) {
+                    continue;
+                }
+
                 int layer_num = m_position[i]->getLayer();
                 LayerDot* dot = m_position[i]->getPair();
                 if (dot == nullptr) {
@@ -1530,12 +1569,14 @@ void LayerBar::clear() {
     m_position.clear();
     m_part = nullptr;
 
+    updateLayerSettingsRangeAvailability();
     update();
 }
 
 void LayerBar::clearTemplate() {
     // m_position.clear();
     m_deleted_ranges.clear();
+    updateLayerSettingsRangeAvailability();
 }
 
 void LayerBar::deleteRange(LayerBar::dot_range* range) {
@@ -1546,6 +1587,7 @@ void LayerBar::deleteRange(LayerBar::dot_range* range) {
     m_part->removeSettingsRange(range->a->getLayer(), range->b->getLayer());
 
     delete range;
+    updateLayerSettingsRangeAvailability();
 }
 
 void LayerBar::splitRange(LayerBar::dot_range* range) {
@@ -1555,12 +1597,17 @@ void LayerBar::splitRange(LayerBar::dot_range* range) {
     m_part->splitSettingsRange(range->a->getLayer(), range->b->getLayer());
 
     delete range;
+    updateLayerSettingsRangeAvailability();
 }
 
 void LayerBar::handleModifiedSetting(QString key) {
-    if (key == PS::Layer::kLayerHeight || key == PS::SlicingVector::kSlicingVectorX ||
-        key == PS::SlicingVector::kSlicingVectorY || key == PS::SlicingVector::kSlicingVectorZ) {
+    if (key == PS::Layer::kLayerHeight || key == PS::Slicing::kSlicePlaneNormalX ||
+        key == PS::Slicing::kSlicePlaneNormalY || key == PS::Slicing::kSlicePlaneNormalZ) {
         updateLayers();
+
+        removeInvalidSelections();
+
+        changeSelectedSettings();
     }
 }
 
@@ -1606,6 +1653,40 @@ bool LayerBar::moveDotToLayer(LayerDot* dot, int layer) {
 
 bool LayerBar::moveDotToNextLayer(LayerDot* dot) { return moveDotToNextLayer(dot, getLayerFromPosition(dot->y())); }
 
+void LayerBar::removeInvalidSelections() {
+    for (int i = m_selection.size() - 1; i >= 0; --i) {
+        LayerDot* dot = m_selection[i];
+        if (dot == nullptr || dot->getLayer() < 0 || dot->getLayer() >= m_position.size() ||
+            m_position[dot->getLayer()] != dot) {
+            m_selection.removeAt(i);
+        }
+    }
+}
+
+bool LayerBar::clampRangeToLayerCount(LayerDot* dot, int layer_count) {
+    if (dot == nullptr || dot->getRange() == nullptr || layer_count <= 0)
+        return false;
+
+    LayerDot* pair = dot->getPair();
+    if (pair == nullptr || pair->getLayer() >= layer_count)
+        return false;
+
+    const int last_layer = layer_count - 1;
+    const int old_low = qMin(dot->getLayer(), pair->getLayer());
+    const int old_high = qMax(dot->getLayer(), pair->getLayer());
+    const int new_low = qMin(pair->getLayer(), last_layer);
+    const int new_high = last_layer;
+
+    if (new_low >= new_high || m_position[new_high] != nullptr)
+        return false;
+
+    if (!moveDotToLayer(dot, new_high))
+        return false;
+
+    m_part->updateSettingsRangeLimits(old_low, old_high, new_low, new_high);
+    return true;
+}
+
 bool LayerBar::moveDotToNextLayer(LayerDot* dot, int layer) {
     int check_dist = 0;
     int init_layer = dot->getLayer();
@@ -1631,9 +1712,27 @@ bool LayerBar::onLayer(LayerDot* dot, int layer) {
     return layer > 0 && layer <= m_layers && m_position[layer] == dot;
 }
 
+void LayerBar::updateLayerSettingsRangeAvailability() {
+    emit layerSettingsRangeAvailabilityChanged(!m_part.isNull() && !m_part->getSettingsRanges().isEmpty());
+}
+
 void LayerBar::changeSelectedSettings() {
+    if (m_part == nullptr) {
+        emit setSelectedSettings(qMakePair(QString(""), QList<QSharedPointer<SettingsBase>>()),
+                                 QList<QSharedPointer<SettingsBase>>());
+        emit selectedLayerSettingsRangesChanged(nullptr, QList<QPair<int, int>>());
+        updateLayerSettingsRangeAvailability();
+        return;
+    }
+
     QVector<QString> names;
     QList<QSharedPointer<SettingsBase>> settings_bases;
+    QList<QSharedPointer<SettingsBase>> inherited_bases;
+    QList<QPair<int, int>> selected_layer_ranges;
+
+    auto include_visual_layer_range = [&selected_layer_ranges](int low, int high) {
+        selected_layer_ranges.append(qMakePair(qMin(low, high), qMax(low, high)));
+    };
 
     QVector<LayerDot*> selected_copy = m_selection;
     // sort from low to high, so that low value is always found first
@@ -1645,8 +1744,9 @@ void LayerBar::changeSelectedSettings() {
         LayerDot* dot = selected_copy[i];
 
         if (dot->getRange() != nullptr) {
-            int low = dot->getLayer();
-            int high = dot->getPair()->getLayer();
+            int low = qMin(dot->getLayer(), dot->getPair()->getLayer());
+            int high = qMax(dot->getLayer(), dot->getPair()->getLayer());
+            include_visual_layer_range(low, high);
 
             selected_copy.removeAt(selected_copy.indexOf(dot->getPair()));
 
@@ -1654,6 +1754,7 @@ void LayerBar::changeSelectedSettings() {
             QString name = "Layers " + QString::number(low + 1) + " - " + QString::number(high + 1);
             names.append(name);
             settings_bases.append(range->getSb());
+            inherited_bases.append(m_part->getSb());
         }
         else if (dot->getGroup() != nullptr) {
             // get the dot group & its name
@@ -1662,10 +1763,15 @@ void LayerBar::changeSelectedSettings() {
             QString name = dot_group->group_name;
             names.append(name);
 
+            for (LayerDot* grouped_dot : dot_group->grouped) {
+                include_visual_layer_range(grouped_dot->getLayer(), grouped_dot->getLayer());
+            }
+
             // dots in the same group share a pointer to the same settings base
             // so just get the sb of one dot
             auto range = m_part->getSettingsRange(dot->getLayer(), dot->getLayer());
             settings_bases.append(range->getSb());
+            inherited_bases.append(m_part->getSb());
 
             // remove all the dots in the group from selection copy
             for (int j = selected_copy.size() - 1; j > i; --j) {
@@ -1675,11 +1781,31 @@ void LayerBar::changeSelectedSettings() {
         }
         else {
             int layer_num = dot->getLayer();
+            include_visual_layer_range(layer_num, layer_num);
             auto range = m_part->getSettingsRange(layer_num, layer_num);
             QString name = "Layer " + QString::number(layer_num + 1);
             names.append(name);
             settings_bases.append(range->getSb());
+            inherited_bases.append(m_part->getSb());
         }
+    }
+
+    std::sort(selected_layer_ranges.begin(), selected_layer_ranges.end(),
+              [](const QPair<int, int>& a, const QPair<int, int>& b) {
+                  if (a.first == b.first)
+                      return a.second < b.second;
+
+                  return a.first < b.first;
+              });
+
+    QList<QPair<int, int>> merged_layer_ranges;
+    for (const QPair<int, int>& layer_range : selected_layer_ranges) {
+        if (merged_layer_ranges.isEmpty() || layer_range.first > merged_layer_ranges.last().second + 1) {
+            merged_layer_ranges.append(layer_range);
+            continue;
+        }
+
+        merged_layer_ranges.last().second = qMax(merged_layer_ranges.last().second, layer_range.second);
     }
 
     QString final;
@@ -1687,6 +1813,7 @@ void LayerBar::changeSelectedSettings() {
     {
         final = m_part->name();
         settings_bases.append(m_part->getSb());
+        inherited_bases.append(QSharedPointer<SettingsBase>());
     }
     else if (names.size() == 1) // just one selected range, display it
     {
@@ -1708,7 +1835,10 @@ void LayerBar::changeSelectedSettings() {
         final += " of " + m_part->name();
     }
 
-    emit setSelectedSettings(qMakePair(final, settings_bases));
+    emit setSelectedSettings(qMakePair(final, settings_bases), inherited_bases);
+    emit selectedLayerSettingsRangesChanged(names.isEmpty() ? nullptr : m_part,
+                                            names.isEmpty() ? QList<QPair<int, int>>() : merged_layer_ranges);
+    updateLayerSettingsRangeAvailability();
 }
 
 void LayerBar::clearSelection() {

@@ -1,0 +1,27 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_tamper"
+    display: "Enable Tamper"
+    type: "boolean"
+    tooltip: "If selected, will turn tamper on during all extrude moves"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kEnableTamper"
+    local: false
+  - name: "tamper_voltage"
+    display: "Tamper Voltage"
+    type: "voltage"
+    tooltip: "Voltage sent to the tamper to control it's speed"
+    depends: {"enable_tamper":true}
+    options: []
+    default: 0
+    minor: "Auxiliary"
+    major: "Printer"
+    namespace: "Printer::Auxiliary"
+    symbol: "kTamperVoltage"
+    local: false

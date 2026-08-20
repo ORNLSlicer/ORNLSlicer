@@ -22,15 +22,12 @@ QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
                                            Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
-        m_extruders_on[ext] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
     m_min_z = 0.0f;
     m_material_number = -1;
-    m_wire_feed = false;
-    m_wire_feed_total = 0;
 
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
@@ -129,13 +126,6 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     QString rv;
     Point new_start_location;
 
-    bool isWireFeed = false;
-    if (params->contains(SS::kWireFeed))
-        isWireFeed = true;
-
-    if (isWireFeed)
-        m_wire_feed_total = 0;
-
     // Use updated start location if this is the first travel
     if (m_first_travel)
         new_start_location = m_start_point;
@@ -160,26 +150,15 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
         Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
-        if (isWireFeed) {
-            rv += m_G1 % writeCoordinates(lift_destination);
-            Velocity speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
-            if (getFeedrate() != speed) {
-                setFeedrate(speed);
-                rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-            }
-            rv += commentSpaceLine("TRAVEL LIFT Z");
+        if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         }
         else {
-            if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
-                rv += m_G1 % m_f %
-                      QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                      writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
-            }
-            else {
-                rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
-            }
-            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
+            rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         }
+        setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
     // write the travel
@@ -189,56 +168,28 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     else if (travel_lift_required)
         travel_destination = travel_destination + travel_lift; // travel destination is above the target point
 
-    if (isWireFeed) {
-        rv += "H54" % commentSpaceLine("Zero UA and UT");
-        rv += "H122" % commentSpaceLine("Engage add roller");
-        rv += m_G1 % writeCoordinates(travel_destination);
-        rv += " UA=" + QString::number(params->setting<Distance>(SS::kWireFeed).to(m_meta.m_distance_unit));
-        m_wire_feed_total += params->setting<Distance>(SS::kWireFeed);
-        Velocity speed = params->setting<Velocity>(SS::kSpeed);
-        if (getFeedrate() != speed) {
-            setFeedrate(speed);
-            rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-        }
+    if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+        rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
+              writeCoordinates(travel_destination);
     }
     else {
-        if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
-            rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
-                  writeCoordinates(travel_destination);
-        }
-        else {
-            rv += m_G0 % writeCoordinates(travel_destination);
-        }
+        rv += m_G0 % writeCoordinates(travel_destination);
     }
 
     rv += commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (isWireFeed)
-        rv += "H123" % commentSpaceLine("Disengage add roller");
-
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        if (isWireFeed) {
-            rv += m_G1 % writeCoordinates(target_location);
-            Velocity speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
-            if (getFeedrate() != speed) {
-                setFeedrate(speed);
-                rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-            }
-            rv += commentSpaceLine("TRAVEL LOWER Z");
+        if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         }
         else {
-            if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
-                rv += m_G1 % m_f %
-                      QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                      writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
-            }
-            else {
-                rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
-            }
-            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
+            rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         }
+        setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
     if (m_first_travel)         // if this is the first travel
@@ -258,25 +209,14 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
 
     QString rv;
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            m_current_rpm = rpm;
-        }
-        // Update extruder speed if needed
-        if (m_extruders_on[0] == true && rpm != m_current_rpm) // only check first extruder
-        {
-            rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
-            m_current_rpm = rpm;
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0, params);
+        m_current_rpm = rpm;
     }
-
-    if (!m_wire_feed && params->contains(SS::kWireFeed)) {
-        rv += "H54" % commentSpaceLine("Zero UA and UT");
-        rv += "H122" % commentSpaceLine("Engage add roller");
-        m_wire_feed = true;
+    // Update extruder speed if needed
+    if (m_deposition_active && rpm != m_current_rpm) {
+        rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
+        m_current_rpm = rpm;
     }
 
     rv += m_G1;
@@ -289,20 +229,6 @@ QString IngersollWriter::writeLine(const Point& start_point, const Point& target
 
     // Writes WXYZ to destination
     rv += writeCoordinates(target_point);
-
-    if (m_wire_feed) {
-        m_wire_feed_total += params->setting<Distance>(SS::kWireFeed);
-        rv += " UA=" % QString::number(m_wire_feed_total.to(m_meta.m_distance_unit));
-
-        if (params->setting<bool>(SS::kFinalWireCoast)) {
-            rv += " H120";
-            m_wire_feed = false;
-        }
-
-        if (params->setting<bool>(SS::kFinalWireFeed)) {
-            rv += " H123";
-        }
-    }
 
     // Add comment for gcode parser
     if (path_modifiers != PathModifiers::kNone)
@@ -326,18 +252,13 @@ QString IngersollWriter::writeArc(const Point& start_point, const Point& end_poi
     auto region_type = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
-        // Update extruder speed if needed
-        if (m_extruders_on[0] == true && rpm != m_current_rpm) // only check first extruder
-        {
-            rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
-            m_current_rpm = rpm;
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0, params);
+    }
+    // Update extruder speed if needed
+    if (m_deposition_active && rpm != m_current_rpm) {
+        rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
+        m_current_rpm = rpm;
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -369,7 +290,7 @@ QString IngersollWriter::writeScan(Point target_point, Velocity speed, bool on_o
 QString IngersollWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -424,7 +345,18 @@ QString IngersollWriter::writeAfterLayer() {
 
 QString IngersollWriter::writeShutdown() {
     QString rv;
-    rv += writeExtruderOff(0); // update to turn off appropriate extruders
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) -> QString {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+                return QString(m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) %
+                               writeCoordinates(destination));
+            }
+            return QString(m_G0 % writeCoordinates(destination));
+        },
+        "TRAVEL FINAL LIFT Z");
+    rv += writeExtruderOff(0); // update to turn off the extruder
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode);
     return rv;
 }
@@ -438,18 +370,19 @@ QString IngersollWriter::writeDwell(Time time) {
         return {};
 }
 
-QString IngersollWriter::writeExtruderOn(RegionType type, float rpm, int extruder_number) {
+QString IngersollWriter::writeExtruderOn(RegionType type, float rpm, int extruder_number,
+                                         const QSharedPointer<SettingsBase>& params) {
     QString rv;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += commentLine("Bead Start");
 
-    m_extruders_on[extruder_number] = true;
+    m_deposition_active = true;
 
     // write dwell and initial extruder turn on depending on region type
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<float>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("TURN EXTRUDER ON");
 
@@ -487,7 +420,7 @@ QString IngersollWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

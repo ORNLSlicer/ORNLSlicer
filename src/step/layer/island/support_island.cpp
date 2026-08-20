@@ -28,15 +28,14 @@ void SupportIsland::optimize(int layerNumber, Point& currentLocation,
                              QVector<QSharedPointer<RegionBase>>& previousRegions) {
     bool unused = true;
     for (QSharedPointer<RegionBase> r : m_regions) {
-        QVector<Path> tmp_path;
-        r->optimize(layerNumber, currentLocation, tmp_path, tmp_path, unused);
+        prepareRegionForOptimization(r, layerNumber, previousRegions);
+        r->optimize(layerNumber, currentLocation, unused);
 
         if (r->getPaths().size() > 0)
             previousRegions.push_back(r);
 
         if (m_sb->setting<bool>(MS::MultiMaterial::kEnable) &&
-            m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0 &&
-            !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial))
+            m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0)
             calculateMultiMaterialTransitions(previousRegions);
     }
 }

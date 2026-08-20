@@ -1,21 +1,29 @@
 ## Creating or Updating a Setting
-The `mss_for_json.ods` file, located in the root directory of the project, defines all available settings and their related info like display name, type, tooltip, dependencies, etc. This file is used to generate the json in `resources/configs/master.conf` that ORNLSlicer parses.
+
+The canonical settings metadata lives in `resources/settings/*.yaml`. These files define every available setting and
+the metadata used by the UI, including display name, type, tooltip, dependencies, enum options, default value, category,
+and local-setting support.
+
+`resources/configs/master.conf` and `resources/configs/setting_inputs.conf` are generated from those YAML files and
+embedded in the application through Qt resources. ORNL Slicer still reads the generated config files at runtime, but
+they should not be edited by hand.
 
 To create or edit a setting:
-1. Make the necessary changes to the `mss_for_json.ods` file.
-2. Run the CMake by clicking "Build" > "Run CMake" in Qt Creator (or your preferred IDE)
-3. Verify that `master.conf` has changed as you expect
 
-**DO NOT edit `master.conf` directly.**
+1. Make the necessary change in the relevant file under `resources/settings`.
+2. Run CMake/build, or run the generator directly:
 
+   ```bash
+   python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf
+   ```
 
+3. Verify that the generated files changed as expected.
 
-## Manual Json Generation
-> **Note:** Settings should no longer be generated manually. 
+The generator uses only the Python standard library. It validates duplicate setting names, required fields, setting
+types, enum defaults, enum options, dependency references, and grouped input component references.
 
-1. Make the desired changes to spreadsheet document in root of repo. This should be
-mms_for_json.ods
-2. In Excel/Open Office, export the spreadsheet as a CSV file.
-3. Goto: https://www.csvjson.com/csv2json and open up the CSV file.
-4. On the output, select Hash.
-5. Generate the json and save the file to the repo under resources/configs/master.conf
+Use a top-level `inputs:` section when scalar settings should be shown as one composite UI row, such as `vector2` or
+`vector3` inputs. Keep each component as a normal setting under `settings:` so saved settings remain flat, and list the
+component setting names under the grouped input.
+
+**DO NOT edit `resources/configs/master.conf` or `resources/configs/setting_inputs.conf` directly.**

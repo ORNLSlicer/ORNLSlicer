@@ -61,6 +61,9 @@ class ArcSegment : public SegmentBase {
     //! \brief Write the gcode for an arc.
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
+    //! \brief Reverse direction of the arc.
+    void reverse() override;
+
     //! \brief returns minimum z-coordinate of the arc
     float getMinZ() override;
 

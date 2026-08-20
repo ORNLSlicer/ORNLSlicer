@@ -35,13 +35,23 @@ void GCodeWidget::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) 
 void GCodeWidget::clear() { m_gcode_view->clear(); }
 
 void GCodeWidget::setOrthoView(bool status) {
-    m_view_controls->setEnabled(!status);
+    const bool changed = m_ortho_enabled != status;
+    m_ortho_enabled = status;
+
+    m_view_controls->setProjectionControlsEnabled(!status);
+    m_view_controls->setOrthographicViewChecked(status);
     m_gcode_view->useOrthographic(status);
+
+    if (changed) {
+        emit orthographicViewChanged(status);
+    }
 }
 
 void GCodeWidget::showSegmentInfo(bool show) { m_segment_info_control->setVisible(show); }
 
 void GCodeWidget::showGhosts(bool status) { m_gcode_view->showGhosts(status); }
+
+void GCodeWidget::showSeams(bool show) { m_gcode_view->showSeams(show); }
 
 void GCodeWidget::handleModifiedSetting(QString key) {
     static const auto printer_settings = QSet<QString> {PRS::Dimensions::kXMin,
@@ -55,7 +65,6 @@ void GCodeWidget::handleModifiedSetting(QString key) {
                                                         PRS::Dimensions::kWMin,
                                                         PRS::Dimensions::kWMax,
                                                         PRS::Dimensions::kBuildVolumeType,
-                                                        PRS::Dimensions::kInnerRadius,
                                                         PRS::Dimensions::kOuterRadius,
                                                         PRS::Dimensions::kEnableW,
                                                         PRS::Dimensions::kEnableGridX,
@@ -65,8 +74,39 @@ void GCodeWidget::handleModifiedSetting(QString key) {
                                                         PRS::Dimensions::kGridYDistance,
                                                         PRS::Dimensions::kGridYOffset};
 
+    static const auto optimization_settings = QSet<QString> {PS::Optimizations::kIslandOrder,
+                                                             PS::Optimizations::kCustomIslandXLocation,
+                                                             PS::Optimizations::kCustomIslandYLocation,
+                                                             PS::Optimizations::kCustomIslandZLocation,
+                                                             PS::Optimizations::kPathOrder,
+                                                             PS::Optimizations::kPerimeterPathOrder,
+                                                             PS::Optimizations::kInsetPathOrder,
+                                                             PS::Optimizations::kSkinPathOrder,
+                                                             PS::Optimizations::kCustomPathXLocation,
+                                                             PS::Optimizations::kCustomPathYLocation,
+                                                             PS::Optimizations::kCustomPathZLocation,
+                                                             PS::Optimizations::kPointOrder,
+                                                             PS::Optimizations::kCustomPointXLocation,
+                                                             PS::Optimizations::kCustomPointYLocation,
+                                                             PS::Optimizations::kCustomPointZLocation,
+                                                             PS::Optimizations::kEnableSecondCustomLocation,
+                                                             PS::Optimizations::kCustomPointSecondXLocation,
+                                                             PS::Optimizations::kCustomPointSecondYLocation,
+                                                             PS::Optimizations::kCustomPointSecondZLocation,
+                                                             PS::Optimizations::kSeamAttractorVectorX,
+                                                             PS::Optimizations::kSeamAttractorVectorY,
+                                                             PS::Optimizations::kSeamAttractorVectorZ,
+                                                             PS::Slicing::kSlicePlaneNormalX,
+                                                             PS::Slicing::kSlicePlaneNormalY,
+                                                             PS::Slicing::kSlicePlaneNormalZ,
+                                                             PRS::Dimensions::kXOffset,
+                                                             PRS::Dimensions::kYOffset};
+
     if (printer_settings.contains(key)) {
         m_gcode_view->updatePrinterSettings(GSM->getGlobal());
+    }
+    else if (optimization_settings.contains(key)) {
+        m_gcode_view->updateOptimizationSettings(GSM->getGlobal());
     }
 }
 
@@ -111,7 +151,7 @@ void GCodeWidget::setupSubWidgets() {
     m_gcode_view->hideSegmentType(types, true);
 
     // View Controls
-    m_view_controls = new ViewControlsToolbar(this);
+    m_view_controls = new ViewControlsToolbar(this, true);
     m_view_controls->raise();
 }
 
@@ -135,6 +175,7 @@ void GCodeWidget::setupEvents() {
     connect(m_view_controls, &ViewControlsToolbar::setFrontView, m_gcode_view, &GCodeView::setFrontView);
     connect(m_view_controls, &ViewControlsToolbar::setSideView, m_gcode_view, &GCodeView::setSideView);
     connect(m_view_controls, &ViewControlsToolbar::setTopView, m_gcode_view, &GCodeView::setTopView);
+    connect(m_view_controls, &ViewControlsToolbar::setOrthographicView, this, &GCodeWidget::setOrthoView);
 }
 
 void GCodeWidget::resizeEvent(QResizeEvent* event) {

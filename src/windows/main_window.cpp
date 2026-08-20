@@ -6,6 +6,7 @@
 #include <QSettings>
 #include <QStatusBar>
 #include <QTimer>
+#include <QUndoCommand>
 #include <qaction.h>
 #include <qapplication.h>
 #include <qcontainerfwd.h>
@@ -16,18 +17,21 @@
 #include <qgridlayout.h>
 #include <qicon.h>
 #include <qkeysequence.h>
+#include <qlineedit.h>
 #include <qlist.h>
 #include <qlogging.h>
 #include <qmainwindow.h>
 #include <qmap.h>
 #include <qmenu.h>
 #include <qmenubar.h>
+#include <qmessagebox.h>
 #include <qminmax.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qobjectdefs.h>
 #include <qoverload.h>
 #include <qpaintdevice.h>
+#include <qplaintextedit.h>
 #include <qprogressbar.h>
 #include <qset.h>
 #include <qsharedpointer.h>
@@ -37,6 +41,7 @@
 #include <qstringliteral.h>
 #include <qtabbar.h>
 #include <qtabwidget.h>
+#include <qtextedit.h>
 #include <qurl.h>
 #include <qwidget.h>
 
@@ -51,11 +56,14 @@
 #include "threading/session_loader.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
 #include "widgets/gcode_widget.h"
 #include "widgets/gcodebar.h"
 #include "widgets/layerbar.h"
 #include "widgets/main_toolbar.h"
+#include "widgets/part_widget/model/part_meta_item.h"
+#include "widgets/part_widget/model/part_meta_model.h"
 #include "widgets/part_widget/part_widget.h"
 #include "widgets/settings/setting_bar.h"
 #include "windows/about.h"
@@ -64,11 +72,102 @@
 #include "windows/dialogs/template_save.h"
 #include "windows/flowratecalc.h"
 #include "windows/gcode_export.h"
+#include "windows/gcode_to_s2c.h"
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
 #include "windows/xtrudecalc.h"
 
 namespace ORNL {
+constexpr int kPartTransformUndoCommandId = 1;
+constexpr int kSettingValueUndoCommandId = 2;
+
+class PartTransformUndoCommand : public QUndoCommand {
+  public:
+    PartTransformUndoCommand(MainWindow* window, QSharedPointer<PartMetaItem> item,
+                             const MainWindow::PartTransformSnapshot& before,
+                             const MainWindow::PartTransformSnapshot& after)
+        : m_window(window), m_item(item), m_before(before), m_after(after) {
+        setText("part position change");
+    }
+
+    int id() const override { return kPartTransformUndoCommandId; }
+
+    bool mergeWith(const QUndoCommand* command) override {
+        const auto* other = dynamic_cast<const PartTransformUndoCommand*>(command);
+        if (other == nullptr || other->m_window != m_window || other->m_item != m_item) {
+            return false;
+        }
+
+        m_after = other->m_after;
+        return true;
+    }
+
+    void undo() override { m_window->applyPartTransformSnapshot(m_item, m_before); }
+
+    void redo() override {
+        if (m_skip_first_redo) {
+            m_skip_first_redo = false;
+            return;
+        }
+
+        m_window->applyPartTransformSnapshot(m_item, m_after);
+    }
+
+  private:
+    MainWindow* m_window;
+    QSharedPointer<PartMetaItem> m_item;
+    MainWindow::PartTransformSnapshot m_before;
+    MainWindow::PartTransformSnapshot m_after;
+    bool m_skip_first_redo = true;
+};
+
+class SettingValueUndoCommand : public QUndoCommand {
+  public:
+    SettingValueUndoCommand(MainWindow* window, const QString& key,
+                            const QVector<MainWindow::SettingValueSnapshot>& before,
+                            const QVector<MainWindow::SettingValueSnapshot>& after)
+        : m_window(window), m_key(key), m_before(before), m_after(after) {
+        setText("setting change");
+    }
+
+    int id() const override { return kSettingValueUndoCommandId; }
+
+    bool mergeWith(const QUndoCommand* command) override {
+        const auto* other = dynamic_cast<const SettingValueUndoCommand*>(command);
+        if (other == nullptr || other->m_window != m_window || other->m_key != m_key ||
+            other->m_before.size() != m_before.size()) {
+            return false;
+        }
+
+        for (int i = 0, end = m_before.size(); i < end; ++i) {
+            if (m_before[i].settings_base != other->m_before[i].settings_base ||
+                m_before[i].key != other->m_before[i].key) {
+                return false;
+            }
+        }
+
+        m_after = other->m_after;
+        return true;
+    }
+
+    void undo() override { m_window->applySettingValueSnapshots(m_before); }
+
+    void redo() override {
+        if (m_skip_first_redo) {
+            m_skip_first_redo = false;
+            return;
+        }
+
+        m_window->applySettingValueSnapshots(m_after);
+    }
+
+  private:
+    MainWindow* m_window;
+    QString m_key;
+    QVector<MainWindow::SettingValueSnapshot> m_before;
+    QVector<MainWindow::SettingValueSnapshot> m_after;
+    bool m_skip_first_redo = true;
+};
 
 MainWindow* MainWindow::m_singleton = nullptr;
 
@@ -113,11 +212,10 @@ void MainWindow::continueStartup() {
 
     GSM->loadAllGlobals(tmp);
     GSM->constructActiveGlobal(CSM->getMostRecentSettingHistory());
-    // GSM->loadLayerBarTemplate(qApp->applicationDirPath() + "/layerbartemplates");
     GSM->loadLayerBarTemplate(CSM->getMostRecentLayerBarSettingFolderLocation());
     this->setupClasses();
     this->setupUi();
-    CSM->setupTCPServer();
+    this->updateSavedProjectState();
 }
 
 MainWindow::~MainWindow() {
@@ -134,6 +232,11 @@ MainWindow::~MainWindow() {
 }
 
 void MainWindow::closeEvent(QCloseEvent* event) {
+    if (!confirmProjectClose()) {
+        event->ignore();
+        return;
+    }
+
     if (PreferencesManager::getInstance()->getWindowMaximizedPreference() != this->isMaximized())
         PreferencesManager::getInstance()->setWindowMaximizedPreference(this->isMaximized());
     if (PreferencesManager::getInstance()->getWindowSizePreference() != this->size())
@@ -141,6 +244,7 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     if (PreferencesManager::getInstance()->getWindowPosPreference() != this->pos())
         PreferencesManager::getInstance()->setWindowPosPreference(this->pos());
 
+    event->accept();
     QApplication::quit();
 }
 
@@ -180,6 +284,8 @@ void MainWindow::setupClasses() {
     // Timer. This controls auto save.
     m_timer = new QTimer(this);
     m_timer->start(300000);
+
+    m_undo_stack = new QUndoStack(this);
 }
 
 void MainWindow::teardownClasses() {
@@ -412,8 +518,8 @@ void MainWindow::setupActions() {
     m_actions["exit"] = {"Exit", ":/icons/exit_black.png", false, QKeySequence(), nullptr};
 
     // Menu Edit
-    m_actions["undo"] = {"Undo", ":/icons/undo_black.png", false, QKeySequence(), nullptr};
-    m_actions["redo"] = {"Redo", ":/icons/redo_black.png", false, QKeySequence(), nullptr};
+    m_actions["undo"] = {"Undo", ":/icons/undo_black.png", false, QKeySequence(QKeySequence::Undo), nullptr};
+    m_actions["redo"] = {"Redo", ":/icons/redo_black.png", false, QKeySequence(QKeySequence::Redo), nullptr};
     m_actions["copy"] = {"Copy", ":/icons/copy_black.png", false, QKeySequence(tr("Ctrl+c")), nullptr};
     m_actions["paste"] = {"Paste", ":/icons/paste_black.png", false, QKeySequence(tr("Ctrl+v")), nullptr};
     m_actions["reload"] = {"Reload", ":/icons/file_refresh_black.png", false, QKeySequence(tr("Ctrl+r")), nullptr};
@@ -445,6 +551,7 @@ void MainWindow::setupActions() {
                                   QKeySequence(tr("Ctrl+t")), nullptr};
     m_actions["template_save"] = {"Save as Template", ":/icons/settings_save_black.png", false,
                                   QKeySequence(tr("Ctrl+Shift+t")), nullptr};
+    m_actions["gcode_to_s2c"] = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
     m_actions["setting_folder"] = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
                                    QKeySequence(), nullptr};
     m_actions["layer_bar_setting_folder"] = {"Additional Layer Bar Setting Location",
@@ -571,6 +678,7 @@ void MainWindow::setupActions() {
     // Settings
     m_menu_settings->addAction(m_actions["template_load"].action);
     m_menu_settings->addAction(m_actions["template_save"].action);
+    m_menu_settings->addAction(m_actions["gcode_to_s2c"].action);
     m_menu_settings->addSeparator();
     m_menu_settings->addAction(m_actions["setting_folder"].action);
     m_menu_settings->addAction(m_actions["layer_bar_setting_folder"].action);
@@ -658,17 +766,51 @@ void MainWindow::setupEvents() {
     connect(m_actions["last_session"].action, &QAction::triggered, this, &MainWindow::autoLoad);
     connect(m_actions["screenshot"].action, &QAction::triggered, m_part_widget, &PartWidget::takeScreenshot);
 
-    connect(m_actions["undo"].action, &QAction::triggered, m_part_widget, &PartWidget::undo);
-    connect(m_actions["redo"].action, &QAction::triggered, m_part_widget, &PartWidget::redo);
+    connect(m_actions["undo"].action, &QAction::triggered, m_undo_stack, &QUndoStack::undo);
+    connect(m_actions["redo"].action, &QAction::triggered, m_undo_stack, &QUndoStack::redo);
     connect(m_actions["copy"].action, &QAction::triggered, this, [this]() {
+        for (QWidget* widget = QApplication::focusWidget(); widget != nullptr; widget = widget->parentWidget()) {
+            if (auto line_edit = qobject_cast<QLineEdit*>(widget)) {
+                line_edit->copy();
+                return;
+            }
+            if (auto plain_text_edit = qobject_cast<QPlainTextEdit*>(widget)) {
+                plain_text_edit->copy();
+                return;
+            }
+            if (auto text_edit = qobject_cast<QTextEdit*>(widget)) {
+                text_edit->copy();
+                return;
+            }
+        }
+
         m_actions["paste"].action->setEnabled(true);
         m_part_widget->copy();
     });
-    connect(m_actions["paste"].action, &QAction::triggered, m_part_widget, &PartWidget::paste);
+    connect(m_actions["paste"].action, &QAction::triggered, this, [this]() {
+        for (QWidget* widget = QApplication::focusWidget(); widget != nullptr; widget = widget->parentWidget()) {
+            if (auto line_edit = qobject_cast<QLineEdit*>(widget)) {
+                line_edit->paste();
+                return;
+            }
+            if (auto plain_text_edit = qobject_cast<QPlainTextEdit*>(widget)) {
+                plain_text_edit->paste();
+                return;
+            }
+            if (auto text_edit = qobject_cast<QTextEdit*>(widget)) {
+                text_edit->paste();
+                return;
+            }
+        }
+
+        m_part_widget->paste();
+    });
     connect(m_actions["reload"].action, &QAction::triggered, m_part_widget, QOverload<>::of(&PartWidget::reload));
     connect(m_actions["delete"].action, &QAction::triggered, m_part_widget, QOverload<>::of(&PartWidget::remove));
 
     m_actions["slice"].action->setEnabled(false);
+    m_actions["undo"].action->setEnabled(false);
+    m_actions["redo"].action->setEnabled(false);
     m_actions["copy"].action->setEnabled(false);
     m_actions["paste"].action->setEnabled(false);
     m_actions["reload"].action->setEnabled(false);
@@ -679,6 +821,9 @@ void MainWindow::setupEvents() {
     m_actions["sel_printer"].action->setEnabled(false);
     m_actions["python_int"].action->setEnabled(false);
     m_actions["debug"].action->setEnabled(true);
+
+    connect(m_undo_stack, &QUndoStack::canUndoChanged, m_actions["undo"].action, &QAction::setEnabled);
+    connect(m_undo_stack, &QUndoStack::canRedoChanged, m_actions["redo"].action, &QAction::setEnabled);
 
     connect(m_actions["zoom_in"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomIn);
     connect(m_actions["zoom_out"].action, &QAction::triggered, m_part_widget, &PartWidget::zoomOut);
@@ -720,6 +865,7 @@ void MainWindow::setupEvents() {
 
     connect(m_actions["template_load"].action, &QAction::triggered, this, &MainWindow::loadTemplate);
     connect(m_actions["template_save"].action, &QAction::triggered, this, &MainWindow::saveTemplate);
+    connect(m_actions["gcode_to_s2c"].action, &QAction::triggered, this, &MainWindow::convertGcodeToS2C);
     connect(m_actions["setting_folder"].action, &QAction::triggered, this, &MainWindow::setSettingFolder);
     connect(m_actions["layer_bar_setting_folder"].action, &QAction::triggered, this,
             &MainWindow::setLayerBarSettingFolder);
@@ -768,6 +914,7 @@ void MainWindow::setupEvents() {
 
     // Connect slice button
     connect(m_part_widget, &PartWidget::slice, this, &MainWindow::doSlice);
+    connect(m_part_widget->view(), &PartView::measurementCompleted, this, &MainWindow::updateStatus);
     // connect(m_part_widget->m_slice_btn, &QToolButton::clicked, this, &MainWindow::doSlice);
 
     // Session connections.
@@ -779,6 +926,9 @@ void MainWindow::setupEvents() {
         switchViews(1);
     });
     connect(CSM.get(), &SessionManager::forwardStatusUpdate, this, &MainWindow::updateStatus);
+    connect(CSM.get(), &SessionManager::sessionSaved, this, [this](QString path) {
+        QMessageBox::information(this, "Save Project", "Project has been successfully saved to " + path);
+    });
 
     // Hook up updated layer min/max from gcode bar to gcodewidget
     connect(m_gcodebar, &GcodeBar::lowerLayerUpdated, m_gcode_widget->view(), &GCodeView::setLowLayer);
@@ -801,6 +951,10 @@ void MainWindow::setupEvents() {
 
     // Connect layerbar to settingbar
     connect(m_layerbar, &LayerBar::setSelectedSettings, m_settingbar, &SettingBar::settingsBasesSelected);
+    connect(m_layerbar, &LayerBar::selectedLayerSettingsRangesChanged, m_part_widget,
+            &PartWidget::setLayerSettingsRanges);
+    connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_main_toolbar,
+            &MainToolbar::setLayerSettingsRangeAbility);
 
     // Part widget connection
     connect(m_part_widget, &PartWidget::selected, this,
@@ -833,16 +987,50 @@ void MainWindow::setupEvents() {
         m_cmdbar->append("\r\nScaling applied permenantly to current transformation\r\n"
                          "Scaling factors are reset to 100%\r\n");
     });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemAddedUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemReloadUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemRemovedUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::parentingUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::transformUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+
+    QSharedPointer<PartMetaModel> part_meta = m_part_widget->getPartMeta();
+    connect(part_meta.get(), &PartMetaModel::itemAddedUpdate, this, &MainWindow::initializePartTransform);
+    connect(part_meta.get(), &PartMetaModel::itemRemovedUpdate, this, &MainWindow::removePartTransform);
+    connect(part_meta.get(), &PartMetaModel::transformUpdate, this, &MainWindow::recordPartTransform);
 
     // Connect to timer.
     connect(m_timer, &QTimer::timeout, this, &MainWindow::autoSave);
 
     // Allow stuff to changed at runtime based upon user-modified settings
+    connect(m_settingbar, &SettingBar::settingAboutToChange, this, &MainWindow::captureSettingChange);
+    connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::recordSettingChange);
     connect(m_settingbar, &SettingBar::settingModified, m_part_widget, &PartWidget::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_gcode_widget, &GCodeWidget::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_main_toolbar, &MainToolbar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
+    connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_part_widget->view(),
+            &PartView::updateOptimizationSettings);
+    connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_gcode_widget->view(),
+            &GCodeView::updateOptimizationSettings);
+    connect(m_part_widget->view(), &PartView::optimizationPointDragStarted, m_settingbar,
+            &SettingBar::beginPairedGlobalSettingChange);
+    connect(m_part_widget->view(), &PartView::optimizationPointDragged, m_settingbar,
+            &SettingBar::updatePairedGlobalSetting);
+    connect(m_part_widget->view(), &PartView::optimizationPointDragFinished, m_settingbar,
+            &SettingBar::finishPairedGlobalSettingChange);
+    connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragStarted, m_settingbar,
+            &SettingBar::beginPairedGlobalSettingChange);
+    connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragged, m_settingbar,
+            &SettingBar::updatePairedGlobalSetting);
+    connect(m_gcode_widget->view(), &GCodeView::optimizationPointDragFinished, m_settingbar,
+            &SettingBar::finishPairedGlobalSettingChange);
+    connect(m_settingbar, &SettingBar::settingsBaseChanged, this, [this](QString) { this->markProjectModified(); });
     connect(m_settingbar, &SettingBar::tabHidden, this, &MainWindow::addHiddenSetting);
     connect(GSM.get(), &SettingsManager::globalLoaded, this, &MainWindow::updateSettings);
 
@@ -853,6 +1041,7 @@ void MainWindow::setupEvents() {
     // Toolbar -> Part Widget
     connect(m_main_toolbar, &MainToolbar::slice, m_part_widget, &PartWidget::preSliceUpdate);
     connect(m_main_toolbar, &MainToolbar::showSlicingPlanes, m_part_widget, &PartWidget::showSlicingPlanes);
+    connect(m_main_toolbar, &MainToolbar::showLayerSettingsRange, m_part_widget, &PartWidget::showLayerSettingsRange);
     connect(m_main_toolbar, &MainToolbar::showLabels, m_part_widget, &PartWidget::showLabels);
     connect(m_main_toolbar, &MainToolbar::showSeams, m_part_widget, &PartWidget::showSeams);
     connect(m_main_toolbar, &MainToolbar::showOverhang, m_part_widget, &PartWidget::showOverhang);
@@ -860,7 +1049,9 @@ void MainWindow::setupEvents() {
     // Toolbar -> GCode Widget
     connect(m_main_toolbar, &MainToolbar::showSegmentInfo, m_gcode_widget, &GCodeWidget::showSegmentInfo);
     connect(m_main_toolbar, &MainToolbar::setOrthoGcode, m_gcode_widget, &GCodeWidget::setOrthoView);
+    connect(m_gcode_widget, &GCodeWidget::orthographicViewChanged, m_main_toolbar, &MainToolbar::setOrthoGcodeChecked);
     connect(m_main_toolbar, &MainToolbar::showGhosts, m_gcode_widget, &GCodeWidget::showGhosts);
+    connect(m_main_toolbar, &MainToolbar::showSeams, m_gcode_widget, &GCodeWidget::showSeams);
     connect(m_main_toolbar, &MainToolbar::exportGCode, m_export_window, [this] {
         m_export_window->raise();
         m_export_window->showNormal();
@@ -916,7 +1107,183 @@ void MainWindow::switchViews(int index) {
     }
 }
 
-void MainWindow::handleModifiedSetting(const QString key) {}
+MainWindow::PartTransformSnapshot MainWindow::partTransformSnapshot(QSharedPointer<PartMetaItem> item) const {
+    PartTransformSnapshot snapshot;
+    if (!item.isNull()) {
+        snapshot.transformation = item->transformation();
+        snapshot.scale_unit_index = item->scaleUnitIndex();
+    }
+    return snapshot;
+}
+
+void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, const PartTransformSnapshot& snapshot) {
+    if (item.isNull() || !m_part_transform_snapshots.contains(item)) {
+        return;
+    }
+
+    m_applying_undo_redo = true;
+    item->setTransformation(snapshot.transformation);
+    item->setScaleUnitIndex(snapshot.scale_unit_index);
+    m_part_transform_snapshots[item] = snapshot;
+    m_applying_undo_redo = false;
+}
+
+QVector<MainWindow::SettingValueSnapshot>
+MainWindow::settingValueSnapshots(const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const {
+    QList<QSharedPointer<SettingsBase>> targets = settings_bases;
+    if (targets.isEmpty()) {
+        targets.push_back(GSM->getGlobal());
+    }
+
+    QVector<SettingValueSnapshot> snapshots;
+    for (const QSharedPointer<SettingsBase>& settings_base : targets) {
+        if (settings_base.isNull()) {
+            continue;
+        }
+
+        SettingValueSnapshot snapshot;
+        snapshot.key = key;
+        snapshot.settings_base = settings_base;
+        snapshot.existed = settings_base->contains(key);
+        if (snapshot.existed) {
+            snapshot.value = settings_base->json()[0][key.toStdString()];
+        }
+
+        snapshots.push_back(snapshot);
+    }
+
+    return snapshots;
+}
+
+void MainWindow::applySettingValueSnapshots(const QVector<SettingValueSnapshot>& snapshots) {
+    if (snapshots.isEmpty()) {
+        return;
+    }
+
+    QSet<QString> restored_keys;
+
+    m_applying_undo_redo = true;
+    for (const SettingValueSnapshot& snapshot : snapshots) {
+        if (snapshot.settings_base.isNull()) {
+            continue;
+        }
+
+        fifojson& settings_json = snapshot.settings_base->json();
+        if (settings_json.empty()) {
+            settings_json.push_back(fifojson::object());
+        }
+
+        if (snapshot.existed) {
+            settings_json[0][snapshot.key.toStdString()] = snapshot.value;
+        }
+        else {
+            snapshot.settings_base->remove(snapshot.key);
+        }
+
+        restored_keys.insert(snapshot.key);
+    }
+
+    for (const QString& key : restored_keys) {
+        m_settingbar->restoreSettingValue(key);
+    }
+    m_applying_undo_redo = false;
+}
+
+bool MainWindow::partTransformSnapshotsEqual(const PartTransformSnapshot& lhs, const PartTransformSnapshot& rhs) const {
+    return lhs.scale_unit_index == rhs.scale_unit_index && lhs.transformation == rhs.transformation;
+}
+
+bool MainWindow::settingValueSnapshotsEqual(const QVector<SettingValueSnapshot>& lhs,
+                                            const QVector<SettingValueSnapshot>& rhs) const {
+    if (lhs.size() != rhs.size()) {
+        return false;
+    }
+
+    for (int i = 0, end = lhs.size(); i < end; ++i) {
+        if (lhs[i].key != rhs[i].key || lhs[i].settings_base != rhs[i].settings_base ||
+            lhs[i].existed != rhs[i].existed) {
+            return false;
+        }
+
+        if (lhs[i].existed && lhs[i].value != rhs[i].value) {
+            return false;
+        }
+    }
+
+    return true;
+}
+
+void MainWindow::captureSettingChange(QString key, QList<QSharedPointer<SettingsBase>> settings_bases) {
+    if (m_applying_undo_redo || m_pending_setting_snapshots.contains(key)) {
+        return;
+    }
+
+    m_pending_setting_snapshots[key] = settingValueSnapshots(key, settings_bases);
+}
+
+void MainWindow::recordSettingChange(QString key) {
+    if (m_applying_undo_redo || !m_pending_setting_snapshots.contains(key)) {
+        return;
+    }
+
+    QVector<SettingValueSnapshot> before = m_pending_setting_snapshots.take(key);
+    QStringList coupled_keys = m_pending_setting_snapshots.keys();
+    coupled_keys.sort();
+    for (const QString& coupled_key : coupled_keys) {
+        before.append(m_pending_setting_snapshots.take(coupled_key));
+    }
+
+    QVector<SettingValueSnapshot> after;
+    after.reserve(before.size());
+    for (const SettingValueSnapshot& snapshot : before) {
+        QList<QSharedPointer<SettingsBase>> settings_bases;
+        settings_bases.push_back(snapshot.settings_base);
+
+        const QVector<SettingValueSnapshot> current = settingValueSnapshots(snapshot.key, settings_bases);
+        if (!current.isEmpty()) {
+            after.push_back(current[0]);
+        }
+    }
+
+    if (settingValueSnapshotsEqual(before, after)) {
+        return;
+    }
+
+    m_undo_stack->push(new SettingValueUndoCommand(this, key, before, after));
+}
+
+void MainWindow::initializePartTransform(QSharedPointer<PartMetaItem> item) {
+    if (!item.isNull()) {
+        m_part_transform_snapshots[item] = partTransformSnapshot(item);
+    }
+}
+
+void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) { m_part_transform_snapshots.remove(item); }
+
+void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
+    if (m_applying_undo_redo || item.isNull()) {
+        return;
+    }
+
+    const PartTransformSnapshot current = partTransformSnapshot(item);
+    if (!m_part_transform_snapshots.contains(item)) {
+        m_part_transform_snapshots[item] = current;
+        return;
+    }
+
+    const PartTransformSnapshot before = m_part_transform_snapshots[item];
+    if (partTransformSnapshotsEqual(before, current)) {
+        return;
+    }
+
+    m_undo_stack->push(new PartTransformUndoCommand(this, item, before, current));
+    m_part_transform_snapshots[item] = current;
+}
+
+void MainWindow::handleModifiedSetting(const QString key) {
+    Q_UNUSED(key);
+    markProjectModified();
+}
 
 QList<QAction*> MainWindow::setupSettingActions(QMenu* submenu, QString panel) {
     QList<QAction*> actions;
@@ -1025,7 +1392,10 @@ void MainWindow::doSlice() {
     m_slice_dialog->show();
 
     // Execute.
-    CSM->doSlice();
+    if (!CSM->doSlice()) {
+        m_slice_dialog.reset();
+        return;
+    }
 
     m_statusbar->showMessage("Slicing the loaded part(s) ...");
     m_cmdbar->append("Slicing the loaded part(s) ...");
@@ -1034,20 +1404,18 @@ void MainWindow::doSlice() {
 
 void MainWindow::loadModel(MeshType mt) {
     QStringList filepaths;
+    const QString model_filter = QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)");
     if (mt == MeshType::kClipping) {
-        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL clipping file"),
-                                                  CSM->getMostRecentModelLocation(),
-                                                  QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model clipping file"),
+                                                  CSM->getMostRecentModelLocation(), model_filter);
     }
     else if (mt == MeshType::kSettings) {
-        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL settings file"),
-                                                  CSM->getMostRecentModelLocation(),
-                                                  QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model settings file"),
+                                                  CSM->getMostRecentModelLocation(), model_filter);
     }
     else {
-        filepaths =
-            QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL part file"), CSM->getMostRecentModelLocation(),
-                                          QObject::tr("Model File (*.stl *.3mf *.obj *.amf)"));
+        filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model part file"),
+                                                  CSM->getMostRecentModelLocation(), model_filter);
     }
 
     if (filepaths.isEmpty())
@@ -1065,7 +1433,7 @@ void MainWindow::loadModel(MeshType mt) {
 void MainWindow::loadPointCloud() {
     // Load a point cloud from file
     QStringList filepaths =
-        QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open STL part file"), CSM->getMostRecentModelLocation(),
+        QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open point cloud file"), CSM->getMostRecentModelLocation(),
                                       QObject::tr("Point Cloud (*.matrix *.xyz)"));
     if (filepaths.isEmpty())
         return;
@@ -1097,6 +1465,7 @@ void MainWindow::importGCode() {
 
 void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
     m_gcode_widget->clear();
+    m_export_window->clearVisualizationInformation();
     disconnect(m_slice_dialog.get(), &SliceDialog::cancelSlice, CSM.get(), &SessionManager::cancelSlice);
 
     GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
@@ -1117,6 +1486,8 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
             &LayerTimesWindow::updateTimeInformation);
     connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, m_export_window,
             &GcodeExport::updateOutputInformation);
+    connect(loader, &GCodeLoader::gcodeLoadedVisualization, m_export_window,
+            &GcodeExport::updateVisualizationInformation);
 
     connect(loader, &GCodeLoader::gcodeLoadedVisualization, this,
             [this](QVector<QVector<QSharedPointer<SegmentBase>>> segments) {
@@ -1146,7 +1517,7 @@ void MainWindow::updateStatus(QString status) {
     m_statusbar->showMessage(status);
 }
 
-void MainWindow::saveSession() {
+bool MainWindow::saveSessionToSelectedFile(bool notifyOnSuccess, bool waitForSave, QString* selectedFile) {
     QFileDialog save_dialog;
     save_dialog.setWindowTitle("Save project");
     save_dialog.setDirectory(CSM->getMostRecentProjectLocation());
@@ -1154,18 +1525,94 @@ void MainWindow::saveSession() {
     save_dialog.setNameFilters(QStringList() << "ORNLSlicer Project File (*.s2p)" << "Any Files (*)");
     save_dialog.setDefaultSuffix("s2p");
     if (!save_dialog.exec())
-        return;
+        return false;
 
     QString filename = save_dialog.selectedFiles().first();
     if (filename.isEmpty())
-        return;
+        return false;
+    if (selectedFile != nullptr)
+        *selectedFile = filename;
 
-    CSM->saveSession(filename);
+    SessionLoader* loader = CSM->saveSession(filename, true, notifyOnSuccess);
+    if (waitForSave)
+        loader->wait();
+
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
+    updateSavedProjectState();
 
     this->setTitleInfo(QFileInfo(filename).fileName());
+    return true;
+}
+
+void MainWindow::saveSession() {
+    QString filename;
+    if (!saveSessionToSelectedFile(true, false, &filename))
+        return;
+
     m_statusbar->showMessage("Session saved");
     m_cmdbar->append("Session saved: " + filename);
+}
+
+QString MainWindow::projectStateSnapshot() {
+    if (m_part_widget != nullptr)
+        m_part_widget->updatePartTransformations();
+
+    fifojson snapshot;
+    snapshot[Constants::Settings::Session::Files::kSession] = CSM->partsJson();
+    snapshot[Constants::Settings::Session::Files::kGlobal] = GSM->globalJson();
+
+    fifojson local_settings = fifojson::array();
+    for (auto& part : CSM->parts()) {
+        fifojson part_json;
+        part_json[Constants::Settings::Session::LocalFile::kName] = part->name();
+        part_json[Constants::Settings::Session::LocalFile::kSettings] = part->getSb()->json();
+        part_json[Constants::Settings::Session::LocalFile::kRanges] = part->SettingsRangesToJson();
+        local_settings.push_back(part_json);
+    }
+    snapshot[Constants::Settings::Session::Files::kLocal] = local_settings;
+
+    return QString::fromStdString(snapshot.dump());
+}
+
+void MainWindow::updateSavedProjectState() {
+    m_saved_project_state = projectStateSnapshot();
+    m_project_modified = false;
+}
+
+void MainWindow::markProjectModified() { m_project_modified = true; }
+
+bool MainWindow::hasUnsavedProjectChanges() {
+    if (!m_project_modified)
+        return false;
+
+    return projectStateSnapshot() != m_saved_project_state;
+}
+
+bool MainWindow::confirmProjectClose() {
+    if (!PreferencesManager::getInstance()->getWarnUnsavedProjectOnClosePreference())
+        return true;
+
+    if (!hasUnsavedProjectChanges())
+        return true;
+
+    QMessageBox dialog(this);
+    dialog.setIcon(QMessageBox::Warning);
+    dialog.setWindowTitle("Save Project");
+    dialog.setText("The current project has unsaved changes.");
+    dialog.setInformativeText("Do you want to save the project before closing?");
+    dialog.setStandardButtons(QMessageBox::Save | QMessageBox::Discard | QMessageBox::Cancel);
+    dialog.setDefaultButton(QMessageBox::Save);
+    dialog.setEscapeButton(QMessageBox::Cancel);
+
+    switch (static_cast<QMessageBox::StandardButton>(dialog.exec())) {
+        case QMessageBox::Save:
+            return saveSessionToSelectedFile(false, true);
+        case QMessageBox::Discard:
+            return true;
+        case QMessageBox::Cancel:
+        default:
+            return false;
+    }
 }
 
 void MainWindow::loadSession() {
@@ -1195,7 +1642,10 @@ void MainWindow::loadSession() {
 
 SessionLoader* MainWindow::loadASession(const QString& filename) {
     m_part_widget->clear();
-    return CSM->loadSession(true, filename);
+    SessionLoader* loader = CSM->loadSession(true, filename);
+    if (loader != nullptr)
+        connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
+    return loader;
 }
 
 void MainWindow::updateSettings(const QString& name) {
@@ -1256,6 +1706,7 @@ void MainWindow::saveTemplate() {
     GSM->loadGlobalJson(dialog.filename());
     QFileInfo fileInfo(dialog.filename());
     updateSettings(fileInfo.baseName());
+    markProjectModified();
 }
 
 void MainWindow::loadTemplate() {
@@ -1272,8 +1723,14 @@ void MainWindow::loadTemplate() {
     if (filename.isEmpty())
         return;
 
-    GSM->loadGlobalJson(filename);
+    loadTemplateFile(filename);
+}
 
+void MainWindow::loadTemplateFile(const QString& filename) {
+    if (filename.isEmpty())
+        return;
+
+    GSM->loadGlobalJson(filename);
     QFileInfo fileInfo(filename);
     QString actualFilename = fileInfo.completeBaseName();
     QStringList tabs {Constants::Settings::SettingTab::kPrinter, Constants::Settings::SettingTab::kMaterial,
@@ -1288,6 +1745,15 @@ void MainWindow::loadTemplate() {
             tabs.removeAt(i);
     }
     m_settingbar->displayNewSetting(tabs, actualFilename);
+    markProjectModified();
+}
+
+void MainWindow::convertGcodeToS2C() {
+    GcodeToS2CDialog dialog(this);
+    if (!dialog.exec())
+        return;
+
+    loadTemplateFile(dialog.outputFilePath());
 }
 
 void MainWindow::setSettingFolder() {

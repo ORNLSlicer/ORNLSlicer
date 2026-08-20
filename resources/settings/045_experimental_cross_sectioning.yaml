@@ -1,0 +1,27 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "cross_section_largest_gap"
+    display: "Largest Gap Distance"
+    type: "distance"
+    tooltip: "Distance to allow cross-section segments to be fused together. Points closer than this distance will be considered neighbors and connected."
+    depends: {}
+    options: []
+    default: 2540
+    minor: "Cross-Sectioning"
+    major: "Experimental"
+    namespace: "Experimental::CrossSectioning"
+    symbol: "kLargestGapDistance"
+    local: false
+  - name: "max_stitch_distance"
+    display: "Max Stitch Distance"
+    type: "distance"
+    tooltip: "Distance to allow cross-section segments to be fused together if gap fails. Points closer than this distance will be considered neighbors and connected. A healing step to help guarantee no open polylines."
+    depends: {}
+    options: []
+    default: 25400
+    minor: "Cross-Sectioning"
+    major: "Experimental"
+    namespace: "Experimental::CrossSectioning"
+    symbol: "kMaxStitchDistance"
+    local: false

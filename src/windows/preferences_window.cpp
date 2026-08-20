@@ -1,9 +1,10 @@
 #include "windows/preferences_window.h"
 
+#include <algorithm>
+
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QLabel>
-#include <QLineEdit>
 #include <QMenu>
 #include <QMenuBar>
 #include <QScrollArea>
@@ -192,6 +193,19 @@ void PreferencesWindow::setupLayout() {
     m_notifications_tab_layout->addWidget(fileshiftBox, 1, 0);
     m_boxes.push_back(fileshiftBox);
 
+    QGroupBox* unsavedProjectCloseBox = new QGroupBox("Close Project");
+    QVBoxLayout* unsavedProjectCloseLayout = new QVBoxLayout();
+    m_warn_unsaved_project_on_close_checkbox = new QCheckBox("Warn before closing unsaved projects");
+    m_warn_unsaved_project_on_close_checkbox->setChecked(
+        m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
+    unsavedProjectCloseLayout->addWidget(m_warn_unsaved_project_on_close_checkbox);
+    unsavedProjectCloseLayout->addStretch(1);
+    unsavedProjectCloseBox->setLayout(unsavedProjectCloseLayout);
+    unsavedProjectCloseBox->setToolTip("Controls whether unsaved project changes show a warning when closing");
+    m_notifications_tab_layout->addWidget(unsavedProjectCloseBox, 1, 1);
+    connect(m_warn_unsaved_project_on_close_checkbox, &QCheckBox::clicked, m_preferences_manager.get(),
+            &PreferencesManager::setWarnUnsavedProjectOnClosePreference);
+
     // Camera tab
     QWidget* cameraWidget = new QWidget(m_tab_widget);
     m_tab_widget->addTab(cameraWidget, "Camera");
@@ -231,6 +245,76 @@ void PreferencesWindow::setupLayout() {
 
     parts_tab_layout->setRowStretch(3, 1);
 
+    // Settings tab
+    QWidget* settingsWidget = new QWidget(m_tab_widget);
+    m_tab_widget->addTab(settingsWidget, "Settings");
+
+    QGridLayout* settings_tab_layout = new QGridLayout();
+    settingsWidget->setLayout(settings_tab_layout);
+
+    m_disabled_setting_visibility_combobox = new QComboBox();
+    m_disabled_setting_visibility_combobox->addItem(toString(DisabledSettingVisibility::kGrey),
+                                                    static_cast<int>(DisabledSettingVisibility::kGrey));
+    m_disabled_setting_visibility_combobox->addItem(toString(DisabledSettingVisibility::kHide),
+                                                    static_cast<int>(DisabledSettingVisibility::kHide));
+
+    int disabledSettingVisibilityIndex = m_disabled_setting_visibility_combobox->findData(
+        static_cast<int>(PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference()));
+    m_disabled_setting_visibility_combobox->setCurrentIndex(std::max(0, disabledSettingVisibilityIndex));
+
+    settings_tab_layout->addWidget(new QLabel("Disabled settings:"), 0, 0, Qt::AlignTop);
+    settings_tab_layout->addWidget(m_disabled_setting_visibility_combobox, 0, 1, Qt::AlignTop);
+    settings_tab_layout->setRowStretch(1, 1);
+
+    connect(m_disabled_setting_visibility_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
+        PreferencesManager::getInstance()->setDisabledSettingVisibilityPreference(
+            m_disabled_setting_visibility_combobox->currentData().toInt());
+    });
+
+    // Visualization tab
+    QWidget* visualizationWidget = new QWidget(m_tab_widget);
+    m_tab_widget->addTab(visualizationWidget, "Visualization");
+
+    QGridLayout* visualization_tab_layout = new QGridLayout();
+    visualizationWidget->setLayout(visualization_tab_layout);
+
+    m_gcode_preview_mode_combobox = new QComboBox();
+    m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kAuto),
+                                           static_cast<int>(GCodePreviewMode::kAuto));
+    m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kTrueWidths),
+                                           static_cast<int>(GCodePreviewMode::kTrueWidths));
+    m_gcode_preview_mode_combobox->addItem(toString(GCodePreviewMode::kThinLines),
+                                           static_cast<int>(GCodePreviewMode::kThinLines));
+    m_gcode_preview_mode_combobox->setToolTip(
+        "Auto uses the vertex threshold. True Bead Widths bypasses it when the toolbar toggle is enabled. Thin Lines "
+        "disables true-width previews.");
+    int previewModeIndex = m_gcode_preview_mode_combobox->findData(
+        static_cast<int>(PreferencesManager::getInstance()->getGCodePreviewModePreference()));
+    m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
+
+    visualization_tab_layout->addWidget(new QLabel("G-code preview mode:"), 0, 0, Qt::AlignTop);
+    visualization_tab_layout->addWidget(m_gcode_preview_mode_combobox, 0, 1, Qt::AlignTop);
+
+    m_gcode_preview_vertex_threshold_spinbox = new QSpinBox();
+    m_gcode_preview_vertex_threshold_spinbox->setMinimum(0);
+    m_gcode_preview_vertex_threshold_spinbox->setMaximum(50000000);
+    m_gcode_preview_vertex_threshold_spinbox->setSingleStep(100000);
+    m_gcode_preview_vertex_threshold_spinbox->setValue(
+        PreferencesManager::getInstance()->getGCodePreviewVertexThresholdPreference());
+    m_gcode_preview_vertex_threshold_spinbox->setToolTip(
+        "Maximum estimated vertices to build for true bead width previews");
+
+    visualization_tab_layout->addWidget(new QLabel("True-width vertex threshold:"), 1, 0, Qt::AlignTop);
+    visualization_tab_layout->addWidget(m_gcode_preview_vertex_threshold_spinbox, 1, 1, Qt::AlignTop);
+    visualization_tab_layout->setRowStretch(2, 1);
+
+    connect(m_gcode_preview_mode_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
+        PreferencesManager::getInstance()->setGCodePreviewModePreference(
+            m_gcode_preview_mode_combobox->currentData().toInt());
+    });
+    connect(m_gcode_preview_vertex_threshold_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
+            PreferencesManager::getInstance().get(), &PreferencesManager::setGCodePreviewVertexThresholdPreference);
+
     // Visualization Colors tab
     QScrollArea* scrollArea = new QScrollArea(m_tab_widget);
     scrollArea->setWidgetResizable(true);
@@ -248,33 +332,6 @@ void PreferencesWindow::setupLayout() {
         color_tab_layout->addWidget(new VisualizationColorPicker(QString::fromStdString(color.first), color.second),
                                     i++, 0, 1, 2, Qt::AlignTop);
     }
-
-    // ComWithApps tab
-    QGridLayout* com_with_apps_tab_layout = new QGridLayout();
-    QWidget* comWithAppsWidget = new QWidget(m_tab_widget);
-    m_tab_widget->addTab(comWithAppsWidget, "Com With Apps");
-    comWithAppsWidget->setLayout(com_with_apps_tab_layout);
-
-    com_with_apps_tab_layout->addWidget(new QLabel("Katana Server "), 0, 0, Qt::AlignTop);
-
-    com_with_apps_tab_layout->addWidget(new QLabel("Send Output:"), 1, 0, Qt::AlignTop);
-    auto katana_checkbox = new QCheckBox();
-    com_with_apps_tab_layout->addWidget(katana_checkbox, 1, 1, Qt::AlignTop);
-    katana_checkbox->setChecked(PreferencesManager::getInstance()->getKatanaSendOutput());
-    connect(katana_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
-            &PreferencesManager::setKatanaSendOutput);
-
-    com_with_apps_tab_layout->addWidget(new QLabel("TCP IP:"), 2, 0, Qt::AlignTop);
-    auto tcp_ip = new QLineEdit();
-    com_with_apps_tab_layout->addWidget(tcp_ip, 2, 1, Qt::AlignTop);
-    tcp_ip->setText(PreferencesManager::getInstance()->getKatanaTCPIp());
-    connect(tcp_ip, &QLineEdit ::textChanged, PreferencesManager::getInstance().get(),
-            &PreferencesManager::setKatanaTCPIp);
-
-    com_with_apps_tab_layout->addWidget(new QLabel("TCP Port:"), 3, 0, Qt::AlignTop);
-    auto tcp_port_box = new QSpinBox();
-    com_with_apps_tab_layout->addWidget(tcp_port_box, 3, 1, Qt::AlignTop);
-    tcp_port_box->setMinimum(1);
 
     // Lag tab
     QWidget* lagWidget = new QWidget(m_tab_widget);
@@ -301,14 +358,6 @@ void PreferencesWindow::setupLayout() {
     segment_lag_box->setValue(PreferencesManager::getInstance()->getSegmentLag());
     connect(segment_lag_box, QOverload<int>::of(&QSpinBox::valueChanged), PreferencesManager::getInstance().get(),
             &PreferencesManager::setSegmentLag);
-
-    tcp_port_box->setMaximum(65535);
-    tcp_port_box->setValue(PreferencesManager::getInstance()->getKatanaTCPPort());
-    connect(tcp_port_box, QOverload<int>::of(&QSpinBox::valueChanged), PreferencesManager::getInstance().get(),
-            &PreferencesManager::setKatanaTCPPort);
-
-    com_with_apps_tab_layout->setRowStretch(5, 1);
-    // End ComWithApps tab
 }
 
 QGroupBox* PreferencesWindow::createContainer(PreferenceChoice choice, QList<QString> displayStrings,
@@ -439,10 +488,20 @@ void PreferencesWindow::importPreferences() {
         m_mass_unit_combobox->setCurrentText(m_preferences_manager->getMassUnitText());
         m_voltage_unit_combobox->setCurrentText(m_preferences_manager->getVoltageUnitText());
         m_rotation_unit_combobox->setCurrentText(m_preferences_manager->getRotationUnitText());
+        int previewModeIndex = m_gcode_preview_mode_combobox->findData(
+            static_cast<int>(m_preferences_manager->getGCodePreviewModePreference()));
+        m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
+        m_gcode_preview_vertex_threshold_spinbox->setValue(
+            m_preferences_manager->getGCodePreviewVertexThresholdPreference());
+        int disabledSettingVisibilityIndex = m_disabled_setting_visibility_combobox->findData(
+            static_cast<int>(m_preferences_manager->getDisabledSettingVisibilityPreference()));
+        m_disabled_setting_visibility_combobox->setCurrentIndex(std::max(0, disabledSettingVisibilityIndex));
 
         setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
         setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());
         setPreferenceValue(m_boxes[2], m_preferences_manager->getFileShiftPreference());
+        m_warn_unsaved_project_on_close_checkbox->setChecked(
+            m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
     }
 }
 

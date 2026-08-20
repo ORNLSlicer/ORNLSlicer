@@ -6,10 +6,12 @@
 #include <QFile>
 #include <QLabel>
 #include <QMainWindow>
+#include <QMatrix4x4>
 #include <QMenuBar>
 #include <QTextEdit>
 #include <QToolBar>
 #include <QUdpSocket>
+#include <QUndoStack>
 #include <qboxlayout.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
@@ -28,8 +30,10 @@
 #include <qtypes.h>
 #include <qwidget.h>
 
+#include "configs/settings_base.h"
 #include "dialogs/slice_dialog.h"
 #include "utilities/enums.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
 #include "widgets/gcode_widget.h"
 #include "widgets/gcodebar.h"
@@ -46,8 +50,11 @@
 
 namespace ORNL {
 
-class PolymerSlicer;
+class PlanarSlicer;
 class SessionLoader;
+class PartMetaItem;
+class PartTransformUndoCommand;
+class SettingValueUndoCommand;
 
 //! \brief Define for quick access to this singleton.
 #define MWIN MainWindow::getInstance()
@@ -60,6 +67,9 @@ class SessionLoader;
  */
 class MainWindow : public QMainWindow {
     Q_OBJECT
+
+    friend class PartTransformUndoCommand;
+    friend class SettingValueUndoCommand;
 
   public:
     //! \brief Get the singleton instance of the MainWindow.
@@ -152,6 +162,9 @@ class MainWindow : public QMainWindow {
     //! \brief Load a template.
     void loadTemplate();
 
+    //! \brief Create and load an S2C settings file from a G-Code settings footer.
+    void convertGcodeToS2C();
+
     //! \brief Set setting folder to load from.
     void setSettingFolder();
 
@@ -191,6 +204,47 @@ class MainWindow : public QMainWindow {
     //! \param key: the settings key
     void handleModifiedSetting(const QString key);
 
+    //! \brief Capture setting state before a row writes a user-initiated value.
+    void captureSettingChange(QString key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
+    //! \brief Push an undo command after a captured setting changed.
+    void recordSettingChange(QString key);
+
+    //! \brief Track part transform changes for undo.
+    void recordPartTransform(QSharedPointer<PartMetaItem> item);
+
+    //! \brief Initialize tracked part transform state.
+    void initializePartTransform(QSharedPointer<PartMetaItem> item);
+
+    //! \brief Remove tracked part transform state.
+    void removePartTransform(QSharedPointer<PartMetaItem> item);
+
+    //! \brief Save the current session through a project file dialog.
+    //! \param notifyOnSuccess Whether to show the existing save-success notification.
+    //! \param waitForSave Whether to wait for the save thread to finish before returning.
+    //! \param selectedFile Optional destination for the selected project file path.
+    //! \return True if the user selected a file and the save was started.
+    bool saveSessionToSelectedFile(bool notifyOnSuccess, bool waitForSave = false, QString* selectedFile = nullptr);
+
+    //! \brief Ask the user whether unsaved project changes should be saved before closing.
+    //! \return True if the close should continue.
+    bool confirmProjectClose();
+
+    //! \brief Create a comparable snapshot of the project data that is saved to .s2p files.
+    QString projectStateSnapshot();
+
+    //! \brief Store the current project state as the last saved/loaded state.
+    void updateSavedProjectState();
+
+    //! \brief Mark the project as having user-originated changes.
+    void markProjectModified();
+
+    //! \brief Check whether the project has unsaved changes.
+    bool hasUnsavedProjectChanges();
+
+    //! \brief Load a template file from a known path.
+    void loadTemplateFile(const QString& filename);
+
   private:
     //! \brief Struct to retain action information efficiently.
     struct menu_info {
@@ -204,6 +258,20 @@ class MainWindow : public QMainWindow {
         QKeySequence shortcut;
         //! \brief Action to execute.
         QAction* action;
+    };
+
+    //! \brief Snapshot of a part transform that can be restored by undo/redo.
+    struct PartTransformSnapshot {
+        QMatrix4x4 transformation;
+        uint scale_unit_index = 0;
+    };
+
+    //! \brief Snapshot of one settings value for one settings base.
+    struct SettingValueSnapshot {
+        QString key;
+        QSharedPointer<SettingsBase> settings_base;
+        bool existed = false;
+        fifojson value;
     };
 
     //! \brief Constructor
@@ -261,8 +329,34 @@ class MainWindow : public QMainWindow {
     //! \brief Performs initial startup once constructor has verified time
     void continueStartup();
 
+    //! \brief Takes a part transform snapshot from an item.
+    PartTransformSnapshot partTransformSnapshot(QSharedPointer<PartMetaItem> item) const;
+
+    //! \brief Applies a part transform snapshot as an undo/redo operation.
+    void applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, const PartTransformSnapshot& snapshot);
+
+    //! \brief Takes setting value snapshots for a set of target bases.
+    QVector<SettingValueSnapshot>
+    settingValueSnapshots(const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const;
+
+    //! \brief Applies setting value snapshots as an undo/redo operation.
+    void applySettingValueSnapshots(const QVector<SettingValueSnapshot>& snapshots);
+
+    //! \brief Compares part snapshots.
+    bool partTransformSnapshotsEqual(const PartTransformSnapshot& lhs, const PartTransformSnapshot& rhs) const;
+
+    //! \brief Compares setting value snapshots.
+    bool settingValueSnapshotsEqual(const QVector<SettingValueSnapshot>& lhs,
+                                    const QVector<SettingValueSnapshot>& rhs) const;
+
     //! \brief Current window status.
     bool m_status;
+
+    //! \brief Last explicit saved/loaded project state.
+    QString m_saved_project_state;
+
+    //! \brief Whether a user action has changed saveable project state since the last save/load.
+    bool m_project_modified = false;
 
     //! \brief Temporary stuff here
     uint m_object_count = 0;
@@ -272,6 +366,18 @@ class MainWindow : public QMainWindow {
 
     //! \brief Autosave timer.
     QTimer* m_timer;
+
+    //! \brief Undo stack for user-visible part transform and setting value changes.
+    QUndoStack* m_undo_stack;
+
+    //! \brief Avoid recording commands while undo/redo is applying state.
+    bool m_applying_undo_redo = false;
+
+    //! \brief Last known transform for each part item.
+    QMap<QSharedPointer<PartMetaItem>, PartTransformSnapshot> m_part_transform_snapshots;
+
+    //! \brief Pending setting snapshots captured before row writes.
+    QHash<QString, QVector<SettingValueSnapshot>> m_pending_setting_snapshots;
 
     //! \brief Singleton pointer. This must be a raw pointer to avoid double free on close.
     static MainWindow* m_singleton;

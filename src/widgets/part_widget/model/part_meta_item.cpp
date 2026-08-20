@@ -117,7 +117,12 @@ void PartMetaItem::setRotation(QQuaternion r, bool current_rotation) {
     if (m_rotation == r)
         return;
 
-    if (current_rotation) {
+    const bool has_parenting = !m_parent.isNull() || !m_children.isEmpty();
+
+    // Parent/child groups need to keep rotation in the live transform so child graphics objects
+    // can inherit the motion correctly. Baking rotation into the mesh resets the parent transform
+    // and breaks the hierarchy relationship for settings meshes.
+    if (current_rotation || has_parenting) {
         m_rotation = r;
         m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
         emit modified(PartMetaUpdateType::kTransformUpdate);
@@ -210,6 +215,20 @@ void PartMetaItem::setScaleUnitIndex(uint idx) {
 uint PartMetaItem::scaleUnitIndex() { return m_scale_unit_index; }
 
 QSharedPointer<Part> PartMetaItem::part() { return m_part; }
+
+int PartMetaItem::instanceCount() {
+    if (m_model.isNull())
+        return 1;
+
+    return m_model->instanceCount(this->sharedFromThis());
+}
+
+void PartMetaItem::setInstanceCount(int count) {
+    if (m_model.isNull())
+        return;
+
+    m_model->setInstanceCount(this->sharedFromThis(), count);
+}
 
 void PartMetaItem::setModel(QSharedPointer<PartMetaModel> m) { m_model = m; }
 } // namespace ORNL

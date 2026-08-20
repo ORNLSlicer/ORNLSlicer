@@ -1,0 +1,8 @@
+#pragma once
+
+namespace ORNL::BuildInfo {
+inline constexpr const char* Version = "@ORNLSLICER_BUILD_VERSION@";
+inline constexpr const char* GitRevision = "@ORNLSLICER_BUILD_GIT_REVISION@";
+inline constexpr const char* BuildConfiguration = "@ORNLSLICER_BUILD_CONFIGURATION@";
+inline constexpr const char* PackageType = "@ORNLSLICER_PACKAGE_TYPE@";
+}

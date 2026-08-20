@@ -96,7 +96,7 @@ QString ScanLayer::writeGCode(QSharedPointer<WriterBase> writer) {
 
 void ScanLayer::compute() {
     for (QSharedPointer<IslandBase> island : m_islands) {
-        island->compute(m_layer_num, m_sync);
+        island->compute(m_layer_num);
     }
 }
 

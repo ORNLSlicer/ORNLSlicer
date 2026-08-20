@@ -12,7 +12,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/scan.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -20,7 +19,7 @@
 
 namespace ORNL {
 LaserScan::LaserScan(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kLaserScan) {
     // NOP
 }
 
@@ -35,7 +34,7 @@ QString LaserScan::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void LaserScan::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void LaserScan::compute(uint layer_num) {
     m_paths.clear();
 
     Distance x_offset = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerXOffset);
@@ -120,12 +119,11 @@ void LaserScan::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     m_paths.append(finalPath);
 }
 
-void LaserScan::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                         QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void LaserScan::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     // NOP - handled by ScanLayer
 }
 
-void LaserScan::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void LaserScan::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

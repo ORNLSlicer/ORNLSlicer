@@ -1,0 +1,111 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "initial_purge_duration"
+    display: "Initial Purge Duration"
+    type: "time"
+    tooltip: "Amount of time extruder will purge\u00a0"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kInitialPurgeDuration"
+    local: false
+  - name: "initial_purge_dwell_screw_rpm"
+    display: "Initial Purge Screw RPM"
+    type: "rpm"
+    tooltip: "Speed for the screw during the initial purge"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kInitialPurgeScrewRPM"
+    local: false
+  - name: "initial_purge_tip_wipe_delay"
+    display: "Initial Purge Tip Wipe Delay"
+    type: "time"
+    tooltip: "Amount of time the extruder will pause before moving to wipe the tip during the initial purge"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_material_load":true},{"syntax":1}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kInitialPurgeTipWipeDelay"
+    local: false
+  - name: "purge_during_dwell"
+    display: "Purge During Dwell"
+    type: "boolean"
+    tooltip: "If selected, a purge command is issued during dwells forced by the minimum layer time cooling settings"
+    depends: {"AND":[{"slicing_mode":0},{"minimum_layer_time_method":0}]}
+    options: []
+    default: false
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kPurgeDuringDwell"
+    local: false
+  - name: "purge_dwell_duration"
+    display: "Purge Dwell Duration"
+    type: "time"
+    tooltip: "Duration to run the extruder during a purge dwell"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"machine_type":0}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kPurgeDwellDuration"
+    local: false
+  - name: "purge_dwell_screw_rpm"
+    display: "Purge Dwell Screw RPM"
+    type: "rpm"
+    tooltip: "Speed for the screw during purge dwells"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"machine_type":0}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kPurgeDwellScrewRPM"
+    local: false
+  - name: "purge_tip_wipe_delay"
+    display: "Purge Dwell Tip Wipe Delay"
+    type: "time"
+    tooltip: "Amount of time the extruder will pause before moving to wipe the tip during a purge dwell"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"machine_type":0}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kPurgeDwellTipWipeDelay"
+    local: false
+  - name: "purge_length"
+    display: "Purge Length"
+    type: "distance"
+    tooltip: "Length of filament, or screw rotation distance, for purges issued between layers"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kPurgeLength"
+    local: false
+  - name: "purge_feedrate"
+    display: "Purge Feedrate"
+    type: "speed"
+    tooltip: "Feedrate for extrusion used for the purge between layers"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"purge_during_dwell":true},{"OR":[{"syntax":10},{"machine_type":1}]}]}]}
+    options: []
+    default: 0
+    minor: "Purge"
+    major: "Material"
+    namespace: "Material::Purge"
+    symbol: "kPurgeFeedrate"
+    local: false

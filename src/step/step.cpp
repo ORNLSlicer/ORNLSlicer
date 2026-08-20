@@ -10,7 +10,6 @@
 #include "geometry/plane.h"
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/island/island_base.h"
 #include "utilities/enums.h"
 
@@ -26,10 +25,6 @@ void Step::setSb(const QSharedPointer<SettingsBase>& sb) { m_sb = sb; }
 void Step::setDirtyBit(bool dirty) { m_dirty_bit = dirty; }
 
 bool Step::isDirty() { return m_dirty_bit; }
-
-QSharedPointer<SyncManager> Step::getSync() const { return m_sync; }
-
-void Step::setSync(const QSharedPointer<SyncManager>& sync) { m_sync = sync; }
 
 StepType Step::getType() { return m_type; }
 

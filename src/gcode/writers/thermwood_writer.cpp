@@ -21,7 +21,7 @@ QString ThermwoodWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
                                            Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -197,8 +197,8 @@ QString ThermwoodWriter::writeLine(const Point& start_point, const Point& target
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     rv += m_G1;
@@ -250,8 +250,8 @@ QString ThermwoodWriter::writeArc(const Point& start_point, const Point& end_poi
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -345,6 +345,13 @@ QString ThermwoodWriter::writeAfterLayer() {
 
 QString ThermwoodWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            return m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) % writeCoordinates(destination);
+        },
+        "TRAVEL FINAL LIFT Z");
     rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT");
 
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M83" %
@@ -361,21 +368,21 @@ QString ThermwoodWriter::writeDwell(Time time) {
         return {};
 }
 
-QString ThermwoodWriter::writeExtruderOn(RegionType type, int rpm) {
+QString ThermwoodWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruders_on[0] = true;
+    m_deposition_active = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
         // scale
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate))
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 
@@ -416,7 +423,7 @@ QString ThermwoodWriter::writeExtruderOn(RegionType type, int rpm) {
 
 QString ThermwoodWriter::writeExtruderOff() {
     QString rv;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

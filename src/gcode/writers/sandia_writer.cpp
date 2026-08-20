@@ -31,8 +31,7 @@ QString SandiaWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
                                         int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
-        m_extruders_on[ext] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -191,15 +190,9 @@ QString SandiaWriter::writeLine(const Point& start_point, const Point& target_po
 
     QString rv;
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            // Set Feedrate to 0 if turning extruder on so that an F parameter
-            // is issued with the first G1 of the path
-            setFeedrate(0);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0, params);
+        setFeedrate(0);
     }
 
     rv += m_G1;
@@ -250,12 +243,8 @@ QString SandiaWriter::writeArc(const Point& start_point, const Point& end_point,
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -303,7 +292,7 @@ QString SandiaWriter::writeScan(Point target_point, Velocity speed, bool on_off)
 QString SandiaWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -360,6 +349,13 @@ QString SandiaWriter::writeAfterLayer() {
 
 QString SandiaWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            return m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) % writeCoordinates(destination);
+        },
+        "TRAVEL FINAL LIFT Z");
     rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT") % writeTamperOff();
 
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M30" % commentSpaceLine("END OF G-CODE");
@@ -388,23 +384,24 @@ QString SandiaWriter::writeTamperOff() {
     return rv;
 }
 
-QString SandiaWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
+QString SandiaWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number,
+                                      const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruders_on[extruder_number] = true;
+    m_deposition_active = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += writeTamperOn();
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
         // scale
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate))
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 
@@ -448,7 +445,7 @@ QString SandiaWriter::writeExtruderOff(int extruder_number) {
     // update to use extruder number
 
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

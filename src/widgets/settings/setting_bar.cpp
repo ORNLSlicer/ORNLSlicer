@@ -1,5 +1,8 @@
 #include "widgets/settings/setting_bar.h"
 
+#include <algorithm>
+
+#include <qabstractitemview.h>
 #include <qboxlayout.h>
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
@@ -8,10 +11,12 @@
 #include <qlabel.h>
 #include <qlineedit.h>
 #include <qlist.h>
+#include <qlistview.h>
 #include <qnamespace.h>
 #include <qobject.h>
 #include <qoverload.h>
 #include <qsharedpointer.h>
+#include <qsizepolicy.h>
 #include <qtabwidget.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
@@ -20,11 +25,32 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_pane.h"
 #include "widgets/settings/setting_row_base.h"
 
 namespace ORNL {
+namespace {
+constexpr int kMaxVisibleSettingBaseItems = 16;
+constexpr int kSettingBaseItemHeightFallback = 22;
+
+bool supportsCylindricalSlicing(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
+
+class DynamicDependencyRefreshBlocker {
+  public:
+    explicit DynamicDependencyRefreshBlocker(bool& suppressed)
+        : m_suppressed(suppressed), m_previous_suppressed(suppressed) {
+        m_suppressed = true;
+    }
+
+    ~DynamicDependencyRefreshBlocker() { m_suppressed = m_previous_suppressed; }
+
+  private:
+    bool& m_suppressed;
+    bool m_previous_suppressed;
+};
+} // namespace
 
 SettingBar::SettingBar(QHash<QString, QString> selectedSettingBases)
     : QWidget(nullptr), mostRecentSetting(selectedSettingBases), m_range_selected(false) {
@@ -50,8 +76,7 @@ SettingPane* SettingBar::getPane(QString major) {
     paneMapping[m_tab_widget->count()] = major;
     m_tab_widget->addTab(m_panes[major], major);
 
-    connect(PreferencesManager::getInstance().get(), &PreferencesManager::anyUnitChanged, m_panes[major],
-            &SettingPane::reload);
+    connect(m_panes[major], &SettingPane::settingAboutToChange, this, &SettingBar::forwardSettingAboutToChange);
     connect(m_panes[major], &SettingPane::settingModified, this, &SettingBar::forwardModifiedSetting);
     connect(m_panes[major], &SettingPane::forwardHideTab, this, &SettingBar::forwardHideTab);
     connect(m_panes[major], &SettingPane::warnSettingBar, this, &SettingBar::barTabWarning);
@@ -91,6 +116,7 @@ void SettingBar::filter(QString str) {
             m_tab_widget->setTabEnabled(cur_pane->getIndex(), true);
         }
 
+        refreshDependencyVisibility();
         return;
     }
 
@@ -102,8 +128,10 @@ void SettingBar::filter(QString str) {
                 // Check if the current row's label matches.
                 if (cur_row->getLabelText().contains(str, Qt::CaseInsensitive)) {
                     cur_row->show();
-                    minor_hidden = false;
-                    major_hidden = false;
+                    if (cur_row->isShown()) {
+                        minor_hidden = false;
+                        major_hidden = false;
+                    }
                 }
                 else
                     cur_row->hide();
@@ -126,14 +154,17 @@ void SettingBar::filter(QString str) {
     }
 }
 
-void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases) {
+void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
+                                       QList<QSharedPointer<SettingsBase>> inherited_bases) {
     auto settings_bases = name_and_bases.second;
+    m_selected_settings_bases = settings_bases;
+    m_selected_inherited_settings_bases = inherited_bases;
 
     // here we clear any warnings if a new settings base has been selected, or do nothing if the settings base remains
     // the same
     for (SettingPane* cur_pane : m_panes) {
         for (SettingTab* cur_tab : cur_pane->getTabs()) {
-            if (cur_tab->m_settings_bases != settings_bases) {
+            if (cur_tab->m_settings_bases != settings_bases || cur_tab->m_inherited_settings_bases != inherited_bases) {
                 cur_pane->m_pane_warning = 0;
             }
         }
@@ -147,45 +178,49 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
         m_current_editing->setText("Currently editing <font color=\"" % accentColor % "\">" % name_and_bases.first %
                                    "</font> settings");
 
-    // If vector is empty, ensure all tabs that aren't user hidden can be seen.
-    if (settings_bases.size() == 0) {
-        m_range_selected = false;
-        for (QString key : m_panes.keys()) {
-            QList<QString> hiddenSettings = PreferencesManager::getInstance()->getHiddenSettings(key);
-            SettingPane* cur_pane = m_panes.value(key);
+    {
+        DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
 
-            for (SettingTab* cur_tab : cur_pane->getTabs()) {
-                cur_tab->settingsBasesSelected(settings_bases);
-                if (!hiddenSettings.contains(cur_tab->getName())) {
-                    cur_tab->show();
-                    for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows()) {
-                        cur_row->show();
+        // If vector is empty, ensure all tabs that aren't user hidden can be seen.
+        if (settings_bases.size() == 0) {
+            m_range_selected = false;
+            for (QString key : m_panes.keys()) {
+                QList<QString> hiddenSettings = PreferencesManager::getInstance()->getHiddenSettings(key);
+                SettingPane* cur_pane = m_panes.value(key);
+
+                for (SettingTab* cur_tab : cur_pane->getTabs()) {
+                    cur_tab->settingsBasesSelected(settings_bases, inherited_bases);
+                    if (!hiddenSettings.contains(cur_tab->getName())) {
+                        cur_tab->show();
+                        for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows()) {
+                            cur_row->show();
+                        }
                     }
                 }
             }
         }
-    }
-    else {
-        m_range_selected = true;
-        for (QString key : m_panes.keys()) {
-            QList<QString> hiddenSettings = PreferencesManager::getInstance()->getHiddenSettings(key);
-            SettingPane* cur_pane = m_panes.value(key);
+        else {
+            m_range_selected = true;
+            for (QString key : m_panes.keys()) {
+                QList<QString> hiddenSettings = PreferencesManager::getInstance()->getHiddenSettings(key);
+                SettingPane* cur_pane = m_panes.value(key);
 
-            for (SettingTab* cur_tab : cur_pane->getTabs()) {
-                if (!hiddenSettings.contains(cur_tab->getName())) {
-                    int settingsHidden = 0;
-                    QList<QSharedPointer<SettingRowBase>> rows = cur_tab->getRows();
-                    for (QSharedPointer<SettingRowBase> cur_row : rows) {
-                        if (!cur_row->isLocal()) {
-                            cur_row->hide();
-                            ++settingsHidden;
+                for (SettingTab* cur_tab : cur_pane->getTabs()) {
+                    if (!hiddenSettings.contains(cur_tab->getName())) {
+                        int settingsHidden = 0;
+                        QList<QSharedPointer<SettingRowBase>> rows = cur_tab->getRows();
+                        for (QSharedPointer<SettingRowBase> cur_row : rows) {
+                            if (!cur_row->isLocal()) {
+                                cur_row->hide();
+                                ++settingsHidden;
+                            }
                         }
+
+                        if (settingsHidden == rows.size())
+                            cur_tab->hide();
+
+                        cur_tab->settingsBasesSelected(settings_bases, inherited_bases);
                     }
-
-                    if (settingsHidden == rows.size())
-                        cur_tab->hide();
-
-                    cur_tab->settingsBasesSelected(settings_bases);
                 }
             }
         }
@@ -197,7 +232,9 @@ void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<Setti
             for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows())
                 cur_row->checkDependencies();
 
+    refreshDependencyVisibility();
     this->blockSignals(false);
+    emitSelectedVisualizationSettings();
 }
 
 void SettingBar::closeAll() {
@@ -233,11 +270,31 @@ void SettingBar::updateDisplayedLists(int index) {
     m_combo_box->clear();
 
     m_combo_box->addItems(GSM->getAllGlobals()[paneMapping[index]].keys());
+    updateSettingBasePopupHeight();
     int listIndex = m_combo_box->findText(mostRecentSetting[paneMapping[index]]);
     if (listIndex != -1)
         m_combo_box->setCurrentIndex(listIndex);
     else
         m_combo_box->setCurrentIndex(0);
+}
+
+void SettingBar::updateSettingBasePopupHeight() {
+    QAbstractItemView* combo_view = m_combo_box->view();
+    if (combo_view == nullptr)
+        return;
+
+    const int visible_items = std::min(m_combo_box->count(), m_combo_box->maxVisibleItems());
+    if (visible_items <= 0) {
+        combo_view->setMaximumHeight(0);
+        return;
+    }
+
+    int row_height = combo_view->sizeHintForRow(std::max(0, m_combo_box->currentIndex()));
+    if (row_height <= 0)
+        row_height = kSettingBaseItemHeightFallback;
+
+    combo_view->setMinimumHeight(0);
+    combo_view->setMaximumHeight((row_height * visible_items) + (combo_view->frameWidth() * 2));
 }
 
 // change selected settings base
@@ -246,13 +303,18 @@ void SettingBar::updateSettings(QString text) {
         GSM->removeCurrentSettings(paneMapping[m_tab_widget->currentIndex()],
                                    mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]]);
         GSM->constructActiveGlobal(paneMapping[m_tab_widget->currentIndex()], text);
-        for (SettingTab* tab : m_panes[paneMapping[m_tab_widget->currentIndex()]]->getTabs()) {
-            tab->setSettingBase(GSM->getGlobal());
-            tab->reload();
+        {
+            DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
+            for (SettingTab* tab : m_panes[paneMapping[m_tab_widget->currentIndex()]]->getTabs()) {
+                tab->setSettingBase(GSM->getGlobal());
+                tab->reload();
+            }
         }
         mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]] = text;
         CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
+        emit settingsBaseChanged(text);
+        emitSelectedVisualizationSettings();
     }
 }
 
@@ -276,16 +338,212 @@ void SettingBar::displayNewSetting(QStringList settingCategories, QString settin
 
     reloadDisplayedList();
 
-    for (SettingPane* cur_pane : m_panes) {
-        for (SettingTab* cur_tab : cur_pane->getTabs()) {
-            cur_tab->setSettingBase(GSM->getGlobal());
-            cur_tab->reload();
+    {
+        DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
+        for (SettingPane* cur_pane : m_panes) {
+            for (SettingTab* cur_tab : cur_pane->getTabs()) {
+                cur_tab->setSettingBase(GSM->getGlobal());
+                cur_tab->reload();
+            }
         }
     }
     enableDependRows();
+    emitSelectedVisualizationSettings();
 }
 
-void SettingBar::forwardModifiedSetting(QString setting_key) { emit settingModified(setting_key); }
+void SettingBar::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
+    emit settingAboutToChange(setting_key, settings_bases);
+}
+
+void SettingBar::forwardModifiedSetting(QString setting_key) {
+    if (m_syncing_radial_settings || m_restoring_settings) {
+        return;
+    }
+
+    QStringList modified_keys {setting_key};
+
+    m_syncing_radial_settings = true;
+    modified_keys.append(syncCylindricalSlicingSettings(setting_key));
+    m_syncing_radial_settings = false;
+
+    const bool dependencies_refreshed = modified_keys.size() > 1;
+    if (dependencies_refreshed) {
+        enableDependRows();
+    }
+    else {
+        refreshDependencyVisibility();
+    }
+
+    if (!m_suppress_dynamic_dependency_refresh && !dependencies_refreshed)
+        refreshDynamicDependencies();
+
+    for (const QString& modified_key : modified_keys) {
+        emit settingModified(modified_key);
+    }
+
+    emitSelectedVisualizationSettings();
+}
+
+QStringList SettingBar::syncCylindricalSlicingSettings(const QString& setting_key) {
+    QStringList synced_keys;
+    QSharedPointer<SettingsBase> sb = GSM->getGlobal();
+
+    if (setting_key == PS::Slicing::kSlicingMode) {
+        const SlicingMode slicing_mode = static_cast<SlicingMode>(sb->setting<int>(PS::Slicing::kSlicingMode));
+        const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+        if (slicing_mode == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
+            emit settingAboutToChange(PRS::MachineSetup::kSyntax, QList<QSharedPointer<SettingsBase>>());
+            sb->setSetting(PRS::MachineSetup::kSyntax, static_cast<int>(GcodeSyntax::kArcSpecialties));
+            reloadSettingRow(PRS::MachineSetup::kSyntax);
+            synced_keys.push_back(PRS::MachineSetup::kSyntax);
+        }
+    }
+
+    return synced_keys;
+}
+
+void SettingBar::reloadSettingRow(const QString& setting_key) {
+    fifojson& master_json = GSM->getMaster()->json();
+    auto setting = master_json.find(setting_key.toStdString());
+    if (setting == master_json.end()) {
+        return;
+    }
+
+    SettingTab* tab = getTab(setting.value()[Constants::Settings::Master::kMajor],
+                             setting.value()[Constants::Settings::Master::kMinor]);
+    if (tab == nullptr) {
+        return;
+    }
+
+    QSharedPointer<SettingRowBase> row = tab->getRow(setting_key);
+    if (!row.isNull()) {
+        row->reloadValue();
+    }
+}
+
+void SettingBar::refreshDynamicDependencies() {
+    for (SettingPane* cur_pane : m_panes) {
+        for (SettingTab* cur_tab : cur_pane->getTabs()) {
+            for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows())
+                cur_row->checkDynamicDependencies();
+        }
+    }
+}
+
+QSharedPointer<SettingsBase> SettingBar::selectedVisualizationSettings() const {
+    if (m_selected_settings_bases.isEmpty() || m_selected_settings_bases.first().isNull())
+        return GSM->getGlobal();
+
+    QSharedPointer<SettingsBase> effective_settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+
+    if (!m_selected_inherited_settings_bases.isEmpty() && !m_selected_inherited_settings_bases.first().isNull())
+        effective_settings->populate(m_selected_inherited_settings_bases.first());
+
+    effective_settings->populate(m_selected_settings_bases.first());
+    return effective_settings;
+}
+
+QList<QSharedPointer<SettingsBase>> SettingBar::selectedEditableSettingsBases() const {
+    QList<QSharedPointer<SettingsBase>> settings_bases;
+    for (const QSharedPointer<SettingsBase>& settings_base : m_selected_settings_bases) {
+        if (!settings_base.isNull())
+            settings_bases.append(settings_base);
+    }
+
+    return settings_bases;
+}
+
+void SettingBar::removeRedundantSelectedLocalOverride(const QString& setting_key) {
+    if (m_selected_settings_bases.isEmpty())
+        return;
+
+    double global_value = 0.0;
+    if (GSM->getGlobal()->contains(setting_key)) {
+        global_value = GSM->getGlobal()->setting<double>(setting_key);
+    }
+    else {
+        fifojson& master_json = GSM->getMaster()->json();
+        auto setting = master_json.find(setting_key.toStdString());
+        if (setting != master_json.end() && setting.value().contains(Constants::Settings::Master::kDefault))
+            global_value = setting.value()[Constants::Settings::Master::kDefault].get<double>();
+    }
+
+    for (int index = 0, end = m_selected_settings_bases.size(); index < end; ++index) {
+        QSharedPointer<SettingsBase> settings_base = m_selected_settings_bases[index];
+        if (settings_base.isNull() || !settings_base->contains(setting_key))
+            continue;
+
+        double inherited_value = global_value;
+        if (index < m_selected_inherited_settings_bases.size()) {
+            const QSharedPointer<SettingsBase>& inherited_base = m_selected_inherited_settings_bases[index];
+            if (!inherited_base.isNull() && inherited_base->contains(setting_key))
+                inherited_value = inherited_base->setting<double>(setting_key);
+        }
+
+        if (settings_base->setting<double>(setting_key) == inherited_value)
+            settings_base->remove(setting_key);
+    }
+}
+
+void SettingBar::emitSelectedVisualizationSettings() {
+    emit selectedVisualizationSettingsChanged(selectedVisualizationSettings());
+}
+
+void SettingBar::reloadRowsForUnitChange() {
+    {
+        DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
+        for (SettingPane* cur_pane : m_panes)
+            cur_pane->reload();
+    }
+
+    refreshDynamicDependencies();
+}
+
+void SettingBar::restoreSettingValue(QString setting_key) {
+    m_restoring_settings = true;
+    reloadSettingRow(setting_key);
+    m_restoring_settings = false;
+
+    enableDependRows();
+    emit settingModified(setting_key);
+    emitSelectedVisualizationSettings();
+}
+
+void SettingBar::beginPairedGlobalSettingChange(QString first_key, QString second_key) {
+    const QList<QSharedPointer<SettingsBase>> settings_bases = selectedEditableSettingsBases();
+    emit settingAboutToChange(first_key, settings_bases);
+    emit settingAboutToChange(second_key, settings_bases);
+}
+
+void SettingBar::updatePairedGlobalSetting(QString first_key, double first_value, QString second_key,
+                                           double second_value) {
+    QList<QSharedPointer<SettingsBase>> settings_bases = selectedEditableSettingsBases();
+    if (settings_bases.isEmpty())
+        settings_bases.append(GSM->getGlobal());
+
+    for (QSharedPointer<SettingsBase> settings_base : settings_bases) {
+        settings_base->setSetting(first_key, first_value);
+        settings_base->setSetting(second_key, second_value);
+    }
+
+    removeRedundantSelectedLocalOverride(first_key);
+    removeRedundantSelectedLocalOverride(second_key);
+
+    m_restoring_settings = true;
+    reloadSettingRow(first_key);
+    reloadSettingRow(second_key);
+    m_restoring_settings = false;
+}
+
+void SettingBar::finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
+                                                 double second_value) {
+    updatePairedGlobalSetting(first_key, first_value, second_key, second_value);
+    enableDependRows();
+
+    emit settingModified(first_key);
+    emit settingModified(second_key);
+    emitSelectedVisualizationSettings();
+}
 
 void SettingBar::forwardHideTab(QString pane, QString category) { emit tabHidden(pane, category); }
 
@@ -341,6 +599,15 @@ void SettingBar::setupSubWidgets() {
     m_tab_widget->setMovable(true);
 
     m_combo_box = new QComboBox(this);
+    m_combo_box->setMaxVisibleItems(kMaxVisibleSettingBaseItems);
+    m_combo_box->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Fixed);
+
+    QListView* combo_view = new QListView(m_combo_box);
+    combo_view->setUniformItemSizes(true);
+    combo_view->setVerticalScrollMode(QAbstractItemView::ScrollPerItem);
+    combo_view->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    combo_view->setHorizontalScrollBarPolicy(Qt::ScrollBarAsNeeded);
+    m_combo_box->setView(combo_view);
 
     m_current_folder = new QLabel(this);
     m_current_folder->setText("Currently searching in : <Not Set> for additional setting files");
@@ -375,12 +642,14 @@ void SettingBar::setupGlobalSettings() {
         SettingTab* curr_tab = this->getTab(curr_json[Constants::Settings::Master::kMajor],
                                             curr_json[Constants::Settings::Master::kMinor]);
         QString key = QString::fromStdString(it.key());
+        fifojson input_json = GSM->getSettingInput(key);
 
-        curr_tab->addRow(key, curr_json);
+        curr_tab->addRow(key, curr_json, input_json);
     }
     enableDependRows();
 
     m_combo_box->addItems(GSM->getAllGlobals()[paneMapping[0]].keys());
+    updateSettingBasePopupHeight();
 
     // should always be found and should already be loaded by virtue of the GSM creation, else default values should
     // have been loaded and nothing selected
@@ -393,6 +662,10 @@ void SettingBar::setupEvents() {
     connect(m_tab_widget, &QTabWidget::currentChanged, this, &SettingBar::updateDisplayedLists);
     connect(m_combo_box, QOverload<const QString&>::of(&QComboBox::currentTextChanged), this,
             &SettingBar::updateSettings);
+    connect(PreferencesManager::getInstance().get(), &PreferencesManager::anyUnitChanged, this,
+            &SettingBar::reloadRowsForUnitChange);
+    connect(PreferencesManager::getInstance().get(), &PreferencesManager::disabledSettingVisibilityChanged, this,
+            &SettingBar::enableDependRows);
 }
 
 // this function iterates through each tab of each pane, and make those rows enabled/disabled
@@ -410,8 +683,42 @@ void SettingBar::enableDependRows() {
                     row->setDependencyLogic(root);
                     row->checkDependencies();
                 }
+                else {
+                    row->checkDynamicDependencies();
+                }
             }
         }
+    }
+
+    refreshDependencyVisibility();
+}
+
+void SettingBar::refreshDependencyVisibility() {
+    if (!m_filter_bar->text().isEmpty()) {
+        filter(m_filter_bar->text());
+        return;
+    }
+
+    for (QString key : m_panes.keys()) {
+        QList<QString> hidden_settings = PreferencesManager::getInstance()->getHiddenSettings(key);
+        SettingPane* cur_pane = m_panes.value(key);
+        bool pane_has_visible_tab = false;
+
+        for (SettingTab* cur_tab : cur_pane->getTabs()) {
+            if (hidden_settings.contains(cur_tab->getName())) {
+                continue;
+            }
+
+            if (cur_tab->hasShownRows()) {
+                cur_tab->show();
+                pane_has_visible_tab = true;
+            }
+            else {
+                cur_tab->hide();
+            }
+        }
+
+        m_tab_widget->setTabEnabled(cur_pane->getIndex(), pane_has_visible_tab);
     }
 }
 

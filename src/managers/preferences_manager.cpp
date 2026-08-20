@@ -9,6 +9,7 @@
 
 #include <QDir>
 #include <QStandardPaths>
+#include <QString>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
@@ -28,6 +29,90 @@
 #include "utilities/theme_tool.h"
 
 namespace ORNL {
+namespace {
+constexpr int kVisualizationColorMigrationVersion = 1;
+constexpr const char* kVisualizationColorMigrationVersionKey = "visualization_color_migration_version";
+
+/*!
+ * \brief Resolve a persisted visualization color name to its enum value.
+ * \param name Persisted visualization color name.
+ * \param color Output enum value when the name is recognized.
+ * \return True if \p name maps to a known VisualizationColors entry.
+ */
+bool visualizationColorFromName(const std::string& name, VisualizationColors& color) {
+    int visualizationColorsLength = (int)VisualizationColors::Length;
+    for (int i = 0; i < visualizationColorsLength; ++i) {
+        VisualizationColors colorEnum = (VisualizationColors)i;
+        if (VisualizationColorsName(colorEnum).toStdString() == name) {
+            color = colorEnum;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+/*!
+ * \brief Parse a persisted visualization color string.
+ * \param colorText Hex color text, with or without a leading '#'.
+ * \param valid Output validity flag from Qt's color parser.
+ * \return Parsed opaque color when valid, otherwise an invalid QColor.
+ */
+QColor parseVisualizationColor(const std::string& colorText, bool& valid) {
+    QString text = QString::fromStdString(colorText).trimmed();
+    QColor color(text);
+
+    if (!color.isValid() && !text.startsWith("#")) {
+        color = QColor(QString("#") + text);
+    }
+
+    valid = color.isValid();
+    if (valid) {
+        color.setAlpha(255);
+    }
+
+    return color;
+}
+
+bool visualizationColorMatches(const std::string& colorText, const QColor& expectedColor) {
+    bool validColor;
+    QColor parsedColor = parseVisualizationColor(colorText, validColor);
+    return validColor && parsedColor == expectedColor;
+}
+
+bool replaceStaleVisualizationColor(std::unordered_map<std::string, std::string>& visualizationColorsHex,
+                                    VisualizationColors color, const std::vector<QColor>& staleColors) {
+    const std::string name = VisualizationColorsName(color).toStdString();
+    auto colorIt = visualizationColorsHex.find(name);
+    if (colorIt == visualizationColorsHex.end()) {
+        return false;
+    }
+
+    for (const QColor& staleColor : staleColors) {
+        if (visualizationColorMatches(colorIt->second, staleColor)) {
+            colorIt->second = VisualizationColorsDefaults(color).name().toStdString();
+            return true;
+        }
+    }
+
+    return false;
+}
+
+bool migrateVisualizationColorDefaults(std::unordered_map<std::string, std::string>& visualizationColorsHex) {
+    bool migrated = false;
+
+    // Carry forward revised arc defaults for users who ran pre-release builds with these stale values persisted.
+    migrated |= replaceStaleVisualizationColor(
+        visualizationColorsHex, VisualizationColors::kInsetArc,
+        {QColor(255, 179, 0, 255), QColor(102, 224, 255, 255)});
+    migrated |= replaceStaleVisualizationColor(
+        visualizationColorsHex, VisualizationColors::kPerimeterArc,
+        {QColor(255, 0, 204, 255), QColor(0, 85, 255, 255)});
+
+    return migrated;
+}
+} // namespace
+
 QSharedPointer<PreferencesManager> PreferencesManager::m_singleton = QSharedPointer<PreferencesManager>();
 
 QSharedPointer<PreferencesManager> PreferencesManager::getInstance() {
@@ -43,27 +128,28 @@ PreferencesManager::PreferencesManager()
       m_mass_unit(kg), m_project_shift_preference(PreferenceChoice::kAsk),
       m_file_shift_preference(PreferenceChoice::kPerformAutomatically), m_align_preference(PreferenceChoice::kAsk),
       m_hide_travel_preference(false), m_hide_support_preference(false), m_use_true_widths_preference(true),
-      m_themeName(ThemeName::kLightMode), m_theme(static_cast<int>(m_themeName)),
-      m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false), m_is_maximized(false), m_window_size(-1, -1),
-      m_window_pos(-1, -1), m_use_implicit_transforms(false), m_always_drop_parts(false), m_layer_lag(100),
-      m_segment_lag(10) {
+      m_gcode_preview_mode_preference(GCodePreviewMode::kAuto), m_gcode_preview_vertex_threshold_preference(5000000),
+      m_disabled_setting_visibility_preference(DisabledSettingVisibility::kGrey),
+      m_warn_unsaved_project_on_close_preference(true), m_themeName(ThemeName::kLightMode),
+      m_theme(static_cast<int>(m_themeName)), m_rotation_unit(RotationUnit::kPitchRollYaw), m_dirty(false),
+      m_is_maximized(false), m_window_size(-1, -1), m_window_pos(-1, -1), m_use_implicit_transforms(false),
+      m_always_drop_parts(false), m_layer_lag(100), m_segment_lag(10),
+      m_visualization_color_migration_version(kVisualizationColorMigrationVersion) {
     m_hidden_settings["Printer"] = std::list<std::string>();
     m_hidden_settings["Material"] = std::list<std::string>();
     m_hidden_settings["Profile"] = std::list<std::string>();
     m_hidden_settings["Experimental"] = std::list<std::string>();
-    m_tcp_port = 12345;
-    m_tcp_server_autostart = false;
-    m_step_connectivity = QVector<bool>(5, false);
-    m_katana_tcp_ip = "127.0.0.1";
-    m_katana_tcp_port = 12345;
+    setDefaultVisualizationColors({});
 }
 
 QColor PreferencesManager::getVisualizationColor(VisualizationColors color) {
-    return m_visualization_qcolors[VisualizationColorsName(color).toStdString()];
+    std::string name = VisualizationColorsName(color).toStdString();
+    return m_visualization_qcolors.try_emplace(name, VisualizationColorsDefaults(color)).first->second;
 }
 
 void PreferencesManager::setVisualizationColor(QString name, QColor value) {
     m_visualization_qcolors[name.toStdString()] = value;
+    m_dirty = true;
 }
 
 QColor PreferencesManager::revertVisualizationColor(QString name) {
@@ -72,6 +158,7 @@ QColor PreferencesManager::revertVisualizationColor(QString name) {
         VisualizationColors colorEnum = (VisualizationColors)i;
         if (VisualizationColorsName(colorEnum) == name) {
             m_visualization_qcolors[name.toStdString()] = VisualizationColorsDefaults(colorEnum);
+            m_dirty = true;
             break;
         }
     }
@@ -107,7 +194,14 @@ std::map<std::string, std::string> PreferencesManager::getVisualizationHexColors
 }
 
 void PreferencesManager::setDefaultVisualizationColors(
-    std::unordered_map<std::string, std::string> visualizationColorsHex) {
+    const std::unordered_map<std::string, std::string>& visualizationColorsHex) {
+    std::unordered_map<std::string, std::string> migratedVisualizationColorsHex = visualizationColorsHex;
+    if (m_visualization_color_migration_version < kVisualizationColorMigrationVersion) {
+        migrateVisualizationColorDefaults(migratedVisualizationColorsHex);
+        m_visualization_color_migration_version = kVisualizationColorMigrationVersion;
+        m_dirty = true;
+    }
+
     m_visualization_qcolors.clear();
     int visualizationColorsLength = (int)VisualizationColors::Length;
     for (int i = 0; i < visualizationColorsLength; ++i) {
@@ -116,13 +210,25 @@ void PreferencesManager::setDefaultVisualizationColors(
             VisualizationColorsDefaults(colorEnum);
     }
 
-    for (const auto& color : visualizationColorsHex) {
-        if (!visualizationColorsHex[color.first].empty()) {
-            bool validColorHexStr;
-            int val = QString::fromStdString(color.second).remove('#').toInt(&validColorHexStr, 16);
-            if (validColorHexStr)
-                m_visualization_qcolors[color.first] = QColor(val);
+    for (const auto& color : migratedVisualizationColorsHex) {
+        VisualizationColors colorEnum;
+        if (!visualizationColorFromName(color.first, colorEnum)) {
+            continue;
         }
+
+        if (color.second.empty()) {
+            m_dirty = true;
+            continue;
+        }
+
+        bool validColor;
+        QColor parsedColor = parseVisualizationColor(color.second, validColor);
+        if (!validColor) {
+            m_dirty = true;
+            continue;
+        }
+
+        m_visualization_qcolors[color.first] = parsedColor;
     }
 }
 
@@ -178,23 +284,24 @@ void PreferencesManager::importPreferences(QString filepath) {
         if (j.contains("use_true_widths"))
             setUseTrueWidthsPreference(j["use_true_widths"]);
 
+        if (j.contains("gcode_preview_mode"))
+            setGCodePreviewModePreference(j["gcode_preview_mode"].get<int>());
+
+        if (j.contains("gcode_preview_vertex_threshold"))
+            setGCodePreviewVertexThresholdPreference(j["gcode_preview_vertex_threshold"].get<int>());
+
+        if (j.contains("disabled_setting_visibility"))
+            setDisabledSettingVisibilityPreference(j["disabled_setting_visibility"].get<int>());
+
+        if (j.contains("warn_unsaved_project_on_close"))
+            setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
+
+        m_visualization_color_migration_version = j.value(kVisualizationColorMigrationVersionKey, 0);
+
         std::unordered_map<std::string, std::string> visualizationColorsHex;
         if (j.find("visualization_colors") != j.end())
             visualizationColorsHex = j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
         setDefaultVisualizationColors(visualizationColorsHex);
-
-        if (j.find("tcp_server_settings") != j.end()) {
-            m_tcp_port = j["tcp_server_settings"]["port"];
-            m_tcp_server_autostart = j["tcp_server_settings"]["auto_start"];
-            std::vector<bool> connectivities = j["tcp_server_settings"]["step_connectivity"];
-            m_step_connectivity = QVector<bool>(connectivities.begin(), connectivities.end());
-        }
-
-        if (j.find("katana_server_settings") != j.end()) {
-            setKatanaSendOutput(j["katana_server_settings"]["send_output"]);
-            setKatanaTCPIp(j["katana_server_settings"]["ip"]);
-            setKatanaTCPPort(j["katana_server_settings"]["port"]);
-        }
 
         file.close();
     }
@@ -235,6 +342,10 @@ fifojson PreferencesManager::json() {
     j["hide_travel"] = m_hide_travel_preference;
     j["hide_support"] = m_hide_support_preference;
     j["use_true_widths"] = m_use_true_widths_preference;
+    j["gcode_preview_mode"] = static_cast<int>(m_gcode_preview_mode_preference);
+    j["gcode_preview_vertex_threshold"] = m_gcode_preview_vertex_threshold_preference;
+    j["disabled_setting_visibility"] = static_cast<int>(m_disabled_setting_visibility_preference);
+    j["warn_unsaved_project_on_close"] = m_warn_unsaved_project_on_close_preference;
     j["hidden_settings"] = m_hidden_settings;
     j["rotation"] = m_rotation_unit;
     j["invert_camera"] = m_invert_camera;
@@ -245,12 +356,7 @@ fifojson PreferencesManager::json() {
     j["use_implicit_transforms"] = m_use_implicit_transforms;
     j["always_drop_parts"] = m_always_drop_parts;
     j["visualization_colors"] = getVisualizationHexColors();
-    j["tcp_server_settings"]["port"] = m_tcp_port;
-    j["tcp_server_settings"]["auto_start"] = m_tcp_server_autostart;
-    j["tcp_server_settings"]["step_connectivity"] = m_step_connectivity;
-    j["katana_server_settings"]["send_output"] = m_katana_send_output;
-    j["katana_server_settings"]["ip"] = m_katana_tcp_ip;
-    j["katana_server_settings"]["port"] = m_katana_tcp_port;
+    j[kVisualizationColorMigrationVersionKey] = m_visualization_color_migration_version;
     j["layer_lag"] = m_layer_lag;
     j["segment_lag"] = m_segment_lag;
 
@@ -310,6 +416,18 @@ bool PreferencesManager::getHideTravelPreference() { return m_hide_travel_prefer
 bool PreferencesManager::getHideSupportPreference() { return m_hide_support_preference; }
 
 bool PreferencesManager::getUseTrueWidthsPreference() { return m_use_true_widths_preference; }
+
+GCodePreviewMode PreferencesManager::getGCodePreviewModePreference() { return m_gcode_preview_mode_preference; }
+
+int PreferencesManager::getGCodePreviewVertexThresholdPreference() {
+    return m_gcode_preview_vertex_threshold_preference;
+}
+
+DisabledSettingVisibility PreferencesManager::getDisabledSettingVisibilityPreference() {
+    return m_disabled_setting_visibility_preference;
+}
+
+bool PreferencesManager::getWarnUnsavedProjectOnClosePreference() { return m_warn_unsaved_project_on_close_preference; }
 
 bool PreferencesManager::getWindowMaximizedPreference() { return m_is_maximized; }
 
@@ -532,6 +650,54 @@ void PreferencesManager::setUseTrueWidthsPreference(bool use) {
     m_dirty = true;
 }
 
+void PreferencesManager::setGCodePreviewModePreference(GCodePreviewMode mode) {
+    switch (mode) {
+        case GCodePreviewMode::kAuto:
+        case GCodePreviewMode::kTrueWidths:
+        case GCodePreviewMode::kThinLines:
+            m_gcode_preview_mode_preference = mode;
+            break;
+        default:
+            m_gcode_preview_mode_preference = GCodePreviewMode::kAuto;
+            break;
+    }
+
+    m_dirty = true;
+}
+
+void PreferencesManager::setGCodePreviewModePreference(int mode) {
+    setGCodePreviewModePreference(static_cast<GCodePreviewMode>(mode));
+}
+
+void PreferencesManager::setGCodePreviewVertexThresholdPreference(int threshold) {
+    m_gcode_preview_vertex_threshold_preference = std::max(0, threshold);
+    m_dirty = true;
+}
+
+void PreferencesManager::setDisabledSettingVisibilityPreference(DisabledSettingVisibility visibility) {
+    switch (visibility) {
+        case DisabledSettingVisibility::kGrey:
+        case DisabledSettingVisibility::kHide:
+            m_disabled_setting_visibility_preference = visibility;
+            break;
+        default:
+            m_disabled_setting_visibility_preference = DisabledSettingVisibility::kGrey;
+            break;
+    }
+
+    m_dirty = true;
+    emit disabledSettingVisibilityChanged();
+}
+
+void PreferencesManager::setDisabledSettingVisibilityPreference(int visibility) {
+    setDisabledSettingVisibilityPreference(static_cast<DisabledSettingVisibility>(visibility));
+}
+
+void PreferencesManager::setWarnUnsavedProjectOnClosePreference(bool warn) {
+    m_warn_unsaved_project_on_close_preference = warn;
+    m_dirty = true;
+}
+
 void PreferencesManager::setRotationUnit(QString unit) {
     if (unit == Constants::Units::kPitchRollYaw)
         m_rotation_unit = RotationUnit::kPitchRollYaw;
@@ -597,30 +763,4 @@ bool PreferencesManager::isSettingHidden(QString panel, QString setting) {
     std::list<std::string> settingList = m_hidden_settings[panel.toStdString()];
     return std::find(settingList.begin(), settingList.end(), setting.toStdString()) != settingList.end();
 }
-
-void PreferencesManager::setStepConnectivity(StatusUpdateStepType type, bool toggle) {
-    m_step_connectivity[(int)type] = toggle;
-}
-
-void PreferencesManager::setTCPServerPort(int port) { m_tcp_port = port; }
-
-void PreferencesManager::setTcpServerAutoStart(bool start) { m_tcp_server_autostart = start; }
-
-bool PreferencesManager::getStepConnectivity(StatusUpdateStepType type) { return m_step_connectivity[(int)type]; }
-
-int PreferencesManager::getTCPServerPort() { return m_tcp_port; }
-
-bool PreferencesManager::getTcpServerAutoStart() { return m_tcp_server_autostart; }
-
-bool PreferencesManager::getKatanaSendOutput() { return m_katana_send_output; }
-
-void PreferencesManager::setKatanaSendOutput(bool send) { m_katana_send_output = send; }
-
-QString PreferencesManager::getKatanaTCPIp() { return m_katana_tcp_ip; }
-
-void PreferencesManager::setKatanaTCPIp(QString ipAddress) { m_katana_tcp_ip = ipAddress; }
-
-int PreferencesManager::getKatanaTCPPort() { return m_katana_tcp_port; }
-
-void PreferencesManager::setKatanaTCPPort(int port) { m_katana_tcp_port = port; }
 } // namespace ORNL

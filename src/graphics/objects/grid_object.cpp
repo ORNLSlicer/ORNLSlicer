@@ -23,13 +23,13 @@ GridObject::GridObject(BaseView* view, float length, float width, float x_grid, 
     std::vector<float> vertices;
     std::vector<float> colors;
 
-    ShapeFactory::createGridPlane(m_length, m_width, m_x_grid, m_y_grid, m_color, vertices, colors);
+    ShapeFactory::appendGridPlaneLines(m_length, m_width, m_x_grid, m_y_grid, m_color, vertices, colors);
 
     std::vector<float> tmp_norm;
     this->populateGL(view, vertices, tmp_norm, colors, GL_LINES);
 
     // Get collision box - Only need vertices.
-    ShapeFactory::createRectangle(length, width, 0.1, QMatrix4x4(), m_color, m_collision_vertices, colors, tmp_norm);
+    ShapeFactory::appendBox(length, width, 0.1, QMatrix4x4(), m_color, m_collision_vertices, colors, tmp_norm);
 }
 
 void GridObject::updateDimensions(float length, float width, float x_grid, float y_grid) {
@@ -42,15 +42,14 @@ void GridObject::updateDimensions(float length, float width, float x_grid, float
     std::vector<float> vertices;
     std::vector<float> colors;
 
-    ShapeFactory::createGridPlane(m_length, m_width, m_x_grid, m_y_grid, m_color, vertices, colors);
+    ShapeFactory::appendGridPlaneLines(m_length, m_width, m_x_grid, m_y_grid, m_color, vertices, colors);
 
     this->replaceVertices(vertices);
     this->replaceColors(colors);
 
     std::vector<float> tmp_norm;
     m_collision_vertices.clear();
-    ShapeFactory::createRectangle(m_length, m_width, 0.1, QMatrix4x4(), m_color, m_collision_vertices, colors,
-                                  tmp_norm);
+    ShapeFactory::appendBox(m_length, m_width, 0.1, QMatrix4x4(), m_color, m_collision_vertices, colors, tmp_norm);
 }
 
 std::vector<Triangle> GridObject::triangles() {

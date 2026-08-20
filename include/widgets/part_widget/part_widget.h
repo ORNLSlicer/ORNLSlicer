@@ -11,6 +11,7 @@
 #include <QWidget>
 #include <qlist.h>
 #include <qobject.h>
+#include <qpair.h>
 #include <qset.h>
 #include <qsharedpointer.h>
 #include <qsize.h>
@@ -44,6 +45,9 @@ class PartWidget : public QWidget {
     //! \brief gets name to first listed part
     //! \return string of name
     QString getFirstPartName();
+
+    //! \brief Get the view for this widget.
+    PartView* view();
 
   signals:
     //! \brief Signal of parts that have been selected.
@@ -128,6 +132,15 @@ class PartWidget : public QWidget {
     //! \param show enables/ disables
     void showSlicingPlanes(bool show);
 
+    //! \brief enables/ disables showing the selected layer settings range
+    //! \param show enables/ disables
+    void showLayerSettingsRange(bool show);
+
+    //! \brief sets the layer settings range visualization targets
+    //! \param part part that owns the selected range
+    //! \param layer_ranges selected layer ranges
+    void setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges);
+
     //! \brief enables/ disables showing labels
     //! \param show enables/ disables
     void showLabels(bool show);
@@ -158,7 +171,13 @@ class PartWidget : public QWidget {
     void setStatusSelection(QString name);
     void setStatusIssue(QString issue);
 
+    //! \brief Updates the measurement readout overlay.
+    void setMeasurementReadout(QString readout);
+
   private:
+    //! \brief Repositions the measurement readout beside the part toolbar.
+    void positionMeasurementReadout();
+
     //! \brief called when the widget is resized
     //! \param event: the event
     void resizeEvent(QResizeEvent* event);
@@ -195,6 +214,8 @@ class PartWidget : public QWidget {
 
     //! \brief Labels
     QLabel* m_selection_label;
+    QLabel* m_measurement_label;
+    QToolButton* m_measurement_clear_btn;
 
     //! \brief Color of emphasized text
     QString m_accentColor;

@@ -15,7 +15,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -23,8 +22,55 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+PolygonList polylineFootprint(const Polyline& line, Distance bead_width, const PolygonList& clipping_geometry) {
+    PolygonList footprint;
+    for (int i = 0, end = line.size() - 1; i < end; ++i) {
+        if (line[i] == line[i + 1])
+            continue;
+
+        footprint += Polyline({line[i], line[i + 1]}).makeReal(bead_width);
+    }
+
+    return footprint & clipping_geometry;
+}
+
+QVector<Polyline> printableLines(const QVector<Polyline>& lines, Distance min_path_length, Distance min_segment_length,
+                                 bool closed) {
+    QVector<Polyline> printable;
+    printable.reserve(lines.size());
+
+    for (const Polyline& line : lines) {
+        Polyline cleaned_line = line.removeShortSegments(min_segment_length, closed);
+        if (cleaned_line.size() > (closed ? 2 : 1) && cleaned_line.length() >= min_path_length)
+            printable.push_back(cleaned_line);
+    }
+
+    return printable;
+}
+
+PolygonList printableFootprint(const QVector<Polyline>& lines, Distance bead_width,
+                               const PolygonList& clipping_geometry) {
+    PolygonList footprint;
+    for (const Polyline& line : lines)
+        footprint += polylineFootprint(line, bead_width, clipping_geometry);
+
+    return footprint;
+}
+
+PolygonList futurePerimeterSupport(const PolygonList& current_geometry, const PolygonList& upper_geometry,
+                                   Distance support_width) {
+    if (support_width <= 0 || upper_geometry.isEmpty())
+        return PolygonList();
+
+    // Extract the upper layer's perimeter band so top skin can support future walls.
+    PolygonList support_geometry = upper_geometry - upper_geometry.offset(-support_width);
+    return support_geometry & current_geometry;
+}
+} // namespace
+
 Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, index, settings_polygons) {
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kSkin) {
     // NOP
 }
 
@@ -42,7 +88,7 @@ QString Skin::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void Skin::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void Skin::compute(uint layer_num) {
     m_paths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kSkinNum));
@@ -51,6 +97,8 @@ void Skin::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     m_geometry = m_geometry.offset(overlap);
 
     Distance beadWidth = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
+    Distance minPathLength = m_sb->setting<Distance>(PS::Skin::kMinPathLength);
+    Distance minSegmentLength = m_sb->setting<Distance>(PS::Skin::kMinSegmentLength);
     Angle patternAngle = m_sb->setting<Angle>(PS::Skin::kAngle);
 
     int top_count = m_sb->setting<int>(PS::Skin::kTopCount);
@@ -71,13 +119,13 @@ void Skin::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     if (m_sb->setting<bool>(PS::Skin::kInfillEnable))
         computeGradualSkinSteps(gradual_count);
 
-    bool anyGeometry = false;
     if (!m_skin_geometry.isEmpty()) {
-        m_geometry -= m_skin_geometry;
         PolygonList skin_offset = m_skin_geometry.offset(-beadWidth / 2);
-        m_computed_geometry = createPatternForArea(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)),
-                                                   skin_offset, beadWidth, beadWidth, patternAngle);
-        anyGeometry = true;
+        const InfillPatterns skin_pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
+        QVector<Polyline> lines = createPatternForArea(skin_pattern, skin_offset, beadWidth, beadWidth, patternAngle);
+        m_computed_geometry =
+            printableLines(lines, minPathLength, minSegmentLength, skin_pattern == InfillPatterns::kConcentric);
+        m_geometry -= printableFootprint(m_computed_geometry, beadWidth, m_skin_geometry);
     }
 
     if (!m_gradual_skin_geometry.isEmpty()) {
@@ -91,14 +139,16 @@ void Skin::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
         double densityStep = (1.0 - percentage) / (gradual_count + 1);
         for (int i = 0, end = m_gradual_skin_geometry.size(); i < end; ++i) {
             if (!m_gradual_skin_geometry[i].isEmpty()) {
-                m_geometry -= m_gradual_skin_geometry[i];
                 PolygonList skin_offset = m_gradual_skin_geometry[i].offset(-beadWidth / 2);
-                m_gradual_computed_geometry.push_back(
+                QVector<Polyline> lines =
                     createPatternForArea(gradualPattern, skin_offset, beadWidth,
-                                         beadWidth / (percentage + densityStep * (end - i)), infillPatternAngle));
+                                         beadWidth / (percentage + densityStep * (end - i)), infillPatternAngle);
+                m_gradual_computed_geometry.push_back(printableLines(lines, minPathLength, minSegmentLength,
+                                                                     gradualPattern == InfillPatterns::kConcentric));
+                m_geometry -=
+                    printableFootprint(m_gradual_computed_geometry.back(), beadWidth, m_gradual_skin_geometry[i]);
             }
         }
-        anyGeometry = true;
     }
 }
 
@@ -114,7 +164,6 @@ QVector<Polyline> Skin::createPatternForArea(InfillPatterns pattern, PolygonList
             result = PatternGenerator::GenerateGrid(geometry, lineSpacing, patternAngle);
             break;
         case InfillPatterns::kConcentric:
-        case InfillPatterns::kInsideOutConcentric:
             result = PatternGenerator::GenerateConcentric(geometry, beadWidth, lineSpacing);
             break;
         case InfillPatterns::kTriangles:
@@ -136,34 +185,48 @@ QVector<Polyline> Skin::createPatternForArea(InfillPatterns pattern, PolygonList
 }
 
 void Skin::computeTopSkin(const int& top_count) {
+    if (top_count <= 0) {
+        // A zero top count disables both regular top skin and future-perimeter support.
+        return;
+    }
+
     PolygonList temp_geometry = m_geometry;
+    const Distance perimeter_support_width =
+        m_sb->setting<bool>(PS::Perimeter::kEnable)
+            ? m_sb->setting<Distance>(PS::Perimeter::kBeadWidth) * m_sb->setting<int>(PS::Perimeter::kCount)
+            : Distance(0);
 
     //! If skin is within top_count of top layer, compute common geometry
     if (m_upper_geometry_includes_top && m_upper_geometry.size() < top_count)
-        for (PolygonList poly : m_upper_geometry)
+        for (const PolygonList& poly : m_upper_geometry)
             temp_geometry &= poly;
     else
         temp_geometry.clear();
 
     //! Compute difference geometry
-    for (PolygonList poly : m_upper_geometry)
+    for (const PolygonList& poly : m_upper_geometry) {
         temp_geometry += m_geometry - poly;
+        temp_geometry += futurePerimeterSupport(m_geometry, poly, perimeter_support_width);
+    }
 
     m_skin_geometry += temp_geometry;
 }
 
 void Skin::computeBottomSkin(const int& bottom_count) {
+    if (bottom_count <= 0)
+        return;
+
     PolygonList temp_geometry = m_geometry;
 
     //! If skin is within bottom_count of botton layer, compute common geometry
     if (m_lower_geometry_includes_bottom && m_lower_geometry.size() < bottom_count)
-        for (PolygonList poly : m_lower_geometry)
+        for (const PolygonList& poly : m_lower_geometry)
             temp_geometry &= poly;
     else
         temp_geometry.clear();
 
     //! Compute difference geometry
-    for (PolygonList poly : m_lower_geometry)
+    for (const PolygonList& poly : m_lower_geometry)
         temp_geometry += m_geometry - poly;
 
     m_skin_geometry += temp_geometry;
@@ -171,7 +234,7 @@ void Skin::computeBottomSkin(const int& bottom_count) {
 
 void Skin::computeGradualSkinSteps(const int& gradual_count) {
     PolygonList currentGradual;
-    for (PolygonList poly : m_gradual_geometry) {
+    for (const PolygonList& poly : m_gradual_geometry) {
         m_gradual_skin_geometry.push_back(m_geometry - m_skin_geometry - currentGradual - poly);
         currentGradual += m_gradual_skin_geometry[m_gradual_skin_geometry.size() - 1];
     }
@@ -183,15 +246,12 @@ void Skin::computeGradualSkinSteps(const int& gradual_count) {
     }
 }
 
-void Skin::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                    QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
-    PathOrderOptimization pathOrderOptimization =
-        static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
+    PathOrderOptimization pathOrderOptimization = this->pathOrderOptimization();
     if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
+        Point startOverride = customPathOrderPoint();
 
         poo.setStartOverride(startOverride);
     }
@@ -199,9 +259,8 @@ void Skin::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+    if (usesCustomPointLocation(pointOrderOptimization)) {
+        Point startOverride = customPointOrderPoint();
 
         poo.setStartPointOverride(startOverride);
     }
@@ -210,37 +269,39 @@ void Skin::optimize(int layerNumber, Point& current_location, QVector<Path>& inn
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     m_paths.clear();
     bool supportsG3 = m_sb->setting<bool>(PRS::MachineSetup::kSupportG3);
     InfillPatterns skinPattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
-    optimizeHelper(poo, supportsG3, innerMostClosedContour, current_location, skinPattern, m_computed_geometry,
-                   m_skin_geometry);
+    optimizeHelper(poo, supportsG3, current_location, skinPattern, m_computed_geometry, m_skin_geometry,
+                   pathOrderOptimization);
 
     InfillPatterns gradualPattern = InfillPatterns::kLines;
     for (int i = 0, end = m_gradual_computed_geometry.size(); i < end; ++i) {
-        optimizeHelper(poo, supportsG3, innerMostClosedContour, current_location, gradualPattern,
-                       m_gradual_computed_geometry[i], m_gradual_skin_geometry[i]);
+        optimizeHelper(poo, supportsG3, current_location, gradualPattern, m_gradual_computed_geometry[i],
+                       m_gradual_skin_geometry[i], pathOrderOptimization);
     }
 }
 
-void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, QVector<Path>& innerMostClosedContour,
-                          Point& current_location, InfillPatterns pattern, QVector<Polyline> lines,
-                          PolygonList geometry) {
+void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
+                          QVector<Polyline> lines, PolygonList geometry, PathOrderOptimization path_order) {
+    const bool order_open_lines =
+        pattern == InfillPatterns::kLines && getSb()->setting<int>(PS::Optimizations::kSkinPathOrder) != 0;
     poo.setInfillParameters(pattern, geometry, getSb()->setting<Distance>(PS::Skin::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength));
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength), order_open_lines);
 
-    poo.setGeometryToEvaluate(lines, RegionType::kSkin,
-                              static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
+    poo.setGeometryToEvaluate(lines, RegionType::kSkin, path_order);
 
     QVector<Polyline> previouslyLinkedLines;
     while (poo.getCurrentPolylineCount() > 0) {
         Polyline result = poo.linkNextPolyline(previouslyLinkedLines);
         if (result.size() > 0) {
-            Path newPath = createPath(result);
+            Path newPath = createPath(result, pattern);
             if (newPath.size() > 0) {
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), innerMostClosedContour);
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                       m_sb->setting<Velocity>(PS::Travel::kSpeed));
                 current_location = newPath.back()->end();
@@ -252,6 +313,17 @@ void Skin::optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, QVector<P
 }
 
 Path Skin::createPath(Polyline line) {
+    const InfillPatterns pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
+    return createPath(line, pattern);
+}
+
+Path Skin::createPath(Polyline line, InfillPatterns pattern) {
+    const bool is_closed_path = pattern == InfillPatterns::kConcentric;
+
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Skin::kMinSegmentLength), is_closed_path);
+    if (line.size() < (is_closed_path ? 3 : 2)) {
+        return Path();
+    }
 
     Distance width = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
     Distance height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
@@ -264,6 +336,7 @@ Path Skin::createPath(Polyline line) {
     for (int i = 0; i < line.size() - 1; i++) {
         QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(line[i], line[i + 1]);
 
+        line_segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         line_segment->getSb()->setSetting(SS::kWidth, width);
         line_segment->getSb()->setSetting(SS::kHeight, height);
         line_segment->getSb()->setSetting(SS::kSpeed, speed);
@@ -276,10 +349,10 @@ Path Skin::createPath(Polyline line) {
     }
 
     //! Creates closing segment if infill pattern is concentric
-    if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric ||
-        static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kInsideOutConcentric) {
+    if (is_closed_path) {
         QSharedPointer<LineSegment> line_segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
+        line_segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         line_segment->getSb()->setSetting(SS::kWidth, width);
         line_segment->getSb()->setSetting(SS::kHeight, height);
         line_segment->getSb()->setSetting(SS::kSpeed, speed);
@@ -306,7 +379,9 @@ void Skin::setGeometryIncludes(bool top, bool bottom, bool gradual) {
     m_gradual_geometry_includes_top = gradual;
 }
 
-void Skin::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Skin::calculateModifiers(Path& path, bool supportsG3) {
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
+
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
@@ -322,42 +397,19 @@ void Skin::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerM
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
     }
     if (m_sb->setting<bool>(MS::TipWipe::kSkinEnable)) {
-        // If angled slicing, force tip wipe to be reverse
-        if (m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ) != 1) {
-            PathModifierGenerator::GenerateTipWipe(
-                path, PathModifiers::kReverseTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
-                m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),
-                m_sb->setting<AngularVelocity>(MS::TipWipe::kSkinExtruderSpeed),
-                m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
-                m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));
-        }
-        // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND (Concentric or Inside Out Concentric))
-        else if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
-                     TipWipeDirection::kForward ||
-                 (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
-                      TipWipeDirection::kOptimal &&
-                  (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) ||
-                 (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
-                      TipWipeDirection::kOptimal &&
-                  (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric ||
-                   static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) ==
-                       InfillPatterns::kInsideOutConcentric))) {
-            if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric ||
-                static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) ==
-                    InfillPatterns::kInsideOutConcentric)
+        // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND Concentric)
+        if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
+                TipWipeDirection::kForward ||
+            (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
+                 TipWipeDirection::kOptimal &&
+             (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) ||
+            (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kSkinDirection)) ==
+                 TipWipeDirection::kOptimal &&
+             (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric))) {
+            if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern)) == InfillPatterns::kConcentric)
                 PathModifierGenerator::GenerateTipWipe(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),
-                    m_sb->setting<AngularVelocity>(MS::TipWipe::kSkinExtruderSpeed),
-                    m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
-                    m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));
-            else if (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))
-                PathModifierGenerator::GenerateTipWipe(
-                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kSkinDistance),
-                    m_sb->setting<Velocity>(MS::TipWipe::kSkinSpeed), innerMostClosedContour,
-                    m_sb->setting<Angle>(MS::TipWipe::kSkinAngle),
                     m_sb->setting<AngularVelocity>(MS::TipWipe::kSkinExtruderSpeed),
                     m_sb->setting<Distance>(MS::TipWipe::kSkinLiftHeight),
                     m_sb->setting<Distance>(MS::TipWipe::kSkinCutoffDistance));

@@ -8,8 +8,18 @@ This directory is the canonical documentation source for ORNLSlicer.
 
 - [ORNLSlicer User Guide](ornlslicer-user-guide.pdf)
 - [Getting Started](wiki/Getting-Started.md)
+- [Cylindrical Slicing](slicing/cylindrical-slicing.md)
+- [Arc Specialties G-code](gcode/arc-specialties.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
+
+## Architecture
+
+- [Architecture Overview](../ARCHITECTURE.md)
+- [Application Runtime](architecture/application-runtime.md)
+- [Slicing Pipeline](architecture/slicing-pipeline.md)
+- [Settings System](architecture/settings-system.md)
+- [G-code and Visualization](architecture/gcode-and-visualization.md)
 
 ## Contributor Docs
 
@@ -28,6 +38,7 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [Troubleshooting](wiki/Troubleshooting.md)
 - [Generating the Master Settings File](wiki/Generating-the-Master-Settings-File.md)
 - [Adding a New User Setting](wiki/Adding-a-New-User-Setting.md)
+- [Adding Images to Settings Tooltips](wiki/Adding-Images-to-Settings-Tooltips.md)
 - [Relevant Papers](wiki/Relevant-Papers.md)
 - [License and Library Licenses](wiki/License-and-Library-Licenses.md)
 - [Citation and Copyright Information](wiki/Citation-and-Copyright-Information.md)

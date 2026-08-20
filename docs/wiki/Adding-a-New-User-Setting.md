@@ -1,66 +1,99 @@
 # To add a new user setting:
 
-### 1. Add the setting to mss_for_json.ods file.
-  * `mss_for_json.ods` is located in the root of the project directory.
-  * The `name` column should be snake cased and is used again in Step #3
-  * The `display` column contains the setting name as shown to the user
-  * The `type` column determines what UI widget is used. It must be one of the following supported types: 
-     - accel          (acceleration)
-     - angle
-     - ang_vel        (angular velocity)
-     - area
-     - boolean
-     - density
-     - distance
-     - enumeration    (must be defined in the `enums` class)
-     - location       (functionally the same as distance)
-     - multiline_text
-     - number         (a positive integer including zero)
-     - numbered_list
-     - percentage
-     - positive_int   (Does not include zero)
-     - power
-     - rpm
-     - speed
-     - string         (Single line text input)
-     - temperature
-     - time
-     - unitless_float
-     - voltage
-  * The `tooltip` column should be a short description of what the setting does
-  * The `depends` column is used to decide when a setting is enabled or disabled. The column must contain valid json, and supports boolean combinations of dependencies. See examples below.
+### 1. Add the setting to `resources/settings`.
 
-      ```C++
-      {"syntax": 4}                              // depends on a syntax; the number is determined by the GcodeSyntax enum
-      {"infill_enable": true }                   // depends on a boolean-type setting
-      {"AND": [{"syntax":1}, {"doffing":true}]}  // depends on two settings both being enabled
-      ```
-      > Note: "AND" and "OR" combinations of dependency support only two parameters. If you need a combination of three or more settings, you must nest the AND/OR blocks
-  * The `options` column contains the list of options for enumeration settings. It should be left blank for settings that are not enums.
-  * The `default` column contains the default value of the setting. It must match the type defined in the `type` column. If the setting type has units, then the default value must be in the internally stored units. For example, distances are internally stored as microns, so a default value of 1 inch would be 25400. 
-  * The `dependency_group` column is for groups of settings with dynamic dependencies that require extra computation. Static dependencies should use the `depends` column.
-  * The `local` column denotes whether a setting can be applied to a specific part or layer. A setting should be marked as local **only** when it is actually implemented to respect part/ layer specific settings, not if it *could* be a local setting but is currently unimplemented.
+Settings metadata is stored in YAML files under `resources/settings`. Files are read in sorted path order, and settings
+inside each file are emitted in file order, so add the setting where it should appear in the UI.
 
-### 2. Generate the Master Settings File
-  * Run the Cmake. See [Generating the Master Settings File](Generating-the-Master-Settings-File) for more information
+Each setting entry has these fields:
 
-### 3. Add the setting to the `constants` class. 
-  * `Constants` class is located in the utilities folder 
-  * There are classes for every major category -- `PrinterSettings`, `MaterialSettings`, `ProfileSettings`, and `ExperimentalSettings`. 
-  * Within the 4 major classes, there are subclasses for every minor category. **If you added a new minor category, you must add a new sub class.**
-  * Add your new constants to the appropriate class & subclass
-  * The string value must match the `name` column in the `mss_for_json.ods`
+* `name`: Stable snake-cased setting key. This is also the key used by setting profiles and C++ constants.
+* `display`: Setting name shown to the user.
+* `type`: UI/input type. It must be one of the supported setting types:
+  - accel
+  - angle
+  - ang_vel
+  - area
+  - boolean
+  - density
+  - distance
+  - enumeration
+  - location
+  - multiline_text
+  - number
+  - numbered_list
+  - percentage
+  - percentage100
+  - positive_int
+  - power
+  - rpm
+  - speed
+  - string
+  - temperature
+  - time
+  - unitless_float
+  - voltage
+* `tooltip`: Short description of what the setting does. Tooltips can include a
+  small Qt resource image using rich-text markup; see
+  [Adding Images to Settings Tooltips](Adding-Images-to-Settings-Tooltips.md).
+* `depends`: Structured dependency object used to decide when a setting is enabled or disabled. Use `{}` for no
+  dependency.
 
-### 4. Fetch the setting value from your code
-You can retrieve values from a settings base with the following code. Be sure to reference the correct settings base for your context, whether that is the global settings base, a part's settings base, or a layer's settings base.
+  ```yaml
+  depends: {"syntax":4}
+  depends: {"infill_enable":true}
+  depends: {"AND":[{"syntax":1},{"doffing":true}]}
+  ```
+
+  `AND` and `OR` must have exactly two child nodes. Use nested nodes for three or more conditions. `NOT` must have
+  exactly one child node.
+* `options`: A YAML list of enum options. It must be empty for non-enum settings.
+
+  ```yaml
+  options:
+    - "Lines"
+    - "Grid"
+    - "Concentric"
+  ```
+* `default`: Default value. It must match the setting type. Unit-backed settings use the internally stored units. For
+  example, distances are internally stored as microns, so a default value of 1 inch is `25400`.
+* `minor`: Minor UI category.
+* `major`: Major UI category. Current values are `Printer`, `Material`, `Profile`, and `Experimental`.
+* `namespace` and `symbol`: Metadata retained for future generated constants. Keep these aligned with the intended C++
+  constant location when adding new settings.
+* `local`: Whether the setting can be applied to a specific part or layer. Mark a setting as local only when local
+  handling is actually implemented.
+
+### 2. Generate the master settings file.
+
+Run CMake/build, or run the generator directly:
+
+```bash
+python3 scripts/generate_master_config.py resources/settings resources/configs/master.conf resources/configs/setting_inputs.conf
+```
+
+See [Generating the Master Settings File](Generating-the-Master-Settings-File.md) for more information.
+
+### 3. Add the setting to the `Constants` class.
+
+`Constants` is located in `include/utilities/constants.h` and `src/utilities/constants.cpp`.
+
+There are classes for every major category: `PrinterSettings`, `MaterialSettings`, `ProfileSettings`, and
+`ExperimentalSettings`. Within those major classes, there are subclasses for each minor category. If you added a new
+minor category, add a matching subclass.
+
+The string value must match the `name` field in the YAML metadata.
+
+### 4. Fetch the setting value from code.
+
+Retrieve values from the relevant settings base: global settings, a part settings base, or a layer settings base.
 
 ```C++
-  // get the global settings base and determine if rafts were enabled
-  auto global_sb = GSM->getGlobal();
-  bool is_raft_enabled = global_sb ->setting<bool>(Constants::MaterialSettings::PlatformAdhesion::kRaftEnable)
+// Get the global settings base and determine if rafts are enabled.
+auto global_sb = GSM->getGlobal();
+bool is_raft_enabled = global_sb->setting<bool>(Constants::MaterialSettings::PlatformAdhesion::kRaftEnable);
 
-  if (is_raft_enabled)
-  {
-      // do something with rafts
-  }
+if (is_raft_enabled) {
+    // Do something with rafts.
+}
 ```

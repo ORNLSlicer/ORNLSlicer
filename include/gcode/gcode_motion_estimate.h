@@ -13,14 +13,30 @@ class MotionEstimation {
     //! \brief Calculate time and volume contribution from motion
     //! \param layer, current layer number
     //! \param isFIncluded, if the current command statement include velocity / speed
-    //! \param isGOCommand, if the current command statement is the fast non extruding move (G0)
-    //! \param extrudersOn, list of extruders and there state indicating on or off currently
+    //! \param isGOCommand, if the current command statement is the fast non-deposition move (G0)
+    //! \param deposition_active, whether deposition is active currently
     //! \param G1F_time, G1 commands execution time estimates
     //! \param layer_time, accumulated time estimate for the entire layer
     //! \param layer_volume, accumulated volume estimate for the entire layer
     //! \param use_b, if using B filament axis, time calculation is based on extrusion not X/Y/Z distance
-    static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, QVector<bool> extrudersOn,
+    static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
                                            Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b);
+
+    //! \brief Calculate time and volume contribution for a non-linear path with a known path length.
+    static Distance calculatePathTimeAndVolume(Distance path_length, Distance start_direction_x,
+                                               Distance start_direction_y, Distance start_direction_z,
+                                               Distance end_direction_x, Distance end_direction_y,
+                                               Distance end_direction_z, bool isFIncluded, bool isGOCommand,
+                                               bool deposition_active, Time& G1F_time, Time& layer_time,
+                                               Volume& layer_volume);
+
+    //! \brief Set the bead dimensions to use for the next deposited volume estimate.
+    //! \param bead_width Total bead width.
+    //! \param bead_height Nominal bead height.
+    static void setBeadGeometry(Distance bead_width, Distance bead_height);
+
+    //! \brief Clears the inferred bead height so the next layer starts from the nominal height.
+    static void resetBeadHeight();
 
     static Acceleration m_v_acceleration;
     static Acceleration m_xy_acceleration;
@@ -42,6 +58,12 @@ class MotionEstimation {
 
     static Distance layerThickness;
     static Distance extrusionWidth;
+
+    static Distance m_current_bead_width;
+    static Distance m_current_bead_height;
+    static Distance m_nominal_bead_height;
+    static Distance m_last_print_z;
+    static Distance m_last_print_w;
 
     static Distance m_previous_distance;
     static Distance m_total_distance;
@@ -101,6 +123,8 @@ class MotionEstimation {
     //! \param isFIncluded, if the current command statement include velocity / speed
     static Time continuousXYMove(double theta, Distance d, Distance dx, Distance dy, Distance dz, Time& G1F_time,
                                  bool isFIncluded);
+
+    static void setPreviousVelocityVector(Velocity velocity, Distance dx, Distance dy, Distance dz);
 
     static bool m_previous_vertical; // Z or W move
 

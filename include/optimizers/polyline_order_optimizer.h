@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
@@ -8,6 +10,7 @@
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "optimizers/point_order_optimizer.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
@@ -50,12 +53,21 @@ class PolylineOrderOptimizer {
     /// @param minDistance: minimum distance of resulting polyline
     /// @param minTravelDistance: minimum distance for travel to be used instead of link
     /// @param enable_partitioned_linking: whether to enable partitioned linking of line infill
+    /// @param avoid_link_overlap: whether infill print-link cores must stay inside link_overlap_geometry
+    /// @param link_core_width: overlap-adjusted bead core width to use when checking infill print links
+    /// @param link_overlap_geometry: overlap-expanded geometry that linked infill print-segment cores must remain
+    /// inside
     void setInfillParameters(InfillPatterns infillPattern, PolygonList border_geometry, Distance minInfillPathDistance,
-                             Distance minTravelDistance, bool enable_partitioned_linking = false);
+                             Distance minTravelDistance, bool enable_partitioned_linking = false,
+                             bool avoid_link_overlap = false, Distance link_core_width = 0,
+                             PolygonList link_overlap_geometry = PolygonList());
 
     void setPointParameters(PointOrderOptimization pointOptimization, bool minDistanceEnable,
                             Distance minDistanceThreshold, Distance consecutiveThreshold, bool randomnessEnable,
-                            Distance randomnessRadius);
+                            Distance randomnessRadius, bool enableSegmentBreaking);
+
+    //! \brief Sets the previous layer's physical start point for consecutive point ordering.
+    void setConsecutiveReferencePoint(const std::optional<Point>& point);
 
     //! \brief Gets remaining Polylines
     //! \return current Polylines remaining
@@ -96,6 +108,11 @@ class PolylineOrderOptimizer {
     //! \brief Links the POO position to the given Polyline with a travel (used for closed contours)
     Polyline linkTo();
 
+    //! \brief Applies a point-order selection by optionally splitting a segment and rotating the closed loop
+    //! \param polyline: Closed-loop polyline to mutate
+    //! \param selection: Rotation/split instructions from the point optimizer
+    void applyPointOrderSelection(Polyline& polyline, const PointOrderOptimizer::PointOrderSelection& selection) const;
+
     //! \brief Links together and orders next, single infill Polyline
     //! \param Polylines: Polylines to consider
     //! \return Next Polyline linked via travel
@@ -122,11 +139,30 @@ class PolylineOrderOptimizer {
     bool linkIntersects(Point link_start, Point link_end, QVector<Polyline> infill_geometry,
                         PolygonList border_geometry);
 
+    //! \brief Determines whether the overlap-adjusted core of an infill link exits the allowed geometry
+    //! \param link_start: Start of link
+    //! \param link_end: End of link
+    //! \return whether the printed link would overlap contour space beyond the allowed overlap
+    bool linkOverlapsContour(Point link_start, Point link_end) const;
+
     //! \brief Finds the index and end of the the closest Polyline to m_current_location
     //! \param polylines: vector of polylines to test for closeness
     //! \param currentLocation: current location to test distance from
     //! \return Index for closest Polyline and whether or not to link to beginning or end
     QPair<int, bool> closestOpenPolyline(QVector<Polyline> polylines, Point currentLocation);
+
+    //! \brief Finds the closest or farthest open Polyline using each Polyline's nearest endpoint
+    //! \param polylines: vector of polylines to test
+    //! \param currentLocation: current location to test distance from
+    //! \param closest: true to select the closest Polyline, false to select the farthest Polyline
+    //! \return Index for selected Polyline and whether its nearest endpoint is the beginning or end
+    QPair<int, bool> extremumOpenPolyline(QVector<Polyline> polylines, Point currentLocation, bool closest);
+
+    //! \brief Selects an open line infill polyline using the configured path order optimization
+    //! \param polylines: vector of polylines to select from
+    //! \param currentLocation: current location to test distance from
+    //! \return Index for selected Polyline and whether or not to link to beginning or end
+    QPair<int, bool> orderedOpenPolyline(QVector<Polyline> polylines, Point currentLocation);
 
     //! \brief Links to a Polyline using shortest or longest distance
     //! \param shortest: Whether to look for shortest or longest (shortest by default)
@@ -170,7 +206,7 @@ class PolylineOrderOptimizer {
 
     //! \brief Settings needed for Point Optimization
     PointOrderOptimization m_point_optimization;
-    bool m_min_point_distance_enable, m_randomness_enable;
+    bool m_min_point_distance_enable, m_randomness_enable, m_segment_breaking_enable = false;
     Distance m_min_point_distance, m_consecutive_threshold, m_randomness_radius;
 
     //! \brief Internal copy of the pattern to evaluate
@@ -184,6 +220,9 @@ class PolylineOrderOptimizer {
 
     //! \brief Override location to use for linking instead of current location (Polyline and point optimizer)
     Point m_override_location, m_point_override_location;
+
+    //! \brief Previous layer's physical start point for consecutive point ordering.
+    std::optional<Point> m_consecutive_reference_point;
 
     //! \brief Current region type for Polyline. Determines which version of link is called
     RegionType m_current_region_type;
@@ -204,5 +243,18 @@ class PolylineOrderOptimizer {
     /// @brief Whether to enable partitioned linking of line infill, which links lines in the same partition before
     /// linking between partitions
     bool m_enable_partitioned_linking = false;
+
+    /// @brief Whether linked infill print segments should be rejected when their bead core overlaps contours
+    bool m_avoid_link_overlap = false;
+
+    /// @brief Overlap-adjusted bead core width used to test linked infill print segments
+    Distance m_link_core_width = 0;
+
+    /// @brief Overlap-expanded geometry that linked infill print-segment cores must remain inside
+    PolygonList m_link_overlap_geometry;
+
+    /// @brief Selection state used to alternate the two exterior edges when ordering open lines outside-in
+    int m_open_path_selection_count = 0;
+    bool m_outside_in_from_front = true;
 };
 } // namespace ORNL

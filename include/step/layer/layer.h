@@ -41,9 +41,6 @@ class Layer : public Step {
     //! transitions
     void connectPaths(Point& start, int& start_index, QVector<QSharedPointer<RegionBase>>& previousRegions);
 
-    //! \brief Adjusts pathing to use multiple nozzles
-    void adjustMultiNozzle();
-
     //! \brief Creates modifiers
     //! \param currentLocation: current location used to update start points of travels after modifiers are added
     void calculateModifiers(Point& currentLocation) override;
@@ -90,12 +87,27 @@ class Layer : public Step {
     QList<QSharedPointer<IslandBase>> m_island_order;
 
   private:
+    //! \brief Builds the translation used to move paths between the flattened slicing frame and printer coordinates.
+    Point getOrientationShift() const;
+
+    //! \brief Moves restored paths above the minimum printable Z height for the slicing plane.
+    void applyMinimumZShift();
+
+    //! \brief Removes the minimum printable Z shift before flattening paths again.
+    void removeMinimumZShift();
+
+    //! \brief Returns the minimum Z coordinate among material-depositing segments.
+    float getMinimumPrintZ();
+
+    //! \brief Redirects clearance moves that would intersect the build plate.
+    void redirectClearanceMoves();
+
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order
     QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
     createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
 
-    //! \brief removes duplicate islands according to remove-duplicate-path settings
-    void removeDuplicateIslands();
+    //! \brief Vertical shift applied to keep printing paths above the build surface.
+    Distance m_minimum_z_shift;
 
     //! \brief a collection of polygons on this layer that contain setting overrides
     QVector<SettingsPolygon> m_settings_polygons;

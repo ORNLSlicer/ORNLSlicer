@@ -1,0 +1,147 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "perimeter_start_code"
+    display: "Perimeter Start G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the start of perimeter paths"
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kPerimeterStartGCode"
+    local: true
+  - name: "perimeter_end_code"
+    display: "Perimeter End G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the end of perimeter paths"
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kPerimeterEndGCode"
+    local: true
+  - name: "inset_start_code"
+    display: "Inset Start G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the start of inset paths"
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kInsetStartGCode"
+    local: true
+  - name: "inset_end_code"
+    display: "Inset End G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the end of inset paths"
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kInsetEndGCode"
+    local: true
+  - name: "skeleton_start_code"
+    display: "Skeleton Start G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the start of skeleton paths"
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kSkeletonStartGCode"
+    local: true
+  - name: "skeleton_end_code"
+    display: "Skeleton End G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the end of skeleton paths"
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kSkeletonEndGCode"
+    local: true
+  - name: "skin_start_code"
+    display: "Skin Start G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the start of skin paths"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kSkinStartGCode"
+    local: true
+  - name: "skin_end_code"
+    display: "Skin End G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the end of skin paths"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kSkinEndGCode"
+    local: true
+  - name: "infill_start_code"
+    display: "Infill Start G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the start of infill paths"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kInfillStartGCode"
+    local: true
+  - name: "infill_end_code"
+    display: "Infill End G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the end of infill paths"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kInfillEndGCode"
+    local: true
+  - name: "support_start_code"
+    display: "Support Start G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the start of support paths"
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kSupportStartGCode"
+    local: true
+  - name: "support_end_code"
+    display: "Support End G-Code"
+    type: "multiline_text"
+    tooltip: "Code to be executed at the end of support paths"
+    depends: {"AND":[{"slicing_mode":0},{"support":true}]}
+    options: []
+    default: ""
+    minor: "G-Code"
+    major: "Profile"
+    namespace: "Profile::GCode"
+    symbol: "kSupportEndGCode"
+    local: true

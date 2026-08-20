@@ -1,0 +1,111 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "travel_speed"
+    display: "Travel Speed"
+    type: "speed"
+    tooltip: "Speed for travel moves"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kTravelSpeed"
+    local: true
+  - name: "minimum_infill_travel_length"
+    display: "Minimum Infill Travel Length"
+    type: "distance"
+    tooltip: "Travel moves less than this value in infill, skin, and support fill are replaced with extrusion moves"
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"infill":true},{"skin":true}]},{"support":true}]}]}
+    options: []
+    default: 25400
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kMinimumInfillTravelLength"
+    local: true
+  - name: "min_travel_length"
+    display: "Minimum Travel Length"
+    type: "distance"
+    tooltip: "Travel moves less than this value will leave the extruder enabled"
+    depends: {"OR":[{"syntax":1},{"OR":[{"syntax":11},{"syntax":31}]}]}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kMinimumTravelLength"
+    local: true
+  - name: "minimum_travel_for_lift"
+    display: "Minimum Travel Length for Lifting"
+    type: "distance"
+    tooltip: "Travel moves less than this value will not create a travel lift"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kMinimumTravelLengthforLifting"
+    local: true
+  - name: "travel_lift_height"
+    display: "Travel Lift Height"
+    type: "distance"
+    tooltip: "Height the Z axis lifts by to clear the part during travel moves"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kTravelLiftHeight"
+    local: false
+  - name: "final_lift_distance"
+    display: "Final Lift Distance"
+    type: "distance"
+    tooltip: "Distance to lift the tool at the end of the print along the slicing plane normal before shutdown."
+    depends: {"slicing_mode":0}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kFinalLiftDistance"
+    local: false
+  - name: "enable_travel_pause"
+    display: "Pause During Travel"
+    type: "boolean"
+    tooltip: "Allows for a pause command to be issued after the travel lift but before the travel XY motion. The centroid move can be added and issued before the pause."
+    depends: {"slicing_mode":0}
+    options: []
+    default: false
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kPauseDuringTravel"
+    local: true
+  - name: "travel_centroid_move"
+    display: "Move to Centroid During Pause"
+    type: "boolean"
+    tooltip: "Moves to the XY centroid of the object before the travel pause."
+    depends: {"AND":[{"slicing_mode":0},{"enable_travel_pause":true}]}
+    options: []
+    default: false
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kMovetoCentroidDuringPause"
+    local: true
+  - name: "travel_pause_duration"
+    display: "Travel Pause Duration"
+    type: "time"
+    tooltip: "Duration of the pause during travel motion."
+    depends: {"AND":[{"slicing_mode":0},{"enable_travel_pause":true}]}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kTravelPauseDuration"
+    local: true

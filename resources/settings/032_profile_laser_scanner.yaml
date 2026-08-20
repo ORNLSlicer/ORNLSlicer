@@ -1,0 +1,284 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "laser_scanner"
+    display: "Enable Laser Scanner"
+    type: "boolean"
+    tooltip: "If selected, will generate G/M codes for laser scanner path between layers"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kEnableLaserScanner"
+    local: false
+  - name: "laser_speed"
+    display: "Laser Scan Speed"
+    type: "speed"
+    tooltip: "Speed for scan paths"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScanSpeed"
+    local: false
+  - name: "laser_scanner_height_offset"
+    display: "Laser Scanner Height Offset"
+    type: "location"
+    tooltip: "Height of scanner above table in home position"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScannerHeightOffset"
+    local: false
+  - name: "laser_scanner_x_offset"
+    display: "Laser Scanner X Offset"
+    type: "location"
+    tooltip: "X offset of scanner from command position (typically extruder head)"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScannerXOffset"
+    local: false
+  - name: "laser_scanner_y_offset"
+    display: "Laser Scanner Y Offset"
+    type: "location"
+    tooltip: "Y offset of scanner from command position (typically extruder head)"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScannerYOffset"
+    local: false
+  - name: "laser_scanner_height"
+    display: "Laser Scanner Height"
+    type: "distance"
+    tooltip: "Target height of scanner above layers"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScannerHeight"
+    local: false
+  - name: "laser_scanner_width"
+    display: "Laser Scanner Width"
+    type: "distance"
+    tooltip: "Width of scanner at given height"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScannerWidth"
+    local: false
+  - name: "laser_scanner_step_distance"
+    display: "Laser Step Distance"
+    type: "distance"
+    tooltip: "Step distance of scanner along layer (resolution)"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserStepDistance"
+    local: false
+  - name: "laser_scan_line_resolution"
+    display: "Laser Scan Line Resolution"
+    type: "distance"
+    tooltip: "Resolution of single scan line"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kLaserScanLineResolution"
+    local: false
+  - name: "laser_scanner_axis"
+    display: "Scanner Axis"
+    type: "enumeration"
+    tooltip: "Axis the scan line will travel"
+    depends: {"laser_scanner":true}
+    options:
+      - "X"
+      - "Y"
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kScannerAxis"
+    local: false
+  - name: "invert_laser_scanner_head"
+    display: "Invert Laser Head"
+    type: "boolean"
+    tooltip: "Direction of mounted laser head with respect to machine axis"
+    depends: {"laser_scanner":true}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kInvertLaserHead"
+    local: false
+  - name: "enable_bed_scan"
+    display: "Enable Bed Scan"
+    type: "boolean"
+    tooltip: "Scan print bed before first layer deposition"
+    depends: {"laser_scanner":true}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kEnableBedScan"
+    local: false
+  - name: "scan_layer_skip"
+    display: "Scan Layer Skip"
+    type: "number"
+    tooltip: "Multiple of layer to scan (1 = every layer, 2 = every other layer, etc.)"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kScanLayerSkip"
+    local: false
+  - name: "enable_scanner_buffer"
+    display: "Enable Scanner Buffer"
+    type: "boolean"
+    tooltip: "If selected, will allow scan lines to be offset by buffer distance to allow acceleration"
+    depends: {"laser_scanner":true}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kEnableScannerBuffer"
+    local: false
+  - name: "buffer_distance"
+    display: "Buffer Distance"
+    type: "distance"
+    tooltip: "Distance to offset scan lines to allow acceleration"
+    depends: {"AND":[{"laser_scanner":true},{"enable_scanner_buffer":true}]}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kBufferDistance"
+    local: false
+  - name: "transmit_height_map"
+    display: "Transmit Height Map"
+    type: "boolean"
+    tooltip: "Transmit height map via socket to controlling software"
+    depends: {"laser_scanner":true}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kTransmitHeightMap"
+    local: false
+  - name: "global_scan"
+    display: "Global Scan"
+    type: "boolean"
+    tooltip: "Scan all objects as part of global bounding box"
+    depends: {"laser_scanner":true}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kGlobalScan"
+    local: false
+  - name: "orientation_axis"
+    display: "Orientation Axis"
+    type: "enumeration"
+    tooltip: "Orientation axis of scan (default for vertical is z)"
+    depends: {"laser_scanner":true}
+    options:
+      - "X"
+      - "Y"
+      - "Z"
+    default: 2
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kOrientationAxis"
+    local: false
+  - name: "orientation_angle"
+    display: "Orientation Angle"
+    type: "angle"
+    tooltip: "Orientation angle of scan (default for vertical is 0)"
+    depends: {"laser_scanner":true}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kOrientationAngle"
+    local: false
+  - name: "enable_orientation_definition"
+    display: "Custom Orientation Definition"
+    type: "boolean"
+    tooltip: "Define angles that represent orientation (robotic arm systems)"
+    depends: {"laser_scanner":true}
+    options: []
+    default: false
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kCustomOrientationDefinition"
+    local: false
+  - name: "orientation_a"
+    display: "Angle A"
+    type: "angle"
+    tooltip: "Angle A (X axis rotation - pitch)"
+    depends: {"AND":[{"laser_scanner":true},{"enable_orientation_definition":true}]}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kAngleA"
+    local: false
+  - name: "orientation_b"
+    display: "Angle B"
+    type: "angle"
+    tooltip: "Angle B (Y axis rotation - yaw)"
+    depends: {"AND":[{"laser_scanner":true},{"enable_orientation_definition":true}]}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kAngleB"
+    local: false
+  - name: "orientation_c"
+    display: "Angle C"
+    type: "angle"
+    tooltip: "Angle C (Z axis rotation - roll)"
+    depends: {"AND":[{"laser_scanner":true},{"enable_orientation_definition":true}]}
+    options: []
+    default: 0
+    minor: "Laser Scanner"
+    major: "Profile"
+    namespace: "Profile::LaserScanner"
+    symbol: "kAngleC"
+    local: false

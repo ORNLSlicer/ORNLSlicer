@@ -10,7 +10,6 @@
 
 #include "configs/settings_base.h"
 #include "configs/settings_range.h"
-#include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/plane.h"
 #include "geometry/point.h"
@@ -33,7 +32,7 @@ class BufferedSlicer {
     struct SliceMeta {
         int number;
         QSharedPointer<SettingsBase> settings;
-        PolygonList geometry, modified_geometry, setting_bounded_geometry;
+        PolygonList geometry;
         Plane plane;
         QVector<SettingsPolygon> settings_polygons;
         QVector3D average_normal;
@@ -56,7 +55,8 @@ class BufferedSlicer {
     BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
                    QVector<QSharedPointer<Part>> settings_parts,
                    QMap<uint, QSharedPointer<SettingsRange>> ranges = QMap<uint, QSharedPointer<SettingsRange>>(),
-                   int previous_buffer = 0, int future_buffer = 0, bool use_cgal_cross_section = false);
+                   int previous_buffer = 0, int future_buffer = 0, bool use_cgal_cross_section = false,
+                   bool include_build_plate_gap = false);
 
     //! \brief performs the next slice and returns it
     //! \note if m_future_buffer_size is > 0, then this actually computes N + m_future_buffer_size slice, but still
@@ -133,8 +133,5 @@ class BufferedSlicer {
 
     //! \brief list of settings parts being tracked
     QVector<QSharedPointer<Part>> m_settings_parts;
-
-    //! \brief Build mesh cut by settings region
-    QSharedPointer<ClosedMesh> m_settings_bounded_mesh, m_settings_remaining_build_mesh;
 };
 } // namespace ORNL

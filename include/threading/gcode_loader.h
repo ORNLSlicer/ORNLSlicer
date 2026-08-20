@@ -9,7 +9,6 @@
 #include <qmap.h>
 #include <qregularexpression.h>
 #include <qscopedpointer.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qstringmatcher.h>
 #include <qtmetamacros.h>
@@ -55,10 +54,7 @@ class GCodeLoader : public QThread {
     //! into the hash for appropriate format.
     //! \param layerFirstLineNumbers: line numbers for BEGINNING LAYER for each layer to jump the cursor to
     //! appropriate line when spinbox moves up and down.
-    //! \param layerSkipLineNumbers: line numbers to skip applying formatting to hash based on visualization
-    //! settings
-    void gcodeLoadedText(QString text, QHash<QString, QTextCharFormat> fontColors, QList<int> layerFirstLineNumbers,
-                         QSet<int> layerSkipLineNumbers);
+    void gcodeLoadedText(QString text, QHash<QString, QTextCharFormat> fontColors, QList<int> layerFirstLineNumbers);
 
     //! \brief Emits error signal
     //! \param msg: Qstring error message
@@ -66,8 +62,8 @@ class GCodeLoader : public QThread {
 
     //! \brief signal to layer time window with info
     //! \param layertimes: List of layer times for display
-    void forwardInfoToLayerTimeWindow(QList<QList<Time>> layer_times, QList<double> layer_FR_modifiers,
-                                      bool adjusted_layer_time);
+    void forwardInfoToLayerTimeWindow(QList<Time> layer_times, QList<Time> adjusted_layer_times,
+                                      QList<double> layer_FR_modifiers, bool adjusted_layer_time);
 
     //! \brief signal to export window with info
     //! \param filename: temp gcode filename to copy
@@ -105,44 +101,49 @@ class GCodeLoader : public QThread {
     //! \return color based on comment keywords
     QColor determineFontColor(const QString& comment);
 
+    //! \brief determine visualization color based on motion command and comment keywords
+    //! \param command_id: Parsed G-code motion command ID.
+    //! \param comment: Comment to parse
+    //! \return color based on command type and comment keywords
+    QColor determineSegmentColor(int command_id, const QString& comment);
+
+    //! \brief Checks whether a comment contains a path modifier with color precedence.
+    //! \param comment: Comment to parse
+    //! \return True when modifier coloring should not be overridden by region-specific arc colors.
+    bool containsColorPriorityModifier(const QString& comment) const;
+
+    //! \brief determine display type based on comment keywords
+    //! \param comment: Comment to parse
+    //! \return semantic display type used for visibility and selection behavior
+    SegmentDisplayType determineSegmentDisplayType(const QString& comment);
+
     //! \brief Set the segment display information based on the region type defined in the comment.
     //! \param segment: Segment to set display info for.
+    //! \param type: Segment visibility/display classification.
     //! \param color: Color to set for the segment.
     //! \param comment: Comment to parse for the segment type.
     //! \param start_pos: The start position of the segment.
     //! \param end_pos: The end position of the segment.
     //! \param line_num: The line number of the segment.
     //! \param layer_num: The layer number of the segment.
-    void setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, const QColor& color, const QString& comment,
-                               const QVector3D& start_pos, const QVector3D& end_pos, const int& line_num,
-                               const int& layer_num);
+    void setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, SegmentDisplayType type, const QColor& color,
+                               const QString& comment, const QVector3D& start_pos, const QVector3D& end_pos,
+                               const int& line_num, const int& layer_num);
 
     //! \brief Set the segment meta information. This is the information that is displayed when the user selects
     //! a segment in the UI.
     //! \param segment: Segment to set meta info for.
     //! \param comment: Comment to parse for the segment type.
     //! \param info_end_pos: The end position of the segment.
-    //! \param extruders_on: Indicates if the extruders are on or off.
+    //! \param deposition_active: Indicates if the command is actively depositing material.
     //! \param info_speed_set: Indicates if the speed is set.
-    //! \param extruders_speed: The speed of the extruders.
+    //! \param extruder_speed: The speed of the extruder.
     void setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const QString& comment, QVector3D& info_end_pos,
-                            const bool& extruders_on, const bool& info_speed_set, const double& extruders_speed);
+                            const bool& deposition_active, const bool& info_speed_set, const double& extruder_speed);
 
     //! \brief generate additional export comments
     //! \return string
     QString additionalExportComments();
-
-    //! \brief generate part(s) model obj file
-    void savePartsModelObjFile();
-
-    //! \brief send the part and gcode over tcp
-    //! \param host
-    //! \param port
-    //! \param machine name
-    //! \param gcode file path
-    //! \param model file path
-    void static sendGcodeModelObjFile(QString host, int port, QString machineName, QString gcodeFilePath,
-                                      QString objFilePath);
 
     //! \brief generates an open gl object for a given gcode command
     //! \param line_num: Line number that links visual segment to gcode for highlighting
@@ -150,19 +151,16 @@ class GCodeLoader : public QThread {
     //! \param color: Color of segment based on comments from gcode
     //! \param command_id: the id of the gcode command for th segment
     //! \param parameters: Parameters of gcodecommand end (x, y, z, w, i, j, p, q)
-    //! \param extruders_on: vector indicating if each extruder is on or off, determines how many segments to
-    //! draw
-    //! \param extruder_offsets: vector indicating offset of each extruder relative to ext0, used to determine
-    //! if shift is necessary
-    //! \param extruders_speed: double value read from gcode
-    //! \param is_travel: if this line is a travel, ignores extruder status
+    //! \param deposition_active: whether the command is actively depositing material
+    //! \param extruder_speed: double value read from gcode
+    //! \param include_non_deposition_moves: if true, generates visual segments when deposition is inactive
     //! \param optional_parameters: Parameters of gcodecommand for start (x, y, z, w)
     //! \return List of generated visual segments.
     QVector<QSharedPointer<SegmentBase>>
     generateVisualSegment(int line_num, int layer_num, const QColor& color, int command_id,
-                          const QMap<char, double>& parameters, QVector<bool> extruders_on,
-                          QVector<Point> extruder_offsets, double extruders_speed, bool is_travel,
-                          const QString comment, const QMap<char, double>& optional_parameters = QMap<char, double>());
+                          const QMap<char, double>& parameters, bool deposition_active, double extruder_speed,
+                          bool include_non_deposition_moves, const QString comment,
+                          const QMap<char, double>& optional_parameters = QMap<char, double>());
 
     //! \brief Filename.
     QString m_filename;
@@ -182,8 +180,8 @@ class GCodeLoader : public QThread {
         m_coasting, m_spirallift, m_rampingup, m_rampingdown, m_leadin;
 
     //! \brief matchers for type identification for coloring
-    QStringMatcher m_perimeter, m_inset, m_infill, m_skin, m_skeleton, m_support, m_support_roof, m_travel, m_raft,
-        m_brim, m_skirt, m_laserscan, m_thermalscan;
+    QStringMatcher m_perimeter, m_radial, m_helical, m_inset, m_infill, m_skin, m_skeleton, m_support, m_support_roof,
+        m_travel, m_raft, m_brim, m_skirt, m_laserscan, m_thermalscan;
 
     //! \brief colors for modifiers to adjust display size
     QVector<QColor> m_modifier_colors;
@@ -227,6 +225,21 @@ class GCodeLoader : public QThread {
 
     //! \brief Current Gcode extruder speed for info display
     QString m_info_extruder_speed;
+
+    //! \brief Last known Arc Specialties cylinder axis for radial/helical true-width bead visualization.
+    Point m_arc_specialties_cylindrical_axis;
+
+    //! \brief Whether an Arc Specialties cylinder axis has been recovered from parsing.
+    bool m_has_arc_specialties_cylindrical_axis = false;
+
+    //! \brief Whether the recovered Arc Specialties cylinder axis belongs to the active print path.
+    bool m_arc_specialties_cylindrical_axis_matches_current_path = false;
+
+    //! \brief Last parsed Arc Specialties CP value used to infer cylindrical centers from linearized beads.
+    double m_previous_arc_specialties_cp = 0.0;
+
+    //! \brief Whether a previous Arc Specialties CP value has been parsed.
+    bool m_has_previous_arc_specialties_cp = false;
 
     //! \brief Current settings for gcode loader
     QSharedPointer<SettingsBase> m_sb;

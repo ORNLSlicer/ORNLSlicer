@@ -47,7 +47,7 @@ void MazakParser::G441Handler(QVector<QString> params) {
         return;
     }
 
-    m_extruders_on[0] = true;
+    m_deposition_active = true;
 }
 
 // G442 (LASER OFF)
@@ -56,7 +56,7 @@ void MazakParser::G442Handler(QVector<QString> params) {
         return;
     }
 
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
 }
 
 void MazakParser::FeedRateHandler(QVector<QString> params) { m_feedrate = "F" % params[1]; }

@@ -7,17 +7,12 @@
 
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
-#include "geometry/path.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "utilities/enums.h"
-
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/single_path.h>
-Q_DECLARE_METATYPE(QList<SinglePath::Bridge>);
-#endif
 
 namespace ORNL {
 /*!
@@ -60,21 +55,16 @@ class IslandBase {
     const PolygonList& getGeometry() const;
 
     //! \brief Compute all regions in the island.
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief applies the single path algorithm on a set of geometry
-    //! \param geometry: input closed contours
-    //! \param layer_num: the index of this layer
-    //! \param sync: used to sync between layers
-    void applySinglePath(QVector<SinglePath::PolygonList>& geometry, uint layer_num, QSharedPointer<SyncManager>& sync);
-#endif
+    void compute(uint layer_num);
 
     //! \brief Get the settings for the island.
     QSharedPointer<SettingsBase> getSb() const;
 
     //! \brief Set the settings for the island.
     void setSb(const QSharedPointer<SettingsBase>& sb);
+
+    //! \brief Sets the slicing frame used while optimizing flattened layer geometry.
+    void setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift);
 
     //! \brief returns enum type of this island
     IslandType getType();
@@ -105,20 +95,14 @@ class IslandBase {
     //! \param previousRegions: chain of regions visited to allow cross-island and cross-layer transitions
     void calculateMultiMaterialTransitions(QVector<QSharedPointer<RegionBase>>& previousRegions);
 
-    //! \brief adjusts pathing for multiple extruders
-    void adjustMultiNozzle();
-
-    //! \brief add nozzle to list of nozzles that should be on when this island prints
-    //! \param nozzle number, indexed at 0
-    void addNozzle(int nozzle);
-
-    //! \brief sets extruder/nozzle number for this island
-    void setExtruder(int ext);
-
-    //! \brief returns extruder/nozzle number for island
-    int getExtruder();
+    //! \brief Fits eligible planar line segments in this island to G2/G3 arcs.
+    void fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb);
 
   protected:
+    //! \brief Prepares a region for optimization with layer metadata and previous-layer seam context.
+    void prepareRegionForOptimization(const QSharedPointer<RegionBase>& region, int layerNumber,
+                                      QVector<QSharedPointer<RegionBase>>& previousRegions);
+
     //! \brief Geometry of island.
     PolygonList m_geometry;
 
@@ -128,16 +112,10 @@ class IslandBase {
     //! \brief Settings the island will use.
     QSharedPointer<SettingsBase> m_sb;
 
-    //! \brief Last enclosing contour for use with path modifiers
-    Path innermostClosedContour;
-
     //! \brief The settings polygon this region may use
     QVector<SettingsPolygon> m_settings_polygons;
 
     //! \brief Enum value of island type
     IslandType m_island_type;
-
-    //! \brief zero-indexed extruder # this island is assigned to
-    int m_extruder;
 };
 } // namespace ORNL

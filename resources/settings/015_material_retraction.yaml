@@ -1,0 +1,99 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "retraction"
+    display: "Enable Retraction"
+    type: "boolean"
+    tooltip: "If selected, filament is retracted back into the extruder to end the path"
+    depends: {"machine_type":1}
+    options: []
+    default: false
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kEnableRetraction"
+    local: true
+  - name: "retract_min_travel_length"
+    display: "Minimum Travel for Retraction"
+    type: "distance"
+    tooltip: "Travel moves longer than this distance will force a retraction"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: 0
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kMinimumTravelforRetraction"
+    local: true
+  - name: "retraction_length"
+    display: "Retraction Length"
+    type: "distance"
+    tooltip: "The length of the filament that will be retracted into the extruder"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: 0
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kRetractionLength"
+    local: true
+  - name: "retraction_speed"
+    display: "Retraction Speed"
+    type: "speed"
+    tooltip: "The speed that the filament that will be retracted into the extruder"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: 0
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kRetractionSpeed"
+    local: true
+  - name: "retraction_open_spaces_only"
+    display: "Retract on Open Spaces Only"
+    type: "boolean"
+    tooltip: "If seleted, retraction will occur only when crossing open spaces"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: false
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kRetractonOpenSpacesOnly"
+    local: true
+  - name: "retraction_layer_change"
+    display: "Retract on Layer Change"
+    type: "boolean"
+    tooltip: "If seleted, retraction will occur between every layer"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: false
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kRetractonLayerChange"
+    local: true
+  - name: "filament_prime_speed"
+    display: "Filament Prime Speed"
+    type: "speed"
+    tooltip: "Speed of the extruder during priming"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: 0
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kFilamentPrimeSpeed"
+    local: true
+  - name: "filament_prime_length"
+    display: "Additional Prime Length"
+    type: "distance"
+    tooltip: "Length of extra filament to extrude during priming after a retraction"
+    depends: {"AND":[{"machine_type":1},{"retraction":true}]}
+    options: []
+    default: 0
+    minor: "Retraction"
+    major: "Material"
+    namespace: "Material::Retraction"
+    symbol: "kAdditionalPrimeLength"
+    local: true

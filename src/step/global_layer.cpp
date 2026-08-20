@@ -1,11 +1,13 @@
 #include "step/global_layer.h"
 
+#include <algorithm>
 #include <limits>
 
 #include <qassert.h>
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
+#include <qlogging.h>
 #include <qmap.h>
 #include <qsharedpointer.h>
 #include <quuid.h>
@@ -16,6 +18,7 @@
 #include "geometry/path_modifier.h"
 #include "geometry/point.h"
 #include "optimizers/island_order_optimizer.h"
+#include "optimizers/optimization_anchor.h"
 #include "part/part.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
@@ -36,6 +39,9 @@ void GlobalLayer::unorient() {
     QMap<QUuid, QSharedPointer<Part::StepPair>>::ConstIterator itr;
     for (itr = m_step_pairs.constBegin(); itr != m_step_pairs.constEnd(); ++itr) {
         auto step_pair = itr.value();
+        if (step_pair.isNull() || step_pair->printing_layer.isNull())
+            continue;
+
         step_pair->printing_layer->unorient();
     }
 }
@@ -44,19 +50,17 @@ void GlobalLayer::reorient() {
     QMap<QUuid, QSharedPointer<Part::StepPair>>::ConstIterator itr;
     for (itr = m_step_pairs.constBegin(); itr != m_step_pairs.constEnd(); ++itr) {
         auto step_pair = itr.value();
+        if (step_pair.isNull() || step_pair->printing_layer.isNull())
+            continue;
+
         step_pair->printing_layer->reorient();
     }
 }
 
-void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, QVector<Point>& current_location,
-                                     int layer_num) {
-    // Retrieve relevant settings
-    int num_nozzles = global_sb->setting<int>(ES::MultiNozzle::kNozzleCount);
-
-    for (int tool = 0; tool < num_nozzles; ++tool) {
-        if (!m_island_order[tool].isEmpty()) {
-            QSharedPointer<IslandBase> firstIsland = m_island_order[tool].front();
-
+void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, Point& current_location, int layer_num) {
+    if (!m_island_order.isEmpty()) {
+        QSharedPointer<IslandBase> firstIsland = m_island_order.front();
+        if (!firstIsland.isNull() && !firstIsland->getRegions().isEmpty()) {
             // Retrieve relevant settings
             bool perimeter_enabled = firstIsland->getSb()->setting<bool>(PS::Perimeter::kEnable);
             bool perimeter_lead_in_enabled = firstIsland->getSb()->setting<bool>(PS::Perimeter::kEnableLeadIn);
@@ -69,61 +73,68 @@ void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, QVe
 
                 Q_ASSERT(firstIsland->getType() == IslandType::kPolymer);
                 QSharedPointer<RegionBase> firstRegion = (firstIsland->getRegions()).front();
-
-                PathModifierGenerator::GenerateLayerLeadIn(firstRegion->getPaths().front(), leadIn, global_sb);
+                if (!firstRegion.isNull() && !firstRegion->getPaths().isEmpty() &&
+                    firstRegion->getPaths().front().size() > 0) {
+                    PathModifierGenerator::GenerateLayerLeadIn(firstRegion->getPaths().front(), leadIn, global_sb);
+                }
             }
         }
     }
 
-    if (global_sb->setting<bool>(MS::SpiralLift::kLayerEnable)) {
-        for (int tool = 0; tool < num_nozzles; ++tool) {
-            auto lastIsland = m_island_order[tool].back();
+    if (global_sb->setting<bool>(MS::SpiralLift::kLayerEnable) && !m_island_order.isEmpty()) {
+        auto lastIsland = m_island_order.back();
+        if (!lastIsland.isNull() && !lastIsland->getRegions().isEmpty()) {
             Q_ASSERT(lastIsland->getType() == IslandType::kPolymer);
             QList<QSharedPointer<RegionBase>> regions = lastIsland->getRegions();
             QSharedPointer<RegionBase> lastRegion = regions.back();
-            Path finalPath = lastRegion->getPaths().back();
+            if (!lastRegion.isNull() && !lastRegion->getPaths().isEmpty() && lastRegion->getPaths().back().size() > 0) {
+                Path& finalPath = lastRegion->getPaths().back();
 
-            if (finalPath.back()->getSb()->setting<PathModifiers>(SS::kPathModifiers) != PathModifiers::kSpiralLift) {
-                PathModifierGenerator::GenerateSpiralLift(finalPath,
-                                                          global_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
-                                                          global_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
-                                                          global_sb->setting<int>(MS::SpiralLift::kLiftPoints),
-                                                          global_sb->setting<Velocity>(MS::SpiralLift::kLiftSpeed),
-                                                          global_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                if (finalPath.back()->getSb()->setting<PathModifiers>(SS::kPathModifiers) !=
+                    PathModifiers::kSpiralLift) {
+                    PathModifierGenerator::GenerateSpiralLift(
+                        finalPath, global_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
+                        global_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
+                        global_sb->setting<int>(MS::SpiralLift::kLiftPoints),
+                        global_sb->setting<Velocity>(MS::SpiralLift::kLiftSpeed),
+                        global_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
 
-                // move current location to the end of the spiral lift
-                current_location[tool] = getIslands().last()->getRegions().last()->getPaths().last().back()->end();
+                    // move current location to the end of the spiral lift
+                    current_location = finalPath.back()->end();
+                }
             }
         }
     }
-}
 
-void GlobalLayer::adjustFixedMultiNozzle() {
-    QMap<QUuid, QSharedPointer<Part::StepPair>>::ConstIterator itr;
-    for (itr = m_step_pairs.constBegin(); itr != m_step_pairs.constEnd(); ++itr) {
-        auto step_pair = itr.value();
-        step_pair->printing_layer->adjustMultiNozzle();
+    for (QSharedPointer<IslandBase> island : m_island_order) {
+        if (!island.isNull())
+            island->fitCircularArcs(global_sb);
     }
 }
 
-void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, QVector<Point>& start, QVector<int>& start_index,
-                               QVector<QVector<QSharedPointer<RegionBase>>>& previous_regions) {
+void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& start, int& start_index,
+                               QVector<QSharedPointer<RegionBase>>& previous_regions) {
     // this function "connects" paths by inserting travels between disconnected pathing. Also orders parts & islands.
-    // Does this individually for each nozzle.
 
-    // all the params should be the same length
-    // and that length is the number of nozzles
-    int num_nozzles = global_sb->setting<int>(ES::MultiNozzle::kNozzleCount);
-    Q_ASSERT(start.size() == num_nozzles);
-    Q_ASSERT(start_index.size() == num_nozzles);
-    Q_ASSERT(previous_regions.size() == num_nozzles);
+    for (auto i = m_step_pairs.constBegin(); i != m_step_pairs.constEnd(); ++i) {
+        if (i.value().isNull())
+            continue;
+
+        QSharedPointer<Layer> printing_layer = i.value()->printing_layer;
+        if (printing_layer.isNull())
+            continue;
+
+        for (QSharedPointer<IslandBase> island : printing_layer->getIslands()) {
+            if (!island.isNull())
+                island->setOptimizationFrame(printing_layer->getSlicingPlane(), printing_layer->getShift());
+        }
+    }
 
     // get the island order method from the settings
     IslandOrderOptimization islandOrderMethod =
         static_cast<IslandOrderOptimization>(global_sb->setting<int>(PS::Optimizations::kIslandOrder));
 
     // 1) Connect paths for all the scans first.
-    //    Assume all the scans go on tool #0.
     if (containsScanLayers()) {
         // 1.1) Order the scan layers.
         //      Scan layers have a raster pattern that covers the entire part. So,
@@ -135,19 +146,26 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, QVector<P
         for (auto i = m_step_pairs.constBegin(); i != m_step_pairs.constEnd(); ++i) {
             QUuid part_id = i.key();
             QSharedPointer<Part::StepPair> step_pair = i.value();
+            if (step_pair.isNull() || step_pair->printing_layer.isNull())
+                continue;
 
             auto part_islands = step_pair->printing_layer->getIslands().toVector();
             for (auto island : part_islands) {
-                islands_for_all_parts.insert(island, part_id);
+                if (!island.isNull() && !island->getGeometry().isEmpty())
+                    islands_for_all_parts.insert(island, part_id);
             }
         }
 
         // 1.1.2) Get the right start point for the Island Order Optimizer part ordering
-        Point start_point = start[0]; // always 0th tool for scans
+        Point start_point = start;
         if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
-            //! \note  Calls to CustomIsland location may need to vary by nozzle/tool number
-            start_point = Point(global_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
-                                global_sb->setting<double>(PS::Optimizations::kCustomIslandYLocation));
+            const auto first_step_pair = m_step_pairs.constBegin();
+            if (first_step_pair != m_step_pairs.constEnd() && !first_step_pair.value().isNull() &&
+                !first_step_pair.value()->printing_layer.isNull()) {
+                QSharedPointer<Layer> printing_layer = first_step_pair.value()->printing_layer;
+                start_point = OptimizationAnchor::customIslandOrderPoint(global_sb, printing_layer->getSlicingPlane(),
+                                                                         printing_layer->getShift());
+            }
         }
 
         // 1.1.3) Make the IOO and get the order results
@@ -158,165 +176,165 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, QVector<P
         bool is_first_scan = true;
         for (auto part : m_part_order) {
             QSharedPointer<Part::StepPair> step_pair = m_step_pairs[part];
-            if (step_pair->scan_layer != nullptr) {
+            if (!step_pair.isNull() && step_pair->scan_layer != nullptr) {
                 if (is_first_scan) {
                     step_pair->scan_layer->setFirst();
                     is_first_scan = false;
                 }
 
                 step_pair->scan_layer->unorient();
-                step_pair->scan_layer->connectPaths(start[0], start_index[0],
-                                                    previous_regions[0]); // always 0th tool for scans
+                step_pair->scan_layer->connectPaths(start, start_index, previous_regions);
 
                 step_pair->scan_layer->reorient();
             }
         }
     }
 
-    // 2) For each tool
-    //       Get a list of all the printed islands for this tool
-    //       Order the islands
-    //       Connect the islands
+    // 2) Order and connect all printed islands.
     m_island_order.clear();
-    m_island_order.reserve(num_nozzles);
-    for (int tool = 0; tool < num_nozzles; ++tool) {
-        // clear the resulting island order (in case of re-slice)
-        // or make a new list to store reuslts
-        if (m_island_order.size() > tool)
-            m_island_order[tool].clear();
-        else
-            m_island_order.push_back(QList<QSharedPointer<IslandBase>>());
+    QMultiMap<int, QSharedPointer<IslandBase>> islands_for_layer;
+    for (auto island : getIslands()) {
+        if (island.isNull() || island->getGeometry().isEmpty())
+            continue;
 
-        // get a list of all the islands that this tool needs to print
-        QMultiMap<int, QSharedPointer<IslandBase>> islands_for_current_tool;
-        for (auto island : getIslands()) {
-            if (island->getExtruder() == tool)
-                islands_for_current_tool.insert(static_cast<int>(island->getType()), island);
+        islands_for_layer.insert(static_cast<int>(island->getType()), island);
+    }
+
+    // make an optimizer to do the ordering
+    IslandBaseOrderOptimizer island_optimizer(start, islands_for_layer.values(), start_index,
+                                              islandOrderMethod); // mode 1 - ordering islands
+
+    // Do seam adjustment if necessary
+    if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
+        Point start_override = start;
+        const auto first_step_pair = m_step_pairs.constBegin();
+        if (first_step_pair != m_step_pairs.constEnd() && !first_step_pair.value().isNull() &&
+            !first_step_pair.value()->printing_layer.isNull()) {
+            QSharedPointer<Layer> printing_layer = first_step_pair.value()->printing_layer;
+            start_override = OptimizationAnchor::customIslandOrderPoint(global_sb, printing_layer->getSlicingPlane(),
+                                                                        printing_layer->getShift());
         }
 
-        // make an optimizer to do the ordering
-        IslandBaseOrderOptimizer island_optimizer(start[tool], islands_for_current_tool.values(), start_index[tool],
-                                                  islandOrderMethod); // mode 1 - ordering islands
+        island_optimizer.setStartPoint(start_override);
+    }
 
-        // Do seam adjustment if necessary
-        if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
-            Point start_override(global_sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
-                                 global_sb->setting<double>(PS::Optimizations::kCustomIslandYLocation));
+    // Handle skirts
+    QList<QSharedPointer<IslandBase>> skirt_islands;
+    skirt_islands = islands_for_layer.values(static_cast<int>(IslandType::kSkirt));
 
-            island_optimizer.setStartPoint(start_override);
+    if (skirt_islands.size() > 0) {
+        m_island_order.push_back(skirt_islands[0]);
+        m_island_order.last()->optimize(m_layer_number, start, previous_regions);
+    }
+
+    QList<QList<QSharedPointer<IslandBase>>> ordered_islands_to_process;
+    QList<QSharedPointer<IslandBase>> brim_islands;
+    if (islands_for_layer.values(static_cast<int>(IslandType::kBrim)).size() > 0)
+        brim_islands = islands_for_layer.values(static_cast<int>(IslandType::kBrim));
+
+    // mutually exclusive, either a layer has rafts or build/support
+    // rafts are global settings, so this is still true for global layers
+    if (islands_for_layer.values(static_cast<int>(IslandType::kRaft)).size() > 0) {
+        ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kRaft)));
+    }
+    else {
+        // check setting, if first, get supports then actual build islands, else the opposite order
+        const QList<QSharedPointer<IslandBase>> support_islands =
+            islands_for_layer.values(static_cast<int>(IslandType::kSupport));
+        bool print_support_first = global_sb->setting<bool>(PS::Support::kPrintFirst);
+        if (!support_islands.isEmpty()) {
+            print_support_first = std::any_of(support_islands.cbegin(), support_islands.cend(), [](const auto& island) {
+                return island->getSb()->template setting<bool>(PS::Support::kPrintFirst);
+            });
         }
 
-        QList<QSharedPointer<IslandBase>> wire_feed_islands =
-            islands_for_current_tool.values(static_cast<int>(IslandType::kWireFeed));
+        if (print_support_first) {
+            if (!support_islands.isEmpty())
+                ordered_islands_to_process.push_back(support_islands);
 
-        if (wire_feed_islands.size() > 0) {
-            island_optimizer.setIslands(wire_feed_islands);
-            while (wire_feed_islands.size() > 0) {
-                int index = island_optimizer.computeNextIndex();
-                QSharedPointer<IslandBase> isl = wire_feed_islands[index];
-                wire_feed_islands.removeAt(index);
-                isl->optimize(m_layer_number, start[tool], previous_regions[tool]);
-                m_island_order[tool].push_back(isl);
-                island_optimizer.setStartPoint(start[tool]);
-            }
-        }
-
-        // Handle skirts
-        QList<QSharedPointer<IslandBase>> skirt_islands;
-        skirt_islands = islands_for_current_tool.values(static_cast<int>(IslandType::kSkirt));
-
-        if (skirt_islands.size() > 0) {
-            m_island_order[tool].push_back(skirt_islands[0]);
-            m_island_order[tool].last()->optimize(m_layer_number, start[tool], previous_regions[tool]);
-        }
-
-        QList<QList<QSharedPointer<IslandBase>>> ordered_islands_to_process;
-        QList<QSharedPointer<IslandBase>> brim_islands;
-        if (islands_for_current_tool.values(static_cast<int>(IslandType::kBrim)).size() > 0)
-            brim_islands = islands_for_current_tool.values(static_cast<int>(IslandType::kBrim));
-
-        // mutually exclusive, either a layer has rafts or build/support
-        // rafts are global settings, so this is still true for global layers
-        if (islands_for_current_tool.values(static_cast<int>(IslandType::kRaft)).size() > 0) {
-            ordered_islands_to_process.push_back(islands_for_current_tool.values(static_cast<int>(IslandType::kRaft)));
+            if (islands_for_layer.values(static_cast<int>(IslandType::kPolymer)).size() > 0)
+                ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kPolymer)));
         }
         else {
-            // check setting, if first, get supports then actual build islands, else the opposite order
-            if (global_sb->setting<bool>(PS::Support::kPrintFirst)) {
-                if (islands_for_current_tool.values(static_cast<int>(IslandType::kSupport)).size() > 0)
-                    ordered_islands_to_process.push_back(
-                        islands_for_current_tool.values(static_cast<int>(IslandType::kSupport)));
+            if (islands_for_layer.values(static_cast<int>(IslandType::kPolymer)).size() > 0)
+                ordered_islands_to_process.push_back(islands_for_layer.values(static_cast<int>(IslandType::kPolymer)));
 
-                if (islands_for_current_tool.values(static_cast<int>(IslandType::kPolymer)).size() > 0)
-                    ordered_islands_to_process.push_back(
-                        islands_for_current_tool.values(static_cast<int>(IslandType::kPolymer)));
-            }
-            else {
-                if (islands_for_current_tool.values(static_cast<int>(IslandType::kPolymer)).size() > 0)
-                    ordered_islands_to_process.push_back(
-                        islands_for_current_tool.values(static_cast<int>(IslandType::kPolymer)));
-
-                if (islands_for_current_tool.values(static_cast<int>(IslandType::kSupport)).size() > 0)
-                    ordered_islands_to_process.push_back(
-                        islands_for_current_tool.values(static_cast<int>(IslandType::kSupport)));
-            }
+            if (!support_islands.isEmpty())
+                ordered_islands_to_process.push_back(support_islands);
         }
+    }
 
-        // create small tree-like structure of seqence between brims and contained islands (raft, support, polymer)
-        QList<QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> impliedOrder =
-            createSequence(brim_islands, ordered_islands_to_process);
+    // create small tree-like structure of seqence between brims and contained islands (raft, support, polymer)
+    QList<QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> impliedOrder =
+        createSequence(brim_islands, ordered_islands_to_process);
 
-        // if brims exist, travel to those first, then contained islands
-        // otherwise, the order will simply be determined by all the islands in a particular precendence level and the
-        // set optimization strategy ie. shortest distance to next polymer island
-        QList<QSharedPointer<IslandBase>> visited_islands;
-        for (QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>> level : impliedOrder) {
-            QList<QSharedPointer<IslandBase>> islandSet = level.keys();
-            island_optimizer.setIslands(islandSet);
-            while (islandSet.size() > 0) {
-                int index = island_optimizer.computeNextIndex();
-                QSharedPointer<IslandBase> currentIsland = islandSet[index];
-                if (!visited_islands.contains(currentIsland)) {
-                    currentIsland->optimize(m_layer_number, start[tool], previous_regions[tool]);
-                    m_island_order[tool].push_back(currentIsland);
-                    visited_islands.push_back(currentIsland);
-                }
-                if (level[currentIsland].size() > 0) {
-                    QList<QSharedPointer<IslandBase>> childrenSet = level[currentIsland];
-                    island_optimizer.setIslands(childrenSet);
-                    while (childrenSet.size() > 0) {
-                        int index = island_optimizer.computeNextIndex();
-                        QSharedPointer<IslandBase> currentIsland = childrenSet[index];
-                        currentIsland->optimize(m_layer_number, start[tool], previous_regions[tool]);
-                        m_island_order[tool].push_back(currentIsland);
-                        childrenSet.removeAt(index);
+    // if brims exist, travel to those first, then contained islands
+    // otherwise, the order will simply be determined by all the islands in a particular precendence level and the
+    // set optimization strategy ie. shortest distance to next polymer island
+    QList<QSharedPointer<IslandBase>> visited_islands;
+    for (QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>> level : impliedOrder) {
+        QList<QSharedPointer<IslandBase>> islandSet = level.keys();
+        island_optimizer.setIslands(islandSet);
+        while (islandSet.size() > 0) {
+            int index = island_optimizer.computeNextIndex();
+            if (index < 0 || index >= islandSet.size()) {
+                qWarning() << "Skipping invalid island optimizer index" << index << "for" << islandSet.size()
+                           << "islands";
+                break;
+            }
+
+            QSharedPointer<IslandBase> currentIsland = islandSet[index];
+            if (!visited_islands.contains(currentIsland)) {
+                currentIsland->optimize(m_layer_number, start, previous_regions);
+                m_island_order.push_back(currentIsland);
+                visited_islands.push_back(currentIsland);
+            }
+            if (level[currentIsland].size() > 0) {
+                QList<QSharedPointer<IslandBase>> childrenSet = level[currentIsland];
+                island_optimizer.setIslands(childrenSet);
+                while (childrenSet.size() > 0) {
+                    int index = island_optimizer.computeNextIndex();
+                    if (index < 0 || index >= childrenSet.size()) {
+                        qWarning() << "Skipping invalid child island optimizer index" << index << "for"
+                                   << childrenSet.size() << "islands";
+                        break;
                     }
+
+                    QSharedPointer<IslandBase> currentIsland = childrenSet[index];
+                    currentIsland->optimize(m_layer_number, start, previous_regions);
+                    m_island_order.push_back(currentIsland);
+                    childrenSet.removeAt(index);
                 }
-                islandSet.removeAt(index);
             }
+            islandSet.removeAt(index);
         }
+    }
 
-        // Handle the thermal scan islands
-        QList<QSharedPointer<IslandBase>> thermal_scan_islands =
-            islands_for_current_tool.values(static_cast<int>(IslandType::kThermalScan));
-        if (thermal_scan_islands.size() > 0) {
-            island_optimizer.setIslands(thermal_scan_islands);
-            while (thermal_scan_islands.size() > 0) {
-                int index = island_optimizer.computeNextIndex();
-                QSharedPointer<IslandBase> isl = thermal_scan_islands[index];
-                thermal_scan_islands.removeAt(index);
-                isl->optimize(m_layer_number, start[tool], previous_regions[tool]);
-                m_island_order[tool].push_back(isl);
+    // Handle the thermal scan islands
+    QList<QSharedPointer<IslandBase>> thermal_scan_islands =
+        islands_for_layer.values(static_cast<int>(IslandType::kThermalScan));
+    if (thermal_scan_islands.size() > 0) {
+        island_optimizer.setIslands(thermal_scan_islands);
+        while (thermal_scan_islands.size() > 0) {
+            int index = island_optimizer.computeNextIndex();
+            if (index < 0 || index >= thermal_scan_islands.size()) {
+                qWarning() << "Skipping invalid thermal-scan island optimizer index" << index << "for"
+                           << thermal_scan_islands.size() << "islands";
+                break;
             }
+
+            QSharedPointer<IslandBase> isl = thermal_scan_islands[index];
+            thermal_scan_islands.removeAt(index);
+            isl->optimize(m_layer_number, start, previous_regions);
+            m_island_order.push_back(isl);
         }
+    }
 
-        if (islandOrderMethod == IslandOrderOptimization::kLeastRecentlyVisited)
-            start_index[tool] = island_optimizer.getFirstIndexSelected();
+    if (islandOrderMethod == IslandOrderOptimization::kLeastRecentlyVisited)
+        start_index = island_optimizer.getFirstIndexSelected();
 
-        for (QSharedPointer<IslandBase> island : islands_for_current_tool)
-            island->markRegionStartSegment();
-
-    } // end of for each tool/nozzle
+    for (QSharedPointer<IslandBase> island : islands_for_layer)
+        island->markRegionStartSegment();
 }
 
 QList<QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
@@ -327,7 +345,17 @@ GlobalLayer::createSequence(QList<QSharedPointer<IslandBase>> parent,
     result.reserve(children_size);
     for (int i = 0; i < children_size; ++i)
         result.append(QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>());
-    if (parent.size() == 0) {
+    auto hasSequenceGeometry = [](const QSharedPointer<IslandBase>& island) {
+        return !island.isNull() && !island->getGeometry().isEmpty() && !island->getGeometry().first().isEmpty();
+    };
+
+    QList<QSharedPointer<IslandBase>> valid_parent;
+    for (const QSharedPointer<IslandBase>& brim : parent) {
+        if (hasSequenceGeometry(brim))
+            valid_parent.append(brim);
+    }
+
+    if (valid_parent.size() == 0) {
         for (int i = 0; i < children_size; ++i) {
             QList<QSharedPointer<IslandBase>> islandSet = children[i];
             for (QSharedPointer<IslandBase> isl : islandSet)
@@ -335,10 +363,13 @@ GlobalLayer::createSequence(QList<QSharedPointer<IslandBase>> parent,
         }
     }
     else {
-        for (QSharedPointer<IslandBase> brim : parent) {
+        for (QSharedPointer<IslandBase> brim : valid_parent) {
             for (int i = 0; i < children_size; ++i) {
                 QList<QSharedPointer<IslandBase>> islandSet = children[i];
                 for (QSharedPointer<IslandBase> isl : islandSet) {
+                    if (!hasSequenceGeometry(isl))
+                        continue;
+
                     if (brim->getGeometry().first().inside(isl->getGeometry().first().first())) {
                         result[i][brim].append(isl);
                     }
@@ -353,6 +384,9 @@ bool GlobalLayer::containsScanLayers() {
     QMap<QUuid, QSharedPointer<Part::StepPair>>::ConstIterator itr;
     for (itr = m_step_pairs.constBegin(); itr != m_step_pairs.constEnd(); ++itr) {
         auto step_pair = itr.value();
+        if (step_pair.isNull())
+            continue;
+
         if (step_pair->scan_layer != nullptr)
             return true;
     }
@@ -364,6 +398,9 @@ QVector<QSharedPointer<IslandBase>> GlobalLayer::getIslands() {
     QMap<QUuid, QSharedPointer<Part::StepPair>>::ConstIterator itr;
     for (itr = m_step_pairs.constBegin(); itr != m_step_pairs.constEnd(); ++itr) {
         auto step_pair = itr.value();
+        if (step_pair.isNull() || step_pair->printing_layer.isNull())
+            continue;
+
         auto part_islands = step_pair->printing_layer->getIslands().toVector();
         layer_islands.append(part_islands);
     }
@@ -373,36 +410,33 @@ QVector<QSharedPointer<IslandBase>> GlobalLayer::getIslands() {
 QString GlobalLayer::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
 
-    for (int tool = 0, end = m_island_order.size(); tool < end; ++tool) {
-        // should output gcode if there are scan layers to output
-        bool shouldOutputGcode = (tool == 0 && containsScanLayers());
-        // should output gcode if there are valid non-scan paths
-        for (QSharedPointer<IslandBase> island : m_island_order[tool]) {
-            if (island->getAnyValidPaths()) {
-                shouldOutputGcode = true;
-                break;
-            }
+    // should output gcode if there are scan layers to output
+    bool shouldOutputGcode = containsScanLayers();
+    // should output gcode if there are valid non-scan paths
+    for (QSharedPointer<IslandBase> island : m_island_order) {
+        if (island->getAnyValidPaths()) {
+            shouldOutputGcode = true;
+            break;
         }
+    }
 
-        if (shouldOutputGcode) {
-            gcode += writer->writeCommentLine("Nozzle " + QString::number(tool));
-            if (tool == 0 && containsScanLayers()) {
-                for (auto part : m_part_order) {
-                    QSharedPointer<ScanLayer> scan_layer = m_step_pairs[part]->scan_layer;
-                    if (scan_layer != nullptr)
-                        gcode += scan_layer->writeGCode(writer);
-                }
-                gcode += writer->writeAfterAllScans();
+    if (shouldOutputGcode) {
+        if (containsScanLayers()) {
+            for (auto part : m_part_order) {
+                QSharedPointer<ScanLayer> scan_layer = m_step_pairs[part]->scan_layer;
+                if (scan_layer != nullptr)
+                    gcode += scan_layer->writeGCode(writer);
             }
-            for (QSharedPointer<IslandBase> island : m_island_order[tool]) {
-                gcode += writer->writeBeforeIsland();
-                gcode += island->writeGCode(writer);
-                gcode += writer->writeAfterIsland();
-            }
+            gcode += writer->writeAfterAllScans();
         }
-        else {
-            gcode += writer->writeEmptyStep();
+        for (QSharedPointer<IslandBase> island : m_island_order) {
+            gcode += writer->writeBeforeIsland();
+            gcode += island->writeGCode(writer);
+            gcode += writer->writeAfterIsland();
         }
+    }
+    else {
+        gcode += writer->writeEmptyStep();
     }
 
     return gcode;

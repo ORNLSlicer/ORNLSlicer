@@ -76,17 +76,6 @@ static GcodeMeta WolfMeta = {GcodeSyntax::kWolf,
                              mm / s / s,   // acceleration
                              rev / minute, // angular velocity
                              ".gcode"};
-static GcodeMeta GKNMeta = {GcodeSyntax::kGKN,
-                            QString(";"), // starting_delim
-                            QString(),    // ending_delim
-                            mm,           // distance
-                            s,            // time
-                            degree,       // angle
-                            g,            // mass
-                            m / s,        // velocity
-                            m / s / s,    // acceleration
-                            rev / minute, // angular velocity
-                            ".gcode"};
 static GcodeMeta HaasInchMeta = {GcodeSyntax::kHaasInch,
                                  QString("("), // starting_delim
                                  QString(")"), // ending_delim
@@ -197,12 +186,6 @@ static GcodeMeta HurcoMeta = {GcodeSyntax::kHurco,
                               mm / s / s,   // acceleration
                               rev / minute, // angular velocity
                               ".nc"};
-static GcodeMeta SkyBaamMeta = {GcodeSyntax::kSkyBaam, QString("("), QString(")"), in,   s, degree, lbm,
-                                in / minute,           in / s / s,   rev / minute, ".nc"};
-
-static GcodeMeta RPBFMeta = {GcodeSyntax::kRPBF, QString("//"), QString("//"), tensOfMicrons, s, degree, g, mm / s,
-                             mm / s / s,         rev / minute,  ".cli",        false};
-
 static GcodeMeta RepRapMeta = {
     GcodeSyntax::kRepRap,
     QString(";"), // starting_delim
@@ -309,15 +292,26 @@ static GcodeMeta MeltioMeta = {GcodeSyntax::kMarlin,
 
 static GcodeMeta AdamantineMeta = {
     GcodeSyntax::kAdamantine, QString("("), QString(")"), m, s, degree, lbm, m / s, m / s / s, rev / s, ".txt"};
+
+//! @brief Metadata for Arc Specialties gcode.
+static GcodeMeta ArcSpecialtiesMeta = {GcodeSyntax::kArcSpecialties,
+                                       QString(";"), // starting_delim
+                                       QString(),    // ending_delim
+                                       mm,
+                                       s,
+                                       degree,
+                                       g,
+                                       mm / minute,
+                                       mm / s / s,
+                                       rev / minute,
+                                       ".nc"};
 static QHash<int, GcodeMeta> createMapping() {
     QHash<int, GcodeMeta> result;
-    result.insert((int)GcodeSyntax::k5AxisMarlin, MarlinMeta);
     result.insert((int)GcodeSyntax::kAML3D, AML3DMeta);
     result.insert((int)GcodeSyntax::kBeam, DmgDmuAndBeamMeta);
     result.insert((int)GcodeSyntax::kCincinnati, CincinnatiMeta);
     result.insert((int)GcodeSyntax::kCommon, MarlinMeta);
     result.insert((int)GcodeSyntax::kDmgDmu, DmgDmuAndBeamMeta);
-    result.insert((int)GcodeSyntax::kGKN, GKNMeta);
     result.insert((int)GcodeSyntax::kGudel, GudelMeta);
     result.insert((int)GcodeSyntax::kHaasInch, HaasInchMeta);
     result.insert((int)GcodeSyntax::kHaasMetric, HaasMetricMeta);
@@ -326,17 +320,16 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kIngersoll, IngersollMeta);
     result.insert((int)GcodeSyntax::kKraussMaffei, KraussMaffeiMeta);
     result.insert((int)GcodeSyntax::kMarlin, MarlinMeta);
-    result.insert((int)GcodeSyntax::kMarlinPellet, MarlinMeta);
+    result.insert((int)GcodeSyntax::kJuggerBot, MarlinMeta);
     result.insert((int)GcodeSyntax::kMazak, MazakMeta);
     result.insert((int)GcodeSyntax::kMeld, MeldMeta);
     result.insert((int)GcodeSyntax::kMeltio, MeltioMeta);
     result.insert((int)GcodeSyntax::kMVP, MVPMeta);
     result.insert((int)GcodeSyntax::kRomiFanuc, RomiFanucMeta);
-    result.insert((int)GcodeSyntax::kRPBF, RPBFMeta);
     result.insert((int)GcodeSyntax::kSandia, SandiaMeta);
     result.insert((int)GcodeSyntax::kSiemens, SiemensMeta);
-    result.insert((int)GcodeSyntax::kSkyBaam, SkyBaamMeta);
     result.insert((int)GcodeSyntax::kThermwood, CincinnatiMeta);
+    result.insert((int)GcodeSyntax::kWolf, WolfMeta);
     result.insert((int)GcodeSyntax::kRepRap, RepRapMeta);
     result.insert((int)GcodeSyntax::kMach4, MarlinMeta);
     result.insert((int)GcodeSyntax::kAeroBasic, AeroBasicMeta);
@@ -344,6 +337,7 @@ static QHash<int, GcodeMeta> createMapping() {
     result.insert((int)GcodeSyntax::kTormach, TormachMeta);
     result.insert((int)GcodeSyntax::kAdamantine, AdamantineMeta);
     result.insert((int)GcodeSyntax::kORNLMetric, ORNLMetricMeta);
+    result.insert((int)GcodeSyntax::kArcSpecialties, ArcSpecialtiesMeta);
     return result;
 }
 

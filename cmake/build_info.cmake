@@ -1,22 +1,25 @@
 include_guard(DIRECTORY)
 
-include(timestamp)
-include(version)
 include(git)
+include(version)
 
 function(FetchBuildInfo)
-    FetchTimestamp()
-    set(CONFIGURE_TIMESTAMP "${RESULT_VAR}")
+    FetchVersion()
+    set(BUILD_INFO_VERSION "${RESULT_VAR}")
 
     FetchRevHash()
-    set(REV_HASH "${RESULT_VAR}")
+    set(BUILD_INFO_GIT_REVISION "${RESULT_VAR}")
 
-    FetchVersion()
-    set(VERSION "${RESULT_VAR}")
+    if(CMAKE_CONFIGURATION_TYPES)
+        set(BUILD_INFO_CONFIGURATION "multi-config")
+    elseif(CMAKE_BUILD_TYPE)
+        set(BUILD_INFO_CONFIGURATION "${CMAKE_BUILD_TYPE}")
+    else()
+        set(BUILD_INFO_CONFIGURATION "unspecified")
+    endif()
 
-    add_compile_definitions(
-        ORNLSLICER_CONFIG_TIMESTAMP=${CONFIGURE_TIMESTAMP}
-	    ORNLSLICER_CONFIG_REV=${REV_HASH}
-	    ORNLSLICER_VERSION=${VERSION}
-    )
+    set(RESULT_VAR "${BUILD_INFO_VERSION}" PARENT_SCOPE)
+    set(ORNLSLICER_BUILD_GIT_REVISION "${BUILD_INFO_GIT_REVISION}" PARENT_SCOPE)
+    set(ORNLSLICER_BUILD_CONFIGURATION "${BUILD_INFO_CONFIGURATION}" PARENT_SCOPE)
+    set(ORNLSLICER_PACKAGE_TYPE "${ORNLSLICER_PACKAGE_TYPE}" PARENT_SCOPE)
 endfunction()

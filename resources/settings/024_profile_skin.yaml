@@ -1,0 +1,231 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "skin"
+    display: "Enable Skin"
+    type: "boolean"
+    tooltip: "If selected, skins will be generated"
+    depends: {"slicing_mode":0}
+    options: []
+    default: false
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kEnableSkin"
+    local: true
+  - name: "skin_top_count"
+    display: "Top Skin Count"
+    type: "number"
+    tooltip: "Number of skin layers at the top of a print"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kTopSkinCount"
+    local: false
+  - name: "skin_bottom_count"
+    display: "Bottom Skin Count"
+    type: "number"
+    tooltip: "Number of skin layers at the bottom of a print"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kBottomSkinCount"
+    local: false
+  - name: "skin_pattern"
+    display: "Skin Pattern"
+    type: "enumeration"
+    tooltip: "Pattern for the skins"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options:
+      - "Lines"
+      - "Grid"
+      - "Concentric"
+      - "Triangles"
+      - "Hexagons and Triangles"
+      - "Honeycomb"
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinPattern"
+    local: true
+  - name: "skin_angle"
+    display: "Skin Fill Angle"
+    type: "angle"
+    tooltip: "Sets the angle for the skin infill"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinFillAngle"
+    local: true
+  - name: "skin_angle_rotation"
+    display: "Skin Fill Angle Rotation"
+    type: "angle"
+    tooltip: "Sets the amount the skin fill rotates layer to layer"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinFillAngleRotation"
+    local: true
+  - name: "skin_exterior_overlap"
+    display: "Skin Exterior Overlap"
+    type: "location"
+    tooltip: "Width of the skin overlaps with the exterior"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinExteriorOverlap"
+    local: true
+  - name: "skin_width"
+    display: "Skin Bead Width"
+    type: "distance"
+    tooltip: "Bead width for skin paths"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinBeadWidth"
+    local: true
+  - name: "skin_speed"
+    display: "Skin Speed"
+    type: "speed"
+    tooltip: "Speed for skin paths"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinSpeed"
+    local: true
+  - name: "skin_extruder_speed"
+    display: "Skin Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder speed for skin paths"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinExtruderSpeed"
+    local: true
+  - name: "skin_extrusion_multiplier"
+    display: "Skin Extrusion Multiplier"
+    type: "unitless_float"
+    tooltip: "Extrusion multiplier to increase/decrease flowrate for skin paths for systems without RPM control"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
+    options: []
+    default: 1
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kSkinExtrusionMultiplier"
+    local: true
+  - name: "skin_minimum_path_length"
+    display: "Minimum Skin Path Length"
+    type: "distance"
+    tooltip: "Skin extrusion paths less than this value are deleted"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kMinimumSkinPathLength"
+    local: true
+  - name: "skin_minimum_segment_length"
+    display: "Minimum Skin Segment Length"
+    type: "distance"
+    tooltip: "Skin path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kMinimumSkinSegmentLength"
+    local: true
+  - name: "skin_gradual_infill"
+    display: "Enable Gradual Infill Steps"
+    type: "boolean"
+    tooltip: "If selected, gradual infill steps will be generated"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: false
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kEnableGradualInfillSteps"
+    local: true
+  - name: "skin_gradual_infill_steps"
+    display: "Number of Gradual Infill Steps"
+    type: "number"
+    tooltip: "Number of gradual infill steps between top skin and infill"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kNumberofGradualInfillSteps"
+    local: true
+  - name: "skin_gradual_infill_pattern"
+    display: "Gradual Infill Pattern"
+    type: "enumeration"
+    tooltip: "Pattern for the gradual infill steps"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
+    options:
+      - "Lines"
+      - "Grid"
+      - "Concentric"
+      - "Triangles"
+      - "Hexagons and Triangles"
+      - "Honeycomb"
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kGradualInfillPattern"
+    local: true
+  - name: "skin_gradual_infill_angle"
+    display: "Gradual Infill Angle"
+    type: "angle"
+    tooltip: "Sets the angle for the gradual infill"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kGradualInfillAngle"
+    local: true
+  - name: "skin_gradual_infill_angle_rotation"
+    display: "Gradual Infill Angle Rotation"
+    type: "angle"
+    tooltip: "Sets the angle for the gradual infill rotation layer to layer"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_gradual_infill":true}]}]}
+    options: []
+    default: 0
+    minor: "Skin"
+    major: "Profile"
+    namespace: "Profile::Skin"
+    symbol: "kGradualInfillAngleRotation"
+    local: true

@@ -11,11 +11,6 @@
 #include "geometry/polyline.h"
 #include "units/unit.h"
 
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/geometry/point.h>
-    #include <single_path/geometry/polygon.h>
-#endif
-
 namespace ORNL {
 class PolygonList;
 class Polyline;
@@ -42,14 +37,6 @@ class Polygon : public QVector<Point> {
 
     //! \brief Conversion Constructor
     Polygon(const Path& path);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Conversion constructor
-    Polygon(SinglePath::Polygon& polygon);
-
-    //! \brief Conversion operator
-    operator SinglePath::Polygon() const;
-#endif
 
     //! \brief Checks the orientation of the Polygon
     //! \details Checks the orientation of the polygon based on the area.
@@ -79,17 +66,6 @@ class Polygon : public QVector<Point> {
 
     //! \brief Rotate the polygon around a specified point
     Polygon rotateAround(const Point& center, const Angle& angle, const QVector3D& axis = {0, 0, 1}) const;
-
-    //! \brief Restores point normals to geometry after it has been modified
-    //! \param all_polys: List of Polygons to retrieve normals from
-    //! \param offset: Whether normals are being restored after an offset operation.
-    //! If true: normals will be restored from the closest point found within all_polys.
-    //! If false: normals will be restored from exact matching point found within all_polys.
-    //! If no exact match can be found, the bisecting normal will be computed and assigned.
-    void restoreNormals(QVector<Polygon> all_polys, bool offset = false);
-
-    //! \brief Reverses the direction of normals for the points of this polygon
-    Polygon reverseNormalDirections();
 
     //! \brief shifts every point in the polygon by the vector
     //! \param vector of direction/length to shift

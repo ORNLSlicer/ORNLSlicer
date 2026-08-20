@@ -7,21 +7,23 @@
 #include <CGAL/property_map.h>
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
-#include <qmap.h>
 #include <qobject.h>
+#include <qset.h>
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <zip/zip.h>
 
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "ornlslicer/build_info.h"
 #include "part/part.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
-SessionLoader::SessionLoader(QString filename, bool save) : m_filename(filename), m_save(save) {
+SessionLoader::SessionLoader(QString filename, bool save)
+    : m_filename(filename), m_save(save), m_has_new_json(false), m_should_write_new_json(false) {
     // NOP
 }
 
@@ -37,13 +39,29 @@ void SessionLoader::saveSession() {
     if (zip == nullptr)
         return;
 
-    QMap<QString, QSharedPointer<Part>> meshes;
+    QSet<QString> active_model_names;
+    auto addActiveModelName = [&active_model_names](const QString& name) {
+        if (name.isEmpty())
+            return;
+
+        QFileInfo file_info(name);
+        active_model_names.insert(name);
+        active_model_names.insert(file_info.fileName());
+
+        QString base_name = file_info.baseName();
+        if (!base_name.isEmpty())
+            active_model_names.insert(base_name);
+    };
+
     auto parts = CSM->parts();
     for (auto& part : parts) {
-        meshes.insert(part->rootMesh()->name(), part);
+        addActiveModelName(part->rootMesh()->name());
+        addActiveModelName(part->rootMesh()->path());
 
-        for (auto& submesh : part->subMeshes())
-            meshes.insert(submesh->name(), part);
+        for (auto& submesh : part->subMeshes()) {
+            addActiveModelName(submesh->name());
+            addActiveModelName(submesh->path());
+        }
     }
 
     // Save models
@@ -51,11 +69,10 @@ void SessionLoader::saveSession() {
         QString file_name = it.key();
         QFileInfo file_info(file_name);
 
-        // Hack to make sure mesh can be found if loaded from project or stl.
-        // This is bad.
-        QString basename = file_info.baseName();
-        if (meshes.contains(basename) || meshes.contains(file_name)) // If this mesh was in the list of active meshes
-        {
+        // Embed model data when the active part still references this source file. Projects can carry a display name
+        // that differs from the model file name, so both mesh names and mesh paths are considered.
+        if (active_model_names.contains(file_name) || active_model_names.contains(file_info.fileName()) ||
+            active_model_names.contains(file_info.baseName())) {
             // To and back from QString in a single line. What an adventure.
             std::string filename = it.key().split("/").back().toStdString();
 
@@ -106,11 +123,12 @@ void SessionLoader::saveSession() {
 
     zip_entry_open(zip, "Version.txt");
     std::string version =
-        "This is an ORNLSlicer project file.\nVersion: " + std::string(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION)) + "\n";
+        "This is an ORNLSlicer project file.\nVersion: " + std::string(ORNL::BuildInfo::Version) + "\n";
     zip_entry_write(zip, version.c_str(), version.length());
     zip_entry_close(zip);
 
     zip_close(zip);
+    emit saveSucceeded();
 }
 
 fifojson SessionLoader::getSettingsFromZip() {
@@ -120,11 +138,15 @@ fifojson SessionLoader::getSettingsFromZip() {
     return result;
 }
 
-void SessionLoader::updateSettingsJson(fifojson j) { m_new_json = j; }
+void SessionLoader::updateSettingsJson(fifojson j, bool writeToProject) {
+    m_new_json = j;
+    m_has_new_json = true;
+    m_should_write_new_json = writeToProject;
+}
 
 void SessionLoader::loadSession() {
 
-    if (!m_new_json.empty()) {
+    if (m_has_new_json && m_should_write_new_json) {
         struct zip_t* zip = zip_open(m_filename.toUtf8(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'd');
         if (zip == nullptr)
             return;
@@ -172,7 +194,11 @@ void SessionLoader::loadSession() {
     }
 
     // Load global settings
-    GSM->loadGlobalJson(fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal)));
+    fifojson global_settings = m_has_new_json
+                                   ? m_new_json
+                                   : fifojson::parse(
+                                         loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal));
+    GSM->loadGlobalJson(global_settings);
 
     // Load transforms
     CSM->loadPartsJson(fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kSession)));
@@ -182,6 +208,11 @@ void SessionLoader::loadSession() {
     for (auto& part_json : parts_and_ranges) {
         std::string name = part_json[Constants::Settings::Session::LocalFile::kName];
         QSharedPointer<Part> part = CSM->getPart(QString::fromStdString(name));
+        if (part.isNull()) {
+            emit error("Project references settings for a part that was not loaded: " + QString::fromStdString(name));
+            continue;
+        }
+
         part->getSb()->json(part_json[Constants::Settings::Session::LocalFile::kSettings]);
 
         auto ranges = part_json[Constants::Settings::Session::LocalFile::kRanges];

@@ -1,5 +1,7 @@
 #include "windows/gcode_export.h"
 
+#include <algorithm>
+
 #include <QApplication>
 #include <QDir>
 #include <QDirIterator>
@@ -21,6 +23,7 @@
 #include <qtextedit.h>
 #include <qwidget.h>
 
+#include "gcode/as_printed_model_exporter.h"
 #include "gcode/gcode_meta.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
@@ -29,7 +32,6 @@
 #include "threading/gcode_aml3d_saver.h"
 #include "threading/gcode_marlin_saver.h"
 #include "threading/gcode_meld_saver.h"
-#include "threading/gcode_rpbf_saver.h"
 #include "threading/gcode_sandia_saver.h"
 #include "threading/gcode_simulation_output.h"
 #include "threading/gcode_tormach_saver.h"
@@ -37,8 +39,24 @@
 #include "utilities/constants.h"
 
 namespace ORNL {
+namespace {
+QString removeModelFileExtension(QString name) {
+    QFileInfo file_info(name);
+    QString suffix = file_info.suffix().toLower();
 
-GcodeExport::GcodeExport(QWidget* parent) {
+    if (suffix == "stl" || suffix == "3mf" || suffix == "obj" || suffix == "amf" || suffix == "step" || suffix == "stp")
+        return file_info.completeBaseName();
+
+    return name;
+}
+
+bool hasVisualizationSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    return std::any_of(gcode.cbegin(), gcode.cend(),
+                       [](const QVector<QSharedPointer<SegmentBase>>& layer) { return !layer.isEmpty(); });
+}
+} // namespace
+
+GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
 
     QIcon icon;
@@ -67,11 +85,18 @@ GcodeExport::GcodeExport(QWidget* parent) {
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox = new QCheckBox("Save Auxiliary files (if applicable)");
     m_auxiliary_file_checkbox->setChecked(true);
+    m_as_printed_model_checkbox = new QCheckBox("Save As-Printed STL model");
+    m_as_printed_model_checkbox->setEnabled(false);
+    m_as_printed_centerline_checkbox = new QCheckBox("Use Centerline Geometry for As-Printed STL");
+    m_as_printed_centerline_checkbox->setEnabled(false);
     m_project_file_checkbox = new QCheckBox("Save Project file");
     m_bundle_files_checkbox = new QCheckBox("Create subdirectory to bundle files");
+    connect(m_as_printed_model_checkbox, &QCheckBox::toggled, [this](bool) { updateAsPrintedModelOptionState(); });
 
     optionsGrid->addWidget(m_gcode_file_checkbox);
     optionsGrid->addWidget(m_auxiliary_file_checkbox);
+    optionsGrid->addWidget(m_as_printed_model_checkbox);
+    optionsGrid->addWidget(m_as_printed_centerline_checkbox);
     optionsGrid->addWidget(m_project_file_checkbox);
     optionsGrid->addWidget(m_bundle_files_checkbox);
     optionsBox->setLayout(optionsGrid);
@@ -88,11 +113,24 @@ GcodeExport::GcodeExport(QWidget* parent) {
 
 GcodeExport::~GcodeExport() {}
 
-void GcodeExport::setDefaultName(QString name) { m_default_name = name; }
+void GcodeExport::setDefaultName(QString name) { m_default_name = removeModelFileExtension(name); }
 
 void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
     m_location = tempLocation;
     m_most_recent_meta = meta;
+    clearVisualizationInformation();
+}
+
+void GcodeExport::updateVisualizationInformation(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
+    m_gcode = gcode;
+    m_has_gcode_visualization = hasVisualizationSegments(m_gcode);
+    updateAsPrintedModelOptionState();
+}
+
+void GcodeExport::clearVisualizationInformation() {
+    m_gcode.clear();
+    m_has_gcode_visualization = false;
+    updateAsPrintedModelOptionState();
 }
 
 void GcodeExport::closeEvent(QCloseEvent* event) {
@@ -100,8 +138,24 @@ void GcodeExport::closeEvent(QCloseEvent* event) {
     m_description_input->clear();
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox->setChecked(true);
+    m_as_printed_model_checkbox->setChecked(false);
+    m_as_printed_centerline_checkbox->setChecked(false);
+    updateAsPrintedModelOptionState();
     m_project_file_checkbox->setChecked(false);
     m_bundle_files_checkbox->setChecked(false);
+}
+
+void GcodeExport::updateAsPrintedModelOptionState() {
+    m_as_printed_model_checkbox->setEnabled(m_has_gcode_visualization);
+    if (!m_has_gcode_visualization) {
+        m_as_printed_model_checkbox->setChecked(false);
+    }
+
+    const bool centerline_enabled = m_has_gcode_visualization && m_as_printed_model_checkbox->isChecked();
+    m_as_printed_centerline_checkbox->setEnabled(centerline_enabled);
+    if (!centerline_enabled) {
+        m_as_printed_centerline_checkbox->setChecked(false);
+    }
 }
 
 void GcodeExport::exportGcode() {
@@ -272,22 +326,27 @@ void GcodeExport::exportGcode() {
             }
         }
 
-        if (m_most_recent_meta == GcodeMetaList::RPBFMeta) {
-            Angle clockAngle = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kClockingAngle);
+        if (m_as_printed_model_checkbox->isChecked()) {
+            QString error;
+            AsPrintedModelExporter::Options as_printed_options;
+            const bool use_centerline_geometry = m_as_printed_centerline_checkbox->isChecked();
+            if (use_centerline_geometry) {
+                as_printed_options.geometry_mode = AsPrintedModelExporter::GeometryMode::kCenterlines;
+            }
 
-            bool use_sector_offsetting = GSM->getGlobal()->setting<bool>(ES::RPBFSlicing::kSectorOffsettingEnable);
-            Angle sector_width = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kSectorSize);
-
-            GCodeRPBFSaver* saver = new GCodeRPBFSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta,
-                                                       clockAngle(), use_sector_offsetting, sector_width);
-            connect(saver, &GCodeRPBFSaver::finished, saver, &GCodeRPBFSaver::deleteLater);
-            connect(saver, &GCodeRPBFSaver::finished, this,
-                    [this, filepath, partName]() { showComplete(filepath, partName); });
-            saver->start();
+            const QString suffix = use_centerline_geometry ? "_as_printed_centerline.stl" : "_as_printed.stl";
+            const QString asPrintedFileName = filepath % '/' % partName % suffix;
+            if (!m_has_gcode_visualization) {
+                QMessageBox::warning(this, "As-Printed Model",
+                                     "Could not save the as-printed STL model: G-code visualization is still loading.");
+            }
+            else if (!AsPrintedModelExporter::writeStl(asPrintedFileName, m_gcode, &error, as_printed_options)) {
+                QMessageBox::warning(this, "As-Printed Model", "Could not save the as-printed STL model: " % error);
+            }
         }
-        else if ((m_most_recent_meta == GcodeMetaList::MarlinMeta ||
-                  m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
-                 GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
+
+        if ((m_most_recent_meta == GcodeMetaList::MarlinMeta || m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
+            GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
             GCodeSimulationOutput* saver =
                 new GCodeSimulationOutput(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
             connect(saver, &GCodeSimulationOutput::finished, saver, &GCodeSimulationOutput::deleteLater);
@@ -371,5 +430,6 @@ void GcodeExport::exportGcode() {
 
 void GcodeExport::showComplete(QString path, QString filename) {
     QMessageBox::information(this, "File Export", filename % " has been succesfully exported to " % path);
+    close();
 }
 } // namespace ORNL

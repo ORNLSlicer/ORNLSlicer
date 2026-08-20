@@ -17,7 +17,6 @@
 #include <qnamespace.h>
 #include <qoverload.h>
 #include <qplaintextedit.h>
-#include <qset.h>
 #include <qslider.h>
 #include <qspinbox.h>
 #include <qtextformat.h>
@@ -36,20 +35,22 @@ GcodeBar::GcodeBar(QWidget* parent) : QWidget(parent) {
 }
 
 void GcodeBar::updateGcodeText(QString text, QHash<QString, QTextCharFormat> fontColors,
-                               QList<int> layerFirstLineNumbers, QSet<int> layerSkipLineNumbers) {
+                               QList<int> layerFirstLineNumbers) {
     // new gcode so reset any previous highlight, forward along the font colors first, then add text
     // it is necessary to forward font colors first as the highlighter overrides font colors as text is added
     // so it must know which colors to set before adding text
     m_view->resetHighlight();
-    m_view->setHighlighterColors(fontColors, layerSkipLineNumbers);
+    m_view->setHighlighterColors(fontColors);
     m_view->setPlainText(text);
     m_layer_first_line_numbers = layerFirstLineNumbers;
     m_view->setLayerFirstLineNumbers(m_layer_first_line_numbers);
     m_refresh_btn->setEnabled(false);
 
-    // preserve the last search. No harm if search string is empty
+    // Preserve the last search without running an empty-document search over large G-code files.
     m_search_count = 0;
-    search();
+    if (!m_search_bar->text().trimmed().isEmpty()) {
+        search();
+    }
 }
 
 void GcodeBar::clear() {

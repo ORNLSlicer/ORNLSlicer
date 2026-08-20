@@ -22,7 +22,7 @@ QString MazakWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -204,7 +204,7 @@ QString MazakWriter::writeLine(const Point& start_point, const Point& target_poi
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruders_on[0] == false && rpm > 0) {
+    if (m_deposition_active == false && rpm > 0) {
         m_current_rpm = rpm;
         rv += writeExtruderOn(region_type, rpm);
     }
@@ -258,7 +258,7 @@ QString MazakWriter::writeArc(const Point& start_point, const Point& end_point, 
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // Turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
+    if (!m_deposition_active && rpm > 0) {
         rv += writeExtruderOn(region_type, rpm);
     }
 
@@ -353,6 +353,8 @@ QString MazakWriter::writeAfterLayer() {
 
 QString MazakWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
 
     rv += "G91Z1.25" % m_newline;
     rv += "G91G28Y0.0" % m_newline;
@@ -376,14 +378,14 @@ QString MazakWriter::writeDwell(Time time) {
 
 QString MazakWriter::writeExtruderOn(RegionType type, int rpm) {
     QString rv;
-    m_extruders_on[0] = true;
+    m_deposition_active = true;
     rv += "G441" % commentSpaceLine("TURN LASER ON");
     return rv;
 }
 
 QString MazakWriter::writeExtruderOff() {
     QString rv;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

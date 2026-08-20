@@ -4,6 +4,7 @@
 
 #include <CGAL/Modifier_base.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
+#include <QString>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -26,6 +27,16 @@ namespace ORNL {
 //! \brief A class that represents a closed 3D volume
 class ClosedMesh : public MeshBase {
   public:
+    enum class RepairResult {
+        kSuccess,
+        kSkippedLargeBoundary,
+        kSkippedNonManifoldBoundary,
+        kFailedHoleFilling,
+        kFailedSelfIntersectionCheck,
+        kFailedSelfIntersectionRepair,
+        kRepairLeftOpen
+    };
+
     //! \brief Default constructor
     ClosedMesh();
 
@@ -153,9 +164,21 @@ class ClosedMesh : public MeshBase {
     static std::pair<QVector<MeshVertex>, QVector<MeshFace>>
     FacesAndVerticesFromPolyhedron(MeshTypes::Polyhedron& mesh);
 
-    //! \brief cleans a supplied polyhedron
-    //! \param polyhedron the object to clean
-    static void CleanPolyhedron(MeshTypes::Polyhedron& polyhedron);
+    //! \brief Attempts to clean a supplied polyhedron for closed-mesh import.
+    //! \param polyhedron Candidate polyhedron to clean in place.
+    //! \return Repair result indicating whether the cleaned polyhedron should replace the import candidate or why
+    //! callers should keep the original mesh.
+    //! \note Repair operations are expected to run on a caller-owned copy so failed repairs do not partially replace
+    //! the original import geometry.
+    static RepairResult CleanPolyhedronWithStatus(MeshTypes::Polyhedron& polyhedron);
+
+    //! \brief Attempts to clean a supplied polyhedron for closed-mesh import.
+    //! \return True if the cleaned polyhedron should replace the import candidate; false if callers should keep the
+    //! original mesh.
+    static bool CleanPolyhedron(MeshTypes::Polyhedron& polyhedron);
+
+    //! \brief Returns a user-facing description of a repair result.
+    static QString RepairResultDescription(RepairResult result);
 
     MeshTypes::SurfaceMesh extractUpwardFaces() override;
 

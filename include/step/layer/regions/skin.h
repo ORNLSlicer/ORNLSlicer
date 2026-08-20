@@ -12,7 +12,6 @@
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -32,16 +31,13 @@ class Skin : public RegionBase {
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
     //! \brief Computes the skin region.
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync) override;
+    void compute(uint layer_num) override;
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number
-    //! \param innerMostClosedContour: used for subsequent path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param current_location: most recent location
     //! \param shouldNextPathBeCCW: state as to CW or CCW of previous path for use with additional DOF
-    void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                  QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) override;
+    void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) override;
 
     //! \brief Creates paths for the skin region.
     //! \param line: polyline representing path
@@ -82,16 +78,20 @@ class Skin : public RegionBase {
     //! \brief Helper function to optimize skin and gradual areas
     //! \param poo currently loaded path optimizer
     //! \param supportsG3 whether or not G2/G3 is supported for subsequent path modifiers
-    //! \param innerMostClosedContour used for subsequent path modifiers
     //! \param current_location updating to most recent location
-    void optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, QVector<Path>& innerMostClosedContour,
-                        Point& current_location, InfillPatterns pattern, QVector<Polyline> lines, PolygonList geometry);
+    void optimizeHelper(PolylineOrderOptimizer poo, bool supportsG3, Point& current_location, InfillPatterns pattern,
+                        QVector<Polyline> lines, PolygonList geometry, PathOrderOptimization path_order);
+
+    //! \brief Creates paths for the skin region using the selected pattern.
+    //! \param line polyline representing path
+    //! \param pattern selected pattern for the path
+    //! \return Polyline converted to path
+    Path createPath(Polyline line, InfillPatterns pattern);
 
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
-    //! \param innerMostClosedContour used for Prestarts (currently only skins/infill)
-    void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) override;
+    void calculateModifiers(Path& path, bool supportsG3) override;
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;

@@ -2,7 +2,8 @@
 
 #include <math.h>
 
-#include <cassert>
+#include <cmath>
+#include <limits>
 #include <vector>
 
 #include <qhashfunctions.h>
@@ -12,6 +13,7 @@
 #include <qsharedpointer.h>
 #include <qvectornd.h>
 
+#include "exceptions/exceptions.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
 #include "geometry/segment_base.h"
@@ -29,9 +31,10 @@ ArcSegment::ArcSegment(Point start, Point end, Point center, Angle angle, bool c
 
 ArcSegment::ArcSegment(Point start, Point middle, Point end) : SegmentBase(start, end) {
     switch (MathUtils::orientation(start, middle, end)) {
-        case 0:            // These points are co-linear and an arc is not valid so throw an error
-            assert(false); // This function should never reach this point
-        case 1:            // Clockwise
+        case 0:
+            throw IllegalArgumentException(
+                "Cannot construct an ArcSegment from collinear start, middle, and end points");
+        case 1: // Clockwise
             m_ccw = false;
             break;
         case -1: // Counter-clockwise
@@ -52,8 +55,15 @@ ArcSegment::ArcSegment(Point start, Point end, Point center, bool ccw)
 }
 
 void ArcSegment::createGraphic(std::vector<float>& vertices, std::vector<float>& normals, std::vector<float>& colors) {
-    ShapeFactory::createArcCylinder(m_display_width, m_start, m_center, m_end, m_ccw, m_color, vertices, colors,
-                                    normals);
+    if (m_has_cylindrical_bead_center) {
+        ShapeFactory::appendRadialArcBead(m_display_width, m_display_height, m_start, m_center, m_end,
+                                          m_cylindrical_bead_center.toQVector3D(), m_ccw, m_color, vertices, colors,
+                                          normals);
+        return;
+    }
+
+    ShapeFactory::appendArcBead(m_display_width, m_display_height, m_start, m_center, m_end, m_ccw, m_color, vertices,
+                                colors, normals);
 }
 
 QSharedPointer<SegmentBase> ArcSegment::clone() const { return QSharedPointer<ArcSegment>::create(*this); }
@@ -71,7 +81,16 @@ QString ArcSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     int extruderSpeed = this->getSb()->setting<int>(SS::kExtruderSpeed);
     RegionType regionType = this->getSb()->setting<RegionType>(SS::kRegionType);
     PathModifiers modifiers = this->getSb()->setting<PathModifiers>(SS::kPathModifiers);
-    return writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
+    const QString gcode = writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
+    if (!gcode.isEmpty())
+        writer->setCurrentPosition(m_end);
+    return gcode;
+}
+
+void ArcSegment::reverse() {
+    SegmentBase::reverse();
+    m_ccw = !m_ccw;
+    updateAngle();
 }
 
 float ArcSegment::getMinZ() {
@@ -82,42 +101,30 @@ float ArcSegment::getMinZ() {
         return m_end.z();
 }
 
-Distance ArcSegment::length() { return m_angle() * m_center.distance(m_start); }
+Distance ArcSegment::length() {
+    const double planar_radius = std::hypot(m_start.x() - m_center.x(), m_start.y() - m_center.y());
+    const double planar_length = m_angle() * planar_radius;
+    const double z_delta = m_end.z() - m_start.z();
+    return Distance(std::hypot(planar_length, z_delta));
+}
 
 Point ArcSegment::CalculateCenter(const Point& start, const Point& middle, const Point& end) {
-    // Find the perpendicular bisector of start -> middle and end -> middle
-    Point mid_start_middle = start;
-    Point mid_end_middle = end;
-    mid_start_middle.moveTowards(middle, start.distance(middle) / 2.0f);
-    mid_end_middle.moveTowards(middle, end.distance(middle) / 2.0f);
+    const double ax = start.x() - end.x();
+    const double ay = start.y() - end.y();
+    const double bx = middle.x() - end.x();
+    const double by = middle.y() - end.y();
+    const double determinant = 2.0 * ((ax * by) - (ay * bx));
+    const double scale = qMax(1.0, qMax(qMax(qAbs(ax), qAbs(ay)), qMax(qAbs(bx), qAbs(by))));
+    const double determinant_tolerance = std::numeric_limits<double>::epsilon() * scale * scale * 16.0;
 
-    double slope_start_middle = 0.0;
-    double slope_end_middle = 0.0;
-    double x = 0.0;
-    double y = 0.0;
+    if (qFuzzyIsNull(determinant) || qAbs(determinant) <= determinant_tolerance) {
+        throw IllegalArgumentException("Cannot calculate an arc center from collinear or near-collinear points");
+    }
 
-    if (!qFuzzyCompare(middle.x(), start.x()) &&
-        !qFuzzyCompare(end.x(), middle.x())) // If neither of the lines are vertical
-    {
-        slope_start_middle = (middle.y() - start.y()) / (middle.x() - start.x());
-        slope_end_middle = (middle.y() - end.y()) / (middle.x() - end.x());
-        x = (((slope_start_middle * slope_end_middle) * (start.y() - end.y())) +
-             (slope_end_middle * (start.x() + middle.x())) - (slope_start_middle * (middle.x() + end.x()))) /
-            (2 * (slope_end_middle - slope_start_middle));
-        y = (-1 / slope_start_middle) * (x - ((start.x() + middle.x()) / 2)) + ((start.y() + middle.y()) / 2);
-    }
-    else if (qFuzzyCompare(middle.x(), start.x()) &&
-             !qFuzzyCompare(end.x(), middle.x())) // The start- > middle line is vertical
-    {
-        slope_end_middle = (end.y() - middle.y()) / (end.x() - middle.x());
-        y = (middle.y() + start.y()) / 2;
-        x = (y - ((end.y() + middle.y()) / 2)) * (slope_end_middle / -1) + ((end.x() + middle.x()) / 2);
-    }
-    else if (!qFuzzyCompare(middle.x(), start.x()) && qFuzzyCompare(end.x(), middle.x())) {
-        slope_start_middle = (middle.y() - start.y()) / (middle.x() - start.x());
-        y = (middle.y() + end.y()) / 2;
-        x = (y - ((start.y() + middle.y()) / 2)) * (slope_start_middle / -1) + ((start.x() + middle.x()) / 2);
-    } // else Both are vertical, therefore co-linear
+    const double start_offset_squared = (ax * ax) + (ay * ay);
+    const double middle_offset_squared = (bx * bx) + (by * by);
+    const double x = end.x() + ((by * start_offset_squared) - (ay * middle_offset_squared)) / determinant;
+    const double y = end.y() + ((ax * middle_offset_squared) - (bx * start_offset_squared)) / determinant;
 
     return Point(x, y, ((end.z() - start.z()) / 2) + start.z());
 }

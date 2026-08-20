@@ -64,10 +64,29 @@ class SettingBar : public QWidget {
 
   signals:
     /*!
+     * \brief Signals that a setting is about to be modified.
+     * \param setting_key   Setting that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void settingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
+    /*!
      * \brief Signals that a setting has been modified.
      * \param setting_key   Setting that has been modified.
      */
     void settingModified(QString setting_key);
+
+    /*!
+     * \brief Signals that the selected settings base has been changed.
+     * \param setting_base Name of the newly selected settings base.
+     */
+    void settingsBaseChanged(QString setting_base);
+
+    /*!
+     * \brief Signals the effective settings that should drive selected-setting visualization.
+     * \param settings Effective selected settings, or global settings when no local target is selected.
+     */
+    void selectedVisualizationSettingsChanged(QSharedPointer<SettingsBase> settings);
 
     //! \brief Signal for main window to notify that a setting tab has been hidden
     //! \param pane Pane that setting is contained in
@@ -82,8 +101,10 @@ class SettingBar : public QWidget {
     void filter(QString str);
 
     //!\brief Currently selected settings bases as provided
-    //! \param settings_bases: List of currently selected ranges
-    void settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases);
+    //! \param name_and_bases: Label plus list of currently selected settings bases
+    //! \param inherited_bases: Parent settings for each selected base; null entries inherit Global directly
+    void settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
+                               QList<QSharedPointer<SettingsBase>> inherited_bases);
 
     //! \brief Closes all tabs.
     void closeAll();
@@ -125,7 +146,27 @@ class SettingBar : public QWidget {
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
 
+    //! \brief Reloads a restored setting row and forwards normal modified-setting notifications.
+    void restoreSettingValue(QString setting_key);
+
+    //! \brief Starts a paired setting edit driven by a view interaction.
+    void beginPairedGlobalSettingChange(QString first_key, QString second_key);
+
+    //! \brief Updates paired setting values without committing a modified-setting notification.
+    void updatePairedGlobalSetting(QString first_key, double first_value, QString second_key, double second_value);
+
+    //! \brief Finishes a paired setting edit and emits normal modified-setting notifications.
+    void finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
+                                         double second_value);
+
   private slots:
+    /*!
+     * \brief Re-emits a signal that a setting is about to be modified.
+     * \param setting_key   Key that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
     /*!
      * \brief Re-emitts a signal that a setting has been modified.
      * \param setting_key   Key that was modified.
@@ -148,6 +189,37 @@ class SettingBar : public QWidget {
      */
     SettingTab* getTab(QString major, QString minor);
 
+    /*!
+     * \brief Selects a cylindrical-capable syntax when the slicing mode enters the cylindrical workflow.
+     * \param setting_key Setting that triggered the sync check.
+     * \return Additional setting keys changed by the sync.
+     */
+    QStringList syncCylindricalSlicingSettings(const QString& setting_key);
+
+    /*!
+     * \brief Reloads the visible setting row for a programmatically updated setting.
+     * \param setting_key Setting row key to reload.
+     */
+    void reloadSettingRow(const QString& setting_key);
+
+    //! \brief Rechecks warning-only dependencies that are not part of row visibility logic.
+    void refreshDynamicDependencies();
+
+    //! \brief Builds the effective settings for the first selected local target, or global settings if none is selected.
+    QSharedPointer<SettingsBase> selectedVisualizationSettings() const;
+
+    //! \brief Returns non-null selected local settings bases; empty means global settings should be edited.
+    QList<QSharedPointer<SettingsBase>> selectedEditableSettingsBases() const;
+
+    //! \brief Removes a selected local override when its value matches the inherited value.
+    void removeRedundantSelectedLocalOverride(const QString& setting_key);
+
+    //! \brief Emits the current effective visualization settings.
+    void emitSelectedVisualizationSettings();
+
+    //! \brief Reloads rows after unit changes and refreshes dynamic warnings once.
+    void reloadRowsForUnitChange();
+
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -164,6 +236,12 @@ class SettingBar : public QWidget {
 
     //! \brief Enables appropriate rows after all settings have been loaded
     void enableDependRows();
+
+    //! \brief Hides dependency-empty setting groups when disabled settings are hidden.
+    void refreshDependencyVisibility();
+
+    //! \brief Keeps the settings-base combo popup compact across application themes.
+    void updateSettingBasePopupHeight();
 
     //! \brief Creates dependency node information for each setting row
     //! \param master Copy of master json to pull appropriate information from
@@ -196,5 +274,20 @@ class SettingBar : public QWidget {
 
     //! \brief Whether or not ranges are currently selected
     bool m_range_selected;
+
+    //! \brief Currently selected local settings bases, if any.
+    QList<QSharedPointer<SettingsBase>> m_selected_settings_bases;
+
+    //! \brief Parent settings inherited by the corresponding selected local settings bases.
+    QList<QSharedPointer<SettingsBase>> m_selected_inherited_settings_bases;
+
+    //! \brief Prevents recursive setting sync while paired radial settings are reloaded.
+    bool m_syncing_radial_settings = false;
+
+    //! \brief Prevents restored undo/redo values from being treated like fresh row edits.
+    bool m_restoring_settings = false;
+
+    //! \brief Defers full dynamic warning refreshes while rows are reloaded in bulk.
+    bool m_suppress_dynamic_dependency_refresh = false;
 };
 } // Namespace ORNL

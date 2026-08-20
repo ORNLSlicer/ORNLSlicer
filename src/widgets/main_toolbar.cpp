@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QLayout>
 #include <QMenu>
+#include <QSignalBlocker>
 #include <qaction.h>
 #include <qfiledevice.h>
 #include <qicon.h>
@@ -32,6 +33,18 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+bool usesCustomPathOrderLocation(const QSharedPointer<SettingsBase>& sb) {
+    const PathOrderOptimization path_order =
+        static_cast<PathOrderOptimization>(sb->setting<int>(PS::Optimizations::kPathOrder));
+
+    return path_order == PathOrderOptimization::kCustomPoint ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kPerimeterPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
+           optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kSkinPathOrder));
+}
+} // namespace
+
 MainToolbar::MainToolbar(QWidget* parent) : m_parent(parent), QToolBar(parent) {
     setup();
     setupSubWidgets();
@@ -80,11 +93,20 @@ void MainToolbar::setupSubWidgets() {
     this->addWidget(m_shape_btn);
     this->addSeparator();
 
-    // Slicing Plane Button
-    m_slicing_planes_btn = buildIconButton(":/icons/slicing_plane.png", "Show slicing plane for each part", true);
+    // Slicing Geometry Button
+    m_slicing_planes_btn = buildIconButton(":/icons/slicing_plane.png", "Show slicing geometry for each part", true);
     this->addWidget(m_slicing_planes_btn);
     connect(m_slicing_planes_btn, &QToolButton::toggled, this,
             [this](bool checked) { emit showSlicingPlanes(checked); });
+
+    // Layer Settings Range Button
+    m_layer_settings_range_btn =
+        buildIconButton(":/icons/layers_black.png", "Show selected layer settings height", true);
+    m_layer_settings_range_btn->setEnabled(false);
+    m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
+    this->addWidget(m_layer_settings_range_btn);
+    connect(m_layer_settings_range_btn, &QToolButton::toggled, this,
+            [this](bool checked) { emit showLayerSettingsRange(checked); });
 
     // Seam buttons
     m_seam_btn = buildIconButton(":/icons/map_markers_black.png", "Show optimization points", true);
@@ -259,6 +281,32 @@ QMenu* MainToolbar::buildShapeMenu() {
     });
     shape_menu->addAction(rect_prism_action);
 
+    auto* hex_prism_action = new QAction("Create Hexagonal Prism", this);
+    connect(hex_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+        bool side_length_ok, height_ok;
+
+        double side_length =
+            promptForSize("Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
+                          PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
+        if (!side_length_ok) {
+            return;
+        }
+        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                      PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
+        if (!height_ok) {
+            return;
+        }
+
+        auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(side_length, height));
+        QString name = promptForName();
+        if (name != "") {
+            new_mesh->setName(name);
+            auto new_part = QSharedPointer<Part>::create(new_mesh);
+            CSM->addPart(new_mesh);
+        }
+    });
+    shape_menu->addAction(hex_prism_action);
+
     auto* open_rect_prism_action = new QAction("Create Open Top Rectangular Prism", this);
     connect(open_rect_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
         bool len_ok, width_ok, height_ok;
@@ -358,6 +406,7 @@ void MainToolbar::enableCorrectOptions() {
         m_add_btn->setEnabled(false);
         m_shape_btn->setEnabled(false);
         m_slicing_planes_btn->setEnabled(false);
+        m_layer_settings_range_btn->setEnabled(false);
         m_overhang_button->setEnabled(false);
         m_billboarding_button->setEnabled(false);
         m_seam_btn->setEnabled(false);
@@ -370,6 +419,7 @@ void MainToolbar::enableCorrectOptions() {
         m_add_btn->setEnabled(true);
         m_shape_btn->setEnabled(true);
         m_slicing_planes_btn->setEnabled(true);
+        m_layer_settings_range_btn->setEnabled(m_layer_settings_range_available);
         m_overhang_button->setEnabled(true);
         m_billboarding_button->setEnabled(true);
         m_segment_info_button->setEnabled(false);
@@ -466,18 +516,34 @@ void MainToolbar::setSliceAbility(bool status) { m_slice_btn->setEnabled(status)
 
 void MainToolbar::setExportAbility(bool status) { m_export_gcode_btn->setEnabled(status); }
 
+void MainToolbar::setLayerSettingsRangeAbility(bool status) {
+    m_layer_settings_range_available = status;
+
+    if (!status) {
+        m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
+        m_layer_settings_range_btn->setChecked(false);
+    }
+    else {
+        m_layer_settings_range_btn->setToolTip("Show selected layer settings height");
+    }
+
+    enableCorrectOptions();
+}
+
+void MainToolbar::setOrthoGcodeChecked(bool status) {
+    const QSignalBlocker blocker(m_2d_gcode_btn);
+    m_2d_gcode_btn->setChecked(status);
+}
+
 void MainToolbar::handleModifiedSetting(const QString& setting_key) {
     IslandOrderOptimization islandOrder =
         static_cast<IslandOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kIslandOrder));
-    PathOrderOptimization pathOrder =
-        static_cast<PathOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kPathOrder));
     PointOrderOptimization pointOrder =
         static_cast<PointOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kPointOrder));
-    bool secondPointEnabled = GSM->getGlobal()->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
 
     // Disable button.
-    if (islandOrder != IslandOrderOptimization::kCustomPoint && pathOrder != PathOrderOptimization::kCustomPoint &&
-        pointOrder != PointOrderOptimization::kCustomPoint && !secondPointEnabled) {
+    if (islandOrder != IslandOrderOptimization::kCustomPoint && !usesCustomPathOrderLocation(GSM->getGlobal()) &&
+        !usesCustomPointLocation(pointOrder)) {
         m_seam_btn->setDisabled(true);
         m_seam_btn->setToolTip("Custom optimization points are not set");
         m_seam_btn->setChecked(false);

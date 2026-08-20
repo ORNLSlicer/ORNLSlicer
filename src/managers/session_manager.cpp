@@ -5,10 +5,7 @@
 
 #include <QCoreApplication>
 #include <QStandardPaths>
-#include <QUuid>
-#include <data_stream.h>
 #include <qcontainerfwd.h>
-#include <qdatetime.h>
 #include <qdir.h>
 #include <qfiledevice.h>
 #include <qfileinfo.h>
@@ -19,8 +16,6 @@
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
-#include <tcp_connection.h>
-#include <tcp_server.h>
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
@@ -33,19 +28,23 @@
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
+#include "threading/slicers/helical_slicer.h"
 #include "threading/slicers/image_slicer.h"
-#include "threading/slicers/polymer_slicer.h"
-#include "threading/slicers/real_time_polymer_slicer.h"
-#include "threading/slicers/real_time_rpbf_slicer.h"
-#include "threading/slicers/rpbf_slicer.h"
+#include "threading/slicers/planar_slicer.h"
+#include "threading/slicers/radial_slicer.h"
 #include "units/derivative_units.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "utilities/runtime_diagnostics.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 
 namespace ORNL {
+namespace {
+bool supportsCylindricalSlicing(GcodeSyntax syntax) { return syntax == GcodeSyntax::kArcSpecialties; }
+} // namespace
+
 QSharedPointer<SessionManager> SessionManager::m_singleton = QSharedPointer<SessionManager>();
 
 QSharedPointer<SessionManager> SessionManager::getInstance() {
@@ -287,7 +286,7 @@ void SessionManager::reloadPart(QSharedPointer<PartMetaItem> pm) {
         m_models[file_info.fileName()] = {mesh_data.raw_data, mesh_data.size};
 
         emit partReloaded(pm);
-        emit forwardStatusUpdate("Reloaded Part STL, file \"" + file_info.fileName() + "\"");
+        emit forwardStatusUpdate("Reloaded part model, file \"" + file_info.fileName() + "\"");
     });
     loader->start();
 }
@@ -315,7 +314,7 @@ void SessionManager::replacePart(QSharedPointer<PartMetaItem> pm, QString filena
         m_models[file_info.fileName()] = {mesh_data.raw_data, mesh_data.size};
 
         emit partReloaded(pm);
-        emit forwardStatusUpdate("Reloaded Part STL, file \"" + file_info.fileName() + "\"");
+        emit forwardStatusUpdate("Reloaded part model, file \"" + file_info.fileName() + "\"");
     });
     loader->start();
 }
@@ -464,6 +463,15 @@ bool SessionManager::loadPartsJson(fifojson j) {
                 CSM->addPart(mesh);
                 break;
             }
+            case kHexagonalPrism: {
+                auto mesh = QSharedPointer<ClosedMesh>::create(
+                    MeshFactory::CreateHexagonalPrismMesh(org_dims.x / 2.0, org_dims.z));
+                mesh->setTransformations(mtrxes);
+                mesh->setType(mesh_type);
+                mesh->setName(name);
+                CSM->addPart(mesh);
+                break;
+            }
             case kCylinder: {
                 auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(org_dims.y, org_dims.z));
                 mesh->setTransformations(mtrxes);
@@ -506,29 +514,32 @@ bool SessionManager::isBuildMode() {
 }
 
 bool SessionManager::doSlice() {
-    // check current syntax for file suffix that needs to be output
-    tempGcodeFile =
-        defaultGcodeFile +
-        GcodeMetaList::SyntaxToMetaHash[(int)GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax)]
-            .m_file_suffix;
+    const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    const SlicingMode type = static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode));
+    const CylindricalPathPattern path_pattern =
+        static_cast<CylindricalPathPattern>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathPattern));
 
-    SlicerType type = static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType));
+    if (type == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
+        const QString message = "Cylindrical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
+        qWarning() << message;
+        emit forwardStatusUpdate(message);
+        return false;
+    }
+
+    // check current syntax for file suffix that needs to be output
+    tempGcodeFile = defaultGcodeFile + GcodeMetaList::SyntaxToMetaHash[(int)syntax].m_file_suffix;
+
     m_sensor_files_generated = GSM->getGlobal()->setting<bool>(PS::LaserScanner::kLaserScanner);
 
     if (m_ast.isNull())
         this->changeSlicer(type);
     else {
         // See if it has changed
-        if (m_slicer_type != type)
+        if (m_slicing_mode != type || (type == SlicingMode::kCylindrical && m_cylindrical_path_pattern != path_pattern))
             this->changeSlicer(type);
         else
             m_ast->setGcodeOutput(tempGcodeFile);
     }
-
-    if (m_active_connections.size() > 0)
-        m_ast->setCommunicate(true);
-    else
-        m_ast->setCommunicate(false);
 
     // Request new information about the parts to be sliced.
     emit requestTransformationUpdate();
@@ -540,6 +551,7 @@ bool SessionManager::doSlice() {
 
 bool SessionManager::sliceComplete() {
 
+    Diagnostics::logLine(QString("SessionManager slice complete: %1").arg(tempGcodeFile));
     emit forwardSliceComplete(tempGcodeFile, true);
     return true;
 }
@@ -574,81 +586,6 @@ void SessionManager::pastePart() {
     m_load_mutex.unlock();
 }
 
-void SessionManager::setupTCPServer() {
-    m_tcp_server = new TCPServer();
-
-    m_step_connectivity = {
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kPreProcess),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kCompute),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kPostProcess),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kGcodeGeneraton),
-        PreferencesManager::getInstance()->getStepConnectivity(StatusUpdateStepType::kGcodeParsing)};
-
-    if (PreferencesManager::getInstance()->getTcpServerAutoStart()) {
-        setServerInformation(PreferencesManager::getInstance()->getTCPServerPort());
-    }
-}
-void SessionManager::setServerInformation(int port) {
-    m_tcp_server->close();
-    connect(m_tcp_server, &TCPServer::newClient, this, [this](ORNL::TCPConnection* connection) {
-        QSharedPointer<DataStream> data_stream = QSharedPointer<DataStream>::create(connection);
-        // auto data_stream = new DataStream(connection);
-        connect(data_stream.get(), &DataStream::newData, this, [this, data_stream, connection]() {
-            fifojson message = json::parse(data_stream->getNextMessage().toStdString());
-            QString id = QString::fromStdString(message["header"]["request-id"]);
-            if (m_active_connections.contains(id)) {
-                int command = message["header"]["command"];
-                switch (command) {
-                    case 1:
-                        if (message["data"]["response"] != 200) {
-                            m_active_connections.remove(id);
-                            connection->close();
-                        }
-                        break;
-
-                    case 5:
-                        if (message["data"]["response"] == 200) {
-                            m_ast->setNetworkData(StatusUpdateStepType::kGcodeGeneraton,
-                                                  QString::fromStdString(message["data"]["gcode"]));
-                        }
-                        break;
-                }
-            }
-        });
-
-        QString id = QUuid::createUuid().toString(QUuid::WithoutBraces);
-        QDateTime current = QDateTime::currentDateTime();
-        QString dt = current.toString();
-
-        m_active_connections.insert(id, connection_data {data_stream, current});
-        fifojson handshake;
-        handshake["header"]["request-id"] = id.toStdString();
-        handshake["header"]["date"] = dt.toStdString();
-        handshake["header"]["command"] = 1;
-        data_stream->send(QString::fromStdString(handshake.dump(4)));
-    });
-
-    m_tcp_server->startAsync(port);
-    emit forwardStatusUpdate("TCP Server started/restarted on port: " + QString::number(port));
-}
-
-void SessionManager::sendMessage(StatusUpdateStepType type, QString data) {
-    if (m_active_connections.size() > 0 && m_step_connectivity[(int)type]) {
-        for (QString key : m_active_connections.keys()) {
-            fifojson j;
-            j["header"]["request-id"] = key.toStdString();
-            j["header"]["date"] = m_active_connections[key].current_date_time.toString().toStdString();
-            j["header"]["command"] = (int)type + 2;
-            j["data"]["gcode"] = data.toStdString();
-            m_active_connections[key].data_stream->send(QString::fromStdString(j.dump(4)));
-        }
-    }
-}
-
-void SessionManager::setServerStepConnectivity(StatusUpdateStepType type, bool state) {
-    m_step_connectivity[(int)type] = state;
-}
-
 qint64 SessionManager::getSliceTimeElapsed() {
     if (m_ast.isNull()) {
         return 0;
@@ -657,43 +594,37 @@ qint64 SessionManager::getSliceTimeElapsed() {
     return m_ast->getTimeElapsed();
 }
 
-bool SessionManager::changeSlicer(SlicerType type) {
+bool SessionManager::changeSlicer(SlicingMode type) {
     // Disconnect the signals from the AST.
     QObject::disconnect(this, &SessionManager::startSlice, nullptr, nullptr);
-
-    if (GSM->getConsoleSettings() != nullptr) {
-        bool use_real_time = GSM->getConsoleSettings()->setting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode);
-        if (use_real_time && type == SlicerType::kPolymerSlice) {
-            type = SlicerType::kRealTimePolymer;
-        }
-        else if (use_real_time && type == SlicerType::kRPBFSlice) {
-            type = SlicerType::kRealTimeRPBF;
-        }
-    }
+    const CylindricalPathPattern path_pattern =
+        static_cast<CylindricalPathPattern>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathPattern));
 
     // Reset the AST with a new slicer.
     switch (type) {
-        case SlicerType::kPolymerSlice:
-            m_ast.reset(new PolymerSlicer(tempGcodeFile));
+        case SlicingMode::kPlanar:
+            m_ast.reset(new PlanarSlicer(tempGcodeFile));
             break;
-        case SlicerType::kMetalSlice:
-            //                m_ast.reset(new ...);
-            break;
-        case SlicerType::kRPBFSlice:
-            m_ast.reset(new RPBFSlicer(tempGcodeFile));
-            break;
-        case SlicerType::kRealTimePolymer:
-            m_ast.reset(new RealTimePolymerSlicer(tempGcodeFile));
-            break;
-        case SlicerType::kRealTimeRPBF:
-            m_ast.reset(new RealTimeRPBFSlicer(tempGcodeFile));
-            break;
-        case SlicerType::kImageSlice:
+        case SlicingMode::kImage:
             m_ast.reset(new ImageSlicer(tempGcodeFile));
+            break;
+        case SlicingMode::kCylindrical:
+            if (path_pattern == CylindricalPathPattern::kHelical) {
+                m_ast.reset(new HelicalSlicer(tempGcodeFile));
+            }
+            else {
+                m_ast.reset(new RadialSlicer(tempGcodeFile));
+            }
+            break;
+        default:
+            qWarning() << "Unknown slicing mode requested. Falling back to Planar slicer.";
+            m_ast.reset(new PlanarSlicer(tempGcodeFile));
+            type = SlicingMode::kPlanar;
             break;
     }
 
-    m_slicer_type = type;
+    m_slicing_mode = type;
+    m_cylindrical_path_pattern = type == SlicingMode::kCylindrical ? path_pattern : CylindricalPathPattern::kRadial;
 
     // Reset part steps
     for (QSharedPointer<Part> part : m_parts) {
@@ -703,17 +634,19 @@ bool SessionManager::changeSlicer(SlicerType type) {
     // Reconnect the signal to the AST.
     QObject::connect(this, &SessionManager::startSlice, m_ast.get(), &AbstractSlicingThread::doSlice);
     connect(m_ast.get(), &AbstractSlicingThread::statusUpdate, this, &SessionManager::forwardDialogUpdate);
+    connect(m_ast.get(), &AbstractSlicingThread::statusMessage, this, &SessionManager::forwardStatusUpdate);
     connect(m_ast.get(), &AbstractSlicingThread::sliceComplete, this, &SessionManager::sliceComplete);
-    connect(m_ast.get(), &AbstractSlicingThread::sendMessage, this, &SessionManager::sendMessage);
     return true;
 }
 
-SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack) {
+SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack, bool notifyOnSuccess) {
     // Request an update.
     emit requestTransformationUpdate();
 
     SessionLoader* loader = new SessionLoader(path, true);
     connect(loader, &SessionLoader::finished, loader, &SessionLoader::deleteLater);
+    if (notifyOnSuccess)
+        connect(loader, &SessionLoader::saveSucceeded, this, [this, path]() { emit sessionSaved(path); });
 
     loader->start();
     m_file = path;
@@ -724,7 +657,7 @@ SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack) {
     return loader;
 }
 
-SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path) {
+SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path, bool promptForSettingsUpdate) {
     // Clear out old data if necessary.
     if (shouldDelete) {
         for (model_data file : m_models)
@@ -744,9 +677,12 @@ SessionLoader* SessionManager::loadSession(bool shouldDelete, QString path) {
     QString filename =
         QString::fromStdString(Constants::Settings::Session::Files::kGlobal) + " in project file: " + path + " ";
     fifojson settings = loader->getSettingsFromZip();
-    int result = GSM->checkVersion(filename, settings, true);
+    int result =
+        GSM->checkVersion(filename, settings,
+                          promptForSettingsUpdate ? SettingsVersionUpdateMode::kGuiPrompt
+                                                  : SettingsVersionUpdateMode::kAutoUpdate);
     if (result == 1)
-        loader->updateSettingsJson(settings);
+        loader->updateSettingsJson(settings, promptForSettingsUpdate);
 
     if (result >= 0) {
         connect(loader, &SessionLoader::finished, loader, &SessionLoader::deleteLater);

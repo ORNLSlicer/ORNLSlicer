@@ -19,7 +19,6 @@
 #include "geometry/mesh/open_mesh.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/layer.h"
 #include "step/layer/scan_layer.h"
 #include "units/unit.h"
@@ -29,7 +28,6 @@
 
 namespace ORNL {
 Part::Part() {
-    m_sync = QSharedPointer<SyncManager>::create();
     m_sb = QSharedPointer<SettingsBase>::create();
     m_uuid = QUuid::createUuid();
 }
@@ -70,7 +68,6 @@ Part::Part(QSharedPointer<MeshBase> root_mesh, QString file_name, MeshType mt) {
     m_mesh_type = mt;
     m_name = root_mesh->name();
     m_root_mesh = root_mesh;
-    m_sync = QSharedPointer<SyncManager>::create();
     m_sb = QSharedPointer<SettingsBase>::create();
     m_template_applied = false;
 
@@ -119,7 +116,7 @@ void Part::createSettingsRange(int low, int high, QSharedPointer<SettingsBase> s
 QSharedPointer<SettingsRange> Part::getSettingsRange(int low, int high) {
     int min = qMin(low, high);
     int max = qMax(low, high);
-    return m_ranges[MathUtils::cantorPair(min, max)];
+    return m_ranges.value(MathUtils::cantorPair(min, max));
 }
 
 bool Part::getTemplateApplied() { return m_template_applied; }
@@ -137,10 +134,15 @@ bool Part::currentPartTemplateEqualToSetTemplate(QString set_template) {
 void Part::removeSettingsRange(int low, int high) {
     int min = qMin(low, high);
     int max = qMax(low, high);
-    m_ranges.remove(MathUtils::cantorPair(min, max));
+    const uint key = MathUtils::cantorPair(min, max);
+    m_ranges.remove(key);
+    m_range_from_template.remove(key);
 }
 
-void Part::clearSettingsRanges() { m_ranges.clear(); }
+void Part::clearSettingsRanges() {
+    m_ranges.clear();
+    m_range_from_template.clear();
+}
 
 json Part::SettingsRangesToJson() {
     json output;
@@ -159,6 +161,7 @@ json Part::SettingsRangesToJson() {
 
 void Part::loadRangesFromJson(json input) {
     m_ranges.clear();
+    m_range_from_template.clear();
     for (auto& range_json : input) {
         int low = range_json[Constants::Settings::Session::Range::kLow];
         int high = range_json[Constants::Settings::Session::Range::kHigh];
@@ -189,15 +192,24 @@ void Part::updateSettingsRangeLimits(int old_low, int old_high, int new_low, int
     // get the old one, to use its sb and group name
     int old_min = qMin(old_low, old_high);
     int old_max = qMax(old_low, old_high);
+    const uint old_key = MathUtils::cantorPair(old_min, old_max);
     QSharedPointer<SettingsRange> old = getSettingsRange(old_min, old_max);
+    if (old.isNull())
+        return;
 
     // make a new range at the new location
     int min = qMin(new_low, new_high);
     int max = qMax(new_low, new_high);
-    createSettingsRange(min, max, old->getSb(), old->groupName());
+    if (old_min == min && old_max == max)
+        return;
 
-    // delete the old range
+    const bool was_from_template = m_range_from_template.value(old_key, false);
+    QSharedPointer<SettingsBase> sb = old->getSb();
+    QString group_name = old->groupName();
     removeSettingsRange(old_min, old_max);
+    const uint new_key = MathUtils::cantorPair(min, max);
+    m_ranges[new_key] = QSharedPointer<SettingsRange>::create(min, max, group_name, sb);
+    m_range_from_template[new_key] = was_from_template;
 }
 
 void Part::setRootMesh(QSharedPointer<MeshBase> mesh) { m_root_mesh = mesh; }
@@ -508,10 +520,6 @@ bool Part::isPartDirty() {
     // a part is "clean" only if all of its steps are not dirty
     return false;
 }
-
-QSharedPointer<SyncManager> Part::getSync() const { return m_sync; }
-
-void Part::setSync(const QSharedPointer<SyncManager>& sync) { m_sync = sync; }
 
 QUuid Part::getId() { return m_uuid; }
 

@@ -1,0 +1,260 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "syntax"
+    display: "Syntax"
+    type: "enumeration"
+    tooltip: "Declares the syntax of the G-code (mm or in, comments () or ; etc"
+    depends: {}
+    options:
+      - "Beam"
+      - "Cincinnati"
+      - "Common"
+      - "Dmg Dmu"
+      - "Gudel"
+      - "Haas Inch"
+      - "Haas Metric"
+      - "Haas Metric No Comments"
+      - "Hurco"
+      - "Ingersoll"
+      - "Marlin"
+      - "JuggerBot3D"
+      - "Mazak"
+      - "MVP"
+      - "RomiFanuc"
+      - "Siemens"
+      - "Thermwood"
+      - "Wolf"
+      - "RepRap"
+      - "Mach4"
+      - "AeroBasic"
+      - "Meld"
+      - "ORNL"
+      - "Okuma"
+      - "Tormach"
+      - "AML3D"
+      - "KraussMaffei"
+      - "Sandia"
+      - "Meltio"
+      - "Adamantine"
+      - "ORNL Metric"
+      - "Arc Specialties"
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kSyntax"
+    local: false
+  - name: "machine_type"
+    display: "Machine Type"
+    type: "enumeration"
+    tooltip: "What type of machine"
+    depends: {}
+    options:
+      - "Pellet"
+      - "Filament"
+      - "Wire_Arc"
+      - "Laser_Wire"
+      - "Concrete"
+      - "Thermoset"
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kMachineType"
+    local: false
+  - name: "force_G1"
+    display: "Force G1 Travels"
+    type: "boolean"
+    tooltip: "Forces travel moves to use G1 rather than G0"
+    depends: {"OR":[{"syntax":1},{"syntax":9}]}
+    options: []
+    default: false
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kForceG1"
+    local: false
+  - name: "supports_G2_3"
+    display: "Supports G2/G3"
+    type: "boolean"
+    tooltip: "If selected, machine will use G2/G3 for supported arc moves. Otherwise, those moves will be comprised of G1s."
+    depends: {}
+    options: []
+    default: false
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kSupportsG2G3"
+    local: false
+  - name: "enable_trafo"
+    display: "Enable TRAFO"
+    type: "boolean"
+    tooltip: "Controls whether generated G-code enables the machine TRAFO transformation mode during initial setup."
+    depends: {"syntax":31}
+    options: []
+    default: true
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kEnableTrafo"
+    local: false
+  - name: "g2_g3_center_point_interpretation"
+    display: "G2/G3 Center Point Interpretation"
+    type: "enumeration"
+    tooltip: "Selects whether G2/G3 I and J arc center coordinates are absolute positions or relative distances from the arc start point."
+    depends: {"AND":[{"syntax":31},{"supports_G2_3":true}]}
+    options:
+      - "Absolute"
+      - "Relative"
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kG2G3CenterPointInterpretation"
+    local: false
+  - name: "g2_g3_absolute_i"
+    display: "G2/G3 Absolute I"
+    type: "location"
+    tooltip: "Absolute I coordinate used for Arc Specialties G2/G3 arc centers."
+    depends: {"AND":[{"g2_g3_center_point_interpretation":0},{"AND":[{"syntax":31},{"supports_G2_3":true}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kG2G3AbsoluteI"
+    local: false
+  - name: "g2_g3_absolute_j"
+    display: "G2/G3 Absolute J"
+    type: "location"
+    tooltip: "Absolute J coordinate used for Arc Specialties G2/G3 arc centers."
+    depends: {"AND":[{"g2_g3_center_point_interpretation":0},{"AND":[{"syntax":31},{"supports_G2_3":true}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kG2G3AbsoluteJ"
+    local: false
+  - name: "tool_number"
+    display: "Tool Number"
+    type: "number"
+    tooltip: "Sets the tool number for the primary extruder."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kToolNumber"
+    local: false
+  - name: "tool_coordinate"
+    display: "Tool Coordinate"
+    type: "number"
+    tooltip: "Sets the tool coordinate for the primary extruder."
+    depends: {"OR":[{"syntax":22},{"syntax":30}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kToolCoordinate"
+    local: false
+  - name: "base_coordinate"
+    display: "Base Coordinate"
+    type: "number"
+    tooltip: "Sets the base coordinate for the primary extruder."
+    depends: {"OR":[{"syntax":22},{"syntax":30}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kBaseCoordinate"
+    local: false
+  - name: "axis_a"
+    display: "Axis A"
+    type: "angle"
+    tooltip: "Sets the printing angle for the A axis"
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kAxisA"
+    local: false
+  - name: "axis_b"
+    display: "Axis B"
+    type: "angle"
+    tooltip: "Sets the printing angle for the B axis"
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kAxisB"
+    local: false
+  - name: "axis_c"
+    display: "Axis C"
+    type: "angle"
+    tooltip: "Sets the printing angle for the C axis"
+    depends: {"OR":[{"syntax":31},{"OR":[{"syntax":30},{"syntax":22}]}]}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kAxisC"
+    local: false
+  - name: "gcode_coordinate_frame_rotation_x"
+    display: "G-Code Frame Rotation X"
+    type: "angle"
+    tooltip: "Rotates generated G-Code coordinates about the X axis before output."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kGCodeCoordinateFrameRotationX"
+    local: false
+  - name: "gcode_coordinate_frame_rotation_y"
+    display: "G-Code Frame Rotation Y"
+    type: "angle"
+    tooltip: "Rotates generated G-Code coordinates about the Y axis before output."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kGCodeCoordinateFrameRotationY"
+    local: false
+  - name: "gcode_coordinate_frame_rotation_z"
+    display: "G-Code Frame Rotation Z"
+    type: "angle"
+    tooltip: "Rotates generated G-Code coordinates about the Z axis before output."
+    depends: {}
+    options: []
+    default: 0
+    minor: "Machine Setup"
+    major: "Printer"
+    namespace: "Printer::MachineSetup"
+    symbol: "kGCodeCoordinateFrameRotationZ"
+    local: false
+inputs:
+  - name: "g2_g3_absolute_center"
+    display: "G2/G3 Absolute Center"
+    widget: "vector2"
+    tooltip: "Absolute I and J coordinates used for Arc Specialties G2/G3 arc centers."
+    depends: {"AND":[{"g2_g3_center_point_interpretation":0},{"AND":[{"syntax":31},{"supports_G2_3":true}]}]}
+    minor: "Machine Setup"
+    major: "Printer"
+    components:
+      - setting: "g2_g3_absolute_i"
+        label: "I"
+      - setting: "g2_g3_absolute_j"
+        label: "J"

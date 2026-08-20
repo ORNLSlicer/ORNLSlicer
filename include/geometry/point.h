@@ -19,11 +19,6 @@
 #include "units/derivative_units.h"
 #include "units/unit.h"
 
-// Single Path Lib
-#ifdef HAVE_SINGLE_PATH
-    #include <single_path/geometry/point.h>
-#endif
-
 namespace ORNL {
 /*!
  * \class Point
@@ -61,14 +56,6 @@ class Point {
     Point(const QPointF& p);
 
     Point(const QVector3D& p);
-
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Conversion constructor
-    Point(SinglePath::Point& point);
-
-    //! \brief Conversion operator
-    operator SinglePath::Point() const;
-#endif
 
     /*!
      * \brief Function for going from QVector2D to Point
@@ -238,20 +225,6 @@ class Point {
     //! \return a settings base
     QSharedPointer<SettingsBase> getSettings();
 
-    //! \brief Sets the normals at this point
-    //! \param normal: vector of normals to set
-    void setNormals(QVector<QVector3D> normals);
-
-    //! \brief gets the normals at this point
-    //! \return vector of normals
-    QVector<QVector3D> getNormals() const;
-
-    //! \brief Reverses the order of normals at this point
-    void reverseNormals();
-
-    //! \brief Reverses the direction of normals at this point
-    void reverseNormalDirections();
-
     //! \brief returns this points with it X,Y, and Z values as a CSV string
     //! \return a string
     QString toCSVString();
@@ -262,9 +235,6 @@ class Point {
     float m_y;
 
     float m_z;
-
-    //! \brief Vector of normals
-    QVector<QVector3D> m_normals;
 
     //! \brief settings to apply at this point. Used in settings polygons/ regions
     QSharedPointer<SettingsBase> m_sb;

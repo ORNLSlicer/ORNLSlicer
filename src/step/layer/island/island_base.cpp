@@ -1,6 +1,7 @@
 #include "step/layer/island/island_base.h"
 
 #include <limits>
+#include <optional>
 #include <utility>
 
 #include <qcontainerfwd.h>
@@ -14,8 +15,6 @@
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
-#include "step/layer/regions/anchor.h"
 #include "step/layer/regions/brim.h"
 #include "step/layer/regions/infill.h"
 #include "step/layer/regions/inset.h"
@@ -168,15 +167,6 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
                 return std::move(thermalscan);
             }
             break;
-        case RegionType::kAnchor:
-            for (QSharedPointer<RegionBase> r : m_regions) {
-                QSharedPointer<Anchor> anchor = r.dynamicCast<Anchor>();
-                if (anchor.isNull())
-                    continue;
-
-                return std::move(anchor);
-            }
-            break;
         case RegionType::kSupportRoof:
         case RegionType::kUnknown:
         default:
@@ -188,115 +178,15 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
 
 const PolygonList& IslandBase::getGeometry() const { return m_geometry; }
 
-void IslandBase::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void IslandBase::compute(uint layer_num) {
     PolygonList pl = m_geometry;
 
     for (QSharedPointer<RegionBase> r : m_regions) {
         r->setGeometry(pl);
-        r->compute(layer_num, sync);
+        r->compute(layer_num);
         pl = r->getGeometry();
     }
-
-#ifdef HAVE_SINGLE_PATH
-    if (m_sb->setting<bool>(ES::SinglePath::kEnableSinglePath)) {
-        // Combine and pass to sp
-        QVector<SinglePath::PolygonList> combined_geometry;
-
-        QSharedPointer<Perimeter> perimeters = nullptr;
-        QSharedPointer<Inset> insets = nullptr;
-
-        // Find regions if they exist
-        for (int index = 0, end = m_regions.size(); index < end; ++index) {
-            if (perimeters == nullptr)
-                perimeters = m_regions[index].dynamicCast<Perimeter>();
-
-            if (insets == nullptr)
-                insets = m_regions[index].dynamicCast<Inset>();
-        }
-
-        // If perimeters are found, add them
-        if (perimeters != nullptr) {
-
-            for (auto& poly_list : perimeters->getComputedGeometry()) {
-                SinglePath::PolygonList sp_poly_list;
-                for (auto& polygon : poly_list) {
-                    SinglePath::Polygon sp_polygon = polygon;
-                    sp_polygon.setRegionType(SinglePath::RegionType::kPerimeter);
-                    sp_poly_list.append(sp_polygon);
-                }
-                combined_geometry.append(sp_poly_list);
-            }
-        }
-
-        // If insets are found, add them
-        if (insets != nullptr) {
-            for (auto& poly_list : insets->getComputedGeometry()) {
-                SinglePath::PolygonList sp_poly_list;
-                for (auto& polygon : poly_list) {
-                    SinglePath::Polygon sp_polygon = polygon;
-                    sp_polygon.setRegionType(SinglePath::RegionType::kInset);
-                    sp_poly_list.append(sp_polygon);
-                }
-                combined_geometry.append(sp_poly_list);
-            }
-        }
-
-        // Only apply if there is geometry
-        if (combined_geometry.size() > 0)
-            applySinglePath(combined_geometry, layer_num, sync);
-
-        // Only need to path in one region. Prefer building in perimeters, but use insets as fallback
-        if (perimeters != nullptr) {
-            perimeters->setSinglePathGeometry(combined_geometry);
-            perimeters->createSinglePaths();
-        }
-        else if (insets != nullptr) {
-            insets->setSinglePathGeometry(combined_geometry);
-            insets->createSinglePaths();
-        } // Else no paths to build
-    }
-#endif
 }
-
-#ifdef HAVE_SINGLE_PATH
-void IslandBase::applySinglePath(QVector<SinglePath::PolygonList>& single_path_geometry, uint layer_num,
-                                 QSharedPointer<SyncManager>& sync) {
-    // Get settings
-    bool enable_exclusion = m_sb->setting<bool>(ES::SinglePath::kEnableBridgeExclusion);
-    bool enable_zippering = m_sb->setting<bool>(ES::SinglePath::kEnableZippering);
-    Distance previous_layer_exclusion_distance = m_sb->setting<Distance>(ES::SinglePath::kPrevLayerExclusionDistance);
-    Distance corner_exclusion_distance = m_sb->setting<Distance>(ES::SinglePath::kCornerExclusionDistance);
-    Distance max_bridge_length = m_sb->setting<Distance>(ES::SinglePath::kMaxBridgeLength);
-    Distance min_bridge_separation = m_sb->setting<Distance>(ES::SinglePath::kMinBridgeSeparation);
-    Distance inset_bead_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
-    Distance perimeter_bead_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-
-    SinglePath::Settings settings(enable_exclusion, enable_zippering, previous_layer_exclusion_distance(),
-                                  corner_exclusion_distance(), max_bridge_length(), min_bridge_separation());
-
-    // Apply single path
-    SinglePath::SinglePath sp(single_path_geometry, perimeter_bead_width(), inset_bead_width(), settings);
-
-    QList<SinglePath::Bridge> exclusion_bridges;
-    QList<SinglePath::Bridge> zipper_bridges;
-
-    if (enable_exclusion)
-        exclusion_bridges = sync->wait<QList<SinglePath::Bridge>>(layer_num, LinkType::kPreviousLayerExclusionInset);
-
-    if (enable_zippering)
-        zipper_bridges = sync->wait<QList<SinglePath::Bridge>>(layer_num, LinkType::kZipperingInset);
-
-    QList<SinglePath::Bridge> picked_bridges = sp.buildGraph(exclusion_bridges, zipper_bridges);
-
-    if (enable_exclusion)
-        sync->wake<QList<SinglePath::Bridge>>(layer_num, LinkType::kPreviousLayerExclusionInset, picked_bridges);
-
-    if (enable_zippering)
-        sync->wake<QList<SinglePath::Bridge>>(layer_num, LinkType::kZipperingInset, picked_bridges);
-
-    single_path_geometry = sp.convertToSinglePath();
-}
-#endif
 
 QSharedPointer<SettingsBase> IslandBase::getSb() const { return m_sb; }
 
@@ -306,6 +196,12 @@ void IslandBase::setSb(const QSharedPointer<SettingsBase>& sb) {
     // For each region in the stages, populate their sb's with the island's.
     for (auto r : m_regions) {
         r->setSb(m_sb);
+    }
+}
+
+void IslandBase::setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift) {
+    for (auto r : m_regions) {
+        r->setOptimizationFrame(slicing_plane, optimization_shift);
     }
 }
 
@@ -344,6 +240,27 @@ bool IslandBase::getAnyValidPaths() {
 
 QVector<SettingsPolygon> IslandBase::getSettingsPolygons() { return m_settings_polygons; }
 
+void IslandBase::prepareRegionForOptimization(const QSharedPointer<RegionBase>& region, int layerNumber,
+                                              QVector<QSharedPointer<RegionBase>>& previousRegions) {
+    std::optional<Point> previous_start;
+
+    for (int i = previousRegions.size() - 1; i >= 0; --i) {
+        const QSharedPointer<RegionBase>& previous_region = previousRegions[i];
+        if (previous_region->getRegionType() != region->getRegionType())
+            continue;
+
+        if (previous_region->getOptimizedLayerNumber() >= layerNumber)
+            continue;
+
+        previous_start = previous_region->getFirstPrintingStartPoint();
+        if (previous_start.has_value())
+            break;
+    }
+
+    region->setOptimizedLayerNumber(layerNumber);
+    region->setPreviousLayerStartPoint(previous_start);
+}
+
 void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<RegionBase>>& previousRegions) {
     if (previousRegions.size() > 1) {
         QSharedPointer<RegionBase> lastRegion = previousRegions.last();
@@ -367,19 +284,9 @@ void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<Region
     }
 }
 
-void IslandBase::adjustMultiNozzle() {
-    for (auto region : getRegions()) {
-        region->adjustMultiNozzle();
-    }
+void IslandBase::fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb) {
+    for (QSharedPointer<RegionBase> region : m_regions)
+        region->fitCircularArcs(global_sb);
 }
 
-void IslandBase::addNozzle(int extruder) {
-    for (QSharedPointer<ORNL::RegionBase> region : getRegions()) {
-        region->addNozzle(extruder);
-    }
-}
-
-void IslandBase::setExtruder(int ext) { m_extruder = ext; }
-
-int IslandBase::getExtruder() { return m_extruder; }
 } // namespace ORNL

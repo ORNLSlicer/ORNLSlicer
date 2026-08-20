@@ -111,11 +111,13 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
         static_cast<PointOrderOptimization>(setting<int>(PS::Optimizations::kPointOrder));
 
     // alternating seam adjustment
-    if (point_order == PointOrderOptimization::kCustomPoint) {
+    if (usesCustomPointLocation(point_order)) {
         Point p1(setting<double>(PS::Optimizations::kCustomPointXLocation),
-                 setting<double>(PS::Optimizations::kCustomPointYLocation));
+                 setting<double>(PS::Optimizations::kCustomPointYLocation),
+                 setting<double>(PS::Optimizations::kCustomPointZLocation));
         Point p2(setting<double>(PS::Optimizations::kCustomPointSecondXLocation),
-                 setting<double>(PS::Optimizations::kCustomPointSecondYLocation));
+                 setting<double>(PS::Optimizations::kCustomPointSecondYLocation),
+                 setting<double>(PS::Optimizations::kCustomPointSecondZLocation));
         double dx = setting<double>(PS::Optimizations::kCustomPointXIncrement);
         double dy = setting<double>(PS::Optimizations::kCustomPointYIncrement);
 
@@ -126,21 +128,25 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
             if (layer_number % 3 == 0 || layer_number % 4 == 0) {
                 setSetting(PS::Optimizations::kCustomPointXLocation, p2.x());
                 setSetting(PS::Optimizations::kCustomPointYLocation, p2.y());
+                setSetting(PS::Optimizations::kCustomPointZLocation, p2.z());
             }
         }
         else if (enable_second) {
             if (layer_number % 2 == 0) {
                 setSetting(PS::Optimizations::kCustomPointXLocation, p2.x() + (dx * layer_number));
                 setSetting(PS::Optimizations::kCustomPointYLocation, p2.y() + (dy * layer_number));
+                setSetting(PS::Optimizations::kCustomPointZLocation, p2.z());
             }
             else {
                 setSetting(PS::Optimizations::kCustomPointXLocation, p1.x() + (dx * layer_number));
                 setSetting(PS::Optimizations::kCustomPointYLocation, p1.y() + (dy * layer_number));
+                setSetting(PS::Optimizations::kCustomPointZLocation, p1.z());
             }
         }
         else {
             setSetting(PS::Optimizations::kCustomPointXLocation, p1.x() + (dx * layer_number));
             setSetting(PS::Optimizations::kCustomPointYLocation, p1.y() + (dy * layer_number));
+            setSetting(PS::Optimizations::kCustomPointZLocation, p1.z());
         }
     }
 
@@ -182,14 +188,6 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
             skin_infill_angle = skin_infill_angle + skin_infill_angle_rotation * layer_number;
             setSetting(PS::Skin::kInfillAngle, skin_infill_angle);
         }
-    }
-
-    if (setting<bool>(ES::RPBFSlicing::kSectorStaggerEnable)) {
-        Angle staggerAngle = setting<Angle>(ES::RPBFSlicing::kSectorStaggerAngle);
-        if (layer_number % 2 == 1)
-            setSetting(ES::RPBFSlicing::kSectorStaggerAngle, staggerAngle * -1);
-        else
-            setSetting(ES::RPBFSlicing::kSectorStaggerAngle, 0);
     }
 }
 } // namespace ORNL

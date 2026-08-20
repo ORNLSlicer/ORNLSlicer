@@ -1,9 +1,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QStyleFactory>
-#include <boost/preprocessor.hpp>
 #include <nlohmann/json_fwd.hpp>
-#include <qabstractsocket.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
 #include <qdeadlinetimer.h>
@@ -11,7 +9,6 @@
 #include <qlist.h>
 #include <qnamespace.h>
 #include <qobject.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qtextformat.h>
 #include <qtresource.h>
@@ -26,11 +23,14 @@
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/mesh/open_mesh.h"
 #include "geometry/segment_base.h"
+#include "ornlslicer/build_info.h"
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
+#include "utilities/runtime_diagnostics.h"
 #include "windows/main_window.h"
 
 int main(int argc, char* argv[]) {
@@ -59,16 +59,11 @@ int main(int argc, char* argv[]) {
     qRegisterMetaType<ORNL::GcodeCommand>("GcodeCommand");
     qRegisterMetaType<ORNL::GcodeMeta>("GcodeMeta");
     qRegisterMetaType<fifojson>("fifojson");
-    qRegisterMetaType<QList<QList<ORNL::Time>>>("QList<QList<Time>>");
     qRegisterMetaType<nlohmann::json>("nlohmann::json");
-    qRegisterMetaType<QAbstractSocket::SocketError>("QAbstractSocket::SocketError");
     qRegisterMetaType<quintptr>("quintptr");
     qRegisterMetaType<ORNL::MeshLoader::MeshData>("MeshData");
     qRegisterMetaType<qintptr>("qintptr");
-    qRegisterMetaType<QSet<int>>("QSet<int>");
-
     // Register the message handler so all output is printed in the main window as well.
-    // qInstallMessageHandler(ORNL::msgHandler);
 
     QCommandLineParser parser;
 
@@ -76,7 +71,7 @@ int main(int argc, char* argv[]) {
         QCoreApplication ca(argc, argv);
         QCoreApplication::setApplicationName("ornlslicer");
         QCoreApplication::setOrganizationName("ornl");
-        QCoreApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
+        QCoreApplication::setApplicationVersion(QString::fromUtf8(ORNL::BuildInfo::Version));
 
         QSharedPointer<ORNL::SettingsBase> options = QSharedPointer<ORNL::SettingsBase>::create();
         ORNL::CommandLineConverter clc;
@@ -87,6 +82,7 @@ int main(int argc, char* argv[]) {
         bool setupResult = clc.convertOptions(parser, options);
 
         if (setupResult) {
+            ORNL::Diagnostics::logRuntimeSummary(QStringLiteral("cli"));
             ORNL::MainControl* control = new ORNL::MainControl(options);
             QObject::connect(control, &ORNL::MainControl::finished, &ca, &QCoreApplication::quit, Qt::QueuedConnection);
 
@@ -96,7 +92,7 @@ int main(int argc, char* argv[]) {
             delete control;
             return ret;
         }
-        return 1;
+        return parser.isSet(ORNL::Constants::ConsoleOptionStrings::kVersion) ? 0 : 1;
     }
     else {
         QApplication a(argc, argv);
@@ -104,8 +100,9 @@ int main(int argc, char* argv[]) {
 
         QApplication::setApplicationName("ornlslicer");
         QApplication::setOrganizationName("ornl");
-        QApplication::setApplicationVersion(BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
-        QApplication::setApplicationDisplayName("ORNLSlicer-" BOOST_PP_STRINGIZE(ORNLSLICER_VERSION));
+        QApplication::setApplicationVersion(QString::fromUtf8(ORNL::BuildInfo::Version));
+        QApplication::setApplicationDisplayName(QString("ORNLSlicer-") + QString::fromUtf8(ORNL::BuildInfo::Version));
+        ORNL::Diagnostics::logRuntimeSummary(QStringLiteral("gui"));
 
         Q_INIT_RESOURCE(icons);
         Q_INIT_RESOURCE(shaders);

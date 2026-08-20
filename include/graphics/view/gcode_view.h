@@ -1,5 +1,7 @@
 #pragma once
 
+#include <limits>
+
 #include <QVector>
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -22,6 +24,7 @@
 namespace ORNL {
 // Forward
 class PrinterObject;
+class SeamObject;
 
 /*!
  * \brief View that displays generated GCode and provides interactivity with it.
@@ -36,6 +39,24 @@ class GCodeView : public BaseView {
     //! \param sb: Settings to use.
     //! \param segmentInfoControl: Segment info display control
     GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoControl> segmentInfoControl);
+
+    //! \brief Moves the camera toward the print volume.
+    void zoomIn();
+    //! \brief Moves the camera away from the print volume.
+    void zoomOut();
+    //! \brief Moves the camera to its default zoom.
+    void resetZoom() override;
+
+    //! \brief Set camera to view from top.
+    void setTopView();
+    //! \brief Set camera to view from side.
+    void setSideView();
+    //! \brief Set camera to view from front.
+    void setFrontView();
+    //! \brief Set camera to view from the forward direction.
+    void setForwardView();
+    //! \brief Set camera to view from an isometric direction.
+    void setIsoView();
 
   public slots:
     //! \brief Changes the view to use an orthographic projection instead of the normal perspective view.
@@ -57,6 +78,13 @@ class GCodeView : public BaseView {
     //! \brief Updates the printer based on changes to the settings.
     //! \param sb: New settings object.
     void updatePrinterSettings(QSharedPointer<SettingsBase> sb);
+
+    //! \brief Shows or hides optimization point graphics.
+    void showSeams(bool show);
+
+    //! \brief Updates optimization point graphics based on changes to the settings.
+    //! \param sb: New settings object.
+    void updateOptimizationSettings(QSharedPointer<SettingsBase> sb);
 
     //! \brief Sets the lowest layer to show.
     void setLowLayer(uint low_layer);
@@ -89,6 +117,15 @@ class GCodeView : public BaseView {
     virtual void resetCamera() override;
 
   signals:
+    //! \brief Notification that a draggable optimization point setting edit has started.
+    void optimizationPointDragStarted(QString x_setting, QString y_setting);
+
+    //! \brief Notification that a draggable optimization point setting edit has changed.
+    void optimizationPointDragged(QString x_setting, double x, QString y_setting, double y);
+
+    //! \brief Notification that a draggable optimization point setting edit has finished.
+    void optimizationPointDragFinished(QString x_setting, double x, QString y_setting, double y);
+
     //! \brief Signal that the passed lines were selected/deselected
     //! \param linesToAdd: lines to select
     //! \param lineToRemove: lines to deselect
@@ -105,18 +142,31 @@ class GCodeView : public BaseView {
     //! \brief Alters the view matrix depending on the projection type and the new view size.
     void resizeGL(int width, int height) override;
 
-    //! \brief Handles the translation of the printer in the volume due to camera movement.
-    //! \param v: Translation vector
-    //! \param absolute: If this translation is relative to (0, 0, 0).
+    //! \brief Applies camera pan to the G-code view camera target.
+    //! \param v World-space translation vector to apply.
+    //! \param absolute If true, set the camera target to \p v; otherwise apply \p v as a relative pan.
+    //! \note This override keeps G-code navigation centered on the printer volume.
     void translateCamera(QVector3D v, bool absolute) override;
+
+    //! \brief Applies shared camera rotation unless the G-code view is orthographic.
+    //! \param screen_delta Horizontal and vertical NDC-style delta requested by keyboard or mouse input.
+    //! \note Orthographic G-code previews intentionally keep the top-down orientation locked.
+    void rotateCamera(QVector2D screen_delta) override;
 
     //! \brief Handles the following: Segment deselection
     void handleLeftClick(QPointF mouse_ndc_pos) override;
 
+    //! \brief Handles the following: Optimization point drag
+    void handleLeftMove(QPointF mouse_ndc_pos) override;
+
+    //! \brief Handles the following: Optimization point drag finalization
+    void handleLeftRelease(QPointF mouse_ndc_pos) override;
+
     //! \brief Handles the following: Segment selection
     void handleLeftDoubleClick(QPointF mouse_ndc_pos) override;
 
-    //! \brief Handles the following: Orthographic rotation blocking
+    //! \brief Handles mouse-drag camera rotation unless orthographic mode is active.
+    //! \param mouse_ndc_pos Mouse position in normalized device coordinates.
     void handleRightMove(QPointF mouse_ndc_pos) override;
 
     //! \brief Handles the following: Segment hover highlighting
@@ -129,11 +179,46 @@ class GCodeView : public BaseView {
     void handleWheelBackward(QPointF mouse_ndc_pos, float delta) override;
 
   private:
+    //! \brief Enables hover tracking only when the visible segment count is small enough for interactive picking.
+    void updateHoverTracking();
+
+    //! \brief Removes ghosted part meshes from the G-code view.
+    void clearGhosts();
+
+    //! \brief Rebuilds ghosted part meshes when ghost display is enabled.
+    void rebuildGhosts();
+
+    //! \brief Removes the visible-range true-width overlay from the G-code object.
+    void clearTrueWidthOverlay();
+
+    //! \brief Rebuilds the visible-range true-width overlay when the current range is below the preference threshold.
+    void refreshTrueWidthOverlay();
+
+    //! \brief Returns a printable-segment subset for the currently visible layer and segment range.
+    QVector<QVector<QSharedPointer<SegmentBase>>> visiblePrintableGCodeSubset() const;
+
     //! \brief Picks a segment based on the mouse position.
     //! \param mouse_ndc_pos: Mouse normalized location.
     //! \param gog: GCode object to search through.
     //! \return Segment line number.
     uint pickSegment(const QPointF& mouse_ndc_pos, QSharedPointer<GCodeObject> gog);
+
+    //! \brief Picks the visible G-code segment, preferring the true-width overlay when it is active.
+    //! \param mouse_ndc_pos: Mouse normalized location.
+    //! \return Segment line number.
+    uint pickVisibleSegment(const QPointF& mouse_ndc_pos);
+
+    //! \brief Refreshes camera-dependent segment info display.
+    void updateSegmentInfoViewMatrix();
+
+    //! \brief Begins dragging an optimization point if the cursor is over one.
+    bool beginOptimizationPointDrag(QPointF mouse_ndc_pos);
+
+    //! \brief Updates an active optimization point drag.
+    bool updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish);
+
+    //! \brief Finishes an active optimization point drag.
+    void finishOptimizationPointDrag(QPointF mouse_ndc_pos);
 
     //! \brief Settings for the view.
     QSharedPointer<SettingsBase> m_sb;
@@ -142,6 +227,8 @@ class GCodeView : public BaseView {
     QSharedPointer<PrinterObject> m_printer;
     //! \brief Main GCodeObject.
     QSharedPointer<GCodeObject> m_gcode_object;
+    //! \brief Optional true-width overlay for the currently visible range when the full preview uses thin lines.
+    QSharedPointer<GCodeObject> m_true_width_overlay_object;
 
     //! \brief m_meta_model tracks the states of the parts and their transformations
     QSharedPointer<PartMetaModel> m_meta_model;
@@ -162,6 +249,11 @@ class GCodeView : public BaseView {
         //! \brief Highest layer shown.
         uint high_layer = 1;
 
+        //! \brief Lowest segment shown inside the visible layer range.
+        uint low_segment = 0;
+        //! \brief Highest segment shown inside the visible layer range.
+        uint high_segment = std::numeric_limits<uint>::max();
+
         //! \brief If using the orthographic projection or not.
         bool ortho = false;
         //! \brief Current zoom level.
@@ -170,9 +262,47 @@ class GCodeView : public BaseView {
         //! \brief If ghosted models are currently being displayed
         bool showing_ghosts = false;
 
+        //! \brief If optimization point graphics are shown.
+        bool seams_shown = false;
+
+        //! \brief If an optimization point is being dragged.
+        bool dragging_seam = false;
+
+        //! \brief Optimization point currently being dragged.
+        QSharedPointer<SeamObject> dragged_seam;
+
+        //! \brief X setting controlled by the dragged optimization point.
+        QString dragged_seam_x_setting;
+
+        //! \brief Y setting controlled by the dragged optimization point.
+        QString dragged_seam_y_setting;
+
+        //! \brief Cursor-to-point offset retained during optimization point drag.
+        QVector3D dragged_seam_offset;
+
         //! \brief Hidden segment types.
         SegmentDisplayType hidden_type = SegmentDisplayType::kNone;
     } m_state;
+
+    //! \brief Cache key for the visible-range true-width overlay.
+    struct TrueWidthOverlayKey {
+        uint low_layer = 0;
+        uint high_layer = 0;
+        uint low_segment = 0;
+        uint high_segment = 0;
+        GCodePreviewMode preview_mode = GCodePreviewMode::kAuto;
+        int vertex_threshold = 0;
+        bool use_true_widths = false;
+
+        bool operator==(const TrueWidthOverlayKey& other) const {
+            return low_layer == other.low_layer && high_layer == other.high_layer && low_segment == other.low_segment &&
+                   high_segment == other.high_segment && preview_mode == other.preview_mode &&
+                   vertex_threshold == other.vertex_threshold && use_true_widths == other.use_true_widths;
+        }
+    };
+
+    TrueWidthOverlayKey m_true_width_overlay_key;
+    bool m_true_width_overlay_key_valid = false;
 
     //! \brief Segment / Bead info display control
     QSharedPointer<GCodeInfoControl> m_segment_info_control;

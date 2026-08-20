@@ -2,21 +2,19 @@
 
 #include <qhash.h>
 #include <qobject.h>
-#include <qset.h>
 #include <qsyntaxhighlighter.h>
 #include <qtextformat.h>
 
 namespace ORNL {
 GcodeHighlighter::GcodeHighlighter(QTextDocument* parent) : QSyntaxHighlighter(parent) {}
 
-void GcodeHighlighter::setColorRules(QHash<QString, QTextCharFormat> colorHash, QSet<int> layerSkipLineNumbers) {
-    m_color_hash = colorHash;
-    m_layer_skip_numbers = layerSkipLineNumbers;
-}
+void GcodeHighlighter::setColorRules(QHash<QString, QTextCharFormat> colorHash) { m_color_hash = colorHash; }
 
 void GcodeHighlighter::highlightBlock(const QString& text) {
-    if (!m_layer_skip_numbers.contains(this->currentBlock().blockNumber()))
-        setFormat(0, text.length(), m_color_hash[text]);
+    const auto color = m_color_hash.constFind(text);
+    if (color != m_color_hash.constEnd()) {
+        setFormat(0, text.length(), color.value());
+    }
 }
 
 } // namespace ORNL

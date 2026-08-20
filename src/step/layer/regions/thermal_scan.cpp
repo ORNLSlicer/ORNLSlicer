@@ -11,7 +11,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/scan.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -19,7 +18,7 @@
 
 namespace ORNL {
 ThermalScan::ThermalScan(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kThermalScan) {
     // NOP
 }
 
@@ -37,7 +36,7 @@ QString ThermalScan::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void ThermalScan::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void ThermalScan::compute(uint layer_num) {
     m_paths.clear();
 
     Distance x_offset = m_sb->setting<Distance>(PS::ThermalScanner::kThermalScannerXOffset);
@@ -52,12 +51,11 @@ void ThermalScan::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     m_paths.push_back(createPath(m_computed_geometry));
 }
 
-void ThermalScan::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                           QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void ThermalScan::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     // NOP?
 }
 
-void ThermalScan::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void ThermalScan::calculateModifiers(Path& path, bool supportsG3) {
     // NOP
 }
 

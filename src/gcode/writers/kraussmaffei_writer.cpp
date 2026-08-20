@@ -11,6 +11,7 @@
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -21,8 +22,7 @@ KraussMaffeiWriter::KraussMaffeiWriter(GcodeMeta meta, const QSharedPointer<Sett
 QString KraussMaffeiWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
                                               Distance maximum_y, int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) // all extruders initially off
-        m_extruders_on[i] = false;
+    m_deposition_active = false;
     m_first_print = true;
     m_first_travel = true;
     m_layer_start = true;
@@ -130,7 +130,7 @@ QString KraussMaffeiWriter::writeTravel(Point start_location, Point target_locat
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
     Point new_start_location;
 
-    setTools(QVector<int>()); // turn off all extruders
+    m_deposition_active = false;
 
     // Update Acceleration
     if (m_sb->setting<bool>(PRS::Acceleration::kEnableDynamic)) {
@@ -200,16 +200,12 @@ QString KraussMaffeiWriter::writeLine(const Point& start_point, const Point& tar
 
     QString rv;
 
-    // check if any extruders need priming
-    bool needs_prime = false;
-    for (int ext : params->setting<QVector<int>>(SS::kExtruders))
-        needs_prime = !m_extruders_on[ext] || needs_prime;
-
-    // set the tools/extruders before priming so that correct extruders get primed
-    rv += setTools(params->setting<QVector<int>>(SS::kExtruders));
+    // check if extruder needs priming
+    bool needs_prime = !m_deposition_active;
+    m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
-    // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
+    // First segment of the path is signified by inactive deposition and the modifier isn't one of five ending modifiers
     if (needs_prime && path_modifiers != PathModifiers::kSlowDown && path_modifiers != PathModifiers::kForwardTipWipe &&
         path_modifiers != PathModifiers::kReverseTipWipe && path_modifiers != PathModifiers::kCoasting &&
         path_modifiers != PathModifiers::kSpiralLift) {
@@ -321,16 +317,12 @@ QString KraussMaffeiWriter::writeArc(const Point& start_point, const Point& end_
     auto region_type = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
-    // check if any extruders need priming
-    bool needs_prime = false;
-    for (int ext : params->setting<QVector<int>>(SS::kExtruders))
-        needs_prime = !m_extruders_on[ext] || needs_prime;
-
-    // set the tools/extruders before priming so that correct extruders get primed
-    rv += setTools(params->setting<QVector<int>>(SS::kExtruders));
+    // check if extruder needs priming
+    bool needs_prime = !m_deposition_active;
+    m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
-    // First segment of the path is signified by extruder being off and the modifier isn't one of five ending modifiers
+    // First segment of the path is signified by inactive deposition and the modifier isn't one of five ending modifiers
     if (needs_prime && path_modifiers != PathModifiers::kSlowDown && path_modifiers != PathModifiers::kForwardTipWipe &&
         path_modifiers != PathModifiers::kReverseTipWipe && path_modifiers != PathModifiers::kCoasting &&
         path_modifiers != PathModifiers::kSpiralLift) {
@@ -425,7 +417,7 @@ QString KraussMaffeiWriter::writeArc(const Point& start_point, const Point& end_
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance length = angle() * center_point.distance(start_point);
+        Distance length = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
         Distance width = params->setting<Distance>(SS::kWidth);
         Distance height = params->setting<Distance>(SS::kHeight);
         Volume segment_extrusion_amount = length * width * height;
@@ -497,6 +489,13 @@ QString KraussMaffeiWriter::writeAfterLayer() {
 
 QString KraussMaffeiWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift(
+        [&](const Point& destination) {
+            const Velocity z_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
+            setFeedrate(z_speed);
+            return m_G1 % m_f % QString::number(z_speed.to(m_meta.m_velocity_unit)) % writeCoordinates(destination);
+        },
+        "TRAVEL FINAL LIFT Z");
     rv += commentSpaceLine("END OF THE MAIN G-CODE");
     rv += m_newline;
     rv += commentSpaceLine("START OF THE END G-CODE");
@@ -564,41 +563,4 @@ QString KraussMaffeiWriter::writePrime(RegionType region_type) {
     return rv;
 }
 
-QString KraussMaffeiWriter::setTools(QVector<int> extruders) {
-
-    QString rv = "";
-    if (m_extruders_on.size() > 2) // assumes at most two extruders for simultaneuos extrusion
-    {
-        if (m_extruders_on[0] && m_extruders_on[1] && extruders.length() < 2) // currently both on, need single ext
-        {
-            // turn off both
-            rv += "M605 S0" % m_newline;
-            m_extruders_on[0] = false;
-            m_extruders_on[1] = false;
-        }
-
-        if (extruders.length() > 1 && !(m_extruders_on[0] && m_extruders_on[1])) // need both exts. on & not already on
-        {
-            // turn on both
-            rv += "M605 S2" % m_newline;
-            m_extruders_on[0] = true;
-            m_extruders_on[1] = true;
-        }
-    }
-
-    // zero or one ext. need to be on
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-        if (!m_extruders_on[i] && extruders.contains(i)) // ext0 should be on but isn't
-        {
-            // write tool change to zero
-            rv += "T" % QString::number(i) % m_newline;
-            m_extruders_on[i] = true;
-        }
-        else if (m_extruders_on[i] && !extruders.contains(i)) {
-            m_extruders_on[i] = false;
-        }
-        // else - was already corrrect
-    }
-    return rv;
-}
 } // namespace ORNL

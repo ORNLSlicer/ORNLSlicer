@@ -50,8 +50,11 @@ class SettingTab : public QWidget {
     //! \brief Copy of settings bases, if applicable
     QList<QSharedPointer<SettingsBase>> m_settings_bases;
 
+    //! \brief Parent settings bases inherited by the corresponding selected bases.
+    QList<QSharedPointer<SettingsBase>> m_inherited_settings_bases;
+
     //! \brief Adds a row to this tab.
-    void addRow(QString key, fifojson& json);
+    void addRow(QString key, const fifojson& json, const fifojson& input = fifojson());
 
     //! \brief Get all rows in this tab.
     QList<QSharedPointer<SettingRowBase>> getRows();
@@ -68,6 +71,9 @@ class SettingTab : public QWidget {
     //! \return Name of tab
     QString getName();
 
+    //! \brief Returns whether any row in this tab is currently visible.
+    bool hasShownRows() const;
+
   public slots:
     //! \brief Expand the current tab.
     void expandTab();
@@ -80,7 +86,9 @@ class SettingTab : public QWidget {
 
     //! \brief Settings bases currently selected to adjust setting
     //! \param settings_bases: settings bases to display for
-    void settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases);
+    //! \param inherited_bases: parent settings for each selected base
+    void settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases,
+                               QList<QSharedPointer<SettingsBase>> inherited_bases);
 
     //! \brief Tells the header what icon to display, based on if there is a warning from any settings in the tab
     //! \param count: Total number of warnings in this tab, should be a positive integer or zero.
@@ -98,6 +106,13 @@ class SettingTab : public QWidget {
     void keyModified(QString key);
 
   signals:
+    /*!
+     * \brief Notification before a setting is modified.
+     * \param key   Key that is about to be modified.
+     * \param settings_bases Selected local settings bases, or empty for global settings.
+     */
+    void settingAboutToChange(QString key, QList<QSharedPointer<SettingsBase>> settings_bases);
+
     /*!
      * \brief Notification that a setting was modified.
      * \param key   Key that was modified.
@@ -147,6 +162,9 @@ class SettingTab : public QWidget {
 
     //! \brief Map of key to input row.
     QHash<QString, QSharedPointer<SettingRowBase>> m_rows;
+
+    //! \brief Alternate keys handled by a composite input row.
+    QHash<QString, QSharedPointer<SettingRowBase>> m_row_aliases;
 
     //! \brief Settings bases this tab uses.
     QSharedPointer<SettingsBase> m_sb;

@@ -7,9 +7,7 @@
 #include <QFile>
 #include <QQueue>
 #include <QStandardPaths>
-#include <data_stream.h>
 #include <qcontainerfwd.h>
-#include <qdatetime.h>
 #include <qhash.h>
 #include <qmap.h>
 #include <qmatrix4x4.h>
@@ -18,7 +16,6 @@
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
-#include <tcp_server.h>
 
 #include "geometry/mesh/mesh_base.h"
 #include "part/part.h"
@@ -32,7 +29,7 @@ namespace ORNL {
 //! \brief Define for easy access to this singleton.
 #define CSM SessionManager::getInstance()
 
-enum class SlicerType : uint8_t;
+enum class SlicingMode : uint8_t;
 class SessionLoader;
 class AbstractSlicingThread;
 
@@ -125,9 +122,6 @@ class SessionManager : public QObject {
     //! \param new_part: part to copy for later paste
     void addCopiedPart(QSharedPointer<Part> new_part);
 
-    //! \brief Checks preferences to see if TCP server should be started
-    void setupTCPServer();
-
     //! \brief Sets the default gcode dir to output location to skip copy/paste of files (useful for image slicing when
     //! there are 1000s of files)
     void setDefaultGcodeDir(QString dir);
@@ -182,7 +176,7 @@ class SessionManager : public QObject {
     bool isBuildMode();
 
     //! \brief Signals the internal slicing thread to begin computation.
-    //! \note If the internal slicing thread is unset, this function assumes that it should be a polymer slice.
+    //! \note If the internal slicing thread is unset, this function assumes that it should be a planar slice.
     bool doSlice();
 
     //! \brief Signals the internal slicing thread has complete computation.
@@ -191,20 +185,19 @@ class SessionManager : public QObject {
     //! \brief Returns the time elapsed for the current slice.
     qint64 getSliceTimeElapsed();
 
-    //! \brief Changes which slicer is used for computation.
-    //! \todo Currently, there is only one slicer (the PolymerSlicer). When more methods are added, more Slicer types
-    //! should be added
-    //!       Both here and in the SlicerType enum. A dialog still needs to be written to run this function.
-    bool changeSlicer(SlicerType type);
+    //! \brief Changes which slicing mode is used for computation.
+    //!       Both here and in the SlicingMode enum. A dialog still needs to be written to run this function.
+    bool changeSlicer(SlicingMode type);
 
     //! \brief Creates a new session loader to save the current session.
-    SessionLoader* saveSession(QString path, bool shouldTrack = true);
+    SessionLoader* saveSession(QString path, bool shouldTrack = true, bool notifyOnSuccess = false);
 
     //! \brief Creates a new session loader to load another session.
     //! \param shouldDelete Whether or not to delete current parts/settings before
     //! loading the session
     //! \param path The path to the project to load
-    SessionLoader* loadSession(bool shouldDelete, QString path = QString());
+    //! \param promptForSettingsUpdate Whether to prompt before rolling forward embedded project settings
+    SessionLoader* loadSession(bool shouldDelete, QString path = QString(), bool promptForSettingsUpdate = true);
 
     //! \brief Slot to receive slicing updates from.  Info to be forwarded to slice dialog
     //! \param type The current section of the step being completed
@@ -220,20 +213,6 @@ class SessionManager : public QObject {
 
     //! \brief Paste previously copied part
     void pastePart();
-
-    //! \brief Start/Restart the server based on dialog information
-    //! \param port: port to start server on
-    void setServerInformation(int port);
-
-    //! \brief Send information to connected clients on tcp server
-    //! \param type: currently finished processing stage
-    //! \param data: data from stage to send (currently just gcode
-    void sendMessage(StatusUpdateStepType type, QString data);
-
-    //! \brief Sets which processing stages will forward information to tcp server (currently just gcode)
-    //! \param type: stage to set
-    //! \param state: whether or not to transmit
-    void setServerStepConnectivity(StatusUpdateStepType type, bool state);
 
   signals:
 
@@ -268,6 +247,9 @@ class SessionManager : public QObject {
 
     //! \brief Signal that slicing thread has started writing the GCode file.
     void forwardStatusUpdate(QString status);
+
+    //! \brief Signal that a session file has been saved successfully.
+    void sessionSaved(QString path);
 
     //! \brief Signal for total number of parts expected to load from project
     void totalPartsInProject(int total);
@@ -318,8 +300,11 @@ class SessionManager : public QObject {
     //! \brief bool to track whether additional files need to be considered for export
     bool m_sensor_files_generated;
 
-    //! \brief default slicer is polymer
-    SlicerType m_slicer_type = SlicerType::kPolymerSlice;
+    //! \brief Default slicing mode is planar.
+    SlicingMode m_slicing_mode = SlicingMode::kPlanar;
+
+    //! \brief Active cylindrical path pattern when cylindrical slicing is selected.
+    CylindricalPathPattern m_cylindrical_path_pattern = CylindricalPathPattern::kRadial;
 
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.
@@ -330,20 +315,5 @@ class SessionManager : public QObject {
 
     //! \brief pointer to part to potentially paste
     QSharedPointer<Part> m_copied_part;
-
-    //! \brief current server
-    TCPServer* m_tcp_server;
-
-    //! \brief struct to hold server connection information
-    struct connection_data {
-        QSharedPointer<DataStream> data_stream;
-        QDateTime current_date_time;
-    };
-
-    //! \brief current tcp server connections
-    QHash<QString, connection_data> m_active_connections;
-
-    //! \brief whether or not to transmit information between each major processing step (currently just gcode)
-    QVector<bool> m_step_connectivity;
 };
 } // namespace ORNL

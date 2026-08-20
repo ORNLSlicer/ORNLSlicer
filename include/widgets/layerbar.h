@@ -21,6 +21,7 @@
 #include <QWidget>
 #include <qcontainerfwd.h>
 #include <qlist.h>
+#include <qpair.h>
 #include <qsharedpointer.h>
 #include <qsize.h>
 #include <qtmetamacros.h>
@@ -71,7 +72,18 @@ class LayerBar : public QWidget {
   signals:
     //! \brief Signal that the selection has been altered.
     //! \param name_and_bases: Label plus list of ranges currently selected
-    void setSelectedSettings(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases);
+    //! \param inherited_bases: Parent settings for each selected base; null entries inherit Global directly
+    void setSelectedSettings(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
+                             QList<QSharedPointer<SettingsBase>> inherited_bases);
+
+    //! \brief Signal that the selected layer settings ranges changed.
+    //! \param part: Part that owns the selected ranges, or null when no layer range is selected.
+    //! \param layer_ranges: Selected layer index ranges.
+    void selectedLayerSettingsRangesChanged(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges);
+
+    //! \brief Signal that layer-specific settings availability changed for the current part.
+    //! \param available: if the current part has layer-specific settings that can be visualized.
+    void layerSettingsRangeAvailabilityChanged(bool available);
 
     //! \brief Signal that a settings range needs to be deleted
     void deleteDot(LayerDot* dot);
@@ -237,6 +249,9 @@ class LayerBar : public QWidget {
     //! \brief Move dot to layer specified.
     bool moveDotToLayer(LayerDot* dot, int layer);
 
+    //! \brief Moves an out-of-bounds range endpoint to the new top layer when possible.
+    bool clampRangeToLayerCount(LayerDot* dot, int layer_count);
+
     //! \brief Finds the next available layer and inserts the dot there.
     bool moveDotToNextLayer(LayerDot* dot);
 
@@ -248,6 +263,12 @@ class LayerBar : public QWidget {
 
     //! \brief determines what ranges are selected and emits accordingly
     void changeSelectedSettings();
+
+    //! \brief Removes selected dots that are no longer valid after a layer count update.
+    void removeInvalidSelections();
+
+    //! \brief emits if the current part has any layer-specific settings
+    void updateLayerSettingsRangeAvailability();
 
     //! \brief Select a given dot and its group/range
     void selectDot(LayerDot* dot);

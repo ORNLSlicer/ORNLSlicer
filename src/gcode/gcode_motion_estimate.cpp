@@ -25,12 +25,30 @@ void MotionEstimation::Init() {
     m_previous_e = 0;
     m_previous_vertical = true; // initialize for the very first move
 
+    m_current_bead_width = 0;
+    m_current_bead_height = 0;
+    m_nominal_bead_height = 0;
+    m_last_print_z = 0;
+    m_last_print_w = 0;
+
     m_incomingV = max_xy_speed;
 }
 
-Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand,
-                                                  QVector<bool> extrudersOn, Time& G1F_time, Time& layer_time,
-                                                  Volume& layer_volume, bool use_b) {
+void MotionEstimation::setBeadGeometry(Distance bead_width, Distance bead_height) {
+    m_current_bead_width = bead_width;
+    m_nominal_bead_height = bead_height;
+
+    if (m_current_bead_height <= 0) {
+        m_current_bead_height = bead_height;
+    }
+}
+
+void MotionEstimation::resetBeadHeight() { m_current_bead_height = 0; }
+
+Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
+                                                  Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b) {
+    static_cast<void>(layer);
+
     // minimum distance to be considered move for estimate calculation
     double m_min_threshold = 10;
 
@@ -101,8 +119,20 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
 
     // the rest is for a predominantly XY move
     Distance length = sqrt(dx * dx + dy * dy + dz * dz);
+    return MotionEstimation::calculatePathTimeAndVolume(length, dx, dy, dz, dx, dy, dz, isFIncluded, isGOCommand,
+                                                        deposition_active, G1F_time, layer_time, layer_volume);
+}
 
-    if (length > m_min_threshold) {
+Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Distance start_direction_x,
+                                                      Distance start_direction_y, Distance start_direction_z,
+                                                      Distance end_direction_x, Distance end_direction_y,
+                                                      Distance end_direction_z, bool isFIncluded, bool isGOCommand,
+                                                      bool deposition_active, Time& G1F_time, Time& layer_time,
+                                                      Volume& layer_volume) {
+    // minimum distance to be considered move for estimate calculation
+    double m_min_threshold = 10;
+
+    if (path_length > m_min_threshold) {
         // ToDo, make sure that max_xy_speed is only for G0 XY moves!
         if (isGOCommand) {
             m_current_speed = max_xy_speed;
@@ -110,15 +140,17 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
 
         if (m_current_speed != 0) {
             if (m_previous_vertical) {
-                layer_time += MotionEstimation::firstXYMove(length, dx, dy, dz, G1F_time, isFIncluded);
+                layer_time += MotionEstimation::firstXYMove(path_length, start_direction_x, start_direction_y,
+                                                            start_direction_z, G1F_time, isFIncluded);
             }
             else {
                 // theta: the angle the travel trajectory changes from the previous segment to the current one
                 //   0 means reverse
                 //   pi means no change
-                double theta = MotionEstimation::getTheta(length, dx, dy, dz);
+                double theta =
+                    MotionEstimation::getTheta(path_length, start_direction_x, start_direction_y, start_direction_z);
                 if (theta <= 0) {
-                    Time t = length / m_current_speed;
+                    Time t = path_length / m_current_speed;
                     layer_time += t;
                     if (isFIncluded)
                         G1F_time += t;
@@ -128,46 +160,53 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
                     // treat it as 1st move, and calculate slowdown time from the previous move
                     // ToDo: 0.1 is an arbitrary value. Need to learn how the machine decides
                     //   on slowdown/parabolic blend
-                    layer_time += MotionEstimation::firstXYMove(length, dx, dy, dz, G1F_time, isFIncluded);
+                    layer_time += MotionEstimation::firstXYMove(path_length, start_direction_x, start_direction_y,
+                                                                start_direction_z, G1F_time, isFIncluded);
                     MotionEstimation::addPreviousXYDecelerationTime(layer_time);
                 }
                 else {
                     // relatively smoother turn: consider a parabolic blend
-                    layer_time += MotionEstimation::continuousXYMove(theta, length, dx, dy, dz, G1F_time, isFIncluded);
+                    layer_time +=
+                        MotionEstimation::continuousXYMove(theta, path_length, start_direction_x, start_direction_y,
+                                                           start_direction_z, G1F_time, isFIncluded);
                 }
             }
+
+            MotionEstimation::setPreviousVelocityVector(m_incomingV, end_direction_x, end_direction_y, end_direction_z);
         }
 
-        // count the number of extruders on
-        int extruders_on_count = 0;
-        for (bool ext_on : extrudersOn) {
-            if (ext_on) {
-                extruders_on_count++;
-            }
-        }
+        // If deposition is active, calculate the deposited volume.
+        if (deposition_active) {
+            Distance height = m_current_bead_height > 0 ? m_current_bead_height : m_nominal_bead_height;
+            Distance bead_width = m_current_bead_width > 0 ? m_current_bead_width : extrusionWidth;
 
-        // if any extruders are on, calculate the extruded volume, accounting for multiple extruders on simultaneously
-        if (extruders_on_count > 0) {
-            Distance width, height;
+            Distance z_delta = qAbs(m_current_z - m_last_print_z);
+            Distance w_delta = qAbs(m_current_w - m_last_print_w);
+            Distance vertical_delta = z_delta > w_delta ? z_delta : w_delta;
 
-            if (layer == 0) {
-                height = initialLayerThickness;
-                width = layer0extrusionWidth - initialLayerThickness;
-            }
-            else {
+            if (height <= 0) {
                 height = layerThickness;
-                width = extrusionWidth - layerThickness;
+            }
+
+            const Distance min_inferred_height = height * 0.2;
+            const Distance max_inferred_height = height * 5.0;
+            if (vertical_delta > m_min_threshold && vertical_delta >= min_inferred_height &&
+                vertical_delta <= max_inferred_height) {
+                height = vertical_delta;
+                m_current_bead_height = height;
             }
 
             // Calculate cross-sectional area of the bead
-            // (width * height) is the rectangular body of the bead
+            // ((bead_width - height) * height) is the rectangular body of the bead
             // (M_PI * height * height / 4.0) is the circular ends
-            Area bead_area = (width * height) + (M_PI * height * height / 4.0);
+            Area bead_area = ((bead_width - height) * height) + (M_PI * height * height / 4.0);
 
-            layer_volume += bead_area * length * extruders_on_count;
+            layer_volume += bead_area * path_length;
+            m_last_print_z = m_current_z;
+            m_last_print_w = m_current_w;
         }
 
-        m_previous_distance = length;
+        m_previous_distance = path_length;
         m_previous_x = m_current_x;
         m_previous_y = m_current_y;
         m_previous_z = m_current_z;
@@ -175,7 +214,7 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
         m_previous_e = m_current_e;
         m_previous_vertical = false;
 
-        return length;
+        return path_length;
     }
 
     return 0;
@@ -184,6 +223,16 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
 void MotionEstimation::setVVector(float vx, float vy, float vz) {
     m_previous_vv = m_current_vv;
     m_current_vv = QVector3D(vx, vy, vz);
+}
+
+void MotionEstimation::setPreviousVelocityVector(Velocity velocity, Distance dx, Distance dy, Distance dz) {
+    const Distance direction_length = sqrt(dx * dx + dy * dy + dz * dz);
+    if (direction_length <= 0)
+        return;
+
+    m_previous_vv.setX((velocity * dx / direction_length)());
+    m_previous_vv.setY((velocity * dy / direction_length)());
+    m_previous_vv.setZ((velocity * dz / direction_length)());
 }
 
 // theta: the angle the travel trajectory changes from the previous segment to the current one
@@ -247,8 +296,7 @@ Time MotionEstimation::firstXYMove(Distance d, Distance dx, Distance dy, Distanc
     m_previous_vv.setY((m_incomingV * dy / d)());
     m_previous_vv.setZ((m_incomingV * dz / d)());
 
-    // max_xy_speed is used in G0 XY travel
-    if (isFIncluded && m_current_speed != max_xy_speed)
+    if (isFIncluded)
         G1F_time += d / m_current_speed;
 
     return time;
@@ -367,6 +415,12 @@ Distance MotionEstimation::m_current_e;
 
 Distance MotionEstimation::layerThickness;
 Distance MotionEstimation::extrusionWidth;
+
+Distance MotionEstimation::m_current_bead_width;
+Distance MotionEstimation::m_current_bead_height;
+Distance MotionEstimation::m_nominal_bead_height;
+Distance MotionEstimation::m_last_print_z;
+Distance MotionEstimation::m_last_print_w;
 
 Distance MotionEstimation::m_previous_distance;
 Distance MotionEstimation::m_total_distance;

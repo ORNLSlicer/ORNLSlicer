@@ -75,12 +75,6 @@ void SettingAngVelSpinBox::reloadValue() {
     this->blockSignals(false);
     emit modified(m_key);
 
-    // give (1) warning if there is a mismatch, otherwise give no (0) warning
-    if (!consistent) {
-        emit warnParent(1);
-        m_warn = true;
-    }
-    else
-        emit warnParent(0);
+    emit warnParent(warningCountDelta(!consistent, m_warn));
 }
 } // namespace ORNL

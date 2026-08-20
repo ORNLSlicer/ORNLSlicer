@@ -1,0 +1,123 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "enable_spiral_perimeter"
+    display: "Spiral Perimeters"
+    type: "boolean"
+    tooltip: "If selected, will perform a spiral lift on perimeters"
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralPerimeters"
+    local: false
+  - name: "enable_spiral_inset"
+    display: "Spiral Insets"
+    type: "boolean"
+    tooltip: "If selected, will perform a spiral lift on insets"
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralInsets"
+    local: false
+  - name: "enable_spiral_skin"
+    display: "Spiral Skins"
+    type: "boolean"
+    tooltip: "If selected, will perform a spiral lift on skin"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralSkins"
+    local: false
+  - name: "enable_spiral_infill"
+    display: "Spiral Infill"
+    type: "boolean"
+    tooltip: "If selected, will perform a spiral lift on infill"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralInfill"
+    local: false
+  - name: "spiral_end_of_layer"
+    display: "End of Layer"
+    type: "boolean"
+    tooltip: "If selected, will perform a spiral list on the last path in a layer"
+    depends: {"slicing_mode":0}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kEndofLayer"
+    local: false
+  - name: "spiral_lift_height"
+    display: "Spiral Lift Height"
+    type: "distance"
+    tooltip: "Sets the distance the extruder lifts before starting the spiral"
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralLiftHeight"
+    local: false
+  - name: "spiral_lift_points"
+    display: "Number of Points"
+    type: "number"
+    tooltip: "Number of small line segments in the spiral move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"supports_G2_3":false},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kNumberofPoints"
+    local: false
+  - name: "spiral_lift_radius"
+    display: "Spiral Lift Radius"
+    type: "distance"
+    tooltip: "Sets maximum distance from starting point that the extruder will spiral outward to"
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralLiftRadius"
+    local: false
+  - name: "spiral_lift_speed"
+    display: "Spiral Lift Speed"
+    type: "speed"
+    tooltip: "Sets the speed for spiral lift moves"
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"enable_spiral_perimeter":true},{"OR":[{"enable_spiral_inset":true},{"OR":[{"enable_spiral_skin":true},{"OR":[{"enable_spiral_infill":true},{"spiral_end_of_layer":true}]}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kSpiralLiftSpeed"
+    local: false
+  - name: "disable_spiral_lift_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Spiral Lift"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change spiral lift path speeds."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
+    options: []
+    default: false
+    minor: "Spiral Lift"
+    major: "Material"
+    namespace: "Material::SpiralLift"
+    symbol: "kDisableSpiralLiftFeedrateScaling"
+    local: false

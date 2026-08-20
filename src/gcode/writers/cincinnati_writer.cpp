@@ -32,10 +32,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) {
-        // all extruders off initially
-        m_extruders_on[ext] = false;
-    }
+    m_deposition_active = false;
     m_first_travel = true;
     m_is_lift = false;
     m_is_travel = false;
@@ -43,8 +40,6 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
     m_w_travel = false;
     m_first_print = true;
     m_layer_start = true;
-    m_wire_feed = false;
-    m_need_wirecut = false;
     m_min_z = 0.0f;
     m_material_number = -1;
     QString rv;
@@ -163,9 +158,9 @@ QString CincinnatiWriter::writeBeforeLayer(float new_min_z, QSharedPointer<Setti
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
     // Retrieve the slicing plane normal
-    QVector3D slicing_vector = {sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+    QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
     slicing_vector.normalize();
 
     /*
@@ -329,8 +324,15 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
 
     Point new_start_location;
     RegionType rType = params->setting<RegionType>(SS::kRegionType);
-    bool infill_alternating_lines = m_sb->setting<bool>(PS::Infill::kEnableAlternatingLines);
     bool w_active_first_travel = false;
+
+    // Determine if travel length is short enough to keep deposition active.
+    Distance travel_distance = start_location.distance(target_location);
+    if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+        int rpm = params->contains(SS::kExtruderSpeed) ? params->setting<int>(SS::kExtruderSpeed)
+                                                       : m_sb->setting<int>(PS::Perimeter::kExtruderSpeed);
+        rv += writeExtruderOn(rType == RegionType::kUnknown ? RegionType::kPerimeter : rType, rpm, params);
+    }
 
     if (m_first_travel) {
         w_active_first_travel = true;
@@ -354,12 +356,6 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     }
 
     bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
-
-    // Need to check if a lift is needed if infill alternating lines is enabled
-    if (infill_alternating_lines && m_region_type == RegionType::kInfill && !m_first_travel &&
-        lType == TravelLiftType::kNoLift) {
-        travel_lift_required = false;
-    }
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -537,8 +533,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     QString rv;
 
     // Update the material number if needed
-    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable) &&
-        !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
+    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
         rv += (m_sb->setting<int>(MS::MultiMaterial::kUseM222)) ? "M222 P" : "M237 L";
         rv += QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL");
         m_material_number = material_number;
@@ -552,13 +547,9 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
         }
     }
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) { // only check first extruder
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            // Set Feedrate to 0 if turning extruder on so that an F parameter is issued with the first G1 of the path
-            setFeedrate(0);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
+        setFeedrate(0);
     }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
@@ -598,13 +589,14 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     // Create comment for region type and path modifiers
     QString comment = toString(region_type);
 
-    // If the region type is skeleton, add the bead width to the comment
-    if (region_type == RegionType::kSkeleton) {
-        // If the skeleton has been adapted, prepend "AD-" to the comment
-        if (params->setting<bool>(SS::kAdapted)) {
-            comment = "AD-" % comment;
-        }
-        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth)());
+    // If the bead width has been adapted, include the true width in the comment for reload/visualization.
+    if (params->setting<bool>(SS::kAdapted)) {
+        comment = "AD-" % comment;
+        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
+    }
+    // Skeleton comments have historically included width even when not adapted.
+    else if (region_type == RegionType::kSkeleton) {
+        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
     }
 
     // Add path modifiers to comments
@@ -632,8 +624,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // update the material number if needed
-    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable) &&
-        !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
+    if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
         if (m_sb->setting<int>(MS::MultiMaterial::kUseM222)) {
             rv += "M222 P" % QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL");
         }
@@ -651,11 +642,8 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
         }
     }
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) { // only check first extruder
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
@@ -715,7 +703,7 @@ QString CincinnatiWriter::writeScan(Point target_point, Velocity speed, bool on_
 QString CincinnatiWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty()) {
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -777,6 +765,7 @@ QString CincinnatiWriter::writeAfterLayer() {
 
 QString CincinnatiWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalLift();
     rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT") % writeTamperOff() % "M68 (PARK)\n";
 
     if (m_sb->setting<int>(MS::Extruder::kServoToTravelSpeed)) {
@@ -789,6 +778,48 @@ QString CincinnatiWriter::writeShutdown() {
               commentSpaceLine("JOG W TO DOFFING LOCATION");
     }
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline % "M30" % commentSpaceLine("END OF G-CODE");
+    return rv;
+}
+
+QString CincinnatiWriter::writeFinalLift() {
+    const Distance final_lift = m_sb->setting<Distance>(PS::Travel::kFinalLiftDistance);
+    if (final_lift <= 0 || !hasCurrentPosition()) {
+        return QString();
+    }
+
+    QString rv;
+    const Point lift_destination = getCurrentPosition() + getLiftVector(final_lift);
+
+    m_is_lift = true;
+    m_is_travel = false;
+
+    if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
+        if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kW_only)) {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kWTableSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(lift_destination);
+            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kWTableSpeed));
+        }
+        else {
+            rv += m_G1 % m_f %
+                  QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
+                  writeCoordinates(lift_destination);
+            setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
+        }
+    }
+    else {
+        rv += m_G0 % writeCoordinates(lift_destination);
+    }
+
+    if (m_w_travel) {
+        rv += commentSpaceLine("TRAVEL FINAL LIFT W");
+    }
+    else {
+        rv += commentSpaceLine("TRAVEL FINAL LIFT Z");
+    }
+
+    setCurrentPosition(lift_destination);
+    m_is_lift = false;
     return rv;
 }
 
@@ -825,21 +856,21 @@ QString CincinnatiWriter::writeTamperOff() {
     }
 }
 
-QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, int extruder_number) {
+QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruders_on[extruder_number] = true;
+    m_deposition_active = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += writeTamperOn();
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
+    if (initial_rpm > 0) {
         // Check settings, turn off extruder servoing, will turn back on at end
         if (m_sb->setting<int>(MS::Extruder::kServoToTravelSpeed)) {
             rv += m_M11 % m_space % commentLine("TURN OFF EXTRUDER SERVOING");
         }
 
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
@@ -847,7 +878,7 @@ QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, int extruder
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) ==
                   (int)ForceMinimumLayerTime::kSlow_Feedrate)) {
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
         }
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
@@ -900,11 +931,11 @@ QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, int extruder
     return rv;
 }
 
-QString CincinnatiWriter::writeExtruderOff(int extruder_number) {
+QString CincinnatiWriter::writeExtruderOff() {
     // update to use extruder number
 
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }
@@ -949,12 +980,12 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
 
         // If sequential mode && target Z is less than current Z, adjust Z. This is for completing one object and moving
         // to the next.
-        if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_z < m_last_z)) {
             target_z = m_last_z + m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
-        else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        else if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
                  m_is_travel == true && (target_z < m_last_z)) {
             target_z = m_last_z;
             m_is_travel = false;
@@ -979,12 +1010,12 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
 
         // If sequential mode && target W is greater than current W, adjust W. This is for completing one object and
         // moving to the next.
-        if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_w > m_last_w)) {
             target_w = m_last_w - m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
-        else if (m_sb->setting<int>(ES::PrinterConfig::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
+        else if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
                  m_is_travel == true && (target_w > m_last_w)) {
             target_w = m_last_w;
             m_is_travel = false;

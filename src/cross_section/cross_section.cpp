@@ -169,7 +169,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
         /*
          * Polygon operations that follow cross sectioning are done in 2 dimensions.
          * To allow that, shift and rotate each segment so that the cross-section will be flat in 2D
-         * Polymer_slicer save shift and rotation amount to layer so that this is un-done before gcode writing
+         * PlanarSlicer saves shift and rotation amount to layer so that this is un-done before gcode writing
          */
 
         // Rotate into 2D frame using precomputed shift & rotation

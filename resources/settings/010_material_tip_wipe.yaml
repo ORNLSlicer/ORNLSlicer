@@ -1,0 +1,527 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "perimeter_wipe"
+    display: "Enable Perimeter Tip Wipe"
+    type: "boolean"
+    tooltip: "If selected, will do a tip wipe for perimeter moves to prevent material from sticking up"
+    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kEnablePerimeterTipWipe"
+    local: true
+  - name: "perimeter_wipe_direction"
+    display: "Perimeter Wipe Direction"
+    type: "enumeration"
+    tooltip: "Direction for all perimeter tip wipes. Optimal does forward for closed loops paths\\nand reverse for open loop paths"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
+    options:
+      - "WIPE_OPTIMAL"
+      - "WIPE_FORWARD"
+      - "WIPE_REVERSE"
+      - "WIPE_ANGLED"
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeDirection"
+    local: true
+  - name: "perimeter_wipe_distance"
+    display: "Perimeter Wipe Distance"
+    type: "distance"
+    tooltip: "Sets the travel distance for perimeter tip wiping. If using an incrementing wipe, this is the initial distance."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeDistance"
+    local: true
+  - name: "perimeter_wipe_speed"
+    display: "Perimeter Wipe Speed"
+    type: "speed"
+    tooltip: "Sets the speed for the perimeter tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeSpeed"
+    local: true
+  - name: "perimeter_wipe_extruder_speed"
+    display: "Perimeter Wipe Extruder Speed"
+    type: "rpm"
+    tooltip: "Sets the extruder speed for the perimeter tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeExtruderSpeed"
+    local: true
+  - name: "perimeter_wipe_angle"
+    display: "Perimeter Wipe Angle"
+    type: "angle"
+    tooltip: "Sets the angle of the perimeter tip wipe"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"perimeter_wipe":true},{"perimeter_wipe_direction":3}]}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeAngle"
+    local: true
+  - name: "perimeter_wipe_cutoff_distance"
+    display: "Perimeter Wipe Cutoff Distance"
+    type: "distance"
+    tooltip: "Sets the distance from the end of the perimeter tip wipe to turn the extruder off"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeCutoffDistance"
+    local: true
+  - name: "perimeter_wipe_lift_height"
+    display: "Perimeter Wipe Lift Height"
+    type: "distance"
+    tooltip: "Sets the distance to lift during the perimeter tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"perimeter_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kPerimeterWipeLiftHeight"
+    local: true
+  - name: "inset_wipe"
+    display: "Enable Inset Tip Wipe"
+    type: "boolean"
+    tooltip: "If selected, will do a tip wipe for inset moves to prevent material from sticking up"
+    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kEnableInsetTipWipe"
+    local: true
+  - name: "inset_wipe_direction"
+    display: "Inset Wipe Direction"
+    type: "enumeration"
+    tooltip: "Direction for all inset tip wipes. Optimal does forward for closed loops paths\\nand reverse for open loop paths"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
+    options:
+      - "WIPE_OPTIMAL"
+      - "WIPE_FORWARD"
+      - "WIPE_REVERSE"
+      - "WIPE_ANGLED"
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeDirection"
+    local: true
+  - name: "inset_wipe_distance"
+    display: "Inset Wipe Distance"
+    type: "distance"
+    tooltip: "Sets the travel distance for inset tip wiping. If using an incrementing wipe, this is the initial distance."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeDistance"
+    local: true
+  - name: "inset_wipe_speed"
+    display: "Inset Wipe Speed"
+    type: "speed"
+    tooltip: "Sets the speed for the inset tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeSpeed"
+    local: true
+  - name: "inset_wipe_extruder_speed"
+    display: "Inset Wipe Extruder Speed"
+    type: "rpm"
+    tooltip: "Sets the extruder speed for the inset tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeExtruderSpeed"
+    local: true
+  - name: "inset_wipe_angle"
+    display: "Inset Wipe Angle"
+    type: "angle"
+    tooltip: "Sets the angle of the inset tip wipe"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"inset_wipe":true},{"inset_wipe_direction":3}]}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeAngle"
+    local: true
+  - name: "inset_wipe_cutoff_distance"
+    display: "Inset Wipe Cutoff Distance"
+    type: "distance"
+    tooltip: "Sets the distance from the end of the inset tip wipe to turn the extruder off"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeCutoffDistance"
+    local: true
+  - name: "inset_wipe_lift_height"
+    display: "Inset Wipe Lift Height"
+    type: "distance"
+    tooltip: "Sets the distance to lift during the inset tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInsetWipeLiftHeight"
+    local: true
+  - name: "skeleton_wipe"
+    display: "Enable Skeleton Tip Wipe"
+    type: "boolean"
+    tooltip: "If selected, will do a tip wipe for skeleton moves to prevent material from sticking up"
+    depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kEnableSkeletonTipWipe"
+    local: true
+  - name: "skeleton_wipe_direction"
+    display: "Skeleton Wipe Direction"
+    type: "enumeration"
+    tooltip: "Direction for all skeleton tip wipes. Optimal does reverse a reverse wipe"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
+    options:
+      - "WIPE_OPTIMAL"
+      - "WIPE_FORWARD"
+      - "WIPE_REVERSE"
+      - "WIPE_ANGLED"
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeletonWipeDirection"
+    local: true
+  - name: "skeleton_wipe_distance"
+    display: "Skeleton Wipe Distance"
+    type: "distance"
+    tooltip: "Sets the travel distance for skeleton tip wiping. If using an incrementing wipe, this is the initial distance."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeletonWipeDistance"
+    local: true
+  - name: "skeleton_wipe_speed"
+    display: "Skeleton Wipe Speed"
+    type: "speed"
+    tooltip: "Sets the speed for the skeleton tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeletonWipeSpeed"
+    local: true
+  - name: "skeleton_wipe_extruder_speed"
+    display: "Skeleton Wipe Extruder Speed"
+    type: "rpm"
+    tooltip: "Sets the extruder speed for the skeleton tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeletonWipeExtruderSpeed"
+    local: true
+  - name: "skeleton_wipe_angle"
+    display: "Skeleton Wipe Angle"
+    type: "angle"
+    tooltip: "Sets the angle of the skeleton tip wipe"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"skeleton_wipe":true},{"skeleton_wipe_direction":3}]}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeletonWipeAngle"
+    local: true
+  - name: "skeleton_wipe_cutoff_distance"
+    display: "Skeleton Wipe Cutoff Distance"
+    type: "distance"
+    tooltip: "Sets the distance from the end of the skeleton tip wipe to turn the extruder off"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeletonWipeCutoffDistance"
+    local: true
+  - name: "skeleton_wipe_lift_height"
+    display: "Skeleteon Wipe Lift Distance"
+    type: "distance"
+    tooltip: "Sets the distance to lift during the skeleton tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkeleteonWipeLiftDistance"
+    local: true
+  - name: "skin_wipe"
+    display: "Enable Skin Tip Wipe"
+    type: "boolean"
+    tooltip: "If selected, will do a tip wipe for skin moves to prevent material from sticking up"
+    depends: {"AND":[{"slicing_mode":0},{"skin":true}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kEnableSkinTipWipe"
+    local: true
+  - name: "skin_wipe_direction"
+    display: "Skin Wipe Direction"
+    type: "enumeration"
+    tooltip: "Direction for all skin tip wipes. Optimal does forward for closed loops paths,\\nreverse for open loop paths, and forward over the inset/perimeter when available"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
+    options:
+      - "WIPE_OPTIMAL"
+      - "WIPE_FORWARD"
+      - "WIPE_REVERSE"
+      - "WIPE_ANGLED"
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeDirection"
+    local: true
+  - name: "skin_wipe_distance"
+    display: "Skin Wipe Distance"
+    type: "distance"
+    tooltip: "Sets the travel distance for skin tip wiping. If using an incrementing wipe, this is the initial distance."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeDistance"
+    local: true
+  - name: "skin_wipe_speed"
+    display: "Skin Wipe Speed"
+    type: "speed"
+    tooltip: "Sets the speed for the skin tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeSpeed"
+    local: true
+  - name: "skin_wipe_extruder_speed"
+    display: "Skin Wipe Extruder Speed"
+    type: "rpm"
+    tooltip: "Sets the extruder speed for the skin tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeExtruderSpeed"
+    local: true
+  - name: "skin_wipe_angle"
+    display: "Skin Wipe Angle"
+    type: "angle"
+    tooltip: "Sets the angle of the skin tip wipe"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"AND":[{"skin_wipe":true},{"skin_wipe_direction":3}]}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeAngle"
+    local: true
+  - name: "skin_wipe_cutoff_distance"
+    display: "Skin Wipe Cutoff Distance"
+    type: "distance"
+    tooltip: "Sets the distance from the end of the skin tip wipe to turn the extruder off"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeCutoffDistance"
+    local: true
+  - name: "skin_wipe_lift_height"
+    display: "Skin Wipe Lift Height"
+    type: "distance"
+    tooltip: "Sets the distance to lift during the skin tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"skin_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kSkinWipeLiftHeight"
+    local: true
+  - name: "infill_wipe"
+    display: "Enable Infill Tip Wipe"
+    type: "boolean"
+    tooltip: "If selected, will do a tip wipe for infill moves to prevent material from sticking up"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kEnableInfillTipWipe"
+    local: true
+  - name: "infill_wipe_direction"
+    display: "Infill Wipe Direction"
+    type: "enumeration"
+    tooltip: "Direction for all infill tip wipes. Optimal does forward for closed loops paths,\\nreverse for open loop paths, and forward over the inset/perimeter when available"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
+    options:
+      - "WIPE_OPTIMAL"
+      - "WIPE_FORWARD"
+      - "WIPE_REVERSE"
+      - "WIPE_ANGLED"
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeDirection"
+    local: true
+  - name: "infill_wipe_distance"
+    display: "Infill Wipe Distance"
+    type: "distance"
+    tooltip: "Sets the travel distance for infill tip wiping. If using an incrementing wipe, this is the initial distance."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeDistance"
+    local: true
+  - name: "infill_wipe_speed"
+    display: "Infill Wipe Speed"
+    type: "speed"
+    tooltip: "Sets the speed for the infill tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeSpeed"
+    local: true
+  - name: "infill_wipe_extruder_speed"
+    display: "Infill Wipe Extruder Speed"
+    type: "rpm"
+    tooltip: "Sets the extruder speed for the infill tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeExtruderSpeed"
+    local: true
+  - name: "infill_wipe_angle"
+    display: "Infill Wipe Angle"
+    type: "angle"
+    tooltip: "Sets the angle of the infill tip wipe"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"infill_wipe":true},{"infill_wipe_direction":3}]}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeAngle"
+    local: true
+  - name: "infill_wipe_cutoff_distance"
+    display: "Infill Wipe Cutoff Distance"
+    type: "distance"
+    tooltip: "Sets the distance from the end of the infill tip wipe move to turn the extruder off"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeCutoffDistance"
+    local: true
+  - name: "infill_wipe_lift_height"
+    display: "Infill Wipe Lift Height"
+    type: "distance"
+    tooltip: "Sets the distance to lift during the infill tip wipe move"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_wipe":true}]}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kInfillWipeLiftHeight"
+    local: true
+  - name: "tip_wipe_voltage"
+    display: "Tip Wipe Voltage"
+    type: "voltage"
+    tooltip: "Sets welder voltage during tip wipe motions"
+    depends: {"AND":[{"slicing_mode":0},{"syntax":24}]}
+    options: []
+    default: 0
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kTipWipeVoltage"
+    local: true
+  - name: "disable_tip_wipe_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Tip Wipes"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change tip wipe path speeds."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
+    options: []
+    default: false
+    minor: "Tip Wipe"
+    major: "Material"
+    namespace: "Material::TipWipe"
+    symbol: "kDisableTipWipeFeedrateScaling"
+    local: false

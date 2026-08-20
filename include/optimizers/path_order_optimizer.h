@@ -8,6 +8,7 @@
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
+#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -37,6 +38,13 @@ class PathOrderOptimizer {
     //! \return Linked path with travel
     Path linkNextPath(QVector<Path> paths = QVector<Path>());
 
+    /*!
+     * @brief Links the next open radial arc using the configured path and point order settings.
+     * @param center Cylinder center used to turn outside-in and inside-out into angular sweep ordering.
+     * @return Linked radial path with a travel prepended.
+     */
+    Path linkNextRadialPath(const Point& center);
+
     //! \brief Set paths to evaluate
     //! \param paths: Copy of paths to evaluate
     void setPathsToEvaluate(QVector<Path> paths);
@@ -50,10 +58,6 @@ class PathOrderOptimizer {
     //! \param previousIslands: List of previously visited islands
     void setParameters(PolygonList previousIslands);
 
-    //! \brief Set parameters (when using additional DOF for perimeter/inset)
-    //! \param shouldNextPathBeCCW: Whether or not next path should be CW or CCW after travel is determined
-    void setParameters(bool shouldNextPathBeCCW);
-
     //! \brief Gets remaining paths
     //! \return current paths remaining
     int getCurrentPathCount();
@@ -61,10 +65,6 @@ class PathOrderOptimizer {
     //! \brief Gets current location
     //! \return current location
     Point& getCurrentLocation();
-
-    //! \brief Gets whether current path is CW or CCW
-    //! \return CW or CCW status
-    bool getCurrentCCW();
 
     //! \brief Link path as part of spiral (works only for a single perimeter)
     //! \param path: Path to link
@@ -109,11 +109,55 @@ class PathOrderOptimizer {
     //! \return Next path linked via travel
     Path linkNextSkeletonPath();
 
-    //! \brief Links single path in line infill
+    /*!
+     * @brief Selects an open radial arc and endpoint using radial-compatible path-order semantics.
+     * @param center Cylinder center used for angular ordering.
+     * @return Selected path index and true when the path should start from its front endpoint.
+     */
+    QPair<int, bool> radialOpenPath(const Point& center);
+
+    /*!
+     * @brief Returns the query point used by radial path ordering.
+     * @param optimization Path order strategy currently being evaluated.
+     * @return Current, override, or custom path-order location.
+     */
+    Point radialPathQueryPoint(PathOrderOptimization optimization) const;
+
+    /*!
+     * @brief Returns the query point used by radial point ordering.
+     * @param optimization Point order strategy currently being evaluated.
+     * @return Current, override, or custom point-order location.
+     */
+    Point radialPointQueryPoint(PointOrderOptimization optimization) const;
+
+    /*!
+     * @brief Returns the closer endpoint distance from a query point to an open path.
+     * @param query Query point.
+     * @param path Open path to evaluate.
+     * @return Shortest endpoint distance.
+     */
+    Distance nearestOpenEndpointDistance(const Point& query, const Path& path) const;
+
+    /*!
+     * @brief Returns the angular midpoint of an open radial arc about a center.
+     * @param path Open radial arc path.
+     * @param center Cylinder center.
+     * @return Representative midpoint angle in radians.
+     */
+    double radialArcMidpointAngle(const Path& path, const Point& center) const;
+
+    /*!
+     * @brief Normalizes an angular delta to [0, 2*pi).
+     * @param delta Angle delta in radians.
+     * @return Positive equivalent angle delta.
+     */
+    double positiveAngularDelta(double delta) const;
+
+    //! \brief Links one line infill path
     //! \return Next path linked via travel
     Path linkNextInfillLines(QVector<Path>& paths);
 
-    //! \brief Links single path in concentric infill
+    //! \brief Links one concentric infill path
     //! \return Next path linked via travel
     Path linkNextInfillConcentric();
 
@@ -145,9 +189,6 @@ class PathOrderOptimizer {
     //! \param shortest: Whether to look for shortest or longest (shortest by default)
     //! \return Index for vertex in closest path and index for path itself
     int findInteriorExterior(bool ExtToInt = true);
-
-    //! \brief Sets rotation of path based on internal status of the previous paths' CW or CCW status
-    void setRotation(Path& path);
 
     //! \brief Computes the topological heirarchy necessary for outside-in and inside-out optimization schemes
     //! \return Returns pointer to root node of n-ary tree representing heirarchy
@@ -186,14 +227,14 @@ class PathOrderOptimizer {
     //! \brief Track whether the override has been used or not.  Allows reset between regions
     bool m_override_used;
 
+    //! \brief Track whether the point-order override has been set.
+    bool m_point_override_used;
+
     //! \brief Override location to use for linking instead of current location (path and point optimizer)
     Point m_override_location, m_point_override_location;
 
     //! \brief Current region type for path. Determines which version of link is called
     RegionType m_current_region_type;
-
-    //! \brief CW or CCW status for next path to determine which direction to rotate
-    bool m_should_next_path_be_ccw;
 
     //! \brief The layer number we are currently on
     int m_layer_num;

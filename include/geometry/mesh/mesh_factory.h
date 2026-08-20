@@ -32,6 +32,12 @@ class MeshFactory {
     //! \returna new mesh
     static ClosedMesh CreateTriaglePyramidMesh(const Distance& length);
 
+    //! \brief Builds and returns a mesh that is a regular hexagonal prism.
+    //! \param side_length the side length of the hexagon
+    //! \param height the height of the prism
+    //! \return a new mesh
+    static ClosedMesh CreateHexagonalPrismMesh(const Distance& side_length, const Distance& height);
+
     //! \brief Builds and returns a mesh that is a cylinder
     //! \param radius the raduis of the cylinder
     //! \param height the height of the cylinder

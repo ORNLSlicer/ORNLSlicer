@@ -5,7 +5,6 @@
 
 #include <qcontainerfwd.h>
 #include <qevent.h>
-#include <qguiapplication.h>
 #include <qhash.h>
 #include <qlist.h>
 #include <qnamespace.h>
@@ -14,7 +13,6 @@
 #include <qpainter.h>
 #include <qplaintextedit.h>
 #include <qscrollbar.h>
-#include <qset.h>
 #include <qtextdocumentfragment.h>
 #include <qtextformat.h>
 #include <qtextobject.h>
@@ -38,9 +36,8 @@ GcodeTextBoxWidget::GcodeTextBoxWidget(QWidget* parent)
     m_manual_cursor_move = false;
 }
 
-void GcodeTextBoxWidget::setHighlighterColors(QHash<QString, QTextCharFormat> fontColors,
-                                              QSet<int> layerSkipLineNumbers) {
-    m_highlighter.setColorRules(fontColors, layerSkipLineNumbers);
+void GcodeTextBoxWidget::setHighlighterColors(QHash<QString, QTextCharFormat> fontColors) {
+    m_highlighter.setColorRules(fontColors);
 }
 
 void GcodeTextBoxWidget::lineNumbersPaintEvent(QPaintEvent* event) {
@@ -185,13 +182,24 @@ void GcodeTextBoxWidget::updateLineNumberDisplayArea(const QRect& rect, int heig
 void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
     int scrollPos = verticalScrollBar()->value();
 
+    QPlainTextEdit::mouseReleaseEvent(event);
+
+    if (event->button() != Qt::LeftButton)
+        return;
+
     m_manual_cursor_move = true;
+
+    Qt::KeyboardModifiers modifier = event->modifiers();
+    if (textCursor().hasSelection() && modifier == Qt::NoModifier) {
+        verticalScrollBar()->setValue(scrollPos);
+        return;
+    }
+
     if (m_previous_line == textCursor().blockNumber()) {
         return;
     }
 
     QList<int> linesToAdd, linesToRemove;
-    Qt::KeyboardModifiers modifier = QGuiApplication::queryKeyboardModifiers();
     if (modifier == Qt::ControlModifier) {
         if (m_selected_blocks.contains(textCursor().blockNumber()))
             linesToRemove.push_back(textCursor().blockNumber());
@@ -238,7 +246,9 @@ void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
     emit lineChange(linesToAdd, linesToRemove);
 
     verticalScrollBar()->setValue(scrollPos);
-    setTextCursor(QTextCursor(document()->findBlockByLineNumber(m_last_block_clicked_on)));
+    QTextBlock clicked_block = document()->findBlockByLineNumber(m_last_block_clicked_on);
+    if (clicked_block.isValid())
+        setTextCursor(QTextCursor(clicked_block));
 }
 
 void GcodeTextBoxWidget::keyPressEvent(QKeyEvent* event) {
@@ -312,6 +322,11 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
 
     QTextDocument* document = this->document();
     document->undo();
+
+    if (searchString.isEmpty()) {
+        document->setModified(false);
+        return;
+    }
 
     QTextCursor highlightCursor(document);
     QTextCursor cursor(document);

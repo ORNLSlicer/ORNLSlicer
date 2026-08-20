@@ -43,9 +43,10 @@ void LayerTimesWindow::setupEvents() {
     connect(m_min_layer_time_edit, &QLineEdit::textChanged, this, &LayerTimesWindow::updateText);
 }
 
-void LayerTimesWindow::updateTimeInformation(QList<QList<Time>> layer_times, QList<double> layer_FR_modifiers,
-                                             bool adjusted_layer_time) {
+void LayerTimesWindow::updateTimeInformation(QList<Time> layer_times, QList<Time> adjusted_layer_times,
+                                             QList<double> layer_FR_modifiers, bool adjusted_layer_time) {
     m_layer_times = layer_times;
+    m_adjusted_layer_times = adjusted_layer_times;
     m_layer_FR_modifiers = layer_FR_modifiers;
     m_adjusted_layer_time = adjusted_layer_time;
     m_min = INT_MAX, m_max = INT_MIN;
@@ -54,11 +55,7 @@ void LayerTimesWindow::updateTimeInformation(QList<QList<Time>> layer_times, QLi
     m_total_adjusted_time = 0;
 
     for (int i = 1; i < m_layer_times.size(); ++i) {
-        // a layer's time is the max time of any extruders printing on that layer
-        Time& current_time = m_layer_times[i][0];
-        for (auto& time : m_layer_times[i]) {
-            current_time = qMax(current_time, time);
-        }
+        Time& current_time = m_layer_times[i];
 
         if (current_time < m_min) {
             m_min_index = i;
@@ -70,7 +67,7 @@ void LayerTimesWindow::updateTimeInformation(QList<QList<Time>> layer_times, QLi
             m_max = current_time;
         }
 
-        m_total_adjusted_time += current_time / m_layer_FR_modifiers[i];
+        m_total_adjusted_time += m_adjusted_layer_times[i];
 
         m_total_time += current_time;
     }
@@ -97,28 +94,24 @@ void LayerTimesWindow::updateText() {
 
     Time currentTotal = 0;
     for (int i = 0; i < m_layer_times.count(); ++i) {
-        // a layer's time is the max time of any extruders printing on that layer
-        Time& current_time = m_layer_times[i][0];
-        for (auto& time : m_layer_times[i]) {
-            current_time = qMax(current_time, time);
-        }
+        Time& current_time = m_layer_times[i];
 
         QString oneLayer =
             "Layer " % QString::number(i) % " " % MathUtils::formattedTimeSpanHHMMSS(current_time()) % ",";
-        if (i == 0) {
-            currentTotal += current_time;
-        }
-        else if (current_time > 1 && m_adjusted_layer_time) {
-            double adjusted_time = current_time() / m_layer_FR_modifiers[i];
-            if (m_layer_FR_modifiers[i] != 1) {
+
+        Time display_time = current_time;
+        if (m_adjusted_layer_time) {
+            display_time = m_adjusted_layer_times[i];
+            double adjusted_time = m_adjusted_layer_times[i]();
+            if (i > 0 && current_time > 1 && m_layer_FR_modifiers[i] != 1) {
                 oneLayer += " Adjusted " % MathUtils::formattedTimeSpanHHMMSS(adjusted_time) % ",";
             }
-            currentTotal += adjusted_time;
         }
+        currentTotal += display_time;
 
         oneLayer += " Total Time So Far " % MathUtils::formattedTimeSpanHHMMSS(currentTotal());
 
-        if (current_time() / m_layer_FR_modifiers[i] < layerTimeThreshold) {
+        if (display_time < layerTimeThreshold) {
             layerTimeString += "<font color=\"red\">" % oneLayer % "</font><br>";
         }
         else {

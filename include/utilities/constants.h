@@ -99,6 +99,8 @@ class Constants {
       public:
         static const QString kUnknown;
         static const QString kPerimeter;
+        static const QString kRadial;
+        static const QString kHelical;
         static const QString kInset;
         static const QString kInfill;
         static const QString kTopSkin;
@@ -113,7 +115,6 @@ class Constants {
         static const QString kLaserScan;
         static const QString kThermalScan;
         static const QString kSkeleton;
-        static const QString kAnchor;
     };
 
     // Used?
@@ -128,7 +129,6 @@ class Constants {
         static const QString kLines;
         static const QString kGrid;
         static const QString kConcentric;
-        static const QString kInsideOutConcentric;
         static const QString kTriangles;
         static const QString kHexagonsAndTriangles;
         static const QString kHoneycomb;
@@ -178,14 +178,19 @@ class Constants {
             static const QString kMachineType;
             static const QString kForceG1;
             static const QString kSupportG3;
+            static const QString kEnableTrafo;
+            static const QString kG2G3CenterPointInterpretation;
+            static const QString kG2G3AbsoluteI;
+            static const QString kG2G3AbsoluteJ;
             static const QString kToolNumber;
+            static const QString kToolCoordinate;
+            static const QString kBaseCoordinate;
             static const QString kAxisA;
             static const QString kAxisB;
             static const QString kAxisC;
-            static const QString kToolCoordinate;
-            static const QString kBaseCoordinate;
-            static const QString kSupportsE1;
-            static const QString kSupportsE2;
+            static const QString kGCodeCoordinateFrameRotationX;
+            static const QString kGCodeCoordinateFrameRotationY;
+            static const QString kGCodeCoordinateFrameRotationZ;
         };
 
         // Categories
@@ -203,7 +208,6 @@ class Constants {
             static const QString kYMax;
             static const QString kZMin;
             static const QString kZMax;
-            static const QString kInnerRadius;
             static const QString kOuterRadius;
             static const QString kXOffset;
             static const QString kYOffset;
@@ -231,8 +235,6 @@ class Constants {
           public:
             static const QString kEnableTamper;
             static const QString kTamperVoltage;
-            static const QString kGKNLaserPower;
-            static const QString kGKNWireSpeed;
         };
 
         class MachineSpeed {
@@ -243,7 +245,6 @@ class Constants {
             static const QString kMaxExtruderSpeed;
             static const QString kWTableSpeed;
             static const QString kZSpeed;
-            static const QString kGKNPrintSpeed;
             static const QString kGearRatio;
         };
 
@@ -266,6 +267,8 @@ class Constants {
             static const QString kEnableWaitForUser;
             static const QString kEnableBoundingBox;
             static const QString kEnableSettingsFooter;
+            static const QString kLayerTimeComments;
+            static const QString kArcSpecialtiesG2G3OptionalStop;
             static const QString kStartCode;
             static const QString kLayerCodeChange;
             static const QString kEndCode;
@@ -280,13 +283,11 @@ class Constants {
         class SyntaxString {
           public:
             static QString kAML3D;
-            static QString k5AxisMarlin;
             static QString kBeam;
             static QString kCincinnati;
             static QString kCincinnatiLegacy;
             static QString kCommon;
             static QString kDmgDmu;
-            static QString kGKN;
             static QString kGudel;
             static QString kHaasInch;
             static QString kHaasMetric;
@@ -295,7 +296,7 @@ class Constants {
             static QString kIngersoll;
             static QString kKraussMaffei;
             static QString kMarlin;
-            static QString kMarlinPellet;
+            static QString kJuggerBot;
             static QString kMazak;
             static QString kMeld;
             static QString kMeltio;
@@ -303,10 +304,8 @@ class Constants {
             static QString kOkuma;
             static QString kORNL;
             static QString kRomiFanuc;
-            static QString kRPBF;
             static QString kSandia;
             static QString kSiemens;
-            static QString kSkyBaam;
             static QString kThermwood;
             static QString kTormach;
             static QString kWolf;
@@ -315,6 +314,7 @@ class Constants {
             static QString kAeroBasic;
             static QString kAdamantine;
             static QString kORNLMetric;
+            static QString kArcSpecialties;
         };
     };
 
@@ -368,6 +368,7 @@ class Constants {
             static const QString kSkeletonSteps;
 
             static const QString kStartUpAreaModifier;
+            static const QString kDisableFeedrateScaling;
         };
 
         class Slowdown {
@@ -408,6 +409,7 @@ class Constants {
             static const QString kSkeletonCutoffDistance;
 
             static const QString kSlowDownAreaModifier;
+            static const QString kDisableFeedrateScaling;
         };
 
         class TipWipe {
@@ -457,9 +459,8 @@ class Constants {
             static const QString kSkeletonCutoffDistance;
             static const QString kSkeletonLiftHeight;
 
-            static const QString kLaserPowerMultiplier;
-            static const QString kWireFeedMultiplier;
             static const QString kTipWipeVoltage;
+            static const QString kDisableFeedrateScaling;
         };
 
         class SpiralLift {
@@ -473,6 +474,7 @@ class Constants {
             static const QString kLiftRadius;
             static const QString kLiftSpeed;
             static const QString kLiftPoints;
+            static const QString kDisableFeedrateScaling;
         };
 
         class Purge {
@@ -530,20 +532,13 @@ class Constants {
             static const QString kThreeZones;
             static const QString kFourZones;
             static const QString kFiveZones;
-            static const QString kExtruder0;
-            static const QString kExtruder1;
-            static const QString kStandBy0;
-            static const QString kStandBy1;
-            static const QString kExtruder0Zone1;
-            static const QString kExtruder0Zone2;
-            static const QString kExtruder0Zone3;
-            static const QString kExtruder0Zone4;
-            static const QString kExtruder0Zone5;
-            static const QString kExtruder1Zone1;
-            static const QString kExtruder1Zone2;
-            static const QString kExtruder1Zone3;
-            static const QString kExtruder1Zone4;
-            static const QString kExtruder1Zone5;
+            static const QString kExtruder;
+            static const QString kStandBy;
+            static const QString kExtruderZone1;
+            static const QString kExtruderZone2;
+            static const QString kExtruderZone3;
+            static const QString kExtruderZone4;
+            static const QString kExtruderZone5;
         };
 
         class Cooling {
@@ -618,15 +613,17 @@ class Constants {
           public:
             static const QString kEnable;
             static const QString kCount;
+            static const QString kBoundarySelection;
             static const QString kBeadWidth;
             static const QString kFirstLayerBeadWidth;
+            static const QString kAdaptive;
+            static const QString kAdaptiveMinWidth;
+            static const QString kAdaptiveMaxWidth;
             static const QString kSpeed;
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
-            static const QString kPower;
-            static const QString kFocus;
-            static const QString kSpotSize;
+            static const QString kMinSegmentLength;
             static const QString kEnableLeadIn;
             static const QString kLeadInFirstLayerOnly;
             static const QString kEnableLeadInX;
@@ -634,7 +631,7 @@ class Constants {
             static const QString kEnableFlyingStart;
             static const QString kFlyingStartDistance;
             static const QString kFlyingStartSpeed;
-            static const QString kEnableShiftedBeads;
+            static const QString kEnableSpiralPerimeter;
         };
 
         class Inset {
@@ -643,11 +640,16 @@ class Constants {
             static const QString kCount;
             static const QString kBeadWidth;
             static const QString kFirstLayerBeadWidth;
+            static const QString kAdaptive;
+            static const QString kAdaptiveMinWidth;
+            static const QString kAdaptiveMaxWidth;
             static const QString kSpeed;
             static const QString kExtruderSpeed;
             static const QString kExtrusionMultiplier;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
             static const QString kOverlap;
+            static const QString kEnableSpiralInset;
         };
 
         class Skeleton {
@@ -668,6 +670,12 @@ class Constants {
             static const QString kSkeletonAdaptMaxWidth;
             static const QString kSkeletonAdaptMaxWidthFilter;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
+            static const QString kPrestartEnable;
+            static const QString kPrestartDistance;
+            static const QString kPrestartSpeed;
+            static const QString kPrestartExtruderSpeed;
+            static const QString kPrestartAreaModifier;
             static const QString kLeadInEnable;
             static const QString kLeadInDistance;
             static const QString kLeadInSpeed;
@@ -690,6 +698,7 @@ class Constants {
             static const QString kExtrusionMultiplier;
             static const QString kOverlap;
             static const QString kMinPathLength;
+            static const QString kMinSegmentLength;
             static const QString kInfillEnable;
             static const QString kInfillSteps;
             static const QString kInfillPattern;
@@ -705,6 +714,7 @@ class Constants {
             static const QString kManualLineSpacing;
             static const QString kPattern;
             static const QString kLinesPartitionedLinking;
+            static const QString kAvoidLinkOverlap;
             static const QString kBasedOnPrinter;
             static const QString kAngle;
             static const QString kAngleRotation;
@@ -716,18 +726,20 @@ class Constants {
             static const QString kCombineXLayers;
             static const QString kCombineLayerShift;
             static const QString kMinPathLength;
-            static const QString kSectorCount;
-            static const QString kPower;
-            static const QString kFocus;
-            static const QString kSpotSize;
-            static const QString kEnableAlternatingLines;
+            static const QString kMinSegmentLength;
         };
 
         class Support {
           public:
             static const QString kEnable;
             static const QString kPrintFirst;
+            static const QString kStructure;
+            static const QString kPlacement;
             static const QString kTaper;
+            static const QString kTaperAngle;
+            static const QString kTaperWallContours;
+            static const QString kTubeWallRegion;
+            static const QString kWallContours;
             static const QString kThresholdAngle;
             static const QString kXYDistance;
             static const QString kLayerOffset;
@@ -735,14 +747,32 @@ class Constants {
             static const QString kMinArea;
             static const QString kPattern;
             static const QString kLineSpacing;
+            static const QString kInterfaceLayers;
+            static const QString kInterfaceLineSpacing;
+            static const QString kInterfaceExpansion;
+            static const QString kInterfaceRegion;
+            static const QString kBaseLayers;
+            static const QString kBaseExpansion;
+            static const QString kMinSegmentLength;
+            static const QString kBaseRegion;
+            static const QString kBridgeSuppression;
+            static const QString kBridgeMaxLength;
+            static const QString kValidation;
+            static const QString kValidationMinOverlap;
+            static const QString kValidationMinBaseArea;
+            static const QString kOrganicBranchDiameter;
+            static const QString kOrganicBranchSpacing;
+            static const QString kOrganicBranchAngle;
         };
 
         class Travel {
           public:
             static const QString kSpeed;
-            static const QString kMinLength;
+            static const QString kInfillMinLength;
+            static const QString kMinTravelLength;
             static const QString kMinTravelForLift;
             static const QString kLiftHeight;
+            static const QString kFinalLiftDistance;
             static const QString kEnableTravelPause;
             static const QString kEnableTravelCentroidMove;
             static const QString kTravelPauseDuration;
@@ -769,22 +799,38 @@ class Constants {
             static const QString kSmoothing;
             static const QString kSmoothingType;
             static const QString kSmoothingTolerance;
+            static const QString kEnableSharpCornerExtension;
+            static const QString kSharpCornerExtensionAngle;
+            static const QString kSharpCornerExtensionDistance;
+            static const QString kSharpCornerClosePointsThreshold;
+            static const QString kSharpCornerSharpeningLegLength;
             static const QString kEnableSpiralize;
             static const QString kEnableFixModel;
             static const QString kEnableOversize;
             static const QString kOversizeDistance;
             static const QString kEnableWidthHeight;
+            static const QString kEnableArcFitting;
+            static const QString kArcFittingTolerance;
+            static const QString kArcFittingMinimumSegmentCount;
         };
 
         class Optimizations {
           public:
+            static const QString kLayerOrdering;
+            static const QString kLayerGroupingTolerance;
             static const QString kIslandOrder;
             static const QString kPathOrder;
+            static const QString kPerimeterPathOrder;
+            static const QString kInsetPathOrder;
+            static const QString kSkinPathOrder;
             static const QString kCustomIslandXLocation;
             static const QString kCustomIslandYLocation;
+            static const QString kCustomIslandZLocation;
             static const QString kCustomPathXLocation;
             static const QString kCustomPathYLocation;
+            static const QString kCustomPathZLocation;
             static const QString kPointOrder;
+            static const QString kEnablePointOrderSegmentBreaking;
             static const QString kLocalRandomnessEnable;
             static const QString kLocalRandomnessRadius;
             static const QString kMinDistanceEnabled;
@@ -792,10 +838,15 @@ class Constants {
             static const QString kConsecutiveDistanceThreshold;
             static const QString kCustomPointXLocation;
             static const QString kCustomPointYLocation;
+            static const QString kCustomPointZLocation;
             static const QString kEnableSecondCustomLocation;
             static const QString kEnableSecondCustomLocationEveryTwo;
             static const QString kCustomPointSecondXLocation;
             static const QString kCustomPointSecondYLocation;
+            static const QString kCustomPointSecondZLocation;
+            static const QString kSeamAttractorVectorX;
+            static const QString kSeamAttractorVectorY;
+            static const QString kSeamAttractorVectorZ;
             static const QString kCustomPointXIncrement;
             static const QString kCustomPointYIncrement;
         };
@@ -840,67 +891,34 @@ class Constants {
             static const QString kThermalScannerTemperatureCutoff;
             static const QString kThermalScannerXOffset;
             static const QString kThermalScannerYOffset;
-            static const QString kPyrometerMove;
         };
 
-        class SlicingVector {
+        class Slicing {
           public:
-            static const QString kSlicingVectorX;
-            static const QString kSlicingVectorY;
-            static const QString kSlicingVectorZ;
+            static const QString kSlicingMode;
+            static const QString kCylindricalPathPattern;
+            static const QString kSlicePlaneNormalX;
+            static const QString kSlicePlaneNormalY;
+            static const QString kSlicePlaneNormalZ;
+            static const QString kCylinderInnerRadius;
+            static const QString kCylinderHeight;
+            static const QString kCylinderAxisSource;
+            static const QString kCylinderAxisX;
+            static const QString kCylinderAxisY;
+            static const QString kRadialPathBoundaryPolicy;
+            static const QString kRadialPathStartAngle;
+            static const QString kHelicalPathBoundaryPolicy;
+            static const QString kHelicalPathHandedness;
+            static const QString kHelicalPathStartAngle;
+            static const QString kMaxHelicalPathLength;
+            static const QString kArcsPerRevolution;
+            static const QString kImagePixelSizeX;
+            static const QString kImagePixelSizeY;
         };
     };
 
     class ExperimentalSettings {
       public:
-        class PrinterConfig {
-          public:
-            static const QString kSlicerType;
-            static const QString kLayerOrdering;
-            static const QString kLayerGroupingTolerance;
-        };
-
-        class SinglePath {
-          public:
-            static const QString kEnableSinglePath;
-            static const QString kEnableBridgeExclusion;
-            static const QString kEnableZippering;
-            static const QString kPrevLayerExclusionDistance;
-            static const QString kCornerExclusionDistance;
-            static const QString kMaxBridgeLength;
-            static const QString kMinBridgeSeparation;
-        };
-
-        class RPBFSlicing {
-          public:
-            static const QString kSectorSize;
-            static const QString kSectorOffsettingEnable;
-            static const QString kSectorOverlap;
-            static const QString kSectorStaggerEnable;
-            static const QString kSectorStaggerAngle;
-            static const QString kClockingAngle;
-        };
-
-        class MultiNozzle {
-          public:
-            static const QString kNozzleCount;
-            static const QString kNozzleOffsetX;
-            static const QString kNozzleOffsetY;
-            static const QString kNozzleOffsetZ;
-            static const QString kNozzleMaterial;
-            static const QString kEnableMultiNozzleMultiMaterial;
-            static const QString kEnableDuplicatePathRemoval;
-            static const QString kDuplicatePathSimilarity;
-            static const QString kEnableIndependentNozzles;
-            static const QString kNozzleAssignmentMethod;
-        };
-
-        class GcodeVisualization {
-          public:
-            static const QString kDisableVisualization;
-            static const QString kVisualizationSkip;
-        };
-
         class Ramping {
           public:
             static const QString kTrajectoryAngleEnabled;
@@ -911,21 +929,6 @@ class Constants {
             static const QString kTrajectoryAngleExtruderSpeedSlowDown;
             static const QString kTrajectoryAngleSpeedUp;
             static const QString kTrajectoryAngleExtruderSpeedUp;
-        };
-
-        class WireFeed {
-          public:
-            static const QString kWireFeedEnable;
-            static const QString kSettingsRegionMeshSplit;
-            static const QString kInitialTravelSpeed;
-            static const QString kAnchorEnable;
-            static const QString kAnchorWidth;
-            static const QString kAnchorHeight;
-            static const QString kAnchorObjectDistanceLeft;
-            static const QString kAnchorObjectDistanceRight;
-            static const QString kWireCutoffDistance;
-            static const QString kWireStickoutDistance;
-            static const QString kWirePrestartDistance;
         };
 
         class FileOutput {
@@ -944,18 +947,7 @@ class Constants {
             static const QString kMarlinTravels;
             static const QString kSimulationOutput;
             static const QString kAMCMOutput;
-        };
-
-        class RotationOrigin {
-          public:
-            static const QString kXOffset;
-            static const QString kYOffset;
-        };
-
-        class ImageResolution {
-          public:
-            static const QString kImageResolutionX;
-            static const QString kImageResolutionY;
+            static const QString kAMCMDataLogging;
         };
 
         class CrossSection {
@@ -980,6 +972,24 @@ class Constants {
             static const std::string kDefault;
             static const std::string kDependencyGroup;
             static const std::string kLocal;
+        };
+        class Input {
+          public:
+            static const std::string kName;
+            static const std::string kDisplay;
+            static const std::string kWidget;
+            static const std::string kToolTip;
+            static const std::string kDepends;
+            static const std::string kMinor;
+            static const std::string kMajor;
+            static const std::string kLocal;
+            static const std::string kComponents;
+            static const std::string kSetting;
+            static const std::string kLabel;
+            static const std::string kType;
+            static const std::string kDefault;
+            static const std::string kVector2;
+            static const std::string kVector3;
         };
         class Session {
           public:
@@ -1037,16 +1047,9 @@ class Constants {
         static const QString kRegionType;
         static const QString kPathModifiers;
         static const QString kMaterialNumber;
-        static const QString kRotation;
         static const QString kRecipe;
-        static const QString kTilt;
-        static const QString kCCW;
         static const QString kESP;
-        static const QString kExtruders;
         static const QString kIsRegionStartSegment;
-        static const QString kWireFeed;
-        static const QString kFinalWireCoast;
-        static const QString kFinalWireFeed;
         static const QString kAdapted;
     };
 
@@ -1067,6 +1070,7 @@ class Constants {
             static const Angle kMaxAngle;
             static const Area kMaxArea;
             static const Voltage kMaxVoltage;
+            static const double kMaxUnitlessFloat;
             static const float kMaxFloat;
             static const float kInfFloat;
         };
@@ -1086,6 +1090,7 @@ class Constants {
             static const Temperature kMinTemperature;
             static const Angle kMinAngle;
             static const Area kMinArea;
+            static const double kMinUnitlessFloat;
             static const float kMinFloat;
         };
     };
@@ -1300,14 +1305,6 @@ class Constants {
         static const QString kHeaderDescription;
 
         static const QString kSliceBounds;
-        static const QString kRealTimeMode;
-        static const QString kRecoveryFilePath;
-        static const QString kOpenLoop;
-        static const QString kRealTimeCommunicationMode;
-        static const QString kRealTimeNetworkAddress;
-        static const QString kRealTimeNetworkIP;
-        static const QString kRealTimeNetworkPort;
-        static const QString kRealTimePrinter;
         static const QString kSingleSliceHeight;
         static const QString kSingleSliceLayerNumber;
 

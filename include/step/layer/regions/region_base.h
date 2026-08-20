@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <QObject>
 #include <qcontainerfwd.h>
 #include <qtypes.h>
@@ -7,10 +9,12 @@
 #include "configs/settings_base.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
+#include "geometry/plane.h"
+#include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "units/unit.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 class PathOrderOptimizer;
@@ -26,12 +30,14 @@ class RegionBase {
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
     RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
-               const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry = PolygonList());
+               const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry = PolygonList(),
+               RegionType region_type = RegionType::kUnknown);
 
     //! \brief Constructor
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
-    RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons);
+    RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons,
+               RegionType region_type = RegionType::kUnknown);
 
     //! \brief Destructor
     virtual ~RegionBase() = default;
@@ -42,21 +48,26 @@ class RegionBase {
 
     //! \brief Performs the computation for this region.
     //! \param layer_num: current layer number
-    //! \param sync: Sync token for linking layers together
-    virtual void compute(uint layer_num, QSharedPointer<SyncManager>& sync) = 0;
+    virtual void compute(uint layer_num) = 0;
 
     //! \brief Performs the optimization for this region.
     //! \param layerNumber: current layer
     //! \param current_location: current location
-    //! \param innerMostClosedContour: inner most contour used in conjunction with path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param shouldNextPathBeCCW: CW or CCW state of last contour when using additional DOF
-    virtual void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                          QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) = 0;
+    virtual void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) = 0;
 
     //! \brief Get the paths generated from this region.
     //! \return Reference to region paths
     QVector<Path>& getPaths();
+
+    //! \brief Returns the first material-depositing start point in the region, if one exists.
+    std::optional<Point> getFirstPrintingStartPoint();
+
+    //! \brief Sets the prior layer's start point for consecutive point ordering.
+    void setPreviousLayerStartPoint(const std::optional<Point>& point);
+
+    //! \brief Gets the prior layer's start point for consecutive point ordering.
+    std::optional<Point> getPreviousLayerStartPoint() const;
 
     //! \brief Reverse path ordering in this region.
     void reversePaths();
@@ -77,6 +88,9 @@ class RegionBase {
     //! \param sb: Pointer to settings base to set
     void setSb(const QSharedPointer<SettingsBase>& sb);
 
+    //! \brief Sets the slicing frame used while optimizing flattened layer geometry.
+    void setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift);
+
     //! \brief transforms the region by rotating by then quaternion, then shifting
     void transform(QQuaternion rotation, Point shift);
 
@@ -87,6 +101,15 @@ class RegionBase {
     //! \brief return index that represents region order
     //! \return region order index
     int getIndex();
+
+    //! \brief Returns the concrete region type.
+    RegionType getRegionType() const;
+
+    //! \brief Records the layer number used for the last optimization pass.
+    void setOptimizedLayerNumber(int layer_number);
+
+    //! \brief Returns the layer number used for the last optimization pass.
+    int getOptimizedLayerNumber() const;
 
     //! \brief returns the material number of a region
     //! \return material number
@@ -101,12 +124,8 @@ class RegionBase {
     //! \param next_material_number: material number to set for transition segments
     void calculateMultiMaterialTransition(Distance& transition_distance, int next_material_number);
 
-    //! \brief adds nozzle to list of nozzles that should be on when this region prints
-    //! \param nozzle number, indexed at 0
-    void addNozzle(int nozzle);
-
-    //! \brief adjusts regions according to multiple-nozzle settings
-    void adjustMultiNozzle();
+    //! \brief Fits eligible planar line segments to G2/G3 arcs.
+    void fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb);
 
     //! \brief Sets whether last region was spiralized or not (path optimizer needs this info)
     //! \param spiral: whether or not last region was spiralized
@@ -122,11 +141,19 @@ class RegionBase {
     //! \param path: path to append
     void appendPath(const Path& path);
 
+    //! \brief Returns the path-order custom anchor in the current optimization frame.
+    Point customPathOrderPoint() const;
+
+    //! \brief Returns this region's path order, falling back to the global path order.
+    PathOrderOptimization pathOrderOptimization() const;
+
+    //! \brief Returns the point-order custom anchor in the current optimization frame.
+    Point customPointOrderPoint() const;
+
     //! \brief adds the modifiers for each region
     //! \param path: path to add modifiers to
     //! \param supportsG3: whether or not the system supports G3 command
-    //! \param innerMostClosedContour: inner most closed contour for use with path modifiers/open paths
-    virtual void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) = 0;
+    virtual void calculateModifiers(Path& path, bool supportsG3) = 0;
 
     //! \brief The geometery this region will work on.
     PolygonList m_geometry;
@@ -146,10 +173,23 @@ class RegionBase {
     //! \brief Index for order
     int m_index;
 
+    //! \brief Concrete type for matching regions across layers.
+    RegionType m_region_type;
+
+    //! \brief Layer number used for the last optimization pass.
+    int m_optimized_layer_number = -1;
+
+    //! \brief Previous layer's physical start point for consecutive point ordering.
+    std::optional<Point> m_previous_layer_start_point;
+
     //! \brief Whether last region was spiralized
     bool m_was_last_region_spiral;
 
     //! \brief Uncut geometry to modify pathing
     PolygonList m_uncut_geometry;
+
+    //! \brief Slicing plane and shift for flattened optimization-space custom anchors.
+    Plane m_optimization_slicing_plane;
+    Point m_optimization_shift;
 };
 } // namespace ORNL

@@ -17,7 +17,6 @@
 #include <qlist.h>
 #include <qnamespace.h>
 #include <qnumeric.h>
-#include <qset.h>
 #include <qsharedpointer.h>
 #include <qstringmatcher.h>
 #include <qtmetamacros.h>
@@ -33,6 +32,34 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+double parseFooterSettingValue(const QString& value) {
+    if (value.compare("TRUE", Qt::CaseInsensitive) == 0)
+        return 1.0;
+
+    if (value.compare("FALSE", Qt::CaseInsensitive) == 0)
+        return 0.0;
+
+    return value.toDouble();
+}
+
+bool isDisableFeedrateScalingSetting(const QString& key) {
+    return key == MS::Startup::kDisableFeedrateScaling || key == MS::Slowdown::kDisableFeedrateScaling ||
+           key == MS::TipWipe::kDisableFeedrateScaling || key == MS::SpiralLift::kDisableFeedrateScaling;
+}
+
+double positiveSweep(double sweep) {
+    const double full_circle = 2.0 * M_PI;
+    while (sweep < 0.0) {
+        sweep += full_circle;
+    }
+    while (sweep >= full_circle) {
+        sweep -= full_circle;
+    }
+    return sweep;
+}
+} // namespace
+
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
     : m_e_absolute(true), m_space(' '), m_distance_unit(meta.m_distance_unit), m_time_unit(meta.m_time_unit),
       m_angle_unit(meta.m_angle_unit), m_mass_unit(meta.m_mass_unit), m_velocity_unit(meta.m_velocity_unit),
@@ -47,7 +74,7 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     MotionEstimation::Init();
 
-    if (meta == GcodeMetaList::SkyBaamMeta || meta == GcodeMetaList::KraussMaffeiMeta) {
+    if (meta == GcodeMetaList::KraussMaffeiMeta) {
         m_g4_prefix = "G4 S";
     }
     else if (meta == GcodeMetaList::MVPMeta) {
@@ -60,23 +87,371 @@ CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
 
     m_insertions = 0;
 
-    m_current_nozzle = 0; // 0th nozzle is default
-
     config();
 
     MotionEstimation::m_total_distance = 0;
     MotionEstimation::m_printing_distance = 0;
     MotionEstimation::m_travel_distance = 0;
+    m_travel_time = 0 * m_time_unit;
 }
 
 Distance CommonParser::getCurrentGXDistance() {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
     bool uses_b = sb->setting<bool>(MS::Filament::kFilamentBAxis);
 
-    return MotionEstimation::calculateTimeAndVolume(
-        m_current_layer, m_with_F_value, m_current_gcode_command.getCommandID() == 0, m_extruders_on,
-        m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer][m_current_nozzle],
+    updateCurrentBeadGeometry();
+
+    const bool include_feedrate_adjustable_time = m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
+                                                  !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
+    const Distance distance = MotionEstimation::calculateTimeAndVolume(
+        m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0,
+        currentMotionDepositsMaterial(), m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer],
         m_layer_volumes[m_current_layer], uses_b);
+
+    const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
+    if (command_adjustable_time > 0) {
+        m_command_G1F_times[m_current_gcode_command.getLineNumber()] += command_adjustable_time;
+    }
+
+    return distance;
+}
+
+Distance CommonParser::getCurrentArcDistance(Distance start_x, Distance start_y, Distance start_z, bool has_i,
+                                             bool has_j, bool has_r, bool ccw) {
+    updateCurrentBeadGeometry();
+
+    Distance start_direction_x;
+    Distance start_direction_y;
+    Distance start_direction_z;
+    Distance end_direction_x;
+    Distance end_direction_y;
+    Distance end_direction_z;
+    const Distance path_length =
+        arcPathLength(start_x, start_y, start_z, MotionEstimation::m_current_x, MotionEstimation::m_current_y,
+                      MotionEstimation::m_current_z, has_i, has_j, has_r, ccw, start_direction_x, start_direction_y,
+                      start_direction_z, end_direction_x, end_direction_y, end_direction_z);
+
+    const bool include_feedrate_adjustable_time = m_current_gcode_command.getCommandID() != 0 && m_with_F_value &&
+                                                  !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
+    const Distance distance = MotionEstimation::calculatePathTimeAndVolume(
+        path_length, start_direction_x, start_direction_y, start_direction_z, end_direction_x, end_direction_y,
+        end_direction_z, include_feedrate_adjustable_time, false, currentMotionDepositsMaterial(),
+        m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer]);
+
+    const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
+    if (command_adjustable_time > 0) {
+        m_command_G1F_times[m_current_gcode_command.getLineNumber()] += command_adjustable_time;
+    }
+
+    return distance;
+}
+
+Distance CommonParser::arcPathLength(Distance start_x, Distance start_y, Distance start_z, Distance end_x,
+                                     Distance end_y, Distance end_z, bool has_i, bool has_j, bool has_r, bool ccw,
+                                     Distance& start_direction_x, Distance& start_direction_y,
+                                     Distance& start_direction_z, Distance& end_direction_x, Distance& end_direction_y,
+                                     Distance& end_direction_z) const {
+    const Distance dx = end_x - start_x;
+    const Distance dy = end_y - start_y;
+    const Distance dz = end_z - start_z;
+    const Distance chord_length = sqrt(dx * dx + dy * dy + dz * dz);
+    const Distance planar_chord_length = sqrt(dx * dx + dy * dy);
+
+    auto set_linear_direction = [&](Distance path_length) {
+        if (chord_length > 0) {
+            const double scale = path_length() / chord_length();
+            start_direction_x = dx * scale;
+            start_direction_y = dy * scale;
+            start_direction_z = dz * scale;
+        }
+        else {
+            start_direction_x = path_length;
+            start_direction_y = 0;
+            start_direction_z = 0;
+        }
+        end_direction_x = start_direction_x;
+        end_direction_y = start_direction_y;
+        end_direction_z = start_direction_z;
+    };
+
+    const bool has_center = has_i && has_j;
+    Distance radius;
+    Distance planar_arc_length;
+    double sweep = 0.0;
+
+    if (has_center) {
+        const Distance start_radius_x = start_x - m_current_arc_center_x;
+        const Distance start_radius_y = start_y - m_current_arc_center_y;
+        const Distance end_radius_x = end_x - m_current_arc_center_x;
+        const Distance end_radius_y = end_y - m_current_arc_center_y;
+        const Distance start_radius = sqrt(start_radius_x * start_radius_x + start_radius_y * start_radius_y);
+        const Distance end_radius = sqrt(end_radius_x * end_radius_x + end_radius_y * end_radius_y);
+        radius = (start_radius + end_radius) / 2.0;
+
+        if (radius <= 0) {
+            set_linear_direction(chord_length);
+            return chord_length;
+        }
+
+        const double start_angle = qAtan2(start_radius_y(), start_radius_x());
+        const double end_angle = qAtan2(end_radius_y(), end_radius_x());
+        sweep = positiveSweep(ccw ? end_angle - start_angle : start_angle - end_angle);
+
+        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) {
+            sweep = 2.0 * M_PI;
+        }
+
+        planar_arc_length = radius * sweep;
+        const Distance path_length = sqrt(planar_arc_length * planar_arc_length + dz * dz);
+
+        const double direction = ccw ? 1.0 : -1.0;
+        start_direction_x = planar_arc_length * (-direction * start_radius_y() / radius());
+        start_direction_y = planar_arc_length * (direction * start_radius_x() / radius());
+        start_direction_z = dz;
+        end_direction_x = planar_arc_length * (-direction * end_radius_y() / radius());
+        end_direction_y = planar_arc_length * (direction * end_radius_x() / radius());
+        end_direction_z = dz;
+        return path_length;
+    }
+
+    if (has_r) {
+        radius = qAbs(m_current_arc_radius);
+        if (radius <= 0) {
+            set_linear_direction(chord_length);
+            return chord_length;
+        }
+
+        const double chord_ratio = std::clamp((planar_chord_length / (2.0 * radius))(), 0.0, 1.0);
+        sweep = 2.0 * qAsin(chord_ratio);
+        if (m_current_arc_radius < 0) {
+            sweep = 2.0 * M_PI - sweep;
+        }
+        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) {
+            sweep = 2.0 * M_PI;
+        }
+
+        planar_arc_length = radius * sweep;
+        const Distance path_length = sqrt(planar_arc_length * planar_arc_length + dz * dz);
+        set_linear_direction(path_length);
+        return path_length;
+    }
+
+    set_linear_direction(chord_length);
+    return chord_length;
+}
+
+void CommonParser::updateCurrentBeadGeometry() {
+    MotionEstimation::setBeadGeometry(beadWidthForComment(m_current_gcode_command.getComment()),
+                                      fileDistanceSetting(PS::Layer::kLayerHeight));
+}
+
+Distance CommonParser::fileDistanceSetting(const QString& key) const {
+    const auto setting = m_file_settings.constFind(key);
+    if (setting != m_file_settings.constEnd()) {
+        return Distance(setting.value());
+    }
+
+    return GSM->getGlobal()->setting<Distance>(key);
+}
+
+bool CommonParser::fileBoolSetting(const QString& key) const {
+    const auto setting = m_file_settings.constFind(key);
+    return setting != m_file_settings.constEnd() && setting.value() != 0.0;
+}
+
+Distance CommonParser::beadWidthForComment(const QString& comment) const {
+    const Distance default_width = fileDistanceSetting(PS::Layer::kBeadWidth);
+    const QString adapted_prefix = QStringLiteral("AD-");
+
+    auto widthForRegionComment = [&](const QString& region_name, Distance fallback_width) -> Distance {
+        const int region_start = comment.indexOf(region_name);
+        const int width_start = comment.indexOf('-', region_start + region_name.size());
+
+        if (width_start >= 0) {
+            const int value_start = width_start + 1;
+            int value_end = comment.indexOf(' ', value_start);
+            if (value_end < 0) {
+                value_end = comment.size();
+            }
+
+            bool ok = false;
+            const double parsed_width = comment.mid(value_start, value_end - value_start).toDouble(&ok);
+            if (ok && parsed_width > 0) {
+                return parsed_width * m_distance_unit;
+            }
+        }
+
+        return fallback_width;
+    };
+
+    if (comment.startsWith(Constants::RegionTypeStrings::kRadial) ||
+        comment.startsWith(Constants::RegionTypeStrings::kHelical)) {
+        return default_width;
+    }
+    else if (comment.startsWith(adapted_prefix % Constants::RegionTypeStrings::kPerimeter)) {
+        return widthForRegionComment(Constants::RegionTypeStrings::kPerimeter,
+                                     fileDistanceSetting(PS::Perimeter::kBeadWidth));
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kPerimeter)) {
+        return fileDistanceSetting(PS::Perimeter::kBeadWidth);
+    }
+    else if (comment.startsWith(adapted_prefix % Constants::RegionTypeStrings::kInset)) {
+        return widthForRegionComment(Constants::RegionTypeStrings::kInset, fileDistanceSetting(PS::Inset::kBeadWidth));
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kInset)) {
+        return fileDistanceSetting(PS::Inset::kBeadWidth);
+    }
+    else if (comment.startsWith(adapted_prefix % Constants::RegionTypeStrings::kSkeleton) ||
+             comment.startsWith(Constants::RegionTypeStrings::kSkeleton)) {
+        return widthForRegionComment(Constants::RegionTypeStrings::kSkeleton,
+                                     fileDistanceSetting(PS::Skeleton::kBeadWidth));
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kSkin)) {
+        return fileDistanceSetting(PS::Skin::kBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kInfill)) {
+        return fileDistanceSetting(PS::Infill::kBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kRaft)) {
+        return fileDistanceSetting(MS::PlatformAdhesion::kRaftBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kBrim)) {
+        return fileDistanceSetting(MS::PlatformAdhesion::kBrimBeadWidth);
+    }
+    else if (comment.startsWith(Constants::RegionTypeStrings::kSkirt)) {
+        return fileDistanceSetting(MS::PlatformAdhesion::kSkirtBeadWidth);
+    }
+
+    return default_width;
+}
+
+bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command) const {
+    const QString& comment = command.getComment();
+
+    if (comment.isEmpty())
+        return false;
+
+    if (fileBoolSetting(MS::TipWipe::kDisableFeedrateScaling) &&
+        (comment.contains(Constants::PathModifierStrings::kForwardTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kReverseTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kAngledTipWipe) ||
+         comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe))) {
+        return true;
+    }
+
+    if (fileBoolSetting(MS::Slowdown::kDisableFeedrateScaling) &&
+        (comment.contains(Constants::PathModifierStrings::kSlowDown) ||
+         comment.contains(Constants::PathModifierStrings::kCoasting))) {
+        return true;
+    }
+
+    if (fileBoolSetting(MS::Startup::kDisableFeedrateScaling) &&
+        comment.contains(Constants::PathModifierStrings::kInitialStartup)) {
+        return true;
+    }
+
+    return fileBoolSetting(MS::SpiralLift::kDisableFeedrateScaling) &&
+           comment.contains(Constants::PathModifierStrings::kSpiralLift);
+}
+
+bool CommonParser::currentMotionDepositsMaterial() const {
+    return m_deposition_active && !m_current_gcode_command.getComment().contains(Constants::RegionTypeStrings::kTravel,
+                                                                                 Qt::CaseInsensitive);
+}
+
+void CommonParser::recordModalFeedrateForCommand(const GcodeCommand& command) {
+    if (m_has_modal_feedrate)
+        m_command_modal_feedrates.insert(command.getLineNumber(), m_modal_feedrate);
+}
+
+void CommonParser::setCommandFeedrate(QString& line, double feedrate) {
+    static const QRegularExpression feedrate_token(
+        "(^|[\\s,/*()])(F(?:[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?|#[A-Za-z0-9_]+))",
+        QRegularExpression::CaseInsensitiveOption);
+
+    int comment_start = line.size();
+    const QString comment_delimiter = getCommentStartDelimiter();
+    if (!comment_delimiter.isEmpty()) {
+        const int delimiter_index = line.indexOf(comment_delimiter);
+        if (delimiter_index >= 0)
+            comment_start = delimiter_index;
+    }
+
+    const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
+    const QString replacement = m_f_parameter % QString::number(feedrate, 'f', 4);
+    if (match.hasMatch()) {
+        line.replace(match.capturedStart(2), match.capturedLength(2), replacement);
+        return;
+    }
+
+    int insert_at = comment_start;
+    while (insert_at > 0 && line.at(insert_at - 1).isSpace())
+        --insert_at;
+    line.insert(insert_at, m_space % replacement);
+}
+
+bool CommonParser::commandFeedrate(const QString& line, double& feedrate) {
+    static const QRegularExpression feedrate_token("(^|[\\s,/*()])(F[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?)",
+                                                   QRegularExpression::CaseInsensitiveOption);
+
+    int comment_start = line.size();
+    const QString comment_delimiter = getCommentStartDelimiter();
+    if (!comment_delimiter.isEmpty()) {
+        const int delimiter_index = line.indexOf(comment_delimiter);
+        if (delimiter_index >= 0)
+            comment_start = delimiter_index;
+    }
+
+    const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
+    if (!match.hasMatch())
+        return false;
+
+    bool converted = false;
+    feedrate = match.captured(2).mid(1).toDouble(&converted);
+    return converted;
+}
+
+void CommonParser::materializeFeedrateTransitions(double modifier) {
+    bool emitted_feedrate_set = false;
+    double emitted_feedrate = 0.0;
+    auto explicit_feedrate = m_explicit_modal_feedrates.upperBound(m_last_layer_line_start);
+
+    for (GcodeCommand& command : m_motion_commands[m_current_layer]) {
+        while (explicit_feedrate != m_explicit_modal_feedrates.cend() &&
+               explicit_feedrate.key() < command.getLineNumber()) {
+            emitted_feedrate = explicit_feedrate.value();
+            emitted_feedrate_set = true;
+            ++explicit_feedrate;
+        }
+
+        if (command.getLineNumber() <= m_last_layer_line_start ||
+            !m_command_modal_feedrates.contains(command.getLineNumber())) {
+            continue;
+        }
+
+        const double original_feedrate = m_command_modal_feedrates.value(command.getLineNumber());
+        const double desired_feedrate =
+            original_feedrate * (feedrateScalingDisabledForCommand(command) ? 1.0 : modifier);
+        const bool has_explicit_feedrate = command.getParameters().contains(m_f_parameter.toLatin1());
+
+        if (!has_explicit_feedrate &&
+            (!emitted_feedrate_set || !qFuzzyCompare(emitted_feedrate + 1.0, desired_feedrate + 1.0))) {
+            setCommandFeedrate(m_lines[command.getLineNumber()], desired_feedrate);
+            command.addParameter(m_f_parameter.toLatin1(), original_feedrate * m_velocity_unit());
+        }
+
+        emitted_feedrate = desired_feedrate;
+        emitted_feedrate_set = true;
+
+        while (explicit_feedrate != m_explicit_modal_feedrates.cend() &&
+               explicit_feedrate.key() == command.getLineNumber()) {
+            ++explicit_feedrate;
+        }
+    }
 }
 
 // currently nothing of interest in header, so skip as long as line starts with
@@ -120,7 +495,7 @@ QHash<QString, double> CommonParser::parseFooter() {
                     // search for root when deciding whether or not to parse the setting
                     QHash<QString, QString>::const_iterator it = m_necessary_variables_copy.find(key_root);
                     if (it != m_necessary_variables_copy.end()) {
-                        double value = setting_split[1].toDouble();
+                        double value = parseFooterSettingValue(setting_split[1]);
                         if (Constants::GcodeFileVariables::kRequiredConversion.find(key_root) !=
                             Constants::GcodeFileVariables::kRequiredConversion.end()) {
                             m_file_settings.insert(it.value(), v.from(value, mm / s));
@@ -136,15 +511,6 @@ QHash<QString, double> CommonParser::parseFooter() {
                                 foundForcedMinLayerTime = true;
                             else if (key == Constants::GcodeFileVariables::kForceMinLayerTimeMethod)
                                 foundForcedMinLayerTimeMethod = true;
-
-                            if (key_root.toLower() == ES::MultiNozzle::kNozzleCount) {
-                                m_num_extruders = (int)value >= 1 ? (int)value : 1;
-                                for (int i = 0; i < m_num_extruders; ++i) {
-                                    m_extruders_on.push_back(false);
-                                    m_extruders_active.push_back(false);
-                                }
-                                m_extruders_active[0] = true;
-                            }
                         }
 
                         QString possible_other_key = it.value().toUpper();
@@ -176,26 +542,7 @@ QHash<QString, double> CommonParser::parseFooter() {
 
     checkAndSetNecessarySettings();
 
-    if (m_num_extruders == 0) {
-        m_num_extruders = 1;
-        for (int i = 0; i < m_num_extruders; ++i) {
-            m_extruders_on.push_back(false);
-            m_extruders_active.push_back(false);
-        }
-        m_extruders_active[0] = true;
-    }
-
-    // after parsing all nozzle offsets, group by extruder and put into vector
-    for (int i = 0; i < m_num_extruders; ++i) {
-        QString x_key = ES::MultiNozzle::kNozzleOffsetX + "_" + QString::number(i);
-        QString y_key = ES::MultiNozzle::kNozzleOffsetY + "_" + QString::number(i);
-        QString z_key = ES::MultiNozzle::kNozzleOffsetZ + "_" + QString::number(i);
-
-        double x = m_file_settings[x_key];
-        double y = m_file_settings[y_key];
-        double z = m_file_settings[z_key];
-        m_extruder_offsets.push_back(Point(x, y, z));
-    }
+    m_deposition_active = false;
 
     // return copy to gcode loader as several settings are required to calculate visualization
     return m_file_settings;
@@ -209,7 +556,9 @@ void CommonParser::checkAndSetNecessarySettings() {
         while (i.hasNext()) {
             i.next();
             QString currentVal = i.value();
-            if (currentVal == MS::Cooling::kForceMinLayerTime)
+            if (isDisableFeedrateScalingSetting(currentVal))
+                m_file_settings.insert(i.value(), (double)sb->setting<bool>(currentVal));
+            else if (currentVal == MS::Cooling::kForceMinLayerTime)
                 m_file_settings.insert(i.value(), (double)sb->setting<bool>(currentVal));
             else
                 m_file_settings.insert(i.value(), sb->setting<double>(currentVal));
@@ -221,6 +570,9 @@ void CommonParser::checkAndSetNecessarySettings() {
     MotionEstimation::w_table_speed = m_file_settings[PRS::MachineSpeed::kWTableSpeed];
     MotionEstimation::layerThickness = m_file_settings[PS::Layer::kLayerHeight];
     MotionEstimation::extrusionWidth = m_file_settings[PS::Layer::kBeadWidth];
+    MotionEstimation::initialLayerThickness = MotionEstimation::layerThickness;
+    MotionEstimation::layer0extrusionWidth = MotionEstimation::extrusionWidth;
+    MotionEstimation::setBeadGeometry(MotionEstimation::extrusionWidth, MotionEstimation::layerThickness);
 
     if (MotionEstimation::max_xy_speed == 0) {
         MotionEstimation::max_xy_speed = 25400;
@@ -237,7 +589,7 @@ void CommonParser::checkAndSetNecessarySettings() {
     }
 }
 
-void CommonParser::preallocateVisualCommands(int layerSkip) {
+void CommonParser::preallocateVisualCommands() {
     // iterate through file looking only for the number of layers and peeking at first char
     // to determine number of motion commands
     // this is to preallocate memory for later return for visualization
@@ -248,7 +600,6 @@ void CommonParser::preallocateVisualCommands(int layerSkip) {
     QRegExp digitExpression("\\d+");
     QRegularExpression gMotionCommand("^G0|^G1|^G2|^G3|^G5");
     m_current_layer = 0;
-    bool skip = false;
     for (int i = m_current_line; i < m_current_end_line; ++i) {
         // find layer total, only executed once
         if (yetToFindLayerCount && layerCountIdentifier.indexIn(m_upper_lines[i]) != -1) {
@@ -259,27 +610,17 @@ void CommonParser::preallocateVisualCommands(int layerSkip) {
         }
 
         if (m_upper_lines[i].length() > 0) {
-            if (skip) {
-                if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
-                    m_motion_commands.push_back(QList<GcodeCommand>());
-                    ++m_current_layer;
-                    skip = m_current_layer % layerSkip != 0;
-                }
+            // most common case, valid motion command
+            if (m_upper_lines[i].indexOf(gMotionCommand) == 0) {
+                commandsInLayer++;
             }
-            else {
-                // most common case, valid motion command
-                if (m_upper_lines[i].indexOf(gMotionCommand) == 0) {
-                    commandsInLayer++;
-                }
-                // lastly, when reaching a new layer or the final line, allocate memory
-                else if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
-                    QList<GcodeCommand> commands;
-                    commands.reserve(commandsInLayer);
-                    m_motion_commands.push_back(commands);
-                    commandsInLayer = 0;
-                    ++m_current_layer;
-                    skip = m_current_layer % layerSkip != 0;
-                }
+            // lastly, when reaching a new layer or the final line, allocate memory
+            else if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
+                QList<GcodeCommand> commands;
+                commands.reserve(commandsInLayer);
+                m_motion_commands.push_back(commands);
+                commandsInLayer = 0;
+                ++m_current_layer;
             }
         }
     }
@@ -292,29 +633,23 @@ void CommonParser::preallocateVisualCommands(int layerSkip) {
     m_current_layer = 0;
 }
 
-QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
+QList<QList<GcodeCommand>> CommonParser::parseLines() {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
-    preallocateVisualCommands(layerSkip);
+    preallocateVisualCommands();
 
     m_layer_start_lines.reserve(m_motion_commands.size());
     m_layer_start_lines.push_back(1);
 
-    QList<Time> extruder_times;
-    for (int i = 0; i < m_num_extruders; ++i)
-        extruder_times.push_back(Time());
-
-    m_layer_times.push_back(extruder_times);
+    m_layer_times.push_back(Time());
+    m_layer_dwell_adjustments.push_back(Time());
     m_layer_FR_modifiers.push_back(1.0);
     m_layer_G1F_times.push_back(Time());
     m_layer_volumes.push_back(Volume());
 
-    bool skip = false;
-    int actualLayer = 0;
-    QStringMatcher layerDelimiter(m_layer_delimiter);
-
     QString newCurrentLine, zOffsetString;
     double currentZOffset = sb->setting<Distance>(PRS::Dimensions::kZOffset).to(m_distance_unit);
     bool no_error;
+    int last_status_percent = -1;
 
     // parse each line
     for (; m_current_line <= m_current_end_line; ++m_current_line) {
@@ -353,17 +688,11 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
             continue;
         }
         else if (m_upper_lines[m_current_line].contains("EXTRUDER(0)")) {
-            for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-                if (m_extruders_active[i])
-                    m_extruders_on[i] = false;
-            }
+            m_deposition_active = false;
             continue;
         }
         else if (m_upper_lines[m_current_line].contains("EXTRUDER(")) {
-            for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-                if (m_extruders_active[i])
-                    m_extruders_on[i] = true;
-            }
+            m_deposition_active = true;
 
             int first = m_upper_lines[m_current_line].indexOf("(") + 1;
             int second = m_upper_lines[m_current_line].indexOf(")");
@@ -384,117 +713,101 @@ QList<QList<GcodeCommand>> CommonParser::parseLines(int layerSkip) {
             newCurrentLine = m_upper_lines[m_current_line];
         }
         if (!m_upper_lines[m_current_line].mid(0).trimmed().isEmpty()) {
-            if (skip) {
-                m_layer_skip_lines.insert(m_current_line);
-                if (layerDelimiter.indexIn(m_upper_lines[m_current_line]) != -1) {
-                    ++m_current_layer;
-                    skip = m_current_layer % layerSkip != 0;
+            parseCommand(newCurrentLine, m_current_line + m_insertions);
 
-                    QList<Time> extruder_times;
-                    for (int i = 0; i < m_num_extruders; ++i)
-                        extruder_times.push_back(Time());
+            // If a new layer has just started, check if previous layer needs to be adjusted
+            // to meet the minimum layer time
+            if (m_current_gcode_command.getCommandIsEndOfLayer() || m_current_line == m_current_end_line) {
+                bool layer_feedrate_adjusted = false;
+                if (m_file_settings[MS::Cooling::kForceMinLayerTime] && m_allow_layer_alter && m_current_layer > 0) {
+                    Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer];
+                    Time decreaseTime = m_layer_times[m_current_layer] - m_max_layer_time_allowed;
 
-                    m_layer_times.push_back(extruder_times);
-                    m_layer_FR_modifiers.push_back(1.0);
-                    m_layer_G1F_times.push_back(Time());
-                    m_layer_volumes.push_back(Volume());
+                    double minModifier = std::numeric_limits<double>::max();
+                    double maxModifier = 1;
+                    if (increaseTime > 0 || decreaseTime > 0)
+                        getMinMaxModifier(minModifier, maxModifier);
 
-                    m_layer_start_lines.push_back(m_current_line + 1);
-                }
-            }
-            else {
-                parseCommand(newCurrentLine, m_current_line + m_insertions);
+                    if (m_layer_G1F_times[m_current_layer] > 0) {
+                        if (increaseTime > 0) { // If layer time less than minimum, slow feedrate or add dwell
+                            if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
+                                // Ratio uses the layer time as well as the total time for all G1 F moves, which are
+                                // what get adjusted
+                                double ratio = (increaseTime / m_layer_G1F_times[m_current_layer])();
+                                double modifier = 1 / (1.0 + ratio);
 
-                // If a new layer has just started, check if previous layer needs to be adjusted
-                // to meet the minimum layer time
-                if (m_current_gcode_command.getCommandIsEndOfLayer() || m_current_line == m_current_end_line) {
-                    if (m_file_settings[MS::Cooling::kForceMinLayerTime] && m_allow_layer_alter &&
-                        m_current_layer > 0) {
-                        Time increaseTime = m_min_layer_time_allowed - m_layer_times[m_current_layer][m_current_nozzle];
-                        Time decreaseTime = m_layer_times[m_current_layer][m_current_nozzle] - m_max_layer_time_allowed;
-
-                        double minModifier = std::numeric_limits<double>::max();
-                        double maxModifier = 1;
-                        if (increaseTime > 0 || decreaseTime > 0)
-                            getMinMaxModifier(minModifier, maxModifier);
-
-                        if (m_layer_G1F_times[m_current_layer] > 0) {
-                            if (increaseTime > 0) { // If layer time less than minimum, slow feedrate or add dwell
-                                if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
-                                    // Ratio uses the layer time as well as the total time for all G1 F moves, which are
-                                    // what get adjusted
-                                    double ratio = (increaseTime / m_layer_G1F_times[m_current_layer])();
-                                    double modifier = 1 / (1.0 + ratio);
-
-                                    if (modifier < minModifier && minModifier > 0 && minModifier < 1) {
-                                        modifier = minModifier;
-                                        emit forwardInfoToMainWindow("Computed speed is lower than min machine speed, "
-                                                                     "machine min speed will be used");
-                                    }
-
-                                    if (modifier > 0 && modifier < 1) {
-                                        AdjustFeedrate(modifier);
-                                        m_was_modified = true;
-                                    }
+                                if (modifier < minModifier && minModifier > 0 && minModifier < 1) {
+                                    modifier = minModifier;
+                                    emit forwardInfoToMainWindow("Computed speed is lower than min machine speed, "
+                                                                 "machine min speed will be used");
                                 }
-                                else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
-                                    AddDwell(increaseTime());
+
+                                if (modifier > 0 && modifier < 1) {
+                                    AdjustFeedrate(modifier);
+                                    layer_feedrate_adjusted = true;
                                     m_was_modified = true;
                                 }
                             }
-                            else if (decreaseTime > 0) { // If layer time more than maximum, increase feedrate
-                                if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
-                                    // Ratio uses the layer time as well as the total time for all G1 F moves, which are
-                                    // what get adjusted
-                                    double ratio = (decreaseTime / m_layer_G1F_times[m_current_layer])();
-                                    double modifier = 1 / (1.0 - ratio);
+                            else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
+                                AddDwell(increaseTime());
+                                m_was_modified = true;
+                            }
+                        }
+                        else if (decreaseTime > 0) { // If layer time more than maximum, increase feedrate
+                            if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
+                                // Ratio uses the layer time as well as the total time for all G1 F moves, which are
+                                // what get adjusted
+                                double ratio = (decreaseTime / m_layer_G1F_times[m_current_layer])();
+                                double modifier = 1 / (1.0 - ratio);
 
-                                    if (modifier > maxModifier && maxModifier > 1) {
-                                        modifier = maxModifier;
-                                        emit forwardInfoToMainWindow(
-                                            "Computed speed exceeds max machine speed, machine max speed will be used");
-                                    }
-
-                                    if (modifier > 1) {
-                                        AdjustFeedrate(modifier);
-                                        m_was_modified = true;
-                                    }
-                                }
-                                else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
+                                if (modifier > maxModifier && maxModifier > 1) {
+                                    modifier = maxModifier;
                                     emit forwardInfoToMainWindow(
-                                        "Add dwell time method was selected, can not modify layer times");
+                                        "Computed speed exceeds max machine speed, machine max speed will be used");
                                 }
+
+                                if (modifier > 1) {
+                                    AdjustFeedrate(modifier);
+                                    layer_feedrate_adjusted = true;
+                                    m_was_modified = true;
+                                }
+                            }
+                            else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
+                                emit forwardInfoToMainWindow(
+                                    "Add dwell time method was selected, can not modify layer times");
                             }
                         }
                     }
-
-                    if (m_current_line == m_current_end_line)
-                        break;
-
-                    m_last_layer_line_start = m_current_line;
-                    //++actualLayer;
-                    ++m_current_layer;
-                    if (m_current_layer <= 1 || layerSkip == 1)
-                        skip = false;
-                    else
-                        skip = m_current_layer % layerSkip != 0;
-
-                    // add empty slots to arrays for this layer
-                    QList<Time> extruder_times;
-                    for (int i = 0; i < m_num_extruders; ++i)
-                        extruder_times.push_back(Time());
-
-                    m_layer_times.push_back(extruder_times);
-                    m_layer_FR_modifiers.push_back(1.0);
-                    m_layer_G1F_times.push_back(Time());
-                    m_layer_volumes.push_back(Volume());
-
-                    m_layer_start_lines.push_back(m_current_line + 1);
                 }
+
+                if (!layer_feedrate_adjusted && m_was_modified && m_allow_layer_alter && m_current_layer > 0 &&
+                    m_file_settings[MS::Cooling::kForceMinLayerTime] &&
+                    m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
+                    materializeFeedrateTransitions(1.0);
+                }
+
+                if (m_current_line == m_current_end_line)
+                    break;
+
+                m_last_layer_line_start = m_current_line;
+                ++m_current_layer;
+
+                // add empty slots to arrays for this layer
+                m_layer_times.push_back(Time());
+                m_layer_dwell_adjustments.push_back(Time());
+                m_layer_FR_modifiers.push_back(1.0);
+                m_layer_G1F_times.push_back(Time());
+                m_layer_volumes.push_back(Volume());
+                MotionEstimation::resetBeadHeight();
+
+                m_layer_start_lines.push_back(m_current_line + 1);
             }
 
-            emit statusUpdate(StatusUpdateStepType::kGcodeParsing,
-                              qRound((double)(m_current_line + 1) / (double)(m_current_end_line + 1) * 100));
+            const int status_percent = qRound((double)(m_current_line + 1) / (double)(m_current_end_line + 1) * 100);
+            if (status_percent != last_status_percent) {
+                emit statusUpdate(StatusUpdateStepType::kGcodeParsing, status_percent);
+                last_status_percent = status_percent;
+            }
         }
 
         if (m_should_cancel)
@@ -578,7 +891,7 @@ void CommonParser::reset() {
 
     m_current_spindle_speed = 0.0 * m_angle_unit / m_time_unit;
 
-    m_current_extruders_speed = 0.0;
+    m_current_extruder_speed = 0.0;
 
     // all machines, except for BAAM, use a constant acceleration that is not set through the Slicer in any way
     // So don't reset to 0 here and leave it to the default acceleration set in the constructor
@@ -588,15 +901,74 @@ void CommonParser::reset() {
     m_purge_time = 0 * m_time_unit;
     m_wait_to_wipe_time = 0 * m_time_unit;
     m_wait_time_to_start_purge = 0 * m_time_unit;
+    m_travel_time = 0 * m_time_unit;
 
-    for (int i = 0; i < m_num_extruders; ++i)
-        m_extruders_on[i] = false;
-    //        m_extruder_ON                 = false;
+    m_deposition_active = false;
     m_dynamic_spindle_control = false;
     m_park = false;
+    m_with_F_value = false;
+    m_modal_feedrate = 0.0;
+    m_has_modal_feedrate = false;
+    m_command_modal_feedrates.clear();
+    m_explicit_modal_feedrates.clear();
+    m_command_G1F_times.clear();
+    m_layer_dwell_adjustments.clear();
 }
 
-QList<QList<Time>> CommonParser::getLayerTimes() { return m_layer_times; }
+QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
+
+QList<Time> CommonParser::getAdjustedLayerTimes() {
+    QList<Time> adjusted_layer_times = m_layer_times;
+    for (int layer = 0; layer < adjusted_layer_times.size() && layer < m_layer_dwell_adjustments.size(); ++layer) {
+        adjusted_layer_times[layer] += m_layer_dwell_adjustments[layer];
+    }
+
+    const bool has_adjusted_feedrates = std::any_of(m_layer_FR_modifiers.cbegin(), m_layer_FR_modifiers.cend(),
+                                                    [](double modifier) { return modifier > 0 && modifier != 1.0; });
+    if (!has_adjusted_feedrates)
+        return adjusted_layer_times;
+
+    bool emitted_feedrate_set = false;
+    double emitted_feedrate = 0.0;
+    auto explicit_feedrate = m_explicit_modal_feedrates.cbegin();
+
+    for (int layer = 0; layer < m_motion_commands.size() && layer < adjusted_layer_times.size(); ++layer) {
+        for (const GcodeCommand& command : m_motion_commands[layer]) {
+            const int line_number = command.getLineNumber();
+            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() < line_number) {
+                emitted_feedrate = explicit_feedrate.value();
+                emitted_feedrate_set = true;
+                ++explicit_feedrate;
+            }
+
+            const double original_feedrate = m_command_modal_feedrates.value(line_number, 0.0);
+            double explicit_command_feedrate = 0.0;
+            if (line_number >= 0 && line_number < m_lines.size() &&
+                commandFeedrate(m_lines[line_number], explicit_command_feedrate)) {
+                emitted_feedrate = explicit_command_feedrate;
+                emitted_feedrate_set = true;
+            }
+            else if (command.getParameters().contains(m_f_parameter.toLatin1()) && original_feedrate > 0) {
+                // Macro feedrates such as F#981 cannot be read back numerically, but their authored value was
+                // resolved while parsing and remains unchanged unless setCommandFeedrate replaced the token.
+                emitted_feedrate = original_feedrate;
+                emitted_feedrate_set = true;
+            }
+
+            const Time command_adjustable_time = m_command_G1F_times.value(line_number);
+            if (command_adjustable_time > 0 && original_feedrate > 0 && emitted_feedrate_set && emitted_feedrate > 0) {
+                const double effective_modifier = emitted_feedrate / original_feedrate;
+                adjusted_layer_times[layer] += command_adjustable_time / effective_modifier - command_adjustable_time;
+            }
+
+            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() == line_number) {
+                ++explicit_feedrate;
+            }
+        }
+    }
+
+    return adjusted_layer_times;
+}
 
 QList<double> CommonParser::getLayerFeedRateModifiers() { return m_layer_FR_modifiers; }
 
@@ -608,19 +980,31 @@ Distance CommonParser::getPrintingDistance() { return MotionEstimation::m_printi
 
 Distance CommonParser::getTravelDistance() { return MotionEstimation::m_travel_distance; }
 
+Time CommonParser::getTravelTime() { return m_travel_time; }
+
 bool CommonParser::getWasModified() { return m_was_modified; }
 
 void CommonParser::cancelSlice() { m_should_cancel = true; }
 
 QList<int> CommonParser::getLayerStartLines() { return m_layer_start_lines; }
 
-QSet<int> CommonParser::getLayerSkipLines() { return m_layer_skip_lines; }
-
 int CommonParser::getCurrentLine() { return m_current_line; }
 
 void CommonParser::alterCurrentEndLine(int count) { m_current_end_line += count; }
 
 void CommonParser::setModified() { m_was_modified = true; }
+
+void CommonParser::recordMotionEstimate(Distance distance, Time time_delta) {
+    MotionEstimation::m_total_distance += distance;
+
+    if (currentMotionDepositsMaterial()) {
+        MotionEstimation::m_printing_distance += distance;
+    }
+    else {
+        MotionEstimation::m_travel_distance += distance;
+        m_travel_time += time_delta;
+    }
+}
 
 void CommonParser::setXPos(NT value) { MotionEstimation::m_current_x = value; }
 
@@ -731,28 +1115,16 @@ void CommonParser::G0Handler(QVector<QString> params) {
                 break;
         }
     }
-
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
     if (is_motion_command) {
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
     }
 
+    const Time layer_time_before = m_layer_times[m_current_layer];
     Distance temp = getCurrentGXDistance();
-    MotionEstimation::m_total_distance += temp;
-
-    bool isPrinting = false;
-    for (int i = 0; i < m_extruders_on.size(); i++) {
-        if (m_extruders_on[i]) {
-            MotionEstimation::m_printing_distance += temp;
-            isPrinting = true;
-            break;
-        }
-    }
-    if (!isPrinting)
-        MotionEstimation::m_travel_distance += temp;
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G1Handler(QVector<QString> params) {
@@ -838,6 +1210,8 @@ void CommonParser::G1Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = current_value;
+                    m_has_modal_feedrate = true;
                     current_value *= m_velocity_unit();
                     setSpeed(current_value);
                     f_not_used = false;
@@ -879,6 +1253,18 @@ void CommonParser::G1Handler(QVector<QString> params) {
             case ('l'):
                 break;
 
+            case ('I'):
+            case ('i'):
+                break;
+
+            case ('J'):
+            case ('j'):
+                break;
+
+            case ('K'):
+            case ('k'):
+                break;
+
             case ('A'):
             case ('a'):
             case ('B'):
@@ -889,15 +1275,15 @@ void CommonParser::G1Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -917,32 +1303,23 @@ void CommonParser::G1Handler(QVector<QString> params) {
         }
         m_current_gcode_command.addParameter(current_parameter, current_value);
     }
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
 
     if (is_motion_command) {
+        recordModalFeedrateForCommand(m_current_gcode_command);
         m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
     }
 
-    m_with_F_value = m_current_spindle_speed != 0;
+    m_with_F_value =
+        is_motion_command && m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
+    const Time layer_time_before = m_layer_times[m_current_layer];
     Distance temp = getCurrentGXDistance();
-    MotionEstimation::m_total_distance += temp;
-
-    bool isPrinting = false;
-    for (int i = 0; i < m_extruders_on.size(); i++) {
-        if (m_extruders_on[i]) {
-            MotionEstimation::m_printing_distance += temp;
-            isPrinting = true;
-            break;
-        }
-    }
-    if (!isPrinting)
-        MotionEstimation::m_travel_distance += temp;
-
-    m_with_F_value = false;
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G1HandlerHelper(QVector<QString> params, QVector<QString> optionalParams) {
@@ -972,7 +1349,10 @@ void CommonParser::G2Handler(QVector<QString> params) {
 
     char current_parameter;
     NT current_value;
-    NT temp_x = getXPos(), temp_y = getYPos(), temp_z = getZPos();
+    const Distance start_x = MotionEstimation::m_current_x;
+    const Distance start_y = MotionEstimation::m_current_y;
+    const Distance start_z = MotionEstimation::m_current_z;
+    NT temp_x = start_x(), temp_y = start_y(), temp_z = start_z();
     bool no_error, x_not_used = true, y_not_used = true, z_not_used = true, i_not_used = true, j_not_used = true,
                    k_not_used = true, f_not_used = true, s_not_used = true, w_not_used = true, e_not_used = true,
                    r_not_used = true;
@@ -986,7 +1366,11 @@ void CommonParser::G2Handler(QVector<QString> params) {
             throwFloatConversionErrorException();
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1026,6 +1410,8 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1037,7 +1423,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('I'):
             case ('i'):
                 if (i_not_used) {
-                    setArcXPos(getXPos() + current_value);
+                    setArcXPos(start_x() + current_value);
                     i_not_used = false;
                 }
                 else {
@@ -1048,7 +1434,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('J'):
             case ('j'):
                 if (j_not_used) {
-                    setArcYPos(getYPos() + current_value);
+                    setArcYPos(start_y() + current_value);
                     j_not_used = false;
                 }
                 else {
@@ -1059,7 +1445,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('K'):
             case ('k'):
                 if (k_not_used) {
-                    setArcZPos(getZPos() + current_value);
+                    setArcZPos(start_z() + current_value);
                     k_not_used = false;
                 }
                 else {
@@ -1103,15 +1489,15 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -1129,15 +1515,15 @@ void CommonParser::G2Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
-
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
-    // TODO: Need this to be 2/3 and the associated thing.
     if (x_not_used || y_not_used) {
         QString exceptionString;
         QTextStream(&exceptionString) << "Error not all required parameters passed for GCode command "
@@ -1148,6 +1534,13 @@ void CommonParser::G2Handler(QVector<QString> params) {
     }
     setXPos(temp_x);
     setYPos(temp_y);
+    setZPos(temp_z);
+
+    m_with_F_value = m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    const Time layer_time_before = m_layer_times[m_current_layer];
+    Distance temp = getCurrentArcDistance(start_x, start_y, start_z, !i_not_used, !j_not_used, !r_not_used, false);
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G3Handler(QVector<QString> params) {
@@ -1162,7 +1555,10 @@ void CommonParser::G3Handler(QVector<QString> params) {
 
     char current_parameter;
     NT current_value;
-    NT temp_x = getXPos(), temp_y = getYPos(), temp_z = getZPos();
+    const Distance start_x = MotionEstimation::m_current_x;
+    const Distance start_y = MotionEstimation::m_current_y;
+    const Distance start_z = MotionEstimation::m_current_z;
+    NT temp_x = start_x(), temp_y = start_y(), temp_z = start_z();
     bool no_error, x_not_used = true, y_not_used = true, z_not_used = true, i_not_used = true, j_not_used = true,
                    k_not_used = true, f_not_used = true, s_not_used = true, w_not_used = true, e_not_used = true,
                    r_not_used = true;
@@ -1179,7 +1575,11 @@ void CommonParser::G3Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1219,6 +1619,8 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1230,7 +1632,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('I'):
             case ('i'):
                 if (i_not_used) {
-                    setArcXPos(getXPos() + current_value);
+                    setArcXPos(start_x() + current_value);
                     i_not_used = false;
                 }
                 else {
@@ -1241,7 +1643,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('J'):
             case ('j'):
                 if (j_not_used) {
-                    setArcYPos(getYPos() + current_value);
+                    setArcYPos(start_y() + current_value);
                     j_not_used = false;
                 }
                 else {
@@ -1252,7 +1654,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('K'):
             case ('k'):
                 if (k_not_used) {
-                    setArcZPos(getZPos() + current_value);
+                    setArcZPos(start_z() + current_value);
                     k_not_used = false;
                 }
                 else {
@@ -1296,15 +1698,15 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -1322,16 +1724,15 @@ void CommonParser::G3Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
-
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Checks if all required paramters have been used
-    // TODO: Need this to be 2/3 and the associated thing.
-    // TODO: Need to add logic for Z.
     int num_not_used = 0;
     num_not_used += x_not_used + y_not_used + z_not_used;
     if (num_not_used > 1) {
@@ -1349,6 +1750,12 @@ void CommonParser::G3Handler(QVector<QString> params) {
     setXPos(temp_x);
     setYPos(temp_y);
     setZPos(temp_z);
+
+    m_with_F_value = m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
+
+    const Time layer_time_before = m_layer_times[m_current_layer];
+    Distance temp = getCurrentArcDistance(start_x, start_y, start_z, !i_not_used, !j_not_used, !r_not_used, true);
+    recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
 void CommonParser::G4Handler(QVector<QString> params) {
@@ -1435,7 +1842,7 @@ void CommonParser::G4Handler(QVector<QString> params) {
                                       << "With GCode command string: " << getCurrentCommandString();
         throw IllegalParameterException(exceptionString);
     }
-    m_layer_times[m_current_layer][m_current_nozzle] += m_current_gcode_command.getParameters()['P'];
+    m_layer_times[m_current_layer] += m_current_gcode_command.getParameters()['P'];
 }
 
 void CommonParser::G5Handler(QVector<QString> params) {
@@ -1466,7 +1873,11 @@ void CommonParser::G5Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-        current_value *= m_distance_unit();
+        const NT authored_value = current_value;
+        if (current_parameter == 'F' || current_parameter == 'f')
+            current_value *= m_velocity_unit();
+        else
+            current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
         switch (current_parameter) {
@@ -1503,6 +1914,8 @@ void CommonParser::G5Handler(QVector<QString> params) {
             case ('F'):
             case ('f'):
                 if (f_not_used) {
+                    m_modal_feedrate = authored_value;
+                    m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
@@ -1577,15 +1990,15 @@ void CommonParser::G5Handler(QVector<QString> params) {
                     current_value *= m_distance_unit();
                     if (m_e_absolute) {
                         if (current_value > MotionEstimation::m_previous_e)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     else {
                         if (current_value > 0)
-                            turnOnActiveExtruders();
+                            setDepositionActive(true);
                         else
-                            turnOffActiveExtruders();
+                            setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
                     e_not_used = false;
@@ -1603,11 +2016,12 @@ void CommonParser::G5Handler(QVector<QString> params) {
                 throw IllegalParameterException(exceptionString);
         }
     }
+    m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
+    m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    m_current_gcode_command.setExtrudersOn(m_extruders_on);
-    m_current_gcode_command.setExtruderOffsets(m_extruder_offsets);
-    m_current_gcode_command.setExtrudersSpeed(m_current_extruders_speed);
-
+    if (!f_not_used)
+        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
     // Enforce XYIJPQ required parameters
@@ -1630,32 +2044,29 @@ void CommonParser::M3Handler(QVector<QString> params) {
     for (QString ref : params) {
         current_parameter = ref.at(0).toLatin1();
         if (current_parameter == 'S' || current_parameter == 's') {
-            m_current_extruders_speed = ref.right(ref.size() - 1).toDouble(&no_error);
+            m_current_extruder_speed = ref.right(ref.size() - 1).toDouble(&no_error);
 
             if (!no_error)
-                m_current_extruders_speed = 0;
+                m_current_extruder_speed = 0;
 
-            setSpindleSpeed(m_current_extruders_speed * m_angular_velocity_unit());
+            setSpindleSpeed(m_current_extruder_speed * m_angular_velocity_unit());
         }
     }
 
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = true;
-    }
+    m_deposition_active = true;
 }
 
 void CommonParser::M5Handler(QVector<QString> params) {
-    m_current_spindle_speed = m_current_extruders_speed = 0;
-    for (int i = 0, end = m_extruders_on.size(); i < end; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = false;
-    }
+    m_current_spindle_speed = m_current_extruder_speed = 0;
+    m_deposition_active = false;
 }
 
 void CommonParser::AddDwell(double dwellTime) {
     int insertIndex = m_current_line - 1 + m_insertions;
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
+    if (m_current_layer >= 0 && m_current_layer < m_layer_dwell_adjustments.size()) {
+        m_layer_dwell_adjustments[m_current_layer] += Time(dwellTime);
+    }
 
     if (sb->setting<bool>(MS::Purge::kEnablePurgeDwell)) {
         QString rv;
@@ -1674,7 +2085,7 @@ void CommonParser::AddDwell(double dwellTime) {
         double purgeTime = sb->setting<double>(MS::Purge::kPurgeDwellDuration);
         double purgeLength;
         double purgeRate;
-        if (sb->setting<int>(PRS::MachineSetup::kMachineType) == 1) {
+        if (sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFilament) {
             double purgeLength = sb->setting<double>(MS::Purge::kPurgeLength);
             double purgeRate = sb->setting<double>(MS::Purge::kPurgeFeedrate);
             new_dwellTime = dwellTime - purgeLength / purgeRate;
@@ -1684,7 +2095,7 @@ void CommonParser::AddDwell(double dwellTime) {
         }
 
         // Purge
-        if (sb->setting<int>(PRS::MachineSetup::kMachineType) == 1) {
+        if (sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFilament) {
             MotionEstimation::m_previous_e += sb->setting<Distance>(MS::Purge::kPurgeLength);
             if (sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv = "G1 F" % QString::number(sb->setting<Velocity>(MS::Purge::kPurgeFeedrate).to(m_velocity_unit)) %
@@ -1714,11 +2125,10 @@ void CommonParser::AddDwell(double dwellTime) {
                  m_g4_comment % getCommentEndDelimiter();
             m_lines.insert(insertIndex, rv);
             ++m_insertions;
-            // insertIndex++;
         }
 
         // Move to purge location
-        if (sb->setting<int>(PRS::MachineSetup::kSyntax) == 1) {
+        if (sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax) == GcodeSyntax::kCincinnati) {
             rv = "M68" % m_space % getCommentStartDelimiter() % "PARK" % getCommentEndDelimiter();
             m_lines.insert(insertIndex, rv);
             ++m_insertions;
@@ -1777,24 +2187,22 @@ void CommonParser::getMinMaxModifier(double& minModifier, double& maxModifier) {
         double maxFeedRate = 1;
         double minFeedRate = minModifier;
 
-        QList<GcodeCommand>::iterator current_layer_motion_end = m_motion_commands[m_current_layer].end();
-        --current_layer_motion_end;
-
-        QList<GcodeCommand>::const_iterator current_layer_motion_begin = m_motion_commands[m_current_layer].begin();
-        --current_layer_motion_begin;
-
-        while (current_layer_motion_end != current_layer_motion_begin &&
-               current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
-            auto parameters = current_layer_motion_end->getParameters();
-            if (parameters.contains(m_f_parameter.toLatin1())) {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
-                QRegularExpressionMatch myMatch = m_f_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-
-                minFeedRate = std::min(minFeedRate, value);
-                maxFeedRate = std::max(maxFeedRate, value);
+        for (const GcodeCommand& command : m_motion_commands[m_current_layer]) {
+            if (command.getLineNumber() <= m_last_layer_line_start || feedrateScalingDisabledForCommand(command)) {
+                continue;
             }
-            --current_layer_motion_end;
+
+            double value = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
+            if (value <= 0 && command.getParameters().contains(m_f_parameter.toLatin1())) {
+                const QRegularExpressionMatch match = m_f_param_and_value.match(m_lines[command.getLineNumber()]);
+                if (match.hasMatch())
+                    value = match.captured().mid(1).toDouble();
+            }
+            if (value <= 0)
+                continue;
+
+            minFeedRate = std::min(minFeedRate, value);
+            maxFeedRate = std::max(maxFeedRate, value);
         }
 
         Velocity velocity;
@@ -1809,22 +2217,20 @@ void CommonParser::AdjustFeedrate(double modifier) {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
     if (m_motion_commands[m_current_layer].size() > 0) {
         m_layer_FR_modifiers[m_current_layer] = modifier;
+        materializeFeedrateTransitions(modifier);
 
-        QList<GcodeCommand>::iterator current_layer_motion_end = m_motion_commands[m_current_layer].end();
-        --current_layer_motion_end;
+        for (GcodeCommand& command : m_motion_commands[m_current_layer]) {
+            if (command.getLineNumber() <= m_last_layer_line_start || feedrateScalingDisabledForCommand(command)) {
+                continue;
+            }
 
-        QList<GcodeCommand>::const_iterator current_layer_motion_begin = m_motion_commands[m_current_layer].begin();
-        --current_layer_motion_begin;
-
-        while (current_layer_motion_end != current_layer_motion_begin &&
-               current_layer_motion_end->getLineNumber() > m_last_layer_line_start) {
             double tempModifier = modifier;
-            auto parameters = current_layer_motion_end->getParameters();
+            auto parameters = command.getParameters();
             if (parameters.contains(m_q_parameter.toLatin1()) &&
-                current_layer_motion_end->getCommandID() != 5) // G5 also used the Q param, so spline are not supported
-                                                               // by syntaxes that use it for spindle control
+                command.getCommandID() != 5) // G5 also used the Q param, so spline are not supported
+                                             // by syntaxes that use it for spindle control
             {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
+                QString& line = m_lines[command.getLineNumber()];
                 QRegularExpressionMatch myMatch = m_q_param_and_value.match(line);
                 double value = myMatch.captured().mid(1).toDouble();
                 double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
@@ -1847,12 +2253,11 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 line = line.left(myMatch.capturedStart()) % m_q_parameter %
                        QString::number(value * tempModifier * extruderModifier, 'f', 4) %
                        line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_q_parameter.toLatin1(),
-                                                       parameters[m_q_parameter.toLatin1()] * tempModifier);
+                command.addParameter(m_q_parameter.toLatin1(), parameters[m_q_parameter.toLatin1()] * tempModifier);
             }
             if (parameters.contains(m_s_parameter.toLatin1()) &&
                 !sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
+                QString& line = m_lines[command.getLineNumber()];
                 QRegularExpressionMatch myMatch = m_s_param_and_value.match(line);
                 double value = myMatch.captured().mid(1).toDouble();
                 double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
@@ -1875,12 +2280,12 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 line = line.left(myMatch.capturedStart()) % m_s_parameter %
                        QString::number(value * tempModifier * extruderModifier, 'f', 4) %
                        line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_s_parameter.toLatin1(),
-                                                       parameters[m_s_parameter.toLatin1()] * tempModifier);
+                command.addParameter(m_s_parameter.toLatin1(), parameters[m_s_parameter.toLatin1()] * tempModifier);
             }
             if (parameters.contains(m_f_parameter.toLatin1())) {
-                if (sb->setting<int>(MS::Extruder::kEnableM3S)) {
-                    int cmd_index = current_layer_motion_end->getLineNumber() - 1;
+                if (sb->setting<int>(MS::Extruder::kEnableM3S) ||
+                    sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax) == GcodeSyntax::kIngersoll) {
+                    int cmd_index = command.getLineNumber() - 1;
                     QString& line = m_lines[cmd_index];
 
                     if (line.startsWith("M3 ")) {
@@ -1918,17 +2323,63 @@ void CommonParser::AdjustFeedrate(double modifier) {
                             m_lines.removeAt(cmd_index);
                         }
                     }
+                    else if (line.startsWith("EXTRUDER(")) {
+                        // Handle the case where the line starts with "EXTRUDER("
+                        static const QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
+                        const QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
+                        double extruderValue = 0.0; // Default value if no match is found
+                        if (extruderMatch.hasMatch()) {
+                            const double extruderValue = extruderMatch.captured(1).toDouble();
+                            if (extruderValue != 0.0) {
+                                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+
+                                // If slowing down, the multiplier for the extruder should be the inverse of the scale
+                                // factor
+                                if (modifier < 1) {
+                                    extruderModifier = 1 / extruderModifier;
+                                    if (extruderValue > 0 &&
+                                        extruderValue * modifier * extruderModifier <
+                                            sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed)) {
+                                        tempModifier =
+                                            modifier * (sb->setting<double>(PRS::MachineSpeed::kMinExtruderSpeed) /
+                                                        (extruderValue * modifier * extruderModifier));
+                                    }
+                                }
+                                else {
+                                    if (extruderValue > 0 &&
+                                        extruderValue * modifier * extruderModifier >
+                                            sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed)) {
+                                        tempModifier =
+                                            modifier * (sb->setting<double>(PRS::MachineSpeed::kMaxExtruderSpeed) /
+                                                        (extruderValue * modifier * extruderModifier));
+                                    }
+                                }
+
+                                const QString modifiedLine =
+                                    line.left(extruderMatch.capturedStart()) % "EXTRUDER(" %
+                                    QString::number(extruderValue * tempModifier * extruderModifier, 'f', 4) % ")" %
+                                    line.mid(extruderMatch.capturedEnd());
+
+                                m_lines.insert(cmd_index + 1, modifiedLine);
+                                m_lines.removeAt(cmd_index);
+                            }
+                        }
+                    }
                 }
 
-                QString& line = m_lines[current_layer_motion_end->getLineNumber()];
-                QRegularExpressionMatch myMatch = m_f_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-                line = line.left(myMatch.capturedStart()) % m_f_parameter %
-                       QString::number(value * tempModifier, 'f', 4) % line.mid(myMatch.capturedEnd());
-                current_layer_motion_end->addParameter(m_f_parameter.toLatin1(),
-                                                       parameters[m_f_parameter.toLatin1()] * tempModifier);
+                QString& line = m_lines[command.getLineNumber()];
+                double value = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
+                if (value <= 0) {
+                    const QRegularExpressionMatch match = m_f_param_and_value.match(line);
+                    if (match.hasMatch())
+                        value = match.captured().mid(1).toDouble();
+                }
+                if (value <= 0)
+                    continue;
+
+                setCommandFeedrate(line, value * tempModifier);
+                command.addParameter(m_f_parameter.toLatin1(), parameters[m_f_parameter.toLatin1()] * tempModifier);
             }
-            --current_layer_motion_end;
         }
     }
 }
@@ -2001,17 +2452,5 @@ void CommonParser::throwIntegerConversionErrorException() {
     throw IllegalParameterException(exceptionString);
 }
 
-void CommonParser::turnOnActiveExtruders() {
-    for (int i = 0; i < m_num_extruders; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = true;
-    }
-}
-
-void CommonParser::turnOffActiveExtruders() {
-    for (int i = 0; i < m_num_extruders; ++i) {
-        if (m_extruders_active[i])
-            m_extruders_on[i] = false;
-    }
-}
+void CommonParser::setDepositionActive(bool on) { m_deposition_active = on; }
 } // namespace ORNL

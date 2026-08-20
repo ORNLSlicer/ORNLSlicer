@@ -73,7 +73,7 @@ CubeObject::CubeObject(BaseView* view, float length, float width, float height, 
           // Back
           0.75, 0.666, 1, 0.666, 0.75, 0.333, 1, 0.666, 1, 0.333, 0.75, 0.333};
 
-    ShapeFactory::createRectangle(m_length, m_width, m_height, QMatrix4x4(), color, vertices, colors, normals);
+    ShapeFactory::appendBox(m_length, m_width, m_height, QMatrix4x4(), color, vertices, colors, normals);
 
     this->populateGL(view, vertices, normals, colors, render_mode, uv, result);
 }

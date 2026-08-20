@@ -4,7 +4,6 @@
 #include <qsharedpointer.h>
 
 #include "part/part.h"
-#include "slicing/buffered_slicer.h"
 #include "step/layer/layer.h"
 
 namespace ORNL {
@@ -35,16 +34,5 @@ void addThermalScan(QSharedPointer<Layer> layer);
 //! \param output_path: the ouput dir of the scan file
 void addLaserScan(QSharedPointer<Part> part, int layer_index, double running_total, QSharedPointer<Step> build_layer,
                   QDir output_path);
-
-//! \brief adds appropriate islands (wirefeed/polymer) for wire feeding
-//! \param layer: the layer to add islands to
-//! \param next_layer_meta: meta for associated layer
-//! \param new_islands: whether to create new islands or replace existing ones
-void createWireFeedIslands(QSharedPointer<Layer> layer, QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
-                           bool new_islands);
-
-//! \brief adds a set of anchors to a layer (for wirefeed)
-//! \param layer: the layer to add anchors to
-void addAnchors(QSharedPointer<Layer> layer);
 } // namespace LayerAdditions
 } // namespace ORNL

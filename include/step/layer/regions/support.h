@@ -11,7 +11,6 @@
 #include "geometry/point.h"
 #include "geometry/polyline.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 
@@ -28,16 +27,13 @@ class Support : public RegionBase {
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
     //! \brief Computes the support region.
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync) override;
+    void compute(uint layer_num) override;
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number
-    //! \param innerMostClosedContour: used for subsequent path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param current_location: most recent location
     //! \param shouldNextPathBeCCW: state as to CW or CCW of previous path for use with additional DOF
-    void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                  QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) override;
+    void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) override;
 
     //! \brief Creates paths for the support region.
     //! \param line: polyline representing path
@@ -48,8 +44,7 @@ class Support : public RegionBase {
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
-    //! \param innerMostClosedContour used for Prestarts (currently only skins/infill)
-    void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) override;
+    void calculateModifiers(Path& path, bool supportsG3) override;
 
     //! \brief Computes the support infill region
     void computeLine(Distance line_spacing, Angle rotation = 0 * deg);
@@ -58,6 +53,9 @@ class Support : public RegionBase {
     //! \brief Holds the computed geometry before it is converted into paths
     //! Vector of vector used to separate perimeter geometry from infill geometry
     QVector<Polyline> m_computed_perimeter_geometry;
-    QVector<Polyline> m_computed_infill_geometry;
+    //! Each entry is an independently linkable hatch direction.  Keeping grid
+    //! directions separate prevents intentional perpendicular lines from
+    //! blocking safe serpentine connectors.
+    QVector<QVector<Polyline>> m_computed_infill_geometry;
 };
 } // namespace ORNL

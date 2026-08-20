@@ -15,7 +15,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -25,7 +24,7 @@
 namespace ORNL {
 Infill::Infill(const QSharedPointer<SettingsBase>& sb, const int index,
                const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, index, settings_polygons) {
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kInfill) {
     // NOP
 }
 
@@ -43,13 +42,14 @@ QString Infill::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void Infill::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void Infill::compute(uint layer_num) {
     m_layer_num = layer_num;
 
     m_paths.clear();
 
-    // keep around unaltered m_geometry for later connections for travels
-    m_geometry_copy = m_geometry.offset(m_sb->setting<Distance>(PS::Infill::kOverlap));
+    // Keep around the overlapped geometry for later connections/travels.
+    const Distance overlap = m_sb->setting<Distance>(PS::Infill::kOverlap);
+    m_geometry_copy = m_geometry.offset(overlap);
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kInfillNum));
 
@@ -113,11 +113,17 @@ void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBas
                 adjustedGeometry, default_line_spacing, default_angle, default_global_printer_area, min, max));
             break;
         case InfillPatterns::kGrid:
-            m_computed_geometry.append(PatternGenerator::GenerateGrid(
+            // Keep the two grid directions in separate optimization groups.
+            // Otherwise each direction is treated as an obstacle to linking
+            // neighboring lines in the other direction, producing a travel for
+            // almost every grid segment.
+            m_computed_geometry.append(PatternGenerator::GenerateLines(
                 adjustedGeometry, default_line_spacing, default_angle, default_global_printer_area, min, max));
+            m_computed_geometry.append(PatternGenerator::GenerateLines(adjustedGeometry, default_line_spacing,
+                                                                       default_angle + 90 * deg,
+                                                                       default_global_printer_area, min, max));
             break;
         case InfillPatterns::kConcentric:
-        case InfillPatterns::kInsideOutConcentric:
             m_computed_geometry.append(
                 PatternGenerator::GenerateConcentric(geometry, default_bead_width, default_line_spacing));
             break;
@@ -135,40 +141,17 @@ void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBas
                                                                            default_global_printer_area, min, max));
             break;
         case InfillPatterns::kRadialHatch:
-            //            Point m_center =
-            //            Point(m_sb->setting<double>(PRS::Dimensions::kXOffset),
-            //            m_sb->setting<double>(PRS::Dimensions::kYOffset)); Point diff = max -
-            //            min; Distance radius; if(diff.x() > diff.y())
-            //                radius = diff.x() / 2.0 + 10;
-            //            else
-            //                radius = diff.y() / 2.0 + 10;
-
-            //            QVector<QVector<Polyline>> result = PatternGenerator::GenerateRadialHatch(adjustedGeometry,
-            //            default_line_spacing, default_angle,
-            //                                                                            sb->setting<int>(PS::Infill::kSectorCount),
-            //                                                                            m_center, radius);
-            //            QVector<Polyline> final;
-            //            for(QVector<Polyline> sector : result)
-            //            {
-            //                final += sector;
-            //            }
-            //            m_computed_geometry.append(final);
             break;
     }
-
-    if (default_infill_pattern == InfillPatterns::kInsideOutConcentric)
-        this->reversePaths();
 }
 
-void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                      QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
         static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
     if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
+        Point startOverride = customPathOrderPoint();
 
         poo.setStartOverride(startOverride);
     }
@@ -176,22 +159,27 @@ void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& i
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+    if (usesCustomPointLocation(pointOrderOptimization)) {
+        Point startOverride = customPointOrderPoint();
 
         poo.setStartPointOverride(startOverride);
     }
+    const Distance bead_width = getSb()->setting<Distance>(PS::Infill::kBeadWidth);
+    const Distance overlap = getSb()->setting<Distance>(PS::Infill::kOverlap);
+    const Distance link_core_width = bead_width - 2 * overlap;
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)), m_geometry_copy,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
-                            getSb()->setting<Distance>(PS::Travel::kMinLength),
-                            getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking));
+                            getSb()->setting<Distance>(PS::Travel::kInfillMinLength),
+                            getSb()->setting<bool>(PS::Infill::kLinesPartitionedLinking),
+                            getSb()->setting<bool>(PS::Infill::kAvoidLinkOverlap), link_core_width, m_geometry_copy);
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     for (QVector<Polyline> lines : m_computed_geometry) {
         poo.setGeometryToEvaluate(
@@ -204,8 +192,7 @@ void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& i
             if (result.size() > 0) {
                 Path newPath = createPath(result);
                 if (newPath.size() > 0) {
-                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3),
-                                       innerMostClosedContour);
+                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                     PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
                     current_location = newPath.back()->end();
@@ -218,6 +205,13 @@ void Infill::optimize(int layerNumber, Point& current_location, QVector<Path>& i
 }
 
 Path Infill::createPath(Polyline line) {
+    const InfillPatterns pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern));
+    const bool is_closed_path = pattern == InfillPatterns::kConcentric;
+
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Infill::kMinSegmentLength), is_closed_path);
+    if (line.size() < (is_closed_path ? 3 : 2)) {
+        return Path();
+    }
 
     Distance width = m_sb->setting<Distance>(PS::Infill::kBeadWidth);
     Distance height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
@@ -230,6 +224,7 @@ Path Infill::createPath(Polyline line) {
     for (int j = 0, polyEnd = line.size() - 1; j < polyEnd; ++j) {
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line[j], line[j + 1]);
 
+        segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, width);
         segment->getSb()->setSetting(SS::kHeight, height);
         segment->getSb()->setSetting(SS::kSpeed, speed);
@@ -242,10 +237,10 @@ Path Infill::createPath(Polyline line) {
     }
 
     //! Creates closing segment if infill pattern is concentric
-    if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kConcentric ||
-        static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kInsideOutConcentric) {
+    if (is_closed_path) {
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line.last(), line.first());
 
+        segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, width);
         segment->getSb()->setSetting(SS::kHeight, height);
         segment->getSb()->setSetting(SS::kSpeed, speed);
@@ -260,7 +255,9 @@ Path Infill::createPath(Polyline line) {
     return newPath;
 }
 
-void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Infill::calculateModifiers(Path& path, bool supportsG3) {
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
+
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
@@ -275,43 +272,19 @@ void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& inne
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
     }
     if (m_sb->setting<bool>(MS::TipWipe::kInfillEnable)) {
-        // If angled slicing, force tip wipe to be reverse
-        if (m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY) != 0 ||
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ) != 1) {
-            PathModifierGenerator::GenerateTipWipe(
-                path, PathModifiers::kReverseTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
-                m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
-                m_sb->setting<AngularVelocity>(MS::TipWipe::kInfillExtruderSpeed),
-                m_sb->setting<Distance>(MS::TipWipe::kInfillLiftHeight),
-                m_sb->setting<Distance>(MS::TipWipe::kInfillCutoffDistance));
-        }
-        // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND (Concentric or Inside Out Concentric))
-        else if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
-                     TipWipeDirection::kForward ||
-                 (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
-                      TipWipeDirection::kOptimal &&
-                  (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) ||
-                 (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
-                      TipWipeDirection::kOptimal &&
-                  (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) ==
-                       InfillPatterns::kConcentric ||
-                   static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) ==
-                       InfillPatterns::kInsideOutConcentric))) {
-            if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kConcentric ||
-                static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) ==
-                    InfillPatterns::kInsideOutConcentric)
+        // if Forward OR (if Optimal AND (Perimeter OR Inset)) OR (if Optimal AND Concentric)
+        if (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
+                TipWipeDirection::kForward ||
+            (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
+                 TipWipeDirection::kOptimal &&
+             (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))) ||
+            (static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInfillDirection)) ==
+                 TipWipeDirection::kOptimal &&
+             (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kConcentric))) {
+            if (static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)) == InfillPatterns::kConcentric)
                 PathModifierGenerator::GenerateTipWipe(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
-                    m_sb->setting<AngularVelocity>(MS::TipWipe::kInfillExtruderSpeed),
-                    m_sb->setting<Distance>(MS::TipWipe::kInfillLiftHeight),
-                    m_sb->setting<Distance>(MS::TipWipe::kInfillCutoffDistance));
-            else if (m_sb->setting<int>(PS::Perimeter::kEnable) || m_sb->setting<int>(PS::Inset::kEnable))
-                PathModifierGenerator::GenerateTipWipe(
-                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInfillDistance),
-                    m_sb->setting<Velocity>(MS::TipWipe::kInfillSpeed), innerMostClosedContour,
-                    m_sb->setting<Angle>(MS::TipWipe::kInfillAngle),
                     m_sb->setting<AngularVelocity>(MS::TipWipe::kInfillExtruderSpeed),
                     m_sb->setting<Distance>(MS::TipWipe::kInfillLiftHeight),
                     m_sb->setting<Distance>(MS::TipWipe::kInfillCutoffDistance));
@@ -342,9 +315,9 @@ void Infill::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& inne
     }
     if (m_sb->setting<bool>(MS::SpiralLift::kInfillEnable)) {
         // Prevent spiral lifts during angled slicing to avoid collisions
-        if (m_sb->setting<float>(PS::SlicingVector::kSlicingVectorX) == 0 &&
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorY) == 0 &&
-            m_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ) == 1) {
+        if (m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX) == 0 &&
+            m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY) == 0 &&
+            m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ) == 1) {
             PathModifierGenerator::GenerateSpiralLift(path, m_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
                                                       m_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
                                                       m_sb->setting<int>(MS::SpiralLift::kLiftPoints),
@@ -380,11 +353,8 @@ bool Infill::settingsSame(QSharedPointer<SettingsBase> a, QSharedPointer<Setting
                          b->setting<Distance>(PS::Infill::kLineSpacing)()) &&
            qFuzzyCompare(a->setting<Distance>(PS::Infill::kBeadWidth)(),
                          b->setting<Distance>(PS::Infill::kBeadWidth)()) &&
-           a->setting<int>(PS::Infill::kSectorCount) == b->setting<int>(PS::Infill::kSectorCount) &&
            a->setting<bool>(PS::Infill::kBasedOnPrinter) == b->setting<bool>(PS::Infill::kBasedOnPrinter) &&
            qFuzzyCompare(a->setting<Angle>(PS::Infill::kAngle)(), b->setting<Angle>(PS::Infill::kAngle)()) &&
            a->setting<bool>(PS::Infill::kEnable) == b->setting<bool>(PS::Infill::kEnable);
 }
-
-void Infill::setLayerCount(uint layer_count) { m_layer_count = layer_count - 1; }
 } // namespace ORNL

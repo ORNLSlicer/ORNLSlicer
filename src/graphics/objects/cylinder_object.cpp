@@ -24,7 +24,7 @@ CylinderObject::CylinderObject(BaseView* view, float outer_radius, float inner_r
     std::vector<float> normals;
     std::vector<float> colors;
 
-    ShapeFactory::createCylinder(m_outer_radius, m_height, QMatrix4x4(), color, vertices, colors, normals);
+    ShapeFactory::appendCylinder(m_outer_radius, m_height, QMatrix4x4(), color, vertices, colors, normals);
 
     this->populateGL(view, vertices, normals, colors);
 }

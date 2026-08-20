@@ -1,0 +1,344 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "build_volume_type"
+    display: "Build Volume Type"
+    type: "enumeration"
+    tooltip: "Sets the general build volume type"
+    depends: {}
+    options:
+      - "Rectangular"
+      - "Cylindrical"
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kBuildVolumeType"
+    local: false
+  - name: "minimum_x"
+    display: "Minimum X"
+    type: "location"
+    tooltip: "Minimum X axis value"
+    depends: {"build_volume_type":0}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMinimumX"
+    local: false
+  - name: "maximum_x"
+    display: "Maximum X"
+    type: "location"
+    tooltip: "Maximum X axis value"
+    depends: {"build_volume_type":0}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMaximumX"
+    local: false
+  - name: "minimum_y"
+    display: "Minimum Y"
+    type: "location"
+    tooltip: "Minimum Y axis value"
+    depends: {"build_volume_type":0}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMinimumY"
+    local: false
+  - name: "maximum_y"
+    display: "Maximum Y"
+    type: "location"
+    tooltip: "Maximum Y axis value"
+    depends: {"build_volume_type":0}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMaximumY"
+    local: false
+  - name: "minimum_z"
+    display: "Minimum Z"
+    type: "location"
+    tooltip: "Minimum Z axis value"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMinimumZ"
+    local: false
+  - name: "maximum_z"
+    display: "Maximum Z"
+    type: "location"
+    tooltip: "Maximum Z axis value"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMaximumZ"
+    local: false
+  - name: "outer_radius"
+    display: "Outer Radius"
+    type: "location"
+    tooltip: "Outer radius value"
+    depends: {"build_volume_type":1}
+    options: []
+    default: 1000000
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kOuterRadius"
+    local: false
+  - name: "x_offset"
+    display: "X Offset"
+    type: "location"
+    tooltip: "Offset X position of origin from the minimum X axis value"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kXOffset"
+    local: false
+  - name: "y_offset"
+    display: "Y Offset"
+    type: "location"
+    tooltip: "Offset Y position of origin from the minimum Y axis value"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kYOffset"
+    local: false
+  - name: "z_offset"
+    display: "Z Offset"
+    type: "location"
+    tooltip: "Height of the Z axis where the nozzle touches the build surface (table at maximum value)"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kZOffset"
+    local: false
+  - name: "variable_for_z"
+    display: "Use Variable for Z Position"
+    type: "boolean"
+    tooltip: "If selected, a variable, #200, is issued in place of the Z offset. Z motions are output as mathematical operations on the variable."
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kUseVariableforZPosition"
+    local: false
+  - name: "enable_w_axis"
+    display: "Enable W Axis"
+    type: "boolean"
+    tooltip: "If selected, W axis will be enabled for Z motion"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kEnableWAxis"
+    local: false
+  - name: "minimum_w"
+    display: "Minimum W"
+    type: "location"
+    tooltip: "Minimum W axis value (enter 0 to disable)"
+    depends: {"enable_w_axis":true}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMinimumW"
+    local: false
+  - name: "maximum_w"
+    display: "Maximum W"
+    type: "location"
+    tooltip: "Minimum W axis value (enter 0 to disable)"
+    depends: {"enable_w_axis":true}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kMaximumW"
+    local: false
+  - name: "initial_w"
+    display: "Initial W"
+    type: "location"
+    tooltip: "Initial W position when printing in Z only mode"
+    depends: {"AND":[{"enable_w_axis":true},{"layer_change":0}]}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kInitialW"
+    local: false
+  - name: "layer_change"
+    display: "Layer Change"
+    type: "enumeration"
+    tooltip: "What type of Z axis movement is used to change layers"
+    depends: {"syntax":1}
+    options:
+      - "Z_ONLY"
+      - "W_ONLY"
+      - "BOTH_Z_AND_W"
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kLayerChange"
+    local: false
+  - name: "doffing"
+    display: "Use Doffing Station"
+    type: "boolean"
+    tooltip: "If selected, W Table will lower to a specific height at the end of print"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kUseDoffingStation"
+    local: false
+  - name: "doffing_location"
+    display: "Doffing Location"
+    type: "location"
+    tooltip: "Height for the W Table when doffing"
+    depends: {"AND":[{"syntax":1},{"doffing":true}]}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kDoffingLocation"
+    local: false
+  - name: "purge_x"
+    display: "Purge X Location"
+    type: "location"
+    tooltip: "X location for the purge routine"
+    depends: {"syntax":10}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kPurgeXLocation"
+    local: false
+  - name: "purge_y"
+    display: "Purge Y Location"
+    type: "location"
+    tooltip: "Y location for the purge routine"
+    depends: {"syntax":10}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kPurgeYLocation"
+    local: false
+  - name: "purge_z"
+    display: "Purge Z Location"
+    type: "location"
+    tooltip: "Z location for the purge routine"
+    depends: {"syntax":10}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kPurgeZLocation"
+    local: false
+  - name: "enable_grid_x"
+    display: "Enable Grid X"
+    type: "boolean"
+    tooltip: "Enable grid rendering on the floor of build volume on x axis (vertical bars)"
+    depends: {}
+    options: []
+    default: false
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kEnableGridX"
+    local: false
+  - name: "grid_x_distance"
+    display: "Grid X Distance"
+    type: "distance"
+    tooltip: "Distance between x grid ticks (vertical bars)"
+    depends: {"enable_grid_x":true}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kGridXDistance"
+    local: false
+  - name: "grid_x_offset"
+    display: "Grid X Offset Distance"
+    type: "distance"
+    tooltip: "Offset distance for location of first X grid line"
+    depends: {"enable_grid_x":true}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kGridXOffsetDistance"
+    local: false
+  - name: "enable_grid_y"
+    display: "Enable Grid Y"
+    type: "boolean"
+    tooltip: "Enable grid rendering on the floor of build volume on y axis (horizontal bars)"
+    depends: {}
+    options: []
+    default: false
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kEnableGridY"
+    local: false
+  - name: "grid_y_distance"
+    display: "Grid Y Distance"
+    type: "distance"
+    tooltip: "Distance between y grid ticks (horizontal bars)"
+    depends: {"enable_grid_y":true}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kGridYDistance"
+    local: false
+  - name: "grid_y_offset"
+    display: "Grid Y Offset Distance"
+    type: "distance"
+    tooltip: "Offset distance for location of first Y grid line"
+    depends: {"enable_grid_y":true}
+    options: []
+    default: 0
+    minor: "Dimensions"
+    major: "Printer"
+    namespace: "Printer::Dimensions"
+    symbol: "kGridYOffsetDistance"
+    local: false

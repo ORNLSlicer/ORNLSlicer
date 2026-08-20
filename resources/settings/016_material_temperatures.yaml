@@ -1,0 +1,147 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "bed_temperature"
+    display: "Bed Temperature"
+    type: "temperature"
+    tooltip: "Temperature of bed while printing"
+    depends: {"OR":[{"machine_type":1},{"syntax":11}]}
+    options: []
+    default: 398.15
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kBedTemperature"
+    local: true
+  - name: "two_zone_extruder"
+    display: "Two Zone Extruder"
+    type: "boolean"
+    tooltip: "Enables two zones for extruder temperature control"
+    depends: {"AND":[{"three_zone_extruder":false},{"AND":[{"four_zone_extruder":false},{"AND":[{"five_zone_extruder":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
+    options: []
+    default: false
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kTwoZoneExtruder"
+    local: true
+  - name: "three_zone_extruder"
+    display: "Three Zone Extruder"
+    type: "boolean"
+    tooltip: "Enables three zones for extruder temperature control"
+    depends: {"AND":[{"two_zone_extruder":false},{"AND":[{"four_zone_extruder":false},{"AND":[{"five_zone_extruder":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
+    options: []
+    default: false
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kThreeZoneExtruder"
+    local: true
+  - name: "four_zone_extruder"
+    display: "Four Zone Extruder"
+    type: "boolean"
+    tooltip: "Enables four zones for extruder temperature control"
+    depends: {"AND":[{"three_zone_extruder":false},{"AND":[{"two_zone_extruder":false},{"AND":[{"five_zone_extruder":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
+    options: []
+    default: false
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kFourZoneExtruder"
+    local: true
+  - name: "five_zone_extruder"
+    display: "Five Zone Extruder"
+    type: "boolean"
+    tooltip: "Enables five zones for extruder temperature control"
+    depends: {"AND":[{"two_zone_extruder":false},{"AND":[{"three_zone_extruder":false},{"AND":[{"four_zone_extruder":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}
+    options: []
+    default: false
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kFiveZoneExtruder"
+    local: true
+  - name: "extruder_temperature"
+    display: "Extruder Temperature"
+    type: "temperature"
+    tooltip: "Temperature of extruder while printing"
+    depends: {"AND":[{"two_zone_extruder":false},{"AND":[{"three_zone_extruder":false},{"AND":[{"four_zone_extruder":false},{"AND":[{"five_zone_extruder":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}]}
+    options: []
+    default: 473.15
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderTemperature"
+    local: true
+  - name: "standby_temperature"
+    display: "Extruder Standby Temperature"
+    type: "temperature"
+    tooltip: "Temperature to hold extruder at when it's not in use"
+    depends: {"AND":[{"two_zone_extruder":false},{"AND":[{"three_zone_extruder":false},{"AND":[{"four_zone_extruder":false},{"AND":[{"five_zone_extruder":false},{"OR":[{"machine_type":1},{"syntax":11}]}]}]}]}]}
+    options: []
+    default: 423.15
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderStandbyTemperature"
+    local: true
+  - name: "extruder_zone1"
+    display: "Extruder Zone 1 Temperature"
+    type: "temperature"
+    tooltip: "Temperature for extruder zone 1"
+    depends: {"OR":[{"two_zone_extruder":true},{"OR":[{"three_zone_extruder":true},{"OR":[{"four_zone_extruder":true},{"five_zone_extruder":true}]}]}]}
+    options: []
+    default: 0
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderZone1Temperature"
+    local: true
+  - name: "extruder_zone2"
+    display: "Extruder Zone 2 Temperature"
+    type: "temperature"
+    tooltip: "Temperature for extruder zone 2"
+    depends: {"OR":[{"two_zone_extruder":true},{"OR":[{"three_zone_extruder":true},{"OR":[{"four_zone_extruder":true},{"five_zone_extruder":true}]}]}]}
+    options: []
+    default: 0
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderZone2Temperature"
+    local: true
+  - name: "extruder_zone3"
+    display: "Extruder Zone 3 Temperature"
+    type: "temperature"
+    tooltip: "Temperature for extruder zone 3"
+    depends: {"OR":[{"three_zone_extruder":true},{"OR":[{"four_zone_extruder":true},{"five_zone_extruder":true}]}]}
+    options: []
+    default: 0
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderZone3Temperature"
+    local: true
+  - name: "extruder_zone4"
+    display: "Extruder Zone 4 Temperature"
+    type: "temperature"
+    tooltip: "Temperature for extruder zone 4"
+    depends: {"OR":[{"four_zone_extruder":true},{"five_zone_extruder":true}]}
+    options: []
+    default: 0
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderZone4Temperature"
+    local: true
+  - name: "extruder_zone5"
+    display: "Extruder Zone 5 Temperature"
+    type: "temperature"
+    tooltip: "Temperature for extruder zone 5"
+    depends: {"five_zone_extruder":true}
+    options: []
+    default: 0
+    minor: "Temperatures"
+    major: "Material"
+    namespace: "Material::Temperatures"
+    symbol: "kExtruderZone5Temperature"
+    local: true

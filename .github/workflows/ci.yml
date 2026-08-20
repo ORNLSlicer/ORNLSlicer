@@ -14,8 +14,8 @@ jobs:
       run:
         working-directory: ./
     steps:
-      - uses: actions/checkout@v4
-      - uses: cachix/install-nix-action@v29
+      - uses: actions/checkout@v5
+      - uses: cachix/install-nix-action@v31
       - run: nix flake check --all-systems
 
   linux:
@@ -27,10 +27,16 @@ jobs:
       run:
         working-directory: ./
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           lfs: 'true'
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v31
+      - name: Publish Nix build results to Cachix
+        if: github.ref == 'refs/heads/develop'
+        uses: cachix/cachix-action@v17
+        with:
+          name: ornl-slicer
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Setup Environment
         run: echo "artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name).appimage" >> $GITHUB_ENV
       - name: Compile Linux Build
@@ -40,7 +46,7 @@ jobs:
           nix bundle -L --bundler .#appimage .#${{ env.ci_derivation }} -o ${{ env.out_link }}
           cp ${{ env.out_link }} ${{ env.artifact }}
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.artifact }}
           path: ${{ env.artifact }}
@@ -55,14 +61,20 @@ jobs:
       run:
         working-directory: ./
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v5
         with:
           lfs: 'true'
-      - uses: cachix/install-nix-action@v27
+      - uses: cachix/install-nix-action@v31
+      - name: Publish Nix build results to Cachix
+        if: github.ref == 'refs/heads/develop'
+        uses: cachix/cachix-action@v17
+        with:
+          name: ornl-slicer
+          authToken: "${{ secrets.CACHIX_AUTH_TOKEN }}"
       - name: Setup Environment
         run: |
-          echo "install_artifact=ornlslicer-installer.exe" >> $GITHUB_ENV
-          echo "package_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-portable" >> $GITHUB_ENV
+          echo "install_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-installer-${{ github.run_number }}.exe" >> $GITHUB_ENV
+          echo "package_artifact=$(nix eval --raw .#${{ env.ci_derivation }}.name)-portable-${{ github.run_number }}" >> $GITHUB_ENV
           echo "version=$(nix eval --raw .#${{ env.ci_derivation }}.version)" >> $GITHUB_ENV
       - name: Compile Windows Build
         run: nix build -L .#${{ env.ci_derivation }} --accept-flake-config -o ${{ env.out_link }}
@@ -75,12 +87,12 @@ jobs:
           -DVERSION=${{ env.version }}
           ${{ env.nsis_script }}
       - name: Upload Portable Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.package_artifact }}
           path: ${{ env.out_link }}
       - name: Upload Installer Artifacts
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: ${{ env.install_artifact }}
           path: ${{ env.install_artifact }}

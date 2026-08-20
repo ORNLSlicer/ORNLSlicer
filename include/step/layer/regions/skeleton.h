@@ -20,7 +20,6 @@
 #include "geometry/polyline.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
 
@@ -48,15 +47,15 @@ class Skeleton : public RegionBase {
     //! \param sb: the settings
     //! \param index: index for region order
     //! \param settings_polygons: a vector of settings polygons to apply
-    Skeleton(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons,
-             bool iswireFed = false);
+    Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
+             const QVector<SettingsPolygon>& settings_polygons);
 
     //! \brief Writes the gcode for the skeleton
     //! \param writer is the instance of the Writer Base to be used for writing skeleton region GCode
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
     //! \brief Computes the skeleton region
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync) override;
+    void compute(uint layer_num) override;
 
     //! \brief Computes a Voronoi Diagram from a set of segments
     void computeSegmentVoronoi();
@@ -106,12 +105,9 @@ class Skeleton : public RegionBase {
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number
-    //! \param innerMostClosedContour: used for subsequent path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param current_location: most recent location
     //! \param shouldNextPathBeCCW: state as to CW or CCW of previous path for use with additional DOF
-    void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                  QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) override;
+    void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) override;
 
     /**
      * @brief Populates the segment settings with local settings.
@@ -159,16 +155,11 @@ class Skeleton : public RegionBase {
      */
     QVector<Path> filterPath(const Path& path);
 
-    //! \brief Sets pathing for anchor lines
-    //! \param anchor_lines: polylines for wire feed
-    void setAnchorWireFeed(QVector<Polyline> anchor_lines);
-
   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
-    //! \param innerMostClosedContour used for Prestarts (currently only skins/infill)
-    void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) override;
+    void calculateModifiers(Path& path, bool supportsG3) override;
 
     //! \brief Holds raw skeleton geometry produced by the Voronoi Generator
     QVector<Polyline> m_skeleton_geometry;
@@ -178,12 +169,6 @@ class Skeleton : public RegionBase {
 
     //! \brief Holds computed geometry
     QVector<Polyline> m_computed_geometry;
-
-    //! \brief Whether or not skeletons belong to wire fed areas or not
-    bool m_wire_region;
-
-    //! \brief Precomputed paths for wire feed at anchors
-    QVector<Polyline> m_computed_anchor_lines;
 
     //! @brief The current layer number being processed
     uint m_layer_num;

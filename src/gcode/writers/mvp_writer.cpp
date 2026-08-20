@@ -23,7 +23,7 @@ QString MVPWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Dis
                                      int num_layers) {
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -183,8 +183,8 @@ QString MVPWriter::writeLine(const Point& start_point, const Point& target_point
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruders_on[0] == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+    if (m_deposition_active == false && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     if (rpm != m_current_rpm && rpm == 0) {
@@ -276,6 +276,8 @@ QString MVPWriter::writeAfterLayer() {
 
 QString MVPWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     rv += "M5" % commentSpaceLine("TURN PUMP OFF END OF PRINT");
     rv += "M53" % commentSpaceLine("TURN GUN OFF END OF PRINT");
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;
@@ -295,18 +297,18 @@ QString MVPWriter::writeDwell(Time time) {
         return {};
 }
 
-QString MVPWriter::writeExtruderOn(RegionType type, int rpm) {
+QString MVPWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruders_on[0] = true;
+    m_deposition_active = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
     rv += "M52" % commentSpaceLine("TURN GUN ON");
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
-        m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("TURN EXTRUDER ON");
 
@@ -342,7 +344,7 @@ QString MVPWriter::writeExtruderOn(RegionType type, int rpm) {
 
 QString MVPWriter::writeExtruderOff() {
     QString rv;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

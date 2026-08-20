@@ -12,7 +12,6 @@
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "step/layer/regions/region_base.h"
 
 namespace ORNL {
@@ -31,40 +30,20 @@ class Perimeter : public RegionBase {
     QString writeGCode(QSharedPointer<WriterBase> writer) override;
 
     //! \brief Computes the perimeter region.
-    void compute(uint layer_num, QSharedPointer<SyncManager>& sync) override;
+    void compute(uint layer_num) override;
 
     //! \brief Optimizes the region.
     //! \param layerNumber: current layer number
-    //! \param innerMostClosedContour: used for subsequent path modifiers
-    //! \param outerMostClosedContour: used for subsequent path modifiers
     //! \param current_location: most recent location
     //! \param shouldNextPathBeCCW: state as to CW or CCW of previous path for use with additional DOF
-    void optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                  QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) override;
+    void optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) override;
 
     //! \brief Creates paths for the perimeter region.
     //! \param line: polyline representing path
     //! \return Polyline converted to path
     Path createPath(Polyline line) override;
 
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Sets the single path geometry
-    //! \param sp_geometry: the new geometry
-    void setSinglePathGeometry(QVector<SinglePath::PolygonList> sp_geometry);
-
-    //! \brief Creates single paths for this region, plus any connected ones from insets
-    void createSinglePaths();
-#endif
-
-    //!\brief Returns the set of paths representing the outermost contours
-    //! \return a list of paths of outermost perimeter contours
-    QVector<Path>& getOuterMostPathSet();
-
-    //!\brief Returns the set of paths representing the innermost contours
-    //! \return a list of paths of innermost perimeter contours
-    QVector<Path>& getInnerMostPathSet();
-
-    //! \brief gets the computed geometry, used for single path
+    //! \brief gets the computed geometry
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
@@ -72,8 +51,13 @@ class Perimeter : public RegionBase {
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
-    //! \param innerMostClosedContour used for Prestarts (currently only skins/infill)
-    void calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) override;
+    void calculateModifiers(Path& path, bool supportsG3) override;
+
+    //! \brief Creates modifiers, optionally treating forward tip wipe as an open-loop wipe.
+    //! \param path Current path to add modifiers to
+    //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
+    //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
+    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
@@ -89,23 +73,30 @@ class Perimeter : public RegionBase {
      * @param[in] parent_sb: The settings base to apply.
      */
     static void populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
-                                        const QSharedPointer<SettingsBase>& parent_sb);
+                                        const QSharedPointer<SettingsBase>& parent_sb, const Distance& bead_width,
+                                        bool adapted);
+
+    /**
+     * @brief Returns the computed adaptive width for a generated contour segment.
+     * @param[in] start Segment start point.
+     * @param[in] end Segment end point.
+     * @param[in] parent_sb Settings used for the fallback nominal width.
+     */
+    Distance beadWidthForSegment(const Point& start, const Point& end,
+                                 const QSharedPointer<SettingsBase>& parent_sb) const;
+
+    /**
+     * @brief Returns whether the supplied width differs from the parent bead width enough to be treated as adapted.
+     * @param[in] width Bead width being applied.
+     * @param[in] parent_sb Settings containing the nominal bead width.
+     */
+    static bool isAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb);
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
 
-#ifdef HAVE_SINGLE_PATH
-    //! \brief Holds the single path geometry before it is converted into paths
-    QVector<SinglePath::PolygonList> m_single_path_geometry;
-#endif
-
-    //! \brief Holds the first set of perimeter generated to provide for later
-    //! optimizations and path modifiers
-    QVector<Path> m_outer_most_path_set;
-
-    //! \brief Holds the last set of perimeter generated to provide for later
-    //! optimizations and path modifiers
-    QVector<Path> m_inner_most_path_set;
+    //! \brief Holds the bead width associated with each computed contour in m_computed_geometry
+    QVector<Distance> m_computed_widths;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;

@@ -21,36 +21,19 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
-QSharedPointer<GlobalLayer> LayerOrderOptimizer::populateStep(QVector<QSharedPointer<Part>> build_parts) {
-    //! \note called by real-time slicers only
-
-    QSharedPointer<GlobalLayer> new_g_layer =
-        QSharedPointer<GlobalLayer>::create(0); // only one layer is kept at a time, so we can always number it 0
-
-    // add all the dirty step groups to the global layer
-    for (auto& part : build_parts) {
-        QList<Part::StepPair> dirty_step_groups = part->getDirtyStepPairs();
-        for (auto& step_group : dirty_step_groups)
-            new_g_layer->addStepPair(part->getId(), step_group);
-    }
-
-    return new_g_layer;
-}
-
 QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPointer<SettingsBase> global_sb,
                                                                       QVector<QSharedPointer<Part>> build_parts) {
     // list to return at end of function
     QList<QSharedPointer<GlobalLayer>> global_layers = QList<QSharedPointer<GlobalLayer>>();
 
     // get the layer ordering method, and then populate the global layers accordingly
-    // after global layers have been assigned, assign nozzles/tools (if necessary)
-    LayerOrdering order_method = global_sb->setting<LayerOrdering>(ES::PrinterConfig::kLayerOrdering);
+    LayerOrdering order_method = global_sb->setting<LayerOrdering>(PS::Optimizations::kLayerOrdering);
 
     if (order_method == LayerOrdering::kByHeight) {
         // Retrieve the slicing plane normal
-        QVector3D slicing_vector = {global_sb->setting<float>(PS::SlicingVector::kSlicingVectorX),
-                                    global_sb->setting<float>(PS::SlicingVector::kSlicingVectorY),
-                                    global_sb->setting<float>(PS::SlicingVector::kSlicingVectorZ)};
+        QVector3D slicing_vector = {global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
+                                    global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
+                                    global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
         slicing_vector.normalize();
 
         bool steps_left = true;
@@ -111,7 +94,7 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
 
                 Distance layer_height = current_step->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
                 Distance layer_grouping_tolerance =
-                    global_sb->setting<Distance>(ES::PrinterConfig::kLayerGroupingTolerance);
+                    global_sb->setting<Distance>(PS::Optimizations::kLayerGroupingTolerance);
                 Plane layer_plane = current_step->getSlicingPlane();
                 layer_plane.shiftAlongNormal(layer_height() / 2.0);
 

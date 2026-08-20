@@ -21,6 +21,12 @@ class SettingsBase;
 //! \brief Define for easy access to this singleton.
 #define GSM SettingsManager::getInstance()
 
+enum class SettingsVersionUpdateMode {
+    kGuiPrompt,
+    kConsolePrompt,
+    kAutoUpdate,
+};
+
 /*!
  *  \class SettingsManager
  *  \brief Singleton manager class that contains all currently active settings.
@@ -37,6 +43,12 @@ class SettingsManager : public QObject {
     //! \brief Obtains the master configuration as a SettingsBase. The master settings contain all information
     //!        for display purposes.
     QSharedPointer<SettingsBase> getMaster() const;
+
+    //! \brief Obtains input metadata used to group scalar settings into composite UI rows.
+    fifojson getSettingInputs() const;
+
+    //! \brief Returns the composite input metadata for a setting key, or null if the key is not grouped.
+    fifojson getSettingInput(const QString& setting_key) const;
 
     // ---- Global Configuration ----
 
@@ -141,6 +153,14 @@ class SettingsManager : public QObject {
     //! -1 something to update and prevented from rolling forward
     int checkVersion(QString filename, fifojson& settings_data, bool gui);
 
+    //! \brief Check settings file version
+    //! \param filename Name of the settings source
+    //! \param settings_data Settings to validate
+    //! \param update_mode How to request or apply version updates
+    //! \return 0 - nothing to update, 1 - something to update and successfully rolled forward,
+    //! -1 something to update and prevented from rolling forward
+    int checkVersion(QString filename, fifojson& settings_data, SettingsVersionUpdateMode update_mode);
+
     // ---- Template Configurations ----
 
     //! \brief Save a list of keys as a template configuration.
@@ -182,6 +202,9 @@ class SettingsManager : public QObject {
 
     //! \brief Master settings.
     QSharedPointer<SettingsBase> m_master;
+
+    //! \brief UI input group metadata generated from settings YAML files.
+    fifojson m_setting_inputs;
 
     //! \brief Valid file suffixes for settings files
     QVector<QString> m_validSuffixes;

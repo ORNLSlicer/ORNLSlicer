@@ -1,7 +1,9 @@
 #include "step/layer/regions/region_base.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
+#include <optional>
 
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -16,28 +18,130 @@
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "geometry/settings_polygon.h"
+#include "optimizers/optimization_anchor.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
+#include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+bool selectedSyntaxSupportsArcFitting(const QSharedPointer<SettingsBase>& global_sb) {
+    const GcodeSyntax syntax = global_sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    switch (syntax) {
+        // These writers inherit WriterBase::writeArc(), which emits no motion.
+        case GcodeSyntax::kAdamantine:
+        case GcodeSyntax::kMVP:
+            return false;
+        default:
+            return true;
+    }
+}
+
+bool planarArcFittingAllowed(const QSharedPointer<SettingsBase>& global_sb) {
+    if (global_sb == nullptr)
+        return false;
+
+    if (!global_sb->setting<bool>(PRS::MachineSetup::kSupportG3))
+        return false;
+
+    if (!selectedSyntaxSupportsArcFitting(global_sb))
+        return false;
+
+    if (static_cast<SlicingMode>(global_sb->setting<int>(PS::Slicing::kSlicingMode)) != SlicingMode::kPlanar)
+        return false;
+
+    constexpr double kVectorTolerance = 1.0e-6;
+    return std::abs(global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX)) <= kVectorTolerance &&
+           std::abs(global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY)) <= kVectorTolerance &&
+           std::abs(global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ) - 1.0f) <= kVectorTolerance;
+}
+
+Point flattenIntoOptimizationFrame(const Point& point, const Plane& slicing_plane, const Point& optimization_shift) {
+    const QVector3D normal = slicing_plane.normal();
+    if (normal.isNull())
+        return point;
+
+    const QQuaternion rotation = MathUtils::CreateQuaternion(normal, QVector3D(0, 0, 1));
+    const QVector3D shifted = (point - optimization_shift).toQVector3D();
+    return Point::fromQVector3D(rotation.rotatedVector(shifted)) + optimization_shift;
+}
+} // namespace
+
 RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const int index,
-                       const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
-    : m_sb(sb), m_index(index), m_settings_polygons(settings_polygons), m_uncut_geometry(uncut_geometry) {
+                       const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry,
+                       RegionType region_type)
+    : m_sb(sb), m_settings_polygons(settings_polygons), m_index(index), m_region_type(region_type),
+      m_uncut_geometry(uncut_geometry) {
     // NOP
 }
 
-RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : m_sb(sb), m_settings_polygons(settings_polygons) {
+RegionBase::RegionBase(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons,
+                       RegionType region_type)
+    : m_sb(sb), m_settings_polygons(settings_polygons), m_region_type(region_type) {
     // NOP
 }
 
 QVector<Path>& RegionBase::getPaths() { return m_paths; }
+
+std::optional<Point> RegionBase::getFirstPrintingStartPoint() {
+    for (Path& path : m_paths) {
+        for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
+            if (segment->isPrintingSegment())
+                return segment->start();
+        }
+    }
+
+    return std::nullopt;
+}
+
+void RegionBase::setPreviousLayerStartPoint(const std::optional<Point>& point) {
+    if (point.has_value())
+        m_previous_layer_start_point = flattenIntoOptimizationFrame(*point, m_optimization_slicing_plane,
+                                                                    m_optimization_shift);
+    else
+        m_previous_layer_start_point = std::nullopt;
+}
+
+std::optional<Point> RegionBase::getPreviousLayerStartPoint() const { return m_previous_layer_start_point; }
 
 void RegionBase::appendPath(const Path& path) { m_paths.append(path); }
 
 QSharedPointer<SettingsBase> RegionBase::getSb() const { return m_sb; }
 
 void RegionBase::setSb(const QSharedPointer<SettingsBase>& sb) { m_sb = sb; }
+
+void RegionBase::setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift) {
+    m_optimization_slicing_plane = slicing_plane;
+    m_optimization_shift = optimization_shift;
+}
+
+Point RegionBase::customPathOrderPoint() const {
+    return OptimizationAnchor::customPathOrderPoint(m_sb, m_optimization_slicing_plane, m_optimization_shift);
+}
+
+PathOrderOptimization RegionBase::pathOrderOptimization() const {
+    const PathOrderOptimization default_optimization =
+        static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder));
+
+    switch (m_region_type) {
+        case RegionType::kPerimeter:
+            return optionalPathOrderOptimization(m_sb->setting<int>(PS::Optimizations::kPerimeterPathOrder),
+                                                 default_optimization);
+        case RegionType::kInset:
+            return optionalPathOrderOptimization(m_sb->setting<int>(PS::Optimizations::kInsetPathOrder),
+                                                 default_optimization);
+        case RegionType::kSkin:
+            return optionalPathOrderOptimization(m_sb->setting<int>(PS::Optimizations::kSkinPathOrder),
+                                                 default_optimization);
+        default:
+            return default_optimization;
+    }
+}
+
+Point RegionBase::customPointOrderPoint() const {
+    return OptimizationAnchor::customPointOrderPoint(m_sb, m_optimization_slicing_plane, m_optimization_shift);
+}
 
 void RegionBase::transform(QQuaternion rotation, Point shift) {
     // rotate and the shift every path in this region
@@ -64,6 +168,12 @@ void RegionBase::setGeometry(const PolygonList& geometry) { m_geometry = geometr
 void RegionBase::reversePaths() { std::reverse(m_paths.begin(), m_paths.end()); }
 
 int RegionBase::getIndex() { return m_index; }
+
+RegionType RegionBase::getRegionType() const { return m_region_type; }
+
+void RegionBase::setOptimizedLayerNumber(int layer_number) { m_optimized_layer_number = layer_number; }
+
+int RegionBase::getOptimizedLayerNumber() const { return m_optimized_layer_number; }
 
 int RegionBase::getMaterialNumber() { return m_material_number; }
 
@@ -95,6 +205,7 @@ void RegionBase::calculateMultiMaterialTransition(Distance& transition_distance,
                     current_segments[j]->setEnd(end);
 
                     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, old_end);
+                    segment->getSb()->populate(current_segments[j]->getSb());
                     segment->getSb()->setSetting(SS::kWidth,
                                                  current_segments[j]->getSb()->setting<Distance>(SS::kWidth));
                     segment->getSb()->setSetting(SS::kHeight,
@@ -125,16 +236,12 @@ void RegionBase::calculateMultiMaterialTransition(Distance& transition_distance,
     }
 }
 
-void RegionBase::adjustMultiNozzle() {
-    for (auto& path : getPaths()) {
-        path.adjustMultiNozzle();
-    }
-}
+void RegionBase::fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb) {
+    if (!planarArcFittingAllowed(global_sb))
+        return;
 
-void RegionBase::addNozzle(int nozzle) {
-    for (Path path : getPaths()) {
-        path.addNozzle(nozzle);
-    }
+    for (Path& path : m_paths)
+        path.fitCircularArcs(m_sb);
 }
 
 void RegionBase::setLastSpiral(bool spiral) { m_was_last_region_spiral = spiral; }

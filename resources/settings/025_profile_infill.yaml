@@ -1,0 +1,250 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "infill"
+    display: "Enable Infill"
+    type: "boolean"
+    tooltip: "If selected, infill will be generated"
+    depends: {"slicing_mode":0}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableInfill"
+    local: true
+  - name: "infill_density"
+    display: "Infill Density"
+    type: "percentage100"
+    tooltip: "Percent of area to be covered by infill"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_manual_spacing":false}]}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillDensity"
+    local: true
+  - name: "infill_manual_spacing"
+    display: "Enable Manual Infill Line Spacing"
+    type: "boolean"
+    tooltip: "Override infill density and manually define distance between beads on infill"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kEnableManualInfillLineSpacing"
+    local: true
+  - name: "infill_line_spacing"
+    display: "Infill Line Spacing"
+    type: "distance"
+    tooltip: "Distance between beads on sparse infill"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_manual_spacing":true}]}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillLineSpacing"
+    local: true
+  - name: "infill_pattern"
+    display: "Infill Pattern"
+    type: "enumeration"
+    tooltip: "Pattern for the infill"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options:
+      - "Lines"
+      - "Grid"
+      - "Concentric"
+      - "Triangles"
+      - "Hexagons and Triangles"
+      - "Honeycomb"
+      - "Radial Hatch"
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillPattern"
+    local: true
+  - name: "infill_lines_partitioned_linking"
+    display: "Apply Path and Point Ordering to Infill Lines"
+    type: "boolean"
+    tooltip: "If enabled and the Infill Pattern is Lines, travel-separated infill segments are selected using Path Order Optimization and oriented using Point Order Optimization. If disabled, they retain the existing monotonic ordering."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_pattern":0}]}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillLinesPartitionedLinking"
+    local: true
+  - name: "infill_avoid_link_overlap"
+    display: "Avoid Infill Link Contour Overlap"
+    type: "boolean"
+    tooltip: "If enabled, infill linking segments whose bead core would exceed the configured infill overlap are replaced by travel moves."
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kAvoidInfillLinkOverlap"
+    local: true
+  - name: "infill_based_on_printer"
+    display: "Infill Based on Printer Area"
+    type: "boolean"
+    tooltip: "If selected, infill pattern is generated based on the printer area rather than the object. This means the infill pattern is specific to where the object is within the printer."
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: false
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillBasedonPrinterArea"
+    local: true
+  - name: "infill_angle"
+    display: "Infill Angle"
+    type: "angle"
+    tooltip: "Sets the angle for the infill"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillAngle"
+    local: true
+  - name: "infill_angle_rotation"
+    display: "Infill Angle Rotation"
+    type: "angle"
+    tooltip: "Determines how much the infill angle rotates on every layer, default 90 degree"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 1.570796327
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillAngleRotation"
+    local: true
+  - name: "infill_overlap_distance"
+    display: "Infill Overlap Distance"
+    type: "location"
+    tooltip: "Width of the infill overlaps with exterior"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillOverlapDistance"
+    local: true
+  - name: "infill_width"
+    display: "Infill Bead Width"
+    type: "distance"
+    tooltip: "Width of the bead for the infill print moves"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillBeadWidth"
+    local: true
+  - name: "infill_speed"
+    display: "Infill Speed"
+    type: "speed"
+    tooltip: "Speed for the infill paths"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillSpeed"
+    local: true
+  - name: "infill_extruder_speed"
+    display: "Infill Extruder Speed"
+    type: "rpm"
+    tooltip: "Extruder speed for the infill"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillExtruderSpeed"
+    local: true
+  - name: "infill_extrusion_multiplier"
+    display: "Infill Extrusion Multiplier"
+    type: "unitless_float"
+    tooltip: "Extrusion multiplier to increase/decrease flowrate for infill paths for systems without RPM control"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"OR":[{"machine_type":1},{"syntax":26}]}]}]}
+    options: []
+    default: 1
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kInfillExtrusionMultiplier"
+    local: true
+  - name: "infill_minimum_path_length"
+    display: "Minimum Infill Path Length"
+    type: "distance"
+    tooltip: "Infill extrusion paths less than this value are deleted"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kMinimumInfillPathLength"
+    local: true
+  - name: "infill_minimum_segment_length"
+    display: "Minimum Infill Segment Length"
+    type: "distance"
+    tooltip: "Infill path segments shorter than this value are collapsed before extrusion paths are created"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kMinimumInfillSegmentLength"
+    local: true
+  - name: "infill_maximum_path_length"
+    display: "Maximum Infill Path Length"
+    type: "distance"
+    tooltip: "Infill extrusion paths greater than this are split"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kMaximumInfillPathLength"
+    local: true
+  - name: "infill_combine_every_x_layers"
+    display: "Combine Infill Every X Layers"
+    type: "number"
+    tooltip: "Prints perimeter for X amount of layers then goes back and prints all of the infill for those layers as one thicker layer, saves time"
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kCombineInfillEveryXLayers"
+    local: false
+  - name: "infill_combine_layer_shift"
+    display: "Shift Combine Infill Start Layer"
+    type: "number"
+    tooltip: "Shift the first starting layer of infill when using combine infill every X layers. A shift value of 1 paired with a combine value of 4 would mean infill on layers 5, 9, 13 and so on."
+    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Infill"
+    symbol: "kShiftCombineInfillStartLayer"
+    local: false

@@ -1,0 +1,51 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "thermal_scanner"
+    display: "Enable Thermal Scanner"
+    type: "boolean"
+    tooltip: "If selected, will generate g/m codes for IR camera measurements between layers"
+    depends: {"syntax":1}
+    options: []
+    default: false
+    minor: "Thermal Scanner"
+    major: "Profile"
+    namespace: "Profile::ThermalScanner"
+    symbol: "kEnableThermalScanner"
+    local: false
+  - name: "thermal_scanner_x_offset"
+    display: "Thermal Scanner X Offset"
+    type: "location"
+    tooltip: "X offset of scanner from command position (typically extruder head)"
+    depends: {"thermal_scanner":true}
+    options: []
+    default: 0
+    minor: "Thermal Scanner"
+    major: "Profile"
+    namespace: "Profile::ThermalScanner"
+    symbol: "kThermalScannerXOffset"
+    local: false
+  - name: "thermal_scanner_y_offset"
+    display: "Thermal Scanner Y Offset"
+    type: "location"
+    tooltip: "Y offset of scanner from command position (typically extruder head)"
+    depends: {"thermal_scanner":true}
+    options: []
+    default: 0
+    minor: "Thermal Scanner"
+    major: "Profile"
+    namespace: "Profile::ThermalScanner"
+    symbol: "kThermalScannerYOffset"
+    local: false
+  - name: "thermal_scanner_temperature_cutoff"
+    display: "Thermal Scanner Temperature Cutoff"
+    type: "temperature"
+    tooltip: "IR Camera Temperature Cutoff (Celsius)"
+    depends: {"thermal_scanner":true}
+    options: []
+    default: 0
+    minor: "Thermal Scanner"
+    major: "Profile"
+    namespace: "Profile::ThermalScanner"
+    symbol: "kThermalScannerTemperatureCutoff"
+    local: false

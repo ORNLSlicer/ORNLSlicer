@@ -17,18 +17,6 @@ using json = fifojson;
 
 namespace ORNL {
 /*!
- * \enum RealTimeSlicingMode
- * \brief what mode real time slicing is operating in
- */
-enum RealTimeSlicingMode { kClosedLoop = 0, kOpenLoop = 1 };
-
-/*!
- * \enum RealTimeSlicingOutput
- * \brief how the gcode should be written when using real time slicing
- */
-enum RealTimeSlicingOutput { kFile = 0, kNetwork = 1 };
-
-/*!
  * \enum MeshType
  * \brief the various types of meshes supported by ORNLSlicer
  */
@@ -45,43 +33,150 @@ enum MeshGeneratorType {
     kRectangularBox = 3,
     kTriangularPyramid = 4,
     kCylinder = 5,
-    kCone = 6
-};
-
-/*!
- * \enum LinkType
- * \brief Selects the type of link between threads
- */
-enum class LinkType : uint8_t {
-    kPreviousLayerExclusionInset,
-    kZipperingInset,
-    kPreviousLayerExclusionPerimeter,
-    kZipperingPerimeter
+    kCone = 6,
+    kHexagonalPrism = 7
 };
 
 /*! \enum BuildVolumeType
  * \brief Determines the type of build volume to create.
  */
-enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1, kToroidal = 2 };
+enum class BuildVolumeType : uint8_t { kRectangular = 0, kCylindrical = 1 };
 
 /*!
- * \enum SlicerType
- * \brief Selects the type of slice to perform. Pass this to Session Manager to decide.
+ * @enum SlicingMode
+ * @brief Selects the slicing workflow. Pass this to Session Manager to decide.
  */
-enum class SlicerType : uint8_t {
-    kPolymerSlice = 0,
-    kMetalSlice = 1,
-    kRPBFSlice = 2,
-    kRealTimePolymer = 3,
-    kRealTimeRPBF = 4,
-    kImageSlice = 5
+enum class SlicingMode : uint8_t {
+    //! @brief Standard planar slicing.
+    kPlanar = 0,
+
+    //! @brief Cylindrical slicing around each part's XY centroid or configured axis.
+    kCylindrical = 1,
+
+    //! @brief Image-based slicing workflow.
+    kImage = 2
 };
 
-//! \brief Function for going from json to SlicerType
-void to_json(json& j, const SlicerType& i);
+/*!
+ * @enum CylindricalPathPattern
+ * @brief Selects the cylindrical path pattern to generate.
+ */
+enum class CylindricalPathPattern : uint8_t {
+    //! @brief Concentric radial rings or arcs.
+    kRadial = 0,
 
-//! \brief Function for going from SlicerType to json
-void from_json(const json& j, SlicerType& i);
+    //! @brief Rising helical paths.
+    kHelical = 1
+};
+
+//! \brief Function for going from json to SlicingMode
+void to_json(json& j, const SlicingMode& i);
+
+//! \brief Function for going from SlicingMode to json
+void from_json(const json& j, SlicingMode& i);
+
+inline QString toString(CylindricalPathPattern path_pattern) {
+    switch (path_pattern) {
+        case CylindricalPathPattern::kHelical:
+            return "Helical";
+        case CylindricalPathPattern::kRadial:
+        default:
+            return "Radial";
+    }
+}
+
+/*!
+ * @enum RadialPathBoundaryPolicy
+ * @brief Controls how radial paths are handled when they intersect the model boundary.
+ */
+enum class RadialPathBoundaryPolicy : uint8_t {
+    //! @brief Keep only the portions retained by the model cross section.
+    kClipToModel = 0,
+
+    //! @brief Keep the original radial path that crosses the model boundary.
+    kKeepBoundaryCrossingPath = 1,
+
+    //! @brief Omit radial paths that are cut by the model cross-section boundary.
+    kDiscardBoundaryCrossingPath = 2
+};
+
+inline QString toString(RadialPathBoundaryPolicy handling) {
+    switch (handling) {
+        case RadialPathBoundaryPolicy::kKeepBoundaryCrossingPath:
+            return "Keep";
+        case RadialPathBoundaryPolicy::kDiscardBoundaryCrossingPath:
+            return "Discard";
+        case RadialPathBoundaryPolicy::kClipToModel:
+        default:
+            return "Clip";
+    }
+}
+
+/*!
+ * @enum HelicalPathBoundaryPolicy
+ * @brief Selects how a helical path is clipped to the model boundary.
+ */
+enum class HelicalPathBoundaryPolicy : uint8_t {
+    //! @brief Keep every portion of the helix that lies inside the model.
+    kClip = 0,
+
+    //! @brief Keep the helix through the model intersection with the greatest Z value.
+    kClipZ = 1
+};
+
+inline QString toString(HelicalPathBoundaryPolicy handling) {
+    switch (handling) {
+        case HelicalPathBoundaryPolicy::kClipZ:
+            return "Clip Z";
+        case HelicalPathBoundaryPolicy::kClip:
+        default:
+            return "Clip";
+    }
+}
+
+/*!
+ * @enum HelicalPathHandedness
+ * @brief Selects the angular direction of rising helical paths.
+ */
+enum class HelicalPathHandedness : uint8_t {
+    //! @brief Counter-clockwise XY sweep while Z increases.
+    kRightHanded = 0,
+
+    //! @brief Clockwise XY sweep while Z increases.
+    kLeftHanded = 1
+};
+
+inline QString toString(HelicalPathHandedness handedness) {
+    switch (handedness) {
+        case HelicalPathHandedness::kLeftHanded:
+            return "Left Handed";
+        case HelicalPathHandedness::kRightHanded:
+        default:
+            return "Right Handed";
+    }
+}
+
+/*!
+ * @enum CylinderAxisSource
+ * @brief Selects the XY cylinder axis used by cylindrical slicing.
+ */
+enum class CylinderAxisSource : uint8_t {
+    //! @brief Use the build part's XY centroid.
+    kPartCentroid = 0,
+
+    //! @brief Use the configured cylinder_axis_x/cylinder_axis_y settings.
+    kCustomXY = 1
+};
+
+inline QString toString(CylinderAxisSource mode) {
+    switch (mode) {
+        case CylinderAxisSource::kCustomXY:
+            return "Custom XY";
+        case CylinderAxisSource::kPartCentroid:
+        default:
+            return "Part Centroid";
+    }
+}
 
 /*!
  * \enum AffectedArea
@@ -127,51 +222,48 @@ inline ThemeName themeFromString(const QString& theme) {
 }
 
 /*!
- * \enum GcodeSyntax
- * \brief The GcodeSyntax enum
+ * @enum GcodeSyntax
+ * @brief Available output syntaxes and parser/writer dialects.
  */
 enum class GcodeSyntax : uint8_t {
-    kBeam,
-    kCincinnati,
-    kCommon,
-    kDmgDmu,
-    kGKN,
-    kGudel,
-    kHaasInch,
-    kHaasMetric,
-    kHaasMetricNoComments,
-    kHurco,
-    kIngersoll,
-    kMarlin,
-    kMarlinPellet,
-    kMazak,
-    kMVP,
-    kRomiFanuc,
-    kRPBF,
-    kSiemens,
-    kSkyBaam,
-    kThermwood,
-    kWolf,
-    kRepRap,
-    kMach4,
-    kAeroBasic,
-    kMeld,
-    kORNL,
-    kOkuma,
-    kTormach,
-    kAML3D,
-    kKraussMaffei,
-    kSandia,
-    k5AxisMarlin,
-    kMeltio,
-    kAdamantine,
-    kORNLMetric
+    kBeam = 0,
+    kCincinnati = 1,
+    kCommon = 2,
+    kDmgDmu = 3,
+    kGudel = 4,
+    kHaasInch = 5,
+    kHaasMetric = 6,
+    kHaasMetricNoComments = 7,
+    kHurco = 8,
+    kIngersoll = 9,
+    kMarlin = 10,
+    kJuggerBot = 11,
+    kMazak = 12,
+    kMVP = 13,
+    kRomiFanuc = 14,
+    kSiemens = 15,
+    kThermwood = 16,
+    kWolf = 17,
+    kRepRap = 18,
+    kMach4 = 19,
+    kAeroBasic = 20,
+    kMeld = 21,
+    kORNL = 22,
+    kOkuma = 23,
+    kTormach = 24,
+    kAML3D = 25,
+    kKraussMaffei = 26,
+    kSandia = 27,
+    kMeltio = 28,
+    kAdamantine = 29,
+    kORNLMetric = 30,
+    kArcSpecialties = 31
 };
 
 inline QString toString(GcodeSyntax syntax) {
     switch (syntax) {
-        case GcodeSyntax::k5AxisMarlin:
-            return PRS::SyntaxString::k5AxisMarlin;
+        case GcodeSyntax::kArcSpecialties:
+            return PRS::SyntaxString::kArcSpecialties;
         case GcodeSyntax::kAML3D:
             return PRS::SyntaxString::kAML3D;
         case GcodeSyntax::kBeam:
@@ -180,8 +272,6 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kCincinnati;
         case GcodeSyntax::kDmgDmu:
             return PRS::SyntaxString::kDmgDmu;
-        case GcodeSyntax::kGKN:
-            return PRS::SyntaxString::kGKN;
         case GcodeSyntax::kGudel:
             return PRS::SyntaxString::kGudel;
         case GcodeSyntax::kHaasInch:
@@ -198,8 +288,8 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kKraussMaffei;
         case GcodeSyntax::kMarlin:
             return PRS::SyntaxString::kMarlin;
-        case GcodeSyntax::kMarlinPellet:
-            return PRS::SyntaxString::kMarlinPellet;
+        case GcodeSyntax::kJuggerBot:
+            return PRS::SyntaxString::kJuggerBot;
         case GcodeSyntax::kMazak:
             return PRS::SyntaxString::kMazak;
         case GcodeSyntax::kMeld:
@@ -214,14 +304,10 @@ inline QString toString(GcodeSyntax syntax) {
             return PRS::SyntaxString::kORNL;
         case GcodeSyntax::kRomiFanuc:
             return PRS::SyntaxString::kRomiFanuc;
-        case GcodeSyntax::kRPBF:
-            return PRS::SyntaxString::kRPBF;
         case GcodeSyntax::kSandia:
             return PRS::SyntaxString::kSandia;
         case GcodeSyntax::kSiemens:
             return PRS::SyntaxString::kSiemens;
-        case GcodeSyntax::kSkyBaam:
-            return PRS::SyntaxString::kSkyBaam;
         case GcodeSyntax::kThermwood:
             return PRS::SyntaxString::kThermwood;
         case GcodeSyntax::kTormach:
@@ -250,11 +336,10 @@ enum class InfillPatterns : uint8_t {
     kLines = 0,
     kGrid = 1,
     kConcentric = 2,
-    kInsideOutConcentric = 3,
-    kTriangles = 4,
-    kHexagonsAndTriangles = 5,
-    kHoneycomb = 6,
-    kRadialHatch = 7
+    kTriangles = 3,
+    kHexagonsAndTriangles = 4,
+    kHoneycomb = 5,
+    kRadialHatch = 6
 };
 
 //! \brief Function for going from json to InfillPatterns
@@ -271,8 +356,6 @@ inline QString toString(InfillPatterns infill_type) {
             return Constants::InfillPatternTypeStrings::kGrid;
         case InfillPatterns::kConcentric:
             return Constants::InfillPatternTypeStrings::kConcentric;
-        case InfillPatterns::kInsideOutConcentric:
-            return Constants::InfillPatternTypeStrings::kInsideOutConcentric;
         case InfillPatterns::kTriangles:
             return Constants::InfillPatternTypeStrings::kTriangles;
         case InfillPatterns::kHexagonsAndTriangles:
@@ -301,8 +384,7 @@ enum class RegionType : int {
     kSupportRoof,
     kLaserScan,
     kThermalScan,
-    kSkeleton,
-    kAnchor
+    kSkeleton
 };
 
 enum class SkeletonInput : int { kSegments, kPoints };
@@ -410,8 +492,6 @@ inline QString toString(RegionType region_type) {
             return Constants::RegionTypeStrings::kThermalScan;
         case RegionType::kSkeleton:
             return Constants::RegionTypeStrings::kSkeleton;
-        case RegionType::kAnchor:
-            return Constants::RegionTypeStrings::kAnchor;
     }
     return QString();
 }
@@ -486,6 +566,17 @@ inline QString toString(PathModifiers modifier_type) {
 }
 
 /*!
+ * \enum  SmoothingType
+ * \brief The Smoothing Type enum
+ */
+enum class SmoothingType : uint8_t {
+    kDouglasPeucker = 0,
+    kRadialDistance = 1,
+    kPerpendicularDistance = 2,
+    kReumannWitkam = 3
+};
+
+/*!
  * \enum  IslandOrderOptimization
  * \brief The Path/ Island OrderOptimization enum
  */
@@ -508,13 +599,43 @@ enum class PathOrderOptimization : uint8_t {
     kCustomPoint = 5
 };
 
+inline PathOrderOptimization optionalPathOrderOptimization(int optimization,
+                                                           PathOrderOptimization default_optimization) {
+    switch (optimization) {
+        case 1:
+            return PathOrderOptimization::kNextClosest;
+        case 2:
+            return PathOrderOptimization::kNextFarthest;
+        case 3:
+            return PathOrderOptimization::kRandom;
+        case 4:
+            return PathOrderOptimization::kOutsideIn;
+        case 5:
+            return PathOrderOptimization::kInsideOut;
+        case 6:
+            return PathOrderOptimization::kCustomPoint;
+        default:
+            return default_optimization;
+    }
+}
+
+inline bool optionalPathOrderUsesCustomLocation(int optimization) {
+    return optimization == static_cast<int>(PathOrderOptimization::kCustomPoint) + 1;
+}
+
 enum class PointOrderOptimization : uint8_t {
     kNextClosest = 0,
     kNextFarthest = 1,
     kRandom = 2,
     kConsecutive = 3,
-    kCustomPoint = 4
+    kCustomPoint = 4,
+    kCustomFarthestPoint = 5
 };
+
+inline bool usesCustomPointLocation(PointOrderOptimization optimization) {
+    return optimization == PointOrderOptimization::kCustomPoint ||
+           optimization == PointOrderOptimization::kCustomFarthestPoint;
+}
 
 //! \brief Function for going from json to OrderOptimization
 void to_json(json& j, const IslandOrderOptimization& i);
@@ -530,21 +651,16 @@ void from_json(const json& j, PathOrderOptimization& i);
 
 enum class Axis : uint8_t { kX, kY, kZ };
 
-enum class IslandType : uint8_t {
-    kAll,
-    kBrim,
-    kPolymer,
-    kRaft,
-    kLaserScan,
-    kThermalScan,
-    kSkirt,
-    kSupport,
-    kPowderSector,
-    kWireFeed,
-    kAnchor
-};
+enum class IslandType : uint8_t { kAll, kBrim, kPolymer, kRaft, kLaserScan, kThermalScan, kSkirt, kSupport };
 
-enum class MachineType : uint8_t { kPellet, kFilament, kWire_Arc, kLaser_Wire, kConcrete, kThermoset };
+enum class MachineType : uint8_t {
+    kPellet = 0,
+    kFilament = 1,
+    kWire_Arc = 2,
+    kLaser_Wire = 3,
+    kConcrete = 4,
+    kThermoset = 5
+};
 
 enum class PrintMaterial : uint8_t {
     kABS20CF = 0,
@@ -627,9 +743,48 @@ enum class SeamSelection : uint8_t { kRandom, kOptimized, kRotating };
 
 enum class PrintDirection : uint8_t { kReverse_off, kReverse_All_Layers, kReverse_Alternating_Layers };
 
+enum class PerimeterBoundarySelection : uint8_t { kAll = 0, kInternal = 1, kExternal = 2 };
+
 enum class ForceMinimumLayerTime : uint8_t { kUse_Purge_Dwells, kSlow_Feedrate };
 
 enum class PreferenceChoice : uint8_t { kAsk = 0, kPerformAutomatically = 1, kSkipAutomatically = 2 };
+
+enum class DisabledSettingVisibility : uint8_t { kGrey = 0, kHide = 1 };
+
+inline QString toString(DisabledSettingVisibility visibility) {
+    switch (visibility) {
+        case DisabledSettingVisibility::kHide:
+            return "Hide";
+        case DisabledSettingVisibility::kGrey:
+        default:
+            return "Grey";
+    }
+}
+
+/*!
+ * \enum GCodePreviewMode
+ * \brief Controls how g-code visualization chooses between true bead meshes and lightweight lines.
+ *
+ * Auto uses the configured vertex threshold. True Bead Widths honors the toolbar true-width request without applying
+ * the automatic threshold fallback. Thin Lines disables true-width previews.
+ */
+enum class GCodePreviewMode : uint8_t {
+    kAuto = 0,
+    kTrueWidths = 1,
+    kThinLines = 2,
+};
+
+inline QString toString(GCodePreviewMode mode) {
+    switch (mode) {
+        case GCodePreviewMode::kTrueWidths:
+            return "True Bead Widths";
+        case GCodePreviewMode::kThinLines:
+            return "Thin Lines";
+        case GCodePreviewMode::kAuto:
+        default:
+            return "Auto";
+    }
+}
 
 enum class VisualizationColors {
     kBrim = 0,
@@ -637,12 +792,16 @@ enum class VisualizationColors {
     kInfill,
     kInitialStartup,
     kInset,
+    kInsetArc,
     kLaserScan,
     kLeadIn,
     kFlyingStart,
     kPerimeter,
+    kPerimeterArc,
     kPrestart,
     kRaft,
+    kRadial,
+    kHelical,
     kRampingDown,
     kRampingUp,
     kSkeleton,
@@ -674,6 +833,8 @@ inline QString VisualizationColorsName(VisualizationColors color) {
             return "InitialStartup";
         case VisualizationColors::kInset:
             return "Inset";
+        case VisualizationColors::kInsetArc:
+            return "InsetArc";
         case VisualizationColors::kLaserScan:
             return "LaserScan";
         case VisualizationColors::kLeadIn:
@@ -682,10 +843,16 @@ inline QString VisualizationColorsName(VisualizationColors color) {
             return "FlyingStart";
         case VisualizationColors::kPerimeter:
             return "Perimeter";
+        case VisualizationColors::kPerimeterArc:
+            return "PerimeterArc";
         case VisualizationColors::kPrestart:
             return "Prestart";
         case VisualizationColors::kRaft:
             return "Raft";
+        case VisualizationColors::kRadial:
+            return "Radial";
+        case VisualizationColors::kHelical:
+            return "Helical";
         case VisualizationColors::kRampingDown:
             return "RampingDown";
         case VisualizationColors::kRampingUp:
@@ -742,6 +909,8 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
             return QColor(135, 222, 205, 255);
         case VisualizationColors::kInset:
             return QColor(0, 204, 255, 255);
+        case VisualizationColors::kInsetArc:
+            return QColor(0, 184, 255, 255);
         case VisualizationColors::kLaserScan:
             return QColor(90, 255, 90, 255);
         case VisualizationColors::kLeadIn:
@@ -750,10 +919,16 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
             return QColor(120, 150, 250);
         case VisualizationColors::kPerimeter:
             return QColor(0, 0, 255, 255);
+        case VisualizationColors::kPerimeterArc:
+            return QColor(32, 64, 255, 255);
         case VisualizationColors::kPrestart:
             return QColor(204, 0, 255, 255);
         case VisualizationColors::kRaft:
             return QColor(102, 102, 102, 255);
+        case VisualizationColors::kRadial:
+            return QColor(47, 82, 102, 255);
+        case VisualizationColors::kHelical:
+            return QColor(127, 0, 255, 255);
         case VisualizationColors::kRampingDown:
             return QColor(22, 99, 137, 255);
         case VisualizationColors::kRampingUp:
@@ -847,7 +1022,6 @@ enum class StatusUpdateStepType : uint8_t {
     kGcodeGeneraton = 3,
     kGcodeParsing = 4,
     kVisualization = 5,
-    kRealTimeLayerCompleted = 6,
 };
 
 inline QString toString(StatusUpdateStepType statusType) {
@@ -864,8 +1038,6 @@ inline QString toString(StatusUpdateStepType statusType) {
             return "G-Code Parsing:";
         case StatusUpdateStepType::kVisualization:
             return "Visualization:";
-        case StatusUpdateStepType::kRealTimeLayerCompleted:
-            return "Layers completed:";
     }
 }
 
@@ -874,8 +1046,6 @@ enum class QuaternionOrder { kXYZ = 0, kZYX = 1 };
 enum class RotationUnit { kPitchRollYaw = 0, kXYZ = 1 };
 
 enum class LayerOrdering : uint8_t { kByHeight = 0, kByLayerNumber = 1, kByPart = 2 };
-
-enum class NozzleAssignmentMethod : uint8_t { kXLocation = 0, kYLocation = 1, kArea = 2 };
 
 enum class TormachMode : uint8_t { kMode21 = 0, kMode40 = 1, kMode102 = 2, kMode274 = 3, kMode509 = 4 };
 

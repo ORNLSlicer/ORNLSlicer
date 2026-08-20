@@ -45,8 +45,8 @@ class CommandLineConverter {
     //! (operator/description) \param parser: parser with values \param options: valid command line options
     bool checkOptionalExportOptions(QCommandLineParser& parser, QSharedPointer<SettingsBase> options);
 
-    //! \brief Convert/Check options that are optional: real-time mode.
-    //! These include slice bounds, real-time mode, real-time communication mode, and real-time network address.
+    //! \brief Convert/Check options that are optional for advanced slicing control.
+    //! These include slice bounds and single-slice controls.
     //! \param parser: parser with values
     //! \param options: valid command line options
     bool checkAdvancedOptions(QCommandLineParser& parser, QSharedPointer<SettingsBase> options);
@@ -55,6 +55,10 @@ class CommandLineConverter {
     //! \param path: path of file
     //! \param suffix: necessary file extension
     bool isValid(QString path, QString suffix);
+
+    //! \brief Check if file path is valid and has a supported model extension
+    //! \param path: path of file
+    bool isValidModelFile(QString path);
 
     //! \brief Copy of master json for access to individual settings
     QSharedPointer<SettingsBase> m_master;

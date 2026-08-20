@@ -3,8 +3,8 @@
 #include <math.h>
 
 #include <cmath>
-#include <limits>
 
+#include <QVector>
 #include <QtMath>
 #include <qcontainerfwd.h>
 #include <qminmax.h>
@@ -22,44 +22,260 @@
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
-#include "utilities/mathutils.h"
 
 namespace ORNL {
-
-void PathModifierGenerator::GenerateRotationAndTilt(Path& path, Point origin, bool rotate, bool& next_ccw, bool tilt) {
-    if (rotate) {
-        if (path.getCCW() != next_ccw) {
-            path.reverseSegments();
-            path.setCCW(!path.getCCW());
-        }
-        next_ccw = !next_ccw;
-
-        for (QSharedPointer<SegmentBase> seg : path.getSegments()) {
-            seg->getSb()->setSetting(SS::kRotation, MathUtils::internalAngle(seg->start(), origin, seg->end()));
-        }
-    }
-    if (tilt) {
-        for (QSharedPointer<SegmentBase>& seg : path.getSegments()) {
-            if (path.getCCW()) {
-                Point newPoint = seg->start();
-                newPoint.reverseNormals();
-                seg->setStart(newPoint);
-            }
-            seg->getSb()->setSetting(SS::kTilt, seg->start().getNormals());
-            seg->getSb()->setSetting(SS::kCCW, path.getCCW());
-        }
+namespace {
+void copyInitialExtruderSpeed(const QSharedPointer<SettingsBase>& destination,
+                              const QSharedPointer<SettingsBase>& source) {
+    if (source->contains(MS::Extruder::kInitialSpeed)) {
+        destination->setSetting(MS::Extruder::kInitialSpeed, source->setting<int>(MS::Extruder::kInitialSpeed));
     }
 }
+
+void copyAdaptedWidthFlag(const QSharedPointer<SettingsBase>& destination, const QSharedPointer<SettingsBase>& source) {
+    if (source->contains(SS::kAdapted)) {
+        destination->setSetting(SS::kAdapted, source->setting<bool>(SS::kAdapted));
+    }
+}
+
+bool isExtendableLineSegment(const QSharedPointer<SegmentBase>& segment) {
+    return segment->isPrintingSegment() && dynamic_cast<LineSegment*>(segment.data()) != nullptr;
+}
+
+bool pointsCoincident(const Point& lhs, const Point& rhs) { return lhs.distance(rhs)() <= 1.0e-4; }
+
+struct Vector2D {
+    double x = 0.0;
+    double y = 0.0;
+};
+
+struct SharpCornerGeometry {
+    Point previous_cut;
+    Point sharp_point;
+    Point next_cut;
+    double previous_cut_parameter = 1.0;
+    double next_cut_parameter = 0.0;
+};
+
+struct SegmentEndpointUpdates {
+    bool has_start = false;
+    bool has_end = false;
+    Point start;
+    Point end;
+    double start_parameter = 0.0;
+    double end_parameter = 1.0;
+};
+
+struct SharpCornerSettings {
+    bool enabled = false;
+    double threshold_radians = 0.0;
+    double extension_length = 0.0;
+    double close_points_threshold = 0.0;
+    double sharpening_leg_length = 0.0;
+};
+
+template <typename T>
+T settingWithFallback(const QSharedPointer<SettingsBase>& settings, const QSharedPointer<SettingsBase>& fallback,
+                      const QString& key) {
+    if (!settings.isNull() && settings->contains(key))
+        return settings->setting<T>(key);
+
+    if (!fallback.isNull())
+        return fallback->setting<T>(key);
+
+    return T();
+}
+
+SharpCornerSettings sharpCornerSettingsForSegment(const QSharedPointer<SegmentBase>& segment,
+                                                  const QSharedPointer<SettingsBase>& fallback) {
+    const QSharedPointer<SettingsBase> segment_settings = segment->getSb();
+    const Angle threshold =
+        settingWithFallback<Angle>(segment_settings, fallback, PS::SpecialModes::kSharpCornerExtensionAngle);
+    const Distance extension_distance =
+        settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerExtensionDistance);
+    const Distance close_points_threshold =
+        settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerClosePointsThreshold);
+    Distance sharpening_leg_length =
+        settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerSharpeningLegLength);
+    if (sharpening_leg_length <= 0)
+        sharpening_leg_length = extension_distance;
+
+    return {
+        settingWithFallback<bool>(segment_settings, fallback, PS::SpecialModes::kEnableSharpCornerExtension),
+        qMin(M_PI, threshold()),
+        extension_distance(),
+        close_points_threshold(),
+        sharpening_leg_length(),
+    };
+}
+
+bool sharpCornerEnabledForBothLegs(const QSharedPointer<SegmentBase>& previous_segment,
+                                   const QSharedPointer<SegmentBase>& next_segment,
+                                   const QSharedPointer<SettingsBase>& fallback, SharpCornerSettings& settings) {
+    settings = sharpCornerSettingsForSegment(previous_segment, fallback);
+    const SharpCornerSettings next_settings = sharpCornerSettingsForSegment(next_segment, fallback);
+
+    return settings.enabled && next_settings.enabled && settings.threshold_radians > 0.0 &&
+           settings.extension_length > 0.0 && settings.sharpening_leg_length > 0.0;
+}
+
+double crossProduct(const Vector2D& lhs, const Vector2D& rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
+
+bool normalizedDirection(const Point& start, const Point& end, Vector2D& direction, double& length) {
+    const double x = end.x() - start.x();
+    const double y = end.y() - start.y();
+    length = std::hypot(x, y);
+    constexpr double kMinLength = 1.0e-6;
+    if (length < kMinLength)
+        return false;
+
+    direction = {x / length, y / length};
+    return true;
+}
+
+Point pointOnSegment(const Point& start, const Point& end, double parameter) {
+    return Point(start.x() + ((end.x() - start.x()) * parameter), start.y() + ((end.y() - start.y()) * parameter),
+                 start.z() + ((end.z() - start.z()) * parameter));
+}
+
+bool lineIntersection(const Point& first_start, const Point& first_end, const Point& second_start,
+                      const Point& second_end, Point& intersection) {
+    const Vector2D first_axis = {first_end.x() - first_start.x(), first_end.y() - first_start.y()};
+    const Vector2D second_axis = {second_end.x() - second_start.x(), second_end.y() - second_start.y()};
+    const double denominator = crossProduct(first_axis, second_axis);
+    constexpr double kParallelTolerance = 1.0e-8;
+    if (std::abs(denominator) < kParallelTolerance)
+        return false;
+
+    const Vector2D start_delta = {second_start.x() - first_start.x(), second_start.y() - first_start.y()};
+    const double first_parameter = crossProduct(start_delta, second_axis) / denominator;
+
+    const double x = first_start.x() + (first_axis.x * first_parameter);
+    const double y = first_start.y() + (first_axis.y * first_parameter);
+    if (!std::isfinite(x) || !std::isfinite(y))
+        return false;
+
+    intersection = Point(x, y, (first_end.z() + second_start.z()) / 2.0f);
+    return true;
+}
+
+QSharedPointer<SegmentBase> cloneSegmentWithEndpoints(const QSharedPointer<SegmentBase>& source, const Point& start,
+                                                      const Point& end) {
+    QSharedPointer<SegmentBase> segment = source->clone();
+    segment->setStart(start);
+    segment->setEnd(end);
+
+    if (!source->getSb().isNull())
+        segment->setSb(QSharedPointer<SettingsBase>::create(*source->getSb()));
+
+    return segment;
+}
+
+bool calculateSharpCornerGeometry(const QSharedPointer<SegmentBase>& previous_segment,
+                                  const QSharedPointer<SegmentBase>& next_segment, double threshold_radians,
+                                  double extension_length, double sharpening_leg_length,
+                                  SharpCornerGeometry& geometry) {
+    Vector2D previous_direction;
+    Vector2D next_direction;
+    double previous_length = 0.0;
+    double next_length = 0.0;
+
+    if (!normalizedDirection(previous_segment->start(), previous_segment->end(), previous_direction, previous_length) ||
+        !normalizedDirection(next_segment->start(), next_segment->end(), next_direction, next_length)) {
+        return false;
+    }
+
+    if (previous_length <= sharpening_leg_length || next_length <= sharpening_leg_length)
+        return false;
+
+    double cos_theta = (previous_direction.x * next_direction.x) + (previous_direction.y * next_direction.y);
+    cos_theta = qMin(1.0, cos_theta);
+    cos_theta = qMax(-1.0, cos_theta);
+
+    const double corner_angle = M_PI - std::acos(cos_theta);
+    if (corner_angle > threshold_radians)
+        return false;
+
+    Point merge_point;
+    if (!lineIntersection(previous_segment->start(), previous_segment->end(), next_segment->start(),
+                          next_segment->end(), merge_point)) {
+        return false;
+    }
+
+    const Vector2D extension_direction = {previous_direction.x - next_direction.x,
+                                          previous_direction.y - next_direction.y};
+    const double extension_direction_length = std::hypot(extension_direction.x, extension_direction.y);
+    constexpr double kMinLength = 1.0e-6;
+    if (extension_direction_length < kMinLength)
+        return false;
+
+    geometry.previous_cut_parameter = 1.0 - (sharpening_leg_length / previous_length);
+    geometry.next_cut_parameter = sharpening_leg_length / next_length;
+    geometry.previous_cut =
+        pointOnSegment(previous_segment->start(), previous_segment->end(), geometry.previous_cut_parameter);
+    geometry.next_cut = pointOnSegment(next_segment->start(), next_segment->end(), geometry.next_cut_parameter);
+    geometry.sharp_point = Point(
+        merge_point.x() + (extension_direction.x / extension_direction_length * extension_length),
+        merge_point.y() + (extension_direction.y / extension_direction_length * extension_length), merge_point.z());
+
+    return true;
+}
+
+bool canApplyEndUpdate(int segment_index, double parameter, const QVector<bool>& skip_segment,
+                       const QVector<SegmentEndpointUpdates>& updates) {
+    constexpr double kParameterTolerance = 1.0e-6;
+    if (skip_segment[segment_index] || updates[segment_index].has_end)
+        return false;
+
+    return !updates[segment_index].has_start ||
+           updates[segment_index].start_parameter < parameter - kParameterTolerance;
+}
+
+bool canApplyStartUpdate(int segment_index, double parameter, const QVector<bool>& skip_segment,
+                         const QVector<SegmentEndpointUpdates>& updates) {
+    constexpr double kParameterTolerance = 1.0e-6;
+    if (skip_segment[segment_index] || updates[segment_index].has_start)
+        return false;
+
+    return !updates[segment_index].has_end || parameter < updates[segment_index].end_parameter - kParameterTolerance;
+}
+
+bool applySharpCornerGeometry(Path& path, int previous_index, int next_index, const SharpCornerGeometry& geometry,
+                              QVector<bool>& skip_segment, QVector<SegmentEndpointUpdates>& updates,
+                              QVector<QVector<QSharedPointer<SegmentBase>>>& insertions_after) {
+    if (!canApplyEndUpdate(previous_index, geometry.previous_cut_parameter, skip_segment, updates) ||
+        !canApplyStartUpdate(next_index, geometry.next_cut_parameter, skip_segment, updates) ||
+        !insertions_after[previous_index].isEmpty()) {
+        return false;
+    }
+
+    updates[previous_index].has_end = true;
+    updates[previous_index].end = geometry.previous_cut;
+    updates[previous_index].end_parameter = geometry.previous_cut_parameter;
+
+    updates[next_index].has_start = true;
+    updates[next_index].start = geometry.next_cut;
+    updates[next_index].start_parameter = geometry.next_cut_parameter;
+
+    insertions_after[previous_index].push_back(
+        cloneSegmentWithEndpoints(path[previous_index], geometry.previous_cut, geometry.sharp_point));
+    insertions_after[previous_index].push_back(
+        cloneSegmentWithEndpoints(path[next_index], geometry.sharp_point, geometry.next_cut));
+
+    return true;
+}
+} // namespace
 
 void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, Velocity velocity) {
     QSharedPointer<TravelSegment> travel_segment =
         QSharedPointer<TravelSegment>::create(current_location, path.front()->start());
-    travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
+    QSharedPointer<SettingsBase> next_segment_settings = path.front()->getSb();
 
-    if (path.size() > 0 && path[0]->getSb()->contains(SS::kTilt)) {
-        travel_segment->getSb()->setSetting(SS::kTilt, path[0]->getSb()->setting<QVector<QVector3D>>(SS::kTilt));
-        travel_segment->getSb()->setSetting(SS::kCCW, path[0]->getSb()->setting<bool>(SS::kCCW));
-    }
+    copyInitialExtruderSpeed(travel_segment->getSb(), next_segment_settings);
+    travel_segment->getSb()->setSetting(SS::kRegionType, next_segment_settings->setting<RegionType>(SS::kRegionType));
+    travel_segment->getSb()->setSetting(SS::kExtruderSpeed,
+                                        next_segment_settings->setting<AngularVelocity>(SS::kExtruderSpeed));
+    travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
 
     path.prepend(travel_segment);
 }
@@ -77,6 +293,8 @@ void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDi
 
     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
 
+    copyInitialExtruderSpeed(segment->getSb(), path[0]->getSb());
+    copyAdaptedWidthFlag(segment->getSb(), path[0]->getSb());
     segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth));
     segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight));
     segment->getSb()->setSetting(SS::kSpeed, leadInSpeed);
@@ -86,6 +304,39 @@ void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDi
     segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kLeadIn);
 
     // Update Width and Height if using Width and Height mode
+    if (enableWidthHeight) {
+        areaMultiplier = qSqrt(areaMultiplier / 100.0);
+        segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth) * areaMultiplier);
+        segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight) * areaMultiplier);
+    }
+
+    path.insert(0, segment);
+}
+
+void PathModifierGenerator::GeneratePrestart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
+                                             AngularVelocity prestartExtruderSpeed, bool enableWidthHeight,
+                                             double areaMultiplier) {
+    Point firstPoint = path[0]->start();
+    Point secondPoint = path[0]->end();
+    Distance length = secondPoint.distance(firstPoint);
+    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * prestartDistance();
+    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * prestartDistance();
+    Distance Z = firstPoint.z();
+    Point newStart = Point(X, Y, Z);
+
+    QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
+
+    copyInitialExtruderSpeed(segment->getSb(), path[0]->getSb());
+    copyAdaptedWidthFlag(segment->getSb(), path[0]->getSb());
+    segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth));
+    segment->getSb()->setSetting(SS::kHeight, path[0]->getSb()->setting<Distance>(SS::kHeight));
+    segment->getSb()->setSetting(SS::kSpeed, prestartSpeed);
+    segment->getSb()->setSetting(SS::kAccel, path[0]->getSb()->setting<Acceleration>(SS::kAccel));
+    segment->getSb()->setSetting(SS::kExtruderSpeed, prestartExtruderSpeed);
+    segment->getSb()->setSetting(SS::kRegionType, path[0]->getSb()->setting<RegionType>(SS::kRegionType));
+    segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kPrestart);
+    segment->getSb()->setSetting(SS::kMaterialNumber, path[0]->getSb()->setting<int>(SS::kMaterialNumber));
+
     if (enableWidthHeight) {
         areaMultiplier = qSqrt(areaMultiplier / 100.0);
         segment->getSb()->setSetting(SS::kWidth, path[0]->getSb()->setting<Distance>(SS::kWidth) * areaMultiplier);
@@ -122,6 +373,8 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
             QSharedPointer<LineSegment> segment =
                 QSharedPointer<LineSegment>::create(path[currentIndex]->start(), path[currentIndex]->end());
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+            copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, flyingStartSpeed);
@@ -131,8 +384,6 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
             segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kFlyingStart);
             segment->getSb()->setSetting(SS::kMaterialNumber,
                                          path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber));
-            segment->getSb()->setSetting(SS::kExtruders,
-                                         path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders));
 
             path.insert(0, segment);
         }
@@ -148,6 +399,8 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, end);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+            copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, flyingStartSpeed);
@@ -157,8 +410,6 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
             segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kFlyingStart);
             segment->getSb()->setSetting(SS::kMaterialNumber,
                                          path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber));
-            segment->getSb()->setSetting(SS::kExtruders,
-                                         path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders));
 
             path.insert(0, segment);
         }
@@ -200,6 +451,8 @@ void PathModifierGenerator::GenerateInitialStartup(Path& path, Distance startDis
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(oldStart, end);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+            copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, startSpeed);
@@ -209,8 +462,6 @@ void PathModifierGenerator::GenerateInitialStartup(Path& path, Distance startDis
             segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kInitialStartup);
             segment->getSb()->setSetting(SS::kMaterialNumber,
                                          path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber));
-            segment->getSb()->setSetting(SS::kExtruders,
-                                         path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders));
 
             // Update Width and Height if using Width and Height mode
             if (enableWidthHeight) {
@@ -269,6 +520,8 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(oldStart, end);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+            copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, startSpeed);
@@ -279,8 +532,6 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
             segment->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kInitialStartup);
             segment->getSb()->setSetting(SS::kMaterialNumber,
                                          path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber));
-            segment->getSb()->setSetting(SS::kExtruders,
-                                         path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders));
 
             // Update Width and Height if using Width and Height mode
             if (enableWidthHeight) {
@@ -328,6 +579,8 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
 
                 QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(oldStart, end);
 
+                copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+                copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
                 segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
                 segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
                 segment->getSb()->setSetting(SS::kSpeed, currentSpeed);
@@ -409,6 +662,8 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, newEnd);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+            copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, slowDownSpeed);
@@ -419,8 +674,6 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
             segment->getSb()->setSetting(SS::kPathModifiers, current_mod);
             segment->getSb()->setSetting(SS::kMaterialNumber,
                                          path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber));
-            segment->getSb()->setSetting(SS::kExtruders,
-                                         path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders));
 
             // Update Width and Height if using Width and Height mode
             if (enableWidthHeight) {
@@ -463,6 +716,8 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(end, oldEnd);
 
+            copyInitialExtruderSpeed(segment->getSb(), path[currentIndex]->getSb());
+            copyAdaptedWidthFlag(segment->getSb(), path[currentIndex]->getSb());
             segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth));
             segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight));
             segment->getSb()->setSetting(SS::kSpeed, slowDownSpeed);
@@ -499,6 +754,8 @@ void PathModifierGenerator::GenerateLayerLeadIn(Path& path, const Point& leadIn,
 
         QSharedPointer<LineSegment> leadInSegment =
             QSharedPointer<LineSegment>::create(leadIn, firstBuildSegment->start());
+        copyInitialExtruderSpeed(leadInSegment->getSb(), firstBuildSegment->getSb());
+        copyAdaptedWidthFlag(leadInSegment->getSb(), firstBuildSegment->getSb());
         leadInSegment->getSb()->setSetting(SS::kWidth, firstBuildSegment->getSb()->setting<Distance>(SS::kWidth));
         leadInSegment->getSb()->setSetting(SS::kHeight, firstBuildSegment->getSb()->setting<Distance>(SS::kHeight));
         leadInSegment->getSb()->setSetting(SS::kSpeed, firstBuildSegment->getSb()->setting<Velocity>(SS::kSpeed));
@@ -568,6 +825,111 @@ void PathModifierGenerator::GenerateTrajectorySlowdown(Path& path, QSharedPointe
     }
 }
 
+void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPointer<SettingsBase> sb) {
+    if (path.size() < 2)
+        return;
+
+    const int segmentCount = path.size();
+    const bool isClosed = pointsCoincident(path.front()->start(), path.back()->end());
+
+    QVector<bool> skipSegment(segmentCount, false);
+    QVector<SegmentEndpointUpdates> endpointUpdates(segmentCount);
+    QVector<QVector<QSharedPointer<SegmentBase>>> insertionsAfter(segmentCount);
+
+    bool modifiedPath = false;
+    if (segmentCount >= 3) {
+        const int firstConnectorIndex = isClosed ? 0 : 1;
+        const int connectorLimit = isClosed ? segmentCount : segmentCount - 1;
+
+        for (int connectorIndex = firstConnectorIndex; connectorIndex < connectorLimit; ++connectorIndex) {
+            if (skipSegment[connectorIndex] || !isExtendableLineSegment(path[connectorIndex])) {
+                continue;
+            }
+
+            const int previousIndex = (connectorIndex + segmentCount - 1) % segmentCount;
+            const int nextIndex = (connectorIndex + 1) % segmentCount;
+
+            if (skipSegment[previousIndex] || skipSegment[nextIndex] || previousIndex == nextIndex ||
+                !isExtendableLineSegment(path[previousIndex]) || !isExtendableLineSegment(path[nextIndex])) {
+                continue;
+            }
+
+            if (!pointsCoincident(path[previousIndex]->end(), path[connectorIndex]->start()) ||
+                !pointsCoincident(path[connectorIndex]->end(), path[nextIndex]->start())) {
+                continue;
+            }
+
+            SharpCornerSettings settings;
+            const SharpCornerSettings connector_settings = sharpCornerSettingsForSegment(path[connectorIndex], sb);
+            if (!sharpCornerEnabledForBothLegs(path[previousIndex], path[nextIndex], sb, settings) ||
+                !connector_settings.enabled || settings.close_points_threshold <= 0.0 ||
+                path[connectorIndex]->length() > settings.close_points_threshold) {
+                continue;
+            }
+
+            SharpCornerGeometry geometry;
+            if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], settings.threshold_radians,
+                                              settings.extension_length, settings.sharpening_leg_length, geometry)) {
+                continue;
+            }
+
+            if (!applySharpCornerGeometry(path, previousIndex, nextIndex, geometry, skipSegment, endpointUpdates,
+                                          insertionsAfter)) {
+                continue;
+            }
+
+            skipSegment[connectorIndex] = true;
+            modifiedPath = true;
+        }
+    }
+
+    const int junctionCount = isClosed ? segmentCount : segmentCount - 1;
+    for (int previousIndex = 0; previousIndex < junctionCount; ++previousIndex) {
+        const int nextIndex = (previousIndex + 1) % segmentCount;
+        if (skipSegment[previousIndex] || skipSegment[nextIndex] || !isExtendableLineSegment(path[previousIndex]) ||
+            !isExtendableLineSegment(path[nextIndex])) {
+            continue;
+        }
+
+        if (!pointsCoincident(path[previousIndex]->end(), path[nextIndex]->start()))
+            continue;
+
+        SharpCornerSettings settings;
+        if (!sharpCornerEnabledForBothLegs(path[previousIndex], path[nextIndex], sb, settings))
+            continue;
+
+        SharpCornerGeometry geometry;
+        if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], settings.threshold_radians,
+                                          settings.extension_length, settings.sharpening_leg_length, geometry)) {
+            continue;
+        }
+
+        modifiedPath |= applySharpCornerGeometry(path, previousIndex, nextIndex, geometry, skipSegment, endpointUpdates,
+                                                 insertionsAfter);
+    }
+
+    if (!modifiedPath)
+        return;
+
+    Path sharpenedPath;
+    for (int segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
+        if (skipSegment[segmentIndex])
+            continue;
+
+        Point start =
+            endpointUpdates[segmentIndex].has_start ? endpointUpdates[segmentIndex].start : path[segmentIndex]->start();
+        Point end =
+            endpointUpdates[segmentIndex].has_end ? endpointUpdates[segmentIndex].end : path[segmentIndex]->end();
+
+        sharpenedPath.append(cloneSegmentWithEndpoints(path[segmentIndex], start, end));
+        for (const QSharedPointer<SegmentBase>& insertion : insertionsAfter[segmentIndex])
+            sharpenedPath.append(insertion);
+    }
+
+    path.clear();
+    path.append(sharpenedPath);
+}
+
 // to generate tip wipe
 void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers, Distance wipeDistance,
                                             Velocity wipeSpeed, Angle wipeAngle, AngularVelocity extruderSpeed,
@@ -605,8 +967,8 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
                 path[currentIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
                 path[currentIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
                 path[currentIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kForwardTipWipe,
-                path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-                path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
+                path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber), tipWipeCutoffDistance,
+                path[currentIndex]->getSb()->setting<bool>(SS::kAdapted));
 
             currentIndex = (currentIndex + 1) % path.size();
         }
@@ -630,8 +992,8 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
             path[currentIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
             path[currentIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
             path[currentIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kAngledTipWipe,
-            path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-            path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
+            path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber), tipWipeCutoffDistance,
+            path[currentIndex]->getSb()->setting<bool>(SS::kAdapted));
     }
     else {
         int currentIndex = path.size() - 1;
@@ -664,143 +1026,13 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
                 path[currentIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
                 path[currentIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
                 path[currentIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kReverseTipWipe,
-                path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-                path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
+                path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber), tipWipeCutoffDistance,
+                path[currentIndex]->getSb()->setting<bool>(SS::kAdapted));
 
             currentIndex -= 1;
             if (currentIndex < 0)
                 currentIndex = path.size() - 1;
         }
-    }
-}
-
-void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers, Distance wipeDistance,
-                                            Velocity wipeSpeed, QVector<Path>& outerPath, Angle wipeAngle,
-                                            AngularVelocity extruderSpeed, Distance tipWipeLiftDistance,
-                                            Distance tipWipeCutoffDistance) {
-    tipWipeDistanceCovered = 0;
-
-    // can only go forward, connect to inset
-    Point closest;
-    double distance = std::numeric_limits<double>::max();
-    int pathIndex, segmentIndex;
-    Point finalPoint = path[path.size() - 1]->end();
-    int finalIndex = path.size() - 1;
-    for (int i = 0, totalContours = outerPath.size(); i < totalContours; ++i) {
-        for (int j = 0, totalSegments = outerPath[i].size(); j < totalSegments; ++j) {
-            auto [temp_closest, temp_distance] =
-                MathUtils::nearestPointOnSegment(outerPath[i][j]->start(), outerPath[i][j]->end(), finalPoint);
-
-            if (temp_distance < distance) {
-                closest = temp_closest;
-                distance = temp_distance;
-                segmentIndex = j;
-                pathIndex = i;
-            }
-        }
-    }
-
-    if (modifiers == PathModifiers::kForwardTipWipe) {
-        if (distance > path[finalIndex]->getSb()->setting<Distance>(SS::kWidth)) {
-            GenerateForwardTipWipeOpenLoop(path, modifiers, wipeDistance, wipeSpeed, extruderSpeed, tipWipeLiftDistance,
-                                           tipWipeCutoffDistance, false);
-        }
-        else {
-            // move to segment
-            Distance new_Z = closest.z() + (tipWipeLiftDistance * finalPoint.distance(closest) / wipeDistance);
-            Point new_end = Point(closest.x(), closest.y(), new_Z);
-            Distance cumulative_distance = 0;
-            Distance wipeLength = wipeDistance;
-            generateTipWipeSegment(
-                path, finalPoint, new_end, path[finalIndex]->getSb()->setting<Distance>(SS::kWidth),
-                path[finalIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
-                path[finalIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
-                path[finalIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kForwardTipWipe,
-                path[finalIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-                path[finalIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
-
-            Distance nextSegmentDistEnd = outerPath[pathIndex][segmentIndex]->end().distance(closest);
-            Distance nextSegmentDistStart = outerPath[pathIndex][segmentIndex]->start().distance(closest);
-
-            wipeDistance -= finalPoint.distance(closest);
-            cumulative_distance += finalPoint.distance(closest);
-
-            if (nextSegmentDistStart > nextSegmentDistEnd) {
-                // int currentIndex = index;
-                while (wipeDistance > 0) {
-                    Distance nextSegmentDist = closest.distance(outerPath[pathIndex][segmentIndex]->end());
-                    wipeDistance -= nextSegmentDist;
-                    cumulative_distance += nextSegmentDist;
-
-                    Point end;
-                    if (wipeDistance >= 0) {
-                        end = Point(outerPath[pathIndex][segmentIndex]->end().x(),
-                                    outerPath[pathIndex][segmentIndex]->end().y(),
-                                    outerPath[pathIndex][segmentIndex]->end().z() +
-                                        (tipWipeLiftDistance * cumulative_distance / wipeLength));
-                    }
-                    else {
-                        float percentage = 1 - (-wipeDistance() / nextSegmentDist());
-                        end = Point((1.0 - percentage) * closest.x() +
-                                        percentage * outerPath[pathIndex][segmentIndex]->end().x(),
-                                    (1.0 - percentage) * closest.y() +
-                                        percentage * outerPath[pathIndex][segmentIndex]->end().y(),
-                                    outerPath[pathIndex][segmentIndex]->end().z() + tipWipeLiftDistance);
-                    }
-
-                    generateTipWipeSegment(
-                        path, closest, end, path[finalIndex]->getSb()->setting<Distance>(SS::kWidth),
-                        path[finalIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
-                        path[finalIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
-                        path[finalIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kForwardTipWipe,
-                        path[finalIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-                        path[finalIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
-
-                    segmentIndex = (segmentIndex + 1) % outerPath[pathIndex].size();
-                    closest = end;
-                }
-            }
-            else {
-                while (wipeDistance > 0) {
-                    Distance nextSegmentDist = closest.distance(outerPath[pathIndex][segmentIndex]->start());
-                    wipeDistance -= nextSegmentDist;
-                    cumulative_distance += nextSegmentDist;
-
-                    Point end;
-                    if (wipeDistance >= 0) {
-                        end = Point(outerPath[pathIndex][segmentIndex]->end().x(),
-                                    outerPath[pathIndex][segmentIndex]->end().y(),
-                                    outerPath[pathIndex][segmentIndex]->end().z() +
-                                        (tipWipeLiftDistance * cumulative_distance / wipeLength));
-                    }
-                    else {
-                        float percentage = 1 - (-wipeDistance() / nextSegmentDist());
-                        end = Point((1.0 - percentage) * closest.x() +
-                                        percentage * outerPath[pathIndex][segmentIndex]->start().x(),
-                                    (1.0 - percentage) * closest.y() +
-                                        percentage * outerPath[pathIndex][segmentIndex]->start().y());
-                    }
-
-                    generateTipWipeSegment(
-                        path, closest, end, path[finalIndex]->getSb()->setting<Distance>(SS::kWidth),
-                        path[finalIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
-                        path[finalIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
-                        path[finalIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kForwardTipWipe,
-                        path[finalIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-                        path[finalIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
-
-                    segmentIndex -= 1;
-                    if (segmentIndex < 0)
-                        segmentIndex = outerPath[pathIndex].size() - 1;
-
-                    closest = end;
-                }
-            }
-        }
-    }
-    else {
-        GenerateTipWipe(path, modifiers, wipeDistance, wipeSpeed, wipeAngle, extruderSpeed, tipWipeLiftDistance,
-                        tipWipeCutoffDistance);
     }
 }
 
@@ -825,8 +1057,8 @@ void PathModifierGenerator::GenerateForwardTipWipeOpenLoop(Path& path, PathModif
         path[currentIndex]->getSb()->setting<Distance>(SS::kHeight), wipeSpeed,
         path[currentIndex]->getSb()->setting<Acceleration>(SS::kAccel), extruderSpeed,
         path[currentIndex]->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kForwardTipWipe,
-        path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber),
-        path[currentIndex]->getSb()->setting<QVector<int>>(SS::kExtruders), tipWipeCutoffDistance);
+        path[currentIndex]->getSb()->setting<int>(SS::kMaterialNumber), tipWipeCutoffDistance,
+        path[currentIndex]->getSb()->setting<bool>(SS::kAdapted));
 }
 
 void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth, Distance spiralHeight,
@@ -834,25 +1066,25 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
     Point startPoint = path.back()->end();
 
     if (supportsG3) {
+        const Angle spiral_angle = 355.0f * degree;
+        const Angle end_angle = (360.0f * degree) - spiral_angle;
         Point spiral_start_point(startPoint.x() + spiralWidth, startPoint.y(), startPoint.z());
-        Point spiral_end_point(startPoint.x() + spiralWidth + spiralHeight * qCos(355.0 * M_PI / 180),
-                               startPoint.y() + spiralWidth + spiralHeight * qSin(355.0 * M_PI / 180),
-                               startPoint.z() + spiralHeight);
-        Point center_point(startPoint.x(), startPoint.y());
+        Point spiral_end_point(startPoint.x() + spiralWidth * qCos(end_angle()),
+                               startPoint.y() + spiralWidth * qSin(end_angle()), startPoint.z() + spiralHeight);
+        Point center_point(startPoint.x(), startPoint.y(), startPoint.z());
 
         writeSegment(path, startPoint, spiral_start_point, path.back()->getSb()->setting<Distance>(SS::kWidth),
                      spiralHeight, spiralLiftVelocity, path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
                      path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
                      path.back()->getSb()->setting<int>(SS::kMaterialNumber),
-                     path.back()->getSb()->setting<QVector<int>>(SS::kExtruders));
+                     path.back()->getSb()->setting<bool>(SS::kAdapted));
 
-        writeArcSegment(path, spiral_start_point, spiral_end_point, center_point, 355, false,
-                        path.back()->getSb()->setting<Distance>(SS::kWidth),
-                        path.back()->getSb()->setting<Distance>(SS::kHeight), spiralLiftVelocity,
-                        path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
-                        path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
-                        path.back()->getSb()->setting<int>(SS::kMaterialNumber),
-                        path.back()->getSb()->setting<QVector<int>>(SS::kExtruders));
+        writeArcSegment(
+            path, spiral_start_point, spiral_end_point, center_point, spiral_angle, false,
+            path.back()->getSb()->setting<Distance>(SS::kWidth), path.back()->getSb()->setting<Distance>(SS::kHeight),
+            spiralLiftVelocity, path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
+            path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
+            path.back()->getSb()->setting<int>(SS::kMaterialNumber), path.back()->getSb()->setting<bool>(SS::kAdapted));
     }
     else {
         float currentZ = startPoint.z();
@@ -868,7 +1100,7 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
                          spiralLiftVelocity, path.back()->getSb()->setting<Acceleration>(SS::kAccel), .0f,
                          path.back()->getSb()->setting<RegionType>(SS::kRegionType), PathModifiers::kSpiralLift,
                          path.back()->getSb()->setting<int>(SS::kMaterialNumber),
-                         path.back()->getSb()->setting<QVector<int>>(SS::kExtruders));
+                         path.back()->getSb()->setting<bool>(SS::kAdapted));
 
             newStart = newEnd;
         }
@@ -878,7 +1110,7 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
 void PathModifierGenerator::writeSegment(Path& path, Point start, Point end, Distance width, Distance height,
                                          Velocity speed, Acceleration acceleration, AngularVelocity extruder_speed,
                                          RegionType regionType, PathModifiers pathModifiers, int materialNumber,
-                                         QVector<int> extruders) {
+                                         bool adapted) {
     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, end);
 
     segment->getSb()->setSetting(SS::kWidth, width);
@@ -889,7 +1121,7 @@ void PathModifierGenerator::writeSegment(Path& path, Point start, Point end, Dis
     segment->getSb()->setSetting(SS::kRegionType, regionType);
     segment->getSb()->setSetting(SS::kPathModifiers, pathModifiers);
     segment->getSb()->setSetting(SS::kMaterialNumber, materialNumber);
-    segment->getSb()->setSetting(SS::kExtruders, extruders);
+    segment->getSb()->setSetting(SS::kAdapted, adapted);
 
     path.append(segment);
 }
@@ -897,7 +1129,7 @@ void PathModifierGenerator::writeSegment(Path& path, Point start, Point end, Dis
 void PathModifierGenerator::writeArcSegment(Path& path, Point start, Point end, Point center, Angle angle, bool ccw,
                                             Distance width, Distance height, Velocity speed, Acceleration acceleration,
                                             AngularVelocity extruder_speed, RegionType regionType,
-                                            PathModifiers path_modifiers, int materialNumber, QVector<int> extruders) {
+                                            PathModifiers path_modifiers, int materialNumber, bool adapted) {
     QSharedPointer<ArcSegment> segment = QSharedPointer<ArcSegment>::create(start, end, center, angle, ccw);
 
     segment->getSb()->setSetting(SS::kWidth, width);
@@ -908,7 +1140,7 @@ void PathModifierGenerator::writeArcSegment(Path& path, Point start, Point end, 
     segment->getSb()->setSetting(SS::kRegionType, regionType);
     segment->getSb()->setSetting(SS::kPathModifiers, path_modifiers);
     segment->getSb()->setSetting(SS::kMaterialNumber, materialNumber);
-    segment->getSb()->setSetting(SS::kExtruders, extruders);
+    segment->getSb()->setSetting(SS::kAdapted, adapted);
 
     path.append(segment);
 }
@@ -950,6 +1182,8 @@ void PathModifierGenerator::GenerateRamp(Path& path, bool& segmentSplitted, int 
             segment->setEnd(newP);
 
             QSharedPointer<LineSegment> newSegment = QSharedPointer<LineSegment>::create(newP, endP);
+            copyInitialExtruderSpeed(newSegment->getSb(), segment->getSb());
+            copyAdaptedWidthFlag(newSegment->getSb(), segment->getSb());
             newSegment->getSb()->setSetting(SS::kWidth, segment->getSb()->setting<Distance>(SS::kWidth));
             newSegment->getSb()->setSetting(SS::kHeight, segment->getSb()->setting<Distance>(SS::kHeight));
             newSegment->getSb()->setSetting(SS::kAccel, segment->getSb()->setting<Acceleration>(SS::kAccel));
@@ -995,7 +1229,7 @@ void PathModifierGenerator::generateTipWipeSegment(Path& path, Point start, Poin
                                                    Velocity speed, Acceleration acceleration,
                                                    AngularVelocity extruder_speed, RegionType regionType,
                                                    PathModifiers pathModifiers, int materialNumber,
-                                                   QVector<int> extruders, Distance tipWipeCutoffDistance) {
+                                                   Distance tipWipeCutoffDistance, bool adapted) {
     if (tipWipeCutoffDistance > 0) {
         Distance length = end.distance(start);
 
@@ -1008,7 +1242,7 @@ void PathModifierGenerator::generateTipWipeSegment(Path& path, Point start, Poin
                            end.z());
 
             writeSegment(path, start, hopPoint, width, height, speed, acceleration, extruder_speed, regionType,
-                         pathModifiers, materialNumber, extruders);
+                         pathModifiers, materialNumber, adapted);
 
             start = hopPoint;
             extruder_speed = 0;
@@ -1018,7 +1252,7 @@ void PathModifierGenerator::generateTipWipeSegment(Path& path, Point start, Poin
     }
 
     writeSegment(path, start, end, width, height, speed, acceleration, extruder_speed, regionType, pathModifiers,
-                 materialNumber, extruders);
+                 materialNumber, adapted);
 }
 
 Distance PathModifierGenerator::tipWipeDistanceCovered = 0;

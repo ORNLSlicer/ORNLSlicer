@@ -33,22 +33,6 @@ Polygon::Polygon(const Path& path) {
     }
 }
 
-#ifdef HAVE_SINGLE_PATH
-Polygon::Polygon(SinglePath::Polygon& polygon) {
-    for (SinglePath::Point point : polygon) {
-        append(point);
-    }
-}
-
-ORNL::Polygon::operator SinglePath::Polygon() const {
-    SinglePath::Polygon polygon;
-    for (Point point : *this) {
-        polygon.append(point);
-    }
-    return polygon;
-}
-#endif
-
 bool Polygon::orientation() const { return ClipperLib2::Orientation((*this)()); }
 
 PolygonList Polygon::offset(const Distance& distance, const ClipperLib2::JoinType& joinType) const {
@@ -56,11 +40,7 @@ PolygonList Polygon::offset(const Distance& distance, const ClipperLib2::JoinTyp
     ClipperLib2::ClipperOffset clipper;
     clipper.AddPath(operator()(), joinType, ClipperLib2::etClosedPolygon);
     clipper.Execute(paths, distance());
-    PolygonList polygons(paths);
-
-    polygons.restoreNormals(QVector<Polygon> {*this}, true);
-
-    return polygons;
+    return PolygonList(paths);
 }
 
 int64_t Polygon::polygonLength() const {
@@ -120,71 +100,6 @@ Polygon Polygon::rotateAround(const Point& center, const Angle& rotation_angle, 
         polygon.append(point.rotateAround(center, rotation_angle, axis));
     }
     return polygon;
-}
-
-void Polygon::restoreNormals(QVector<Polygon> all_polys, bool offset) {
-    if (offset) //! Offset operation: assign normals of closest point
-    {
-        for (Point& p1 : *this) {
-            Distance min_dist = Distance(std::numeric_limits<float>::max());
-
-            for (const Polygon& poly : all_polys) {
-                Point p2 = poly.closestPointTo(p1);
-
-                if (p1.distance(p2) < min_dist) {
-                    min_dist = p1.distance(p2);
-                    p1.setNormals(p2.getNormals());
-                }
-            }
-        }
-    }
-    else //! Clipping operation: assign normals of exact point. If point can't be found, compute bisecting normal.
-    {
-        auto index = [](uint i, uint last) {
-            uint ret = i;
-            if (i < 0)
-                ret = last;
-            else if (i > last)
-                ret = 0;
-
-            return ret;
-        };
-
-        for (uint i = 0, size = this->size(); i < size; ++i) {
-            bool found = false;
-            for (Polygon& poly : all_polys) {
-                for (Point& p : poly) {
-                    if ((*this)[i] == p) {
-                        (*this)[i].setNormals(p.getNormals());
-                        found = true;
-                        break;
-                    }
-                }
-                if (found)
-                    break;
-            }
-
-            if (!found) //! Compute bisecting normal
-            {
-                uint last = (*this).size() - 1;
-
-                QVector3D unit_z {0, 0, 1};
-                QVector3D prev = ((*this)[index(i - 1, last)] - (*this)[i]).toQVector3D().normalized();
-                QVector3D next = ((*this)[index(i + 1, last)] - (*this)[i]).toQVector3D().normalized();
-
-                QVector3D normal =
-                    (QVector3D::crossProduct(unit_z, prev) + QVector3D::crossProduct(next, unit_z)).normalized();
-                (*this)[i].setNormals(QVector<QVector3D> {normal, normal});
-            }
-        }
-    }
-}
-
-Polygon Polygon::reverseNormalDirections() {
-    for (Point& point : *this)
-        point.reverseNormalDirections();
-
-    return *this;
 }
 
 Polygon Polygon::translate(const QVector3D& shift) {
@@ -273,79 +188,48 @@ QVector<Polyline> Polygon::getEdges() const {
 }
 
 PolygonList Polygon::operator+(const PolygonList& rhs) {
-    QVector<Polygon> all_polys = QVector<Polygon> {*this} + QVector<Polygon> {rhs};
-
     ClipperLib2::Paths paths;
     ClipperLib2::Clipper clipper;
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPaths(rhs(), ClipperLib2::ptSubject, true);
     clipper.Execute(ClipperLib2::ctUnion, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals(all_polys);
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator+(const Polygon& rhs) {
-    QVector<Polygon> all_polys = QVector<Polygon> {*this} + QVector<Polygon> {rhs};
-
     ClipperLib2::Paths paths;
     ClipperLib2::Clipper clipper;
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPath(rhs(), ClipperLib2::ptSubject, true);
     clipper.Execute(ClipperLib2::ctUnion, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals(all_polys);
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator-(const PolygonList& other) {
-    QVector<Polygon> all_polys =
-        QVector<Polygon> {*this} + QVector<Polygon> {PolygonList(other).reverseNormalDirections()};
-
     ClipperLib2::Paths paths;
     ClipperLib2::Clipper clipper;
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPaths(other(), ClipperLib2::ptClip, true);
     clipper.Execute(ClipperLib2::ctDifference, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals(all_polys);
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator-(const Polygon& rhs) {
-    QVector<Polygon> all_polys = QVector<Polygon> {*this} + QVector<Polygon> {Polygon(rhs).reverseNormalDirections()};
-
     ClipperLib2::Paths paths;
     ClipperLib2::Clipper clipper;
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPath(rhs(), ClipperLib2::ptClip, true);
     clipper.Execute(ClipperLib2::ctDifference, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals(all_polys);
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator|(const PolygonList& rhs) {
-    QVector<Polygon> all_polys = QVector<Polygon> {*this} + QVector<Polygon> {rhs};
-
     ClipperLib2::Paths paths;
     ClipperLib2::Clipper clipper;
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPaths(rhs(), ClipperLib2::ptSubject, true);
     clipper.Execute(ClipperLib2::ctUnion, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals(all_polys);
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator|(const Polygon& rhs) {
@@ -354,26 +238,16 @@ PolygonList Polygon::operator|(const Polygon& rhs) {
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPath(rhs(), ClipperLib2::ptSubject, true);
     clipper.Execute(ClipperLib2::ctUnion, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals({*this, rhs});
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator&(const PolygonList& rhs) {
-    QVector<Polygon> all_polys = QVector<Polygon> {*this} + QVector<Polygon> {rhs};
-
     ClipperLib2::Paths paths;
     ClipperLib2::Clipper clipper;
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPaths(rhs(), ClipperLib2::ptClip, true);
     clipper.Execute(ClipperLib2::ctIntersection, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals(all_polys);
-
-    return result;
+    return PolygonList(paths);
 }
 
 PolygonList Polygon::operator&(const Polygon& rhs) {
@@ -382,11 +256,7 @@ PolygonList Polygon::operator&(const Polygon& rhs) {
     clipper.AddPath((*this)(), ClipperLib2::ptSubject, true);
     clipper.AddPath(rhs(), ClipperLib2::ptClip, true);
     clipper.Execute(ClipperLib2::ctIntersection, paths, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
-    PolygonList result(paths);
-
-    result.restoreNormals({*this, rhs});
-
-    return result;
+    return PolygonList(paths);
 }
 
 QVector<Polyline> Polygon::operator&(const Polyline& rhs) {

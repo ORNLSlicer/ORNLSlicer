@@ -1,0 +1,199 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "smoothing"
+    display: "Enable Smoothing"
+    type: "boolean"
+    tooltip: "If selected, a smoothing process will be applied on all contours of the STL"
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableSmoothing"
+    local: false
+  - name: "smoothing_type"
+    display: "Smoothing Type"
+    type: "enumeration"
+    tooltip: "Select the smoothing algorithm to be applied"
+    depends: {"smoothing":true}
+    options:
+      - "Douglas Peucker"
+      - "Radial Distance"
+      - "Perpendicular Distance"
+      - "Reumann-Witkam"
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSmoothingType"
+    local: false
+  - name: "smoothing_tolerance"
+    display: "Smoothing Tolerance"
+    type: "distance"
+    tooltip: "The tolerance for the smoothing algorithm"
+    depends: {"smoothing":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSmoothingTolerance"
+    local: false
+  - name: "arc_fitting"
+    display: "Enable Arc Fitting"
+    type: "boolean"
+    tooltip: "Fits eligible planar print moves to circular G2/G3 arcs when the selected machine and syntax support G2/G3."
+    depends: {"AND":[{"supports_G2_3":true},{"AND":[{"slicing_mode":0},{"AND":[{"NOT":[{"syntax":13}]},{"NOT":[{"syntax":29}]}]}]}]}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableArcFitting"
+    local: true
+  - name: "arc_fitting_tolerance"
+    display: "Arc Fitting Tolerance"
+    type: "distance"
+    tooltip: "Maximum radial deviation allowed when replacing a run of line segments with a circular arc."
+    depends: {"arc_fitting":true}
+    options: []
+    default: 50
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kArcFittingTolerance"
+    local: true
+  - name: "arc_fitting_minimum_segment_count"
+    display: "Minimum Arc Fitting Segments"
+    type: "positive_int"
+    tooltip: "Minimum number of consecutive line segments required before arc fitting can replace them with one G2/G3 move."
+    depends: {"arc_fitting":true}
+    options: []
+    default: 3
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kArcFittingMinimumSegmentCount"
+    local: true
+  - name: "sharp_corner_extension"
+    display: "Enable Sharp Corner Extension"
+    type: "boolean"
+    tooltip: "If selected, sharp toolpath junctions are extended outward to compensate for corner rounding during printing."
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableSharpCornerExtension"
+    local: true
+  - name: "sharp_corner_extension_angle"
+    display: "Sharp Corner Angle Threshold"
+    type: "angle"
+    tooltip: "Maximum corner angle that can be sharpened."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 1.570796327
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerExtensionAngle"
+    local: true
+  - name: "sharp_corner_extension_distance"
+    display: "Sharp Corner Extension Length"
+    type: "distance"
+    tooltip: "Distance to extend the corner merge point along the corner bisector."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerExtensionDistance"
+    local: true
+  - name: "sharp_corner_close_points_threshold"
+    display: "Sharp Corner Close Points Threshold"
+    type: "distance"
+    tooltip: "Maximum length of a bead segment connecting two corner legs that can be removed before sharpening."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerClosePointsThreshold"
+    local: true
+  - name: "sharp_corner_sharpening_leg_length"
+    display: "Sharp Corner Sharpening Leg Length"
+    type: "distance"
+    tooltip: "Distance along each original corner leg to replace with sharpened geometry. A value of 0 uses the extension length."
+    depends: {"sharp_corner_extension":true}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kSharpCornerSharpeningLegLength"
+    local: true
+  - name: "enable_spiralize_mode"
+    display: "Enable Spiralize Mode"
+    type: "boolean"
+    tooltip: "If selected, extruder will never lift and part will be made in one continuous path without infill"
+    depends: {"slicing_mode":0}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableSpiralizeMode"
+    local: true
+  - name: "enable_fix_model"
+    display: "Enable Fix Model"
+    type: "boolean"
+    tooltip: "If selected, manifold issues with the model will be repaired"
+    depends: {}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kEnableFixModel"
+    local: false
+  - name: "oversize"
+    display: "Oversize Part"
+    type: "boolean"
+    tooltip: "If selected, the part can be oversized in the X and Y dimensions to allow for a machining tolerance"
+    depends: {"slicing_mode":0}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kOversizePart"
+    local: false
+  - name: "oversize_distance"
+    display: "Oversize Distance"
+    type: "location"
+    tooltip: "Distance to oversize the part in the X and Y directions"
+    depends: {"AND":[{"slicing_mode":0},{"oversize":true}]}
+    options: []
+    default: 0
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kOversizeDistance"
+    local: false
+  - name: "enable_width_height"
+    display: "Use Width and Height"
+    type: "boolean"
+    tooltip: "If selected, G-Code will not command feeds and speed and instead send desired bead geometry for the HMI to interpret"
+    depends: {"AND":[{"slicing_mode":0},{"syntax":11}]}
+    options: []
+    default: false
+    minor: "Special Modes"
+    major: "Profile"
+    namespace: "Profile::SpecialModes"
+    symbol: "kUseWidthandHeight"
+    local: false

@@ -102,7 +102,7 @@ void ArrowObject::initArrow(BaseView* view) {
     cone_tfm.rotate(90, 0, 1, 0);
 
     std::vector<float> tmp_norm;
-    ShapeFactory::createCone(.3, 1, cone_tfm, QColor(), m_head_vertices, colors, tmp_norm);
+    ShapeFactory::appendCone(.3, 1, cone_tfm, QColor(), m_head_vertices, colors, tmp_norm);
 
     // Concat the two vectors and populate
     vertices = m_tail_vertices;

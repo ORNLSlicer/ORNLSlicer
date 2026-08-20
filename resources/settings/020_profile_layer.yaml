@@ -1,0 +1,75 @@
+# Canonical settings metadata for ORNLSlicer.
+# Edit this file instead of resources/configs/master.conf.
+settings:
+  - name: "layer_height"
+    display: "Layer Height"
+    type: "distance"
+    tooltip: "Thickness of each layer"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Layer"
+    major: "Profile"
+    namespace: "Profile::Layer"
+    symbol: "kLayerHeight"
+    local: true
+  - name: "nozzle_diameter"
+    display: "Nozzle Diameter"
+    type: "distance"
+    tooltip: "The diameter of the main extruder nozzle"
+    depends: {"AND":[{"slicing_mode":0},{"OR":[{"machine_type":0},{"OR":[{"machine_type":1},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Layer"
+    major: "Profile"
+    namespace: "Profile::Layer"
+    symbol: "kNozzleDiameter"
+    local: false
+  - name: "default_width"
+    display: "Default Bead Width"
+    type: "distance"
+    tooltip: "Default bead width for paths that don't have a defined width"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Layer"
+    major: "Profile"
+    namespace: "Profile::Layer"
+    symbol: "kDefaultBeadWidth"
+    local: true
+  - name: "default_speed"
+    display: "Default Print Speed"
+    type: "speed"
+    tooltip: "Default printing speed for paths that don't have a defined speed"
+    depends: {}
+    options: []
+    default: 0
+    minor: "Layer"
+    major: "Profile"
+    namespace: "Profile::Layer"
+    symbol: "kDefaultPrintSpeed"
+    local: true
+  - name: "default_extruder_speed"
+    display: "Default Extruder Speed"
+    type: "rpm"
+    tooltip: "Default extruder speed for paths that don't have a defined extruder speed"
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    options: []
+    default: 0
+    minor: "Layer"
+    major: "Profile"
+    namespace: "Profile::Layer"
+    symbol: "kDefaultExtruderSpeed"
+    local: true
+  - name: "minimum_extrude_length"
+    display: "Minimum Extrude Length"
+    type: "distance"
+    tooltip: "Default minimum extrusion length. Paths less than this are eliminated. Currently used for brim, raft, and support paths."
+    depends: {"slicing_mode":0}
+    options: []
+    default: 0
+    minor: "Layer"
+    major: "Profile"
+    namespace: "Profile::Layer"
+    symbol: "kMinimumExtrudeLength"
+    local: true

@@ -137,6 +137,12 @@ class PartMetaItem : public QObject, public QEnableSharedFromThis<PartMetaItem> 
     //! \brief Get the part pointer.
     QSharedPointer<Part> part();
 
+    //! \brief Gets the number of visible instances for this item.
+    int instanceCount();
+
+    //! \brief Sets the number of visible instances for this item.
+    void setInstanceCount(int count);
+
   signals:
     //! \brief Signal that this item was modified.
     void modified(PartMetaUpdateType type);

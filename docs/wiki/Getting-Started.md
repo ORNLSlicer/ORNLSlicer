@@ -26,7 +26,7 @@ Windows limits file paths to 260 characters by default, which can break builds w
 
 **WSL2** provides a native Linux experience inside Windows. We recommend using **Ubuntu 24.04**.
 
-- **For ORNL-managed machines**, follow the [ORNL-specific WSL2 guide](ORNL-WSL2-Installation).
+- **For ORNL-managed machines**, follow the [ORNL-specific WSL2 guide](ORNL-WSL2-Installation.md).
 - **For all others**:
   
   1. Open a **PowerShell** window.
@@ -106,7 +106,7 @@ Authenticate with GitHub securely using SSH keys:
 
    > If prompted, type `yes` to confirm the SSH connection. If nothing happens, click this link:
 
-   🔧 [Troubleshooting SSH Connection Issues](Troubleshooting#connection-issues)
+   🔧 [Troubleshooting SSH Connection Issues](Troubleshooting.md#connection-issues)
 
 
 ## 7. Install Nix

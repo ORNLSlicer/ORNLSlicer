@@ -8,9 +8,11 @@
 #include <QGridLayout>
 #include <QIcon>
 #include <QLabel>
+#include <QMatrix4x4>
 #include <QMouseEvent>
 #include <QPixmap>
 #include <QPushButton>
+#include <QVector3D>
 #include <QWidget>
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -67,12 +69,21 @@ class GCodeInfoControl : public QWidget {
     //! \brief Remove segment from info tracking list.
     void removeSegmentInfo(int selectedLineNumber);
 
+    //! \brief Updates the camera view matrix used to display segment travel direction.
+    void setViewMatrix(const QMatrix4x4& viewMatrix);
+
   private:
     //! \brief Display xy direction
-    inline void updateDirection(double angle);
+    void updateDirection(double angle);
 
     //! \brief Display z direction
-    inline void updateZDirection(double angle);
+    void updateZDirection(double angle);
+
+    //! \brief Display direction for the current camera view.
+    void updateDirectionForSegment(const QSharedPointer<SegmentBase>& segment);
+
+    //! \brief Converts a 3D travel vector to a screen-space angle.
+    double viewAngleForDirection(const QVector3D& direction, double fallbackAngle) const;
 
     //! \brief Initilizes the widget.
     void setupWidget();
@@ -85,8 +96,23 @@ class GCodeInfoControl : public QWidget {
     //! \param lineNo: select the line number
     void fillSegmentInfo(uint lineNo);
 
+    //! \brief Finds the display segment for a G-Code line number.
+    QSharedPointer<SegmentBase> segmentForLine(uint lineNo);
+
+    //! \brief Updates the centerline distance readout for the selected segment pair.
+    void updateCenterDistanceInfo(uint lineNo);
+
+    //! \brief Formats a distance for display using the preferred distance unit.
+    QString formatDistance(double microns) const;
+
     //! \brief list of segments
     QVector<QVector<QSharedPointer<SegmentBase>>> m_gcode;
+
+    //! \brief Segment currently shown in the info panel.
+    QSharedPointer<SegmentBase> m_current_segment;
+
+    //! \brief Current camera view matrix used to orient the direction arrow.
+    QMatrix4x4 m_view_matrix;
 
     //! \brief Int list of gcode line numbers that are currently selected
     QList<int> m_line_no_list;
@@ -99,6 +125,7 @@ class GCodeInfoControl : public QWidget {
     QLabel* m_infolbl_speed;
     QLabel* m_infolbl_extruder_speed;
     QLabel* m_infolbl_length;
+    QLabel* m_infolbl_center_distance;
     QLabel* m_infolbl_layer_no;
     QLabel* m_infolbl_line_no;
     QLabel* m_infolbl_direction;

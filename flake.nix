@@ -57,7 +57,7 @@
             src     = self;
             version = (lib.fetchVersion ./version.json);
 
-            inherit (libraries) sockets kuba-zip clipper psimpl;
+            inherit (libraries) kuba-zip clipper psimpl;
             inherit stdenv;
           };
         };
@@ -90,6 +90,7 @@
         packages = [
           pkgs.git
           pkgs.jq
+          pkgs.ccache
 
           pkgs.doxygen
           pkgs.graphviz
@@ -119,7 +120,7 @@
   });
 
   nixConfig = {
-    extra-substituters = [ "https://mdfbaam.cachix.org" ];
-    extra-trusted-public-keys = [ "mdfbaam.cachix.org-1:WCQinXaMJP7Ny4sMlKdisNUyhcO2MHnPoobUef5aTmQ=" ];
+    extra-substituters = [ "https://ornl-slicer.cachix.org" ];
+    extra-trusted-public-keys = [ "ornl-slicer.cachix.org-1:VIvBeaBy4B47CzxtF7VxZWsK0wXJt4Dm7VNuAb65Nzg=" ];
   };
 }

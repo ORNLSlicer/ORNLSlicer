@@ -12,7 +12,6 @@
 #include "configs/settings_base.h"
 #include "configs/settings_range.h"
 #include "cross_section/cross_section.h"
-#include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
@@ -30,42 +29,27 @@ BufferedSlicer::BufferedSlicer() {}
 BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
                                QVector<QSharedPointer<Part>> settings_parts,
                                QMap<uint, QSharedPointer<SettingsRange>> ranges, int previous_buffer, int future_buffer,
-                               bool use_cgal_cross_section) {
+                               bool use_cgal_cross_section, bool include_build_plate_gap) {
     m_mesh = mesh;
     m_settings = settings;
     m_settings_parts = settings_parts;
     m_settings_ranges = ranges;
     m_use_cgal_cross_section = use_cgal_cross_section;
 
-    auto closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get());
     m_previous_buffer_size = previous_buffer;
     m_future_buffer_size = future_buffer;
 
     std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh);
 
-    if (m_settings->setting<bool>(ES::WireFeed::kSettingsRegionMeshSplit)) {
-        QSharedPointer<ClosedMesh> single_setting_mesh = QSharedPointer<ClosedMesh>::create();
-
-        if (settings_parts.size() > 0) {
-            QVector<QSharedPointer<MeshBase>> all_settings_meshes;
-            for (QSharedPointer<Part> part : settings_parts)
-                all_settings_meshes += part->meshes();
-
-            QSharedPointer<ClosedMesh> first_mesh = all_settings_meshes.first().staticCast<ClosedMesh>();
-            single_setting_mesh = QSharedPointer<ClosedMesh>::create(*first_mesh.get());
-
-            all_settings_meshes.pop_front();
-            for (QSharedPointer<MeshBase> mesh : all_settings_meshes)
-                SlicingUtilities::UnionMesh(single_setting_mesh, mesh.staticCast<ClosedMesh>());
-
-            ClosedMesh* closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get());
-            m_settings_bounded_mesh = QSharedPointer<ClosedMesh>::create(*closed_mesh);
-            SlicingUtilities::IntersectMesh(m_settings_bounded_mesh, single_setting_mesh);
-
-            m_settings_remaining_build_mesh = QSharedPointer<ClosedMesh>::create(*closed_mesh);
-            SlicingUtilities::ClipMesh(m_settings_remaining_build_mesh,
-                                       QVector<QSharedPointer<MeshBase>> {single_setting_mesh});
-        }
+    // A normal mesh slice starts at the mesh minimum.  For planar support,
+    // retain the otherwise-empty layers below a raised mesh so support can
+    // reach the physical build plate at Z = 0.
+    const QVector3D normal = m_slicing_plane.normal().normalized();
+    if (include_build_plate_gap && m_settings->setting<bool>(PS::Support::kEnable) && qFuzzyIsNull(normal.x()) &&
+        qFuzzyIsNull(normal.y()) && normal.z() > 0.0f && m_mesh_min.z() > 0.0f) {
+        Point build_plate_point = m_slicing_plane.point();
+        build_plate_point.z(0.0);
+        m_slicing_plane.point(build_plate_point);
     }
 
     // Fill previous slots will nullptr to start
@@ -171,34 +155,9 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         QVector<SettingsPolygon> settings_polygons;
         computeSettingsPolygons(settings_polygons, shift_amount);
 
-        PolygonList settings_modified_geometry;
-        if (m_settings_remaining_build_mesh != nullptr) {
-            Point aux_shift = shift_amount; // preserve base
-            QVector3D aux_normal;
-            settings_modified_geometry = CrossSection::doCrossSection(
-                m_settings_remaining_build_mesh, m_slicing_plane, aux_shift, aux_normal, layer_specific_settings, true);
-        }
-
-        PolygonList settings_bounded_geometry;
-        if (m_settings_bounded_mesh != nullptr) {
-            Point aux_shift = shift_amount;
-            QVector3D aux_normal;
-            settings_bounded_geometry = CrossSection::doCrossSection(
-                m_settings_bounded_mesh, m_slicing_plane, aux_shift, aux_normal, layer_specific_settings, true);
-        }
-
         SliceMeta meta = {
-            m_slice_count,
-            layer_specific_settings,
-            geometry,
-            settings_modified_geometry,
-            settings_bounded_geometry,
-            m_slicing_plane,
-            settings_polygons,
-            average_normal,
-            shift_amount,
-            m_additional_shift,
-            opt_polylines,
+            m_slice_count, layer_specific_settings, geometry,      m_slicing_plane, settings_polygons, average_normal,
+            shift_amount,  m_additional_shift,      opt_polylines,
         };
 
         slice_meta = QSharedPointer<SliceMeta>::create(meta);

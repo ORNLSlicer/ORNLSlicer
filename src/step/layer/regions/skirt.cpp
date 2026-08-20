@@ -17,7 +17,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -26,7 +25,7 @@
 
 namespace ORNL {
 Skirt::Skirt(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon>& settings_polygons)
-    : RegionBase(sb, settings_polygons) {
+    : RegionBase(sb, settings_polygons, RegionType::kSkirt) {
     // NOP
 }
 
@@ -44,7 +43,7 @@ QString Skirt::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void Skirt::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void Skirt::compute(uint layer_num) {
     m_paths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
@@ -80,15 +79,13 @@ void Skirt::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
     }
 }
 
-void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                     QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Skirt::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
         static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
     if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
+        Point startOverride = customPathOrderPoint();
 
         poo.setStartOverride(startOverride);
     }
@@ -96,9 +93,8 @@ void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& in
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+    if (usesCustomPointLocation(pointOrderOptimization)) {
+        Point startOverride = customPointOrderPoint();
 
         poo.setStartPointOverride(startOverride);
     }
@@ -107,7 +103,9 @@ void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& in
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     m_paths.clear();
 
@@ -119,6 +117,7 @@ void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& in
         Path newPath = createPath(result);
 
         if (newPath.size() > 0) {
+            calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
             PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                   m_sb->setting<Velocity>(PS::Travel::kSpeed));
             current_location = newPath.back()->end();
@@ -127,8 +126,8 @@ void Skirt::optimize(int layerNumber, Point& current_location, QVector<Path>& in
     }
 }
 
-void Skirt::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
-    // NOP
+void Skirt::calculateModifiers(Path& path, bool supportsG3) {
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
 }
 
 Path Skirt::createPath(Polyline line) {
@@ -181,6 +180,9 @@ Path Skirt::createPath(Polyline line) {
 
                 QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, point);
 
+                segment->getSb()->setSetting(
+                    MS::Extruder::kInitialSpeed,
+                    (is_settings_region ? start.getSettings() : m_sb)->setting<int>(MS::Extruder::kInitialSpeed));
                 segment->getSb()->setSetting(SS::kWidth, is_settings_region ? start.getSettings()->setting<Distance>(
                                                                                   MS::PlatformAdhesion::kRaftBeadWidth)
                                                                             : default_width);
@@ -209,6 +211,9 @@ Path Skirt::createPath(Polyline line) {
 
         // Add final segment
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, end);
+        segment->getSb()->setSetting(
+            MS::Extruder::kInitialSpeed,
+            (is_settings_region ? start.getSettings() : m_sb)->setting<int>(MS::Extruder::kInitialSpeed));
         segment->getSb()->setSetting(SS::kWidth, is_settings_region ? start.getSettings()->setting<Distance>(
                                                                           MS::PlatformAdhesion::kRaftBeadWidth)
                                                                     : default_width);

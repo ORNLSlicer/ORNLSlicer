@@ -65,21 +65,6 @@ PolymerIsland::PolymerIsland(const PolygonList& geometry, const QSharedPointer<S
 
 void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
                              QVector<QSharedPointer<RegionBase>>& previousRegions) {
-    QSharedPointer<Inset> insets = getRegion(RegionType::kInset).dynamicCast<Inset>();
-    QSharedPointer<Perimeter> perimeters = getRegion(RegionType::kPerimeter).dynamicCast<Perimeter>();
-
-    QVector<Path> innerMostClosedContour;
-    if (insets != nullptr)
-        innerMostClosedContour = insets->getInnerMostPathSet();
-    else if (perimeters != nullptr)
-        innerMostClosedContour = perimeters->getInnerMostPathSet();
-
-    QVector<Path> outerMostClosedContour;
-    if (perimeters != nullptr)
-        outerMostClosedContour = perimeters->getOuterMostPathSet();
-    else if (insets != nullptr)
-        outerMostClosedContour = insets->getOuterMostPathSet();
-
     bool shouldNextPathBeCCW = true;
     if (previousRegions.size() != 0 && previousRegions.last()->getPaths().size() != 0)
         shouldNextPathBeCCW = !previousRegions.last()->getPaths().last().getCCW();
@@ -91,16 +76,15 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
             wasLastSpiral = previousRegions.last()->getSb()->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
         r->setLastSpiral(wasLastSpiral);
+        prepareRegionForOptimization(r, layerNumber, previousRegions);
 
-        r->optimize(layerNumber, currentLocation, innerMostClosedContour, outerMostClosedContour, shouldNextPathBeCCW);
+        r->optimize(layerNumber, currentLocation, shouldNextPathBeCCW);
 
         if (r->getPaths().size() > 0)
             previousRegions.push_back(r);
 
         if (m_sb->setting<bool>(MS::MultiMaterial::kEnable) &&
-            m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0 &&
-            !m_sb->setting<bool>(ES::MultiNozzle::kEnableMultiNozzleMultiMaterial)) {
-            // multi-material without multi-nozzle requires material transitions
+            m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0) {
             calculateMultiMaterialTransitions(previousRegions);
         }
     }

@@ -24,6 +24,9 @@ class StepThread : public QObject {
     //! \brief Set the step for operation.
     void setStep(const QSharedPointer<Step>& value);
 
+    //! \brief Stops the internal worker thread after any active step callback has returned.
+    void stop();
+
   public slots:
     //! \brief Perfom the computation for the step in this thread.
     void doStep();

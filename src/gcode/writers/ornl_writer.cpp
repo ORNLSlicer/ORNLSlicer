@@ -33,8 +33,7 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
     m_current_rpm = 0;
     m_current_robot = 1;
     m_machine_type = m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType);
-    for (int ext = 0, end = m_extruders_on.size(); ext < end; ++ext) // all extruders off initially
-        m_extruders_on[ext] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -42,7 +41,6 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
-        rv += "G1 F120 " % commentLine("SET INITIAL FEEDRATE");
         if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
             rv += "M0" % commentSpaceLine("WAIT FOR USER");
         }
@@ -241,15 +239,9 @@ QString ORNLWriter::writeLine(const Point& start_point, const Point& target_poin
 
     QString rv;
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // Turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) // only check first extruder
-        {
-            rv += writeExtruderOn(region_type, rpm, extruder);
-            // Set Feedrate to 0 if turning extruder on so that an F parameter
-            // is issued with the first G1 of the path
-            setFeedrate(0);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0, params);
+        setFeedrate(0);
     }
 
     rv += m_G1;
@@ -305,12 +297,8 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
     Distance z_offset = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
 
-    for (int extruder : params->setting<QVector<int>>(SS::kExtruders)) {
-        // turn on the extruder if it isn't already on
-        if (m_extruders_on[0] == false && rpm > 0) {
-            // only check first extruder
-            rv += writeExtruderOn(region_type, rpm, extruder);
-        }
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, 0, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -353,7 +341,7 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
 QString ORNLWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off appropriate extruders
+        rv += writeExtruderOff(0); // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -405,6 +393,8 @@ QString ORNLWriter::writeAfterLayer() {
 
 QString ORNLWriter::writeShutdown() {
     QString rv;
+    rv += writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); },
+                               "TRAVEL FINAL LIFT Z");
     if (m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kPellet) {
         rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF END OF PRINT");
     }
@@ -425,9 +415,10 @@ QString ORNLWriter::writeDwell(Time time) {
         return {};
 }
 
-QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extruder_number) {
+QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extruder_number,
+                                    const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruders_on[extruder_number] = true;
+    m_deposition_active = true;
     float output_rpm;
 
     if (m_machine_type == MachineType::kWire_Arc) {
@@ -444,7 +435,7 @@ QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
     }
     else {
         // Retrieve relevant settings
-        int initial_speed = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+        int initial_speed = getInitialExtruderSpeed(params);
         float gear_ratio = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
         bool force_min_layer_time = m_sb->setting<bool>(MS::Cooling::kForceMinLayerTime);
         ForceMinimumLayerTime force_min_layer_time_method =
@@ -507,7 +498,7 @@ QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
 
 QString ORNLWriter::writeExtruderOff(int extruder_number) {
     QString rv;
-    m_extruders_on[extruder_number] = false;
+    m_deposition_active = false;
 
     // Retrieve relevant settings
     Time off_delay = m_sb->setting<Time>(MS::Extruder::kOffDelay);
@@ -528,6 +519,7 @@ QString ORNLWriter::writeExtruderOff(int extruder_number) {
         rv += writeDwell(off_delay);
     }
 
+    rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF");
     m_current_rpm = 0;
 
     return rv;

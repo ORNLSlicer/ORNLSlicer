@@ -62,6 +62,25 @@ class SegmentBase {
     //! \brief Gets the display color.
     QColor color();
 
+    //! \brief Returns whether material deposition is active for this segment.
+    bool depositionActive() const;
+
+    //! \brief Sets whether material deposition is active for this segment.
+    void setDepositionActive(bool deposition_active);
+
+    //! \brief Sets the cylindrical axis used to orient true-width bead geometry.
+    //! \param center Cylinder axis center in the same coordinate space as the segment.
+    void setCylindricalBeadCenter(const Point& center);
+
+    //! \brief Clears any cylindrical bead orientation override.
+    void clearCylindricalBeadCenter();
+
+    //! \brief Returns whether true-width bead geometry should be oriented around a cylindrical axis.
+    bool hasCylindricalBeadCenter() const;
+
+    //! \brief Returns the cylindrical axis used to orient true-width bead geometry.
+    Point cylindricalBeadCenter() const;
+
     //! \brief Sets the display info for this segment corresponding to a loaded GCode file.
     //! \param display_width: Width of segment in display units.
     //! \param display_length: Length of segment in display units.
@@ -119,15 +138,6 @@ class SegmentBase {
 
     //! \brief returns true if the segment is printing/extruding
     bool isPrintingSegment();
-
-    //! \brief sets the list of nozzles that should be on when this
-    //!        segment prints
-    //! \param list of extruders indexes
-    void setNozzles(QVector<int> extruder_numbers);
-
-    //! \brief adds a nozzle number to the list
-    //! \param extruder number (indexed at 0)
-    void addNozzle(int extruder_number);
 
     //! \brief computes the length of this segment
     //! \return the distance from start to end along this segment
@@ -217,5 +227,14 @@ class SegmentBase {
 
     //! \brief The height of the segment in display units.
     float m_display_height;
+
+    //! \brief Whether material deposition is active for this segment.
+    bool m_deposition_active;
+
+    //! \brief Whether true-width bead geometry should use a cylindrical radial frame.
+    bool m_has_cylindrical_bead_center = false;
+
+    //! \brief Cylindrical axis used to orient true-width bead geometry.
+    Point m_cylindrical_bead_center;
 };
 } // namespace ORNL

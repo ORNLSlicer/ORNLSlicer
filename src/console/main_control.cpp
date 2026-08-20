@@ -16,7 +16,6 @@
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "threading/gcode_loader.h"
-#include "threading/gcode_rpbf_saver.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -63,8 +62,7 @@ void MainControl::run() {
             m_options->setting<bool>(Constants::ConsoleOptionStrings::kUseImplicitTransforms));
     }
 
-    if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) ==
-        SlicerType::kImageSlice)
+    if (static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) == SlicingMode::kImage)
         CSM->setDefaultGcodeDir(m_options->setting<QString>(Constants::ConsoleOptionStrings::kOutputLocation));
 
     int stlCount = m_options->setting<int>(Constants::ConsoleOptionStrings::kInputStlCount);
@@ -101,7 +99,8 @@ void MainControl::run() {
     }
     else {
         connect(CSM.get(), &SessionManager::totalPartsInProject, this, &MainControl::partsInProject);
-        CSM->loadSession(false, m_options->setting<QString>(Constants::ConsoleOptionStrings::kInputProjectFile));
+        CSM->loadSession(false, m_options->setting<QString>(Constants::ConsoleOptionStrings::kInputProjectFile),
+                         false);
     }
 }
 
@@ -110,26 +109,18 @@ void MainControl::partsInProject(int total) { m_parts_to_load = total; }
 void MainControl::loadComplete() {
     --m_parts_to_load;
 
-    if (m_parts_to_load == 0)
-        CSM->doSlice();
+    if (m_parts_to_load == 0 && !CSM->doSlice())
+        emit finished();
 }
 
 void MainControl::sliceComplete(QString filepath, bool alterFile) {
-    if (static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) !=
-        SlicerType::kImageSlice) {
-        if (m_options->setting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode)) {
-            auto meta = GcodeMetaList::createMapping()[GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)];
-            updateOutputInformation(filepath, meta);
-            gcodeParseComplete();
-        }
-        else {
-            GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
-            connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);
-            connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this, &MainControl::updateOutputInformation);
-            connect(loader, &GCodeLoader::finished, this, &MainControl::gcodeParseComplete);
-            connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
-            loader->start();
-        }
+    if (static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) != SlicingMode::kImage) {
+        GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
+        connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);
+        connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this, &MainControl::updateOutputInformation);
+        connect(loader, &GCodeLoader::finished, this, &MainControl::gcodeParseComplete);
+        connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
+        loader->start();
     }
     else {
         emit finished();
@@ -160,53 +151,27 @@ void MainControl::gcodeParseComplete() {
         inputFile.close();
     }
 
-    if (m_selected_meta == GcodeMetaList::RPBFMeta &&
-        static_cast<SlicerType>(GSM->getGlobal()->setting<int>(ES::PrinterConfig::kSlicerType)) !=
-            SlicerType::kRealTimeRPBF) {
-        Angle clockInRad = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kClockingAngle);
-        bool use_sector_offsetting = GSM->getGlobal()->setting<bool>(ES::RPBFSlicing::kSectorOffsettingEnable);
-        Angle sector_width = GSM->getGlobal()->setting<Angle>(ES::RPBFSlicing::kSectorSize);
+    QFile tempFile(m_temp_location % "temp");
+    if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+        QTextStream out(&tempFile);
+        out << text;
+        tempFile.close();
 
-        GCodeRPBFSaver* saver = new GCodeRPBFSaver(m_temp_location, filepath, gcodeFileName, text, m_selected_meta,
-                                                   clockInRad(), use_sector_offsetting, sector_width);
-        connect(saver, &GCodeRPBFSaver::finished, saver, &GCodeRPBFSaver::deleteLater);
-        connect(saver, &GCodeRPBFSaver::finished, this, [this, filepath, partName]() { emit finished(); });
-        saver->start();
-    }
-    else {
-        QFile tempFile(m_temp_location % "temp");
-        if (tempFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-            QTextStream out(&tempFile);
-            out << text;
-            tempFile.close();
+        QFile::rename(tempFile.fileName(), gcodeFileName);
 
-            QFile::rename(tempFile.fileName(), gcodeFileName);
-
-            emit finished();
-        }
+        emit finished();
     }
 }
 
 void MainControl::displayProgress(StatusUpdateStepType type, int percentage) {
-    if (!m_options->setting<bool>(Constants::ConsoleOptionStrings::kRealTimeMode)) {
-        if (m_last_step_type != type)
-            m_last_step_type = type;
-        else
-            std::cout << "\r";
+    if (m_last_step_type != type)
+        m_last_step_type = type;
+    else
+        std::cout << "\r";
 
-        std::cout << toString(type).toStdString() << " " << percentage;
+    std::cout << toString(type).toStdString() << " " << percentage;
 
-        if (percentage == 100)
-            std::cout << "\n";
-    }
-    else {
-        if (type == StatusUpdateStepType::kRealTimeLayerCompleted) {
-            if (percentage == -1)
-                std::cout << "\n" << "Slice complete";
-            else
-                std::cout << "\r" << toString(type).toStdString() << " "
-                          << percentage; // Percentage is actually a layer number here
-        }
-    }
+    if (percentage == 100)
+        std::cout << "\n";
 }
 } // namespace ORNL

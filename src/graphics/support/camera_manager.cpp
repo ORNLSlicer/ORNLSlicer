@@ -38,6 +38,15 @@ void CameraManager::rotateAbsolute(const QVector2D r) {
     this->updateViewMatrix();
 }
 
+void CameraManager::rotateByScreenDelta(const QVector2D delta) {
+    int invert = (PreferencesManager::getInstance()->invertCamera()) ? 1 : -1;
+
+    m_pitch += delta.x() * Constants::OpenGL::kTrackball * invert;
+    m_yaw += delta.y() * Constants::OpenGL::kTrackball * invert;
+
+    this->updateViewMatrix();
+}
+
 void CameraManager::zoom(float delta) {
     constexpr float kZoomBase = 1.01;
     delta /= 8.75;
@@ -51,12 +60,7 @@ void CameraManager::zoom(float delta) {
 void CameraManager::rotateFromPoint(QPointF ndc_pos) {
     QPointF delta = ndc_pos - m_drag_start;
 
-    int invert = (PreferencesManager::getInstance()->invertCamera()) ? 1 : -1;
-
-    m_pitch += delta.x() * Constants::OpenGL::kTrackball * invert;
-    m_yaw += delta.y() * Constants::OpenGL::kTrackball * invert;
-
-    this->updateViewMatrix();
+    this->rotateByScreenDelta(QVector2D(delta));
 
     this->setDragStart(ndc_pos);
 }

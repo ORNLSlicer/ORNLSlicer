@@ -45,8 +45,8 @@ TextObject::TextObject(ORNL::BaseView* view, QString str, float scale, bool bill
     painter.end();
     // result.invertPixels();
 
-    ShapeFactory::createRectangle(scale * str.length(), scale, 0.1, QMatrix4x4(), Constants::Colors::kWhite, vertices,
-                                  colors, normals);
+    ShapeFactory::appendBox(scale * str.length(), scale, 0.1, QMatrix4x4(), Constants::Colors::kWhite, vertices, colors,
+                            normals);
 
     uv = {// Bottom face
           0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0,

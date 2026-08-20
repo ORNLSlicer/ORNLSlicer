@@ -6,8 +6,8 @@
 #include <qhash.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
+#include <qmap.h>
 #include <qregularexpression.h>
-#include <qset.h>
 #include <qtmetamacros.h>
 
 #include "gcode/gcode_command.h"
@@ -54,9 +54,8 @@ class CommonParser : public ParserBase {
     QHash<QString, double> parseFooter();
 
     //! \brief Parse all remaining lines outside of header and footer.
-    //! \param layerSkip: Layer interval to skip
     //! \return Copy of parsed gcode commands (used for visualization construction)
-    QList<QList<GcodeCommand>> parseLines(int layerSkip);
+    QList<QList<GcodeCommand>> parseLines();
 
     // ---- Regular Commands ----
 
@@ -181,7 +180,10 @@ class CommonParser : public ParserBase {
 
     //! \brief Returns the currently calculated times for each layer
     //! \return The time in seconds
-    QList<QList<Time>> getLayerTimes();
+    QList<Time> getLayerTimes();
+
+    //! \brief Returns the calculated layer times after feedrate adjustment.
+    QList<Time> getAdjustedLayerTimes();
 
     //! \brief Returns the currently calculated feedrate modifier for each layer
     //! \return The time in seconds
@@ -204,6 +206,10 @@ class CommonParser : public ParserBase {
     //! \return travel distance in gcode file
     Distance getTravelDistance();
 
+    //! \brief Returns the estimated total travel time for the gcode file
+    //! \return travel time in gcode file
+    Time getTravelTime();
+
     //! \brief Returns whether or not any lines were altered to enforce minimum layer times or expand/contract
     bool getWasModified();
 
@@ -213,10 +219,6 @@ class CommonParser : public ParserBase {
     //! \brief Get lines for the start of each layer (for visualization)
     //! \return List of start lines for each layer
     QList<int> getLayerStartLines();
-
-    //! \brief Get lines to skip visualization for if setting was turned on
-    //! \return Set of all lines for which coloring should not apply
-    QSet<int> getLayerSkipLines();
 
   signals:
 
@@ -235,12 +237,12 @@ class CommonParser : public ParserBase {
     //! \return Current line index
     int getCurrentLine();
 
-    //! \brief Updates current end line index.  Used by RPBF_parser child class for command expansion.
+    //! \brief Updates current end line index.
     //! \param count Number of lines to add
     void alterCurrentEndLine(int count);
 
     //! \brief Sets the flag indicating the text was modified.  Triggers gcode_loader to reload text once
-    //! processing complete.  Used by RPBF_parser since it modifies text.
+    //! processing complete.
     void setModified();
 
     //! \brief Sets the X position of the extruder.
@@ -466,19 +468,8 @@ class CommonParser : public ParserBase {
     //! an integer conversion occurs. \throws IllegalParameterException
     void throwIntegerConversionErrorException();
 
-    //! \brief number of extruders/nozzles; parsed from settings
-    int m_num_extruders = 0;
-
-    //! \brief maintains where each extruder is on or off
-    QVector<bool> m_extruders_on;
-
-    //! \brief maintains which extruders are active, ie tracks tool changes
-    QVector<bool> m_extruders_active;
-
-    //! \brief offsets corresponding to each extruder, parsed from
-    //!        settings at end of gcode file; used to visualize segments in
-    //!        correct locations
-    QVector<Point> m_extruder_offsets;
+    //! \brief Tracks whether the parsed command stream is actively depositing material.
+    bool m_deposition_active = false;
 
     bool m_dynamic_spindle_control; // true if on, false if off.
     bool m_park;                    // true if parking, false if not.
@@ -500,27 +491,64 @@ class CommonParser : public ParserBase {
     //! \brief calculates distance for the current motion segment
     Distance getCurrentGXDistance();
 
+    //! \brief Calculates distance for the current arc motion segment.
+    Distance getCurrentArcDistance(Distance start_x, Distance start_y, Distance start_z, bool has_i, bool has_j,
+                                   bool has_r, bool ccw);
+
+    //! \brief Calculates arc path length and direction vectors in parser distance units.
+    Distance arcPathLength(Distance start_x, Distance start_y, Distance start_z, Distance end_x, Distance end_y,
+                           Distance end_z, bool has_i, bool has_j, bool has_r, bool ccw, Distance& start_direction_x,
+                           Distance& start_direction_y, Distance& start_direction_z, Distance& end_direction_x,
+                           Distance& end_direction_y, Distance& end_direction_z) const;
+
+    //! \brief Sets the current bead geometry used by motion volume estimation.
+    void updateCurrentBeadGeometry();
+
+    //! \brief Returns a distance setting loaded from the file footer, falling back to the current global setting.
+    Distance fileDistanceSetting(const QString& key) const;
+
+    //! \brief Returns a boolean setting loaded from the file footer, defaulting to false when absent.
+    bool fileBoolSetting(const QString& key) const;
+
+    //! \brief Resolves bead width from the parsed motion comment and loaded settings.
+    Distance beadWidthForComment(const QString& comment) const;
+
+    //! \brief Returns whether feedrate scaling should be skipped for the parsed motion command.
+    bool feedrateScalingDisabledForCommand(const GcodeCommand& command) const;
+
+    //! \brief Returns whether the current motion command deposits material.
+    bool currentMotionDepositsMaterial() const;
+
+    //! \brief Records the authored modal feedrate for a parsed motion command.
+    void recordModalFeedrateForCommand(const GcodeCommand& command);
+
+    //! \brief Records motion distance and non-deposition time after estimating a parsed command.
+    void recordMotionEstimate(Distance distance, Time time_delta);
+
+    //! \brief Replaces an existing F token or inserts one before the command comment.
+    void setCommandFeedrate(QString& line, double feedrate);
+
+    //! \brief Reads a numeric F token from a command before its comment.
+    bool commandFeedrate(const QString& line, double& feedrate);
+
+    //! \brief Inserts feedrates where scaled and protected modal spans meet.
+    void materializeFeedrateTransitions(double modifier);
+
     //! \brief After parsing footer, check that all necessary parameters were found.
     //! If not found, set them appropriately and assign local variables.
     void checkAndSetNecessarySettings();
 
     //! \brief Preallocate memory for processed gcode commands.  A copy is later returned
     //! for use in visualization construction.
-    //! \param layerSkip: Layer interval to skip
-    void preallocateVisualCommands(int layerSkip);
+    void preallocateVisualCommands();
 
-    //! \brief sets m_extruders_on according to which extruders are active
-    void turnOnActiveExtruders();
-
-    //! \brief sets m_extruders_on according to which extruders are active
-    void turnOffActiveExtruders();
+    //! \brief Sets the current deposition-active state.
+    void setDepositionActive(bool on);
 
     // STATE VARIABLES
 
     //! \brief Numerous state variables.  Used to track current/previous values of various
     //! pieces of state.  This is necessary to produce time and volume estimates.
-    int m_current_nozzle;
-
     Distance m_current_arc_center_x;
     Distance m_current_arc_center_y;
     Distance m_current_arc_center_z;
@@ -534,18 +562,28 @@ class CommonParser : public ParserBase {
 
     AngularVelocity m_current_spindle_speed;
 
-    double m_current_extruders_speed;
+    double m_current_extruder_speed;
 
     Time m_sleep_time;
 
     // List of all calculated times/volumes for layers as well as total distance
-    QList<QList<Time>> m_layer_times; // 2D list: row=layer #, col=extruder#
+    QList<Time> m_layer_times;
+
+    //! \brief Additional layer time inserted by dwell-based minimum layer time enforcement.
+    QList<Time> m_layer_dwell_adjustments;
 
     //! \brief layer "G1 F" lines feedrate modifier
     QList<double> m_layer_FR_modifiers;
 
+    //! \brief Estimated time spent on non-deposition motion.
+    Time m_travel_time;
+
     //! \brief layer time from "G1 F" lines
     QList<Time> m_layer_G1F_times;
+
+    //! \brief Nominal feedrate-adjustable time attributed to each motion command.
+    QHash<int, Time> m_command_G1F_times;
+
     QList<Volume> m_layer_volumes;
 
     // key information from the footer
@@ -605,17 +643,26 @@ class CommonParser : public ParserBase {
     //! \brief Flag to indicate cancelling parsing
     bool m_should_cancel;
 
-    //! \brief Flag to indicate G1 line contains F command
+    //! \brief Flag to indicate the current modal feedrate can be scaled for layer-time adjustment.
     bool m_with_F_value;
+
+    //! \brief Authored modal feedrate in the selected G-code velocity unit.
+    double m_modal_feedrate;
+
+    //! \brief Whether an authored modal feedrate has been established.
+    bool m_has_modal_feedrate;
+
+    //! \brief Authored modal feedrate active for each parsed motion command.
+    QHash<int, double> m_command_modal_feedrates;
+
+    //! \brief Explicit modal feedrate changes, including F-only G1 commands.
+    QMap<int, double> m_explicit_modal_feedrates;
 
     //! \brief Flag to indicate Z value should be multiplied by negative one, used for MVP syntax
     bool m_negate_z_value;
 
     //! \brief Line at which each layer start (used for visualization)
     QList<int> m_layer_start_lines;
-
-    //! \brief Lines in a layer that should be skipped for visualization if setting is enabled
-    QSet<int> m_layer_skip_lines;
 
 }; // class CommonParser
 

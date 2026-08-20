@@ -44,6 +44,16 @@ SettingsManager::SettingsManager() : m_global(new SettingsBase()), m_master(new 
 
     QString master_data = master_file.readAll();
     m_master->json(json::parse(master_data.toStdString()));
+
+    QFile setting_inputs_file(":/configs/setting_inputs.conf");
+    if (setting_inputs_file.open(QIODevice::ReadOnly)) {
+        QString input_data = setting_inputs_file.readAll();
+        m_setting_inputs = input_data.isEmpty() ? fifojson::object() : json::parse(input_data.toStdString());
+    }
+    else {
+        m_setting_inputs = fifojson::object();
+    }
+
     for (auto& el : m_master->json().items()) {
         if (!m_allGlobals.contains(QString::fromStdString(el.value()[Constants::Settings::Master::kMajor]))) {
             m_allGlobals.insert(QString::fromStdString(el.value()[Constants::Settings::Master::kMajor]),
@@ -65,6 +75,20 @@ SettingsManager::SettingsManager() : m_global(new SettingsBase()), m_master(new 
 }
 
 QSharedPointer<SettingsBase> SettingsManager::getMaster() const { return m_master; }
+
+fifojson SettingsManager::getSettingInputs() const { return m_setting_inputs; }
+
+fifojson SettingsManager::getSettingInput(const QString& setting_key) const {
+    for (auto& input : m_setting_inputs.items()) {
+        for (auto& component : input.value().at(Constants::Settings::Input::kComponents).items()) {
+            if (QString::fromStdString(component.value().at(Constants::Settings::Input::kSetting).get<std::string>()) ==
+                setting_key)
+                return input.value();
+        }
+    }
+
+    return fifojson();
+}
 
 bool SettingsManager::loadGlobalJson(QString path) {
 
@@ -182,23 +206,39 @@ bool SettingsManager::loadGlobalLayerBarTemplate(QString path, bool newTemplateS
 }
 
 void SettingsManager::constructActiveGlobal(QString settingTab, QString settingFile) {
-    if (m_allGlobals[settingTab].contains(settingFile)) {
-        m_global->populate(m_allGlobals[settingTab][settingFile]->json());
-    }
-    else {
-        m_global->populate(m_allGlobals[settingTab]["LFAM_03in"]->json());
+    auto tab = m_allGlobals.find(settingTab);
+    if (tab == m_allGlobals.end())
+        return;
+
+    auto setting = tab.value().find(settingFile);
+    if (setting == tab.value().end()) {
+        setting = tab.value().find("LFAM_03in");
+        if (setting == tab.value().end() || setting.value().isNull())
+            return;
+
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
+
+    if (!setting.value().isNull())
+        m_global->populate(setting.value()->json());
 }
 
 void SettingsManager::constructLayerBarTemplate(QString settingTab, QString settingFile) {
-    if (m_allGlobals[settingTab].contains(settingFile)) {
-        m_global->populate(m_allGlobals[settingTab][settingFile]->json());
-    }
-    else {
-        m_global->populate(m_allGlobals[settingTab]["LFAM_03in"]->json());
+    auto tab = m_allGlobals.find(settingTab);
+    if (tab == m_allGlobals.end())
+        return;
+
+    auto setting = tab.value().find(settingFile);
+    if (setting == tab.value().end()) {
+        setting = tab.value().find("LFAM_03in");
+        if (setting == tab.value().end() || setting.value().isNull())
+            return;
+
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
+
+    if (!setting.value().isNull())
+        m_global->populate(setting.value()->json());
 }
 
 void SettingsManager::constructActiveGlobal(QHash<QString, QString> settingTabAndFile) {
@@ -218,6 +258,11 @@ void SettingsManager::constructLayerBarTemplate(QHash<QString, QString> settingT
 }
 
 int SettingsManager::checkVersion(QString filename, fifojson& settings_data, bool gui) {
+    return checkVersion(filename, settings_data,
+                        gui ? SettingsVersionUpdateMode::kGuiPrompt : SettingsVersionUpdateMode::kConsolePrompt);
+}
+
+int SettingsManager::checkVersion(QString filename, fifojson& settings_data, SettingsVersionUpdateMode update_mode) {
     fifojson header;
     double version = 0;
     auto item = settings_data.find(Constants::SettingFileStrings::kHeader);
@@ -231,12 +276,17 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, boo
     }
 
     if (version < m_current_master_version) {
-        if (gui) {
+        if (update_mode == SettingsVersionUpdateMode::kAutoUpdate) {
+            qInfo() << filename + " is outdated. Loading it with the newest compatible version.";
+            SettingsVersionControl::rollSettingsForward(version, settings_data);
+            return 1;
+        }
+        else if (update_mode == SettingsVersionUpdateMode::kGuiPrompt) {
             int ret = m_yes_to_all_update;
             if (!ret)
                 ret = QMessageBox::warning(
                     nullptr, QCoreApplication::applicationName(),
-                    filename + "is outdated. Do you want to update this template to the newest compatible version?  "
+                    filename + " is outdated. Do you want to update this template to the newest compatible version?  "
                                "Failure to do so may result in program instability.",
                     QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No);
 

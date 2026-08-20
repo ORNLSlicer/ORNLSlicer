@@ -2,34 +2,49 @@
 
 #include <algorithm>
 #include <climits>
+#include <exception>
 #include <limits>
+#include <memory>
 
 #include <QApplication>
+#include <QStringBuilder>
+#include <QTextStream>
 #include <qdebug.h>
 #include <qfiledevice.h>
 #include <qfileinfo.h>
 #include <qhashfunctions.h>
 #include <qobject.h>
+#include <qregularexpression.h>
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
 
 #include "gcode/gcode_meta.h"
+#include "gcode/parsers/adamantine_parser.h"
+#include "gcode/parsers/aerobasic_parser.h"
+#include "gcode/parsers/arc_specialties_parser.h"
+#include "gcode/parsers/beam_parser.h"
+#include "gcode/parsers/cincinnati_parser.h"
+#include "gcode/parsers/common_parser.h"
+#include "gcode/parsers/marlin_parser.h"
+#include "gcode/parsers/mazak_parser.h"
+#include "gcode/parsers/mvp_parser.h"
+#include "gcode/parsers/siemens_parser.h"
+#include "gcode/parsers/tormach_parser.h"
 #include "gcode/writers/adamantine_writer.h"
 #include "gcode/writers/aerobasic_writer.h"
 #include "gcode/writers/aml3d_writer.h"
+#include "gcode/writers/arc_specialties_writer.h"
 #include "gcode/writers/cincinnati_writer.h"
 #include "gcode/writers/dmg_dmu_writer.h"
-#include "gcode/writers/five_axis_marlin_writer.h"
-#include "gcode/writers/gkn_writer.h"
 #include "gcode/writers/gudel_writer.h"
 #include "gcode/writers/haas_metric_no_comments_writer.h"
 #include "gcode/writers/haas_writer.h"
 #include "gcode/writers/hurco_writer.h"
 #include "gcode/writers/ingersoll_writer.h"
+#include "gcode/writers/juggerbot_writer.h"
 #include "gcode/writers/kraussmaffei_writer.h"
 #include "gcode/writers/mach4_writer.h"
-#include "gcode/writers/marlin_pellet_writer.h"
 #include "gcode/writers/marlin_writer.h"
 #include "gcode/writers/mazak_writer.h"
 #include "gcode/writers/meld_writer.h"
@@ -39,12 +54,11 @@
 #include "gcode/writers/ornl_writer.h"
 #include "gcode/writers/reprap_writer.h"
 #include "gcode/writers/romi_fanuc_writer.h"
-#include "gcode/writers/rpbf_writer.h"
 #include "gcode/writers/sandia_writer.h"
 #include "gcode/writers/siemens_writer.h"
-#include "gcode/writers/skybaam_writer.h"
 #include "gcode/writers/thermwood_writer.h"
 #include "gcode/writers/tormach_writer.h"
+#include "gcode/writers/wolf_writer.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "units/unit.h"
@@ -52,8 +66,118 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+GcodeMeta metaForSyntax(GcodeSyntax syntax) {
+    switch (syntax) {
+        case GcodeSyntax::kAML3D:
+            return GcodeMetaList::AML3DMeta;
+        case GcodeSyntax::kBeam:
+            return GcodeMetaList::BeamMeta;
+        case GcodeSyntax::kCincinnati:
+        case GcodeSyntax::kThermwood:
+            return GcodeMetaList::CincinnatiMeta;
+        case GcodeSyntax::kDmgDmu:
+            return GcodeMetaList::DmgDmuAndBeamMeta;
+        case GcodeSyntax::kGudel:
+            return GcodeMetaList::GudelMeta;
+        case GcodeSyntax::kHaasInch:
+            return GcodeMetaList::HaasInchMeta;
+        case GcodeSyntax::kHaasMetric:
+        case GcodeSyntax::kHaasMetricNoComments:
+        case GcodeSyntax::kOkuma:
+            return GcodeMetaList::HaasMetricMeta;
+        case GcodeSyntax::kHurco:
+            return GcodeMetaList::HurcoMeta;
+        case GcodeSyntax::kIngersoll:
+            return GcodeMetaList::IngersollMeta;
+        case GcodeSyntax::kKraussMaffei:
+            return GcodeMetaList::KraussMaffeiMeta;
+        case GcodeSyntax::kJuggerBot:
+        case GcodeSyntax::kMach4:
+        case GcodeSyntax::kMarlin:
+            return GcodeMetaList::MarlinMeta;
+        case GcodeSyntax::kRepRap:
+            return GcodeMetaList::RepRapMeta;
+        case GcodeSyntax::kMazak:
+            return GcodeMetaList::MazakMeta;
+        case GcodeSyntax::kMeld:
+            return GcodeMetaList::MeldMeta;
+        case GcodeSyntax::kMeltio:
+            return GcodeMetaList::MeltioMeta;
+        case GcodeSyntax::kMVP:
+            return GcodeMetaList::MVPMeta;
+        case GcodeSyntax::kORNLMetric:
+            return GcodeMetaList::ORNLMetricMeta;
+        case GcodeSyntax::kORNL:
+            return GcodeMetaList::ORNLMeta;
+        case GcodeSyntax::kArcSpecialties:
+            return GcodeMetaList::ArcSpecialtiesMeta;
+        case GcodeSyntax::kRomiFanuc:
+            return GcodeMetaList::RomiFanucMeta;
+        case GcodeSyntax::kSandia:
+            return GcodeMetaList::SandiaMeta;
+        case GcodeSyntax::kSiemens:
+            return GcodeMetaList::SiemensMeta;
+        case GcodeSyntax::kTormach:
+            return GcodeMetaList::TormachMeta;
+        case GcodeSyntax::kWolf:
+            return GcodeMetaList::WolfMeta;
+        case GcodeSyntax::kAeroBasic:
+            return GcodeMetaList::AeroBasicMeta;
+        case GcodeSyntax::kAdamantine:
+            return GcodeMetaList::AdamantineMeta;
+        default:
+            return GcodeMetaList::MarlinMeta;
+    }
+}
+
+std::unique_ptr<CommonParser> makeLayerTimeParser(GcodeSyntax syntax, QStringList& original_lines,
+                                                  QStringList& upper_lines) {
+    constexpr bool kAllowLayerAlter = true;
+    const GcodeMeta meta = metaForSyntax(syntax);
+
+    switch (syntax) {
+        case GcodeSyntax::kAML3D:
+            return std::make_unique<CincinnatiParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kBeam:
+            return std::make_unique<BeamParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kCincinnati:
+        case GcodeSyntax::kThermwood:
+            return std::make_unique<CincinnatiParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kKraussMaffei:
+        case GcodeSyntax::kJuggerBot:
+        case GcodeSyntax::kMach4:
+        case GcodeSyntax::kMarlin:
+        case GcodeSyntax::kRepRap:
+            return std::make_unique<MarlinParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kMazak:
+            return std::make_unique<MazakParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kMVP:
+            return std::make_unique<MVPParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kArcSpecialties:
+            return std::make_unique<ArcSpecialtiesParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kSiemens:
+            return std::make_unique<SiemensParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kTormach:
+            return std::make_unique<TormachParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kAeroBasic:
+            return std::make_unique<AeroBasicParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        case GcodeSyntax::kAdamantine:
+            return std::make_unique<AdamantineParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+        default:
+            return std::make_unique<CommonParser>(meta, kAllowLayerAlter, original_lines, upper_lines);
+    }
+}
+
+QString layerTimeComment(const GcodeMeta& meta, Time layer_time) {
+    return meta.m_comment_starting_delimiter %
+           QString("ORNL_SLICER_LAYER_TIME_ESTIMATE=%1").arg(layer_time.to(s), 0, 'f', 3) %
+           meta.m_comment_ending_delimiter;
+}
+} // namespace
+
 AbstractSlicingThread::AbstractSlicingThread(QString outputLocation, bool skipGcode)
-    : QObject(), m_min(0), m_max(INT_MAX), m_should_cancel(false), m_should_communicate(false) {
+    : QObject(), m_min(0), m_max(INT_MAX), m_should_cancel(false) {
     m_skip_gcode = skipGcode;
     setGcodeOutput(outputLocation);
 
@@ -80,10 +204,6 @@ qint64 AbstractSlicingThread::getTimeElapsed() { return m_elapsed_time; }
 void AbstractSlicingThread::setGcodeOutput(QString output) {
     m_syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     switch (m_syntax) {
-        case GcodeSyntax::k5AxisMarlin:
-            m_base = QSharedPointer<FiveAxisMarlinWriter>(
-                new FiveAxisMarlinWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
-            break;
         case GcodeSyntax::kAML3D:
             m_base = QSharedPointer<AML3DWriter>(new AML3DWriter(GcodeMetaList::AML3DMeta, GSM->getGlobal()));
             break;
@@ -93,9 +213,6 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kDmgDmu:
             m_base = QSharedPointer<DMGDMUWriter>(new DMGDMUWriter(GcodeMetaList::DmgDmuAndBeamMeta, GSM->getGlobal()));
-            break;
-        case GcodeSyntax::kGKN:
-            m_base = QSharedPointer<GKNWriter>(new GKNWriter(GcodeMetaList::GKNMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kGudel:
             m_base = QSharedPointer<GudelWriter>(new GudelWriter(GcodeMetaList::GudelMeta, GSM->getGlobal()));
@@ -124,9 +241,8 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
         case GcodeSyntax::kMarlin:
             m_base = QSharedPointer<MarlinWriter>(new MarlinWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
             break;
-        case GcodeSyntax::kMarlinPellet:
-            m_base =
-                QSharedPointer<MarlinPelletWriter>(new MarlinPelletWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
+        case GcodeSyntax::kJuggerBot:
+            m_base = QSharedPointer<JuggerBotWriter>(new JuggerBotWriter(GcodeMetaList::MarlinMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kMazak:
             m_base = QSharedPointer<MazakWriter>(new MazakWriter(GcodeMetaList::MazakMeta, GSM->getGlobal()));
@@ -150,17 +266,11 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             m_base =
                 QSharedPointer<RomiFanucWriter>(new RomiFanucWriter(GcodeMetaList::RomiFanucMeta, GSM->getGlobal()));
             break;
-        case GcodeSyntax::kRPBF:
-            m_base = QSharedPointer<RPBFWriter>(new RPBFWriter(GcodeMetaList::RPBFMeta, GSM->getGlobal()));
-            break;
         case GcodeSyntax::kSandia:
             m_base = QSharedPointer<SandiaWriter>(new SandiaWriter(GcodeMetaList::SandiaMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kSiemens:
             m_base = QSharedPointer<SiemensWriter>(new SiemensWriter(GcodeMetaList::SiemensMeta, GSM->getGlobal()));
-            break;
-        case GcodeSyntax::kSkyBaam:
-            m_base = QSharedPointer<SkyBaamWriter>(new SkyBaamWriter(GcodeMetaList::SkyBaamMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kThermwood:
             m_base =
@@ -168,6 +278,9 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kTormach:
             m_base = QSharedPointer<TormachWriter>(new TormachWriter(GcodeMetaList::TormachMeta, GSM->getGlobal()));
+            break;
+        case GcodeSyntax::kWolf:
+            m_base = QSharedPointer<WolfWriter>(new WolfWriter(GcodeMetaList::WolfMeta, GSM->getGlobal()));
             break;
         case GcodeSyntax::kRepRap:
             m_base = QSharedPointer<RepRapWriter>(new RepRapWriter(GcodeMetaList::RepRapMeta, GSM->getGlobal()));
@@ -185,6 +298,10 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
             break;
         case GcodeSyntax::kORNLMetric:
             m_base = QSharedPointer<ORNLWriter>(new ORNLWriter(GcodeMetaList::ORNLMetricMeta, GSM->getGlobal()));
+            break;
+        case GcodeSyntax::kArcSpecialties:
+            m_base = QSharedPointer<ArcSpecialtiesWriter>(
+                new ArcSpecialtiesWriter(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal()));
             break;
         default:
             m_base =
@@ -216,20 +333,6 @@ void AbstractSlicingThread::setMaxSteps(int steps) { m_max_steps = steps; }
 
 int AbstractSlicingThread::getMaxSteps() { return m_max_steps; }
 
-void AbstractSlicingThread::setCommunicate(bool communicate) { m_should_communicate = communicate; }
-
-bool AbstractSlicingThread::shouldCommunicate() { return m_should_communicate; }
-
-void AbstractSlicingThread::setNetworkData(StatusUpdateStepType stage, QString data) {
-    if (stage == StatusUpdateStepType::kGcodeGeneraton) {
-        m_temp_gcode_output_file.open(QIODevice::ReadWrite | QIODevice::Truncate | QIODevice::Text);
-        QTextStream stream(&m_temp_gcode_output_file);
-        stream << data;
-        m_temp_gcode_output_file.close();
-        emit sliceComplete();
-    }
-}
-
 void AbstractSlicingThread::forwardStatus(StatusUpdateStepType type, int completedPercentage) {
     emit statusUpdate(type, completedPercentage);
 }
@@ -238,7 +341,9 @@ void AbstractSlicingThread::writeGCodeSetup() {
     QTextStream stream(&m_temp_gcode_output_file);
 
     float minimum_x(std::numeric_limits<float>::max()), minimum_y(std::numeric_limits<float>::max()),
-        maximum_x(std::numeric_limits<float>::min()), maximum_y(std::numeric_limits<float>::min());
+        maximum_x(std::numeric_limits<float>::min()), maximum_y(std::numeric_limits<float>::min()),
+        maximum_z(std::numeric_limits<float>::lowest());
+    bool has_part_bounds = false;
 
     for (QSharedPointer<Part> curr_part : CSM->parts()) {
         if (curr_part->rootMesh()->type() == MeshType::kClipping) // Skip parts that were used for clipping
@@ -248,6 +353,12 @@ void AbstractSlicingThread::writeGCodeSetup() {
         minimum_y = std::min(minimum_y, curr_part->rootMesh()->min().y());
         maximum_x = std::max(maximum_x, curr_part->rootMesh()->max().x());
         maximum_y = std::max(maximum_y, curr_part->rootMesh()->max().y());
+        maximum_z = std::max(maximum_z, curr_part->rootMesh()->max().z());
+        has_part_bounds = true;
+    }
+
+    if (has_part_bounds) {
+        m_base->setBuildMaximumZ(Distance(maximum_z));
     }
 
     stream << m_base->writeSlicerHeader(toString(m_syntax));
@@ -257,10 +368,89 @@ void AbstractSlicingThread::writeGCodeSetup() {
 }
 
 void AbstractSlicingThread::writeGCodeShutdown() {
-    QTextStream stream(&m_temp_gcode_output_file);
-    stream << m_base->writeShutdown();
-    if (m_syntax != GcodeSyntax::kMVP)
-        stream << m_base->writeSettingsFooter();
+    {
+        QTextStream stream(&m_temp_gcode_output_file);
+        stream << m_base->writeShutdown();
+        if (m_syntax != GcodeSyntax::kMVP)
+            stream << m_base->writeSettingsFooter();
+        stream.flush();
+    }
+    writeLayerTimeComments();
     m_temp_gcode_output_file.close();
+}
+
+void AbstractSlicingThread::writeLayerTimeComments() {
+    if (!GSM->getGlobal()->setting<bool>(PRS::GCode::kLayerTimeComments)) {
+        return;
+    }
+
+    const QString file_name = m_temp_gcode_output_file.fileName();
+    if (!m_temp_gcode_output_file.isOpen() || !m_temp_gcode_output_file.flush() || !m_temp_gcode_output_file.seek(0)) {
+        qWarning() << "Unable to read generated G-Code for layer time comments:" << file_name;
+        return;
+    }
+
+    QString text;
+    {
+        QTextStream in(&m_temp_gcode_output_file);
+        text = in.readAll();
+    }
+
+    try {
+        QStringList original_lines = text.split('\n');
+        QStringList upper_lines = text.toUpper().split('\n');
+
+        std::unique_ptr<CommonParser> parser = makeLayerTimeParser(m_syntax, original_lines, upper_lines);
+        parser->parseHeader();
+        parser->parseFooter();
+        parser->parseLines();
+
+        const QList<Time> adjusted_layer_times = parser->getAdjustedLayerTimes();
+        if (adjusted_layer_times.isEmpty()) {
+            return;
+        }
+
+        const GcodeMeta meta = metaForSyntax(m_syntax);
+        const QRegularExpression layer_marker("^\\s*" + QRegularExpression::escape(meta.m_comment_starting_delimiter) +
+                                                  "\\s*BEGINNING\\s+LAYER\\s*:\\s*(\\d+)\\b",
+                                              QRegularExpression::CaseInsensitiveOption);
+
+        QStringList annotated_lines = text.split('\n');
+        int layer_marker_count = 0;
+        for (const QString& line : annotated_lines) {
+            if (layer_marker.match(line).hasMatch()) {
+                ++layer_marker_count;
+            }
+        }
+
+        const int layer_time_offset = adjusted_layer_times.size() > layer_marker_count ? 1 : 0;
+        for (int line_index = 0; line_index < annotated_lines.size(); ++line_index) {
+            const QRegularExpressionMatch match = layer_marker.match(annotated_lines[line_index]);
+            if (!match.hasMatch()) {
+                continue;
+            }
+
+            bool converted = false;
+            const int layer_time_index = match.captured(1).toInt(&converted) - 1 + layer_time_offset;
+            if (!converted || layer_time_index < 0 || layer_time_index >= adjusted_layer_times.size()) {
+                continue;
+            }
+
+            annotated_lines.insert(line_index + 1, layerTimeComment(meta, adjusted_layer_times[layer_time_index]));
+            ++line_index;
+        }
+
+        if (!m_temp_gcode_output_file.resize(0) || !m_temp_gcode_output_file.seek(0)) {
+            qWarning() << "Unable to write generated G-Code layer time comments:" << file_name;
+            return;
+        }
+
+        QTextStream out(&m_temp_gcode_output_file);
+        out << annotated_lines.join('\n');
+        out.flush();
+    } catch (const std::exception& exception) {
+        qWarning() << "Unable to add generated G-Code layer time comments:" << exception.what();
+        return;
+    }
 }
 } // namespace ORNL

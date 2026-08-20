@@ -23,7 +23,7 @@ QString HaasMetricNoCommentsWriter::writeInitialSetup(Distance minimum_x, Distan
     m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_rpm = 0;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     m_first_travel = true;
     m_first_print = true;
     m_layer_start = true;
@@ -178,12 +178,12 @@ QString HaasMetricNoCommentsWriter::writeLine(const Point& start_point, const Po
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_extruders_on[0] == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+    if (m_deposition_active == false && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     // turn off extruder with an M5 before the line, rather than in-line with S0
-    if (rpm == 0 && m_extruders_on[0] == true) {
+    if (rpm == 0 && m_deposition_active == true) {
         rv += writeExtruderOff();
     }
 
@@ -231,11 +231,9 @@ QString HaasMetricNoCommentsWriter::writeArc(const Point& start_point, const Poi
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
     float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    rv += ((ccw) ? m_G3 : m_G2);
-
     // Turn on the extruder if it isn't already on
-    if (!m_extruders_on[0] && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
+    if (!m_deposition_active && rpm > 0) {
+        rv += writeExtruderOn(region_type, rpm, params);
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -329,6 +327,8 @@ QString HaasMetricNoCommentsWriter::writeAfterLayer() {
 
 QString HaasMetricNoCommentsWriter::writeShutdown() {
     QString rv;
+    rv +=
+        writeFinalTravelLift([&](const Point& destination) { return m_G0 % writeCoordinates(destination); }, QString());
 
     rv += "G91G28Z0.0" % m_newline;
     rv += "G91G28Y0.0" % m_newline;
@@ -347,21 +347,22 @@ QString HaasMetricNoCommentsWriter::writeDwell(Time time) {
         return {};
 }
 
-QString HaasMetricNoCommentsWriter::writeExtruderOn(RegionType type, int rpm) {
+QString HaasMetricNoCommentsWriter::writeExtruderOn(RegionType type, int rpm,
+                                                    const QSharedPointer<SettingsBase>& params) {
     QString rv;
-    m_extruders_on[0] = true;
+    m_deposition_active = true;
     float output_rpm;
+    int initial_rpm = getInitialExtruderSpeed(params);
 
-    if (m_sb->setting<int>(MS::Extruder::kInitialSpeed) > 0) {
-        output_rpm =
-            m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+    if (initial_rpm > 0) {
+        output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
         // Only update the current rpm if not using feedrate scaling. An updated rpm value here could prevent the S
         // parameter from being issued during the first G1 motion of the path and thus the extruder rate won't properly
         // scale
         if (!(m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
               m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate))
-            m_current_rpm = m_sb->setting<int>(MS::Extruder::kInitialSpeed);
+            m_current_rpm = initial_rpm;
 
         rv += m_M3 % m_s % QString::number(output_rpm);
 
@@ -402,7 +403,7 @@ QString HaasMetricNoCommentsWriter::writeExtruderOn(RegionType type, int rpm) {
 
 QString HaasMetricNoCommentsWriter::writeExtruderOff() {
     QString rv;
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
     if (m_sb->setting<Time>(MS::Extruder::kOffDelay) > 0) {
         rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOffDelay));
     }

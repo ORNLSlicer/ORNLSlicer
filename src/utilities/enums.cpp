@@ -29,8 +29,11 @@ void from_json(const json& j, PointOrderOptimization& o) {
     o = static_cast<PointOrderOptimization>(j["point_order_optimization"].get<int>());
 }
 
-void to_json(json& j, const SlicerType& i) { j = json {{"slicer_type", static_cast<int>(i)}}; }
+void to_json(json& j, const SlicingMode& i) { j = json {{"slicing_mode", static_cast<int>(i)}}; }
 
-void from_json(const json& j, SlicerType& i) { i = static_cast<SlicerType>(j["slicer_type"].get<int>()); }
+void from_json(const json& j, SlicingMode& i) {
+    const char* key = j.contains("slicing_mode") ? "slicing_mode" : "slicer_type";
+    i = static_cast<SlicingMode>(j[key].get<int>());
+}
 
 } // namespace ORNL

@@ -28,7 +28,6 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/line.h"
 #include "geometry/settings_polygon.h"
-#include "managers/sync/sync_manager.h"
 #include "optimizers/polyline_order_optimizer.h"
 #include "step/layer/regions/region_base.h"
 #include "units/unit.h"
@@ -63,10 +62,8 @@ template <> struct boost::polygon::segment_traits<ORNL::Polyline> {
 
 namespace ORNL {
 Skeleton::Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
-                   const QVector<SettingsPolygon>& settings_polygons, bool isWireFed)
-    : RegionBase(sb, index, settings_polygons) {
-    m_wire_region = isWireFed;
-}
+                   const QVector<SettingsPolygon>& settings_polygons)
+    : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kSkeleton) {}
 
 QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
@@ -82,10 +79,13 @@ QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
+void Skeleton::compute(uint layer_num) {
     m_layer_num = layer_num;
 
     m_paths.clear();
+    m_skeleton_geometry.clear();
+    m_skeleton_graph.clear();
+    m_computed_geometry.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kSkeletonNum));
 
@@ -112,11 +112,6 @@ void Skeleton::compute(uint layer_num, QSharedPointer<SyncManager>& sync) {
 
             //! Uncomment to inspect Skeleton structure. See instructions in header file.
             // inspectSkeleton(layer_num);
-
-            if (m_computed_anchor_lines.size() != 0) {
-                m_computed_geometry.push_front(m_computed_anchor_lines.first());
-                m_computed_geometry.push_back(m_computed_anchor_lines.last());
-            }
         }
         else {
             qDebug() << "\t\tNo permitted skeletons generated from geometry on layer " << m_layer_num;
@@ -578,31 +573,66 @@ void Skeleton::extractSimplePaths() {
 }
 
 void Skeleton::extractPath(QVector<SkeletonEdge> path_) {
+    if (path_.isEmpty())
+        return;
+
+    struct EdgeEndpoints {
+        SkeletonVertex source;
+        SkeletonVertex target;
+    };
+
+    auto sameUndirectedEdge = [](const EdgeEndpoints& lhs, const EdgeEndpoints& rhs) {
+        return (lhs.source == rhs.source && lhs.target == rhs.target) ||
+               (lhs.source == rhs.target && lhs.target == rhs.source);
+    };
+
+    auto trackEdge = [&sameUndirectedEdge](QVector<EdgeEndpoints>& edges, SkeletonVertex source,
+                                           SkeletonVertex target) {
+        EdgeEndpoints endpoints {source, target};
+        const auto duplicate = std::any_of(edges.cbegin(), edges.cend(), [&sameUndirectedEdge, &endpoints](const auto& edge) {
+            return sameUndirectedEdge(edge, endpoints);
+        });
+        if (!duplicate)
+            edges.push_back(endpoints);
+    };
+
     Polyline path;
+    QVector<EdgeEndpoints> edges_to_remove;
+    QVector<SkeletonVertex> touched_vertices;
+
+    auto trackVertex = [&touched_vertices](SkeletonVertex vertex) {
+        if (!touched_vertices.contains(vertex))
+            touched_vertices.push_back(vertex);
+    };
 
     SkeletonEdge e = path_.takeFirst();
-    path << m_skeleton_graph[e.m_source] << m_skeleton_graph[e.m_target];
-    remove_edge(e, m_skeleton_graph);
-
-    //! Remove isolated vertices
-    if (boost::degree(e.m_source, m_skeleton_graph) == 0) {
-        remove_vertex(e.m_source, m_skeleton_graph);
-    }
-    if (boost::degree(e.m_target, m_skeleton_graph) == 0) {
-        remove_vertex(e.m_target, m_skeleton_graph);
-    }
+    SkeletonVertex source = boost::source(e, m_skeleton_graph);
+    SkeletonVertex target = boost::target(e, m_skeleton_graph);
+    path << m_skeleton_graph[source] << m_skeleton_graph[target];
+    trackEdge(edges_to_remove, source, target);
+    trackVertex(source);
+    trackVertex(target);
 
     for (SkeletonEdge& e : path_) {
-        path << m_skeleton_graph[e.m_target];
-        remove_edge(e, m_skeleton_graph);
+        source = boost::source(e, m_skeleton_graph);
+        target = boost::target(e, m_skeleton_graph);
+        path << m_skeleton_graph[target];
+        trackEdge(edges_to_remove, source, target);
+        trackVertex(source);
+        trackVertex(target);
+    }
 
-        //! Remove isolated vertices
-        if (boost::degree(e.m_source, m_skeleton_graph) == 0) {
-            remove_vertex(e.m_source, m_skeleton_graph);
-        }
-        if (boost::degree(e.m_target, m_skeleton_graph) == 0) {
-            remove_vertex(e.m_target, m_skeleton_graph);
-        }
+    // Re-resolve each edge before removal. A DFS path can contain the same undirected edge more than once; removing
+    // by a stale descriptor a second time corrupts Boost's list-backed edge container.
+    for (const EdgeEndpoints& edge : edges_to_remove) {
+        auto [edge_descriptor, found] = boost::edge(edge.source, edge.target, m_skeleton_graph);
+        if (found)
+            boost::remove_edge(edge_descriptor, m_skeleton_graph);
+    }
+
+    for (SkeletonVertex vertex : touched_vertices) {
+        if (boost::degree(vertex, m_skeleton_graph) == 0)
+            boost::remove_vertex(vertex, m_skeleton_graph);
     }
 
     m_computed_geometry.append(path);
@@ -721,6 +751,11 @@ LSegmentList Skeleton::createSegments(const Point& start, const Point& end,
 }
 
 Path Skeleton::createPath(Polyline line) {
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Skeleton::kMinSegmentLength));
+    if (line.size() < 2) {
+        return Path();
+    }
+
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;
@@ -860,17 +895,13 @@ QVector<Path> Skeleton::filterPath(const Path& path) {
     return filtered_paths;
 }
 
-void Skeleton::setAnchorWireFeed(QVector<Polyline> anchor_lines) { m_computed_anchor_lines = anchor_lines; }
-
-void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>& innerMostClosedContour,
-                        QVector<Path>& outerMostClosedContour, bool& shouldNextPathBeCCW) {
+void Skeleton::optimize(int layerNumber, Point& current_location, bool& shouldNextPathBeCCW) {
     PolylineOrderOptimizer poo(current_location, layerNumber);
 
     PathOrderOptimization pathOrderOptimization =
         static_cast<PathOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPathOrder));
     if (pathOrderOptimization == PathOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPathXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPathYLocation));
+        Point startOverride = customPathOrderPoint();
 
         poo.setStartOverride(startOverride);
     }
@@ -878,37 +909,19 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
     PointOrderOptimization pointOrderOptimization =
         static_cast<PointOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kPointOrder));
 
-    if (pointOrderOptimization == PointOrderOptimization::kCustomPoint) {
-        Point startOverride(getSb()->setting<double>(PS::Optimizations::kCustomPointXLocation),
-                            getSb()->setting<double>(PS::Optimizations::kCustomPointYLocation));
+    if (usesCustomPointLocation(pointOrderOptimization)) {
+        Point startOverride = customPointOrderPoint();
 
         poo.setStartPointOverride(startOverride);
-    }
-
-    //! Uncomment if erroneous skeletons are being generated outside geometry
-    if (!outerMostClosedContour.isEmpty()) {
-        PolygonList _outerMostClosedContour;
-        for (const Path& path : outerMostClosedContour) {
-            _outerMostClosedContour += Polygon(path);
-        }
-
-        //! Removes skeletons generated outside outerMostClosedContour
-        QVector<Polyline> containedPaths;
-        for (Polyline line : m_computed_geometry) {
-            if (std::all_of(line.begin(), line.end(), [_outerMostClosedContour](const Point& pt) mutable {
-                    return _outerMostClosedContour.inside(pt);
-                })) {
-                containedPaths += line;
-            }
-        }
-        m_computed_geometry = containedPaths;
     }
 
     poo.setPointParameters(pointOrderOptimization, getSb()->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                            getSb()->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                            getSb()->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                            getSb()->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+                           getSb()->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius),
+                           getSb()->setting<bool>(PS::Optimizations::kEnablePointOrderSegmentBreaking));
+    poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kSkeleton,
                               static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder)));
@@ -920,8 +933,7 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
 
             if (paths.size() > 0) {
                 for (Path path : paths) {
-                    QVector<Path> temp_path;
-                    calculateModifiers(path, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), temp_path);
+                    calculateModifiers(path, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
                     PathModifierGenerator::GenerateTravel(path, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
                     current_location = path.back()->end();
@@ -932,7 +944,9 @@ void Skeleton::optimize(int layerNumber, Point& current_location, QVector<Path>&
     }
 }
 
-void Skeleton::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& innerMostClosedContour) {
+void Skeleton::calculateModifiers(Path& path, bool supportsG3) {
+    PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
+
     // Ramping
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
@@ -994,6 +1008,17 @@ void Skeleton::calculateModifiers(Path& path, bool supportsG3, QVector<Path>& in
             PathModifierGenerator::GenerateInitialStartup(path, su_distance, su_speed, su_extruder_speed,
                                                           sm_enable_width_height, su_area_modifier);
         }
+    }
+
+    // Prestart
+    if (m_sb->setting<bool>(PS::Skeleton::kPrestartEnable)) {
+        const auto& ps_distance = m_sb->setting<Distance>(PS::Skeleton::kPrestartDistance);
+        const auto& ps_speed = m_sb->setting<Velocity>(PS::Skeleton::kPrestartSpeed);
+        const auto& ps_extruder_speed = m_sb->setting<AngularVelocity>(PS::Skeleton::kPrestartExtruderSpeed);
+        const auto& ps_enable_width_height = m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight);
+        const auto& ps_area_modifier = m_sb->setting<double>(PS::Skeleton::kPrestartAreaModifier);
+        PathModifierGenerator::GeneratePrestart(path, ps_distance, ps_speed, ps_extruder_speed, ps_enable_width_height,
+                                                ps_area_modifier);
     }
 
     // Lead In

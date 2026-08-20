@@ -26,7 +26,7 @@ void BeamParser::M110Handler(QVector<QString> params) {
         return;
     }
 
-    m_extruders_on[0] = true;
+    m_deposition_active = true;
 }
 
 void BeamParser::M111Handler(QVector<QString> params) {
@@ -34,6 +34,6 @@ void BeamParser::M111Handler(QVector<QString> params) {
         return;
     }
 
-    m_extruders_on[0] = false;
+    m_deposition_active = false;
 }
 } // namespace ORNL

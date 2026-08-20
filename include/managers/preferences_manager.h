@@ -127,6 +127,18 @@ class PreferencesManager : public QObject {
     //! \return if true widths should be used
     bool getUseTrueWidthsPreference();
 
+    //! \brief Returns the preferred g-code preview rendering mode.
+    GCodePreviewMode getGCodePreviewModePreference();
+
+    //! \brief Returns the true-width preview vertex threshold.
+    int getGCodePreviewVertexThresholdPreference();
+
+    //! \brief Returns how dependency-disabled settings are displayed.
+    DisabledSettingVisibility getDisabledSettingVisibilityPreference();
+
+    //! \brief Return the user preference for warning about unsaved projects when closing
+    bool getWarnUnsavedProjectOnClosePreference();
+
     //! \brief Return the window preference for maximization
     bool getWindowMaximizedPreference();
 
@@ -215,31 +227,6 @@ class PreferencesManager : public QObject {
     //! \return visualization color map of name and color as hex string
     std::map<std::string, std::string> getVisualizationHexColors();
 
-    //! \brief Get processing step connectivity
-    //! \param type: processing step to get
-    //! \return whether or not to transmit results over TCP
-    bool getStepConnectivity(StatusUpdateStepType type);
-
-    //! \brief Get TCP server port
-    //! \return TCP port
-    int getTCPServerPort();
-
-    //! \brief Get TCP server autostart
-    //! \return whether or not to autostart
-    bool getTcpServerAutoStart();
-
-    //! \brief Get Send Output To Katana
-    //! \return whether or not to send gcode / model to Katana
-    bool getKatanaSendOutput();
-
-    //! \brief Get Katana TCP IP Address
-    //! \return Katana TCP IP Address as string
-    QString getKatanaTCPIp();
-
-    //! \brief Get Katana TCP Port
-    //! \return Katana TCP Port as integer
-    int getKatanaTCPPort();
-
   signals:
     //! \brief Signal emitted when the import unit is changed
     void importUnitChanged(Distance new_value, Distance old_value);
@@ -279,6 +266,9 @@ class PreferencesManager : public QObject {
 
     //! \brief Signal that any of the above units have changed
     void themeChanged();
+
+    //! \brief Signal emitted when dependency-disabled setting visibility is changed
+    void disabledSettingVisibilityChanged();
 
   public slots:
     //! \brief sets the unit used to scale when importing models
@@ -364,6 +354,29 @@ class PreferencesManager : public QObject {
     //! \param use if true widths should be used
     void setUseTrueWidthsPreference(bool use);
 
+    //! \brief Sets the preferred g-code preview rendering mode.
+    //! \param mode selected preview mode
+    void setGCodePreviewModePreference(GCodePreviewMode mode);
+
+    //! \brief Sets the preferred g-code preview rendering mode from a UI index.
+    //! \param mode selected preview mode as an integer
+    void setGCodePreviewModePreference(int mode);
+
+    //! \brief Sets the true-width preview vertex threshold.
+    //! \param threshold maximum estimated vertices to build for true-width preview
+    void setGCodePreviewVertexThresholdPreference(int threshold);
+
+    //! \brief Sets how dependency-disabled settings are displayed.
+    //! \param visibility selected disabled setting visibility
+    void setDisabledSettingVisibilityPreference(DisabledSettingVisibility visibility);
+
+    //! \brief Sets how dependency-disabled settings are displayed from a UI index.
+    //! \param visibility selected visibility as an integer
+    void setDisabledSettingVisibilityPreference(int visibility);
+
+    //! \brief Sets the preference for warning about unsaved projects when closing
+    void setWarnUnsavedProjectOnClosePreference(bool warn);
+
     //! \brief Sets the unit used for rotation
     void setRotationUnit(QString unit);
 
@@ -399,37 +412,15 @@ class PreferencesManager : public QObject {
     //! \param lag: time to lag in milliseconds
     void setSegmentLag(int lag);
 
-    //! \brief Sets processing stage connectivity (currently only gcode)
-    //! \param type: processing stage to set
-    //! \param toggle: whether or not to transmit over TCP
-    void setStepConnectivity(StatusUpdateStepType type, bool toggle);
-
-    //! \brief Sets TCP server's port
-    //! \param port: port to set
-    void setTCPServerPort(int port);
-
-    //! \brief Sets whether TCP server should autostart or not
-    //! \param start: whether or not to autostart
-    void setTcpServerAutoStart(bool start);
-
-    //! \brief Sets whether Send Output To Katana or not
-    //! \param send: whether or not to send
-    void setKatanaSendOutput(bool send);
-
-    //! \brief Set Katana TCP IP Address
-    //! \param Katana TCP IP Address as string
-    void setKatanaTCPIp(QString ipAddress);
-
-    //! \brief Set Katana TCP Port
-    //! \param Katana TCP Port as integer
-    void setKatanaTCPPort(int port);
-
   private:
     //! \brief Constructor
     PreferencesManager();
 
-    //! \brief Set Visualization Colors to Default
-    void setDefaultVisualizationColors(std::unordered_map<std::string, std::string> visualizationColorsHex);
+    //! \brief Set visualization colors to defaults and apply valid persisted overrides
+    //! \param visualizationColorsHex Persisted visualization color values keyed by VisualizationColorsName()
+    //!
+    //! Invalid persisted colors are left at their default values so they can be repaired on the next export.
+    void setDefaultVisualizationColors(const std::unordered_map<std::string, std::string>& visualizationColorsHex);
 
     //! \brief Singleton pointer
     static QSharedPointer<PreferencesManager> m_singleton;
@@ -453,6 +444,10 @@ class PreferencesManager : public QObject {
     bool m_hide_travel_preference;
     bool m_hide_support_preference;
     bool m_use_true_widths_preference;
+    GCodePreviewMode m_gcode_preview_mode_preference;
+    int m_gcode_preview_vertex_threshold_preference;
+    DisabledSettingVisibility m_disabled_setting_visibility_preference;
+    bool m_warn_unsaved_project_on_close_preference;
 
     //! \brief Preferences for window size and position
     bool m_is_maximized;
@@ -482,30 +477,15 @@ class PreferencesManager : public QObject {
     //! \brief bool to determine if a save is necessary
     int m_dirty;
 
+    //! \brief Version of one-time visualization color migrations applied to this preferences file.
+    int m_visualization_color_migration_version;
+
     //! Std construct to make it easier to write out to json for hidden settings
     //! Construct limited to this class.  All input/output converted to Qt structures.
     std::unordered_map<std::string, std::list<std::string>> m_hidden_settings;
 
     //! \brief visualization color's preferences QColors
     std::unordered_map<std::string, QColor> m_visualization_qcolors;
-
-    //! \brief whether or not to transmit information for each major processing stage (currently only gcode)
-    QVector<bool> m_step_connectivity;
-
-    //! \brief port to run tcp server on
-    int m_tcp_port;
-
-    //! \brief whether to automatically start tcp server on startup
-    bool m_tcp_server_autostart;
-
-    //! \brief whether to Send Output To Katana
-    bool m_katana_send_output;
-
-    //! \brief Katana TCP IP Address
-    QString m_katana_tcp_ip;
-
-    //! \brief Katana TCP Port
-    int m_katana_tcp_port;
 
 }; // class PreferencesManager
 } // namespace ORNL

@@ -36,6 +36,10 @@ class MainToolbar : public QToolBar {
     //! \param checked: if the planes should be displayed
     void showSlicingPlanes(bool checked);
 
+    //! \brief signals when the selected layer settings range plane should/ shouldn't be displayed
+    //! \param checked: if the selected layer settings range plane should be displayed
+    void showLayerSettingsRange(bool checked);
+
     //! \brief signals when the overhang should/ shouldn't be displayed
     //! \param checked: if overhang should be displayed
     void showOverhang(bool checked);
@@ -84,9 +88,17 @@ class MainToolbar : public QToolBar {
     //! \param status: if the export button is enabled
     void setExportAbility(bool status);
 
+    //! \brief enables/ disables the layer settings range button
+    //! \param status: if any layer-specific settings are available for display
+    void setLayerSettingsRangeAbility(bool status);
+
     //! \brief updates seams button from settings
     //! \param setting_key: the new settings
     void handleModifiedSetting(const QString& setting_key);
+
+    //! \brief updates the 2D g-code button without re-emitting the toggle signal
+    //! \param status if the g-code view is using orthographic projection
+    void setOrthoGcodeChecked(bool status);
 
   private:
     //! \brief sets up the widget
@@ -139,6 +151,7 @@ class MainToolbar : public QToolBar {
     QToolButton* m_add_btn;
     QToolButton* m_shape_btn;
     QToolButton* m_slicing_planes_btn;
+    QToolButton* m_layer_settings_range_btn;
     QToolButton* m_seam_btn;
     QToolButton* m_overhang_button;
     QToolButton* m_billboarding_button;
@@ -147,5 +160,8 @@ class MainToolbar : public QToolBar {
     QToolButton* m_show_ghosts_btn;
     QToolButton* m_export_gcode_btn;
     QToolButton* m_slice_btn;
+
+    //! \brief if selected part has layer-specific settings available for visualization
+    bool m_layer_settings_range_available = false;
 };
 } // namespace ORNL
