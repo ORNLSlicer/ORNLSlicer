@@ -19,7 +19,7 @@ settings:
   - name: "layer_grouping_tolerance"
     display: "Layer Grouping Tolerance"
     type: "distance"
-    tooltip: "Layers with the same plane normal that are separated by a distance less than this value will be assigned to the same global layer."
+    tooltip: "Layers with local heights along their slicing plane normals that differ by less than this value will be assigned to the same global layer."
     depends: {"AND":[{"slicing_mode":0},{"layer_ordering":0}]}
     options: []
     default: 1

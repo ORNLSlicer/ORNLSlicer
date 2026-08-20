@@ -60,6 +60,12 @@ class GlobalLayer {
     //! \param step_pair - the step pair to add to the layer
     void addStepPair(QUuid part_id, Part::StepPair step_pair);
 
+    //! \brief returns the number of step pairs assigned to this global layer
+    int getStepPairCount() const;
+
+    //! \brief returns whether this global layer contains a step pair for the part
+    bool hasStepPair(QUuid part_id) const;
+
     //! \brief returns a list of all the islands, from all parts and step groups
     QVector<QSharedPointer<IslandBase>> getIslands();
 

@@ -1,25 +1,54 @@
 #include "optimizers/layer_order_optimizer.h"
 
+#include <algorithm>
+#include <cmath>
+
 #include <qassert.h>
 #include <qcontainerfwd.h>
 #include <qlist.h>
-#include <qmap.h>
 #include <qminmax.h>
 #include <qsharedpointer.h>
 #include <quuid.h>
+#include <qvector.h>
+#include <qvectornd.h>
 
 #include "configs/settings_base.h"
 #include "geometry/plane.h"
-#include "geometry/point.h"
 #include "part/part.h"
 #include "step/global_layer.h"
 #include "step/step.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
-#include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+constexpr double kLocalLayerZComparisonTolerance = 1.0e-7;
+
+struct LayerCandidate {
+    int part_index;
+    int step_index;
+    QSharedPointer<Part> part;
+    QUuid part_id;
+    Distance local_layer_z;
+};
+
+bool localLayerZsAreEqual(Distance lhs, Distance rhs, double tolerance = kLocalLayerZComparisonTolerance) {
+    return std::abs(lhs() - rhs()) <= tolerance;
+}
+
+bool candidatesCanShareGlobalLayer(const LayerCandidate& lhs, const LayerCandidate& rhs, Distance tolerance) {
+    return localLayerZsAreEqual(lhs.local_layer_z, rhs.local_layer_z, tolerance());
+}
+
+bool layerCandidateLessThan(const LayerCandidate& lhs, const LayerCandidate& rhs) {
+    if (localLayerZsAreEqual(lhs.local_layer_z, rhs.local_layer_z))
+        return lhs.part_index < rhs.part_index;
+
+    return lhs.local_layer_z < rhs.local_layer_z;
+}
+} // namespace
+
 QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPointer<SettingsBase> global_sb,
                                                                       QVector<QSharedPointer<Part>> build_parts) {
     // list to return at end of function
@@ -29,85 +58,69 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
     LayerOrdering order_method = global_sb->setting<LayerOrdering>(PS::Optimizations::kLayerOrdering);
 
     if (order_method == LayerOrdering::kByHeight) {
-        bool steps_left = true;
         int num_global_steps = 0;
+        const Distance layer_grouping_tolerance =
+            global_sb->setting<Distance>(PS::Optimizations::kLayerGroupingTolerance);
 
-        // Make a map to track the step/layer number each part is currently on
-        // Start each part at zero
-        QMap<QUuid, int> current_layer;
-        for (auto& part : build_parts)
-            current_layer.insert(part->getId(), 0);
+        // Track the current step by build-parts index so ties keep the input part order.
+        QVector<int> current_layer(build_parts.size(), 0);
+        QVector<Distance> current_local_z(build_parts.size(), Distance(0.0));
 
-        while (steps_left) {
+        while (true) {
+            QVector<LayerCandidate> candidates;
+            candidates.reserve(build_parts.size());
 
-            // Check the current step of all the parts, find the minimum plane
-            QUuid part_with_min_plane = QUuid(); // null quuid initially
-            Plane min_plane;
-            Distance min_dist;
-
-            // Check all the parts for the next "lowest" layer to print
-            for (auto& part : build_parts) {
-                QUuid part_id = part->getId();
-
-                // Skip the part if all its layers have been assigned to a global layer
-                if (current_layer[part_id] >= part->countStepPairs())
+            for (int part_index = 0, part_count = build_parts.size(); part_index < part_count; ++part_index) {
+                QSharedPointer<Part> part = build_parts[part_index];
+                if (part.isNull())
                     continue;
 
-                // Get the current layer for this part
-                QSharedPointer<Step> current_step = part->getStepPair(current_layer[part_id]).printing_layer;
+                if (current_layer[part_index] >= part->countStepPairs())
+                    continue;
 
-                // calculate the distance from
-                Plane layer_plane = current_step->getSlicingPlane();
-                Distance layer_height = current_step->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-                layer_plane.shiftAlongNormal(layer_height() / 2.0);
-
-                Distance layer_dist =
-                    MathUtils::linePlaneIntersection(Point(0, 0, 0), layer_plane.normal(), layer_plane).distance();
-
-                // If this is the first plane in this loop, or its lower than the current min, set this layer as the min
-                if (part_with_min_plane.isNull() || layer_dist < min_dist) {
-                    part_with_min_plane = part_id;
-                    min_plane = layer_plane;
-                    min_dist = layer_dist;
+                QSharedPointer<Step> current_step = part->getStepPair(current_layer[part_index]).printing_layer;
+                Q_ASSERT(!current_step.isNull());
+                if (current_step.isNull()) {
+                    ++current_layer[part_index];
+                    continue;
                 }
+
+                if (current_step->getSlicingPlane().normal().isNull()) {
+                    Q_ASSERT(false);
+                    ++current_layer[part_index];
+                    continue;
+                }
+
+                const Distance layer_height = current_step->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
+                const Distance local_layer_z = current_local_z[part_index] + layer_height;
+                candidates.push_back({part_index, current_layer[part_index], part, part->getId(), local_layer_z});
             }
 
-            // check all the parts (again) for layers with the same plane as the lowest layer. Layers with same plane
-            // can be printed at the same time, and go on the same global layer
+            if (candidates.isEmpty())
+                break;
+
+            const auto min_candidate =
+                std::min_element(candidates.constBegin(), candidates.constEnd(), layerCandidateLessThan);
+
+            // Layers at the same local height can be printed at the same time, even when their slicing planes differ.
             QSharedPointer<GlobalLayer> new_global_layer = QSharedPointer<GlobalLayer>::create(num_global_steps);
-            for (auto& part : build_parts) {
-                QUuid part_id = part->getId();
-
-                // skip the part if all its layers have been assigned to a global layer
-                if (current_layer[part_id] >= part->countStepPairs())
-                    continue;
-
-                // get the current layer for this part
-                QSharedPointer<Step> current_step = part->getStepPair(current_layer[part_id]).printing_layer;
-
-                Distance layer_height = current_step->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-                Distance layer_grouping_tolerance =
-                    global_sb->setting<Distance>(PS::Optimizations::kLayerGroupingTolerance);
-                Plane layer_plane = current_step->getSlicingPlane();
-                layer_plane.shiftAlongNormal(layer_height() / 2.0);
-
-                // if this part's current layer is equal to the min plane, add it to the global layer
-                if (layer_plane.isEqual(min_plane, layer_grouping_tolerance())) {
-                    new_global_layer->addStepPair(part_id, part->getStepPair(current_layer[part_id]));
-                    ++current_layer[part_id];
+            bool added_step_pair = false;
+            for (const LayerCandidate& candidate : candidates) {
+                if (candidatesCanShareGlobalLayer(candidate, *min_candidate, layer_grouping_tolerance)) {
+                    new_global_layer->addStepPair(candidate.part_id, candidate.part->getStepPair(candidate.step_index));
+                    current_local_z[candidate.part_index] = candidate.local_layer_z;
+                    ++current_layer[candidate.part_index];
+                    added_step_pair = true;
                 }
             }
 
-            // add the new global layer to the list
+            Q_ASSERT(added_step_pair);
+            if (!added_step_pair)
+                break;
+
             global_layers.push_back(new_global_layer);
             ++num_global_steps;
-
-            // update steps_left
-            steps_left = false;
-            for (auto& part : build_parts)
-                steps_left = steps_left || (current_layer[part->getId()] < part->countStepPairs());
-
-        } // end while(steps left)
+        }
     }
     else if (order_method == LayerOrdering::kByLayerNumber) {
         // look at all the parts to find the maximum number of steps

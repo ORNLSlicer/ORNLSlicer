@@ -459,6 +459,10 @@ void GlobalLayer::addStepPair(QUuid part_id, Part::StepPair step_group) {
     m_step_pairs.insert(part_id, ptr);
 }
 
+int GlobalLayer::getStepPairCount() const { return m_step_pairs.size(); }
+
+bool GlobalLayer::hasStepPair(QUuid part_id) const { return m_step_pairs.contains(part_id); }
+
 double GlobalLayer::getMinZ() {
     double min = std::numeric_limits<double>::max();
     QMap<QUuid, QSharedPointer<Part::StepPair>>::ConstIterator itr;
