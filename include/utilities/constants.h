@@ -820,6 +820,7 @@ class Constants {
             static const QString kLayerGroupingTolerance;
             static const QString kIslandOrder;
             static const QString kPathOrder;
+            static const QString kCylindricalPathOrder;
             static const QString kPerimeterPathOrder;
             static const QString kInsetPathOrder;
             static const QString kSkinPathOrder;
