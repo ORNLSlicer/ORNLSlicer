@@ -918,11 +918,12 @@ inline bool VisualizationColorFromName(const QString& name, VisualizationColors&
 }
 
 enum class SegmentDisplayType : uint8_t {
-    kNone    = 0x00,
-    kLine    = 1 << 0,
-    kTravel  = 1 << 1,
-    kSupport = 1 << 2,
-    kAll     = 0xff
+    kNone     = 0x00,
+    kLine     = 1 << 0,
+    kTravel   = 1 << 1,
+    kSupport  = 1 << 2,
+    kInternal = 1 << 3,
+    kAll      = 0xff
 };
 
 inline constexpr SegmentDisplayType operator|(const SegmentDisplayType& lhs, const SegmentDisplayType& rhs) {
