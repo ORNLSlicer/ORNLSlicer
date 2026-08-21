@@ -27,7 +27,7 @@ SegmentBase::SegmentBase(Point start, Point end)
 
     m_non_build_modifiers = PathModifiers::kCoasting | PathModifiers::kForwardTipWipe |
                             PathModifiers::kPerimeterTipWipe | PathModifiers::kReverseTipWipe |
-                            PathModifiers::kSpiralLift;
+                            PathModifiers::kAngledTipWipe | PathModifiers::kSpiralLift;
 }
 
 Point SegmentBase::start() const {
@@ -60,6 +60,10 @@ float SegmentBase::displayHeight() {
 
 SegmentDisplayType SegmentBase::displayType() {
     return m_display_type;
+}
+
+void SegmentBase::setDisplayType(SegmentDisplayType type) {
+    m_display_type = type;
 }
 
 QColor SegmentBase::color() {
