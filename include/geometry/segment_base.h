@@ -59,6 +59,9 @@ class SegmentBase {
     //! \brief Gets the display type.
     SegmentDisplayType displayType();
 
+    //! \brief Sets the display type.
+    void setDisplayType(SegmentDisplayType type);
+
     //! \brief Gets the display color.
     QColor color();
 
