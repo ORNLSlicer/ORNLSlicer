@@ -25,7 +25,7 @@ Complete these before marking a PR ready for review:
 - Commits follow Conventional Commits; squash fixups locally before opening.
 - Code builds locally; no new warnings introduced intentionally.
 - Public APIs, structs, classes, and complex functions documented (see `documentation.md`).
-- Formatting applied: `clang-format` run on all modified C++ headers and sources.
+- Formatting applied: `clang-format` or `pre-commit run` run on all modified C++ headers and sources; pre-commit.ci may add an automatic formatting commit if drift remains.
 - No stray debug code, commented-out blocks, or unused includes.
 - Added/updated tests where feasible (logic, parsing, geometry, algorithms). If not applicable, state why.
 - Large assets or generated files are excluded from the diff.
