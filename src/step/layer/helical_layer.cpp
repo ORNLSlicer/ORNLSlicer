@@ -12,6 +12,7 @@
 #include "geometry/point.h"
 #include "geometry/segment_base.h"
 #include "geometry/segments/travel.h"
+#include "optimizers/path_order_optimizer.h"
 #include "step/layer/layer.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -100,14 +101,14 @@ void HelicalLayer::calculateModifiers(Point& currentLocation) {
 
     QVector<Path> ordered_paths;
     ordered_paths.reserve(print_paths.size());
-    for (Path path : print_paths) {
-        // Helical fragments encode angular and Z progression; keep their generated direction and order.
-        QSharedPointer<TravelSegment> travel =
-            QSharedPointer<TravelSegment>::create(currentLocation, path.front()->start());
-        path.prepend(travel);
-        restoreHelicalPathSettings(path, m_sb);
-        currentLocation = path.back()->end();
-        ordered_paths.push_back(path);
+    PathOrderOptimizer path_optimizer(currentLocation, getLayerNumber(), m_sb);
+    path_optimizer.setPathsToEvaluate(print_paths);
+    while (path_optimizer.getCurrentPathCount() > 0) {
+        Path next_path = path_optimizer.linkNextHelicalPath();
+        if (next_path.size() > 0) {
+            restoreHelicalPathSettings(next_path, m_sb);
+            ordered_paths.push_back(next_path);
+        }
     }
 
     m_paths = ordered_paths;

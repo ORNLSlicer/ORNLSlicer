@@ -1,6 +1,5 @@
 #include "step/layer/radial_layer.h"
 
-#include <cmath>
 #include <limits>
 
 #include <qcontainerfwd.h>
@@ -19,18 +18,6 @@
 
 namespace ORNL {
 namespace {
-//! @brief Segment setting key used by the radial writer to recover the cylinder center X.
-const QString kRadialCenterX = "radial_center_x";
-
-//! @brief Segment setting key used by the radial writer to recover the cylinder center Y.
-const QString kRadialCenterY = "radial_center_y";
-
-//! @brief Group of disconnected arcs that belong to the same horizontal radial circle.
-struct CirclePathGroup {
-    long long z_key;
-    QVector<Path> paths;
-};
-
 //! @brief Returns the first printable radial segment in a path, or nullptr when the path only contains travels.
 QSharedPointer<SegmentBase> firstPrintSegment(const Path& path) {
     for (const QSharedPointer<SegmentBase>& segment : path) {
@@ -46,31 +33,6 @@ QSharedPointer<SettingsBase> firstPrintSettings(const Path& path, const QSharedP
     if (print_segment != nullptr) { return print_segment->getSb(); }
 
     return fallback;
-}
-
-//! @brief Returns the radial center stored on the path's printable segment settings.
-Point radialCenter(const Path& path) {
-    QSharedPointer<SettingsBase> settings = firstPrintSettings(path, QSharedPointer<SettingsBase>::create());
-    return Point(settings->setting<Distance>(kRadialCenterX), settings->setting<Distance>(kRadialCenterY), 0);
-}
-
-//! @brief Key used to group arcs that share the same radial circle.
-long long circleKey(const Path& path) {
-    QSharedPointer<SegmentBase> print_segment = firstPrintSegment(path);
-    return print_segment == nullptr ? 0 : std::llround(print_segment->start().z());
-}
-
-//! @brief Adds a path to the group matching its bead Z, preserving first-seen group order.
-void addToCircleGroup(QVector<CirclePathGroup>& groups, const Path& path) {
-    const long long key = circleKey(path);
-    for (CirclePathGroup& group : groups) {
-        if (group.z_key == key) {
-            group.paths.push_back(path);
-            return;
-        }
-    }
-
-    groups.push_back(CirclePathGroup {key, QVector<Path> {path}});
 }
 
 //! @brief Restores radial print metadata and gives optimizer-created travels radial center settings.
@@ -118,30 +80,30 @@ void RadialLayer::compute() {
 }
 
 void RadialLayer::calculateModifiers(Point& currentLocation) {
-    QVector<CirclePathGroup> circle_groups;
+    QVector<Path> print_paths;
+    print_paths.reserve(m_paths.size());
     for (Path path : m_paths) {
         path.removeTravels();
-        if (firstPrintSegment(path) != nullptr) { addToCircleGroup(circle_groups, path); }
+        if (firstPrintSegment(path) != nullptr) {
+            print_paths.push_back(path);
+        }
     }
 
-    if (circle_groups.isEmpty()) {
+    if (print_paths.isEmpty()) {
         m_paths.clear();
         return;
     }
 
     QVector<Path> optimized_paths;
     optimized_paths.reserve(m_paths.size());
-    for (CirclePathGroup& group : circle_groups) {
-        PathOrderOptimizer path_optimizer(currentLocation, getLayerNumber(), m_sb);
-        path_optimizer.setPathsToEvaluate(group.paths);
-        const Point center = radialCenter(group.paths.front());
+    PathOrderOptimizer path_optimizer(currentLocation, getLayerNumber(), m_sb);
+    path_optimizer.setPathsToEvaluate(print_paths);
 
-        while (path_optimizer.getCurrentPathCount() > 0) {
-            Path next_path = path_optimizer.linkNextRadialPath(center);
-            if (next_path.size() > 0) {
-                restoreRadialPathSettings(next_path, m_sb);
-                optimized_paths.push_back(next_path);
-            }
+    while (path_optimizer.getCurrentPathCount() > 0) {
+        Path next_path = path_optimizer.linkNextRadialPath();
+        if (next_path.size() > 0) {
+            restoreRadialPathSettings(next_path, m_sb);
+            optimized_paths.push_back(next_path);
         }
     }
 

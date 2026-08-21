@@ -39,11 +39,16 @@ class PathOrderOptimizer {
     Path linkNextPath(QVector<Path> paths = QVector<Path>());
 
     /*!
-     * @brief Links the next open radial arc using the configured path and point order settings.
-     * @param center Cylinder center used to turn outside-in and inside-out into angular sweep ordering.
+     * @brief Links the next radial path using cylindrical path-order settings.
      * @return Linked radial path with a travel prepended.
      */
-    Path linkNextRadialPath(const Point& center);
+    Path linkNextRadialPath();
+
+    /*!
+     * @brief Links the next open helical fragment from the selected endpoint.
+     * @return Linked helical path with a travel prepended.
+     */
+    Path linkNextHelicalPath();
 
     //! \brief Set paths to evaluate
     //! \param paths: Copy of paths to evaluate
@@ -97,6 +102,20 @@ class PathOrderOptimizer {
         }
     };
 
+    //! \brief Selected radial path and entry point.
+    struct RadialPathSelection {
+        int path_index = -1;
+        int segment_index = 0;
+        bool start_from_front = true;
+        bool rotate_to_segment = false;
+    };
+
+    //! \brief Selected open path endpoint.
+    struct OpenPathSelection {
+        int path_index = -1;
+        bool start_from_front = true;
+    };
+
     //! \brief Links the POO position to the given path with a travel (used for closed contours)
     Path linkTo();
 
@@ -110,11 +129,22 @@ class PathOrderOptimizer {
     Path linkNextSkeletonPath();
 
     /*!
-     * @brief Selects an open radial arc and endpoint using radial-compatible path-order semantics.
-     * @param center Cylinder center used for angular ordering.
-     * @return Selected path index and true when the path should start from its front endpoint.
+     * @brief Selects a radial path and safe entry point using cylindrical path-order semantics.
+     * @return Selected path index plus either a closed-path rotation index or open-path endpoint.
      */
-    QPair<int, bool> radialOpenPath(const Point& center);
+    RadialPathSelection radialPathSelection();
+
+    /*!
+     * @brief Selects a helical fragment endpoint using cylindrical path-order settings.
+     * @return Selected path index plus whether to enter from its front endpoint.
+     */
+    OpenPathSelection helicalOpenPath() const;
+
+    /*!
+     * @brief Returns the supported cylindrical path-order setting.
+     * @return Next Closest or Next Farthest.
+     */
+    PathOrderOptimization cylindricalPathOrderOptimization() const;
 
     /*!
      * @brief Returns the query point used by radial path ordering.
@@ -137,21 +167,6 @@ class PathOrderOptimizer {
      * @return Shortest endpoint distance.
      */
     Distance nearestOpenEndpointDistance(const Point& query, const Path& path) const;
-
-    /*!
-     * @brief Returns the angular midpoint of an open radial arc about a center.
-     * @param path Open radial arc path.
-     * @param center Cylinder center.
-     * @return Representative midpoint angle in radians.
-     */
-    double radialArcMidpointAngle(const Path& path, const Point& center) const;
-
-    /*!
-     * @brief Normalizes an angular delta to [0, 2*pi).
-     * @param delta Angle delta in radians.
-     * @return Positive equivalent angle delta.
-     */
-    double positiveAngularDelta(double delta) const;
 
     //! \brief Links one line infill path
     //! \return Next path linked via travel
