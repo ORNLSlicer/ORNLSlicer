@@ -15,6 +15,7 @@
 #include "geometry/segments/arc.h"
 #include "geometry/segments/bezier.h"
 #include "geometry/segments/line.h"
+#include "gcode/gcode_segment_filter.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -469,6 +470,7 @@ bool AsPrintedModelExporter::shouldExportSegment(const QSharedPointer<SegmentBas
     if (!options.include_travel && static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
     if (!options.include_support && static_cast<bool>(type & SegmentDisplayType::kSupport)) { return false; }
     if (!segment->depositionActive() && !static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
+    if (options.external_only && !GCodeSegmentFilter::isExternalBeadComment(segment->m_segment_info_meta.type)) { return false; }
 
     return true;
 }
