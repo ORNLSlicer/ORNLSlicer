@@ -10,6 +10,7 @@
 #include <QByteArray>
 #include <QDataStream>
 #include <QSaveFile>
+#include <QSet>
 #include <QTextStream>
 #include <QVector3D>
 
@@ -455,6 +456,8 @@ AsPrintedModelExporter::generateTriangles(const QVector<QVector<QSharedPointer<S
     std::vector<float> colors;
     const float output_scale = viewToOutputScale(options.output_unit);
     const bool blend_corners = options.blend_corners && options.geometry_mode == GeometryMode::kTrueBeadWidths;
+    const QSet<const SegmentBase*> external_segments =
+        options.external_only ? GCodeSegmentFilter::externalSegments(gcode) : QSet<const SegmentBase*>();
 
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         QVector<QSharedPointer<SegmentBase>> connected_segments;
@@ -465,7 +468,8 @@ AsPrintedModelExporter::generateTriangles(const QVector<QVector<QSharedPointer<S
         };
 
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (!shouldExportSegment(segment, options)) {
+            if (!shouldExportSegment(segment, options) ||
+                (options.external_only && !external_segments.contains(segment.data()))) {
                 if (blend_corners) {
                     flushConnectedSegments();
                 }
@@ -530,6 +534,9 @@ bool AsPrintedModelExporter::shouldExportSegment(const QSharedPointer<SegmentBas
     if (isDegenerateSegment(segment)) {
         return false;
     }
+    if (GCodeSegmentFilter::isNonBuildModifierSegment(segment)) {
+        return false;
+    }
 
     const SegmentDisplayType type = segment->displayType();
     if (!options.include_travel && static_cast<bool>(type & SegmentDisplayType::kTravel)) {
@@ -539,9 +546,6 @@ bool AsPrintedModelExporter::shouldExportSegment(const QSharedPointer<SegmentBas
         return false;
     }
     if (!segment->depositionActive() && !static_cast<bool>(type & SegmentDisplayType::kTravel)) {
-        return false;
-    }
-    if (options.external_only && !GCodeSegmentFilter::isExternalBeadComment(segment->m_segment_info_meta.type)) {
         return false;
     }
 
