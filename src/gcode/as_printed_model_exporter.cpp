@@ -3,6 +3,7 @@
 #include <QByteArray>
 #include <QDataStream>
 #include <QSaveFile>
+#include <QSet>
 #include <QTextStream>
 #include <QVector3D>
 #include <algorithm>
@@ -402,6 +403,8 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
     std::vector<float> colors;
     const float output_scale = viewToOutputScale(options.output_unit);
     const bool blend_corners = options.blend_corners && options.geometry_mode == GeometryMode::kTrueBeadWidths;
+    const QSet<const SegmentBase*> external_segments =
+        options.external_only ? GCodeSegmentFilter::externalSegments(gcode) : QSet<const SegmentBase*>();
 
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         QVector<QSharedPointer<SegmentBase>> connected_segments;
@@ -412,7 +415,8 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
         };
 
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (!shouldExportSegment(segment, options)) {
+            if (!shouldExportSegment(segment, options) ||
+                (options.external_only && !external_segments.contains(segment.data()))) {
                 if (blend_corners) { flushConnectedSegments(); }
                 continue;
             }
@@ -465,6 +469,7 @@ bool AsPrintedModelExporter::writeStl(const QString& path, const QVector<QVector
 bool AsPrintedModelExporter::shouldExportSegment(const QSharedPointer<SegmentBase>& segment, const Options& options) {
     if (segment.isNull()) { return false; }
     if (isDegenerateSegment(segment)) { return false; }
+    if (GCodeSegmentFilter::isNonBuildModifierSegment(segment)) { return false; }
 
     const SegmentDisplayType type = segment->displayType();
     if (!options.include_travel && static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
