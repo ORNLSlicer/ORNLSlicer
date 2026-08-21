@@ -361,6 +361,7 @@
             "radial_path_boundary_policy": 0,
             "radial_path_start_angle": 0,
             "helical_path_boundary_policy": 0,
+            "helical_path_z_clip_rounding": 0,
             "helical_path_handedness": 0,
             "helical_path_start_angle": 2.035402957908809,
             "max_helical_path_length": 0,

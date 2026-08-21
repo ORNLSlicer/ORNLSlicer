@@ -45,8 +45,16 @@ class ArcSpecialtiesWriter : public WriterBase {
     void setHelicalPathBoundaryPolicy(const QVector<QPair<QString, HelicalPathBoundaryPolicy>>& methods);
 
     /*!
+     * @brief Supplies the effective part-local helical Z clip rounding values for the settings header.
+     *
+     * @param rounding Part name and rounding pairs for Clip Z parts that produced helical paths.
+     */
+    void setHelicalPathZClipRounding(const QVector<QPair<QString, HelicalPathZClipRounding>>& rounding);
+
+    /*!
      * @brief Supplies the effective part-local helical handedness values for the settings header.
-     * @param handedness Part name and handedness pairs for parts that produced helical paths.
+     * @param
+     * handedness Part name and handedness pairs for parts that produced helical paths.
      */
     void setHelicalPathHandedness(const QVector<QPair<QString, HelicalPathHandedness>>& handedness);
 
@@ -319,6 +327,9 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     //! @brief Effective part-local boundary policies reported in helical G-code headers.
     QVector<QPair<QString, HelicalPathBoundaryPolicy>> m_helical_path_boundary_policy;
+
+    //! @brief Effective part-local Clip Z rounding values reported in helical G-code headers.
+    QVector<QPair<QString, HelicalPathZClipRounding>> m_helical_path_z_clip_rounding;
 
     //! @brief Effective part-local handedness values reported in helical G-code headers.
     QVector<QPair<QString, HelicalPathHandedness>> m_helical_path_handedness;

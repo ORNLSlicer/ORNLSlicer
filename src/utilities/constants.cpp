@@ -760,10 +760,8 @@ const QString Constants::ProfileSettings::Optimizations::kLayerOrdering         
 const QString Constants::ProfileSettings::Optimizations::kLayerGroupingTolerance = "layer_grouping_tolerance";
 const QString Constants::ProfileSettings::Optimizations::kIslandOrder = "island_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kPathOrder = "path_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kCylindricalPathOrder =
-    "cylindrical_path_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kPerimeterPathOrder =
-    "perimeter_path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kCylindricalPathOrder = "cylindrical_path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kPerimeterPathOrder = "perimeter_path_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kInsetPathOrder = "inset_path_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kSkinPathOrder = "skin_path_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kCustomIslandXLocation = "custom_island_order_x_location";
@@ -851,12 +849,13 @@ const QString Constants::ProfileSettings::Slicing::kCylinderAxisY             = 
 const QString Constants::ProfileSettings::Slicing::kRadialPathBoundaryPolicy  = "radial_path_boundary_policy";
 const QString Constants::ProfileSettings::Slicing::kRadialPathStartAngle      = "radial_path_start_angle";
 const QString Constants::ProfileSettings::Slicing::kHelicalPathBoundaryPolicy = "helical_path_boundary_policy";
-const QString Constants::ProfileSettings::Slicing::kHelicalPathHandedness     = "helical_path_handedness";
-const QString Constants::ProfileSettings::Slicing::kHelicalPathStartAngle     = "helical_path_start_angle";
-const QString Constants::ProfileSettings::Slicing::kMaxHelicalPathLength      = "max_helical_path_length";
-const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution         = "arcs_per_revolution";
-const QString Constants::ProfileSettings::Slicing::kImagePixelSizeX           = "image_pixel_size_x";
-const QString Constants::ProfileSettings::Slicing::kImagePixelSizeY           = "image_pixel_size_y";
+const QString Constants::ProfileSettings::Slicing::kHelicalPathZClipRounding = "helical_path_z_clip_rounding";
+const QString Constants::ProfileSettings::Slicing::kHelicalPathHandedness = "helical_path_handedness";
+const QString Constants::ProfileSettings::Slicing::kHelicalPathStartAngle = "helical_path_start_angle";
+const QString Constants::ProfileSettings::Slicing::kMaxHelicalPathLength = "max_helical_path_length";
+const QString Constants::ProfileSettings::Slicing::kArcsPerRevolution = "arcs_per_revolution";
+const QString Constants::ProfileSettings::Slicing::kImagePixelSizeX = "image_pixel_size_x";
+const QString Constants::ProfileSettings::Slicing::kImagePixelSizeY = "image_pixel_size_y";
 
 //================================================================================
 // Experimental Settings

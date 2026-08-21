@@ -122,6 +122,11 @@ void ArcSpecialtiesWriter::setHelicalPathBoundaryPolicy(
     m_helical_path_boundary_policy = methods;
 }
 
+void ArcSpecialtiesWriter::setHelicalPathZClipRounding(
+    const QVector<QPair<QString, HelicalPathZClipRounding>>& rounding) {
+    m_helical_path_z_clip_rounding = rounding;
+}
+
 void ArcSpecialtiesWriter::setHelicalPathHandedness(const QVector<QPair<QString, HelicalPathHandedness>>& handedness) {
     m_helical_path_handedness = handedness;
 }
@@ -211,6 +216,24 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                 text += commentLine("Helical Path Boundary Policy: " %
                                     toString(static_cast<HelicalPathBoundaryPolicy>(
                                         m_sb->setting<int>(PS::Slicing::kHelicalPathBoundaryPolicy))));
+            }
+
+            if (m_helical_path_z_clip_rounding.size() == 1) {
+                text +=
+                    commentLine("Helical Z Clip Rounding: " % toString(m_helical_path_z_clip_rounding.first().second));
+            }
+            else if (m_helical_path_z_clip_rounding.size() > 1) {
+                for (const QPair<QString, HelicalPathZClipRounding>& part_rounding : m_helical_path_z_clip_rounding) {
+                    const QString part_name = part_rounding.first.isEmpty() ? "Unnamed Part" : part_rounding.first;
+                    text +=
+                        commentLine("Helical Z Clip Rounding (" % part_name % "): " % toString(part_rounding.second));
+                }
+            }
+            else if (static_cast<HelicalPathBoundaryPolicy>(m_sb->setting<int>(
+                         PS::Slicing::kHelicalPathBoundaryPolicy)) == HelicalPathBoundaryPolicy::kClipZ) {
+                text += commentLine("Helical Z Clip Rounding: " %
+                                    toString(static_cast<HelicalPathZClipRounding>(
+                                        m_sb->setting<int>(PS::Slicing::kHelicalPathZClipRounding))));
             }
 
             if (m_helical_path_handedness.size() == 1) {

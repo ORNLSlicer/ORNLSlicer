@@ -209,6 +209,32 @@ bool writesStartupWorldApproachAbovePartOrCylinderHeight() {
            worldApproachLineForSafeZ(70.0 * ORNL::mm, 50.0 * ORNL::mm).contains("Z=170.0000");
 }
 
+bool writesStartupWorldApproachAboveGeneratedHelicalMaxZ() {
+    return worldApproachLineForSafeZ(62.0 * ORNL::mm, 50.0 * ORNL::mm).contains("Z=162.0000");
+}
+
+bool writesHelicalZClipRoundingHeader() {
+    QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kCylindrical));
+    settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern,
+                         static_cast<int>(ORNL::CylindricalPathPattern::kHelical));
+    settings->setSetting(ORNL::PS::Slicing::kHelicalPathBoundaryPolicy,
+                         static_cast<int>(ORNL::HelicalPathBoundaryPolicy::kClipZ));
+    settings->setSetting(ORNL::PS::Slicing::kHelicalPathZClipRounding,
+                         static_cast<int>(ORNL::HelicalPathZClipRounding::kCompleteRevolution));
+    settings->setSetting(ORNL::PS::Slicing::kHelicalPathHandedness,
+                         static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
+    settings->setSetting(ORNL::PS::Slicing::kHelicalPathStartAngle, 90.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Layer::kBeadWidth, 4.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);
+
+    ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+    const QString header = writer.writeSettingsHeader(ORNL::GcodeSyntax::kArcSpecialties);
+    return header.contains(";Helical Path Boundary Policy: Clip Z") &&
+           header.contains(";Helical Z Clip Rounding: Complete Revolution");
+}
+
 bool writesCylindricalTravelWithConfiguredArcDensity() {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kCylindrical));
@@ -269,6 +295,10 @@ int main(int argc, char* argv[]) {
     passed &= expect(writesFirstTravelWithWorkObjectToolFrame(), "Arc Specialties first travel did not use ZR=-135.");
     passed &= expect(writesStartupWorldApproachAbovePartOrCylinderHeight(),
                      "Arc Specialties startup world approach did not use part/cylinder safe Z.");
+    passed &= expect(writesStartupWorldApproachAboveGeneratedHelicalMaxZ(),
+                     "Arc Specialties startup world approach did not use generated helical safe Z.");
+    passed &= expect(writesHelicalZClipRoundingHeader(),
+                     "Arc Specialties writer did not emit the helical Z clip rounding header.");
     passed &= expect(writesCylindricalTravelWithConfiguredArcDensity(),
                      "Arc Specialties cylindrical travel did not honor Arcs per Revolution.");
 

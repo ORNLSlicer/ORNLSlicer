@@ -130,5 +130,11 @@ class HelicalSlicer : public TraditionalAST {
 
     //! @brief Ordered helical layers generated during helical path computation.
     QList<QSharedPointer<HelicalLayer>> m_helical_layers;
+
+    //! @brief Whether generated helical paths exceeded or confirmed the mesh-derived build maximum.
+    bool m_has_generated_path_max_z = false;
+
+    //! @brief Maximum Z reached by generated helical paths, including rounded Clip Z extensions.
+    Distance m_generated_path_max_z = 0;
 };
 }  // namespace ORNL
