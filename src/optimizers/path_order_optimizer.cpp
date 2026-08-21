@@ -287,25 +287,37 @@ Path PathOrderOptimizer::linkNextSkeletonPath() {
     return new_path;
 }
 
-Path PathOrderOptimizer::linkNextRadialPath(const Point& center) {
+Path PathOrderOptimizer::linkNextRadialPath() {
     Path new_path;
     if (m_paths.isEmpty()) { return new_path; }
 
-    QPair<int, bool> location = radialOpenPath(center);
-    int index                 = location.first;
-    bool start                = location.second;
-    if (index < 0 || index >= m_paths.size()) return new_path;
+    RadialPathSelection location = radialPathSelection();
+    int index = location.path_index;
+    if (index < 0 || index >= m_paths.size())
+        return new_path;
 
+    new_path = m_paths[index];
     new_path.setCCW(m_paths[index].getCCW());
 
+    if (location.rotate_to_segment) {
+        addTravel(location.segment_index, new_path);
+        m_current_location = new_path.back()->end();
+        m_paths.remove(index);
+        return new_path;
+    }
+
     QSharedPointer<TravelSegment> travel_segment = QSharedPointer<TravelSegment>::create(
-        m_current_location, start ? m_paths[index].front()->start() : m_paths[index].back()->end());
+        m_current_location, location.start_from_front ? m_paths[index].front()->start() : m_paths[index].back()->end());
     Velocity velocity = m_sb->setting<Velocity>(PS::Travel::kSpeed);
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
+    new_path.clear();
+    new_path.setCCW(m_paths[index].getCCW());
     new_path.append(travel_segment);
 
-    if (start) {
-        for (QSharedPointer<SegmentBase> seg : m_paths[index]) { new_path.append(seg); }
+    if (location.start_from_front) {
+        for (QSharedPointer<SegmentBase> seg : m_paths[index]) {
+            new_path.append(seg);
+        }
     }
     else {
         QList<QSharedPointer<SegmentBase>> segments = m_paths[index].getSegments();
@@ -322,77 +334,141 @@ Path PathOrderOptimizer::linkNextRadialPath(const Point& center) {
     return new_path;
 }
 
-QPair<int, bool> PathOrderOptimizer::radialOpenPath(const Point& center) {
-    if (m_paths.isEmpty()) return QPair<int, bool>(-1, true);
+Path PathOrderOptimizer::linkNextHelicalPath() {
+    Path new_path;
+    if (m_paths.isEmpty()) {
+        return new_path;
+    }
 
-    PathOrderOptimization path_order =
-        static_cast<PathOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPathOrder));
+    OpenPathSelection location = helicalOpenPath();
+    const int index = location.path_index;
+    if (index < 0 || index >= m_paths.size())
+        return new_path;
+
+    new_path.setCCW(m_paths[index].getCCW());
+
+    QSharedPointer<TravelSegment> travel_segment = QSharedPointer<TravelSegment>::create(
+        m_current_location, location.start_from_front ? m_paths[index].front()->start() : m_paths[index].back()->end());
+    Velocity velocity = m_sb->setting<Velocity>(PS::Travel::kSpeed);
+    travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
+    new_path.append(travel_segment);
+
+    if (location.start_from_front) {
+        for (QSharedPointer<SegmentBase> seg : m_paths[index]) {
+            new_path.append(seg);
+        }
+    }
+    else {
+        QList<QSharedPointer<SegmentBase>> segments = m_paths[index].getSegments();
+        while (!segments.isEmpty()) {
+            QSharedPointer<SegmentBase> seg = segments.back();
+            seg->reverse();
+            new_path.append(seg);
+            segments.removeLast();
+        }
+    }
+
+    m_current_location = new_path.back()->end();
+    m_paths.remove(index);
+    return new_path;
+}
+
+PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection() {
+    RadialPathSelection selection;
+    if (m_paths.isEmpty())
+        return selection;
+
+    PathOrderOptimization path_order = cylindricalPathOrderOptimization();
     Point query_point = radialPathQueryPoint(path_order);
+    const bool find_farthest = path_order == PathOrderOptimization::kNextFarthest;
 
-    int selected_index = 0;
-    switch (path_order) {
-        case PathOrderOptimization::kNextFarthest: {
-            double farthest = -1.0;
-            for (int i = 0, end = m_paths.size(); i < end; ++i) {
-                const double distance = nearestOpenEndpointDistance(query_point, m_paths[i])();
-                if (distance > farthest) {
-                    farthest       = distance;
-                    selected_index = i;
+    double selected_distance = 0.0;
+    for (int i = 0, end = m_paths.size(); i < end; ++i) {
+        if (m_paths[i].isClosed()) {
+            for (int j = 0, segment_count = m_paths[i].size(); j < segment_count; ++j) {
+                QSharedPointer<SegmentBase> segment = m_paths[i][j];
+                if (segment.isNull()) {
+                    continue;
+                }
+
+                const double distance = query_point.distance(segment->start())();
+                if (selection.path_index < 0 || (find_farthest && distance > selected_distance) ||
+                    (!find_farthest && distance < selected_distance)) {
+                    selected_distance = distance;
+                    selection.path_index = i;
+                    selection.segment_index = j;
+                    selection.start_from_front = true;
+                    selection.rotate_to_segment = true;
                 }
             }
-            break;
         }
-        case PathOrderOptimization::kRandom:
-            selected_index = QRandomGenerator::global()->bounded(m_paths.size());
-            break;
-        case PathOrderOptimization::kOutsideIn:
-        case PathOrderOptimization::kInsideOut: {
-            const double query_radius = std::hypot(query_point.x() - center.x(), query_point.y() - center.y());
-            const bool reverse_sweep  = path_order == PathOrderOptimization::kInsideOut;
-            double best_sweep         = std::numeric_limits<double>::max();
-
-            for (int i = 0, end = m_paths.size(); i < end; ++i) {
-                const double path_angle = radialArcMidpointAngle(m_paths[i], center);
-                double sweep            = path_angle;
-                if (query_radius > std::numeric_limits<double>::epsilon()) {
-                    const double query_angle = std::atan2(query_point.y() - center.y(), query_point.x() - center.x());
-                    sweep                    = reverse_sweep ? positiveAngularDelta(query_angle - path_angle)
-                                                             : positiveAngularDelta(path_angle - query_angle);
-                }
-                else if (reverse_sweep) { sweep = positiveAngularDelta(-path_angle); }
-                else { sweep = positiveAngularDelta(path_angle); }
-
-                if (sweep < best_sweep) {
-                    best_sweep     = sweep;
-                    selected_index = i;
-                }
+        else {
+            const double distance = nearestOpenEndpointDistance(query_point, m_paths[i])();
+            if (selection.path_index < 0 || (find_farthest && distance > selected_distance) ||
+                (!find_farthest && distance < selected_distance)) {
+                selected_distance = distance;
+                selection.path_index = i;
+                selection.segment_index = 0;
+                selection.start_from_front = true;
+                selection.rotate_to_segment = false;
             }
-            break;
         }
-        case PathOrderOptimization::kNextClosest:
-        case PathOrderOptimization::kCustomPoint:
-        default: {
-            double closest = std::numeric_limits<double>::max();
-            for (int i = 0, end = m_paths.size(); i < end; ++i) {
-                const double distance = nearestOpenEndpointDistance(query_point, m_paths[i])();
-                if (distance < closest) {
-                    closest        = distance;
-                    selected_index = i;
-                }
-            }
-            break;
-        }
+    }
+
+    if (selection.path_index < 0 || selection.rotate_to_segment) {
+        return selection;
     }
 
     PointOrderOptimization point_order =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
     Point point_query = radialPointQueryPoint(point_order);
-    Polyline endpoints {m_paths[selected_index].front()->start(), m_paths[selected_index].back()->end()};
+    Polyline endpoints {m_paths[selection.path_index].front()->start(), m_paths[selection.path_index].back()->end()};
     const bool reverse = PointOrderOptimizer::findSkeletonPointOrder(
         point_query, endpoints, point_order, m_sb->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
         m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold));
 
-    return QPair<int, bool>(selected_index, !reverse);
+    selection.start_from_front = !reverse;
+    return selection;
+}
+
+PathOrderOptimizer::OpenPathSelection PathOrderOptimizer::helicalOpenPath() const {
+    OpenPathSelection selection;
+    if (m_paths.isEmpty())
+        return selection;
+
+    const PathOrderOptimization path_order = cylindricalPathOrderOptimization();
+    const Point query_point = m_current_location;
+    const bool find_farthest = path_order == PathOrderOptimization::kNextFarthest;
+
+    double selected_distance = 0.0;
+    for (int i = 0, end = m_paths.size(); i < end; ++i) {
+        const double start_distance = query_point.distance(m_paths[i].front()->start())();
+        if (selection.path_index < 0 || (find_farthest && start_distance > selected_distance) ||
+            (!find_farthest && start_distance < selected_distance)) {
+            selected_distance = start_distance;
+            selection.path_index = i;
+            selection.start_from_front = true;
+        }
+
+        const double end_distance = query_point.distance(m_paths[i].back()->end())();
+        if ((find_farthest && end_distance > selected_distance) ||
+            (!find_farthest && end_distance < selected_distance)) {
+            selected_distance = end_distance;
+            selection.path_index = i;
+            selection.start_from_front = false;
+        }
+    }
+
+    return selection;
+}
+
+PathOrderOptimization PathOrderOptimizer::cylindricalPathOrderOptimization() const {
+    const int path_order = m_sb->setting<int>(PS::Optimizations::kCylindricalPathOrder);
+    if (path_order == static_cast<int>(PathOrderOptimization::kNextFarthest)) {
+        return PathOrderOptimization::kNextFarthest;
+    }
+
+    return PathOrderOptimization::kNextClosest;
 }
 
 Point PathOrderOptimizer::radialPathQueryPoint(PathOrderOptimization optimization) const {
@@ -419,26 +495,6 @@ Point PathOrderOptimizer::radialPointQueryPoint(PointOrderOptimization optimizat
 
 Distance PathOrderOptimizer::nearestOpenEndpointDistance(const Point& query, const Path& path) const {
     return std::min(query.distance(path.front()->start()), query.distance(path.back()->end()));
-}
-
-double PathOrderOptimizer::radialArcMidpointAngle(const Path& path, const Point& center) const {
-    const double start_angle =
-        std::atan2(path.front()->start().y() - center.y(), path.front()->start().x() - center.x());
-    const double end_angle = std::atan2(path.back()->end().y() - center.y(), path.back()->end().x() - center.x());
-    const double pi        = std::acos(-1.0);
-    double delta           = end_angle - start_angle;
-    while (delta > pi) { delta -= 2.0 * pi; }
-    while (delta < -pi) { delta += 2.0 * pi; }
-
-    return start_angle + delta / 2.0;
-}
-
-double PathOrderOptimizer::positiveAngularDelta(double delta) const {
-    const double two_pi = 2.0 * std::acos(-1.0);
-    while (delta < 0.0) { delta += two_pi; }
-    while (delta >= two_pi) { delta -= two_pi; }
-
-    return delta;
 }
 
 bool PathOrderOptimizer::linkIntersects(Point link_start, Point link_end, QVector<Path> infill_geometry,
