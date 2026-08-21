@@ -101,6 +101,20 @@ settings:
     namespace: "Profile::Optimizations"
     symbol: "kPathOrderOptimization"
     local: true
+  - name: "cylindrical_path_order_optimization"
+    display: "Cylindrical Path Order Optimization"
+    type: "enumeration"
+    tooltip: "Type of path order optimizer to use for radial and helical cylindrical slicing paths."
+    depends: {"slicing_mode":1}
+    options:
+      - "Next Closest"
+      - "Next Farthest"
+    default: 0
+    minor: "Optimizations"
+    major: "Profile"
+    namespace: "Profile::Optimizations"
+    symbol: "kCylindricalPathOrderOptimization"
+    local: true
   - name: "perimeter_path_order_optimization"
     display: "Perimeter Path Order Optimization"
     type: "enumeration"

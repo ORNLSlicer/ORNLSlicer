@@ -178,6 +178,7 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
                                                              PS::Optimizations::kCustomIslandYLocation,
                                                              PS::Optimizations::kCustomIslandZLocation,
                                                              PS::Optimizations::kPathOrder,
+                                                             PS::Optimizations::kCylindricalPathOrder,
                                                              PS::Optimizations::kPerimeterPathOrder,
                                                              PS::Optimizations::kInsetPathOrder,
                                                              PS::Optimizations::kSkinPathOrder,

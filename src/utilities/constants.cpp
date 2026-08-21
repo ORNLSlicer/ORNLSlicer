@@ -758,18 +758,21 @@ const QString Constants::ProfileSettings::SpecialModes::kArcFittingMinimumSegmen
 // Optimizations
 const QString Constants::ProfileSettings::Optimizations::kLayerOrdering          = "layer_ordering";
 const QString Constants::ProfileSettings::Optimizations::kLayerGroupingTolerance = "layer_grouping_tolerance";
-const QString Constants::ProfileSettings::Optimizations::kIslandOrder            = "island_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kPathOrder              = "path_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kPerimeterPathOrder     = "perimeter_path_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kInsetPathOrder         = "inset_path_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kSkinPathOrder          = "skin_path_order_optimization";
-const QString Constants::ProfileSettings::Optimizations::kCustomIslandXLocation  = "custom_island_order_x_location";
-const QString Constants::ProfileSettings::Optimizations::kCustomIslandYLocation  = "custom_island_order_y_location";
-const QString Constants::ProfileSettings::Optimizations::kCustomIslandZLocation  = "custom_island_order_z_location";
-const QString Constants::ProfileSettings::Optimizations::kCustomPathXLocation    = "custom_path_order_x_location";
-const QString Constants::ProfileSettings::Optimizations::kCustomPathYLocation    = "custom_path_order_y_location";
-const QString Constants::ProfileSettings::Optimizations::kCustomPathZLocation    = "custom_path_order_z_location";
-const QString Constants::ProfileSettings::Optimizations::kPointOrder             = "point_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kIslandOrder = "island_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kPathOrder = "path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kCylindricalPathOrder =
+    "cylindrical_path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kPerimeterPathOrder =
+    "perimeter_path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kInsetPathOrder = "inset_path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kSkinPathOrder = "skin_path_order_optimization";
+const QString Constants::ProfileSettings::Optimizations::kCustomIslandXLocation = "custom_island_order_x_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomIslandYLocation = "custom_island_order_y_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomIslandZLocation = "custom_island_order_z_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomPathXLocation = "custom_path_order_x_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomPathYLocation = "custom_path_order_y_location";
+const QString Constants::ProfileSettings::Optimizations::kCustomPathZLocation = "custom_path_order_z_location";
+const QString Constants::ProfileSettings::Optimizations::kPointOrder = "point_order_optimization";
 const QString Constants::ProfileSettings::Optimizations::kEnablePointOrderSegmentBreaking =
     "enable_point_order_segment_breaking";
 const QString Constants::ProfileSettings::Optimizations::kLocalRandomnessEnable = "local_randomness_enable";
