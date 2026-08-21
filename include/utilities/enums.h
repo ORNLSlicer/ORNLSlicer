@@ -135,6 +135,34 @@ inline QString toString(HelicalPathBoundaryPolicy handling) {
 }
 
 /*!
+ * @enum HelicalPathZClipRounding
+ * @brief Controls where Clip Z helical paths end relative to full revolutions.
+
+ */
+enum class HelicalPathZClipRounding : uint8_t {
+    //! @brief End exactly at the highest-Z model intersection.
+    kExactIntersection = 0,
+
+    //! @brief Continue upward to the next complete revolution.
+    kCompleteRevolution = 1,
+
+    //! @brief End at the previous complete revolution.
+    kLastFullRevolution = 2
+};
+
+inline QString toString(HelicalPathZClipRounding rounding) {
+    switch (rounding) {
+        case HelicalPathZClipRounding::kCompleteRevolution:
+            return "Complete Revolution";
+        case HelicalPathZClipRounding::kLastFullRevolution:
+            return "Last Full Revolution";
+        case HelicalPathZClipRounding::kExactIntersection:
+        default:
+            return "Exact Intersection";
+    }
+}
+
+/*!
  * @enum HelicalPathHandedness
  * @brief Selects the angular direction of rising helical paths.
  */
