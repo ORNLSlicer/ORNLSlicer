@@ -526,6 +526,8 @@ void GCodeLoader::run() {
                 if (m_should_cancel) { return; }
             }
 
+            GCodeSegmentFilter::tagInternalSegments(layers);
+
             // emit vector for visualization
             emit gcodeLoadedVisualization(layers);
             // very likely to have allocated too much memory, free extra
@@ -863,14 +865,7 @@ SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comme
     if (m_travel.indexIn(comment) != -1) { type |= SegmentDisplayType::kTravel; }
     if (m_support.indexIn(comment) != -1) { type |= SegmentDisplayType::kSupport; }
 
-    if (type == SegmentDisplayType::kNone) {
-        type = SegmentDisplayType::kLine;
-        if (GCodeSegmentFilter::isInternalBeadComment(comment)) {
-            type |= SegmentDisplayType::kInternal;
-        }
-    }
-
-    return type;
+    return type == SegmentDisplayType::kNone ? SegmentDisplayType::kLine : type;
 }
 
 void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, SegmentDisplayType type,
