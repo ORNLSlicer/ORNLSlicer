@@ -15,13 +15,14 @@ This slicer currently requires the `Arc Specialties` G-code syntax, but this pag
 7. Set `Cylinder Axis Source` if the cylinder axis should use a custom XY coordinate instead of the part centroid.
 8. Set `Cylinder Inner Radius` if the first cylinder or helix should begin away from the axis.
 9. Set `Cylinder Height` to limit generated cylindrical paths above the part base. Leave it at `0` to use the part height.
-10. Set the path boundary policy for the selected `Cylindrical Path Pattern`.
-11. Set the radial or helical path start angle if the first point should begin somewhere other than the default.
-12. For `Helical`, set `Helical Path Handedness` if the helix should sweep clockwise rather than the default counter-clockwise direction as Z rises.
-13. For `Helical`, set `Max Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
-14. Confirm the printer `Syntax` is `Arc Specialties`. Selecting `Cylindrical` defaults to `Arc Specialties` when the current syntax is not cylindrical-capable.
-15. Configure the required Arc Specialties machine output settings, including positioner axes, frame rotation, `TRAFO`, and G2/G3 center mode, using the [Arc Specialties](../gcode/arc-specialties.md) syntax documentation.
-16. Slice and inspect the generated G-code preview before running the machine.
+10. Set `Cylindrical Path Order Optimization` to choose `Next Closest` or `Next Farthest` ordering between retained cylindrical paths.
+11. Set the path boundary policy for the selected `Cylindrical Path Pattern`.
+12. Set the radial or helical path start angle if the first point should begin somewhere other than the default.
+13. For `Helical`, set `Helical Path Handedness` if the helix should sweep clockwise rather than the default counter-clockwise direction as Z rises.
+14. For `Helical`, set `Max Helical Path Length` when long generated helices should be split into shorter paths. Leave it at `0` to keep each clipped helix fragment as one path.
+15. Confirm the printer `Syntax` is `Arc Specialties`. Selecting `Cylindrical` defaults to `Arc Specialties` when the current syntax is not cylindrical-capable.
+16. Configure the required Arc Specialties machine output settings, including positioner axes, frame rotation, `TRAFO`, and G2/G3 center mode, using the [Arc Specialties](../gcode/arc-specialties.md) syntax documentation.
+17. Slice and inspect the generated G-code preview before running the machine.
 
 ## Path Patterns
 
@@ -39,6 +40,8 @@ If `Max Helical Path Length` is greater than `0`, each generated helical fragmen
 
 `Cylinder Height` limits radial and helical candidate paths above the retained part base. Values of `0` or smaller use the retained part height, preserving the default model-bounded behavior.
 
+`Cylindrical Path Order Optimization` controls how retained radial arcs or helical fragments are selected after clipping. `Next Closest` minimizes travel from the current machine location to the next path. `Next Farthest` selects the farthest available path first. Closed radial paths can be rotated so travel enters at the selected segment start. Open radial arcs stay endpoint-only so they are not split. Helical fragments are selected by start or end endpoint and may be reordered or reversed.
+
 ## Required Settings
 
 | Setting | Location | Effect |
@@ -52,6 +55,7 @@ If `Max Helical Path Length` is greater than `0`, each generated helical fragmen
 | `Cylinder Axis - X` / `Cylinder Axis - Y` | Profile > Slicing | Custom cylinder axis coordinates when `Cylinder Axis Source` is `Custom XY`. |
 | `Cylinder Inner Radius` | Profile > Slicing | Inner radial boundary before the half-layer offset is applied. |
 | `Cylinder Height` | Profile > Slicing | Upper height limit for generated cylindrical paths above the part base. Values less than or equal to `0` use the retained part height. |
+| `Cylindrical Path Order Optimization` | Profile > Optimizations | Selects `Next Closest` or `Next Farthest` ordering between retained radial or helical paths. Closed radial paths may rotate to the selected segment start. |
 | `Radial Path Start Angle` | Profile > Slicing | For `Radial`, angular start position around the cylinder axis. |
 | `Helical Path Start Angle` | Profile > Slicing | For `Helical`, angular start position around the cylinder axis. Defaults to `90 deg` for a +Y start. |
 | `Helical Path Handedness` | Profile > Slicing | For `Helical`, selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
@@ -60,7 +64,7 @@ If `Max Helical Path Length` is greater than `0`, each generated helical fragmen
 
 Only relevant settings are shown for the selected path pattern. `Radial` shows `Radial Path Boundary Policy` with `Clip`, `Keep`, and `Discard`, plus `Radial Path Start Angle`. `Helical` shows `Helical Path Boundary Policy` with `Clip` and `Clip Z`, plus helical-only controls such as `Helical Path Start Angle` and `Helical Path Handedness`.
 
-Planar-only path settings, including Perimeter, Inset, Skeleton, Skin, Infill, Support, Ordering, Platform Adhesion, and their region-specific material modifiers, are hidden or disabled while `Slicing Mode` is `Cylindrical`.
+Planar-only path settings, including Perimeter, Inset, Skeleton, Skin, Infill, Support, Ordering, Platform Adhesion, and their region-specific material modifiers, are hidden or disabled while `Slicing Mode` is `Cylindrical`. Cylindrical mode shows the two-option `Cylindrical Path Order Optimization` setting instead of the planar path-order controls.
 
 ## Boundary Policies
 
@@ -83,7 +87,7 @@ When `Clip Z` finds no boundary crossing, a helix that is wholly inside the mode
 
 ## G-code Output Handoff
 
-Cylindrical slicing hands radial and helical paths to the Arc Specialties writer. The generated header reports the cylindrical geometry, selected path pattern, path start angle, helical handedness, boundary policy, and travel lift distance. Print moves are marked with `RADIAL` or `HELICAL` comments so the preview path can classify cylindrical bead motion.
+Cylindrical slicing hands radial and helical paths to the Arc Specialties writer. The generated header reports the cylindrical geometry, selected path pattern, cylindrical path order, path start angle, helical handedness, boundary policy, and travel lift distance. Print moves are marked with `RADIAL` or `HELICAL` comments so the preview path can classify cylindrical bead motion.
 
 When `Supports G2/G3` is disabled, cylindrical print paths are written as sampled G1 segments. When `Supports G2/G3` is enabled, complete rings or helical revolutions are divided according to `Arcs per Revolution`; clipped or partial paths may include a shorter final arc. The exact G00/G01/G02/G03 syntax, positioner fields, center modes, and startup commands are described in [Arc Specialties](../gcode/arc-specialties.md).
 
@@ -101,6 +105,7 @@ When `Supports G2/G3` is disabled, cylindrical print paths are written as sample
 After slicing, verify that:
 
 - The G-code header identifies the selected `Cylindrical Path Pattern` and selected path start angle.
+- The G-code header identifies the selected `Cylindrical Path Order Optimization`.
 - For `Helical`, the G-code header identifies the selected `Helical Path Handedness`.
 - A complete radial ring or helical revolution contains the configured `Arcs per Revolution`; clipped or partial paths may include a shorter final arc.
 - Printed paths lie on the part rather than above or below it.
