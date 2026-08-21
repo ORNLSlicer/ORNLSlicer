@@ -73,6 +73,7 @@ class GcodeExport : public QWidget {
     QCheckBox* m_gcode_file_checkbox;
     QCheckBox* m_auxiliary_file_checkbox;
     QCheckBox* m_as_printed_model_checkbox;
+    QCheckBox* m_as_printed_external_only_checkbox;
     QCheckBox* m_as_printed_centerline_checkbox;
     QCheckBox* m_project_file_checkbox;
     QCheckBox* m_bundle_files_checkbox;

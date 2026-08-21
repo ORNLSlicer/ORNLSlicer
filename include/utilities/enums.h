@@ -978,6 +978,7 @@ enum class SegmentDisplayType : uint8_t {
     kLine = 1 << 0,
     kTravel = 1 << 1,
     kSupport = 1 << 2,
+    kInternal = 1 << 3,
     kAll = 0xff
 };
 

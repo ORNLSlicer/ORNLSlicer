@@ -169,6 +169,7 @@ class GcodeBar : public QWidget {
     QComboBox* m_view_sel;
     QCheckBox* m_hide_travel;
     QCheckBox* m_hide_support;
+    QCheckBox* m_hide_internal;
     QCheckBox* m_true_width;
     QCheckBox* m_lock_layer;
     QSpinBox* m_layer_lower;

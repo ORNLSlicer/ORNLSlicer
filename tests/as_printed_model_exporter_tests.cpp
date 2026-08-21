@@ -83,6 +83,8 @@ QSharedPointer<ORNL::SegmentBase> makeLineSegment(ORNL::SegmentDisplayType type,
 QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const ORNL::Point& end,
                                                  const ORNL::Point& center, uint line_number,
                                                  bool deposition_active = true);
+QSharedPointer<ORNL::SegmentBase> makeTaggedLineSegment(const QString& comment, uint line_number,
+                                                        float y_offset = 0.0f);
 
 QSharedPointer<ORNL::SegmentBase> makeLineSegment(const ORNL::Point& start, const ORNL::Point& end, uint line_number,
                                                   ORNL::SegmentDisplayType type = ORNL::SegmentDisplayType::kLine,
@@ -108,6 +110,12 @@ QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const
     segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale, kHeight * ORNL::mm() * scale,
                             ORNL::SegmentDisplayType::kLine, QColor(255, 255, 255), line_number, 0);
     segment->setDepositionActive(deposition_active);
+    return segment;
+}
+
+QSharedPointer<ORNL::SegmentBase> makeTaggedLineSegment(const QString& comment, uint line_number, float y_offset) {
+    QSharedPointer<ORNL::SegmentBase> segment = makeLineSegment(ORNL::SegmentDisplayType::kLine, line_number, y_offset);
+    segment->m_segment_info_meta.type = comment;
     return segment;
 }
 
@@ -167,6 +175,21 @@ int main(int argc, char* argv[]) {
     const auto all_triangles = ORNL::AsPrintedModelExporter::generateTriangles(mixed_segments, include_all);
     passed &= expect(all_triangles.size() == printable_triangles.size() * 3,
                      "Expected optional support and travel output to include all three segments.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> externally_tagged_segments;
+    externally_tagged_segments.push_back(
+        {makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kPerimeter, 4),
+         makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kSkin, 5, 20.0f),
+         makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kRadial, 6, 40.0f),
+         makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kInset, 7, 60.0f),
+         makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kInfill, 8, 80.0f),
+         makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kSkeleton, 9, 100.0f)});
+    ORNL::AsPrintedModelExporter::Options external_only_options;
+    external_only_options.external_only = true;
+    const auto external_only_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(externally_tagged_segments, external_only_options);
+    passed &= expect(external_only_triangles.size() == printable_triangles.size() * 3,
+                     "Expected external-only STL output to keep perimeter, skin, and radial beads only.");
 
     const Bounds printable_bounds = boundsFor(printable_triangles);
     passed &= expect(near(printable_bounds.min.x(), 0.0f), "Expected STL vertices to start at local X zero.");

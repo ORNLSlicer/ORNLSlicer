@@ -87,6 +87,8 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     m_auxiliary_file_checkbox->setChecked(true);
     m_as_printed_model_checkbox = new QCheckBox("Save As-Printed STL model");
     m_as_printed_model_checkbox->setEnabled(false);
+    m_as_printed_external_only_checkbox = new QCheckBox("Only External Beads for As-Printed STL");
+    m_as_printed_external_only_checkbox->setEnabled(false);
     m_as_printed_centerline_checkbox = new QCheckBox("Use Centerline Geometry for As-Printed STL");
     m_as_printed_centerline_checkbox->setEnabled(false);
     m_project_file_checkbox = new QCheckBox("Save Project file");
@@ -96,6 +98,7 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     optionsGrid->addWidget(m_gcode_file_checkbox);
     optionsGrid->addWidget(m_auxiliary_file_checkbox);
     optionsGrid->addWidget(m_as_printed_model_checkbox);
+    optionsGrid->addWidget(m_as_printed_external_only_checkbox);
     optionsGrid->addWidget(m_as_printed_centerline_checkbox);
     optionsGrid->addWidget(m_project_file_checkbox);
     optionsGrid->addWidget(m_bundle_files_checkbox);
@@ -139,6 +142,7 @@ void GcodeExport::closeEvent(QCloseEvent* event) {
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox->setChecked(true);
     m_as_printed_model_checkbox->setChecked(false);
+    m_as_printed_external_only_checkbox->setChecked(false);
     m_as_printed_centerline_checkbox->setChecked(false);
     updateAsPrintedModelOptionState();
     m_project_file_checkbox->setChecked(false);
@@ -151,9 +155,14 @@ void GcodeExport::updateAsPrintedModelOptionState() {
         m_as_printed_model_checkbox->setChecked(false);
     }
 
-    const bool centerline_enabled = m_has_gcode_visualization && m_as_printed_model_checkbox->isChecked();
-    m_as_printed_centerline_checkbox->setEnabled(centerline_enabled);
-    if (!centerline_enabled) {
+    const bool as_printed_options_enabled = m_has_gcode_visualization && m_as_printed_model_checkbox->isChecked();
+    m_as_printed_external_only_checkbox->setEnabled(as_printed_options_enabled);
+    if (!as_printed_options_enabled) {
+        m_as_printed_external_only_checkbox->setChecked(false);
+    }
+
+    m_as_printed_centerline_checkbox->setEnabled(as_printed_options_enabled);
+    if (!as_printed_options_enabled) {
         m_as_printed_centerline_checkbox->setChecked(false);
     }
 }
@@ -333,8 +342,17 @@ void GcodeExport::exportGcode() {
             if (use_centerline_geometry) {
                 as_printed_options.geometry_mode = AsPrintedModelExporter::GeometryMode::kCenterlines;
             }
+            const bool use_external_only = m_as_printed_external_only_checkbox->isChecked();
+            as_printed_options.external_only = use_external_only;
 
-            const QString suffix = use_centerline_geometry ? "_as_printed_centerline.stl" : "_as_printed.stl";
+            QString suffix = "_as_printed";
+            if (use_external_only) {
+                suffix += "_external";
+            }
+            if (use_centerline_geometry) {
+                suffix += "_centerline";
+            }
+            suffix += ".stl";
             const QString asPrintedFileName = filepath % '/' % partName % suffix;
             if (!m_has_gcode_visualization) {
                 QMessageBox::warning(this, "As-Printed Model",

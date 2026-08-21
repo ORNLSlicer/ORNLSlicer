@@ -32,6 +32,7 @@
 #include "configs/settings_range.h"
 #include "exceptions/exceptions.h"
 #include "gcode/arc_specialties_axis_inference.h"
+#include "gcode/gcode_segment_filter.h"
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/adamantine_parser.h"
@@ -813,7 +814,14 @@ SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comme
         type |= SegmentDisplayType::kSupport;
     }
 
-    return type == SegmentDisplayType::kNone ? SegmentDisplayType::kLine : type;
+    if (type == SegmentDisplayType::kNone) {
+        type = SegmentDisplayType::kLine;
+        if (GCodeSegmentFilter::isInternalBeadComment(comment)) {
+            type |= SegmentDisplayType::kInternal;
+        }
+    }
+
+    return type;
 }
 
 void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, SegmentDisplayType type,
