@@ -609,6 +609,9 @@ const QString Constants::ProfileSettings::Skeleton::kSkeletonInputCleaningDistan
 const QString Constants::ProfileSettings::Skeleton::kSkeletonInputChamferingAngle  = "skeleton_input_chamfering_angle";
 const QString Constants::ProfileSettings::Skeleton::kSkeletonOutputCleaningDistance =
     "skeleton_output_cleaning_distance";
+const QString Constants::ProfileSettings::Skeleton::kSkeletonPruningMode = "skeleton_pruning_mode";
+const QString Constants::ProfileSettings::Skeleton::kSkeletonVanishingAngleThreshold =
+    "skeleton_vanishing_angle_threshold";
 const QString Constants::ProfileSettings::Skeleton::kBeadWidth                   = "skeleton_width";
 const QString Constants::ProfileSettings::Skeleton::kSpeed                       = "skeleton_speed";
 const QString Constants::ProfileSettings::Skeleton::kExtruderSpeed               = "skeleton_extruder_speed";

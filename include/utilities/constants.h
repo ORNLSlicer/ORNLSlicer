@@ -659,6 +659,8 @@ class Constants {
             static const QString kSkeletonInputCleaningDistance;
             static const QString kSkeletonInputChamferingAngle;
             static const QString kSkeletonOutputCleaningDistance;
+            static const QString kSkeletonPruningMode;
+            static const QString kSkeletonVanishingAngleThreshold;
             static const QString kBeadWidth;
             static const QString kSpeed;
             static const QString kExtruderSpeed;
