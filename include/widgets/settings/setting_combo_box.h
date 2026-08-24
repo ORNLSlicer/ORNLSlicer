@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QComboBox>
+
 #include <qgridlayout.h>
 #include <qobject.h>
 #include <qsharedpointer.h>
@@ -22,7 +23,7 @@ class SettingTab;
 class SettingComboBox : public QComboBox, public SettingRowBase {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Default Constructor
     //! \param parent: parent settingtab to setup events
     //! \param sb: global setting base
@@ -49,7 +50,7 @@ class SettingComboBox : public QComboBox, public SettingRowBase {
     //! \param enabled: enable/disable state
     void setEnabled(bool enabled) override;
 
-  signals:
+   signals:
     //! \brief Signal emitted when setting is modified by user
     //! \param key: key of setting modified
     void modified(QString key);
@@ -59,7 +60,7 @@ class SettingComboBox : public QComboBox, public SettingRowBase {
     //! warning, 0 does nothing.
     void warnParent(int count);
 
-  public slots:
+   public slots:
     //! \brief Slot to handle when user manually changes value
     //! \param val: value cast to appropriate type within each class
     virtual void valueChanged(QVariant val) override;
@@ -68,7 +69,7 @@ class SettingComboBox : public QComboBox, public SettingRowBase {
     //! selects new setting profile
     virtual void reloadValue() override;
 
-  protected:
+   protected:
     //! \brief Sets error notification when dynamic dependency check fails
     //! \param msg: Message to display
     virtual void setNotification(QString msg) override;
@@ -89,4 +90,4 @@ class SettingComboBox : public QComboBox, public SettingRowBase {
     //! \brief Index of the previously selected item
     int m_prev;
 };
-} // namespace ORNL
+}  // namespace ORNL

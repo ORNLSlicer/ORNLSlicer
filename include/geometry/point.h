@@ -1,14 +1,14 @@
 #pragma once
 
-#include <cstddef>
-#include <functional>
-
 #include <QMatrix4x4>
 #include <QPoint>
 #include <QPointF>
 #include <QVector2D>
 #include <QVector3D>
 #include <QVector4D>
+#include <cstddef>
+#include <functional>
+
 #include <clipper.hpp>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
@@ -25,7 +25,7 @@ namespace ORNL {
  * \brief Point class that converts to variable other 2d objects
  */
 class Point {
-  public:
+   public:
     //! \brief Constructor
     Point();
 
@@ -229,7 +229,7 @@ class Point {
     //! \return a string
     QString toCSVString();
 
-  private:
+   private:
     float m_x;
 
     float m_y;
@@ -239,7 +239,7 @@ class Point {
     //! \brief settings to apply at this point. Used in settings polygons/ regions
     QSharedPointer<SettingsBase> m_sb;
 
-}; // class Point
+};  // class Point
 
 Point operator*(const double lhs, const Point& rhs);
 Point operator*(const QMatrix4x4& lhs, const Point& rhs);
@@ -248,16 +248,17 @@ Point operator-(const Point& lhs, const Point& rhs);
 bool operator==(const Point& lhs, const Point& rhs);
 bool operator!=(const Point& lhs, const Point& rhs);
 bool operator<(const Point& lhs, const Point& rhs);
-} // namespace ORNL
+}  // namespace ORNL
 
 namespace std {
-template <> struct hash<ORNL::Point> {
+template <>
+struct hash<ORNL::Point> {
     size_t operator()(const ORNL::Point& pp) const {
         static int prime = 31;
-        int result = 89;
-        result = result * prime + pp.x();
-        result = result * prime + pp.y();
+        int result       = 89;
+        result           = result * prime + pp.x();
+        result           = result * prime + pp.y();
         return result;
     }
 };
-} // namespace std
+}  // namespace std

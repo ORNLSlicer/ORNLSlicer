@@ -33,9 +33,7 @@ QString Infill::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kInfill);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kInfill);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kInfill);
     }
     gcode += writer->writeAfterRegion(RegionType::kInfill);
@@ -49,7 +47,7 @@ void Infill::compute(uint layer_num) {
 
     // Keep around the overlapped geometry for later connections/travels.
     const Distance overlap = m_sb->setting<Distance>(PS::Infill::kOverlap);
-    m_geometry_copy = m_geometry.offset(overlap);
+    m_geometry_copy        = m_geometry.offset(overlap);
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kInfillNum));
 
@@ -86,8 +84,8 @@ void Infill::compute(uint layer_num) {
 
 void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBase>& sb) {
     InfillPatterns default_infill_pattern = static_cast<InfillPatterns>(sb->setting<int>(PS::Infill::kPattern));
-    Distance default_line_spacing = sb->setting<Distance>(PS::Infill::kLineSpacing);
-    Distance default_bead_width = sb->setting<Distance>(PS::Infill::kBeadWidth);
+    Distance default_line_spacing         = sb->setting<Distance>(PS::Infill::kLineSpacing);
+    Distance default_bead_width           = sb->setting<Distance>(PS::Infill::kBeadWidth);
 
     // kAngle in the setting has already been updated for each layer
     Angle default_angle = sb->setting<Angle>(PS::Infill::kAngle);
@@ -103,7 +101,7 @@ void Infill::fillGeometry(PolygonList geometry, const QSharedPointer<SettingsBas
     }
 
     if (!sb->setting<bool>(PS::Infill::kManualLineSpacing)) {
-        double density = sb->setting<double>(PS::Infill::kDensity) / 100.0;
+        double density       = sb->setting<double>(PS::Infill::kDensity) / 100.0;
         default_line_spacing = default_bead_width / density;
     }
 
@@ -164,8 +162,8 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
 
         poo.setStartPointOverride(startOverride);
     }
-    const Distance bead_width = getSb()->setting<Distance>(PS::Infill::kBeadWidth);
-    const Distance overlap = getSb()->setting<Distance>(PS::Infill::kOverlap);
+    const Distance bead_width      = getSb()->setting<Distance>(PS::Infill::kBeadWidth);
+    const Distance overlap         = getSb()->setting<Distance>(PS::Infill::kOverlap);
     const Distance link_core_width = bead_width - 2 * overlap;
     poo.setInfillParameters(static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern)), m_geometry_copy,
                             getSb()->setting<Distance>(PS::Infill::kMinPathLength),
@@ -206,19 +204,17 @@ void Infill::optimize(int layerNumber, Point& current_location, bool& shouldNext
 
 Path Infill::createPath(Polyline line) {
     const InfillPatterns pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Infill::kPattern));
-    const bool is_closed_path = pattern == InfillPatterns::kConcentric;
+    const bool is_closed_path    = pattern == InfillPatterns::kConcentric;
 
     line = line.removeShortSegments(m_sb->setting<Distance>(PS::Infill::kMinSegmentLength), is_closed_path);
-    if (line.size() < (is_closed_path ? 3 : 2)) {
-        return Path();
-    }
+    if (line.size() < (is_closed_path ? 3 : 2)) { return Path(); }
 
-    Distance width = m_sb->setting<Distance>(PS::Infill::kBeadWidth);
-    Distance height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity speed = m_sb->setting<Velocity>(PS::Infill::kSpeed);
-    Acceleration acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kInfill);
+    Distance width                 = m_sb->setting<Distance>(PS::Infill::kBeadWidth);
+    Distance height                = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    Velocity speed                 = m_sb->setting<Velocity>(PS::Infill::kSpeed);
+    Acceleration acceleration      = m_sb->setting<Acceleration>(PRS::Acceleration::kInfill);
     AngularVelocity extruder_speed = m_sb->setting<AngularVelocity>(PS::Infill::kExtruderSpeed);
-    int material_number = m_sb->setting<int>(MS::MultiMaterial::kInfillNum);
+    int material_number            = m_sb->setting<int>(MS::MultiMaterial::kInfillNum);
 
     Path newPath;
     for (int j = 0, polyEnd = line.size() - 1; j < polyEnd; ++j) {
@@ -357,4 +353,4 @@ bool Infill::settingsSame(QSharedPointer<SettingsBase> a, QSharedPointer<Setting
            qFuzzyCompare(a->setting<Angle>(PS::Infill::kAngle)(), b->setting<Angle>(PS::Infill::kAngle)()) &&
            a->setting<bool>(PS::Infill::kEnable) == b->setting<bool>(PS::Infill::kEnable);
 }
-} // namespace ORNL
+}  // namespace ORNL

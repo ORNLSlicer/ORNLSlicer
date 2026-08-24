@@ -2,10 +2,10 @@
 
 #include <math.h>
 
-#include <cmath>
-
 #include <QVector>
 #include <QtMath>
+#include <cmath>
+
 #include <qcontainerfwd.h>
 #include <qminmax.h>
 #include <qnumeric.h>
@@ -33,16 +33,16 @@ void copyInitialExtruderSpeed(const QSharedPointer<SettingsBase>& destination,
 }
 
 void copyAdaptedWidthFlag(const QSharedPointer<SettingsBase>& destination, const QSharedPointer<SettingsBase>& source) {
-    if (source->contains(SS::kAdapted)) {
-        destination->setSetting(SS::kAdapted, source->setting<bool>(SS::kAdapted));
-    }
+    if (source->contains(SS::kAdapted)) { destination->setSetting(SS::kAdapted, source->setting<bool>(SS::kAdapted)); }
 }
 
 bool isExtendableLineSegment(const QSharedPointer<SegmentBase>& segment) {
     return segment->isPrintingSegment() && dynamic_cast<LineSegment*>(segment.data()) != nullptr;
 }
 
-bool pointsCoincident(const Point& lhs, const Point& rhs) { return lhs.distance(rhs)() <= 1.0e-4; }
+bool pointsCoincident(const Point& lhs, const Point& rhs) {
+    return lhs.distance(rhs)() <= 1.0e-4;
+}
 
 struct Vector2D {
     double x = 0.0;
@@ -54,34 +54,32 @@ struct SharpCornerGeometry {
     Point sharp_point;
     Point next_cut;
     double previous_cut_parameter = 1.0;
-    double next_cut_parameter = 0.0;
+    double next_cut_parameter     = 0.0;
 };
 
 struct SegmentEndpointUpdates {
     bool has_start = false;
-    bool has_end = false;
+    bool has_end   = false;
     Point start;
     Point end;
     double start_parameter = 0.0;
-    double end_parameter = 1.0;
+    double end_parameter   = 1.0;
 };
 
 struct SharpCornerSettings {
-    bool enabled = false;
-    double threshold_radians = 0.0;
-    double extension_length = 0.0;
+    bool enabled                  = false;
+    double threshold_radians      = 0.0;
+    double extension_length       = 0.0;
     double close_points_threshold = 0.0;
-    double sharpening_leg_length = 0.0;
+    double sharpening_leg_length  = 0.0;
 };
 
 template <typename T>
 T settingWithFallback(const QSharedPointer<SettingsBase>& settings, const QSharedPointer<SettingsBase>& fallback,
                       const QString& key) {
-    if (!settings.isNull() && settings->contains(key))
-        return settings->setting<T>(key);
+    if (!settings.isNull() && settings->contains(key)) return settings->setting<T>(key);
 
-    if (!fallback.isNull())
-        return fallback->setting<T>(key);
+    if (!fallback.isNull()) return fallback->setting<T>(key);
 
     return T();
 }
@@ -97,8 +95,7 @@ SharpCornerSettings sharpCornerSettingsForSegment(const QSharedPointer<SegmentBa
         settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerClosePointsThreshold);
     Distance sharpening_leg_length =
         settingWithFallback<Distance>(segment_settings, fallback, PS::SpecialModes::kSharpCornerSharpeningLegLength);
-    if (sharpening_leg_length <= 0)
-        sharpening_leg_length = extension_distance;
+    if (sharpening_leg_length <= 0) sharpening_leg_length = extension_distance;
 
     return {
         settingWithFallback<bool>(segment_settings, fallback, PS::SpecialModes::kEnableSharpCornerExtension),
@@ -112,22 +109,23 @@ SharpCornerSettings sharpCornerSettingsForSegment(const QSharedPointer<SegmentBa
 bool sharpCornerEnabledForBothLegs(const QSharedPointer<SegmentBase>& previous_segment,
                                    const QSharedPointer<SegmentBase>& next_segment,
                                    const QSharedPointer<SettingsBase>& fallback, SharpCornerSettings& settings) {
-    settings = sharpCornerSettingsForSegment(previous_segment, fallback);
+    settings                                = sharpCornerSettingsForSegment(previous_segment, fallback);
     const SharpCornerSettings next_settings = sharpCornerSettingsForSegment(next_segment, fallback);
 
     return settings.enabled && next_settings.enabled && settings.threshold_radians > 0.0 &&
            settings.extension_length > 0.0 && settings.sharpening_leg_length > 0.0;
 }
 
-double crossProduct(const Vector2D& lhs, const Vector2D& rhs) { return lhs.x * rhs.y - lhs.y * rhs.x; }
+double crossProduct(const Vector2D& lhs, const Vector2D& rhs) {
+    return lhs.x * rhs.y - lhs.y * rhs.x;
+}
 
 bool normalizedDirection(const Point& start, const Point& end, Vector2D& direction, double& length) {
-    const double x = end.x() - start.x();
-    const double y = end.y() - start.y();
-    length = std::hypot(x, y);
+    const double x              = end.x() - start.x();
+    const double y              = end.y() - start.y();
+    length                      = std::hypot(x, y);
     constexpr double kMinLength = 1.0e-6;
-    if (length < kMinLength)
-        return false;
+    if (length < kMinLength) return false;
 
     direction = {x / length, y / length};
     return true;
@@ -140,20 +138,18 @@ Point pointOnSegment(const Point& start, const Point& end, double parameter) {
 
 bool lineIntersection(const Point& first_start, const Point& first_end, const Point& second_start,
                       const Point& second_end, Point& intersection) {
-    const Vector2D first_axis = {first_end.x() - first_start.x(), first_end.y() - first_start.y()};
-    const Vector2D second_axis = {second_end.x() - second_start.x(), second_end.y() - second_start.y()};
-    const double denominator = crossProduct(first_axis, second_axis);
+    const Vector2D first_axis           = {first_end.x() - first_start.x(), first_end.y() - first_start.y()};
+    const Vector2D second_axis          = {second_end.x() - second_start.x(), second_end.y() - second_start.y()};
+    const double denominator            = crossProduct(first_axis, second_axis);
     constexpr double kParallelTolerance = 1.0e-8;
-    if (std::abs(denominator) < kParallelTolerance)
-        return false;
+    if (std::abs(denominator) < kParallelTolerance) return false;
 
-    const Vector2D start_delta = {second_start.x() - first_start.x(), second_start.y() - first_start.y()};
+    const Vector2D start_delta   = {second_start.x() - first_start.x(), second_start.y() - first_start.y()};
     const double first_parameter = crossProduct(start_delta, second_axis) / denominator;
 
     const double x = first_start.x() + (first_axis.x * first_parameter);
     const double y = first_start.y() + (first_axis.y * first_parameter);
-    if (!std::isfinite(x) || !std::isfinite(y))
-        return false;
+    if (!std::isfinite(x) || !std::isfinite(y)) return false;
 
     intersection = Point(x, y, (first_end.z() + second_start.z()) / 2.0f);
     return true;
@@ -165,8 +161,7 @@ QSharedPointer<SegmentBase> cloneSegmentWithEndpoints(const QSharedPointer<Segme
     segment->setStart(start);
     segment->setEnd(end);
 
-    if (!source->getSb().isNull())
-        segment->setSb(QSharedPointer<SettingsBase>::create(*source->getSb()));
+    if (!source->getSb().isNull()) segment->setSb(QSharedPointer<SettingsBase>::create(*source->getSb()));
 
     return segment;
 }
@@ -178,23 +173,21 @@ bool calculateSharpCornerGeometry(const QSharedPointer<SegmentBase>& previous_se
     Vector2D previous_direction;
     Vector2D next_direction;
     double previous_length = 0.0;
-    double next_length = 0.0;
+    double next_length     = 0.0;
 
     if (!normalizedDirection(previous_segment->start(), previous_segment->end(), previous_direction, previous_length) ||
         !normalizedDirection(next_segment->start(), next_segment->end(), next_direction, next_length)) {
         return false;
     }
 
-    if (previous_length <= sharpening_leg_length || next_length <= sharpening_leg_length)
-        return false;
+    if (previous_length <= sharpening_leg_length || next_length <= sharpening_leg_length) return false;
 
     double cos_theta = (previous_direction.x * next_direction.x) + (previous_direction.y * next_direction.y);
-    cos_theta = qMin(1.0, cos_theta);
-    cos_theta = qMax(-1.0, cos_theta);
+    cos_theta        = qMin(1.0, cos_theta);
+    cos_theta        = qMax(-1.0, cos_theta);
 
     const double corner_angle = M_PI - std::acos(cos_theta);
-    if (corner_angle > threshold_radians)
-        return false;
+    if (corner_angle > threshold_radians) return false;
 
     Point merge_point;
     if (!lineIntersection(previous_segment->start(), previous_segment->end(), next_segment->start(),
@@ -202,18 +195,17 @@ bool calculateSharpCornerGeometry(const QSharedPointer<SegmentBase>& previous_se
         return false;
     }
 
-    const Vector2D extension_direction = {previous_direction.x - next_direction.x,
-                                          previous_direction.y - next_direction.y};
+    const Vector2D extension_direction      = {previous_direction.x - next_direction.x,
+                                               previous_direction.y - next_direction.y};
     const double extension_direction_length = std::hypot(extension_direction.x, extension_direction.y);
-    constexpr double kMinLength = 1.0e-6;
-    if (extension_direction_length < kMinLength)
-        return false;
+    constexpr double kMinLength             = 1.0e-6;
+    if (extension_direction_length < kMinLength) return false;
 
     geometry.previous_cut_parameter = 1.0 - (sharpening_leg_length / previous_length);
-    geometry.next_cut_parameter = sharpening_leg_length / next_length;
+    geometry.next_cut_parameter     = sharpening_leg_length / next_length;
     geometry.previous_cut =
         pointOnSegment(previous_segment->start(), previous_segment->end(), geometry.previous_cut_parameter);
-    geometry.next_cut = pointOnSegment(next_segment->start(), next_segment->end(), geometry.next_cut_parameter);
+    geometry.next_cut    = pointOnSegment(next_segment->start(), next_segment->end(), geometry.next_cut_parameter);
     geometry.sharp_point = Point(
         merge_point.x() + (extension_direction.x / extension_direction_length * extension_length),
         merge_point.y() + (extension_direction.y / extension_direction_length * extension_length), merge_point.z());
@@ -224,8 +216,7 @@ bool calculateSharpCornerGeometry(const QSharedPointer<SegmentBase>& previous_se
 bool canApplyEndUpdate(int segment_index, double parameter, const QVector<bool>& skip_segment,
                        const QVector<SegmentEndpointUpdates>& updates) {
     constexpr double kParameterTolerance = 1.0e-6;
-    if (skip_segment[segment_index] || updates[segment_index].has_end)
-        return false;
+    if (skip_segment[segment_index] || updates[segment_index].has_end) return false;
 
     return !updates[segment_index].has_start ||
            updates[segment_index].start_parameter < parameter - kParameterTolerance;
@@ -234,8 +225,7 @@ bool canApplyEndUpdate(int segment_index, double parameter, const QVector<bool>&
 bool canApplyStartUpdate(int segment_index, double parameter, const QVector<bool>& skip_segment,
                          const QVector<SegmentEndpointUpdates>& updates) {
     constexpr double kParameterTolerance = 1.0e-6;
-    if (skip_segment[segment_index] || updates[segment_index].has_start)
-        return false;
+    if (skip_segment[segment_index] || updates[segment_index].has_start) return false;
 
     return !updates[segment_index].has_end || parameter < updates[segment_index].end_parameter - kParameterTolerance;
 }
@@ -249,12 +239,12 @@ bool applySharpCornerGeometry(Path& path, int previous_index, int next_index, co
         return false;
     }
 
-    updates[previous_index].has_end = true;
-    updates[previous_index].end = geometry.previous_cut;
+    updates[previous_index].has_end       = true;
+    updates[previous_index].end           = geometry.previous_cut;
     updates[previous_index].end_parameter = geometry.previous_cut_parameter;
 
-    updates[next_index].has_start = true;
-    updates[next_index].start = geometry.next_cut;
+    updates[next_index].has_start       = true;
+    updates[next_index].start           = geometry.next_cut;
     updates[next_index].start_parameter = geometry.next_cut_parameter;
 
     insertions_after[previous_index].push_back(
@@ -264,7 +254,7 @@ bool applySharpCornerGeometry(Path& path, int previous_index, int next_index, co
 
     return true;
 }
-} // namespace
+}  // namespace
 
 void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, Velocity velocity) {
     QSharedPointer<TravelSegment> travel_segment =
@@ -283,13 +273,13 @@ void PathModifierGenerator::GenerateTravel(Path& path, Point current_location, V
 void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDistance, Velocity leadInSpeed,
                                                    AngularVelocity leadInExtruderSpeed, bool enableWidthHeight,
                                                    double areaMultiplier) {
-    Point firstPoint = path[0]->start();
+    Point firstPoint  = path[0]->start();
     Point secondPoint = path[0]->end();
-    Distance length = secondPoint.distance(firstPoint);
-    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * leadInDistance();
-    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * leadInDistance();
-    Distance Z = firstPoint.z();
-    Point newStart = Point(X, Y, Z);
+    Distance length   = secondPoint.distance(firstPoint);
+    Distance X        = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * leadInDistance();
+    Distance Y        = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * leadInDistance();
+    Distance Z        = firstPoint.z();
+    Point newStart    = Point(X, Y, Z);
 
     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
 
@@ -316,13 +306,13 @@ void PathModifierGenerator::GenerateOpenLoopLeadIn(Path& path, Distance leadInDi
 void PathModifierGenerator::GeneratePrestart(Path& path, Distance prestartDistance, Velocity prestartSpeed,
                                              AngularVelocity prestartExtruderSpeed, bool enableWidthHeight,
                                              double areaMultiplier) {
-    Point firstPoint = path[0]->start();
+    Point firstPoint  = path[0]->start();
     Point secondPoint = path[0]->end();
-    Distance length = secondPoint.distance(firstPoint);
-    Distance X = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * prestartDistance();
-    Distance Y = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * prestartDistance();
-    Distance Z = firstPoint.z();
-    Point newStart = Point(X, Y, Z);
+    Distance length   = secondPoint.distance(firstPoint);
+    Distance X        = firstPoint.x() + (firstPoint.x() - secondPoint.x()) / length() * prestartDistance();
+    Distance Y        = firstPoint.y() + (firstPoint.y() - secondPoint.y()) / length() * prestartDistance();
+    Distance Z        = firstPoint.z();
+    Point newStart    = Point(X, Y, Z);
 
     QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(newStart, firstPoint);
 
@@ -387,7 +377,7 @@ void PathModifierGenerator::GenerateFlyingStart(Path& path, Distance flyingStart
 
             path.insert(0, segment);
         }
-        else // Break the original segment's path into a shorter segment to be used for the flying start
+        else  // Break the original segment's path into a shorter segment to be used for the flying start
         {
             float percentage = 1 - (-flyingStartDistance() / nextSegmentDist());
             // swap the ends and starts?
@@ -442,7 +432,7 @@ void PathModifierGenerator::GenerateInitialStartup(Path& path, Distance startDis
         }
         else {
             float percentage = 1 - (-startDistance() / nextSegmentDist());
-            Point end = Point(
+            Point end        = Point(
                 (1.0 - percentage) * path[currentIndex]->start().x() + percentage * path[currentIndex]->end().x(),
                 (1.0 - percentage) * path[currentIndex]->start().y() + percentage * path[currentIndex]->end().y());
 
@@ -466,10 +456,10 @@ void PathModifierGenerator::GenerateInitialStartup(Path& path, Distance startDis
             // Update Width and Height if using Width and Height mode
             if (enableWidthHeight) {
                 areaMultiplier = qSqrt(areaMultiplier / 100);
-                segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth) *
-                                                             areaMultiplier);
-                segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight) *
-                                                              areaMultiplier);
+                segment->getSb()->setSetting(
+                    SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth) * areaMultiplier);
+                segment->getSb()->setSetting(
+                    SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight) * areaMultiplier);
             }
 
             path.insert(currentIndex, segment);
@@ -483,10 +473,10 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
                                                              Velocity endSpeed, AngularVelocity startExtruderSpeed,
                                                              AngularVelocity endExtruderSpeed, int steps,
                                                              bool enableWidthHeight, double areaMultiplier) {
-    int currentIndex = 0;
-    Distance stepDistance = startDistance / steps;
+    int currentIndex        = 0;
+    Distance stepDistance   = startDistance / steps;
     AngularVelocity rpmStep = (endExtruderSpeed - startExtruderSpeed) / steps;
-    Velocity speedStep = (endSpeed - startSpeed) / steps;
+    Velocity speedStep      = (endSpeed - startSpeed) / steps;
 
     // Loop through once to do the standard initial startup pathing
     while (startDistance > 0) {
@@ -511,7 +501,7 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
         }
         else {
             float percentage = 1 - (-startDistance() / nextSegmentDist());
-            Point end = Point(
+            Point end        = Point(
                 (1.0 - percentage) * path[currentIndex]->start().x() + percentage * path[currentIndex]->end().x(),
                 (1.0 - percentage) * path[currentIndex]->start().y() + percentage * path[currentIndex]->end().y());
 
@@ -536,10 +526,10 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
             // Update Width and Height if using Width and Height mode
             if (enableWidthHeight) {
                 areaMultiplier = qSqrt(areaMultiplier / 100);
-                segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth) *
-                                                             areaMultiplier);
-                segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight) *
-                                                              areaMultiplier);
+                segment->getSb()->setSetting(
+                    SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth) * areaMultiplier);
+                segment->getSb()->setSetting(
+                    SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight) * areaMultiplier);
             }
 
             path.insert(currentIndex, segment);
@@ -554,9 +544,9 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
     AngularVelocity currentExtruderSpeed;
     Velocity currentSpeed;
     for (int j = 1; j < steps; j++) {
-        currentDistance = stepDistance;
+        currentDistance      = stepDistance;
         currentExtruderSpeed = startExtruderSpeed + rpmStep * (j - 1);
-        currentSpeed = startSpeed + speedStep * (j - 1);
+        currentSpeed         = startSpeed + speedStep * (j - 1);
         while (currentDistance > 0) {
             RegionType regionType = path[currentIndex]->getSb()->setting<RegionType>(SS::kRegionType);
 
@@ -570,7 +560,7 @@ void PathModifierGenerator::GenerateInitialStartupWithRampUp(Path& path, Distanc
             }
             else {
                 float percentage = 1 - (-currentDistance() / nextSegmentDist());
-                Point end = Point(
+                Point end        = Point(
                     (1.0 - percentage) * path[currentIndex]->start().x() + percentage * path[currentIndex]->end().x(),
                     (1.0 - percentage) * path[currentIndex]->start().y() + percentage * path[currentIndex]->end().y());
 
@@ -609,12 +599,11 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
                                              Distance slowDownCutoffDistance, Velocity slowDownSpeed,
                                              AngularVelocity extruderSpeed, bool enableWidthHeight,
                                              double areaMultiplier) {
-    int currentIndex = path.size() - 1;
-    bool isClosed = false;
+    int currentIndex      = path.size() - 1;
+    bool isClosed         = false;
     Distance tempDistance = slowDownDistance;
     Point newEnd;
-    if (path[currentIndex]->end() == path[0]->start())
-        isClosed = true;
+    if (path[currentIndex]->end() == path[0]->start()) isClosed = true;
 
     PathModifiers current_mod;
     if (extruderSpeed <= 0)
@@ -624,8 +613,8 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
 
     while (tempDistance > 0 && ((currentIndex >= 0 && !isClosed) || isClosed)) {
         Distance newZIncrement = tempDistance / slowDownDistance * slowDownLiftDistance;
-        newEnd = Point(path[currentIndex]->end().x(), path[currentIndex]->end().y(),
-                       path[currentIndex]->end().z() + newZIncrement);
+        newEnd                 = Point(path[currentIndex]->end().x(), path[currentIndex]->end().y(),
+                                       path[currentIndex]->end().z() + newZIncrement);
 
         // Update start point of the move following this one, so that start points have correct Z value
         if (tempDistance != slowDownDistance && currentIndex + 1 < path.size()) {
@@ -653,7 +642,7 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
         }
         else {
             float percentage = 1 - (-tempDistance() / nextSegmentDist());
-            Point end = Point(
+            Point end        = Point(
                 (1.0 - percentage) * path[currentIndex]->end().x() + percentage * path[currentIndex]->start().x(),
                 (1.0 - percentage) * path[currentIndex]->end().y() + percentage * path[currentIndex]->start().y());
 
@@ -678,23 +667,22 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
             // Update Width and Height if using Width and Height mode
             if (enableWidthHeight) {
                 areaMultiplier = qSqrt(areaMultiplier / 100);
-                segment->getSb()->setSetting(SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth) *
-                                                             areaMultiplier);
-                segment->getSb()->setSetting(SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight) *
-                                                              areaMultiplier);
+                segment->getSb()->setSetting(
+                    SS::kWidth, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth) * areaMultiplier);
+                segment->getSb()->setSetting(
+                    SS::kHeight, path[currentIndex]->getSb()->setting<Distance>(SS::kHeight) * areaMultiplier);
             }
 
             path.insert(currentIndex + 1, segment);
         }
 
         currentIndex -= 1;
-        if (currentIndex < 0)
-            currentIndex = path.size() - 1;
+        if (currentIndex < 0) currentIndex = path.size() - 1;
     }
 
     // Step through loop again if a cutoff distance is needed
     currentIndex = path.size() - 1;
-    current_mod = PathModifiers::kCoasting;
+    current_mod  = PathModifiers::kCoasting;
     while (slowDownCutoffDistance > 0 && ((currentIndex >= 1 && !isClosed) || isClosed)) {
         Distance nextSegmentDist = path[currentIndex]->end().distance(path[currentIndex]->start());
         slowDownCutoffDistance -= nextSegmentDist;
@@ -706,7 +694,7 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
         }
         else {
             float percentage = 1 - (-slowDownCutoffDistance() / nextSegmentDist());
-            Point end = Point(
+            Point end        = Point(
                 (1.0 - percentage) * path[currentIndex]->end().x() + percentage * path[currentIndex]->start().x(),
                 (1.0 - percentage) * path[currentIndex]->end().y() + percentage * path[currentIndex]->start().y(),
                 (1.0 - percentage) * path[currentIndex]->end().z() + percentage * path[currentIndex]->start().z());
@@ -733,8 +721,7 @@ void PathModifierGenerator::GenerateSlowdown(Path& path, Distance slowDownDistan
         }
 
         currentIndex -= 1;
-        if (currentIndex < 0)
-            currentIndex = path.size() - 1;
+        if (currentIndex < 0) currentIndex = path.size() - 1;
     }
 }
 
@@ -745,8 +732,8 @@ void PathModifierGenerator::GenerateLayerLeadIn(Path& path, const Point& leadIn,
 
     for (int i = 0; i < pathSize; i++) {
         firstBuildSegment = path[i];
-        extRate = path[i]->getSb()->setting<int>(SS::kExtruderSpeed);
-        if (extRate <= 0) // If extrusion rate is zero, must be travel move
+        extRate           = path[i]->getSb()->setting<int>(SS::kExtruderSpeed);
+        if (extRate <= 0)  // If extrusion rate is zero, must be travel move
         {
             path[i]->setEnd(leadIn);
             continue;
@@ -775,35 +762,33 @@ void PathModifierGenerator::GenerateTrajectorySlowdown(Path& path, QSharedPointe
     Angle trajactoryAngleThresh = sb->setting<Angle>(ES::Ramping::kTrajectoryAngleThreshold);
 
     // if the threshold angle set to zero ignores the calculations and returns
-    if (trajactoryAngleThresh <= 0)
-        return;
+    if (trajactoryAngleThresh <= 0) return;
 
-    Distance rampDownLength = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleRampDownDistance);
-    Distance rampUpLength = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleRampUpDistance);
-    Velocity speedSlowDown = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleSpeedSlowDown)();
+    Distance rampDownLength               = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleRampDownDistance);
+    Distance rampUpLength                 = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleRampUpDistance);
+    Velocity speedSlowDown                = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleSpeedSlowDown)();
     AngularVelocity extruderSpeedSlowDown = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleExtruderSpeedSlowDown)();
-    Velocity speedUp = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleSpeedUp)();
-    AngularVelocity extruderSpeedUp = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleExtruderSpeedUp)();
+    Velocity speedUp                      = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleSpeedUp)();
+    AngularVelocity extruderSpeedUp       = sb->setting<Distance>(ES::Ramping::kTrajectoryAngleExtruderSpeedUp)();
 
     for (int pathIndex = 0, end = path.size() - 1; pathIndex < end; ++pathIndex) {
-        if (!path[pathIndex]->isPrintingSegment() || !path[pathIndex + 1]->isPrintingSegment())
-            continue;
+        if (!path[pathIndex]->isPrintingSegment() || !path[pathIndex + 1]->isPrintingSegment()) continue;
 
-        Point startPoint = path[pathIndex]->start();
+        Point startPoint      = path[pathIndex]->start();
         Point connectingPoint = path[pathIndex]->end();
-        Point endPoint = path[pathIndex + 1]->end();
+        Point endPoint        = path[pathIndex + 1]->end();
 
-        double seg1X = connectingPoint.x() - startPoint.x();
-        double seg1Y = connectingPoint.y() - startPoint.y();
-        double seg2X = endPoint.x() - connectingPoint.x();
-        double seg2Y = endPoint.y() - connectingPoint.y();
+        double seg1X      = connectingPoint.x() - startPoint.x();
+        double seg1Y      = connectingPoint.y() - startPoint.y();
+        double seg2X      = endPoint.x() - connectingPoint.x();
+        double seg2Y      = endPoint.y() - connectingPoint.y();
         double seg1Length = qSqrt(seg1X * seg1X + seg1Y * seg1Y);
         double seg2Length = qSqrt(seg2X * seg2X + seg2Y * seg2Y);
 
         double cosTheta = (seg1X * seg2X + seg1Y * seg2Y) / (seg1Length * seg2Length);
-        cosTheta = qMin(1.0, cosTheta);
-        cosTheta = qMax(-1.0, cosTheta);
-        double theta = qAbs(M_PI - qAcos(cosTheta));
+        cosTheta        = qMin(1.0, cosTheta);
+        cosTheta        = qMax(-1.0, cosTheta);
+        double theta    = qAbs(M_PI - qAcos(cosTheta));
 
         if (theta < trajactoryAngleThresh) {
             bool segmentSplitted = false;
@@ -826,11 +811,10 @@ void PathModifierGenerator::GenerateTrajectorySlowdown(Path& path, QSharedPointe
 }
 
 void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPointer<SettingsBase> sb) {
-    if (path.size() < 2)
-        return;
+    if (path.size() < 2) return;
 
     const int segmentCount = path.size();
-    const bool isClosed = pointsCoincident(path.front()->start(), path.back()->end());
+    const bool isClosed    = pointsCoincident(path.front()->start(), path.back()->end());
 
     QVector<bool> skipSegment(segmentCount, false);
     QVector<SegmentEndpointUpdates> endpointUpdates(segmentCount);
@@ -839,15 +823,13 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
     bool modifiedPath = false;
     if (segmentCount >= 3) {
         const int firstConnectorIndex = isClosed ? 0 : 1;
-        const int connectorLimit = isClosed ? segmentCount : segmentCount - 1;
+        const int connectorLimit      = isClosed ? segmentCount : segmentCount - 1;
 
         for (int connectorIndex = firstConnectorIndex; connectorIndex < connectorLimit; ++connectorIndex) {
-            if (skipSegment[connectorIndex] || !isExtendableLineSegment(path[connectorIndex])) {
-                continue;
-            }
+            if (skipSegment[connectorIndex] || !isExtendableLineSegment(path[connectorIndex])) { continue; }
 
             const int previousIndex = (connectorIndex + segmentCount - 1) % segmentCount;
-            const int nextIndex = (connectorIndex + 1) % segmentCount;
+            const int nextIndex     = (connectorIndex + 1) % segmentCount;
 
             if (skipSegment[previousIndex] || skipSegment[nextIndex] || previousIndex == nextIndex ||
                 !isExtendableLineSegment(path[previousIndex]) || !isExtendableLineSegment(path[nextIndex])) {
@@ -879,7 +861,7 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
             }
 
             skipSegment[connectorIndex] = true;
-            modifiedPath = true;
+            modifiedPath                = true;
         }
     }
 
@@ -891,12 +873,10 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
             continue;
         }
 
-        if (!pointsCoincident(path[previousIndex]->end(), path[nextIndex]->start()))
-            continue;
+        if (!pointsCoincident(path[previousIndex]->end(), path[nextIndex]->start())) continue;
 
         SharpCornerSettings settings;
-        if (!sharpCornerEnabledForBothLegs(path[previousIndex], path[nextIndex], sb, settings))
-            continue;
+        if (!sharpCornerEnabledForBothLegs(path[previousIndex], path[nextIndex], sb, settings)) continue;
 
         SharpCornerGeometry geometry;
         if (!calculateSharpCornerGeometry(path[previousIndex], path[nextIndex], settings.threshold_radians,
@@ -908,13 +888,11 @@ void PathModifierGenerator::GenerateSharpCornerExtension(Path& path, QSharedPoin
                                                  insertionsAfter);
     }
 
-    if (!modifiedPath)
-        return;
+    if (!modifiedPath) return;
 
     Path sharpenedPath;
     for (int segmentIndex = 0; segmentIndex < segmentCount; ++segmentIndex) {
-        if (skipSegment[segmentIndex])
-            continue;
+        if (skipSegment[segmentIndex]) continue;
 
         Point start =
             endpointUpdates[segmentIndex].has_start ? endpointUpdates[segmentIndex].start : path[segmentIndex]->start();
@@ -937,14 +915,13 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
     tipWipeDistanceCovered = 0;
 
     if (static_cast<int>(modifiers & PathModifiers::kForwardTipWipe) != 0) {
-        int currentIndex = 0;
+        int currentIndex            = 0;
         Distance cumulativeDistance = 0;
-        Distance wipeLength = wipeDistance;
+        Distance wipeLength         = wipeDistance;
         while (wipeDistance > 0) {
             Distance nextSegmentDist = path[currentIndex]->length();
 
-            if (nextSegmentDist == 0)
-                break;
+            if (nextSegmentDist == 0) break;
 
             wipeDistance -= nextSegmentDist;
             cumulativeDistance += nextSegmentDist;
@@ -957,7 +934,7 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
             }
             else {
                 float percentage = 1 - (-wipeDistance() / nextSegmentDist());
-                end = Point(
+                end              = Point(
                     (1.0 - percentage) * path[currentIndex]->start().x() + percentage * path[currentIndex]->end().x(),
                     (1.0 - percentage) * path[currentIndex]->start().y() + percentage * path[currentIndex]->end().y(),
                     path[currentIndex]->end().z() + tipWipeLiftDistance);
@@ -985,7 +962,7 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
         // Find the new X and Y location to wipe to
         Distance new_x = wipeDistance * cos(new_angle) + path[currentIndex]->end().x();
         Distance new_y = wipeDistance * sin(new_angle) + path[currentIndex]->end().y();
-        Point end = Point(new_x, new_y, path[currentIndex]->end().z() + tipWipeLiftDistance);
+        Point end      = Point(new_x, new_y, path[currentIndex]->end().z() + tipWipeLiftDistance);
 
         generateTipWipeSegment(
             path, path[currentIndex]->end(), end, path[currentIndex]->getSb()->setting<Distance>(SS::kWidth),
@@ -996,12 +973,11 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
             path[currentIndex]->getSb()->setting<bool>(SS::kAdapted));
     }
     else {
-        int currentIndex = path.size() - 1;
+        int currentIndex            = path.size() - 1;
         Distance cumulativeDistance = 0;
-        Distance wipeLength = wipeDistance;
-        bool isClosed = false;
-        if (path[currentIndex]->end() == path[0]->start())
-            isClosed = true;
+        Distance wipeLength         = wipeDistance;
+        bool isClosed               = false;
+        if (path[currentIndex]->end() == path[0]->start()) isClosed = true;
 
         while (wipeDistance > 0 && ((currentIndex >= 0 && !isClosed) || isClosed)) {
             Distance nextSegmentDist = path[currentIndex]->end().distance(path[currentIndex]->start());
@@ -1015,7 +991,7 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
             }
             else {
                 float percentage = 1 - (-wipeDistance() / nextSegmentDist());
-                end = Point(
+                end              = Point(
                     (1.0 - percentage) * path[currentIndex]->end().x() + percentage * path[currentIndex]->start().x(),
                     (1.0 - percentage) * path[currentIndex]->end().y() + percentage * path[currentIndex]->start().y(),
                     path[currentIndex]->start().z() + tipWipeLiftDistance);
@@ -1030,8 +1006,7 @@ void PathModifierGenerator::GenerateTipWipe(Path& path, PathModifiers modifiers,
                 path[currentIndex]->getSb()->setting<bool>(SS::kAdapted));
 
             currentIndex -= 1;
-            if (currentIndex < 0)
-                currentIndex = path.size() - 1;
+            if (currentIndex < 0) currentIndex = path.size() - 1;
         }
     }
 }
@@ -1040,16 +1015,15 @@ void PathModifierGenerator::GenerateForwardTipWipeOpenLoop(Path& path, PathModif
                                                            Velocity wipeSpeed, AngularVelocity extruderSpeed,
                                                            Distance tipWipeLiftDistance, Distance tipWipeCutoffDistance,
                                                            bool clearTipWipDistanceCovered) {
-    if (clearTipWipDistanceCovered)
-        tipWipeDistanceCovered = 0;
+    if (clearTipWipDistanceCovered) tipWipeDistanceCovered = 0;
 
     int currentIndex = path.size() - 1;
-    Distance length = path[currentIndex]->end().distance(path[currentIndex]->start());
-    Distance X = path[currentIndex]->end().x() +
-                 (path[currentIndex]->end().x() - path[currentIndex]->start().x()) / length() * wipeDistance();
-    Distance Y = path[currentIndex]->end().y() +
-                 (path[currentIndex]->end().y() - path[currentIndex]->start().y()) / length() * wipeDistance();
-    Distance Z = path[currentIndex]->end().z() + tipWipeLiftDistance;
+    Distance length  = path[currentIndex]->end().distance(path[currentIndex]->start());
+    Distance X       = path[currentIndex]->end().x() +
+                       (path[currentIndex]->end().x() - path[currentIndex]->start().x()) / length() * wipeDistance();
+    Distance Y       = path[currentIndex]->end().y() +
+                       (path[currentIndex]->end().y() - path[currentIndex]->start().y()) / length() * wipeDistance();
+    Distance Z       = path[currentIndex]->end().z() + tipWipeLiftDistance;
     Point end(X, Y, Z);
 
     generateTipWipeSegment(
@@ -1067,7 +1041,7 @@ void PathModifierGenerator::GenerateSpiralLift(Path& path, Distance spiralWidth,
 
     if (supportsG3) {
         const Angle spiral_angle = 355.0f * degree;
-        const Angle end_angle = (360.0f * degree) - spiral_angle;
+        const Angle end_angle    = (360.0f * degree) - spiral_angle;
         Point spiral_start_point(startPoint.x() + spiralWidth, startPoint.y(), startPoint.z());
         Point spiral_end_point(startPoint.x() + spiralWidth * qCos(end_angle()),
                                startPoint.y() + spiralWidth * qSin(end_angle()), startPoint.z() + spiralHeight);
@@ -1149,35 +1123,31 @@ void PathModifierGenerator::GenerateRamp(Path& path, bool& segmentSplitted, int 
                                          PathModifiers pathModifiers, Distance rampLength, Velocity speed,
                                          AngularVelocity extruderSpeed) {
     Distance rampLengthCovered = 0;
-    int endIndex = path.size() - 1;
-    bool rampDown = pathModifiers == PathModifiers::kRampingDown;
+    int endIndex               = path.size() - 1;
+    bool rampDown              = pathModifiers == PathModifiers::kRampingDown;
 
     while (rampLengthCovered < rampLength) {
         if (rampDown) {
-            if (segmentIndex < 0)
-                break;
+            if (segmentIndex < 0) break;
         }
         else {
-            if (segmentIndex > endIndex)
-                break;
+            if (segmentIndex > endIndex) break;
         }
 
         QSharedPointer<SegmentBase> segment = path[segmentIndex];
 
         PathModifiers segPM = segment->getSb()->setting<PathModifiers>(SS::kPathModifiers);
-        if (segPM == PathModifiers::kRampingUp || segPM == PathModifiers::kRampingDown)
-            break;
+        if (segPM == PathModifiers::kRampingUp || segPM == PathModifiers::kRampingDown) break;
 
         if (segment->length() > (rampLength - rampLengthCovered)) {
             double newPDist = ((rampLength - rampLengthCovered) / segment->length())();
-            if (!rampDown)
-                newPDist = 1 - newPDist;
+            if (!rampDown) newPDist = 1 - newPDist;
 
             Point startP = segment->start();
-            Point endP = segment->end();
-            Point newPV = Point((startP.x() - endP.x()) * newPDist, (startP.y() - endP.y()) * newPDist,
-                                (startP.z() - endP.z()) * newPDist);
-            Point newP = Point(endP.x() + newPV.x(), endP.y() + newPV.y(), endP.z() + newPV.z());
+            Point endP   = segment->end();
+            Point newPV  = Point((startP.x() - endP.x()) * newPDist, (startP.y() - endP.y()) * newPDist,
+                                 (startP.z() - endP.z()) * newPDist);
+            Point newP   = Point(endP.x() + newPV.x(), endP.y() + newPV.y(), endP.z() + newPV.z());
 
             segment->setEnd(newP);
 
@@ -1233,9 +1203,7 @@ void PathModifierGenerator::generateTipWipeSegment(Path& path, Point start, Poin
     if (tipWipeCutoffDistance > 0) {
         Distance length = end.distance(start);
 
-        if (tipWipeDistanceCovered >= tipWipeCutoffDistance) {
-            extruder_speed = 0;
-        }
+        if (tipWipeDistanceCovered >= tipWipeCutoffDistance) { extruder_speed = 0; }
         else if (tipWipeDistanceCovered() + length() - tipWipeCutoffDistance() > 0.09) {
             auto ratio = (tipWipeCutoffDistance() - tipWipeDistanceCovered()) / length();
             Point hopPoint(start.x() + ((end.x() - start.x()) * ratio), start.y() + ((end.y() - start.y()) * ratio),
@@ -1244,7 +1212,7 @@ void PathModifierGenerator::generateTipWipeSegment(Path& path, Point start, Poin
             writeSegment(path, start, hopPoint, width, height, speed, acceleration, extruder_speed, regionType,
                          pathModifiers, materialNumber, adapted);
 
-            start = hopPoint;
+            start          = hopPoint;
             extruder_speed = 0;
         }
 
@@ -1256,4 +1224,4 @@ void PathModifierGenerator::generateTipWipeSegment(Path& path, Point start, Poin
 }
 
 Distance PathModifierGenerator::tipWipeDistanceCovered = 0;
-} // namespace ORNL
+}  // namespace ORNL

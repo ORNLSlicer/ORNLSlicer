@@ -26,7 +26,7 @@ namespace ORNL {
 //! called, it actually computes the Nth next slice, however returns whatever the front of the buffer is.
 //! \note when the previous or future buffers cannot be filled with valid slices, they are instead filled with nullptr
 class BufferedSlicer {
-  public:
+   public:
     //! \struct SliceMeta
     //! \brief Contains a snapshot of various variables when taking a slice
     struct SliceMeta {
@@ -81,7 +81,7 @@ class BufferedSlicer {
     //! \return the number of slices taken
     int getSliceCount();
 
-  private:
+   private:
     //! \brief processes a single slice (cross-sections)
     //! \return a cross-section (SliceMeta) object
     QSharedPointer<BufferedSlicer::SliceMeta> processSingleSlice();
@@ -134,4 +134,4 @@ class BufferedSlicer {
     //! \brief list of settings parts being tracked
     QVector<QSharedPointer<Part>> m_settings_parts;
 };
-} // namespace ORNL
+}  // namespace ORNL

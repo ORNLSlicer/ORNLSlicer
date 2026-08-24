@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QLinkedList>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -17,7 +18,7 @@ namespace ORNL {
 class IslandBase;
 
 class Layer : public Step {
-  public:
+   public:
     //! \brief Constructor
     Layer(uint layer_nr, const QSharedPointer<SettingsBase>& sb);
 
@@ -79,14 +80,14 @@ class Layer : public Step {
     //! \return a list of settings polygons
     QVector<SettingsPolygon> getSettingsPolygons();
 
-  protected:
+   protected:
     //! \brief Layer number.
     uint m_layer_nr;
 
     //! \brief Precendence list based on geometry and settings to define order for traveling and gcode.
     QList<QSharedPointer<IslandBase>> m_island_order;
 
-  private:
+   private:
     //! \brief Builds the translation used to move paths between the flattened slicing frame and printer coordinates.
     Point getOrientationShift() const;
 
@@ -103,8 +104,8 @@ class Layer : public Step {
     void redirectClearanceMoves();
 
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order
-    QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
-    createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
+    QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> createSequence(
+        QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
 
     //! \brief Vertical shift applied to keep printing paths above the build surface.
     Distance m_minimum_z_shift;
@@ -112,4 +113,4 @@ class Layer : public Step {
     //! \brief a collection of polygons on this layer that contain setting overrides
     QVector<SettingsPolygon> m_settings_polygons;
 };
-} // namespace ORNL
+}  // namespace ORNL

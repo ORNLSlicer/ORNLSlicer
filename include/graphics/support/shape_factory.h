@@ -1,10 +1,9 @@
 #pragma once
 
-#include <vector>
-
 #include <QColor>
 #include <QMatrix4x4>
 #include <QVector3D>
+#include <vector>
 
 #include "geometry/point.h"
 
@@ -14,7 +13,7 @@ namespace ORNL {
 //! All creation functions append to the supplied vectors so callers can build combined meshes without intermediate
 //! allocations.
 class ShapeFactory final {
-  public:
+   public:
     ShapeFactory() = delete;
 
     //! @name Closed Triangle Meshes
@@ -255,7 +254,7 @@ class ShapeFactory final {
 
     //! @}
 
-  private:
+   private:
     /*! @brief Computes the transform that places a local +Z bead mesh between two endpoints.
      *  @param start Segment start point.
      *  @param end Segment end point.
@@ -272,4 +271,4 @@ class ShapeFactory final {
     static QMatrix4x4 computeLinearBeadTransform(const QVector3D& start, const QVector3D& end,
                                                  const QVector3D& normal_hint);
 };
-} // namespace ORNL
+}  // namespace ORNL

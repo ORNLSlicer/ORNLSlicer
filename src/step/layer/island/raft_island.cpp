@@ -29,4 +29,4 @@ void RaftIsland::optimize(int layerNumber, Point& currentLocation,
         r->optimize(layerNumber, currentLocation, unused);
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

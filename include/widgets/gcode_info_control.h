@@ -14,6 +14,7 @@
 #include <QPushButton>
 #include <QVector3D>
 #include <QWidget>
+
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qnamespace.h>
@@ -31,20 +32,19 @@ namespace ORNL {
 class QClickableFrame : public QFrame {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: the widget this sits on
     explicit QClickableFrame(QFrame* parent = nullptr) : QFrame(parent) {}
 
-  signals:
+   signals:
     //! \brief Signal that the mouse left button was clicked.
     void mouseLeftButtonClicked();
 
-  private:
+   private:
     //! \brief Mouse press event
     void mousePressEvent(QMouseEvent* event) {
-        if (event->buttons() == Qt::LeftButton)
-            emit mouseLeftButtonClicked();
+        if (event->buttons() == Qt::LeftButton) emit mouseLeftButtonClicked();
     }
 };
 
@@ -55,7 +55,7 @@ class QClickableFrame : public QFrame {
 class GCodeInfoControl : public QWidget {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: the widget this sits on
     explicit GCodeInfoControl(QWidget* parent = nullptr);
@@ -72,7 +72,7 @@ class GCodeInfoControl : public QWidget {
     //! \brief Updates the camera view matrix used to display segment travel direction.
     void setViewMatrix(const QMatrix4x4& viewMatrix);
 
-  private:
+   private:
     //! \brief Display xy direction
     void updateDirection(double angle);
 
@@ -133,4 +133,4 @@ class GCodeInfoControl : public QWidget {
     QPixmap* m_infopm_direction_z;
     QComboBox* m_headercb_lines;
 };
-} // namespace ORNL
+}  // namespace ORNL

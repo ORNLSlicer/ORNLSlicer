@@ -1,7 +1,5 @@
 #pragma once
 
-#include <functional>
-
 #include <QCheckBox>
 #include <QComboBox>
 #include <QGridLayout>
@@ -9,6 +7,8 @@
 #include <QObject>
 #include <QToolButton>
 #include <QWidget>
+#include <functional>
+
 #include <qlist.h>
 #include <qscopedpointer.h>
 
@@ -39,8 +39,7 @@ struct DependencyNode {
 //! \brief Base class for widgets that holds additional information such as dependency
 //! logic and json.  Used in combination with child widget types to create a row
 class SettingRowBase {
-
-  public:
+   public:
     using ValueChangeCallback = std::function<void(const QString&, const QList<QSharedPointer<SettingsBase>>&)>;
 
     //! \brief Default Constructor
@@ -131,7 +130,7 @@ class SettingRowBase {
     //! \brief Set callback used to notify before this row writes a new value.
     void setValueChangeCallback(ValueChangeCallback callback);
 
-  protected:
+   protected:
     //! \brief Function to handle value changes for each widget type
     virtual void valueChanged(QVariant val) = 0;
 
@@ -145,18 +144,19 @@ class SettingRowBase {
     void setLocalOverrideKeys(QList<QString> keys);
 
     //! \brief Returns the value inherited by one selected settings base.
-    template <class T> T inheritedValueHelper(const QString& key, int index, const T& global_value) const {
+    template <class T>
+    T inheritedValueHelper(const QString& key, int index, const T& global_value) const {
         if (index >= 0 && index < m_inherited_settings_bases.size()) {
             const QSharedPointer<SettingsBase>& inherited_base = m_inherited_settings_bases[index];
-            if (!inherited_base.isNull() && inherited_base->contains(key))
-                return inherited_base->setting<T>(key);
+            if (!inherited_base.isNull() && inherited_base->contains(key)) return inherited_base->setting<T>(key);
         }
 
         return global_value;
     }
 
     //! \brief Returns the effective value for one selected settings base.
-    template <class T> T effectiveValueHelper(const QString& key, int index, const T& global_value) const {
+    template <class T>
+    T effectiveValueHelper(const QString& key, int index, const T& global_value) const {
         if (index >= 0 && index < m_settings_bases.size() && m_settings_bases[index]->contains(key))
             return m_settings_bases[index]->setting<T>(key);
 
@@ -164,10 +164,11 @@ class SettingRowBase {
     }
 
     //! \brief Removes edited overrides matching the value inherited by each selected base.
-    template <class T> void removeRedundantLocalOverrides(const QString& key, const T& global_value) {
+    template <class T>
+    void removeRedundantLocalOverrides(const QString& key, const T& global_value) {
         for (int index = 0, end = m_settings_bases.size(); index < end; ++index) {
             QSharedPointer<SettingsBase> settings_base = m_settings_bases[index];
-            const T inherited_value = inheritedValueHelper<T>(key, index, global_value);
+            const T inherited_value                    = inheritedValueHelper<T>(key, index, global_value);
             if (settings_base->contains(key) && settings_base->setting<T>(key) == inherited_value)
                 settings_base->remove(key);
         }
@@ -178,12 +179,12 @@ class SettingRowBase {
     bool checkLogic(DependencyNode root);
 
     //! \brief Templated helper for all widget types when value is changed
-    template <class T> void valueChangedHelper(T value) {
+    template <class T>
+    void valueChangedHelper(T value) {
         notifyValueAboutToChange(m_key);
 
         if (m_settings_bases.size() != 0)
-            for (QSharedPointer<SettingsBase> range : m_settings_bases)
-                range->setSetting(m_key, value);
+            for (QSharedPointer<SettingsBase> range : m_settings_bases) range->setSetting(m_key, value);
         else
             m_sb->setSetting(m_key, value);
 
@@ -196,19 +197,19 @@ class SettingRowBase {
         clearNotification();
         styleLabel(true);
 
-        for (QSharedPointer<SettingRowBase> row : m_rows_to_notify)
-            row->checkDependencies();
+        for (QSharedPointer<SettingRowBase> row : m_rows_to_notify) row->checkDependencies();
 
         checkDynamicDependencies();
     }
 
     //! \brief Templated helper for all widget types when settings must be reloaded
-    template <class T> T reloadValueHelper(bool& consistent) {
+    template <class T>
+    T reloadValueHelper(bool& consistent) {
         T cur;
         if (m_settings_bases.size() > 0) {
             const T global_value = m_sb->contains(m_key) ? m_sb->setting<T>(m_key)
                                                          : m_json[Constants::Settings::Master::kDefault].get<T>();
-            cur = effectiveValueHelper<T>(m_key, 0, global_value);
+            cur                  = effectiveValueHelper<T>(m_key, 0, global_value);
 
             bool all_bases_consistent = true;
             for (int index = 1, end = m_settings_bases.size(); index < end; ++index)
@@ -223,7 +224,7 @@ class SettingRowBase {
                 // set to default
                 setNotification("Multiple Values");
                 styleLabel(false);
-                cur = m_json[Constants::Settings::Master::kDefault].get<T>();
+                cur        = m_json[Constants::Settings::Master::kDefault].get<T>();
                 consistent = false;
             }
         }
@@ -284,7 +285,7 @@ class SettingRowBase {
     //! \brief Pointer to global setting base
     QSharedPointer<SettingsBase> m_sb;
 
-  protected:
+   protected:
     //! \brief Returns the default tooltip from the row's master setting metadata.
     QString baseToolTip() const;
 
@@ -349,4 +350,4 @@ class SettingRowBase {
     ValueChangeCallback m_value_change_callback;
 };
 
-} // Namespace ORNL
+}  // Namespace ORNL

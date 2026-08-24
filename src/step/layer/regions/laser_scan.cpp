@@ -27,9 +27,7 @@ QString LaserScan::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kLaserScan);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
     }
     return gcode;
 }
@@ -37,8 +35,8 @@ QString LaserScan::writeGCode(QSharedPointer<WriterBase> writer) {
 void LaserScan::compute(uint layer_num) {
     m_paths.clear();
 
-    Distance x_offset = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerXOffset);
-    Distance y_offset = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerYOffset);
+    Distance x_offset   = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerXOffset);
+    Distance y_offset   = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerYOffset);
     Distance scan_width = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerWidth);
 
     Distance buffer_distance = 0;
@@ -50,7 +48,7 @@ void LaserScan::compute(uint layer_num) {
     // Determine which axis the laser scanner will travel
     if (static_cast<Axis>(m_sb->setting<int>(PS::LaserScanner::kLaserScannerAxis)) == Axis::kX) {
         // Determine number of scan lines
-        float y_distance = m_geometry.max().y() - m_geometry.min().y();
+        float y_distance         = m_geometry.max().y() - m_geometry.min().y();
         int number_of_scan_lines = qCeil(y_distance / scan_width());
 
         // Determine starting point of first scan line
@@ -78,10 +76,10 @@ void LaserScan::compute(uint layer_num) {
             scan_lines += scan_line.reverse();
         }
     }
-    else // Scanner Axis = Y
+    else  // Scanner Axis = Y
     {
         // Determine number of scan lines
-        float x_distance = m_geometry.max().x() - m_geometry.min().x();
+        float x_distance         = m_geometry.max().x() - m_geometry.min().x();
         int number_of_scan_lines = qCeil(x_distance / scan_width());
 
         // Determine starting point of first scan line
@@ -113,8 +111,7 @@ void LaserScan::compute(uint layer_num) {
     m_computed_geometry = scan_lines;
 
     Path finalPath;
-    for (Polyline line : m_computed_geometry)
-        finalPath.append(createPath(line));
+    for (Polyline line : m_computed_geometry) finalPath.append(createPath(line));
 
     m_paths.append(finalPath);
 }
@@ -144,4 +141,4 @@ Path LaserScan::createPath(Polyline line) {
 
     return newPath;
 }
-} // namespace ORNL
+}  // namespace ORNL

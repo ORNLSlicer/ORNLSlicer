@@ -15,7 +15,7 @@
 
 namespace ORNL {
 class Raft : public RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
@@ -39,7 +39,7 @@ class Raft : public RegionBase {
     //! \return Polyline converted to path
     Path createPath(Polyline line) override;
 
-  private:
+   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
@@ -49,4 +49,4 @@ class Raft : public RegionBase {
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
 };
-} // namespace ORNL
+}  // namespace ORNL

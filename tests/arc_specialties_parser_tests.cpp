@@ -1,13 +1,12 @@
+#include <QCoreApplication>
+#include <QSharedPointer>
+#include <QStringList>
+#include <QVector3D>
 #include <cmath>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
 #include <optional>
-
-#include <QCoreApplication>
-#include <QSharedPointer>
-#include <QStringList>
-#include <QVector3D>
 
 #include "configs/settings_base.h"
 #include "gcode/arc_specialties_axis_inference.h"
@@ -20,8 +19,7 @@
 
 namespace {
 bool expect(bool condition, const char* message) {
-    if (!condition)
-        std::cerr << message << '\n';
+    if (!condition) std::cerr << message << '\n';
     return condition;
 }
 
@@ -88,7 +86,7 @@ bool writesInlineArcOptionalStop() {
     const ORNL::Point end(1.0 * ORNL::mm, 0.0 * ORNL::mm);
     const ORNL::Point center(0.5 * ORNL::mm, 0.0 * ORNL::mm);
 
-    const QString first_arc = writer.writeArc(start, end, center, 180.0 * ORNL::degree, false, segment_settings);
+    const QString first_arc  = writer.writeArc(start, end, center, 180.0 * ORNL::degree, false, segment_settings);
     const QString second_arc = writer.writeArc(start, end, center, 180.0 * ORNL::degree, false, segment_settings);
 
     return first_arc.contains("F600.0000 G81 ;") && second_arc.contains("F600.0000 G81 ;") &&
@@ -128,17 +126,19 @@ bool writesCompactCylindricalPrintComments() {
 
 QString lineContaining(const QString& block, const QString& marker) {
     for (const QString& line : block.split('\n', Qt::SkipEmptyParts)) {
-        if (line.contains(marker)) {
-            return line;
-        }
+        if (line.contains(marker)) { return line; }
     }
 
     return QString();
 }
 
-int occurrenceCount(const QString& block, const QString& marker) { return block.count(marker); }
+int occurrenceCount(const QString& block, const QString& marker) {
+    return block.count(marker);
+}
 
-bool near(double actual, double expected) { return std::abs(actual - expected) <= 1e-6; }
+bool near(double actual, double expected) {
+    return std::abs(actual - expected) <= 1e-6;
+}
 
 bool infersLeftHandedHelicalAxisFromReversedCpDelta() {
     ORNL::Point center;
@@ -171,7 +171,7 @@ bool writesFirstTravelWithWorkObjectToolFrame() {
                                                     ORNL::TravelLiftType::kNoLift, settings);
 
     const QString world_approach_line = lineContaining(travel_block, ";WORLD APPROACH TRAVEL");
-    const QString first_travel_line = lineContaining(travel_block, ";TRAVEL");
+    const QString first_travel_line   = lineContaining(travel_block, ";TRAVEL");
 
     return world_approach_line.contains("ZR=-90.0000") && first_travel_line.contains("ZR=-135.0000");
 }
@@ -240,7 +240,7 @@ bool writesCylindricalTravelWithConfiguredArcDensity() {
 
     return occurrenceCount(travel_block, ";TRAVEL ARC") == 4;
 }
-} // namespace
+}  // namespace
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);

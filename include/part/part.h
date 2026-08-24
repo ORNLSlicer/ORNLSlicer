@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QUuid>
+
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qmap.h>
@@ -26,12 +27,11 @@ class Step;
  *        sub-meshes. Additionally, this class also has a parenting system between parts.
  */
 class Part : public QEnableSharedFromThis<Part> {
-
-  public:
+   public:
     //! \brief a step pair links a scan layer with its corresponding
     //!        printing layer
     struct StepPair {
-        QSharedPointer<Layer> printing_layer; // can be either raft or layer type
+        QSharedPointer<Layer> printing_layer;  // can be either raft or layer type
         QSharedPointer<ScanLayer> scan_layer;
     };
 
@@ -48,22 +48,34 @@ class Part : public QEnableSharedFromThis<Part> {
     //! \param Mesh type mode, defaults to build
     Part(QSharedPointer<MeshBase> root_mesh, QString file_name = "", MeshType mt = MeshType::kBuild);
 
-    void setSourceFile(QString file_name) { m_file_name = file_name; }
+    void setSourceFile(QString file_name) {
+        m_file_name = file_name;
+    }
 
     //! \brief Source file for part
-    QString sourceFilePath() { return m_file_name; }
+    QString sourceFilePath() {
+        return m_file_name;
+    }
 
     //! \brief Mesh type mode, defaults to build
-    MeshType getMeshType() { return m_mesh_type; }
+    MeshType getMeshType() {
+        return m_mesh_type;
+    }
 
     //! \brief Set Mesh type mode
-    void setMeshType(MeshType mt) { m_mesh_type = mt; }
+    void setMeshType(MeshType mt) {
+        m_mesh_type = mt;
+    }
 
     //! \brief Get name of this part.
-    inline QString name() { return m_name; }
+    inline QString name() {
+        return m_name;
+    }
 
     //! \brief Set name of this part.
-    inline void setName(QString name) { m_name = name; }
+    inline void setName(QString name) {
+        m_name = name;
+    }
 
     //! \brief Get the SettingsBase.
     //! \return pointer to SettingsBase
@@ -287,7 +299,7 @@ class Part : public QEnableSharedFromThis<Part> {
     //! \returns universally unique identifier for this part
     QUuid getId();
 
-  private:
+   private:
     //! \brief a unique identifier for the part
     QUuid m_uuid;
 
@@ -330,4 +342,4 @@ class Part : public QEnableSharedFromThis<Part> {
     //! \brief Mesh type mode, defaults to build
     MeshType m_mesh_type = MeshType::kBuild;
 };
-} // namespace ORNL
+}  // namespace ORNL

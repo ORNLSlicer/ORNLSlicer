@@ -2,6 +2,7 @@
 
 #include <QToolTip>
 #include <QWheelEvent>
+
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
 #include <qgridlayout.h>
@@ -25,9 +26,7 @@ SettingComboBox::SettingComboBox(SettingTab* parent, QSharedPointer<SettingsBase
     this->setFocusPolicy(Qt::StrongFocus);
     m_warn = false;
 
-    if (m_sb->contains(key)) {
-        m_cur = m_sb->setting<int>(key);
-    }
+    if (m_sb->contains(key)) { m_cur = m_sb->setting<int>(key); }
     else {
         m_cur = json.operator[](Constants::Settings::Master::kDefault).get<int>();
         m_sb->setSetting(key, m_cur);
@@ -37,8 +36,7 @@ SettingComboBox::SettingComboBox(SettingTab* parent, QSharedPointer<SettingsBase
     QStringList options = json.operator[]("options").get<QString>().split(',');
 
     // For each option, make sure it is trimmed.
-    for (QString& curr : options)
-        curr = curr.trimmed();
+    for (QString& curr : options) curr = curr.trimmed();
 
     this->addItems(options);
     this->setCurrentIndex(m_cur);
@@ -93,21 +91,18 @@ void SettingComboBox::show() {
 
 void SettingComboBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<int>(val.toInt());
-    if (m_prev != this->currentIndex()) {
-        emit modified(m_key);
-    }
+    if (m_prev != this->currentIndex()) { emit modified(m_key); }
     m_prev = this->currentIndex();
 }
 
 void SettingComboBox::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
-    int m_cur = reloadValueHelper<int>(consistent);
-    if (consistent)
-        setCurrentIndex(m_cur);
+    int m_cur       = reloadValueHelper<int>(consistent);
+    if (consistent) setCurrentIndex(m_cur);
 
     this->blockSignals(false);
     emit modified(m_key);
@@ -120,4 +115,4 @@ void SettingComboBox::wheelEvent(QWheelEvent* event) {
     else
         QComboBox::wheelEvent(event);
 }
-} // namespace ORNL
+}  // namespace ORNL

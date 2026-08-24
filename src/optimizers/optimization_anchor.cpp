@@ -51,17 +51,12 @@ QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plan
     QVector3D direction;
     if (use_seam_attractor_vector) {
         direction = settingVector(sb, PS::Optimizations::kSeamAttractorVectorX,
-                                  PS::Optimizations::kSeamAttractorVectorY,
-                                  PS::Optimizations::kSeamAttractorVectorZ);
+                                  PS::Optimizations::kSeamAttractorVectorY, PS::Optimizations::kSeamAttractorVectorZ);
     }
 
-    if (direction.isNull()) {
-        direction = slicing_plane.normal();
-    }
+    if (direction.isNull()) { direction = slicing_plane.normal(); }
 
-    if (direction.isNull()) {
-        direction = QVector3D(0.0f, 0.0f, 1.0f);
-    }
+    if (direction.isNull()) { direction = QVector3D(0.0f, 0.0f, 1.0f); }
 
     direction.normalize();
     return direction;
@@ -69,21 +64,15 @@ QVector3D seamAttractorVector(const QSharedPointer<SettingsBase>& sb, const Plan
 
 Point projectAlongVector(const Point& anchor, const Plane& slicing_plane, QVector3D direction) {
     QVector3D normal = slicing_plane.normal();
-    if (normal.isNull()) {
-        return anchor;
-    }
+    if (normal.isNull()) { return anchor; }
 
     normal.normalize();
-    if (direction.isNull()) {
-        direction = normal;
-    }
-    else {
-        direction.normalize();
-    }
+    if (direction.isNull()) { direction = normal; }
+    else { direction.normalize(); }
 
     float denominator = QVector3D::dotProduct(direction, normal);
     if (std::fabs(denominator) <= kProjectionDenominatorEpsilon) {
-        direction = normal;
+        direction   = normal;
         denominator = 1.0f;
     }
 
@@ -94,24 +83,22 @@ Point projectAlongVector(const Point& anchor, const Plane& slicing_plane, QVecto
 
 Point flattenIntoOptimizationFrame(const Point& point, const Plane& slicing_plane, const Point& optimization_shift) {
     const QVector3D normal = slicing_plane.normal();
-    if (normal.isNull()) {
-        return point;
-    }
+    if (normal.isNull()) { return point; }
 
     const QQuaternion rotation = MathUtils::CreateQuaternion(normal, QVector3D(0, 0, 1));
-    const QVector3D shifted = (point - optimization_shift).toQVector3D();
+    const QVector3D shifted    = (point - optimization_shift).toQVector3D();
     return Point::fromQVector3D(rotation.rotatedVector(shifted)) + optimization_shift;
 }
 
 Point customOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
                        const Point& optimization_shift, bool use_seam_attractor_vector, const QString& x_key,
                        const QString& y_key, const QString& z_key) {
-    return flattenIntoOptimizationFrame(projectAlongVector(settingPoint(sb, x_key, y_key, z_key), slicing_plane,
-                                                           seamAttractorVector(sb, slicing_plane,
-                                                                               use_seam_attractor_vector)),
-                                        slicing_plane, optimization_shift);
+    return flattenIntoOptimizationFrame(
+        projectAlongVector(settingPoint(sb, x_key, y_key, z_key), slicing_plane,
+                           seamAttractorVector(sb, slicing_plane, use_seam_attractor_vector)),
+        slicing_plane, optimization_shift);
 }
-} // namespace
+}  // namespace
 
 namespace OptimizationAnchor {
 Point customIslandOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
@@ -134,5 +121,5 @@ Point customPointOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane&
                             PS::Optimizations::kCustomPointXLocation, PS::Optimizations::kCustomPointYLocation,
                             PS::Optimizations::kCustomPointZLocation);
 }
-} // namespace OptimizationAnchor
-} // namespace ORNL
+}  // namespace OptimizationAnchor
+}  // namespace ORNL

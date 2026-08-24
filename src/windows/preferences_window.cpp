@@ -1,7 +1,5 @@
 #include "windows/preferences_window.h"
 
-#include <algorithm>
-
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QLabel>
@@ -11,6 +9,8 @@
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QTabWidget>
+#include <algorithm>
+
 #include <qboxlayout.h>
 #include <qcheckbox.h>
 #include <qcombobox.h>
@@ -193,8 +193,8 @@ void PreferencesWindow::setupLayout() {
     m_notifications_tab_layout->addWidget(fileshiftBox, 1, 0);
     m_boxes.push_back(fileshiftBox);
 
-    QGroupBox* unsavedProjectCloseBox = new QGroupBox("Close Project");
-    QVBoxLayout* unsavedProjectCloseLayout = new QVBoxLayout();
+    QGroupBox* unsavedProjectCloseBox        = new QGroupBox("Close Project");
+    QVBoxLayout* unsavedProjectCloseLayout   = new QVBoxLayout();
     m_warn_unsaved_project_on_close_checkbox = new QCheckBox("Warn before closing unsaved projects");
     m_warn_unsaved_project_on_close_checkbox->setChecked(
         m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
@@ -364,8 +364,8 @@ QGroupBox* PreferencesWindow::createContainer(PreferenceChoice choice, QList<QSt
                                               void (PreferencesWindow::*func)(PreferenceChoice)) {
     QGroupBox* groupBox = new QGroupBox(displayStrings[0]);
 
-    QRadioButton* m_ask_radio_button = new QRadioButton(displayStrings[1]);
-    QRadioButton* m_do_automatically_radio_button = new QRadioButton(displayStrings[2]);
+    QRadioButton* m_ask_radio_button                = new QRadioButton(displayStrings[1]);
+    QRadioButton* m_do_automatically_radio_button   = new QRadioButton(displayStrings[2]);
     QRadioButton* m_skip_automatically_radio_button = new QRadioButton(displayStrings[3]);
 
     if (choice == PreferenceChoice::kAsk)
@@ -465,8 +465,7 @@ void PreferencesWindow::setupEvents() {
 
 void PreferencesWindow::closeEvent(QCloseEvent* event) {
     // if window closed and changes made, save them
-    if (m_preferences_manager->isDirty())
-        m_preferences_manager->exportPreferences();
+    if (m_preferences_manager->isDirty()) m_preferences_manager->exportPreferences();
 
     // m_window_manager->removePreferencesWindow();
     event->accept();
@@ -576,9 +575,7 @@ void PreferencesWindow::exportPreferences() {
     QString filepath = QFileDialog::getSaveFileName(this, "Save .preferences file",
                                                     QStandardPaths::writableLocation(QStandardPaths::DesktopLocation),
                                                     "*.preferences");
-    if (!filepath.isNull()) {
-        m_preferences_manager->exportPreferences(filepath);
-    }
+    if (!filepath.isNull()) { m_preferences_manager->exportPreferences(filepath); }
 }
 
 void PreferencesWindow::shiftProjectPreferenceChanged(PreferenceChoice shift) {
@@ -592,4 +589,4 @@ void PreferencesWindow::shiftFilePreferenceChanged(PreferenceChoice shift) {
 void PreferencesWindow::alignPreferenceChanged(PreferenceChoice align) {
     m_preferences_manager->setAlignPreference(align);
 }
-} // namespace ORNL
+}  // namespace ORNL

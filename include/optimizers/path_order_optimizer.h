@@ -27,7 +27,7 @@ class TravelSegment;
  * \list kRandom: links to a random vertex each time
  */
 class PathOrderOptimizer {
-  public:
+   public:
     //! \brief Constructor
     //! \note Layer number is only needed if kConsecutive linking is used
     PathOrderOptimizer(Point& start, uint layer_number, const QSharedPointer<SettingsBase>& sb);
@@ -80,7 +80,7 @@ class PathOrderOptimizer {
     //! \param pt: Seam point
     void setStartPointOverride(Point pt);
 
-  private:
+   private:
     //! \brief Node to hold topological data
     //! \param m_poly: Polygon representing current path. Used for inside/outside comparison.
     //! \param m_path_index: Path index in m_paths that node represents.
@@ -93,7 +93,7 @@ class PathOrderOptimizer {
         TopologicalNode() {}
         TopologicalNode(int index, Polygon poly) {
             m_path_index = index;
-            m_poly = poly;
+            m_poly       = poly;
         }
     };
 
@@ -249,4 +249,4 @@ class PathOrderOptimizer {
     //! subsequent path.
     bool m_has_computed_heirarchy;
 };
-} // namespace ORNL
+}  // namespace ORNL

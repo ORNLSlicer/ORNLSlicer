@@ -17,7 +17,7 @@ namespace ORNL {
  * \brief The gcode writer for the AeroBasic syntax
  */
 class AeroBasicWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     AeroBasicWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -81,7 +81,7 @@ class AeroBasicWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes g-code coordinates WXYZ for a move or travel to the destination point
     QString writeCoordinates(Point destination);
     //! \brief Writes g-code for retraction moves
@@ -98,5 +98,5 @@ class AeroBasicWriter : public WriterBase {
     //! \brief tracks the current amount of filament output for the E command
     Distance m_filament_location;
 
-}; // class AeroBasicWriter
-} // namespace ORNL
+};  // class AeroBasicWriter
+}  // namespace ORNL

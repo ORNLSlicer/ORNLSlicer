@@ -4,6 +4,7 @@
 #include <QOpenGLFunctions_3_3_Core>
 #include <QOpenGLShaderProgram>
 #include <QOpenGLWidget>
+
 #include <qevent.h>
 #include <qlist.h>
 #include <qmatrix4x4.h>
@@ -32,7 +33,7 @@ class GCodeObject;
  */
 class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     Q_OBJECT
-  public:
+   public:
     //! \brief Initialize printer OpenGL buffers, projection and view matrices, part picker, and shader program
     //! \param parent QWidget that has to be passed to superclass constructor
     BaseView(QWidget* parent = nullptr);
@@ -101,7 +102,7 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     //! \return The camera object.
     QSharedPointer<CameraManager> camera();
 
-  protected:
+   protected:
     /*!
      * \title Object Methods
      * \brief The following functions relate to the addition and remove of objects.
@@ -215,7 +216,7 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     //! \brief Shows camera focus.
     QSharedPointer<AxesObject> m_focus;
 
-  private:
+   private:
     //! \brief OpenGL setup.
     void initializeGL() override;
 
@@ -251,4 +252,4 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     QList<QSharedPointer<GraphicsObject>> m_render_objects;
 };
 
-} // namespace ORNL
+}  // namespace ORNL

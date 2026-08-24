@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
 #include <qobject.h>
@@ -56,12 +57,12 @@ void GCodeMarlinSaver::run() {
     for (QString line : lines) {
         isTravel = "0";
         if (line.startsWith(G1)) {
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (line.contains("TRAVEL") || line.contains("TIP WIPE") || line.contains("COAST") ||
                 line.contains("LIFT") || line.contains("FLYING START")) {
-                isTravel = "1";
+                isTravel        = "1";
                 extrusionAmount = "0.0";
             }
 
@@ -75,7 +76,7 @@ void GCodeMarlinSaver::run() {
                         zval = params[i].mid(1);
                     else if (params[i].startsWith(f))
                         feedrate = params[i].mid(1);
-                    else if (params[i].startsWith(e)) // Note that extrusion values aren't currently being used
+                    else if (params[i].startsWith(e))  // Note that extrusion values aren't currently being used
                         extrusionAmount = params[i].mid(1);
                 }
             }
@@ -93,27 +94,26 @@ void GCodeMarlinSaver::run() {
                 zFeedrate = "0.0";
             else
                 zFeedrate = feedrate;
-            if (previousExtrusionAmount == extrusionAmount)
-                extrusionAmount = "0.0";
+            if (previousExtrusionAmount == extrusionAmount) extrusionAmount = "0.0";
 
             // Convert mm to m and mm/min to m/s
-            double mm = xval.toDouble();
-            mm = mm / 1000;
-            xOut = QString::number(mm);
-            mm = yval.toDouble();
-            mm = mm / 1000;
-            yOut = QString::number(mm);
-            mm = zval.toDouble();
-            mm = mm / 1000;
-            zOut = QString::number(mm);
-            mm = xFeedrate.toDouble();
-            mm = mm / 60 / 1000;
+            double mm    = xval.toDouble();
+            mm           = mm / 1000;
+            xOut         = QString::number(mm);
+            mm           = yval.toDouble();
+            mm           = mm / 1000;
+            yOut         = QString::number(mm);
+            mm           = zval.toDouble();
+            mm           = mm / 1000;
+            zOut         = QString::number(mm);
+            mm           = xFeedrate.toDouble();
+            mm           = mm / 60 / 1000;
             xFeedrateOut = QString::number(mm);
-            mm = yFeedrate.toDouble();
-            mm = mm / 60 / 1000;
+            mm           = yFeedrate.toDouble();
+            mm           = mm / 60 / 1000;
             yFeedrateOut = QString::number(mm);
-            mm = zFeedrate.toDouble();
-            mm = mm / 60 / 1000;
+            mm           = zFeedrate.toDouble();
+            mm           = mm / 60 / 1000;
             zFeedrateOut = QString::number(mm);
 
             // Write output
@@ -131,13 +131,13 @@ void GCodeMarlinSaver::run() {
             }
 
             // Store current value as previous value
-            previousX = xval;
-            previousY = yval;
-            previousZ = zval;
+            previousX               = xval;
+            previousY               = yval;
+            previousZ               = zval;
             previousExtrusionAmount = extrusionAmount;
         }
     }
     file.close();
 }
 
-} // namespace ORNL
+}  // namespace ORNL

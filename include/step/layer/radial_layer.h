@@ -20,7 +20,7 @@ namespace ORNL {
  * paths against the model and skips the normal polymer path-generation stack.
  */
 class RadialLayer : public Layer {
-  public:
+   public:
     /*!
      * @brief Constructs a radial layer.
      * @param layer_nr One-based layer number used in generated gcode comments.
@@ -74,8 +74,8 @@ class RadialLayer : public Layer {
      */
     bool hasPaths() const;
 
-  private:
+   private:
     //! @brief Precomputed travel and print paths for this radial layer.
     QVector<Path> m_paths;
 };
-} // namespace ORNL
+}  // namespace ORNL

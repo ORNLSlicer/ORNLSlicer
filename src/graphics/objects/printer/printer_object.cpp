@@ -2,14 +2,14 @@
 
 #include <math.h>
 
+#include <QMatrix4x4>
+#include <QPointF>
+#include <QVector>
 #include <algorithm>
 #include <limits>
 #include <tuple>
 #include <vector>
 
-#include <QMatrix4x4>
-#include <QPointF>
-#include <QVector>
 #include <qcolor.h>
 #include <qmath.h>
 #include <qsharedpointer.h>
@@ -25,12 +25,12 @@
 namespace ORNL {
 namespace {
 constexpr float kMinimumOptimizationGuideLength = 1.5f;
-constexpr float kOptimizationGuidePrinterScale = 0.5f;
+constexpr float kOptimizationGuidePrinterScale  = 0.5f;
 
 QSharedPointer<GraphicsObject> createOptimizationGuide(BaseView* view, QColor color) {
     const std::vector<float> vertices = {-0.5f, 0.0f, 0.0f, 0.5f, 0.0f, 0.0f};
-    const std::vector<float> colors = {color.redF(), color.greenF(), color.blueF(), color.alphaF(),
-                                       color.redF(), color.greenF(), color.blueF(), color.alphaF()};
+    const std::vector<float> colors   = {color.redF(), color.greenF(), color.blueF(), color.alphaF(),
+                                         color.redF(), color.greenF(), color.blueF(), color.alphaF()};
     const std::vector<float> normals;
 
     auto guide = QSharedPointer<GraphicsObject>::create(view, vertices, normals, colors, GL_LINES);
@@ -67,9 +67,7 @@ QVector3D optimizationGuideDirection(const QSharedPointer<SettingsBase>& sb) {
         direction = QVector3D(sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
                               sb->setting<float>(PS::Slicing::kSlicePlaneNormalY),
                               sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ));
-        if (direction.isNull()) {
-            direction = QVector3D(0.0f, 0.0f, 1.0f);
-        }
+        if (direction.isNull()) { direction = QVector3D(0.0f, 0.0f, 1.0f); }
     }
 
     direction.normalize();
@@ -109,7 +107,7 @@ void hideOptimizationAnchor(const QSharedPointer<SeamObject>& marker, const QSha
     marker->hide();
     guide->hide();
 }
-} // namespace
+}  // namespace
 
 void PrinterObject::updateFromSettings(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
@@ -141,15 +139,13 @@ PrinterObject::OptimizationPointPick PrinterObject::pickOptimizationPoint(const 
     float nearest = std::numeric_limits<float>::infinity();
     OptimizationPointPick picked;
     for (const OptimizationPointPick& candidate : candidates) {
-        if (!candidate.isValid() || candidate.object->hidden()) {
-            continue;
-        }
+        if (!candidate.isValid() || candidate.object->hidden()) { continue; }
 
         const float distance =
             PartPicker::pickDistance(projection, view, mouse_ndc_pos, candidate.object->triangles(), ortho);
         if (distance < nearest) {
             nearest = distance;
-            picked = candidate;
+            picked  = candidate;
         }
     }
 
@@ -162,14 +158,10 @@ bool PrinterObject::bedIntersection(const QMatrix4x4& projection, const QMatrix4
     QVector3D direction;
     std::tie(start, direction) = PartPicker::getDirectionAndStart(projection, mouse_ndc_pos, view, ortho);
 
-    if (qFuzzyIsNull(direction.z())) {
-        return false;
-    }
+    if (qFuzzyIsNull(direction.z())) { return false; }
 
     const float distance = (this->printerCenter().z() - start.z()) / direction.z();
-    if (distance < 0.0f) {
-        return false;
-    }
+    if (distance < 0.0f) { return false; }
 
     intersection = start + (distance * direction);
     return true;
@@ -178,12 +170,12 @@ bool PrinterObject::bedIntersection(const QMatrix4x4& projection, const QMatrix4
 float PrinterObject::getDefaultZoom() {
     if (m_printer_max_dims.y() > m_printer_max_dims.z()) {
         float offset = (0.5 * m_printer_max_dims.y()) / qTan((1.0 / 2.0) * M_PI);
-        float base = offset + (m_printer_max_dims.x()) - printerCenter().x();
+        float base   = offset + (m_printer_max_dims.x()) - printerCenter().x();
         return base / qTan((3.0 / 18.0) * M_PI);
     }
     else {
         float offset = (0.5 * m_printer_max_dims.z()) / qCos((3.0 / 18.0) * M_PI);
-        float base = offset + (m_printer_max_dims.x()) - printerCenter().x();
+        float base   = offset + (m_printer_max_dims.x()) - printerCenter().x();
         return base / qTan((3.0 / 18.0) * M_PI);
     }
 }
@@ -208,8 +200,8 @@ void PrinterObject::updateSeams() {
         optionalPathOrderUsesCustomLocation(m_sb->setting<int>(PS::Optimizations::kPerimeterPathOrder)) ||
         optionalPathOrderUsesCustomLocation(m_sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
         optionalPathOrderUsesCustomLocation(m_sb->setting<int>(PS::Optimizations::kSkinPathOrder));
-    bool secondPointEnabled = m_sb->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
-    const float bed_z = this->printerCenter().z();
+    bool secondPointEnabled         = m_sb->setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
+    const float bed_z               = this->printerCenter().z();
     const QVector3D guide_direction = optimizationGuideDirection(m_sb);
     const float max_printer_dimension =
         std::max(std::max(m_printer_max_dims.x(), m_printer_max_dims.y()), m_printer_max_dims.z());
@@ -224,9 +216,7 @@ void PrinterObject::updateSeams() {
         showOptimizationAnchor(m_seams.custom_island_opt, m_seams.custom_island_guide, translation, guide_direction,
                                guide_length);
     }
-    else {
-        hideOptimizationAnchor(m_seams.custom_island_opt, m_seams.custom_island_guide);
-    }
+    else { hideOptimizationAnchor(m_seams.custom_island_opt, m_seams.custom_island_guide); }
 
     if (path_order_uses_custom) {
         const QVector3D translation = optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPathXLocation,
@@ -236,9 +226,7 @@ void PrinterObject::updateSeams() {
         showOptimizationAnchor(m_seams.custom_path_opt, m_seams.custom_path_guide, translation, guide_direction,
                                guide_length);
     }
-    else {
-        hideOptimizationAnchor(m_seams.custom_path_opt, m_seams.custom_path_guide);
-    }
+    else { hideOptimizationAnchor(m_seams.custom_path_opt, m_seams.custom_path_guide); }
 
     if (usesCustomPointLocation(pointOrder)) {
         const QVector3D translation = optimizationPointTranslation(m_sb, PS::Optimizations::kCustomPointXLocation,
@@ -256,9 +244,7 @@ void PrinterObject::updateSeams() {
             showOptimizationAnchor(m_seams.custom_point_second_opt, m_seams.custom_point_second_guide,
                                    secondTranslation, guide_direction, guide_length);
         }
-        else {
-            hideOptimizationAnchor(m_seams.custom_point_second_opt, m_seams.custom_point_second_guide);
-        }
+        else { hideOptimizationAnchor(m_seams.custom_point_second_opt, m_seams.custom_point_second_guide); }
     }
     else {
         hideOptimizationAnchor(m_seams.custom_point_opt, m_seams.custom_point_guide);
@@ -266,26 +252,30 @@ void PrinterObject::updateSeams() {
     }
 }
 
-void PrinterObject::setSettings(QSharedPointer<SettingsBase> sb) { m_sb = sb; }
+void PrinterObject::setSettings(QSharedPointer<SettingsBase> sb) {
+    m_sb = sb;
+}
 
-QSharedPointer<SettingsBase> PrinterObject::getSettings() { return m_sb; }
+QSharedPointer<SettingsBase> PrinterObject::getSettings() {
+    return m_sb;
+}
 
 void PrinterObject::createSeams() {
     const QColor island_color =
         PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kPerimeter);
-    const QColor path_color = PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSkin);
+    const QColor path_color  = PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSkin);
     const QColor point_color = PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kInset);
     const QColor second_point_color =
         PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kInfill);
 
-    m_seams.custom_island_opt = QSharedPointer<SeamObject>::create(this->view(), island_color);
-    m_seams.custom_path_opt = QSharedPointer<SeamObject>::create(this->view(), path_color);
-    m_seams.custom_point_opt = QSharedPointer<SeamObject>::create(this->view(), point_color);
+    m_seams.custom_island_opt       = QSharedPointer<SeamObject>::create(this->view(), island_color);
+    m_seams.custom_path_opt         = QSharedPointer<SeamObject>::create(this->view(), path_color);
+    m_seams.custom_point_opt        = QSharedPointer<SeamObject>::create(this->view(), point_color);
     m_seams.custom_point_second_opt = QSharedPointer<SeamObject>::create(this->view(), second_point_color);
 
-    m_seams.custom_island_guide = createOptimizationGuide(this->view(), island_color);
-    m_seams.custom_path_guide = createOptimizationGuide(this->view(), path_color);
-    m_seams.custom_point_guide = createOptimizationGuide(this->view(), point_color);
+    m_seams.custom_island_guide       = createOptimizationGuide(this->view(), island_color);
+    m_seams.custom_path_guide         = createOptimizationGuide(this->view(), path_color);
+    m_seams.custom_point_guide        = createOptimizationGuide(this->view(), point_color);
     m_seams.custom_point_second_guide = createOptimizationGuide(this->view(), second_point_color);
 
     this->adoptChild(m_seams.custom_island_opt);
@@ -303,7 +293,11 @@ void PrinterObject::createSeams() {
     hideOptimizationAnchor(m_seams.custom_point_second_opt, m_seams.custom_point_second_guide);
 }
 
-bool PrinterObject::isTrueVolume() { return m_is_true_volume; }
+bool PrinterObject::isTrueVolume() {
+    return m_is_true_volume;
+}
 
-PrinterObject::PrinterObject(bool is_true_volume) { m_is_true_volume = is_true_volume; }
-} // namespace ORNL
+PrinterObject::PrinterObject(bool is_true_volume) {
+    m_is_true_volume = is_true_volume;
+}
+}  // namespace ORNL

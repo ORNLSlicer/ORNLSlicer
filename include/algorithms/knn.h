@@ -14,7 +14,7 @@ namespace ORNL {
  * \note Points are compared in 3D space.
  */
 class kNN {
-  public:
+   public:
     //! \brief Computes the kNN for a set of query points.
     kNN(const QVector<Point>& referencePoints, const QVector<Point>& queryPoints, int kNeighbors);
 
@@ -30,7 +30,7 @@ class kNN {
     //! \brief Returns the K nearest distances for each query point
     QVector<Distance> getNearestDistances();
 
-  protected:
+   protected:
     //! \brief A pointer to our array of reference points.
     float* m_referencePoints;
 
@@ -66,4 +66,4 @@ class kNN {
     bool knn_c(const float* ref, int ref_nb, const float* query, int query_nb, int dim, int k, float* knn_dist,
                int* knn_index);
 };
-} // namespace ORNL
+}  // namespace ORNL

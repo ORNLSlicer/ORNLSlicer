@@ -32,7 +32,7 @@ SettingTemperatureSpinBox::SettingTemperatureSpinBox(SettingTab* parent, QShared
     Temperature unit = PreferencesManager::getInstance()->getTemperatureUnit();
 
     this->setMaximum(Constants::Limits::Maximums::kMaxTemperature.to(unit));
-    this->setMinimum(-459.67); // absolute zero
+    this->setMinimum(-459.67);  // absolute zero
     this->setDecimals(m_precision);
     this->setValue(cur.to(unit));
 
@@ -47,7 +47,7 @@ SettingRowBase* SettingTemperatureSpinBox::createInstance(SettingTab* parent, QS
 
 void SettingTemperatureSpinBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     Temperature base_value;
     base_value.from(val.toDouble(), PreferencesManager::getInstance()->getTemperatureUnit());
@@ -70,12 +70,11 @@ void SettingTemperatureSpinBox::reloadValue() {
 
     bool consistent = true;
     Temperature cur(reloadValueHelper<double>(consistent));
-    if (consistent)
-        setValue(cur.to(unit));
+    if (consistent) setValue(cur.to(unit));
 
     this->blockSignals(false);
     emit modified(m_key);
 
     emit warnParent(warningCountDelta(!consistent, m_warn));
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -1,14 +1,14 @@
 #include "managers/settings/settings_manager.h"
 
-#include <iostream>
-#include <string>
-
 #include <QCoreApplication>
 #include <QDirIterator>
 #include <QFile>
 #include <QMessageBox>
 #include <QRegularExpression>
 #include <QStandardPaths>
+#include <iostream>
+#include <string>
+
 #include <nlohmann/json.hpp>
 #include <qcontainerfwd.h>
 #include <qdir.h>
@@ -31,9 +31,7 @@ namespace ORNL {
 QSharedPointer<SettingsManager> SettingsManager::m_singleton = QSharedPointer<SettingsManager>();
 
 QSharedPointer<SettingsManager> SettingsManager::getInstance() {
-    if (m_singleton.isNull()) {
-        m_singleton.reset(new SettingsManager());
-    }
+    if (m_singleton.isNull()) { m_singleton.reset(new SettingsManager()); }
     return m_singleton;
 }
 
@@ -48,11 +46,9 @@ SettingsManager::SettingsManager() : m_global(new SettingsBase()), m_master(new 
     QFile setting_inputs_file(":/configs/setting_inputs.conf");
     if (setting_inputs_file.open(QIODevice::ReadOnly)) {
         QString input_data = setting_inputs_file.readAll();
-        m_setting_inputs = input_data.isEmpty() ? fifojson::object() : json::parse(input_data.toStdString());
+        m_setting_inputs   = input_data.isEmpty() ? fifojson::object() : json::parse(input_data.toStdString());
     }
-    else {
-        m_setting_inputs = fifojson::object();
-    }
+    else { m_setting_inputs = fifojson::object(); }
 
     for (auto& el : m_master->json().items()) {
         if (!m_allGlobals.contains(QString::fromStdString(el.value()[Constants::Settings::Master::kMajor]))) {
@@ -67,16 +63,20 @@ SettingsManager::SettingsManager() : m_global(new SettingsBase()), m_master(new 
 
     QFile versions(":/configs/versions.conf");
     versions.open(QIODevice::ReadOnly);
-    QString version_string = versions.readAll();
-    fifojson version_data = json::parse(version_string.toStdString());
+    QString version_string   = versions.readAll();
+    fifojson version_data    = json::parse(version_string.toStdString());
     m_current_master_version = version_data["master_version"];
-    m_yes_to_all_update = false;
-    m_current_template = "";
+    m_yes_to_all_update      = false;
+    m_current_template       = "";
 }
 
-QSharedPointer<SettingsBase> SettingsManager::getMaster() const { return m_master; }
+QSharedPointer<SettingsBase> SettingsManager::getMaster() const {
+    return m_master;
+}
 
-fifojson SettingsManager::getSettingInputs() const { return m_setting_inputs; }
+fifojson SettingsManager::getSettingInputs() const {
+    return m_setting_inputs;
+}
 
 fifojson SettingsManager::getSettingInput(const QString& setting_key) const {
     for (auto& input : m_setting_inputs.items()) {
@@ -91,9 +91,7 @@ fifojson SettingsManager::getSettingInput(const QString& setting_key) const {
 }
 
 bool SettingsManager::loadGlobalJson(QString path) {
-
-    if (path.isEmpty())
-        return false;
+    if (path.isEmpty()) return false;
     QFile conf_file(path);
 
     // Attempt to open the file.
@@ -142,40 +140,33 @@ bool SettingsManager::loadGlobalJson(QString path) {
 }
 
 bool SettingsManager::loadAllGlobals(QString path) {
-    if (path.isEmpty())
-        return false;
+    if (path.isEmpty()) return false;
 
     // resource profiles
     QDirIterator it(path, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QString nextFile = it.next();
         QFileInfo fileInfo(nextFile);
-        if (m_validSuffixes.contains(fileInfo.suffix())) {
-            loadGlobalJson(nextFile);
-        }
+        if (m_validSuffixes.contains(fileInfo.suffix())) { loadGlobalJson(nextFile); }
     }
     return true;
 }
 
 bool SettingsManager::loadLayerBarTemplate(QString path) {
-    if (path.isEmpty())
-        return false;
+    if (path.isEmpty()) return false;
 
     // resource profiles
     QDirIterator it(path, QDirIterator::Subdirectories);
     while (it.hasNext()) {
         QString nextFile = it.next();
         QFileInfo fileInfo(nextFile);
-        if (m_validLayerSuffixes.contains(fileInfo.suffix())) {
-            loadGlobalLayerBarTemplate(nextFile, false);
-        }
+        if (m_validLayerSuffixes.contains(fileInfo.suffix())) { loadGlobalLayerBarTemplate(nextFile, false); }
     }
     return true;
 }
 
 bool SettingsManager::loadGlobalLayerBarTemplate(QString path, bool newTemplateSaved) {
-    if (path.isEmpty())
-        return false;
+    if (path.isEmpty()) return false;
     QFile conf_file(path);
     QFileInfo fileInfo(conf_file);
     QVector<SettingsRange> new_range;
@@ -191,7 +182,7 @@ bool SettingsManager::loadGlobalLayerBarTemplate(QString path, bool newTemplateS
     conf_file.close();
     fifojson j_arr = json::parse(settings_data.toStdString());
     for (auto& item : j_arr.items()) {
-        fifojson j = item.value()["settings"];
+        fifojson j                      = item.value()["settings"];
         QSharedPointer<SettingsBase> sb = QSharedPointer<SettingsBase>::create();
         sb->populate(j);
         SettingsRange sr(item.value()["low"], item.value()["high"], "", sb);
@@ -199,46 +190,38 @@ bool SettingsManager::loadGlobalLayerBarTemplate(QString path, bool newTemplateS
     }
     m_all_layer_bar_templates[fileInfo.completeBaseName()] = new_range;
     // After new template added, emit signal that it has been saved so it is added to templates list.
-    if (newTemplateSaved) {
-        emit newLayerBarTemplateSaved();
-    }
+    if (newTemplateSaved) { emit newLayerBarTemplateSaved(); }
     return true;
 }
 
 void SettingsManager::constructActiveGlobal(QString settingTab, QString settingFile) {
     auto tab = m_allGlobals.find(settingTab);
-    if (tab == m_allGlobals.end())
-        return;
+    if (tab == m_allGlobals.end()) return;
 
     auto setting = tab.value().find(settingFile);
     if (setting == tab.value().end()) {
         setting = tab.value().find("LFAM_03in");
-        if (setting == tab.value().end() || setting.value().isNull())
-            return;
+        if (setting == tab.value().end() || setting.value().isNull()) return;
 
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
 
-    if (!setting.value().isNull())
-        m_global->populate(setting.value()->json());
+    if (!setting.value().isNull()) m_global->populate(setting.value()->json());
 }
 
 void SettingsManager::constructLayerBarTemplate(QString settingTab, QString settingFile) {
     auto tab = m_allGlobals.find(settingTab);
-    if (tab == m_allGlobals.end())
-        return;
+    if (tab == m_allGlobals.end()) return;
 
     auto setting = tab.value().find(settingFile);
     if (setting == tab.value().end()) {
         setting = tab.value().find("LFAM_03in");
-        if (setting == tab.value().end() || setting.value().isNull())
-            return;
+        if (setting == tab.value().end() || setting.value().isNull()) return;
 
         CSM->setMostRecentSettingHistory(settingTab, "LFAM_03in");
     }
 
-    if (!setting.value().isNull())
-        m_global->populate(setting.value()->json());
+    if (!setting.value().isNull()) m_global->populate(setting.value()->json());
 }
 
 void SettingsManager::constructActiveGlobal(QHash<QString, QString> settingTabAndFile) {
@@ -264,12 +247,12 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, boo
 
 int SettingsManager::checkVersion(QString filename, fifojson& settings_data, SettingsVersionUpdateMode update_mode) {
     fifojson header;
-    double version = 0;
-    auto item = settings_data.find(Constants::SettingFileStrings::kHeader);
+    double version    = 0;
+    auto item         = settings_data.find(Constants::SettingFileStrings::kHeader);
     bool header_found = item != settings_data.end() && !item.value().is_null();
 
     if (header_found) {
-        header = settings_data[Constants::SettingFileStrings::kHeader];
+        header     = settings_data[Constants::SettingFileStrings::kHeader];
         auto item2 = header.find(Constants::SettingFileStrings::kVersion);
         if (item2 != header.end() && !item2.value().is_null())
             version = header[Constants::SettingFileStrings::kVersion];
@@ -286,12 +269,12 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, Set
             if (!ret)
                 ret = QMessageBox::warning(
                     nullptr, QCoreApplication::applicationName(),
-                    filename + " is outdated. Do you want to update this template to the newest compatible version?  "
-                               "Failure to do so may result in program instability.",
+                    filename +
+                        " is outdated. Do you want to update this template to the newest compatible version?  "
+                        "Failure to do so may result in program instability.",
                     QMessageBox::Yes | QMessageBox::YesToAll | QMessageBox::No);
 
-            if (ret == QMessageBox::YesToAll)
-                m_yes_to_all_update = true;
+            if (ret == QMessageBox::YesToAll) m_yes_to_all_update = true;
 
             if (ret == QMessageBox::Yes || m_yes_to_all_update) {
                 SettingsVersionControl::rollSettingsForward(version, settings_data);
@@ -301,8 +284,9 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, Set
                 return -1;
         }
         else {
-            qInfo() << filename + " is outdated. Failure to update may result in program instability. Do you want to "
-                                  "update this template to the newest compatible version? (Y/N)";
+            qInfo() << filename +
+                           " is outdated. Failure to update may result in program instability. Do you want to "
+                           "update this template to the newest compatible version? (Y/N)";
             std::string response;
             std::cin >> response;
             if (QString::fromStdString(response).toUpper() == "Y") {
@@ -341,7 +325,7 @@ void SettingsManager::consoleConstructActiveGlobal(QString path) {
 
 void SettingsManager::removeCurrentSettings(QString settingTab, QString settingFile) {
     fifojson j_array = fifojson::array({});
-    j_array = m_allGlobals[settingTab][settingFile]->json();
+    j_array          = m_allGlobals[settingTab][settingFile]->json();
     for (auto& array : j_array.items()) {
         for (auto& el : array.value().items()) {
             // reset current settings to default
@@ -353,16 +337,15 @@ void SettingsManager::removeCurrentSettings(QString settingTab, QString settingF
 fifojson SettingsManager::removeSuffixes(fifojson& j) {
     fifojson settings_array = fifojson::array({});
     fifojson current_index_settings;
-    int index = 0; // Last index denotes suffix
+    int index = 0;  // Last index denotes suffix
     for (auto& el : j[Constants::SettingFileStrings::kSettings].items()) {
         QString key_root = QString::fromStdString(el.key());
-        int last_index = key_root.lastIndexOf(QRegularExpression("_\\d+")); // index of suffix
+        int last_index   = key_root.lastIndexOf(QRegularExpression("_\\d+"));  // index of suffix
         if (last_index >= 0) {
-            key_root.chop(key_root.size() - last_index);                               // remove suffix
-            int key_suffix = key_root.right(key_root.size() - last_index - 1).toInt(); // get suffix
+            key_root.chop(key_root.size() - last_index);                                // remove suffix
+            int key_suffix = key_root.right(key_root.size() - last_index - 1).toInt();  // get suffix
             // If suffix matches index, add to json
-            if (key_suffix == index)
-                current_index_settings[key_root.toStdString()] = el.value();
+            if (key_suffix == index) current_index_settings[key_root.toStdString()] = el.value();
             // otherwise increment index and add current json to json array
             else {
                 index++;
@@ -374,16 +357,13 @@ fifojson SettingsManager::removeSuffixes(fifojson& j) {
                 current_index_settings[key_root.toStdString()] = el.value();
             }
         }
-        else {
-            current_index_settings[key_root.toStdString()] = el.value();
-        }
+        else { current_index_settings[key_root.toStdString()] = el.value(); }
     }
     settings_array.push_back(current_index_settings);
     return settings_array;
 }
 
 bool SettingsManager::loadGlobalJson(const fifojson& j) {
-
     // tabs must already exist by virtue of the settings manager having loaded already
     QStringList tabs {Constants::Settings::SettingTab::kPrinter, Constants::Settings::SettingTab::kMaterial,
                       Constants::Settings::SettingTab::kProfile, Constants::Settings::SettingTab::kExperimental};
@@ -393,11 +373,9 @@ bool SettingsManager::loadGlobalJson(const fifojson& j) {
     for (QString tab : tabs) {
         if (!m_allGlobals[tab].contains(name)) {
             QSharedPointer<SettingsBase> sb = QSharedPointer<SettingsBase>(new SettingsBase());
-            m_allGlobals[tab][name] = sb;
+            m_allGlobals[tab][name]         = sb;
         }
-        else {
-            m_allGlobals[tab][name]->reset();
-        }
+        else { m_allGlobals[tab][name]->reset(); }
     }
 
     // set all the globals that contain the last session values
@@ -422,8 +400,7 @@ bool SettingsManager::loadGlobalJson(const fifojson& j) {
 }
 
 bool SettingsManager::loadLayerSettings(QString path) {
-    if (path.isEmpty())
-        return false;
+    if (path.isEmpty()) return false;
     QFile conf_file(path);
 
     fifojson j_array = fifojson::array({});
@@ -439,7 +416,7 @@ bool SettingsManager::loadLayerSettings(QString path) {
     fifojson j_arr = json::parse(settings_data.toStdString());
     // Loop through json array to create settings ranges and add to settings range array.
     for (auto& item : j_arr.items()) {
-        fifojson j = item.value()["settings"];
+        fifojson j                      = item.value()["settings"];
         QSharedPointer<SettingsBase> sb = QSharedPointer<SettingsBase>::create();
         sb->populate(j);
         SettingsRange sr(item.value()["low"], item.value()["high"], "", sb);
@@ -449,16 +426,19 @@ bool SettingsManager::loadLayerSettings(QString path) {
 }
 
 bool SettingsManager::loadLayerSettingsFromTemplate(QVector<SettingsRange> layerBarTemplate) {
-    if (layerBarTemplate.size() == 0)
-        return false;
+    if (layerBarTemplate.size() == 0) return false;
     m_settings_ranges.clear();
     m_settings_ranges = layerBarTemplate;
     return true;
 }
 
-QVector<SettingsRange> SettingsManager::getLayerSettings() { return m_settings_ranges; }
+QVector<SettingsRange> SettingsManager::getLayerSettings() {
+    return m_settings_ranges;
+}
 
-QSharedPointer<SettingsBase> SettingsManager::getGlobal() const { return m_global; }
+QSharedPointer<SettingsBase> SettingsManager::getGlobal() const {
+    return m_global;
+}
 
 QMap<QString, QMap<QString, QSharedPointer<SettingsBase>>> SettingsManager::getAllGlobals() const {
     return m_allGlobals;
@@ -468,11 +448,17 @@ QMap<QString, QVector<SettingsRange>> SettingsManager::getAllLayerBarTemplates()
     return m_all_layer_bar_templates;
 }
 
-void SettingsManager::setCurrentTemplate(QString currentTemplate) { m_current_template = currentTemplate; }
+void SettingsManager::setCurrentTemplate(QString currentTemplate) {
+    m_current_template = currentTemplate;
+}
 
-QString SettingsManager::getCurrentTemplate() { return m_current_template; }
+QString SettingsManager::getCurrentTemplate() {
+    return m_current_template;
+}
 
-void SettingsManager::clearTemplate() { m_settings_ranges.clear(); }
+void SettingsManager::clearTemplate() {
+    m_settings_ranges.clear();
+}
 
 fifojson SettingsManager::globalJson() const {
     fifojson formattedJson = m_global->json();
@@ -480,11 +466,12 @@ fifojson SettingsManager::globalJson() const {
     return formattedJson;
 }
 
-void SettingsManager::clearGlobal() { m_global.reset(new SettingsBase()); }
+void SettingsManager::clearGlobal() {
+    m_global.reset(new SettingsBase());
+}
 
 void SettingsManager::saveTemplate(const QStringList& keys, QString path, QString name) {
-    if (path.isEmpty())
-        return;
+    if (path.isEmpty()) return;
     QFile conf_file(path);
 
     // Attempt to open the file.
@@ -496,7 +483,7 @@ void SettingsManager::saveTemplate(const QStringList& keys, QString path, QStrin
     // Collect the keys specified.
     fifojson tj = fifojson::object();
     for (QString key : keys) {
-        int index = 0;
+        int index  = 0;
         bool found = true;
         // save all suffixed versions of the key
         // assumes that suffixes are sequential, ie that if there is no _3, there is not _4, _5,...
@@ -509,18 +496,16 @@ void SettingsManager::saveTemplate(const QStringList& keys, QString path, QStrin
                     tj[key.toStdString()] = m_global->json()[0][key.toStdString()];
                 }
             }
-            else {
-                tj[key.toStdString()] = m_global->json()[0][key.toStdString()];
-            }
+            else { tj[key.toStdString()] = m_global->json()[0][key.toStdString()]; }
             ++index;
         }
     }
 
     SettingsVersionControl::formatSettings(m_current_master_version, tj);
-    fifojson whole_file;                  // json including header and settings
-    fifojson j_array = fifojson::array(); // array for settings template
-    j_array[0] = tj[Constants::SettingFileStrings::kSettings];
-    whole_file[Constants::SettingFileStrings::kHeader] = tj[Constants::SettingFileStrings::kHeader];
+    fifojson whole_file;                                                       // json including header and settings
+    fifojson j_array                                     = fifojson::array();  // array for settings template
+    j_array[0]                                           = tj[Constants::SettingFileStrings::kSettings];
+    whole_file[Constants::SettingFileStrings::kHeader]   = tj[Constants::SettingFileStrings::kHeader];
     whole_file[Constants::SettingFileStrings::kSettings] = j_array;
     if (!name.isEmpty())
         whole_file[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kCreatedBy] =
@@ -530,7 +515,11 @@ void SettingsManager::saveTemplate(const QStringList& keys, QString path, QStrin
     conf_file.close();
 }
 
-void SettingsManager::setConsoleSettings(QSharedPointer<SettingsBase> sb) { m_console_settings = sb; }
+void SettingsManager::setConsoleSettings(QSharedPointer<SettingsBase> sb) {
+    m_console_settings = sb;
+}
 
-QSharedPointer<SettingsBase> SettingsManager::getConsoleSettings() { return m_console_settings; }
-} // namespace ORNL
+QSharedPointer<SettingsBase> SettingsManager::getConsoleSettings() {
+    return m_console_settings;
+}
+}  // namespace ORNL

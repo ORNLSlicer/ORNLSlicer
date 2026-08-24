@@ -54,32 +54,26 @@ double radialDistance(const Point& point, const Point& center) {
 double counterClockwiseSweep(const Point& start, const Point& end, const Point& center) {
     const double start_x = start.x() - center.x();
     const double start_y = start.y() - center.y();
-    const double end_x = end.x() - center.x();
-    const double end_y = end.y() - center.y();
+    const double end_x   = end.x() - center.x();
+    const double end_y   = end.y() - center.y();
 
     double sweep = std::atan2((start_x * end_y) - (start_y * end_x), (start_x * end_x) + (start_y * end_y));
-    if (sweep < 0.0) {
-        sweep += 2.0 * M_PI;
-    }
+    if (sweep < 0.0) { sweep += 2.0 * M_PI; }
     return sweep;
 }
 
 //! \brief Returns the sweep from start to end in the selected angular direction.
 double directedSweep(const Point& start, const Point& end, const Point& center, bool counterclockwise) {
     const double ccw_sweep = counterClockwiseSweep(start, end, center);
-    if (counterclockwise || ccw_sweep <= kArcSweepTolerance) {
-        return ccw_sweep;
-    }
+    if (counterclockwise || ccw_sweep <= kArcSweepTolerance) { return ccw_sweep; }
     return (2.0 * M_PI) - ccw_sweep;
 }
-} // namespace
+}  // namespace
 
 QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polyline, const Point& center, Distance radius,
                                                          int arcs_per_revolution, bool counterclockwise) {
     QVector<Point> arc_points;
-    if (polyline.size() < 2 || radius <= 0 || arcs_per_revolution <= 0) {
-        return arc_points;
-    }
+    if (polyline.size() < 2 || radius <= 0 || arcs_per_revolution <= 0) { return arc_points; }
     arcs_per_revolution = clampArcsPerRevolution(arcs_per_revolution);
 
     QVector<double> cumulative_sweeps;
@@ -92,34 +86,30 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
         cumulative_sweeps.push_back(total_sweep);
     }
 
-    if (total_sweep <= kArcSweepTolerance) {
-        return arc_points;
-    }
+    if (total_sweep <= kArcSweepTolerance) { return arc_points; }
 
     // Retain clipping intersections exactly. Intermediate arc boundaries are
     // projected to the analytic cylinder below.
     arc_points.push_back(polyline.first());
 
     const double arc_sweep = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
-    int source_segment = 1;
+    int source_segment     = 1;
     for (double target_sweep = arc_sweep; target_sweep < total_sweep - kArcSweepTolerance; target_sweep += arc_sweep) {
         while (source_segment < cumulative_sweeps.size() - 1 && cumulative_sweeps[source_segment] < target_sweep) {
             ++source_segment;
         }
 
         const double segment_start_sweep = cumulative_sweeps[source_segment - 1];
-        const double segment_sweep = cumulative_sweeps[source_segment] - segment_start_sweep;
-        if (segment_sweep <= std::numeric_limits<double>::epsilon()) {
-            continue;
-        }
+        const double segment_sweep       = cumulative_sweeps[source_segment] - segment_start_sweep;
+        if (segment_sweep <= std::numeric_limits<double>::epsilon()) { continue; }
 
-        const double fraction = std::clamp((target_sweep - segment_start_sweep) / segment_sweep, 0.0, 1.0);
+        const double fraction     = std::clamp((target_sweep - segment_start_sweep) / segment_sweep, 0.0, 1.0);
         const Point& source_start = polyline[source_segment - 1];
-        const Point& source_end = polyline[source_segment];
-        const double start_angle = std::atan2(source_start.y() - center.y(), source_start.x() - center.x());
-        const double direction = counterclockwise ? 1.0 : -1.0;
-        const double angle = start_angle + direction * segment_sweep * fraction;
-        const double z = source_start.z() + ((source_end.z() - source_start.z()) * fraction);
+        const Point& source_end   = polyline[source_segment];
+        const double start_angle  = std::atan2(source_start.y() - center.y(), source_start.x() - center.x());
+        const double direction    = counterclockwise ? 1.0 : -1.0;
+        const double angle        = start_angle + direction * segment_sweep * fraction;
+        const double z            = source_start.z() + ((source_end.z() - source_start.z()) * fraction);
 
         arc_points.push_back(
             Point(center.x() + (radius() * std::cos(angle)), center.y() + (radius() * std::sin(angle)), z));
@@ -132,32 +122,28 @@ QVector<Point> SlicingUtilities::GetCylindricalArcPoints(const Polyline& polylin
 bool SlicingUtilities::IsCylindricalArcSegment(const Point& start, const Point& end, const Point& center,
                                                Distance radius, int arcs_per_revolution, bool counterclockwise) {
     const double expected_radius = radius();
-    if (expected_radius <= std::numeric_limits<double>::epsilon() || arcs_per_revolution <= 0) {
-        return false;
-    }
+    if (expected_radius <= std::numeric_limits<double>::epsilon() || arcs_per_revolution <= 0) { return false; }
     arcs_per_revolution = clampArcsPerRevolution(arcs_per_revolution);
 
-    const double tolerance = std::max(kArcGeometryTolerance(), expected_radius * kArcGeometryRelativeTolerance);
+    const double tolerance         = std::max(kArcGeometryTolerance(), expected_radius * kArcGeometryRelativeTolerance);
     const double angular_tolerance = std::max(kMinArcAngularSpan, tolerance / expected_radius);
-    const double planar_chord = std::hypot(end.x() - start.x(), end.y() - start.y());
+    const double planar_chord      = std::hypot(end.x() - start.x(), end.y() - start.y());
     if (planar_chord <= tolerance) {
         return arcs_per_revolution == 1 && std::abs(radialDistance(start, center) - expected_radius) <= tolerance &&
                std::abs(radialDistance(end, center) - expected_radius) <= tolerance;
     }
 
-    const double sweep = directedSweep(start, end, center, counterclockwise);
+    const double sweep     = directedSweep(start, end, center, counterclockwise);
     const double max_sweep = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
-    if (sweep <= angular_tolerance || sweep > max_sweep + angular_tolerance) {
-        return false;
-    }
+    if (sweep <= angular_tolerance || sweep > max_sweep + angular_tolerance) { return false; }
 
     const Point arc_center = GetCylindricalArcCenter(start, end, center);
     return radialDistance(arc_center, center) <= tolerance;
 }
 
 Point SlicingUtilities::GetCylindricalArcCenter(const Point& start, const Point& end, const Point& center) {
-    const double chord_x = end.x() - start.x();
-    const double chord_y = end.y() - start.y();
+    const double chord_x              = end.x() - start.x();
+    const double chord_y              = end.y() - start.y();
     const double chord_length_squared = (chord_x * chord_x) + (chord_y * chord_y);
     if (chord_length_squared <= std::numeric_limits<double>::epsilon()) {
         return Point(center.x(), center.y(), start.z());
@@ -175,8 +161,7 @@ QVector<QSharedPointer<MeshBase>> SlicingUtilities::GetMeshesByType(QMap<QString
                                                                     MeshType mt) {
     QVector<QSharedPointer<MeshBase>> meshes;
     for (QSharedPointer<Part> part : parts) {
-        if (part->rootMesh()->type() == mt)
-            meshes.push_back(part->rootMesh());
+        if (part->rootMesh()->type() == mt) meshes.push_back(part->rootMesh());
     }
     return meshes;
 }
@@ -184,8 +169,7 @@ QVector<QSharedPointer<MeshBase>> SlicingUtilities::GetMeshesByType(QMap<QString
 QVector<QSharedPointer<Part>> SlicingUtilities::GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt) {
     QVector<QSharedPointer<Part>> found_parts;
     for (QSharedPointer<Part> part : parts) {
-        if (part->rootMesh()->type() == mt)
-            found_parts.push_back(part);
+        if (part->rootMesh()->type() == mt) found_parts.push_back(part);
     }
     return found_parts;
 }
@@ -193,9 +177,8 @@ QVector<QSharedPointer<Part>> SlicingUtilities::GetPartsByType(QMap<QString, QSh
 void SlicingUtilities::ClipMesh(QSharedPointer<MeshBase> mesh, QVector<QSharedPointer<MeshBase>> clippers) {
     for (QSharedPointer<MeshBase> clipper : clippers) {
         auto closed_clipper = dynamic_cast<ClosedMesh*>(clipper.get());
-        auto closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get());
-        if (closed_clipper != nullptr && closed_mesh != nullptr)
-            closed_mesh->difference(*closed_clipper);
+        auto closed_mesh    = dynamic_cast<ClosedMesh*>(mesh.get());
+        if (closed_clipper != nullptr && closed_mesh != nullptr) closed_mesh->difference(*closed_clipper);
     }
 }
 
@@ -210,8 +193,7 @@ void SlicingUtilities::UnionMesh(QSharedPointer<ClosedMesh> mesh, QSharedPointer
 int SlicingUtilities::GetPartStart(QSharedPointer<Part> part, int current_steps) {
     int part_start = 0;
     if (part->countStepPairs() > 0) {
-        while (part_start < current_steps && !part->stepGroupContains(part_start, StepType::kLayer))
-            ++part_start;
+        while (part_start < current_steps && !part->stepGroupContains(part_start, StepType::kLayer)) ++part_start;
     }
     return part_start;
 }
@@ -252,16 +234,14 @@ bool SlicingUtilities::doPartsOverlap(QVector<QSharedPointer<Part>> parts, Plane
             CrossSection::doCrossSection(part->rootMesh(), slicing_plane, tmp_point, tmp_vec, part->getSb());
 
         // Since settings meshes are always rectangular prisms there is only a single island
-        if (!geometry.isEmpty()) {
-            polygons.push_back(geometry.first());
-        }
+        if (!geometry.isEmpty()) { polygons.push_back(geometry.first()); }
     }
 
     // Polygon in Polygon test
     bool overlap = false;
     for (int i = 0, end = polygons.size(); i < end; ++i) {
         for (int j = i + 1; j < end; ++j) {
-            Polygon first = polygons[i];
+            Polygon first  = polygons[i];
             Polygon second = polygons[j];
 
             if (first.overlaps(second)) {
@@ -273,4 +253,4 @@ bool SlicingUtilities::doPartsOverlap(QVector<QSharedPointer<Part>> parts, Plane
 
     return overlap;
 }
-} // namespace ORNL
+}  // namespace ORNL

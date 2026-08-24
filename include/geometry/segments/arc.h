@@ -16,7 +16,7 @@ namespace ORNL {
  *  \brief Segment type for arc movements.
  */
 class ArcSegment : public SegmentBase {
-  public:
+   public:
     //! \brief Constructor
     ArcSegment(Point start, Point end, Point center, Angle angle, bool ccw);
 
@@ -106,7 +106,7 @@ class ArcSegment : public SegmentBase {
     //! \param shift: amount to shift by
     virtual void shift(Point shift) override;
 
-  private:
+   private:
     //! \brief recalculates angles based on points
     void updateAngle();
 
@@ -117,4 +117,4 @@ class ArcSegment : public SegmentBase {
     // CCW
     bool m_ccw;
 };
-} // namespace ORNL
+}  // namespace ORNL

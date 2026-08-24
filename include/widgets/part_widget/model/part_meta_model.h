@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+
 #include <qlist.h>
 #include <qmap.h>
 #include <qsharedpointer.h>
@@ -20,7 +21,7 @@ class Part;
  */
 class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel> {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     PartMetaModel();
 
@@ -63,7 +64,7 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     //! \brief Sets the number of items that are instances of this item.
     void setInstanceCount(QSharedPointer<PartMetaItem> pm, int count);
 
-  signals:
+   signals:
     //! \brief Signal that an item was added.
     void itemAddedUpdate(QSharedPointer<PartMetaItem> pm);
     //! \brief Signal that an item was reloaded.
@@ -82,11 +83,11 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     //! \brief Signal that any update has occured.
     void modelUpdated(QSharedPointer<PartMetaItem> pm);
 
-  private slots:
+   private slots:
     //! \brief Slot to recieve updates from items.
     void itemUpdated(PartMetaItem::PartMetaUpdateType type);
 
-  private:
+   private:
     //! \brief Items need access to private slots.
     friend class PartMetaItem;
 
@@ -99,4 +100,4 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     //! \brief Gets the items that are instances of the supplied item.
     QList<QSharedPointer<PartMetaItem>> instanceItems(QSharedPointer<PartMetaItem> pm);
 };
-} // namespace ORNL
+}  // namespace ORNL

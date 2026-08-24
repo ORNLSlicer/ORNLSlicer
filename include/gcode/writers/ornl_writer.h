@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the ORNL syntax
  */
 class ORNLWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     ORNLWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -78,7 +78,7 @@ class ORNLWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private: //! \brief Defines the machine type - used to differentiate between polymer extrusion and wire-arc
+   private:  //! \brief Defines the machine type - used to differentiate between polymer extrusion and wire-arc
     MachineType m_machine_type;
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType region_type, int rpm, int extruder_number,
@@ -107,5 +107,5 @@ class ORNLWriter : public WriterBase {
     //! \brief Defines the current region type - useful for determining how to enable/disable deposition
     RegionType m_current_type;
 
-}; // class ORNLWriter
-} // namespace ORNL
+};  // class ORNLWriter
+}  // namespace ORNL

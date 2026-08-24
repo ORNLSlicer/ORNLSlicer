@@ -14,11 +14,11 @@ namespace ORNL {
  * \brief Creates and orders global layers according to the user-selected schema
  */
 class LayerOrderOptimizer {
-  public:
+   public:
     //! \brief Creates and orders global layers
     //! \param global_sb: global settings base
     //! \param build_parts: list of build parts to access steps
     static QList<QSharedPointer<GlobalLayer>> populateSteps(QSharedPointer<SettingsBase> global_sb,
                                                             QVector<QSharedPointer<Part>> build_parts);
 };
-} // namespace ORNL
+}  // namespace ORNL

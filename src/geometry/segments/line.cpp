@@ -27,21 +27,18 @@ void LineSegment::createGraphic(std::vector<float>& vertices, std::vector<float>
                                    m_end.toQVector3D(), m_color, vertices, colors, normals);
 }
 
-QSharedPointer<SegmentBase> LineSegment::clone() const { return QSharedPointer<LineSegment>::create(*this); }
+QSharedPointer<SegmentBase> LineSegment::clone() const {
+    return QSharedPointer<LineSegment>::create(*this);
+}
 
 QString LineSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     const QString gcode = writer->writeLine(m_start, m_end, this->getSb());
-    if (!gcode.isEmpty())
-        writer->setCurrentPosition(m_end);
+    if (!gcode.isEmpty()) writer->setCurrentPosition(m_end);
     return gcode;
 }
 
 float LineSegment::getMinZ() {
-    if (m_start.z() < m_end.z()) {
-        return m_start.z();
-    }
-    else {
-        return m_end.z();
-    }
+    if (m_start.z() < m_end.z()) { return m_start.z(); }
+    else { return m_end.z(); }
 }
-} // namespace ORNL
+}  // namespace ORNL

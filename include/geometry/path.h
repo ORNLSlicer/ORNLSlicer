@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QList>
+
 #include <qquaternion.h>
 #include <qsharedpointer.h>
 
@@ -19,7 +20,7 @@ class SettingsBase;
  * \brief A list of path segments.
  */
 class Path {
-  public:
+   public:
     //! \brief Add a segment to the end of the path.
     //! \param ps: Segment to add
     void add(const QSharedPointer<SegmentBase>& ps);
@@ -124,11 +125,11 @@ class Path {
     //! \return whether or not path is ccw
     bool getCCW();
 
-  private:
+   private:
     //! \brief Segments that compose this path.
     QList<QSharedPointer<SegmentBase>> m_segments;
 
     //! \brief Bools for whether or not path is counter-clockwise or contains origin
     bool m_ccw;
 };
-} // namespace ORNL
+}  // namespace ORNL

@@ -1,6 +1,7 @@
 #include "gcode/writers/marlin_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -21,13 +22,13 @@ MarlinWriter::MarlinWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& s
 
 QString MarlinWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                         int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
     m_deposition_active = false;
-    m_first_print = true;
-    m_first_travel = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
+    m_first_print       = true;
+    m_first_travel      = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += "M140 S" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kBed).to(degC)) %
@@ -113,9 +114,7 @@ QString MarlinWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
         if (m_sb->setting<int>(MS::Filament::kRelative) > 0) {
             rv += "M83" % commentSpaceLine("USE RELATIVE EXTRUSION DISTANCES");
         }
-        else {
-            rv += "M82" % commentSpaceLine("USE ABSOLUTE EXTRUSION DISTANCES");
-        }
+        else { rv += "M82" % commentSpaceLine("USE ABSOLUTE EXTRUSION DISTANCES"); }
 
         // Cooling fan
         if (m_sb->setting<bool>(MS::Cooling::kEnable))
@@ -132,9 +131,7 @@ QString MarlinWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
         if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
             rv += "G92 B0" % commentSpaceLine("RESET FILAMENT TO 0");
         }
-        else {
-            rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0");
-        }
+        else { rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0"); }
     }
 
     if (m_sb->setting<int>(PRS::GCode::kEnableBoundingBox)) {
@@ -152,8 +149,7 @@ QString MarlinWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
         m_start_point = Point(minimum_x, minimum_y, 0);
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -164,7 +160,7 @@ QString MarlinWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
 
 QString MarlinWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     if (m_sb->setting<bool>(MS::Retraction::kEnable) && m_sb->setting<bool>(MS::Retraction::kLayerChange) &&
         new_min_z > sb->setting<Distance>(PS::Layer::kLayerHeight)) {
@@ -220,9 +216,7 @@ QString MarlinWriter::writeBeforePath(RegionType type) {
         if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
             rv += "G92 B0" % commentSpaceLine("RESET FILAMENT TO 0");
         }
-        else {
-            rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0");
-        }
+        else { rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0"); }
         m_filament_location = 0.0;
     }
 
@@ -252,7 +246,7 @@ QString MarlinWriter::writeTravel(Point start_location, Point target_location, T
 
     Distance liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -272,7 +266,7 @@ QString MarlinWriter::writeTravel(Point start_location, Point target_location, T
     // write the lift
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly) &&
         !m_first_travel) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G1 % m_f %
               QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
               writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
@@ -282,7 +276,7 @@ QString MarlinWriter::writeTravel(Point start_location, Point target_location, T
     // write the travel
     Point travel_destination = target_location;
     if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
           commentSpaceLine("TRAVEL");
@@ -302,14 +296,14 @@ QString MarlinWriter::writeTravel(Point start_location, Point target_location, T
 
 QString MarlinWriter::writeLine(const Point& start_point, const Point& target_point,
                                 const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     QString rv;
 
     // check if extruder needs priming
-    bool needs_prime = !m_deposition_active;
+    bool needs_prime    = !m_deposition_active;
     m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
@@ -362,8 +356,7 @@ QString MarlinWriter::writeLine(const Point& start_point, const Point& target_po
             }
         }
 
-        if (m_filament_location < 0)
-            rv += writePrime();
+        if (m_filament_location < 0) rv += writePrime();
     }
 
     rv += m_G1;
@@ -396,9 +389,9 @@ QString MarlinWriter::writeLine(const Point& start_point, const Point& target_po
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance segment_length = start_point.distance(target_point);
-        Distance width = params->setting<Distance>(SS::kWidth);
-        Distance height = params->setting<Distance>(SS::kHeight);
+        Distance segment_length    = start_point.distance(target_point);
+        Distance width             = params->setting<Distance>(SS::kWidth);
+        Distance height            = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
         Distance segment_filament_length =
             (segment_length * width * height) / ((filament_diameter / 2) * (filament_diameter / 2) * 3.14159);
@@ -410,9 +403,7 @@ QString MarlinWriter::writeLine(const Point& start_point, const Point& target_po
             if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv += m_b % QString::number(Distance(segment_filament_length).to(m_meta.m_distance_unit), 'f', 4);
             }
-            else {
-                rv += m_e % QString::number(Distance(segment_filament_length).to(m_meta.m_distance_unit), 'f', 4);
-            }
+            else { rv += m_e % QString::number(Distance(segment_filament_length).to(m_meta.m_distance_unit), 'f', 4); }
         }
         // if using absolute E, update total length and write value
         else {
@@ -420,9 +411,7 @@ QString MarlinWriter::writeLine(const Point& start_point, const Point& target_po
             if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv += m_b % QString::number(Distance(m_filament_location).to(m_meta.m_distance_unit), 'f', 4);
             }
-            else {
-                rv += m_e % QString::number(Distance(m_filament_location).to(m_meta.m_distance_unit), 'f', 4);
-            }
+            else { rv += m_e % QString::number(Distance(m_filament_location).to(m_meta.m_distance_unit), 'f', 4); }
         }
     }
 
@@ -441,14 +430,14 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
                                const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // check if extruder needs priming
-    bool needs_prime = !m_deposition_active;
+    bool needs_prime    = !m_deposition_active;
     m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
@@ -501,8 +490,7 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
             }
         }
 
-        if (m_filament_location < 0)
-            rv += writePrime();
+        if (m_filament_location < 0) rv += writePrime();
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -526,7 +514,7 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // calculate and write E value if path is an extrusion path
@@ -548,9 +536,9 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance length = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
-        Distance width = params->setting<Distance>(SS::kWidth);
-        Distance height = params->setting<Distance>(SS::kHeight);
+        Distance length            = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
+        Distance width             = params->setting<Distance>(SS::kWidth);
+        Distance height            = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
         Distance segment_filament_length =
             (length * width * height) / ((filament_diameter / 2) * (filament_diameter / 2) * 3.14159);
@@ -562,9 +550,7 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
             if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv += m_b % QString::number(segment_filament_length.to(m_meta.m_distance_unit));
             }
-            else {
-                rv += m_e % QString::number(segment_filament_length.to(m_meta.m_distance_unit));
-            }
+            else { rv += m_e % QString::number(segment_filament_length.to(m_meta.m_distance_unit)); }
         }
         // if using absolute E, update total length and write value
         else {
@@ -572,9 +558,7 @@ QString MarlinWriter::writeArc(const Point& start_point, const Point& end_point,
             if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv += m_b % QString::number(m_filament_location.to(m_meta.m_distance_unit));
             }
-            else {
-                rv += m_e % QString::number(m_filament_location.to(m_meta.m_distance_unit));
-            }
+            else { rv += m_e % QString::number(m_filament_location.to(m_meta.m_distance_unit)); }
         }
     }
 
@@ -665,7 +649,7 @@ QString MarlinWriter::writePurge(int RPM, int duration, int delay) {
     QString rv;
 
     QVector3D travel_lift = getTravelLift();
-    auto liftZ = Distance(travel_lift.z()).to(m_meta.m_distance_unit) + m_current_z.to(m_meta.m_distance_unit);
+    auto liftZ  = Distance(travel_lift.z()).to(m_meta.m_distance_unit) + m_current_z.to(m_meta.m_distance_unit);
     auto purgeZ = m_sb->setting<Distance>(PRS::Dimensions::kPurgeZ).to(m_meta.m_distance_unit);
 
     rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
@@ -675,8 +659,7 @@ QString MarlinWriter::writePurge(int RPM, int duration, int delay) {
           m_y % QString::number(m_sb->setting<Distance>(PRS::Dimensions::kPurgeY).to(m_meta.m_distance_unit)) %
           commentSpaceLine("TRAVEL");
 
-    if (liftZ > purgeZ)
-        rv += m_G1 % m_z % QString::number(purgeZ) % commentSpaceLine("TRAVEL LOWER Z");
+    if (liftZ > purgeZ) rv += m_G1 % m_z % QString::number(purgeZ) % commentSpaceLine("TRAVEL LOWER Z");
 
     auto length = m_sb->setting<Distance>(MS::Purge::kPurgeLength).to(m_meta.m_distance_unit);
     if (m_sb->setting<bool>(MS::Filament::kRelative))
@@ -697,8 +680,7 @@ QString MarlinWriter::writePurge(int RPM, int duration, int delay) {
               commentSpaceLine("PURGE");
     }
 
-    if (liftZ > purgeZ)
-        rv += m_G1 % m_z % QString::number(liftZ) % commentSpaceLine("TRAVEL LIFT Z");
+    if (liftZ > purgeZ) rv += m_G1 % m_z % QString::number(liftZ) % commentSpaceLine("TRAVEL LIFT Z");
 
     return rv;
 }
@@ -724,7 +706,7 @@ QString MarlinWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
@@ -737,9 +719,7 @@ QString MarlinWriter::writeRetraction() {
             if (m_sb->setting<bool>(MS::Filament::kFilamentBAxis)) {
                 rv += "G92 B0" % commentSpaceLine("RESET FILAMENT TO 0");
             }
-            else {
-                rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0");
-            }
+            else { rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0"); }
             m_filament_location = 0.0;
         }
 
@@ -803,4 +783,4 @@ QString MarlinWriter::writePrime() {
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

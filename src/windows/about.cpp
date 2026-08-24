@@ -7,6 +7,7 @@
 #include <QIcon>
 #include <QLabel>
 #include <QUrl>
+
 #include <qdatetime.h>
 #include <qfont.h>
 #include <qnamespace.h>
@@ -58,4 +59,4 @@ AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
 }
 
 AboutWindow::~AboutWindow() {}
-} // namespace ORNL
+}  // namespace ORNL

@@ -5,6 +5,7 @@
 #include <QStringBuilder>
 #include <QTextStream>
 #include <QVector3D>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -20,7 +21,7 @@ namespace ORNL {
 class PathSegment;
 
 class WriterBase {
-  public:
+   public:
     //! \brief Default Constructor
     WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -58,7 +59,9 @@ class WriterBase {
     virtual QString writeBeforePath(RegionType type) = 0;
 
     //! \brief Writes G-Code for travel lift between paths; only used for syntaxes that can't use defined slicing plane
-    virtual QString writeTravelLift(bool lift) { return QString(); }
+    virtual QString writeTravelLift(bool lift) {
+        return QString();
+    }
 
     //! \brief Writes G-Code for traveling between paths
     virtual QString writeTravel(Point start_location, Point target_location, TravelLiftType lType,
@@ -69,7 +72,9 @@ class WriterBase {
                               const QSharedPointer<SettingsBase> params) = 0;
 
     //! \brief Writes G-Code for scan segment
-    virtual QString writeScan(Point target_point, Velocity speed, bool on_off) { return QString(); }
+    virtual QString writeScan(Point target_point, Velocity speed, bool on_off) {
+        return QString();
+    }
 
     //! \brief Writes G-Code for arc segment
     virtual QString writeArc(const Point& start_point, const Point& end_point, const Point& center_point,
@@ -89,7 +94,9 @@ class WriterBase {
     }
 
     //! \brief Writes G-Code to be executed once all scans are complete
-    virtual QString writeAfterAllScans() { return QString(); }
+    virtual QString writeAfterAllScans() {
+        return QString();
+    }
 
     //! \brief Writes G-Code to be executed at the end of each island
     virtual QString writeAfterIsland() = 0;
@@ -131,7 +138,9 @@ class WriterBase {
     Point getCurrentPosition() const;
 
     //! \brief Write purge command
-    virtual QString writePurge(int RPM, int duration, int delay) { return QString(); }
+    virtual QString writePurge(int RPM, int duration, int delay) {
+        return QString();
+    }
 
     //! \brief Writes G-Code for a pause, G4
     virtual QString writeDwell(Time time) = 0;
@@ -142,7 +151,7 @@ class WriterBase {
     //! \brief writes the string param as a comment on its own line
     QString writeCommentLine(QString comment);
 
-  protected:
+   protected:
     //! \brief Writes a comment
     QString comment(const QString& text);
     //! \brief Writes a comment and ends the line
@@ -157,15 +166,14 @@ class WriterBase {
     QVector3D getLiftVector(Distance lift_height) const;
 
     //! \brief emits a final lift move for point-based writers when configured
-    template <typename MoveEmitter> QString writeFinalTravelLift(MoveEmitter&& emit_move, const QString& comment) {
+    template <typename MoveEmitter>
+    QString writeFinalTravelLift(MoveEmitter&& emit_move, const QString& comment) {
         const Distance final_lift = m_sb->setting<Distance>(PS::Travel::kFinalLiftDistance);
-        if (final_lift <= 0 || !m_has_current_position)
-            return QString();
+        if (final_lift <= 0 || !m_has_current_position) return QString();
 
         const Point lift_destination = m_current_position + getLiftVector(final_lift);
-        QString rv = emit_move(lift_destination);
-        if (rv.isEmpty())
-            return rv;
+        QString rv                   = emit_move(lift_destination);
+        if (rv.isEmpty()) return rv;
 
         if (comment.isEmpty())
             rv += m_newline;
@@ -224,6 +232,6 @@ class WriterBase {
     //! \brief whether or not the build maximum Z value has been recorded
     bool m_has_build_maximum_z;
 
-  private:
-}; // class WriterBase
-} // namespace ORNL
+   private:
+};  // class WriterBase
+}  // namespace ORNL

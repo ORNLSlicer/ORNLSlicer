@@ -1,9 +1,8 @@
+#include <QVector>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <QVector>
 
 #include "geometry/point.h"
 #include "geometry/polyline.h"
@@ -12,14 +11,15 @@
 
 namespace {
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
 }
 
-bool closeTo(double lhs, double rhs) { return std::abs(lhs - rhs) <= 1.0e-4; }
+bool closeTo(double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1.0e-4;
+}
 
 bool expectPoint(const ORNL::Point& point, double x, double y, const std::string& message) {
     return expect(closeTo(point.x(), x) && closeTo(point.y(), y), message);
@@ -43,7 +43,7 @@ ORNL::Polyline rectangleStartingOnLeftEdge(double min_x, double min_y, double ma
     line.push_back(ORNL::Point(min_x, max_y, 0.0f));
     return line;
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;

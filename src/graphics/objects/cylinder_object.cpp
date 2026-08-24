@@ -18,7 +18,7 @@ CylinderObject::CylinderObject(BaseView* view, float radius, float height, QColo
 CylinderObject::CylinderObject(BaseView* view, float outer_radius, float inner_radius, float height, QColor color) {
     m_outer_radius = outer_radius;
     m_inner_radius = inner_radius;
-    m_height = height;
+    m_height       = height;
 
     std::vector<float> vertices;
     std::vector<float> normals;
@@ -28,4 +28,4 @@ CylinderObject::CylinderObject(BaseView* view, float outer_radius, float inner_r
 
     this->populateGL(view, vertices, normals, colors);
 }
-} // namespace ORNL
+}  // namespace ORNL

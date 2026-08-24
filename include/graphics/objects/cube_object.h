@@ -28,7 +28,7 @@ namespace ORNL {
  *  auto goc = QSharedPointer<CubeObject>::create(this, 20, 10, 7, Constants::Colors::kWhite, GL_TRIANGLES, text);
  */
 class CubeObject : public GraphicsObject {
-  public:
+   public:
     /*!
      * \brief Constructor for object.
      * \param view: View this object is drawn on.
@@ -44,7 +44,7 @@ class CubeObject : public GraphicsObject {
     CubeObject(BaseView* view, float length, float width, float height, QColor color, ushort render_mode = GL_TRIANGLES,
                const QVector<QImage>& textures = QVector<QImage>());
 
-  protected:
+   protected:
     //! \brief Dims
     float m_length;
     float m_width;
@@ -53,4 +53,4 @@ class CubeObject : public GraphicsObject {
     //! \brief Cube texture.
     QVector<QImage> m_textures;
 };
-} // namespace ORNL
+}  // namespace ORNL

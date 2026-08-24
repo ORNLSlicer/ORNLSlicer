@@ -2,6 +2,7 @@
 
 #include <QFileDialog>
 #include <QMessageBox>
+
 #include <qboxlayout.h>
 #include <qevent.h>
 #include <qimage.h>
@@ -31,7 +32,9 @@
 #include "widgets/view_controls_toolbar.h"
 
 namespace ORNL {
-PartWidget::PartWidget(QWidget* parent) : QWidget(parent) { this->setupWidget(); }
+PartWidget::PartWidget(QWidget* parent) : QWidget(parent) {
+    this->setupWidget();
+}
 
 QSet<QSharedPointer<Part>> PartWidget::parts() {
     QSet<QSharedPointer<Part>> ret;
@@ -41,8 +44,8 @@ QSet<QSharedPointer<Part>> PartWidget::parts() {
         QSharedPointer<Part> p = item->part();
 
         QVector3D gop_translation = item->translation();
-        QQuaternion gop_rotation = item->rotation();
-        QVector3D gop_scale = item->scale();
+        QQuaternion gop_rotation  = item->rotation();
+        QVector3D gop_scale       = item->scale();
 
         gop_translation *= Constants::OpenGL::kViewToObject;
 
@@ -57,9 +60,13 @@ QSet<QSharedPointer<Part>> PartWidget::parts() {
     return ret;
 }
 
-QSharedPointer<PartMetaModel> PartWidget::getPartMeta() { return m_model; }
+QSharedPointer<PartMetaModel> PartWidget::getPartMeta() {
+    return m_model;
+}
 
-QString PartWidget::getFirstPartName() { return m_part_control->nameOfFirstPart(); }
+QString PartWidget::getFirstPartName() {
+    return m_part_control->nameOfFirstPart();
+}
 
 PartView* PartWidget::view() {
     m_view_controls->raise();
@@ -76,9 +83,7 @@ void PartWidget::takeScreenshot() {
 
     if (!filepath.isNull()) {
         // If file has no file ending, just save as png
-        if (!filepath.contains(".")) {
-            filepath += ".png";
-        }
+        if (!filepath.contains(".")) { filepath += ".png"; }
         screenshot = m_part_view->grabFramebuffer();
         screenshot.save(filepath);
     }
@@ -88,9 +93,13 @@ void PartWidget::undo() {}
 
 void PartWidget::redo() {}
 
-void PartWidget::copy() { m_model->setSelectionCopied(); }
+void PartWidget::copy() {
+    m_model->setSelectionCopied();
+}
 
-void PartWidget::paste() { m_model->copySelection(); }
+void PartWidget::paste() {
+    m_model->copySelection();
+}
 
 void PartWidget::add(QSharedPointer<Part> part) {
     auto pm = m_model->newItem(part);
@@ -104,28 +113,36 @@ void PartWidget::add(QSharedPointer<Part> part) {
 }
 
 void PartWidget::reload() {
-    for (auto& pm : m_model->selectedItems()) {
-        m_model->reloadItem(pm);
-    }
+    for (auto& pm : m_model->selectedItems()) { m_model->reloadItem(pm); }
 }
 
 void PartWidget::remove() {
-    for (auto& pm : m_model->selectedItems()) {
-        m_model->removeItem(pm);
-    }
+    for (auto& pm : m_model->selectedItems()) { m_model->removeItem(pm); }
 }
 
-void PartWidget::remove(QSharedPointer<Part> part) { m_model->removeItem(m_model->lookupByPointer(part)); }
+void PartWidget::remove(QSharedPointer<Part> part) {
+    m_model->removeItem(m_model->lookupByPointer(part));
+}
 
-void PartWidget::clear() { m_model->clearItems(); }
+void PartWidget::clear() {
+    m_model->clearItems();
+}
 
-void PartWidget::zoomIn() { m_part_view->zoomIn(); }
+void PartWidget::zoomIn() {
+    m_part_view->zoomIn();
+}
 
-void PartWidget::zoomOut() { m_part_view->zoomOut(); }
+void PartWidget::zoomOut() {
+    m_part_view->zoomOut();
+}
 
-void PartWidget::resetZoom() { m_part_view->resetZoom(); }
+void PartWidget::resetZoom() {
+    m_part_view->resetZoom();
+}
 
-void PartWidget::resetCamera() { m_part_view->resetCamera(); }
+void PartWidget::resetCamera() {
+    m_part_view->resetCamera();
+}
 
 void PartWidget::handleModifiedSetting(const QString& setting_key) {
     static const auto printer_settings = QSet<QString> {PRS::Dimensions::kXMin,
@@ -183,58 +200,62 @@ void PartWidget::handleModifiedSetting(const QString& setting_key) {
 
     static const auto overhang_settings = QSet<QString> {PS::Support::kThresholdAngle};
 
-    if (printer_settings.contains(setting_key)) {
-        m_part_view->updatePrinterSettings(GSM->getGlobal());
-    }
+    if (printer_settings.contains(setting_key)) { m_part_view->updatePrinterSettings(GSM->getGlobal()); }
     else if (slicing_settings.contains(setting_key)) {
         m_part_view->updateSlicingSettings(GSM->getGlobal());
         if (slice_plane_normal_settings.contains(setting_key)) {
             m_part_view->updateOptimizationSettings(GSM->getGlobal());
         }
     }
-    else if (optimization_settings.contains(setting_key)) {
-        m_part_view->updateOptimizationSettings(GSM->getGlobal());
-    }
-    else if (overhang_settings.contains(setting_key)) {
-        m_part_view->updateOverhangSettings(GSM->getGlobal());
-    }
+    else if (optimization_settings.contains(setting_key)) { m_part_view->updateOptimizationSettings(GSM->getGlobal()); }
+    else if (overhang_settings.contains(setting_key)) { m_part_view->updateOverhangSettings(GSM->getGlobal()); }
 }
 
-void PartWidget::setEnabled(bool status) { m_toolbar->setEnabled(status); }
+void PartWidget::setEnabled(bool status) {
+    m_toolbar->setEnabled(status);
+}
 
 void PartWidget::preSliceUpdate() {
     CSM->clearParts();
 
     auto parts = this->parts();
 
-    for (auto p : parts) {
-        CSM->addPart(p, false);
-    }
+    for (auto p : parts) { CSM->addPart(p, false); }
 
     emit slice();
 }
 
-void PartWidget::showSlicingPlanes(bool show) { m_part_view->showSlicingPlanes(show); }
+void PartWidget::showSlicingPlanes(bool show) {
+    m_part_view->showSlicingPlanes(show);
+}
 
-void PartWidget::showLayerSettingsRange(bool show) { m_part_view->showLayerSettingsRange(show); }
+void PartWidget::showLayerSettingsRange(bool show) {
+    m_part_view->showLayerSettingsRange(show);
+}
 
 void PartWidget::setLayerSettingsRanges(QSharedPointer<Part> part, QList<QPair<int, int>> layer_ranges) {
     m_part_view->setLayerSettingsRanges(part, layer_ranges);
 }
 
-void PartWidget::showLabels(bool show) { m_part_view->showLabels(show); }
+void PartWidget::showLabels(bool show) {
+    m_part_view->showLabels(show);
+}
 
-void PartWidget::showSeams(bool show) { m_part_view->showSeams(show); }
+void PartWidget::showSeams(bool show) {
+    m_part_view->showSeams(show);
+}
 
-void PartWidget::showOverhang(bool show) { m_part_view->showOverhang(show); }
+void PartWidget::showOverhang(bool show) {
+    m_part_view->showOverhang(show);
+}
 
 void PartWidget::updatePartTransformations() {
     for (auto& item : m_model->items()) {
         QSharedPointer<Part> p = item->part();
 
         QVector3D gop_translation = item->translation();
-        QQuaternion gop_rotation = item->rotation();
-        QVector3D gop_scale = item->scale();
+        QQuaternion gop_rotation  = item->rotation();
+        QVector3D gop_scale       = item->scale();
 
         gop_translation *= Constants::OpenGL::kViewToObject;
 
@@ -245,7 +266,9 @@ void PartWidget::updatePartTransformations() {
     }
 }
 
-void PartWidget::modelAdditionUpdate(QSharedPointer<PartMetaItem> item) { emit added(item->part()); }
+void PartWidget::modelAdditionUpdate(QSharedPointer<PartMetaItem> item) {
+    emit added(item->part());
+}
 
 void PartWidget::modelSelectionUpdate(QSharedPointer<PartMetaItem> item) {
     QList<QSharedPointer<PartMetaItem>> selected_items = m_model->selectedItems();
@@ -263,9 +286,7 @@ void PartWidget::modelSelectionUpdate(QSharedPointer<PartMetaItem> item) {
     else
         this->setStatusSelection(manip_item->part()->name());
 
-    for (auto& pm : selected_items) {
-        selected_set.insert(pm->part());
-    }
+    for (auto& pm : selected_items) { selected_set.insert(pm->part()); }
 
     this->setEnabled(!selected_set.empty());
 
@@ -296,28 +317,26 @@ void PartWidget::positionIssues(QList<QSharedPointer<Part>> opl, QList<QSharedPo
         m_part_control->setOutsideStatus(part_meta_item->part()->name(), false);
     }
 
-    for (auto& part : opl) {
-        m_part_control->setOutsideStatus(part->name(), true);
-    }
+    for (auto& part : opl) { m_part_control->setOutsideStatus(part->name(), true); }
 
-    for (auto& part : fpl) {
-        m_part_control->setFloatingStatus(part->name(), true);
-    }
+    for (auto& part : fpl) { m_part_control->setFloatingStatus(part->name(), true); }
 }
 
 void PartWidget::setStatusSelection(QString name) {
     m_status_state.selected_part = name;
 
-    m_accentColor = PreferencesManager::getInstance()->getTheme().getDotPairedColor().name();
+    m_accentColor  = PreferencesManager::getInstance()->getTheme().getDotPairedColor().name();
     QString status = "Currently Manipulating: <font color=\"" % m_accentColor % "\">%1</font>";
-    status = status.arg(m_status_state.selected_part);
+    status         = status.arg(m_status_state.selected_part);
 
     m_selection_label->setText(status);
-    m_selection_label->setMinimumSize(200, 17); // size when no part is loaded
+    m_selection_label->setMinimumSize(200, 17);  // size when no part is loaded
     m_selection_label->adjustSize();
 }
 
-void PartWidget::setStatusIssue(QString issue) { m_status_state.issues = issue; }
+void PartWidget::setStatusIssue(QString issue) {
+    m_status_state.issues = issue;
+}
 
 void PartWidget::setMeasurementReadout(QString readout) {
     if (readout.isEmpty()) {
@@ -337,8 +356,7 @@ void PartWidget::setMeasurementReadout(QString readout) {
 
 void PartWidget::positionMeasurementReadout() {
     double toolbar_y = (this->height() / 3.0) - (Constants::UI::PartToolbar::kHeight / 2.0);
-    if (toolbar_y <= Constants::UI::PartToolbar::kMinTopOffset)
-        toolbar_y = Constants::UI::PartToolbar::kMinTopOffset;
+    if (toolbar_y <= Constants::UI::PartToolbar::kMinTopOffset) toolbar_y = Constants::UI::PartToolbar::kMinTopOffset;
 
     const int readout_x = Constants::UI::PartToolbar::kLeftOffset + Constants::UI::PartToolbar::kWidth + 8;
     m_measurement_label->move(readout_x, toolbar_y);
@@ -351,9 +369,9 @@ void PartWidget::resizeEvent(QResizeEvent* event) {
     m_part_control->move(Constants::UI::PartControl::kLeftOffset,
                          event->size().height() -
                              (Constants::UI::PartControl::kSize.height() + Constants::UI::PartControl::kBottomOffset));
-    m_selection_label->move(Constants::UI::PartControl::kLeftOffset + 10,
-                            event->size().height() -
-                                (Constants::UI::PartControl::kSize.height() + 10 + m_selection_label->height()));
+    m_selection_label->move(
+        Constants::UI::PartControl::kLeftOffset + 10,
+        event->size().height() - (Constants::UI::PartControl::kSize.height() + 10 + m_selection_label->height()));
     positionMeasurementReadout();
 
     emit resized(event->size());
@@ -419,16 +437,17 @@ void PartWidget::setupStyle() {
     m_view_controls->setupStyle();
     m_part_view->setupStyle();
     m_part_control->setupStyle();
-    m_accentColor = PreferencesManager::getInstance()->getTheme().getDotPairedColor().name();
+    m_accentColor  = PreferencesManager::getInstance()->getTheme().getDotPairedColor().name();
     QString status = "Currently Manipulating: <font color=\"" % m_accentColor % "\">%1</font>";
-    status = status.arg(m_status_state.selected_part);
+    status         = status.arg(m_status_state.selected_part);
     m_selection_label->setText(status);
 
     m_measurement_label->setStyleSheet(QString("QLabel { background: rgba(245, 245, 245, 220); color: %1; "
                                                "border: 1px solid rgba(0, 0, 0, 80); padding: 4px 7px; }")
                                            .arg(m_accentColor));
-    m_measurement_clear_btn->setStyleSheet("QToolButton { background: rgba(245, 245, 245, 220); "
-                                           "border: 1px solid rgba(0, 0, 0, 80); padding: 1px; }");
+    m_measurement_clear_btn->setStyleSheet(
+        "QToolButton { background: rgba(245, 245, 245, 220); "
+        "border: 1px solid rgba(0, 0, 0, 80); padding: 1px; }");
 }
 
 void PartWidget::setupLayouts() {
@@ -438,17 +457,17 @@ void PartWidget::setupLayouts() {
 
 void PartWidget::setupPosition() {
     // Status
-    m_selection_label->move(300, this->height() -
-                                     (Constants::UI::PartControl::kSize.height() + 15 + m_selection_label->height()));
+    m_selection_label->move(
+        300, this->height() - (Constants::UI::PartControl::kSize.height() + 15 + m_selection_label->height()));
     positionMeasurementReadout();
 
     // Projection Buttons
     QPoint new_size = QPoint(this->width(), this->height());
 
     // Part control
-    m_part_control->move(Constants::UI::PartControl::kLeftOffset,
-                         this->height() -
-                             (Constants::UI::PartControl::kSize.height() + Constants::UI::PartControl::kBottomOffset));
+    m_part_control->move(
+        Constants::UI::PartControl::kLeftOffset,
+        this->height() - (Constants::UI::PartControl::kSize.height() + Constants::UI::PartControl::kBottomOffset));
 }
 
 void PartWidget::setupInputs() {
@@ -492,4 +511,4 @@ void PartWidget::setupEvents() {
     connect(m_part_view, &PartView::positioningIssues, this, &PartWidget::positionIssues);
 }
 
-} // Namespace ORNL
+}  // Namespace ORNL

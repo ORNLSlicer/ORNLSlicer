@@ -40,22 +40,17 @@ void MainControl::continueStartup() {
 }
 
 void MainControl::run() {
-
     if (m_options->contains(Constants::ConsoleOptionStrings::kShiftPartsOnLoad)) {
         if (m_options->setting<bool>(Constants::ConsoleOptionStrings::kShiftPartsOnLoad)) {
             PreferencesManager::getInstance()->setFileShiftPreference(PreferenceChoice::kPerformAutomatically);
         }
-        else {
-            PreferencesManager::getInstance()->setFileShiftPreference(PreferenceChoice::kSkipAutomatically);
-        }
+        else { PreferencesManager::getInstance()->setFileShiftPreference(PreferenceChoice::kSkipAutomatically); }
     }
     if (m_options->contains(Constants::ConsoleOptionStrings::kAlignParts)) {
         if (m_options->setting<bool>(Constants::ConsoleOptionStrings::kAlignParts)) {
             PreferencesManager::getInstance()->setAlignPreference(PreferenceChoice::kPerformAutomatically);
         }
-        else {
-            PreferencesManager::getInstance()->setAlignPreference(PreferenceChoice::kSkipAutomatically);
-        }
+        else { PreferencesManager::getInstance()->setAlignPreference(PreferenceChoice::kSkipAutomatically); }
     }
     if (m_options->contains(Constants::ConsoleOptionStrings::kUseImplicitTransforms)) {
         PreferencesManager::getInstance()->setUseImplicitTransforms(
@@ -65,7 +60,7 @@ void MainControl::run() {
     if (static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) == SlicingMode::kImage)
         CSM->setDefaultGcodeDir(m_options->setting<QString>(Constants::ConsoleOptionStrings::kOutputLocation));
 
-    int stlCount = m_options->setting<int>(Constants::ConsoleOptionStrings::kInputStlCount);
+    int stlCount        = m_options->setting<int>(Constants::ConsoleOptionStrings::kInputStlCount);
     int supportStlCount = m_options->setting<int>(Constants::ConsoleOptionStrings::kInputSupportStlCount);
     if (stlCount > 0) {
         m_parts_to_load = stlCount + supportStlCount;
@@ -99,18 +94,18 @@ void MainControl::run() {
     }
     else {
         connect(CSM.get(), &SessionManager::totalPartsInProject, this, &MainControl::partsInProject);
-        CSM->loadSession(false, m_options->setting<QString>(Constants::ConsoleOptionStrings::kInputProjectFile),
-                         false);
+        CSM->loadSession(false, m_options->setting<QString>(Constants::ConsoleOptionStrings::kInputProjectFile), false);
     }
 }
 
-void MainControl::partsInProject(int total) { m_parts_to_load = total; }
+void MainControl::partsInProject(int total) {
+    m_parts_to_load = total;
+}
 
 void MainControl::loadComplete() {
     --m_parts_to_load;
 
-    if (m_parts_to_load == 0 && !CSM->doSlice())
-        emit finished();
+    if (m_parts_to_load == 0 && !CSM->doSlice()) emit finished();
 }
 
 void MainControl::sliceComplete(QString filepath, bool alterFile) {
@@ -122,9 +117,7 @@ void MainControl::sliceComplete(QString filepath, bool alterFile) {
         connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
         loader->start();
     }
-    else {
-        emit finished();
-    }
+    else { emit finished(); }
 }
 
 void MainControl::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
@@ -138,8 +131,7 @@ void MainControl::gcodeParseComplete() {
     QString filepath = info.absolutePath();
 
     QString gcodeFileName = filepath % '/' % partName % m_selected_meta.m_file_suffix;
-    if (QFile::exists(gcodeFileName))
-        QFile::remove(gcodeFileName);
+    if (QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
 
     QString projectFileName = filepath % '/' % partName % ".s2p";
 
@@ -171,7 +163,6 @@ void MainControl::displayProgress(StatusUpdateStepType type, int percentage) {
 
     std::cout << toString(type).toStdString() << " " << percentage;
 
-    if (percentage == 100)
-        std::cout << "\n";
+    if (percentage == 100) std::cout << "\n";
 }
-} // namespace ORNL
+}  // namespace ORNL

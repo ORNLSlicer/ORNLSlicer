@@ -23,7 +23,7 @@ namespace ORNL {
  *        as one layer
  */
 class GlobalLayer {
-  public:
+   public:
     //! \brief Constructor
     //! \param layer_number - the # in sequence the global layer should be printed
     GlobalLayer(int layer_number);
@@ -71,11 +71,11 @@ class GlobalLayer {
     //! \note used for writeBeforeLayer() function
     Distance getLayerHeight();
 
-  private:
+   private:
     //! \brief Creates tree-like structure if brims exist, otherwise, sorts islands into precendence order;
     //!        helper function for connectPaths()
-    QList<QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
-    createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
+    QList<QMap<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> createSequence(
+        QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children);
 
     //! \brief returns true if this global layer contains scan layers
     bool containsScanLayers();
@@ -95,4 +95,4 @@ class GlobalLayer {
     //! \note order determined in connectPaths and saved for use again in writeGcode
     QList<QUuid> m_part_order;
 };
-} // namespace ORNL
+}  // namespace ORNL

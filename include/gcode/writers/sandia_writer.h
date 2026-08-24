@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Sandia syntax
  */
 class SandiaWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     SandiaWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -87,7 +87,7 @@ class SandiaWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the tamper
     QString writeTamperOn();
     //! \brief Writes G-Code to disable the tamper
@@ -112,5 +112,5 @@ class SandiaWriter : public WriterBase {
     //! \brief true is first print motion of the layer
     bool m_layer_start;
 
-}; // class SANDIAWriter
-} // namespace ORNL
+};  // class SANDIAWriter
+}  // namespace ORNL

@@ -1,10 +1,10 @@
 #include "widgets/gcode_info_control.h"
 
+#include <QtMath>
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
-#include <QtMath>
 #include <qboxlayout.h>
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
@@ -31,46 +31,46 @@
 
 namespace ORNL {
 namespace {
-constexpr double kTwoPi = 6.28318530717958647692;
+constexpr double kTwoPi                    = 6.28318530717958647692;
 constexpr double kCenterlineArcSampleAngle = kTwoPi / 48.0;
 constexpr int kCenterlineBezierSampleCount = 48;
-constexpr double kDistanceEpsilon = 1.0e-9;
+constexpr double kDistanceEpsilon          = 1.0e-9;
 
-double clamp01(double value) { return std::max(0.0, std::min(1.0, value)); }
+double clamp01(double value) {
+    return std::max(0.0, std::min(1.0, value));
+}
 
-QVector3D viewPointToMicrons(const Point& point) { return point.toQVector3D() * Constants::OpenGL::kViewToObject; }
+QVector3D viewPointToMicrons(const Point& point) {
+    return point.toQVector3D() * Constants::OpenGL::kViewToObject;
+}
 
 QVector<QVector3D> linearCenterlineSamples(const QSharedPointer<SegmentBase>& segment) {
     return {viewPointToMicrons(segment->start()), viewPointToMicrons(segment->end())};
 }
 
 QVector<QVector3D> arcCenterlineSamples(const ArcSegment& arc) {
-    const Point start = arc.start();
-    const Point center = arc.center();
-    const Point end = arc.end();
+    const Point start   = arc.start();
+    const Point center  = arc.center();
+    const Point end     = arc.end();
     const double radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const double sweep = arc.angle()();
+    const double sweep  = arc.angle()();
 
     if (!std::isfinite(radius) || !std::isfinite(sweep) || radius <= kDistanceEpsilon || sweep <= kDistanceEpsilon) {
         return {viewPointToMicrons(start), viewPointToMicrons(end)};
     }
 
-    const int sample_count = std::max(1, static_cast<int>(std::ceil(std::abs(sweep) / kCenterlineArcSampleAngle)));
-    const double start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const int sample_count    = std::max(1, static_cast<int>(std::ceil(std::abs(sweep) / kCenterlineArcSampleAngle)));
+    const double start_angle  = std::atan2(start.y() - center.y(), start.x() - center.x());
     const double signed_sweep = arc.counterclockwise() ? sweep : -sweep;
-    const double z_delta = end.z() - start.z();
+    const double z_delta      = end.z() - start.z();
 
     QVector<QVector3D> samples;
     samples.reserve(sample_count + 1);
     for (int i = 0; i <= sample_count; ++i) {
-        if (i == 0) {
-            samples.push_back(viewPointToMicrons(start));
-        }
-        else if (i == sample_count) {
-            samples.push_back(viewPointToMicrons(end));
-        }
+        if (i == 0) { samples.push_back(viewPointToMicrons(start)); }
+        else if (i == sample_count) { samples.push_back(viewPointToMicrons(end)); }
         else {
-            const double t = static_cast<double>(i) / static_cast<double>(sample_count);
+            const double t     = static_cast<double>(i) / static_cast<double>(sample_count);
             const double angle = start_angle + (signed_sweep * t);
             samples.push_back(QVector3D(center.x() + (radius * std::cos(angle)),
                                         center.y() + (radius * std::sin(angle)), start.z() + (z_delta * t)) *
@@ -92,45 +92,35 @@ QVector<QVector3D> bezierCenterlineSamples(BezierSegment& bezier) {
 }
 
 QVector<QVector3D> centerlineSamples(const QSharedPointer<SegmentBase>& segment) {
-    if (segment.isNull()) {
-        return {};
-    }
+    if (segment.isNull()) { return {}; }
 
-    if (const auto* arc = dynamic_cast<ArcSegment*>(segment.data())) {
-        return arcCenterlineSamples(*arc);
-    }
-    if (auto* bezier = dynamic_cast<BezierSegment*>(segment.data())) {
-        return bezierCenterlineSamples(*bezier);
-    }
+    if (const auto* arc = dynamic_cast<ArcSegment*>(segment.data())) { return arcCenterlineSamples(*arc); }
+    if (auto* bezier = dynamic_cast<BezierSegment*>(segment.data())) { return bezierCenterlineSamples(*bezier); }
 
     return linearCenterlineSamples(segment);
 }
 
 double lineSegmentDistance(const QVector3D& first_start, const QVector3D& first_end, const QVector3D& second_start,
                            const QVector3D& second_end) {
-    const QVector3D first_direction = first_end - first_start;
+    const QVector3D first_direction  = first_end - first_start;
     const QVector3D second_direction = second_end - second_start;
-    const QVector3D start_delta = first_start - second_start;
+    const QVector3D start_delta      = first_start - second_start;
 
-    const double first_length_squared = QVector3D::dotProduct(first_direction, first_direction);
+    const double first_length_squared  = QVector3D::dotProduct(first_direction, first_direction);
     const double second_length_squared = QVector3D::dotProduct(second_direction, second_direction);
-    const double second_projection = QVector3D::dotProduct(second_direction, start_delta);
+    const double second_projection     = QVector3D::dotProduct(second_direction, start_delta);
 
-    double first_t = 0.0;
+    double first_t  = 0.0;
     double second_t = 0.0;
 
     if (first_length_squared <= kDistanceEpsilon && second_length_squared <= kDistanceEpsilon) {
         return first_start.distanceToPoint(second_start);
     }
 
-    if (first_length_squared <= kDistanceEpsilon) {
-        second_t = clamp01(second_projection / second_length_squared);
-    }
+    if (first_length_squared <= kDistanceEpsilon) { second_t = clamp01(second_projection / second_length_squared); }
     else {
         const double first_projection = QVector3D::dotProduct(first_direction, start_delta);
-        if (second_length_squared <= kDistanceEpsilon) {
-            first_t = clamp01(-first_projection / first_length_squared);
-        }
+        if (second_length_squared <= kDistanceEpsilon) { first_t = clamp01(-first_projection / first_length_squared); }
         else {
             const double direction_projection = QVector3D::dotProduct(first_direction, second_direction);
             const double denominator =
@@ -145,24 +135,22 @@ double lineSegmentDistance(const QVector3D& first_start, const QVector3D& first_
             second_t = (direction_projection * first_t + second_projection) / second_length_squared;
             if (second_t < 0.0) {
                 second_t = 0.0;
-                first_t = clamp01(-first_projection / first_length_squared);
+                first_t  = clamp01(-first_projection / first_length_squared);
             }
             else if (second_t > 1.0) {
                 second_t = 1.0;
-                first_t = clamp01((direction_projection - first_projection) / first_length_squared);
+                first_t  = clamp01((direction_projection - first_projection) / first_length_squared);
             }
         }
     }
 
-    const QVector3D first_closest = first_start + (first_direction * static_cast<float>(first_t));
+    const QVector3D first_closest  = first_start + (first_direction * static_cast<float>(first_t));
     const QVector3D second_closest = second_start + (second_direction * static_cast<float>(second_t));
     return first_closest.distanceToPoint(second_closest);
 }
 
 int centerlineSegmentCount(const QVector<QVector3D>& samples) {
-    if (samples.isEmpty()) {
-        return 0;
-    }
+    if (samples.isEmpty()) { return 0; }
     return std::max(1, static_cast<int>(samples.size()) - 1);
 }
 
@@ -175,13 +163,11 @@ QVector3D centerlineSegmentEnd(const QVector<QVector3D>& samples, int index) {
 }
 
 double centerlineDistance(const QSharedPointer<SegmentBase>& first, const QSharedPointer<SegmentBase>& second) {
-    const QVector<QVector3D> first_samples = centerlineSamples(first);
+    const QVector<QVector3D> first_samples  = centerlineSamples(first);
     const QVector<QVector3D> second_samples = centerlineSamples(second);
-    const int first_segment_count = centerlineSegmentCount(first_samples);
-    const int second_segment_count = centerlineSegmentCount(second_samples);
-    if (first_segment_count == 0 || second_segment_count == 0) {
-        return std::numeric_limits<double>::infinity();
-    }
+    const int first_segment_count           = centerlineSegmentCount(first_samples);
+    const int second_segment_count          = centerlineSegmentCount(second_samples);
+    if (first_segment_count == 0 || second_segment_count == 0) { return std::numeric_limits<double>::infinity(); }
 
     double min_distance = std::numeric_limits<double>::infinity();
     for (int first_index = 0; first_index < first_segment_count; ++first_index) {
@@ -196,9 +182,11 @@ double centerlineDistance(const QSharedPointer<SegmentBase>& first, const QShare
 
     return min_distance;
 }
-} // namespace
+}  // namespace
 
-GCodeInfoControl::GCodeInfoControl(QWidget* parent) : QWidget(parent) { setupWidget(); }
+GCodeInfoControl::GCodeInfoControl(QWidget* parent) : QWidget(parent) {
+    setupWidget();
+}
 
 void GCodeInfoControl::setGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     m_gcode = gcode;
@@ -247,8 +235,7 @@ void GCodeInfoControl::addSegmentInfo(int selectedLineNumber) {
     if (index < 0) {
         index = 0;
         for (; index < m_line_no_list.length(); ++index) {
-            if (m_line_no_list[index] > selectedLineNumber)
-                break;
+            if (m_line_no_list[index] > selectedLineNumber) break;
         }
 
         m_line_no_list.insert(index, selectedLineNumber);
@@ -268,22 +255,16 @@ void GCodeInfoControl::removeSegmentInfo(int selectedLineNumber) {
     m_line_no_list.removeAt(index);
     m_headercb_lines->removeItem(index);
 
-    if (m_line_no_list.isEmpty() || m_headercb_lines->currentIndex() < 0) {
-        fillSegmentInfo(0);
-    }
-    else {
-        fillSegmentInfo(m_line_no_list[m_headercb_lines->currentIndex()]);
-    }
+    if (m_line_no_list.isEmpty() || m_headercb_lines->currentIndex() < 0) { fillSegmentInfo(0); }
+    else { fillSegmentInfo(m_line_no_list[m_headercb_lines->currentIndex()]); }
 }
 
 QSharedPointer<SegmentBase> GCodeInfoControl::segmentForLine(uint lineNo) {
     for (auto& layer : m_gcode) {
-        if (layer.isEmpty() || layer.back()->lineNumber() < lineNo)
-            continue;
+        if (layer.isEmpty() || layer.back()->lineNumber() < lineNo) continue;
 
         for (auto& seg : layer) {
-            if (seg->lineNumber() == lineNo)
-                return seg;
+            if (seg->lineNumber() == lineNo) return seg;
         }
     }
 
@@ -292,21 +273,18 @@ QSharedPointer<SegmentBase> GCodeInfoControl::segmentForLine(uint lineNo) {
 
 void GCodeInfoControl::updateCenterDistanceInfo(uint lineNo) {
     m_infolbl_center_distance->setText("");
-    if (m_line_no_list.size() != 2)
-        return;
+    if (m_line_no_list.size() != 2) return;
 
-    const int first_line = m_line_no_list.first();
+    const int first_line  = m_line_no_list.first();
     const int second_line = m_line_no_list.last();
-    const int other_line = first_line == static_cast<int>(lineNo) ? second_line : first_line;
+    const int other_line  = first_line == static_cast<int>(lineNo) ? second_line : first_line;
 
     QSharedPointer<SegmentBase> current_segment = segmentForLine(lineNo);
-    QSharedPointer<SegmentBase> other_segment = segmentForLine(other_line);
-    if (current_segment.isNull() || other_segment.isNull())
-        return;
+    QSharedPointer<SegmentBase> other_segment   = segmentForLine(other_line);
+    if (current_segment.isNull() || other_segment.isNull()) return;
 
     const double distance = centerlineDistance(current_segment, other_segment);
-    if (!std::isfinite(distance))
-        return;
+    if (!std::isfinite(distance)) return;
 
     m_infolbl_center_distance->setText(QString("Line %1: %2").arg(other_line).arg(formatDistance(distance)));
 }
@@ -336,17 +314,11 @@ void GCodeInfoControl::updateDirectionForSegment(const QSharedPointer<SegmentBas
     auto& meta = segment->m_segment_info_meta;
     QVector3D direction(meta.end.x() - meta.start.x(), meta.end.y() - meta.start.y(), meta.end.z() - meta.start.z());
 
-    if (meta.isXYmove()) {
-        updateDirection(viewAngleForDirection(direction, 360 - meta.getCCWXAngle()));
-    }
+    if (meta.isXYmove()) { updateDirection(viewAngleForDirection(direction, 360 - meta.getCCWXAngle())); }
     else {
         float diff = meta.getZChange();
-        if (diff == 0) {
-            m_infolbl_direction->setVisible(false);
-        }
-        else {
-            updateZDirection(viewAngleForDirection(direction, diff > 0 ? 180 : 0));
-        }
+        if (diff == 0) { m_infolbl_direction->setVisible(false); }
+        else { updateZDirection(viewAngleForDirection(direction, diff > 0 ? 180 : 0)); }
     }
 }
 
@@ -360,8 +332,7 @@ double GCodeInfoControl::viewAngleForDirection(const QVector3D& direction, doubl
     }
 
     double angle = qRadiansToDegrees(std::atan2(view_direction.y(), view_direction.x()));
-    if (angle < 0.0)
-        angle += 360.0;
+    if (angle < 0.0) angle += 360.0;
 
     return 360.0 - angle;
 }
@@ -374,19 +345,19 @@ void GCodeInfoControl::setViewMatrix(const QMatrix4x4& viewMatrix) {
 void GCodeInfoControl::setupWidget() {
     QLabel* lbl2DAxis = new QLabel;
 
-    m_infolbl_type = new QLabel;
-    m_infolbl_speed = new QLabel;
-    m_infolbl_extruder_speed = new QLabel;
-    m_infolbl_length = new QLabel;
+    m_infolbl_type            = new QLabel;
+    m_infolbl_speed           = new QLabel;
+    m_infolbl_extruder_speed  = new QLabel;
+    m_infolbl_length          = new QLabel;
     m_infolbl_center_distance = new QLabel;
-    m_infolbl_layer_no = new QLabel;
-    m_infolbl_line_no = new QLabel;
-    m_infolbl_direction = new QLabel;
-    m_infopm_direction = new QPixmap(":/icons/right_flat.png");
-    m_infopm_direction_z = new QPixmap(":/icons/down_black.png");
+    m_infolbl_layer_no        = new QLabel;
+    m_infolbl_line_no         = new QLabel;
+    m_infolbl_direction       = new QLabel;
+    m_infopm_direction        = new QPixmap(":/icons/right_flat.png");
+    m_infopm_direction_z      = new QPixmap(":/icons/down_black.png");
     lbl2DAxis->setPixmap(QPixmap(":/icons/2d_axis.png"));
 
-    m_info_display = new QFrame;
+    m_info_display           = new QFrame;
     m_info_display_indicator = new QLabel;
     m_info_display_indicator->setPixmap(QPixmap(":/icons/down_black.png"));
 
@@ -482,4 +453,4 @@ void GCodeInfoControl::setupHeaderWidget() {
     hlayout->addWidget(line);
     hlayout->addWidget(m_headercb_lines);
 }
-} // namespace ORNL
+}  // namespace ORNL

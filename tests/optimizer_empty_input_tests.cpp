@@ -1,10 +1,9 @@
-#include <cstdlib>
-#include <iostream>
-#include <string>
-
 #include <QList>
 #include <QSharedPointer>
 #include <QVector>
+#include <cstdlib>
+#include <iostream>
+#include <string>
 
 #include "configs/settings_base.h"
 #include "geometry/path.h"
@@ -21,13 +20,12 @@
 
 namespace {
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;
@@ -69,7 +67,8 @@ int main() {
     polylines.append(one_point_polyline);
     polyline_optimizer.setGeometryToEvaluate(polylines, ORNL::RegionType::kSkeleton,
                                              ORNL::PathOrderOptimization::kNextClosest);
-    passed &= expect(polyline_optimizer.getCurrentPolylineCount() == 0, "Expected degenerate polylines to be filtered.");
+    passed &=
+        expect(polyline_optimizer.getCurrentPolylineCount() == 0, "Expected degenerate polylines to be filtered.");
     passed &= expect(polyline_optimizer.linkNextPolyline().isEmpty(), "Expected empty polyline optimizer result.");
 
     ORNL::Polyline zero_distance_polyline;

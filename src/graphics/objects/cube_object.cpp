@@ -1,8 +1,8 @@
 #include "graphics/objects/cube_object.h"
 
+#include <QPainter>
 #include <vector>
 
-#include <QPainter>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qimage.h>
@@ -16,7 +16,7 @@ namespace ORNL {
 CubeObject::CubeObject(BaseView* view, float length, float width, float height, QColor color, ushort render_mode,
                        const QVector<QImage>& textures) {
     m_length = length;
-    m_width = width;
+    m_width  = width;
     m_height = height;
 
     m_textures = textures;
@@ -27,17 +27,13 @@ CubeObject::CubeObject(BaseView* view, float length, float width, float height, 
     std::vector<float> uv;
 
     // Fill out rest of textures with blank textures.
-    for (int i = m_textures.size(); i < 6; i++) {
-        m_textures.append(QImage(":/textures/blank_texture.png"));
-    }
+    for (int i = m_textures.size(); i < 6; i++) { m_textures.append(QImage(":/textures/blank_texture.png")); }
 
     // Face pixel size - should be square.
     uint fps = 0;
     for (QImage& texture : m_textures) {
-        if (texture.size().width() > fps)
-            fps = texture.size().width();
-        if (texture.size().height() > fps)
-            fps = texture.size().height();
+        if (texture.size().width() > fps) fps = texture.size().width();
+        if (texture.size().height() > fps) fps = texture.size().height();
     }
 
     // Stitch together textures for a cube map.
@@ -78,4 +74,4 @@ CubeObject::CubeObject(BaseView* view, float length, float width, float height, 
     this->populateGL(view, vertices, normals, colors, render_mode, uv, result);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

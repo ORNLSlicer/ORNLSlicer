@@ -1,6 +1,7 @@
 #include "widgets/settings/setting_plain_text_edit.h"
 
 #include <QToolTip>
+
 #include <qgridlayout.h>
 #include <qlabel.h>
 #include <qnamespace.h>
@@ -79,7 +80,7 @@ void SettingPlainTextEdit::show() {
 
 void SettingPlainTextEdit::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<QString>(val.value<QString>());
     emit modified(m_key);
@@ -88,12 +89,11 @@ void SettingPlainTextEdit::valueChanged(QVariant val) {
 void SettingPlainTextEdit::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
-    QString cur = reloadValueHelper<QString>(consistent);
-    if (consistent)
-        setPlainText(cur);
+    QString cur     = reloadValueHelper<QString>(consistent);
+    if (consistent) setPlainText(cur);
 
     this->blockSignals(false);
     emit modified(m_key);
     emit warnParent(warningCountDelta(!consistent, m_warn));
 }
-} // Namespace ORNL
+}  // Namespace ORNL

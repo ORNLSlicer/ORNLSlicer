@@ -27,15 +27,14 @@ PolymerIsland::PolymerIsland(const PolygonList& geometry, const QSharedPointer<S
                              const QVector<SettingsPolygon>& settings_polygons, const PolygonList& uncut_geometry)
     : IslandBase(geometry, sb, settings_polygons) {
     bool enable_perimeter = this->getSb()->setting<bool>(PS::Perimeter::kEnable);
-    bool enable_inset = this->getSb()->setting<bool>(PS::Inset::kEnable);
-    bool enable_skin = this->getSb()->setting<bool>(PS::Skin::kEnable);
-    bool enable_infill = this->getSb()->setting<bool>(PS::Infill::kEnable);
-    bool enable_skeleton = this->getSb()->setting<bool>(PS::Skeleton::kEnable);
+    bool enable_inset     = this->getSb()->setting<bool>(PS::Inset::kEnable);
+    bool enable_skin      = this->getSb()->setting<bool>(PS::Skin::kEnable);
+    bool enable_infill    = this->getSb()->setting<bool>(PS::Infill::kEnable);
+    bool enable_skeleton  = this->getSb()->setting<bool>(PS::Skeleton::kEnable);
 
     QList<QString> order = this->getSb()->setting<QList<QString>>(PS::Ordering::kRegionOrder);
     QList<RegionType> regionOrder;
-    for (QString str : order)
-        regionOrder.push_back(fromString(str.toUpper()));
+    for (QString str : order) regionOrder.push_back(fromString(str.toUpper()));
 
     for (int i = regionOrder.size() - 1; i >= 0; --i) {
         if ((regionOrder[i] == RegionType::kPerimeter && !enable_perimeter) ||
@@ -80,8 +79,7 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
 
         r->optimize(layerNumber, currentLocation, shouldNextPathBeCCW);
 
-        if (r->getPaths().size() > 0)
-            previousRegions.push_back(r);
+        if (r->getPaths().size() > 0) previousRegions.push_back(r);
 
         if (m_sb->setting<bool>(MS::MultiMaterial::kEnable) &&
             m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0) {
@@ -94,4 +92,4 @@ void PolymerIsland::reorderRegions() {
     std::sort(m_regions.begin(), m_regions.end(),
               [](auto const& a, auto const& b) { return a->getIndex() < b->getIndex(); });
 }
-} // namespace ORNL
+}  // namespace ORNL

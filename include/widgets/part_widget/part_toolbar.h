@@ -3,6 +3,7 @@
 #include <QToolBar>
 #include <QToolButton>
 #include <QVector3D>
+
 #include <qkeysequence.h>
 #include <qsharedpointer.h>
 #include <qsize.h>
@@ -20,7 +21,7 @@ namespace ORNL {
  */
 class PartToolbar : public QToolBar {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param model the part(s) that are being edited
     //! \param parent optional parent pointer
@@ -36,7 +37,7 @@ class PartToolbar : public QToolBar {
     //! \param old_unit: the old unit
     void updateAngleUnits(Angle new_unit, Angle old_unit);
 
-  signals:
+   signals:
     //! \brief signals to center parts
     void centerParts();
 
@@ -50,7 +51,7 @@ class PartToolbar : public QToolBar {
     //! \brief toggles point-to-point measurement mode
     void measureModeChanged(bool enabled);
 
-  public slots:
+   public slots:
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
 
@@ -65,7 +66,7 @@ class PartToolbar : public QToolBar {
     //! \param status enable/ disable
     void setEnabled(bool status);
 
-  private:
+   private:
     //! \brief setups base widget
     void setupWidget();
 
@@ -134,4 +135,4 @@ class PartToolbar : public QToolBar {
     // Drop to floor
     QToolButton* m_drop_to_floor_btn;
 };
-} // namespace ORNL
+}  // namespace ORNL

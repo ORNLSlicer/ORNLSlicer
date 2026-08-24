@@ -4,6 +4,7 @@
 #include <QSize>
 #include <QToolBar>
 #include <QToolButton>
+
 #include <qtmetamacros.h>
 
 namespace ORNL {
@@ -13,12 +14,12 @@ namespace ORNL {
  */
 class ViewControlsToolbar : public QToolBar {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param parent optional parent widget
     ViewControlsToolbar(QWidget* parent = nullptr, bool show_orthographic_button = false);
 
-  signals:
+   signals:
     //! \brief sets the camera to iso view
     void setIsoView();
     //! \brief sets the camera to front view
@@ -30,7 +31,7 @@ class ViewControlsToolbar : public QToolBar {
     //! \brief toggles overhead orthographic g-code projection
     void setOrthographicView(bool enabled);
 
-  public slots:
+   public slots:
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
 
@@ -46,7 +47,7 @@ class ViewControlsToolbar : public QToolBar {
 
     void setEnabled(bool status);
 
-  private:
+   private:
     //! \brief sets up the widget and style
     void setupWidget();
 
@@ -70,4 +71,4 @@ class ViewControlsToolbar : public QToolBar {
     QToolButton* m_top_btn;
     QToolButton* m_ortho_btn;
 };
-} // namespace ORNL
+}  // namespace ORNL

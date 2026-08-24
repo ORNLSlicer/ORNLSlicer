@@ -24,7 +24,7 @@ class Polyline;
  * \brief Provides access to methods used with polymer slicing
  */
 class SlicingUtilities {
-  public:
+   public:
     /*!
      * \brief Resamples a retained cylindrical path at G2/G3 arc boundaries.
      * \param polyline: densely sampled radial or helical path in the selected angular direction
@@ -131,4 +131,4 @@ class SlicingUtilities {
      */
     static bool doPartsOverlap(QVector<QSharedPointer<Part>> parts, Plane slicing_plane);
 };
-} // namespace ORNL
+}  // namespace ORNL

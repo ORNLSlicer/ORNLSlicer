@@ -2,6 +2,7 @@
 
 #include <QVector3D>
 #include <QVector>
+
 #include <qcontainerfwd.h>
 
 #include "geometry/mesh/advanced/mesh_types.h"
@@ -15,7 +16,7 @@ namespace ORNL {
  * Keeps track of which faces connect to it.
  */
 class MeshVertex {
-  public:
+   public:
     /*!
      * \brief Constructor
      *
@@ -30,8 +31,8 @@ class MeshVertex {
     //! \brief Converts the mesh vertex to a CGAL cartesian point
     MeshTypes::Point_3 toPoint3() const;
 
-    QVector3D location; //!< Location of the vertex
+    QVector3D location;  //!< Location of the vertex
     QVector3D normal;
-    QVector<int> connected_faces; //!< list of the indices of connected faces
+    QVector<int> connected_faces;  //!< list of the indices of connected faces
 };
-} // namespace ORNL
+}  // namespace ORNL

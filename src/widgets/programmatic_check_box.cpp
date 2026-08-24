@@ -7,7 +7,9 @@
 
 namespace ORNL {
 
-ProgrammaticCheckBox::ProgrammaticCheckBox(QString str, QWidget* parent) : QCheckBox(str, parent) { setTristate(true); }
+ProgrammaticCheckBox::ProgrammaticCheckBox(QString str, QWidget* parent) : QCheckBox(str, parent) {
+    setTristate(true);
+}
 
 void ProgrammaticCheckBox::nextCheckState() {
     if (this->checkState() == Qt::Checked)
@@ -15,4 +17,4 @@ void ProgrammaticCheckBox::nextCheckState() {
     else
         setCheckState(Qt::Checked);
 }
-} // namespace ORNL
+}  // namespace ORNL

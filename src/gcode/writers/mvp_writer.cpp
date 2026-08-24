@@ -1,6 +1,7 @@
 #include "gcode/writers/mvp_writer.h"
 
 #include <QStringBuilder>
+
 #include <qhashfunctions.h>
 #include <qnumeric.h>
 #include <qsharedpointer.h>
@@ -21,12 +22,12 @@ MVPWriter::MVPWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : W
 
 QString MVPWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                      int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_travel = true;
-    m_first_print = true;
-    m_layer_start = true;
+    m_first_travel      = true;
+    m_first_print       = true;
+    m_layer_start       = true;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += "G54" % commentSpaceLine("ENABLE W01") % m_G1 % m_f %
@@ -46,8 +47,7 @@ QString MVPWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Dis
               commentSpaceLine("BOUNDING BOX") % "M0" % commentSpaceLine("WAIT FOR USER");
     }
 
-    if (!m_sb->setting<QString>(PRS::GCode::kStartCode).isEmpty())
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (!m_sb->setting<QString>(PRS::GCode::kStartCode).isEmpty()) rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -58,7 +58,7 @@ QString MVPWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Dis
 
 QString MVPWriter::writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     rv += "M01 " % commentLine("OPTIONAL STOP - LAYER CHANGE");
     return rv;
@@ -74,7 +74,9 @@ QString MVPWriter::writeBeforeIsland() {
     return rv;
 }
 
-QString MVPWriter::writeBeforeRegion(RegionType type, int pathSize) { return {}; }
+QString MVPWriter::writeBeforeRegion(RegionType type, int pathSize) {
+    return {};
+}
 
 QString MVPWriter::writeBeforePath(RegionType type) {
     QString rv;
@@ -145,7 +147,7 @@ QString MVPWriter::writeTravel(Point start_location, Point target_location, Trav
     // write the lift
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
@@ -155,7 +157,7 @@ QString MVPWriter::writeTravel(Point start_location, Point target_location, Trav
     if (m_first_travel)
         travel_destination.z(qAbs(m_sb->setting<Distance>(PRS::Dimensions::kZOffset)()));
     else if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
@@ -166,26 +168,24 @@ QString MVPWriter::writeTravel(Point start_location, Point target_location, Trav
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     return rv;
 }
 
 QString MVPWriter::writeLine(const Point& start_point, const Point& target_point,
                              const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    int rpm                      = params->setting<int>(SS::kExtruderSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_deposition_active == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, params);
-    }
+    if (m_deposition_active == false && rpm > 0) { rv += writeExtruderOn(region_type, rpm, params); }
 
     if (rpm != m_current_rpm && rpm == 0) {
         rv += writeExtruderOff();
@@ -288,7 +288,9 @@ QString MVPWriter::writeShutdown() {
     return rv;
 }
 
-QString MVPWriter::writePurge(int RPM, int duration, int delay) { return {}; }
+QString MVPWriter::writePurge(int RPM, int duration, int delay) {
+    return {};
+}
 
 QString MVPWriter::writeDwell(Time time) {
     if (time > 0)
@@ -366,9 +368,9 @@ QString MVPWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

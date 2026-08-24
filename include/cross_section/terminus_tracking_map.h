@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QVector>
 #include <cstddef>
 
-#include <QVector>
 #include <qcontainerfwd.h>
 
 #include "terminus.h"
@@ -18,7 +18,7 @@ namespace ORNL {
  * form polygons.
  */
 class TerminusTrackingMap {
-  public:
+   public:
     //! \brief Initializes the TerminusTrackingMap with the size indicated.
     TerminusTrackingMap(Terminus::Index end_idx);
 
@@ -68,8 +68,8 @@ class TerminusTrackingMap {
     void updateMap(size_t num_terminuses, const Terminus* current_terminus, const Terminus* next_terminus,
                    size_t num_removed_terminuses, const Terminus* removed_current_terminuses);
 
-  private:
+   private:
     QVector<Terminus> m_terminus_old_to_current_map;
     QVector<Terminus> m_terminus_current_to_old_map;
 };
-} // namespace ORNL
+}  // namespace ORNL

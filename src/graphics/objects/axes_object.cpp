@@ -2,9 +2,9 @@
 
 #include <math.h>
 
+#include <QtMath>
 #include <vector>
 
-#include <QtMath>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qmatrix4x4.h>
@@ -81,4 +81,4 @@ void AxesObject::updateDimensions(float axis_length) {
     this->scaleAbsolute(
         QVector3D(axis_length / m_starting_length, axis_length / m_starting_length, axis_length / m_starting_length));
 }
-} // namespace ORNL
+}  // namespace ORNL

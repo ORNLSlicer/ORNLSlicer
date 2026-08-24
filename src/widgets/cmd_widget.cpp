@@ -9,15 +9,20 @@
 
 namespace ORNL {
 
-CmdWidget::CmdWidget(QWidget* parent) : QWidget(parent) { this->setupWidget(); }
+CmdWidget::CmdWidget(QWidget* parent) : QWidget(parent) {
+    this->setupWidget();
+}
 
-void CmdWidget::operator<<(QString str) { this->append(str); }
+void CmdWidget::operator<<(QString str) {
+    this->append(str);
+}
 
-void CmdWidget::print(QString str) { this->append(str); }
+void CmdWidget::print(QString str) {
+    this->append(str);
+}
 
 void CmdWidget::runCmd(QString cmd) {
-    if (cmd.isEmpty())
-        return;
+    if (cmd.isEmpty()) return;
     this->append(cmd);
 }
 
@@ -52,7 +57,9 @@ void CmdWidget::setupSubWidgets() {
     // m_accept->setToolTip("Submit");
 }
 
-void CmdWidget::setupLayout() { m_layout = new QGridLayout(this); }
+void CmdWidget::setupLayout() {
+    m_layout = new QGridLayout(this);
+}
 
 void CmdWidget::setupInsert() {
     m_layout->addWidget(m_output, 0, 0, 1, 2);
@@ -65,4 +72,4 @@ void CmdWidget::setupEvents() {
     // connect(m_accept, &QToolButton::pressed, this, &CmdWidget::fetchFromCmdEdit);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

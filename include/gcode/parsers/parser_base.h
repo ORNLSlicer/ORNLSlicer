@@ -20,7 +20,7 @@ namespace ORNL {
  */
 class ParserBase : public QObject {
     Q_OBJECT
-  public:
+   public:
     //! \brief Parses the command that is passed from the command string,
     //!        and sends the command to its corresponding handler.
     //! \param command_string Gcode command string
@@ -43,7 +43,7 @@ class ParserBase : public QObject {
     //! \return bool true if starts with delimiter
     bool startsWithDelimiter(QString& str);
 
-  protected:
+   protected:
     //! \brief Default Constructor
     ParserBase();
 
@@ -114,10 +114,10 @@ class ParserBase : public QObject {
     //! \brief Maps a GCode command to a function handlerm
     //! \brief This function throws a multiple parameter exception.
     QHash<QString, std::function<void(QVector<QString>)>>
-        m_command_mapping; //!< Mappings of GCode command strings
-                           //!< to function handlers which take parameters
+        m_command_mapping;  //!< Mappings of GCode command strings
+                            //!< to function handlers which take parameters
 
-  private:
+   private:
     //! \brief Current line comment
     QString m_line_comment;
     //! \brief Current starting delimiter
@@ -137,5 +137,5 @@ class ParserBase : public QObject {
     //! \brief Matcher for identifying new layers for quicker string comparison
     QStringMatcher m_beginning_layer_matcher;
 
-}; // class ParserBase
-} // namespace ORNL
+};  // class ParserBase
+}  // namespace ORNL

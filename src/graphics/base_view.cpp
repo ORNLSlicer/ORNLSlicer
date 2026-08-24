@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QMouseEvent>
+
 #include <qmatrix4x4.h>
 #include <qnamespace.h>
 #include <qopenglshaderprogram.h>
@@ -25,7 +26,7 @@
 namespace ORNL {
 namespace {
 constexpr float kKeyboardRotateDegrees = 5.0f;
-constexpr float kKeyboardPanNdcStep = 0.10f;
+constexpr float kKeyboardPanNdcStep    = 0.10f;
 
 bool isArrowKey(int key) {
     return key == Qt::Key_Left || key == Qt::Key_Right || key == Qt::Key_Up || key == Qt::Key_Down;
@@ -50,7 +51,7 @@ bool hasCameraPanModifier(Qt::KeyboardModifiers modifiers) {
     return modifiers.testFlag(Qt::ShiftModifier) || modifiers.testFlag(Qt::ControlModifier) ||
            modifiers.testFlag(Qt::AltModifier);
 }
-} // namespace
+}  // namespace
 
 BaseView::BaseView(QWidget* parent) : QOpenGLWidget(parent) {
     // Initalize camera projection.
@@ -61,7 +62,7 @@ BaseView::BaseView(QWidget* parent) : QOpenGLWidget(parent) {
     m_projection.perspective(Constants::OpenGL::kFov, aspect, Constants::OpenGL::kNearPlane,
                              Constants::OpenGL::kFarPlane);
 
-    m_camera = QSharedPointer<CameraManager>::create(); // Manager for camera/view matrix
+    m_camera = QSharedPointer<CameraManager>::create();  // Manager for camera/view matrix
     m_shader_program.reset(new QOpenGLShaderProgram());
     this->setMouseTracking(true);
     this->setFocusPolicy(Qt::StrongFocus);
@@ -143,12 +144,8 @@ void BaseView::mouseMoveEvent(QMouseEvent* e) {
         }
 
         case (Qt::RightButton): {
-            if (e->modifiers() == Qt::ControlModifier) {
-                this->handleControlModifiedRightMove(ndc_mouse_pos);
-            }
-            else {
-                this->handleRightMove(ndc_mouse_pos);
-            }
+            if (e->modifiers() == Qt::ControlModifier) { this->handleControlModifiedRightMove(ndc_mouse_pos); }
+            else { this->handleRightMove(ndc_mouse_pos); }
             break;
         }
 
@@ -198,7 +195,7 @@ void BaseView::keyPressEvent(QKeyEvent* e) {
     if (hasCameraPanModifier(e->modifiers())) {
         QMatrix4x4 view = m_camera->viewMatrix();
         QVector3D right = QVector3D(view(0, 0), view(0, 1), view(0, 2));
-        QVector3D up = QVector3D(view(1, 0), view(1, 1), view(1, 2));
+        QVector3D up    = QVector3D(view(1, 0), view(1, 1), view(1, 2));
 
         right.setZ(0);
         up.setZ(0);
@@ -221,12 +218,12 @@ void BaseView::keyPressEvent(QKeyEvent* e) {
 
 void BaseView::zoomIn() {
     m_camera->zoom(10);
-    this->update(); // Need to repaint with new view matrix
+    this->update();  // Need to repaint with new view matrix
 }
 
 void BaseView::zoomOut() {
     m_camera->zoom(-10);
-    this->update(); // Need to repaint with new view matrix
+    this->update();  // Need to repaint with new view matrix
 }
 
 void BaseView::resetZoom() {
@@ -241,7 +238,7 @@ void BaseView::resetCamera() {
     m_camera->panAbsolute(QVector3D(0, 0, 0));
     m_focus->scaleAbsolute(QVector3D(1, 1, 1));
 
-    this->update(); // Need to repaint with new model matrices
+    this->update();  // Need to repaint with new model matrices
 }
 
 void BaseView::setTopView() {
@@ -274,19 +271,33 @@ void BaseView::setIsoView() {
     this->handleWheelForward(QPointF(), 120 * 20);
 }
 
-void BaseView::addObject(QSharedPointer<GraphicsObject> object) { m_render_objects.append(object); }
+void BaseView::addObject(QSharedPointer<GraphicsObject> object) {
+    m_render_objects.append(object);
+}
 
-void BaseView::removeObject(QSharedPointer<GraphicsObject> object) { m_render_objects.removeOne(object); }
+void BaseView::removeObject(QSharedPointer<GraphicsObject> object) {
+    m_render_objects.removeOne(object);
+}
 
-void BaseView::setProjectionMatrix(QMatrix4x4 projection) { m_projection = projection; }
+void BaseView::setProjectionMatrix(QMatrix4x4 projection) {
+    m_projection = projection;
+}
 
-QSharedPointer<CameraManager> BaseView::camera() { return m_camera; }
+QSharedPointer<CameraManager> BaseView::camera() {
+    return m_camera;
+}
 
-QMatrix4x4 BaseView::projectionMatrix() { return m_projection; }
+QMatrix4x4 BaseView::projectionMatrix() {
+    return m_projection;
+}
 
-QMatrix4x4 BaseView::viewMatrix() { return m_camera->viewMatrix(); }
+QMatrix4x4 BaseView::viewMatrix() {
+    return m_camera->viewMatrix();
+}
 
-QSharedPointer<QOpenGLShaderProgram> BaseView::shaderProgram() { return m_shader_program; }
+QSharedPointer<QOpenGLShaderProgram> BaseView::shaderProgram() {
+    return m_shader_program;
+}
 
 void BaseView::handleMidClick(QPointF mouse_ndc_pos) {
     m_camera->setDragStart(mouse_ndc_pos);
@@ -326,7 +337,7 @@ void BaseView::handleMidMove(QPointF mouse_ndc_pos) {
 void BaseView::handleRightMove(QPointF mouse_ndc_pos) {
     m_camera->rotateFromPoint(mouse_ndc_pos);
 
-    this->update(); // Repaint because view matrix has changed
+    this->update();  // Repaint because view matrix has changed
 }
 
 void BaseView::handleRightLeftMove(QPointF mouse_nds_pos) {
@@ -375,16 +386,18 @@ void BaseView::translateCamera(QVector3D v, bool absolute) {
     }
 }
 
-void BaseView::rotateCamera(QVector2D screen_delta) { m_camera->rotateByScreenDelta(screen_delta); }
+void BaseView::rotateCamera(QVector2D screen_delta) {
+    m_camera->rotateByScreenDelta(screen_delta);
+}
 
 void BaseView::initializeGL() {
     // Required for OpenGL to work
     this->initializeOpenGLFunctions();
 
-    this->setupStyle(); // color background
+    this->setupStyle();  // color background
 
-    this->glEnable(GL_CULL_FACE);  // Cull polygons based on winding
-    this->glEnable(GL_DEPTH_TEST); // Depth comparisons so stuff behind other polygons not shown
+    this->glEnable(GL_CULL_FACE);   // Cull polygons based on winding
+    this->glEnable(GL_DEPTH_TEST);  // Depth comparisons so stuff behind other polygons not shown
 
     this->glEnable(GL_BLEND);
     this->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -396,15 +409,15 @@ void BaseView::initializeGL() {
     m_shader_program->link();
     m_shader_program->bind();
 
-    m_shader_locs.projection = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kProjectionName);
-    m_shader_locs.view = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kViewName);
+    m_shader_locs.projection     = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kProjectionName);
+    m_shader_locs.view           = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kViewName);
     m_shader_locs.lighting_color = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kLightingColorName);
-    m_shader_locs.lighting_pos = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kLightingPositionName);
-    m_shader_locs.camera_pos = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kCameraPositionName);
+    m_shader_locs.lighting_pos   = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kLightingPositionName);
+    m_shader_locs.camera_pos     = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kCameraPositionName);
     m_shader_locs.ambient_strength = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kAmbientStrengthName);
     m_shader_locs.using_solid_wireframe_mode =
         m_shader_program->uniformLocation(Constants::OpenGL::Shader::kUsingSolidWireframeModeName);
-    m_shader_locs.stack_axis = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kStackingAxisName);
+    m_shader_locs.stack_axis     = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kStackingAxisName);
     m_shader_locs.overhang_angle = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kOverhangAngleName);
     m_shader_locs.using_overhang_mode = m_shader_program->uniformLocation(Constants::OpenGL::Shader::kOverhangModeName);
     m_shader_locs.rendering_part_object =
@@ -454,9 +467,7 @@ void BaseView::paintGL() {
 
     QQueue<QSharedPointer<GraphicsObject>> goQueue;
     // Add objects to the render queue first
-    for (auto& go : m_render_objects) {
-        go->addToRenderQueue(goQueue);
-    }
+    for (auto& go : m_render_objects) { go->addToRenderQueue(goQueue); }
 
     // Then render objects in queue
     while (!goQueue.isEmpty()) {
@@ -484,4 +495,4 @@ QPointF BaseView::normalizeWidgetPos(QPointF widget_pos) {
     normalized_device_pos.setY(1.0 - 2.0 * widget_pos.y() / this->height());
     return normalized_device_pos;
 }
-} // namespace ORNL
+}  // namespace ORNL

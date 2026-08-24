@@ -34,9 +34,7 @@ struct CirclePathGroup {
 //! @brief Returns the first printable radial segment in a path, or nullptr when the path only contains travels.
 QSharedPointer<SegmentBase> firstPrintSegment(const Path& path) {
     for (const QSharedPointer<SegmentBase>& segment : path) {
-        if (dynamic_cast<TravelSegment*>(segment.data()) == nullptr) {
-            return segment;
-        }
+        if (dynamic_cast<TravelSegment*>(segment.data()) == nullptr) { return segment; }
     }
 
     return nullptr;
@@ -45,9 +43,7 @@ QSharedPointer<SegmentBase> firstPrintSegment(const Path& path) {
 //! @brief Returns segment settings from the first printable segment in a path.
 QSharedPointer<SettingsBase> firstPrintSettings(const Path& path, const QSharedPointer<SettingsBase>& fallback) {
     QSharedPointer<SegmentBase> print_segment = firstPrintSegment(path);
-    if (print_segment != nullptr) {
-        return print_segment->getSb();
-    }
+    if (print_segment != nullptr) { return print_segment->getSb(); }
 
     return fallback;
 }
@@ -89,37 +85,27 @@ void restoreRadialPathSettings(Path& path, const QSharedPointer<SettingsBase>& l
             travel_settings->setSetting(SS::kRegionType, RegionType::kPerimeter);
             segment->setSb(travel_settings);
         }
-        else {
-            segment->getSb()->setSetting(SS::kRegionType, RegionType::kPerimeter);
-        }
+        else { segment->getSb()->setSetting(SS::kRegionType, RegionType::kPerimeter); }
     }
 }
-} // namespace
+}  // namespace
 
 RadialLayer::RadialLayer(uint layer_nr, const QSharedPointer<SettingsBase>& sb) : Layer(layer_nr, sb) {}
 
 void RadialLayer::addPath(const Path& path) {
-    if (path.size() > 0) {
-        m_paths.push_back(path);
-    }
+    if (path.size() > 0) { m_paths.push_back(path); }
 }
 
 QString RadialLayer::writeGCode(QSharedPointer<WriterBase> writer) {
-    if (m_paths.isEmpty()) {
-        return writer->writeEmptyStep();
-    }
+    if (m_paths.isEmpty()) { return writer->writeEmptyStep(); }
 
     QString gcode;
     gcode += writer->writeBeforeRegion(RegionType::kPerimeter, m_paths.size());
     for (Path& path : m_paths) {
-        if (path.size() == 0) {
-            continue;
-        }
+        if (path.size() == 0) { continue; }
 
         gcode += writer->writeBeforePath(RegionType::kPerimeter);
-        for (const QSharedPointer<SegmentBase>& segment : path) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (const QSharedPointer<SegmentBase>& segment : path) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kPerimeter);
     }
     gcode += writer->writeAfterRegion(RegionType::kPerimeter);
@@ -135,9 +121,7 @@ void RadialLayer::calculateModifiers(Point& currentLocation) {
     QVector<CirclePathGroup> circle_groups;
     for (Path path : m_paths) {
         path.removeTravels();
-        if (firstPrintSegment(path) != nullptr) {
-            addToCircleGroup(circle_groups, path);
-        }
+        if (firstPrintSegment(path) != nullptr) { addToCircleGroup(circle_groups, path); }
     }
 
     if (circle_groups.isEmpty()) {
@@ -165,9 +149,7 @@ void RadialLayer::calculateModifiers(Point& currentLocation) {
 }
 
 Point RadialLayer::getStartLocation() const {
-    if (m_paths.isEmpty() || m_paths.first().size() == 0) {
-        return Point(0, 0, 0);
-    }
+    if (m_paths.isEmpty() || m_paths.first().size() == 0) { return Point(0, 0, 0); }
 
     return m_paths.first().front()->start();
 }
@@ -175,21 +157,19 @@ Point RadialLayer::getStartLocation() const {
 float RadialLayer::getMinZ() {
     float min_z = std::numeric_limits<float>::max();
     for (const Path& path : m_paths) {
-        for (const QSharedPointer<SegmentBase>& segment : path) {
-            min_z = std::min(min_z, segment->getMinZ());
-        }
+        for (const QSharedPointer<SegmentBase>& segment : path) { min_z = std::min(min_z, segment->getMinZ()); }
     }
 
     return min_z == std::numeric_limits<float>::max() ? 0.0f : min_z;
 }
 
 Point RadialLayer::getEndLocation() {
-    if (m_paths.isEmpty() || m_paths.last().size() == 0) {
-        return Point(0, 0, 0);
-    }
+    if (m_paths.isEmpty() || m_paths.last().size() == 0) { return Point(0, 0, 0); }
 
     return m_paths.last().back()->end();
 }
 
-bool RadialLayer::hasPaths() const { return !m_paths.isEmpty(); }
-} // namespace ORNL
+bool RadialLayer::hasPaths() const {
+    return !m_paths.isEmpty();
+}
+}  // namespace ORNL

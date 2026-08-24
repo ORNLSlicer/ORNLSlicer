@@ -12,38 +12,38 @@
 namespace ORNL {
 void MotionEstimation::Init() {
     // values in Slicer-1 GCodes.cs are in mm/s2, convert to micron/s2
-    m_v_acceleration = Acceleration((1 / 0.5) * 1000000 * 25.4 / 162560 * 1000);
+    m_v_acceleration  = Acceleration((1 / 0.5) * 1000000 * 25.4 / 162560 * 1000);
     m_xy_acceleration = Acceleration((1 / 0.1) * 1000000 * 25.4 / 162560 * 1000);
 
     m_current_acceleration = m_xy_acceleration;
 
     m_previous_distance = Distance(0);
-    m_previous_x = 0;
-    m_previous_y = 0;
-    m_previous_z = 0;
-    m_previous_w = 0;
-    m_previous_e = 0;
-    m_previous_vertical = true; // initialize for the very first move
+    m_previous_x        = 0;
+    m_previous_y        = 0;
+    m_previous_z        = 0;
+    m_previous_w        = 0;
+    m_previous_e        = 0;
+    m_previous_vertical = true;  // initialize for the very first move
 
-    m_current_bead_width = 0;
+    m_current_bead_width  = 0;
     m_current_bead_height = 0;
     m_nominal_bead_height = 0;
-    m_last_print_z = 0;
-    m_last_print_w = 0;
+    m_last_print_z        = 0;
+    m_last_print_w        = 0;
 
     m_incomingV = max_xy_speed;
 }
 
 void MotionEstimation::setBeadGeometry(Distance bead_width, Distance bead_height) {
-    m_current_bead_width = bead_width;
+    m_current_bead_width  = bead_width;
     m_nominal_bead_height = bead_height;
 
-    if (m_current_bead_height <= 0) {
-        m_current_bead_height = bead_height;
-    }
+    if (m_current_bead_height <= 0) { m_current_bead_height = bead_height; }
 }
 
-void MotionEstimation::resetBeadHeight() { m_current_bead_height = 0; }
+void MotionEstimation::resetBeadHeight() {
+    m_current_bead_height = 0;
+}
 
 Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
                                                   Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b) {
@@ -89,8 +89,7 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
     if (qAbs(dw) > m_min_threshold && qAbs(dx) < m_min_threshold && qAbs(dy) < m_min_threshold) {
         Time t = MotionEstimation::getTravelTime(dw, w_table_speed, m_v_acceleration);
         layer_time += t;
-        if (isFIncluded)
-            G1F_time += t;
+        if (isFIncluded) G1F_time += t;
         MotionEstimation::setVVector(0, 0, w_table_speed());
         m_previous_w = m_current_w;
 
@@ -102,12 +101,10 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
 
     // Z move: non-zero dz
     if (qAbs(dz) > m_min_threshold && qAbs(dx) < m_min_threshold && qAbs(dy) < m_min_threshold) {
-        if (isFIncluded)
-            z_speed = m_current_speed;
+        if (isFIncluded) z_speed = m_current_speed;
         Time t = MotionEstimation::getTravelTime(dz, z_speed, m_v_acceleration);
         layer_time += t;
-        if (isFIncluded)
-            G1F_time += t;
+        if (isFIncluded) G1F_time += t;
         MotionEstimation::setVVector(0, 0, z_speed());
         m_previous_z = m_current_z;
 
@@ -134,9 +131,7 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
 
     if (path_length > m_min_threshold) {
         // ToDo, make sure that max_xy_speed is only for G0 XY moves!
-        if (isGOCommand) {
-            m_current_speed = max_xy_speed;
-        }
+        if (isGOCommand) { m_current_speed = max_xy_speed; }
 
         if (m_current_speed != 0) {
             if (m_previous_vertical) {
@@ -152,8 +147,7 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
                 if (theta <= 0) {
                     Time t = path_length / m_current_speed;
                     layer_time += t;
-                    if (isFIncluded)
-                        G1F_time += t;
+                    if (isFIncluded) G1F_time += t;
                 }
                 else if (qAbs(theta - M_PI) < 0.1) {
                     // Reverse: This happens primarily during infill paths
@@ -177,22 +171,20 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
 
         // If deposition is active, calculate the deposited volume.
         if (deposition_active) {
-            Distance height = m_current_bead_height > 0 ? m_current_bead_height : m_nominal_bead_height;
+            Distance height     = m_current_bead_height > 0 ? m_current_bead_height : m_nominal_bead_height;
             Distance bead_width = m_current_bead_width > 0 ? m_current_bead_width : extrusionWidth;
 
-            Distance z_delta = qAbs(m_current_z - m_last_print_z);
-            Distance w_delta = qAbs(m_current_w - m_last_print_w);
+            Distance z_delta        = qAbs(m_current_z - m_last_print_z);
+            Distance w_delta        = qAbs(m_current_w - m_last_print_w);
             Distance vertical_delta = z_delta > w_delta ? z_delta : w_delta;
 
-            if (height <= 0) {
-                height = layerThickness;
-            }
+            if (height <= 0) { height = layerThickness; }
 
             const Distance min_inferred_height = height * 0.2;
             const Distance max_inferred_height = height * 5.0;
             if (vertical_delta > m_min_threshold && vertical_delta >= min_inferred_height &&
                 vertical_delta <= max_inferred_height) {
-                height = vertical_delta;
+                height                = vertical_delta;
                 m_current_bead_height = height;
             }
 
@@ -207,11 +199,11 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
         }
 
         m_previous_distance = path_length;
-        m_previous_x = m_current_x;
-        m_previous_y = m_current_y;
-        m_previous_z = m_current_z;
-        m_previous_w = m_current_w;
-        m_previous_e = m_current_e;
+        m_previous_x        = m_current_x;
+        m_previous_y        = m_current_y;
+        m_previous_z        = m_current_z;
+        m_previous_w        = m_current_w;
+        m_previous_e        = m_current_e;
         m_previous_vertical = false;
 
         return path_length;
@@ -222,13 +214,12 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
 
 void MotionEstimation::setVVector(float vx, float vy, float vz) {
     m_previous_vv = m_current_vv;
-    m_current_vv = QVector3D(vx, vy, vz);
+    m_current_vv  = QVector3D(vx, vy, vz);
 }
 
 void MotionEstimation::setPreviousVelocityVector(Velocity velocity, Distance dx, Distance dy, Distance dz) {
     const Distance direction_length = sqrt(dx * dx + dy * dy + dz * dz);
-    if (direction_length <= 0)
-        return;
+    if (direction_length <= 0) return;
 
     m_previous_vv.setX((velocity * dx / direction_length)());
     m_previous_vv.setY((velocity * dy / direction_length)());
@@ -243,23 +234,19 @@ double MotionEstimation::getTheta(Distance d, Distance dx, Distance dy, Distance
         (((m_previous_vv.x() * dx + m_previous_vv.y() * dy + m_previous_vv.z() * dz) / (d * m_previous_vv.length()))());
 
     // Applying the bound to make sure that machine roundoff error does not cause a NaN
-    cosTheta = qMin(1.0, cosTheta);
-    cosTheta = qMax(-1.0, cosTheta);
+    cosTheta     = qMin(1.0, cosTheta);
+    cosTheta     = qMax(-1.0, cosTheta);
     double theta = qAcos(cosTheta);
     return theta;
 }
 
 Time MotionEstimation::getTravelTime(Distance d, Velocity v, Acceleration a) {
     Time total;
-    d = abs(d);
-    Time accelTime = v / a;
+    d                  = abs(d);
+    Time accelTime     = v / a;
     Distance accelDist = v * v / (2.0 * a);
-    if (d > 2.0 * accelDist) {
-        total = 2 * accelTime + (d - 2.0 * accelDist) / v;
-    }
-    else {
-        total = sqrt(2.0 * d / a);
-    }
+    if (d > 2.0 * accelDist) { total = 2 * accelTime + (d - 2.0 * accelDist) / v; }
+    else { total = sqrt(2.0 * d / a); }
 
     return total;
 }
@@ -269,35 +256,30 @@ Time MotionEstimation::getTravelTime(Distance d, Velocity v, Acceleration a) {
 //  and deceleration costs extra time
 void MotionEstimation::addPreviousXYDecelerationTime(Time& layer_time) {
     if (!m_previous_vertical) {
-        if (m_previous_acceleration == 0) {
-            m_previous_acceleration = m_current_acceleration;
-        }
-        if (m_previous_acceleration != 0) {
-            layer_time += m_incomingV / m_previous_acceleration;
-        }
+        if (m_previous_acceleration == 0) { m_previous_acceleration = m_current_acceleration; }
+        if (m_previous_acceleration != 0) { layer_time += m_incomingV / m_previous_acceleration; }
     }
 }
 
 // consider only the acceleration from 0-speed
 Time MotionEstimation::firstXYMove(Distance d, Distance dx, Distance dy, Distance dz, Time& G1F_time,
                                    bool isFIncluded) {
-    Time time = 0;
-    Time accelTime = m_current_speed / m_current_acceleration;
+    Time time          = 0;
+    Time accelTime     = m_current_speed / m_current_acceleration;
     Distance accelDist = 0.5 * m_current_acceleration * accelTime * accelTime;
     if (d > accelDist) {
-        time = accelTime + (d - accelDist) / m_current_speed;
+        time        = accelTime + (d - accelDist) / m_current_speed;
         m_incomingV = m_current_speed;
     }
     else {
-        time = sqrt(2.0 * d / m_current_acceleration);
+        time        = sqrt(2.0 * d / m_current_acceleration);
         m_incomingV = time * m_current_acceleration;
     }
     m_previous_vv.setX((m_incomingV * dx / d)());
     m_previous_vv.setY((m_incomingV * dy / d)());
     m_previous_vv.setZ((m_incomingV * dz / d)());
 
-    if (isFIncluded)
-        G1F_time += d / m_current_speed;
+    if (isFIncluded) G1F_time += d / m_current_speed;
 
     return time;
 }
@@ -311,8 +293,7 @@ Time MotionEstimation::firstXYMove(Distance d, Distance dx, Distance dy, Distanc
 Time MotionEstimation::continuousXYMove(double theta, Distance d, Distance dx, Distance dy, Distance dz, Time& G1F_time,
                                         bool isFIncluded) {
     Time time = d / m_current_speed;
-    if (isFIncluded)
-        G1F_time += time;
+    if (isFIncluded) G1F_time += time;
 
     Time addTime = 0;
     // Consider two minor changes
@@ -327,20 +308,20 @@ Time MotionEstimation::continuousXYMove(double theta, Distance d, Distance dx, D
     // get the maximum arc radius based on the speed and the acceleration: a = V^2/R
     // the magnitude of the blendSpeed remains (the smaller of two speeds), while the acceleration changes the speed
     // vector direction
-    Velocity blendSpeed = qMin(m_current_speed, m_incomingV);
-    Distance blendRadius = blendSpeed * blendSpeed / m_current_acceleration;
+    Velocity blendSpeed   = qMin(m_current_speed, m_incomingV);
+    Distance blendRadius  = blendSpeed * blendSpeed / m_current_acceleration;
     Distance byPassLength = blendRadius * qTan(0.5 * theta);
 
     // If the segment length is too small compared to the speed, the arc will cover beyond the segment
     // we assume that the bypass length is at most 1/3 of the shorter of the two segments
     // therefore a slow down might be necessary
-    float bypassMaxRatio = 1.0 / 3.0; // arbitrary for now, should be printer specific
+    float bypassMaxRatio = 1.0 / 3.0;  // arbitrary for now, should be printer specific
     Distance minDistance = qMin(d(), m_previous_distance());
-    bool slowDown = byPassLength > minDistance * bypassMaxRatio;
+    bool slowDown        = byPassLength > minDistance * bypassMaxRatio;
     if (slowDown) {
         // if slow down is needed, calculate the new radius, blend speed and the bypass length
-        blendRadius = bypassMaxRatio * minDistance / qTan(0.5 * theta);
-        blendSpeed = sqrt(blendRadius * m_current_acceleration);
+        blendRadius  = bypassMaxRatio * minDistance / qTan(0.5 * theta);
+        blendSpeed   = sqrt(blendRadius * m_current_acceleration);
         byPassLength = blendRadius * qTan(0.5 * theta);
     }
     // parabolic blend saving: the added value is negative, representing its saving over the two straight line segments
@@ -441,5 +422,5 @@ Velocity MotionEstimation::m_incomingV;
 QVector3D MotionEstimation::m_previous_vv;
 QVector3D MotionEstimation::m_current_vv;
 
-bool MotionEstimation::m_previous_vertical; // Z or W move
-} // namespace ORNL
+bool MotionEstimation::m_previous_vertical;  // Z or W move
+}  // namespace ORNL

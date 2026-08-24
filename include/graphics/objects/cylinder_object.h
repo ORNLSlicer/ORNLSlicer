@@ -11,7 +11,7 @@ namespace ORNL {
  * This class is a base object type that can be used as primative for other objects.
  */
 class CylinderObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor.
     //! \param view: View to render to.
     //! \param radius: GL radius of cylinder.
@@ -27,10 +27,10 @@ class CylinderObject : public GraphicsObject {
     //! \todo Shape factory needs support for inner radius for this constructor to be useful.
     CylinderObject(BaseView* view, float outer_radius, float inner_radius, float height, QColor color);
 
-  private:
+   private:
     //! \brief Dims
     float m_inner_radius;
     float m_outer_radius;
     float m_height;
 };
-} // namespace ORNL
+}  // namespace ORNL

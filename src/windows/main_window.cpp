@@ -7,6 +7,7 @@
 #include <QStatusBar>
 #include <QTimer>
 #include <QUndoCommand>
+
 #include <qaction.h>
 #include <qapplication.h>
 #include <qcontainerfwd.h>
@@ -79,10 +80,10 @@
 
 namespace ORNL {
 constexpr int kPartTransformUndoCommandId = 1;
-constexpr int kSettingValueUndoCommandId = 2;
+constexpr int kSettingValueUndoCommandId  = 2;
 
 class PartTransformUndoCommand : public QUndoCommand {
-  public:
+   public:
     PartTransformUndoCommand(MainWindow* window, QSharedPointer<PartMetaItem> item,
                              const MainWindow::PartTransformSnapshot& before,
                              const MainWindow::PartTransformSnapshot& after)
@@ -90,19 +91,21 @@ class PartTransformUndoCommand : public QUndoCommand {
         setText("part position change");
     }
 
-    int id() const override { return kPartTransformUndoCommandId; }
+    int id() const override {
+        return kPartTransformUndoCommandId;
+    }
 
     bool mergeWith(const QUndoCommand* command) override {
         const auto* other = dynamic_cast<const PartTransformUndoCommand*>(command);
-        if (other == nullptr || other->m_window != m_window || other->m_item != m_item) {
-            return false;
-        }
+        if (other == nullptr || other->m_window != m_window || other->m_item != m_item) { return false; }
 
         m_after = other->m_after;
         return true;
     }
 
-    void undo() override { m_window->applyPartTransformSnapshot(m_item, m_before); }
+    void undo() override {
+        m_window->applyPartTransformSnapshot(m_item, m_before);
+    }
 
     void redo() override {
         if (m_skip_first_redo) {
@@ -113,7 +116,7 @@ class PartTransformUndoCommand : public QUndoCommand {
         m_window->applyPartTransformSnapshot(m_item, m_after);
     }
 
-  private:
+   private:
     MainWindow* m_window;
     QSharedPointer<PartMetaItem> m_item;
     MainWindow::PartTransformSnapshot m_before;
@@ -122,7 +125,7 @@ class PartTransformUndoCommand : public QUndoCommand {
 };
 
 class SettingValueUndoCommand : public QUndoCommand {
-  public:
+   public:
     SettingValueUndoCommand(MainWindow* window, const QString& key,
                             const QVector<MainWindow::SettingValueSnapshot>& before,
                             const QVector<MainWindow::SettingValueSnapshot>& after)
@@ -130,7 +133,9 @@ class SettingValueUndoCommand : public QUndoCommand {
         setText("setting change");
     }
 
-    int id() const override { return kSettingValueUndoCommandId; }
+    int id() const override {
+        return kSettingValueUndoCommandId;
+    }
 
     bool mergeWith(const QUndoCommand* command) override {
         const auto* other = dynamic_cast<const SettingValueUndoCommand*>(command);
@@ -150,7 +155,9 @@ class SettingValueUndoCommand : public QUndoCommand {
         return true;
     }
 
-    void undo() override { m_window->applySettingValueSnapshots(m_before); }
+    void undo() override {
+        m_window->applySettingValueSnapshots(m_before);
+    }
 
     void redo() override {
         if (m_skip_first_redo) {
@@ -161,7 +168,7 @@ class SettingValueUndoCommand : public QUndoCommand {
         m_window->applySettingValueSnapshots(m_after);
     }
 
-  private:
+   private:
     MainWindow* m_window;
     QString m_key;
     QVector<MainWindow::SettingValueSnapshot> m_before;
@@ -172,12 +179,13 @@ class SettingValueUndoCommand : public QUndoCommand {
 MainWindow* MainWindow::m_singleton = nullptr;
 
 MainWindow* MainWindow::getInstance() {
-    if (m_singleton == nullptr)
-        m_singleton = new MainWindow();
+    if (m_singleton == nullptr) m_singleton = new MainWindow();
     return m_singleton;
 }
 
-MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_status(false) { continueStartup(); }
+MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent), m_status(false) {
+    continueStartup();
+}
 
 void MainWindow::continueStartup() {
     PreferencesManager::getInstance()->importPreferences();
@@ -190,24 +198,16 @@ void MainWindow::continueStartup() {
     QString templates;
 
     for (QString path : template_paths) {
-        if (QDir(path).exists()) {
-            templates = path;
-        }
+        if (QDir(path).exists()) { templates = path; }
     }
 
-    if (!templates.isEmpty()) {
-        GSM->loadAllGlobals(templates);
-    }
-    else {
-        qWarning() << "Cannot find base templates directory.";
-    }
+    if (!templates.isEmpty()) { GSM->loadAllGlobals(templates); }
+    else { qWarning() << "Cannot find base templates directory."; }
 
     QString tmp = CSM->getMostRecentSettingFolderLocation();
 
 #ifndef WIN32
-    if (tmp == QStandardPaths::writableLocation(QStandardPaths::HomeLocation)) {
-        tmp = "/tmp/";
-    }
+    if (tmp == QStandardPaths::writableLocation(QStandardPaths::HomeLocation)) { tmp = "/tmp/"; }
 #endif
 
     GSM->loadAllGlobals(tmp);
@@ -248,7 +248,9 @@ void MainWindow::closeEvent(QCloseEvent* event) {
     QApplication::quit();
 }
 
-CmdWidget* MainWindow::getCmdOut() { return m_cmdbar; }
+CmdWidget* MainWindow::getCmdOut() {
+    return m_cmdbar;
+}
 
 void MainWindow::showEvent(QShowEvent* event) {
     QMainWindow::showEvent(event);
@@ -289,9 +291,7 @@ void MainWindow::setupClasses() {
 }
 
 void MainWindow::teardownClasses() {
-
-    if (PreferencesManager::getInstance()->isDirty())
-        PreferencesManager::getInstance()->exportPreferences();
+    if (PreferencesManager::getInstance()->isDirty()) PreferencesManager::getInstance()->exportPreferences();
 }
 
 void MainWindow::setupUi() {
@@ -311,8 +311,7 @@ void MainWindow::setupUi() {
 
 void MainWindow::setupWindows() {
     // Main Window
-    if (this->objectName().isEmpty())
-        this->setObjectName(QStringLiteral("MainWindow"));
+    if (this->objectName().isEmpty()) this->setObjectName(QStringLiteral("MainWindow"));
     this->resize(Constants::UI::MainWindow::kWindowSize);
 
     QIcon icon;
@@ -320,11 +319,11 @@ void MainWindow::setupWindows() {
     this->setWindowIcon(icon);
 
     // Preferences Window
-    m_pref_window = new PreferencesWindow(this);
+    m_pref_window          = new PreferencesWindow(this);
     m_flowrate_calc_window = new FlowrateCalcWindow(this);
-    m_xtrude_calc_window = new XtrudeCalcWindow(this);
-    m_export_window = new GcodeExport(this);
-    m_layertimebar = new LayerTimesWindow(this);
+    m_xtrude_calc_window   = new XtrudeCalcWindow(this);
+    m_export_window        = new GcodeExport(this);
+    m_layertimebar         = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
     m_about_window = new AboutWindow(this);
 }
@@ -507,51 +506,51 @@ void MainWindow::setupActions() {
 
     // Menu File
     m_actions["sel_printer"] = {"Select Printer", ":/icons/3d_printer.png", false, QKeySequence(), nullptr};
-    m_actions["load_model"] = {"Load Model for Building", ":/icons/file_black.png", false, QKeySequence(tr("Ctrl+o")),
-                               nullptr};
+    m_actions["load_model"]  = {"Load Model for Building", ":/icons/file_black.png", false, QKeySequence(tr("Ctrl+o")),
+                                nullptr};
     m_actions["load_point_cloud"] = {"Load Point Cloud", ":/icons/file_cloud_black.png", false, QKeySequence(),
                                      nullptr};
-    m_actions["last_session"] = {"Restore Last Session", ":/icons/restore_session_black.png", false, QKeySequence(),
-                                 nullptr};
-    m_actions["slice"] = {"Slice", ":/icons/layers_black.png", false, QKeySequence(tr("Ctrl+g")), nullptr};
-    m_actions["screenshot"] = {"Take Screenshot", ":/icons/screenshot_black.png", false, QKeySequence(), nullptr};
-    m_actions["exit"] = {"Exit", ":/icons/exit_black.png", false, QKeySequence(), nullptr};
+    m_actions["last_session"]     = {"Restore Last Session", ":/icons/restore_session_black.png", false, QKeySequence(),
+                                     nullptr};
+    m_actions["slice"]            = {"Slice", ":/icons/layers_black.png", false, QKeySequence(tr("Ctrl+g")), nullptr};
+    m_actions["screenshot"]       = {"Take Screenshot", ":/icons/screenshot_black.png", false, QKeySequence(), nullptr};
+    m_actions["exit"]             = {"Exit", ":/icons/exit_black.png", false, QKeySequence(), nullptr};
 
     // Menu Edit
-    m_actions["undo"] = {"Undo", ":/icons/undo_black.png", false, QKeySequence(QKeySequence::Undo), nullptr};
-    m_actions["redo"] = {"Redo", ":/icons/redo_black.png", false, QKeySequence(QKeySequence::Redo), nullptr};
-    m_actions["copy"] = {"Copy", ":/icons/copy_black.png", false, QKeySequence(tr("Ctrl+c")), nullptr};
-    m_actions["paste"] = {"Paste", ":/icons/paste_black.png", false, QKeySequence(tr("Ctrl+v")), nullptr};
+    m_actions["undo"]   = {"Undo", ":/icons/undo_black.png", false, QKeySequence(QKeySequence::Undo), nullptr};
+    m_actions["redo"]   = {"Redo", ":/icons/redo_black.png", false, QKeySequence(QKeySequence::Redo), nullptr};
+    m_actions["copy"]   = {"Copy", ":/icons/copy_black.png", false, QKeySequence(tr("Ctrl+c")), nullptr};
+    m_actions["paste"]  = {"Paste", ":/icons/paste_black.png", false, QKeySequence(tr("Ctrl+v")), nullptr};
     m_actions["reload"] = {"Reload", ":/icons/file_refresh_black.png", false, QKeySequence(tr("Ctrl+r")), nullptr};
     m_actions["delete"] = {"Delete", ":/icons/delete_black.png", false, QKeySequence(tr("Ctrl+Delete")), nullptr};
 
     // Menu Zoom
-    m_actions["zoom_in"] = {"Zoom In", ":/icons/magnify_plus_black.png", false, QKeySequence(tr("Ctrl+=")), nullptr};
+    m_actions["zoom_in"]  = {"Zoom In", ":/icons/magnify_plus_black.png", false, QKeySequence(tr("Ctrl+=")), nullptr};
     m_actions["zoom_out"] = {"Zoom Out", ":/icons/magnify_minus_black.png", false, QKeySequence(tr("Ctrl+-")), nullptr};
     m_actions["zoom_reset"] = {"Reset", ":/icons/magnify_reset_black.png", false, QKeySequence(tr("Ctrl+0")), nullptr};
 
     // Menu Hidden Settings
-    m_actions["show_all"] = {"Show All Settings", ":/icons/eye_black.png", false, QKeySequence(), nullptr};
-    m_actions["show_all_printer"] = {"Show All Printer Settings", ":/icons/eye_black.png", false, QKeySequence(),
-                                     nullptr};
-    m_actions["show_all_material"] = {"Show All Material Settings", ":/icons/eye_black.png", false, QKeySequence(),
-                                      nullptr};
-    m_actions["show_all_profile"] = {"Show All Profile Settings", ":/icons/eye_black.png", false, QKeySequence(),
-                                     nullptr};
+    m_actions["show_all"]              = {"Show All Settings", ":/icons/eye_black.png", false, QKeySequence(), nullptr};
+    m_actions["show_all_printer"]      = {"Show All Printer Settings", ":/icons/eye_black.png", false, QKeySequence(),
+                                          nullptr};
+    m_actions["show_all_material"]     = {"Show All Material Settings", ":/icons/eye_black.png", false, QKeySequence(),
+                                          nullptr};
+    m_actions["show_all_profile"]      = {"Show All Profile Settings", ":/icons/eye_black.png", false, QKeySequence(),
+                                          nullptr};
     m_actions["show_all_experimental"] = {"Show All Experimental Settings", ":/icons/eye_black.png", false,
                                           QKeySequence(), nullptr};
 
     // Menu View
-    m_actions["part_view"] = {"Part View", ":/icons/cube_black.png", false, QKeySequence(), nullptr};
-    m_actions["gcode_view"] = {"G-Code View", ":/icons/3d_black.png", false, QKeySequence(), nullptr};
+    m_actions["part_view"]    = {"Part View", ":/icons/cube_black.png", false, QKeySequence(), nullptr};
+    m_actions["gcode_view"]   = {"G-Code View", ":/icons/3d_black.png", false, QKeySequence(), nullptr};
     m_actions["reset_camera"] = {"Reset Camera", ":/icons/camera_reset_black.png", false, QKeySequence(), nullptr};
 
     // Menu Settings
-    m_actions["template_load"] = {"Load from Template", ":/icons/settings_file_black.png", false,
-                                  QKeySequence(tr("Ctrl+t")), nullptr};
-    m_actions["template_save"] = {"Save as Template", ":/icons/settings_save_black.png", false,
-                                  QKeySequence(tr("Ctrl+Shift+t")), nullptr};
-    m_actions["gcode_to_s2c"] = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
+    m_actions["template_load"]  = {"Load from Template", ":/icons/settings_file_black.png", false,
+                                   QKeySequence(tr("Ctrl+t")), nullptr};
+    m_actions["template_save"]  = {"Save as Template", ":/icons/settings_save_black.png", false,
+                                   QKeySequence(tr("Ctrl+Shift+t")), nullptr};
+    m_actions["gcode_to_s2c"]   = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
     m_actions["setting_folder"] = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
                                    QKeySequence(), nullptr};
     m_actions["layer_bar_setting_folder"] = {"Additional Layer Bar Setting Location",
@@ -560,7 +559,7 @@ void MainWindow::setupActions() {
                          nullptr};
 
     // Menu Project
-    m_actions["project_new"] = {"New Project", ":/icons/file_add_black.png", false, QKeySequence(), nullptr};
+    m_actions["project_new"]  = {"New Project", ":/icons/file_add_black.png", false, QKeySequence(), nullptr};
     m_actions["project_load"] = {"Load Project", ":/icons/folder_black.png", false, QKeySequence(tr("Ctrl+Shift+o")),
                                  nullptr};
     m_actions["project_save"] = {"Save Project", ":/icons/save_project_black.png", false, QKeySequence(tr("Ctrl+s")),
@@ -569,10 +568,10 @@ void MainWindow::setupActions() {
     m_actions["gcode_export"] = {"Export G-Code", ":/icons/export_black.png", false, QKeySequence(), nullptr};
 
     // Menu Tools
-    m_actions["flowrate_calc"] = {"Flowrate Calculator", ":/icons/calculator_black.png", false, QKeySequence(),
-                                  nullptr};
-    m_actions["xtrude_calc"] = {"Xtrude Calculator", ":/icons/print_head.png", false, QKeySequence(), nullptr};
-    m_actions["build_log"] = {"Build Log", ":/icons/list.png", false, QKeySequence(), nullptr};
+    m_actions["flowrate_calc"]       = {"Flowrate Calculator", ":/icons/calculator_black.png", false, QKeySequence(),
+                                        nullptr};
+    m_actions["xtrude_calc"]         = {"Xtrude Calculator", ":/icons/print_head.png", false, QKeySequence(), nullptr};
+    m_actions["build_log"]           = {"Build Log", ":/icons/list.png", false, QKeySequence(), nullptr};
     m_actions["remote_connectivity"] = {"Remote Connectivity", ":/icons/remote_connect_black.png", false,
                                         QKeySequence(), nullptr};
 
@@ -580,16 +579,16 @@ void MainWindow::setupActions() {
     m_actions["python_int"] = {"Python Interpreter", ":/icons/python.ico", false, QKeySequence(), nullptr};
 
     // Menu Help
-    m_actions["manual"] = {"User's Manual", ":/icons/help_black.png", false, QKeySequence(), nullptr};
-    m_actions["repo"] = {"Open Website/Repository", ":/icons/web_black.png", false, QKeySequence(), nullptr};
-    m_actions["bug"] = {"Report Bug", ":/icons/bug_black.png", false, QKeySequence(), nullptr};
+    m_actions["manual"]   = {"User's Manual", ":/icons/help_black.png", false, QKeySequence(), nullptr};
+    m_actions["repo"]     = {"Open Website/Repository", ":/icons/web_black.png", false, QKeySequence(), nullptr};
+    m_actions["bug"]      = {"Report Bug", ":/icons/bug_black.png", false, QKeySequence(), nullptr};
     m_actions["about_s2"] = {QString("About %1").arg(QApplication::applicationDisplayName()),
                              ":/icons/ornlslicer_logo.png", false, QKeySequence(), nullptr};
     m_actions["about_qt"] = {"About Qt", ":/icons/qt.png", false, QKeySequence(), nullptr};
 
     // Menu Debug
-    m_actions["debug"] = {"Run MainWindow::debug()", ":/icons/test_black.png", false, QKeySequence(tr("Ctrl+Space")),
-                          nullptr};
+    m_actions["debug"]   = {"Run MainWindow::debug()", ":/icons/test_black.png", false, QKeySequence(tr("Ctrl+Space")),
+                            nullptr};
     m_actions["cs_view"] = {"Cross-section Viewer", ":/icons/layers_black.png", false, QKeySequence(), nullptr};
 
     // Setup all defined actions above.
@@ -984,8 +983,9 @@ void MainWindow::setupEvents() {
         }
     });
     connect(m_part_widget, &PartWidget::displayRotationInfoMsg, this, [this]() {
-        m_cmdbar->append("\r\nScaling applied permenantly to current transformation\r\n"
-                         "Scaling factors are reset to 100%\r\n");
+        m_cmdbar->append(
+            "\r\nScaling applied permenantly to current transformation\r\n"
+            "Scaling factors are reset to 100%\r\n");
     });
     connect(m_part_widget->getPartMeta().get(), &PartMetaModel::itemAddedUpdate, this,
             [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
@@ -1110,44 +1110,36 @@ void MainWindow::switchViews(int index) {
 MainWindow::PartTransformSnapshot MainWindow::partTransformSnapshot(QSharedPointer<PartMetaItem> item) const {
     PartTransformSnapshot snapshot;
     if (!item.isNull()) {
-        snapshot.transformation = item->transformation();
+        snapshot.transformation   = item->transformation();
         snapshot.scale_unit_index = item->scaleUnitIndex();
     }
     return snapshot;
 }
 
 void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, const PartTransformSnapshot& snapshot) {
-    if (item.isNull() || !m_part_transform_snapshots.contains(item)) {
-        return;
-    }
+    if (item.isNull() || !m_part_transform_snapshots.contains(item)) { return; }
 
     m_applying_undo_redo = true;
     item->setTransformation(snapshot.transformation);
     item->setScaleUnitIndex(snapshot.scale_unit_index);
     m_part_transform_snapshots[item] = snapshot;
-    m_applying_undo_redo = false;
+    m_applying_undo_redo             = false;
 }
 
-QVector<MainWindow::SettingValueSnapshot>
-MainWindow::settingValueSnapshots(const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const {
+QVector<MainWindow::SettingValueSnapshot> MainWindow::settingValueSnapshots(
+    const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const {
     QList<QSharedPointer<SettingsBase>> targets = settings_bases;
-    if (targets.isEmpty()) {
-        targets.push_back(GSM->getGlobal());
-    }
+    if (targets.isEmpty()) { targets.push_back(GSM->getGlobal()); }
 
     QVector<SettingValueSnapshot> snapshots;
     for (const QSharedPointer<SettingsBase>& settings_base : targets) {
-        if (settings_base.isNull()) {
-            continue;
-        }
+        if (settings_base.isNull()) { continue; }
 
         SettingValueSnapshot snapshot;
-        snapshot.key = key;
+        snapshot.key           = key;
         snapshot.settings_base = settings_base;
-        snapshot.existed = settings_base->contains(key);
-        if (snapshot.existed) {
-            snapshot.value = settings_base->json()[0][key.toStdString()];
-        }
+        snapshot.existed       = settings_base->contains(key);
+        if (snapshot.existed) { snapshot.value = settings_base->json()[0][key.toStdString()]; }
 
         snapshots.push_back(snapshot);
     }
@@ -1156,36 +1148,24 @@ MainWindow::settingValueSnapshots(const QString& key, const QList<QSharedPointer
 }
 
 void MainWindow::applySettingValueSnapshots(const QVector<SettingValueSnapshot>& snapshots) {
-    if (snapshots.isEmpty()) {
-        return;
-    }
+    if (snapshots.isEmpty()) { return; }
 
     QSet<QString> restored_keys;
 
     m_applying_undo_redo = true;
     for (const SettingValueSnapshot& snapshot : snapshots) {
-        if (snapshot.settings_base.isNull()) {
-            continue;
-        }
+        if (snapshot.settings_base.isNull()) { continue; }
 
         fifojson& settings_json = snapshot.settings_base->json();
-        if (settings_json.empty()) {
-            settings_json.push_back(fifojson::object());
-        }
+        if (settings_json.empty()) { settings_json.push_back(fifojson::object()); }
 
-        if (snapshot.existed) {
-            settings_json[0][snapshot.key.toStdString()] = snapshot.value;
-        }
-        else {
-            snapshot.settings_base->remove(snapshot.key);
-        }
+        if (snapshot.existed) { settings_json[0][snapshot.key.toStdString()] = snapshot.value; }
+        else { snapshot.settings_base->remove(snapshot.key); }
 
         restored_keys.insert(snapshot.key);
     }
 
-    for (const QString& key : restored_keys) {
-        m_settingbar->restoreSettingValue(key);
-    }
+    for (const QString& key : restored_keys) { m_settingbar->restoreSettingValue(key); }
     m_applying_undo_redo = false;
 }
 
@@ -1195,9 +1175,7 @@ bool MainWindow::partTransformSnapshotsEqual(const PartTransformSnapshot& lhs, c
 
 bool MainWindow::settingValueSnapshotsEqual(const QVector<SettingValueSnapshot>& lhs,
                                             const QVector<SettingValueSnapshot>& rhs) const {
-    if (lhs.size() != rhs.size()) {
-        return false;
-    }
+    if (lhs.size() != rhs.size()) { return false; }
 
     for (int i = 0, end = lhs.size(); i < end; ++i) {
         if (lhs[i].key != rhs[i].key || lhs[i].settings_base != rhs[i].settings_base ||
@@ -1205,33 +1183,25 @@ bool MainWindow::settingValueSnapshotsEqual(const QVector<SettingValueSnapshot>&
             return false;
         }
 
-        if (lhs[i].existed && lhs[i].value != rhs[i].value) {
-            return false;
-        }
+        if (lhs[i].existed && lhs[i].value != rhs[i].value) { return false; }
     }
 
     return true;
 }
 
 void MainWindow::captureSettingChange(QString key, QList<QSharedPointer<SettingsBase>> settings_bases) {
-    if (m_applying_undo_redo || m_pending_setting_snapshots.contains(key)) {
-        return;
-    }
+    if (m_applying_undo_redo || m_pending_setting_snapshots.contains(key)) { return; }
 
     m_pending_setting_snapshots[key] = settingValueSnapshots(key, settings_bases);
 }
 
 void MainWindow::recordSettingChange(QString key) {
-    if (m_applying_undo_redo || !m_pending_setting_snapshots.contains(key)) {
-        return;
-    }
+    if (m_applying_undo_redo || !m_pending_setting_snapshots.contains(key)) { return; }
 
     QVector<SettingValueSnapshot> before = m_pending_setting_snapshots.take(key);
-    QStringList coupled_keys = m_pending_setting_snapshots.keys();
+    QStringList coupled_keys             = m_pending_setting_snapshots.keys();
     coupled_keys.sort();
-    for (const QString& coupled_key : coupled_keys) {
-        before.append(m_pending_setting_snapshots.take(coupled_key));
-    }
+    for (const QString& coupled_key : coupled_keys) { before.append(m_pending_setting_snapshots.take(coupled_key)); }
 
     QVector<SettingValueSnapshot> after;
     after.reserve(before.size());
@@ -1240,30 +1210,24 @@ void MainWindow::recordSettingChange(QString key) {
         settings_bases.push_back(snapshot.settings_base);
 
         const QVector<SettingValueSnapshot> current = settingValueSnapshots(snapshot.key, settings_bases);
-        if (!current.isEmpty()) {
-            after.push_back(current[0]);
-        }
+        if (!current.isEmpty()) { after.push_back(current[0]); }
     }
 
-    if (settingValueSnapshotsEqual(before, after)) {
-        return;
-    }
+    if (settingValueSnapshotsEqual(before, after)) { return; }
 
     m_undo_stack->push(new SettingValueUndoCommand(this, key, before, after));
 }
 
 void MainWindow::initializePartTransform(QSharedPointer<PartMetaItem> item) {
-    if (!item.isNull()) {
-        m_part_transform_snapshots[item] = partTransformSnapshot(item);
-    }
+    if (!item.isNull()) { m_part_transform_snapshots[item] = partTransformSnapshot(item); }
 }
 
-void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) { m_part_transform_snapshots.remove(item); }
+void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) {
+    m_part_transform_snapshots.remove(item);
+}
 
 void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
-    if (m_applying_undo_redo || item.isNull()) {
-        return;
-    }
+    if (m_applying_undo_redo || item.isNull()) { return; }
 
     const PartTransformSnapshot current = partTransformSnapshot(item);
     if (!m_part_transform_snapshots.contains(item)) {
@@ -1272,9 +1236,7 @@ void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
     }
 
     const PartTransformSnapshot before = m_part_transform_snapshots[item];
-    if (partTransformSnapshotsEqual(before, current)) {
-        return;
-    }
+    if (partTransformSnapshotsEqual(before, current)) { return; }
 
     m_undo_stack->push(new PartTransformUndoCommand(this, item, before, current));
     m_part_transform_snapshots[item] = current;
@@ -1381,8 +1343,7 @@ void MainWindow::doSlice() {
     m_gcodebar->clear();
     m_layertimebar->clear();
 
-    if (!CSM->isBuildMode())
-        return;
+    if (!CSM->isBuildMode()) return;
 
     m_slice_dialog.reset(new SliceDialog(this));
     connect(CSM.get(), &SessionManager::updateDialog, m_slice_dialog.get(),
@@ -1418,16 +1379,13 @@ void MainWindow::loadModel(MeshType mt) {
                                                   CSM->getMostRecentModelLocation(), model_filter);
     }
 
-    if (filepaths.isEmpty())
-        return;
+    if (filepaths.isEmpty()) return;
 
     QString statusMsg = "Loading model(s): " + filepaths.join("\n");
     m_cmdbar->append(statusMsg);
 
     // For each file in the selection, load it.
-    for (QString file : filepaths) {
-        CSM->loadModel(file, true, mt);
-    }
+    for (QString file : filepaths) { CSM->loadModel(file, true, mt); }
 }
 
 void MainWindow::loadPointCloud() {
@@ -1435,8 +1393,7 @@ void MainWindow::loadPointCloud() {
     QStringList filepaths =
         QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open point cloud file"), CSM->getMostRecentModelLocation(),
                                       QObject::tr("Point Cloud (*.matrix *.xyz)"));
-    if (filepaths.isEmpty())
-        return;
+    if (filepaths.isEmpty()) return;
 
     QString statusMsg = "Loading model(s): " + filepaths.join("\n");
     m_cmdbar->append(statusMsg);
@@ -1444,8 +1401,7 @@ void MainWindow::loadPointCloud() {
     // Add parts/ load into graphics
     for (QString file : filepaths) {
         auto new_mesh = OpenMesh::BuildMeshFromPointCloud(file);
-        if (new_mesh != nullptr)
-            CSM->addPart(new_mesh);
+        if (new_mesh != nullptr) CSM->addPart(new_mesh);
     }
 }
 
@@ -1491,9 +1447,7 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
 
     connect(loader, &GCodeLoader::gcodeLoadedVisualization, this,
             [this](QVector<QVector<QSharedPointer<SegmentBase>>> segments) {
-                if (segments.empty()) {
-                    return;
-                }
+                if (segments.empty()) { return; }
 
                 m_gcodebar->setMaxLayer(qMax(segments.size() - 1, 0));
                 if (segments.size() > 1)
@@ -1510,7 +1464,9 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
     enableExportMenu();
 }
 
-void MainWindow::importFile(QString filepath, bool alterFile) { importGCodeHelper(filepath, alterFile); }
+void MainWindow::importFile(QString filepath, bool alterFile) {
+    importGCodeHelper(filepath, alterFile);
+}
 
 void MainWindow::updateStatus(QString status) {
     m_cmdbar->append(status);
@@ -1524,18 +1480,14 @@ bool MainWindow::saveSessionToSelectedFile(bool notifyOnSuccess, bool waitForSav
     save_dialog.setAcceptMode(QFileDialog::AcceptSave);
     save_dialog.setNameFilters(QStringList() << "ORNLSlicer Project File (*.s2p)" << "Any Files (*)");
     save_dialog.setDefaultSuffix("s2p");
-    if (!save_dialog.exec())
-        return false;
+    if (!save_dialog.exec()) return false;
 
     QString filename = save_dialog.selectedFiles().first();
-    if (filename.isEmpty())
-        return false;
-    if (selectedFile != nullptr)
-        *selectedFile = filename;
+    if (filename.isEmpty()) return false;
+    if (selectedFile != nullptr) *selectedFile = filename;
 
     SessionLoader* loader = CSM->saveSession(filename, true, notifyOnSuccess);
-    if (waitForSave)
-        loader->wait();
+    if (waitForSave) loader->wait();
 
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
     updateSavedProjectState();
@@ -1546,27 +1498,25 @@ bool MainWindow::saveSessionToSelectedFile(bool notifyOnSuccess, bool waitForSav
 
 void MainWindow::saveSession() {
     QString filename;
-    if (!saveSessionToSelectedFile(true, false, &filename))
-        return;
+    if (!saveSessionToSelectedFile(true, false, &filename)) return;
 
     m_statusbar->showMessage("Session saved");
     m_cmdbar->append("Session saved: " + filename);
 }
 
 QString MainWindow::projectStateSnapshot() {
-    if (m_part_widget != nullptr)
-        m_part_widget->updatePartTransformations();
+    if (m_part_widget != nullptr) m_part_widget->updatePartTransformations();
 
     fifojson snapshot;
     snapshot[Constants::Settings::Session::Files::kSession] = CSM->partsJson();
-    snapshot[Constants::Settings::Session::Files::kGlobal] = GSM->globalJson();
+    snapshot[Constants::Settings::Session::Files::kGlobal]  = GSM->globalJson();
 
     fifojson local_settings = fifojson::array();
     for (auto& part : CSM->parts()) {
         fifojson part_json;
-        part_json[Constants::Settings::Session::LocalFile::kName] = part->name();
+        part_json[Constants::Settings::Session::LocalFile::kName]     = part->name();
         part_json[Constants::Settings::Session::LocalFile::kSettings] = part->getSb()->json();
-        part_json[Constants::Settings::Session::LocalFile::kRanges] = part->SettingsRangesToJson();
+        part_json[Constants::Settings::Session::LocalFile::kRanges]   = part->SettingsRangesToJson();
         local_settings.push_back(part_json);
     }
     snapshot[Constants::Settings::Session::Files::kLocal] = local_settings;
@@ -1576,24 +1526,23 @@ QString MainWindow::projectStateSnapshot() {
 
 void MainWindow::updateSavedProjectState() {
     m_saved_project_state = projectStateSnapshot();
-    m_project_modified = false;
+    m_project_modified    = false;
 }
 
-void MainWindow::markProjectModified() { m_project_modified = true; }
+void MainWindow::markProjectModified() {
+    m_project_modified = true;
+}
 
 bool MainWindow::hasUnsavedProjectChanges() {
-    if (!m_project_modified)
-        return false;
+    if (!m_project_modified) return false;
 
     return projectStateSnapshot() != m_saved_project_state;
 }
 
 bool MainWindow::confirmProjectClose() {
-    if (!PreferencesManager::getInstance()->getWarnUnsavedProjectOnClosePreference())
-        return true;
+    if (!PreferencesManager::getInstance()->getWarnUnsavedProjectOnClosePreference()) return true;
 
-    if (!hasUnsavedProjectChanges())
-        return true;
+    if (!hasUnsavedProjectChanges()) return true;
 
     QMessageBox dialog(this);
     dialog.setIcon(QMessageBox::Warning);
@@ -1622,12 +1571,10 @@ void MainWindow::loadSession() {
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
     load_dialog.setNameFilters(QStringList() << "ORNLSlicer Project File (*.s2p)" << "Any Files (*)");
     load_dialog.setDefaultSuffix("s2p");
-    if (!load_dialog.exec())
-        return;
+    if (!load_dialog.exec()) return;
 
     QString filename = load_dialog.selectedFiles().first();
-    if (filename.isEmpty())
-        return;
+    if (filename.isEmpty()) return;
 
     SessionLoader* loader = loadASession(filename);
     if (loader != nullptr) {
@@ -1643,8 +1590,7 @@ void MainWindow::loadSession() {
 SessionLoader* MainWindow::loadASession(const QString& filename) {
     m_part_widget->clear();
     SessionLoader* loader = CSM->loadSession(true, filename);
-    if (loader != nullptr)
-        connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
+    if (loader != nullptr) connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
     return loader;
 }
 
@@ -1656,14 +1602,11 @@ void MainWindow::updateSettings(const QString& name) {
 
 void MainWindow::showAllSettings(QString key, QMenu* menu) {
     QList<QString> settings = PreferencesManager::getInstance()->getHiddenSettings(key);
-    for (QString setting : settings) {
-        this->removeHiddenSetting(menu, key, setting);
-    }
+    for (QString setting : settings) { this->removeHiddenSetting(menu, key, setting); }
 }
 
 void MainWindow::autoSave() {
-    if (m_status)
-        return;
+    if (m_status) return;
 
     if (CSM->parts().count() == 0) {
         qDebug() << "Not auto saving session - no part exists";
@@ -1673,14 +1616,12 @@ void MainWindow::autoSave() {
     QString homePathStr = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir homePath(homePathStr);
     try {
-        if (!homePath.exists())
-            QDir().mkpath(homePathStr);
+        if (!homePath.exists()) QDir().mkpath(homePathStr);
     } catch (...) { qWarning() << "Check your path, cannot create directory:" + homePathStr; }
     CSM->saveSession(QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p", false);
 }
 
 void MainWindow::autoLoad() {
-
     QString filename = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation) + "/_lastsession.s2p";
     QFileInfo file(filename);
     if (!file.exists() || !file.isFile()) {
@@ -1695,12 +1636,13 @@ void MainWindow::autoLoad() {
 
 // New Project: delete all existing loaded parts, start from scratch
 //   it does not replace the existing settings though
-void MainWindow::createProject() { m_part_widget->clear(); }
+void MainWindow::createProject() {
+    m_part_widget->clear();
+}
 
 void MainWindow::saveTemplate() {
     TemplateSaveDialog dialog;
-    if (!dialog.exec())
-        return;
+    if (!dialog.exec()) return;
 
     GSM->saveTemplate(dialog.keys(), dialog.filename(), dialog.name());
     GSM->loadGlobalJson(dialog.filename());
@@ -1716,19 +1658,16 @@ void MainWindow::loadTemplate() {
     load_dialog.setNameFilters(QStringList() << "ORNLSlicer Configuration/Template File (*.s2c)"
                                              << "Any Files (*)");
     load_dialog.setDefaultSuffix("s2c");
-    if (!load_dialog.exec())
-        return;
+    if (!load_dialog.exec()) return;
 
     QString filename = load_dialog.selectedFiles().first();
-    if (filename.isEmpty())
-        return;
+    if (filename.isEmpty()) return;
 
     loadTemplateFile(filename);
 }
 
 void MainWindow::loadTemplateFile(const QString& filename) {
-    if (filename.isEmpty())
-        return;
+    if (filename.isEmpty()) return;
 
     GSM->loadGlobalJson(filename);
     QFileInfo fileInfo(filename);
@@ -1736,13 +1675,11 @@ void MainWindow::loadTemplateFile(const QString& filename) {
     QStringList tabs {Constants::Settings::SettingTab::kPrinter, Constants::Settings::SettingTab::kMaterial,
                       Constants::Settings::SettingTab::kProfile, Constants::Settings::SettingTab::kExperimental};
 
-    for (QString tab : tabs)
-        GSM->constructActiveGlobal(tab, actualFilename);
+    for (QString tab : tabs) GSM->constructActiveGlobal(tab, actualFilename);
 
     QMap<QString, QMap<QString, QSharedPointer<SettingsBase>>> allGlobalCopy = GSM->getAllGlobals();
     for (int i = tabs.size() - 1; i >= 0; --i) {
-        if (!allGlobalCopy[tabs[i]].contains(actualFilename))
-            tabs.removeAt(i);
+        if (!allGlobalCopy[tabs[i]].contains(actualFilename)) tabs.removeAt(i);
     }
     m_settingbar->displayNewSetting(tabs, actualFilename);
     markProjectModified();
@@ -1750,8 +1687,7 @@ void MainWindow::loadTemplateFile(const QString& filename) {
 
 void MainWindow::convertGcodeToS2C() {
     GcodeToS2CDialog dialog(this);
-    if (!dialog.exec())
-        return;
+    if (!dialog.exec()) return;
 
     loadTemplateFile(dialog.outputFilePath());
 }
@@ -1762,12 +1698,10 @@ void MainWindow::setSettingFolder() {
     load_dialog.setWindowTitle("Select Directory");
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
 
-    if (!load_dialog.exec())
-        return;
+    if (!load_dialog.exec()) return;
 
     QString path = load_dialog.selectedFiles().first() + "/";
-    if (path.isEmpty())
-        return;
+    if (path.isEmpty()) return;
 
     CSM->setMostRecentSettingFolderLocation(path);
     GSM->loadAllGlobals(path);
@@ -1781,12 +1715,10 @@ void MainWindow::setLayerBarSettingFolder() {
     load_dialog.setWindowTitle("Select Directory");
     load_dialog.setAcceptMode(QFileDialog::AcceptOpen);
 
-    if (!load_dialog.exec())
-        return;
+    if (!load_dialog.exec()) return;
 
     QString path = load_dialog.selectedFiles().first() + "/";
-    if (path.isEmpty())
-        return;
+    if (path.isEmpty()) return;
 
     CSM->setMostRecentLayerBarSettingFolderLocation(path);
     GSM->loadLayerBarTemplate(path);
@@ -1809,7 +1741,9 @@ void MainWindow::setLock(bool lock) {
     m_gcodebar->setDisabled(lock);
 }
 
-void MainWindow::setTitleInfo(const QString& str) { this->setWindowTitle(str); }
+void MainWindow::setTitleInfo(const QString& str) {
+    this->setWindowTitle(str);
+}
 
 void MainWindow::enableSelectionMenu(bool partSelected) {
     m_actions["reload"].action->setEnabled(partSelected);
@@ -1817,9 +1751,13 @@ void MainWindow::enableSelectionMenu(bool partSelected) {
     m_actions["copy"].action->setEnabled(partSelected);
 }
 
-void MainWindow::enableSliceMenu(bool partExists) { m_actions["slice"].action->setEnabled(partExists); }
+void MainWindow::enableSliceMenu(bool partExists) {
+    m_actions["slice"].action->setEnabled(partExists);
+}
 
-void MainWindow::enableExportBuildLogMenu() { m_actions["build_log"].action->setEnabled(true); }
+void MainWindow::enableExportBuildLogMenu() {
+    m_actions["build_log"].action->setEnabled(true);
+}
 
 void MainWindow::enableExportMenu() {
     m_actions["gcode_export"].action->setEnabled(true);
@@ -1832,4 +1770,4 @@ void MainWindow::showGCodeKeyInfo(QString msg) {
 
     m_cmdbar->append(msg);
 }
-} // namespace ORNL
+}  // namespace ORNL

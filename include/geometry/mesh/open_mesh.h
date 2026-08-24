@@ -24,7 +24,7 @@ namespace ORNL {
 //! \class OpenMesh
 //! \brief A class that represents an open 3D volume
 class OpenMesh : public MeshBase {
-  public:
+   public:
     //! \brief Default constructor
     OpenMesh();
 
@@ -93,15 +93,15 @@ class OpenMesh : public MeshBase {
     //! \brief converts a surface mesh into vertices and faces
     //! \param sm the surface mesh
     //! \return a pair of vertices and faces
-    static std::pair<QVector<MeshVertex>, QVector<MeshFace>>
-    VerticesAndFacesFromSurfaceMesh(MeshTypes::SurfaceMesh& sm);
+    static std::pair<QVector<MeshVertex>, QVector<MeshFace>> VerticesAndFacesFromSurfaceMesh(
+        MeshTypes::SurfaceMesh& sm);
 
     //! \brief Builds and returns a surface mesh from a point cloud
     //! \param file_path the file to build the cloud from
     //! \return a pointer to the new mesh if it could be loaded
     static QSharedPointer<OpenMesh> BuildMeshFromPointCloud(const QString& file_path);
 
-  private:
+   private:
     //! \brief converts vertices and faces into polyhedron, used to keep the two in sync
     void convert() override;
 
@@ -123,7 +123,7 @@ class OpenMesh : public MeshBase {
         ConstructPointCloud(MeshTypes::SurfaceMesh& mesh, PointIterator b, PointIterator e) : mesh(mesh) {
             for (; b != e; ++b) {
                 boost::graph_traits<MeshTypes::SurfaceMesh>::vertex_descriptor v;
-                v = add_vertex(mesh);
+                v             = add_vertex(mesh);
                 mesh.point(v) = *b;
             }
         }
@@ -135,9 +135,15 @@ class OpenMesh : public MeshBase {
                           vertex_descriptor(static_cast<size_type>(f[2])));
             return *this;
         }
-        ConstructPointCloud& operator*() { return *this; }
-        ConstructPointCloud& operator++() { return *this; }
-        ConstructPointCloud operator++(int) { return *this; }
+        ConstructPointCloud& operator*() {
+            return *this;
+        }
+        ConstructPointCloud& operator++() {
+            return *this;
+        }
+        ConstructPointCloud operator++(int) {
+            return *this;
+        }
     };
 
     //! \brief the CGAL representation of this mesh
@@ -146,4 +152,4 @@ class OpenMesh : public MeshBase {
     //! \brief the original CGAL representation of this mesh
     MeshTypes::SurfaceMesh m_original_representation;
 };
-} // namespace ORNL
+}  // namespace ORNL

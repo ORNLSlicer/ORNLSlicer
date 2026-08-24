@@ -3,6 +3,7 @@
 #include <QDialog>
 #include <QMap>
 #include <QSet>
+
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
@@ -24,11 +25,11 @@ namespace ORNL {
  */
 class CsDebugDialog : public QDialog {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor.
     explicit CsDebugDialog(QWidget* parent = nullptr);
 
-  private slots:
+   private slots:
     //! \brief Paint graphics view.
     void paintGraphicsView(int height = -1);
     //! \brief Get updates from combo boxes.
@@ -38,7 +39,7 @@ class CsDebugDialog : public QDialog {
     //! \brief Change the layer painted.
     void changeLayer(int height);
 
-  private:
+   private:
     //! \brief Change the current part.
     void changePart(QSharedPointer<Part> part);
     //! \brief Update the scrollbar.
@@ -82,4 +83,4 @@ class CsDebugDialog : public QDialog {
     // Graphics View
     QGraphicsView* m_view;
 };
-} // namespace ORNL
+}  // namespace ORNL

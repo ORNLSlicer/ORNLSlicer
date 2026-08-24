@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QTextEdit>
 #include <QWidget>
+
 #include <qlist.h>
 #include <qtmetamacros.h>
 
@@ -18,12 +19,12 @@ namespace ORNL {
 class LayerTimesWindow : public QWidget {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Standard widget constructor
     //! \param parent Pointer to parent window
     LayerTimesWindow(QWidget* parent);
 
-  public slots:
+   public slots:
 
     //! \brief Slot to receive updated time information from gcode parse
     //! \param layerTimes list of times for each layer
@@ -34,7 +35,7 @@ class LayerTimesWindow : public QWidget {
     //! \brief Clear Layer times text
     void clear();
 
-  private:
+   private:
     //! \brief Setup widget internal events
     void setupEvents();
     //! \brief Update text after user changes threshold or new time information is received
@@ -70,4 +71,4 @@ class LayerTimesWindow : public QWidget {
     Time m_min, m_max;
     int m_min_index, m_max_index;
 };
-} // namespace ORNL
+}  // namespace ORNL

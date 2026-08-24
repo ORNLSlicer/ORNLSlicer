@@ -3,6 +3,6 @@
 namespace ORNL {
 ClosePolygonResult::ClosePolygonResult() {
     polygon_idx = -1;
-    point_idx = -1;
+    point_idx   = -1;
 }
-} // namespace ORNL
+}  // namespace ORNL

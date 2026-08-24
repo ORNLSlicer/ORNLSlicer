@@ -20,7 +20,7 @@ namespace ORNL {
  * the normal polymer island and region generation stack.
  */
 class HelicalLayer : public Layer {
-  public:
+   public:
     /*!
      * @brief Constructs a helical layer.
      * @param layer_nr One-based layer number used in generated gcode comments.
@@ -74,8 +74,8 @@ class HelicalLayer : public Layer {
      */
     bool hasPaths() const;
 
-  private:
+   private:
     //! @brief Precomputed travel and print paths for this helical layer.
     QVector<Path> m_paths;
 };
-} // namespace ORNL
+}  // namespace ORNL

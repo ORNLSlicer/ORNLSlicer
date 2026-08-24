@@ -9,7 +9,7 @@
 namespace ORNL {
 //! \brief an object for the point, normal representation of a plane
 class Plane {
-  public:
+   public:
     //! \brief Default Constructor for point/normal representation
     Plane();
 
@@ -88,7 +88,7 @@ class Plane {
     //! \brief Checks if two planes are equivalent
     bool operator==(const Plane& rhs);
 
-  private:
+   private:
     Point m_point;
     QVector3D m_normal_vector;
 
@@ -96,4 +96,4 @@ class Plane {
     double m_epsilon = .01;
 };
 
-} // namespace ORNL
+}  // namespace ORNL

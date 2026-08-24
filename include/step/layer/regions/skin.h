@@ -19,7 +19,7 @@
 
 namespace ORNL {
 class Skin : public RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param index: index for region order
@@ -65,7 +65,7 @@ class Skin : public RegionBase {
     //! \param poly_list geometry to add
     void addGradualGeometry(const PolygonList& poly_list);
 
-  private:
+   private:
     //! \brief Helper function to create pattern for skin and gradual areas
     //! \param pattern Selected pattern
     //! \param geometry Geometric bounds to apply pattern to
@@ -131,4 +131,4 @@ class Skin : public RegionBase {
     //! \brief Holds paths created by gradual areas as these paths may be different patterns
     // QVector<QVector<Path>> m_gradual_paths;
 };
-} // namespace ORNL
+}  // namespace ORNL

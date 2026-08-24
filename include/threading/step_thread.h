@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QThread>
+
 #include <qobject.h>
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>
@@ -14,7 +15,7 @@ namespace ORNL {
  */
 class StepThread : public QObject {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     StepThread();
 
@@ -27,15 +28,15 @@ class StepThread : public QObject {
     //! \brief Stops the internal worker thread after any active step callback has returned.
     void stop();
 
-  public slots:
+   public slots:
     //! \brief Perfom the computation for the step in this thread.
     void doStep();
 
-  signals:
+   signals:
     //! \brief Signal that computation has concluded.
     void completed();
 
-  private:
+   private:
     // Internal thread.
     QThread m_internal_thread;
 
@@ -43,4 +44,4 @@ class StepThread : public QObject {
     QSharedPointer<Step> m_step;
 };
 
-} // namespace ORNL
+}  // namespace ORNL

@@ -16,7 +16,7 @@ namespace ORNL {
  *              - M110, M111
  */
 class BeamParser : public CommonParser {
-  public:
+   public:
     //! \brief Standard constructor that specifies meta type and whether or not
     //! to alter layers for minimal layer time
     //! \param meta GcodeMeta struct that includes information about units and
@@ -30,7 +30,7 @@ class BeamParser : public CommonParser {
     //! \brief Function to initialize syntax specific handlers
     virtual void config();
 
-  protected:
+   protected:
     //! \brief Handler for 'M110' command for turning on extruder
     //! \param params Accepted by function for formatting check, but are not
     //! used for the command
@@ -41,4 +41,4 @@ class BeamParser : public CommonParser {
     //! used for the command
     virtual void M111Handler(QVector<QString> params);
 };
-} // namespace ORNL
+}  // namespace ORNL

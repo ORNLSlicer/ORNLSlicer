@@ -7,6 +7,7 @@
 #include <QPixmap>
 #include <QPushButton>
 #include <QWidget>
+
 #include <qhashfunctions.h>
 #include <qtmetamacros.h>
 
@@ -21,7 +22,7 @@ namespace ORNL {
  */
 class RemoveButton : public QPushButton {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! isDelete Whether or not button signals delete or hide when clicked
     //! parent Parent widget
@@ -31,13 +32,13 @@ class RemoveButton : public QPushButton {
     //! \return boolean whether or not cursor is inside button bounds
     bool isInside();
 
-  signals:
+   signals:
     //! \brief Emitted to header whenever the cursor is within the button
     //! Signals header to update coloring as Qt does not signal transition events for nested
     //! child widgets
     void childTransition();
 
-  private:
+   private:
     //! \brief Whether the cursor is within the bounds of the button or not
     //! Qt does not signal events for nested child widgets
     bool m_inside;
@@ -55,7 +56,7 @@ class RemoveButton : public QPushButton {
  */
 class SettingHeader : public QFrame {
     Q_OBJECT
-  public:
+   public:
     /*!
      * \brief Constructor
      * \param parent    The parent of this object (for QObject).
@@ -94,7 +95,7 @@ class SettingHeader : public QFrame {
     //! Trigger header to show itself
     void showHeader();
 
-  signals:
+   signals:
     //! \brief Signal that the tab was expanded.
     void expand();
 
@@ -107,7 +108,7 @@ class SettingHeader : public QFrame {
     //! \brief Signal setting tab of header's hide
     void hideHeader();
 
-  public slots:
+   public slots:
     //! \brief Update background after a transition (remove or add highlighting)
     void updateBackground();
 
@@ -117,7 +118,7 @@ class SettingHeader : public QFrame {
     //! \brief Either delete or hide header based on constructor settings
     void deleteOrHideHeader();
 
-  private:
+   private:
     // Qt Overrides.
     void mousePressEvent(QMouseEvent* event);
 
@@ -149,4 +150,4 @@ class SettingHeader : public QFrame {
     RemoveButton* m_remove;
 };
 
-} // Namespace ORNL
+}  // Namespace ORNL

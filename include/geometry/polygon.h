@@ -22,7 +22,7 @@ class Polyline;
  * An individual polygon represented as a vector of points
  */
 class Polygon : public QVector<Point> {
-  public:
+   public:
     // QVector constructors
     using QVector<Point>::QVector;
 
@@ -179,5 +179,5 @@ class Polygon : public QVector<Point> {
     //! \brief operator for use with ClipperLib2
     ClipperLib2::Path operator()() const;
 
-}; // Class Polygon
-} // namespace ORNL
+};  // Class Polygon
+}  // namespace ORNL

@@ -13,7 +13,7 @@ namespace ORNL {
  * \brief is a polygon that contains a settings. It is a cross-section of a settings mesh with part range info
  */
 class SettingsPolygon : public PolygonList {
-  public:
+   public:
     //! \brief Constructor
     SettingsPolygon() = default;
 
@@ -38,8 +38,8 @@ class SettingsPolygon : public PolygonList {
      */
     QSharedPointer<SettingsBase> getSettings() const;
 
-  private:
+   private:
     //! \brief the settings
     QSharedPointer<SettingsBase> m_sb;
 };
-} // namespace ORNL
+}  // namespace ORNL

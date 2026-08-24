@@ -6,6 +6,7 @@
 #include <QTextEdit>
 #include <QToolButton>
 #include <QWidget>
+
 #include <qobject.h>
 #include <qtmetamacros.h>
 
@@ -17,7 +18,7 @@ namespace ORNL {
  */
 class CmdWidget : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor.
     explicit CmdWidget(QWidget* parent = nullptr);
 
@@ -27,14 +28,14 @@ class CmdWidget : public QWidget {
     //! \brief Function for output.
     void print(QString str);
 
-  public slots:
+   public slots:
     //! \brief Function to run a command. This currently only appends the string if not empty.
     void runCmd(QString cmd);
 
     //! \brief Appends a string to the output.
     void append(QString str);
 
-  private:
+   private:
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -53,4 +54,4 @@ class CmdWidget : public QWidget {
     // Widgets
     QTextEdit* m_output;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

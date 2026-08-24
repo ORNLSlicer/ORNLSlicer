@@ -1,7 +1,8 @@
 #include "gcode/writers/writer_base.h"
 
-#include <CGAL/property_map.h>
 #include <QStringBuilder>
+
+#include <CGAL/property_map.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
 #include <qvectornd.h>
@@ -17,39 +18,39 @@
 
 namespace ORNL {
 WriterBase::WriterBase(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : m_sb(sb) {
-    m_meta = meta;
-    m_newline = '\n';
-    m_empty_step_comment = "INTENTIONALLY BLANK - NO PATHING PRODUCED USING CURRENT SETTINGS";
-    m_space = ' ';
-    m_x = " X";
-    m_y = " Y";
-    m_z = " Z";
-    m_w = " W";
-    m_e = " E";
-    m_f = " F";
-    m_s = " S";
-    m_p = " P";
-    m_i = " I";
-    m_j = " J";
-    m_k = " K";
-    m_r = " R";
-    m_l = " L";
-    m_q = " Q";
-    m_a = " A";
-    m_b = " B";
-    m_G0 = "G0";
-    m_G1 = "G1";
-    m_G2 = "G2";
-    m_G3 = "G3";
-    m_G4 = "G4";
-    m_G5 = "G5";
-    m_M3 = "M3";
-    m_M5 = "M5";
-    m_start_point = Point(0, 0, 0);
-    m_current_position = Point(0, 0, 0);
+    m_meta                 = meta;
+    m_newline              = '\n';
+    m_empty_step_comment   = "INTENTIONALLY BLANK - NO PATHING PRODUCED USING CURRENT SETTINGS";
+    m_space                = ' ';
+    m_x                    = " X";
+    m_y                    = " Y";
+    m_z                    = " Z";
+    m_w                    = " W";
+    m_e                    = " E";
+    m_f                    = " F";
+    m_s                    = " S";
+    m_p                    = " P";
+    m_i                    = " I";
+    m_j                    = " J";
+    m_k                    = " K";
+    m_r                    = " R";
+    m_l                    = " L";
+    m_q                    = " Q";
+    m_a                    = " A";
+    m_b                    = " B";
+    m_G0                   = "G0";
+    m_G1                   = "G1";
+    m_G2                   = "G2";
+    m_G3                   = "G3";
+    m_G4                   = "G4";
+    m_G5                   = "G5";
+    m_M3                   = "M3";
+    m_M5                   = "M5";
+    m_start_point          = Point(0, 0, 0);
+    m_current_position     = Point(0, 0, 0);
     m_has_current_position = false;
-    m_build_maximum_z = Distance(0.0);
-    m_has_build_maximum_z = false;
+    m_build_maximum_z      = Distance(0.0);
+    m_has_build_maximum_z  = false;
 
     m_deposition_active = false;
 }
@@ -67,7 +68,9 @@ QString WriterBase::commentSpaceLine(const QString& text) {
                    m_newline);
 }
 
-QVector3D WriterBase::getTravelLift() { return getLiftVector(m_sb->setting<Distance>(PS::Travel::kLiftHeight)); }
+QVector3D WriterBase::getTravelLift() {
+    return getLiftVector(m_sb->setting<Distance>(PS::Travel::kLiftHeight));
+}
 
 QVector3D WriterBase::getLiftVector(Distance lift_height) const {
     // Retrieve the slicing plane normal
@@ -83,13 +86,17 @@ QVector3D WriterBase::getLiftVector(Distance lift_height) const {
 }
 
 void WriterBase::setCurrentPosition(const Point& point) {
-    m_current_position = point;
+    m_current_position     = point;
     m_has_current_position = true;
 }
 
-bool WriterBase::hasCurrentPosition() const { return m_has_current_position; }
+bool WriterBase::hasCurrentPosition() const {
+    return m_has_current_position;
+}
 
-Point WriterBase::getCurrentPosition() const { return m_current_position; }
+Point WriterBase::getCurrentPosition() const {
+    return m_current_position;
+}
 
 int WriterBase::getInitialExtruderSpeed(const QSharedPointer<SettingsBase>& params) const {
     if (params != nullptr && params->contains(MS::Extruder::kInitialSpeed)) {
@@ -159,7 +166,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
         text += commentLine(
             QString("Nozzle Diameter: %0in").arg(m_sb->setting<Distance>(PS::Layer::kNozzleDiameter).to(in)));
     }
-    if (m_sb->setting<int>(PRS::MachineSetup::kMachineType) == 1) // If filament machine type
+    if (m_sb->setting<int>(PRS::MachineSetup::kMachineType) == 1)  // If filament machine type
     {
         text += commentLine(
             QString("Filament Diameter: %0mm").arg(m_sb->setting<Distance>(MS::Filament::kDiameter).to(mm)));
@@ -191,8 +198,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
 
     if (m_sb->setting<int>(PS::SpecialModes::kEnableSpiralize)) {
         text += commentLine(QString("Spiralize is turned ON"));
-        if (m_sb->setting<int>(PS::SpecialModes::kSmoothing))
-            text += commentLine("Smoothing is turned ON");
+        if (m_sb->setting<int>(PS::SpecialModes::kSmoothing)) text += commentLine("Smoothing is turned ON");
         if (m_sb->setting<int>(PS::SpecialModes::kEnableOversize)) {
             text += commentLine(QString("Oversize part by: %0in")
                                     .arg(m_sb->setting<Distance>(PS::SpecialModes::kOversizeDistance).to(in)));
@@ -273,8 +279,7 @@ QString WriterBase::writeSettingsHeader(GcodeSyntax syntax) {
                                     .arg(m_sb->setting<Distance>(PS::SpecialModes::kOversizeDistance).to(in)));
         }
     }
-    if (syntax == GcodeSyntax::kIngersoll)
-        text += commentLine("---END HEADER");
+    if (syntax == GcodeSyntax::kIngersoll) text += commentLine("---END HEADER");
 
     text += m_newline;
     return text;
@@ -287,8 +292,7 @@ QString WriterBase::writeLayerChange(uint layer_number) {
 QString WriterBase::writeSettingsFooter() {
     QString rv;
     const fifojson& settings = m_sb->json();
-    if (!settings.is_array() || settings.empty() || !settings.front().is_object())
-        return rv;
+    if (!settings.is_array() || settings.empty() || !settings.front().is_object()) return rv;
 
     if (m_sb->setting<int>(Constants::PrinterSettings::GCode::kEnableSettingsFooter)) {
         rv += m_newline % commentLine("Settings Footer");
@@ -301,21 +305,33 @@ QString WriterBase::writeSettingsFooter() {
     return rv;
 }
 
-QString WriterBase::writeEmptyStep() { return commentLine(m_empty_step_comment); }
+QString WriterBase::writeEmptyStep() {
+    return commentLine(m_empty_step_comment);
+}
 
-QString WriterBase::writeCommentLine(QString comment) { return "\n" + commentLine(comment); }
+QString WriterBase::writeCommentLine(QString comment) {
+    return "\n" + commentLine(comment);
+}
 
-void WriterBase::setFeedrate(Velocity feedrate) { m_feedrate = feedrate; }
+void WriterBase::setFeedrate(Velocity feedrate) {
+    m_feedrate = feedrate;
+}
 
-Velocity WriterBase::getFeedrate() const { return m_feedrate; }
+Velocity WriterBase::getFeedrate() const {
+    return m_feedrate;
+}
 
 void WriterBase::setBuildMaximumZ(Distance maximum_z) {
-    m_build_maximum_z = maximum_z;
+    m_build_maximum_z     = maximum_z;
     m_has_build_maximum_z = true;
 }
 
-bool WriterBase::hasBuildMaximumZ() const { return m_has_build_maximum_z; }
+bool WriterBase::hasBuildMaximumZ() const {
+    return m_has_build_maximum_z;
+}
 
-Distance WriterBase::getBuildMaximumZ() const { return m_build_maximum_z; }
+Distance WriterBase::getBuildMaximumZ() const {
+    return m_build_maximum_z;
+}
 
-} // namespace ORNL
+}  // namespace ORNL

@@ -18,7 +18,9 @@
 
 namespace ORNL {
 namespace {
-bool isActiveSpeedLimit(Velocity speed) { return speed > 0; }
+bool isActiveSpeedLimit(Velocity speed) {
+    return speed > 0;
+}
 
 QString masterString(const fifojson& json, const std::string& key) {
     return QString::fromStdString(json.at(key).get<std::string>());
@@ -29,14 +31,12 @@ bool isXYSpeedLimitKey(const QString& key) {
 }
 
 bool isPrinterXYMotionSpeed(const QString& key, const fifojson& json) {
-    if (isXYSpeedLimitKey(key))
-        return false;
+    if (isXYSpeedLimitKey(key)) return false;
 
     const QString major = masterString(json, Constants::Settings::Master::kMajor);
     const QString minor = masterString(json, Constants::Settings::Master::kMinor);
 
-    if (major == Constants::Settings::SettingTab::kPrinter)
-        return false;
+    if (major == Constants::Settings::SettingTab::kPrinter) return false;
 
     if (major == Constants::Settings::SettingTab::kMaterial &&
         (minor == "Extruder" || minor == "Purge" || minor == "Retraction"))
@@ -49,7 +49,7 @@ QString formatVelocity(Velocity speed) {
     const Velocity unit = PreferencesManager::getInstance()->getVelocityUnit();
     return QString::number(speed.to(unit), 'g', 6) + " " + PreferencesManager::getInstance()->getVelocityUnitText();
 }
-} // namespace
+}  // namespace
 
 SettingSpeedSpinBox::SettingSpeedSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
                                          fifojson json, QGridLayout* layout, int index)
@@ -79,7 +79,7 @@ SettingRowBase* SettingSpeedSpinBox::createInstance(SettingTab* parent, QSharedP
 
 void SettingSpeedSpinBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     Velocity base_value;
     base_value.from(val.toDouble(), PreferencesManager::getInstance()->getVelocityUnit());
@@ -94,8 +94,7 @@ void SettingSpeedSpinBox::reloadValue() {
 
     bool consistent = true;
     Velocity cur(reloadValueHelper<double>(consistent));
-    if (consistent)
-        setValue(cur.to(unit));
+    if (consistent) setValue(cur.to(unit));
 
     this->blockSignals(false);
     emit modified(m_key);
@@ -118,7 +117,7 @@ void SettingSpeedSpinBox::checkDynamicDependencies() {
         return;
     }
 
-    const QString warning = speedLimitWarning();
+    const QString warning     = speedLimitWarning();
     const bool warning_active = !warning.isEmpty();
     if (warning_active) {
         applyNotification(warning, false);
@@ -135,11 +134,13 @@ void SettingSpeedSpinBox::checkDynamicDependencies() {
     emit warnParent(warningCountDelta(warning_active, m_warn));
 }
 
-Velocity SettingSpeedSpinBox::effectiveSpeed() const { return effectiveSpeed(0); }
+Velocity SettingSpeedSpinBox::effectiveSpeed() const {
+    return effectiveSpeed(0);
+}
 
 Velocity SettingSpeedSpinBox::effectiveSpeed(int settings_base_index) const {
     const double default_value = m_json[Constants::Settings::Master::kDefault].get<double>();
-    const double global_value = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
+    const double global_value  = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
 
     if (!m_settings_bases.isEmpty())
         return Velocity(effectiveValueHelper<double>(m_key, settings_base_index, global_value));
@@ -148,16 +149,14 @@ Velocity SettingSpeedSpinBox::effectiveSpeed(int settings_base_index) const {
 }
 
 bool SettingSpeedSpinBox::hasConsistentEffectiveSpeed() const {
-    if (m_settings_bases.size() <= 1)
-        return true;
+    if (m_settings_bases.size() <= 1) return true;
 
     const double default_value = m_json[Constants::Settings::Master::kDefault].get<double>();
-    const double global_value = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
-    const double first_value = effectiveValueHelper<double>(m_key, 0, global_value);
+    const double global_value  = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
+    const double first_value   = effectiveValueHelper<double>(m_key, 0, global_value);
 
     for (int index = 1, end = m_settings_bases.size(); index < end; ++index) {
-        if (effectiveValueHelper<double>(m_key, index, global_value) != first_value)
-            return false;
+        if (effectiveValueHelper<double>(m_key, index, global_value) != first_value) return false;
     }
 
     return true;
@@ -166,21 +165,19 @@ bool SettingSpeedSpinBox::hasConsistentEffectiveSpeed() const {
 QString SettingSpeedSpinBox::speedLimitWarning() const {
     for (int index = 0, end = effectiveSettingsBaseCount(); index < end; ++index) {
         const QString warning = speedLimitWarning(index);
-        if (!warning.isEmpty())
-            return warning;
+        if (!warning.isEmpty()) return warning;
     }
 
     return QString();
 }
 
 QString SettingSpeedSpinBox::speedLimitWarning(int settings_base_index) const {
-    if (m_sb.isNull())
-        return QString();
+    if (m_sb.isNull()) return QString();
 
     const Velocity min_xy_speed(effectiveDouble(PRS::MachineSpeed::kMinXYSpeed, settings_base_index));
     const Velocity max_xy_speed(effectiveDouble(PRS::MachineSpeed::kMaxXYSpeed, settings_base_index));
-    const bool has_min = isActiveSpeedLimit(min_xy_speed);
-    const bool has_max = isActiveSpeedLimit(max_xy_speed);
+    const bool has_min       = isActiveSpeedLimit(min_xy_speed);
+    const bool has_max       = isActiveSpeedLimit(max_xy_speed);
     const bool invalid_range = has_min && has_max && min_xy_speed > max_xy_speed;
 
     if (isXYSpeedLimitKey(m_key)) {
@@ -191,11 +188,10 @@ QString SettingSpeedSpinBox::speedLimitWarning(int settings_base_index) const {
         return QString();
     }
 
-    if (!isPrinterXYMotionSpeed(m_key, m_json) || invalid_range)
-        return QString();
+    if (!isPrinterXYMotionSpeed(m_key, m_json) || invalid_range) return QString();
 
     const Velocity current_speed = effectiveSpeed(settings_base_index);
-    const QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
+    const QString display        = masterString(m_json, Constants::Settings::Master::kDisplay);
 
     if (has_min && current_speed < min_xy_speed)
         return display + " (" + formatVelocity(current_speed) + ") is below Minimum XY Speed (" +
@@ -207,4 +203,4 @@ QString SettingSpeedSpinBox::speedLimitWarning(int settings_base_index) const {
 
     return QString();
 }
-} // namespace ORNL
+}  // namespace ORNL

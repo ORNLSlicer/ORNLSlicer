@@ -7,15 +7,15 @@ namespace ORNL {
 class GcodeTextBoxWidget;
 
 class LineNumberDisplay : public QWidget {
-  public:
+   public:
     LineNumberDisplay(GcodeTextBoxWidget* textbox);
 
     QSize sizeHint() const override;
 
-  protected:
+   protected:
     void paintEvent(QPaintEvent* event) override;
 
-  private:
+   private:
     GcodeTextBoxWidget* textBox;
 };
-} // namespace ORNL
+}  // namespace ORNL

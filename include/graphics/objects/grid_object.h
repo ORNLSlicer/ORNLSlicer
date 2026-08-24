@@ -12,7 +12,7 @@ namespace ORNL {
  * \brief Displays a grid on a plane.
  */
 class GridObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor.
     //! \param length: Plane length.
     //! \param width: Plane width.
@@ -33,7 +33,7 @@ class GridObject : public GraphicsObject {
     //! grid.
     std::vector<Triangle> triangles();
 
-  private:
+   private:
     //! \brief Grid dims.
     float m_length;
     float m_width;
@@ -46,4 +46,4 @@ class GridObject : public GraphicsObject {
     //! \brief Vertices used to check for cast rays.
     std::vector<float> m_collision_vertices;
 };
-} // namespace ORNL
+}  // namespace ORNL

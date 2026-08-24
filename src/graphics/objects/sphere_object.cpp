@@ -21,4 +21,4 @@ SphereObject::SphereObject(BaseView* view, float radius, QColor color, ushort re
 
     this->populateGL(view, vertices, normals, colors, render_mode);
 }
-} // namespace ORNL
+}  // namespace ORNL

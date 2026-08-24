@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QHBoxLayout>
+
 #include <qframe.h>
 #include <qhashfunctions.h>
 #include <qicon.h>
@@ -21,12 +22,13 @@
 namespace ORNL {
 SettingHeader::SettingHeader(QWidget* parent, QString name, QIcon icon, bool canDelete)
     : QFrame(parent), m_name(name), m_icon(icon), m_can_delete(canDelete) {
-
     setupWidget();
     setupSubWidgets();
 }
 
-void SettingHeader::updateBackground() { this->update(); }
+void SettingHeader::updateBackground() {
+    this->update();
+}
 
 void SettingHeader::setName(QString new_name) {
     m_name = new_name;
@@ -63,7 +65,7 @@ void SettingHeader::setupSubWidgets() {
     QHBoxLayout* hlayout = new QHBoxLayout();
     hlayout->setContentsMargins(0, 0, 0, 0);
     QSpacerItem* hspacer = new QSpacerItem(0, 0, QSizePolicy::Expanding);
-    m_picture = new QLabel(this);
+    m_picture            = new QLabel(this);
     m_picture->setSizeIncrement(28, 28);
     m_picture->setPixmap(m_icon.pixmap(QSize(28, 28), QIcon::Normal, QIcon::On));
     m_label = new QLabel(this);
@@ -105,7 +107,9 @@ void SettingHeader::mousePressEvent(QMouseEvent* event) {
     this->update();
 }
 
-void SettingHeader::showHeader() { this->show(); }
+void SettingHeader::showHeader() {
+    this->show();
+}
 
 void SettingHeader::deleteOrHideHeader() {
     if (m_can_delete)
@@ -132,5 +136,7 @@ RemoveButton::RemoveButton(bool isDelete, QWidget* parent) : QPushButton(parent)
     this->setIcon(QIcon(hideOrDelete.scaled(22, 22, Qt::KeepAspectRatio)));
 }
 
-bool RemoveButton::isInside() { return m_inside; }
-} // Namespace ORNL
+bool RemoveButton::isInside() {
+    return m_inside;
+}
+}  // Namespace ORNL

@@ -1,10 +1,10 @@
 #pragma once
 
-#include <functional>
-
 #include <QFrame>
 #include <QGridLayout>
 #include <QWidget>
+#include <functional>
+
 #include <qboxlayout.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -31,7 +31,7 @@ namespace ORNL {
 class SettingTab : public QWidget {
     Q_OBJECT
 
-  public:
+   public:
     /*!
      * \brief Constructor.
      * \param parent    Parent of this object (for QObject).
@@ -74,7 +74,7 @@ class SettingTab : public QWidget {
     //! \brief Returns whether any row in this tab is currently visible.
     bool hasShownRows() const;
 
-  public slots:
+   public slots:
     //! \brief Expand the current tab.
     void expandTab();
 
@@ -105,7 +105,7 @@ class SettingTab : public QWidget {
 
     void keyModified(QString key);
 
-  signals:
+   signals:
     /*!
      * \brief Notification before a setting is modified.
      * \param key   Key that is about to be modified.
@@ -127,7 +127,7 @@ class SettingTab : public QWidget {
     //! \param count: Number of warnings
     void warnPane(int count);
 
-  private:
+   private:
     //! \brief Setup the static widgets and their layouts.
     void setupWidget(bool isHidden);
 
@@ -173,4 +173,4 @@ class SettingTab : public QWidget {
                                                  QGridLayout*, int)>>
         m_creation_mapping;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

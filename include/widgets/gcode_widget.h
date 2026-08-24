@@ -2,6 +2,7 @@
 
 #include <QVBoxLayout>
 #include <QWidget>
+
 #include <qcontainerfwd.h>
 #include <qobject.h>
 #include <qsharedpointer.h>
@@ -20,7 +21,7 @@ namespace ORNL {
  */
 class GCodeWidget : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: A widget.
     GCodeWidget(QWidget* parent = nullptr);
@@ -32,7 +33,7 @@ class GCodeWidget : public QWidget {
     //! \param meta the model the track
     void setPartMeta(QSharedPointer<PartMetaModel> meta);
 
-  signals:
+   signals:
     //! \brief signals when this widget has been resized
     //! \param size
     void resized(QSize size);
@@ -41,7 +42,7 @@ class GCodeWidget : public QWidget {
     //! \param status if the view is using orthographic projection
     void orthographicViewChanged(bool status);
 
-  public slots:
+   public slots:
     //! \brief Adds the GCode to the view after it has been loaded.
     void addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode);
     //! \brief Clears the GCode in the view.
@@ -79,7 +80,7 @@ class GCodeWidget : public QWidget {
     //! \brief Resets the camera to the default position.
     void resetCamera();
 
-  private:
+   private:
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -111,4 +112,4 @@ class GCodeWidget : public QWidget {
     //! \brief Current overhead orthographic projection state.
     bool m_ortho_enabled = false;
 };
-} // namespace ORNL
+}  // namespace ORNL

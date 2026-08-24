@@ -22,12 +22,13 @@ SettingPane::SettingPane(int idx, QWidget* parent, QString pane, int warnings)
 }
 
 SettingTab* SettingPane::getTab(QString category) {
-    if (!m_tabs.contains(category))
-        return nullptr;
+    if (!m_tabs.contains(category)) return nullptr;
     return m_tabs[category];
 }
 
-QVector<SettingTab*> SettingPane::getTabs() { return m_tabs.values().toVector(); }
+QVector<SettingTab*> SettingPane::getTabs() {
+    return m_tabs.values().toVector();
+}
 
 SettingTab* SettingPane::newTab(QString category, QIcon icon, bool isHidden) {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
@@ -35,8 +36,7 @@ SettingTab* SettingPane::newTab(QString category, QIcon icon, bool isHidden) {
 
     m_tabs[category] = new SettingTab(this, category, icon, m_tabs.size(), isHidden, GSM->getGlobal());
     // -1 to insert before stretch.
-    if (!isHidden)
-        m_scroll_layout->insertWidget(m_scroll_layout->count() - 1, m_tabs[category]);
+    if (!isHidden) m_scroll_layout->insertWidget(m_scroll_layout->count() - 1, m_tabs[category]);
 
     connect(m_tabs[category], &SettingTab::settingAboutToChange, this, &SettingPane::forwardSettingAboutToChange);
     connect(m_tabs[category], &SettingTab::modified, this, &SettingPane::forwardModifiedSetting);
@@ -46,20 +46,18 @@ SettingTab* SettingPane::newTab(QString category, QIcon icon, bool isHidden) {
     return m_tabs[category];
 }
 
-int SettingPane::getIndex() { return m_idx; }
+int SettingPane::getIndex() {
+    return m_idx;
+}
 
 void SettingPane::setLock(bool status) {
     for (SettingTab* curr_tab : m_tabs) {
-        for (QSharedPointer<SettingRowBase> cur_row : curr_tab->getRows()) {
-            cur_row->setEnabled(status);
-        }
+        for (QSharedPointer<SettingRowBase> cur_row : curr_tab->getRows()) { cur_row->setEnabled(status); }
     }
 }
 
 void SettingPane::reload() {
-    for (SettingTab* curr_tab : m_tabs) {
-        curr_tab->reload();
-    }
+    for (SettingTab* curr_tab : m_tabs) { curr_tab->reload(); }
 }
 
 void SettingPane::hideTab(QString category) {
@@ -74,20 +72,18 @@ void SettingPane::showTab(QString category) {
 }
 
 void SettingPane::paneWarning(int count) {
-    m_pane_warning = m_pane_warning + count; // keep track of total number of warnings from all children (tabs)
-    if (m_pane_warning > 0) {
-        emit warnSettingBar(1, m_name);
-    }
-    else {
-        emit warnSettingBar(0, m_name);
-    }
+    m_pane_warning = m_pane_warning + count;  // keep track of total number of warnings from all children (tabs)
+    if (m_pane_warning > 0) { emit warnSettingBar(1, m_name); }
+    else { emit warnSettingBar(0, m_name); }
 }
 
 void SettingPane::forwardSettingAboutToChange(QString setting_key, QList<QSharedPointer<SettingsBase>> settings_bases) {
     emit settingAboutToChange(setting_key, settings_bases);
 }
 
-void SettingPane::forwardModifiedSetting(QString setting_key) { emit settingModified(setting_key); }
+void SettingPane::forwardModifiedSetting(QString setting_key) {
+    emit settingModified(setting_key);
+}
 
 void SettingPane::setupWidget() {
     this->setupSubWidgets();
@@ -98,7 +94,8 @@ void SettingPane::setupWidget() {
 void SettingPane::setupSubWidgets() {
     // ScrollArea
     m_scroll_area = new QScrollArea(this);
-    m_scroll_area->setStyleSheet("QScrollArea { background: transparent; border:0px;}\
+    m_scroll_area->setStyleSheet(
+        "QScrollArea { background: transparent; border:0px;}\
                             QScrollArea > QWidget > QWidget { background: transparent; }");
     m_scroll_area->setWidgetResizable(true);
     m_scroll_area->setVerticalScrollBarPolicy(Qt::ScrollBarAsNeeded);
@@ -124,4 +121,4 @@ void SettingPane::setupInsert() {
     m_scroll_area->setWidget(m_scroll_container);
 }
 
-} // Namespace ORNL
+}  // Namespace ORNL

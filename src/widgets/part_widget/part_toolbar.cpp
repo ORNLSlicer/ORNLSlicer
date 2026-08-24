@@ -8,6 +8,7 @@
 #include <QMenu>
 #include <QPainter>
 #include <QPixmap>
+
 #include <qcontainerfwd.h>
 #include <qevent.h>
 #include <qicon.h>
@@ -47,13 +48,13 @@ QIcon measurementIcon() {
 
     return QIcon(pixmap);
 }
-} // namespace
+}  // namespace
 
 PartToolbar::PartToolbar(QSharedPointer<PartMetaModel> model, QWidget* parent)
     : m_model(model), m_parent(parent), QToolBar(parent) {
     m_translation_controls = new ToolbarInput(m_parent, false);
-    m_rotation_controls = new ToolbarInput(m_parent, false);
-    m_scale_controls = new ToolbarInput(m_parent, true);
+    m_rotation_controls    = new ToolbarInput(m_parent, false);
+    m_scale_controls       = new ToolbarInput(m_parent, true);
 
     setupWidget();
     setupSubWidgets();
@@ -130,9 +131,7 @@ void PartToolbar::resize(QSize new_size) {
     if (y_offset <= Constants::UI::PartToolbar::kMinTopOffset) {
         this->move(Constants::UI::PartToolbar::kLeftOffset, Constants::UI::PartToolbar::kMinTopOffset);
     }
-    else {
-        this->move(Constants::UI::PartToolbar::kLeftOffset, y_offset);
-    }
+    else { this->move(Constants::UI::PartToolbar::kLeftOffset, y_offset); }
 
     // Update size
     this->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
@@ -155,7 +154,7 @@ void PartToolbar::closeAllControls() {
 }
 
 void PartToolbar::setEnabled(bool status) {
-    if (!status) // If we are disabling, close all the controls
+    if (!status)  // If we are disabling, close all the controls
         closeAllControls();
 
     m_translation_btn->setEnabled(status);
@@ -252,7 +251,6 @@ void PartToolbar::makeSpace() {
 }
 
 void PartToolbar::setupTranslation() {
-
     m_translation_btn = buildIconButton(":/icons/translate_black.png", "Translation Controls", false);
     this->addWidget(m_translation_btn);
     m_translation_controls->setMaximumValue(
@@ -267,7 +265,6 @@ void PartToolbar::setupTranslation() {
 }
 
 void PartToolbar::setupRotation() {
-
     m_rotation_btn = buildIconButton(":/icons/rotate_black.png",
                                      "Rotation Controls\r\nBefore applying any roation, previous scaling, if any,\r\n"
                                      "will be applied permenantly to current transformation and\r\n"
@@ -301,7 +298,7 @@ void PartToolbar::setupScale() {
     m_scale_btn = buildIconButton(":/icons/scale_black.png", "Scaling Controls", false);
     this->addWidget(m_scale_btn);
     m_scale_controls->setMaximumValue(Constants::Limits::Maximums::kMaxFloat);
-    m_scale_controls->setMinimumValue(0.0001f); // Shouldn't be able to scale a dimension to 0! Unphysical
+    m_scale_controls->setMinimumValue(0.0001f);  // Shouldn't be able to scale a dimension to 0! Unphysical
     m_scale_controls->setIncrement(0.1);
     m_scale_controls->setPrecision(4);
     m_scale_controls->setValue(Axis::kX, 1.0);
@@ -316,12 +313,10 @@ void PartToolbar::setupAlign() {
     this->addWidget(m_align_btn);
     m_align_controls = new ToolbarAlignInput(m_parent);
     connect(m_align_btn, &QToolButton::pressed, m_align_controls, &ToolbarAlignInput::toggleInput);
-    connect(m_align_controls, &ToolbarAlignInput::setAlignment, this,
-            [this](QVector3D dir) {
-                if (m_measure_btn != nullptr)
-                    m_measure_btn->setChecked(false);
-                emit setupAlignment(dir);
-            });
+    connect(m_align_controls, &ToolbarAlignInput::setAlignment, this, [this](QVector3D dir) {
+        if (m_measure_btn != nullptr) m_measure_btn->setChecked(false);
+        emit setupAlignment(dir);
+    });
 }
 
 void PartToolbar::setupMeasurement() {
@@ -350,4 +345,4 @@ QToolButton* PartToolbar::buildIconButton(const QString& icon_loc, const QString
     button->setCheckable(toggle);
     return button;
 }
-} // namespace ORNL
+}  // namespace ORNL

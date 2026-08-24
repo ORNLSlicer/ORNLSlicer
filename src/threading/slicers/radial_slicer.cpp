@@ -1,10 +1,10 @@
 #include "threading/slicers/radial_slicer.h"
 
+#include <QTextStream>
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
-#include <QTextStream>
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
 #include <qdebug.h>
@@ -45,7 +45,9 @@ const QString kRadialCenterX = "radial_center_x";
 const QString kRadialCenterY = "radial_center_y";
 
 //! @brief Returns a positive setting value or a safe fallback.
-Distance positiveOrFallback(Distance value, Distance fallback) { return value > 0 ? value : fallback; }
+Distance positiveOrFallback(Distance value, Distance fallback) {
+    return value > 0 ? value : fallback;
+}
 
 //! @brief Physical fallback used when the radial layer spacing setting is invalid.
 const Distance kDefaultRadialLayerHeight = 1.0 * mm;
@@ -60,23 +62,21 @@ const Distance kMinPathSegmentLength = 10.0 * micron;
 double totalPolylineLength(const QVector<Polyline>& polylines) {
     double total_length = 0.0;
     for (const Polyline& polyline : polylines) {
-        if (polyline.size() > 1) {
-            total_length += polyline.length()();
-        }
+        if (polyline.size() > 1) { total_length += polyline.length()(); }
     }
     return total_length;
 }
 
 //! @brief Clips a candidate radial ring against the model cross section.
-QVector<Polyline> clipCircleToSection(PolygonList& geometry, const Polyline& circle) { return geometry & circle; }
+QVector<Polyline> clipCircleToSection(PolygonList& geometry, const Polyline& circle) {
+    return geometry & circle;
+}
 
 //! @brief Returns whether model clipping removed any meaningful portion of the radial path.
 bool crossesModelBoundary(const Polyline& circle, const QVector<Polyline>& clipped_lines) {
-    if (clipped_lines.isEmpty() || circle.size() < 2) {
-        return false;
-    }
+    if (clipped_lines.isEmpty() || circle.size() < 2) { return false; }
 
-    const double circle_length = circle.length()();
+    const double circle_length  = circle.length()();
     const double clipped_length = totalPolylineLength(clipped_lines);
     return clipped_length < circle_length - kMinPathSegmentLength();
 }
@@ -84,9 +84,7 @@ bool crossesModelBoundary(const Polyline& circle, const QVector<Polyline>& clipp
 //! @brief Applies the configured radial boundary policy to a candidate radial path.
 QVector<Polyline> applyBoundaryPolicy(const Polyline& circle, const QVector<Polyline>& clipped_lines,
                                       RadialPathBoundaryPolicy handling) {
-    if (clipped_lines.isEmpty()) {
-        return {};
-    }
+    if (clipped_lines.isEmpty()) { return {}; }
 
     switch (handling) {
         case RadialPathBoundaryPolicy::kKeepBoundaryCrossingPath:
@@ -109,13 +107,11 @@ struct RadialCrossSection {
 bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min, Point& mesh_max) {
     bool has_bounds = false;
     for (const QSharedPointer<MeshBase>& mesh : meshes) {
-        if (mesh == nullptr || mesh->vertices().isEmpty()) {
-            continue;
-        }
+        if (mesh == nullptr || mesh->vertices().isEmpty()) { continue; }
 
         if (!has_bounds) {
-            mesh_min = mesh->min();
-            mesh_max = mesh->max();
+            mesh_min   = mesh->min();
+            mesh_max   = mesh->max();
             has_bounds = true;
             continue;
         }
@@ -135,9 +131,7 @@ bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min
 
 //! @brief Estimates progress loop iterations for an inclusive Distance range.
 int estimateInclusiveCount(Distance start, Distance end, Distance step) {
-    if (step <= 0 || start > end) {
-        return 1;
-    }
+    if (step <= 0 || start > end) { return 1; }
 
     return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
 }
@@ -145,18 +139,16 @@ int estimateInclusiveCount(Distance start, Distance end, Distance step) {
 //! @brief Returns the upper Z limit for generated cylindrical candidates.
 Distance cylindricalTopZ(const QSharedPointer<SettingsBase>& part_sb, Distance base_z, Distance mesh_top_z) {
     const Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
-    if (cylinder_height <= 0) {
-        return mesh_top_z;
-    }
+    if (cylinder_height <= 0) { return mesh_top_z; }
 
     const Distance capped_top_z(base_z + cylinder_height);
     return capped_top_z < mesh_top_z ? capped_top_z : mesh_top_z;
 }
-} // namespace
+}  // namespace
 
 RadialSlicer::RadialSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
     m_syntax = GcodeSyntax::kArcSpecialties;
-    m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
+    m_base   = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
 }
 
 void RadialSlicer::doSlice() {
@@ -170,16 +162,12 @@ void RadialSlicer::doSlice() {
     this->setMaxSteps(0);
     this->preProcess();
 
-    if (this->shouldCancel()) {
-        return;
-    }
+    if (this->shouldCancel()) { return; }
 
     this->postProcess();
     m_elapsed_time = m_timer.elapsed();
 
-    if (this->shouldCancel()) {
-        return;
-    }
+    if (this->shouldCancel()) { return; }
 
     if (!m_skip_gcode) {
         this->writeGCodeSetup();
@@ -187,9 +175,7 @@ void RadialSlicer::doSlice() {
         this->writeGCodeShutdown();
     }
 
-    if (this->shouldCancel()) {
-        return;
-    }
+    if (this->shouldCancel()) { return; }
 
     emit sliceComplete();
 }
@@ -206,10 +192,10 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
 
     int last_preprocess_percent = -1;
-    int last_compute_percent = -1;
-    auto emitPartProgress = [this, &build_parts](StatusUpdateStepType type, int part_index, double part_fraction,
-                                                 int& last_percent) {
-        const double total_parts = std::max(1, static_cast<int>(build_parts.size()));
+    int last_compute_percent    = -1;
+    auto emitPartProgress       = [this, &build_parts](StatusUpdateStepType type, int part_index, double part_fraction,
+                                                       int& last_percent) {
+        const double total_parts           = std::max(1, static_cast<int>(build_parts.size()));
         const double bounded_part_fraction = std::clamp(part_fraction, 0.0, 1.0);
         const int percent =
             std::clamp(static_cast<int>(((part_index + bounded_part_fraction) / total_parts) * 100.0), 0, 100);
@@ -264,13 +250,11 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         const RadialPathBoundaryPolicy boundary_policy =
             static_cast<RadialPathBoundaryPolicy>(part_sb->setting<int>(PS::Slicing::kRadialPathBoundaryPolicy));
         Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
-        if (initial_radius < 0) {
-            initial_radius = 0.0 * micron;
-        }
+        if (initial_radius < 0) { initial_radius = 0.0 * micron; }
 
         const Distance base_z(mesh_min.z());
         const Distance top_z = cylindricalTopZ(part_sb, base_z, mesh_max.z());
-        Point center = radialCenterForPart(part_sb, part, base_z);
+        Point center         = radialCenterForPart(part_sb, part, base_z);
         const Distance max_radius(maxRadiusForMeshes(meshes, center));
 
         // Match planar slicing's centerline convention: the first layer sits
@@ -282,7 +266,7 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
 
         QVector<RadialCrossSection> cross_sections;
         const int estimated_section_count = estimateInclusiveCount(first_bead_z, top_z, bead_width);
-        int sections_processed = 0;
+        int sections_processed            = 0;
         for (Distance z = first_bead_z; z <= top_z; z += bead_width) {
             Plane slicing_plane(Point(center.x(), center.y(), z()), QVector3D(0, 0, 1));
             PolygonList combined_geometry;
@@ -292,21 +276,13 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
                 QVector3D average_normal;
                 PolygonList geometry =
                     CrossSection::doCrossSection(mesh, slicing_plane, shift, average_normal, part_sb);
-                if (geometry.isEmpty()) {
-                    continue;
-                }
+                if (geometry.isEmpty()) { continue; }
 
-                if (combined_geometry.isEmpty()) {
-                    combined_geometry = geometry;
-                }
-                else {
-                    combined_geometry += geometry;
-                }
+                if (combined_geometry.isEmpty()) { combined_geometry = geometry; }
+                else { combined_geometry += geometry; }
             }
 
-            if (!combined_geometry.isEmpty()) {
-                cross_sections.push_back(RadialCrossSection {z, combined_geometry});
-            }
+            if (!combined_geometry.isEmpty()) { cross_sections.push_back(RadialCrossSection {z, combined_geometry}); }
 
             ++sections_processed;
             emitPreProcessProgress(parts_processed, static_cast<double>(sections_processed) /
@@ -321,9 +297,9 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         emitComputeProgress(parts_processed, 0.0);
-        int radial_layer_number = 0;
+        int radial_layer_number          = 0;
         const int estimated_radius_count = estimateInclusiveCount(first_radius, max_radius, layer_height);
-        int radii_processed = 0;
+        int radii_processed              = 0;
         for (Distance radius = first_radius; radius <= max_radius; radius += layer_height) {
             QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
             layer_settings->makeLocalAdjustments(radial_layer_number);
@@ -338,22 +314,16 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
                 // Intersect the horizontal model cross section with the
                 // current candidate path, then apply the radial boundary
                 // policy for paths intersected by the part boundary.
-                QVector<Polyline> clipped_lines = clipCircleToSection(section.geometry, circle);
+                QVector<Polyline> clipped_lines   = clipCircleToSection(section.geometry, circle);
                 QVector<Polyline> candidate_lines = applyBoundaryPolicy(circle, clipped_lines, boundary_policy);
 
                 for (Polyline line : candidate_lines) {
-                    if (line.size() < 2) {
-                        continue;
-                    }
+                    if (line.size() < 2) { continue; }
 
-                    for (Point& point : line) {
-                        point.z(section.z());
-                    }
+                    for (Point& point : line) { point.z(section.z()); }
 
                     Path path = createPath(line, layer_settings, center, radius, current_location);
-                    if (path.size() > 0) {
-                        radial_layer->addPath(path);
-                    }
+                    if (path.size() > 0) { radial_layer->addPath(path); }
                 }
             }
 
@@ -404,7 +374,7 @@ void RadialSlicer::writeGCode() {
     QTextStream stream(&m_temp_gcode_output_file);
 
     const double num_layers = std::max(1.0, static_cast<double>(m_radial_layers.size()));
-    int layer_number = 0;
+    int layer_number        = 0;
     for (const QSharedPointer<RadialLayer>& layer : m_radial_layers) {
         stream << m_base->writeLayerChange(layer_number);
         stream << m_base->writeBeforeLayer(layer->getMinZ(), layer->getSb());
@@ -420,9 +390,7 @@ void RadialSlicer::writeGCode() {
 }
 
 QSharedPointer<MeshBase> RadialSlicer::copyMesh(const QSharedPointer<MeshBase>& mesh) {
-    if (mesh == nullptr) {
-        return nullptr;
-    }
+    if (mesh == nullptr) { return nullptr; }
 
     if (ClosedMesh* closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get())) {
         return QSharedPointer<ClosedMesh>::create(*closed_mesh);
@@ -453,14 +421,12 @@ Point RadialSlicer::radialCenterForPart(const QSharedPointer<SettingsBase>& part
 double RadialSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>& meshes, const Point& center) {
     double max_radius = 0.0;
     for (const QSharedPointer<MeshBase>& mesh : meshes) {
-        if (mesh == nullptr) {
-            continue;
-        }
+        if (mesh == nullptr) { continue; }
 
         for (const MeshVertex& vertex : mesh->vertices()) {
             const double dx = static_cast<double>(vertex.location.x() - center.x());
             const double dy = static_cast<double>(vertex.location.y() - center.y());
-            max_radius = std::max(max_radius, std::hypot(dx, dy));
+            max_radius      = std::max(max_radius, std::hypot(dx, dy));
         }
     }
     return max_radius;
@@ -505,35 +471,29 @@ QSharedPointer<SettingsBase> RadialSlicer::createSegmentSettings(const QSharedPo
 Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings,
                               const Point& center, Distance radius, Point& current_location) {
     Path path;
-    if (polyline.size() < 2) {
-        return path;
-    }
+    if (polyline.size() < 2) { return path; }
 
-    const bool write_arcs = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
+    const bool write_arcs         = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
     const int arcs_per_revolution = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
     const QVector<Point> arc_points =
         write_arcs ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution, true)
                    : QVector<Point>();
     const Point path_start = arc_points.size() > 1 ? arc_points.first() : polyline.first();
-    const Point path_end = arc_points.size() > 1 ? arc_points.last() : polyline.last();
+    const Point path_end   = arc_points.size() > 1 ? arc_points.last() : polyline.last();
 
     QSharedPointer<SettingsBase> region_start_settings = createSegmentSettings(layer_settings, center, true);
-    QSharedPointer<SettingsBase> print_settings = createSegmentSettings(layer_settings, center, false);
+    QSharedPointer<SettingsBase> print_settings        = createSegmentSettings(layer_settings, center, false);
     QSharedPointer<TravelSegment> travel = QSharedPointer<TravelSegment>::create(current_location, path_start);
     travel->setSb(region_start_settings);
 
     // Avoid tiny zero-length moves created when clipped arcs share endpoints.
-    if (current_location.distance(path_start) > kMinPathSegmentLength) {
-        path.add(travel);
-    }
+    if (current_location.distance(path_start) > kMinPathSegmentLength) { path.add(travel); }
 
     if (arc_points.size() > 1) {
         for (int i = 1, end = arc_points.size(); i < end; ++i) {
             const bool is_arc = SlicingUtilities::IsCylindricalArcSegment(arc_points[i - 1], arc_points[i], center,
                                                                           radius, arcs_per_revolution, true);
-            if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
-                continue;
-            }
+            if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) { continue; }
 
             QSharedPointer<SegmentBase> segment;
             if (is_arc) {
@@ -541,9 +501,7 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
                     SlicingUtilities::GetCylindricalArcCenter(arc_points[i - 1], arc_points[i], center);
                 segment = QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, true);
             }
-            else {
-                segment = QSharedPointer<LineSegment>::create(arc_points[i - 1], arc_points[i]);
-            }
+            else { segment = QSharedPointer<LineSegment>::create(arc_points[i - 1], arc_points[i]); }
 
             segment->setSb(i == 1 ? region_start_settings : print_settings);
             path.add(segment);
@@ -551,9 +509,7 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
     }
     else {
         for (int i = 1, end = polyline.size(); i < end; ++i) {
-            if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) {
-                continue;
-            }
+            if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) { continue; }
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polyline[i - 1], polyline[i]);
             segment->setSb(i == 1 ? region_start_settings : print_settings);
@@ -561,10 +517,8 @@ Path RadialSlicer::createPath(const Polyline& polyline, const QSharedPointer<Set
         }
     }
 
-    if (path.size() > 0) {
-        current_location = path_end;
-    }
+    if (path.size() > 0) { current_location = path_end; }
 
     return path;
 }
-} // namespace ORNL
+}  // namespace ORNL

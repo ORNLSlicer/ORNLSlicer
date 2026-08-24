@@ -1,14 +1,14 @@
 #pragma once
 
+#include <QApplication>
+#include <QObject>
+#include <QPair>
+#include <QStyle>
 #include <list>
 #include <map>
 #include <string>
 #include <unordered_map>
 
-#include <QApplication>
-#include <QObject>
-#include <QPair>
-#include <QStyle>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
@@ -31,7 +31,7 @@ namespace ORNL {
 class PreferencesManager : public QObject {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Returns the singleton
     static QSharedPointer<PreferencesManager> getInstance();
 
@@ -227,7 +227,7 @@ class PreferencesManager : public QObject {
     //! \return visualization color map of name and color as hex string
     std::map<std::string, std::string> getVisualizationHexColors();
 
-  signals:
+   signals:
     //! \brief Signal emitted when the import unit is changed
     void importUnitChanged(Distance new_value, Distance old_value);
 
@@ -270,7 +270,7 @@ class PreferencesManager : public QObject {
     //! \brief Signal emitted when dependency-disabled setting visibility is changed
     void disabledSettingVisibilityChanged();
 
-  public slots:
+   public slots:
     //! \brief sets the unit used to scale when importing models
     //! \param du the unit text
     void setImportUnit(QString du);
@@ -412,7 +412,7 @@ class PreferencesManager : public QObject {
     //! \param lag: time to lag in milliseconds
     void setSegmentLag(int lag);
 
-  private:
+   private:
     //! \brief Constructor
     PreferencesManager();
 
@@ -487,5 +487,5 @@ class PreferencesManager : public QObject {
     //! \brief visualization color's preferences QColors
     std::unordered_map<std::string, QColor> m_visualization_qcolors;
 
-}; // class PreferencesManager
-} // namespace ORNL
+};  // class PreferencesManager
+}  // namespace ORNL

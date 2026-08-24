@@ -23,7 +23,7 @@ namespace ORNL {
  * the stitch.
  */
 class PossibleStitch {
-  public:
+   public:
     PossibleStitch();
 
     /*!
@@ -43,10 +43,10 @@ class PossibleStitch {
      */
     bool operator<(const PossibleStitch& other) const;
 
-    Area distance_2;     //!< The squared distance from terminus_0 to terminus_1
-    Terminus terminus_0; //!< The Terminus representing the end of polyline_0
-                         //! where the join would happen
-    Terminus terminus_1; //!< The Terminus representing the end of polyline_1
-                         //! where the join would happen
+    Area distance_2;      //!< The squared distance from terminus_0 to terminus_1
+    Terminus terminus_0;  //!< The Terminus representing the end of polyline_0
+                          //! where the join would happen
+    Terminus terminus_1;  //!< The Terminus representing the end of polyline_1
+                          //! where the join would happen
 };
-} // namespace ORNL
+}  // namespace ORNL

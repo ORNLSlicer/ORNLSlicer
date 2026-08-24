@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QVector>
 #include <limits>
 
-#include <QVector>
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qmap.h>
@@ -34,7 +34,7 @@ class SeamObject;
  */
 class GCodeView : public BaseView {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: Settings to use.
     //! \param segmentInfoControl: Segment info display control
@@ -58,7 +58,7 @@ class GCodeView : public BaseView {
     //! \brief Set camera to view from an isometric direction.
     void setIsoView();
 
-  public slots:
+   public slots:
     //! \brief Changes the view to use an orthographic projection instead of the normal perspective view.
     void useOrthographic(bool ortho);
 
@@ -116,7 +116,7 @@ class GCodeView : public BaseView {
     //! \brief Moves the camera to its default zoom and orientation.
     virtual void resetCamera() override;
 
-  signals:
+   signals:
     //! \brief Notification that a draggable optimization point setting edit has started.
     void optimizationPointDragStarted(QString x_setting, QString y_setting);
 
@@ -135,7 +135,7 @@ class GCodeView : public BaseView {
     //! \param max: new max segments
     void maxSegmentChanged(uint max);
 
-  protected:
+   protected:
     //! \brief Initalizes the view with the printer and the associated objects.
     void initView() override;
 
@@ -178,7 +178,7 @@ class GCodeView : public BaseView {
     //! \brief Handles the following: Orthographic out zoom
     void handleWheelBackward(QPointF mouse_ndc_pos, float delta) override;
 
-  private:
+   private:
     //! \brief Enables hover tracking only when the visible segment count is small enough for interactive picking.
     void updateHoverTracking();
 
@@ -286,13 +286,13 @@ class GCodeView : public BaseView {
 
     //! \brief Cache key for the visible-range true-width overlay.
     struct TrueWidthOverlayKey {
-        uint low_layer = 0;
-        uint high_layer = 0;
-        uint low_segment = 0;
-        uint high_segment = 0;
+        uint low_layer                = 0;
+        uint high_layer               = 0;
+        uint low_segment              = 0;
+        uint high_segment             = 0;
         GCodePreviewMode preview_mode = GCodePreviewMode::kAuto;
-        int vertex_threshold = 0;
-        bool use_true_widths = false;
+        int vertex_threshold          = 0;
+        bool use_true_widths          = false;
 
         bool operator==(const TrueWidthOverlayKey& other) const {
             return low_layer == other.low_layer && high_layer == other.high_layer && low_segment == other.low_segment &&
@@ -307,4 +307,4 @@ class GCodeView : public BaseView {
     //! \brief Segment / Bead info display control
     QSharedPointer<GCodeInfoControl> m_segment_info_control;
 };
-} // namespace ORNL
+}  // namespace ORNL

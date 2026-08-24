@@ -23,31 +23,57 @@ XYZInputWidget::XYZInputWidget(QWidget* parent) : QWidget(parent) {
     this->setupEvents();
 }
 
-QVector3D XYZInputWidget::value() { return QVector3D(m_x_dsb->value(), m_y_dsb->value(), m_z_dsb->value()); }
+QVector3D XYZInputWidget::value() {
+    return QVector3D(m_x_dsb->value(), m_y_dsb->value(), m_z_dsb->value());
+}
 
-void XYZInputWidget::showLabel(bool show) { m_front_label->setHidden(!show); }
+void XYZInputWidget::showLabel(bool show) {
+    m_front_label->setHidden(!show);
+}
 
-void XYZInputWidget::showUnit(bool show) { m_unit_label->setHidden(!show); }
+void XYZInputWidget::showUnit(bool show) {
+    m_unit_label->setHidden(!show);
+}
 
-void XYZInputWidget::showLock(bool show) { m_lock_check->setHidden(!show); }
+void XYZInputWidget::showLock(bool show) {
+    m_lock_check->setHidden(!show);
+}
 
-void XYZInputWidget::setLabelText(QString str) { m_front_label->setText(str); }
+void XYZInputWidget::setLabelText(QString str) {
+    m_front_label->setText(str);
+}
 
-void XYZInputWidget::setUnitText(QString str) { m_unit_label->setText(str); }
+void XYZInputWidget::setUnitText(QString str) {
+    m_unit_label->setText(str);
+}
 
-void XYZInputWidget::setLock(bool lock) { m_lock_check->setChecked(lock); }
+void XYZInputWidget::setLock(bool lock) {
+    m_lock_check->setChecked(lock);
+}
 
-void XYZInputWidget::setXText(QString x) { m_x_label->setText(x + " "); }
+void XYZInputWidget::setXText(QString x) {
+    m_x_label->setText(x + " ");
+}
 
-void XYZInputWidget::setYText(QString y) { m_y_label->setText(y + " "); }
+void XYZInputWidget::setYText(QString y) {
+    m_y_label->setText(y + " ");
+}
 
-void XYZInputWidget::setZText(QString z) { m_z_label->setText(z + " "); }
+void XYZInputWidget::setZText(QString z) {
+    m_z_label->setText(z + " ");
+}
 
-void XYZInputWidget::setXValue(double val) { m_x_dsb->setValue(val); }
+void XYZInputWidget::setXValue(double val) {
+    m_x_dsb->setValue(val);
+}
 
-void XYZInputWidget::setYValue(double val) { m_y_dsb->setValue(val); }
+void XYZInputWidget::setYValue(double val) {
+    m_y_dsb->setValue(val);
+}
 
-void XYZInputWidget::setZValue(double val) { m_z_dsb->setValue(val); }
+void XYZInputWidget::setZValue(double val) {
+    m_z_dsb->setValue(val);
+}
 
 void XYZInputWidget::setValue(QVector3D xyz) {
     m_x_dsb->setValue(xyz.x());
@@ -63,7 +89,7 @@ void XYZInputWidget::setIncrement(double inc) {
 
 void XYZInputWidget::readValue(double val) {
     QObject* dsb = QObject::sender();
-    Axis ax = Axis::kX;
+    Axis ax      = Axis::kX;
 
     if (dsb == m_y_dsb)
         ax = Axis::kY;
@@ -177,4 +203,4 @@ void XYZInputWidget::setupEvents() {
         }
     });
 }
-} // namespace ORNL
+}  // namespace ORNL

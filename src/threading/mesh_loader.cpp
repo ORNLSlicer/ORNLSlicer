@@ -1,5 +1,9 @@
 #include "threading/mesh_loader.h"
 
+#include <QLinkedList>
+#include <QStack>
+#include <QTemporaryFile>
+#include <QtDebug>
 #include <array>
 #include <cmath>
 #include <cstddef>
@@ -19,10 +23,6 @@
 #include <Interface_Static.hxx>
 #include <Poly_Triangle.hxx>
 #include <Poly_Triangulation.hxx>
-#include <QLinkedList>
-#include <QStack>
-#include <QTemporaryFile>
-#include <QtDebug>
 #include <STEPControl_Reader.hxx>
 #include <TopAbs_Orientation.hxx>
 #include <TopExp_Explorer.hxx>
@@ -55,7 +55,7 @@
 
 namespace ORNL {
 namespace {
-constexpr double kStepLinearDeflectionMm = 0.1;
+constexpr double kStepLinearDeflectionMm       = 0.1;
 constexpr double kStepAngularDeflectionRadians = 0.1;
 
 bool isStepFile(const QString& suffix) {
@@ -72,8 +72,7 @@ void applyInitialTransform(const QSharedPointer<MeshBase>& mesh, QMatrix4x4 tran
         transform.scale(QVector3D(conv(), conv(), conv()));
         mesh->setUnit(unit);
 
-        if (PreferencesManager::getInstance()->getUseImplicitTransforms())
-            transform.translate(center.toQVector3D());
+        if (PreferencesManager::getInstance()->getUseImplicitTransforms()) transform.translate(center.toQVector3D());
     }
 
     mesh->setTransformation(transform);
@@ -86,20 +85,16 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
 
     STEPControl_Reader reader;
     const QByteArray file_path_data = file_path.toUtf8();
-    if (reader.ReadFile(file_path_data.constData()) != IFSelect_RetDone)
-        return surface_mesh;
+    if (reader.ReadFile(file_path_data.constData()) != IFSelect_RetDone) return surface_mesh;
 
-    if (reader.TransferRoots() == 0)
-        return surface_mesh;
+    if (reader.TransferRoots() == 0) return surface_mesh;
 
     TopoDS_Shape shape = reader.OneShape();
-    if (shape.IsNull())
-        return surface_mesh;
+    if (shape.IsNull()) return surface_mesh;
 
     BRepMesh_IncrementalMesh mesher(shape, kStepLinearDeflectionMm, false, kStepAngularDeflectionRadians, true);
     mesher.Perform();
-    if (!mesher.IsDone())
-        return surface_mesh;
+    if (!mesher.IsDone()) return surface_mesh;
 
     using VertexIndex = MeshTypes::SurfaceMesh::Vertex_index;
     std::map<std::tuple<long long, long long, long long>, VertexIndex> vertex_lookup;
@@ -108,14 +103,13 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
         const long long x = std::llround(point.X() * 1000.0);
         const long long y = std::llround(point.Y() * 1000.0);
         const long long z = std::llround(point.Z() * 1000.0);
-        const auto key = std::make_tuple(x, y, z);
+        const auto key    = std::make_tuple(x, y, z);
 
         auto existing = vertex_lookup.find(key);
-        if (existing != vertex_lookup.end())
-            return existing->second;
+        if (existing != vertex_lookup.end()) return existing->second;
 
         const VertexIndex index = surface_mesh.add_vertex(MeshTypes::Point_3(x, y, z));
-        vertex_lookup[key] = index;
+        vertex_lookup[key]      = index;
         return index;
     };
 
@@ -124,8 +118,7 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
 
         TopLoc_Location location;
         Handle(Poly_Triangulation) triangulation = BRep_Tool::Triangulation(face, location);
-        if (triangulation.IsNull())
-            continue;
+        if (triangulation.IsNull()) continue;
 
         const gp_Trsf& transform = location.Transformation();
         for (int triangle_index = 1; triangle_index <= triangulation->NbTriangles(); ++triangle_index) {
@@ -135,8 +128,7 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
             triangulation->Triangle(triangle_index).Get(n1, n2, n3);
 
             std::array<Standard_Integer, 3> node_ids = {n1, n2, n3};
-            if (face.Orientation() == TopAbs_REVERSED)
-                std::swap(node_ids[1], node_ids[2]);
+            if (face.Orientation() == TopAbs_REVERSED) std::swap(node_ids[1], node_ids[2]);
 
             std::array<VertexIndex, 3> indices;
             for (int i = 0; i < 3; ++i) {
@@ -145,8 +137,7 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
                 indices[i] = add_vertex(point);
             }
 
-            if (indices[0] == indices[1] || indices[1] == indices[2] || indices[2] == indices[0])
-                continue;
+            if (indices[0] == indices[1] || indices[1] == indices[2] || indices[2] == indices[0]) continue;
 
             auto face_index = surface_mesh.add_face(indices[0], indices[1], indices[2]);
             if (face_index == MeshTypes::SurfaceMesh::null_face())
@@ -159,8 +150,7 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
 
 QSharedPointer<MeshBase> buildMeshFromStepSurfaceMesh(MeshTypes::SurfaceMesh& surface_mesh, const QFileInfo& file_info,
                                                       MeshType mesh_type) {
-    if (surface_mesh.number_of_faces() == 0 || surface_mesh.number_of_vertices() == 0)
-        return nullptr;
+    if (surface_mesh.number_of_faces() == 0 || surface_mesh.number_of_vertices() == 0) return nullptr;
 
     QSharedPointer<MeshBase> mesh;
     if (CGAL::is_closed(surface_mesh)) {
@@ -171,9 +161,7 @@ QSharedPointer<MeshBase> buildMeshFromStepSurfaceMesh(MeshTypes::SurfaceMesh& su
             MeshTypes::Polyhedron repaired_polyhedron = polyhedron;
             try {
                 ClosedMesh::RepairResult repair_result = ClosedMesh::CleanPolyhedronWithStatus(repaired_polyhedron);
-                if (repair_result == ClosedMesh::RepairResult::kSuccess) {
-                    polyhedron = repaired_polyhedron;
-                }
+                if (repair_result == ClosedMesh::RepairResult::kSuccess) { polyhedron = repaired_polyhedron; }
                 else {
                     qWarning() << "Model repair did not complete for" << file_info.fileName() << "-"
                                << ClosedMesh::RepairResultDescription(repair_result) << "Importing unrepaired mesh.";
@@ -207,8 +195,7 @@ QVector<MeshLoader::MeshData> loadStepMeshes(const QFileInfo& file_info, MeshTyp
     if (read_from_memory) {
         temporary_step_file.setFileTemplate(
             QDir::temp().filePath("ornlslicer_step_XXXXXX." + file_info.suffix().toLower()));
-        if (!temporary_step_file.open())
-            return loaded_meshes;
+        if (!temporary_step_file.open()) return loaded_meshes;
 
         if (temporary_step_file.write(static_cast<const char*>(file_data.first), file_data.second) !=
             static_cast<qint64>(file_data.second))
@@ -219,16 +206,15 @@ QVector<MeshLoader::MeshData> loadStepMeshes(const QFileInfo& file_info, MeshTyp
     }
 
     MeshTypes::SurfaceMesh surface_mesh = buildSurfaceMeshFromStep(step_path);
-    QSharedPointer<MeshBase> mesh = buildMeshFromStepSurfaceMesh(surface_mesh, file_info, mesh_type);
-    if (mesh.isNull())
-        return loaded_meshes;
+    QSharedPointer<MeshBase> mesh       = buildMeshFromStepSurfaceMesh(surface_mesh, file_info, mesh_type);
+    if (mesh.isNull()) return loaded_meshes;
 
     applyInitialTransform(mesh, transform, unit);
     loaded_meshes.push_back({mesh, file_data.first, file_data.second});
 
     return loaded_meshes;
 }
-} // namespace
+}  // namespace
 
 MeshLoader::MeshLoader(QString file_path, MeshType mt, QMatrix4x4 transform, Distance unit)
     : m_file_path(file_path), m_mesh_type(mt), m_transform(transform), m_unit(unit) {}
@@ -236,11 +222,9 @@ MeshLoader::MeshLoader(QString file_path, MeshType mt, QMatrix4x4 transform, Dis
 void MeshLoader::run() {
     auto meshes = LoadMeshes(m_file_path, m_mesh_type, m_transform, m_unit);
 
-    if (meshes.isEmpty())
-        emit error("Error importing mesh: " + QFileInfo(m_file_path).fileName());
+    if (meshes.isEmpty()) emit error("Error importing mesh: " + QFileInfo(m_file_path).fileName());
 
-    for (auto mesh_data : meshes)
-        emit newMesh(mesh_data);
+    for (auto mesh_data : meshes) emit newMesh(mesh_data);
 }
 
 QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType mt, QMatrix4x4 transform,
@@ -252,10 +236,9 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
     std::pair<void*, size_t> file_data;
     const bool read_from_memory = raw_data != nullptr && file_size != 0;
 
-    if (raw_data == nullptr || file_size == 0) // Data not provided, so load from file
+    if (raw_data == nullptr || file_size == 0)  // Data not provided, so load from file
     {
-        if (!file_info.exists())
-            return loaded_meshes;
+        if (!file_info.exists()) return loaded_meshes;
 
         file_data = LoadRawData(file_info.absoluteFilePath());
     }
@@ -263,8 +246,7 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
         file_data = std::make_pair(raw_data, file_size);
 
     if (file_data.first == nullptr || file_data.second == 0) {
-        if (!read_from_memory && file_data.first != nullptr)
-            free(file_data.first);
+        if (!read_from_memory && file_data.first != nullptr) free(file_data.first);
         return loaded_meshes;
     }
 
@@ -276,8 +258,7 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
 
     if (isStepFile(model_type)) {
         auto step_meshes = loadStepMeshes(file_info, mt, transform, unit, file_data, read_from_memory);
-        if (step_meshes.isEmpty() && !read_from_memory)
-            free(file_data.first);
+        if (step_meshes.isEmpty() && !read_from_memory) free(file_data.first);
         return step_meshes;
     }
 
@@ -285,35 +266,34 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
         scene =
             importer.ReadFileFromMemory(file_data.first, file_data.second,
                                         aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType,
-                                        "stl"); // Tell assimp we are using STL.
+                                        "stl");  // Tell assimp we are using STL.
     }
     else if (model_type == "3mf" || model_type == "3MF") {
         scene =
             importer.ReadFileFromMemory(file_data.first, file_data.second,
                                         aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType,
-                                        "3mf"); // Tell assimp we are using 3mf.
+                                        "3mf");  // Tell assimp we are using 3mf.
     }
     else if (model_type == "obj" || model_type == "OBJ") {
-        scene = importer.ReadFileFromMemory(file_data.first, file_data.second,
-                                            aiProcess_DropNormals | aiProcess_JoinIdenticalVertices |
-                                                aiProcess_Triangulate | aiProcess_SortByPType,
-                                            "obj"); // Tell assimp we are using obj.
+        scene = importer.ReadFileFromMemory(
+            file_data.first, file_data.second,
+            aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_SortByPType,
+            "obj");  // Tell assimp we are using obj.
     }
     else if (model_type == "amf" || model_type == "AMF") {
-        scene = importer.ReadFileFromMemory(file_data.first, file_data.second,
-                                            aiProcess_DropNormals | aiProcess_JoinIdenticalVertices |
-                                                aiProcess_Triangulate | aiProcess_SortByPType,
-                                            "amf"); // Tell assimp we are using obj.
+        scene = importer.ReadFileFromMemory(
+            file_data.first, file_data.second,
+            aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_SortByPType,
+            "amf");  // Tell assimp we are using obj.
     }
     else {
-        scene = importer.ReadFileFromMemory(file_data.first, file_data.second,
-                                            aiProcess_DropNormals | aiProcess_JoinIdenticalVertices |
-                                                aiProcess_SortByPType);
+        scene = importer.ReadFileFromMemory(
+            file_data.first, file_data.second,
+            aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType);
     }
 
     if (scene == nullptr) {
-        if (!read_from_memory)
-            free(file_data.first);
+        if (!read_from_memory) free(file_data.first);
         return loaded_meshes;
     }
 
@@ -324,8 +304,7 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
             if (mesh->mNumFaces > 0 && mesh->mNumVertices > 0) {
                 QString name = file_info.baseName();
 
-                if (scene->mNumMeshes > 1)
-                    name += "_" + QString::number(num_models_added);
+                if (scene->mNumMeshes > 1) name += "_" + QString::number(num_models_added);
 
                 QSharedPointer<MeshBase> new_mesh;
 
@@ -339,9 +318,7 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
                     try {
                         ClosedMesh::RepairResult repair_result =
                             ClosedMesh::CleanPolyhedronWithStatus(repaired_polyhedron);
-                        if (repair_result == ClosedMesh::RepairResult::kSuccess) {
-                            polyhedron = repaired_polyhedron;
-                        }
+                        if (repair_result == ClosedMesh::RepairResult::kSuccess) { polyhedron = repaired_polyhedron; }
                         else {
                             qWarning() << "Model repair did not complete for" << file_info.fileName() << "-"
                                        << ClosedMesh::RepairResultDescription(repair_result)
@@ -358,18 +335,16 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
 
                 if (builder.wasError() || !polyhedron.is_closed()) {
                     MeshTypes::SurfaceMesh sm = BuildSurfaceMesh(mesh);
-                    new_mesh = QSharedPointer<OpenMesh>::create(sm, name, file_info.fileName());
+                    new_mesh                  = QSharedPointer<OpenMesh>::create(sm, name, file_info.fileName());
                 }
-                else {
-                    new_mesh = QSharedPointer<ClosedMesh>::create(polyhedron, name, file_info.fileName());
-                }
+                else { new_mesh = QSharedPointer<ClosedMesh>::create(polyhedron, name, file_info.fileName()); }
                 new_mesh->setType(mt);
 
                 // Center the mesh about itself
                 auto center = new_mesh->originalCentroid();
                 new_mesh->center();
 
-                if (transform.isIdentity()) // If the transform was not provided
+                if (transform.isIdentity())  // If the transform was not provided
                 {
                     // Scale to the default unit
                     Distance conv(unit);
@@ -392,14 +367,12 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
         }
     }
 
-    if (loaded_meshes.isEmpty() && !read_from_memory)
-        free(file_data.first);
+    if (loaded_meshes.isEmpty() && !read_from_memory) free(file_data.first);
 
     return loaded_meshes;
 }
 
 std::pair<void*, size_t> MeshLoader::LoadRawData(QString file_path) {
-
     // Load raw data
     // Some C here to get a void pointer of the model.
     FILE* fptr = fopen(file_path.toUtf8(), "rb");
@@ -409,13 +382,11 @@ std::pair<void*, size_t> MeshLoader::LoadRawData(QString file_path) {
     fseek(fptr, 0L, SEEK_SET);
 
     void* data = malloc(fsize);
-    if (data == nullptr)
-        return std::make_pair(nullptr, 0);
+    if (data == nullptr) return std::make_pair(nullptr, 0);
 
     int readres = fread(data, 1, fsize, fptr);
 
-    if (readres != fsize)
-        return std::make_pair(nullptr, 0);
+    if (readres != fsize) return std::make_pair(nullptr, 0);
 
     fclose(fptr);
 
@@ -432,9 +403,9 @@ MeshTypes::SurfaceMesh MeshLoader::BuildSurfaceMesh(aiMesh* mesh) {
             MeshTypes::Point_3(mesh->mVertices[i].x * 1000, mesh->mVertices[i].y * 1000, mesh->mVertices[i].z * 1000));
 
     for (uint i = 0, end = mesh->mNumFaces; i < end; ++i) {
-        auto& face = mesh->mFaces[i];
+        auto& face     = mesh->mFaces[i];
         auto face_desc = sm.add_face(points[face.mIndices[0]], points[face.mIndices[1]], points[face.mIndices[2]]);
     }
     return sm;
 }
-} // namespace ORNL
+}  // namespace ORNL

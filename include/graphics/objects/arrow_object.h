@@ -15,7 +15,7 @@ namespace ORNL {
  * \brief A arrow drawn using GL_LINES. Mostly used to draw parenting relationships between parts.
  */
 class ArrowObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param view: View to render to.
     //! \param begin: Beginning point.
@@ -39,7 +39,7 @@ class ArrowObject : public GraphicsObject {
     //! \brief If tracking, update the arrow to the object center locations.
     void updateEndpoints();
 
-  private:
+   private:
     //! \brief Initalizes arrow.
     void initArrow(BaseView* view);
     //! \brief Finds a transform for the arrow between the beginning and end.
@@ -61,4 +61,4 @@ class ArrowObject : public GraphicsObject {
     //! \brief Color
     QColor m_color;
 };
-} // namespace ORNL
+}  // namespace ORNL

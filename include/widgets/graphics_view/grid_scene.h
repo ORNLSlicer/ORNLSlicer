@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QGraphicsScene>
+
 #include <qobject.h>
 #include <qtmetamacros.h>
 #include <qwindowdefs.h>
@@ -8,17 +9,17 @@
 namespace ORNL {
 class GridScene : public QGraphicsScene {
     Q_OBJECT
-  public:
+   public:
     GridScene(QObject* parent = nullptr);
 
     void setGridStep(int step);
 
-  protected:
+   protected:
     void drawBackground(QPainter* painter, const QRectF& rect);
 
     void drawForeground(QPainter* painter, const QRectF& rect);
 
-  private:
+   private:
     int m_grid_step;
 };
-} // namespace ORNL
+}  // namespace ORNL

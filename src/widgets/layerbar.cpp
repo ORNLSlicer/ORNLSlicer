@@ -57,14 +57,14 @@
 
 namespace ORNL {
 LayerBar::LayerBar(QSharedPointer<PartMetaModel> pm, QWidget* parent) : QWidget(parent) {
-    m_model = pm;
+    m_model  = pm;
     m_layers = 0;
     m_position.resize(m_layers);
-    m_part = nullptr;
-    m_skip = 1;
+    m_part             = nullptr;
+    m_skip             = 1;
     m_last_clicked_dot = nullptr;
-    m_track_change = false;
-    m_original_y = 0;
+    m_track_change     = false;
+    m_original_y       = 0;
 
     setupActions();
 
@@ -76,17 +76,19 @@ LayerBar::LayerBar(QSharedPointer<PartMetaModel> pm, QWidget* parent) : QWidget(
     connect(m_model.get(), &PartMetaModel::itemRemovedUpdate, this, &LayerBar::removalUpdate);
 }
 
-LayerBar::~LayerBar() { qDeleteAll(m_position); }
+LayerBar::~LayerBar() {
+    qDeleteAll(m_position);
+}
 
-QSize LayerBar::sizeHint() const { return QSize(40, 200); }
+QSize LayerBar::sizeHint() const {
+    return QSize(40, 200);
+}
 
 void LayerBar::addSingle(int layer) {
-    if (layer < 0) {
-        return;
-    }
+    if (layer < 0) { return; }
 
-    LayerDot* new_dot = addDot(layer, false);  // visually add dot. Not from template
-    m_part->createSettingsRange(layer, layer); // add range to part
+    LayerDot* new_dot = addDot(layer, false);   // visually add dot. Not from template
+    m_part->createSettingsRange(layer, layer);  // add range to part
     updateLayerSettingsRangeAvailability();
     selectDot(new_dot);
     m_last_clicked_dot = new_dot;
@@ -95,8 +97,8 @@ void LayerBar::addSingle(int layer) {
 }
 
 void LayerBar::addSingleFromTemplate(int layer, QSharedPointer<SettingsBase> sb) {
-    LayerDot* new_dot = addDot(layer, true);       // visually add dot. From template
-    m_part->createSettingsRange(layer, layer, sb); // add range to part with settings base
+    LayerDot* new_dot = addDot(layer, true);        // visually add dot. From template
+    m_part->createSettingsRange(layer, layer, sb);  // add range to part with settings base
     updateLayerSettingsRangeAvailability();
     new_dot->isFromTemplate();
     selectDot(new_dot);
@@ -107,7 +109,7 @@ void LayerBar::addSingleFromTemplate(int layer, QSharedPointer<SettingsBase> sb)
 
 void LayerBar::addRange(int lower, int upper) {
     if (layerValid(lower) && layerValid(upper)) {
-        LayerDot* a = addDot(lower, false); // Not from template
+        LayerDot* a = addDot(lower, false);  // Not from template
         LayerDot* b = addDot(upper, false);
 
         dot_range* range = new dot_range;
@@ -126,7 +128,7 @@ void LayerBar::addRange(int lower, int upper) {
 
 void LayerBar::addRangeFromTemplate(int lower, int upper, QSharedPointer<SettingsBase> sb) {
     if (layerValid(lower) && layerValid(upper)) {
-        LayerDot* a = addDot(lower, true); // From template
+        LayerDot* a = addDot(lower, true);  // From template
         LayerDot* b = addDot(upper, true);
 
         a->isFromTemplate();
@@ -149,8 +151,7 @@ void LayerBar::addRangeFromTemplate(int lower, int upper, QSharedPointer<Setting
 void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
     // delete all the old dots / positions
     qDeleteAll(m_position);
-    for (auto& dot : m_position)
-        dot = nullptr;
+    for (auto& dot : m_position) dot = nullptr;
 
     m_selection.clear();
 
@@ -169,18 +170,18 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
         resizeEvent(nullptr);
 
         // reconstruct the dots, ranges and groups
-        QVector<dot_group*> dot_group_list; // keep a list of groups we've made so we don't make the same one twice
+        QVector<dot_group*> dot_group_list;  // keep a list of groups we've made so we don't make the same one twice
 
-        auto ranges = m_part->getSettingsRanges();
+        auto ranges              = m_part->getSettingsRanges();
         auto range_from_template = m_part->getRangesFromTemplate();
         for (auto range : ranges) {
-            int low = range->low();
-            int high = range->high();
-            QString group_name = range->groupName(); // only single dots can be in groups
-            int min = qMin(low, high);
-            int max = qMax(low, high);
+            int low            = range->low();
+            int high           = range->high();
+            QString group_name = range->groupName();  // only single dots can be in groups
+            int min            = qMin(low, high);
+            int max            = qMax(low, high);
 
-            if (low == high) // add Single
+            if (low == high)  // add Single
             {
                 LayerDot* new_dot;
 
@@ -188,19 +189,18 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
                     new_dot = addDot(low, false);
                 else
                     new_dot = addDot(low, true);
-                if (group_name.length() > 0) // dot is in a group
+                if (group_name.length() > 0)  // dot is in a group
                 {
                     dot_group* group = nullptr;
 
                     // look for the group in existing groups
                     for (int i = 0, end = dot_group_list.size(); i < end && group == nullptr; ++i) {
-                        if (dot_group_list[i]->group_name == group_name)
-                            group = dot_group_list[i];
+                        if (dot_group_list[i]->group_name == group_name) group = dot_group_list[i];
                     }
 
                     // if we didn't find the group in the list, make it & add to list
                     if (group == nullptr) {
-                        group = new dot_group;
+                        group             = new dot_group;
                         group->group_name = group_name;
                         dot_group_list.push_back(group);
                     }
@@ -210,7 +210,7 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
                     new_dot->setGroup(group);
                 }
             }
-            else // add range
+            else  // add range
             {
                 LayerDot* a;
                 LayerDot* b;
@@ -219,22 +219,22 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
                     a = addDot(low, false);
                     b = addDot(high, false);
                 }
-                else { // From template
+                else {  // From template
                     a = addDot(low, true);
                     b = addDot(high, true);
                 }
                 dot_range* range = new dot_range;
-                range->a = a;
-                range->b = b;
+                range->a         = a;
+                range->b         = b;
 
                 a->setRange(range);
                 b->setRange(range);
             }
         }
     }
-    else // Disable on settings/ clipping mesh or no part
+    else  // Disable on settings/ clipping mesh or no part
     {
-        m_part = nullptr;
+        m_part   = nullptr;
         m_layers = 0;
         m_position.resize(m_layers);
         m_selection.clear();
@@ -266,7 +266,7 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
         updateLayers();
         resizeEvent(nullptr);
         for (LayerDot* dot : m_position) {
-            if (dot != nullptr) // Delete current layer dots and load new ones from selected template
+            if (dot != nullptr)  // Delete current layer dots and load new ones from selected template
                 deleteSingle(dot);
         }
         loadTemplateLayers();
@@ -279,13 +279,11 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
     update();
 }
 
-void LayerBar::reselectPart() { // If no part selected
-    if (m_part == nullptr)
-        return;
+void LayerBar::reselectPart() {  // If no part selected
+    if (m_part == nullptr) return;
     // delete all the old dots / positions
     qDeleteAll(m_position);
-    for (auto& dot : m_position)
-        dot = nullptr;
+    for (auto& dot : m_position) dot = nullptr;
 
     m_selection.clear();
     // Clear dots if no template selected.
@@ -304,18 +302,18 @@ void LayerBar::reselectPart() { // If no part selected
         resizeEvent(nullptr);
 
         // reconstruct the dots, ranges and groups
-        QVector<dot_group*> dot_group_list; // keep a list of groups we've made so we don't make the same one twice
+        QVector<dot_group*> dot_group_list;  // keep a list of groups we've made so we don't make the same one twice
 
-        auto ranges = m_part->getSettingsRanges();
+        auto ranges              = m_part->getSettingsRanges();
         auto range_from_template = m_part->getRangesFromTemplate();
         for (auto range : ranges) {
-            int low = range->low();
-            int high = range->high();
-            QString group_name = range->groupName(); // only single dots can be in groups
-            int min = qMin(low, high);
-            int max = qMax(low, high);
+            int low            = range->low();
+            int high           = range->high();
+            QString group_name = range->groupName();  // only single dots can be in groups
+            int min            = qMin(low, high);
+            int max            = qMax(low, high);
 
-            if (low == high) // add Single
+            if (low == high)  // add Single
             {
                 LayerDot* new_dot;
 
@@ -323,19 +321,18 @@ void LayerBar::reselectPart() { // If no part selected
                     new_dot = addDot(low, false);
                 else
                     new_dot = addDot(low, true);
-                if (group_name.length() > 0) // dot is in a group
+                if (group_name.length() > 0)  // dot is in a group
                 {
                     dot_group* group = nullptr;
 
                     // look for the group in existing groups
                     for (int i = 0, end = dot_group_list.size(); i < end && group == nullptr; ++i) {
-                        if (dot_group_list[i]->group_name == group_name)
-                            group = dot_group_list[i];
+                        if (dot_group_list[i]->group_name == group_name) group = dot_group_list[i];
                     }
 
                     // if we didn't find the group in the list, make it & add to list
                     if (group == nullptr) {
-                        group = new dot_group;
+                        group             = new dot_group;
                         group->group_name = group_name;
                         dot_group_list.push_back(group);
                     }
@@ -345,7 +342,7 @@ void LayerBar::reselectPart() { // If no part selected
                     new_dot->setGroup(group);
                 }
             }
-            else // add range
+            else  // add range
             {
                 LayerDot* a;
                 LayerDot* b;
@@ -354,13 +351,13 @@ void LayerBar::reselectPart() { // If no part selected
                     a = addDot(low, false);
                     b = addDot(high, false);
                 }
-                else { // From template
+                else {  // From template
                     a = addDot(low, true);
                     b = addDot(high, true);
                 }
                 dot_range* range = new dot_range;
-                range->a = a;
-                range->b = b;
+                range->a         = a;
+                range->b         = b;
 
                 a->setRange(range);
                 b->setRange(range);
@@ -388,7 +385,7 @@ void LayerBar::reselectPart() { // If no part selected
         updateLayers();
         resizeEvent(nullptr);
         for (LayerDot* dot : m_position) {
-            if (dot != nullptr) // Delete current layer dots and load new ones from selected template
+            if (dot != nullptr)  // Delete current layer dots and load new ones from selected template
                 deleteSingle(dot);
         }
         loadTemplateLayers();
@@ -404,15 +401,15 @@ void LayerBar::reselectPart() { // If no part selected
 void LayerBar::loadTemplateLayers() {
     QVector<SettingsRange> sr = GSM->getLayerSettings();
     for (int i = 0, end = sr.size(); i < end; ++i) {
-        if (sr[i].high() <= m_layers) {        // Don't load layers that are higher than part height
-            if (sr[i].low() == sr[i].high()) { // If single layer
+        if (sr[i].high() <= m_layers) {         // Don't load layers that are higher than part height
+            if (sr[i].low() == sr[i].high()) {  // If single layer
                 addSingleFromTemplate(sr[i].low(), sr[i].getSb());
             }
-            else { // If range
+            else {  // If range
                 addRangeFromTemplate(sr[i].low(), sr[i].high(), sr[i].getSb());
             }
         }
-        else { // If not in range, add to deleted layers in case they need to be brought back if layerbar grows.
+        else {  // If not in range, add to deleted layers in case they need to be brought back if layerbar grows.
             m_deleted_ranges.push_back(sr[i]);
         }
     }
@@ -426,8 +423,7 @@ void LayerBar::removePart(QSharedPointer<Part> part) {
 }
 
 void LayerBar::deleteSelection() {
-    for (LayerDot* dot : m_selection)
-        deleteSingle(dot);
+    for (LayerDot* dot : m_selection) deleteSingle(dot);
 
     m_selection.clear();
     clearSelection();
@@ -436,11 +432,11 @@ void LayerBar::deleteSelection() {
 
 void LayerBar::setLayer() {
     bool ok;
-    bool moved = false;
-    LayerDot* dot = m_selection.back();
+    bool moved        = false;
+    LayerDot* dot     = m_selection.back();
     int orginal_layer = dot->getLayer();
-    int new_layer = QInputDialog::getInt(this, "Layer Entry", "Enter new layer number:", dot->getLayer() + 1, 1,
-                                         m_layers + 1, 1, &ok);
+    int new_layer     = QInputDialog::getInt(this, "Layer Entry", "Enter new layer number:", dot->getLayer() + 1, 1,
+                                             m_layers + 1, 1, &ok);
     new_layer--;
 
     moved = moveDotToLayer(dot, new_layer);
@@ -463,10 +459,9 @@ void LayerBar::setLayer() {
 }
 
 void LayerBar::setPairLayers() {
-    LayerDot* first_layer = m_selection.back();
+    LayerDot* first_layer  = m_selection.back();
     LayerDot* second_layer = m_selection.front();
-    if (first_layer->getLayer() > second_layer->getLayer())
-        std::swap(first_layer, second_layer);
+    if (first_layer->getLayer() > second_layer->getLayer()) std::swap(first_layer, second_layer);
 
     // Dialog prompt to get user input for range start and end
     QDialog dialog(this);
@@ -474,8 +469,8 @@ void LayerBar::setPairLayers() {
     dialog.setWindowTitle("Move existing layer range");
 
     // Input for first and last in range
-    QSpinBox* spinbox_first = new QSpinBox(&dialog);  // start of range
-    QSpinBox* spinbox_second = new QSpinBox(&dialog); // end of range
+    QSpinBox* spinbox_first  = new QSpinBox(&dialog);  // start of range
+    QSpinBox* spinbox_second = new QSpinBox(&dialog);  // end of range
     spinbox_first->setRange(1, m_layers - 1);
     spinbox_second->setRange(1, m_layers);
 
@@ -484,7 +479,7 @@ void LayerBar::setPairLayers() {
 
     // Add inputs into a layout and the form
     QGroupBox* groupBox = new QGroupBox(tr("Alter the layer numbers to the desired location."));
-    QGridLayout* grid = new QGridLayout;
+    QGridLayout* grid   = new QGridLayout;
     grid->addWidget(new QLabel("First layer"), 1, 1);
     grid->addWidget(new QLabel("Last layer"), 2, 1);
     grid->addWidget(spinbox_first, 1, 2);
@@ -503,12 +498,10 @@ void LayerBar::setPairLayers() {
     bool result = dialog.exec();
 
     while (result == QDialog::Accepted) {
-        int first_val = spinbox_first->value() - 1;
+        int first_val  = spinbox_first->value() - 1;
         int second_val = spinbox_second->value() - 1;
 
-        if (first_val == first_layer->getLayer() && second_val == second_layer->getLayer()) {
-            break;
-        }
+        if (first_val == first_layer->getLayer() && second_val == second_layer->getLayer()) { break; }
 
         if (first_val < second_val &&
             !m_part->getSettingsRange(first_layer->getLayer(), second_layer->getLayer()).isNull() &&
@@ -516,11 +509,9 @@ void LayerBar::setPairLayers() {
             (this->layerValid(second_val) || m_position[second_val] == second_layer)) {
             m_part->updateSettingsRangeLimits(first_layer->getLayer(), second_layer->getLayer(), first_val, second_val);
 
-            if (first_layer->getLayer() != first_val)
-                this->moveDotToLayer(first_layer, first_val);
+            if (first_layer->getLayer() != first_val) this->moveDotToLayer(first_layer, first_val);
 
-            if (second_layer->getLayer() != second_val)
-                this->moveDotToLayer(second_layer, second_val);
+            if (second_layer->getLayer() != second_val) this->moveDotToLayer(second_layer, second_val);
 
             updateLayers();
             removeInvalidSelections();
@@ -552,8 +543,7 @@ void LayerBar::addSelection() {
         new_layer--;
     }
 
-    if (ok)
-        addSingle(new_layer);
+    if (ok) addSingle(new_layer);
 }
 
 void LayerBar::addPair() {
@@ -563,20 +553,19 @@ void LayerBar::addPair() {
     dialog.setWindowTitle("Add New Range of Layer Settings");
 
     // Input for first and last in range
-    QDoubleSpinBox* pairFirst = new QDoubleSpinBox(&dialog); // start of range
-    QDoubleSpinBox* pairLast = new QDoubleSpinBox(&dialog);  // end of range
+    QDoubleSpinBox* pairFirst = new QDoubleSpinBox(&dialog);  // start of range
+    QDoubleSpinBox* pairLast  = new QDoubleSpinBox(&dialog);  // end of range
     pairFirst->setRange(1, m_layers - 1);
     pairLast->setRange(1, m_layers);
     pairFirst->setDecimals(0);
     pairLast->setDecimals(0);
 
     // If a dot is selected, use that dot as the start
-    if (m_selection.size() == 1)
-        pairFirst->setValue(m_selection[0]->getLayer() + 1);
+    if (m_selection.size() == 1) pairFirst->setValue(m_selection[0]->getLayer() + 1);
 
     // Add inputs into a layout and the form
     QGroupBox* groupBox = new QGroupBox(tr("Indicate which layers to pair"));
-    QGridLayout* grid = new QGridLayout;
+    QGridLayout* grid   = new QGridLayout;
     grid->addWidget(new QLabel("First layer"), 1, 1);
     grid->addWidget(new QLabel("Second layer"), 2, 1);
     grid->addWidget(pairFirst, 1, 2);
@@ -596,7 +585,7 @@ void LayerBar::addPair() {
     if (dialog.exec() == QDialog::Accepted) {
         // Initiate values and dots
         int first = pairFirst->value() - 1;
-        int last = pairLast->value() - 1;
+        int last  = pairLast->value() - 1;
         LayerDot* a;
         LayerDot* b;
         bool ok = true;
@@ -606,8 +595,9 @@ void LayerBar::addPair() {
         options.setOptions(QInputDialog::UseListViewForComboBoxItems);
         options.setComboBoxItems(choose);
         options.setWindowTitle("Could not add the settings range");
-        options.setLabelText("One of the specified layers already has settings associated with it. \n"
-                             "What would you like to do?");
+        options.setLabelText(
+            "One of the specified layers already has settings associated with it. \n"
+            "What would you like to do?");
 
         if (m_selection.size() == 0) {
             while (!layerValid(first) && ok) {
@@ -619,9 +609,7 @@ void LayerBar::addPair() {
                         &ok);
                     first--;
                 }
-                else if (options.textValue().contains("Delete") && ok) {
-                    deleteSingle(m_position[first]);
-                }
+                else if (options.textValue().contains("Delete") && ok) { deleteSingle(m_position[first]); }
             }
             while (!layerValid(last) && ok) {
                 options.exec();
@@ -631,9 +619,7 @@ void LayerBar::addPair() {
                         "Layer " + QString::number(last + 1) + " was invalid. New last layer:", 1, 1, m_layers, 1, &ok);
                     last--;
                 }
-                else if (options.textValue().contains("Delete") && ok) {
-                    deleteSingle(m_position[last]);
-                }
+                else if (options.textValue().contains("Delete") && ok) { deleteSingle(m_position[last]); }
             }
             while (first == last && ok) {
                 last = QInputDialog::getInt(
@@ -642,9 +628,7 @@ void LayerBar::addPair() {
                     &ok);
                 last--;
             }
-            if (ok) {
-                this->addRange(first, last);
-            }
+            if (ok) { this->addRange(first, last); }
         }
         else if (m_selection.size() == 1) {
             while (!layerValid(last) && ok) {
@@ -655,9 +639,7 @@ void LayerBar::addPair() {
                         "Layer " + QString::number(last + 1) + " was invalid. New last layer:", 1, 1, m_layers, 1, &ok);
                     last--;
                 }
-                else if (options.textValue().contains("Delete") && ok) {
-                    deleteSingle(m_position[last]);
-                }
+                else if (options.textValue().contains("Delete") && ok) { deleteSingle(m_position[last]); }
             }
             while (first == last && ok) {
                 last = QInputDialog::getInt(
@@ -699,8 +681,8 @@ void LayerBar::addGroup() {
     dialog.setWindowTitle("Add a Selection Group");
 
     // Radiobuttons for selecting odds/evens or making a custom selection group
-    QRadioButton* selectOdds = new QRadioButton("Select all odd layers.", &dialog);
-    QRadioButton* selectEvens = new QRadioButton("Select all even layers.", &dialog);
+    QRadioButton* selectOdds   = new QRadioButton("Select all odd layers.", &dialog);
+    QRadioButton* selectEvens  = new QRadioButton("Select all even layers.", &dialog);
     QRadioButton* selectCustom = new QRadioButton("Make a custom group.", &dialog);
 
     // ButtonGroup to make the buttons exclusive
@@ -710,22 +692,22 @@ void LayerBar::addGroup() {
     chooseSelection->addButton(selectCustom, 3);
 
     // Inputs for a custom selection group
-    QDoubleSpinBox* grpStart = new QDoubleSpinBox(&dialog); // first layer in the group
-    grpStart->setRange(1, m_layers - 2);                    // minimum of 1, maximum of 2nd to last layer of the part
-    grpStart->setDecimals(0);                               // no decimals
-    QDoubleSpinBox* grpEnd = new QDoubleSpinBox(&dialog);   // last layer in the group
-    grpEnd->setRange(3, m_layers);                          // minimum of 3, maximum of last layer
-    grpEnd->setValue(m_layers);                             // default is last layer
-    grpEnd->setDecimals(0);                                 // no decimals
-    QDoubleSpinBox* interval = new QDoubleSpinBox(&dialog); // number of layers to skip between selections
-    interval->setRange(1, m_layers / 2);                    // minimum of 0, maximum of 1/2 total number of layers
-    interval->setDecimals(0);                               // no decimals
+    QDoubleSpinBox* grpStart = new QDoubleSpinBox(&dialog);  // first layer in the group
+    grpStart->setRange(1, m_layers - 2);                     // minimum of 1, maximum of 2nd to last layer of the part
+    grpStart->setDecimals(0);                                // no decimals
+    QDoubleSpinBox* grpEnd = new QDoubleSpinBox(&dialog);    // last layer in the group
+    grpEnd->setRange(3, m_layers);                           // minimum of 3, maximum of last layer
+    grpEnd->setValue(m_layers);                              // default is last layer
+    grpEnd->setDecimals(0);                                  // no decimals
+    QDoubleSpinBox* interval = new QDoubleSpinBox(&dialog);  // number of layers to skip between selections
+    interval->setRange(1, m_layers / 2);                     // minimum of 0, maximum of 1/2 total number of layers
+    interval->setDecimals(0);                                // no decimals
     QLineEdit* name = new QLineEdit(&dialog);
     name->setText("New Group");
 
     // Groupbox to group the inputs together and enable/disable them based on radiobutton selection
     QGroupBox* groupBox = new QGroupBox(tr("Custom Group"));
-    QGridLayout* grid = new QGridLayout;
+    QGridLayout* grid   = new QGridLayout;
     grid->addWidget(new QLabel("Start at layer"), 1, 1);
     grid->addWidget(new QLabel("Stop at layer"), 2, 1);
     grid->addWidget(new QLabel("Interval*"), 3, 1);
@@ -768,25 +750,25 @@ void LayerBar::addGroup() {
     if (dialog.exec() == QDialog::Accepted) {
         // If the user didn't dismiss the dialog, add dots at the appropriate layers
         // Default values: select all odd layers (checkedId == 1)
-        int start = 0;
-        int end = m_layers;
-        int skip = 2;
+        int start          = 0;
+        int end            = m_layers;
+        int skip           = 2;
         QString group_name = "Odd Layers";
         if (chooseSelection->checkedId() == 2) {
             // If user wants to select even layers
             group_name = "Even Layers";
-            start = 1;
+            start      = 1;
         }
         else if (chooseSelection->checkedId() == 3) {
             // If user wants to make a custom selection group
-            start = grpStart->value() - 1;
-            end = grpEnd->value();
-            skip = interval->value() + 1;
+            start      = grpStart->value() - 1;
+            end        = grpEnd->value();
+            skip       = interval->value() + 1;
             group_name = name->text();
         }
 
         // Make the dot group
-        dot_group* group = new dot_group;
+        dot_group* group  = new dot_group;
         group->group_name = group_name;
 
         for (int i = start; i < end; i = i + skip) {
@@ -810,7 +792,7 @@ void LayerBar::groupDots() {
     QString group_name = QInputDialog::getText(this, "Create Group", "Enter a name for the new group:");
 
     // Make a new group
-    dot_group* group = new dot_group;
+    dot_group* group  = new dot_group;
     group->group_name = group_name;
 
     for (LayerDot* dot : m_selection) {
@@ -867,13 +849,12 @@ void LayerBar::transformUpdate(QSharedPointer<PartMetaItem> item) {
         MathUtils::decomposeTransformMatrix(part->rootMesh()->transformation());
 
     QVector3D gop_translation = item->translation();
-    QQuaternion gop_rotation = item->rotation();
-    QVector3D gop_scale = item->scale();
+    QQuaternion gop_rotation  = item->rotation();
+    QVector3D gop_scale       = item->scale();
     gop_translation *= Constants::OpenGL::kViewToObject;
 
-    if (gop_rotation != part_rotation || gop_scale != part_scale) // Only need to recalculate on scale/ rotation events
+    if (gop_rotation != part_rotation || gop_scale != part_scale)  // Only need to recalculate on scale/ rotation events
     {
-
         QMatrix4x4 object_transformation = MathUtils::composeTransformMatrix(gop_translation, gop_rotation, gop_scale);
         part->setTransformation(object_transformation);
 
@@ -881,11 +862,12 @@ void LayerBar::transformUpdate(QSharedPointer<PartMetaItem> item) {
     }
 }
 
-void LayerBar::visualUpdate(QSharedPointer<PartMetaItem> item) { changePart(item); }
+void LayerBar::visualUpdate(QSharedPointer<PartMetaItem> item) {
+    changePart(item);
+}
 
 void LayerBar::removalUpdate(QSharedPointer<PartMetaItem> item) {
-    if (item->isSelected())
-        changePart(nullptr);
+    if (item->isSelected()) changePart(nullptr);
 }
 
 void LayerBar::makePair() {
@@ -922,7 +904,6 @@ void LayerBar::splitPair() {
 }
 
 void LayerBar::paintEvent(QPaintEvent* event) {
-
     QPainter painter(this);
 
     painter.setRenderHint(QPainter::Antialiasing);
@@ -932,13 +913,12 @@ void LayerBar::paintEvent(QPaintEvent* event) {
 
 void LayerBar::mousePressEvent(QMouseEvent* event) {
     // if there's no part or no layers, do nothing
-    if (m_part == nullptr || m_layers <= 0)
-        return;
+    if (m_part == nullptr || m_layers <= 0) return;
 
     // Get the dot underneath the cursor.
     LayerDot* dot = qobject_cast<LayerDot*>(this->childAt(event->pos()));
 
-    if (dot == nullptr) // there is not a dot under the cursor
+    if (dot == nullptr)  // there is not a dot under the cursor
     {
         // If the left button was clicked, make a new dot if possible.
         if (event->button() == Qt::LeftButton) {
@@ -950,7 +930,7 @@ void LayerBar::mousePressEvent(QMouseEvent* event) {
                 clearSelection();
         }
     }
-    else // there is a dot under the cursor
+    else  // there is a dot under the cursor
     {
         if (event->button() == Qt::LeftButton) {
             // If SHIFT is held and there's a dot already selected,
@@ -977,7 +957,7 @@ void LayerBar::mousePressEvent(QMouseEvent* event) {
                     m_should_deselect = false;
                 }
             }
-            else // no key modifiers
+            else  // no key modifiers
             {
                 if (!dot->isSelected()) {
                     clearSelection();
@@ -985,9 +965,7 @@ void LayerBar::mousePressEvent(QMouseEvent* event) {
                     changeSelectedSettings();
                     m_should_deselect = false;
                 }
-                else {
-                    m_should_deselect = true;
-                }
+                else { m_should_deselect = true; }
             }
             m_last_clicked_dot = dot;
         }
@@ -995,8 +973,7 @@ void LayerBar::mousePressEvent(QMouseEvent* event) {
 }
 
 void LayerBar::mouseReleaseEvent(QMouseEvent* event) {
-    if (m_part == nullptr || m_layers <= 0)
-        return;
+    if (m_part == nullptr || m_layers <= 0) return;
 
     // this function needs to update part's ranges if the dots were moved by user
     if (!m_selection.isEmpty() && event->button() == Qt::LeftButton && m_track_change) {
@@ -1005,26 +982,24 @@ void LayerBar::mouseReleaseEvent(QMouseEvent* event) {
 
         QVector<LayerDot*> selection_copy = m_selection;
         std::sort(selection_copy.begin(), selection_copy.end(),
-                  [](LayerDot* a, LayerDot* b) { return a->getLayer() < b->getLayer(); }); // sort low to high
+                  [](LayerDot* a, LayerDot* b) { return a->getLayer() < b->getLayer(); });  // sort low to high
 
         // Upon release, calculate each dot's new position.
         for (int i = 0; i < selection_copy.size();
-             ++i) // initentionally re-evaluating array size on every iteration bc it can change
+             ++i)  // initentionally re-evaluating array size on every iteration bc it can change
         {
             LayerDot* dot = selection_copy[i];
             // if the range has been visually moved, but not moved on the part, update the part
             if (dot->getLayer() != dot->getDisplayLayer()) {
-                int old_low = dot->getLayer();
+                int old_low  = dot->getLayer();
                 int old_high = dot->getLayer();
-                if (dot->getRange() != nullptr)
-                    old_high = dot->getPair()->getLayer();
+                if (dot->getRange() != nullptr) old_high = dot->getPair()->getLayer();
 
-                int new_low = dot->getDisplayLayer();
+                int new_low  = dot->getDisplayLayer();
                 int new_high = dot->getDisplayLayer();
-                if (dot->getRange() != nullptr)
-                    new_high = dot->getPair()->getDisplayLayer();
+                if (dot->getRange() != nullptr) new_high = dot->getPair()->getDisplayLayer();
 
-                if (moveDotToLayer(dot, new_low)) // successfully moved the layer
+                if (moveDotToLayer(dot, new_low))  // successfully moved the layer
                 {
                     // need to update the ranges on the part to reflect the click/drag movement
                     m_part->updateSettingsRangeLimits(old_low, old_high, new_low, new_high);
@@ -1061,32 +1036,32 @@ void LayerBar::mouseReleaseEvent(QMouseEvent* event) {
 void LayerBar::mouseMoveEvent(QMouseEvent* event) {
     if (!m_selection.isEmpty() && event->buttons() & Qt::LeftButton &&
         QGuiApplication::keyboardModifiers() == Qt::NoModifier) {
-        m_should_deselect = false;
+        m_should_deselect   = false;
         int relative_origin = m_last_clicked_dot->y();
         if (!m_track_change) {
-            m_original_y = relative_origin;
+            m_original_y   = relative_origin;
             m_track_change = true;
         }
 
         // ensure that none of the selected dots are moved out of bounds when clicking & dragging dots
         LayerDot* highest_dot = m_selection[0];
-        LayerDot* lowest_dot = m_selection[0];
-        int min = lowest_dot->getLayer();
-        int max = highest_dot->getLayer();
+        LayerDot* lowest_dot  = m_selection[0];
+        int min               = lowest_dot->getLayer();
+        int max               = highest_dot->getLayer();
         for (auto d : m_selection) {
             if (d->getLayer() > max) {
-                max = d->getLayer();
+                max         = d->getLayer();
                 highest_dot = d;
             }
             else if (d->getLayer() < min) {
-                min = d->getLayer();
+                min        = d->getLayer();
                 lowest_dot = d;
             }
         }
 
-        int new_low_coord = event->y() + (lowest_dot->y() - relative_origin) - 10;
+        int new_low_coord  = event->y() + (lowest_dot->y() - relative_origin) - 10;
         int new_high_coord = event->y() + (highest_dot->y() - relative_origin) - 10;
-        int adjusted_y = event->y();
+        int adjusted_y     = event->y();
 
         // if the move will put a dot out-of-bounds, adjust the move amount
         if (new_low_coord > getPositionFromLayer(0))
@@ -1097,7 +1072,7 @@ void LayerBar::mouseMoveEvent(QMouseEvent* event) {
         // For each selected dot, try to move them to the appropriate location.
         for (LayerDot* dot : m_selection) {
             int y_coord = adjusted_y + (dot->y() - relative_origin) - 10;
-            int layer = getLayerFromPosition(y_coord);
+            int layer   = getLayerFromPosition(y_coord);
 
             // move
             dot->move(dot->x(), y_coord);
@@ -1137,26 +1112,22 @@ void LayerBar::contextMenuEvent(QContextMenuEvent* event) {
         // if any selected dot is in a group or pair, then the dots CAN'T be group
         // if all selected dots are in the same group, then the dots CAN be ungrouped
         dot_group* check_group = m_selection[0]->getGroup();
-        bool can_group = (check_group == nullptr);   // assume we can group, until we find a dot in a pair or group
-        bool can_ungroup = (check_group != nullptr); // assume we can ungroup if the first dot is in a group, until
-                                                     //   we find a dot that isn't in that group
+        bool can_group   = (check_group == nullptr);  // assume we can group, until we find a dot in a pair or group
+        bool can_ungroup = (check_group != nullptr);  // assume we can ungroup if the first dot is in a group, until
+                                                      //   we find a dot that isn't in that group
         for (LayerDot* dot : m_selection) {
             if (dot->getGroup() != nullptr) {
                 can_group = false;
-                if (check_group != dot->getGroup())
-                    can_ungroup = false;
+                if (check_group != dot->getGroup()) can_ungroup = false;
             }
             else if (dot->getPair() != nullptr)
                 can_group = true;
         }
 
         // add the corresponding actions to the menu
-        if (can_group)
-            menu.addAction(m_group_dots);
+        if (can_group) menu.addAction(m_group_dots);
 
-        if (can_ungroup) {
-            menu.addAction(m_ungroup_dots);
-        }
+        if (can_ungroup) { menu.addAction(m_ungroup_dots); }
 
         menu.addSeparator();
     }
@@ -1182,11 +1153,10 @@ void LayerBar::contextMenuEvent(QContextMenuEvent* event) {
 
 void LayerBar::resizeEvent(QResizeEvent* event) {
     // Recalculate the following to use in movement.
-    m_px_divs = ((float)(this->height() - (m_layers * 3) - 6) / (m_layers + 1)) + 1;
+    m_px_divs     = ((float)(this->height() - (m_layers * 3) - 6) / (m_layers + 1)) + 1;
     m_px_divs_inc = m_px_divs + 2;
 
-    if (m_px_divs < 30)
-        m_skip = static_cast<int>(30 / m_px_divs);
+    if (m_px_divs < 30) m_skip = static_cast<int>(30 / m_px_divs);
 
     // Update all dots to their correct position.
     for (LayerDot* dot : m_position) {
@@ -1202,20 +1172,18 @@ void LayerBar::resizeEvent(QResizeEvent* event) {
 void LayerBar::paintDivisions(QPainter* painter) {
     const int maj_hz_pad = 3;
     const int min_hz_pad = 7;
-    const int bar_size = 3;
+    const int bar_size   = 3;
 
     painter->setPen(PreferencesManager::getInstance()->getTheme().getLayerbarMajorColor());
 
     // m_px_divs = size BETWEEN divisions, m_px_divs_inc = size INCLUDING divisions
-    m_px_divs = ((float)(this->height() - (m_layers * bar_size) - (bar_size * 2)) / (m_layers + 1)) + 1;
+    m_px_divs     = ((float)(this->height() - (m_layers * bar_size) - (bar_size * 2)) / (m_layers + 1)) + 1;
     m_px_divs_inc = m_px_divs + 2;
 
     // Adjust the skip value based on the available room.
     int minor_skip = 1;
     if (m_px_divs < 60) {
-        if (m_px_divs < 5) {
-            minor_skip = static_cast<int>(5 / m_px_divs);
-        }
+        if (m_px_divs < 5) { minor_skip = static_cast<int>(5 / m_px_divs); }
 
         m_skip = static_cast<int>(60 / m_px_divs);
     }
@@ -1226,9 +1194,7 @@ void LayerBar::paintDivisions(QPainter* painter) {
     float loc = 2;
     for (int i = 0; i < m_layers; ++i) {
         if (i % m_skip) {
-            if (i % minor_skip) {
-                loc += m_px_divs + 2;
-            }
+            if (i % minor_skip) { loc += m_px_divs + 2; }
             else {
                 // Draw the minor line.
                 painter->setPen(PreferencesManager::getInstance()->getTheme().getLayerbarMinorColor());
@@ -1274,7 +1240,7 @@ void LayerBar::paintRanges(QPainter* painter) {
         for (auto settings_range : m_part->getSettingsRanges()) {
             if (!settings_range->isSingle()) {
                 LayerDot* low_dot = m_position[settings_range->low()];
-                dot_range* range = low_dot->getRange();
+                dot_range* range  = low_dot->getRange();
 
                 // Determine edges of ranges.
                 QPoint a_point, b_point;
@@ -1298,7 +1264,7 @@ LayerDot* LayerBar::addDot(int layer, bool from_template) {
         new LayerDot(this, layer, PreferencesManager::getInstance()->getTheme().getDotColors(), from_template);
     dot->move((this->width() / 2) - (dot->width() / 2), -20);
 
-    if (this->moveDotToLayer(dot, layer)) // successfully moved to layer
+    if (this->moveDotToLayer(dot, layer))  // successfully moved to layer
     {
         this->clearSelection();
 
@@ -1306,7 +1272,7 @@ LayerDot* LayerBar::addDot(int layer, bool from_template) {
         m_position[dot->getLayer()] = dot;
         dot->show();
     }
-    else // couldn't move to layer, so backtrack
+    else  // couldn't move to layer, so backtrack
     {
         delete dot;
         dot = nullptr;
@@ -1316,7 +1282,7 @@ LayerDot* LayerBar::addDot(int layer, bool from_template) {
 
 void LayerBar::deleteSingle(LayerDot* dot) {
     // Remove the dot from internal containers.
-    int layer = dot->getLayer();
+    int layer         = dot->getLayer();
     m_position[layer] = nullptr;
 
     // When the animation finishes, delete the dot.
@@ -1324,7 +1290,7 @@ void LayerBar::deleteSingle(LayerDot* dot) {
 
     dot->smoothMove(dot->x(), this->height());
 
-    if (dot->getRange() != nullptr) // If this dot is in a range, delete the range.
+    if (dot->getRange() != nullptr)  // If this dot is in a range, delete the range.
     {
         dot_range* range = dot->getRange();
 
@@ -1338,16 +1304,15 @@ void LayerBar::deleteSingle(LayerDot* dot) {
         dot->getPair()->setRange(nullptr);
         delete range;
     }
-    else if (dot->getGroup() != nullptr) // dot is in group, remove it from group before deleting dot
+    else if (dot->getGroup() != nullptr)  // dot is in group, remove it from group before deleting dot
     {
         dot_group* group = dot->getGroup();
         group->grouped.removeAt(group->grouped.indexOf(dot));
         m_part->removeSettingsRange(dot->getLayer(), dot->getLayer());
 
-        if (group->grouped.size() < 0)
-            delete group;
+        if (group->grouped.size() < 0) delete group;
     }
-    else // just a single dot, delete it
+    else  // just a single dot, delete it
     {
         m_part->removeSettingsRange(dot->getLayer(), dot->getLayer());
     }
@@ -1401,9 +1366,7 @@ void LayerBar::updateLayers() {
     if (m_part->getSb()->contains(PS::Layer::kLayerHeight)) {
         global_layer_height = m_part->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
     }
-    else {
-        global_layer_height = GSM->getGlobal()->setting<Distance>(PS::Layer::kLayerHeight);
-    }
+    else { global_layer_height = GSM->getGlobal()->setting<Distance>(PS::Layer::kLayerHeight); }
 
     int layer_count = 0;
     // if valid config ( normal and axis not perpendicular)
@@ -1417,13 +1380,14 @@ void LayerBar::updateLayers() {
         Distance part_height = slicing_plane.distanceToPoint(part_max);
 
         Point g_direction = part_min + (slicing_vector * global_layer_height());
-        global_layer_height = slicing_plane.distanceToPoint(g_direction); // height in direction normal to slicing plane
+        global_layer_height =
+            slicing_plane.distanceToPoint(g_direction);  // height in direction normal to slicing plane
 
         // count the layers
         Distance current_height = 0;
-        layer_count = 0;
-        auto ranges = m_part->getSettingsRanges();
-        bool is_in_range = false;
+        layer_count             = 0;
+        auto ranges             = m_part->getSettingsRanges();
+        bool is_in_range        = false;
         uint range_id;
 
         while (current_height < part_height) {
@@ -1435,7 +1399,7 @@ void LayerBar::updateLayers() {
                     if (!is_in_range) {
                         // this is the first range we've found that contains the layer
                         is_in_range = true;
-                        range_id = i.key();
+                        range_id    = i.key();
                     }
                     else {
                         // The current layer is in multiple ranges
@@ -1445,10 +1409,10 @@ void LayerBar::updateLayers() {
                         //    - for multi-layer ranges with same low-index, the range with
                         //      the lower high index will be selected
                         auto old_range = ranges[range_id];
-                        if (range->isSingle() ||               // new range is single, top priority
-                            range->low() > old_range->low() || // new range has higher low than old
+                        if (range->isSingle() ||                // new range is single, top priority
+                            range->low() > old_range->low() ||  // new range has higher low than old
                             old_range->low() == range->low() &&
-                                range->high() < old_range->high()) // new range is narrower
+                                range->high() < old_range->high())  // new range is narrower
                         {
                             range_id = i.key();
                         }
@@ -1461,14 +1425,12 @@ void LayerBar::updateLayers() {
             // height
             if (is_in_range && ranges[range_id]->getSb()->contains(PS::Layer::kLayerHeight)) {
                 Distance range_height = ranges[range_id]->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-                Point p = slicing_plane.point() + (slicing_vector * range_height());
-                range_height = slicing_plane.distanceToPoint(p); // height in direction normal to slicing plane
+                Point p               = slicing_plane.point() + (slicing_vector * range_height());
+                range_height = slicing_plane.distanceToPoint(p);  // height in direction normal to slicing plane
 
                 current_height += range_height;
             }
-            else {
-                current_height += global_layer_height;
-            }
+            else { current_height += global_layer_height; }
 
             ++layer_count;
         }
@@ -1481,32 +1443,22 @@ void LayerBar::updateLayers() {
                       (slicing_vector * ranges[range_id]->getSb()->setting<Distance>(PS::Layer::kLayerHeight)());
             last_layer_height = slicing_plane.distanceToPoint(p);
         }
-        else {
-            last_layer_height = global_layer_height;
-        }
+        else { last_layer_height = global_layer_height; }
 
-        if ((current_height - part_height) >= (last_layer_height / 2.0)) {
-            --layer_count;
-        }
+        if ((current_height - part_height) >= (last_layer_height / 2.0)) { --layer_count; }
         m_layers = layer_count;
     }
-    else {
-        m_layers = 0;
-    }
+    else { m_layers = 0; }
     // if the number of layers decreased, remove any dots from
     // layers that don't exist anymore
     if (layer_count < m_position.size()) {
         for (int i = m_position.size() - 1; i >= layer_count; --i) {
             if (m_position[i] != nullptr) {
-                if (clampRangeToLayerCount(m_position[i], layer_count)) {
-                    continue;
-                }
+                if (clampRangeToLayerCount(m_position[i], layer_count)) { continue; }
 
                 int layer_num = m_position[i]->getLayer();
                 LayerDot* dot = m_position[i]->getPair();
-                if (dot == nullptr) {
-                    storeDeletedLayers(layer_num, layer_num);
-                }
+                if (dot == nullptr) { storeDeletedLayers(layer_num, layer_num); }
                 else {
                     int pair = dot->getLayer();
                     storeDeletedLayers(layer_num, pair);
@@ -1518,21 +1470,23 @@ void LayerBar::updateLayers() {
     int old_size = m_position.size();
     m_position.resize(m_layers);
     if (old_size < m_position.size()) {
-        if (m_deleted_ranges.size() > 0) {
-            returnDeletedLayers();
-        }
+        if (m_deleted_ranges.size() > 0) { returnDeletedLayers(); }
     }
 
     double layers = (m_layers <= 30) ? m_layers : 30;
-    m_px_divs = height() / layers;
+    m_px_divs     = height() / layers;
 
     resizeEvent(nullptr);
     update();
 }
 
-bool LayerBar::sortByTop(SettingsRange a, SettingsRange b) { return a.high() > b.high(); }
+bool LayerBar::sortByTop(SettingsRange a, SettingsRange b) {
+    return a.high() > b.high();
+}
 
-QVector<SettingsRange> LayerBar::getDeletedRanges() { return m_deleted_ranges; }
+QVector<SettingsRange> LayerBar::getDeletedRanges() {
+    return m_deleted_ranges;
+}
 
 void LayerBar::storeDeletedLayers(int layer_number, int pair) {
     QVector<SettingsRange> sr = GSM->getLayerSettings();
@@ -1550,12 +1504,12 @@ void LayerBar::storeDeletedLayers(int layer_number, int pair) {
 void LayerBar::returnDeletedLayers() {
     while (m_deleted_ranges.size() > 0 && m_deleted_ranges[m_deleted_ranges.size() - 1].high() < m_layers) {
         if (m_deleted_ranges[m_deleted_ranges.size() - 1].low() ==
-            m_deleted_ranges[m_deleted_ranges.size() - 1].high()) { // Bring back single
+            m_deleted_ranges[m_deleted_ranges.size() - 1].high()) {  // Bring back single
             addSingleFromTemplate(m_deleted_ranges[m_deleted_ranges.size() - 1].low(),
                                   m_deleted_ranges[m_deleted_ranges.size() - 1].getSb());
             m_deleted_ranges.pop_back();
         }
-        else { // Bring back range
+        else {  // Bring back range
             addRangeFromTemplate(m_deleted_ranges[m_deleted_ranges.size() - 1].low(),
                                  m_deleted_ranges[m_deleted_ranges.size() - 1].high(),
                                  m_deleted_ranges[m_deleted_ranges.size() - 1].getSb());
@@ -1632,10 +1586,10 @@ int LayerBar::getPositionFromLayer(int layer) {
 bool LayerBar::moveDotToLayer(LayerDot* dot, int layer) {
     bool moved_dot = false;
 
-    if (layerValid(layer)) // a valid layer is in bounds and has no dot on it
+    if (layerValid(layer))  // a valid layer is in bounds and has no dot on it
     {
         m_position[dot->getLayer()] = nullptr;
-        m_position[layer] = dot;
+        m_position[layer]           = dot;
 
         int x = (this->width() / 2) - (dot->width() / 2);
         int y = getPositionFromLayer(layer);
@@ -1651,7 +1605,9 @@ bool LayerBar::moveDotToLayer(LayerDot* dot, int layer) {
     return moved_dot;
 }
 
-bool LayerBar::moveDotToNextLayer(LayerDot* dot) { return moveDotToNextLayer(dot, getLayerFromPosition(dot->y())); }
+bool LayerBar::moveDotToNextLayer(LayerDot* dot) {
+    return moveDotToNextLayer(dot, getLayerFromPosition(dot->y()));
+}
 
 void LayerBar::removeInvalidSelections() {
     for (int i = m_selection.size() - 1; i >= 0; --i) {
@@ -1664,24 +1620,20 @@ void LayerBar::removeInvalidSelections() {
 }
 
 bool LayerBar::clampRangeToLayerCount(LayerDot* dot, int layer_count) {
-    if (dot == nullptr || dot->getRange() == nullptr || layer_count <= 0)
-        return false;
+    if (dot == nullptr || dot->getRange() == nullptr || layer_count <= 0) return false;
 
     LayerDot* pair = dot->getPair();
-    if (pair == nullptr || pair->getLayer() >= layer_count)
-        return false;
+    if (pair == nullptr || pair->getLayer() >= layer_count) return false;
 
     const int last_layer = layer_count - 1;
-    const int old_low = qMin(dot->getLayer(), pair->getLayer());
-    const int old_high = qMax(dot->getLayer(), pair->getLayer());
-    const int new_low = qMin(pair->getLayer(), last_layer);
-    const int new_high = last_layer;
+    const int old_low    = qMin(dot->getLayer(), pair->getLayer());
+    const int old_high   = qMax(dot->getLayer(), pair->getLayer());
+    const int new_low    = qMin(pair->getLayer(), last_layer);
+    const int new_high   = last_layer;
 
-    if (new_low >= new_high || m_position[new_high] != nullptr)
-        return false;
+    if (new_low >= new_high || m_position[new_high] != nullptr) return false;
 
-    if (!moveDotToLayer(dot, new_high))
-        return false;
+    if (!moveDotToLayer(dot, new_high)) return false;
 
     m_part->updateSettingsRangeLimits(old_low, old_high, new_low, new_high);
     return true;
@@ -1693,11 +1645,9 @@ bool LayerBar::moveDotToNextLayer(LayerDot* dot, int layer) {
 
     while (true) {
         // Check up then down for each check distance.
-        if (moveDotToLayer(dot, layer + check_dist))
-            break;
+        if (moveDotToLayer(dot, layer + check_dist)) break;
 
-        if (moveDotToLayer(dot, layer - check_dist))
-            break;
+        if (moveDotToLayer(dot, layer - check_dist)) break;
 
         check_dist++;
     }
@@ -1737,20 +1687,20 @@ void LayerBar::changeSelectedSettings() {
     QVector<LayerDot*> selected_copy = m_selection;
     // sort from low to high, so that low value is always found first
     std::sort(selected_copy.begin(), selected_copy.end(),
-              [](LayerDot* a, LayerDot* b) { return a->getLayer() < b->getLayer(); }); // sort low to high
+              [](LayerDot* a, LayerDot* b) { return a->getLayer() < b->getLayer(); });  // sort low to high
 
-    for (int i = 0; i < selected_copy.size(); ++i) // intentionally re-evaluating array size bc it will change
+    for (int i = 0; i < selected_copy.size(); ++i)  // intentionally re-evaluating array size bc it will change
     {
         LayerDot* dot = selected_copy[i];
 
         if (dot->getRange() != nullptr) {
-            int low = qMin(dot->getLayer(), dot->getPair()->getLayer());
+            int low  = qMin(dot->getLayer(), dot->getPair()->getLayer());
             int high = qMax(dot->getLayer(), dot->getPair()->getLayer());
             include_visual_layer_range(low, high);
 
             selected_copy.removeAt(selected_copy.indexOf(dot->getPair()));
 
-            auto range = m_part->getSettingsRange(low, high);
+            auto range   = m_part->getSettingsRange(low, high);
             QString name = "Layers " + QString::number(low + 1) + " - " + QString::number(high + 1);
             names.append(name);
             settings_bases.append(range->getSb());
@@ -1760,7 +1710,7 @@ void LayerBar::changeSelectedSettings() {
             // get the dot group & its name
             // add the group name to the list
             auto dot_group = dot->getGroup();
-            QString name = dot_group->group_name;
+            QString name   = dot_group->group_name;
             names.append(name);
 
             for (LayerDot* grouped_dot : dot_group->grouped) {
@@ -1782,7 +1732,7 @@ void LayerBar::changeSelectedSettings() {
         else {
             int layer_num = dot->getLayer();
             include_visual_layer_range(layer_num, layer_num);
-            auto range = m_part->getSettingsRange(layer_num, layer_num);
+            auto range   = m_part->getSettingsRange(layer_num, layer_num);
             QString name = "Layer " + QString::number(layer_num + 1);
             names.append(name);
             settings_bases.append(range->getSb());
@@ -1792,8 +1742,7 @@ void LayerBar::changeSelectedSettings() {
 
     std::sort(selected_layer_ranges.begin(), selected_layer_ranges.end(),
               [](const QPair<int, int>& a, const QPair<int, int>& b) {
-                  if (a.first == b.first)
-                      return a.second < b.second;
+                  if (a.first == b.first) return a.second < b.second;
 
                   return a.first < b.first;
               });
@@ -1809,27 +1758,26 @@ void LayerBar::changeSelectedSettings() {
     }
 
     QString final;
-    if (names.size() == 0) // no selected ranges, change back to part settings
+    if (names.size() == 0)  // no selected ranges, change back to part settings
     {
         final = m_part->name();
         settings_bases.append(m_part->getSb());
         inherited_bases.append(QSharedPointer<SettingsBase>());
     }
-    else if (names.size() == 1) // just one selected range, display it
+    else if (names.size() == 1)  // just one selected range, display it
     {
         final = names[0];
         final += " of " + m_part->name();
     }
-    else if (names.size() <= 3) // several selected ranges, display their names concatenated
+    else if (names.size() <= 3)  // several selected ranges, display their names concatenated
     {
         for (int i = 0, end = names.size(); i < end; ++i) {
-            if (i > 0)
-                final += ", ";
+            if (i > 0) final += ", ";
             final += names[i];
         }
         final += " of " + m_part->name();
     }
-    else // too many ranges to display all the names
+    else  // too many ranges to display all the names
     {
         final = "Multiple ranges";
         final += " of " + m_part->name();
@@ -1842,8 +1790,7 @@ void LayerBar::changeSelectedSettings() {
 }
 
 void LayerBar::clearSelection() {
-    for (LayerDot* curr_dot : m_selection)
-        curr_dot->setSelected(false);
+    for (LayerDot* curr_dot : m_selection) curr_dot->setSelected(false);
 
     m_selection.clear();
     changeSelectedSettings();
@@ -1851,8 +1798,7 @@ void LayerBar::clearSelection() {
 
 void LayerBar::selectAll() {
     for (LayerDot* dot : m_position) {
-        if (dot != nullptr)
-            selectDot(dot);
+        if (dot != nullptr) selectDot(dot);
     }
     changeSelectedSettings();
 }
@@ -1860,14 +1806,13 @@ void LayerBar::selectAll() {
 void LayerBar::selectOnInterval(int min, int max) {
     for (int i = min; i <= max; i++) {
         LayerDot* dot = m_position[i];
-        if (dot != nullptr)
-            selectDot(dot);
+        if (dot != nullptr) selectDot(dot);
     }
     changeSelectedSettings();
 }
 
 void LayerBar::selectDot(LayerDot* dot) {
-    if (dot->getGroup() != nullptr) // dot it group, select all dots in group
+    if (dot->getGroup() != nullptr)  // dot it group, select all dots in group
     {
         QVector<LayerDot*> grouped_dots = dot->getGroup()->grouped;
         for (auto d : grouped_dots) {
@@ -1877,7 +1822,7 @@ void LayerBar::selectDot(LayerDot* dot) {
             }
         }
     }
-    else if (dot->getRange() != nullptr) // dot in range, select its pair too
+    else if (dot->getRange() != nullptr)  // dot in range, select its pair too
     {
         if (!dot->isSelected()) {
             dot->setSelected(true);
@@ -1890,7 +1835,7 @@ void LayerBar::selectDot(LayerDot* dot) {
             m_selection.append(paired_dot);
         }
     }
-    else // just a single dot
+    else  // just a single dot
     {
         if (!dot->isSelected()) {
             dot->setSelected(true);
@@ -1900,7 +1845,7 @@ void LayerBar::selectDot(LayerDot* dot) {
 }
 
 void LayerBar::deselectDot(LayerDot* dot) {
-    if (dot->getGroup() != nullptr) // dot in group, deselect all dots in group
+    if (dot->getGroup() != nullptr)  // dot in group, deselect all dots in group
     {
         QVector<LayerDot*> grouped_dots = dot->getGroup()->grouped;
         for (auto d : grouped_dots) {
@@ -1910,7 +1855,7 @@ void LayerBar::deselectDot(LayerDot* dot) {
             }
         }
     }
-    else if (dot->getRange() != nullptr) // dot in range, deselect its pair too
+    else if (dot->getRange() != nullptr)  // dot in range, deselect its pair too
     {
         if (dot->isSelected()) {
             dot->setSelected(false);
@@ -1923,7 +1868,7 @@ void LayerBar::deselectDot(LayerDot* dot) {
             m_selection.removeAt(m_selection.indexOf(paired_dot));
         }
     }
-    else // just a single dot
+    else  // just a single dot
     {
         if (dot->isSelected()) {
             dot->setSelected(false);
@@ -1934,19 +1879,19 @@ void LayerBar::deselectDot(LayerDot* dot) {
 
 void LayerBar::setupActions() {
     // Setup actions.
-    m_set_layer_act = new QAction("Set Layer Number", this);
+    m_set_layer_act        = new QAction("Set Layer Number", this);
     m_set_range_layers_act = new QAction("Set Range Layer Numbers", this);
-    m_delete_act = new QAction("Delete Selected Layer Settings", this);
-    m_add_act = new QAction("Add Layer Settings", this);
-    m_add_group = new QAction("Add a Group of Layer Settings", this);
-    m_join_act = new QAction("Pair Selected Layers", this);
-    m_split_act = new QAction("Split Pair", this);
-    m_add_pair = new QAction("Add a Range of Layer Settings", this);
-    m_pair_from_one = new QAction("Select a Range from This Layer", this);
-    m_clear_act = new QAction("Clear Selection", this);
-    m_group_dots = new QAction("Group Selected Layer Settings", this);
-    m_ungroup_dots = new QAction("Ungroup Selected Layer Settings", this);
-    m_select_all = new QAction("Select All", this);
+    m_delete_act           = new QAction("Delete Selected Layer Settings", this);
+    m_add_act              = new QAction("Add Layer Settings", this);
+    m_add_group            = new QAction("Add a Group of Layer Settings", this);
+    m_join_act             = new QAction("Pair Selected Layers", this);
+    m_split_act            = new QAction("Split Pair", this);
+    m_add_pair             = new QAction("Add a Range of Layer Settings", this);
+    m_pair_from_one        = new QAction("Select a Range from This Layer", this);
+    m_clear_act            = new QAction("Clear Selection", this);
+    m_group_dots           = new QAction("Group Selected Layer Settings", this);
+    m_ungroup_dots         = new QAction("Ungroup Selected Layer Settings", this);
+    m_select_all           = new QAction("Select All", this);
 
     // Connect our actions to our signals.
     connect(m_set_layer_act, &QAction::triggered, this, &LayerBar::setLayer);
@@ -1964,4 +1909,4 @@ void LayerBar::setupActions() {
     connect(m_select_all, &QAction::triggered, this, &LayerBar::selectAll);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

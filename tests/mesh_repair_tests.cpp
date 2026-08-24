@@ -16,8 +16,9 @@ struct Triangle {
     int c;
 };
 
-template <class HDS> class PolyhedronBuilder : public CGAL::Modifier_base<HDS> {
-  public:
+template <class HDS>
+class PolyhedronBuilder : public CGAL::Modifier_base<HDS> {
+   public:
     PolyhedronBuilder(const std::vector<ORNL::MeshTypes::Point_3>& points, const std::vector<Triangle>& triangles)
         : m_points(points), m_triangles(triangles) {}
 
@@ -25,8 +26,7 @@ template <class HDS> class PolyhedronBuilder : public CGAL::Modifier_base<HDS> {
         CGAL::Polyhedron_incremental_builder_3<HDS> builder(hds, true);
         builder.begin_surface(m_points.size(), m_triangles.size());
 
-        for (const ORNL::MeshTypes::Point_3& point : m_points)
-            builder.add_vertex(point);
+        for (const ORNL::MeshTypes::Point_3& point : m_points) builder.add_vertex(point);
 
         for (const Triangle& triangle : m_triangles) {
             builder.begin_facet();
@@ -51,9 +51,11 @@ template <class HDS> class PolyhedronBuilder : public CGAL::Modifier_base<HDS> {
         builder.end_surface();
     }
 
-    bool wasError() const { return m_error; }
+    bool wasError() const {
+        return m_error;
+    }
 
-  private:
+   private:
     const std::vector<ORNL::MeshTypes::Point_3>& m_points;
     const std::vector<Triangle>& m_triangles;
     bool m_error = false;
@@ -86,8 +88,8 @@ ORNL::MeshTypes::Polyhedron buildLargeBoundaryOpenStrip() {
     std::vector<Triangle> triangles;
     triangles.reserve(strip_segments * 2);
     for (int x = 0; x < strip_segments; ++x) {
-        const int lower_left = x * 2;
-        const int upper_left = lower_left + 1;
+        const int lower_left  = x * 2;
+        const int upper_left  = lower_left + 1;
         const int lower_right = lower_left + 2;
         const int upper_right = lower_left + 3;
 
@@ -109,18 +111,17 @@ ORNL::MeshTypes::Polyhedron buildClosedTetrahedron() {
 }
 
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;
 
-    ORNL::MeshTypes::Polyhedron open_strip = buildLargeBoundaryOpenStrip();
+    ORNL::MeshTypes::Polyhedron open_strip     = buildLargeBoundaryOpenStrip();
     ORNL::ClosedMesh::RepairResult open_result = ORNL::ClosedMesh::CleanPolyhedronWithStatus(open_strip);
     passed &= expect(open_result == ORNL::ClosedMesh::RepairResult::kSkippedLargeBoundary,
                      "Expected large-boundary open strip repair to be skipped.");

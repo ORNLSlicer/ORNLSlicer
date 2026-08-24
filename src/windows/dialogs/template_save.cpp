@@ -39,17 +39,22 @@ TemplateSaveDialog::TemplateSaveDialog(QWidget* parent)
     this->setupUi();
 }
 
-QStringList& TemplateSaveDialog::keys() { return m_keys; }
+QStringList& TemplateSaveDialog::keys() {
+    return m_keys;
+}
 
-QString& TemplateSaveDialog::filename() { return m_filename; }
+QString& TemplateSaveDialog::filename() {
+    return m_filename;
+}
 
-QString TemplateSaveDialog::name() { return m_name_edit->text(); }
+QString TemplateSaveDialog::name() {
+    return m_name_edit->text();
+}
 
 void TemplateSaveDialog::checkSelection(QTableWidgetItem* item) {
-
-    QString major_key = m_table->item(item->row(), 2)->text();
+    QString major_key                         = m_table->item(item->row(), 2)->text();
     m_setting_status[major_key][item->text()] = (bool)item->checkState();
-    QList<bool> valuesToCheck = m_setting_status[major_key].values();
+    QList<bool> valuesToCheck                 = m_setting_status[major_key].values();
 
     if (item->checkState() == Qt::CheckState::Checked) {
         if (std::all_of(valuesToCheck.begin(), valuesToCheck.end(), [](bool b) { return b; })) {
@@ -81,8 +86,7 @@ void TemplateSaveDialog::checkSelection(QTableWidgetItem* item) {
 
         for (QHash<QString, bool> major_category : m_setting_status) {
             for (bool b : major_category.values())
-                if (b)
-                    goto skip;
+                if (b) goto skip;
         }
 
         m_browse_btn->setEnabled(false);
@@ -92,13 +96,10 @@ void TemplateSaveDialog::checkSelection(QTableWidgetItem* item) {
     }
 
     // If the clicked item is not in the selection, only select the clicked item.
-    if (!m_table->selectedItems().contains(item))
-        return;
+    if (!m_table->selectedItems().contains(item)) return;
 
     m_table->blockSignals(true);
-    for (QTableWidgetItem* cur : m_table->selectedItems()) {
-        cur->setCheckState(item->checkState());
-    }
+    for (QTableWidgetItem* cur : m_table->selectedItems()) { cur->setCheckState(item->checkState()); }
     m_table->blockSignals(false);
 }
 
@@ -108,8 +109,7 @@ void TemplateSaveDialog::updateSelection() {
     m_table->blockSignals(true);
     // If all, select everything.
     if (sender->text() == "All") {
-        for (QCheckBox* box : m_category_check_boxes.values())
-            box->setCheckState(sender->checkState());
+        for (QCheckBox* box : m_category_check_boxes.values()) box->setCheckState(sender->checkState());
 
         for (int i = 0; i < m_table->rowCount(); i++) {
             m_table->item(i, 0)->setCheckState(sender->checkState());
@@ -164,8 +164,7 @@ void TemplateSaveDialog::fileDialog() {
     save_dialog.setDirectory(m_filename);
     save_dialog.setDefaultSuffix("s2c");
 
-    if (!save_dialog.exec())
-        return;
+    if (!save_dialog.exec()) return;
 
     m_filename = save_dialog.selectedFiles().first();
     m_edit->setText(m_filename);
@@ -193,9 +192,7 @@ void TemplateSaveDialog::accept() {
 
 bool TemplateSaveDialog::itemChecked() {
     for (int i = 0; i < m_table->rowCount(); i++) {
-        if (m_table->item(i, 0)->checkState()) {
-            return true;
-        }
+        if (m_table->item(i, 0)->checkState()) { return true; }
     }
     return false;
 }
@@ -254,7 +251,7 @@ void TemplateSaveDialog::setupWidgets() {
 }
 
 void TemplateSaveDialog::setupLayouts() {
-    m_layout = new QGridLayout(this);
+    m_layout      = new QGridLayout(this);
     m_file_layout = new QGridLayout(m_file_container);
 }
 
@@ -271,8 +268,8 @@ void TemplateSaveDialog::setupTable() {
     m_table->horizontalHeader()->setSectionResizeMode(QHeaderView::ResizeToContents);
 
     // For each item in the master, fetch the display name, category, and current value.
-    int pos = 0;
-    int index = 0;
+    int pos      = 0;
+    int index    = 0;
     bool isFound = true;
 
     while (true) {
@@ -285,13 +282,12 @@ void TemplateSaveDialog::setupTable() {
             QString type = QString::fromStdString(it.value()["type"]);
             if (m_convertable_types.contains(type)) {
                 double rawVal = GSM->getGlobal()->setting<double>(QString::fromStdString(it.key()), index);
-                val = convertRawValue(type, rawVal);
+                val           = convertRawValue(type, rawVal);
             }
             else
                 val = QString::fromStdString(GSM->getGlobal()->json()[0][it.key()].dump());
 
-            if (val == "null")
-                val = "(unset)";
+            if (val == "null") val = "(unset)";
 
             QTableWidgetItem* dis =
                 new QTableWidgetItem(QString::fromStdString(it.value()[Constants::Settings::Master::kDisplay]));
@@ -302,8 +298,7 @@ void TemplateSaveDialog::setupTable() {
             QTableWidgetItem* cur = new QTableWidgetItem(val);
 
             // Add the major category to our list if required.
-            if (Q_UNLIKELY(!m_maj.contains(maj->text())))
-                m_maj.insert(maj->text());
+            if (Q_UNLIKELY(!m_maj.contains(maj->text()))) m_maj.insert(maj->text());
 
             // Adds checkboxes to display name.
             dis->setCheckState(Qt::Unchecked);
@@ -329,8 +324,7 @@ void TemplateSaveDialog::setupTable() {
             // ++index;
         }
         ++index;
-        if (!isFound)
-            break;
+        if (!isFound) break;
     }
 
     // Sort by category.
@@ -384,7 +378,7 @@ void TemplateSaveDialog::setupEvents() {
         connect(box, &QCheckBox::clicked, this, &TemplateSaveDialog::updateSelection);
 
     // Connect the ok and cancel buttons.
-    QPushButton* ok = m_button_container->button(QDialogButtonBox::Ok);
+    QPushButton* ok     = m_button_container->button(QDialogButtonBox::Ok);
     QPushButton* cancel = m_button_container->button(QDialogButtonBox::Cancel);
     connect(ok, &QPushButton::pressed, this, &TemplateSaveDialog::accept);
     connect(cancel, &QPushButton::pressed, this, &TemplateSaveDialog::reject);
@@ -436,8 +430,6 @@ QString TemplateSaveDialog::convertRawValue(QString type, double value) {
         return QString::number(base_value.to(PreferencesManager::getInstance()->getDistanceUnit() *
                                              PreferencesManager::getInstance()->getDistanceUnit()));
     }
-    else {
-        return QString::number(value);
-    }
+    else { return QString::number(value); }
 }
-} // namespace ORNL
+}  // namespace ORNL

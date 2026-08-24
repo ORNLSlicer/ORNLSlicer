@@ -2,6 +2,7 @@
 
 #include <QStack>
 #include <QtGlobal>
+
 #include <qabstractitemmodel.h>
 #include <qitemselectionmodel.h>
 #include <qlist.h>
@@ -37,8 +38,7 @@ void PartControlTreeWidget::selectionChanged(const QItemSelection& selected, con
 
     // If a call occurs with no new selected items, we can bail immediately.
     QModelIndexList l = selected.indexes();
-    if (l.empty())
-        return;
+    if (l.empty()) return;
 
     QTreeWidgetItem* item = this->itemFromIndex(l.first());
 
@@ -46,28 +46,20 @@ void PartControlTreeWidget::selectionChanged(const QItemSelection& selected, con
     QTreeWidgetItem* par = item->parent();
 
     while (par) {
-        if (par->isSelected()) {
-            par->setSelected(false);
-        }
+        if (par->isSelected()) { par->setSelected(false); }
 
         par = par->parent();
     }
 
     QStack<QTreeWidgetItem*> queue;
-    for (int i = 0; i < item->childCount(); i++) {
-        queue.push(item->child(i));
-    }
+    for (int i = 0; i < item->childCount(); i++) { queue.push(item->child(i)); }
 
     while (!queue.empty()) {
         QTreeWidgetItem* curr_item = queue.pop();
 
-        for (int i = 0; i < curr_item->childCount(); i++) {
-            queue.push(curr_item->child(i));
-        }
+        for (int i = 0; i < curr_item->childCount(); i++) { queue.push(curr_item->child(i)); }
 
-        if (curr_item->isSelected()) {
-            curr_item->setSelected(false);
-        }
+        if (curr_item->isSelected()) { curr_item->setSelected(false); }
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

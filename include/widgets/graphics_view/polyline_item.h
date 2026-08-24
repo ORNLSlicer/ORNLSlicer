@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QGraphicsItem>
 #include <cstdint>
 
-#include <QGraphicsItem>
 #include <qcolor.h>
 #include <qobject.h>
 
@@ -10,7 +10,7 @@
 
 namespace ORNL {
 class PolylineGraphicsItem : public QGraphicsItem {
-  public:
+   public:
     PolylineGraphicsItem(QGraphicsItem* parent = nullptr);
 
     PolylineGraphicsItem(const Polyline& polyline, QGraphicsItem* parent = nullptr);
@@ -27,7 +27,7 @@ class PolylineGraphicsItem : public QGraphicsItem {
 
     void paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) override;
 
-  private:
+   private:
     Polyline m_polyline;
 
     uint32_t m_draw_to;
@@ -36,4 +36,4 @@ class PolylineGraphicsItem : public QGraphicsItem {
 
     QColor m_color;
 };
-} // namespace ORNL
+}  // namespace ORNL

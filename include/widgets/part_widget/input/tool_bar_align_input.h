@@ -6,6 +6,7 @@
 #include <QToolButton>
 #include <QVector3D>
 #include <QWidget>
+
 #include <qpoint.h>
 #include <qtmetamacros.h>
 
@@ -16,7 +17,7 @@ namespace ORNL {
  */
 class ToolbarAlignInput : public QFrame {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: the part widget this sits on
     explicit ToolbarAlignInput(QWidget* parent);
@@ -25,7 +26,7 @@ class ToolbarAlignInput : public QFrame {
     //! \param pos the new position
     void setPos(QPoint pos);
 
-  public slots:
+   public slots:
     //! \brief closes this input immediately(no animation)
     void closeInput();
 
@@ -35,12 +36,12 @@ class ToolbarAlignInput : public QFrame {
     //! \brief setup stylesheets for controlling theme
     void setupStyle();
 
-  signals:
+   signals:
     //! \brief signals when to start alignment for a given direction
     //! \param dir direction to align along
     void setAlignment(QVector3D dir);
 
-  private:
+   private:
     //! \brief setups the widget
     void setupWidget();
 
@@ -84,4 +85,4 @@ class ToolbarAlignInput : public QFrame {
     // Keeps track of the open status
     bool is_open = false;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

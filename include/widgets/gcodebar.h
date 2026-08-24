@@ -10,6 +10,7 @@
 #include <QTimer>
 #include <QToolButton>
 #include <QWidget>
+
 #include <qhash.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
@@ -23,10 +24,10 @@
 namespace ORNL {
 class GcodeBar : public QWidget {
     Q_OBJECT
-  public:
+   public:
     explicit GcodeBar(QWidget* parent = nullptr);
 
-  signals:
+   signals:
     //! \brief Signals to update layer range
     //! \brief new_value: value to set lower/upper to
     void lowerLayerUpdated(int new_value);
@@ -59,7 +60,7 @@ class GcodeBar : public QWidget {
     //! \brief signal to remove highlight on a highlightable line upon search
     void removeHighlight();
 
-  public slots:
+   public slots:
     //! \brief necessary information passing to GcodeBar object after gcode loading
     //! \param text: GCode content
     //! \param fontColors: hash that contains color/highlight information for all lines
@@ -116,7 +117,7 @@ class GcodeBar : public QWidget {
     //! \brief display the next segment after each time window when the play button is pressed
     void drawNextSegment();
 
-  private slots:
+   private slots:
     //! \brief update slots to keep spinboxes and sliders in sync and respect lock
     //! \param new_value: new potential layer
     void updateLowerSpin(int new_value);
@@ -130,7 +131,7 @@ class GcodeBar : public QWidget {
     void updateSegmentUpperSpin(int new_value);
     void updateSegmentUpperSlider(int new_value);
 
-  private:
+   private:
     // Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -204,4 +205,4 @@ class GcodeBar : public QWidget {
     //! \brief If layers are locked, distance between lower/upper bound
     int m_lock_distance;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

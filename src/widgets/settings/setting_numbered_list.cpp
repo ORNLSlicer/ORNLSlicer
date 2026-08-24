@@ -3,6 +3,7 @@
 #include <QDropEvent>
 #include <QHeaderView>
 #include <QToolTip>
+
 #include <qabstractitemview.h>
 #include <qcontainerfwd.h>
 #include <qgridlayout.h>
@@ -105,7 +106,7 @@ void SettingNumberedList::show() {
 
 void SettingNumberedList::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<QList<QString>>(val.value<QStringList>());
     emit modified(m_key);
@@ -114,10 +115,9 @@ void SettingNumberedList::valueChanged(QVariant val) {
 void SettingNumberedList::reloadValue() {
     this->blockSignals(true);
 
-    bool consistent = true;
+    bool consistent    = true;
     QList<QString> cur = reloadValueHelper<QList<QString>>(consistent);
-    if (consistent)
-        setEntries(cur);
+    if (consistent) setEntries(cur);
 
     this->blockSignals(false);
     emit modified(m_key);
@@ -125,9 +125,7 @@ void SettingNumberedList::reloadValue() {
 }
 
 void SettingNumberedList::setEntries(QList<QString> entries) {
-    for (int i = 0, end = entries.size(); i < end; ++i) {
-        this->item(i, 0)->setText(entries[i]);
-    }
+    for (int i = 0, end = entries.size(); i < end; ++i) { this->item(i, 0)->setText(entries[i]); }
 }
 
 void SettingNumberedList::dropEvent(QDropEvent* event) {
@@ -135,28 +133,23 @@ void SettingNumberedList::dropEvent(QDropEvent* event) {
         int newRow = this->indexAt(event->pos()).row();
         if (newRow != -1) {
             QTableWidgetItem* selectedItem = this->selectedItems()[0];
-            int originalRow = selectedItem->row();
+            int originalRow                = selectedItem->row();
             this->takeItem(originalRow, 0);
 
             if (newRow > originalRow) {
-                for (int i = originalRow; i < newRow; ++i) {
-                    this->setItem(i, 0, this->takeItem(i + 1, 0));
-                }
+                for (int i = originalRow; i < newRow; ++i) { this->setItem(i, 0, this->takeItem(i + 1, 0)); }
             }
             else {
-                for (int i = originalRow; i > newRow; --i) {
-                    this->setItem(i, 0, this->takeItem(i - 1, 0));
-                }
+                for (int i = originalRow; i > newRow; --i) { this->setItem(i, 0, this->takeItem(i - 1, 0)); }
             }
             this->setItem(newRow, 0, selectedItem);
             this->clearSelection();
 
             QList<QString> entries;
-            for (int i = 0, end = this->rowCount(); i < end; ++i)
-                entries.push_back(this->item(i, 0)->text());
+            for (int i = 0, end = this->rowCount(); i < end; ++i) entries.push_back(this->item(i, 0)->text());
 
             valueChanged(QVariant(entries));
         }
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

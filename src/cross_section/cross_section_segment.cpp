@@ -2,9 +2,9 @@
 
 namespace ORNL {
 CrossSectionSegment::CrossSectionSegment() {
-    face_index = -1;
+    face_index         = -1;
     end_other_face_idx = -1;
-    end_vertex = nullptr;
-    added_to_polygon = false;
+    end_vertex         = nullptr;
+    added_to_polygon   = false;
 }
-} // namespace ORNL
+}  // namespace ORNL

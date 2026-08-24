@@ -15,7 +15,7 @@
 
 namespace ORNL {
 class Inset : public RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param index: index for region order
@@ -44,7 +44,7 @@ class Inset : public RegionBase {
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
-  private:
+   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
@@ -95,4 +95,4 @@ class Inset : public RegionBase {
     //! \brief Holds the bead width associated with each computed contour in m_computed_geometry
     QVector<Distance> m_computed_widths;
 };
-} // namespace ORNL
+}  // namespace ORNL

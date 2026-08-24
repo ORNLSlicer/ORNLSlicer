@@ -1,10 +1,3 @@
-#include <algorithm>
-#include <cmath>
-#include <cstdlib>
-#include <iostream>
-#include <limits>
-#include <string>
-
 #include <QByteArray>
 #include <QColor>
 #include <QCoreApplication>
@@ -16,6 +9,12 @@
 #include <QTemporaryDir>
 #include <QTextStream>
 #include <QVector>
+#include <algorithm>
+#include <cmath>
+#include <cstdlib>
+#include <iostream>
+#include <limits>
+#include <string>
 
 #include "gcode/as_printed_model_exporter.h"
 #include "geometry/point.h"
@@ -25,11 +24,11 @@
 #include "utilities/enums.h"
 
 namespace {
-constexpr float kLength = 10.0f;
-constexpr float kWidth = 2.0f;
-constexpr float kHeight = 1.0f;
+constexpr float kLength             = 10.0f;
+constexpr float kWidth              = 2.0f;
+constexpr float kHeight             = 1.0f;
 constexpr float kCenterlineDiameter = 0.1f;
-constexpr float kTolerance = 0.001f;
+constexpr float kTolerance          = 0.001f;
 
 struct Bounds {
     QVector3D min = QVector3D(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
@@ -39,8 +38,7 @@ struct Bounds {
 };
 
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
@@ -67,9 +65,7 @@ Bounds boundsFor(const std::vector<ORNL::AsPrintedModelExporter::Triangle>& tria
 
 QVector3D normalFor(const ORNL::AsPrintedModelExporter::Triangle& triangle) {
     QVector3D normal = QVector3D::crossProduct(triangle.b - triangle.a, triangle.c - triangle.a);
-    if (normal.lengthSquared() > std::numeric_limits<float>::epsilon()) {
-        normal.normalize();
-    }
+    if (normal.lengthSquared() > std::numeric_limits<float>::epsilon()) { normal.normalize(); }
     return normal;
 }
 
@@ -86,9 +82,9 @@ QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const
 
 QSharedPointer<ORNL::SegmentBase> makeLineSegment(const ORNL::Point& start, const ORNL::Point& end, uint line_number,
                                                   ORNL::SegmentDisplayType type = ORNL::SegmentDisplayType::kLine,
-                                                  bool deposition_active = true) {
+                                                  bool deposition_active        = true) {
     const float scale = ORNL::Constants::OpenGL::kObjectToView;
-    auto segment = QSharedPointer<ORNL::LineSegment>::create(start * scale, end * scale);
+    auto segment      = QSharedPointer<ORNL::LineSegment>::create(start * scale, end * scale);
     segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale, kHeight * ORNL::mm() * scale,
                             type, QColor(255, 255, 255), line_number, 0);
     segment->setDepositionActive(deposition_active);
@@ -104,19 +100,20 @@ QSharedPointer<ORNL::SegmentBase> makeLineSegment(ORNL::SegmentDisplayType type,
 QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const ORNL::Point& end,
                                                  const ORNL::Point& center, uint line_number, bool deposition_active) {
     const float scale = ORNL::Constants::OpenGL::kObjectToView;
-    auto segment = QSharedPointer<ORNL::ArcSegment>::create(start * scale, end * scale, center * scale, true);
+    auto segment      = QSharedPointer<ORNL::ArcSegment>::create(start * scale, end * scale, center * scale, true);
     segment->setDisplayInfo(kWidth * ORNL::mm() * scale, start.distance(end)() * scale, kHeight * ORNL::mm() * scale,
                             ORNL::SegmentDisplayType::kLine, QColor(255, 255, 255), line_number, 0);
     segment->setDepositionActive(deposition_active);
     return segment;
 }
 
-int countFacets(const QString& text) { return text.count(QStringLiteral("facet normal")); }
+int countFacets(const QString& text) {
+    return text.count(QStringLiteral("facet normal"));
+}
 
 bool readFile(const QString& path, QString& text) {
     QFile file(path);
-    if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
-        return false;
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
 
     QTextStream in(&file);
     text = in.readAll();
@@ -125,22 +122,20 @@ bool readFile(const QString& path, QString& text) {
 
 bool readBytes(const QString& path, QByteArray& bytes) {
     QFile file(path);
-    if (!file.open(QIODevice::ReadOnly))
-        return false;
+    if (!file.open(QIODevice::ReadOnly)) return false;
 
     bytes = file.readAll();
     return true;
 }
 
 quint32 binaryFacetCount(const QByteArray& bytes) {
-    if (bytes.size() < 84)
-        return 0;
+    if (bytes.size() < 84) return 0;
 
     const auto* data = reinterpret_cast<const uchar*>(bytes.constData() + 80);
     return static_cast<quint32>(data[0]) | (static_cast<quint32>(data[1]) << 8) |
            (static_cast<quint32>(data[2]) << 16) | (static_cast<quint32>(data[3]) << 24);
 }
-} // namespace
+}  // namespace
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
@@ -163,8 +158,8 @@ int main(int argc, char* argv[]) {
 
     ORNL::AsPrintedModelExporter::Options include_all;
     include_all.include_support = true;
-    include_all.include_travel = true;
-    const auto all_triangles = ORNL::AsPrintedModelExporter::generateTriangles(mixed_segments, include_all);
+    include_all.include_travel  = true;
+    const auto all_triangles    = ORNL::AsPrintedModelExporter::generateTriangles(mixed_segments, include_all);
     passed &= expect(all_triangles.size() == printable_triangles.size() * 3,
                      "Expected optional support and travel output to include all three segments.");
 
@@ -199,9 +194,7 @@ int main(int argc, char* argv[]) {
         const QVector3D centroid = (triangle.a + triangle.b + triangle.c) / 3.0f;
         QVector3D outward(0.0f, centroid.y() - (kCenterlineDiameter / 2.0f),
                           centroid.z() - (kCenterlineDiameter / 2.0f));
-        if (outward.lengthSquared() <= std::numeric_limits<float>::epsilon()) {
-            continue;
-        }
+        if (outward.lengthSquared() <= std::numeric_limits<float>::epsilon()) { continue; }
         outward.normalize();
 
         passed &= expect(QVector3D::dotProduct(normal, outward) > 0.0f,
@@ -217,7 +210,7 @@ int main(int argc, char* argv[]) {
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> radial_segments;
     radial_segments.push_back({radial_segment});
     const auto radial_triangles = ORNL::AsPrintedModelExporter::generateTriangles(radial_segments);
-    const Bounds radial_bounds = boundsFor(radial_triangles);
+    const Bounds radial_bounds  = boundsFor(radial_triangles);
     passed &= expect(near(radial_bounds.max.x() - radial_bounds.min.x(), kHeight),
                      "Expected cylindrical bead radial thickness to match bead height.");
     passed &= expect(near(radial_bounds.max.z() - radial_bounds.min.z(), kWidth),
@@ -230,7 +223,7 @@ int main(int argc, char* argv[]) {
     transformed_axis_segment->rotate(QQuaternion::fromAxisAndAngle(QVector3D(0.0f, 0.0f, 1.0f), 90.0f));
     transformed_axis_segment->shift(pointFromMm(3.0f, 4.0f) * ORNL::Constants::OpenGL::kObjectToView);
     const ORNL::Point transformed_axis = transformed_axis_segment->cylindricalBeadCenter();
-    const ORNL::Point expected_axis = pointFromMm(1.0f, 5.0f) * ORNL::Constants::OpenGL::kObjectToView;
+    const ORNL::Point expected_axis    = pointFromMm(1.0f, 5.0f) * ORNL::Constants::OpenGL::kObjectToView;
     passed &= expect(near(transformed_axis.x(), expected_axis.x()) && near(transformed_axis.y(), expected_axis.y()),
                      "Expected transformed segments to carry the cylindrical bead center.");
 
@@ -239,7 +232,7 @@ int main(int argc, char* argv[]) {
     const ORNL::Point lfam_end(136.0f * ORNL::in(), 42.5f * ORNL::in(), -15.25f * ORNL::in());
     lfam_style_segments.push_back({makeLineSegment(lfam_start, lfam_end, 1)});
     const auto lfam_triangles = ORNL::AsPrintedModelExporter::generateTriangles(lfam_style_segments);
-    const Bounds lfam_bounds = boundsFor(lfam_triangles);
+    const Bounds lfam_bounds  = boundsFor(lfam_triangles);
     passed &= expect(near(lfam_bounds.min.x(), 0.0f), "Expected LFAM-style export to use local X zero.");
     passed &= expect(near(lfam_bounds.max.x() - lfam_bounds.min.x(), 16.0f * 25.4f, 0.01f),
                      "Expected LFAM-style inch coordinates to export as millimeters.");

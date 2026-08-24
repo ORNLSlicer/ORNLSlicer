@@ -40,6 +40,6 @@ Point findSlicingPlaneMidPoint(QSharedPointer<MeshBase> mesh, Plane& slicing_pla
 //! \return the intersection point
 Point findIntersection(Point& vertex0, Point& vertex1, Plane& slicing_plane);
 
-} // namespace CrossSection
+}  // namespace CrossSection
 
-} // namespace ORNL
+}  // namespace ORNL

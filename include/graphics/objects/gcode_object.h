@@ -29,7 +29,7 @@ namespace ORNL {
  * This unfortunately increases complexity of the object by a significant amount.
  */
 class GCodeObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor.
     //! \param view: View to render to.
     //! \param gcode: GCode segments to visualize.
@@ -40,7 +40,7 @@ class GCodeObject : public GraphicsObject {
     //! \param update_segment_info: If true, this object owns the segment info control's backing g-code.
     GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentBase>>> gcode,
                 QSharedPointer<GCodeInfoControl> segmentInfoControl, bool use_true_widths,
-                GCodePreviewMode preview_mode = GCodePreviewMode::kAuto,
+                GCodePreviewMode preview_mode         = GCodePreviewMode::kAuto,
                 qsizetype true_width_vertex_threshold = 5000000, bool update_segment_info = true);
 
     //! \brief Destructor.
@@ -108,11 +108,11 @@ class GCodeObject : public GraphicsObject {
     //! \brief Returns true when this object renders printable segments as lightweight lines.
     bool isLightweight() const;
 
-  protected:
+   protected:
     //! \brief Overridden draw call to allow segment hiding.
     void draw();
 
-  private:
+   private:
     //! \brief Render buffer that contains a segment's vertices.
     enum class SegmentRenderBuffer { kPrimary, kTravelLine };
 
@@ -209,4 +209,4 @@ class GCodeObject : public GraphicsObject {
     //! \brief Segment / Bead info display control
     QSharedPointer<GCodeInfoControl> m_segment_info_control;
 };
-} // namespace ORNL
+}  // namespace ORNL

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QWidget>
+
 #include <qtmetamacros.h>
 
 namespace ORNL {
@@ -10,11 +11,11 @@ namespace ORNL {
  */
 class AboutWindow : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     explicit AboutWindow(QWidget* parent = 0);
 
     //! \brief Destructor
     ~AboutWindow();
 };
-} // namespace ORNL
+}  // namespace ORNL

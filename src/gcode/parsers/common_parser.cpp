@@ -1,9 +1,5 @@
 #include "gcode/parsers/common_parser.h"
 
-#include <algorithm>
-#include <functional>
-#include <limits>
-
 #include <QRegExp>
 #include <QString>
 #include <QStringBuilder>
@@ -11,6 +7,10 @@
 #include <QTextStream>
 #include <QVector>
 #include <QtMath>
+#include <algorithm>
+#include <functional>
+#include <limits>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlatin1stringview.h>
@@ -34,11 +34,9 @@
 namespace ORNL {
 namespace {
 double parseFooterSettingValue(const QString& value) {
-    if (value.compare("TRUE", Qt::CaseInsensitive) == 0)
-        return 1.0;
+    if (value.compare("TRUE", Qt::CaseInsensitive) == 0) return 1.0;
 
-    if (value.compare("FALSE", Qt::CaseInsensitive) == 0)
-        return 0.0;
+    if (value.compare("FALSE", Qt::CaseInsensitive) == 0) return 0.0;
 
     return value.toDouble();
 }
@@ -50,54 +48,65 @@ bool isDisableFeedrateScalingSetting(const QString& key) {
 
 double positiveSweep(double sweep) {
     const double full_circle = 2.0 * M_PI;
-    while (sweep < 0.0) {
-        sweep += full_circle;
-    }
-    while (sweep >= full_circle) {
-        sweep -= full_circle;
-    }
+    while (sweep < 0.0) { sweep += full_circle; }
+    while (sweep >= full_circle) { sweep -= full_circle; }
     return sweep;
 }
-} // namespace
+}  // namespace
 
 CommonParser::CommonParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
-    : m_e_absolute(true), m_space(' '), m_distance_unit(meta.m_distance_unit), m_time_unit(meta.m_time_unit),
-      m_angle_unit(meta.m_angle_unit), m_mass_unit(meta.m_mass_unit), m_velocity_unit(meta.m_velocity_unit),
-      m_acceleration_unit(meta.m_acceleration_unit), m_angular_velocity_unit(meta.m_angular_velocity_unit),
-      m_layer_delimiter(meta.m_layer_delimiter), m_layer_count_delimiter(meta.m_layer_count_delimiter),
-      m_allow_layer_alter(allowLayerAlter), m_lines(lines), m_upper_lines(upperLines), m_current_line(0),
-      m_current_end_line(m_lines.size() - 1), m_was_modified(false), m_last_layer_line_start(0), m_g4_prefix("G4 P"),
-      m_g4_comment("DWELL"), m_f_param_and_value("F[^\\D]\\d*\\.*\\d*"), m_q_param_and_value("Q[^\\D]\\d*\\.*\\d*"),
-      m_s_param_and_value("S[^\\D]\\d*\\.*\\d*"), m_f_parameter('F'), m_q_parameter('Q'), m_s_parameter('S'),
-      m_should_cancel(false), m_negate_z_value(false) {
+    : m_e_absolute(true),
+      m_space(' '),
+      m_distance_unit(meta.m_distance_unit),
+      m_time_unit(meta.m_time_unit),
+      m_angle_unit(meta.m_angle_unit),
+      m_mass_unit(meta.m_mass_unit),
+      m_velocity_unit(meta.m_velocity_unit),
+      m_acceleration_unit(meta.m_acceleration_unit),
+      m_angular_velocity_unit(meta.m_angular_velocity_unit),
+      m_layer_delimiter(meta.m_layer_delimiter),
+      m_layer_count_delimiter(meta.m_layer_count_delimiter),
+      m_allow_layer_alter(allowLayerAlter),
+      m_lines(lines),
+      m_upper_lines(upperLines),
+      m_current_line(0),
+      m_current_end_line(m_lines.size() - 1),
+      m_was_modified(false),
+      m_last_layer_line_start(0),
+      m_g4_prefix("G4 P"),
+      m_g4_comment("DWELL"),
+      m_f_param_and_value("F[^\\D]\\d*\\.*\\d*"),
+      m_q_param_and_value("Q[^\\D]\\d*\\.*\\d*"),
+      m_s_param_and_value("S[^\\D]\\d*\\.*\\d*"),
+      m_f_parameter('F'),
+      m_q_parameter('Q'),
+      m_s_parameter('S'),
+      m_should_cancel(false),
+      m_negate_z_value(false) {
     setBlockCommentDelimiters(meta.m_comment_starting_delimiter, meta.m_comment_ending_delimiter);
 
     MotionEstimation::Init();
 
-    if (meta == GcodeMetaList::KraussMaffeiMeta) {
-        m_g4_prefix = "G4 S";
-    }
+    if (meta == GcodeMetaList::KraussMaffeiMeta) { m_g4_prefix = "G4 S"; }
     else if (meta == GcodeMetaList::MVPMeta) {
         m_negate_z_value = true;
-        m_g4_prefix = "G4 F";
+        m_g4_prefix      = "G4 F";
     }
-    else if (meta == GcodeMetaList::IngersollMeta) {
-        m_g4_prefix = "G4 F";
-    }
+    else if (meta == GcodeMetaList::IngersollMeta) { m_g4_prefix = "G4 F"; }
 
     m_insertions = 0;
 
     config();
 
-    MotionEstimation::m_total_distance = 0;
+    MotionEstimation::m_total_distance    = 0;
     MotionEstimation::m_printing_distance = 0;
-    MotionEstimation::m_travel_distance = 0;
-    m_travel_time = 0 * m_time_unit;
+    MotionEstimation::m_travel_distance   = 0;
+    m_travel_time                         = 0 * m_time_unit;
 }
 
 Distance CommonParser::getCurrentGXDistance() {
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
-    bool uses_b = sb->setting<bool>(MS::Filament::kFilamentBAxis);
+    bool uses_b                     = sb->setting<bool>(MS::Filament::kFilamentBAxis);
 
     updateCurrentBeadGeometry();
 
@@ -105,7 +114,7 @@ Distance CommonParser::getCurrentGXDistance() {
                                                   !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
     const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
-    const Distance distance = MotionEstimation::calculateTimeAndVolume(
+    const Distance distance           = MotionEstimation::calculateTimeAndVolume(
         m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0,
         currentMotionDepositsMaterial(), m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer],
         m_layer_volumes[m_current_layer], uses_b);
@@ -137,7 +146,7 @@ Distance CommonParser::getCurrentArcDistance(Distance start_x, Distance start_y,
                                                   !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
     const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
-    const Distance distance = MotionEstimation::calculatePathTimeAndVolume(
+    const Distance distance           = MotionEstimation::calculatePathTimeAndVolume(
         path_length, start_direction_x, start_direction_y, start_direction_z, end_direction_x, end_direction_y,
         end_direction_z, include_feedrate_adjustable_time, false, currentMotionDepositsMaterial(),
         m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer]);
@@ -155,18 +164,18 @@ Distance CommonParser::arcPathLength(Distance start_x, Distance start_y, Distanc
                                      Distance& start_direction_x, Distance& start_direction_y,
                                      Distance& start_direction_z, Distance& end_direction_x, Distance& end_direction_y,
                                      Distance& end_direction_z) const {
-    const Distance dx = end_x - start_x;
-    const Distance dy = end_y - start_y;
-    const Distance dz = end_z - start_z;
-    const Distance chord_length = sqrt(dx * dx + dy * dy + dz * dz);
+    const Distance dx                  = end_x - start_x;
+    const Distance dy                  = end_y - start_y;
+    const Distance dz                  = end_z - start_z;
+    const Distance chord_length        = sqrt(dx * dx + dy * dy + dz * dz);
     const Distance planar_chord_length = sqrt(dx * dx + dy * dy);
 
     auto set_linear_direction = [&](Distance path_length) {
         if (chord_length > 0) {
             const double scale = path_length() / chord_length();
-            start_direction_x = dx * scale;
-            start_direction_y = dy * scale;
-            start_direction_z = dz * scale;
+            start_direction_x  = dx * scale;
+            start_direction_y  = dy * scale;
+            start_direction_z  = dz * scale;
         }
         else {
             start_direction_x = path_length;
@@ -186,11 +195,11 @@ Distance CommonParser::arcPathLength(Distance start_x, Distance start_y, Distanc
     if (has_center) {
         const Distance start_radius_x = start_x - m_current_arc_center_x;
         const Distance start_radius_y = start_y - m_current_arc_center_y;
-        const Distance end_radius_x = end_x - m_current_arc_center_x;
-        const Distance end_radius_y = end_y - m_current_arc_center_y;
-        const Distance start_radius = sqrt(start_radius_x * start_radius_x + start_radius_y * start_radius_y);
-        const Distance end_radius = sqrt(end_radius_x * end_radius_x + end_radius_y * end_radius_y);
-        radius = (start_radius + end_radius) / 2.0;
+        const Distance end_radius_x   = end_x - m_current_arc_center_x;
+        const Distance end_radius_y   = end_y - m_current_arc_center_y;
+        const Distance start_radius   = sqrt(start_radius_x * start_radius_x + start_radius_y * start_radius_y);
+        const Distance end_radius     = sqrt(end_radius_x * end_radius_x + end_radius_y * end_radius_y);
+        radius                        = (start_radius + end_radius) / 2.0;
 
         if (radius <= 0) {
             set_linear_direction(chord_length);
@@ -198,23 +207,21 @@ Distance CommonParser::arcPathLength(Distance start_x, Distance start_y, Distanc
         }
 
         const double start_angle = qAtan2(start_radius_y(), start_radius_x());
-        const double end_angle = qAtan2(end_radius_y(), end_radius_x());
-        sweep = positiveSweep(ccw ? end_angle - start_angle : start_angle - end_angle);
+        const double end_angle   = qAtan2(end_radius_y(), end_radius_x());
+        sweep                    = positiveSweep(ccw ? end_angle - start_angle : start_angle - end_angle);
 
-        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) {
-            sweep = 2.0 * M_PI;
-        }
+        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) { sweep = 2.0 * M_PI; }
 
-        planar_arc_length = radius * sweep;
+        planar_arc_length          = radius * sweep;
         const Distance path_length = sqrt(planar_arc_length * planar_arc_length + dz * dz);
 
         const double direction = ccw ? 1.0 : -1.0;
-        start_direction_x = planar_arc_length * (-direction * start_radius_y() / radius());
-        start_direction_y = planar_arc_length * (direction * start_radius_x() / radius());
-        start_direction_z = dz;
-        end_direction_x = planar_arc_length * (-direction * end_radius_y() / radius());
-        end_direction_y = planar_arc_length * (direction * end_radius_x() / radius());
-        end_direction_z = dz;
+        start_direction_x      = planar_arc_length * (-direction * start_radius_y() / radius());
+        start_direction_y      = planar_arc_length * (direction * start_radius_x() / radius());
+        start_direction_z      = dz;
+        end_direction_x        = planar_arc_length * (-direction * end_radius_y() / radius());
+        end_direction_y        = planar_arc_length * (direction * end_radius_x() / radius());
+        end_direction_z        = dz;
         return path_length;
     }
 
@@ -226,15 +233,11 @@ Distance CommonParser::arcPathLength(Distance start_x, Distance start_y, Distanc
         }
 
         const double chord_ratio = std::clamp((planar_chord_length / (2.0 * radius))(), 0.0, 1.0);
-        sweep = 2.0 * qAsin(chord_ratio);
-        if (m_current_arc_radius < 0) {
-            sweep = 2.0 * M_PI - sweep;
-        }
-        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) {
-            sweep = 2.0 * M_PI;
-        }
+        sweep                    = 2.0 * qAsin(chord_ratio);
+        if (m_current_arc_radius < 0) { sweep = 2.0 * M_PI - sweep; }
+        if (sweep <= 1.0e-9 && planar_chord_length <= 1.0) { sweep = 2.0 * M_PI; }
 
-        planar_arc_length = radius * sweep;
+        planar_arc_length          = radius * sweep;
         const Distance path_length = sqrt(planar_arc_length * planar_arc_length + dz * dz);
         set_linear_direction(path_length);
         return path_length;
@@ -251,9 +254,7 @@ void CommonParser::updateCurrentBeadGeometry() {
 
 Distance CommonParser::fileDistanceSetting(const QString& key) const {
     const auto setting = m_file_settings.constFind(key);
-    if (setting != m_file_settings.constEnd()) {
-        return Distance(setting.value());
-    }
+    if (setting != m_file_settings.constEnd()) { return Distance(setting.value()); }
 
     return GSM->getGlobal()->setting<Distance>(key);
 }
@@ -269,20 +270,16 @@ Distance CommonParser::beadWidthForComment(const QString& comment) const {
 
     auto widthForRegionComment = [&](const QString& region_name, Distance fallback_width) -> Distance {
         const int region_start = comment.indexOf(region_name);
-        const int width_start = comment.indexOf('-', region_start + region_name.size());
+        const int width_start  = comment.indexOf('-', region_start + region_name.size());
 
         if (width_start >= 0) {
             const int value_start = width_start + 1;
-            int value_end = comment.indexOf(' ', value_start);
-            if (value_end < 0) {
-                value_end = comment.size();
-            }
+            int value_end         = comment.indexOf(' ', value_start);
+            if (value_end < 0) { value_end = comment.size(); }
 
-            bool ok = false;
+            bool ok                   = false;
             const double parsed_width = comment.mid(value_start, value_end - value_start).toDouble(&ok);
-            if (ok && parsed_width > 0) {
-                return parsed_width * m_distance_unit;
-            }
+            if (ok && parsed_width > 0) { return parsed_width * m_distance_unit; }
         }
 
         return fallback_width;
@@ -332,8 +329,7 @@ Distance CommonParser::beadWidthForComment(const QString& comment) const {
 bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command) const {
     const QString& comment = command.getComment();
 
-    if (comment.isEmpty())
-        return false;
+    if (comment.isEmpty()) return false;
 
     if (fileBoolSetting(MS::TipWipe::kDisableFeedrateScaling) &&
         (comment.contains(Constants::PathModifierStrings::kForwardTipWipe) ||
@@ -359,13 +355,12 @@ bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command
 }
 
 bool CommonParser::currentMotionDepositsMaterial() const {
-    return m_deposition_active && !m_current_gcode_command.getComment().contains(Constants::RegionTypeStrings::kTravel,
-                                                                                 Qt::CaseInsensitive);
+    return m_deposition_active &&
+           !m_current_gcode_command.getComment().contains(Constants::RegionTypeStrings::kTravel, Qt::CaseInsensitive);
 }
 
 void CommonParser::recordModalFeedrateForCommand(const GcodeCommand& command) {
-    if (m_has_modal_feedrate)
-        m_command_modal_feedrates.insert(command.getLineNumber(), m_modal_feedrate);
+    if (m_has_modal_feedrate) m_command_modal_feedrates.insert(command.getLineNumber(), m_modal_feedrate);
 }
 
 void CommonParser::setCommandFeedrate(QString& line, double feedrate) {
@@ -373,24 +368,22 @@ void CommonParser::setCommandFeedrate(QString& line, double feedrate) {
         "(^|[\\s,/*()])(F(?:[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?|#[A-Za-z0-9_]+))",
         QRegularExpression::CaseInsensitiveOption);
 
-    int comment_start = line.size();
+    int comment_start               = line.size();
     const QString comment_delimiter = getCommentStartDelimiter();
     if (!comment_delimiter.isEmpty()) {
         const int delimiter_index = line.indexOf(comment_delimiter);
-        if (delimiter_index >= 0)
-            comment_start = delimiter_index;
+        if (delimiter_index >= 0) comment_start = delimiter_index;
     }
 
     const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
-    const QString replacement = m_f_parameter % QString::number(feedrate, 'f', 4);
+    const QString replacement           = m_f_parameter % QString::number(feedrate, 'f', 4);
     if (match.hasMatch()) {
         line.replace(match.capturedStart(2), match.capturedLength(2), replacement);
         return;
     }
 
     int insert_at = comment_start;
-    while (insert_at > 0 && line.at(insert_at - 1).isSpace())
-        --insert_at;
+    while (insert_at > 0 && line.at(insert_at - 1).isSpace()) --insert_at;
     line.insert(insert_at, m_space % replacement);
 }
 
@@ -398,32 +391,30 @@ bool CommonParser::commandFeedrate(const QString& line, double& feedrate) {
     static const QRegularExpression feedrate_token("(^|[\\s,/*()])(F[-+]?\\d*\\.?\\d+(?:[Ee][-+]?\\d+)?)",
                                                    QRegularExpression::CaseInsensitiveOption);
 
-    int comment_start = line.size();
+    int comment_start               = line.size();
     const QString comment_delimiter = getCommentStartDelimiter();
     if (!comment_delimiter.isEmpty()) {
         const int delimiter_index = line.indexOf(comment_delimiter);
-        if (delimiter_index >= 0)
-            comment_start = delimiter_index;
+        if (delimiter_index >= 0) comment_start = delimiter_index;
     }
 
     const QRegularExpressionMatch match = feedrate_token.match(line.left(comment_start));
-    if (!match.hasMatch())
-        return false;
+    if (!match.hasMatch()) return false;
 
     bool converted = false;
-    feedrate = match.captured(2).mid(1).toDouble(&converted);
+    feedrate       = match.captured(2).mid(1).toDouble(&converted);
     return converted;
 }
 
 void CommonParser::materializeFeedrateTransitions(double modifier) {
     bool emitted_feedrate_set = false;
-    double emitted_feedrate = 0.0;
-    auto explicit_feedrate = m_explicit_modal_feedrates.upperBound(m_last_layer_line_start);
+    double emitted_feedrate   = 0.0;
+    auto explicit_feedrate    = m_explicit_modal_feedrates.upperBound(m_last_layer_line_start);
 
     for (GcodeCommand& command : m_motion_commands[m_current_layer]) {
         while (explicit_feedrate != m_explicit_modal_feedrates.cend() &&
                explicit_feedrate.key() < command.getLineNumber()) {
-            emitted_feedrate = explicit_feedrate.value();
+            emitted_feedrate     = explicit_feedrate.value();
             emitted_feedrate_set = true;
             ++explicit_feedrate;
         }
@@ -444,7 +435,7 @@ void CommonParser::materializeFeedrateTransitions(double modifier) {
             command.addParameter(m_f_parameter.toLatin1(), original_feedrate * m_velocity_unit());
         }
 
-        emitted_feedrate = desired_feedrate;
+        emitted_feedrate     = desired_feedrate;
         emitted_feedrate_set = true;
 
         while (explicit_feedrate != m_explicit_modal_feedrates.cend() &&
@@ -463,8 +454,7 @@ void CommonParser::parseHeader() {
             delimiterSearch.indexIn(m_upper_lines[m_current_line]) == -1) ||
            m_upper_lines[m_current_line].length() == 0) {
         ++m_current_line;
-        if (m_current_line > totalLines)
-            break;
+        if (m_current_line > totalLines) break;
     }
 }
 
@@ -474,7 +464,7 @@ QHash<QString, double> CommonParser::parseFooter() {
     Velocity v;
     m_necessary_variables_copy = Constants::GcodeFileVariables::kNecessaryVariables;
 
-    bool foundForcedMinLayerTime = false;
+    bool foundForcedMinLayerTime       = false;
     bool foundForcedMinLayerTimeMethod = false;
     while (startsWithDelimiter(m_upper_lines[m_current_end_line]) || m_upper_lines[m_current_end_line].length() == 0) {
         if (m_upper_lines[m_current_end_line].length() > 0) {
@@ -483,14 +473,13 @@ QHash<QString, double> CommonParser::parseFooter() {
                 QVector<QString> setting_split = setting.split(' ', Qt::SkipEmptyParts);
                 // make sure we have a valid pair
                 if (setting_split.size() == 2) {
-                    QString key = setting_split[0]; // may or may not be suffixed
+                    QString key      = setting_split[0];  // may or may not be suffixed
                     QString key_root = key;
 
                     // if key is suffixed, remove the suffix
                     int suffix_loc = -1;
-                    suffix_loc = key_root.lastIndexOf(QRegularExpression("_\\d+"));
-                    if (suffix_loc >= 0)
-                        key_root.truncate(suffix_loc);
+                    suffix_loc     = key_root.lastIndexOf(QRegularExpression("_\\d+"));
+                    if (suffix_loc >= 0) key_root.truncate(suffix_loc);
 
                     // search for root when deciding whether or not to parse the setting
                     QHash<QString, QString>::const_iterator it = m_necessary_variables_copy.find(key_root);
@@ -521,8 +510,7 @@ QHash<QString, double> CommonParser::parseFooter() {
             }
         }
         --m_current_end_line;
-        if (m_current_end_line < 0)
-            break;
+        if (m_current_end_line < 0) break;
     }
 
     // convert force minimum layer time setting from Slicer-1 to ORNLSlicer if needed
@@ -565,13 +553,13 @@ void CommonParser::checkAndSetNecessarySettings() {
         }
     }
 
-    MotionEstimation::z_speed = m_file_settings[PRS::MachineSpeed::kZSpeed];
-    MotionEstimation::max_xy_speed = m_file_settings[PRS::MachineSpeed::kMaxXYSpeed];
-    MotionEstimation::w_table_speed = m_file_settings[PRS::MachineSpeed::kWTableSpeed];
-    MotionEstimation::layerThickness = m_file_settings[PS::Layer::kLayerHeight];
-    MotionEstimation::extrusionWidth = m_file_settings[PS::Layer::kBeadWidth];
+    MotionEstimation::z_speed               = m_file_settings[PRS::MachineSpeed::kZSpeed];
+    MotionEstimation::max_xy_speed          = m_file_settings[PRS::MachineSpeed::kMaxXYSpeed];
+    MotionEstimation::w_table_speed         = m_file_settings[PRS::MachineSpeed::kWTableSpeed];
+    MotionEstimation::layerThickness        = m_file_settings[PS::Layer::kLayerHeight];
+    MotionEstimation::extrusionWidth        = m_file_settings[PS::Layer::kBeadWidth];
     MotionEstimation::initialLayerThickness = MotionEstimation::layerThickness;
-    MotionEstimation::layer0extrusionWidth = MotionEstimation::extrusionWidth;
+    MotionEstimation::layer0extrusionWidth  = MotionEstimation::extrusionWidth;
     MotionEstimation::setBeadGeometry(MotionEstimation::extrusionWidth, MotionEstimation::layerThickness);
 
     if (MotionEstimation::max_xy_speed == 0) {
@@ -611,9 +599,7 @@ void CommonParser::preallocateVisualCommands() {
 
         if (m_upper_lines[i].length() > 0) {
             // most common case, valid motion command
-            if (m_upper_lines[i].indexOf(gMotionCommand) == 0) {
-                commandsInLayer++;
-            }
+            if (m_upper_lines[i].indexOf(gMotionCommand) == 0) { commandsInLayer++; }
             // lastly, when reaching a new layer or the final line, allocate memory
             else if (layerDelimiter.indexIn(m_upper_lines[i]) != -1) {
                 QList<GcodeCommand> commands;
@@ -662,18 +648,14 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
             // parser that is formatted the way a line is normally formatted (without the variable)
             double zVal;
             int second = m_upper_lines[m_current_line].indexOf("]");
-            int zLoc = m_upper_lines[m_current_line].indexOf("Z");
+            int zLoc   = m_upper_lines[m_current_line].indexOf("Z");
             if (m_upper_lines[m_current_line].contains("+")) {
-                int first = m_upper_lines[m_current_line].indexOf("+") + 2;
+                int first               = m_upper_lines[m_current_line].indexOf("+") + 2;
                 QString zAdditionString = m_upper_lines[m_current_line].mid(first, second - first);
-                zVal = zAdditionString.toDouble(&no_error);
-                if (!no_error) {
-                    throwFloatConversionErrorException();
-                }
+                zVal                    = zAdditionString.toDouble(&no_error);
+                if (!no_error) { throwFloatConversionErrorException(); }
             }
-            else {
-                zVal = 0;
-            }
+            else { zVal = 0; }
 
             zVal += currentZOffset;
             newCurrentLine = m_upper_lines[m_current_line].mid(0, zLoc + 1) % QString::number(zVal, 'f', 4) %
@@ -694,13 +676,11 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
         else if (m_upper_lines[m_current_line].contains("EXTRUDER(")) {
             m_deposition_active = true;
 
-            int first = m_upper_lines[m_current_line].indexOf("(") + 1;
-            int second = m_upper_lines[m_current_line].indexOf(")");
+            int first             = m_upper_lines[m_current_line].indexOf("(") + 1;
+            int second            = m_upper_lines[m_current_line].indexOf(")");
             QString spindleString = m_upper_lines[m_current_line].mid(first, second - first);
-            double spindleSpeed = spindleString.toDouble(&no_error);
-            if (!no_error) {
-                throwFloatConversionErrorException();
-            }
+            double spindleSpeed   = spindleString.toDouble(&no_error);
+            if (!no_error) { throwFloatConversionErrorException(); }
             setSpindleSpeed(spindleSpeed * m_angular_velocity_unit());
 
             continue;
@@ -725,27 +705,27 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
 
                     double minModifier = std::numeric_limits<double>::max();
                     double maxModifier = 1;
-                    if (increaseTime > 0 || decreaseTime > 0)
-                        getMinMaxModifier(minModifier, maxModifier);
+                    if (increaseTime > 0 || decreaseTime > 0) getMinMaxModifier(minModifier, maxModifier);
 
                     if (m_layer_G1F_times[m_current_layer] > 0) {
-                        if (increaseTime > 0) { // If layer time less than minimum, slow feedrate or add dwell
+                        if (increaseTime > 0) {  // If layer time less than minimum, slow feedrate or add dwell
                             if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
                                 // Ratio uses the layer time as well as the total time for all G1 F moves, which are
                                 // what get adjusted
-                                double ratio = (increaseTime / m_layer_G1F_times[m_current_layer])();
+                                double ratio    = (increaseTime / m_layer_G1F_times[m_current_layer])();
                                 double modifier = 1 / (1.0 + ratio);
 
                                 if (modifier < minModifier && minModifier > 0 && minModifier < 1) {
                                     modifier = minModifier;
-                                    emit forwardInfoToMainWindow("Computed speed is lower than min machine speed, "
-                                                                 "machine min speed will be used");
+                                    emit forwardInfoToMainWindow(
+                                        "Computed speed is lower than min machine speed, "
+                                        "machine min speed will be used");
                                 }
 
                                 if (modifier > 0 && modifier < 1) {
                                     AdjustFeedrate(modifier);
                                     layer_feedrate_adjusted = true;
-                                    m_was_modified = true;
+                                    m_was_modified          = true;
                                 }
                             }
                             else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
@@ -753,11 +733,11 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                                 m_was_modified = true;
                             }
                         }
-                        else if (decreaseTime > 0) { // If layer time more than maximum, increase feedrate
+                        else if (decreaseTime > 0) {  // If layer time more than maximum, increase feedrate
                             if (m_min_layer_time_choice == ForceMinimumLayerTime::kSlow_Feedrate) {
                                 // Ratio uses the layer time as well as the total time for all G1 F moves, which are
                                 // what get adjusted
-                                double ratio = (decreaseTime / m_layer_G1F_times[m_current_layer])();
+                                double ratio    = (decreaseTime / m_layer_G1F_times[m_current_layer])();
                                 double modifier = 1 / (1.0 - ratio);
 
                                 if (modifier > maxModifier && maxModifier > 1) {
@@ -769,7 +749,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                                 if (modifier > 1) {
                                     AdjustFeedrate(modifier);
                                     layer_feedrate_adjusted = true;
-                                    m_was_modified = true;
+                                    m_was_modified          = true;
                                 }
                             }
                             else if (m_min_layer_time_choice == ForceMinimumLayerTime::kUse_Purge_Dwells) {
@@ -786,8 +766,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
                     materializeFeedrateTransitions(1.0);
                 }
 
-                if (m_current_line == m_current_end_line)
-                    break;
+                if (m_current_line == m_current_end_line) break;
 
                 m_last_layer_line_start = m_current_line;
                 ++m_current_layer;
@@ -810,8 +789,7 @@ QList<QList<GcodeCommand>> CommonParser::parseLines() {
             }
         }
 
-        if (m_should_cancel)
-            return QList<QList<GcodeCommand>>();
+        if (m_should_cancel) return QList<QList<GcodeCommand>>();
     }
 
     // emit layer times and key info
@@ -832,49 +810,85 @@ void CommonParser::config() {
     addCommandMapping("M5", std::bind(&CommonParser::M5Handler, this, std::placeholders::_1));
 }
 
-NT CommonParser::getXPos() const { return getXPos(m_distance_unit); }
+NT CommonParser::getXPos() const {
+    return getXPos(m_distance_unit);
+}
 
-NT CommonParser::getXPos(Distance distance_unit) const { return MotionEstimation::m_current_x.to(distance_unit); }
+NT CommonParser::getXPos(Distance distance_unit) const {
+    return MotionEstimation::m_current_x.to(distance_unit);
+}
 
-NT CommonParser::getYPos() const { return getYPos(m_distance_unit); }
+NT CommonParser::getYPos() const {
+    return getYPos(m_distance_unit);
+}
 
-NT CommonParser::getYPos(Distance distance_unit) const { return MotionEstimation::m_current_y.to(distance_unit); }
+NT CommonParser::getYPos(Distance distance_unit) const {
+    return MotionEstimation::m_current_y.to(distance_unit);
+}
 
-NT CommonParser::getZPos() const { return getZPos(m_distance_unit); }
+NT CommonParser::getZPos() const {
+    return getZPos(m_distance_unit);
+}
 
-NT CommonParser::getZPos(Distance distance_unit) const { return MotionEstimation::m_current_z.to(distance_unit); }
+NT CommonParser::getZPos(Distance distance_unit) const {
+    return MotionEstimation::m_current_z.to(distance_unit);
+}
 
-NT CommonParser::getWPos() const { return getWPos(m_distance_unit); }
+NT CommonParser::getWPos() const {
+    return getWPos(m_distance_unit);
+}
 
-NT CommonParser::getWPos(Distance distance_unit) const { return MotionEstimation::m_current_w.to(distance_unit); }
+NT CommonParser::getWPos(Distance distance_unit) const {
+    return MotionEstimation::m_current_w.to(distance_unit);
+}
 
-NT CommonParser::getArcXPos() const { return getArcXPos(m_distance_unit); }
+NT CommonParser::getArcXPos() const {
+    return getArcXPos(m_distance_unit);
+}
 
-NT CommonParser::getArcXPos(Distance distance_unit) const { return m_current_arc_center_x.to(distance_unit); }
+NT CommonParser::getArcXPos(Distance distance_unit) const {
+    return m_current_arc_center_x.to(distance_unit);
+}
 
-NT CommonParser::getArcYPos() const { return getArcYPos(m_distance_unit); }
+NT CommonParser::getArcYPos() const {
+    return getArcYPos(m_distance_unit);
+}
 
-NT CommonParser::getArcYPos(Distance distance_unit) const { return m_current_arc_center_y.to(distance_unit); }
+NT CommonParser::getArcYPos(Distance distance_unit) const {
+    return m_current_arc_center_y.to(distance_unit);
+}
 
-NT CommonParser::getSpeed() const { return getSpeed(m_velocity_unit); }
+NT CommonParser::getSpeed() const {
+    return getSpeed(m_velocity_unit);
+}
 
-NT CommonParser::getSpeed(Velocity velocity_unit) const { return MotionEstimation::m_current_speed.to(velocity_unit); }
+NT CommonParser::getSpeed(Velocity velocity_unit) const {
+    return MotionEstimation::m_current_speed.to(velocity_unit);
+}
 
-NT CommonParser::getSpindleSpeed() const { return getSpindleSpeed(rev / minute); }
+NT CommonParser::getSpindleSpeed() const {
+    return getSpindleSpeed(rev / minute);
+}
 
 NT CommonParser::getSpindleSpeed(AngularVelocity angular_velocity_unit) const {
     return m_current_spindle_speed.to(angular_velocity_unit);
 }
 
-NT CommonParser::getAcceleration() const { return getAcceleration(m_acceleration_unit); }
+NT CommonParser::getAcceleration() const {
+    return getAcceleration(m_acceleration_unit);
+}
 
 NT CommonParser::getAcceleration(Acceleration acceleration_unit) const {
     return MotionEstimation::m_current_acceleration.to(acceleration_unit);
 }
 
-NT CommonParser::getSleepTime() const { return getSleepTime(m_time_unit); }
+NT CommonParser::getSleepTime() const {
+    return getSleepTime(m_time_unit);
+}
 
-NT CommonParser::getSleepTime(Time time_unit) const { return m_sleep_time.to(time_unit); }
+NT CommonParser::getSleepTime(Time time_unit) const {
+    return m_sleep_time.to(time_unit);
+}
 
 void CommonParser::reset() {
     resetInternalState();
@@ -897,25 +911,27 @@ void CommonParser::reset() {
     // So don't reset to 0 here and leave it to the default acceleration set in the constructor
     // m_current_acceleration = 0 * m_acceleration_unit;
 
-    m_sleep_time = 0 * m_time_unit;
-    m_purge_time = 0 * m_time_unit;
-    m_wait_to_wipe_time = 0 * m_time_unit;
+    m_sleep_time               = 0 * m_time_unit;
+    m_purge_time               = 0 * m_time_unit;
+    m_wait_to_wipe_time        = 0 * m_time_unit;
     m_wait_time_to_start_purge = 0 * m_time_unit;
-    m_travel_time = 0 * m_time_unit;
+    m_travel_time              = 0 * m_time_unit;
 
-    m_deposition_active = false;
+    m_deposition_active       = false;
     m_dynamic_spindle_control = false;
-    m_park = false;
-    m_with_F_value = false;
-    m_modal_feedrate = 0.0;
-    m_has_modal_feedrate = false;
+    m_park                    = false;
+    m_with_F_value            = false;
+    m_modal_feedrate          = 0.0;
+    m_has_modal_feedrate      = false;
     m_command_modal_feedrates.clear();
     m_explicit_modal_feedrates.clear();
     m_command_G1F_times.clear();
     m_layer_dwell_adjustments.clear();
 }
 
-QList<Time> CommonParser::getLayerTimes() { return m_layer_times; }
+QList<Time> CommonParser::getLayerTimes() {
+    return m_layer_times;
+}
 
 QList<Time> CommonParser::getAdjustedLayerTimes() {
     QList<Time> adjusted_layer_times = m_layer_times;
@@ -925,33 +941,32 @@ QList<Time> CommonParser::getAdjustedLayerTimes() {
 
     const bool has_adjusted_feedrates = std::any_of(m_layer_FR_modifiers.cbegin(), m_layer_FR_modifiers.cend(),
                                                     [](double modifier) { return modifier > 0 && modifier != 1.0; });
-    if (!has_adjusted_feedrates)
-        return adjusted_layer_times;
+    if (!has_adjusted_feedrates) return adjusted_layer_times;
 
     bool emitted_feedrate_set = false;
-    double emitted_feedrate = 0.0;
-    auto explicit_feedrate = m_explicit_modal_feedrates.cbegin();
+    double emitted_feedrate   = 0.0;
+    auto explicit_feedrate    = m_explicit_modal_feedrates.cbegin();
 
     for (int layer = 0; layer < m_motion_commands.size() && layer < adjusted_layer_times.size(); ++layer) {
         for (const GcodeCommand& command : m_motion_commands[layer]) {
             const int line_number = command.getLineNumber();
             while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() < line_number) {
-                emitted_feedrate = explicit_feedrate.value();
+                emitted_feedrate     = explicit_feedrate.value();
                 emitted_feedrate_set = true;
                 ++explicit_feedrate;
             }
 
-            const double original_feedrate = m_command_modal_feedrates.value(line_number, 0.0);
+            const double original_feedrate   = m_command_modal_feedrates.value(line_number, 0.0);
             double explicit_command_feedrate = 0.0;
             if (line_number >= 0 && line_number < m_lines.size() &&
                 commandFeedrate(m_lines[line_number], explicit_command_feedrate)) {
-                emitted_feedrate = explicit_command_feedrate;
+                emitted_feedrate     = explicit_command_feedrate;
                 emitted_feedrate_set = true;
             }
             else if (command.getParameters().contains(m_f_parameter.toLatin1()) && original_feedrate > 0) {
                 // Macro feedrates such as F#981 cannot be read back numerically, but their authored value was
                 // resolved while parsing and remains unchanged unless setCommandFeedrate replaced the token.
-                emitted_feedrate = original_feedrate;
+                emitted_feedrate     = original_feedrate;
                 emitted_feedrate_set = true;
             }
 
@@ -970,65 +985,111 @@ QList<Time> CommonParser::getAdjustedLayerTimes() {
     return adjusted_layer_times;
 }
 
-QList<double> CommonParser::getLayerFeedRateModifiers() { return m_layer_FR_modifiers; }
+QList<double> CommonParser::getLayerFeedRateModifiers() {
+    return m_layer_FR_modifiers;
+}
 
-QList<Volume> CommonParser::getLayerVolumes() { return m_layer_volumes; }
+QList<Volume> CommonParser::getLayerVolumes() {
+    return m_layer_volumes;
+}
 
-Distance CommonParser::getTotalDistance() { return MotionEstimation::m_total_distance; }
+Distance CommonParser::getTotalDistance() {
+    return MotionEstimation::m_total_distance;
+}
 
-Distance CommonParser::getPrintingDistance() { return MotionEstimation::m_printing_distance; }
+Distance CommonParser::getPrintingDistance() {
+    return MotionEstimation::m_printing_distance;
+}
 
-Distance CommonParser::getTravelDistance() { return MotionEstimation::m_travel_distance; }
+Distance CommonParser::getTravelDistance() {
+    return MotionEstimation::m_travel_distance;
+}
 
-Time CommonParser::getTravelTime() { return m_travel_time; }
+Time CommonParser::getTravelTime() {
+    return m_travel_time;
+}
 
-bool CommonParser::getWasModified() { return m_was_modified; }
+bool CommonParser::getWasModified() {
+    return m_was_modified;
+}
 
-void CommonParser::cancelSlice() { m_should_cancel = true; }
+void CommonParser::cancelSlice() {
+    m_should_cancel = true;
+}
 
-QList<int> CommonParser::getLayerStartLines() { return m_layer_start_lines; }
+QList<int> CommonParser::getLayerStartLines() {
+    return m_layer_start_lines;
+}
 
-int CommonParser::getCurrentLine() { return m_current_line; }
+int CommonParser::getCurrentLine() {
+    return m_current_line;
+}
 
-void CommonParser::alterCurrentEndLine(int count) { m_current_end_line += count; }
+void CommonParser::alterCurrentEndLine(int count) {
+    m_current_end_line += count;
+}
 
-void CommonParser::setModified() { m_was_modified = true; }
+void CommonParser::setModified() {
+    m_was_modified = true;
+}
 
 void CommonParser::recordMotionEstimate(Distance distance, Time time_delta) {
     MotionEstimation::m_total_distance += distance;
 
-    if (currentMotionDepositsMaterial()) {
-        MotionEstimation::m_printing_distance += distance;
-    }
+    if (currentMotionDepositsMaterial()) { MotionEstimation::m_printing_distance += distance; }
     else {
         MotionEstimation::m_travel_distance += distance;
         m_travel_time += time_delta;
     }
 }
 
-void CommonParser::setXPos(NT value) { MotionEstimation::m_current_x = value; }
+void CommonParser::setXPos(NT value) {
+    MotionEstimation::m_current_x = value;
+}
 
-void CommonParser::setYPos(NT value) { MotionEstimation::m_current_y = value; }
+void CommonParser::setYPos(NT value) {
+    MotionEstimation::m_current_y = value;
+}
 
-void CommonParser::setZPos(NT value) { MotionEstimation::m_current_z = value; }
+void CommonParser::setZPos(NT value) {
+    MotionEstimation::m_current_z = value;
+}
 
-void CommonParser::setWPos(NT value) { MotionEstimation::m_current_w = value; }
+void CommonParser::setWPos(NT value) {
+    MotionEstimation::m_current_w = value;
+}
 
-void CommonParser::setArcXPos(NT value) { m_current_arc_center_x = value; }
+void CommonParser::setArcXPos(NT value) {
+    m_current_arc_center_x = value;
+}
 
-void CommonParser::setArcYPos(NT value) { m_current_arc_center_y = value; }
+void CommonParser::setArcYPos(NT value) {
+    m_current_arc_center_y = value;
+}
 
-void CommonParser::setArcZPos(NT value) { m_current_arc_center_z = value; }
+void CommonParser::setArcZPos(NT value) {
+    m_current_arc_center_z = value;
+}
 
-void CommonParser::setArcRPos(NT value) { m_current_arc_radius = value; }
+void CommonParser::setArcRPos(NT value) {
+    m_current_arc_radius = value;
+}
 
-void CommonParser::setSpeed(NT value) { MotionEstimation::m_current_speed = value; }
+void CommonParser::setSpeed(NT value) {
+    MotionEstimation::m_current_speed = value;
+}
 
-void CommonParser::setSpindleSpeed(NT value) { m_current_spindle_speed = value * m_angular_velocity_unit; }
+void CommonParser::setSpindleSpeed(NT value) {
+    m_current_spindle_speed = value * m_angular_velocity_unit;
+}
 
-void CommonParser::setAcceleration(NT value) { MotionEstimation::m_current_acceleration = value; }
+void CommonParser::setAcceleration(NT value) {
+    MotionEstimation::m_current_acceleration = value;
+}
 
-void CommonParser::setSleepTime(NT value) { m_sleep_time = value; }
+void CommonParser::setSleepTime(NT value) {
+    m_sleep_time = value;
+}
 
 void CommonParser::G0Handler(QVector<QString> params) {
     if (params.empty()) {
@@ -1049,10 +1110,8 @@ void CommonParser::G0Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
-        if (!no_error) {
-            throwFloatConversionErrorException();
-        }
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
+        if (!no_error) { throwFloatConversionErrorException(); }
 
         current_value *= m_distance_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
@@ -1061,48 +1120,40 @@ void CommonParser::G0Handler(QVector<QString> params) {
             case ('x'):
                 if (x_not_used) {
                     setXPos(current_value);
-                    x_not_used = false;
+                    x_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Y'):
             case ('y'):
                 if (y_not_used) {
                     setYPos(current_value);
-                    y_not_used = false;
+                    y_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Z'):
             case ('z'):
                 if (z_not_used) {
                     setZPos(current_value);
-                    z_not_used = false;
+                    z_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('W'):
             case ('w'):
                 if (w_not_used) {
                     setWPos(current_value);
-                    w_not_used = false;
+                    w_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             default:
@@ -1118,12 +1169,10 @@ void CommonParser::G0Handler(QVector<QString> params) {
     m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    if (is_motion_command) {
-        m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
-    }
+    if (is_motion_command) { m_motion_commands[m_current_layer].push_back(m_current_gcode_command); }
 
     const Time layer_time_before = m_layer_times[m_current_layer];
-    Distance temp = getCurrentGXDistance();
+    Distance temp                = getCurrentGXDistance();
     recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
@@ -1146,10 +1195,8 @@ void CommonParser::G1Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
-        if (!no_error) {
-            throwFloatConversionErrorException();
-        }
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
+        if (!no_error) { throwFloatConversionErrorException(); }
 
         switch (current_parameter) {
             case ('X'):
@@ -1157,12 +1204,10 @@ void CommonParser::G1Handler(QVector<QString> params) {
                 if (x_not_used) {
                     current_value *= m_distance_unit();
                     setXPos(current_value);
-                    x_not_used = false;
+                    x_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Y'):
@@ -1170,28 +1215,22 @@ void CommonParser::G1Handler(QVector<QString> params) {
                 if (y_not_used) {
                     current_value *= m_distance_unit();
                     setYPos(current_value);
-                    y_not_used = false;
+                    y_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Z'):
             case ('z'):
                 if (z_not_used) {
-                    if (m_negate_z_value) {
-                        current_value = current_value * -1;
-                    }
+                    if (m_negate_z_value) { current_value = current_value * -1; }
                     current_value *= m_distance_unit();
                     setZPos(current_value);
-                    z_not_used = false;
+                    z_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('W'):
@@ -1199,26 +1238,22 @@ void CommonParser::G1Handler(QVector<QString> params) {
                 if (w_not_used) {
                     current_value *= m_distance_unit();
                     setWPos(current_value);
-                    w_not_used = false;
+                    w_not_used        = false;
                     is_motion_command = true;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('F'):
             case ('f'):
                 if (f_not_used) {
-                    m_modal_feedrate = current_value;
+                    m_modal_feedrate     = current_value;
                     m_has_modal_feedrate = true;
                     current_value *= m_velocity_unit();
                     setSpeed(current_value);
                     f_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('S'):
@@ -1228,9 +1263,7 @@ void CommonParser::G1Handler(QVector<QString> params) {
                     setSpindleSpeed(current_value);
                     s_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Q'):
@@ -1240,9 +1273,7 @@ void CommonParser::G1Handler(QVector<QString> params) {
                     setSpindleSpeed(current_value);
                     s_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('M'):
@@ -1286,11 +1317,9 @@ void CommonParser::G1Handler(QVector<QString> params) {
                             setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
-                    e_not_used = false;
+                    e_not_used                    = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             default:
@@ -1306,8 +1335,7 @@ void CommonParser::G1Handler(QVector<QString> params) {
     m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    if (!f_not_used)
-        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    if (!f_not_used) m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
 
     if (is_motion_command) {
         recordModalFeedrateForCommand(m_current_gcode_command);
@@ -1318,7 +1346,7 @@ void CommonParser::G1Handler(QVector<QString> params) {
         is_motion_command && m_has_modal_feedrate && !feedrateScalingDisabledForCommand(m_current_gcode_command);
 
     const Time layer_time_before = m_layer_times[m_current_layer];
-    Distance temp = getCurrentGXDistance();
+    Distance temp                = getCurrentGXDistance();
     recordMotionEstimate(temp, m_layer_times[m_current_layer] - layer_time_before);
 }
 
@@ -1330,7 +1358,7 @@ void CommonParser::G1HandlerHelper(QVector<QString> params, QVector<QString> opt
     for (QString ref : optionalParams) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
         m_current_gcode_command.addOptionalParameter(current_parameter, current_value * m_distance_unit());
     }
 
@@ -1361,10 +1389,8 @@ void CommonParser::G2Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
-        if (!no_error) {
-            throwFloatConversionErrorException();
-        }
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
+        if (!no_error) { throwFloatConversionErrorException(); }
 
         const NT authored_value = current_value;
         if (current_parameter == 'F' || current_parameter == 'f')
@@ -1377,47 +1403,39 @@ void CommonParser::G2Handler(QVector<QString> params) {
             case ('X'):
             case ('x'):
                 if (x_not_used) {
-                    temp_x = current_value;
+                    temp_x     = current_value;
                     x_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Y'):
             case ('y'):
                 if (y_not_used) {
-                    temp_y = current_value;
+                    temp_y     = current_value;
                     y_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Z'):
             case ('z'):
                 if (z_not_used) {
-                    temp_z = current_value;
+                    temp_z     = current_value;
                     z_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('F'):
             case ('f'):
                 if (f_not_used) {
-                    m_modal_feedrate = authored_value;
+                    m_modal_feedrate     = authored_value;
                     m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('I'):
@@ -1426,9 +1444,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     setArcXPos(start_x() + current_value);
                     i_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('J'):
@@ -1437,9 +1453,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     setArcYPos(start_y() + current_value);
                     j_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('K'):
@@ -1448,9 +1462,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     setArcZPos(start_z() + current_value);
                     k_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('R'):
             case ('r'):
@@ -1458,9 +1470,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     setArcRPos(current_value);
                     r_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('S'):
             case ('s'):
@@ -1469,9 +1479,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     setSpindleSpeed(current_value);
                     s_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('W'):
             case ('w'):
@@ -1479,9 +1487,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
                     setWPos(current_value);
                     w_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('E'):
             case ('e'):
@@ -1500,11 +1506,9 @@ void CommonParser::G2Handler(QVector<QString> params) {
                             setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
-                    e_not_used = false;
+                    e_not_used                    = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             default:
                 QString exceptionString;
@@ -1518,8 +1522,7 @@ void CommonParser::G2Handler(QVector<QString> params) {
     m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    if (!f_not_used)
-        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    if (!f_not_used) m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
     recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
@@ -1566,7 +1569,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
         if (!no_error) {
             QString exceptionString;
             QTextStream(&exceptionString) << "Error with float conversion on GCode line "
@@ -1586,47 +1589,39 @@ void CommonParser::G3Handler(QVector<QString> params) {
             case ('X'):
             case ('x'):
                 if (x_not_used) {
-                    temp_x = current_value;
+                    temp_x     = current_value;
                     x_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Y'):
             case ('y'):
                 if (y_not_used) {
-                    temp_y = current_value;
+                    temp_y     = current_value;
                     y_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('Z'):
             case ('z'):
                 if (z_not_used) {
-                    temp_z = current_value;
+                    temp_z     = current_value;
                     z_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('F'):
             case ('f'):
                 if (f_not_used) {
-                    m_modal_feedrate = authored_value;
+                    m_modal_feedrate     = authored_value;
                     m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('I'):
@@ -1635,9 +1630,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     setArcXPos(start_x() + current_value);
                     i_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('J'):
@@ -1646,9 +1639,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     setArcYPos(start_y() + current_value);
                     j_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
 
             case ('K'):
@@ -1657,9 +1648,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     setArcZPos(start_z() + current_value);
                     k_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('R'):
             case ('r'):
@@ -1667,9 +1656,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     setArcRPos(current_value);
                     r_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('S'):
             case ('s'):
@@ -1678,9 +1665,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     setSpindleSpeed(current_value);
                     s_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('W'):
             case ('w'):
@@ -1688,9 +1673,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
                     setWPos(current_value);
                     w_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('E'):
             case ('e'):
@@ -1709,11 +1692,9 @@ void CommonParser::G3Handler(QVector<QString> params) {
                             setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
-                    e_not_used = false;
+                    e_not_used                    = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             default:
                 QString exceptionString;
@@ -1727,8 +1708,7 @@ void CommonParser::G3Handler(QVector<QString> params) {
     m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    if (!f_not_used)
-        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    if (!f_not_used) m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
     recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
@@ -1775,10 +1755,8 @@ void CommonParser::G4Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
-        if (!no_error) {
-            throwFloatConversionErrorException();
-        }
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
+        if (!no_error) { throwFloatConversionErrorException(); }
 
         current_value *= m_time_unit();
         m_current_gcode_command.addParameter(current_parameter, current_value);
@@ -1790,9 +1768,7 @@ void CommonParser::G4Handler(QVector<QString> params) {
                     setSleepTime(current_value);
                     p_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('S'):
             case ('s'):
@@ -1800,9 +1776,7 @@ void CommonParser::G4Handler(QVector<QString> params) {
                     setSleepTime(current_value);
                     s_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('F'):
             case ('f'):
@@ -1810,9 +1784,7 @@ void CommonParser::G4Handler(QVector<QString> params) {
                     setSleepTime(current_value);
                     f_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('X'):
             case ('x'):
@@ -1820,9 +1792,7 @@ void CommonParser::G4Handler(QVector<QString> params) {
                     setSleepTime(current_value);
                     x_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             default:
                 QString exceptionString;
@@ -1864,7 +1834,7 @@ void CommonParser::G5Handler(QVector<QString> params) {
 
     for (const QString& ref : params) {
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&number_error);
+        current_value     = ref.right(ref.size() - 1).toDouble(&number_error);
         if (!number_error) {
             QString exceptionString;
             QTextStream(&exceptionString) << "Error with float conversion on GCode line "
@@ -1884,84 +1854,68 @@ void CommonParser::G5Handler(QVector<QString> params) {
             case ('X'):
             case ('x'):
                 if (x_not_used) {
-                    temp_x = current_value;
+                    temp_x     = current_value;
                     x_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('Y'):
             case ('y'):
                 if (y_not_used) {
-                    temp_y = current_value;
+                    temp_y     = current_value;
                     y_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('Z'):
             case ('z'):
                 if (z_not_used) {
-                    temp_z = current_value;
+                    temp_z     = current_value;
                     z_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('F'):
             case ('f'):
                 if (f_not_used) {
-                    m_modal_feedrate = authored_value;
+                    m_modal_feedrate     = authored_value;
                     m_has_modal_feedrate = true;
                     setSpeed(current_value);
                     f_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('I'):
             case ('i'):
                 if (i_not_used) {
                     m_current_spline_control_a_x = getXPos() + current_value;
-                    i_not_used = false;
+                    i_not_used                   = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('J'):
             case ('j'):
                 if (j_not_used) {
                     m_current_spline_control_a_y = getYPos() + current_value;
-                    j_not_used = false;
+                    j_not_used                   = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('P'):
             case ('p'):
                 if (p_not_used) {
                     m_current_spline_control_b_x = temp_x + current_value;
-                    p_not_used = false;
+                    p_not_used                   = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('Q'):
             case ('q'):
                 if (q_not_used) {
                     m_current_spline_control_b_y = temp_y + current_value;
-                    q_not_used = false;
+                    q_not_used                   = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('S'):
             case ('s'):
@@ -1970,9 +1924,7 @@ void CommonParser::G5Handler(QVector<QString> params) {
                     setSpindleSpeed(current_value);
                     s_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('W'):
             case ('w'):
@@ -1980,9 +1932,7 @@ void CommonParser::G5Handler(QVector<QString> params) {
                     setWPos(current_value);
                     w_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             case ('E'):
             case ('e'):
@@ -2001,11 +1951,9 @@ void CommonParser::G5Handler(QVector<QString> params) {
                             setDepositionActive(false);
                     }
                     MotionEstimation::m_current_e = current_value;
-                    e_not_used = false;
+                    e_not_used                    = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
                 break;
             default:
                 QString exceptionString;
@@ -2019,8 +1967,7 @@ void CommonParser::G5Handler(QVector<QString> params) {
     m_current_gcode_command.setDepositionActive(currentMotionDepositsMaterial());
     m_current_gcode_command.setExtruderSpeed(m_current_extruder_speed);
 
-    if (!f_not_used)
-        m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
+    if (!f_not_used) m_explicit_modal_feedrates.insert(m_current_gcode_command.getLineNumber(), m_modal_feedrate);
     recordModalFeedrateForCommand(m_current_gcode_command);
     m_motion_commands[m_current_layer].push_back(m_current_gcode_command);
 
@@ -2046,8 +1993,7 @@ void CommonParser::M3Handler(QVector<QString> params) {
         if (current_parameter == 'S' || current_parameter == 's') {
             m_current_extruder_speed = ref.right(ref.size() - 1).toDouble(&no_error);
 
-            if (!no_error)
-                m_current_extruder_speed = 0;
+            if (!no_error) m_current_extruder_speed = 0;
 
             setSpindleSpeed(m_current_extruder_speed * m_angular_velocity_unit());
         }
@@ -2058,11 +2004,11 @@ void CommonParser::M3Handler(QVector<QString> params) {
 
 void CommonParser::M5Handler(QVector<QString> params) {
     m_current_spindle_speed = m_current_extruder_speed = 0;
-    m_deposition_active = false;
+    m_deposition_active                                = false;
 }
 
 void CommonParser::AddDwell(double dwellTime) {
-    int insertIndex = m_current_line - 1 + m_insertions;
+    int insertIndex                 = m_current_line - 1 + m_insertions;
     QSharedPointer<SettingsBase> sb = GSM->getGlobal();
     if (m_current_layer >= 0 && m_current_layer < m_layer_dwell_adjustments.size()) {
         m_layer_dwell_adjustments[m_current_layer] += Time(dwellTime);
@@ -2073,7 +2019,7 @@ void CommonParser::AddDwell(double dwellTime) {
 
         QString custom_code = sb->setting<QString>(MS::Cooling::kPostPauseCode);
         if (!(custom_code.isNull() || custom_code.isEmpty())) {
-            auto custom_code_lines = custom_code.split('\n');
+            auto custom_code_lines       = custom_code.split('\n');
             auto custom_code_lines_count = custom_code_lines.length();
             for (auto i = custom_code_lines_count; i > 0;) {
                 m_lines.insert(insertIndex, custom_code_lines[--i]);
@@ -2087,12 +2033,10 @@ void CommonParser::AddDwell(double dwellTime) {
         double purgeRate;
         if (sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFilament) {
             double purgeLength = sb->setting<double>(MS::Purge::kPurgeLength);
-            double purgeRate = sb->setting<double>(MS::Purge::kPurgeFeedrate);
-            new_dwellTime = dwellTime - purgeLength / purgeRate;
+            double purgeRate   = sb->setting<double>(MS::Purge::kPurgeFeedrate);
+            new_dwellTime      = dwellTime - purgeLength / purgeRate;
         }
-        else {
-            new_dwellTime = dwellTime - purgeTime;
-        }
+        else { new_dwellTime = dwellTime - purgeTime; }
 
         // Purge
         if (sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFilament) {
@@ -2145,7 +2089,7 @@ void CommonParser::AddDwell(double dwellTime) {
 
         custom_code = sb->setting<QString>(MS::Cooling::kPrePauseCode);
         if (!(custom_code.isNull() || custom_code.isEmpty())) {
-            auto custom_code_lines = custom_code.split('\n');
+            auto custom_code_lines       = custom_code.split('\n');
             auto custom_code_lines_count = custom_code_lines.length();
             for (auto i = custom_code_lines_count; i > 0;) {
                 m_lines.insert(insertIndex, custom_code_lines[--i]);
@@ -2156,7 +2100,7 @@ void CommonParser::AddDwell(double dwellTime) {
     else {
         QString custom_code = sb->setting<QString>(MS::Cooling::kPostPauseCode);
         if (!(custom_code.isNull() || custom_code.isEmpty())) {
-            auto custom_code_lines = custom_code.split('\n');
+            auto custom_code_lines       = custom_code.split('\n');
             auto custom_code_lines_count = custom_code_lines.length();
             for (auto i = custom_code_lines_count; i > 0;) {
                 m_lines.insert(insertIndex, custom_code_lines[--i]);
@@ -2171,7 +2115,7 @@ void CommonParser::AddDwell(double dwellTime) {
 
         custom_code = sb->setting<QString>(MS::Cooling::kPrePauseCode);
         if (!(custom_code.isNull() || custom_code.isEmpty())) {
-            auto custom_code_lines = custom_code.split('\n');
+            auto custom_code_lines       = custom_code.split('\n');
             auto custom_code_lines_count = custom_code_lines.length();
             for (auto i = custom_code_lines_count; i > 0;) {
                 m_lines.insert(insertIndex, custom_code_lines[--i]);
@@ -2195,11 +2139,9 @@ void CommonParser::getMinMaxModifier(double& minModifier, double& maxModifier) {
             double value = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
             if (value <= 0 && command.getParameters().contains(m_f_parameter.toLatin1())) {
                 const QRegularExpressionMatch match = m_f_param_and_value.match(m_lines[command.getLineNumber()]);
-                if (match.hasMatch())
-                    value = match.captured().mid(1).toDouble();
+                if (match.hasMatch()) value = match.captured().mid(1).toDouble();
             }
-            if (value <= 0)
-                continue;
+            if (value <= 0) continue;
 
             minFeedRate = std::min(minFeedRate, value);
             maxFeedRate = std::max(maxFeedRate, value);
@@ -2225,15 +2167,15 @@ void CommonParser::AdjustFeedrate(double modifier) {
             }
 
             double tempModifier = modifier;
-            auto parameters = command.getParameters();
+            auto parameters     = command.getParameters();
             if (parameters.contains(m_q_parameter.toLatin1()) &&
-                command.getCommandID() != 5) // G5 also used the Q param, so spline are not supported
-                                             // by syntaxes that use it for spindle control
+                command.getCommandID() != 5)  // G5 also used the Q param, so spline are not supported
+                                              // by syntaxes that use it for spindle control
             {
-                QString& line = m_lines[command.getLineNumber()];
+                QString& line                   = m_lines[command.getLineNumber()];
                 QRegularExpressionMatch myMatch = m_q_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+                double value                    = myMatch.captured().mid(1).toDouble();
+                double extruderModifier         = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
                 // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
                 if (modifier < 1) {
                     extruderModifier = 1 / extruderModifier;
@@ -2257,10 +2199,10 @@ void CommonParser::AdjustFeedrate(double modifier) {
             }
             if (parameters.contains(m_s_parameter.toLatin1()) &&
                 !sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
-                QString& line = m_lines[command.getLineNumber()];
+                QString& line                   = m_lines[command.getLineNumber()];
                 QRegularExpressionMatch myMatch = m_s_param_and_value.match(line);
-                double value = myMatch.captured().mid(1).toDouble();
-                double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
+                double value                    = myMatch.captured().mid(1).toDouble();
+                double extruderModifier         = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
                 // If slowing down, the multiplier for the extruder should be the inverse of the scale factor
                 if (modifier < 1) {
                     extruderModifier = 1 / extruderModifier;
@@ -2290,7 +2232,7 @@ void CommonParser::AdjustFeedrate(double modifier) {
 
                     if (line.startsWith("M3 ")) {
                         QRegularExpressionMatch myMatch = m_s_param_and_value.match(line);
-                        double value = myMatch.captured().mid(1).toDouble();
+                        double value                    = myMatch.captured().mid(1).toDouble();
 
                         if (value != 0) {
                             double extruderModifier = sb->setting<double>(MS::Cooling::kExtruderScaleFactor);
@@ -2327,7 +2269,7 @@ void CommonParser::AdjustFeedrate(double modifier) {
                         // Handle the case where the line starts with "EXTRUDER("
                         static const QRegularExpression extruderPattern("EXTRUDER\\((\\d+\\.?\\d*)\\)");
                         const QRegularExpressionMatch extruderMatch = extruderPattern.match(line);
-                        double extruderValue = 0.0; // Default value if no match is found
+                        double extruderValue                        = 0.0;  // Default value if no match is found
                         if (extruderMatch.hasMatch()) {
                             const double extruderValue = extruderMatch.captured(1).toDouble();
                             if (extruderValue != 0.0) {
@@ -2368,14 +2310,12 @@ void CommonParser::AdjustFeedrate(double modifier) {
                 }
 
                 QString& line = m_lines[command.getLineNumber()];
-                double value = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
+                double value  = m_command_modal_feedrates.value(command.getLineNumber(), 0.0);
                 if (value <= 0) {
                     const QRegularExpressionMatch match = m_f_param_and_value.match(line);
-                    if (match.hasMatch())
-                        value = match.captured().mid(1).toDouble();
+                    if (match.hasMatch()) value = match.captured().mid(1).toDouble();
                 }
-                if (value <= 0)
-                    continue;
+                if (value <= 0) continue;
 
                 setCommandFeedrate(line, value * tempModifier);
                 command.addParameter(m_f_parameter.toLatin1(), parameters[m_f_parameter.toLatin1()] * tempModifier);
@@ -2391,24 +2331,16 @@ QString CommonParser::removeRotations(QString currentLine) {
     QString xval, yval, zval, velocity, feedrate, newLine, temp, comment;
 
     if (currentLine.startsWith(G0) || currentLine.startsWith(G1)) {
-        temp = currentLine.mid(0, currentLine.indexOf(getCommentStartDelimiter()));
+        temp    = currentLine.mid(0, currentLine.indexOf(getCommentStartDelimiter()));
         comment = currentLine.mid(currentLine.indexOf(getCommentStartDelimiter()), currentLine.indexOf(newline));
     }
-    else {
-        return currentLine;
-    }
+    else { return currentLine; }
 
     QVector<QString> params = temp.split(space);
 
-    if (params[0] == G1) {
-        newLine = "G1 ";
-    }
-    else if (params[0] == G0) {
-        newLine = "G0 ";
-    }
-    else {
-        return currentLine;
-    }
+    if (params[0] == G1) { newLine = "G1 "; }
+    else if (params[0] == G0) { newLine = "G0 "; }
+    else { return currentLine; }
 
     for (int i = 1, end = params.size(); i < end; ++i) {
         if (params[i].startsWith(RX) || params[i].startsWith(RY) || params[i].startsWith(RZ) ||
@@ -2452,5 +2384,7 @@ void CommonParser::throwIntegerConversionErrorException() {
     throw IllegalParameterException(exceptionString);
 }
 
-void CommonParser::setDepositionActive(bool on) { m_deposition_active = on; }
-} // namespace ORNL
+void CommonParser::setDepositionActive(bool on) {
+    m_deposition_active = on;
+}
+}  // namespace ORNL

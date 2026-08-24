@@ -1,11 +1,11 @@
 #include "gcode/parsers/cincinnati_parser.h"
 
-#include <functional>
-
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
 #include <QVector>
+#include <functional>
+
 #include <qcontainerfwd.h>
 
 #include "exceptions/exceptions.h"
@@ -210,7 +210,7 @@ void CincinnatiParser::M65Handler(QVector<QString> params) {
             throw IllegalParameterException(exceptionString);
         }
 
-    m_voltage_control = false;
+    m_voltage_control       = false;
     m_voltage_control_value = 1.0;
 }
 
@@ -233,11 +233,9 @@ void CincinnatiParser::M66Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
 
-        if (!no_error) {
-            throwFloatConversionErrorException();
-        }
+        if (!no_error) { throwFloatConversionErrorException(); }
 
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
@@ -269,9 +267,7 @@ void CincinnatiParser::M66Handler(QVector<QString> params) {
                     setAcceleration(((1 / current_value) * mToMicron * mmToInch / encoderTicksPerInch * mToMM)());
                     l_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
         }
     }
 
@@ -305,8 +301,8 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
     m_return_to_prev_location = false;
     setSpindleSpeed(250.0);
     // TODO: make setters and getters for this handler
-    m_purge_time = 60 * s;
-    m_wait_to_wipe_time = 0 * s;
+    m_purge_time               = 60 * s;
+    m_wait_to_wipe_time        = 0 * s;
     m_wait_time_to_start_purge = 0 * s;
 
     char current_parameter;
@@ -316,10 +312,8 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
     for (QString ref : params) {
         // Retriving the first character in the QString and making it a char
         current_parameter = ref.at(0).toLatin1();
-        current_value = ref.right(ref.size() - 1).toDouble(&no_error);
-        if (!no_error) {
-            throwFloatConversionErrorException();
-        }
+        current_value     = ref.right(ref.size() - 1).toDouble(&no_error);
+        if (!no_error) { throwFloatConversionErrorException(); }
 
         m_current_gcode_command.addParameter(current_parameter, current_value);
 
@@ -330,9 +324,7 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
                     setSpindleSpeed(current_value);
                     f_not_used = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
 
                 break;
 
@@ -340,11 +332,9 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
             case ('l'):
                 if (l_not_used) {
                     m_return_to_prev_location = static_cast<bool>(current_value);
-                    l_not_used = false;
+                    l_not_used                = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
 
                 break;
 
@@ -352,11 +342,9 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
             case ('p'):
                 if (p_not_used) {
                     m_purge_time = current_value * s;
-                    p_not_used = false;
+                    p_not_used   = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
 
                 break;
 
@@ -364,11 +352,9 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
             case ('s'):
                 if (s_not_used) {
                     m_wait_to_wipe_time = current_value * s;
-                    s_not_used = false;
+                    s_not_used          = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
 
                 break;
 
@@ -376,11 +362,9 @@ void CincinnatiParser::M69Handler(QVector<QString> params) {
             case ('t'):
                 if (t_not_used) {
                     m_wait_time_to_start_purge = current_value * s;
-                    t_not_used = false;
+                    t_not_used                 = false;
                 }
-                else {
-                    throwMultipleParameterException(current_parameter);
-                }
+                else { throwMultipleParameterException(current_parameter); }
 
                 break;
 
@@ -406,4 +390,4 @@ void CincinnatiParser::ToolChangeHandler(QVector<QString> params) {
         throw IllegalParameterException(exceptionString);
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

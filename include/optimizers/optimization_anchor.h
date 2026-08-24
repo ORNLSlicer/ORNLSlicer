@@ -20,5 +20,5 @@ Point customPathOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& 
 //! \brief Returns the custom point-order anchor in the flattened optimization frame.
 Point customPointOrderPoint(const QSharedPointer<SettingsBase>& sb, const Plane& slicing_plane,
                             const Point& optimization_shift);
-} // namespace OptimizationAnchor
-} // namespace ORNL
+}  // namespace OptimizationAnchor
+}  // namespace ORNL

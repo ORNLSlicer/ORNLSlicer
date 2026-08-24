@@ -29,7 +29,7 @@ namespace ORNL {
  *
  */
 class CincinnatiParser : public CommonParser {
-  public:
+   public:
     //! \brief Standard constructor that specifies meta type and whether or not
     //! to alter layers for minimal layer time
     //! \param meta GcodeMeta struct that includes information about units and
@@ -42,7 +42,7 @@ class CincinnatiParser : public CommonParser {
 
     virtual void config();
 
-  protected:
+   protected:
     //! \brief Function handler for the 'M0' command for waiting for user
     //! input to continue runnning.
     //!        This function handler accepts no parameters but takes them
@@ -236,8 +236,8 @@ class CincinnatiParser : public CommonParser {
     //! a placeholder function.
     virtual void ToolChangeHandler(QVector<QString> params);
 
-  private:
+   private:
     bool m_voltage_control = true;
     double m_voltage_control_value;
 };
-} // namespace ORNL
+}  // namespace ORNL

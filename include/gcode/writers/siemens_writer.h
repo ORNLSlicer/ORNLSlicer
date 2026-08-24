@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Cincinnati Inc. syntax
  */
 class SiemensWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     SiemensWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -75,7 +75,7 @@ class SiemensWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the tamper
     QString writeTamperOn();
     //! \brief Writes G-Code to disable the tamper
@@ -101,5 +101,5 @@ class SiemensWriter : public WriterBase {
     //! \brief preallocated prefixs commonly used in this syntax
     QString m_M64, m_M65;
 
-}; // class SiemensWriter
-} // namespace ORNL
+};  // class SiemensWriter
+}  // namespace ORNL

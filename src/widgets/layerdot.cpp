@@ -27,18 +27,20 @@ LayerDot::LayerDot(QWidget* parent, int new_layer, QVector<QColor> m_colors, boo
     m_move_ani->setDuration(0);
 
     m_dot_colors = m_colors;
-    if (!from_template) // Default color orange if dot from template. Green if dot entered by user.
+    if (!from_template)  // Default color orange if dot from template. Green if dot entered by user.
         m_default_color = m_dot_colors.at(
-            0); // dot colors = [0]base_color, [1]hover_color, [2]selected_color, [3]group_color, [4]label_color
+            0);  // dot colors = [0]base_color, [1]hover_color, [2]selected_color, [3]group_color, [4]label_color
     else
         m_default_color = m_dot_colors.at(2);
-    m_color = m_default_color;
-    m_shrink = 0;
-    m_selected = false;
+    m_color         = m_default_color;
+    m_shrink        = 0;
+    m_selected      = false;
     m_from_template = false;
 }
 
-LayerDot::~LayerDot() { delete m_move_ani; }
+LayerDot::~LayerDot() {
+    delete m_move_ani;
+}
 
 void LayerDot::setSelected(bool status) {
     m_selected = status;
@@ -87,37 +89,43 @@ void LayerDot::smoothMove(int x, int y) {
 }
 
 void LayerDot::setShrink(int shrink) {
-    if (shrink > 17 || shrink < 0)
-        shrink = 17;
+    if (shrink > 17 || shrink < 0) shrink = 17;
     m_shrink = shrink;
 }
 
-int LayerDot::getLayer() { return m_layer; }
+int LayerDot::getLayer() {
+    return m_layer;
+}
 
-int LayerDot::getDisplayLayer() { return m_display_layer; }
+int LayerDot::getDisplayLayer() {
+    return m_display_layer;
+}
 
-LayerBar::dot_range* LayerDot::getRange() { return m_range; }
+LayerBar::dot_range* LayerDot::getRange() {
+    return m_range;
+}
 
 LayerDot* LayerDot::getPair() {
-    if (m_range == nullptr)
-        return nullptr;
+    if (m_range == nullptr) return nullptr;
     return (m_range->a == this) ? m_range->b : m_range->a;
 }
 
 QString LayerDot::getGroupName() {
-    if (m_group != nullptr) {
-        return m_group->group_name;
-    }
+    if (m_group != nullptr) { return m_group->group_name; }
     return "";
 }
 
-LayerBar::dot_group* LayerDot::getGroup() { return m_group; }
+LayerBar::dot_group* LayerDot::getGroup() {
+    return m_group;
+}
 
-bool LayerDot::isSelected() { return m_selected; }
+bool LayerDot::isSelected() {
+    return m_selected;
+}
 
 void LayerDot::isFromTemplate() {
     m_from_template = true;
-    m_color = m_dot_colors.at(2);
+    m_color         = m_dot_colors.at(2);
 }
 
 void LayerDot::paintEvent(QPaintEvent* event) {
@@ -148,7 +156,7 @@ void LayerDot::paintLayerDot(QPainter* painter) {
     const QPoint upper_corner(0, m_shrink), lower_corner(19, 19 - m_shrink);
 
     // Setup the fill and the circle dimensions.
-    QBrush filler((m_selected) ? m_dot_colors.at(3) : m_color, Qt::SolidPattern); // blue if selected
+    QBrush filler((m_selected) ? m_dot_colors.at(3) : m_color, Qt::SolidPattern);  // blue if selected
     QRect circle_bounds(upper_corner, lower_corner);
 
     // Draw the circle.
@@ -170,4 +178,4 @@ void LayerDot::updateTooltip() {
         this->setToolTip("Range Selection Layer " + QString::number(m_layer + 1) + " to " +
                          QString::number(this->getPair()->getLayer() + 1));
 }
-} // Namespace ORNL
+}  // Namespace ORNL

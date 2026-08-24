@@ -19,9 +19,9 @@ struct GcodeMeta {
     Acceleration m_acceleration_unit;
     AngularVelocity m_angular_velocity_unit;
     QString m_file_suffix;
-    bool hasTravels = true;
+    bool hasTravels                 = true;
     QString m_layer_count_delimiter = "LAYER COUNT";
-    QString m_layer_delimiter = "BEGINNING LAYER";
+    QString m_layer_delimiter       = "BEGINNING LAYER";
 
     bool operator==(const GcodeMeta& rhs) const = default;
 };
@@ -30,273 +30,273 @@ struct GcodeMeta {
 //! possible name clashing
 namespace GcodeMetaList {
 
-static GcodeMeta BeamMeta = {GcodeSyntax::kBeam, QString("("), QString(")"), in,    s, degree, lbm,
-                             in / minute,        in / s / s,   rev / minute, ".mpf"};
-static GcodeMeta CincinnatiMeta = {GcodeSyntax::kCincinnati,
-                                   QString("("),
-                                   QString(")"),
-                                   in,
-                                   s,
-                                   degree,
-                                   lbm,
-                                   in / minute,
-                                   in / s / s,
-                                   rev / minute,
-                                   ".nc"};
-static GcodeMeta MarlinMeta = {GcodeSyntax::kMarlin,
-                               QString(";"), // starting_delim
-                               QString(),    // ending_delim
-                               mm,           // distance
-                               ms,           // time
-                               degree,       // angle
-                               g,            // mass
-                               mm / minute,  // velocity
-                               mm / s / s,   // acceleration
-                               rev / minute, // angular velocity
-                               ".gcode"};
-static GcodeMeta SiemensMeta = {GcodeSyntax::kSiemens,
-                                QString(";"), // starting_delim
-                                QString(),    // ending_delim
-                                in,           // distance
-                                s,            // time
-                                degree,       // angle
-                                lbm,          // mass
-                                in / minute,  // velocity
-                                in / s / s,   // acceleration
-                                rev / minute, // angular velocity
-                                ".mpf"};
-static GcodeMeta WolfMeta = {GcodeSyntax::kWolf,
-                             QString(";"), // starting_delim
-                             QString(),    // ending_delim
-                             mm,           // distance
-                             s,            // time
-                             degree,       // angle
-                             g,            // mass
-                             mm / minute,  // velocity
-                             mm / s / s,   // acceleration
-                             rev / minute, // angular velocity
-                             ".gcode"};
-static GcodeMeta HaasInchMeta = {GcodeSyntax::kHaasInch,
-                                 QString("("), // starting_delim
-                                 QString(")"), // ending_delim
-                                 in,           // distance
-                                 s,            // time
-                                 degree,       // angle
-                                 lbm,          // mass
-                                 in / minute,  // velocity
-                                 in / s / s,   // acceleration
-                                 rev / minute, // angular velocity
-                                 ".nc"};
-static GcodeMeta HaasMetricMeta = {GcodeSyntax::kHaasMetric,
-                                   QString("("), // starting_delim
-                                   QString(")"), // ending_delim
-                                   mm,           // distance
-                                   s,            // time
-                                   degree,       // angle
-                                   g,            // mass
-                                   mm / minute,  // velocity
-                                   mm / s / s,   // acceleration
-                                   rev / minute, // angular velocity
-                                   ".nc"};
-static GcodeMeta RomiFanucMeta = {GcodeSyntax::kRomiFanuc,
-                                  QString("("), // starting_delim
-                                  QString(")"), // ending_delim
-                                  mm,           // distance
-                                  ms,           // time
-                                  degree,       // angle
-                                  g,            // mass
-                                  mm / minute,  // velocity
-                                  mm / s / s,   // acceleration
-                                  rev / minute, // angular velocity
-                                  ".txt"};
-static GcodeMeta DmgDmuAndBeamMeta = {GcodeSyntax::kDmgDmu,
-                                      QString(";"), // starting_delim
-                                      QString(),    // ending_delim
-                                      mm,           // distance
-                                      s,            // time
-                                      degree,       // angle
-                                      g,            // mass
-                                      mm / minute,  // velocity
-                                      mm / s / s,   // acceleration
-                                      rev / minute, // angular velocity
+static GcodeMeta BeamMeta          = {GcodeSyntax::kBeam, QString("("), QString(")"), in,    s, degree, lbm,
+                                      in / minute,        in / s / s,   rev / minute, ".mpf"};
+static GcodeMeta CincinnatiMeta    = {GcodeSyntax::kCincinnati,
+                                      QString("("),
+                                      QString(")"),
+                                      in,
+                                      s,
+                                      degree,
+                                      lbm,
+                                      in / minute,
+                                      in / s / s,
+                                      rev / minute,
+                                      ".nc"};
+static GcodeMeta MarlinMeta        = {GcodeSyntax::kMarlin,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      mm,            // distance
+                                      ms,            // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".gcode"};
+static GcodeMeta SiemensMeta       = {GcodeSyntax::kSiemens,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      in,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      lbm,           // mass
+                                      in / minute,   // velocity
+                                      in / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
                                       ".mpf"};
-static GcodeMeta GudelMeta = {GcodeSyntax::kGudel,
-                              QString(";"), // starting_delim
-                              QString(),    // ending_delim
-                              mm,           // distance
-                              s,            // time
-                              degree,       // angle
-                              g,            // mass
-                              mm / minute,  // velocity
-                              mm / s / s,   // acceleration
-                              rev / minute, // angular velocity
-                              ".mpf"};
-static GcodeMeta IngersollMeta = {GcodeSyntax::kIngersoll,
-                                  QString(";"), // starting_delim
-                                  QString(),    // ending_delim
-                                  mm,           // distance
-                                  s,            // time
-                                  degree,       // angle
-                                  g,            // mass
-                                  mm / minute,  // velocity
-                                  mm / s / s,   // acceleration
-                                  rev / minute, // angular velocity
-                                  ".gcode"};
-static GcodeMeta MVPMeta = {GcodeSyntax::kMVP,
-                            QString(";"), // starting_delim
-                            QString(),    // ending_delim
-                            mm,           // distance
-                            s,            // time
-                            degree,       // angle
-                            g,            // mass
-                            mm / minute,  // velocity
-                            mm / s / s,   // acceleration
-                            rev / minute, // angular velocity
-                            ".mpf"};
-static GcodeMeta MazakMeta = {GcodeSyntax::kMazak,
-                              QString("("), // starting_delim
-                              QString(")"), // ending_delim
-                              mm,           // distance
-                              s,            // time
-                              degree,       // angle
-                              g,            // mass
-                              mm / minute,  // velocity
-                              mm / s / s,   // acceleration
-                              rev / minute, // angular velocity
-                              ".eia"};
-static GcodeMeta MeldMeta = {GcodeSyntax::kMeld,
-                             QString("("), // starting_delim
-                             QString(")"), // ending_delim
-                             in,           // distance
-                             ms,           // time
-                             degree,       // angle
-                             lbm,          // mass
-                             in / minute,  // velocity
-                             in / s / s,   // acceleration
-                             rev / minute, // angular velocity
-                             ".nc"};
-static GcodeMeta HurcoMeta = {GcodeSyntax::kHurco,
-                              QString("("), // starting_delim
-                              QString(")"), // ending_delim
-                              mm,           // distance
-                              ms,           // time
-                              degree,       // angle
-                              g,            // mass
-                              mm / minute,  // velocity
-                              mm / s / s,   // acceleration
-                              rev / minute, // angular velocity
-                              ".nc"};
-static GcodeMeta RepRapMeta = {
+static GcodeMeta WolfMeta          = {GcodeSyntax::kWolf,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".gcode"};
+static GcodeMeta HaasInchMeta      = {GcodeSyntax::kHaasInch,
+                                      QString("("),  // starting_delim
+                                      QString(")"),  // ending_delim
+                                      in,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      lbm,           // mass
+                                      in / minute,   // velocity
+                                      in / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".nc"};
+static GcodeMeta HaasMetricMeta    = {GcodeSyntax::kHaasMetric,
+                                      QString("("),  // starting_delim
+                                      QString(")"),  // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".nc"};
+static GcodeMeta RomiFanucMeta     = {GcodeSyntax::kRomiFanuc,
+                                      QString("("),  // starting_delim
+                                      QString(")"),  // ending_delim
+                                      mm,            // distance
+                                      ms,            // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".txt"};
+static GcodeMeta DmgDmuAndBeamMeta = {GcodeSyntax::kDmgDmu,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".mpf"};
+static GcodeMeta GudelMeta         = {GcodeSyntax::kGudel,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".mpf"};
+static GcodeMeta IngersollMeta     = {GcodeSyntax::kIngersoll,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".gcode"};
+static GcodeMeta MVPMeta           = {GcodeSyntax::kMVP,
+                                      QString(";"),  // starting_delim
+                                      QString(),     // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".mpf"};
+static GcodeMeta MazakMeta         = {GcodeSyntax::kMazak,
+                                      QString("("),  // starting_delim
+                                      QString(")"),  // ending_delim
+                                      mm,            // distance
+                                      s,             // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".eia"};
+static GcodeMeta MeldMeta          = {GcodeSyntax::kMeld,
+                                      QString("("),  // starting_delim
+                                      QString(")"),  // ending_delim
+                                      in,            // distance
+                                      ms,            // time
+                                      degree,        // angle
+                                      lbm,           // mass
+                                      in / minute,   // velocity
+                                      in / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".nc"};
+static GcodeMeta HurcoMeta         = {GcodeSyntax::kHurco,
+                                      QString("("),  // starting_delim
+                                      QString(")"),  // ending_delim
+                                      mm,            // distance
+                                      ms,            // time
+                                      degree,        // angle
+                                      g,             // mass
+                                      mm / minute,   // velocity
+                                      mm / s / s,    // acceleration
+                                      rev / minute,  // angular velocity
+                                      ".nc"};
+static GcodeMeta RepRapMeta        = {
     GcodeSyntax::kRepRap,
-    QString(";"), // starting_delim
-    QString(),    // ending_delim
-    mm,           // distance
-    ms,           // time
-    degree,       // angle
-    g,            // mass
-    mm / minute,  // velocity
-    mm / s / s,   // acceleration
-    rev / minute, // angular velocity
-    ".gcode"      // suffix
+    QString(";"),  // starting_delim
+    QString(),     // ending_delim
+    mm,            // distance
+    ms,            // time
+    degree,        // angle
+    g,             // mass
+    mm / minute,   // velocity
+    mm / s / s,    // acceleration
+    rev / minute,  // angular velocity
+    ".gcode"       // suffix
 };
 
 static GcodeMeta AeroBasicMeta = {GcodeSyntax::kAeroBasic,
-                                  QString("'"), // starting_delim
-                                  QString(),    // ending_delim
-                                  mm,           // distance
-                                  s,            // time
-                                  degree,       // angle
-                                  g,            // mass
-                                  mm / s,       // velocity
-                                  mm / s / s,   // acceleration
-                                  rev / s,      // angular velocity
+                                  QString("'"),  // starting_delim
+                                  QString(),     // ending_delim
+                                  mm,            // distance
+                                  s,             // time
+                                  degree,        // angle
+                                  g,             // mass
+                                  mm / s,        // velocity
+                                  mm / s / s,    // acceleration
+                                  rev / s,       // angular velocity
                                   ".gcode"};
 
-static GcodeMeta ORNLMeta = {GcodeSyntax::kORNL,
-                             QString("("), // starting_delim
-                             QString(")"), // ending_delim
-                             in,
-                             s,
-                             degree,
-                             lbm,
-                             in / minute,
-                             in / s / s,
-                             rev / minute,
-                             ".gcode"};
-static GcodeMeta ORNLMetricMeta = {GcodeSyntax::kORNLMetric,
-                                   QString("("), // starting_delim
-                                   QString(")"), // ending_delim
-                                   mm,
-                                   s,
-                                   degree,
-                                   g,
-                                   mm / minute,
-                                   mm / s / s,
-                                   rev / minute,
-                                   ".gcode"};
-static GcodeMeta TormachMeta = {GcodeSyntax::kTormach,
-                                QString(";"), // starting_delim
-                                QString(""),  // ending_delim
-                                mm,
-                                s,
-                                degree,
-                                g,
-                                mm / minute,
-                                mm / s / s,
-                                rev / minute,
-                                ".nc"};
-static GcodeMeta AML3DMeta = {GcodeSyntax::kAML3D,
-                              QString("("), // starting_delim
-                              QString(")"), // ending_delim
-                              mm,
-                              s,
-                              degree,
-                              g,
-                              mm / s,
-                              mm / s / s,
-                              rev / minute,
-                              ".gcode"};
-static GcodeMeta KraussMaffeiMeta = {GcodeSyntax::kKraussMaffei,
-                                     QString(";"), // starting_delim
-                                     QString(),    // ending_delim
-                                     mm,           // distance
-                                     ms,           // time
-                                     degree,       // angle
-                                     g,            // mass
-                                     mm / minute,  // velocity
-                                     mm / s / s,   // acceleration
-                                     rev / minute, // angular velocity
+static GcodeMeta ORNLMeta         = {GcodeSyntax::kORNL,
+                                     QString("("),  // starting_delim
+                                     QString(")"),  // ending_delim
+                                     in,
+                                     s,
+                                     degree,
+                                     lbm,
+                                     in / minute,
+                                     in / s / s,
+                                     rev / minute,
                                      ".gcode"};
-static GcodeMeta SandiaMeta = {GcodeSyntax::kSandia,
-                               QString(";"), // starting_delim
-                               QString(),    // ending_delim
-                               mm,           // distance
-                               ms,           // time
-                               degree,       // angle
-                               g,            // mass
-                               m / s,        // velocity
-                               mm / s / s,   // acceleration
-                               rev / minute, // angular velocity
-                               ".gcode"};
-static GcodeMeta MeltioMeta = {GcodeSyntax::kMarlin,
-                               QString("("), // starting_delim
-                               QString(")"), // ending_delim
-                               mm,           // distance
-                               ms,           // time
-                               degree,       // angle
-                               g,            // mass
-                               mm / minute,  // velocity
-                               mm / s / s,   // acceleration
-                               rev / minute, // angular velocity
-                               ".nc"};
+static GcodeMeta ORNLMetricMeta   = {GcodeSyntax::kORNLMetric,
+                                     QString("("),  // starting_delim
+                                     QString(")"),  // ending_delim
+                                     mm,
+                                     s,
+                                     degree,
+                                     g,
+                                     mm / minute,
+                                     mm / s / s,
+                                     rev / minute,
+                                     ".gcode"};
+static GcodeMeta TormachMeta      = {GcodeSyntax::kTormach,
+                                     QString(";"),  // starting_delim
+                                     QString(""),   // ending_delim
+                                     mm,
+                                     s,
+                                     degree,
+                                     g,
+                                     mm / minute,
+                                     mm / s / s,
+                                     rev / minute,
+                                     ".nc"};
+static GcodeMeta AML3DMeta        = {GcodeSyntax::kAML3D,
+                                     QString("("),  // starting_delim
+                                     QString(")"),  // ending_delim
+                                     mm,
+                                     s,
+                                     degree,
+                                     g,
+                                     mm / s,
+                                     mm / s / s,
+                                     rev / minute,
+                                     ".gcode"};
+static GcodeMeta KraussMaffeiMeta = {GcodeSyntax::kKraussMaffei,
+                                     QString(";"),  // starting_delim
+                                     QString(),     // ending_delim
+                                     mm,            // distance
+                                     ms,            // time
+                                     degree,        // angle
+                                     g,             // mass
+                                     mm / minute,   // velocity
+                                     mm / s / s,    // acceleration
+                                     rev / minute,  // angular velocity
+                                     ".gcode"};
+static GcodeMeta SandiaMeta       = {GcodeSyntax::kSandia,
+                                     QString(";"),  // starting_delim
+                                     QString(),     // ending_delim
+                                     mm,            // distance
+                                     ms,            // time
+                                     degree,        // angle
+                                     g,             // mass
+                                     m / s,         // velocity
+                                     mm / s / s,    // acceleration
+                                     rev / minute,  // angular velocity
+                                     ".gcode"};
+static GcodeMeta MeltioMeta       = {GcodeSyntax::kMarlin,
+                                     QString("("),  // starting_delim
+                                     QString(")"),  // ending_delim
+                                     mm,            // distance
+                                     ms,            // time
+                                     degree,        // angle
+                                     g,             // mass
+                                     mm / minute,   // velocity
+                                     mm / s / s,    // acceleration
+                                     rev / minute,  // angular velocity
+                                     ".nc"};
 
 static GcodeMeta AdamantineMeta = {
     GcodeSyntax::kAdamantine, QString("("), QString(")"), m, s, degree, lbm, m / s, m / s / s, rev / s, ".txt"};
 
 //! @brief Metadata for Arc Specialties gcode.
 static GcodeMeta ArcSpecialtiesMeta = {GcodeSyntax::kArcSpecialties,
-                                       QString(";"), // starting_delim
-                                       QString(),    // ending_delim
+                                       QString(";"),  // starting_delim
+                                       QString(),     // ending_delim
                                        mm,
                                        s,
                                        degree,
@@ -342,5 +342,5 @@ static QHash<int, GcodeMeta> createMapping() {
 }
 
 static QHash<int, GcodeMeta> SyntaxToMetaHash = createMapping();
-} // namespace GcodeMetaList
-} // namespace ORNL
+}  // namespace GcodeMetaList
+}  // namespace ORNL

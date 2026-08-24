@@ -17,7 +17,7 @@ class CylinderPlaneObject;
  * \brief Printer that uses cylindrical coordinates.
  */
 class CylindricalPrinterObject : public PrinterObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param view: View to render to.
     //! \param sb: Settings to use.
@@ -31,13 +31,13 @@ class CylindricalPrinterObject : public PrinterObject {
     //! \brief List of parts that are external to the build volume.
     QList<QSharedPointer<PartObject>> externalParts();
 
-  protected:
+   protected:
     //! \brief Hook for updating member variables.
     void updateMembers();
     //! \brief Hook for updating printer geometry.
     void updateGeometry();
 
-  private:
+   private:
     //! \brief Dims
     float m_radius;
     float m_height;
@@ -52,4 +52,4 @@ class CylindricalPrinterObject : public PrinterObject {
     //! \brief Reflective floor surface.
     QSharedPointer<CylinderPlaneObject> m_floor_plane;
 };
-} // namespace ORNL
+}  // namespace ORNL

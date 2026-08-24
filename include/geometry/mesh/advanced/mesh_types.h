@@ -121,6 +121,6 @@ typedef boost::graph_traits<SurfaceMesh>::vertex_descriptor SM_VertexDescriptor;
 
 //! \brief Face of a surface mesh
 typedef boost::graph_traits<SurfaceMesh>::face_descriptor SM_FaceDescriptor;
-} // namespace SimpleCartesian
-} // namespace MeshTypes
-} // namespace ORNL
+}  // namespace SimpleCartesian
+}  // namespace MeshTypes
+}  // namespace ORNL

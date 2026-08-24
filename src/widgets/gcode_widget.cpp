@@ -1,6 +1,7 @@
 #include "widgets/gcode_widget.h"
 
 #include <QResizeEvent>
+
 #include <qboxlayout.h>
 #include <qcontainerfwd.h>
 #include <qobject.h>
@@ -21,37 +22,49 @@
 #include "widgets/view_controls_toolbar.h"
 
 namespace ORNL {
-GCodeWidget::GCodeWidget(QWidget* parent) : QWidget(parent) { this->setupWidget(); }
+GCodeWidget::GCodeWidget(QWidget* parent) : QWidget(parent) {
+    this->setupWidget();
+}
 
 GCodeView* GCodeWidget::view() {
-    m_view_controls->raise(); // If the gcode view is changed, the controls need to be raised as well
+    m_view_controls->raise();  // If the gcode view is changed, the controls need to be raised as well
     return m_gcode_view;
 }
 
-void GCodeWidget::setPartMeta(QSharedPointer<PartMetaModel> meta) { m_gcode_view->setMeta(meta); }
+void GCodeWidget::setPartMeta(QSharedPointer<PartMetaModel> meta) {
+    m_gcode_view->setMeta(meta);
+}
 
-void GCodeWidget::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) { m_gcode_view->addGCode(gcode); }
+void GCodeWidget::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
+    m_gcode_view->addGCode(gcode);
+}
 
-void GCodeWidget::clear() { m_gcode_view->clear(); }
+void GCodeWidget::clear() {
+    m_gcode_view->clear();
+}
 
 void GCodeWidget::setOrthoView(bool status) {
     const bool changed = m_ortho_enabled != status;
-    m_ortho_enabled = status;
+    m_ortho_enabled    = status;
 
     m_view_controls->setProjectionControlsEnabled(!status);
     m_view_controls->setOrthographicViewChecked(status);
     m_gcode_view->useOrthographic(status);
 
-    if (changed) {
-        emit orthographicViewChanged(status);
-    }
+    if (changed) { emit orthographicViewChanged(status); }
 }
 
-void GCodeWidget::showSegmentInfo(bool show) { m_segment_info_control->setVisible(show); }
+void GCodeWidget::showSegmentInfo(bool show) {
+    m_segment_info_control->setVisible(show);
+}
 
-void GCodeWidget::showGhosts(bool status) { m_gcode_view->showGhosts(status); }
+void GCodeWidget::showGhosts(bool status) {
+    m_gcode_view->showGhosts(status);
+}
 
-void GCodeWidget::showSeams(bool show) { m_gcode_view->showSeams(show); }
+void GCodeWidget::showSeams(bool show) {
+    m_gcode_view->showSeams(show);
+}
 
 void GCodeWidget::handleModifiedSetting(QString key) {
     static const auto printer_settings = QSet<QString> {PRS::Dimensions::kXMin,
@@ -102,21 +115,25 @@ void GCodeWidget::handleModifiedSetting(QString key) {
                                                              PRS::Dimensions::kXOffset,
                                                              PRS::Dimensions::kYOffset};
 
-    if (printer_settings.contains(key)) {
-        m_gcode_view->updatePrinterSettings(GSM->getGlobal());
-    }
-    else if (optimization_settings.contains(key)) {
-        m_gcode_view->updateOptimizationSettings(GSM->getGlobal());
-    }
+    if (printer_settings.contains(key)) { m_gcode_view->updatePrinterSettings(GSM->getGlobal()); }
+    else if (optimization_settings.contains(key)) { m_gcode_view->updateOptimizationSettings(GSM->getGlobal()); }
 }
 
-void GCodeWidget::zoomIn() { m_gcode_view->zoomIn(); }
+void GCodeWidget::zoomIn() {
+    m_gcode_view->zoomIn();
+}
 
-void GCodeWidget::zoomOut() { m_gcode_view->zoomOut(); }
+void GCodeWidget::zoomOut() {
+    m_gcode_view->zoomOut();
+}
 
-void GCodeWidget::resetZoom() { m_gcode_view->resetZoom(); }
+void GCodeWidget::resetZoom() {
+    m_gcode_view->resetZoom();
+}
 
-void GCodeWidget::resetCamera() { m_gcode_view->resetCamera(); }
+void GCodeWidget::resetCamera() {
+    m_gcode_view->resetCamera();
+}
 
 void GCodeWidget::setupWidget() {
     this->setupSubWidgets();
@@ -142,12 +159,8 @@ void GCodeWidget::setupSubWidgets() {
     m_gcode_view->resize(this->width(), this->height());
     m_gcode_view->setFormat(format);
     SegmentDisplayType types = SegmentDisplayType::kNone;
-    if (PreferencesManager::getInstance()->getHideTravelPreference()) {
-        types |= SegmentDisplayType::kTravel;
-    }
-    if (PreferencesManager::getInstance()->getHideSupportPreference()) {
-        types |= SegmentDisplayType::kSupport;
-    }
+    if (PreferencesManager::getInstance()->getHideTravelPreference()) { types |= SegmentDisplayType::kTravel; }
+    if (PreferencesManager::getInstance()->getHideSupportPreference()) { types |= SegmentDisplayType::kSupport; }
     m_gcode_view->hideSegmentType(types, true);
 
     // View Controls
@@ -184,4 +197,4 @@ void GCodeWidget::resizeEvent(QResizeEvent* event) {
 
     emit resized(event->size());
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -37,12 +37,11 @@ Point BezierSegment::getPointAlong(double t) {
 
 Distance BezierSegment::length() {
     const int approx_segments = 1000;
-    Distance length = 0.0;
-    Point last = m_start;
+    Distance length           = 0.0;
+    Point last                = m_start;
     Point next;
 
     for (double increment = (1.0 / approx_segments), t = increment; t <= 1.0; t += increment) {
-
         next = this->getPointAlong(t);
         length += last.distance(next);
         last = next;
@@ -53,12 +52,9 @@ Distance BezierSegment::length() {
 float BezierSegment::getMinZ() {
     float min = m_start.z();
 
-    if (min < m_control_a.z())
-        min = m_control_a.z();
-    if (min < m_control_b.z())
-        min = m_control_b.z();
-    if (min < m_end.z())
-        min = m_end.z();
+    if (min < m_control_a.z()) min = m_control_a.z();
+    if (min < m_control_b.z()) min = m_control_b.z();
+    if (min < m_end.z()) min = m_end.z();
 
     return min;
 }
@@ -68,7 +64,9 @@ QString BezierSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     return {};
 }
 
-QSharedPointer<SegmentBase> BezierSegment::clone() const { return QSharedPointer<BezierSegment>::create(*this); }
+QSharedPointer<SegmentBase> BezierSegment::clone() const {
+    return QSharedPointer<BezierSegment>::create(*this);
+}
 
 QPair<BezierSegment, Distance> BezierSegment::Fit(int start_index, int end_index, Path& path) {
     Point p1 = path[start_index]->start();
@@ -76,8 +74,7 @@ QPair<BezierSegment, Distance> BezierSegment::Fit(int start_index, int end_index
 
     // Compute the ground truth
     BSpline spline(p1);
-    for (int i = start_index; i <= end_index; ++i)
-        spline.append(path[i]->end());
+    for (int i = start_index; i <= end_index; ++i) spline.append(path[i]->end());
 
     // Determine control points for new curve
     double t0 = 0.49;
@@ -101,7 +98,7 @@ QPair<BezierSegment, Distance> BezierSegment::Fit(int start_index, int end_index
     Point numer_part = p_t1 - (p1 * t11) - (p4 * t14);
 
     Point p3_numerator = (p_t0 - (p1 * t01) - (p4 * t04)) - (numer_part * (t02 / t12));
-    Point p3 = p3_numerator / (t03 - ((t02 * t13) / t12));
+    Point p3           = p3_numerator / (t03 - ((t02 * t13) / t12));
 
     Point p2 = (numer_part - (p3 * t13)) / t12;
 
@@ -125,7 +122,7 @@ QPair<Point, Point> BezierSegment::ComputeControlPoints(Point& a, Point& b, Poin
     Distance d_ab = a.distance(b);
     Distance d_bc = b.distance(c);
 
-    double first_scale = smoothing * (d_ab() / (d_ab + d_bc)());
+    double first_scale  = smoothing * (d_ab() / (d_ab + d_bc)());
     double second_scale = smoothing * (d_bc() / (d_ab + d_bc)());
 
     Point first_control((b.x() - first_scale * (c.x() - a.x())), (b.y() - first_scale * (c.y() - a.y())));
@@ -135,19 +132,23 @@ QPair<Point, Point> BezierSegment::ComputeControlPoints(Point& a, Point& b, Poin
     return QPair<Point, Point>(first_control, second_control);
 }
 
-void BezierSegment::setControlA(Point& control) { m_control_a = control; }
+void BezierSegment::setControlA(Point& control) {
+    m_control_a = control;
+}
 
-void BezierSegment::setControlB(Point& control) { m_control_b = control; }
+void BezierSegment::setControlB(Point& control) {
+    m_control_b = control;
+}
 
 void BezierSegment::rotate(QQuaternion rotation) {
     // rotate each point
-    QVector3D control_a_vec = m_control_a.toQVector3D();
+    QVector3D control_a_vec    = m_control_a.toQVector3D();
     QVector3D result_control_a = rotation.rotatedVector(control_a_vec);
-    m_control_a = Point(result_control_a);
+    m_control_a                = Point(result_control_a);
 
-    QVector3D control_b_vec = m_control_b.toQVector3D();
+    QVector3D control_b_vec    = m_control_b.toQVector3D();
     QVector3D result_control_b = rotation.rotatedVector(control_b_vec);
-    m_control_b = Point(result_control_b);
+    m_control_b                = Point(result_control_b);
 
     SegmentBase::rotate(rotation);
 }
@@ -158,4 +159,4 @@ void BezierSegment::shift(Point shift) {
 
     SegmentBase::shift(shift);
 }
-} // namespace ORNL
+}  // namespace ORNL

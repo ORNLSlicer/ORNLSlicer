@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Ingersoll syntax
  */
 class IngersollWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     IngersollWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -84,7 +84,7 @@ class IngersollWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, float rpm, int extruder_number,
                             const QSharedPointer<SettingsBase>& params = nullptr);
@@ -112,5 +112,5 @@ class IngersollWriter : public WriterBase {
     //! \brief preallocated prefixs commonly used in this syntax
     int m_material_number;
 
-}; // class IngersollWriter
-} // namespace ORNL
+};  // class IngersollWriter
+}  // namespace ORNL

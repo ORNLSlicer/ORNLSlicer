@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
 #include <qobject.h>
@@ -53,7 +54,7 @@ void GCodeMeldSaver::run() {
 
     for (QString line : lines) {
         if (line.startsWith(G0) || line.startsWith(G1) || line.startsWith(M24) || line.startsWith(M25)) {
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G0) {
@@ -80,13 +81,11 @@ void GCodeMeldSaver::run() {
                     }
                 }
             }
-            if (params[0] == M25) {
-                feedrate = QString::number(0);
-            }
+            if (params[0] == M25) { feedrate = QString::number(0); }
             out << xval % comma % yval % comma % zval % comma % velocity % comma % feedrate % newline;
         }
     }
     file.close();
 }
 
-} // namespace ORNL
+}  // namespace ORNL

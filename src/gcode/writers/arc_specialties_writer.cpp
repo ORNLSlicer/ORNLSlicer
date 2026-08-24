@@ -2,11 +2,11 @@
 
 #include <math.h>
 
+#include <QStringBuilder>
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
-#include <QStringBuilder>
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -50,9 +50,9 @@ static const Distance kStartupWorldApproachZBuffer = 100.0 * mm;
 Point radialLiftedPoint(const Point& point, const QSharedPointer<SettingsBase>& params, Distance lift_height) {
     const double center_x = params->setting<Distance>(kRadialCenterX)();
     const double center_y = params->setting<Distance>(kRadialCenterY)();
-    const double dx = point.x() - center_x;
-    const double dy = point.y() - center_y;
-    const double length = std::hypot(dx, dy);
+    const double dx       = point.x() - center_x;
+    const double dy       = point.y() - center_y;
+    const double length   = std::hypot(dx, dy);
 
     if (length <= std::numeric_limits<double>::epsilon()) {
         // There is no outward radial direction on the cylinder axis.
@@ -73,21 +73,15 @@ double radialDistance(const Point& point, const QSharedPointer<SettingsBase>& pa
 //! @brief Returns the shortest signed angular sweep from start to end.
 double shortestAngularDelta(double start_angle, double end_angle) {
     double delta = end_angle - start_angle;
-    while (delta > M_PI) {
-        delta -= 2.0 * M_PI;
-    }
-    while (delta < -M_PI) {
-        delta += 2.0 * M_PI;
-    }
+    while (delta > M_PI) { delta -= 2.0 * M_PI; }
+    while (delta < -M_PI) { delta += 2.0 * M_PI; }
     return delta;
 }
 
 //! @brief Normalizes an angle in degrees to [0, 360).
 double normalizeDegrees(double degrees) {
     degrees = std::fmod(degrees, 360.0);
-    if (degrees < 0.0) {
-        degrees += 360.0;
-    }
+    if (degrees < 0.0) { degrees += 360.0; }
 
     return degrees;
 }
@@ -102,7 +96,9 @@ constexpr int kDefaultG83Mode = 0;
 constexpr int kMaxG83Mode = 4;
 
 //! @brief Returns a supported G83 mode, falling back to weld-stop-only behavior for invalid input.
-int validatedG83Mode(int mode) { return mode >= kDefaultG83Mode && mode <= kMaxG83Mode ? mode : kDefaultG83Mode; }
+int validatedG83Mode(int mode) {
+    return mode >= kDefaultG83Mode && mode <= kMaxG83Mode ? mode : kDefaultG83Mode;
+}
 
 //! @brief Formats a distance using the output unit declared by the active gcode metadata.
 QString formatDistance(Distance value, Distance unit) {
@@ -110,8 +106,10 @@ QString formatDistance(Distance value, Distance unit) {
 }
 
 //! @brief Formats an angle using the output unit declared by the active gcode metadata.
-QString formatAngle(Angle value, Angle unit) { return QString::number(value.to(unit), 'f', 4) % unit.toString(); }
-} // namespace
+QString formatAngle(Angle value, Angle unit) {
+    return QString::number(value.to(unit), 'f', 4) % unit.toString();
+}
+}  // namespace
 
 ArcSpecialtiesWriter::ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
     : WriterBase(meta, sb) {}
@@ -131,13 +129,14 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
     const CylindricalPathPattern path_pattern =
         static_cast<CylindricalPathPattern>(m_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
     const bool cylindrical_mode = slicing_mode == SlicingMode::kCylindrical;
-    const bool helical_mode = path_pattern == CylindricalPathPattern::kHelical;
+    const bool helical_mode     = path_pattern == CylindricalPathPattern::kHelical;
     if (cylindrical_mode) {
         text += commentLine(helical_mode ? "Arc Specialties Helical Slicing Parameters"
                                          : "Arc Specialties Radial Slicing Parameters");
         text += commentLine("Cylindrical Path Pattern: " % toString(path_pattern));
-        text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
-                            "offset");
+        text += commentLine(
+            "Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
+            "offset");
         text += commentLine(
             "G-Code Coordinate Frame Rotation: X=" %
             formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX), m_meta.m_angle_unit) %
@@ -153,10 +152,10 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine(QString("Initial World Approach Tool Frame Rotation: XR=") %
                             QString::number(kToolFrameXR, 'f', 4) % "deg YR=" % QString::number(kToolFrameYR, 'f', 4) %
                             "deg ZR=" % QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
-        text += commentLine("Initial Approach: TRAFO-off world approach uses cylinder center XY and the greater of "
-                            "part maximum Z and Cylinder Height plus " %
-                            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) %
-                            " before work-object kinematics");
+        text += commentLine(
+            "Initial Approach: TRAFO-off world approach uses cylinder center XY and the greater of "
+            "part maximum Z and Cylinder Height plus " %
+            formatDistance(kStartupWorldApproachZBuffer, m_meta.m_distance_unit) % " before work-object kinematics");
         text += commentLine(
             QString("Cylinder Inner Radius: ") %
             formatDistance(m_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius), m_meta.m_distance_unit));
@@ -255,8 +254,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
     }
     else if (slicing_mode == SlicingMode::kPlanar) {
         text += commentLine("Arc Specialties Planar Slicing Parameters");
-        text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
-                            "offset");
+        text += commentLine(
+            "Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
+            "offset");
         text += commentLine(QString("Slice Plane Normal: X=") %
                             QString::number(m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalX), 'f', 4) % " Y=" %
                             QString::number(m_sb->setting<float>(PS::Slicing::kSlicePlaneNormalY), 'f', 4) % " Z=" %
@@ -307,10 +307,10 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
 
 QString ArcSpecialtiesWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
                                                 Distance maximum_y, int num_layers) {
-    m_first_travel = true;
-    m_layer_start = true;
+    m_first_travel                     = true;
+    m_layer_start                      = true;
     m_absolute_arc_center_mode_enabled = usesAbsoluteArcCenters();
-    m_startup_kinematics_written = false;
+    m_startup_kinematics_written       = false;
     m_pending_layer_change.clear();
     setFeedrate(0.0);
 
@@ -368,17 +368,23 @@ QString ArcSpecialtiesWriter::writeLayerChange(uint layer_number) {
 
 QString ArcSpecialtiesWriter::writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) {
     QString rv;
-    m_layer_start = true;
+    m_layer_start  = true;
     m_current_bead = 1;
     m_current_layer++;
     return rv;
 }
 
-QString ArcSpecialtiesWriter::writeBeforePart(QVector3D normal) { return QString(); }
+QString ArcSpecialtiesWriter::writeBeforePart(QVector3D normal) {
+    return QString();
+}
 
-QString ArcSpecialtiesWriter::writeBeforeIsland() { return QString(); }
+QString ArcSpecialtiesWriter::writeBeforeIsland() {
+    return QString();
+}
 
-QString ArcSpecialtiesWriter::writeBeforeRegion(RegionType type, int pathSize) { return QString(); }
+QString ArcSpecialtiesWriter::writeBeforeRegion(RegionType type, int pathSize) {
+    return QString();
+}
 
 QString ArcSpecialtiesWriter::writeBeforePath(RegionType type) {
     m_region_type = type;
@@ -389,14 +395,10 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
                                           QSharedPointer<SettingsBase> params) {
     QString rv;
     Velocity speed = params->setting<Velocity>(PS::Travel::kSpeed);
-    if (speed <= 0) {
-        speed = params->setting<Velocity>(PRS::MachineSpeed::kMaxXYSpeed);
-    }
+    if (speed <= 0) { speed = params->setting<Velocity>(PRS::MachineSpeed::kMaxXYSpeed); }
 
     Velocity lift_speed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
-    if (lift_speed <= 0) {
-        lift_speed = speed;
-    }
+    if (lift_speed <= 0) { lift_speed = speed; }
 
     // Determine if travel length is short enough to keep welder on
     Distance travel_distance = start_location.distance(target_location);
@@ -408,7 +410,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     const Distance lift_height = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
-    bool travel_lift_required = lift_height > 0 && lType != TravelLiftType::kNoLift;
+    bool travel_lift_required  = lift_height > 0 && lType != TravelLiftType::kNoLift;
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
@@ -426,41 +428,37 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     auto writeRadialArcTravel = [this, &params, &writeBeginningBead](Point start, Point end,
                                                                      Velocity move_speed) -> QString {
         QString rv;
-        const double center_x = params->setting<Distance>(kRadialCenterX)();
-        const double center_y = params->setting<Distance>(kRadialCenterY)();
+        const double center_x     = params->setting<Distance>(kRadialCenterX)();
+        const double center_y     = params->setting<Distance>(kRadialCenterY)();
         const double start_radius = radialDistance(start, params);
-        const double end_radius = radialDistance(end, params);
+        const double end_radius   = radialDistance(end, params);
 
         if (start_radius <= std::numeric_limits<double>::epsilon() ||
             end_radius <= std::numeric_limits<double>::epsilon()) {
             rv += writeMotion("G00", end, move_speed, params, "TRAVEL");
         }
         else {
-            const double start_angle = std::atan2(start.y() - center_y, start.x() - center_x);
-            const double end_angle = std::atan2(end.y() - center_y, end.x() - center_x);
-            const double delta_angle = shortestAngularDelta(start_angle, end_angle);
-            const int arcs_per_revolution = std::max(1, params->contains(PS::Slicing::kArcsPerRevolution)
-                                                            ? params->setting<int>(PS::Slicing::kArcsPerRevolution)
-                                                            : m_sb->setting<int>(PS::Slicing::kArcsPerRevolution));
+            const double start_angle          = std::atan2(start.y() - center_y, start.x() - center_x);
+            const double end_angle            = std::atan2(end.y() - center_y, end.x() - center_x);
+            const double delta_angle          = shortestAngularDelta(start_angle, end_angle);
+            const int arcs_per_revolution     = std::max(1, params->contains(PS::Slicing::kArcsPerRevolution)
+                                                                ? params->setting<int>(PS::Slicing::kArcsPerRevolution)
+                                                                : m_sb->setting<int>(PS::Slicing::kArcsPerRevolution));
             const double target_segment_angle = (2.0 * M_PI) / static_cast<double>(arcs_per_revolution);
-            const double travel_angle = std::abs(delta_angle);
+            const double travel_angle         = std::abs(delta_angle);
 
-            if (travel_angle <= target_segment_angle) {
-                rv += writeMotion("G00", end, move_speed, params, "TRAVEL");
-            }
+            if (travel_angle <= target_segment_angle) { rv += writeMotion("G00", end, move_speed, params, "TRAVEL"); }
             else {
                 const int segments =
                     std::clamp(static_cast<int>(std::ceil(travel_angle / target_segment_angle)), 2, 180);
 
                 for (int i = 1; i <= segments; ++i) {
-                    const double t = static_cast<double>(i) / static_cast<double>(segments);
-                    const double angle = start_angle + delta_angle * t;
+                    const double t      = static_cast<double>(i) / static_cast<double>(segments);
+                    const double angle  = start_angle + delta_angle * t;
                     const double radius = start_radius + (end_radius - start_radius) * t;
                     Point waypoint(center_x + radius * std::cos(angle), center_y + radius * std::sin(angle),
                                    start.z() + (end.z() - start.z()) * t);
-                    if (i == segments) {
-                        waypoint = end;
-                    }
+                    if (i == segments) { waypoint = end; }
 
                     rv += writeMotion("G00", waypoint, move_speed, params, "TRAVEL ARC");
                 }
@@ -480,9 +478,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     };
 
     auto liftPoint = [this, &params, cylindrical_mode, lift_height](const Point& point) -> Point {
-        if (cylindrical_mode) {
-            return radialLiftedPoint(point, params, lift_height);
-        }
+        if (cylindrical_mode) { return radialLiftedPoint(point, params, lift_height); }
 
         return point + Point::fromQVector3D(getLiftVector(lift_height));
     };
@@ -496,9 +492,7 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
     }
 
     Point travel_destination = target_location;
-    if (travel_lift_required) {
-        travel_destination = liftPoint(target_location);
-    }
+    if (travel_lift_required) { travel_destination = liftPoint(target_location); }
 
     const bool travel_lower_required =
         travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly);
@@ -545,13 +539,9 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
 
     m_layer_start = false;
 
-    if (!m_deposition_active) {
-        rv += writeWelderOn();
-    }
+    if (!m_deposition_active) { rv += writeWelderOn(); }
 
-    if (speed <= 0) {
-        speed = 10.0 * mm / s;
-    }
+    if (speed <= 0) { speed = 10.0 * mm / s; }
 
     rv += writeMotion("G01", target_point, speed, params, printMoveComment());
     return rv;
@@ -559,22 +549,16 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
 
 QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& end_point, const Point& center_point,
                                        const Angle&, const bool& ccw, const QSharedPointer<SettingsBase> params) {
-    if (!m_sb->setting<bool>(PRS::MachineSetup::kSupportG3)) {
-        return writeLine(start_point, end_point, params);
-    }
+    if (!m_sb->setting<bool>(PRS::MachineSetup::kSupportG3)) { return writeLine(start_point, end_point, params); }
 
     QString rv;
     rv += writeStartupKinematics();
     rv += writePendingLayerChange();
 
-    if (!m_deposition_active) {
-        rv += writeWelderOn();
-    }
+    if (!m_deposition_active) { rv += writeWelderOn(); }
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    if (speed <= 0) {
-        speed = 10.0 * mm / s;
-    }
+    if (speed <= 0) { speed = 10.0 * mm / s; }
 
     setFeedrate(speed);
     m_layer_start = false;
@@ -626,11 +610,17 @@ QString ArcSpecialtiesWriter::writeAfterPath(RegionType type) {
     return rv;
 }
 
-QString ArcSpecialtiesWriter::writeAfterRegion(RegionType type) { return QString(); }
+QString ArcSpecialtiesWriter::writeAfterRegion(RegionType type) {
+    return QString();
+}
 
-QString ArcSpecialtiesWriter::writeAfterIsland() { return QString(); }
+QString ArcSpecialtiesWriter::writeAfterIsland() {
+    return QString();
+}
 
-QString ArcSpecialtiesWriter::writeAfterPart() { return QString(); }
+QString ArcSpecialtiesWriter::writeAfterPart() {
+    return QString();
+}
 
 QString ArcSpecialtiesWriter::writeAfterLayer() {
     QString layer_code = m_sb->setting<QString>(PRS::GCode::kLayerCodeChange);
@@ -643,9 +633,7 @@ QString ArcSpecialtiesWriter::writeShutdown() {
     if (!m_sb->setting<QString>(PRS::GCode::kEndCode).isEmpty()) {
         rv += m_sb->setting<QString>(PRS::GCode::kEndCode) % m_newline;
     }
-    if (m_startup_kinematics_written && m_absolute_arc_center_mode_enabled) {
-        rv += "G164" % m_newline;
-    }
+    if (m_startup_kinematics_written && m_absolute_arc_center_mode_enabled) { rv += "G164" % m_newline; }
     rv += "M49" % commentSpaceLine("ROBOT GO HOME");
     rv += "#CHANNEL INIT [CMDPOS]" % m_newline;
     rv += "M02" % commentSpaceLine("PROGRAM END");
@@ -667,9 +655,7 @@ QString ArcSpecialtiesWriter::writeWelderOn() {
         m_deposition_active = true;
         return rv;
     }
-    else {
-        return QString();
-    }
+    else { return QString(); }
 }
 
 QString ArcSpecialtiesWriter::writeWelderOff(int mode) {
@@ -681,9 +667,7 @@ QString ArcSpecialtiesWriter::writeWelderOff(int mode) {
         m_deposition_active = false;
         return rv;
     }
-    else {
-        return QString();
-    }
+    else { return QString(); }
 }
 
 QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& destination, Velocity speed,
@@ -706,9 +690,7 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
 }
 
 QString ArcSpecialtiesWriter::writeStartupKinematics() {
-    if (m_startup_kinematics_written) {
-        return QString();
-    }
+    if (m_startup_kinematics_written) { return QString(); }
 
     QString rv;
     rv += "#KIN ID [9]" % m_newline;
@@ -733,9 +715,7 @@ QString ArcSpecialtiesWriter::writeStartupKinematics() {
 }
 
 QString ArcSpecialtiesWriter::writePendingLayerChange() {
-    if (m_pending_layer_change.isEmpty()) {
-        return QString();
-    }
+    if (m_pending_layer_change.isEmpty()) { return QString(); }
 
     m_pending_layer_change.prepend(m_newline);
     QString rv = m_pending_layer_change;
@@ -750,8 +730,8 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
 
 QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const QSharedPointer<SettingsBase>& params,
                                                double tool_frame_zr, const Point& cp_reference) {
-    const double ap_output = m_sb->setting<Angle>(PRS::MachineSetup::kAxisA).to(m_meta.m_angle_unit);
-    const double cp_output = Angle(cpAxisForPoint(cp_reference, params) * degree).to(m_meta.m_angle_unit);
+    const double ap_output         = m_sb->setting<Angle>(PRS::MachineSetup::kAxisA).to(m_meta.m_angle_unit);
+    const double cp_output         = Angle(cpAxisForPoint(cp_reference, params) * degree).to(m_meta.m_angle_unit);
     const Point output_destination = rotateGCodeCoordinateFramePoint(destination);
 
     return QString(" X=") % QString::number(Distance(output_destination.x()).to(m_meta.m_distance_unit), 'f', 4) %
@@ -765,7 +745,7 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
 Point ArcSpecialtiesWriter::firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
                                                                         const Point& travel_lower_destination,
                                                                         Distance travel_lift_height) const {
-    const Point lower_output_destination = rotateGCodeCoordinateFramePoint(travel_lower_destination);
+    const Point lower_output_destination  = rotateGCodeCoordinateFramePoint(travel_lower_destination);
     Point first_travel_output_destination = rotateGCodeCoordinateFramePoint(travel_destination);
     first_travel_output_destination.y(lower_output_destination.y());
     first_travel_output_destination.z(Distance(lower_output_destination.z()) + travel_lift_height);
@@ -784,21 +764,17 @@ Point ArcSpecialtiesWriter::safeStartupWorldApproachPoint(const Point& travel_de
     Distance safe_z(travel_destination.z());
     bool apply_startup_buffer = false;
     if (hasBuildMaximumZ()) {
-        safe_z = getBuildMaximumZ();
+        safe_z               = getBuildMaximumZ();
         apply_startup_buffer = true;
     }
 
     if (isCylindricalSlicingMode()) {
         const Distance cylinder_height = m_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
-        if (cylinder_height > safe_z) {
-            safe_z = cylinder_height;
-        }
+        if (cylinder_height > safe_z) { safe_z = cylinder_height; }
         apply_startup_buffer = apply_startup_buffer || cylinder_height > 0;
     }
 
-    if (apply_startup_buffer) {
-        safe_z += kStartupWorldApproachZBuffer;
-    }
+    if (apply_startup_buffer) { safe_z += kStartupWorldApproachZBuffer; }
     approach.z(static_cast<float>(safe_z()));
 
     return approach;
@@ -831,13 +807,13 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
         return normalizeDegrees(m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree));
     }
 
-    const double center_x = params->setting<Distance>(kRadialCenterX)();
-    const double center_y = params->setting<Distance>(kRadialCenterY)();
+    const double center_x               = params->setting<Distance>(kRadialCenterX)();
+    const double center_y               = params->setting<Distance>(kRadialCenterY)();
     const Point transformed_destination = rotateGCodeCoordinateFramePoint(destination);
-    const Point transformed_center = rotateGCodeCoordinateFramePoint(Point(center_x, center_y, destination.z()));
-    double cp_degrees = std::atan2(transformed_destination.y() - transformed_center.y(),
-                                   transformed_destination.x() - transformed_center.x()) *
-                        180.0 / M_PI;
+    const Point transformed_center      = rotateGCodeCoordinateFramePoint(Point(center_x, center_y, destination.z()));
+    double cp_degrees                   = std::atan2(transformed_destination.y() - transformed_center.y(),
+                                                     transformed_destination.x() - transformed_center.x()) *
+                                          180.0 / M_PI;
 
     if (isHelicalPathPattern()) {
         const HelicalPathHandedness handedness =
@@ -882,4 +858,4 @@ bool ArcSpecialtiesWriter::isCylindricalSlicingMode() const {
     const SlicingMode slicing_mode = static_cast<SlicingMode>(m_sb->setting<int>(PS::Slicing::kSlicingMode));
     return slicing_mode == SlicingMode::kCylindrical;
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -22,7 +22,7 @@ namespace ORNL {
 PartMetaItem::PartMetaItem(QSharedPointer<Part> p) {
     m_part = p;
 
-    m_selected = false;
+    m_selected     = false;
     m_transparency = 255;
 
     m_type = m_part->rootMesh()->type();
@@ -38,7 +38,7 @@ PartMetaItem::PartMetaItem(QSharedPointer<Part> p) {
         m_scale_unit_index = 3;
     else if (unit == Constants::Units::kFeet)
         m_scale_unit_index = 4;
-    else // If it is any other unit default to mm
+    else  // If it is any other unit default to mm
         m_scale_unit_index = 0;
 
     m_transformation = m_part->rootMesh()->transformation();
@@ -57,18 +57,26 @@ PartMetaItem::PartMetaItem(QSharedPointer<Part> p) {
     emit modified(PartMetaUpdateType::kAddUpdate);
 }
 
-void PartMetaItem::replaceInModel(QString filename) { m_model->replaceItem(this->sharedFromThis(), filename); }
+void PartMetaItem::replaceInModel(QString filename) {
+    m_model->replaceItem(this->sharedFromThis(), filename);
+}
 
-void PartMetaItem::reloadInModel() { m_model->reloadItem(this->sharedFromThis()); }
+void PartMetaItem::reloadInModel() {
+    m_model->reloadItem(this->sharedFromThis());
+}
 
-void PartMetaItem::removeFromModel() { m_model->removeItem(this->sharedFromThis()); }
+void PartMetaItem::removeFromModel() {
+    m_model->removeItem(this->sharedFromThis());
+}
 
 void PartMetaItem::setSelected(bool toggle) {
     m_selected = toggle;
     emit modified(PartMetaUpdateType::kSelectionUpdate);
 }
 
-bool PartMetaItem::isSelected() { return m_selected; }
+bool PartMetaItem::isSelected() {
+    return m_selected;
+}
 
 void PartMetaItem::setMeshType(MeshType mt) {
     m_part->setMeshType(mt);
@@ -77,17 +85,21 @@ void PartMetaItem::setMeshType(MeshType mt) {
     emit modified(PartMetaUpdateType::kVisualUpdate);
 }
 
-MeshType PartMetaItem::meshType() { return m_type; }
+MeshType PartMetaItem::meshType() {
+    return m_type;
+}
 
 void PartMetaItem::setTransparency(uint val) {
     m_transparency = val;
     emit modified(PartMetaUpdateType::kVisualUpdate);
 }
 
-uint PartMetaItem::transparency() { return m_transparency; }
+uint PartMetaItem::transparency() {
+    return m_transparency;
+}
 
 void PartMetaItem::setWireframe(bool show) {
-    m_render_mode = (show) ? GL_LINES : GL_TRIANGLES;
+    m_render_mode    = (show) ? GL_LINES : GL_TRIANGLES;
     m_wireframe_mode = show;
     emit modified(PartMetaUpdateType::kVisualUpdate);
 }
@@ -98,24 +110,31 @@ void PartMetaItem::setSolidWireframe(bool show) {
     emit modified(PartMetaUpdateType::kVisualUpdate);
 }
 
-bool PartMetaItem::wireframeMode() { return m_wireframe_mode; }
+bool PartMetaItem::wireframeMode() {
+    return m_wireframe_mode;
+}
 
-ushort PartMetaItem::renderMode() { return m_render_mode; }
+ushort PartMetaItem::renderMode() {
+    return m_render_mode;
+}
 
-bool PartMetaItem::solidWireframeMode() { return m_solid_wireframe_mode; }
+bool PartMetaItem::solidWireframeMode() {
+    return m_solid_wireframe_mode;
+}
 
 void PartMetaItem::setTranslation(QVector3D t) {
-    m_translation = t;
+    m_translation    = t;
     m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
 
     emit modified(PartMetaUpdateType::kTransformUpdate);
 }
 
-QVector3D PartMetaItem::translation() { return m_translation; }
+QVector3D PartMetaItem::translation() {
+    return m_translation;
+}
 
 void PartMetaItem::setRotation(QQuaternion r, bool current_rotation) {
-    if (m_rotation == r)
-        return;
+    if (m_rotation == r) return;
 
     const bool has_parenting = !m_parent.isNull() || !m_children.isEmpty();
 
@@ -123,7 +142,7 @@ void PartMetaItem::setRotation(QQuaternion r, bool current_rotation) {
     // can inherit the motion correctly. Baking rotation into the mesh resets the parent transform
     // and breaks the hierarchy relationship for settings meshes.
     if (current_rotation || has_parenting) {
-        m_rotation = r;
+        m_rotation       = r;
         m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
         emit modified(PartMetaUpdateType::kTransformUpdate);
         return;
@@ -132,13 +151,13 @@ void PartMetaItem::setRotation(QQuaternion r, bool current_rotation) {
     QVector3D translation = m_translation;
     setTranslation(QVector3D(0, 0, 0));
 
-    m_rotation = r;
+    m_rotation       = r;
     m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
     emit modified(PartMetaUpdateType::kTransformUpdate);
 
-    m_scale = QVector3D(1, 1, 1);
-    m_rotation = QQuaternion(1, 0, 0, 0);
-    m_translation = translation;
+    m_scale          = QVector3D(1, 1, 1);
+    m_rotation       = QQuaternion(1, 0, 0, 0);
+    m_translation    = translation;
     m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
     m_part->rootMesh()->alignAxis(m_transformation);
 
@@ -146,28 +165,34 @@ void PartMetaItem::setRotation(QQuaternion r, bool current_rotation) {
     emit modified(PartMetaUpdateType::kReloadUpdate);
 }
 
-QQuaternion PartMetaItem::rotation() { return m_rotation; }
+QQuaternion PartMetaItem::rotation() {
+    return m_rotation;
+}
 
 void PartMetaItem::setScale(QVector3D s) {
-    m_scale = s;
+    m_scale          = s;
     m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
 
     emit modified(PartMetaUpdateType::kTransformUpdate);
 }
 
-QVector3D PartMetaItem::scale() { return m_scale; }
+QVector3D PartMetaItem::scale() {
+    return m_scale;
+}
 
 void PartMetaItem::setTransformation(QMatrix4x4 m) {
-    m_transformation = m;
+    m_transformation                             = m;
     std::tie(m_translation, m_rotation, m_scale) = MathUtils::decomposeTransformMatrix(m_transformation);
 
     emit modified(PartMetaUpdateType::kTransformUpdate);
 }
 
-QMatrix4x4 PartMetaItem::transformation() { return m_transformation; }
+QMatrix4x4 PartMetaItem::transformation() {
+    return m_transformation;
+}
 
 void PartMetaItem::resetTransformation() {
-    m_transformation = m_original_transformation;
+    m_transformation                             = m_original_transformation;
     std::tie(m_translation, m_rotation, m_scale) = MathUtils::decomposeTransformMatrix(m_transformation);
 
     m_part->rootMesh()->resetAlignedAxis(m_transformation);
@@ -176,7 +201,9 @@ void PartMetaItem::resetTransformation() {
     emit modified(PartMetaUpdateType::kReloadUpdate);
 }
 
-void PartMetaItem::setOriginalTransformation(QMatrix4x4 m) { m_aligned_transformation = m; }
+void PartMetaItem::setOriginalTransformation(QMatrix4x4 m) {
+    m_aligned_transformation = m;
+}
 
 void PartMetaItem::adoptChild(QSharedPointer<PartMetaItem> c) {
     m_children.append(c);
@@ -185,7 +212,9 @@ void PartMetaItem::adoptChild(QSharedPointer<PartMetaItem> c) {
     emit modified(PartMetaUpdateType::kParentingUpdate);
 }
 
-QList<QSharedPointer<PartMetaItem>> PartMetaItem::children() { return m_children; }
+QList<QSharedPointer<PartMetaItem>> PartMetaItem::children() {
+    return m_children;
+}
 
 void PartMetaItem::orphanChild(QSharedPointer<PartMetaItem> c) {
     m_children.removeOne(c);
@@ -200,11 +229,17 @@ void PartMetaItem::setParent(QSharedPointer<PartMetaItem> p) {
     emit modified(PartMetaUpdateType::kParentingUpdate);
 }
 
-QSharedPointer<PartMetaItem> PartMetaItem::parent() { return m_parent; }
+QSharedPointer<PartMetaItem> PartMetaItem::parent() {
+    return m_parent;
+}
 
-void PartMetaItem::setGraphicsPart(QSharedPointer<PartObject> gop) { m_graphics_part = gop; }
+void PartMetaItem::setGraphicsPart(QSharedPointer<PartObject> gop) {
+    m_graphics_part = gop;
+}
 
-QSharedPointer<PartObject> PartMetaItem::graphicsPart() { return m_graphics_part; }
+QSharedPointer<PartObject> PartMetaItem::graphicsPart() {
+    return m_graphics_part;
+}
 
 void PartMetaItem::setScaleUnitIndex(uint idx) {
     m_scale_unit_index = idx;
@@ -212,23 +247,27 @@ void PartMetaItem::setScaleUnitIndex(uint idx) {
     emit modified(PartMetaUpdateType::kTransformUpdate);
 }
 
-uint PartMetaItem::scaleUnitIndex() { return m_scale_unit_index; }
+uint PartMetaItem::scaleUnitIndex() {
+    return m_scale_unit_index;
+}
 
-QSharedPointer<Part> PartMetaItem::part() { return m_part; }
+QSharedPointer<Part> PartMetaItem::part() {
+    return m_part;
+}
 
 int PartMetaItem::instanceCount() {
-    if (m_model.isNull())
-        return 1;
+    if (m_model.isNull()) return 1;
 
     return m_model->instanceCount(this->sharedFromThis());
 }
 
 void PartMetaItem::setInstanceCount(int count) {
-    if (m_model.isNull())
-        return;
+    if (m_model.isNull()) return;
 
     m_model->setInstanceCount(this->sharedFromThis(), count);
 }
 
-void PartMetaItem::setModel(QSharedPointer<PartMetaModel> m) { m_model = m; }
-} // namespace ORNL
+void PartMetaItem::setModel(QSharedPointer<PartMetaModel> m) {
+    m_model = m;
+}
+}  // namespace ORNL

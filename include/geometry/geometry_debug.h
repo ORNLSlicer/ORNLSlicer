@@ -2,6 +2,7 @@
 
 #include <QPair>
 #include <QString>
+
 #include <qcontainerfwd.h>
 
 #include "geometry/point.h"
@@ -51,5 +52,5 @@ void printDesmos(const PolygonList& polygon_list, QString label = "");
 /// @param label An optional label to prepend to the output for identification purposes.
 void printDesmos(const EdgeList& edge_list, QString label = "");
 
-} // namespace GeometryDebug
-} // namespace ORNL
+}  // namespace GeometryDebug
+}  // namespace ORNL

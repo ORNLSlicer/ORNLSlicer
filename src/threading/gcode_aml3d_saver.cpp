@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
 #include <qobject.h>
@@ -33,9 +34,9 @@ void GCodeAML3DSaver::run() {
         4);
     zval = QString::number(
         GSM->getGlobal()->setting<Distance>(PRS::Dimensions::kZMax).to(m_selected_meta.m_distance_unit), 'f', 4);
-    feedrate = QString::number(0);
-    layerNum = 0;
-    pointNum = 0;
+    feedrate    = QString::number(0);
+    layerNum    = 0;
+    pointNum    = 0;
     weaveLength = QString::number(
         GSM->getGlobal()->setting<Distance>(ES::FileOutput::kAML3DWeaveLength).to(m_selected_meta.m_distance_unit), 'f',
         4);
@@ -43,7 +44,7 @@ void GCodeAML3DSaver::run() {
         GSM->getGlobal()->setting<Distance>(ES::FileOutput::kAML3DWeaveWidth).to(m_selected_meta.m_distance_unit), 'f',
         4);
 
-    int start = 0;
+    int start      = 0;
     bool endOfFile = false;
     // While loop should always evaluate true, but need a way to contain the file operations
     // so that multiple files can be opened, written to, and closed within the parsing of the g-code lines
@@ -82,9 +83,7 @@ void GCodeAML3DSaver::run() {
             // The BEGINNING LAYER string denotes the start of a new layer which means we need a new file
             if (lines[i].contains("BEGINNING LAYER")) {
                 // Ignore the start of the first layer
-                if (lines[i].contains("(BEGINNING LAYER: 1)")) {
-                    continue;
-                }
+                if (lines[i].contains("(BEGINNING LAYER: 1)")) { continue; }
 
                 break;
             }
@@ -128,12 +127,10 @@ void GCodeAML3DSaver::run() {
                 }
 
                 // Read the travel lower Z line just to extract the Z height and save it for future lines
-                if (lines[i].contains("TRAVEL LOWER Z")) {
-                    continue;
-                }
+                if (lines[i].contains("TRAVEL LOWER Z")) { continue; }
 
                 pointNum++;
-                beadOutput = QString::number(beadNum);
+                beadOutput  = QString::number(beadNum);
                 pointOutput = QString::number(pointNum);
                 out << beadOutput % comma % pointOutput % comma % xval % comma % yval % comma % zval % comma %
                            zeroString % comma % zeroString % comma % zeroString % comma % zeroString % comma %
@@ -144,9 +141,8 @@ void GCodeAML3DSaver::run() {
 
         file.close();
 
-        if (endOfFile)
-            break;
+        if (endOfFile) break;
     }
 }
 
-} // namespace ORNL
+}  // namespace ORNL

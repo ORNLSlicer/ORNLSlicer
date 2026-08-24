@@ -101,9 +101,9 @@ Point Point::fromQVector3D(const QVector3D& p) {
 }
 
 Point::Point(const Point& p) {
-    m_x = p.m_x;
-    m_y = p.m_y;
-    m_z = p.m_z;
+    m_x  = p.m_x;
+    m_y  = p.m_y;
+    m_z  = p.m_z;
     m_sb = p.m_sb;
 }
 
@@ -121,13 +121,14 @@ Point Point::round(Point p) {
     return p;
 }
 
-Distance Point::distance() const { return qSqrt(qPow(m_x, 2) + qPow(m_y, 2) + qPow(m_z, 2)); }
+Distance Point::distance() const {
+    return qSqrt(qPow(m_x, 2) + qPow(m_y, 2) + qPow(m_z, 2));
+}
 
 // normalizes the x,y and z values of the point to be between 0 and 1
 Point Point::normal(Distance len) {
     Distance _len = (*this).distance();
-    if (_len < 1 * micron)
-        return Point(len, 0);
+    if (_len < 1 * micron) return Point(len, 0);
     return (*this) * len.to(micron) / _len.to(micron);
 }
 
@@ -135,7 +136,9 @@ Distance Point::distance(const Point& rhs) const {
     return qSqrt(qPow(rhs.m_x - m_x, 2) + qPow(rhs.m_y - m_y, 2) + qPow(rhs.m_z - m_z, 2));
 }
 
-float Point::dot(const Point& rhs) const { return m_x * rhs.m_x + m_y * rhs.m_y + m_z * rhs.m_z; }
+float Point::dot(const Point& rhs) const {
+    return m_x * rhs.m_x + m_y * rhs.m_y + m_z * rhs.m_z;
+}
 
 float Point::dot(const Point& lhs, const Point& rhs) {
     return lhs.m_x * rhs.m_x + lhs.m_y * rhs.m_y + lhs.m_z * rhs.m_z;
@@ -145,7 +148,9 @@ Point Point::cross(const Point& rhs) const {
     return Point(m_y * rhs.m_z - m_z * rhs.m_y, m_z * rhs.m_x - m_x * rhs.m_z, m_x * rhs.m_y - m_y * rhs.m_x);
 }
 
-Point Point::rotate(Angle angle, QVector3D axis) { return rotateAround({0, 0, 0}, angle, axis); }
+Point Point::rotate(Angle angle, QVector3D axis) {
+    return rotateAround({0, 0, 0}, angle, axis);
+}
 
 Point Point::rotateAround(Point center, Angle angle, QVector3D axis) {
     QVector3D c = center.toQVector3D();
@@ -164,29 +169,49 @@ void Point::moveTowards(const Point& target, const Distance dist) {
     *this += vector;
 }
 
-bool Point::shorterThan(Distance rhs) const { return distance() < rhs; }
+bool Point::shorterThan(Distance rhs) const {
+    return distance() < rhs;
+}
 
 ClipperLib2::IntPoint Point::toIntPoint() const {
     return ClipperLib2::IntPoint(static_cast<long long>(m_x), static_cast<long long>(m_y));
 }
 
-Distance2D Point::toDistance2D() const { return Distance2D(m_x, m_y); }
+Distance2D Point::toDistance2D() const {
+    return Distance2D(m_x, m_y);
+}
 
-Distance3D Point::toDistance3D() const { return Distance3D(m_x, m_y, m_z); }
+Distance3D Point::toDistance3D() const {
+    return Distance3D(m_x, m_y, m_z);
+}
 
-QPoint Point::toQPoint() const { return QPoint(static_cast<int>(m_x), static_cast<int>(m_y)); }
+QPoint Point::toQPoint() const {
+    return QPoint(static_cast<int>(m_x), static_cast<int>(m_y));
+}
 
-ORNL::Point::operator QPointF() const { return QPointF(m_x, m_y); }
+ORNL::Point::operator QPointF() const {
+    return QPointF(m_x, m_y);
+}
 
-QVector2D Point::toQVector2D() const { return QVector2D(m_x, m_y); }
+QVector2D Point::toQVector2D() const {
+    return QVector2D(m_x, m_y);
+}
 
-QVector3D Point::toQVector3D() const { return QVector3D(m_x, m_y, m_z); }
+QVector3D Point::toQVector3D() const {
+    return QVector3D(m_x, m_y, m_z);
+}
 
-MeshTypes::Kernel::Point_3 Point::toCartesian3D() const { return MeshTypes::Kernel::Point_3(m_x, m_y, m_z); }
+MeshTypes::Kernel::Point_3 Point::toCartesian3D() const {
+    return MeshTypes::Kernel::Point_3(m_x, m_y, m_z);
+}
 
-MeshTypes::Vector_3 Point::toVector_3() const { return MeshTypes::Vector_3(m_x, m_y, m_z); }
+MeshTypes::Vector_3 Point::toVector_3() const {
+    return MeshTypes::Vector_3(m_x, m_y, m_z);
+}
 
-Point Point::operator+(const Point& rhs) { return Point(m_x + rhs.m_x, m_y + rhs.m_y, m_z + rhs.m_z); }
+Point Point::operator+(const Point& rhs) {
+    return Point(m_x + rhs.m_x, m_y + rhs.m_y, m_z + rhs.m_z);
+}
 
 Point Point::operator+=(const Point& rhs) {
     m_x += rhs.m_x;
@@ -195,7 +220,9 @@ Point Point::operator+=(const Point& rhs) {
     return *this;
 }
 
-Point Point::operator-(const Point& rhs) { return Point(m_x - rhs.m_x, m_y - rhs.m_y, m_z - rhs.m_z); }
+Point Point::operator-(const Point& rhs) {
+    return Point(m_x - rhs.m_x, m_y - rhs.m_y, m_z - rhs.m_z);
+}
 
 Point Point::operator-=(const Point& rhs) {
     m_x -= rhs.m_x;
@@ -204,9 +231,13 @@ Point Point::operator-=(const Point& rhs) {
     return *this;
 }
 
-Point Point::operator*(const float rhs) const { return Point(rhs * m_x, rhs * m_y, rhs * m_z); }
+Point Point::operator*(const float rhs) const {
+    return Point(rhs * m_x, rhs * m_y, rhs * m_z);
+}
 
-Point Point::operator*(const float rhs) { return Point(rhs * m_x, rhs * m_y, rhs * m_z); }
+Point Point::operator*(const float rhs) {
+    return Point(rhs * m_x, rhs * m_y, rhs * m_z);
+}
 
 Point Point::operator*=(const float rhs) {
     m_x *= rhs;
@@ -215,7 +246,9 @@ Point Point::operator*=(const float rhs) {
     return *this;
 }
 
-Point Point::operator/(const float rhs) { return Point(m_x / rhs, m_y / rhs, m_z / rhs); }
+Point Point::operator/(const float rhs) {
+    return Point(m_x / rhs, m_y / rhs, m_z / rhs);
+}
 
 Point Point::operator/=(const float m) {
     m_x /= m;
@@ -233,33 +266,61 @@ bool Point::operator!=(const Point& rhs) {
            MathUtils::notEquals(m_z, rhs.m_z);
 }
 
-float Point::x() { return m_x; }
+float Point::x() {
+    return m_x;
+}
 
-float Point::x() const { return m_x; }
+float Point::x() const {
+    return m_x;
+}
 
-void Point::x(float x) { m_x = x; }
+void Point::x(float x) {
+    m_x = x;
+}
 
-void Point::x(const Distance& x) { m_x = x(); }
+void Point::x(const Distance& x) {
+    m_x = x();
+}
 
-float Point::y() { return m_y; }
+float Point::y() {
+    return m_y;
+}
 
-float Point::y() const { return m_y; }
+float Point::y() const {
+    return m_y;
+}
 
-void Point::y(float y) { m_y = y; }
+void Point::y(float y) {
+    m_y = y;
+}
 
-void Point::y(const Distance& y) { m_y = y(); }
+void Point::y(const Distance& y) {
+    m_y = y();
+}
 
-float Point::z() { return m_z; }
+float Point::z() {
+    return m_z;
+}
 
-float Point::z() const { return m_z; }
+float Point::z() const {
+    return m_z;
+}
 
-void Point::z(float z) { m_z = z; }
+void Point::z(float z) {
+    m_z = z;
+}
 
-void Point::z(const Distance& z) { m_z = z(); }
+void Point::z(const Distance& z) {
+    m_z = z();
+}
 
-void Point::setSettings(QSharedPointer<SettingsBase> sb) { m_sb = sb; }
+void Point::setSettings(QSharedPointer<SettingsBase> sb) {
+    m_sb = sb;
+}
 
-QSharedPointer<SettingsBase> Point::getSettings() { return m_sb; }
+QSharedPointer<SettingsBase> Point::getSettings() {
+    return m_sb;
+}
 
 QString Point::toCSVString() {
     return QString(QString::number(m_x) + "," + QString::number(m_y) + "," + QString::number(m_z));
@@ -270,7 +331,9 @@ Point operator*(const QMatrix4x4& lhs, const Point& rhs) {
     return Point(lhs * p);
 }
 
-Point operator*(const float lhs, Point& rhs) { return rhs * lhs; }
+Point operator*(const float lhs, Point& rhs) {
+    return rhs * lhs;
+}
 
 Point operator+(const Point& lhs, const Point& rhs) {
     return Point(lhs.x() + rhs.x(), lhs.y() + rhs.y(), lhs.z() + rhs.z());
@@ -291,29 +354,15 @@ bool operator!=(const Point& lhs, const Point& rhs) {
 }
 
 bool operator<(const Point& lhs, const Point& rhs) {
-    if (lhs.x() < rhs.x()) {
-        return true;
-    }
-    else if (lhs.x() > rhs.x()) {
-        return false;
-    }
+    if (lhs.x() < rhs.x()) { return true; }
+    else if (lhs.x() > rhs.x()) { return false; }
     // lhs.location.x() == rhs.location.x()
-    else if (lhs.y() < rhs.y()) {
-        return true;
-    }
-    else if (lhs.y() > rhs.y()) {
-        return false;
-    }
+    else if (lhs.y() < rhs.y()) { return true; }
+    else if (lhs.y() > rhs.y()) { return false; }
     // lhs.location.y() == rhs.location.y()
-    else if (lhs.z() < rhs.z()) {
-        return true;
-    }
-    else if (lhs.z() > rhs.z()) {
-        return false;
-    }
+    else if (lhs.z() < rhs.z()) { return true; }
+    else if (lhs.z() > rhs.z()) { return false; }
     // lhs.location.z() == rhs.location.z()
-    else {
-        return false;
-    }
+    else { return false; }
 }
-} // namespace ORNL
+}  // namespace ORNL

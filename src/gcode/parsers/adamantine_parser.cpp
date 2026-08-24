@@ -1,8 +1,8 @@
 #include "gcode/parsers/adamantine_parser.h"
 
+#include <QString>
 #include <functional>
 
-#include <QString>
 #include <qcontainerfwd.h>
 #include <qlatin1stringview.h>
 
@@ -14,7 +14,7 @@ AdamantineParser::AdamantineParser(GcodeMeta meta, bool allowLayerAlter, QString
     : CommonParser(meta, allowLayerAlter, lines, upperLines) {
     config();
 
-    m_home_string = QLatin1String("X0 Y0 Z0");
+    m_home_string     = QLatin1String("X0 Y0 Z0");
     m_home_parameters = m_home_string.split(' ');
 }
 
@@ -40,6 +40,8 @@ void AdamantineParser::G92Handler(QVector<QString> params) {
 }
 
 // M83 ; use relative distances for extrusion
-void AdamantineParser::M83Handler(QVector<QString> params) { m_e_absolute = false; }
+void AdamantineParser::M83Handler(QVector<QString> params) {
+    m_e_absolute = false;
+}
 
-} // namespace ORNL
+}  // namespace ORNL

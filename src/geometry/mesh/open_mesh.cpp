@@ -1,5 +1,6 @@
 #include "geometry/mesh/open_mesh.h"
 
+#include <QFileInfo>
 #include <array>
 #include <cstddef>
 #include <iterator>
@@ -24,7 +25,6 @@
 #include <CGAL/boost/graph/graph_traits_Surface_mesh.h>
 #include <CGAL/boost/graph/iterator.h>
 #include <CGAL/disable_warnings.h>
-#include <QFileInfo>
 #include <qcontainerfwd.h>
 #include <qfiledevice.h>
 #include <qhashfunctions.h>
@@ -49,16 +49,16 @@ namespace ORNL {
 OpenMesh::OpenMesh() : MeshBase() {}
 
 OpenMesh::OpenMesh(const QVector<MeshVertex>& vertices, const QVector<MeshFace>& faces) : MeshBase(vertices, faces) {
-    m_representation = SurfaceMeshFromVerticesAndFaces(m_vertices, m_faces);
-    m_original_representation = m_representation; // Create a copy
+    m_representation          = SurfaceMeshFromVerticesAndFaces(m_vertices, m_faces);
+    m_original_representation = m_representation;  // Create a copy
     updateDims();
 }
 
 OpenMesh::OpenMesh(const QString& name, const QString& path, const QVector<MeshVertex>& vertices,
                    const QVector<MeshFace>& faces, MeshType type)
     : MeshBase(vertices, faces, name, path, type) {
-    m_representation = SurfaceMeshFromVerticesAndFaces(m_vertices, m_faces);
-    m_original_representation = m_representation; // Create a copy
+    m_representation          = SurfaceMeshFromVerticesAndFaces(m_vertices, m_faces);
+    m_original_representation = m_representation;  // Create a copy
     updateDims();
 }
 
@@ -71,17 +71,19 @@ OpenMesh::OpenMesh(MeshTypes::SurfaceMesh poly, QString name, QString file) : Me
     auto vertices_and_faces = VerticesAndFacesFromSurfaceMesh(m_representation);
     m_vertices_original = m_vertices = m_vertices_aligned = vertices_and_faces.first;
     m_faces_original = m_faces = m_faces_aligned = vertices_and_faces.second;
-    m_original_representation = m_representation;
+    m_original_representation                    = m_representation;
     updateDims();
     m_original_dimensions = m_dimensions;
 }
 
 OpenMesh::OpenMesh(QSharedPointer<OpenMesh> mesh) : MeshBase(mesh) {
-    m_representation = mesh->m_representation;
+    m_representation          = mesh->m_representation;
     m_original_representation = mesh->m_original_representation;
 }
 
-MeshTypes::SurfaceMesh OpenMesh::surface_mesh() { return m_representation; }
+MeshTypes::SurfaceMesh OpenMesh::surface_mesh() {
+    return m_representation;
+}
 
 void OpenMesh::center() {
     //! Compose translation
@@ -153,7 +155,7 @@ MeshTypes::SurfaceMesh OpenMesh::extractUpwardFaces() {
         QVector3D normal = QVector3D::crossProduct(points[1] - points[0], points[2] - points[0]).normalized();
         // This face is upward facing
         if (normal.z() > 0.0)
-            segment_property_map[face] = 1; // Set a flag
+            segment_property_map[face] = 1;  // Set a flag
         else
             segment_property_map[face] = 0;
     }
@@ -178,19 +180,15 @@ std::pair<QVector<Polyline>, QVector<Polygon>> OpenMesh::intersect(Plane plane) 
     QVector<Polygon> result_polygons;
 
     for (auto& cgal_polyline : cgal_polylines) {
-        if (cgal_polyline.front() == cgal_polyline.back()) // Can this be closed into a polygon?
+        if (cgal_polyline.front() == cgal_polyline.back())  // Can this be closed into a polygon?
         {
             Polygon new_polygon;
-            for (auto& point : cgal_polyline) {
-                new_polygon.append(Point::FromCGALPoint(point));
-            }
+            for (auto& point : cgal_polyline) { new_polygon.append(Point::FromCGALPoint(point)); }
             result_polylines.push_back(new_polygon);
         }
         else {
             Polyline new_line;
-            for (auto& point : cgal_polyline) {
-                new_line.append(Point::FromCGALPoint(point));
-            }
+            for (auto& point : cgal_polyline) { new_line.append(Point::FromCGALPoint(point)); }
             result_polylines.push_back(new_line);
         }
     }
@@ -203,8 +201,7 @@ MeshTypes::SurfaceMesh OpenMesh::SurfaceMeshFromVerticesAndFaces(const QVector<M
     typedef MeshTypes::SurfaceMesh::Vertex_index VertexIndex;
     QMap<uint, VertexIndex> points;
 
-    for (uint i = 0, end = vertices.size(); i < end; ++i)
-        points[i] = sm.add_vertex(vertices[i].toPoint3());
+    for (uint i = 0, end = vertices.size(); i < end; ++i) points[i] = sm.add_vertex(vertices[i].toPoint3());
 
     for (auto& face : faces) {
         sm.add_face(points[face.vertex_index[0]], points[face.vertex_index[1]], points[face.vertex_index[2]]);
@@ -212,8 +209,8 @@ MeshTypes::SurfaceMesh OpenMesh::SurfaceMeshFromVerticesAndFaces(const QVector<M
     return sm;
 }
 
-std::pair<QVector<MeshVertex>, QVector<MeshFace>>
-OpenMesh::VerticesAndFacesFromSurfaceMesh(MeshTypes::SurfaceMesh& sm) {
+std::pair<QVector<MeshVertex>, QVector<MeshFace>> OpenMesh::VerticesAndFacesFromSurfaceMesh(
+    MeshTypes::SurfaceMesh& sm) {
     QVector<MeshFace> mesh_faces;
     mesh_faces.reserve(CGAL::faces(sm).size());
 
@@ -272,8 +269,7 @@ QSharedPointer<OpenMesh> OpenMesh::BuildMeshFromPointCloud(const QString& file_p
     else if (suffix == "matrix")
         p = loadMatrixFile(file_path);
 
-    if (p.isEmpty())
-        return nullptr; // No points loaded
+    if (p.isEmpty()) return nullptr;  // No points loaded
 
     std::vector<MeshTypes::Point_3> points(p.begin(), p.end());
     MeshTypes::SurfaceMesh m;
@@ -321,9 +317,9 @@ QVector<MeshTypes::Point_3> OpenMesh::loadMatrixFile(const QString& file_path) {
 QVector<MeshTypes::Point_3> OpenMesh::loadXYZFile(const QString& file_path) {
     QVector<MeshTypes::Point_3> points;
     CGAL::IO::read_points(file_path.toStdString(), std::back_inserter(points));
-    for (auto it = points.begin(); it != points.end(); ++it) // Scale to micron
+    for (auto it = points.begin(); it != points.end(); ++it)  // Scale to micron
         *it = MeshTypes::Point_3(it->x() * 1000, it->y() * 1000, it->z() * 1000);
 
     return points;
 }
-} // namespace ORNL
+}  // namespace ORNL

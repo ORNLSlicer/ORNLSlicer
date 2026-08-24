@@ -2,14 +2,14 @@
 
 #include <GL/gl.h>
 
-#include <vector>
-
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLTexture>
 #include <QOpenGLVertexArrayObject>
 #include <QPointer>
 #include <QQueue>
+#include <vector>
+
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qimage.h>
@@ -48,7 +48,9 @@ struct Triangle {
     QVector3D c;
 
     // Allows access to struct members with index.
-    inline QVector3D& operator[](uint index) { return *((QVector3D*)(this) + index); }
+    inline QVector3D& operator[](uint index) {
+        return *((QVector3D*)(this) + index);
+    }
 };
 
 /*!
@@ -72,12 +74,12 @@ struct Triangle {
  * and translated to allow for this motion.
  */
 class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
-  public:
+   public:
     //! \brief Construct object from GL data.
     GraphicsObject(BaseView* view, const std::vector<float>& vertices, const std::vector<float>& normals,
                    const std::vector<float>& colors, const ushort render_mode = GL_TRIANGLES,
                    const std::vector<float>& uv = std::vector<float>(),
-                   const QImage texture = QImage(":/textures/blank_texture.png"));
+                   const QImage texture         = QImage(":/textures/blank_texture.png"));
 
     //! \brief Destructor.
     ~GraphicsObject();
@@ -203,7 +205,7 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
     //! \brief Gets object transparency.
     uint transparency();
 
-  protected:
+   protected:
     //! \brief Empty constructor. Only for derived classes.
     GraphicsObject();
 
@@ -211,7 +213,7 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
     void populateGL(BaseView* view, const std::vector<float>& vertices, const std::vector<float>& normals,
                     const std::vector<float>& colors, const ushort render_mode = GL_TRIANGLES,
                     const std::vector<float>& uv = std::vector<float>(),
-                    const QImage texture = QImage(":/textures/blank_texture.png"));
+                    const QImage texture         = QImage(":/textures/blank_texture.png"));
 
     //! \brief The actual call to OpenGL to draw the object.
     //! \note This function is virtual to permit objects to render as they see fit. The default proceedure
@@ -319,7 +321,7 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
     //! \brief If this object is selected or not.
     bool m_selected = false;
 
-  private:
+   private:
     //! \brief Set the global transformation. This is an internal function to enforce updating of
     //!        transform components.
     void setTransformationInternal(QMatrix4x4 mtrx, bool propagate = true);
@@ -357,4 +359,4 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
     QVector<QVector3D> m_transformed_mbb;
 };
 
-} // Namespace ORNL
+}  // Namespace ORNL

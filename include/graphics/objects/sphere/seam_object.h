@@ -12,10 +12,10 @@ namespace ORNL {
  * For use as a seam graphic.
  */
 class SeamObject : public SphereObject {
-  public:
+   public:
     //! \brief Constructor.
     //! \param view: View to render to.
     //! \param color: Color of the object.
     SeamObject(BaseView* view, QColor color);
 };
-} // namespace ORNL
+}  // namespace ORNL

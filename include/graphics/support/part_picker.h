@@ -1,11 +1,10 @@
 #pragma once
 
-#include <tuple>
-#include <vector>
-
 #include <QMatrix4x4>
 #include <QPointF>
 #include <QVector3D>
+#include <tuple>
+#include <vector>
 
 #include "graphics/graphics_object.h"
 
@@ -29,9 +28,11 @@ std::tuple<float, Triangle> pickDistanceAndTriangle(const QMatrix4x4& projection
                                                     bool ortho = false);
 
 //! \brief Returns the distance to the nearest triangle, the nearest triangle iself, and the point of intersection.
-std::tuple<float, Triangle, QVector3D>
-pickDistanceTriangleAndIntersection(const QMatrix4x4& projection, const QMatrix4x4& view, QPointF ndc_mouse_pos,
-                                    const std::vector<Triangle>& triangles, bool ortho = false);
+std::tuple<float, Triangle, QVector3D> pickDistanceTriangleAndIntersection(const QMatrix4x4& projection,
+                                                                           const QMatrix4x4& view,
+                                                                           QPointF ndc_mouse_pos,
+                                                                           const std::vector<Triangle>& triangles,
+                                                                           bool ortho = false);
 
 //! \brief Calculate distance from nearest triangle in the vector to the mouse point
 float pickDistance(const QMatrix4x4& projection, const QMatrix4x4& view, QPointF ndc_mouse_pos,
@@ -58,5 +59,5 @@ float findDistanceToTriangle(const QVector3D& ray_start, const QVector3D& ray_di
  */
 std::tuple<QVector3D, QVector3D> getDirectionAndStart(const QMatrix4x4& projection, QPointF ndc_mouse_pos,
                                                       const QMatrix4x4& view, bool ortho);
-} // namespace PartPicker
-} // namespace ORNL
+}  // namespace PartPicker
+}  // namespace ORNL

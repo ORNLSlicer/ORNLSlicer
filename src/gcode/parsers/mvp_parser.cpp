@@ -1,11 +1,11 @@
 #include "gcode/parsers/mvp_parser.h"
 
-#include <functional>
-
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
 #include <QVector>
+#include <functional>
+
 #include <qcontainerfwd.h>
 
 #include "gcode/gcode_meta.h"
@@ -29,4 +29,4 @@ void MVPParser::M124Handler(QVector<QString> params) {
     CommonParser::M5Handler(params);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

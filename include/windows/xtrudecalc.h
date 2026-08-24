@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QWidget>
+
 #include <qgridlayout.h>
 #include <qobject.h>
 #include <qtmetamacros.h>
@@ -19,18 +20,18 @@ namespace ORNL {
  */
 class XtrudeCalcWindow : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     explicit XtrudeCalcWindow(QWidget* parent);
 
     //! \brief Destructor
     ~XtrudeCalcWindow();
 
-  protected:
+   protected:
     //! \brief Close event override to reset form values
     void closeEvent(QCloseEvent* event);
 
-  private slots:
+   private slots:
     //! \brief Check to see if preferences were updated in order to update units
     void checkUnitPref();
 
@@ -42,7 +43,7 @@ class XtrudeCalcWindow : public QWidget {
     //! \param index Current combo index
     void enableDensity(int index);
 
-  private:
+   private:
     //! \brief Setup events for widget components
     void setupEvents();
 
@@ -115,5 +116,5 @@ class XtrudeCalcWindow : public QWidget {
 
     //! \brief parent widget of this Xtrude calculator window
     QWidget* m_parent;
-}; // class XtrudeCalcWindow
-} // namespace ORNL
+};  // class XtrudeCalcWindow
+}  // namespace ORNL

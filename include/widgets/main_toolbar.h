@@ -3,6 +3,7 @@
 #include <QTabBar>
 #include <QToolBar>
 #include <QToolButton>
+
 #include <qobject.h>
 #include <qsize.h>
 #include <qtmetamacros.h>
@@ -16,12 +17,12 @@ namespace ORNL {
  */
 class MainToolbar : public QToolBar {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param optional parent pointer
     MainToolbar(QWidget* parent = nullptr);
 
-  signals:
+   signals:
     //! \brief signals when the view is changed by the tabs on the toolbar
     //! \param index: the index of the tab selected
     void viewChanged(int index);
@@ -68,7 +69,7 @@ class MainToolbar : public QToolBar {
     //! \param mt: the type of part/ mesh this will become (ie build or settings)
     void loadModel(MeshType mt);
 
-  public slots:
+   public slots:
     //! \brief sets the tab selected in the toolbar
     //! \param index: the index of the view
     void setView(int index);
@@ -100,7 +101,7 @@ class MainToolbar : public QToolBar {
     //! \param status if the g-code view is using orthographic projection
     void setOrthoGcodeChecked(bool status);
 
-  private:
+   private:
     //! \brief sets up the widget
     void setup();
 
@@ -164,4 +165,4 @@ class MainToolbar : public QToolBar {
     //! \brief if selected part has layer-specific settings available for visualization
     bool m_layer_settings_range_available = false;
 };
-} // namespace ORNL
+}  // namespace ORNL

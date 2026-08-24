@@ -1,6 +1,7 @@
 #include "widgets/settings/setting_line_edit.h"
 
 #include <QToolTip>
+
 #include <qgridlayout.h>
 #include <qlabel.h>
 #include <qlineedit.h>
@@ -80,7 +81,7 @@ void SettingLineEdit::show() {
 
 void SettingLineEdit::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<QString>(val.toString());
     emit modified(m_key);
@@ -89,12 +90,11 @@ void SettingLineEdit::valueChanged(QVariant val) {
 void SettingLineEdit::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
-    QString cur = reloadValueHelper<QString>(consistent);
-    if (consistent)
-        setText(cur);
+    QString cur     = reloadValueHelper<QString>(consistent);
+    if (consistent) setText(cur);
 
     this->blockSignals(false);
     emit modified(m_key);
     emit warnParent(warningCountDelta(!consistent, m_warn));
 }
-} // Namespace ORNL
+}  // Namespace ORNL

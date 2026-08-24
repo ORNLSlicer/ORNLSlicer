@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 
 #include "gcode/gcode_meta.h"
@@ -30,7 +31,7 @@ void GCodeAdamantineSaver::run() {
         // modify m_text to remove comments and triple returns
         m_text.remove(comments)
             .remove(tripleReturns)
-            .replace(doubleReturns, "\n"); //.remove(tripleReturns).remove(doubleReturns);
+            .replace(doubleReturns, "\n");  //.remove(tripleReturns).remove(doubleReturns);
         // move the last two lines to the top of the file
         QStringList lines = m_text.split("\n");
         lines.removeFirst();
@@ -42,13 +43,11 @@ void GCodeAdamantineSaver::run() {
         lines.prepend(lastLine);
         lines.prepend(secondToLastLine);
         // write text to out file
-        for (QString line : lines) {
-            out << line << "\n";
-        }
+        for (QString line : lines) { out << line << "\n"; }
         // close file
         tempFile.close();
         QFile::rename(tempFile.fileName(), m_filename);
     }
 }
 
-} // namespace ORNL
+}  // namespace ORNL

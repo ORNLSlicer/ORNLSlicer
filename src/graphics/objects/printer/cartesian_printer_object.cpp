@@ -37,7 +37,7 @@ CartesianPrinterObject::CartesianPrinterObject(BaseView* view, QSharedPointer<Se
     this->populateGL(view, vertices, tmp_norm, colors, GL_LINES);
 
     float length = m_max.x() - m_min.x();
-    float width = m_max.y() - m_min.y();
+    float width  = m_max.y() - m_min.y();
 
     // Axes
     auto goax = QSharedPointer<AxesObject>::create(view, std::fmin(length, width) * 0.4);
@@ -49,7 +49,7 @@ CartesianPrinterObject::CartesianPrinterObject(BaseView* view, QSharedPointer<Se
     gopl->translate(m_floor_center);
     gopl->setUnderneath(true);
 
-    m_axes = goax;
+    m_axes        = goax;
     m_floor_plane = gopl;
 
     this->adoptChild(goax);
@@ -60,7 +60,9 @@ CartesianPrinterObject::CartesianPrinterObject(BaseView* view, QSharedPointer<Se
     this->updateSeams();
 }
 
-QVector3D CartesianPrinterObject::printerCenter() { return this->translation() + m_floor_center; }
+QVector3D CartesianPrinterObject::printerCenter() {
+    return this->translation() + m_floor_center;
+}
 
 QList<QSharedPointer<PartObject>> CartesianPrinterObject::externalParts() {
     QList<QSharedPointer<PartObject>> ret;
@@ -69,8 +71,7 @@ QList<QSharedPointer<PartObject>> CartesianPrinterObject::externalParts() {
 
     for (auto& child : this->allChildren()) {
         auto gop = child.dynamicCast<PartObject>();
-        if (gop.isNull())
-            continue;
+        if (gop.isNull()) continue;
 
         QVector3D partMin = gop->minimum();
         QVector3D partMax = gop->maximum();
@@ -90,18 +91,18 @@ QList<QSharedPointer<PartObject>> CartesianPrinterObject::externalParts() {
 void CartesianPrinterObject::updateMembers() {
     QSharedPointer<SettingsBase> sb = this->getSettings();
 
-    m_x_grid = 0;
+    m_x_grid        = 0;
     m_x_grid_offset = 0;
-    m_y_grid = 0;
+    m_y_grid        = 0;
     m_y_grid_offset = 0;
 
     if (sb->setting<bool>(PRS::Dimensions::kEnableGridX)) {
-        m_x_grid = sb->setting<float>(PRS::Dimensions::kGridXDistance);
+        m_x_grid        = sb->setting<float>(PRS::Dimensions::kGridXDistance);
         m_x_grid_offset = sb->setting<float>(PRS::Dimensions::kGridXOffset);
     }
 
     if (sb->setting<bool>(PRS::Dimensions::kEnableGridY)) {
-        m_y_grid = sb->setting<float>(PRS::Dimensions::kGridYDistance);
+        m_y_grid        = sb->setting<float>(PRS::Dimensions::kGridYDistance);
         m_y_grid_offset = sb->setting<float>(PRS::Dimensions::kGridYOffset);
     }
 
@@ -159,7 +160,7 @@ void CartesianPrinterObject::updateGeometry() {
     this->translateAbsolute(QVector3D(0, 0, 0));
 
     float length = m_max.x() - m_min.x();
-    float width = m_max.y() - m_min.y();
+    float width  = m_max.y() - m_min.y();
 
     m_axes->updateDimensions(std::fmin(length, width) * 0.4);
     m_floor_plane->updateDimensions(length, width);
@@ -169,4 +170,4 @@ void CartesianPrinterObject::updateGeometry() {
 
     this->translateAbsolute(translation);
 }
-} // namespace ORNL
+}  // namespace ORNL

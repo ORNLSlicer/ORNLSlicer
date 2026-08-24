@@ -18,7 +18,7 @@ namespace ORNL {
  *              - M83
  */
 class MarlinParser : public CommonParser {
-  public:
+   public:
     //! \brief Standard constructor that specifies meta type and whether or not
     //! to alter layers for minimal layer time
     //! \param meta GcodeMeta struct that includes information about units and
@@ -32,7 +32,7 @@ class MarlinParser : public CommonParser {
     //! \brief Function to initialize syntax specific handlers
     virtual void config();
 
-  protected:
+   protected:
     //! \brief Handler for 'G28' command for homing
     //! \param params Accepted by function for formatting check, but are not
     //! used for the command
@@ -47,11 +47,11 @@ class MarlinParser : public CommonParser {
     //! used for the command
     virtual void M83Handler(QVector<QString> params);
 
-  private:
+   private:
     //! \brief Predefined string for home command
     QString m_home_string;
 
     //! \brief Predefined parameters referencing home command
     QVector<QString> m_home_parameters;
 };
-} // namespace ORNL
+}  // namespace ORNL

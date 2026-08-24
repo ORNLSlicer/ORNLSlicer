@@ -55,24 +55,26 @@ QString IslandBase::writeGCode(QSharedPointer<WriterBase> writer) {
     QString ret;
 
     for (auto r : m_regions) {
-        if (r->getPaths().size() > 0)
-            ret += r->writeGCode(writer);
+        if (r->getPaths().size() > 0) ret += r->writeGCode(writer);
     }
 
     return ret;
 }
 
-void IslandBase::addRegion(QSharedPointer<RegionBase> region) { m_regions.push_back(region); }
+void IslandBase::addRegion(QSharedPointer<RegionBase> region) {
+    m_regions.push_back(region);
+}
 
-const QList<QSharedPointer<RegionBase>> IslandBase::getRegions() const { return m_regions; }
+const QList<QSharedPointer<RegionBase>> IslandBase::getRegions() const {
+    return m_regions;
+}
 
 QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
     switch (type) {
         case RegionType::kPerimeter:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Perimeter> perimeter = r.dynamicCast<Perimeter>();
-                if (perimeter.isNull())
-                    continue;
+                if (perimeter.isNull()) continue;
 
                 return std::move(perimeter);
             }
@@ -80,8 +82,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kInset:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Inset> inset = r.dynamicCast<Inset>();
-                if (inset.isNull())
-                    continue;
+                if (inset.isNull()) continue;
 
                 return std::move(inset);
             }
@@ -89,8 +90,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kSkin:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Skin> skin = r.dynamicCast<Skin>();
-                if (skin.isNull())
-                    continue;
+                if (skin.isNull()) continue;
 
                 return std::move(skin);
             }
@@ -98,8 +98,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kInfill:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Infill> infill = r.dynamicCast<Infill>();
-                if (infill.isNull())
-                    continue;
+                if (infill.isNull()) continue;
 
                 return std::move(infill);
             }
@@ -107,8 +106,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kSkeleton:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Skeleton> skeleton = r.dynamicCast<Skeleton>();
-                if (skeleton.isNull())
-                    continue;
+                if (skeleton.isNull()) continue;
 
                 return std::move(skeleton);
             }
@@ -116,8 +114,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kBrim:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Brim> brim = r.dynamicCast<Brim>();
-                if (brim.isNull())
-                    continue;
+                if (brim.isNull()) continue;
 
                 return std::move(brim);
             }
@@ -125,8 +122,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kSkirt:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Skirt> skirt = r.dynamicCast<Skirt>();
-                if (skirt.isNull())
-                    continue;
+                if (skirt.isNull()) continue;
 
                 return std::move(skirt);
             }
@@ -134,8 +130,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kRaft:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Raft> raft = r.dynamicCast<Raft>();
-                if (raft.isNull())
-                    continue;
+                if (raft.isNull()) continue;
 
                 return std::move(raft);
             }
@@ -143,8 +138,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kSupport:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<Support> support = r.dynamicCast<Support>();
-                if (support.isNull())
-                    continue;
+                if (support.isNull()) continue;
 
                 return std::move(support);
             }
@@ -152,8 +146,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kLaserScan:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<LaserScan> laserscan = r.dynamicCast<LaserScan>();
-                if (laserscan.isNull())
-                    continue;
+                if (laserscan.isNull()) continue;
 
                 return std::move(laserscan);
             }
@@ -161,8 +154,7 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
         case RegionType::kThermalScan:
             for (QSharedPointer<RegionBase> r : m_regions) {
                 QSharedPointer<ThermalScan> thermalscan = r.dynamicCast<ThermalScan>();
-                if (thermalscan.isNull())
-                    continue;
+                if (thermalscan.isNull()) continue;
 
                 return std::move(thermalscan);
             }
@@ -176,7 +168,9 @@ QSharedPointer<RegionBase> IslandBase::getRegion(RegionType type) {
     return nullptr;
 }
 
-const PolygonList& IslandBase::getGeometry() const { return m_geometry; }
+const PolygonList& IslandBase::getGeometry() const {
+    return m_geometry;
+}
 
 void IslandBase::compute(uint layer_num) {
     PolygonList pl = m_geometry;
@@ -188,30 +182,28 @@ void IslandBase::compute(uint layer_num) {
     }
 }
 
-QSharedPointer<SettingsBase> IslandBase::getSb() const { return m_sb; }
+QSharedPointer<SettingsBase> IslandBase::getSb() const {
+    return m_sb;
+}
 
 void IslandBase::setSb(const QSharedPointer<SettingsBase>& sb) {
     m_sb = sb;
 
     // For each region in the stages, populate their sb's with the island's.
-    for (auto r : m_regions) {
-        r->setSb(m_sb);
-    }
+    for (auto r : m_regions) { r->setSb(m_sb); }
 }
 
 void IslandBase::setOptimizationFrame(const Plane& slicing_plane, const Point& optimization_shift) {
-    for (auto r : m_regions) {
-        r->setOptimizationFrame(slicing_plane, optimization_shift);
-    }
+    for (auto r : m_regions) { r->setOptimizationFrame(slicing_plane, optimization_shift); }
 }
 
-IslandType IslandBase::getType() { return m_island_type; }
+IslandType IslandBase::getType() {
+    return m_island_type;
+}
 
 void IslandBase::transform(QQuaternion rotation, Point shift) {
     // rotate and then shift every region in this island
-    for (QSharedPointer<RegionBase> region : m_regions) {
-        region->transform(rotation, shift);
-    }
+    for (QSharedPointer<RegionBase> region : m_regions) { region->transform(rotation, shift); }
 }
 
 float IslandBase::getMinZ() {
@@ -219,8 +211,7 @@ float IslandBase::getMinZ() {
     float island_min = std::numeric_limits<float>::max();
     for (QSharedPointer<RegionBase> region : m_regions) {
         float region_min = region->getMinZ();
-        if (region_min < island_min)
-            island_min = region_min;
+        if (region_min < island_min) island_min = region_min;
     }
     return island_min;
 }
@@ -238,7 +229,9 @@ bool IslandBase::getAnyValidPaths() {
     return ret;
 }
 
-QVector<SettingsPolygon> IslandBase::getSettingsPolygons() { return m_settings_polygons; }
+QVector<SettingsPolygon> IslandBase::getSettingsPolygons() {
+    return m_settings_polygons;
+}
 
 void IslandBase::prepareRegionForOptimization(const QSharedPointer<RegionBase>& region, int layerNumber,
                                               QVector<QSharedPointer<RegionBase>>& previousRegions) {
@@ -246,15 +239,12 @@ void IslandBase::prepareRegionForOptimization(const QSharedPointer<RegionBase>& 
 
     for (int i = previousRegions.size() - 1; i >= 0; --i) {
         const QSharedPointer<RegionBase>& previous_region = previousRegions[i];
-        if (previous_region->getRegionType() != region->getRegionType())
-            continue;
+        if (previous_region->getRegionType() != region->getRegionType()) continue;
 
-        if (previous_region->getOptimizedLayerNumber() >= layerNumber)
-            continue;
+        if (previous_region->getOptimizedLayerNumber() >= layerNumber) continue;
 
         previous_start = previous_region->getFirstPrintingStartPoint();
-        if (previous_start.has_value())
-            break;
+        if (previous_start.has_value()) break;
     }
 
     region->setOptimizedLayerNumber(layerNumber);
@@ -263,16 +253,14 @@ void IslandBase::prepareRegionForOptimization(const QSharedPointer<RegionBase>& 
 
 void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<RegionBase>>& previousRegions) {
     if (previousRegions.size() > 1) {
-        QSharedPointer<RegionBase> lastRegion = previousRegions.last();
+        QSharedPointer<RegionBase> lastRegion       = previousRegions.last();
         QSharedPointer<RegionBase> preceedingRegion = previousRegions[previousRegions.size() - 2];
         if (lastRegion->getMaterialNumber() != preceedingRegion->getMaterialNumber()) {
             Distance transition_distance;
             if (m_sb->setting<int>(MS::MultiMaterial::kEnableSecondDistance) && lastRegion->getMaterialNumber() == 2) {
                 transition_distance = m_sb->setting<Distance>(MS::MultiMaterial::kSecondDistance);
             }
-            else {
-                transition_distance = m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance);
-            }
+            else { transition_distance = m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance); }
 
             int i = previousRegions.size() - 2;
             while (i >= 0 && transition_distance > 0) {
@@ -285,8 +273,7 @@ void IslandBase::calculateMultiMaterialTransitions(QVector<QSharedPointer<Region
 }
 
 void IslandBase::fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb) {
-    for (QSharedPointer<RegionBase> region : m_regions)
-        region->fitCircularArcs(global_sb);
+    for (QSharedPointer<RegionBase> region : m_regions) region->fitCircularArcs(global_sb);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

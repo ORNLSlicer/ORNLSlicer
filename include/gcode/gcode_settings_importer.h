@@ -1,17 +1,16 @@
 #pragma once
 
-#include <functional>
-#include <optional>
-
 #include <QString>
 #include <QStringList>
+#include <functional>
+#include <optional>
 
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
 
 class GcodeSettingsImporter {
-  public:
+   public:
     struct ImportResult {
         fifojson settings_file;
         QStringList errors;
@@ -36,4 +35,4 @@ class GcodeSettingsImporter {
     static QStringList settingOptions(const fifojson& master_entry);
 };
 
-} // namespace ORNL
+}  // namespace ORNL

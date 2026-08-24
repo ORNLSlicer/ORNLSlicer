@@ -16,7 +16,7 @@
 
 namespace ORNL {
 class Perimeter : public RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param index: index for region order
@@ -47,7 +47,7 @@ class Perimeter : public RegionBase {
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
-  private:
+   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
@@ -101,4 +101,4 @@ class Perimeter : public RegionBase {
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;
 };
-} // namespace ORNL
+}  // namespace ORNL

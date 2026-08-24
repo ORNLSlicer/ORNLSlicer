@@ -3,6 +3,7 @@
 #include <QMatrix4x4>
 #include <QPointF>
 #include <QString>
+
 #include <qlist.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -22,14 +23,16 @@ class SeamObject;
  * the derived classes.
  */
 class PrinterObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Pick result for draggable optimization point graphics.
     struct OptimizationPointPick {
         QSharedPointer<SeamObject> object;
         QString x_setting;
         QString y_setting;
 
-        bool isValid() const { return !object.isNull(); }
+        bool isValid() const {
+            return !object.isNull();
+        }
     };
 
     //! \brief Update this printer using new settings.
@@ -68,7 +71,7 @@ class PrinterObject : public GraphicsObject {
     //! \return the default zoom in OpenGL space
     float getDefaultZoom();
 
-  protected:
+   protected:
     //! \brief Empty constructor (for derived classes).
     PrinterObject(bool is_true_volume);
 
@@ -94,7 +97,7 @@ class PrinterObject : public GraphicsObject {
     //! \brief the max dim of the printer
     QVector3D m_printer_max_dims;
 
-  private:
+   private:
     //! \brief If seams are shown.
     bool m_seams_shown = false;
 
@@ -116,4 +119,4 @@ class PrinterObject : public GraphicsObject {
         QSharedPointer<GraphicsObject> custom_point_second_guide;
     } m_seams;
 };
-} // namespace ORNL
+}  // namespace ORNL

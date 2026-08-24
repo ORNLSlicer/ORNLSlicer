@@ -1,6 +1,7 @@
 #include "gcode/writers/ornl_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -29,21 +30,19 @@ QString ORNLWriter::writeSettingsHeader(GcodeSyntax syntax) {
 
 QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                       int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_rpm = 0;
-    m_current_robot = 1;
-    m_machine_type = m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType);
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_rpm       = 0;
+    m_current_robot     = 1;
+    m_machine_type      = m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType);
     m_deposition_active = false;
-    m_first_travel = true;
-    m_first_print = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
+    m_first_travel      = true;
+    m_first_print       = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
-        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
-            rv += "M0" % commentSpaceLine("WAIT FOR USER");
-        }
+        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) { rv += "M0" % commentSpaceLine("WAIT FOR USER"); }
         rv += writeDwell(0.25);
     }
 
@@ -68,13 +67,10 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
         rv +=
             writePurge(m_sb->setting<int>(MS::Purge::kInitialScrewRPM), m_sb->setting<int>(MS::Purge::kInitialDuration),
                        m_sb->setting<int>(MS::Purge::kInitialTipWipeDelay));
-        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
-            rv += "M0" % commentSpaceLine("WAIT FOR USER");
-        }
+        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) { rv += "M0" % commentSpaceLine("WAIT FOR USER"); }
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -85,7 +81,7 @@ QString ORNLWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
 
 QString ORNLWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     rv += "M01 " % commentLine("OPTIONAL STOP - LAYER CHANGE");
     return rv;
@@ -187,7 +183,7 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -197,7 +193,7 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
     // write the lift
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
 
         rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
@@ -210,13 +206,13 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
                                   m_sb->setting<Distance>(PS::Travel::kLiftHeight)() +
                                   m_sb->setting<Distance>(PS::Layer::kLayerHeight)()));
     else if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
@@ -230,12 +226,12 @@ QString ORNLWriter::writeTravel(Point start_location, Point target_location, Tra
 QString ORNLWriter::writeLine(const Point& start_point, const Point& target_point,
                               const QSharedPointer<SettingsBase> params) {
     // Get the settings
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    int material_number = params->setting<int>(SS::kMaterialNumber);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    int rpm                      = params->setting<int>(SS::kExtruderSpeed);
+    int material_number          = params->setting<int>(SS::kMaterialNumber);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
@@ -249,9 +245,7 @@ QString ORNLWriter::writeLine(const Point& start_point, const Point& target_poin
     if (m_layer_start && m_machine_type != MachineType::kWire_Arc) {
         setFeedrate(speed);
         rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
-        if (m_machine_type != MachineType::kWire_Arc) {
-            rv += m_s % QString::number(output_rpm);
-        }
+        if (m_machine_type != MachineType::kWire_Arc) { rv += m_s % QString::number(output_rpm); }
 
         m_current_rpm = rpm;
 
@@ -289,17 +283,15 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
     QString rv;
 
     // Get the settings
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
-    Distance z_offset = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    float output_rpm    = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    Distance z_offset   = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
 
-    if (!m_deposition_active && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0, params);
-    }
+    if (!m_deposition_active && rpm > 0) { rv += writeExtruderOn(region_type, rpm, 0, params); }
 
     rv += ((ccw) ? m_G3 : m_G2);
 
@@ -324,16 +316,14 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // Add comment for gcode parser
     if (path_modifiers != PathModifiers::kNone) {
         rv += commentSpaceLine(toString(region_type) % m_space % toString(path_modifiers));
     }
-    else {
-        rv += commentSpaceLine(toString(region_type));
-    }
+    else { rv += commentSpaceLine(toString(region_type)); }
 
     return rv;
 }
@@ -341,7 +331,7 @@ QString ORNLWriter::writeArc(const Point& start_point, const Point& end_point, c
 QString ORNLWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off the extruder
+        rv += writeExtruderOff(0);  // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -435,8 +425,8 @@ QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
     }
     else {
         // Retrieve relevant settings
-        int initial_speed = getInitialExtruderSpeed(params);
-        float gear_ratio = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+        int initial_speed         = getInitialExtruderSpeed(params);
+        float gear_ratio          = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
         bool force_min_layer_time = m_sb->setting<bool>(MS::Cooling::kForceMinLayerTime);
         ForceMinimumLayerTime force_min_layer_time_method =
             m_sb->setting<ForceMinimumLayerTime>(MS::Cooling::kForceMinLayerTimeMethod);
@@ -476,9 +466,7 @@ QString ORNLWriter::writeExtruderOn(RegionType region_type, int rpm, int extrude
             }
 
             // Write the appropriate dwell time for the region
-            if (dwell_time > 0) {
-                rv += writeDwell(dwell_time);
-            }
+            if (dwell_time > 0) { rv += writeDwell(dwell_time); }
         }
         else {
             output_rpm = gear_ratio * rpm;
@@ -515,9 +503,7 @@ QString ORNLWriter::writeExtruderOff(int extruder_number) {
             rv += "M105" % commentSpaceLine("WIRE SHIELDING OFF");
         }
     }
-    else if (off_delay > 0) {
-        rv += writeDwell(off_delay);
-    }
+    else if (off_delay > 0) { rv += writeDwell(off_delay); }
 
     rv += m_M5 % commentSpaceLine("TURN EXTRUDER OFF");
     m_current_rpm = 0;
@@ -549,14 +535,10 @@ QString ORNLWriter::writeCoordinates(Point destination) {
 
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
 
-        if (m_current_robot == 1) {
-            rv += " X_R=-180 Y_R=0 Z_R=-135 A_P=0 C_P=0";
-        }
-        else if (m_current_robot == 2) {
-            rv += " X_R=180 Y_R=0 Z_R=90 A_P=0 C_P=0";
-        }
+        if (m_current_robot == 1) { rv += " X_R=-180 Y_R=0 Z_R=-135 A_P=0 C_P=0"; }
+        else if (m_current_robot == 2) { rv += " X_R=180 Y_R=0 Z_R=90 A_P=0 C_P=0"; }
     }
     else {
         // always specify X and Y
@@ -576,10 +558,10 @@ QString ORNLWriter::writeCoordinates(Point destination) {
         if (qAbs(target_z - m_last_z) > 10) {
             rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
             m_current_z = target_z;
-            m_last_z = target_z;
+            m_last_z    = target_z;
         }
     }
 
     return rv;
 }
-} // namespace ORNL
+}  // namespace ORNL

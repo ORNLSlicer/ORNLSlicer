@@ -1,7 +1,5 @@
 #pragma once
 
-#include <array>
-
 #include <QDoubleSpinBox>
 #include <QEvent>
 #include <QGridLayout>
@@ -9,6 +7,8 @@
 #include <QString>
 #include <QVariant>
 #include <QWidget>
+#include <array>
+
 #include <qobject.h>
 #include <qtmetamacros.h>
 
@@ -25,7 +25,7 @@ class SettingTab;
 class Vector2InputWidget : public QWidget, public SettingRowBase {
     Q_OBJECT
 
-  public:
+   public:
     Vector2InputWidget(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString primary_key, QString secondary_key,
                        fifojson json, QGridLayout* layout, int index, Distance primary_default,
                        Distance secondary_default, QString primary_label = "X", QString secondary_label = "Y");
@@ -39,28 +39,28 @@ class Vector2InputWidget : public QWidget, public SettingRowBase {
     //! \brief Enable/disable row.
     void setEnabled(bool enabled) override;
 
-  signals:
+   signals:
     //! \brief Signal emitted when a setting is modified by user.
     void modified(QString key);
 
     //! \brief Signal emitted to pass a warning up to the next level.
     void warnParent(int count);
 
-  public slots:
+   public slots:
     //! \brief Slot to satisfy SettingRowBase; updates the primary setting.
     void valueChanged(QVariant val) override;
 
     //! \brief Slot to handle setting reload when user changes units or selects another setting profile.
     void reloadValue() override;
 
-  protected:
+   protected:
     bool eventFilter(QObject* watched, QEvent* event) override;
 
     void setNotification(QString msg) override;
 
     void clearNotification() override;
 
-  private:
+   private:
     struct Component {
         QString key;
         QDoubleSpinBox* spin_box;
@@ -81,4 +81,4 @@ class Vector2InputWidget : public QWidget, public SettingRowBase {
     bool m_warn;
     int m_precision = 4;
 };
-} // namespace ORNL
+}  // namespace ORNL

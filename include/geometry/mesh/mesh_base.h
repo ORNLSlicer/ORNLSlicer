@@ -28,7 +28,7 @@ namespace ORNL {
 //! \class MeshBase
 //! \brief A base type for 3D objects
 class MeshBase {
-  public:
+   public:
     //! \brief Default constructor
     MeshBase();
 
@@ -211,13 +211,15 @@ class MeshBase {
         typedef value_type& reference;
         typedef boost::lvalue_property_map_tag category;
         FacetPropMap(std::vector<ValueType>& internal_vector) : m_internal_vector(internal_vector) {}
-        reference operator[](key_type key) const { return m_internal_vector[key->id()]; }
+        reference operator[](key_type key) const {
+            return m_internal_vector[key->id()];
+        }
 
-      private:
+       private:
         std::vector<ValueType>& m_internal_vector;
     };
 
-  protected:
+   protected:
     //! \brief instructs child class to update it's underlying CGAL representation from the faces and vertices
     //! \note this is called by setTransformation()
     virtual void convert() = 0;
@@ -286,9 +288,9 @@ class MeshBase {
     //! \brief if this mesh is closed or not
     bool m_is_closed = false;
 
-  private:
+   private:
     //! \brief check if transformation is rotation
     //! \param matrix: a translation matrix
     bool isRotationalTransform(const QMatrix4x4& matrix, QQuaternion& rotation);
 };
-} // namespace ORNL
+}  // namespace ORNL

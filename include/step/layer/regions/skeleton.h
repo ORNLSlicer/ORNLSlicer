@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QStack>
+
 #include <boost/graph/adjacency_list.hpp>
 #include <boost/graph/connected_components.hpp>
 #include <boost/graph/filtered_graph.hpp>
@@ -24,9 +25,9 @@
 #include "units/unit.h"
 
 namespace ORNL {
-using SkeletonGraph = boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, Point, Polyline>;
+using SkeletonGraph  = boost::adjacency_list<boost::listS, boost::listS, boost::undirectedS, Point, Polyline>;
 using SkeletonVertex = boost::graph_traits<SkeletonGraph>::vertex_descriptor;
-using SkeletonEdge = boost::graph_traits<SkeletonGraph>::edge_descriptor;
+using SkeletonEdge   = boost::graph_traits<SkeletonGraph>::edge_descriptor;
 
 struct SkeletonSubgraphFilter {
     SkeletonSubgraphFilter() = default;
@@ -34,7 +35,9 @@ struct SkeletonSubgraphFilter {
     SkeletonSubgraphFilter(QMap<SkeletonVertex, int> vertex_subgraph_map_)
         : vertex_subgraph_map(vertex_subgraph_map_) {}
 
-    bool operator()(const SkeletonVertex& v) const { return vertex_subgraph_map[v] == 0; }
+    bool operator()(const SkeletonVertex& v) const {
+        return vertex_subgraph_map[v] == 0;
+    }
 
     QMap<SkeletonVertex, int> vertex_subgraph_map;
 };
@@ -42,7 +45,7 @@ struct SkeletonSubgraphFilter {
 using SkeletonSubgraph = boost::filtered_graph<SkeletonGraph, boost::keep_all, SkeletonSubgraphFilter>;
 
 class Skeleton : public RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param index: index for region order
@@ -155,7 +158,7 @@ class Skeleton : public RegionBase {
      */
     QVector<Path> filterPath(const Path& path);
 
-  private:
+   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
@@ -173,4 +176,4 @@ class Skeleton : public RegionBase {
     //! @brief The current layer number being processed
     uint m_layer_num;
 };
-} // namespace ORNL
+}  // namespace ORNL

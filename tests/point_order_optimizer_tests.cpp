@@ -12,23 +12,24 @@
 
 namespace {
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
 }
 
-bool closeTo(double lhs, double rhs) { return std::abs(lhs - rhs) <= 1.0e-5; }
+bool closeTo(double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1.0e-5;
+}
 
 ORNL::Polyline squareLoop() {
     return ORNL::Polyline {ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
                            ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)};
 }
-} // namespace
+}  // namespace
 
 int main() {
-    bool passed = true;
+    bool passed                   = true;
     const ORNL::Polyline polyline = squareLoop();
 
     const auto physical_selection = ORNL::PointOrderOptimizer::linkToPoint(
@@ -40,9 +41,9 @@ int main() {
                      "Expected consecutive physical selection to split at the requested XY distance.");
     passed &= expect(physical_selection.insertion_index == 1,
                      "Expected consecutive split to be inserted before the second square vertex.");
-    passed &= expect(closeTo(physical_selection.split_point.x(), 5.0) &&
-                         closeTo(physical_selection.split_point.y(), 0.0),
-                     "Expected consecutive split point at (5, 0).");
+    passed &=
+        expect(closeTo(physical_selection.split_point.x(), 5.0) && closeTo(physical_selection.split_point.y(), 0.0),
+               "Expected consecutive split point at (5, 0).");
 
     const auto randomized_split_selection = ORNL::PointOrderOptimizer::linkToPoint(
         ORNL::Point(999.0f, 999.0f, 0.0f), polyline, 4, ORNL::PointOrderOptimization::kConsecutive, false,

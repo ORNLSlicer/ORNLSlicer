@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Haas syntax
  */
 class HaasWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     HaasWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -75,7 +75,7 @@ class HaasWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
 
@@ -102,5 +102,5 @@ class HaasWriter : public WriterBase {
     //! @brief The tool number to use for the current operation
     int m_tool_number;
 
-}; // class HaasWriter
-} // namespace ORNL
+};  // class HaasWriter
+}  // namespace ORNL

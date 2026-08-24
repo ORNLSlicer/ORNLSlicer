@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Tormach syntax
  */
 class AML3DWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     AML3DWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -87,7 +87,7 @@ class AML3DWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the tamper
     QString writeTamperOn();
     //! \brief Writes G-Code to disable the tamper
@@ -114,5 +114,5 @@ class AML3DWriter : public WriterBase {
     //! \brief true if wiping tip and no travel has been initiated
     bool m_tip_wipe;
 
-}; // class AML3DWriter
-} // namespace ORNL
+};  // class AML3DWriter
+}  // namespace ORNL

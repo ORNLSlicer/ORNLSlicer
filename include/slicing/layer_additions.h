@@ -34,5 +34,5 @@ void addThermalScan(QSharedPointer<Layer> layer);
 //! \param output_path: the ouput dir of the scan file
 void addLaserScan(QSharedPointer<Part> part, int layer_index, double running_total, QSharedPointer<Step> build_layer,
                   QDir output_path);
-} // namespace LayerAdditions
-} // namespace ORNL
+}  // namespace LayerAdditions
+}  // namespace ORNL

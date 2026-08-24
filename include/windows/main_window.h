@@ -12,6 +12,7 @@
 #include <QToolBar>
 #include <QUdpSocket>
 #include <QUndoStack>
+
 #include <qboxlayout.h>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>
@@ -71,7 +72,7 @@ class MainWindow : public QMainWindow {
     friend class PartTransformUndoCommand;
     friend class SettingValueUndoCommand;
 
-  public:
+   public:
     //! \brief Get the singleton instance of the MainWindow.
     static MainWindow* getInstance();
 
@@ -81,11 +82,11 @@ class MainWindow : public QMainWindow {
     //! \brief Get the instance of the cmd widget to access data.
     CmdWidget* getCmdOut();
 
-  signals:
+   signals:
     //! \brief Signal to indicate check of time is complete (if registry check is insufficient)
     void nistDone();
 
-  public slots:
+   public slots:
     //! \brief Override show event to manipulate bounds on cmd_window
     void showEvent(QShowEvent* event);
 
@@ -133,7 +134,7 @@ class MainWindow : public QMainWindow {
     //! \brief loads a point cloud into a surface mesh object
     void loadPointCloud();
 
-  private slots:
+   private slots:
     //! \brief Start the slicing.
     void doSlice();
 
@@ -245,7 +246,7 @@ class MainWindow : public QMainWindow {
     //! \brief Load a template file from a known path.
     void loadTemplateFile(const QString& filename);
 
-  private:
+   private:
     //! \brief Struct to retain action information efficiently.
     struct menu_info {
         //! \brief Display name.
@@ -336,8 +337,8 @@ class MainWindow : public QMainWindow {
     void applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, const PartTransformSnapshot& snapshot);
 
     //! \brief Takes setting value snapshots for a set of target bases.
-    QVector<SettingValueSnapshot>
-    settingValueSnapshots(const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const;
+    QVector<SettingValueSnapshot> settingValueSnapshots(
+        const QString& key, const QList<QSharedPointer<SettingsBase>>& settings_bases) const;
 
     //! \brief Applies setting value snapshots as an undo/redo operation.
     void applySettingValueSnapshots(const QVector<SettingValueSnapshot>& snapshots);
@@ -446,7 +447,7 @@ class MainWindow : public QMainWindow {
     //! \brief Setting panel to menu map
     QHash<QString, QMenu*> m_setting_panel_to_menu_map;
 
-  protected:
+   protected:
     void closeEvent(QCloseEvent* event);
 };
-} // namespace ORNL
+}  // namespace ORNL

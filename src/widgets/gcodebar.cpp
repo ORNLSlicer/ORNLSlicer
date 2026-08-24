@@ -4,6 +4,7 @@
 #include <QPushButton>
 #include <QStandardPaths>
 #include <QTextDocumentWriter>
+
 #include <qcheckbox.h>
 #include <qcombobox.h>
 #include <qframe.h>
@@ -48,9 +49,7 @@ void GcodeBar::updateGcodeText(QString text, QHash<QString, QTextCharFormat> fon
 
     // Preserve the last search without running an empty-document search over large G-code files.
     m_search_count = 0;
-    if (!m_search_bar->text().trimmed().isEmpty()) {
-        search();
-    }
+    if (!m_search_bar->text().trimmed().isEmpty()) { search(); }
 }
 
 void GcodeBar::clear() {
@@ -98,8 +97,7 @@ void GcodeBar::updateLowerSlider(int new_value) {
 }
 
 void GcodeBar::forwardLowerLayerUpdate(int new_value) {
-    if (m_lock_layer->isChecked())
-        m_layer_upper->setValue(new_value + m_lock_distance);
+    if (m_lock_layer->isChecked()) m_layer_upper->setValue(new_value + m_lock_distance);
     // Before we forward, we should check if the new upper layer value is less than the lower layer,
     // and if so, set the lower layer to the upper layer.
     else if (new_value > m_layer_upper->value()) {
@@ -140,8 +138,7 @@ void GcodeBar::updateUpperSlider(int new_value) {
 }
 
 void GcodeBar::forwardUpperLayerUpdate(int new_value) {
-    if (m_lock_layer->isChecked())
-        m_layer_lower->setValue(new_value - m_lock_distance);
+    if (m_lock_layer->isChecked()) m_layer_lower->setValue(new_value - m_lock_distance);
     // Before we forward, we should check if the new upper layer value is less than the lower layer,
     // and if so, set the lower layer to the upper layer.
     else if (new_value < m_layer_lower->value()) {
@@ -202,8 +199,7 @@ void GcodeBar::forwardLineChange(QList<int> linesToAdd, QList<int> linesToRemove
     if (linesToAdd.count() == 1 && linesToAdd[0] > 0) {
         int layerNumber = 0;
         for (int layerStartLine : m_layer_first_line_numbers) {
-            if (layerStartLine > linesToAdd[0] + 1)
-                break;
+            if (layerStartLine > linesToAdd[0] + 1) break;
             ++layerNumber;
         }
         --layerNumber;
@@ -236,8 +232,7 @@ void GcodeBar::setMaxLayer(int max_value) {
 void GcodeBar::setMaxSegment(int max_value) {
     // If layer has no geometry, max_value will be negative one
     // Make max_value zero to show no geometry exists
-    if (max_value < 0)
-        max_value = 0;
+    if (max_value < 0) max_value = 0;
 
     m_segment_lower->setMaximum(max_value);
     m_segment_lower_slider->setMaximum(max_value);
@@ -263,7 +258,6 @@ void GcodeBar::setupWidget() {
 }
 
 void GcodeBar::setupSubWidgets() {
-
     // Search Separator
     m_search_separator = new QFrame(this);
     m_search_separator->setFrameShape(QFrame::HLine);
@@ -443,8 +437,7 @@ void GcodeBar::setupEvents() {
     });
 
     connect(m_lock_layer, &QCheckBox::clicked, [this] {
-        if (m_lock_layer->isChecked())
-            m_lock_distance = m_layer_upper->value() - m_layer_lower->value();
+        if (m_lock_layer->isChecked()) m_lock_distance = m_layer_upper->value() - m_layer_lower->value();
     });
 
     // Timeout occurs when the timer is up, and the next layer or segment is drawn
@@ -479,12 +472,10 @@ void GcodeBar::search() {
 }
 
 void GcodeBar::updateRefreshButton(bool change) {
-
     // Don't enable the refresh button if the change is for formatting resulted from a search
     // QPlainTextEdit::modificationChanged is for all types of modifications. No signal available for content change
     // only
-    if (!m_search_only_change)
-        m_refresh_btn->setEnabled(change);
+    if (!m_search_only_change) m_refresh_btn->setEnabled(change);
 }
 
 void GcodeBar::updatePlayButton() {
@@ -517,10 +508,8 @@ void GcodeBar::updateSegmentPlayButton() {
         m_segment_play_btn->setToolTip("Start playing segments");
     }
     else {
-        if (m_hide_travel->isChecked())
-            m_hide_travel->click();
-        if (m_hide_support->isChecked())
-            m_hide_support->click();
+        if (m_hide_travel->isChecked()) m_hide_travel->click();
+        if (m_hide_support->isChecked()) m_hide_support->click();
 
         // Delay between drawing segments in milliseconds
         int draw_time = PreferencesManager::getInstance()->getSegmentLag();
@@ -561,4 +550,4 @@ void GcodeBar::drawNextSegment() {
         m_segment_play_btn->setToolTip("Start playing segments");
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

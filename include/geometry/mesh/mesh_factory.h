@@ -9,7 +9,7 @@ namespace ORNL {
  * \brief Static class the provides various functions to generate meshes
  */
 class MeshFactory {
-  public:
+   public:
     //! \brief Constructor
     MeshFactory();
 
@@ -52,4 +52,4 @@ class MeshFactory {
     //! \return a new mesh
     static ClosedMesh CreateConeMesh(const Distance& radius, const Distance& height, const int resolution = 50);
 };
-} // namespace ORNL
+}  // namespace ORNL

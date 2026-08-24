@@ -1,6 +1,7 @@
 #include "gcode/writers/meld_writer.h"
 
 #include <QStringBuilder>
+
 #include <qhashfunctions.h>
 #include <qnumeric.h>
 #include <qsharedpointer.h>
@@ -19,15 +20,15 @@ MeldWriter::MeldWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) :
 
 QString MeldWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                       int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_w         = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_travel = true;
-    m_first_print = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
-    m_material_number = -1;
+    m_first_travel      = true;
+    m_first_print       = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
+    m_material_number   = -1;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("preamble");
@@ -53,8 +54,7 @@ QString MeldWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
         m_start_point = Point(minimum_x, minimum_y, 0);
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -65,7 +65,7 @@ QString MeldWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Di
 
 QString MeldWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     return rv;
 }
@@ -119,7 +119,7 @@ QString MeldWriter::writeBeforePath(RegionType type) {
 QString MeldWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                 QSharedPointer<SettingsBase> params) {
     QString rv;
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
+    Velocity speed  = params->setting<Velocity>(SS::kSpeed);
     Velocity zSpeed = m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed);
 
     Point new_start_location;
@@ -133,7 +133,7 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -147,7 +147,7 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
     // write the lift
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G1 % m_f % QString::number(zSpeed.to(m_meta.m_velocity_unit)) % writeCoordinates(lift_destination) %
               commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
@@ -158,7 +158,7 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
     if (m_first_travel)
         travel_destination.z(qAbs(m_sb->setting<Distance>(PRS::Dimensions::kZOffset)()));
     else if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
           commentSpaceLine("TRAVEL");
@@ -171,30 +171,26 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     return rv;
 }
 
 QString MeldWriter::writeLine(const Point& start_point, const Point& target_point,
                               const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    int rpm                      = params->setting<int>(SS::kExtruderSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
     // turn on the extruder if it isn't already on
-    if (m_deposition_active == false && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, params);
-    }
+    if (m_deposition_active == false && rpm > 0) { rv += writeExtruderOn(region_type, rpm, params); }
 
-    if (rpm == 0 && m_deposition_active == true) {
-        rv += writeExtruderOff();
-    }
+    if (rpm == 0 && m_deposition_active == true) { rv += writeExtruderOff(); }
 
     rv += m_G1;
     // update feedrate if needed
@@ -222,16 +218,14 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
                              const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // Turn on the extruder if it isn't already on
-    if (!m_deposition_active && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, params);
-    }
+    if (!m_deposition_active && rpm > 0) { rv += writeExtruderOn(region_type, rpm, params); }
 
     rv += ((ccw) ? m_G3 : m_G2);
 
@@ -257,7 +251,7 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // Add comment for gcode parser
@@ -355,7 +349,7 @@ QString MeldWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPoint
     m_deposition_active = true;
     float output_rpm;
     int initial_rpm = getInitialExtruderSpeed(params);
-    output_rpm = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
+    output_rpm      = m_sb->setting<float>(PRS::MachineSpeed::kGearRatio) * initial_rpm;
 
     if (!m_sb->setting<int>(ES::FileOutput::kMeldDiscrete)) {
         rv += "M4" % m_s % QString::number(output_rpm) % " @714" % commentSpaceLine("TURN SPINDLE ON");
@@ -429,9 +423,9 @@ QString MeldWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

@@ -17,7 +17,7 @@ namespace ORNL {
  * \brief The gcode writer for the KraussMaffei syntax
  */
 class KraussMaffeiWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     KraussMaffeiWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -76,7 +76,7 @@ class KraussMaffeiWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes g-code coordinates WXYZ for a move or travel to the destination point
     QString writeCoordinates(Point destination);
 
@@ -91,5 +91,5 @@ class KraussMaffeiWriter : public WriterBase {
     //! \brief true is first print motion of the layer
     bool m_layer_start;
 
-}; // class KraussMaffeiWriter
-} // namespace ORNL
+};  // class KraussMaffeiWriter
+}  // namespace ORNL

@@ -31,12 +31,11 @@ void SupportIsland::optimize(int layerNumber, Point& currentLocation,
         prepareRegionForOptimization(r, layerNumber, previousRegions);
         r->optimize(layerNumber, currentLocation, unused);
 
-        if (r->getPaths().size() > 0)
-            previousRegions.push_back(r);
+        if (r->getPaths().size() > 0) previousRegions.push_back(r);
 
         if (m_sb->setting<bool>(MS::MultiMaterial::kEnable) &&
             m_sb->setting<Distance>(MS::MultiMaterial::kTransitionDistance) > 0)
             calculateMultiMaterialTransitions(previousRegions);
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

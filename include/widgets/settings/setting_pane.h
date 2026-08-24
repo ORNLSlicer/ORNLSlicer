@@ -4,6 +4,7 @@
 #include <QScrollArea>
 #include <QToolButton>
 #include <QWidget>
+
 #include <qboxlayout.h>
 #include <qcontainerfwd.h>
 #include <qhash.h>
@@ -25,7 +26,7 @@ namespace ORNL {
  */
 class SettingPane : public QWidget {
     Q_OBJECT
-  public:
+   public:
     /*!
      * \brief Constructor.
      * \param idx       Index of this pane in SettingsBar tab widget.
@@ -50,7 +51,7 @@ class SettingPane : public QWidget {
     //! \param category Header category to show
     void showTab(QString category);
 
-  public slots:
+   public slots:
     //! \brief Lock all tabs on this pane.
     void setLock(bool status);
     //! \brief Reloads all settings on this pane.
@@ -64,7 +65,7 @@ class SettingPane : public QWidget {
     //! \param count: The number of warnings forwarded from the pane's children
     void paneWarning(int count);
 
-  private slots:
+   private slots:
     /*!
      * \brief Forwards an impending setting modification to the bar for retransmission.
      * \param setting_key   Key that is about to be modified.
@@ -78,7 +79,7 @@ class SettingPane : public QWidget {
      */
     void forwardModifiedSetting(QString setting_key);
 
-  signals:
+   signals:
     /*!
      * \brief Signal that setting is about to be modified.
      * \param setting_key   Key that is about to be modified.
@@ -102,7 +103,7 @@ class SettingPane : public QWidget {
     //! \param pane: String representing the name of the pane that is emitting the signal
     void warnSettingBar(bool warn, QString pane);
 
-  private:
+   private:
     //! \brief Update the configurations listed in the selection box.
     void updateConfigBox();
 
@@ -135,4 +136,4 @@ class SettingPane : public QWidget {
     //! \brief Name of this pane
     QString m_name;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

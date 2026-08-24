@@ -2,6 +2,7 @@
 
 #include <QObject>
 #include <QPlainTextEdit>
+
 #include <qevent.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -26,7 +27,7 @@ class LineNumberDisplay;
 class GcodeTextBoxWidget : public QPlainTextEdit {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Constructor for the Gcode Textbox.
     //! \param parent Parent class for the textbox.
     GcodeTextBoxWidget(QWidget* parent = nullptr);
@@ -88,25 +89,25 @@ class GcodeTextBoxWidget : public QPlainTextEdit {
     //! \param searchCount: the number of Enter/Return hits for the same search string
     void search(QString searchString, int searchCount);
 
-  signals:
+   signals:
     //! \brief Signal to indicate a text line was highlighted/unhighlighted
     //! \param linesToAdd: Segments to highlight
     //! \param linesToRemove: Segments to unhighlight
     void lineChange(QList<int> linesToAdd, QList<int> linesToRemove);
 
-  protected:
+   protected:
     //! \brief Overrides for resizing, mouse, and keys
     void resizeEvent(QResizeEvent* event) override;
     virtual void mouseReleaseEvent(QMouseEvent* event) override;
     //! \brief This function overrides for the up for and down arrows
     virtual void keyPressEvent(QKeyEvent* event) override;
 
-  private slots:
+   private slots:
     //! \brief Update display area for text
     void updateLineNumberDisplayAreaWidth(int blockCount);
     void updateLineNumberDisplayArea(const QRect& rect, int height);
 
-  private:
+   private:
     //! \brief Widget and highlight information
     QWidget* m_line_number_display_area;
     GcodeHighlighter m_highlighter;
@@ -137,4 +138,4 @@ class GcodeTextBoxWidget : public QPlainTextEdit {
     //! \brief Last block clicked on
     int m_last_block_clicked_on;
 };
-} // namespace ORNL
+}  // namespace ORNL

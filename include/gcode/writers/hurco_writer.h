@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Hurco syntax
  */
 class HurcoWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     HurcoWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -75,7 +75,7 @@ class HurcoWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
@@ -96,5 +96,5 @@ class HurcoWriter : public WriterBase {
     //! \brief preallocated prefixs commonly used in this syntax
     int m_material_number;
 
-}; // class HurcoWriter
-} // namespace ORNL
+};  // class HurcoWriter
+}  // namespace ORNL

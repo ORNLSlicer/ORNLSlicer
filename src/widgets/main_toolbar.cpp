@@ -1,7 +1,5 @@
 #include "widgets/main_toolbar.h"
 
-#include <algorithm>
-
 #include <QComboBox>
 #include <QFile>
 #include <QGraphicsDropShadowEffect>
@@ -9,6 +7,8 @@
 #include <QLayout>
 #include <QMenu>
 #include <QSignalBlocker>
+#include <algorithm>
+
 #include <qaction.h>
 #include <qfiledevice.h>
 #include <qicon.h>
@@ -43,7 +43,7 @@ bool usesCustomPathOrderLocation(const QSharedPointer<SettingsBase>& sb) {
            optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kInsetPathOrder)) ||
            optionalPathOrderUsesCustomLocation(sb->setting<int>(PS::Optimizations::kSkinPathOrder));
 }
-} // namespace
+}  // namespace
 
 MainToolbar::MainToolbar(QWidget* parent) : m_parent(parent), QToolBar(parent) {
     setup();
@@ -193,7 +193,7 @@ QToolButton* MainToolbar::buildIconButton(const QString& icon_loc, const QString
 }
 
 QMenu* MainToolbar::buildAddMenu() {
-    auto* add_menu = new QMenu(this);
+    auto* add_menu          = new QMenu(this);
     auto* build_part_action = new QAction("Load Build Model", this);
     build_part_action->setIcon(QIcon(":/icons/print_head.png"));
     connect(build_part_action, &QAction::triggered, this, [this]() { emit loadModel(MeshType::kBuild); });
@@ -257,22 +257,16 @@ QMenu* MainToolbar::buildShapeMenu() {
 
         double length = promptForSize("Enter length", PreferencesManager::getInstance()->getDistanceUnitText(),
                                       PreferencesManager::getInstance()->getDistanceUnit()(), len_ok);
-        if (!len_ok) {
-            return;
-        }
+        if (!len_ok) { return; }
         double width = promptForSize("Enter width", PreferencesManager::getInstance()->getDistanceUnitText(),
                                      PreferencesManager::getInstance()->getDistanceUnit()(), width_ok);
-        if (!width_ok) {
-            return;
-        }
+        if (!width_ok) { return; }
         double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
                                       PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
-        if (!height_ok) {
-            return;
-        }
+        if (!height_ok) { return; }
 
         auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(length, width, height));
-        QString name = promptForName();
+        QString name  = promptForName();
         if (name != "") {
             new_mesh->setName(name);
             auto new_part = QSharedPointer<Part>::create(new_mesh);
@@ -288,17 +282,13 @@ QMenu* MainToolbar::buildShapeMenu() {
         double side_length =
             promptForSize("Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
                           PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
-        if (!side_length_ok) {
-            return;
-        }
+        if (!side_length_ok) { return; }
         double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
                                       PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
-        if (!height_ok) {
-            return;
-        }
+        if (!height_ok) { return; }
 
         auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(side_length, height));
-        QString name = promptForName();
+        QString name  = promptForName();
         if (name != "") {
             new_mesh->setName(name);
             auto new_part = QSharedPointer<Part>::create(new_mesh);
@@ -313,22 +303,16 @@ QMenu* MainToolbar::buildShapeMenu() {
 
         double length = promptForSize("Enter length", PreferencesManager::getInstance()->getDistanceUnitText(),
                                       PreferencesManager::getInstance()->getDistanceUnit()(), len_ok);
-        if (!len_ok) {
-            return;
-        }
+        if (!len_ok) { return; }
         double width = promptForSize("Enter width", PreferencesManager::getInstance()->getDistanceUnitText(),
                                      PreferencesManager::getInstance()->getDistanceUnit()(), width_ok);
-        if (!width_ok) {
-            return;
-        }
+        if (!width_ok) { return; }
         double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
                                       PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
-        if (!height_ok) {
-            return;
-        }
+        if (!height_ok) { return; }
 
         auto new_mesh = QSharedPointer<OpenMesh>::create(MeshFactory::CreateOpenTopBoxMesh(length, width, height));
-        QString name = promptForName();
+        QString name  = promptForName();
         if (name != "") {
             new_mesh->setName(name);
             auto new_part = QSharedPointer<Part>::create(new_mesh);
@@ -345,7 +329,7 @@ QMenu* MainToolbar::buildShapeMenu() {
 
         if (ok) {
             auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateTriaglePyramidMesh(length));
-            QString name = promptForName();
+            QString name  = promptForName();
             if (name != "") {
                 new_mesh->setName(name);
                 auto new_part = QSharedPointer<Part>::create(new_mesh);
@@ -358,10 +342,10 @@ QMenu* MainToolbar::buildShapeMenu() {
     auto* cylinder_action = new QAction("Create Cylinder", this);
     connect(cylinder_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
         bool ok;
-        double radius = promptForSize("Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), ok);
-        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        double radius  = promptForSize("Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        double height  = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
         int resolution = int(promptForSize("Enter resolution", "segments", 1.0, ok));
 
         if (ok) {
@@ -380,15 +364,15 @@ QMenu* MainToolbar::buildShapeMenu() {
     auto* cone_action = new QAction("Create Cone", this);
     connect(cone_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
         bool ok;
-        double radius = promptForSize("Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), ok);
-        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        double radius  = promptForSize("Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        double height  = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
         int resolution = int(promptForSize("Enter resolution", "segments", 1.0, ok));
 
         if (ok) {
             auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(radius, height, resolution));
-            QString name = promptForName();
+            QString name  = promptForName();
             if (name != "") {
                 new_mesh->setName(name);
                 auto new_part = QSharedPointer<Part>::create(new_mesh);
@@ -426,7 +410,7 @@ void MainToolbar::enableCorrectOptions() {
         m_2d_gcode_btn->setEnabled(false);
         m_show_ghosts_btn->setEnabled(false);
         m_export_gcode_btn->setEnabled(false);
-        handleModifiedSetting(""); // Checks and sets seam button
+        handleModifiedSetting("");  // Checks and sets seam button
     }
 }
 
@@ -439,12 +423,11 @@ QString MainToolbar::promptForName() {
     while (name.isEmpty()) {
         name = QInputDialog::getText(this, tr("New Mesh Name"), label, QLineEdit::Normal, "", &ok);
 
-        if (!ok)
-            break;
+        if (!ok) break;
 
         if (CSM->getPart(name) != nullptr) {
             label = "Name already in use. Please enter another:";
-            name = "";
+            name  = "";
         }
     }
 
@@ -455,20 +438,19 @@ double MainToolbar::promptForSize(const QString& label_text, const QString& unit
                                   bool& ok) {
     QString str_value;
     QString label = label_text + "(" + unit_text + "):";
-    double value = 0.0;
-    ok = true;
+    double value  = 0.0;
+    ok            = true;
 
     while (str_value.isEmpty()) {
         str_value = QInputDialog::getText(this, tr("Input"), label, QLineEdit::Normal, "", &ok);
 
-        if (!ok)
-            break;
+        if (!ok) break;
 
         bool conv_ok = false;
-        value = str_value.toDouble(&conv_ok);
+        value        = str_value.toDouble(&conv_ok);
 
         if (!conv_ok) {
-            label = "Error with number. " + label_text + "(" + unit_text + "):";
+            label     = "Error with number. " + label_text + "(" + unit_text + "):";
             str_value = "";
         }
     }
@@ -512,9 +494,13 @@ void MainToolbar::resize(QSize new_size) {
     this->raise();
 }
 
-void MainToolbar::setSliceAbility(bool status) { m_slice_btn->setEnabled(status); }
+void MainToolbar::setSliceAbility(bool status) {
+    m_slice_btn->setEnabled(status);
+}
 
-void MainToolbar::setExportAbility(bool status) { m_export_gcode_btn->setEnabled(status); }
+void MainToolbar::setExportAbility(bool status) {
+    m_export_gcode_btn->setEnabled(status);
+}
 
 void MainToolbar::setLayerSettingsRangeAbility(bool status) {
     m_layer_settings_range_available = status;
@@ -523,9 +509,7 @@ void MainToolbar::setLayerSettingsRangeAbility(bool status) {
         m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
         m_layer_settings_range_btn->setChecked(false);
     }
-    else {
-        m_layer_settings_range_btn->setToolTip("Show selected layer settings height");
-    }
+    else { m_layer_settings_range_btn->setToolTip("Show selected layer settings height"); }
 
     enableCorrectOptions();
 }
@@ -554,4 +538,4 @@ void MainToolbar::handleModifiedSetting(const QString& setting_key) {
         m_seam_btn->setToolTip("Show optimization points");
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

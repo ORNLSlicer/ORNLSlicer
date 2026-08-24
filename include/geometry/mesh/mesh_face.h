@@ -29,7 +29,7 @@ namespace ORNL {
  * \endverbatim
  */
 class MeshFace {
-  public:
+   public:
     //! \brief Constructor
     MeshFace();
 
@@ -44,10 +44,10 @@ class MeshFace {
     int vertex_index[3];
 
     //! \brief faces that are connected to this one
-    int connected_face_index[3]; //!< same ordering as vertex_index
-                                 //!(connected_face is connected via vertex
-                                 //! 0 and
-                                 //! 1, etc)
+    int connected_face_index[3];  //!< same ordering as vertex_index
+                                  //!(connected_face is connected via vertex
+                                  //! 0 and
+                                  //! 1, etc)
 
     //! \brief the normal of this face
     QVector3D normal;
@@ -55,4 +55,4 @@ class MeshFace {
     //! \brief a flag to ignore this face when cross-sectioning
     bool ignore = false;
 };
-} // namespace ORNL
+}  // namespace ORNL

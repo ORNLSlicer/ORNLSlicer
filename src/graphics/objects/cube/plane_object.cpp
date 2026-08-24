@@ -14,9 +14,9 @@ PlaneObject::PlaneObject(BaseView* view, float length, float width, QColor color
 PlaneObject::PlaneObject(BaseView* view, float length, float width, float height, QColor color)
     : CubeObject(view, length, width, height, color) {
     m_starting_length = length;
-    m_starting_width = width;
+    m_starting_width  = width;
     m_starting_height = height;
-    m_color = color;
+    m_color           = color;
 }
 
 void PlaneObject::setLockedRotationQuaternion(const QQuaternion& rotation) {
@@ -24,16 +24,19 @@ void PlaneObject::setLockedRotationQuaternion(const QQuaternion& rotation) {
     this->rotateAbsolute(m_locked_rotation);
 }
 
-void PlaneObject::setLockedRotation(bool lock) { m_rotation_toggle = lock; }
+void PlaneObject::setLockedRotation(bool lock) {
+    m_rotation_toggle = lock;
+}
 
-void PlaneObject::updateDimensions(float length, float width) { updateDimensions(length, width, m_starting_height); }
+void PlaneObject::updateDimensions(float length, float width) {
+    updateDimensions(length, width, m_starting_height);
+}
 
 void PlaneObject::updateDimensions(float length, float width, float height) {
     this->scaleAbsolute(QVector3D(length / m_starting_length, width / m_starting_width, height / m_starting_height));
 }
 
 void PlaneObject::transformationCallback() {
-    if (m_rotation_toggle)
-        this->rotateAbsolute(m_locked_rotation);
+    if (m_rotation_toggle) this->rotateAbsolute(m_locked_rotation);
 }
-} // namespace ORNL
+}  // namespace ORNL

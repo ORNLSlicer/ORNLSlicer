@@ -46,7 +46,7 @@ SettingRowBase* SettingTimeSpinBox::createInstance(SettingTab* parent, QSharedPo
 
 void SettingTimeSpinBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     Time base_value;
     base_value.from(val.toDouble(), PreferencesManager::getInstance()->getTimeUnit());
@@ -62,12 +62,11 @@ void SettingTimeSpinBox::reloadValue() {
 
     bool consistent = true;
     Time cur(reloadValueHelper<double>(consistent));
-    if (consistent)
-        setValue(cur.to(unit));
+    if (consistent) setValue(cur.to(unit));
 
     this->blockSignals(false);
     emit modified(m_key);
 
     checkDynamicDependencies();
 }
-} // namespace ORNL
+}  // namespace ORNL

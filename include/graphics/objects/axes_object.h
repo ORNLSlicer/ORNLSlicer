@@ -7,7 +7,7 @@ namespace ORNL {
  * \brief Object that draws a set of coordinate arrows in the XYZ directions. A very commonly used object.
  */
 class AxesObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param view: View to render to.
     //! \param axis_length: GL length of the axes.
@@ -17,8 +17,8 @@ class AxesObject : public GraphicsObject {
     //! \param axis_length: GL length of the axes.
     void updateDimensions(float axis_length);
 
-  private:
+   private:
     //! \brief Length that object starts with. For scaling.
     float m_starting_length;
 };
-} // namespace ORNL
+}  // namespace ORNL

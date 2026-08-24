@@ -13,6 +13,7 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QToolButton>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -30,7 +31,7 @@ namespace ORNL {
  */
 class TemplateSaveDialog : public QDialog {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor.
     explicit TemplateSaveDialog(QWidget* parent = nullptr);
 
@@ -43,7 +44,7 @@ class TemplateSaveDialog : public QDialog {
     //! \brief Get the optional name from the dialog.
     QString name();
 
-  private slots:
+   private slots:
     //! \brief Checks all items in a selection.
     void checkSelection(QTableWidgetItem* item);
 
@@ -59,7 +60,7 @@ class TemplateSaveDialog : public QDialog {
     //! \brief Update checkbox status
     void updateSelection();
 
-  private:
+   private:
     //! \brief Setup the static widgets and their layouts.
     void setupUi();
 
@@ -136,4 +137,4 @@ class TemplateSaveDialog : public QDialog {
     //! \brief List of types to convert to user preferred unit
     QList<QString> m_convertable_types;
 };
-} // namespace ORNL
+}  // namespace ORNL

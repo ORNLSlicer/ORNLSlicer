@@ -1,9 +1,9 @@
 #include "widgets/settings/setting_spin_box.h"
 
-#include <climits>
-
 #include <QToolTip>
 #include <QWheelEvent>
+#include <climits>
+
 #include <qgridlayout.h>
 #include <qlabel.h>
 #include <qnamespace.h>
@@ -36,8 +36,7 @@ SettingSpinBox::SettingSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> 
     }
 
     QString type = json[Constants::Settings::Master::kType];
-    if (type == "positive_int" || type == "power")
-        this->setMinimum(1);
+    if (type == "positive_int" || type == "power") this->setMinimum(1);
 
     this->setMaximum(INT_MAX);
     this->setAlignment(Qt::AlignRight);
@@ -91,7 +90,7 @@ void SettingSpinBox::show() {
 
 void SettingSpinBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<int>(val.toInt());
     emit modified(m_key);
@@ -100,9 +99,8 @@ void SettingSpinBox::valueChanged(QVariant val) {
 void SettingSpinBox::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
-    int cur = reloadValueHelper<int>(consistent);
-    if (consistent)
-        setValue(cur);
+    int cur         = reloadValueHelper<int>(consistent);
+    if (consistent) setValue(cur);
 
     this->blockSignals(false);
     emit modified(m_key);
@@ -115,4 +113,4 @@ void SettingSpinBox::wheelEvent(QWheelEvent* event) {
     else
         QSpinBox::wheelEvent(event);
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <QApplication>
+
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
 #include <qfont.h>
@@ -23,10 +24,10 @@ namespace ORNL {
 //  1. Use unit class
 //  2. Provide unit choices: metric or British
 FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
-    m_parent = parent;
-    m_density_metric = g / (cm * cm * cm);
+    m_parent               = parent;
+    m_density_metric       = g / (cm * cm * cm);
     Density IS_unit_chosen = lbm / (inch * inch * inch);
-    m_density_metric_to_is = m_density_metric() / IS_unit_chosen(); // around 0.036127292
+    m_density_metric_to_is = m_density_metric() / IS_unit_chosen();  // around 0.036127292
 
     // setFixedSize(420,260);
     setWindowTitle(QApplication::applicationDisplayName() + ": Flowrate Calculator");
@@ -34,7 +35,7 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
-    m_layout = new QGridLayout();
+    m_layout            = new QGridLayout();
     QLabel* lblFlowrate = new QLabel("Flowrate Measurement");
     QFont titleFont("Arial", 10, QFont::Bold);
     lblFlowrate->setFont(titleFont);
@@ -45,12 +46,12 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     m_layout->addWidget(lblPrintParams, 0, 3, 1, 2);
 
     QLabel* lblRPM = new QLabel("Speed (RPM):");
-    m_speed_rpm = new QLineEdit();
+    m_speed_rpm    = new QLineEdit();
     m_layout->addWidget(lblRPM, 1, 0);
     m_layout->addWidget(m_speed_rpm, 1, 1);
 
     QLabel* lblHour = new QLabel("Lbs/Hour:");
-    m_lbs_hour = new QLineEdit();
+    m_lbs_hour      = new QLineEdit();
     m_layout->addWidget(lblHour, 2, 0);
     m_layout->addWidget(m_lbs_hour, 2, 1);
 
@@ -58,30 +59,30 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     m_layout->setColumnMinimumWidth(2, 50);
 
     QLabel* lbl_beadWidth = new QLabel("Bead Width (in):");
-    m_bead_width = new QLineEdit();
+    m_bead_width          = new QLineEdit();
     m_layout->addWidget(lbl_beadWidth, 1, 3);
     m_layout->addWidget(m_bead_width, 1, 4);
 
     QLabel* lbl_layerHeight = new QLabel("Layer Height (in):");
-    m_layer_height = new QLineEdit();
+    m_layer_height          = new QLineEdit();
     m_layout->addWidget(lbl_layerHeight, 2, 3);
     m_layout->addWidget(m_layer_height, 2, 4);
 
     QLabel* lbl_printRate = new QLabel("Desired Print Rate (lbs/hr):");
-    m_print_rate = new QLineEdit();
+    m_print_rate          = new QLineEdit();
     m_layout->addWidget(lbl_printRate, 3, 3);
     m_layout->addWidget(m_print_rate, 3, 4);
 
     QLabel* lbl_materialType = new QLabel("Material Type:");
-    QStringList commands = {"20% CF-ABS", "ABS",         "PPS", "50% CF-PPS", "PPSU", "25% CF-PPSU",
-                            "PESU",       "25% CF-PESU", "PLA", "Concrete",   "Other"};
-    m_material_type = new QComboBox();
+    QStringList commands     = {"20% CF-ABS", "ABS",         "PPS", "50% CF-PPS", "PPSU", "25% CF-PPSU",
+                                "PESU",       "25% CF-PESU", "PLA", "Concrete",   "Other"};
+    m_material_type          = new QComboBox();
     m_material_type->addItems(commands);
     m_layout->addWidget(lbl_materialType, 4, 3);
     m_layout->addWidget(m_material_type, 4, 4);
 
     QLabel* lbl_density = new QLabel("Density (g/cm³):");
-    m_density = new QLineEdit();
+    m_density           = new QLineEdit();
     m_density->setReadOnly(true);
     m_density->setText(QString::number(toDensityValue(PrintMaterial::kABS20CF)() / m_density_metric(), 'f', 5));
     m_density->setEnabled(false);
@@ -94,13 +95,13 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
     m_layout->addWidget(line, 6, 0, 1, 5);
 
     QLabel* lbl_gantrySpeed = new QLabel("Gantry Speed (in/sec):");
-    m_gantry_speed = new QLineEdit();
+    m_gantry_speed          = new QLineEdit();
     m_gantry_speed->setReadOnly(true);
     m_layout->addWidget(lbl_gantrySpeed, 7, 3);
     m_layout->addWidget(m_gantry_speed, 7, 4);
 
     QLabel* lbl_sprindleSpeed = new QLabel("Spindle Speed (RPM):");
-    m_spindle_speed = new QLineEdit();
+    m_spindle_speed           = new QLineEdit();
     m_spindle_speed->setReadOnly(true);
     m_layout->addWidget(lbl_sprindleSpeed, 8, 3);
     m_layout->addWidget(m_spindle_speed, 8, 4);
@@ -150,9 +151,7 @@ void FlowrateCalcWindow::enableDensity(int index) {
 
 void FlowrateCalcWindow::saveOtherDensity() {
     // if enabled, Other must be selected
-    if (m_material_type->isEnabled()) {
-        m_saved_other_density = m_density->text();
-    }
+    if (m_material_type->isEnabled()) { m_saved_other_density = m_density->text(); }
 }
 
 void FlowrateCalcWindow::checkInputAndCalculate() {
@@ -218,10 +217,10 @@ void FlowrateCalcWindow::checkInputAndCalculate() {
     v_density = m_density->text().toDouble(&densityOk) * m_density_metric_to_is;
 
     // calculations
-    double ratio = v_printRate / v_lbsHour;
+    double ratio     = v_printRate / v_lbsHour;
     double volumeSec = (v_printRate / 3600) / v_density;
-    double area = v_layerHeight * (v_beadWidth - v_layerHeight) + M_PI * (v_layerHeight / 2) * (v_layerHeight / 2);
-    double gantrySpeed = volumeSec / area;
+    double area      = v_layerHeight * (v_beadWidth - v_layerHeight) + M_PI * (v_layerHeight / 2) * (v_layerHeight / 2);
+    double gantrySpeed  = volumeSec / area;
     double spindleSpeed = ratio * v_speedRPM;
 
     // write to textboxes
@@ -230,9 +229,7 @@ void FlowrateCalcWindow::checkInputAndCalculate() {
 
     // Warning message in the same window - thus no need for an additional click
     m_status_label->clear();
-    if (spindleSpeed > 400) {
-        m_status_label->setText("Warning: Spindle Speed Exceeds 400 RPM");
-    }
+    if (spindleSpeed > 400) { m_status_label->setText("Warning: Spindle Speed Exceeds 400 RPM"); }
 }
 
 void FlowrateCalcWindow::closeEvent(QCloseEvent* event) {
@@ -250,10 +247,8 @@ void FlowrateCalcWindow::closeEvent(QCloseEvent* event) {
     m_print_rate->clear();
 
     // set the focus back to the main window
-    if (m_parent->isMinimized()) {
-        m_parent->showNormal();
-    }
+    if (m_parent->isMinimized()) { m_parent->showNormal(); }
     // setFocus() doesn't deliver, but activateWindow() serves the purpose
     m_parent->activateWindow();
 }
-} // namespace ORNL
+}  // namespace ORNL

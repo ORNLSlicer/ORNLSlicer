@@ -1,7 +1,5 @@
 #include "windows/gcode_export.h"
 
-#include <algorithm>
-
 #include <QApplication>
 #include <QDir>
 #include <QDirIterator>
@@ -11,6 +9,8 @@
 #include <QLabel>
 #include <QMessageBox>
 #include <QStringBuilder>
+#include <algorithm>
+
 #include <qboxlayout.h>
 #include <qdebug.h>
 #include <qfiledevice.h>
@@ -54,7 +54,7 @@ bool hasVisualizationSegments(const QVector<QVector<QSharedPointer<SegmentBase>>
     return std::any_of(gcode.cbegin(), gcode.cend(),
                        [](const QVector<QSharedPointer<SegmentBase>>& layer) { return !layer.isEmpty(); });
 }
-} // namespace
+}  // namespace
 
 GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
@@ -65,10 +65,10 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
 
     m_layout = new QVBoxLayout();
 
-    QGroupBox* headerBox = new QGroupBox("Optional G-Code Header Information");
+    QGroupBox* headerBox    = new QGroupBox("Optional G-Code Header Information");
     QGridLayout* headerGrid = new QGridLayout();
 
-    m_operator_input = new QLineEdit();
+    m_operator_input    = new QLineEdit();
     m_description_input = new QTextEdit();
 
     headerBox->setLayout(headerGrid);
@@ -79,9 +79,9 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
 
     m_layout->addWidget(headerBox);
 
-    QGroupBox* optionsBox = new QGroupBox("Export Options");
+    QGroupBox* optionsBox    = new QGroupBox("Export Options");
     QVBoxLayout* optionsGrid = new QVBoxLayout();
-    m_gcode_file_checkbox = new QCheckBox("Save G-Code file(s)");
+    m_gcode_file_checkbox    = new QCheckBox("Save G-Code file(s)");
     m_gcode_file_checkbox->setChecked(true);
     m_auxiliary_file_checkbox = new QCheckBox("Save Auxiliary files (if applicable)");
     m_auxiliary_file_checkbox->setChecked(true);
@@ -113,16 +113,18 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
 
 GcodeExport::~GcodeExport() {}
 
-void GcodeExport::setDefaultName(QString name) { m_default_name = removeModelFileExtension(name); }
+void GcodeExport::setDefaultName(QString name) {
+    m_default_name = removeModelFileExtension(name);
+}
 
 void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
-    m_location = tempLocation;
+    m_location         = tempLocation;
     m_most_recent_meta = meta;
     clearVisualizationInformation();
 }
 
 void GcodeExport::updateVisualizationInformation(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
-    m_gcode = gcode;
+    m_gcode                   = gcode;
     m_has_gcode_visualization = hasVisualizationSegments(m_gcode);
     updateAsPrintedModelOptionState();
 }
@@ -147,15 +149,11 @@ void GcodeExport::closeEvent(QCloseEvent* event) {
 
 void GcodeExport::updateAsPrintedModelOptionState() {
     m_as_printed_model_checkbox->setEnabled(m_has_gcode_visualization);
-    if (!m_has_gcode_visualization) {
-        m_as_printed_model_checkbox->setChecked(false);
-    }
+    if (!m_has_gcode_visualization) { m_as_printed_model_checkbox->setChecked(false); }
 
     const bool centerline_enabled = m_has_gcode_visualization && m_as_printed_model_checkbox->isChecked();
     m_as_printed_centerline_checkbox->setEnabled(centerline_enabled);
-    if (!centerline_enabled) {
-        m_as_printed_centerline_checkbox->setChecked(false);
-    }
+    if (!centerline_enabled) { m_as_printed_centerline_checkbox->setChecked(false); }
 }
 
 void GcodeExport::exportGcode() {
@@ -163,23 +161,23 @@ void GcodeExport::exportGcode() {
     QFileDialog exportDialog;
     QString filter = "G-Code File (*" % m_most_recent_meta.m_file_suffix % ")";
     if (m_bundle_files_checkbox->isChecked()) {
-        filepath = exportDialog.getSaveFileName(this, "Export G-Code",
-                                                CSM->getMostRecentGcodeLocation() % '/' % m_default_name %
-                                                    m_most_recent_meta.m_file_suffix,
-                                                filter, &filter, QFileDialog::DontConfirmOverwrite);
+        filepath = exportDialog.getSaveFileName(
+            this, "Export G-Code",
+            CSM->getMostRecentGcodeLocation() % '/' % m_default_name % m_most_recent_meta.m_file_suffix, filter,
+            &filter, QFileDialog::DontConfirmOverwrite);
     }
     else {
-        filepath = exportDialog.getSaveFileName(this, "Export G-Code",
-                                                CSM->getMostRecentGcodeLocation() % '/' % m_default_name %
-                                                    m_most_recent_meta.m_file_suffix,
-                                                filter, &filter);
+        filepath = exportDialog.getSaveFileName(
+            this, "Export G-Code",
+            CSM->getMostRecentGcodeLocation() % '/' % m_default_name % m_most_recent_meta.m_file_suffix, filter,
+            &filter);
     }
 
     if (filepath != QString()) {
         QFileInfo info(filepath);
         QString partName;
         QString fullName = info.fileName();
-        filepath = info.absolutePath();
+        filepath         = info.absolutePath();
 
         CSM->setMostRecentGcodeLocation(info.absolutePath());
 
@@ -187,9 +185,7 @@ void GcodeExport::exportGcode() {
         if (fullName.endsWith(m_most_recent_meta.m_file_suffix)) {
             partName = fullName.left(fullName.length() - m_most_recent_meta.m_file_suffix.length());
         }
-        else {
-            partName = fullName;
-        }
+        else { partName = fullName; }
 
         // if bundling files, create folder based on name
         if (m_bundle_files_checkbox->isChecked()) {
@@ -201,11 +197,8 @@ void GcodeExport::exportGcode() {
         if (m_most_recent_meta == GcodeMetaList::AdamantineMeta) {
             gcodeFileName = filepath % '/' % partName % "_scan_path" % m_most_recent_meta.m_file_suffix;
         }
-        else {
-            gcodeFileName = filepath % '/' % partName % m_most_recent_meta.m_file_suffix;
-        }
-        if (QFile::exists(gcodeFileName))
-            QFile::remove(gcodeFileName);
+        else { gcodeFileName = filepath % '/' % partName % m_most_recent_meta.m_file_suffix; }
+        if (QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
 
         QString projectFileName = filepath % '/' % partName % ".s2p";
 
@@ -220,9 +213,7 @@ void GcodeExport::exportGcode() {
                     CSM->saveSession(projectFileName, false);
                 }
             }
-            else {
-                CSM->saveSession(projectFileName, false);
-            }
+            else { CSM->saveSession(projectFileName, false); }
         }
 
         QString text;
@@ -235,23 +226,21 @@ void GcodeExport::exportGcode() {
 
         // Insert comment start/end characters to the description
         QString description = m_description_input->toPlainText();
-        int lineEnd = 0;
+        int lineEnd         = 0;
         while (lineEnd > -1) {
             if (lineEnd + 1 <
-                description.length()) // Check to make sure lineEnd + 1 exists before potentially trying to access it
+                description.length())  // Check to make sure lineEnd + 1 exists before potentially trying to access it
             {
                 lineEnd = description.indexOf("\n", lineEnd);
-                if (lineEnd > -1) // "\n" is found, -1 means not found
+                if (lineEnd > -1)  // "\n" is found, -1 means not found
                 {
                     description.insert(lineEnd, m_most_recent_meta.m_comment_ending_delimiter);
                     lineEnd = description.indexOf("\n", lineEnd);
                     description.insert(lineEnd + 1, m_most_recent_meta.m_comment_starting_delimiter);
-                    lineEnd++; // Increment lineEnd so that the next search doesn't find the same result
+                    lineEnd++;  // Increment lineEnd so that the next search doesn't find the same result
                 }
             }
-            else {
-                break;
-            }
+            else { break; }
         }
 
         // Add header information to the gcode file
@@ -262,7 +251,7 @@ void GcodeExport::exportGcode() {
 
         if (m_auxiliary_file_checkbox->isChecked()) {
             if (CSM->sensorFilesGenerated()) {
-                bool overwrite = false;
+                bool overwrite   = false;
                 bool hasAnswered = false;
                 text.replace("#TEMPFILENAME#", partName + "-");
 
@@ -288,7 +277,7 @@ void GcodeExport::exportGcode() {
                         QFile::copy(sensorFile.fileName(), outputLoc);
                 }
 
-                int i = 1;
+                int i          = 1;
                 bool moreFound = true;
                 while (moreFound) {
                     moreFound = false;
@@ -432,4 +421,4 @@ void GcodeExport::showComplete(QString path, QString filename) {
     QMessageBox::information(this, "File Export", filename % " has been succesfully exported to " % path);
     close();
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -53,10 +53,9 @@ std::tuple<float, Triangle> PartPicker::pickDistanceAndTriangle(const QMatrix4x4
     return std::make_tuple(std::get<0>(ret), std::get<1>(ret));
 }
 
-std::tuple<float, Triangle, QVector3D>
-PartPicker::pickDistanceTriangleAndIntersection(const QMatrix4x4& projection, const QMatrix4x4& view,
-                                                QPointF ndc_mouse_pos, const std::vector<Triangle>& triangles,
-                                                bool ortho) {
+std::tuple<float, Triangle, QVector3D> PartPicker::pickDistanceTriangleAndIntersection(
+    const QMatrix4x4& projection, const QMatrix4x4& view, QPointF ndc_mouse_pos, const std::vector<Triangle>& triangles,
+    bool ortho) {
     QVector3D start_pos;
     QVector3D dir;
 
@@ -81,7 +80,7 @@ std::tuple<float, Triangle, QVector3D> PartPicker::castRay(const QVector3D& s, c
         float dist_to_triangle = findDistanceToTriangle(s, v, tri);
 
         if (min_dist > dist_to_triangle) {
-            min_dist = dist_to_triangle;
+            min_dist          = dist_to_triangle;
             selected_triangle = tri;
         }
     }
@@ -95,12 +94,12 @@ float PartPicker::findDistanceToTriangle(const QVector3D& ray_start, const QVect
     const float epsilon = std::numeric_limits<float>::epsilon();
     QVector3D edge1;
     QVector3D edge2;
-    QVector3D p, q; // vectors with no real physical meaning, but used to solve equation
+    QVector3D p, q;  // vectors with no real physical meaning, but used to solve equation
     float denominator;
     float distance = std::numeric_limits<float>::infinity();
-    float u, v;          // coordinate of intersection in barycentric coordinate system, must be in interval [0,1]
-    QVector3D transform; // will represent moving one of the triangle's vertices to the origin of the barycentric
-                         // coordinate system
+    float u, v;           // coordinate of intersection in barycentric coordinate system, must be in interval [0,1]
+    QVector3D transform;  // will represent moving one of the triangle's vertices to the origin of the barycentric
+                          // coordinate system
 
     // This is Moller-Trumbore
 
@@ -109,52 +108,44 @@ float PartPicker::findDistanceToTriangle(const QVector3D& ray_start, const QVect
 
     // I say *should* because I didn't actually check the math, but these edges
     // work in practice.
-    edge1 = triangle.b - triangle.a;
-    edge2 = triangle.c - triangle.a;
-    p = QVector3D::crossProduct(ray_dir, edge2);
+    edge1       = triangle.b - triangle.a;
+    edge2       = triangle.c - triangle.a;
+    p           = QVector3D::crossProduct(ray_dir, edge2);
     denominator = QVector3D::dotProduct(edge1, p);
 
     // If denominator is less than zero, that means the triangle faces away
     // from our ray and should be culled
 
     // If denominator is (close to) zero, that means the ray and triangle are parallel
-    if (denominator < epsilon) {
-        return distance;
-    }
+    if (denominator < epsilon) { return distance; }
 
     transform = ray_start - triangle.a;
 
     // u and v are the barycentric coordinates whose sum should not
     // exceed 1 and neither of which should be negative
     u = QVector3D::dotProduct(transform, p) / denominator;
-    if ((u < 0) || (u > 1)) {
-        return distance;
-    }
+    if ((u < 0) || (u > 1)) { return distance; }
 
     q = QVector3D::crossProduct(transform, edge1);
     v = QVector3D::dotProduct(ray_dir, q) / denominator;
-    if ((v < 0) || (u + v > 1)) {
-        return distance;
-    }
+    if ((v < 0) || (u + v > 1)) { return distance; }
 
     // Finally, we can compute how far along the ray we intersect with the triangle
     distance = QVector3D::dotProduct(q, edge2) / denominator;
 
     // If distance is negative, that means the triangle that we "hit" is *behind*
     // us, and we don't care if we "hit" something behind us, so just return
-    if (distance < epsilon) {
-        return std::numeric_limits<float>::infinity();
-    }
+    if (distance < epsilon) { return std::numeric_limits<float>::infinity(); }
     return distance;
 }
 
 std::tuple<QVector3D, QVector3D> PartPicker::getDirectionAndStart(const QMatrix4x4& projection, QPointF ndc_mouse_pos,
                                                                   const QMatrix4x4& view, bool ortho) {
-    QVector4D p_near_ndc = QVector4D(ndc_mouse_pos.x(), ndc_mouse_pos.y(), -1, 1); // z near = -1
-    QVector4D p_far_ndc = QVector4D(ndc_mouse_pos.x(), ndc_mouse_pos.y(), 1, 1);   // z far = 1
+    QVector4D p_near_ndc = QVector4D(ndc_mouse_pos.x(), ndc_mouse_pos.y(), -1, 1);  // z near = -1
+    QVector4D p_far_ndc  = QVector4D(ndc_mouse_pos.x(), ndc_mouse_pos.y(), 1, 1);   // z far = 1
 
     QVector4D p_near_h = view.inverted() * projection.inverted() * p_near_ndc;
-    QVector4D p_far_h = view.inverted() * projection.inverted() * p_far_ndc;
+    QVector4D p_far_h  = view.inverted() * projection.inverted() * p_far_ndc;
 
     QVector3D p0, p1;
     if (ortho) {
@@ -167,4 +158,4 @@ std::tuple<QVector3D, QVector3D> PartPicker::getDirectionAndStart(const QMatrix4
     }
     return std::make_tuple(p0, (p1 - p0).normalized());
 }
-} // namespace ORNL
+}  // namespace ORNL

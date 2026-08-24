@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief Island that supports are composed of.
  */
 class SupportIsland : public IslandBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param geometry: the outlines
     //! \param sb: the settings
@@ -30,4 +30,4 @@ class SupportIsland : public IslandBase {
                   QVector<QSharedPointer<RegionBase>>& previousRegions) override;
 };
 
-} // namespace ORNL
+}  // namespace ORNL

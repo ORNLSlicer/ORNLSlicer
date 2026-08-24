@@ -35,9 +35,7 @@ QString Brim::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kBrim);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kBrim);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kBrim);
     }
     gcode += writer->writeAfterRegion(RegionType::kBrim);
@@ -51,19 +49,16 @@ void Brim::compute(uint layer_num) {
 
     Distance brimWidth = m_sb->setting<Distance>(MS::PlatformAdhesion::kBrimWidth);
     Distance beadWidth = m_sb->setting<Distance>(MS::PlatformAdhesion::kBrimBeadWidth);
-    int m_rings = qCeil(brimWidth() / beadWidth());
+    int m_rings        = qCeil(brimWidth() / beadWidth());
 
     // m_geometry is set to the outer most loop, which is printed first
     // printing inwards if there are more than 1 loops
     for (int ring_nr = 0; ring_nr < m_rings; ring_nr++) {
         Distance addOffset = beadWidth;
-        if (ring_nr == 0)
-            addOffset = 0;
+        if (ring_nr == 0) addOffset = 0;
         PolygonList path_line = m_geometry.offset(-addOffset);
 
-        if (!path_line.size()) {
-            break;
-        }
+        if (!path_line.size()) { break; }
         m_geometry = path_line;
 
         for (Polygon poly : path_line) {
@@ -109,7 +104,7 @@ void Brim::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
 
     while (poo.getCurrentPolylineCount() > 0) {
         Polyline result = poo.linkNextPolyline();
-        Path newPath = createPath(result);
+        Path newPath    = createPath(result);
 
         if (newPath.size() > 0) {
             calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
@@ -128,16 +123,16 @@ void Brim::calculateModifiers(Path& path, bool supportsG3) {
 Path Brim::createPath(Polyline line) {
     Path new_path;
 
-    Distance default_width = m_sb->setting<Distance>(MS::PlatformAdhesion::kBrimBeadWidth);
-    Distance default_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity default_speed = m_sb->setting<Velocity>(PS::Layer::kSpeed);
-    Acceleration default_acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kDefault);
+    Distance default_width                 = m_sb->setting<Distance>(MS::PlatformAdhesion::kBrimBeadWidth);
+    Distance default_height                = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    Velocity default_speed                 = m_sb->setting<Velocity>(PS::Layer::kSpeed);
+    Acceleration default_acceleration      = m_sb->setting<Acceleration>(PRS::Acceleration::kDefault);
     AngularVelocity default_extruder_speed = m_sb->setting<AngularVelocity>(PS::Layer::kExtruderSpeed);
-    int material_number = m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum);
+    int material_number                    = m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum);
 
     for (int i = 0, end_cond = line.size(); i < end_cond; ++i) {
         Point start = line[i];
-        Point end = line[(i + 1) % end_cond];
+        Point end   = line[(i + 1) % end_cond];
 
         bool is_settings_region = false;
 
@@ -150,12 +145,9 @@ Path Brim::createPath(Polyline line) {
                 start.setSettings(updatedBase);
                 is_settings_region = true;
             }
-            else {
-                start.setSettings(m_sb);
-            }
+            else { start.setSettings(m_sb); }
 
-            if (settings_poly.inside(end))
-                end.setSettings(updatedBase);
+            if (settings_poly.inside(end)) end.setSettings(updatedBase);
 
             // Find if/ where this line intersects with a settings polygon
             QVector<Point> poly_intersect = settings_poly.clipLine(start, end);
@@ -170,8 +162,7 @@ Path Brim::createPath(Polyline line) {
 
             for (Point& point : intersections) {
                 // If no settings change, skip this point
-                if (point.getSettings()->json() == m_sb->json())
-                    continue;
+                if (point.getSettings()->json() == m_sb->json()) continue;
 
                 QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(start, point);
 
@@ -200,7 +191,7 @@ Path Brim::createPath(Polyline line) {
 
                 new_path.append(segment);
                 is_settings_region = !is_settings_region;
-                start = point;
+                start              = point;
             }
         }
 
@@ -230,11 +221,7 @@ Path Brim::createPath(Polyline line) {
         new_path.append(segment);
     }
 
-    if (new_path.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) {
-        return new_path;
-    }
-    else {
-        return Path();
-    }
+    if (new_path.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) { return new_path; }
+    else { return Path(); }
 }
-} // namespace ORNL
+}  // namespace ORNL

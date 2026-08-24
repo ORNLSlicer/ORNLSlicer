@@ -18,7 +18,7 @@ namespace ORNL {
  *              - Feedrate
  */
 class MazakParser : public CommonParser {
-  public:
+   public:
     //! \brief Standard constructor that specifies meta type and whether or not
     //! to alter layers for minimal layer time
     //! \param meta GcodeMeta struct that includes information about units and
@@ -32,7 +32,7 @@ class MazakParser : public CommonParser {
     //! \brief Function to initialize syntax specific handlers
     virtual void config() override;
 
-  protected:
+   protected:
     //! \brief Handler for 'G1' command for motion
     //! G1 must be overridden due to unique format, formatting is adjusted and then
     //! referred to base G1 handler
@@ -54,7 +54,7 @@ class MazakParser : public CommonParser {
     //! \param params Should be single param containing speed
     virtual void FeedRateHandler(QVector<QString> params);
 
-  private:
+   private:
     //! \brief Feedrate replacement'#981' command.  Used as F variable.
     QString m_feedrate;
 
@@ -64,4 +64,4 @@ class MazakParser : public CommonParser {
     //! \brief Predefined variable for '#981' command.  Used for lookup.
     QString m_feedrate_reference;
 };
-} // namespace ORNL
+}  // namespace ORNL

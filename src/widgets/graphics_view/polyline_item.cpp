@@ -1,8 +1,8 @@
 #include "widgets/graphics_view/polyline_item.h"
 
+#include <QPainter>
 #include <cstdint>
 
-#include <QPainter>
 #include <qgraphicsitem.h>
 #include <qnamespace.h>
 #include <qobject.h>
@@ -11,7 +11,9 @@
 #include "geometry/polyline.h"
 
 namespace ORNL {
-PolylineGraphicsItem::PolylineGraphicsItem(QGraphicsItem* parent) : QGraphicsItem(parent) { m_color = Qt::green; }
+PolylineGraphicsItem::PolylineGraphicsItem(QGraphicsItem* parent) : QGraphicsItem(parent) {
+    m_color = Qt::green;
+}
 
 PolylineGraphicsItem::PolylineGraphicsItem(const Polyline& polyline, QGraphicsItem* parent) : QGraphicsItem(parent) {
     this->setPolyline(polyline);
@@ -19,23 +21,30 @@ PolylineGraphicsItem::PolylineGraphicsItem(const Polyline& polyline, QGraphicsIt
 }
 
 void PolylineGraphicsItem::setPolyline(const Polyline& polyline) {
-    m_polyline = polyline;
+    m_polyline      = polyline;
     m_bounding_rect = QRect(m_polyline.min().toQPoint() + QPoint(2, 2), m_polyline.max().toQPoint() + QPoint(2, 2));
 
     m_draw_to = polyline.size();
 }
 
-void PolylineGraphicsItem::setSegmentDraw(uint32_t segment_no) { m_draw_to = segment_no; }
+void PolylineGraphicsItem::setSegmentDraw(uint32_t segment_no) {
+    m_draw_to = segment_no;
+}
 
-Polyline PolylineGraphicsItem::getPolyline() const { return m_polyline; }
+Polyline PolylineGraphicsItem::getPolyline() const {
+    return m_polyline;
+}
 
-void PolylineGraphicsItem::setColor(QColor color) { m_color = color; }
+void PolylineGraphicsItem::setColor(QColor color) {
+    m_color = color;
+}
 
-QRectF PolylineGraphicsItem::boundingRect() const { return m_bounding_rect; }
+QRectF PolylineGraphicsItem::boundingRect() const {
+    return m_bounding_rect;
+}
 
 void PolylineGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsItem* option, QWidget* widget) {
-    if (m_polyline.count() <= 1)
-        return;
+    if (m_polyline.count() <= 1) return;
 
     QPen line_pen;
     line_pen.setColor(m_color);
@@ -56,8 +65,6 @@ void PolylineGraphicsItem::paint(QPainter* painter, const QStyleOptionGraphicsIt
     }
 
     painter->setPen(vertex_pen);
-    for (int i = 0; i < m_draw_to; i++) {
-        painter->drawPoint(m_polyline[i].toQPoint());
-    }
+    for (int i = 0; i < m_draw_to; i++) { painter->drawPoint(m_polyline[i].toQPoint()); }
 }
-} // namespace ORNL
+}  // namespace ORNL

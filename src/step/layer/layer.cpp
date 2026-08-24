@@ -48,40 +48,36 @@ bool isBelowBuildPlate(const Point& point, const MeshTypes::Plane_3& build_plate
 }
 
 bool lineIntersectsBuildPlate(const Point& start, const Point& end, const MeshTypes::Plane_3& build_plate) {
-    if (isBelowBuildPlate(start, build_plate) || isBelowBuildPlate(end, build_plate)) {
-        return true;
-    }
+    if (isBelowBuildPlate(start, build_plate) || isBelowBuildPlate(end, build_plate)) { return true; }
 
     return false;
 }
 
 bool arcIntersectsBuildPlate(const ArcSegment& arc, const Point& start, const Point& end,
                              const MeshTypes::Plane_3& build_plate) {
-    const Point center = arc.center();
-    const double start_radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const double end_radius = std::hypot(end.x() - center.x(), end.y() - center.y());
+    const Point center                = arc.center();
+    const double start_radius         = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const double end_radius           = std::hypot(end.x() - center.x(), end.y() - center.y());
     constexpr double kRadiusTolerance = 1.0e-4;
     if (start_radius <= kRadiusTolerance || std::abs(start_radius - end_radius) > kRadiusTolerance) {
         return lineIntersectsBuildPlate(start, end, build_plate);
     }
 
     constexpr double kMaxSampleAngle = M_PI / 36.0;
-    const double arc_angle = std::abs(arc.angle()());
-    const int sample_count = std::max(1, static_cast<int>(std::ceil(arc_angle / kMaxSampleAngle)));
-    const double start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
-    const double signed_angle = arc.counterclockwise() ? arc_angle : -arc_angle;
+    const double arc_angle           = std::abs(arc.angle()());
+    const int sample_count           = std::max(1, static_cast<int>(std::ceil(arc_angle / kMaxSampleAngle)));
+    const double start_angle         = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const double signed_angle        = arc.counterclockwise() ? arc_angle : -arc_angle;
 
     Point previous = start;
     for (int sample = 1; sample <= sample_count; ++sample) {
         const double fraction = static_cast<double>(sample) / sample_count;
-        const double angle = start_angle + (signed_angle * fraction);
+        const double angle    = start_angle + (signed_angle * fraction);
         const Point current(center.x() + (start_radius * std::cos(angle)),
                             center.y() + (start_radius * std::sin(angle)),
                             start.z() + ((end.z() - start.z()) * fraction));
 
-        if (lineIntersectsBuildPlate(previous, current, build_plate)) {
-            return true;
-        }
+        if (lineIntersectsBuildPlate(previous, current, build_plate)) { return true; }
         previous = current;
     }
 
@@ -91,9 +87,7 @@ bool arcIntersectsBuildPlate(const ArcSegment& arc, const Point& start, const Po
 bool clearanceMoveIntersectsBuildPlate(const QSharedPointer<SegmentBase>& segment, const Point& start, const Point& end,
                                        const MeshTypes::Plane_3& build_plate) {
     const QSharedPointer<ArcSegment> arc = segment.dynamicCast<ArcSegment>();
-    if (!arc.isNull()) {
-        return arcIntersectsBuildPlate(*arc, start, end, build_plate);
-    }
+    if (!arc.isNull()) { return arcIntersectsBuildPlate(*arc, start, end, build_plate); }
 
     return lineIntersectsBuildPlate(start, end, build_plate);
 }
@@ -101,7 +95,7 @@ bool clearanceMoveIntersectsBuildPlate(const QSharedPointer<SegmentBase>& segmen
 Point redirectTipWipeEnd(const Point& start, const QVector3D& original_move, const QVector3D& slicing_normal) {
     // Mirror the move's in-plane component while preserving its lift along the slicing normal.
     const QVector3D normal_component = slicing_normal * QVector3D::dotProduct(original_move, slicing_normal);
-    const QVector3D redirected_move = (2.0f * normal_component) - original_move;
+    const QVector3D redirected_move  = (2.0f * normal_component) - original_move;
 
     return start + Point::fromQVector3D(redirected_move);
 }
@@ -121,7 +115,7 @@ QSharedPointer<SegmentBase> rewriteRedirectedSegment(const QSharedPointer<Segmen
     redirected_segment->setEnd(end);
     return redirected_segment;
 }
-} // namespace
+}  // namespace
 
 Layer::Layer(uint layer_nr, const QSharedPointer<SettingsBase>& sb)
     : Step(sb), m_layer_nr(layer_nr), m_minimum_z_shift(0) {
@@ -145,23 +139,21 @@ QString Layer::writeGCode(QSharedPointer<WriterBase> writer) {
             writer->writeAfterIsland();
         }
     }
-    else {
-        gcode += writer->writeEmptyStep();
-    }
+    else { gcode += writer->writeEmptyStep(); }
 
     return gcode;
 }
 
-uint Layer::getLayerNumber() const { return m_layer_nr; }
+uint Layer::getLayerNumber() const {
+    return m_layer_nr;
+}
 
 void Layer::compute() {
     for (QSharedPointer<IslandBase> island : m_islands) {
         island->compute(m_layer_nr);
 
         QSharedPointer<PolymerIsland> polyIsland = island.dynamicCast<PolymerIsland>();
-        if (polyIsland != nullptr) {
-            polyIsland->reorderRegions();
-        }
+        if (polyIsland != nullptr) { polyIsland->reorderRegions(); }
     }
 }
 
@@ -169,8 +161,7 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
     m_island_order.clear();
 
     for (QSharedPointer<IslandBase> island : m_islands) {
-        if (!island.isNull())
-            island->setOptimizationFrame(m_slicing_plane, m_shift_amount);
+        if (!island.isNull()) island->setOptimizationFrame(m_slicing_plane, m_shift_amount);
     }
 
     // Optimize the layer.
@@ -178,7 +169,7 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
         static_cast<IslandOrderOptimization>(this->getSb()->setting<int>(PS::Optimizations::kIslandOrder));
 
     // start index = index of last visited island
-    IslandBaseOrderOptimizer ioo(start, m_islands.values(), start_index, islandOrderOptimization); // mode 1
+    IslandBaseOrderOptimizer ioo(start, m_islands.values(), start_index, islandOrderOptimization);  // mode 1
 
     // seam adjustment
     if (islandOrderOptimization == IslandOrderOptimization::kCustomPoint) {
@@ -299,13 +290,11 @@ void Layer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<
         start_index = ioo.getFirstIndexSelected();
     }
 
-    for (QSharedPointer<IslandBase> island : m_islands) {
-        island->markRegionStartSegment();
-    }
+    for (QSharedPointer<IslandBase> island : m_islands) { island->markRegionStartSegment(); }
 }
 
-QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>>
-Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children) {
+QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> Layer::createSequence(
+    QList<QSharedPointer<IslandBase>> parent, QList<QList<QSharedPointer<IslandBase>>> children) {
     QList<QHash<QSharedPointer<IslandBase>, QList<QSharedPointer<IslandBase>>>> result;
     int children_size = children.size();
     result.reserve(children_size);
@@ -319,8 +308,7 @@ Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSha
 
     QList<QSharedPointer<IslandBase>> validParent;
     for (const QSharedPointer<IslandBase>& brim : parent) {
-        if (hasSequenceGeometry(brim))
-            validParent.append(brim);
+        if (hasSequenceGeometry(brim)) validParent.append(brim);
     }
 
     if (validParent.size() == 0) {
@@ -337,8 +325,7 @@ Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSha
             for (int i = 0; i < children_size; ++i) {
                 QList<QSharedPointer<IslandBase>> islandSet = children[i];
                 for (QSharedPointer<IslandBase> isl : islandSet) {
-                    if (!hasSequenceGeometry(isl))
-                        continue;
+                    if (!hasSequenceGeometry(isl)) continue;
 
                     if (brim->getGeometry().first().inside(isl->getGeometry().first().first())) {
                         result[i][brim].append(isl);
@@ -353,10 +340,10 @@ Layer::createSequence(QList<QSharedPointer<IslandBase>> parent, QList<QList<QSha
 void Layer::calculateModifiers(Point& currentLocation) {
     // check for spiral lift for end of layer
     if (this->getSb()->setting<bool>(MS::SpiralLift::kLayerEnable)) {
-        QSharedPointer<IslandBase> lastIsland = m_islands.value(static_cast<int>(IslandType::kPolymer)); // back();
+        QSharedPointer<IslandBase> lastIsland     = m_islands.value(static_cast<int>(IslandType::kPolymer));  // back();
         QList<QSharedPointer<RegionBase>> regions = lastIsland->getRegions();
-        QSharedPointer<RegionBase> lastRegion = regions.back();
-        Path finalPath = lastRegion->getPaths().back();
+        QSharedPointer<RegionBase> lastRegion     = regions.back();
+        Path finalPath                            = lastRegion->getPaths().back();
 
         if (finalPath.back()->getSb()->setting<PathModifiers>(SS::kPathModifiers) != PathModifiers::kSpiralLift) {
             PathModifierGenerator::GenerateSpiralLift(finalPath,
@@ -371,17 +358,14 @@ void Layer::calculateModifiers(Point& currentLocation) {
         }
     }
 
-    for (QSharedPointer<IslandBase> island : getIslands())
-        island->fitCircularArcs(this->getSb());
+    for (QSharedPointer<IslandBase> island : getIslands()) island->fitCircularArcs(this->getSb());
 }
 
 void Layer::setSb(const QSharedPointer<SettingsBase>& sb) {
     this->Step::setSb(sb);
 
     // For every island, set the the settings base.
-    for (auto isl : m_islands) {
-        isl->setSb(this->getSb());
-    }
+    for (auto isl : m_islands) { isl->setSb(this->getSb()); }
 }
 
 void Layer::flagIfDirtySettingsPolygons(const QVector<SettingsPolygon>& new_settings_polys) {
@@ -403,9 +387,7 @@ void Layer::flagIfDirtySettingsPolygons(const QVector<SettingsPolygon>& new_sett
         }
     }
 
-    if (any_non_matching) {
-        this->setDirtyBit(true);
-    }
+    if (any_non_matching) { this->setDirtyBit(true); }
 }
 
 Point Layer::getEndLocation() {
@@ -418,9 +400,7 @@ Point Layer::getEndLocation() {
             for (int path_index = paths.size() - 1; path_index >= 0; --path_index) {
                 auto path = paths[path_index];
 
-                if (path.size() > 0) {
-                    return path.back()->end();
-                }
+                if (path.size() > 0) { return path.back()->end(); }
             }
         }
     }
@@ -445,38 +425,30 @@ Point Layer::getOrientationShift() const {
 void Layer::applyMinimumZShift() {
     m_minimum_z_shift = 0;
 
-    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize))
-        return;
+    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) return;
 
-    const QVector3D normal = m_slicing_plane.normal().normalized();
+    const QVector3D normal             = m_slicing_plane.normal().normalized();
     constexpr float kMinimumZComponent = 1.0e-6f;
-    const float z_component = std::abs(normal.z());
-    if (z_component < kMinimumZComponent)
-        return;
+    const float z_component            = std::abs(normal.z());
+    if (z_component < kMinimumZComponent) return;
 
     const float current_min_z_value = getMinimumPrintZ();
-    if (current_min_z_value == std::numeric_limits<float>::max())
-        return;
+    if (current_min_z_value == std::numeric_limits<float>::max()) return;
 
-    const Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    const Distance current_min_z = current_min_z_value;
+    const Distance layer_height    = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    const Distance current_min_z   = current_min_z_value;
     const Distance minimum_print_z = current_min_z + (layer_height / (2.0 * z_component));
 
     m_minimum_z_shift = minimum_print_z - current_min_z;
     const Point shift(0.0f, 0.0f, m_minimum_z_shift());
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(QQuaternion(), shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(QQuaternion(), shift); }
 }
 
 void Layer::removeMinimumZShift() {
-    if (m_minimum_z_shift == 0)
-        return;
+    if (m_minimum_z_shift == 0) return;
 
     const Point shift(0.0f, 0.0f, -m_minimum_z_shift());
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(QQuaternion(), shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(QQuaternion(), shift); }
     m_minimum_z_shift = 0;
 }
 
@@ -489,8 +461,7 @@ float Layer::getMinimumPrintZ() {
                 for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
                     if (segment->isPrintingSegment()) {
                         const float segment_min_z = segment->getMinZ();
-                        if (segment_min_z < minimum_print_z)
-                            minimum_print_z = segment_min_z;
+                        if (segment_min_z < minimum_print_z) minimum_print_z = segment_min_z;
                     }
                 }
             }
@@ -516,9 +487,7 @@ void Layer::unorient() {
         Point origin_shift = Point(.0, .0, .0) - m_shift_amount;
         origin_shift.z(.0);
 
-        for (QSharedPointer<IslandBase> island : getIslands()) {
-            island->transform(QQuaternion(), origin_shift * -1);
-        }
+        for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(QQuaternion(), origin_shift * -1); }
     }
 }
 
@@ -527,18 +496,14 @@ void Layer::reorient() {
     Point origin_shift = Point(.0, .0, .0) - m_shift_amount;
     origin_shift.z(.0);
 
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(QQuaternion(), origin_shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(QQuaternion(), origin_shift); }
 
     const Point orientation_shift = getOrientationShift();
 
     // Rotate and then shift every island in the layer
     QQuaternion rotation = MathUtils::CreateQuaternion(QVector3D(0, 0, 1), m_slicing_plane.normal());
 
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(rotation, orientation_shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(rotation, orientation_shift); }
 
     applyMinimumZShift();
     redirectClearanceMoves();
@@ -546,9 +511,7 @@ void Layer::reorient() {
 
 void Layer::redirectClearanceMoves() {
     QVector3D slicing_normal = m_slicing_plane.normal().normalized();
-    if (slicing_normal.isNull()) {
-        return;
-    }
+    if (slicing_normal.isNull()) { return; }
 
     const MeshTypes::Plane_3 build_plate(MeshTypes::Point_3(0.0, 0.0, 0.0), MeshTypes::Vector_3(0.0, 0.0, 1.0));
 
@@ -563,24 +526,24 @@ void Layer::redirectClearanceMoves() {
                         continue;
                     }
 
-                    Point original_position = index > 0 ? segments[index - 1]->end() : segments[index]->start();
+                    Point original_position   = index > 0 ? segments[index - 1]->end() : segments[index]->start();
                     Point redirected_position = original_position;
-                    bool has_redirected = false;
+                    bool has_redirected       = false;
 
                     // Reconstruct the emitted moves from successive endpoints. Multi-segment wipes and spiral lifts
                     // can store starts on the source contour, but the machine moves from the preceding endpoint.
                     while (index < segments.size() &&
                            isClearanceModifier(segments[index]->getSb()->setting<PathModifiers>(SS::kPathModifiers))) {
                         const QSharedPointer<SegmentBase>& segment = segments[index];
-                        const Point original_end = segment->end();
-                        const QVector3D original_move = (original_end - original_position).toQVector3D();
+                        const Point original_end                   = segment->end();
+                        const QVector3D original_move              = (original_end - original_position).toQVector3D();
                         Point candidate_end =
                             has_redirected ? redirected_position + Point::fromQVector3D(original_move) : original_end;
                         bool should_rewrite_segment = has_redirected;
 
                         if (clearanceMoveIntersectsBuildPlate(segment, redirected_position, candidate_end,
                                                               build_plate)) {
-                            candidate_end = redirectTipWipeEnd(redirected_position, original_move, slicing_normal);
+                            candidate_end  = redirectTipWipeEnd(redirected_position, original_move, slicing_normal);
                             has_redirected = true;
                             should_rewrite_segment = true;
                         }
@@ -589,7 +552,7 @@ void Layer::redirectClearanceMoves() {
                             segments[index] = rewriteRedirectedSegment(segment, redirected_position, candidate_end);
                         }
 
-                        original_position = original_end;
+                        original_position   = original_end;
                         redirected_position = candidate_end;
                         ++index;
                     }
@@ -600,9 +563,7 @@ void Layer::redirectClearanceMoves() {
 }
 
 void Layer::compensateForRafts() {
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(QQuaternion(), m_raft_shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(QQuaternion(), m_raft_shift); }
 }
 
 float Layer::getMinZ() {
@@ -610,9 +571,7 @@ float Layer::getMinZ() {
 
     for (QSharedPointer<IslandBase> island : m_islands) {
         float island_min = island->getMinZ();
-        if (island_min < min_z) {
-            min_z = island_min;
-        }
+        if (island_min < min_z) { min_z = island_min; }
     }
 
     return min_z;
@@ -626,5 +585,7 @@ void Layer::setSettingsPolygons(QVector<SettingsPolygon>& settings_polygons) {
     m_settings_polygons = settings_polygons;
 }
 
-QVector<SettingsPolygon> Layer::getSettingsPolygons() { return m_settings_polygons; }
-} // namespace ORNL
+QVector<SettingsPolygon> Layer::getSettingsPolygons() {
+    return m_settings_polygons;
+}
+}  // namespace ORNL

@@ -1,6 +1,7 @@
 #include "gcode/writers/reprap_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -22,13 +23,13 @@ RepRapWriter::RepRapWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& s
 
 QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                         int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
     m_deposition_active = false;
-    m_first_print = true;
-    m_first_travel = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
+    m_first_print       = true;
+    m_first_travel      = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
     QString rv;
 
     rv += commentLine("Layer height: " %
@@ -54,9 +55,7 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
         if (m_sb->setting<int>(MS::Filament::kRelative) > 0) {
             rv += "M83" % commentSpaceLine("USE RELATIVE EXTRUSION DISTANCES");
         }
-        else {
-            rv += "M82" % commentSpaceLine("USE ABSOLUTE EXTRUSION DISTANCES");
-        }
+        else { rv += "M82" % commentSpaceLine("USE ABSOLUTE EXTRUSION DISTANCES"); }
 
         rv += "G92 E0" % commentSpaceLine("RESET FILAMENT AXIS TO 0");
 
@@ -78,8 +77,7 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
         m_start_point = Point(minimum_x, minimum_y, 0);
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -90,7 +88,7 @@ QString RepRapWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, 
 
 QString RepRapWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
 
     if (m_sb->setting<bool>(MS::Retraction::kEnable) && m_sb->setting<bool>(MS::Retraction::kLayerChange) &&
@@ -187,7 +185,7 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
 
     Distance liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -206,7 +204,7 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
 
     // write the lift
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G1 % m_f %
               QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
               writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
@@ -216,7 +214,7 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
     // write the travel
     Point travel_destination = target_location;
     if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
           commentSpaceLine("TRAVEL");
@@ -236,14 +234,14 @@ QString RepRapWriter::writeTravel(Point start_location, Point target_location, T
 
 QString RepRapWriter::writeLine(const Point& start_point, const Point& target_point,
                                 const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     QString rv;
 
     // check if extruder needs priming
-    bool needs_prime = !m_deposition_active;
+    bool needs_prime    = !m_deposition_active;
     m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
@@ -296,8 +294,7 @@ QString RepRapWriter::writeLine(const Point& start_point, const Point& target_po
             }
         }
 
-        if (m_filament_location < 0)
-            rv += writePrime();
+        if (m_filament_location < 0) rv += writePrime();
     }
 
     rv += m_G1;
@@ -315,7 +312,6 @@ QString RepRapWriter::writeLine(const Point& start_point, const Point& target_po
     if (path_modifiers != PathModifiers::kCoasting && path_modifiers != PathModifiers::kForwardTipWipe &&
         path_modifiers != PathModifiers::kPerimeterTipWipe && path_modifiers != PathModifiers::kReverseTipWipe &&
         path_modifiers != PathModifiers::kSpiralLift) {
-
         // Set extrusion multiplier, or use default value of 1.0
         double current_multiplier;
         if (region_type == RegionType::kPerimeter)
@@ -331,9 +327,9 @@ QString RepRapWriter::writeLine(const Point& start_point, const Point& target_po
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance segment_length = start_point.distance(target_point);
-        Distance width = params->setting<Distance>(SS::kWidth);
-        Distance height = params->setting<Distance>(SS::kHeight);
+        Distance segment_length    = start_point.distance(target_point);
+        Distance width             = params->setting<Distance>(SS::kWidth);
+        Distance height            = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
         Distance segment_filament_length =
             (segment_length * width * height) / ((filament_diameter / 2) * (filament_diameter / 2) * 3.14159);
@@ -366,10 +362,10 @@ QString RepRapWriter::writeArc(const Point& start_point, const Point& end_point,
                                const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -387,14 +383,13 @@ QString RepRapWriter::writeArc(const Point& start_point, const Point& end_point,
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // calculate and write E value if path is an extrusion path
     if (path_modifiers != PathModifiers::kCoasting && path_modifiers != PathModifiers::kForwardTipWipe &&
         path_modifiers != PathModifiers::kPerimeterTipWipe && path_modifiers != PathModifiers::kReverseTipWipe &&
         path_modifiers != PathModifiers::kSpiralLift) {
-
         // Set extrusion multiplier, or use default value of 1.0
         double current_multiplier;
         if (region_type == RegionType::kPerimeter)
@@ -410,9 +405,9 @@ QString RepRapWriter::writeArc(const Point& start_point, const Point& end_point,
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance segment_length = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
-        Distance width = params->setting<Distance>(SS::kWidth);
-        Distance height = params->setting<Distance>(SS::kHeight);
+        Distance segment_length    = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
+        Distance width             = params->setting<Distance>(SS::kWidth);
+        Distance height            = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
         Distance segment_filament_length =
             (segment_length * width * height) / ((filament_diameter / 2) * (filament_diameter / 2) * 3.14159);
@@ -508,7 +503,9 @@ QString RepRapWriter::writeShutdown() {
     return rv;
 }
 
-QString RepRapWriter::writePurge(int RPM, int duration, int delay) { return {}; }
+QString RepRapWriter::writePurge(int RPM, int duration, int delay) {
+    return {};
+}
 
 QString RepRapWriter::writeDwell(Time time) {
     if (time > 0)
@@ -531,7 +528,7 @@ QString RepRapWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
@@ -577,4 +574,4 @@ QString RepRapWriter::writePrime() {
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

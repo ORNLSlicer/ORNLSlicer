@@ -2,14 +2,14 @@
 
 #include <GL/gl.h>
 
+#include <QOpenGLShaderProgram>
+#include <QStack>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
 #include <tuple>
 #include <vector>
 
-#include <QOpenGLShaderProgram>
-#include <QStack>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qimage.h>
@@ -37,8 +37,7 @@ GraphicsObject::GraphicsObject(BaseView* view, const std::vector<float>& vertice
 }
 
 GraphicsObject::~GraphicsObject() {
-    if (m_view.isNull() || m_view->context() == nullptr)
-        return;
+    if (m_view.isNull() || m_view->context() == nullptr) return;
 
     m_view->makeCurrent();
 
@@ -51,9 +50,7 @@ GraphicsObject::~GraphicsObject() {
 }
 
 void GraphicsObject::render() {
-
-    if (m_state.hidden)
-        return;
+    if (m_state.hidden) return;
     m_view->shaderProgram()->setUniformValue(m_shader_locs.usingSolidWireframeMode, this->getSolidWireFrameMode());
 
     // Draw to front of screen if on top or underneath.
@@ -94,19 +91,21 @@ void GraphicsObject::render() {
     // qDebug() << m_view->glGetError();
 
     // Restore global rendering values.
-    if (m_state.ontop || m_state.underneath)
-        m_view->glDepthRange(0.01, 0.99);
-    if (m_state.billboard)
-        m_view->shaderProgram()->setUniformValue(m_shader_locs.ambient, 0.4f);
+    if (m_state.ontop || m_state.underneath) m_view->glDepthRange(0.01, 0.99);
+    if (m_state.billboard) m_view->shaderProgram()->setUniformValue(m_shader_locs.ambient, 0.4f);
 }
 
 void GraphicsObject::configureUniforms() {
     m_view->shaderProgram()->setUniformValue(m_shader_locs.renderingPartObject, false);
 }
 
-BaseView* GraphicsObject::view() { return m_view.data(); }
+BaseView* GraphicsObject::view() {
+    return m_view.data();
+}
 
-QVector<QVector3D> GraphicsObject::minimumBoundingBox() { return m_transformed_mbb; }
+QVector<QVector3D> GraphicsObject::minimumBoundingBox() {
+    return m_transformed_mbb;
+}
 
 bool GraphicsObject::doesMBBIntersect(QSharedPointer<GraphicsObject> go) {
     QVector3D min = this->minimum();
@@ -123,7 +122,9 @@ bool GraphicsObject::doesMBBIntersect(QSharedPointer<GraphicsObject> go) {
     return false;
 }
 
-QVector3D GraphicsObject::center() { return (m_transformed_mbb[MBB_MIN] + m_transformed_mbb[MBB_MAX]) / 2; }
+QVector3D GraphicsObject::center() {
+    return (m_transformed_mbb[MBB_MIN] + m_transformed_mbb[MBB_MAX]) / 2;
+}
 
 QVector3D GraphicsObject::minimum() {
     QVector3D min;
@@ -165,9 +166,9 @@ void GraphicsObject::setTransformationInternal(QMatrix4x4 mtrx, bool propagate) 
     if (propagate) {
         for (auto& c : this->children()) {
             // Get new child position and propagate.
-            QMatrix4x4 child_tfm = c->transformation();
+            QMatrix4x4 child_tfm    = c->transformation();
             QMatrix4x4 relative_tfm = m_transform.inverted() * child_tfm;
-            QMatrix4x4 new_tfm = mtrx * relative_tfm;
+            QMatrix4x4 new_tfm      = mtrx * relative_tfm;
 
             // Using external function to decompose here.
             c->setTransformation(new_tfm, true);
@@ -177,9 +178,7 @@ void GraphicsObject::setTransformationInternal(QMatrix4x4 mtrx, bool propagate) 
     m_transform = mtrx;
 
     // Update bounding cube.
-    for (int i = 0; i < m_mbb.size(); i++) {
-        m_transformed_mbb[i] = mtrx * m_mbb[i];
-    }
+    for (int i = 0; i < m_mbb.size(); i++) { m_transformed_mbb[i] = mtrx * m_mbb[i]; }
 
     if (!m_state.in_callback) {
         m_state.in_callback = true;
@@ -241,13 +240,21 @@ void GraphicsObject::scale(QVector3D s, bool propagate) {
     this->setTransformationInternal(new_tfm, propagate);
 }
 
-QMatrix4x4 GraphicsObject::transformation() { return m_transform; }
+QMatrix4x4 GraphicsObject::transformation() {
+    return m_transform;
+}
 
-QVector3D GraphicsObject::translation() { return m_translation; }
+QVector3D GraphicsObject::translation() {
+    return m_translation;
+}
 
-QQuaternion GraphicsObject::rotation() { return m_rotation; }
+QQuaternion GraphicsObject::rotation() {
+    return m_rotation;
+}
 
-QVector3D GraphicsObject::scaling() { return m_scale; }
+QVector3D GraphicsObject::scaling() {
+    return m_scale;
+}
 
 std::vector<Triangle> GraphicsObject::triangles() {
     // 3 vertices specify a triangle, but each vertex refers to 3 floats
@@ -266,30 +273,36 @@ std::vector<Triangle> GraphicsObject::triangles() {
     return triangles;
 }
 
-const std::vector<float>& GraphicsObject::vertices() { return m_vertices; }
+const std::vector<float>& GraphicsObject::vertices() {
+    return m_vertices;
+}
 
-const std::vector<float>& GraphicsObject::normals() { return m_normals; }
+const std::vector<float>& GraphicsObject::normals() {
+    return m_normals;
+}
 
-const std::vector<float>& GraphicsObject::colors() { return m_colors; }
+const std::vector<float>& GraphicsObject::colors() {
+    return m_colors;
+}
 
-QSharedPointer<GraphicsObject> GraphicsObject::parent() { return m_parent; }
+QSharedPointer<GraphicsObject> GraphicsObject::parent() {
+    return m_parent;
+}
 
-QSet<QSharedPointer<GraphicsObject>> GraphicsObject::children() { return m_children; }
+QSet<QSharedPointer<GraphicsObject>> GraphicsObject::children() {
+    return m_children;
+}
 
 QSet<QSharedPointer<GraphicsObject>> GraphicsObject::allChildren() {
     QSet<QSharedPointer<GraphicsObject>> ret;
 
     QStack<QSharedPointer<GraphicsObject>> queue;
-    for (auto& child : m_children) {
-        queue.push(child);
-    }
+    for (auto& child : m_children) { queue.push(child); }
 
     while (!queue.empty()) {
         QSharedPointer<GraphicsObject> go = queue.pop();
 
-        for (auto& go_child : go->children()) {
-            queue.push(go_child);
-        }
+        for (auto& go_child : go->children()) { queue.push(go_child); }
 
         ret.insert(go);
     }
@@ -305,39 +318,56 @@ void GraphicsObject::adoptChild(QSharedPointer<GraphicsObject> child) {
 }
 
 void GraphicsObject::orphanChild(QSharedPointer<GraphicsObject> child) {
-    if (child.isNull())
-        return;
+    if (child.isNull()) return;
     child->m_parent = nullptr;
     m_children.remove(child);
 
     this->orphanChildCallback(child);
 }
 
-void GraphicsObject::lock() { m_state.locked = true; }
+void GraphicsObject::lock() {
+    m_state.locked = true;
+}
 
-void GraphicsObject::unlock() { m_state.locked = false; }
+void GraphicsObject::unlock() {
+    m_state.locked = false;
+}
 
-void GraphicsObject::setLocked(bool lock) { m_state.locked = lock; }
+void GraphicsObject::setLocked(bool lock) {
+    m_state.locked = lock;
+}
 
-bool GraphicsObject::locked() { return m_state.locked; }
+bool GraphicsObject::locked() {
+    return m_state.locked;
+}
 
-void GraphicsObject::hide() { m_state.hidden = true; }
+void GraphicsObject::hide() {
+    m_state.hidden = true;
+}
 
-void GraphicsObject::show() { m_state.hidden = false; }
+void GraphicsObject::show() {
+    m_state.hidden = false;
+}
 
-void GraphicsObject::setHidden(bool hide) { m_state.hidden = hide; }
+void GraphicsObject::setHidden(bool hide) {
+    m_state.hidden = hide;
+}
 
-bool GraphicsObject::hidden() { return m_state.hidden; }
+bool GraphicsObject::hidden() {
+    return m_state.hidden;
+}
 
-void GraphicsObject::setBillboarding(bool state) { m_state.billboard = state; }
+void GraphicsObject::setBillboarding(bool state) {
+    m_state.billboard = state;
+}
 
 void GraphicsObject::setOnTop(bool state) {
     m_state.underneath = false;
-    m_state.ontop = state;
+    m_state.ontop      = state;
 }
 
 void GraphicsObject::setUnderneath(bool state) {
-    m_state.ontop = false;
+    m_state.ontop      = false;
     m_state.underneath = state;
 }
 
@@ -348,12 +378,12 @@ GraphicsObject::GraphicsObject() {
 void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertices, const std::vector<float>& normals,
                                 const std::vector<float>& colors, const ushort render_mode,
                                 const std::vector<float>& uv, const QImage texture) {
-    m_view = view;
+    m_view        = view;
     m_render_mode = render_mode;
 
     QSharedPointer<QOpenGLShaderProgram> program = m_view->shaderProgram();
     // Get shader locations.
-    m_shader_locs.model = m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kModelName);
+    m_shader_locs.model   = m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kModelName);
     m_shader_locs.ambient = m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kAmbientStrengthName);
     m_shader_locs.overhangAngle =
         m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kOverhangAngleName);
@@ -362,9 +392,9 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     m_shader_locs.renderingPartObject =
         m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kRenderingPartObjectName);
     m_shader_locs.vertice = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kPositionName);
-    m_shader_locs.normal = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kNormalName);
-    m_shader_locs.color = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kColorName);
-    m_shader_locs.uv = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kUVName);
+    m_shader_locs.normal  = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kNormalName);
+    m_shader_locs.color   = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kColorName);
+    m_shader_locs.uv      = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kUVName);
     m_shader_locs.usingSolidWireframeMode =
         m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kUsingSolidWireframeModeName);
 
@@ -373,9 +403,9 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     m_view->shaderProgram()->bind();
 
     m_vertices = vertices;
-    m_normals = normals;
-    m_colors = colors;
-    m_uv = uv;
+    m_normals  = normals;
+    m_colors   = colors;
+    m_uv       = uv;
 
     m_texture = QSharedPointer<QOpenGLTexture>::create(texture);
     m_texture->setMinificationFilter(QOpenGLTexture::Nearest);
@@ -396,9 +426,7 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     m_view->shaderProgram()->setAttributeBuffer(m_shader_locs.vertice, GL_FLOAT, 0, 3);
 
     // Normals
-    if (!m_normals.size()) {
-        m_normals.resize(m_vertices.size(), 0);
-    }
+    if (!m_normals.size()) { m_normals.resize(m_vertices.size(), 0); }
     m_nbo.create();
     m_nbo.setUsagePattern(QOpenGLBuffer::StaticDraw);
     m_nbo.bind();
@@ -407,9 +435,7 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     m_view->shaderProgram()->setAttributeBuffer(m_shader_locs.normal, GL_FLOAT, 0, 3);
 
     // Colors
-    if (!m_colors.size()) {
-        m_normals.resize((m_vertices.size() / 3) * 4, 0);
-    }
+    if (!m_colors.size()) { m_normals.resize((m_vertices.size() / 3) * 4, 0); }
     m_cbo.create();
     m_cbo.setUsagePattern(QOpenGLBuffer::DynamicDraw);
     m_cbo.bind();
@@ -424,9 +450,7 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
         // map to 0,0 for the remaining vertices.
         int uv_float_count = (m_vertices.size() / 3) * 2;
         m_uv.resize(uv_float_count);
-        for (int i = m_uv.size(); i < uv_float_count; i++) {
-            m_uv[i] = 0.0f;
-        }
+        for (int i = m_uv.size(); i < uv_float_count; i++) { m_uv[i] = 0.0f; }
     }
 
     m_tbo.create();
@@ -480,15 +504,25 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     std::tie(m_translation, m_rotation, m_scale) = MathUtils::decomposeTransformMatrix(m_transform);
 }
 
-void GraphicsObject::draw() { m_view->glDrawArrays(renderMode(), 0, m_vertices.size() / 3); }
+void GraphicsObject::draw() {
+    m_view->glDrawArrays(renderMode(), 0, m_vertices.size() / 3);
+}
 
-bool GraphicsObject::getSolidWireFrameMode() { return m_state.is_solid_wireframe; }
+bool GraphicsObject::getSolidWireFrameMode() {
+    return m_state.is_solid_wireframe;
+}
 
-void GraphicsObject::setSolidWireFrameMode(bool state) { m_state.is_solid_wireframe = state; }
+void GraphicsObject::setSolidWireFrameMode(bool state) {
+    m_state.is_solid_wireframe = state;
+}
 
-bool GraphicsObject::getWireFrameMode() { return m_state.is_wireframe; }
+bool GraphicsObject::getWireFrameMode() {
+    return m_state.is_wireframe;
+}
 
-void GraphicsObject::setWireFrameMode(bool state) { m_state.is_wireframe = state; }
+void GraphicsObject::setWireFrameMode(bool state) {
+    m_state.is_wireframe = state;
+}
 
 void GraphicsObject::setTransparency(uint trans) {
     m_transparency = trans;
@@ -500,7 +534,9 @@ void GraphicsObject::setTransparency(uint trans) {
     this->paint(m_color);
 }
 
-uint GraphicsObject::transparency() { return m_transparency; }
+uint GraphicsObject::transparency() {
+    return m_transparency;
+}
 
 void GraphicsObject::replaceVertices(std::vector<float>& vertices) {
     m_vertices = vertices;
@@ -651,42 +687,47 @@ void GraphicsObject::orphanChildCallback(QSharedPointer<GraphicsObject> child) {
     // Does nothing by default.
 }
 
-QSharedPointer<QOpenGLTexture>& GraphicsObject::texture() { return m_texture; }
+QSharedPointer<QOpenGLTexture>& GraphicsObject::texture() {
+    return m_texture;
+}
 
-QSharedPointer<QOpenGLVertexArrayObject>& GraphicsObject::vao() { return m_vao; }
+QSharedPointer<QOpenGLVertexArrayObject>& GraphicsObject::vao() {
+    return m_vao;
+}
 
-ushort& GraphicsObject::renderMode() { return m_render_mode; }
+ushort& GraphicsObject::renderMode() {
+    return m_render_mode;
+}
 
-bool& GraphicsObject::solidWireFrameMode() { return m_state.is_solid_wireframe; }
+bool& GraphicsObject::solidWireFrameMode() {
+    return m_state.is_solid_wireframe;
+}
 
-bool& GraphicsObject::wireFrameMode() { return m_state.is_wireframe; }
+bool& GraphicsObject::wireFrameMode() {
+    return m_state.is_wireframe;
+}
 
 void GraphicsObject::addToRenderQueue(QQueue<QSharedPointer<GraphicsObject>>& renderQueue) {
-
     // First add each of this objects children to the render queue
-    for (auto& c : m_children) {
-        c->addToRenderQueue(renderQueue);
-    }
+    for (auto& c : m_children) { c->addToRenderQueue(renderQueue); }
 
     QSharedPointer<PartObject> p = this->sharedFromThis().dynamicCast<PartObject>();
     // If this graphics object is a part and its transparent, put it to the back of the render queue,
     // otherwise, put it to the front.
-    if (p && p->transparency() < 255) {
-        renderQueue.append(this->sharedFromThis());
-    }
-    else {
-        renderQueue.prepend(this->sharedFromThis());
-    }
+    if (p && p->transparency() < 255) { renderQueue.append(this->sharedFromThis()); }
+    else { renderQueue.prepend(this->sharedFromThis()); }
 }
 
-void GraphicsObject::paint(QColor color) { this->paint(color, 0); }
+void GraphicsObject::paint(QColor color) {
+    this->paint(color, 0);
+}
 
 void GraphicsObject::paint(QColor color, uint whence, long count) {
     // TODO: move this to shaders.
     uint stop = (count == -1) ? m_colors.size() : whence + count;
 
     for (int i = whence; i < stop; i += 4) {
-        m_colors[i] = color.redF();
+        m_colors[i]     = color.redF();
         m_colors[i + 1] = color.greenF();
         m_colors[i + 2] = color.blueF();
         m_colors[i + 3] = color.alphaF();
@@ -698,4 +739,4 @@ void GraphicsObject::paint(QColor color, uint whence, long count) {
     m_cbo.release();
 }
 
-} // Namespace ORNL
+}  // Namespace ORNL

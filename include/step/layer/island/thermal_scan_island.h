@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief Island that thermal scans are composed of.
  */
 class ThermalScanIsland : public IslandBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param geometry: the outlines
     //! \param sb: the settings
@@ -29,4 +29,4 @@ class ThermalScanIsland : public IslandBase {
     void optimize(int layerNumber, Point& currentLocation,
                   QVector<QSharedPointer<RegionBase>>& previousRegions) override;
 };
-} // namespace ORNL
+}  // namespace ORNL

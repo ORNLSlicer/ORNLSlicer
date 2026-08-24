@@ -7,6 +7,7 @@
 #include <QInputDialog>
 #include <QMessageBox>
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 
 #include "gcode/gcode_settings_importer.h"
@@ -16,9 +17,8 @@ namespace ORNL {
 namespace {
 QString errorPreview(const QStringList& errors) {
     constexpr int kMaxErrors = 10;
-    QStringList preview = errors.mid(0, kMaxErrors);
-    if (errors.size() > kMaxErrors)
-        preview.append(QString("...and %1 more.").arg(errors.size() - kMaxErrors));
+    QStringList preview      = errors.mid(0, kMaxErrors);
+    if (errors.size() > kMaxErrors) preview.append(QString("...and %1 more.").arg(errors.size() - kMaxErrors));
     return preview.join("\n");
 }
 
@@ -29,10 +29,9 @@ QString comparableFilePath(const QString& path) {
 }
 
 bool pathsReferToSameFile(const QString& first, const QString& second) {
-    if (first.isEmpty() || second.isEmpty())
-        return false;
+    if (first.isEmpty() || second.isEmpty()) return false;
 
-    const QString first_path = comparableFilePath(first);
+    const QString first_path  = comparableFilePath(first);
     const QString second_path = comparableFilePath(second);
 #ifdef Q_OS_WIN
     return first_path.compare(second_path, Qt::CaseInsensitive) == 0;
@@ -40,11 +39,15 @@ bool pathsReferToSameFile(const QString& first, const QString& second) {
     return first_path == second_path;
 #endif
 }
-} // namespace
+}  // namespace
 
-GcodeToS2CDialog::GcodeToS2CDialog(QWidget* parent) : QDialog(parent) { setupUi(); }
+GcodeToS2CDialog::GcodeToS2CDialog(QWidget* parent) : QDialog(parent) {
+    setupUi();
+}
 
-QString GcodeToS2CDialog::outputFilePath() const { return m_output_edit->text().trimmed(); }
+QString GcodeToS2CDialog::outputFilePath() const {
+    return m_output_edit->text().trimmed();
+}
 
 void GcodeToS2CDialog::setupUi() {
     setWindowTitle("G-Code to S2C");
@@ -53,12 +56,12 @@ void GcodeToS2CDialog::setupUi() {
     m_layout = new QGridLayout(this);
 
     QLabel* gcode_label = new QLabel("G-Code file:", this);
-    m_gcode_edit = new QLineEdit(this);
+    m_gcode_edit        = new QLineEdit(this);
     m_gcode_edit->setReadOnly(true);
     m_gcode_browse = new QPushButton("Browse...", this);
 
     QLabel* output_label = new QLabel("Settings file:", this);
-    m_output_edit = new QLineEdit(this);
+    m_output_edit        = new QLineEdit(this);
     m_output_edit->setReadOnly(true);
     m_output_browse = new QPushButton("Browse...", this);
 
@@ -96,8 +99,7 @@ void GcodeToS2CDialog::browseGcodeFile() {
     dialog.setAcceptMode(QFileDialog::AcceptOpen);
     dialog.setNameFilters(QStringList() << "G-Code Files (*.gcode *.nc *.mpf *.eia *.txt)" << "Any Files (*)");
 
-    if (!dialog.exec())
-        return;
+    if (!dialog.exec()) return;
 
     m_gcode_edit->setText(dialog.selectedFiles().first());
     setDefaultOutputPath();
@@ -110,11 +112,9 @@ void GcodeToS2CDialog::browseOutputFile() {
     dialog.setNameFilters(QStringList() << "ORNLSlicer Configuration/Template File (*.s2c)" << "Any Files (*)");
     dialog.setDefaultSuffix("s2c");
 
-    if (!m_output_edit->text().isEmpty())
-        dialog.selectFile(m_output_edit->text());
+    if (!m_output_edit->text().isEmpty()) dialog.selectFile(m_output_edit->text());
 
-    if (!dialog.exec())
-        return;
+    if (!dialog.exec()) return;
 
     m_output_edit->setText(dialog.selectedFiles().first());
 }
@@ -128,7 +128,7 @@ void GcodeToS2CDialog::accept() {
     m_status_label->setText("Creating settings file...");
     QApplication::processEvents();
 
-    const QString gcode_path = m_gcode_edit->text().trimmed();
+    const QString gcode_path  = m_gcode_edit->text().trimmed();
     const QString output_path = outputFilePath();
     if (pathsReferToSameFile(gcode_path, output_path)) {
         m_status_label->setText("Choose a different settings file path.");
@@ -166,32 +166,29 @@ void GcodeToS2CDialog::accept() {
         message += QString(" Used defaults for %1 missing settings.").arg(result.defaulted_keys.size());
     if (!result.prompted_keys.isEmpty())
         message += QString(" Prompted for %1 missing settings.").arg(result.prompted_keys.size());
-    if (!result.warnings.isEmpty())
-        message += "\n\nWarnings:\n" + errorPreview(result.warnings);
+    if (!result.warnings.isEmpty()) message += "\n\nWarnings:\n" + errorPreview(result.warnings);
 
     QMessageBox::information(this, "G-Code to S2C", message);
     QDialog::accept();
 }
 
 void GcodeToS2CDialog::setDefaultOutputPath() {
-    if (m_gcode_edit->text().isEmpty() || !m_output_edit->text().isEmpty())
-        return;
+    if (m_gcode_edit->text().isEmpty() || !m_output_edit->text().isEmpty()) return;
 
     QFileInfo info(m_gcode_edit->text());
     m_output_edit->setText(info.absolutePath() % "/" % info.completeBaseName() % ".s2c");
 }
 
 std::optional<fifojson> GcodeToS2CDialog::promptForMissingValue(const QString& key, const fifojson& master_entry) {
-    const QString display = GcodeSettingsImporter::displayName(master_entry);
-    const QString label = display + " (" + key + ") is missing.\nEnter the raw setting value:";
+    const QString display      = GcodeSettingsImporter::displayName(master_entry);
+    const QString label        = display + " (" + key + ") is missing.\nEnter the raw setting value:";
     const QString default_text = QString::fromStdString(master_entry.at(Constants::Settings::Master::kDefault).dump());
 
     while (true) {
         bool ok = false;
         const QString text =
             QInputDialog::getText(this, "Missing Setting Value", label, QLineEdit::Normal, default_text, &ok);
-        if (!ok)
-            return std::nullopt;
+        if (!ok) return std::nullopt;
 
         fifojson candidate;
         try {
@@ -207,4 +204,4 @@ std::optional<fifojson> GcodeToS2CDialog::promptForMissingValue(const QString& k
     }
 }
 
-} // namespace ORNL
+}  // namespace ORNL

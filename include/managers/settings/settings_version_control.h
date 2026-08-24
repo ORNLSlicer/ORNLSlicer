@@ -9,7 +9,7 @@ namespace ORNL {
  *         if/when existing settings are altered.
  */
 class SettingsVersionControl {
-  public:
+   public:
     //! \brief Public interface: receives current version and settings for alteration
     //! \param version: current version in settings file
     //! \param settings: settings to alter
@@ -24,7 +24,7 @@ class SettingsVersionControl {
     //! \param settings_group: a single settings object to modify
     static void migrateLegacySettingKeys(fifojson& settings_group);
 
-  private:
+   private:
     //! \brief Rolls initial settings templates without a version to version 1.0
     //! \param version: current version in settings file
     //! \param settings: settings to alter
@@ -75,4 +75,4 @@ class SettingsVersionControl {
     //! \param settings: settings to alter
     static void pre_10_0To10_0(double& version, fifojson& settings);
 };
-} // namespace ORNL
+}  // namespace ORNL

@@ -15,7 +15,7 @@ namespace ORNL {
  *  \brief Segment type for linear movements.
  */
 class LineSegment : public SegmentBase {
-  public:
+   public:
     //! \brief Constructor.
     LineSegment(Point start, Point end);
 
@@ -36,6 +36,6 @@ class LineSegment : public SegmentBase {
 };
 
 // Type definitions for shared pointers and lists of LineSegment
-using LSegmentPtr = QSharedPointer<LineSegment>;
+using LSegmentPtr  = QSharedPointer<LineSegment>;
 using LSegmentList = QVector<LSegmentPtr>;
-} // namespace ORNL
+}  // namespace ORNL

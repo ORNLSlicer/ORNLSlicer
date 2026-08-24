@@ -7,6 +7,7 @@
 #include <QPropertyAnimation>
 #include <QString>
 #include <QWidget>
+
 #include <qcontainerfwd.h>
 #include <qcoreevent.h>
 #include <qnamespace.h>
@@ -23,12 +24,12 @@ class LayerDot : public QWidget {
     Q_OBJECT
     friend class LayerBar;
 
-  public:
+   public:
     //! \brief Constructor.
     explicit LayerDot(QWidget* parent = nullptr, int new_layer = -1,
                       QVector<QColor> m_colors = {Qt::darkGreen, Qt::darkYellow, QColor(255, 172, 28), Qt::darkBlue,
                                                   Qt::white},
-                      bool from_template = false);
+                      bool from_template       = false);
 
     //! \brief Destructor.
     ~LayerDot();
@@ -57,11 +58,11 @@ class LayerDot : public QWidget {
     //! \brief Sets dot color to red (all dots from template are red).
     void isFromTemplate();
 
-  signals:
+   signals:
     //! \brief Signal that the layer was updated.
     void layerChanged(int layer);
 
-  public slots:
+   public slots:
     //! \brief Slot to set the status of the dot (the color).
     void setSelected(bool status);
     //! \brief Slot that sets the layer.
@@ -77,7 +78,7 @@ class LayerDot : public QWidget {
     //! \brief Set the shrink factor.
     void setShrink(int shrink);
 
-  private:
+   private:
     // -- Qt Overrides --
 
     void paintEvent(QPaintEvent* event);
@@ -122,7 +123,7 @@ class LayerDot : public QWidget {
 
     //! \brief Current color.
     QColor m_color;
-    QColor m_default_color; // default color is red if from template, green is added by user.
+    QColor m_default_color;  // default color is red if from template, green is added by user.
     QVector<QColor> m_dot_colors;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

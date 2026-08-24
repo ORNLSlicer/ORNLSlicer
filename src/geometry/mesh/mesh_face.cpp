@@ -5,7 +5,7 @@
 namespace ORNL {
 MeshFace::MeshFace() {
     for (int i = 0; i < 3; i++) {
-        vertex_index[i] = -1;
+        vertex_index[i]         = -1;
         connected_face_index[i] = -1;
     }
 }
@@ -23,4 +23,4 @@ MeshFace::MeshFace(int* vertices, int* connected_faces, QVector3D _normal, bool 
 
     ignore = _ignore;
 }
-} // namespace ORNL
+}  // namespace ORNL

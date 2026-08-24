@@ -27,9 +27,9 @@ namespace ORNL {
  * farthest from the defined point.
  */
 class PointOrderOptimizer {
-  public:
+   public:
     struct PointOrderSelection {
-        int rotation_index = 0;
+        int rotation_index      = 0;
         bool insert_split_point = false;
         Point split_point;
         int insertion_index = 0;
@@ -46,7 +46,7 @@ class PointOrderOptimizer {
                                            PointOrderOptimization pointOptimization, bool min_dist_enabled,
                                            Distance min_dist_threshold, Distance consecutive_dist_threshold,
                                            bool local_randomness_enable, Distance randomness_radius,
-                                           bool allow_segment_breaking = false,
+                                           bool allow_segment_breaking                       = false,
                                            const std::optional<Point>& consecutive_reference = std::nullopt);
 
     //! \brief Constructor
@@ -58,7 +58,7 @@ class PointOrderOptimizer {
                                        PointOrderOptimization pointOptimization, bool min_dist_enabled,
                                        Distance min_dist_threshold);
 
-  private:
+   private:
     //! \brief Finds the shortest or longest distance between the current location and the points in the polyline
     //! \param polyline: The polyline to find the shortest or longest distance in
     //! \param startPoint: The current location
@@ -118,4 +118,4 @@ class PointOrderOptimizer {
     static int computePerturbation(const Polyline& polyline, const Point& current_start, Distance radius);
 };
 
-} // namespace ORNL
+}  // namespace ORNL

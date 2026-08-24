@@ -1,24 +1,25 @@
 #pragma once
 
+#include <QString>
 #include <exception>
 #include <string>
 
-#include <QString>
-
-#define NEW_EX(name)                                                                                                   \
-    class name : public ORNL::ExceptionBase {                                                                          \
-      public:                                                                                                          \
-        name(QString message = "") : ExceptionBase(#name ": " + message) {}                                            \
+#define NEW_EX(name)                                                        \
+    class name : public ORNL::ExceptionBase {                               \
+       public:                                                              \
+        name(QString message = "") : ExceptionBase(#name ": " + message) {} \
     };
 
 namespace ORNL {
 class ExceptionBase : public std::exception {
-  public:
+   public:
     ExceptionBase(QString message) : m_message(message.toStdString()) {}
 
-    const char* what() const throw() { return m_message.c_str(); }
+    const char* what() const throw() {
+        return m_message.c_str();
+    }
 
-  protected:
+   protected:
     std::string m_message;
 };
 
@@ -49,4 +50,4 @@ NEW_EX(IncorrectPathSegmentType)
 NEW_EX(UnknownUnitException)
 
 NEW_EX(BadLayerRange)
-} // namespace ORNL
+}  // namespace ORNL

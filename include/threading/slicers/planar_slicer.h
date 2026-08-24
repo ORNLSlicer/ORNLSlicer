@@ -18,10 +18,10 @@ namespace ORNL {
  * \brief Implementation of SlicingThread for planar slices.
  */
 class PlanarSlicer : public TraditionalAST {
-  public:
+   public:
     PlanarSlicer(QString gcodeLocation);
 
-  protected:
+   protected:
     //! \brief Creates layer steps by performing cross-sections.
     //! \param opt_data: optional sensor data
     void preProcess(nlohmann::json opt_data = nlohmann::json()) override;
@@ -35,7 +35,7 @@ class PlanarSlicer : public TraditionalAST {
     //! \param base: WriterBase that creates actual gcode output
     void writeGCode() override;
 
-  private:
+   private:
     //! \brief Creates layer steps for support structure
     //! \param part: Part to create supports for
     //! \param layer_count: Total number of layers
@@ -89,4 +89,4 @@ class PlanarSlicer : public TraditionalAST {
     //! \brief cached layer settings
     QList<QSharedPointer<SettingsBase>> m_saved_layer_settings;
 };
-} // namespace ORNL
+}  // namespace ORNL

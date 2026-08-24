@@ -1,10 +1,9 @@
+#include <QSharedPointer>
+#include <QVector3D>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <QSharedPointer>
-#include <QVector3D>
 
 #include "configs/settings_base.h"
 #include "geometry/plane.h"
@@ -15,14 +14,15 @@
 
 namespace {
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
 }
 
-bool closeTo(double lhs, double rhs) { return std::abs(lhs - rhs) <= 1.0e-5; }
+bool closeTo(double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1.0e-5;
+}
 
 QSharedPointer<ORNL::SettingsBase> settingsWithSeamAttractor(ORNL::PointOrderOptimization point_order) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
@@ -46,7 +46,7 @@ QSharedPointer<ORNL::SettingsBase> settingsWithSeamAttractor(ORNL::PointOrderOpt
 
     return settings;
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;
@@ -63,8 +63,8 @@ int main() {
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kNextClosest);
     custom_island_settings->setSetting(ORNL::PS::Optimizations::kIslandOrder,
                                        static_cast<int>(ORNL::IslandOrderOptimization::kCustomPoint));
-    const ORNL::Point custom_island_anchor = ORNL::OptimizationAnchor::customIslandOrderPoint(
-        custom_island_settings, slicing_plane, optimization_shift);
+    const ORNL::Point custom_island_anchor =
+        ORNL::OptimizationAnchor::customIslandOrderPoint(custom_island_settings, slicing_plane, optimization_shift);
     passed &= expect(closeTo(custom_island_anchor.x(), 12.0) && closeTo(custom_island_anchor.y(), 3.0) &&
                          closeTo(custom_island_anchor.z(), 10.0),
                      "Expected seam attractor vector to project the anchor for Custom Island Location order.");
@@ -81,9 +81,8 @@ int main() {
 
     QSharedPointer<ORNL::SettingsBase> custom_region_path_settings =
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kNextClosest);
-    custom_region_path_settings->setSetting(
-        ORNL::PS::Optimizations::kSkinPathOrder,
-        static_cast<int>(ORNL::PathOrderOptimization::kCustomPoint) + 1);
+    custom_region_path_settings->setSetting(ORNL::PS::Optimizations::kSkinPathOrder,
+                                            static_cast<int>(ORNL::PathOrderOptimization::kCustomPoint) + 1);
     const ORNL::Point custom_region_path_anchor =
         ORNL::OptimizationAnchor::customPathOrderPoint(custom_region_path_settings, slicing_plane, optimization_shift);
     passed &= expect(closeTo(custom_region_path_anchor.x(), 12.0) && closeTo(custom_region_path_anchor.y(), 3.0) &&
@@ -99,9 +98,9 @@ int main() {
 
     const ORNL::Point custom_anchor = ORNL::OptimizationAnchor::customPointOrderPoint(
         settingsWithSeamAttractor(ORNL::PointOrderOptimization::kCustomPoint), slicing_plane, optimization_shift);
-    passed &= expect(closeTo(custom_anchor.x(), 12.0) && closeTo(custom_anchor.y(), 3.0) &&
-                         closeTo(custom_anchor.z(), 10.0),
-                     "Expected seam attractor vector to project the anchor for Custom Location point order.");
+    passed &=
+        expect(closeTo(custom_anchor.x(), 12.0) && closeTo(custom_anchor.y(), 3.0) && closeTo(custom_anchor.z(), 10.0),
+               "Expected seam attractor vector to project the anchor for Custom Location point order.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

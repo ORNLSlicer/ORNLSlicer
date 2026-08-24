@@ -1,9 +1,8 @@
+#include <QSharedPointer>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <string>
-
-#include <QSharedPointer>
 
 #include "configs/settings_base.h"
 #include "geometry/path.h"
@@ -15,14 +14,15 @@
 
 namespace {
 bool expect(bool condition, const std::string& message) {
-    if (condition)
-        return true;
+    if (condition) return true;
 
     std::cerr << message << '\n';
     return false;
 }
 
-bool closeTo(double lhs, double rhs) { return std::abs(lhs - rhs) <= 1.0e-4; }
+bool closeTo(double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1.0e-4;
+}
 
 bool expectPoint(const ORNL::Point& point, double x, double y, const std::string& message) {
     return expect(closeTo(point.x(), x) && closeTo(point.y(), y), message);
@@ -41,7 +41,7 @@ QSharedPointer<ORNL::SettingsBase> sharpCornerSettings(ORNL::Distance close_poin
     settings->setSetting(ORNL::PS::SpecialModes::kSharpCornerSharpeningLegLength, ORNL::Distance(4.0));
     return settings;
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;

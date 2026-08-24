@@ -281,5 +281,5 @@ double clamp(double min, double val, double max);
  * \return Cartesian coordinates.
  */
 QVector3D sphericalToCartesian(float rho, float theta, float phi);
-} // namespace MathUtils
-} // namespace ORNL
+}  // namespace MathUtils
+}  // namespace ORNL

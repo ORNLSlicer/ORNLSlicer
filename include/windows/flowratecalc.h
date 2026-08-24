@@ -6,6 +6,7 @@
 #include <QLineEdit>
 #include <QTextEdit>
 #include <QWidget>
+
 #include <qgridlayout.h>
 #include <qobject.h>
 #include <qtmetamacros.h>
@@ -19,18 +20,18 @@ namespace ORNL {
  */
 class FlowrateCalcWindow : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     explicit FlowrateCalcWindow(QWidget* parent);
 
     //! \brief Destructor
     ~FlowrateCalcWindow();
 
-  protected:
+   protected:
     //! \brief Close event override to reset form values
     void closeEvent(QCloseEvent* event);
 
-  private slots:
+   private slots:
     //! \brief Check that all inputs are valid and perform necessary calculations
     //! Inputs are checked automatically as a user alters them
     void checkInputAndCalculate();
@@ -42,7 +43,7 @@ class FlowrateCalcWindow : public QWidget {
     //! \param index Current combo index
     void enableDensity(int index);
 
-  private:
+   private:
     //! \brief Setup events for widget components
     void setupEvents();
 
@@ -68,11 +69,11 @@ class FlowrateCalcWindow : public QWidget {
     QLabel* m_status_label;
 
     //! \brief Metric to imperial conversion
-    double m_density_metric_to_is; // from metric to British system, g/cm^3 --> lb/in^3
+    double m_density_metric_to_is;  // from metric to British system, g/cm^3 --> lb/in^3
 
     //! \brief Density in Metric
     Density m_density_metric;
     //! \brief parent widget of this flowrate calculator window
     QWidget* m_parent;
-}; // class FlowrateCalcWindow
-} // namespace ORNL
+};  // class FlowrateCalcWindow
+}  // namespace ORNL
