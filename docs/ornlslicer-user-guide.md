@@ -1625,7 +1625,7 @@ operate on text; otherwise they operate on selected parts where supported.
 <!-- BEGIN GENERATED SETTINGS REFERENCE -->
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 533 scalar manufacturing settings exposed by the canonical catalog. The 5 grouped controls combine related scalar values, producing 526 visible setting rows across 37 categories.
+This generated appendix documents all 542 scalar manufacturing settings exposed by the canonical catalog. The 5 grouped controls combine related scalar values, producing 535 visible setting rows across 37 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1674,7 +1674,7 @@ The catalog is organized as follows:
 | [Material](#e3-material-settings) | [Cooling](#settings-material-cooling) | 10 |
 | [Material](#e3-material-settings) | [Platform Adhesion](#settings-material-platform-adhesion) | 14 |
 | [Material](#e3-material-settings) | [Multi-Material](#settings-material-multi-material) | 11 |
-| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 18 |
+| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 19 |
 | [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 6 |
 | [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 20 |
 | [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 13 |
@@ -1684,8 +1684,8 @@ The catalog is organized as follows:
 | [Profile](#e4-profile-settings) | [Support](#settings-profile-support) | 29 |
 | [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 9 |
 | [Profile](#e4-profile-settings) | [G-Code](#settings-profile-g-code) | 12 |
-| [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 11 |
-| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 30 |
+| [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 16 |
+| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 33 |
 | [Profile](#e4-profile-settings) | [Ordering](#settings-profile-ordering) | 3 |
 | [Profile](#e4-profile-settings) | [Laser Scanner](#settings-profile-laser-scanner) | 23 |
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
@@ -2577,8 +2577,7 @@ If selected, each layer marker in the G-Code includes the estimated layer time i
 
 ##### Arc Specialties G2/G3 Optional Stop (`arc_specialties_g2_g3_optional_stop`)
 
-If selected, Arc Specialties G-Code emits a G81 optional stop routine before each non-initial G2/G3
-arc move.
+If selected, Arc Specialties G-Code adds an inline G81 optional stop routine to each G2/G3 arc move.
 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
@@ -5334,6 +5333,19 @@ height beyond this radius.
   mode-specific scope limitations still apply.
 - **Available when:** Slicing Mode is `Cylindrical`.
 
+<a id="setting-cylinder_height"></a>
+
+##### Cylinder Height (`cylinder_height`)
+
+Limits cylindrical path generation to this height above the part base. Values less than or equal to
+zero use the part height.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Cylindrical`.
+
 <a id="setting-cylindrical_path_pattern"></a>
 
 ##### Cylindrical Path Pattern (`cylindrical_path_pattern`)
@@ -7540,6 +7552,68 @@ G2/G3 move.
   mode-specific scope limitations still apply.
 - **Available when:** Enable Arc Fitting is enabled.
 
+<a id="setting-sharp_corner_extension"></a>
+
+##### Enable Sharp Corner Extension (`sharp_corner_extension`)
+
+If selected, sharp toolpath junctions are extended outward to compensate for corner rounding during
+printing.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Always available.
+
+<a id="setting-sharp_corner_extension_angle"></a>
+
+##### Sharp Corner Angle Threshold (`sharp_corner_extension_angle`)
+
+Maximum corner angle that can be sharpened.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `90°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
+<a id="setting-sharp_corner_extension_distance"></a>
+
+##### Sharp Corner Extension Length (`sharp_corner_extension_distance`)
+
+Distance to extend the corner merge point along the corner bisector.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
+<a id="setting-sharp_corner_close_points_threshold"></a>
+
+##### Sharp Corner Close Points Threshold (`sharp_corner_close_points_threshold`)
+
+Maximum length of a bead segment connecting two corner legs that can be removed before sharpening.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
+<a id="setting-sharp_corner_sharpening_leg_length"></a>
+
+##### Sharp Corner Sharpening Leg Length (`sharp_corner_sharpening_leg_length`)
+
+Distance along each original corner leg to replace with sharpened geometry. A value of 0 uses the
+extension length.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
 <a id="setting-enable_spiralize_mode"></a>
 
 ##### Enable Spiralize Mode (`enable_spiralize_mode`)
@@ -7715,6 +7789,66 @@ or a user-defined reference point.
   - `Inside Out` — Traverses contour hierarchy from interior paths toward exterior paths.
   - `Custom Location` — Uses the custom X/Y location as the reference for nearest-path selection.
 
+<a id="setting-perimeter_path_order_optimization"></a>
+
+##### Perimeter Path Order Optimization (`perimeter_path_order_optimization`)
+
+Type of order optimizer to use on perimeter paths. Use Global follows Path Order Optimization.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Use Global`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+- **Choices:**
+  - `Use Global`
+  - `Next Closest`
+  - `Next Farthest`
+  - `Random`
+  - `Outside In`
+  - `Inside Out`
+  - `Custom Location`
+
+<a id="setting-inset_path_order_optimization"></a>
+
+##### Inset Path Order Optimization (`inset_path_order_optimization`)
+
+Type of order optimizer to use on inset paths. Use Global follows Path Order Optimization.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Use Global`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+- **Choices:**
+  - `Use Global`
+  - `Next Closest`
+  - `Next Farthest`
+  - `Random`
+  - `Outside In`
+  - `Inside Out`
+  - `Custom Location`
+
+<a id="setting-skin_path_order_optimization"></a>
+
+##### Skin Path Order Optimization (`skin_path_order_optimization`)
+
+Type of order optimizer to use on skin paths. Use Global follows Path Order Optimization.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Use Global`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+- **Choices:**
+  - `Use Global`
+  - `Next Closest`
+  - `Next Farthest`
+  - `Random`
+  - `Outside In`
+  - `Inside Out`
+  - `Custom Location`
+
 <a id="setting-custom_path_order_x_location"></a>
 
 ##### Custom Path Point X Location (`custom_path_order_x_location`)
@@ -7725,7 +7859,9 @@ X Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Path Order Optimization is `Custom Location` or
+  (Perimeter Path Order Optimization is `Custom Location` or (Inset Path Order Optimization is
+  `Custom Location` or Skin Path Order Optimization is `Custom Location`)))).
 
 <a id="setting-custom_path_order_y_location"></a>
 
@@ -7737,7 +7873,9 @@ Y Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Path Order Optimization is `Custom Location` or
+  (Perimeter Path Order Optimization is `Custom Location` or (Inset Path Order Optimization is
+  `Custom Location` or Skin Path Order Optimization is `Custom Location`)))).
 
 <a id="setting-custom_path_order_z_location"></a>
 
@@ -7749,7 +7887,9 @@ Z Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Path Order Optimization is `Custom Location` or
+  (Perimeter Path Order Optimization is `Custom Location` or (Inset Path Order Optimization is
+  `Custom Location` or Skin Path Order Optimization is `Custom Location`)))).
 
 <a id="setting-point_order_optimization"></a>
 
@@ -7972,9 +8112,11 @@ use the slicing vector automatically.
 - **Input:** `vector3` grouped control with the components listed below.
 - **Scope:** Local-capable. Each component can be overridden through this grouped row at supported
   narrower scopes.
-- **Available when:** (Slicing Mode is `Planar` and ((Island Order Optimization is `Custom Location`
-  or Path Order Optimization is `Custom Location`) or (Point Order Optimization is `Custom Location`
-  or Point Order Optimization is `Custom Farthest Location`))).
+- **Available when:** (Slicing Mode is `Planar` and (Island Order Optimization is `Custom Location`
+  or ((Path Order Optimization is `Custom Location` or (Perimeter Path Order Optimization is `Custom
+  Location` or (Inset Path Order Optimization is `Custom Location` or Skin Path Order Optimization
+  is `Custom Location`))) or (Point Order Optimization is `Custom Location` or Point Order
+  Optimization is `Custom Farthest Location`)))).
 - **Components and master defaults:**
   - **X:** `seam_attractor_vector_x` — `0`
   - **Y:** `seam_attractor_vector_y` — `0`
