@@ -21,10 +21,10 @@ namespace ORNL {
  * \brief Implementation of SlicingThread for Image slices.
  */
 class ImageSlicer : public TraditionalAST {
-  public:
+   public:
     ImageSlicer(QString gcodeLocation);
 
-  protected:
+   protected:
     //! \brief Creates images from cross-sections.
     //! \param opt_data: optional sensor data
     void preProcess(nlohmann::json opt_data = nlohmann::json()) override;
@@ -35,7 +35,7 @@ class ImageSlicer : public TraditionalAST {
     //! \brief NOP
     void writeGCode() override;
 
-  private:
+   private:
     //! \brief Struct to group meshes with their bounds and ids
     //! \param m_mesh: Mesh from each part
     //! \param m_min: minimum of mesh bounding cube
@@ -55,7 +55,7 @@ class ImageSlicer : public TraditionalAST {
     struct PolygonListAndColor {
         PolygonListAndColor(PolygonList pL, ushort c) {
             m_cross_section = pL;
-            m_color = c;
+            m_color         = c;
         }
         PolygonList m_cross_section;
         ushort m_color;
@@ -66,7 +66,7 @@ class ImageSlicer : public TraditionalAST {
     //! m_slicing_plane: current slicing plane for given id
     struct SlicingPlaneWithLayer {
         SlicingPlaneWithLayer(int layer, Plane slicing_plane) {
-            m_layer = layer;
+            m_layer         = layer;
             m_slicing_plane = slicing_plane;
         }
         int m_layer;
@@ -93,4 +93,4 @@ class ImageSlicer : public TraditionalAST {
     //!\brief Number of digits for image file name to allow sequencing of layers
     int m_total_digits = 7;
 };
-} // namespace ORNL
+}  // namespace ORNL

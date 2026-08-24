@@ -13,11 +13,11 @@ namespace ORNL {
  * point_idx.
  */
 class ClosePolygonResult {
-  public:
+   public:
     ClosePolygonResult();
 
     Point intersection_point;
     int polygon_idx;
     uint point_idx;
 };
-} // namespace ORNL
+}  // namespace ORNL

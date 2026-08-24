@@ -28,7 +28,7 @@
 namespace ORNL {
 
 ScanLayer::ScanLayer(int layer, const QSharedPointer<SettingsBase>& sb) : m_layer_num(layer), Step(sb) {
-    m_type = StepType::kScan;
+    m_type          = StepType::kScan;
     m_first_connect = false;
 }
 
@@ -62,8 +62,8 @@ QString ScanLayer::writeGCode(QSharedPointer<WriterBase> writer) {
     if (file.open(QIODevice::WriteOnly | QIODevice::Text)) {
         QTextStream stream(&file);
 
-        Point widthHeight = m_geometry.max() - m_geometry.min();
-        Distance stepDistance = getSb()->setting<Distance>(PS::LaserScanner::kLaserScannerStepDistance);
+        Point widthHeight       = m_geometry.max() - m_geometry.min();
+        Distance stepDistance   = getSb()->setting<Distance>(PS::LaserScanner::kLaserScannerStepDistance);
         Distance lineResolution = getSb()->setting<Distance>(PS::LaserScanner::kLaserScanLineResolution);
 
         stream << "P||" % QString::number(Distance(m_geometry.min().x()).to(mm), 'f', 4) % '|' %
@@ -95,9 +95,7 @@ QString ScanLayer::writeGCode(QSharedPointer<WriterBase> writer) {
 }
 
 void ScanLayer::compute() {
-    for (QSharedPointer<IslandBase> island : m_islands) {
-        island->compute(m_layer_num);
-    }
+    for (QSharedPointer<IslandBase> island : m_islands) { island->compute(m_layer_num); }
 }
 
 void ScanLayer::connectPaths(Point& start, int& start_index, QVector<QSharedPointer<RegionBase>>& previousRegions) {
@@ -134,15 +132,13 @@ void ScanLayer::calculateModifiers(Point& point) {
 }
 
 Point ScanLayer::getEndLocation() {
-
     for (auto& island : m_islands) {
         auto regions = island->getRegions();
         for (int region_index = regions.size() - 1; region_index >= 0; region_index--) {
             auto paths = regions[region_index]->getPaths();
             for (int path_index = paths.size() - 1; path_index >= 0; path_index--) {
                 auto path = paths[path_index];
-                if (path.size() > 0)
-                    return path.back()->end();
+                if (path.size() > 0) return path.back()->end();
             }
         }
     }
@@ -152,8 +148,7 @@ Point ScanLayer::getEndLocation() {
 void ScanLayer::unorient() {
     if (!this->isDirty()) {
         for (QSharedPointer<IslandBase> island : m_islands) {
-
-            Point m_half_shift = m_shift_amount;
+            Point m_half_shift   = m_shift_amount;
             Distance scan_height = island->getSb()->setting<Distance>(PS::LaserScanner::kLaserScannerHeight) -
                                    island->getSb()->setting<Distance>(PS::LaserScanner::kLaserScannerHeightOffset);
 
@@ -177,13 +172,11 @@ void ScanLayer::reorient() {
     // unapply origin shift
     Point m_origin_shift = Point(.0, .0, .0) - m_shift_amount;
     m_origin_shift.z(.0);
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(QQuaternion(), m_origin_shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(QQuaternion(), m_origin_shift); }
 
     // raise the layer by half the layer height, because cross-sections are taken at the center of a layer
     // but the path for the extruder should be at a full layer height
-    Point m_half_shift = m_shift_amount;
+    Point m_half_shift   = m_shift_amount;
     Distance scan_height = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerHeight) -
                            m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerHeightOffset);
 
@@ -193,20 +186,19 @@ void ScanLayer::reorient() {
 
     // rotate and then shift every island in the layer
     QQuaternion rotation = MathUtils::CreateQuaternion(QVector3D(0, 0, 1), m_slicing_plane.normal());
-    for (QSharedPointer<IslandBase> island : getIslands()) {
-        island->transform(rotation, m_half_shift);
-    }
+    for (QSharedPointer<IslandBase> island : getIslands()) { island->transform(rotation, m_half_shift); }
 }
 
 float ScanLayer::getMinZ() {
     float min_z = std::numeric_limits<float>::max();
     for (QSharedPointer<IslandBase> island : m_islands) {
         float island_min = island->getMinZ();
-        if (island_min < min_z)
-            min_z = island_min;
+        if (island_min < min_z) min_z = island_min;
     }
     return min_z;
 }
 
-void ScanLayer::setFirst() { m_first_connect = true; }
-} // namespace ORNL
+void ScanLayer::setFirst() {
+    m_first_connect = true;
+}
+}  // namespace ORNL

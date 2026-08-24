@@ -1,14 +1,14 @@
 #include "threading/abs_slicing_thread.h"
 
+#include <QApplication>
+#include <QStringBuilder>
+#include <QTextStream>
 #include <algorithm>
 #include <climits>
 #include <exception>
 #include <limits>
 #include <memory>
 
-#include <QApplication>
-#include <QStringBuilder>
-#include <QTextStream>
 #include <qdebug.h>
 #include <qfiledevice.h>
 #include <qfileinfo.h>
@@ -134,7 +134,7 @@ GcodeMeta metaForSyntax(GcodeSyntax syntax) {
 std::unique_ptr<CommonParser> makeLayerTimeParser(GcodeSyntax syntax, QStringList& original_lines,
                                                   QStringList& upper_lines) {
     constexpr bool kAllowLayerAlter = true;
-    const GcodeMeta meta = metaForSyntax(syntax);
+    const GcodeMeta meta            = metaForSyntax(syntax);
 
     switch (syntax) {
         case GcodeSyntax::kAML3D:
@@ -174,7 +174,7 @@ QString layerTimeComment(const GcodeMeta& meta, Time layer_time) {
            QString("ORNL_SLICER_LAYER_TIME_ESTIMATE=%1").arg(layer_time.to(s), 0, 'f', 3) %
            meta.m_comment_ending_delimiter;
 }
-} // namespace
+}  // namespace
 
 AbstractSlicingThread::AbstractSlicingThread(QString outputLocation, bool skipGcode)
     : QObject(), m_min(0), m_max(INT_MAX), m_should_cancel(false) {
@@ -195,11 +195,17 @@ void AbstractSlicingThread::setBounds(int min, int max) {
     m_max = max;
 }
 
-int AbstractSlicingThread::getMinBound() { return m_min; }
+int AbstractSlicingThread::getMinBound() {
+    return m_min;
+}
 
-int AbstractSlicingThread::getMaxBound() { return m_max; }
+int AbstractSlicingThread::getMaxBound() {
+    return m_max;
+}
 
-qint64 AbstractSlicingThread::getTimeElapsed() { return m_elapsed_time; }
+qint64 AbstractSlicingThread::getTimeElapsed() {
+    return m_elapsed_time;
+}
 
 void AbstractSlicingThread::setGcodeOutput(QString output) {
     m_syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
@@ -317,7 +323,9 @@ void AbstractSlicingThread::setGcodeOutput(QString output) {
     m_temp_gcode_dir = fi.absoluteDir();
 }
 
-void AbstractSlicingThread::setCancel() { m_should_cancel = true; }
+void AbstractSlicingThread::setCancel() {
+    m_should_cancel = true;
+}
 
 bool AbstractSlicingThread::shouldCancel() {
     if (m_should_cancel) {
@@ -329,9 +337,13 @@ bool AbstractSlicingThread::shouldCancel() {
     return false;
 }
 
-void AbstractSlicingThread::setMaxSteps(int steps) { m_max_steps = steps; }
+void AbstractSlicingThread::setMaxSteps(int steps) {
+    m_max_steps = steps;
+}
 
-int AbstractSlicingThread::getMaxSteps() { return m_max_steps; }
+int AbstractSlicingThread::getMaxSteps() {
+    return m_max_steps;
+}
 
 void AbstractSlicingThread::forwardStatus(StatusUpdateStepType type, int completedPercentage) {
     emit statusUpdate(type, completedPercentage);
@@ -346,20 +358,18 @@ void AbstractSlicingThread::writeGCodeSetup() {
     bool has_part_bounds = false;
 
     for (QSharedPointer<Part> curr_part : CSM->parts()) {
-        if (curr_part->rootMesh()->type() == MeshType::kClipping) // Skip parts that were used for clipping
+        if (curr_part->rootMesh()->type() == MeshType::kClipping)  // Skip parts that were used for clipping
             continue;
 
-        minimum_x = std::min(minimum_x, curr_part->rootMesh()->min().x());
-        minimum_y = std::min(minimum_y, curr_part->rootMesh()->min().y());
-        maximum_x = std::max(maximum_x, curr_part->rootMesh()->max().x());
-        maximum_y = std::max(maximum_y, curr_part->rootMesh()->max().y());
-        maximum_z = std::max(maximum_z, curr_part->rootMesh()->max().z());
+        minimum_x       = std::min(minimum_x, curr_part->rootMesh()->min().x());
+        minimum_y       = std::min(minimum_y, curr_part->rootMesh()->min().y());
+        maximum_x       = std::max(maximum_x, curr_part->rootMesh()->max().x());
+        maximum_y       = std::max(maximum_y, curr_part->rootMesh()->max().y());
+        maximum_z       = std::max(maximum_z, curr_part->rootMesh()->max().z());
         has_part_bounds = true;
     }
 
-    if (has_part_bounds) {
-        m_base->setBuildMaximumZ(Distance(maximum_z));
-    }
+    if (has_part_bounds) { m_base->setBuildMaximumZ(Distance(maximum_z)); }
 
     stream << m_base->writeSlicerHeader(toString(m_syntax));
     stream << m_base->writeSettingsHeader(m_syntax);
@@ -371,8 +381,7 @@ void AbstractSlicingThread::writeGCodeShutdown() {
     {
         QTextStream stream(&m_temp_gcode_output_file);
         stream << m_base->writeShutdown();
-        if (m_syntax != GcodeSyntax::kMVP)
-            stream << m_base->writeSettingsFooter();
+        if (m_syntax != GcodeSyntax::kMVP) stream << m_base->writeSettingsFooter();
         stream.flush();
     }
     writeLayerTimeComments();
@@ -380,9 +389,7 @@ void AbstractSlicingThread::writeGCodeShutdown() {
 }
 
 void AbstractSlicingThread::writeLayerTimeComments() {
-    if (!GSM->getGlobal()->setting<bool>(PRS::GCode::kLayerTimeComments)) {
-        return;
-    }
+    if (!GSM->getGlobal()->setting<bool>(PRS::GCode::kLayerTimeComments)) { return; }
 
     const QString file_name = m_temp_gcode_output_file.fileName();
     if (!m_temp_gcode_output_file.isOpen() || !m_temp_gcode_output_file.flush() || !m_temp_gcode_output_file.seek(0)) {
@@ -398,7 +405,7 @@ void AbstractSlicingThread::writeLayerTimeComments() {
 
     try {
         QStringList original_lines = text.split('\n');
-        QStringList upper_lines = text.toUpper().split('\n');
+        QStringList upper_lines    = text.toUpper().split('\n');
 
         std::unique_ptr<CommonParser> parser = makeLayerTimeParser(m_syntax, original_lines, upper_lines);
         parser->parseHeader();
@@ -406,9 +413,7 @@ void AbstractSlicingThread::writeLayerTimeComments() {
         parser->parseLines();
 
         const QList<Time> adjusted_layer_times = parser->getAdjustedLayerTimes();
-        if (adjusted_layer_times.isEmpty()) {
-            return;
-        }
+        if (adjusted_layer_times.isEmpty()) { return; }
 
         const GcodeMeta meta = metaForSyntax(m_syntax);
         const QRegularExpression layer_marker("^\\s*" + QRegularExpression::escape(meta.m_comment_starting_delimiter) +
@@ -416,25 +421,19 @@ void AbstractSlicingThread::writeLayerTimeComments() {
                                               QRegularExpression::CaseInsensitiveOption);
 
         QStringList annotated_lines = text.split('\n');
-        int layer_marker_count = 0;
+        int layer_marker_count      = 0;
         for (const QString& line : annotated_lines) {
-            if (layer_marker.match(line).hasMatch()) {
-                ++layer_marker_count;
-            }
+            if (layer_marker.match(line).hasMatch()) { ++layer_marker_count; }
         }
 
         const int layer_time_offset = adjusted_layer_times.size() > layer_marker_count ? 1 : 0;
         for (int line_index = 0; line_index < annotated_lines.size(); ++line_index) {
             const QRegularExpressionMatch match = layer_marker.match(annotated_lines[line_index]);
-            if (!match.hasMatch()) {
-                continue;
-            }
+            if (!match.hasMatch()) { continue; }
 
-            bool converted = false;
+            bool converted             = false;
             const int layer_time_index = match.captured(1).toInt(&converted) - 1 + layer_time_offset;
-            if (!converted || layer_time_index < 0 || layer_time_index >= adjusted_layer_times.size()) {
-                continue;
-            }
+            if (!converted || layer_time_index < 0 || layer_time_index >= adjusted_layer_times.size()) { continue; }
 
             annotated_lines.insert(line_index + 1, layerTimeComment(meta, adjusted_layer_times[layer_time_index]));
             ++line_index;
@@ -453,4 +452,4 @@ void AbstractSlicingThread::writeLayerTimeComments() {
         return;
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Gudel syntax
  */
 class GudelWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     GudelWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -75,7 +75,7 @@ class GudelWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
@@ -96,5 +96,5 @@ class GudelWriter : public WriterBase {
     //! \brief preallocated prefixs commonly used in this syntax
     int m_material_number;
 
-}; // class GudelWriter
-} // namespace ORNL
+};  // class GudelWriter
+}  // namespace ORNL

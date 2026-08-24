@@ -31,9 +31,13 @@ bool equals(double a, double b) {
     return (a == b) || (std::abs(a - b) < std::abs(std::min(a, b)) * std::numeric_limits<double>::epsilon());
 }
 
-bool equals(double a, double b, double eps) { return (a == b) || (std::abs(a - b) < eps); }
+bool equals(double a, double b, double eps) {
+    return (a == b) || (std::abs(a - b) < eps);
+}
 
-bool notEquals(double a, double b) { return !equals(a, b); }
+bool notEquals(double a, double b) {
+    return !equals(a, b);
+}
 
 Point center(QVector<Point> points) {
     float x = 0, y = 0, z = 0;
@@ -99,17 +103,12 @@ bool intersect(Point p1, Point q1, Point p2, Point q2) {
     short o3 = orientation(p2, q2, p1);
     short o4 = orientation(p2, q2, q1);
 
-    if (o1 != o2 && o3 != o4)
-        return true;
+    if (o1 != o2 && o3 != o4) return true;
 
-    if (o1 == 0 && onSegment(p1, p2, q1))
-        return true;
-    if (o2 == 0 && onSegment(p1, q2, q1))
-        return true;
-    if (o3 == 0 && onSegment(p2, p1, q2))
-        return true;
-    if (o4 == 0 && onSegment(p2, q1, q2))
-        return true;
+    if (o1 == 0 && onSegment(p1, p2, q1)) return true;
+    if (o2 == 0 && onSegment(p1, q2, q1)) return true;
+    if (o3 == 0 && onSegment(p2, p1, q2)) return true;
+    if (o4 == 0 && onSegment(p2, q1, q2)) return true;
 
     return false;
 }
@@ -123,12 +122,10 @@ short orientation(Point A, Point B, Point C) {
     float val = (C.x() - A.x()) * (B.y() - A.y()) - (C.y() - A.y()) * (B.x() - A.x());
 
     //! Point C is colinear to line AB
-    if (qFuzzyIsNull(val))
-        return 0;
+    if (qFuzzyIsNull(val)) return 0;
 
     //! Point C lies to the left of line AB -> orientation of ABC is ccw
-    if (val < 0)
-        return -1;
+    if (val < 0) return -1;
 
     //! Point C lies to the right of line AB -> orientation of ABC is cw
     return 1;
@@ -154,7 +151,7 @@ Point lineIntersection(Point A, Point B, Point C, Point D) {
 }
 
 Point linePlaneIntersection(Point line_pt, QVector3D line_direction, Plane plane) {
-    QVector3D N = plane.normal();
+    QVector3D N    = plane.normal();
     Point plane_pt = plane.point();
 
     double t =
@@ -171,16 +168,14 @@ bool nearCollinear(Point A, Point B, Point C, Angle threshold) {
     Distance a = B.distance(C);
 
     // if any of the two points are the same
-    if (a == 0 || b == 0 || c == 0)
-        return true;
+    if (a == 0 || b == 0 || c == 0) return true;
 
     // Or if any of the two points are close enough, 1.0e-6 is hardcoded for now
     Distance d_max = qMax(a, b);
-    d_max = qMax(d_max, c);
+    d_max          = qMax(d_max, c);
     Distance d_min = qMin(a, b);
-    d_min = qMin(d_min, c);
-    if (d_min / d_max < 1.0e-6)
-        return true;
+    d_min          = qMin(d_min, c);
+    if (d_min / d_max < 1.0e-6) return true;
 
     // checking two of three angles is enough. If B is the mid point of collinear ABC
     //   Angle ABC = PI, not 0. But the other two angles are 0
@@ -192,26 +187,14 @@ bool nearCollinear(Point A, Point B, Point C, Angle threshold) {
 
 bool slopesNearCollinear(Point pt1, Point pt2, Point pt3, Distance distSqrd) {
     if (std::abs(pt1.x() - pt2.x()) > std::abs(pt1.y() - pt2.y())) {
-        if ((pt1.x() > pt2.x()) == (pt1.x() < pt3.x())) {
-            return distanceFromLineSqrd(pt1, pt2, pt3) < distSqrd;
-        }
-        else if ((pt2.x() > pt1.x()) == (pt2.x() < pt3.x())) {
-            return distanceFromLineSqrd(pt2, pt1, pt3) < distSqrd;
-        }
-        else {
-            return distanceFromLineSqrd(pt3, pt1, pt2) < distSqrd;
-        }
+        if ((pt1.x() > pt2.x()) == (pt1.x() < pt3.x())) { return distanceFromLineSqrd(pt1, pt2, pt3) < distSqrd; }
+        else if ((pt2.x() > pt1.x()) == (pt2.x() < pt3.x())) { return distanceFromLineSqrd(pt2, pt1, pt3) < distSqrd; }
+        else { return distanceFromLineSqrd(pt3, pt1, pt2) < distSqrd; }
     }
     else {
-        if ((pt1.y() > pt2.y()) == (pt1.y() < pt3.y())) {
-            return distanceFromLineSqrd(pt1, pt2, pt3) < distSqrd;
-        }
-        else if ((pt2.y() > pt1.y()) == (pt2.y() < pt3.y())) {
-            return distanceFromLineSqrd(pt2, pt1, pt3) < distSqrd;
-        }
-        else {
-            return distanceFromLineSqrd(pt3, pt1, pt2) < distSqrd;
-        }
+        if ((pt1.y() > pt2.y()) == (pt1.y() < pt3.y())) { return distanceFromLineSqrd(pt1, pt2, pt3) < distSqrd; }
+        else if ((pt2.y() > pt1.y()) == (pt2.y() < pt3.y())) { return distanceFromLineSqrd(pt2, pt1, pt3) < distSqrd; }
+        else { return distanceFromLineSqrd(pt3, pt1, pt2) < distSqrd; }
     }
 }
 
@@ -219,13 +202,13 @@ Distance distanceFromLineSqrd(Point pt, Point ln1, Point ln2) {
     float A = ln1.y() - ln2.y();
     float B = ln2.x() - ln1.x();
     float C = A * ln1.x() + B * ln1.y();
-    C = A * pt.x() + B * pt.y() - C;
+    C       = A * pt.x() + B * pt.y() - C;
     return (C * C) / (A * A + B * B);
 }
 
 float distanceFromLineSegSqrd(Point pt, Point ln1, Point ln2) {
-    float x = ln1.x();
-    float y = ln1.y();
+    float x  = ln1.x();
+    float y  = ln1.y();
     float dx = ln2.x() - x;
     float dy = ln2.y() - y;
 
@@ -248,19 +231,19 @@ float distanceFromLineSegSqrd(Point pt, Point ln1, Point ln2) {
     return dx * dx + dy * dy;
 }
 
-bool pointsAreClose(Point pt1, Point pt2, Distance distSqrd) { return std::pow(pt1.distance(pt2)(), 2) <= distSqrd(); }
+bool pointsAreClose(Point pt1, Point pt2, Distance distSqrd) {
+    return std::pow(pt1.distance(pt2)(), 2) <= distSqrd();
+}
 
-uint32_t cantorPair(uint32_t a, uint32_t b) { return (a + b) * (a + b + 1) / 2 + a; }
+uint32_t cantorPair(uint32_t a, uint32_t b) {
+    return (a + b) * (a + b + 1) / 2 + a;
+}
 
 std::pair<Point, double> nearestPointOnSegment(const Point& a, const Point& b, const Point& p) {
     double t = (b - a).dot(p - a) / (b - a).dot(b - a);
 
-    if (t < 0) {
-        return std::make_pair(a, p.distance(a)());
-    }
-    else if (t > 1) {
-        return std::make_pair(b, p.distance(b)());
-    }
+    if (t < 0) { return std::make_pair(a, p.distance(a)()); }
+    else if (t > 1) { return std::make_pair(b, p.distance(b)()); }
     else {
         Point nearest = a * (1.0 - t) + b * t;
         return std::make_pair(nearest, p.distance(nearest)());
@@ -282,11 +265,11 @@ QVector<Point> chamferCorner(const Point& A, const Point& B, const Point& C, Dis
 // 1000.51  ->  0:16:41
 // 59.45    --> 0:00:59
 QString formattedTimeSpanHHMMSS(double sec) {
-    int seconds = int(sec);
-    int hours = (seconds / 60 / 60);
-    int minutes = (seconds / 60) % 60;
+    int seconds          = int(sec);
+    int hours            = (seconds / 60 / 60);
+    int minutes          = (seconds / 60) % 60;
     int remainingSeconds = seconds % 60;
-    int milliseconds = round((sec - seconds) * 1000);
+    int milliseconds     = round((sec - seconds) * 1000);
     return QString::number(hours) + ":" + QString::number(minutes).rightJustified(2, '0') + ":" +
            QString::number(remainingSeconds).rightJustified(2, '0') + "." +
            QString::number(milliseconds).leftJustified(3, '0');
@@ -302,43 +285,35 @@ QString formattedTimeSpanHHMMSS(Time time) {
 // 1000.5 -> 16 min 41 sec
 // 43.23  -> 43 sec
 QString formattedTimeSpan(double sec) {
-    int seconds = int(sec);
-    int hours = (seconds / 60 / 60);
-    int minutes = (seconds / 60) % 60;
+    int seconds          = int(sec);
+    int hours            = (seconds / 60 / 60);
+    int minutes          = (seconds / 60) % 60;
     int remainingSeconds = seconds % 60;
     if (hours > 0) {
         return QString::number(hours) + " hr " + QString::number(minutes) + " min " +
                QString::number(remainingSeconds) + " sec";
     }
-    else if (minutes > 0) {
-        return QString::number(minutes) + " min " + QString::number(remainingSeconds) + " sec";
-    }
-    else {
-        return QString::number(remainingSeconds) + " sec";
-    }
+    else if (minutes > 0) { return QString::number(minutes) + " min " + QString::number(remainingSeconds) + " sec"; }
+    else { return QString::number(remainingSeconds) + " sec"; }
 }
 
 QString formattedTimeSpan(Time sec) {
-    int seconds = int(sec());
-    int hours = (seconds / 60 / 60);
-    int minutes = (seconds / 60) % 60;
+    int seconds          = int(sec());
+    int hours            = (seconds / 60 / 60);
+    int minutes          = (seconds / 60) % 60;
     int remainingSeconds = seconds % 60;
     if (hours > 0) {
         return QString::number(hours) + " hr " + QString::number(minutes) + " min " +
                QString::number(remainingSeconds) + " sec";
     }
-    else if (minutes > 0) {
-        return QString::number(minutes) + " min " + QString::number(remainingSeconds) + " sec";
-    }
-    else {
-        return QString::number(remainingSeconds) + " sec";
-    }
+    else if (minutes > 0) { return QString::number(minutes) + " min " + QString::number(remainingSeconds) + " sec"; }
+    else { return QString::number(remainingSeconds) + " sec"; }
 }
 
 QQuaternion CreateQuaternion(double x, double y, double z, QuaternionOrder order) {
     double pitch = qDegreesToRadians(x);
-    double yaw = qDegreesToRadians(y);
-    double roll = qDegreesToRadians(z);
+    double yaw   = qDegreesToRadians(y);
+    double roll  = qDegreesToRadians(z);
 
     QQuaternion result;
     QVector3D vx(1, 0, 0), vy(0, 1, 0), vz(0, 0, 1);
@@ -347,11 +322,11 @@ QQuaternion CreateQuaternion(double x, double y, double z, QuaternionOrder order
     qy = AxisAngleToQuat(vy, yaw);
     qz = AxisAngleToQuat(vz, roll);
     if (order == QuaternionOrder::kXYZ) {
-        qt = QuatMult(qx, qy);
+        qt     = QuatMult(qx, qy);
         result = QuatMult(qt, qz);
     }
     else if (order == QuaternionOrder::kZYX) {
-        qt = QuatMult(qz, qy);
+        qt     = QuatMult(qz, qy);
         result = QuatMult(qt, qx);
     }
 
@@ -366,11 +341,11 @@ QQuaternion CreateQuaternion(Angle x, Angle y, Angle z, QuaternionOrder order) {
     qy = AxisAngleToQuat(vy, y());
     qz = AxisAngleToQuat(vz, z());
     if (order == QuaternionOrder::kXYZ) {
-        qt = QuatMult(qx, qy);
+        qt     = QuatMult(qx, qy);
         result = QuatMult(qt, qz);
     }
     else if (order == QuaternionOrder::kZYX) {
-        qt = QuatMult(qz, qy);
+        qt     = QuatMult(qz, qy);
         result = QuatMult(qt, qx);
     }
 
@@ -426,17 +401,17 @@ QQuaternion CreateQuaternion(QVector3D vector_start, QVector3D vector_end) {
     // if they're opposite, create some non-zero quaternion to give 180 degree rotation. This quanternion is not unique
     if (qFuzzyCompare(cross_product.lengthSquared(), 0.0f) && vector_start != vector_end) {
         // hard code the axis-aligned cases for now
-        if (vector_start == QVector3D(0, 0, 1) || vector_end == QVector3D(0, 0, 1)) // input vectors are z-axis aligned
+        if (vector_start == QVector3D(0, 0, 1) || vector_end == QVector3D(0, 0, 1))  // input vectors are z-axis aligned
         {
             cross_product = QVector3D(1, 0, 0);
         }
         else if (vector_start == QVector3D(0, 1, 0) ||
-                 vector_end == QVector3D(0, 1, 0)) // input vectors are y-axis aligned
+                 vector_end == QVector3D(0, 1, 0))  // input vectors are y-axis aligned
         {
             cross_product = QVector3D(1, 0, 0);
         }
         else if (vector_start == QVector3D(1, 0, 0) ||
-                 vector_end == QVector3D(1, 0, 0)) // input vectors are x-axis aligned
+                 vector_end == QVector3D(1, 0, 0))  // input vectors are x-axis aligned
         {
             cross_product = QVector3D(0, 1, 0);
         }
@@ -459,27 +434,25 @@ QQuaternion CreateQuaternion(QVector3D vector_start, QVector3D vector_end) {
 void EulerAngles(QQuaternion q, double* pitch, double* roll, double* yaw) {
     double sinr_cosp = 2 * (q.scalar() * q.x() + q.y() * q.z());
     double cosr_cosp = 1 - 2 * (q.x() * q.x() + q.y() * q.y());
-    *pitch = std::atan2(sinr_cosp, cosr_cosp);
+    *pitch           = std::atan2(sinr_cosp, cosr_cosp);
 
     double sinp = 2 * (q.scalar() * q.y() - q.z() * q.x());
     if (std::abs(sinp) >= 1)
-        *roll = std::copysign(M_PI / 2, sinp); // use 90 degrees if out of range
+        *roll = std::copysign(M_PI / 2, sinp);  // use 90 degrees if out of range
     else
         *roll = std::asin(sinp);
 
     double siny_cosp = 2 * (q.scalar() * q.z() + q.x() * q.y());
     double cosy_cosp = 1 - 2 * (q.y() * q.y() + q.z() * q.z());
-    *yaw = std::atan2(siny_cosp, cosy_cosp);
+    *yaw             = std::atan2(siny_cosp, cosy_cosp);
 }
 
 double findBinomialCoefficients(int n, int k) {
     double coefficient = 1;
 
-    for (int i = n - k + 1; i <= n; i++)
-        coefficient *= i;
+    for (int i = n - k + 1; i <= n; i++) coefficient *= i;
 
-    for (int i = 1; i <= k; i++)
-        coefficient /= i;
+    for (int i = 1; i <= k; i++) coefficient /= i;
 
     return coefficient;
 }
@@ -494,9 +467,9 @@ std::tuple<QVector3D, QQuaternion, QVector3D> decomposeTransformMatrix(QMatrix4x
     mtrx(2, 3) = 0.0f;
 
     // Extract scale
-    float scale_x = mtrx.column(0).length();
-    float scale_y = mtrx.column(1).length();
-    float scale_z = mtrx.column(2).length();
+    float scale_x   = mtrx.column(0).length();
+    float scale_y   = mtrx.column(1).length();
+    float scale_z   = mtrx.column(2).length();
     QVector3D scale = QVector3D(scale_x, scale_y, scale_z);
 
     // Divide out the scales
@@ -522,19 +495,15 @@ QMatrix4x4 composeTransformMatrix(QVector3D t, QQuaternion r, QVector3D s) {
 }
 
 double clamp(double min, double val, double max) {
-    if (val < min)
-        return min;
-    if (val > max)
-        return max;
+    if (val < min) return min;
+    if (val > max) return max;
 
     return val;
 }
 
 double snap(double val, double interval) {
     double half_interval = interval / 2;
-    if (val < 0) {
-        half_interval = -half_interval;
-    }
+    if (val < 0) { half_interval = -half_interval; }
 
     return (((int)(val + half_interval)) / (int)interval) * interval;
 }
@@ -553,6 +522,8 @@ QVector3D sphericalToCartesian(float rho, float theta, float phi) {
     return ret;
 }
 
-bool glEquals(double a, double b) { return (std::abs(a - b) < 1e-5); }
-} // namespace MathUtils
-} // namespace ORNL
+bool glEquals(double a, double b) {
+    return (std::abs(a - b) < 1e-5);
+}
+}  // namespace MathUtils
+}  // namespace ORNL

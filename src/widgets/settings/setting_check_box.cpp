@@ -1,6 +1,7 @@
 #include "widgets/settings/setting_check_box.h"
 
 #include <QToolTip>
+
 #include <qcheckbox.h>
 #include <qgridlayout.h>
 #include <qhashfunctions.h>
@@ -23,8 +24,7 @@ SettingCheckBox::SettingCheckBox(SettingTab* parent, QSharedPointer<SettingsBase
     bool cur;
     m_warn = false;
     // If the settings base contains the key, use its value. Otherwise, pull from the default.
-    if (m_sb->contains(key))
-        cur = m_sb->setting<bool>(key);
+    if (m_sb->contains(key)) cur = m_sb->setting<bool>(key);
     // Get the value as an int from the master since json throws an error reading 0 as false.
     else {
         cur = json.operator[](Constants::Settings::Master::kDefault).get<int>();
@@ -79,7 +79,7 @@ void SettingCheckBox::show() {
 
 void SettingCheckBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<bool>(val.toBool());
     emit modified(m_key);
@@ -88,12 +88,11 @@ void SettingCheckBox::valueChanged(QVariant val) {
 void SettingCheckBox::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
-    bool cur = reloadValueHelper<bool>(consistent);
-    if (consistent)
-        setChecked(cur);
+    bool cur        = reloadValueHelper<bool>(consistent);
+    if (consistent) setChecked(cur);
 
     this->blockSignals(false);
     emit modified(m_key);
     emit warnParent(warningCountDelta(!consistent, m_warn));
 }
-} // Namespace ORNL
+}  // Namespace ORNL

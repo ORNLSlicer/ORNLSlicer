@@ -6,7 +6,7 @@
 
 namespace ORNL {
 class MotionEstimation {
-  public:
+   public:
     //! \brief Initilizes the neccesary parameters and sets to default values
     static void Init();
 
@@ -80,7 +80,7 @@ class MotionEstimation {
     static Velocity m_current_speed;
     static Velocity m_incomingV;
 
-  private:
+   private:
     //! \brief Set direction vector from last motion
     //! \param vx Direction vector x component
     //! \param vy Direction vector y component
@@ -126,10 +126,10 @@ class MotionEstimation {
 
     static void setPreviousVelocityVector(Velocity velocity, Distance dx, Distance dy, Distance dz);
 
-    static bool m_previous_vertical; // Z or W move
+    static bool m_previous_vertical;  // Z or W move
 
     // Actual velocty vectors considering acceleration and parabolic blend
     static QVector3D m_previous_vv;
     static QVector3D m_current_vv;
 };
-} // namespace ORNL
+}  // namespace ORNL

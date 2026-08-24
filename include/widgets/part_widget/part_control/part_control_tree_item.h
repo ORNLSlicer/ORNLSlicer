@@ -3,6 +3,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QTreeWidget>
+
 #include <qobject.h>
 #include <qsharedpointer.h>
 #include <qwidget.h>
@@ -17,7 +18,7 @@ namespace ORNL {
  * \brief an item that sits in the part control's list
  */
 class PartControlTreeItem : public QTreeWidgetItem {
-  public:
+   public:
     //! \brief Constructor
     //! \param part: a pointer to the part this item will contain
     explicit PartControlTreeItem(QSharedPointer<PartMetaItem> pm);
@@ -42,11 +43,11 @@ class PartControlTreeItem : public QTreeWidgetItem {
     //! \param floating
     void setFloating(bool floating);
 
-  private:
+   private:
     //! \class Container
     //! \brief a sub-class that is a container for the warning badges
     class Container : public QWidget {
-      public:
+       public:
         //! \brief Contructor
         //! \param name the name of the part
         //! \param closed if the part is a closed mesh
@@ -61,7 +62,7 @@ class PartControlTreeItem : public QTreeWidgetItem {
         //! \param floating
         void showFloatingBadge(bool show);
 
-      private:
+       private:
         QLabel* m_alignment_badge;
     };
 
@@ -74,9 +75,9 @@ class PartControlTreeItem : public QTreeWidgetItem {
     //! \brief container for warning badges
     Container* m_container;
 
-    bool m_is_mesh_closed = true;
+    bool m_is_mesh_closed        = true;
     bool m_is_mesh_inside_volume = true;
-    bool m_is_mesh_floating = true;
-    MeshType m_mesh_type = MeshType::kBuild;
+    bool m_is_mesh_floating      = true;
+    MeshType m_mesh_type         = MeshType::kBuild;
 };
-} // namespace ORNL
+}  // namespace ORNL

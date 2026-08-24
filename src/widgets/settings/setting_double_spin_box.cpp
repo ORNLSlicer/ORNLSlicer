@@ -2,6 +2,7 @@
 
 #include <QToolTip>
 #include <QWheelEvent>
+
 #include <qgridlayout.h>
 #include <qlabel.h>
 #include <qnamespace.h>
@@ -29,15 +30,21 @@ QString masterString(const fifojson& json, const std::string& key) {
     return QString::fromStdString(json.at(key).get<std::string>());
 }
 
-bool isOneOf(const QString& key, const QStringList& keys) { return keys.contains(key); }
+bool isOneOf(const QString& key, const QStringList& keys) {
+    return keys.contains(key);
+}
 
-bool isConfiguredRange(double min_value, double max_value) { return min_value != 0 || max_value != 0; }
+bool isConfiguredRange(double min_value, double max_value) {
+    return min_value != 0 || max_value != 0;
+}
 
 bool isValidRange(double min_value, double max_value) {
     return isConfiguredRange(min_value, max_value) && min_value < max_value;
 }
 
-QString formatRpm(double value) { return QString::number(value, 'g', 6) + " rpm"; }
+QString formatRpm(double value) {
+    return QString::number(value, 'g', 6) + " rpm";
+}
 
 QString formatDistance(double value) {
     const Distance unit = PreferencesManager::getInstance()->getDistanceUnit();
@@ -51,22 +58,17 @@ QString formatTime(double value) {
 }
 
 QString formatTypedValue(double value, const QString& type) {
-    if (type == "distance" || type == "location")
-        return formatDistance(value);
-    if (type == "time")
-        return formatTime(value);
-    if (type == "rpm")
-        return formatRpm(value);
-    if (type == "percentage" || type == "percentage100")
-        return QString::number(value, 'g', 6) + "%";
+    if (type == "distance" || type == "location") return formatDistance(value);
+    if (type == "time") return formatTime(value);
+    if (type == "rpm") return formatRpm(value);
+    if (type == "percentage" || type == "percentage100") return QString::number(value, 'g', 6) + "%";
 
     return QString::number(value, 'g', 6);
 }
 
 QString dimensionRangeWarning(const QString& key, const QString& min_key, const QString& max_key, double min_value,
                               double max_value, const QString& min_label, const QString& max_label) {
-    if (!isConfiguredRange(min_value, max_value) || min_value < max_value)
-        return QString();
+    if (!isConfiguredRange(min_value, max_value) || min_value < max_value) return QString();
 
     if (key == min_key || key == max_key) {
         return min_label + " (" + formatDistance(min_value) + ") must be less than " + max_label + " (" +
@@ -77,8 +79,7 @@ QString dimensionRangeWarning(const QString& key, const QString& min_key, const 
 }
 
 QString boundsWarning(const QString& display, double value, double min_value, double max_value, const QString& axis) {
-    if (!isValidRange(min_value, max_value) || (value >= min_value && value <= max_value))
-        return QString();
+    if (!isValidRange(min_value, max_value) || (value >= min_value && value <= max_value)) return QString();
 
     return display + " (" + formatDistance(value) + ") is outside the " + axis + " build volume range (" +
            formatDistance(min_value) + " to " + formatDistance(max_value) + ").";
@@ -86,13 +87,12 @@ QString boundsWarning(const QString& display, double value, double min_value, do
 
 QString enabledSettingWarning(const QString& display, double value, const QString& required_description,
                               const QString& type) {
-    if (value > 0)
-        return QString();
+    if (value > 0) return QString();
 
     return display + " must be greater than zero " + required_description + " (currently " +
            formatTypedValue(value, type) + ").";
 }
-} // namespace
+}  // namespace
 
 SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
                                            fifojson json, QGridLayout* layout, int index)
@@ -115,7 +115,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
         this->setMaximum(9999.99);
         unitText = "rpm";
     }
-    else if (type == "percentage100") // Percentage values with a maximum value of 100
+    else if (type == "percentage100")  // Percentage values with a maximum value of 100
     {
         this->setMinimum(0);
         this->setMaximum(100);
@@ -165,8 +165,7 @@ void SettingDoubleSpinBox::applyNotification(QString msg, bool show_tooltip) {
     // set pop-up/tooltip
     this->setStyleFromFile(this, m_theme_path + "setting_rows_warning.qss");
     this->setToolTip(msg);
-    if (show_tooltip)
-        QToolTip::showText(this->mapToGlobal(QPoint(0, 0)), msg, nullptr, QRect(), 30000);
+    if (show_tooltip) QToolTip::showText(this->mapToGlobal(QPoint(0, 0)), msg, nullptr, QRect(), 30000);
 }
 
 void SettingDoubleSpinBox::clearNotification() {
@@ -187,7 +186,7 @@ void SettingDoubleSpinBox::show() {
 
 void SettingDoubleSpinBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     valueChangedHelper<double>(val.toDouble());
     emit modified(m_key);
@@ -196,9 +195,8 @@ void SettingDoubleSpinBox::valueChanged(QVariant val) {
 void SettingDoubleSpinBox::reloadValue() {
     this->blockSignals(true);
     bool consistent = true;
-    double cur = reloadValueHelper<double>(consistent);
-    if (consistent)
-        setValue(cur);
+    double cur      = reloadValueHelper<double>(consistent);
+    if (consistent) setValue(cur);
 
     this->blockSignals(false);
     emit modified(m_key);
@@ -228,7 +226,7 @@ void SettingDoubleSpinBox::checkDynamicDependencies() {
         return;
     }
 
-    const QString warning = dynamicDependencyWarning();
+    const QString warning     = dynamicDependencyWarning();
     const bool warning_active = !warning.isEmpty();
     if (warning_active) {
         applyNotification(warning, false);
@@ -249,62 +247,64 @@ int SettingDoubleSpinBox::effectiveSettingsBaseCount() const {
     return m_settings_bases.isEmpty() ? 1 : m_settings_bases.size();
 }
 
-double SettingDoubleSpinBox::effectiveDouble() const { return effectiveDouble(0); }
+double SettingDoubleSpinBox::effectiveDouble() const {
+    return effectiveDouble(0);
+}
 
 double SettingDoubleSpinBox::effectiveDouble(int settings_base_index) const {
     const double default_value = m_json[Constants::Settings::Master::kDefault].get<double>();
-    const double global_value = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
+    const double global_value  = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
 
-    if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<double>(m_key, settings_base_index, global_value);
+    if (!m_settings_bases.isEmpty()) return effectiveValueHelper<double>(m_key, settings_base_index, global_value);
 
     return global_value;
 }
 
-double SettingDoubleSpinBox::effectiveDouble(const QString& key) const { return effectiveDouble(key, 0); }
+double SettingDoubleSpinBox::effectiveDouble(const QString& key) const {
+    return effectiveDouble(key, 0);
+}
 
 double SettingDoubleSpinBox::effectiveDouble(const QString& key, int settings_base_index) const {
     const double global_value = m_sb->contains(key) ? m_sb->setting<double>(key) : 0.0;
 
-    if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<double>(key, settings_base_index, global_value);
+    if (!m_settings_bases.isEmpty()) return effectiveValueHelper<double>(key, settings_base_index, global_value);
 
     return global_value;
 }
 
-bool SettingDoubleSpinBox::effectiveBool(const QString& key) const { return effectiveBool(key, 0); }
+bool SettingDoubleSpinBox::effectiveBool(const QString& key) const {
+    return effectiveBool(key, 0);
+}
 
 bool SettingDoubleSpinBox::effectiveBool(const QString& key, int settings_base_index) const {
     const bool global_value = m_sb->contains(key) ? m_sb->setting<bool>(key) : false;
 
-    if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<bool>(key, settings_base_index, global_value);
+    if (!m_settings_bases.isEmpty()) return effectiveValueHelper<bool>(key, settings_base_index, global_value);
 
     return global_value;
 }
 
-int SettingDoubleSpinBox::effectiveInt(const QString& key) const { return effectiveInt(key, 0); }
+int SettingDoubleSpinBox::effectiveInt(const QString& key) const {
+    return effectiveInt(key, 0);
+}
 
 int SettingDoubleSpinBox::effectiveInt(const QString& key, int settings_base_index) const {
     const int global_value = m_sb->contains(key) ? m_sb->setting<int>(key) : 0;
 
-    if (!m_settings_bases.isEmpty())
-        return effectiveValueHelper<int>(key, settings_base_index, global_value);
+    if (!m_settings_bases.isEmpty()) return effectiveValueHelper<int>(key, settings_base_index, global_value);
 
     return global_value;
 }
 
 bool SettingDoubleSpinBox::hasConsistentEffectiveDouble() const {
-    if (m_settings_bases.size() <= 1)
-        return true;
+    if (m_settings_bases.size() <= 1) return true;
 
     const double default_value = m_json[Constants::Settings::Master::kDefault].get<double>();
-    const double global_value = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
-    const double first_value = effectiveValueHelper<double>(m_key, 0, global_value);
+    const double global_value  = m_sb->contains(m_key) ? m_sb->setting<double>(m_key) : default_value;
+    const double first_value   = effectiveValueHelper<double>(m_key, 0, global_value);
 
     for (int index = 1, end = m_settings_bases.size(); index < end; ++index) {
-        if (effectiveValueHelper<double>(m_key, index, global_value) != first_value)
-            return false;
+        if (effectiveValueHelper<double>(m_key, index, global_value) != first_value) return false;
     }
 
     return true;
@@ -313,23 +313,21 @@ bool SettingDoubleSpinBox::hasConsistentEffectiveDouble() const {
 QString SettingDoubleSpinBox::dynamicDependencyWarning() const {
     for (int index = 0, end = effectiveSettingsBaseCount(); index < end; ++index) {
         const QString warning = dynamicDependencyWarning(index);
-        if (!warning.isEmpty())
-            return warning;
+        if (!warning.isEmpty()) return warning;
     }
 
     return QString();
 }
 
 QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) const {
-    if (m_sb.isNull())
-        return QString();
+    if (m_sb.isNull()) return QString();
 
     const QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
-    const QString type = masterString(m_json, Constants::Settings::Master::kType);
-    const double value = effectiveDouble(settings_base_index);
+    const QString type    = masterString(m_json, Constants::Settings::Master::kType);
+    const double value    = effectiveDouble(settings_base_index);
 
-    const double min_extruder_speed = effectiveDouble(PRS::MachineSpeed::kMinExtruderSpeed, settings_base_index);
-    const double max_extruder_speed = effectiveDouble(PRS::MachineSpeed::kMaxExtruderSpeed, settings_base_index);
+    const double min_extruder_speed   = effectiveDouble(PRS::MachineSpeed::kMinExtruderSpeed, settings_base_index);
+    const double max_extruder_speed   = effectiveDouble(PRS::MachineSpeed::kMaxExtruderSpeed, settings_base_index);
     const bool has_min_extruder_speed = min_extruder_speed > 0;
     const bool has_max_extruder_speed = max_extruder_speed > 0;
     const bool invalid_extruder_range =
@@ -361,23 +359,19 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
 
     QString warning = dimensionRangeWarning(m_key, PRS::Dimensions::kXMin, PRS::Dimensions::kXMax, x_min, x_max,
                                             "Minimum X", "Maximum X");
-    if (!warning.isEmpty())
-        return warning;
+    if (!warning.isEmpty()) return warning;
 
     warning = dimensionRangeWarning(m_key, PRS::Dimensions::kYMin, PRS::Dimensions::kYMax, y_min, y_max, "Minimum Y",
                                     "Maximum Y");
-    if (!warning.isEmpty())
-        return warning;
+    if (!warning.isEmpty()) return warning;
 
     warning = dimensionRangeWarning(m_key, PRS::Dimensions::kZMin, PRS::Dimensions::kZMax, z_min, z_max, "Minimum Z",
                                     "Maximum Z");
-    if (!warning.isEmpty())
-        return warning;
+    if (!warning.isEmpty()) return warning;
 
     warning = dimensionRangeWarning(m_key, PRS::Dimensions::kWMin, PRS::Dimensions::kWMax, w_min, w_max, "Minimum W",
                                     "Maximum W");
-    if (!warning.isEmpty())
-        return warning;
+    if (!warning.isEmpty()) return warning;
 
     if (m_key == PRS::Dimensions::kPurgeX || m_key == PS::Perimeter::kEnableLeadInX)
         return boundsWarning(display, value, x_min, x_max, "X");
@@ -385,11 +379,9 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
     if (m_key == PRS::Dimensions::kPurgeY || m_key == PS::Perimeter::kEnableLeadInY)
         return boundsWarning(display, value, y_min, y_max, "Y");
 
-    if (m_key == PRS::Dimensions::kPurgeZ)
-        return boundsWarning(display, value, z_min, z_max, "Z");
+    if (m_key == PRS::Dimensions::kPurgeZ) return boundsWarning(display, value, z_min, z_max, "Z");
 
-    if (m_key == PRS::Dimensions::kDoffingHeight)
-        return boundsWarning(display, value, w_min, w_max, "W");
+    if (m_key == PRS::Dimensions::kDoffingHeight) return boundsWarning(display, value, w_min, w_max, "W");
 
     if (m_key == PS::Layer::kLayerHeight && value <= 0)
         return display + " must be greater than zero (currently " + formatDistance(value) + ").";
@@ -408,8 +400,7 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
 
     if (isOneOf(m_key, bead_width_keys)) {
         const double layer_height = effectiveDouble(PS::Layer::kLayerHeight, settings_base_index);
-        if (value <= 0)
-            return display + " must be greater than zero (currently " + formatDistance(value) + ").";
+        if (value <= 0) return display + " must be greater than zero (currently " + formatDistance(value) + ").";
 
         if (layer_height > 0 && value < layer_height)
             return display + " (" + formatDistance(value) + ") is smaller than Layer Height (" +
@@ -436,8 +427,7 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
 
     if (isOneOf(m_key, lift_distance_keys) && value > 0) {
         const double z_speed = effectiveDouble(PRS::MachineSpeed::kZSpeed, settings_base_index);
-        if (z_speed <= 0)
-            return display + " requires Z Speed to be greater than zero.";
+        if (z_speed <= 0) return display + " requires Z Speed to be greater than zero.";
 
         if (isValidRange(z_min, z_max) && value > (z_max - z_min))
             return display + " (" + formatDistance(value) + ") exceeds the Z build volume range (" +
@@ -483,4 +473,4 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
 
     return QString();
 }
-} // namespace ORNL
+}  // namespace ORNL

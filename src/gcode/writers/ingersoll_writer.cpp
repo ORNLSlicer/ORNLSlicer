@@ -1,6 +1,7 @@
 #include "gcode/writers/ingersoll_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -20,14 +21,14 @@ IngersollWriter::IngersollWriter(GcodeMeta meta, const QSharedPointer<SettingsBa
 
 QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
                                            Distance maximum_y, int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_travel = true;
-    m_first_print = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
-    m_material_number = -1;
+    m_first_travel      = true;
+    m_first_print       = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
+    m_material_number   = -1;
 
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
@@ -52,8 +53,7 @@ QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
 
     if (m_sb->setting<int>(PRS::GCode::kEnableMaterialLoad)) {}
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -64,7 +64,7 @@ QString IngersollWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
 
 QString IngersollWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     return rv;
 }
@@ -135,7 +135,7 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -149,15 +149,13 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     // write the lift
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
             rv += m_G1 % m_f %
                   QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
                   writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         }
-        else {
-            rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
-        }
+        else { rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z"); }
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
@@ -166,15 +164,13 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
     if (m_first_travel)
         travel_destination.z(qAbs(m_sb->setting<Distance>(PRS::Dimensions::kZOffset)()));
     else if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
         rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
               writeCoordinates(travel_destination);
     }
-    else {
-        rv += m_G0 % writeCoordinates(travel_destination);
-    }
+    else { rv += m_G0 % writeCoordinates(travel_destination); }
 
     rv += commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
@@ -186,26 +182,24 @@ QString IngersollWriter::writeTravel(Point start_location, Point target_location
                   QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
                   writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
         }
-        else {
-            rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z");
-        }
+        else { rv += m_G0 % writeCoordinates(target_location) % commentSpaceLine("TRAVEL LOWER Z"); }
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     return rv;
 }
 
 QString IngersollWriter::writeLine(const Point& start_point, const Point& target_point,
                                    const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    float rpm = params->setting<float>(SS::kExtruderSpeed);
-    int material_number = params->setting<int>(SS::kMaterialNumber);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    float rpm                    = params->setting<float>(SS::kExtruderSpeed);
+    int material_number          = params->setting<int>(SS::kMaterialNumber);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
@@ -245,16 +239,14 @@ QString IngersollWriter::writeArc(const Point& start_point, const Point& end_poi
                                   const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
+    float output_rpm    = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
-    if (!m_deposition_active && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0, params);
-    }
+    if (!m_deposition_active && rpm > 0) { rv += writeExtruderOn(region_type, rpm, 0, params); }
     // Update extruder speed if needed
     if (m_deposition_active && rpm != m_current_rpm) {
         rv += "EXTRUDER(" % QString::number(output_rpm) % ")" % commentSpaceLine("UPDATE EXTRUDER RPM");
@@ -290,7 +282,7 @@ QString IngersollWriter::writeScan(Point target_point, Velocity speed, bool on_o
 QString IngersollWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off the extruder
+        rv += writeExtruderOff(0);  // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -325,7 +317,9 @@ QString IngersollWriter::writeAfterRegion(RegionType type) {
     return rv;
 }
 
-QString IngersollWriter::writeAfterScan(Distance beadWidth, Distance laserStep, Distance laserResolution) { return {}; }
+QString IngersollWriter::writeAfterScan(Distance beadWidth, Distance laserStep, Distance laserResolution) {
+    return {};
+}
 
 QString IngersollWriter::writeAfterIsland() {
     QString rv;
@@ -356,12 +350,14 @@ QString IngersollWriter::writeShutdown() {
             return QString(m_G0 % writeCoordinates(destination));
         },
         "TRAVEL FINAL LIFT Z");
-    rv += writeExtruderOff(0); // update to turn off the extruder
+    rv += writeExtruderOff(0);  // update to turn off the extruder
     rv += m_sb->setting<QString>(PRS::GCode::kEndCode);
     return rv;
 }
 
-QString IngersollWriter::writePurge(int RPM, int duration, int delay) { return {}; }
+QString IngersollWriter::writePurge(int RPM, int duration, int delay) {
+    return {};
+}
 
 QString IngersollWriter::writeDwell(Time time) {
     if (time > 0)
@@ -447,9 +443,9 @@ QString IngersollWriter::getZWValue(const Point& destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

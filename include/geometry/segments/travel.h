@@ -14,7 +14,7 @@ namespace ORNL {
  *  \brief Segment for travel movements.
  */
 class TravelSegment : public SegmentBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param start point
     //! \param end point
@@ -34,8 +34,8 @@ class TravelSegment : public SegmentBase {
     //! \brief returns minimum z-coordinate of the travel
     float getMinZ() override;
 
-  private:
+   private:
     //! private type to track what type of lift to apply to this particular travel
     TravelLiftType m_lift_type;
 };
-} // namespace ORNL
+}  // namespace ORNL

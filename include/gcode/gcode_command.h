@@ -3,6 +3,7 @@
 #include <QMap>
 #include <QObject>
 #include <QString>
+
 #include <qcontainerfwd.h>
 #include <qtmetamacros.h>
 
@@ -12,7 +13,7 @@ namespace ORNL {
 //! \brief A plain old data structure class for a GCode command.
 class GcodeCommand : public QObject {
     Q_OBJECT
-  public:
+   public:
     GcodeCommand();
 
     GcodeCommand(const GcodeCommand& other);
@@ -129,7 +130,7 @@ class GcodeCommand : public QObject {
 
     GcodeCommand& operator=(const GcodeCommand& other);
 
-  private:
+   private:
     int m_line_number;
     char m_command;
     int m_command_id;
@@ -142,4 +143,4 @@ class GcodeCommand : public QObject {
     bool m_is_motion_command;
     bool m_is_end_of_layer;
 };
-} // namespace ORNL
+}  // namespace ORNL

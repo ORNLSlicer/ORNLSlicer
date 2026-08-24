@@ -15,7 +15,7 @@ namespace ORNL {
  * vertex at the end.
  */
 class Terminus {
-  public:
+   public:
     /*! A representation of Terminus that can be used as an array index.
      *
      * See \ref asIndex() for more information.
@@ -91,7 +91,7 @@ class Terminus {
     //! \brief Test for inequality
     bool operator!=(const Terminus& other);
 
-  private:
+   private:
     /*!
      * \brief The index representation of the Terminus
      *
@@ -99,4 +99,4 @@ class Terminus {
      */
     Index m_idx;
 };
-} // namespace ORNL
+}  // namespace ORNL

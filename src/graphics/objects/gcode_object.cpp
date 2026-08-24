@@ -2,6 +2,7 @@
 
 #include <GL/gl.h>
 
+#include <QOpenGLShaderProgram>
 #include <algorithm>
 #include <cmath>
 #include <cstring>
@@ -9,7 +10,6 @@
 #include <utility>
 #include <vector>
 
-#include <QOpenGLShaderProgram>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qlist.h>
@@ -32,17 +32,15 @@
 namespace ORNL {
 namespace {
 //! @brief Vertex counts emitted by ShapeFactory for each full bead mesh segment type.
-constexpr qsizetype kLinearBeadVertexCount = 120;
-constexpr qsizetype kCurvedBeadVertexCount = 1980;
+constexpr qsizetype kLinearBeadVertexCount   = 120;
+constexpr qsizetype kCurvedBeadVertexCount   = 1980;
 constexpr double kLightweightArcSegmentAngle = (2.0 * 3.14159265358979323846) / 48.0;
-constexpr double kLightweightArcEpsilon = 1.0e-6;
+constexpr double kLightweightArcEpsilon      = 1.0e-6;
 
 //! @brief Counts display segments before GL buffer construction so oversized gcode can use a lighter path.
 qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
     qsizetype count = 0;
-    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
-        count += layer.size();
-    }
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) { count += layer.size(); }
     return count;
 }
 
@@ -50,9 +48,7 @@ qsizetype countSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gco
 bool hasMeshSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (!static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
-                return true;
-            }
+            if (!static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) { return true; }
         }
     }
 
@@ -64,9 +60,7 @@ qsizetype countTravelSegments(const QVector<QVector<QSharedPointer<SegmentBase>>
     qsizetype count = 0;
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
-                ++count;
-            }
+            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) { ++count; }
         }
     }
 
@@ -101,9 +95,7 @@ void appendLightweightLineEdge(const QVector3D& start, const QVector3D& end, con
 
 int lightweightArcSegmentCount(const ArcSegment& arc) {
     const double sweep = arc.angle()();
-    if (!std::isfinite(sweep) || sweep <= kLightweightArcEpsilon) {
-        return 1;
-    }
+    if (!std::isfinite(sweep) || sweep <= kLightweightArcEpsilon) { return 1; }
 
     return std::max(1, static_cast<int>(std::ceil(sweep / kLightweightArcSegmentAngle)));
 }
@@ -111,11 +103,11 @@ int lightweightArcSegmentCount(const ArcSegment& arc) {
 //! @brief Appends a curved GL_LINES approximation for an arc segment.
 void appendLightweightArc(const ArcSegment& arc, const QColor& color, std::vector<float>& vertices,
                           std::vector<float>& normals, std::vector<float>& colors) {
-    const Point start = arc.start();
-    const Point center = arc.center();
-    const Point end = arc.end();
+    const Point start   = arc.start();
+    const Point center  = arc.center();
+    const Point end     = arc.end();
     const double radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const double sweep = arc.angle()();
+    const double sweep  = arc.angle()();
 
     if (!std::isfinite(radius) || !std::isfinite(sweep) || radius <= kLightweightArcEpsilon ||
         sweep <= kLightweightArcEpsilon) {
@@ -123,19 +115,17 @@ void appendLightweightArc(const ArcSegment& arc, const QColor& color, std::vecto
         return;
     }
 
-    const int segment_count = lightweightArcSegmentCount(arc);
-    const double start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    const int segment_count   = lightweightArcSegmentCount(arc);
+    const double start_angle  = std::atan2(start.y() - center.y(), start.x() - center.x());
     const double signed_sweep = arc.counterclockwise() ? sweep : -sweep;
-    const double z_delta = end.z() - start.z();
+    const double z_delta      = end.z() - start.z();
 
     QVector3D previous = start.toQVector3D();
     for (int i = 1; i <= segment_count; ++i) {
         QVector3D current;
-        if (i == segment_count) {
-            current = end.toQVector3D();
-        }
+        if (i == segment_count) { current = end.toQVector3D(); }
         else {
-            const double t = static_cast<double>(i) / static_cast<double>(segment_count);
+            const double t     = static_cast<double>(i) / static_cast<double>(segment_count);
             const double angle = start_angle + (signed_sweep * t);
             current = QVector3D(center.x() + (radius * std::cos(angle)), center.y() + (radius * std::sin(angle)),
                                 start.z() + (z_delta * t));
@@ -158,28 +148,22 @@ void appendLightweightLine(const QSharedPointer<SegmentBase>& segment, std::vect
     appendLightweightLineEdge(segment->start().toQVector3D(), segment->end().toQVector3D(), color, vertices, normals,
                               colors);
 }
-} // namespace
+}  // namespace
 
 qsizetype GCodeObject::estimateTrueWidthVertexCount(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
                                                     qsizetype limit) {
     qsizetype count = 0;
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) {
-                continue;
-            }
+            if (static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel)) { continue; }
 
             if (dynamic_cast<ArcSegment*>(segment.data()) != nullptr ||
                 dynamic_cast<BezierSegment*>(segment.data()) != nullptr) {
                 count += kCurvedBeadVertexCount;
             }
-            else {
-                count += kLinearBeadVertexCount;
-            }
+            else { count += kLinearBeadVertexCount; }
 
-            if (count > limit) {
-                return count;
-            }
+            if (count > limit) { return count; }
         }
     }
 
@@ -199,17 +183,15 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
 
     m_segment_info_control = segmentInfoControl;
     m_updates_segment_info = update_segment_info;
-    if (m_updates_segment_info && !m_segment_info_control.isNull()) {
-        m_segment_info_control->setGCode(gcode);
-    }
+    if (m_updates_segment_info && !m_segment_info_control.isNull()) { m_segment_info_control->setGCode(gcode); }
 
-    const qsizetype segment_count = countSegments(gcode);
-    const qsizetype vertex_threshold = true_width_vertex_threshold < 0 ? 0 : true_width_vertex_threshold;
-    const bool true_widths_requested = use_true_widths && preview_mode != GCodePreviewMode::kThinLines;
+    const qsizetype segment_count     = countSegments(gcode);
+    const qsizetype vertex_threshold  = true_width_vertex_threshold < 0 ? 0 : true_width_vertex_threshold;
+    const bool true_widths_requested  = use_true_widths && preview_mode != GCodePreviewMode::kThinLines;
     const bool auto_threshold_limited = preview_mode != GCodePreviewMode::kTrueWidths;
     const qsizetype estimate_limit = auto_threshold_limited ? vertex_threshold : std::numeric_limits<qsizetype>::max();
     const qsizetype mesh_vertex_count = true_widths_requested ? estimateTrueWidthVertexCount(gcode, estimate_limit) : 0;
-    m_lightweight_lines = !true_widths_requested || (auto_threshold_limited && mesh_vertex_count > vertex_threshold);
+    m_lightweight_lines   = !true_widths_requested || (auto_threshold_limited && mesh_vertex_count > vertex_threshold);
     m_primary_render_mode = (m_lightweight_lines || !hasMeshSegments(gcode)) ? GL_LINES : GL_TRIANGLES;
 
     if (m_lightweight_lines) {
@@ -241,11 +223,11 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
 
         for (auto& segment : layer) {
             QSharedPointer<SegmentDisplayMeta> seg_meta = QSharedPointer<SegmentDisplayMeta>::create();
-            seg_meta->layer = segment->layerNumber();
-            seg_meta->line = segment->lineNumber();
-            seg_meta->type = segment->displayType();
-            seg_meta->original_color = segment->color();
-            seg_meta->current_color = segment->color();
+            seg_meta->layer                             = segment->layerNumber();
+            seg_meta->line                              = segment->lineNumber();
+            seg_meta->type                              = segment->displayType();
+            seg_meta->original_color                    = segment->color();
+            seg_meta->current_color                     = segment->color();
 
             const bool render_as_line =
                 m_lightweight_lines || static_cast<bool>(segment->displayType() & SegmentDisplayType::kTravel);
@@ -257,9 +239,7 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
                 if (render_as_line) {
                     appendLightweightLine(segment, primary_vertices, primary_normals, primary_colors);
                 }
-                else {
-                    segment->createGraphic(primary_vertices, primary_normals, primary_colors);
-                }
+                else { segment->createGraphic(primary_vertices, primary_normals, primary_colors); }
                 seg_meta->length = (primary_vertices.size() / 3) - seg_meta->offset;
             }
             else {
@@ -268,8 +248,7 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
                 seg_meta->length = (travel_line_vertices.size() / 3) - seg_meta->offset;
             }
 
-            if (static_cast<bool>(seg_meta->type & m_hidden_type))
-                seg_meta->hidden = true;
+            if (static_cast<bool>(seg_meta->type & m_hidden_type)) seg_meta->hidden = true;
 
             layer_meta.push_back(seg_meta);
         }
@@ -277,10 +256,10 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
         m_segments.push_back(layer_meta);
     }
 
-    m_low_layer = 0;
+    m_low_layer  = 0;
     m_high_layer = gcode.size() - 1;
 
-    m_low_segment = 0;
+    m_low_segment  = 0;
     m_high_segment = visibleSegmentCount();
 
     this->populateGL(view, primary_vertices, primary_normals, primary_colors, m_primary_render_mode);
@@ -288,14 +267,11 @@ GCodeObject::GCodeObject(BaseView* view, QVector<QVector<QSharedPointer<SegmentB
 }
 
 GCodeObject::~GCodeObject() {
-    if (m_view.isNull() || m_view->context() == nullptr)
-        return;
+    if (m_view.isNull() || m_view->context() == nullptr) return;
 
     m_view->makeCurrent();
 
-    if (!m_travel_line_vao.isNull()) {
-        m_travel_line_vao->destroy();
-    }
+    if (!m_travel_line_vao.isNull()) { m_travel_line_vao->destroy(); }
 
     m_travel_line_vbo.destroy();
     m_travel_line_nbo.destroy();
@@ -305,13 +281,11 @@ GCodeObject::~GCodeObject() {
 
 void GCodeObject::populateTravelLineGL(BaseView* view, const std::vector<float>& vertices,
                                        const std::vector<float>& normals, const std::vector<float>& colors) {
-    if (vertices.empty()) {
-        return;
-    }
+    if (vertices.empty()) { return; }
 
     m_travel_line_vertices = vertices;
-    m_travel_line_normals = normals;
-    m_travel_line_colors = colors;
+    m_travel_line_normals  = normals;
+    m_travel_line_colors   = colors;
     m_travel_line_uv.resize((m_travel_line_vertices.size() / 3) * 2, 0.0f);
 
     view->makeCurrent();
@@ -373,11 +347,10 @@ void GCodeObject::hideSegmentType(SegmentDisplayType type, bool hide) {
 
 void GCodeObject::showSegments(uint low_segment, uint high_segment) {
     uint max = visibleSegmentCount();
-    if (low_segment < 0 || high_segment > max)
-        return;
+    if (low_segment < 0 || high_segment > max) return;
 
     m_high_segment = high_segment;
-    m_low_segment = low_segment;
+    m_low_segment  = low_segment;
 
     uint count = 0;
     for (int i = m_low_layer; i <= m_high_layer; i++) {
@@ -386,35 +359,38 @@ void GCodeObject::showSegments(uint low_segment, uint high_segment) {
                 static_cast<bool>(m_segments[i][j]->type & m_hidden_type)) {
                 m_segments[i][j]->hidden = true;
             }
-            else {
-                m_segments[i][j]->hidden = false;
-            }
+            else { m_segments[i][j]->hidden = false; }
             ++count;
         }
     }
 }
 
-void GCodeObject::showLowSegment(uint low_segment) { this->showSegments(low_segment, m_high_segment); }
+void GCodeObject::showLowSegment(uint low_segment) {
+    this->showSegments(low_segment, m_high_segment);
+}
 
-void GCodeObject::showHighSegment(uint high_segment) { this->showSegments(m_low_segment, high_segment); }
+void GCodeObject::showHighSegment(uint high_segment) {
+    this->showSegments(m_low_segment, high_segment);
+}
 
 void GCodeObject::showLayers(uint low_layer, uint high_layer) {
-    if (low_layer < 0 || high_layer > m_segments.size())
-        return;
+    if (low_layer < 0 || high_layer > m_segments.size()) return;
 
-    m_low_layer = low_layer;
+    m_low_layer  = low_layer;
     m_high_layer = high_layer;
 }
 
-void GCodeObject::showLow(uint low_layer) { this->showLayers(low_layer, m_high_layer); }
+void GCodeObject::showLow(uint low_layer) {
+    this->showLayers(low_layer, m_high_layer);
+}
 
-void GCodeObject::showHigh(uint high_layer) { this->showLayers(m_low_layer, high_layer); }
+void GCodeObject::showHigh(uint high_layer) {
+    this->showLayers(m_low_layer, high_layer);
+}
 
 void GCodeObject::selectSegment(uint line_number) {
-
     for (auto& layer : m_segments) {
-        if (layer.isEmpty() || layer.back()->line < line_number)
-            continue;
+        if (layer.isEmpty() || layer.back()->line < line_number) continue;
 
         for (auto& seg : layer) {
             if (seg->line == line_number) {
@@ -432,7 +408,6 @@ void GCodeObject::selectSegment(uint line_number) {
 }
 
 void GCodeObject::deselectSegment(uint line_number) {
-
     if (m_selected_segments.contains(line_number)) {
         QSharedPointer<SegmentDisplayMeta> seg_meta = m_selected_segments[line_number];
         m_selected_segments.remove(line_number);
@@ -462,7 +437,6 @@ QList<int> GCodeObject::deselectAll() {
 }
 
 void GCodeObject::highlightSegment(uint line_number) {
-
     if (!m_highlighted_segment.isNull()) {
         if (m_highlighted_segment->line == line_number)
             return;
@@ -472,8 +446,7 @@ void GCodeObject::highlightSegment(uint line_number) {
 
     QSharedPointer<SegmentDisplayMeta> seg_meta;
     for (auto& layer : m_segments) {
-        if (layer.isEmpty() || layer.back()->line < line_number)
-            continue;
+        if (layer.isEmpty() || layer.back()->line < line_number) continue;
 
         for (auto& seg : layer) {
             if (seg->line == line_number) {
@@ -499,37 +472,36 @@ search_break:
 uint GCodeObject::visibleSegmentCount() {
     uint sum = 0;
 
-    for (uint i = m_low_layer; i <= m_high_layer; i++) {
-        sum += m_segments[i].size();
-    }
+    for (uint i = m_low_layer; i <= m_high_layer; i++) { sum += m_segments[i].size(); }
 
     return sum;
 }
 
-bool GCodeObject::isCurrentlySelected(int line_num) { return m_selected_segments.contains(line_num); }
+bool GCodeObject::isCurrentlySelected(int line_num) {
+    return m_selected_segments.contains(line_num);
+}
 
-bool GCodeObject::isLightweight() const { return m_lightweight_lines; }
+bool GCodeObject::isLightweight() const {
+    return m_lightweight_lines;
+}
 
 const QVector<std::pair<uint, std::vector<Triangle>>> GCodeObject::segmentTriangles() {
     QVector<std::pair<uint, std::vector<Triangle>>> ret;
 
-    if (m_primary_render_mode != GL_TRIANGLES) {
-        return ret;
-    }
+    if (m_primary_render_mode != GL_TRIANGLES) { return ret; }
 
-    QMatrix4x4 transform = this->transformation();
+    QMatrix4x4 transform           = this->transformation();
     const std::vector<float>& vert = this->vertices();
 
     for (uint i = m_low_layer; i <= m_high_layer; i++) {
         for (QSharedPointer<SegmentDisplayMeta> seg : m_segments[i]) {
-            if (seg->hidden || seg->buffer != SegmentRenderBuffer::kPrimary)
-                continue;
+            if (seg->hidden || seg->buffer != SegmentRenderBuffer::kPrimary) continue;
             // For each segment, get its triangles.
             std::vector<Triangle> seg_tri;
             Triangle current_triangle;
 
             uint seg_start = seg->offset * 3;
-            uint seg_end = (seg->offset + seg->length) * 3;
+            uint seg_end   = (seg->offset + seg->length) * 3;
 
             for (uint i = seg_start; i < seg_end; i += 9) {
                 current_triangle.a = transform * QVector3D(vert[i + 0], vert[i + 1], vert[i + 2]);
@@ -554,19 +526,17 @@ const QVector<std::pair<uint, std::pair<QVector3D, QVector3D>>> GCodeObject::seg
 
     for (uint i = m_low_layer; i <= m_high_layer; i++) {
         for (QSharedPointer<SegmentDisplayMeta> seg : m_segments[i]) {
-            if (seg->hidden)
-                continue;
-            if (seg->buffer == SegmentRenderBuffer::kPrimary && m_primary_render_mode != GL_LINES)
-                continue;
+            if (seg->hidden) continue;
+            if (seg->buffer == SegmentRenderBuffer::kPrimary && m_primary_render_mode != GL_LINES) continue;
 
             const std::vector<float>& vert =
                 seg->buffer == SegmentRenderBuffer::kTravelLine ? m_travel_line_vertices : this->vertices();
             uint seg_start = seg->offset * 3;
-            uint seg_end = (seg->offset + seg->length) * 3;
+            uint seg_end   = (seg->offset + seg->length) * 3;
 
             for (uint i = seg_start; i + 5 < seg_end; i += 6) {
                 QVector3D start = transform * QVector3D(vert[i + 0], vert[i + 1], vert[i + 2]);
-                QVector3D end = transform * QVector3D(vert[i + 3], vert[i + 4], vert[i + 5]);
+                QVector3D end   = transform * QVector3D(vert[i + 3], vert[i + 4], vert[i + 5]);
                 ret.push_back(std::make_pair(seg->line, std::make_pair(start, end)));
             }
         }
@@ -593,9 +563,7 @@ void GCodeObject::drawBufferRuns(SegmentRenderBuffer buffer, ushort render_mode)
                 continue;
             }
 
-            if (run_length > 0 && run_offset + run_length == segment->offset) {
-                run_length += segment->length;
-            }
+            if (run_length > 0 && run_offset + run_length == segment->offset) { run_length += segment->length; }
             else {
                 drawRun();
                 run_offset = segment->offset;
@@ -610,9 +578,7 @@ void GCodeObject::drawBufferRuns(SegmentRenderBuffer buffer, ushort render_mode)
 void GCodeObject::draw() {
     drawBufferRuns(SegmentRenderBuffer::kPrimary, m_primary_render_mode);
 
-    if (m_travel_line_vao.isNull()) {
-        return;
-    }
+    if (m_travel_line_vao.isNull()) { return; }
 
     this->vao()->release();
     m_travel_line_vao->bind();
@@ -622,9 +588,7 @@ void GCodeObject::draw() {
 }
 
 void GCodeObject::updateTravelLineColors(std::vector<float>& colors, uint whence) {
-    if (m_travel_line_vao.isNull()) {
-        return;
-    }
+    if (m_travel_line_vao.isNull()) { return; }
 
     m_travel_line_cbo.bind();
 
@@ -657,8 +621,6 @@ void GCodeObject::paintSegment(QSharedPointer<GCodeObject::SegmentDisplayMeta> s
     if (seg_meta->buffer == SegmentRenderBuffer::kTravelLine) {
         updateTravelLineColors(new_colors, seg_meta->offset * 4);
     }
-    else {
-        this->updateColors(new_colors, seg_meta->offset * 4);
-    }
+    else { this->updateColors(new_colors, seg_meta->offset * 4); }
 }
-} // namespace ORNL
+}  // namespace ORNL

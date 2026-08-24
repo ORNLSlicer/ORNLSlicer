@@ -18,19 +18,19 @@ namespace ORNL {
 class MainControl : public QObject {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Constructor
     //! \param options: command line options that were successfully processed
     MainControl(QSharedPointer<SettingsBase> options);
 
-  signals:
+   signals:
     //! \brief Preprocessing is done.  STL's have been loaded.
     void preProcess();
 
     //! \brief Thread has complete. Signal for main to exit message handler.
     void finished();
 
-  public slots:
+   public slots:
 
     //! \brief Starts slicing
     void run();
@@ -38,7 +38,7 @@ class MainControl : public QObject {
     //! \brief Continue with process once security has been checked.
     void continueStartup();
 
-  private slots:
+   private slots:
     //! \brief Notification as to the number of parts contained in project file
     //! \param total: part total
     void partsInProject(int total);
@@ -64,7 +64,7 @@ class MainControl : public QObject {
     //! \brief Parsing of gcode is complete.  Must still parse to allow layer time adjustments.
     void gcodeParseComplete();
 
-  private:
+   private:
     //! \brief path's to input, output, and temporary locations
     QString m_input_path, m_output_path, m_temp_location;
 
@@ -80,4 +80,4 @@ class MainControl : public QObject {
     //! \brief Number of parts remaining to load if more than one specified.
     int m_parts_to_load;
 };
-} // namespace ORNL
+}  // namespace ORNL

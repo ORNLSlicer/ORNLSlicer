@@ -1,12 +1,12 @@
 #pragma once
 
-#include <cstddef>
-#include <cstdint>
-
 #include <QDir>
 #include <QFile>
 #include <QQueue>
 #include <QStandardPaths>
+#include <cstddef>
+#include <cstdint>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qmap.h>
@@ -40,7 +40,7 @@ class AbstractSlicingThread;
  */
 class SessionManager : public QObject {
     Q_OBJECT
-  public:
+   public:
     //! \brief Destructor.
     ~SessionManager();
 
@@ -56,16 +56,24 @@ class SessionManager : public QObject {
     };
 
     //! \brief Retuns a map of filename to model_data structures.
-    inline QMap<QString, model_data>& models() { return m_models; }
+    inline QMap<QString, model_data>& models() {
+        return m_models;
+    }
 
     //! \brief Returns a map of part name to Part class.
-    inline QMap<QString, QSharedPointer<Part>>& parts() { return m_parts; }
+    inline QMap<QString, QSharedPointer<Part>>& parts() {
+        return m_parts;
+    }
 
     //! \brief Returns a Part class associated with a name.
-    inline QSharedPointer<Part> getPart(QString name) { return m_parts.value(name, nullptr); }
+    inline QSharedPointer<Part> getPart(QString name) {
+        return m_parts.value(name, nullptr);
+    }
 
     //! \brief Retuns the number of parts in the session.
-    inline int count() { return m_parts.size(); }
+    inline int count() {
+        return m_parts.size();
+    }
 
     //! \brief Retuns the file last used to save the session.
     //! \todo This function will always return the autosave path since it is saved after the current session.
@@ -126,7 +134,7 @@ class SessionManager : public QObject {
     //! there are 1000s of files)
     void setDefaultGcodeDir(QString dir);
 
-  public slots:
+   public slots:
     //! \brief loads a model into the session
     //! \param filename the path to the file
     //! \param saveLocation the location to save to
@@ -214,7 +222,7 @@ class SessionManager : public QObject {
     //! \brief Paste previously copied part
     void pastePart();
 
-  signals:
+   signals:
 
     //! \brief Signal to the slice dialog with status update information
     //! \param type The current section of the step being completed
@@ -254,7 +262,7 @@ class SessionManager : public QObject {
     //! \brief Signal for total number of parts expected to load from project
     void totalPartsInProject(int total);
 
-  private:
+   private:
     //! \brief Constructor
     SessionManager();
 
@@ -316,4 +324,4 @@ class SessionManager : public QObject {
     //! \brief pointer to part to potentially paste
     QSharedPointer<Part> m_copied_part;
 };
-} // namespace ORNL
+}  // namespace ORNL

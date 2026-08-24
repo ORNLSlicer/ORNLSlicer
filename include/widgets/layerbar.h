@@ -19,6 +19,7 @@
 #include <QToolTip>
 #include <QVector>
 #include <QWidget>
+
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qpair.h>
@@ -43,7 +44,7 @@ class LayerBar : public QWidget {
     Q_OBJECT
     friend class LayerDot;
 
-  public:
+   public:
     //! \brief Constructor.
     explicit LayerBar(QSharedPointer<PartMetaModel> pm, QWidget* parent = nullptr);
 
@@ -69,7 +70,7 @@ class LayerBar : public QWidget {
     //! \return an int
     int getLayerCount();
 
-  signals:
+   signals:
     //! \brief Signal that the selection has been altered.
     //! \param name_and_bases: Label plus list of ranges currently selected
     //! \param inherited_bases: Parent settings for each selected base; null entries inherit Global directly
@@ -88,7 +89,7 @@ class LayerBar : public QWidget {
     //! \brief Signal that a settings range needs to be deleted
     void deleteDot(LayerDot* dot);
 
-  public slots:
+   public slots:
     //! \brief Slot to add a layer range to a part.
     void addRange(int lower, int upper);
 
@@ -164,7 +165,7 @@ class LayerBar : public QWidget {
     //! \brief Clear dots and deleted ranges if <no template selected>.
     void clearTemplate();
 
-  private slots:
+   private slots:
     // -- QActions --
 
     //! \brief Slot to delete the currently selected ranges.
@@ -216,7 +217,7 @@ class LayerBar : public QWidget {
     //! \brief Loads layers unto layer bar when new part is selected.
     void loadTemplateLayers();
 
-  private:
+   private:
     // -- Qt Overrides --
     void paintEvent(QPaintEvent* event);
     void mousePressEvent(QMouseEvent* event);
@@ -340,4 +341,4 @@ class LayerBar : public QWidget {
     QAction* m_ungroup_dots;
     QAction* m_select_all;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

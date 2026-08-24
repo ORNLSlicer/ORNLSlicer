@@ -1,11 +1,10 @@
 #pragma once
 
-#include <vector>
-
 #include <QSharedPointer>
 #include <QString>
 #include <QVector3D>
 #include <QVector>
+#include <vector>
 
 #include "geometry/segment_base.h"
 #include "units/unit.h"
@@ -13,7 +12,7 @@
 namespace ORNL {
 //! \brief Generates and saves an STL representation of deposited G-code beads.
 class AsPrintedModelExporter final {
-  public:
+   public:
     enum class StlFormat { kBinary, kAscii };
     enum class OriginMode { kPreserve, kLocalOrigin };
     enum class GeometryMode { kTrueBeadWidths, kCenterlines };
@@ -21,10 +20,15 @@ class AsPrintedModelExporter final {
     struct Options {
         Options(bool include_support = false, bool include_travel = false, bool blend_corners = true,
                 StlFormat format = StlFormat::kBinary, Distance output_unit = mm,
-                OriginMode origin_mode = OriginMode::kLocalOrigin,
+                OriginMode origin_mode     = OriginMode::kLocalOrigin,
                 GeometryMode geometry_mode = GeometryMode::kTrueBeadWidths, Distance centerline_diameter = 0.1 * mm)
-            : include_support(include_support), include_travel(include_travel), blend_corners(blend_corners),
-              format(format), output_unit(output_unit), origin_mode(origin_mode), geometry_mode(geometry_mode),
+            : include_support(include_support),
+              include_travel(include_travel),
+              blend_corners(blend_corners),
+              format(format),
+              output_unit(output_unit),
+              origin_mode(origin_mode),
+              geometry_mode(geometry_mode),
               centerline_diameter(centerline_diameter) {}
 
         bool include_support;
@@ -53,7 +57,7 @@ class AsPrintedModelExporter final {
     static bool writeStl(const QString& path, const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
                          QString* error_message = nullptr, Options options = Options());
 
-  private:
+   private:
     static bool shouldExportSegment(const QSharedPointer<SegmentBase>& segment, const Options& options);
 };
-} // namespace ORNL
+}  // namespace ORNL

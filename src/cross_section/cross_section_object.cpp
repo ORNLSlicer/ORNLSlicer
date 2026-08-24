@@ -44,22 +44,18 @@ CrossSectionObject::CrossSectionObject(QSharedPointer<SettingsBase> sb) : m_sb(s
     largest_neglected_gap_first_phase = m_sb->setting<double>(ES::CrossSection::kLargestGap);
 
     // if unset or 0, default to .1 inches
-    if (largest_neglected_gap_first_phase <= 0)
-        largest_neglected_gap_first_phase = 2540;
+    if (largest_neglected_gap_first_phase <= 0) largest_neglected_gap_first_phase = 2540;
 
     largest_neglected_gap_second_phase = 2.0 * largest_neglected_gap_first_phase;
 
     // if unset or 0, default to 1 inch
     max_stitch1 = m_sb->setting<double>(ES::CrossSection::kMaxStitch);
-    if (max_stitch1 <= 0)
-        max_stitch1 = 25400;
+    if (max_stitch1 <= 0) max_stitch1 = 25400;
 }
 
 bool CrossSectionObject::shorterThan(const Point& p0, int32_t len) {
-    if (p0.x() > len || p0.x() < -len)
-        return false;
-    if (p0.y() > len || p0.y() < -len)
-        return false;
+    if (p0.x() > len || p0.x() < -len) return false;
+    if (p0.y() > len || p0.y() < -len) return false;
     return (p0.x() * p0.x() + p0.y() * p0.y()) <= len * len;
 }
 
@@ -72,8 +68,7 @@ PolygonList CrossSectionObject::makePolygons() {
     possiblePoints.reserve(m_segments.size());
 
     for (unsigned int startSegment = 0, end = m_segments.size(); startSegment < end; ++startSegment) {
-        if (m_segments[startSegment].added_to_polygon)
-            continue;
+        if (m_segments[startSegment].added_to_polygon) continue;
 
         Polygon poly;
         poly += m_segments[startSegment].start;
@@ -86,36 +81,33 @@ PolygonList CrossSectionObject::makePolygons() {
         unsigned int segmentIndex = startSegment;
         bool canClose;
         while (true) {
-            canClose = false;
+            canClose                                  = false;
             m_segments[segmentIndex].added_to_polygon = true;
-            Point p0 = m_segments[segmentIndex].end;
+            Point p0                                  = m_segments[segmentIndex].end;
             poly += p0;
 
             long long startKey = ((quint64)(m_segments[segmentIndex].start.x() * 1000) << 32) |
                                  ((quint64)(m_segments[segmentIndex].start.y() * 1000));
-            long long endKey = ((quint64)(p0.x() * 1000) << 32) | ((quint64)(p0.y() * 1000));
+            long long endKey   = ((quint64)(p0.x() * 1000) << 32) | ((quint64)(p0.y() * 1000));
 
             startPointHash.insert(startKey, segmentIndex);
             endPointHash.insert(endKey, segmentIndex);
             possiblePoints.push_back(p0);
 
-            int nextIndex = -1;
+            int nextIndex      = -1;
             int other_face_idx = m_segments[segmentIndex].end_other_face_idx;
 
             if (other_face_idx > -1 && m_face_idx_to_segment_idx.contains(other_face_idx)) {
-                Point p1 = m_segments[m_face_idx_to_segment_idx[other_face_idx]].start;
+                Point p1   = m_segments[m_face_idx_to_segment_idx[other_face_idx]].start;
                 Point diff = p0 - p1;
                 if (shorterThan(diff, 10)) {
-                    if (m_face_idx_to_segment_idx[other_face_idx] == static_cast<int>(startSegment))
-                        canClose = true;
-                    if (m_segments[m_face_idx_to_segment_idx[other_face_idx]].added_to_polygon)
-                        break;
+                    if (m_face_idx_to_segment_idx[other_face_idx] == static_cast<int>(startSegment)) canClose = true;
+                    if (m_segments[m_face_idx_to_segment_idx[other_face_idx]].added_to_polygon) break;
                     nextIndex = m_face_idx_to_segment_idx[other_face_idx];
                 }
             }
 
-            if (nextIndex == -1)
-                break;
+            if (nextIndex == -1) break;
             segmentIndex = nextIndex;
         }
         if (canClose)
@@ -178,8 +170,8 @@ PolygonList CrossSectionObject::makePolygons() {
     }
     m_polygons.addAll(m_closeable_polygons);
 
-    m_polygons.removeDegenerateVertices(); // Remove vertices connected to
-                                           // overlapping line segments
+    m_polygons.removeDegenerateVertices();  // Remove vertices connected to
+                                            // overlapping line segments
 
     m_polygons = m_polygons.simplify();
 
@@ -189,8 +181,7 @@ PolygonList CrossSectionObject::makePolygons() {
             if (!endPointHash.contains(key)) {
                 Point currentPoint = p;
                 auto it = std::remove_if(possiblePoints.begin(), possiblePoints.end(), [currentPoint](const Point p) {
-                    if (p.x() == currentPoint.x() && p.y() == currentPoint.y())
-                        return true;
+                    if (p.x() == currentPoint.x() && p.y() == currentPoint.y()) return true;
 
                     return false;
                 });
@@ -210,22 +201,26 @@ PolygonList CrossSectionObject::makePolygons() {
     return m_polygons;
 }
 
-QVector<CrossSectionSegment> CrossSectionObject::segments() { return m_segments; }
+QVector<CrossSectionSegment> CrossSectionObject::segments() {
+    return m_segments;
+}
 
-void CrossSectionObject::addSegment(CrossSectionSegment segment) { m_segments.append(segment); }
+void CrossSectionObject::addSegment(CrossSectionSegment segment) {
+    m_segments.append(segment);
+}
 
 void CrossSectionObject::insertFaceToSegment(int face_idx, int segment_idx) {
     m_face_idx_to_segment_idx.insert(face_idx, segment_idx);
 }
 
-PolygonList& CrossSectionObject::getPolygonList() { return m_polygons; }
+PolygonList& CrossSectionObject::getPolygonList() {
+    return m_polygons;
+}
 
 void CrossSectionObject::makeBasicPolygonLoops() {
     // loop through all segments and create loops out of them
     for (int start_idx = 0, end = m_segments.size(); start_idx < end; ++start_idx) {
-        if (!m_segments[start_idx].added_to_polygon) {
-            makeBasicPolygonLoop(start_idx);
-        }
+        if (!m_segments[start_idx].added_to_polygon) { makeBasicPolygonLoop(start_idx); }
     }
 
     // Clear the segment list to save memory
@@ -240,7 +235,7 @@ void CrossSectionObject::makeBasicPolygonLoop(int start_idx) {
         CrossSectionSegment& segment = m_segments[segment_idx];
         polygon += segment.end;
         segment.added_to_polygon = true;
-        segment_idx = getNextSegmentIdx(segment, start_idx);
+        segment_idx              = getNextSegmentIdx(segment, start_idx);
         if (segment_idx == static_cast<int>(start_idx)) {
             // polygon is closed
             m_polygons += polygon;
@@ -260,9 +255,7 @@ int CrossSectionObject::getNextSegmentIdx(const CrossSectionSegment& segment, in
     // side of the edge
     if (segment_ended_at_edge) {
         int face_to_try = segment.end_other_face_idx;
-        if (face_to_try == -1) {
-            return -1;
-        }
+        if (face_to_try == -1) { return -1; }
         return tryFaceNextSegmentIdx(segment, face_to_try, start_idx);
     }
     // If segment ends on a vertex loop through potential faces
@@ -270,9 +263,7 @@ int CrossSectionObject::getNextSegmentIdx(const CrossSectionSegment& segment, in
         const QVector<int>& faces_to_try = segment.end_vertex->connected_faces;
         for (int face_to_try : faces_to_try) {
             int result_idx = tryFaceNextSegmentIdx(segment, face_to_try, start_idx);
-            if (result_idx == static_cast<int>(start_idx)) {
-                return start_idx;
-            }
+            if (result_idx == static_cast<int>(start_idx)) { return start_idx; }
             if (result_idx != -1) {
                 // Not immediately returned since we might still encounter
                 // the start_idx
@@ -284,24 +275,20 @@ int CrossSectionObject::getNextSegmentIdx(const CrossSectionSegment& segment, in
 }
 
 int CrossSectionObject::tryFaceNextSegmentIdx(const CrossSectionSegment& segment, int face_idx, int start_idx) {
-    auto it_end = m_face_idx_to_segment_idx.end();      //!< The iterator corresponding to the end
-    auto it = m_face_idx_to_segment_idx.find(face_idx); //!< The iterator
-                                                        //! corresponding to the
+    auto it_end = m_face_idx_to_segment_idx.end();           //!< The iterator corresponding to the end
+    auto it     = m_face_idx_to_segment_idx.find(face_idx);  //!< The iterator
+                                                             //! corresponding to the
     //! face_idx or end if it
     //! doesn't exist
     if (it != it_end) {
         int segment_idx = it.value();
-        Point p1 = m_segments[segment_idx].start;
-        Point diff = segment.end - p1;
+        Point p1        = m_segments[segment_idx].start;
+        Point diff      = segment.end - p1;
         // If the start of the segment on the trial face is close enough to
         // the end of the previous segment
         if (diff.shorterThan(largest_neglected_gap_first_phase)) {
-            if (segment_idx == static_cast<int>(start_idx)) {
-                return start_idx;
-            }
-            if (m_segments[segment_idx].added_to_polygon) {
-                return -1;
-            }
+            if (segment_idx == static_cast<int>(start_idx)) { return start_idx; }
+            if (m_segments[segment_idx].added_to_polygon) { return -1; }
             return segment_idx;
         }
     }
@@ -336,7 +323,7 @@ GapCloserResult CrossSectionObject::findPolygonGapCloser(Point ip0, Point ip1) {
     ret.polygon_idx = c1.polygon_idx;
     ret.point_idx_a = c1.point_idx;
     ret.point_idx_b = c2.point_idx;
-    ret.a_to_b = true;
+    ret.a_to_b      = true;
 
     if (ret.point_idx_a == ret.point_idx_b) {
         // Connection points are on the same line segment
@@ -344,7 +331,7 @@ GapCloserResult CrossSectionObject::findPolygonGapCloser(Point ip0, Point ip1) {
     }
     else {
         // Find out if we should go from A to B or the other way around
-        Point p0 = m_polygons[ret.polygon_idx][ret.point_idx_a];
+        Point p0          = m_polygons[ret.polygon_idx][ret.point_idx_a];
         Distance length_a = p0.distance(ip0);
         for (uint i = ret.point_idx_a; i != ret.point_idx_b; i = (i + 1) % m_polygons[ret.polygon_idx].size()) {
             Point p1 = m_polygons[ret.polygon_idx][i];
@@ -353,7 +340,7 @@ GapCloserResult CrossSectionObject::findPolygonGapCloser(Point ip0, Point ip1) {
         }
         length_a += p0.distance(ip1);
 
-        p0 = m_polygons[ret.polygon_idx][ret.point_idx_b];
+        p0                = m_polygons[ret.polygon_idx][ret.point_idx_b];
         Distance length_b = p0.distance(ip1);
         for (uint i = ret.point_idx_b; i != ret.point_idx_a; i = (i + 1) % m_polygons[ret.polygon_idx].size()) {
             Point p1 = m_polygons[ret.polygon_idx][i];
@@ -383,7 +370,7 @@ ClosePolygonResult CrossSectionObject::findPolygonPointClosestTo(Point p) {
 
             // Q = A + Normal(B - A) * (((B - A) dot (P - A)) / VSize(A -
             // B));
-            Point p_diff = p1 - p0;
+            Point p_diff         = p1 - p0;
             Distance line_length = p1.distance(p0);
 
             if (line_length() > 1) {
@@ -393,8 +380,8 @@ ClosePolygonResult CrossSectionObject::findPolygonPointClosestTo(Point p) {
                     Point q = p0 + p_diff * dist_on_line / line_length();
                     if ((q - p).shorterThan(.01f * in)) {
                         ret.intersection_point = q;
-                        ret.polygon_idx = n;
-                        ret.point_idx = i;
+                        ret.polygon_idx        = n;
+                        ret.point_idx          = i;
                         return ret;
                     }
                 }
@@ -418,7 +405,7 @@ void CrossSectionObject::stitch_extensive() {
         uint best_polyline_1_idx = -1;
         uint best_polyline_2_idx = -1;
         GapCloserResult best_result;
-        best_result.length = std::numeric_limits<double>::max();
+        best_result.length      = std::numeric_limits<double>::max();
         best_result.polygon_idx = -1;
         best_result.point_idx_a = -1;
         best_result.point_idx_b = -1;
@@ -426,9 +413,7 @@ void CrossSectionObject::stitch_extensive() {
         //! \note m_open_polylines size must be evaluated
         for (int polyline_1_idx = 0; polyline_1_idx < m_open_polylines.size(); ++polyline_1_idx) {
             Polygon polyline_1 = m_open_polylines[polyline_1_idx];
-            if (polyline_1.size() < 1) {
-                continue;
-            }
+            if (polyline_1.size() < 1) { continue; }
 
             // Extra brackets cause res to be scoped
             {
@@ -436,21 +421,19 @@ void CrossSectionObject::stitch_extensive() {
                 if (res.length() > 0 && res.length < best_result.length) {
                     best_polyline_1_idx = polyline_1_idx;
                     best_polyline_2_idx = polyline_1_idx;
-                    best_result = res;
+                    best_result         = res;
                 }
             }
 
             for (int polyline_2_idx = 0; polyline_2_idx < m_open_polylines.size(); polyline_2_idx++) {
                 Polygon polyline_2 = m_open_polylines[polyline_2_idx];
-                if (polyline_2.size() < 1 || polyline_1_idx == polyline_2_idx) {
-                    continue;
-                }
+                if (polyline_2.size() < 1 || polyline_1_idx == polyline_2_idx) { continue; }
 
                 GapCloserResult res = findPolygonGapCloser(polyline_1[0], polyline_2.back());
                 if (res.length() > 0 && res.length < best_result.length) {
                     best_polyline_1_idx = polyline_1_idx;
                     best_polyline_2_idx = polyline_2_idx;
-                    best_result = res;
+                    best_result         = res;
                 }
             }
         }
@@ -464,7 +447,7 @@ void CrossSectionObject::stitch_extensive() {
                 else if (best_result.a_to_b) {
                     Polygon polygon;
                     for (uint j = best_result.point_idx_a; j != best_result.point_idx_b;
-                         j = (j + 1) % m_polygons[best_result.polygon_idx].size()) {
+                         j      = (j + 1) % m_polygons[best_result.polygon_idx].size()) {
                         polygon += m_polygons[best_result.polygon_idx][j];
                     }
                     for (int j = m_open_polylines[best_polyline_1_idx].size() - 1; j >= 0; j--) {
@@ -477,7 +460,7 @@ void CrossSectionObject::stitch_extensive() {
                     uint n = m_polygons.size();
                     m_polygons += m_open_polylines[best_polyline_1_idx];
                     for (uint j = best_result.point_idx_b; j != best_result.point_idx_a;
-                         j = (j + 1) % m_polygons[best_result.polygon_idx].size()) {
+                         j      = (j + 1) % m_polygons[best_result.polygon_idx].size()) {
                         m_polygons[n] += m_polygons[best_result.polygon_idx][j];
                     }
                     m_open_polylines[best_polyline_1_idx].clear();
@@ -493,7 +476,7 @@ void CrossSectionObject::stitch_extensive() {
                 else if (best_result.a_to_b) {
                     Polygon polygon;
                     for (int n = best_result.point_idx_a; n != best_result.point_idx_b;
-                         n = (n + 1) % m_polygons[best_result.polygon_idx].size()) {
+                         n     = (n + 1) % m_polygons[best_result.polygon_idx].size()) {
                         polygon += m_polygons[best_result.polygon_idx][n];
                     }
                     for (int n = polygon.size() - 1; n >= 0; n--) {
@@ -506,7 +489,7 @@ void CrossSectionObject::stitch_extensive() {
                 }
                 else {
                     for (uint n = best_result.point_idx_b; n != best_result.point_idx_a;
-                         n = (n + 1) % m_polygons[best_result.polygon_idx].size()) {
+                         n      = (n + 1) % m_polygons[best_result.polygon_idx].size()) {
                         m_open_polylines[best_polyline_2_idx] += m_polygons[best_result.polygon_idx][n];
                     }
                     for (int n = m_open_polylines[best_polyline_1_idx].size() - 1; n >= 0; n--) {
@@ -516,9 +499,7 @@ void CrossSectionObject::stitch_extensive() {
                 }
             }
         }
-        else {
-            break;
-        }
+        else { break; }
     }
 }
 
@@ -532,15 +513,17 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
     // Represents a terminal point of a polyline in open_polylines.
     struct StitchGridVal {
         uint polyline_idx;
-        Point polyline_term_point; //<! Depending on the
-                                   // SparsePointGridInclusive,
-                                   // either the start point or the end
-                                   // point of the
-                                   // polyline
+        Point polyline_term_point;  //<! Depending on the
+                                    // SparsePointGridInclusive,
+                                    // either the start point or the end
+                                    // point of the
+                                    // polyline
     };
 
     struct StitchGridValLocator {
-        Point operator()(const StitchGridVal& val) const { return val.polyline_term_point; }
+        Point operator()(const StitchGridVal& val) const {
+            return val.polyline_term_point;
+        }
     };
 
     // Used to find nearby end points within a fixed maximum radius
@@ -554,12 +537,10 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
     for (int polyline_0_idx = 0, end = m_open_polylines.size(); polyline_0_idx < end; ++polyline_0_idx) {
         Polyline polyline_0 = m_open_polylines[polyline_0_idx];
 
-        if (polyline_0.empty()) {
-            continue;
-        }
+        if (polyline_0.empty()) { continue; }
 
         StitchGridVal grid_val;
-        grid_val.polyline_idx = static_cast<uint>(polyline_0_idx);
+        grid_val.polyline_idx        = static_cast<uint>(polyline_0_idx);
         grid_val.polyline_term_point = polyline_0.back();
         grid_ends.insert(grid_val);
     }
@@ -569,12 +550,10 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
         for (int polyline_0_idx = 0, end = m_open_polylines.size(); polyline_0_idx < end; ++polyline_0_idx) {
             Polygon polyline_0 = m_open_polylines[polyline_0_idx];
 
-            if (polyline_0.empty()) {
-                continue;
-            }
+            if (polyline_0.empty()) { continue; }
 
             StitchGridVal grid_val;
-            grid_val.polyline_idx = static_cast<uint>(polyline_0_idx);
+            grid_val.polyline_idx        = static_cast<uint>(polyline_0_idx);
             grid_val.polyline_term_point = polyline_0.front();
             grid_starts.insert(grid_val);
         }
@@ -585,9 +564,7 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
     for (int polyline_1_idx = 0; polyline_1_idx < m_open_polylines.size(); ++polyline_1_idx) {
         Polyline polyline_1 = m_open_polylines[polyline_1_idx];
 
-        if (polyline_1.empty()) {
-            continue;
-        }
+        if (polyline_1.empty()) { continue; }
 
         /*
          * Check for stitches that append polyline_1 onto polyline_0
@@ -597,7 +574,7 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
         QVector<StitchGridVal> nearby_ends = grid_ends.getNearby(polyline_1.front(), max_dist);
         for (const auto& nearby_end : nearby_ends) {
             Distance diff = nearby_end.polyline_term_point.distance(polyline_1.front());
-            Area dist2 = diff * diff;
+            Area dist2    = diff * diff;
             if (dist2 < max_distance2) {
                 PossibleStitch poss_stitch;
                 poss_stitch.distance_2 = dist2;
@@ -616,12 +593,10 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
             nearby_ends = grid_ends.getNearby(polyline_1.back(), max_dist);
             for (const auto& nearby_end : nearby_ends) {
                 // Disallow stitching with self with same end point
-                if (nearby_end.polyline_idx == static_cast<uint>(polyline_1_idx)) {
-                    continue;
-                }
+                if (nearby_end.polyline_idx == static_cast<uint>(polyline_1_idx)) { continue; }
 
                 Distance diff = nearby_end.polyline_term_point.distance(polyline_1.back());
-                Area dist2 = diff * diff;
+                Area dist2    = diff * diff;
                 if (dist2 < max_distance2) {
                     PossibleStitch poss_stitch;
                     poss_stitch.distance_2 = dist2;
@@ -639,12 +614,10 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
             QVector<StitchGridVal> nearby_starts = grid_starts.getNearby(polyline_1.front(), max_dist);
             for (const auto& nearby_start : nearby_starts) {
                 // Disallow stitching with self with same end point
-                if (nearby_start.polyline_idx == static_cast<uint>(polyline_1_idx)) {
-                    continue;
-                }
+                if (nearby_start.polyline_idx == static_cast<uint>(polyline_1_idx)) { continue; }
 
                 Distance diff = nearby_start.polyline_term_point.distance(polyline_1.front());
-                Area dist2 = diff * diff;
+                Area dist2    = diff * diff;
                 if (dist2 < max_distance2) {
                     PossibleStitch poss_stitch;
                     poss_stitch.distance_2 = dist2;
@@ -662,10 +635,10 @@ std::priority_queue<PossibleStitch> CrossSectionObject::findPossibleStitches(Dis
 void CrossSectionObject::planPolylineStitch(Terminus& terminus_0, Terminus& terminus_1, bool reverse[2]) const {
     size_t polyline_0_idx = terminus_0.getPolylineIdx();
     size_t polyline_1_idx = terminus_1.getPolylineIdx();
-    bool back_0 = terminus_0.isEnd();
-    bool back_1 = terminus_1.isEnd();
-    reverse[0] = false;
-    reverse[1] = false;
+    bool back_0           = terminus_0.isEnd();
+    bool back_1           = terminus_1.isEnd();
+    reverse[0]            = false;
+    reverse[1]            = false;
     if (back_0) {
         if (back_1) {
             /*
@@ -715,15 +688,11 @@ void CrossSectionObject::joinPolylines(Polyline& polyline_0, Polyline& polyline_
     }
     if (reverse[1]) {
         // reverse polyline_1 by adding in reverse order
-        for (int poly_idx = polyline_1.size() - 1; poly_idx >= 0; --poly_idx) {
-            polyline_0 += polyline_1[poly_idx];
-        }
+        for (int poly_idx = polyline_1.size() - 1; poly_idx >= 0; --poly_idx) { polyline_0 += polyline_1[poly_idx]; }
     }
     else {
         // append polyline_1 onto polyline_0
-        for (const Point& p : polyline_1) {
-            polyline_0 += p;
-        }
+        for (const Point& p : polyline_1) { polyline_0 += p; }
     }
     polyline_1.clear();
 }
@@ -741,15 +710,15 @@ void CrossSectionObject::connectOpenPolylinesImpl(Distance max_dist, Distance ce
         PossibleStitch next_stitch = stitch_queue.top();
         stitch_queue.pop();
         Terminus old_terminus_0 = next_stitch.terminus_0;
-        Terminus terminus_0 = terminus_tracking_map.getCurrentFromOld(old_terminus_0);
-        unsigned long long idx = terminus_0.asIndex();
+        Terminus terminus_0     = terminus_tracking_map.getCurrentFromOld(old_terminus_0);
+        unsigned long long idx  = terminus_0.asIndex();
         if (terminus_0 == Terminus::INVALID_TERMINUS) {
             // if we already used this terminus, then this stitch is no
             // longer usable
             continue;
         }
         Terminus old_terminus_1 = next_stitch.terminus_1;
-        Terminus terminus_1 = terminus_tracking_map.getCurrentFromOld(old_terminus_1);
+        Terminus terminus_1     = terminus_tracking_map.getCurrentFromOld(old_terminus_1);
         if (terminus_1 == Terminus::INVALID_TERMINUS) {
             // if we already used this terminus, then this stitch is no
             // longer usable
@@ -764,12 +733,10 @@ void CrossSectionObject::connectOpenPolylinesImpl(Distance max_dist, Distance ce
             // finished polygon
             Polyline& polyline_0 = m_open_polylines[best_polyline_0_idx];
             m_closeable_polygons.append(polyline_0.close());
-            polyline_0.clear(); // Clear instead of removing, so that the
-                                // indices are still correct
+            polyline_0.clear();  // Clear instead of removing, so that the
+                                 // indices are still correct
             Terminus cur_terms[2] = {{best_polyline_0_idx, false}, {best_polyline_0_idx, true}};
-            for (size_t idx = 0U; idx != 2U; ++idx) {
-                terminus_tracking_map.markRemoved(cur_terms[idx]);
-            }
+            for (size_t idx = 0U; idx != 2U; ++idx) { terminus_tracking_map.markRemoved(cur_terms[idx]); }
             continue;
         }
 
@@ -790,23 +757,19 @@ void CrossSectionObject::connectOpenPolylinesImpl(Distance max_dist, Distance ce
         joinPolylines(m_open_polylines[best_polyline_0_idx], m_open_polylines[best_polyline_1_idx], reverse);
 
         // update terminus_tracking_map
-        Terminus cur_terms[4] = {{best_polyline_0_idx, false},
-                                 {best_polyline_0_idx, true},
-                                 {best_polyline_1_idx, false},
-                                 {best_polyline_1_idx, true}};
+        Terminus cur_terms[4]  = {{best_polyline_0_idx, false},
+                                  {best_polyline_0_idx, true},
+                                  {best_polyline_1_idx, false},
+                                  {best_polyline_1_idx, true}};
         Terminus next_terms[4] = {{best_polyline_0_idx, false},
                                   Terminus::INVALID_TERMINUS,
                                   Terminus::INVALID_TERMINUS,
                                   {best_polyline_0_idx, true}};
-        if (reverse[0]) {
-            std::swap(next_terms[0], next_terms[1]);
-        }
-        if (reverse[1]) {
-            std::swap(next_terms[2], next_terms[3]);
-        }
+        if (reverse[0]) { std::swap(next_terms[0], next_terms[1]); }
+        if (reverse[1]) { std::swap(next_terms[2], next_terms[3]); }
         // cur_terms -> next_terms has movement map
         // best_polyline_1 is always removed
         terminus_tracking_map.updateMap(4U, cur_terms, next_terms, 2U, &cur_terms[2]);
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

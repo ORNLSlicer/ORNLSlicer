@@ -2,9 +2,9 @@
 
 #include <GL/gl.h>
 
+#include <QPainter>
 #include <vector>
 
-#include <QPainter>
 #include <qhashfunctions.h>
 #include <qimage.h>
 #include <qmatrix4x4.h>
@@ -84,4 +84,4 @@ void TextObject::setText(QString str) {
 
     this->replaceTexture(result);
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -17,24 +17,24 @@ namespace ORNL {
  */
 class TraditionalAST : public AbstractSlicingThread {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     TraditionalAST(QString outputLocation, bool skipGcode = false);
 
-  public slots:
+   public slots:
     //! \brief Main function that starts slice.
     void doSlice() override;
 
-  signals:
+   signals:
     //! \brief Signal to the active steps to begin computation.
     void stepStart();
 
-  protected slots:
+   protected slots:
     //! \brief Upon completion of thread running step object, this slot will clean up the thread.
     //!        If more objects are on the queue, then this will run the thread
     void cleanThread() override;
 
-  private:
+   private:
     //! \brief Queue of steps to be processed.
     QQueue<QSharedPointer<Step>> m_step_queue;
 
@@ -44,4 +44,4 @@ class TraditionalAST : public AbstractSlicingThread {
     //! \brief Start size of processing queue.  Used to avoid evaluting .size repeatedly
     int m_queue_start_size;
 };
-} // namespace ORNL
+}  // namespace ORNL

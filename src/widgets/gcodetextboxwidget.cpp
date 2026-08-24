@@ -23,7 +23,10 @@
 
 namespace ORNL {
 GcodeTextBoxWidget::GcodeTextBoxWidget(QWidget* parent)
-    : QPlainTextEdit(parent), m_highlighter(this->document()), m_previous_line(0), m_last_block_count(0),
+    : QPlainTextEdit(parent),
+      m_highlighter(this->document()),
+      m_previous_line(0),
+      m_last_block_count(0),
       m_last_block_clicked_on(0) {
     setLineWrapMode(QPlainTextEdit::NoWrap);
 
@@ -45,9 +48,9 @@ void GcodeTextBoxWidget::lineNumbersPaintEvent(QPaintEvent* event) {
     painter.fillRect(event->rect(), QColor(255, 255, 255, 100));
 
     QTextBlock block = firstVisibleBlock();
-    int blockNumber = block.blockNumber();
-    int top = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
-    int bottom = top + static_cast<int>(blockBoundingRect(block).height());
+    int blockNumber  = block.blockNumber();
+    int top          = static_cast<int>(blockBoundingGeometry(block).translated(contentOffset()).top());
+    int bottom       = top + static_cast<int>(blockBoundingRect(block).height());
 
     while (block.isValid() && top <= event->rect().bottom()) {
         if (block.isVisible() && bottom >= event->rect().top()) {
@@ -57,8 +60,8 @@ void GcodeTextBoxWidget::lineNumbersPaintEvent(QPaintEvent* event) {
                              number);
         }
 
-        block = block.next();
-        top = bottom;
+        block  = block.next();
+        top    = bottom;
         bottom = top + static_cast<int>(blockBoundingRect(block).height());
         ++blockNumber;
     }
@@ -68,7 +71,9 @@ int GcodeTextBoxWidget::calculateLineNumbersDisplayWidth() {
     return 3 + fontMetrics().horizontalAdvance(QLatin1Char('9')) * ceil(log10(std::max<int>(2, blockCount())) + 1);
 }
 
-int GcodeTextBoxWidget::getCursorBlockNumber() { return textCursor().block().blockNumber(); }
+int GcodeTextBoxWidget::getCursorBlockNumber() {
+    return textCursor().block().blockNumber();
+}
 
 void GcodeTextBoxWidget::highlightLine(QList<int> linesToAdd, QList<int> linesToRemove, bool shouldCenter) {
     QTextCursor manipulate_cursor(textCursor());
@@ -85,8 +90,7 @@ void GcodeTextBoxWidget::highlightLine(QList<int> linesToAdd, QList<int> linesTo
         format.setBackground(QBrush(PreferencesManager::getInstance()->getTheme().getGcodeTextboxHighlightLineColor()));
         manipulate_cursor.setBlockFormat(format);
         setTextCursor(manipulate_cursor);
-        if (shouldCenter)
-            this->centerCursor();
+        if (shouldCenter) this->centerCursor();
 
         m_selected_blocks.insert(line_num);
     }
@@ -114,17 +118,17 @@ bool GcodeTextBoxWidget::getCursorManualMove() {
     return m_manual_cursor_move;
 }
 
-void GcodeTextBoxWidget::setCursorManualMoveFalse() { m_manual_cursor_move = false; }
+void GcodeTextBoxWidget::setCursorManualMoveFalse() {
+    m_manual_cursor_move = false;
+}
 
 void GcodeTextBoxWidget::moveCursorToLine(int line_num) {
     if (!m_manual_cursor_move) {
         // move further down and move back to the line to ensure that the GCode editor will place the line on top
-        int visible_lines = this->height() / this->fontMetrics().height();
+        int visible_lines    = this->height() / this->fontMetrics().height();
         int move_ahead_lines = std::min(document()->blockCount() - line_num, visible_lines);
-        QTextBlock block = document()->findBlockByLineNumber(line_num + move_ahead_lines);
-        if (block.isValid()) {
-            setTextCursor(QTextCursor(block));
-        }
+        QTextBlock block     = document()->findBlockByLineNumber(line_num + move_ahead_lines);
+        if (block.isValid()) { setTextCursor(QTextCursor(block)); }
     }
 
     setTextCursor(QTextCursor(document()->findBlockByLineNumber(line_num - 1)));
@@ -132,7 +136,7 @@ void GcodeTextBoxWidget::moveCursorToLine(int line_num) {
 }
 
 void GcodeTextBoxWidget::resetHighlight() {
-    m_previous_line = -1;
+    m_previous_line     = -1;
     m_highlighted_block = QTextBlock();
 }
 
@@ -167,16 +171,10 @@ void GcodeTextBoxWidget::updateLineNumberDisplayAreaWidth(int blockCount) {
 }
 
 void GcodeTextBoxWidget::updateLineNumberDisplayArea(const QRect& rect, int height) {
-    if (height) {
-        m_line_number_display_area->scroll(0, height);
-    }
-    else {
-        m_line_number_display_area->update(0, rect.y(), m_line_number_display_area->width(), rect.height());
-    }
+    if (height) { m_line_number_display_area->scroll(0, height); }
+    else { m_line_number_display_area->update(0, rect.y(), m_line_number_display_area->width(), rect.height()); }
 
-    if (rect.contains(viewport()->rect())) {
-        setViewportMargins(calculateLineNumbersDisplayWidth(), 0, 0, 0);
-    }
+    if (rect.contains(viewport()->rect())) { setViewportMargins(calculateLineNumbersDisplayWidth(), 0, 0, 0); }
 }
 
 void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
@@ -184,8 +182,7 @@ void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
 
     QPlainTextEdit::mouseReleaseEvent(event);
 
-    if (event->button() != Qt::LeftButton)
-        return;
+    if (event->button() != Qt::LeftButton) return;
 
     m_manual_cursor_move = true;
 
@@ -195,9 +192,7 @@ void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
         return;
     }
 
-    if (m_previous_line == textCursor().blockNumber()) {
-        return;
-    }
+    if (m_previous_line == textCursor().blockNumber()) { return; }
 
     QList<int> linesToAdd, linesToRemove;
     if (modifier == Qt::ControlModifier) {
@@ -213,27 +208,24 @@ void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
         std::sort(minMaxVec.begin(), minMaxVec.end());
 
         for (int i = minMaxVec[0]; i < minMaxVec[1]; ++i) {
-            if (!m_selected_blocks.contains(i))
-                linesToAdd.push_back(i);
+            if (!m_selected_blocks.contains(i)) linesToAdd.push_back(i);
         }
         for (int key : m_selected_blocks.values()) {
-            if (key < minMaxVec[0] || key > minMaxVec[1])
-                linesToRemove.push_back(key);
+            if (key < minMaxVec[0] || key > minMaxVec[1]) linesToRemove.push_back(key);
         }
     }
     else {
         if (!textCursor().selection().isEmpty()) {
             QTextCursor cursor_copy(textCursor());
             int start = textCursor().selectionStart();
-            int end = textCursor().selectionEnd();
+            int end   = textCursor().selectionEnd();
             cursor_copy.setPosition(start);
             int firstLine = cursor_copy.blockNumber();
             cursor_copy.setPosition(end);
             int lastLine = cursor_copy.blockNumber();
 
             for (int i = firstLine; i <= lastLine; ++i) {
-                if (!m_selected_blocks.contains(i))
-                    linesToAdd.push_back(i);
+                if (!m_selected_blocks.contains(i)) linesToAdd.push_back(i);
             }
         }
         else {
@@ -247,8 +239,7 @@ void GcodeTextBoxWidget::mouseReleaseEvent(QMouseEvent* event) {
 
     verticalScrollBar()->setValue(scrollPos);
     QTextBlock clicked_block = document()->findBlockByLineNumber(m_last_block_clicked_on);
-    if (clicked_block.isValid())
-        setTextCursor(QTextCursor(clicked_block));
+    if (clicked_block.isValid()) setTextCursor(QTextCursor(clicked_block));
 }
 
 void GcodeTextBoxWidget::keyPressEvent(QKeyEvent* event) {
@@ -257,14 +248,10 @@ void GcodeTextBoxWidget::keyPressEvent(QKeyEvent* event) {
         linesToRemove = m_selected_blocks.values();
 
         m_manual_cursor_move = true;
-        int lineId = textCursor().blockNumber();
+        int lineId           = textCursor().blockNumber();
 
-        if (event->key() == Qt::Key_Up) {
-            --lineId;
-        }
-        else if (event->key() == Qt::Key_Down) {
-            ++lineId;
-        }
+        if (event->key() == Qt::Key_Up) { --lineId; }
+        else if (event->key() == Qt::Key_Down) { ++lineId; }
 
         linesToAdd.push_back(lineId);
         emit lineChange(linesToAdd, linesToRemove);
@@ -297,7 +284,7 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
             // move the cursor there
             //   if the next match is currently visible on the current page, the page stays
             //   else jump to the page for the next match and set that line on top
-            int blockNumber = firstVisibleBlock().blockNumber();
+            int blockNumber   = firstVisibleBlock().blockNumber();
             int visible_lines = this->height() / this->fontMetrics().height();
             if (lineNum - blockNumber > visible_lines - 1 || lineNum < blockNumber)
                 m_manual_cursor_move = false;
@@ -306,9 +293,7 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
 
             moveCursorToLine(lineNum + 1);
         }
-        else {
-            m_cursor_index = 0;
-        }
+        else { m_cursor_index = 0; }
     }
     else {
         // reset highlight cursor for a new search. GCode reload automatically resets the search
@@ -341,19 +326,17 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
     QTextCharFormat focusedColorFormat = plainFormat;
     focusedColorFormat.setBackground(QColor(255, 100, 0));
 
-    bool found = false;
-    int lineNum = -1;
+    bool found    = false;
+    int lineNum   = -1;
     int matchedId = 0;
     while (!highlightCursor.isNull() && !highlightCursor.atEnd()) {
         highlightCursor = document->find(searchString, highlightCursor);
         if (!highlightCursor.isNull()) {
             m_matched_lines.append(highlightCursor.blockNumber());
-            if (lineNum < 0)
-                lineNum = highlightCursor.blockNumber();
+            if (lineNum < 0) lineNum = highlightCursor.blockNumber();
             found = true;
             highlightCursor.mergeCharFormat(matchedColorFormat);
-            if (matchedId == m_cursor_index)
-                highlightCursor.mergeCharFormat(focusedColorFormat);
+            if (matchedId == m_cursor_index) highlightCursor.mergeCharFormat(focusedColorFormat);
             ++matchedId;
         }
     }
@@ -361,10 +344,9 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
     // leap to the first match for a fresh search
     if (found && m_cursor_index == 0) {
         // if the first match is not currently visible, move the cursor there
-        int blockNumber = firstVisibleBlock().blockNumber();
+        int blockNumber   = firstVisibleBlock().blockNumber();
         int visible_lines = this->height() / this->fontMetrics().height();
-        if (lineNum - blockNumber > visible_lines - 1 || lineNum < blockNumber)
-            moveCursorToLine(lineNum + 1);
+        if (lineNum - blockNumber > visible_lines - 1 || lineNum < blockNumber) moveCursorToLine(lineNum + 1);
     }
 
     cursor.endEditBlock();
@@ -372,4 +354,4 @@ void GcodeTextBoxWidget::search(QString searchString, int searchCount) {
     // this is necessary to make the PlainTextEdit emit modification signal again for content editing
     document->setModified(false);
 }
-} // namespace ORNL
+}  // namespace ORNL

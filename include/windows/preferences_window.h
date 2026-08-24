@@ -7,6 +7,7 @@
 #include <QMainWindow>
 #include <QRadioButton>
 #include <QSpinBox>
+
 #include <qhashfunctions.h>
 #include <qlist.h>
 #include <qsharedpointer.h>
@@ -24,17 +25,17 @@ namespace ORNL {
  */
 class PreferencesWindow : public QMainWindow {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     explicit PreferencesWindow(QWidget* parent = 0);
 
     //! \brief Destructor
     ~PreferencesWindow();
 
-  signals:
+   signals:
     void updateTheme();
 
-  private slots:
+   private slots:
     //! \brief Tell the preferences manager to import preferences from file
     void importPreferences();
 
@@ -54,7 +55,7 @@ class PreferencesWindow : public QMainWindow {
     void updateMassUnitVisual(Mass oldUnit, Mass newUnit);
     void updateThemeVisual();
 
-  private:
+   private:
     //! \brief Setup all components
     void setupLayout();
     //! \brief Setup the events for the various widgets.
@@ -102,5 +103,5 @@ class PreferencesWindow : public QMainWindow {
 
     //! \brief Copy of pointer to manager that holds actual preference information
     QSharedPointer<PreferencesManager> m_preferences_manager;
-}; // class PreferencesWindow
-} // namespace ORNL
+};  // class PreferencesWindow
+}  // namespace ORNL

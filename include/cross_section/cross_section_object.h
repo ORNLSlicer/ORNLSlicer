@@ -1,10 +1,10 @@
 #pragma once
 
+#include <QSharedPointer>
+#include <QVector>
 #include <cstdint>
 #include <queue>
 
-#include <QSharedPointer>
-#include <QVector>
 #include <qcontainerfwd.h>
 #include <qmap.h>
 #include <qtypes.h>
@@ -23,7 +23,7 @@ class ClosePolygonResult;
 class PossibleStitch;
 
 class CrossSectionObject {
-  public:
+   public:
     /*!
      * \brief Default Constructor
      *
@@ -75,7 +75,7 @@ class CrossSectionObject {
      */
     PolygonList& getPolygonList();
 
-  private:
+   private:
     /*!
      * \brief Connect the segment into loops
      */
@@ -229,8 +229,8 @@ class CrossSectionObject {
     QVector<Polyline> m_open_polylines;
     QVector<Polygon> m_closeable_polygons;
     QVector<CrossSectionSegment> m_segments;
-    QMap<int, int> m_face_idx_to_segment_idx; // topology
+    QMap<int, int> m_face_idx_to_segment_idx;  // topology
 
     bool shorterThan(const Point& p0, int32_t len);
 };
-} // namespace ORNL
+}  // namespace ORNL

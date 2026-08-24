@@ -11,6 +11,7 @@
 #include <QTabWidget>
 #include <QVBoxLayout>
 #include <QWidget>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -37,7 +38,7 @@ class SettingTab;
  */
 class SettingBar : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor.
     explicit SettingBar(QHash<QString, QString> selectedSettingBases);
 
@@ -62,7 +63,7 @@ class SettingBar : public QWidget {
     //! \param path Path of current folder
     void setCurrentFolder(QString path);
 
-  signals:
+   signals:
     /*!
      * \brief Signals that a setting is about to be modified.
      * \param setting_key   Setting that is about to be modified.
@@ -93,7 +94,7 @@ class SettingBar : public QWidget {
     //! \param category Setting header to add
     void tabHidden(QString pane, QString category);
 
-  public slots:
+   public slots:
     /*!
      * \brief Hides all settings that do not match the filter.
      * \param str   String to filter.
@@ -159,7 +160,7 @@ class SettingBar : public QWidget {
     void finishPairedGlobalSettingChange(QString first_key, double first_value, QString second_key,
                                          double second_value);
 
-  private slots:
+   private slots:
     /*!
      * \brief Re-emits a signal that a setting is about to be modified.
      * \param setting_key   Key that is about to be modified.
@@ -173,7 +174,7 @@ class SettingBar : public QWidget {
      */
     void forwardModifiedSetting(QString setting_key);
 
-  private:
+   private:
     /*!
      * \brief Returns the pane based on the major category.
      * \param major Category.
@@ -205,7 +206,8 @@ class SettingBar : public QWidget {
     //! \brief Rechecks warning-only dependencies that are not part of row visibility logic.
     void refreshDynamicDependencies();
 
-    //! \brief Builds the effective settings for the first selected local target, or global settings if none is selected.
+    //! \brief Builds the effective settings for the first selected local target, or global settings if none is
+    //! selected.
     QSharedPointer<SettingsBase> selectedVisualizationSettings() const;
 
     //! \brief Returns non-null selected local settings bases; empty means global settings should be edited.
@@ -290,4 +292,4 @@ class SettingBar : public QWidget {
     //! \brief Defers full dynamic warning refreshes while rows are reloaded in bulk.
     bool m_suppress_dynamic_dependency_refresh = false;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

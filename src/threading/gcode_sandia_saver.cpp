@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
 #include <qobject.h>
@@ -25,7 +26,7 @@ GCodeSandiaSaver::GCodeSandiaSaver(QString tempLocation, QString path, QString f
 void GCodeSandiaSaver::run() {
     // First, get necessary parameters from settings to rotate all pathing
     QChar comma(','), newline('\n'), space(' '), x('X'), y('Y'), z('Z'), f('F'), s('S'), zero('0');
-    qint16 layerNum = 0;
+    qint16 layerNum   = 0;
     QStringList lines = m_text.split(newline);
     QString G0("G0"), G1("G1"), M3("M3 "), M5("M5"), commaSpace(", ");
     QString xval, yval, zval, velocity, feedrate;
@@ -61,12 +62,12 @@ void GCodeSandiaSaver::run() {
 
     QString line;
 
-    for (int i = 0; i < lines.size(); i++) //(QString line : lines)
+    for (int i = 0; i < lines.size(); i++)  //(QString line : lines)
     {
         line = lines[i];
         if (line.startsWith(G0)) {
             out << "$VEL.CP" % newline;
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G0) {
@@ -96,11 +97,9 @@ void GCodeSandiaSaver::run() {
                 if (!(GSM->getGlobal()->setting<int>(ES::FileOutput::kSandiaMetalFile))) {
                     out << "dEarlyStop()" % newline;
                 }
-                else {
-                    out << "fEarlyOff()" % newline;
-                }
+                else { out << "fEarlyOff()" % newline; }
             }
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G1) {
@@ -136,25 +135,19 @@ void GCodeSandiaSaver::run() {
             if (!(GSM->getGlobal()->setting<int>(ES::FileOutput::kSandiaMetalFile))) {
                 out << "dStartPrinting()" % newline;
             }
-            else {
-                out << "fDelayStart()" % newline;
-            }
+            else { out << "fDelayStart()" % newline; }
         }
         else if (line.startsWith(M5)) {
             if (!(GSM->getGlobal()->setting<int>(ES::FileOutput::kSandiaMetalFile))) {
                 out << "dWaitForStop()" % newline;
             }
-            else {
-                out << "fWaitForOff()" % newline;
-            }
+            else { out << "fWaitForOff()" % newline; }
         }
     }
-    if (!(GSM->getGlobal()->setting<int>(ES::FileOutput::kSandiaMetalFile))) {
-        out << newline % "dShutdown()";
-    }
+    if (!(GSM->getGlobal()->setting<int>(ES::FileOutput::kSandiaMetalFile))) { out << newline % "dShutdown()"; }
 
     out << newline % "END";
     file.close();
 }
 
-} // namespace ORNL
+}  // namespace ORNL

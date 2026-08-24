@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QCheckBox>
+
 #include <qhashfunctions.h>
 #include <qtmetamacros.h>
 #include <qwidget.h>
@@ -13,12 +14,12 @@ namespace ORNL {
  */
 class ProgrammaticCheckBox : public QCheckBox {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor.
     ProgrammaticCheckBox(QString str, QWidget* parent);
 
-  public slots:
+   public slots:
     //! \brief Override to enforce checked/unchecked transition
     void nextCheckState() override;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

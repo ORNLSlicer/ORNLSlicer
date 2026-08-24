@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QThread>
 #include <string>
 
-#include <QThread>
 #include <qobject.h>
 #include <qtmetamacros.h>
 #include <zip/zip.h>
@@ -17,7 +17,7 @@ namespace ORNL {
  */
 class SessionLoader : public QThread {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor.
     //! \param filename: Filename for either loading or saving.
     //! \param save:     If true, the current session will be saved. If false, the current session will be loaded.
@@ -35,7 +35,7 @@ class SessionLoader : public QThread {
     //! \brief Start the thread.
     void run() override;
 
-  signals:
+   signals:
     //! \brief Signal that an error has occured.
     void error(QString error);
 
@@ -45,7 +45,7 @@ class SessionLoader : public QThread {
     //! \brief Signal that a session file has been loaded successfully.
     void loadSucceeded();
 
-  private:
+   private:
     //! \brief Saves a session.
     void saveSession();
 
@@ -72,5 +72,5 @@ class SessionLoader : public QThread {
     //! \brief If enabled, m_new_json is also written back into the project file.
     bool m_should_write_new_json;
 
-}; // class SessionLoader
-} // namespace ORNL
+};  // class SessionLoader
+}  // namespace ORNL

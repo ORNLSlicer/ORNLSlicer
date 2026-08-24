@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QObject>
 #include <optional>
 
-#include <QObject>
 #include <qcontainerfwd.h>
 #include <qtypes.h>
 
@@ -24,7 +24,7 @@ class PathOrderOptimizer;
  * \note For more information about the abstract slicing architecture, see the documentation.
  */
 class RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param index: index for region order
@@ -131,7 +131,7 @@ class RegionBase {
     //! \param spiral: whether or not last region was spiralized
     void setLastSpiral(bool spiral);
 
-  protected:
+   protected:
     //! \brief Generates paths for the region.
     //! \param line: polyline representing path
     //! \return Polyline converted to path
@@ -192,4 +192,4 @@ class RegionBase {
     Plane m_optimization_slicing_plane;
     Point m_optimization_shift;
 };
-} // namespace ORNL
+}  // namespace ORNL

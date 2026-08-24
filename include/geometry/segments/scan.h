@@ -13,7 +13,7 @@ namespace ORNL {
  *  \brief Segment for scan movements.
  */
 class ScanSegment : public SegmentBase {
-  public:
+   public:
     //! \brief Constructor
     ScanSegment(Point start, Point end);
 
@@ -30,8 +30,8 @@ class ScanSegment : public SegmentBase {
     //! \brief must be implemented from segment_base, don't acutally need it
     float getMinZ() override;
 
-  private:
+   private:
     //! \brief boolean to track whether or not to trigger laser scanner
     bool m_on_off;
 };
-} // namespace ORNL
+}  // namespace ORNL

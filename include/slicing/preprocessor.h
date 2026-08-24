@@ -33,7 +33,7 @@ namespace ORNL {
 //!                 7. Final Processing: provides access to all parts/ global settings after all steps are created
 //!
 class Preprocessor {
-  public:
+   public:
     //! \struct Parts
     //! \brief provides access to all parts, sorted by type
     struct Parts {
@@ -47,16 +47,16 @@ class Preprocessor {
     struct ActivePartMeta {
         ActivePartMeta(QSharedPointer<Part> _part = nullptr, QSharedPointer<SettingsBase> _part_sb = nullptr,
                        int _steps_processed = 0, int _part_start = 0) {
-            part = _part;
-            part_sb = _part_sb;
+            part            = _part;
+            part_sb         = _part_sb;
             steps_processed = _steps_processed;
-            part_start = _part_start;
+            part_start      = _part_start;
         }
 
         QSharedPointer<Part> part;
         QSharedPointer<SettingsBase> part_sb;
         int steps_processed = 0;
-        int part_start = 0;
+        int part_start      = 0;
         int last_step_count = 0;
     };
 
@@ -139,7 +139,7 @@ class Preprocessor {
     //! \return Sorted Parts struct
     Parts getParts();
 
-  private:
+   private:
     //! \brief Callable functions used by the preprocessor
     StepBuilder m_step_builder;
     Processing m_initial_processing;
@@ -149,10 +149,10 @@ class Preprocessor {
     CrossSectionProcessing m_cross_section_processing;
     StatusUpdate m_status_update;
 
-    bool m_use_cgal_cross_section = false;
+    bool m_use_cgal_cross_section  = false;
     bool m_include_build_plate_gap = false;
 
     //! \brief Sorted parts
     Parts m_parts;
 };
-} // namespace ORNL
+}  // namespace ORNL

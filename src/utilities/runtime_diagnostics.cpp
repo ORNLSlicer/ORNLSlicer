@@ -22,5 +22,7 @@ void logLine(const QString& message) {
     std::cerr << "[ornlslicer] " << message.toStdString() << std::endl;
 }
 
-void logRuntimeSummary(const QString& mode) { logLine(runtimeSummary(mode)); }
-} // namespace ORNL::Diagnostics
+void logRuntimeSummary(const QString& mode) {
+    logLine(runtimeSummary(mode));
+}
+}  // namespace ORNL::Diagnostics

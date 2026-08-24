@@ -1,10 +1,10 @@
 
 #include "geometry/polygon_list.h"
 
+#include <QPolygon>
 #include <cstdint>
 #include <limits>
 
-#include <QPolygon>
 #include <clipper.hpp>
 #include <qpoint.h>
 #include <qtypes.h>
@@ -37,7 +37,7 @@ PolygonList PolygonList::offset(Distance distance, Distance real_offset, Clipper
         paths.clear();
         clipper.Clear();
         clipper.AddPaths(polygons(), joinType, ClipperLib2::etClosedPolygon);
-        clipper.Execute(paths, -distance() + 10); //! +10 buffer
+        clipper.Execute(paths, -distance() + 10);  //! +10 buffer
         PolygonList reversed_offset_geometry(paths);
 
         PolygonList lost_geometry = original_geometry - reversed_offset_geometry;
@@ -50,9 +50,7 @@ bool PolygonList::inside(Point p, bool border_result) const {
     int poly_count_inside = 0;
     for (ClipperLib2::Path poly : (*this)()) {
         const int is_inside_this_poly = ClipperLib2::PointInPolygon(p.toIntPoint(), poly);
-        if (is_inside_this_poly == -1) {
-            return border_result;
-        }
+        if (is_inside_this_poly == -1) { return border_result; }
         poly_count_inside += is_inside_this_poly;
     }
     return (poly_count_inside % 2) == 1;
@@ -91,9 +89,7 @@ PolygonList PolygonList::externalPolygonBoundaries() const {
     PolygonList boundaries;
 
     for (const PolygonList& part : splitIntoParts()) {
-        if (!part.isEmpty()) {
-            boundaries.append(part.first());
-        }
+        if (!part.isEmpty()) { boundaries.append(part.first()); }
     }
 
     return boundaries;
@@ -103,9 +99,7 @@ PolygonList PolygonList::internalPolygonBoundaries() const {
     PolygonList boundaries;
 
     for (const PolygonList& part : splitIntoParts()) {
-        for (int i = 1; i < part.size(); ++i) {
-            boundaries.append(part[i]);
-        }
+        for (int i = 1; i < part.size(); ++i) { boundaries.append(part[i]); }
     }
 
     return boundaries;
@@ -119,9 +113,7 @@ QVector<PolygonList> PolygonList::splitIntoParts(bool unionAll) const {
     if (unionAll) {
         clipper.Execute(ClipperLib2::ctUnion, resultPolyTree, ClipperLib2::pftNonZero, ClipperLib2::pftNonZero);
     }
-    else {
-        clipper.Execute(ClipperLib2::ctUnion, resultPolyTree);
-    }
+    else { clipper.Execute(ClipperLib2::ctUnion, resultPolyTree); }
 
     splitIntoParts_processPolyTreeNode(&resultPolyTree, result);
 
@@ -137,8 +129,7 @@ void PolygonList::splitIntoParts_processPolyTreeNode(ClipperLib2::PolyNode* node
             part += child->Childs[i]->Contour;
             splitIntoParts_processPolyTreeNode(child->Childs[i], ret);
         }
-        if (part.size() > 0)
-            ret.push_back(part);
+        if (part.size() > 0) ret.push_back(part);
     }
 }
 
@@ -156,9 +147,7 @@ PolygonList PolygonList::removeDegenerateVertices() {
         bool isChanged = false;
         for (int idx = 0; idx < poly.size(); idx++) {
             Point& last = (result.size() == 0) ? poly.back() : result.back();
-            if (idx + 1 == poly.size() && result.size() == 0) {
-                break;
-            }
+            if (idx + 1 == poly.size() && result.size() == 0) { break; }
             Point& next = (idx + 1 == poly.size()) ? result[0] : poly[idx + 1];
             // lines are in the opposite direction
             if (isDegenerate(last, poly[idx], next)) {
@@ -168,20 +157,16 @@ PolygonList PolygonList::removeDegenerateVertices() {
                     result.pop_back();
                 }
             }
-            else {
-                result += (poly[idx]);
-            }
+            else { result += (poly[idx]); }
         }
 
         if (isChanged) {
-            if (result.size() > 2) {
-                ret[poly_idx] = result;
-            }
+            if (result.size() > 2) { ret[poly_idx] = result; }
             else {
                 ret.remove(poly_idx);
-                poly_idx--; // effectively the next iteration has the same
-                            // poly_idx (referring to a new poly which is
-                            // not yet processed)
+                poly_idx--;  // effectively the next iteration has the same
+                             // poly_idx (referring to a new poly which is
+                             // not yet processed)
             }
         }
     }
@@ -196,17 +181,11 @@ Point PolygonList::min() const {
         if (p.area()() > 0) {
             Point temp_min = p.min();
 
-            if (temp_min.x() < rv.x()) {
-                rv.x(temp_min.x());
-            }
+            if (temp_min.x() < rv.x()) { rv.x(temp_min.x()); }
 
-            if (temp_min.y() < rv.y()) {
-                rv.y(temp_min.y());
-            }
+            if (temp_min.y() < rv.y()) { rv.y(temp_min.y()); }
 
-            if (temp_min.z() < rv.z()) {
-                rv.z(temp_min.z());
-            }
+            if (temp_min.z() < rv.z()) { rv.z(temp_min.z()); }
         }
     }
     return rv;
@@ -221,23 +200,19 @@ Point PolygonList::max() const {
         if (p.area()() > 0) {
             Point temp_min = p.max();
 
-            if (temp_min.x() > rv.x()) {
-                rv.x(temp_min.x());
-            }
+            if (temp_min.x() > rv.x()) { rv.x(temp_min.x()); }
 
-            if (temp_min.y() > rv.y()) {
-                rv.y(temp_min.y());
-            }
+            if (temp_min.y() > rv.y()) { rv.y(temp_min.y()); }
 
-            if (temp_min.z() > rv.z()) {
-                rv.z(temp_min.z());
-            }
+            if (temp_min.z() > rv.z()) { rv.z(temp_min.z()); }
         }
     }
     return rv;
 }
 
-Point PolygonList::boundingRectCenter() const { return (max() + min()) / 2.0; }
+Point PolygonList::boundingRectCenter() const {
+    return (max() + min()) / 2.0;
+}
 
 PolygonList PolygonList::rotate(const Angle& angle, const QVector3D& axis) {
     return rotateAround({0, 0, 0}, angle, axis);
@@ -245,106 +220,138 @@ PolygonList PolygonList::rotate(const Angle& angle, const QVector3D& axis) {
 
 PolygonList PolygonList::rotateAround(const Point& center, const Angle& angle, const QVector3D& axis) {
     PolygonList rv;
-    for (const Polygon& polygon : *this) {
-        rv += polygon.rotateAround(center, angle, axis);
-    }
+    for (const Polygon& polygon : *this) { rv += polygon.rotateAround(center, angle, axis); }
     return rv;
 }
 
 int64_t PolygonList::totalLength() {
     int64_t total_length = 0;
-    for (Polygon polygon : (*this)) {
-        total_length += polygon.polygonLength();
-    }
+    for (Polygon polygon : (*this)) { total_length += polygon.polygonLength(); }
 
     return total_length;
 }
 
 Area PolygonList::totalArea() {
     Area total_area;
-    for (Polygon poly : *this) {
-        total_area += poly.area();
-    }
+    for (Polygon poly : *this) { total_area += poly.area(); }
     return total_area;
 }
 
 bool PolygonList::operator==(const PolygonList& rhs) const {
     PolygonList pl1 = *this;
     PolygonList pl2 = rhs;
-    if ((pl1 - pl2).isEmpty() && ((pl2) - (pl1)).isEmpty()) {
-        return true;
-    }
-    else {
-        return false;
-    }
+    if ((pl1 - pl2).isEmpty() && ((pl2) - (pl1)).isEmpty()) { return true; }
+    else { return false; }
 }
 
 bool PolygonList::operator!=(const PolygonList& rhs) const {
     PolygonList pl1 = *this;
     PolygonList pl2 = rhs;
-    if ((pl1 - pl2).isEmpty() && ((pl2) - (pl1)).isEmpty()) {
-        return false;
-    }
-    else {
-        return true;
-    }
+    if ((pl1 - pl2).isEmpty() && ((pl2) - (pl1)).isEmpty()) { return false; }
+    else { return true; }
 }
 
-PolygonList PolygonList::operator+(const PolygonList& rhs) { return _add(rhs); }
+PolygonList PolygonList::operator+(const PolygonList& rhs) {
+    return _add(rhs);
+}
 
-PolygonList PolygonList::operator+(const Polygon& rhs) { return _add(rhs); }
+PolygonList PolygonList::operator+(const Polygon& rhs) {
+    return _add(rhs);
+}
 
-PolygonList PolygonList::operator+=(const PolygonList& rhs) { return _add_to_this(rhs); }
+PolygonList PolygonList::operator+=(const PolygonList& rhs) {
+    return _add_to_this(rhs);
+}
 
-PolygonList PolygonList::operator+=(const Polygon& rhs) { return _add_to_this(rhs); }
+PolygonList PolygonList::operator+=(const Polygon& rhs) {
+    return _add_to_this(rhs);
+}
 
-PolygonList PolygonList::operator-(const PolygonList& rhs) const { return _subtract(rhs); }
+PolygonList PolygonList::operator-(const PolygonList& rhs) const {
+    return _subtract(rhs);
+}
 
-PolygonList PolygonList::operator-(const Polygon& rhs) const { return _subtract(rhs); }
+PolygonList PolygonList::operator-(const Polygon& rhs) const {
+    return _subtract(rhs);
+}
 
-PolygonList PolygonList::operator-=(const PolygonList& rhs) { return _subtract_from_this(rhs); }
+PolygonList PolygonList::operator-=(const PolygonList& rhs) {
+    return _subtract_from_this(rhs);
+}
 
-PolygonList PolygonList::operator-=(const Polygon& rhs) { return _subtract_from_this(rhs); }
+PolygonList PolygonList::operator-=(const Polygon& rhs) {
+    return _subtract_from_this(rhs);
+}
 
-PolygonList PolygonList::operator<<(const PolygonList& rhs) { return _add(rhs); }
+PolygonList PolygonList::operator<<(const PolygonList& rhs) {
+    return _add(rhs);
+}
 
-PolygonList PolygonList::operator<<(const Polygon& rhs) { return _add(rhs); }
+PolygonList PolygonList::operator<<(const Polygon& rhs) {
+    return _add(rhs);
+}
 
-PolygonList PolygonList::operator|(const PolygonList& rhs) { return _add(rhs); }
+PolygonList PolygonList::operator|(const PolygonList& rhs) {
+    return _add(rhs);
+}
 
-PolygonList PolygonList::operator|(const Polygon& rhs) { return _add(rhs); }
+PolygonList PolygonList::operator|(const Polygon& rhs) {
+    return _add(rhs);
+}
 
-PolygonList PolygonList::operator|=(const PolygonList& rhs) { return _add_to_this(rhs); }
+PolygonList PolygonList::operator|=(const PolygonList& rhs) {
+    return _add_to_this(rhs);
+}
 
-PolygonList PolygonList::operator|=(const Polygon& rhs) { return _add_to_this(rhs); }
+PolygonList PolygonList::operator|=(const Polygon& rhs) {
+    return _add_to_this(rhs);
+}
 
-PolygonList PolygonList::operator&(const PolygonList& rhs) { return _intersect(rhs); }
+PolygonList PolygonList::operator&(const PolygonList& rhs) {
+    return _intersect(rhs);
+}
 
-PolygonList PolygonList::operator&(const Polygon& rhs) { return _intersect(rhs); }
+PolygonList PolygonList::operator&(const Polygon& rhs) {
+    return _intersect(rhs);
+}
 
-QVector<Polyline> PolygonList::operator&(const Polyline& rhs) { return _intersect(rhs); }
+QVector<Polyline> PolygonList::operator&(const Polyline& rhs) {
+    return _intersect(rhs);
+}
 
-PolygonList PolygonList::operator&=(const PolygonList& rhs) { return _intersect_with_this(rhs); }
+PolygonList PolygonList::operator&=(const PolygonList& rhs) {
+    return _intersect_with_this(rhs);
+}
 
-PolygonList PolygonList::operator&=(const Polygon& rhs) { return _intersect_with_this(rhs); }
+PolygonList PolygonList::operator&=(const Polygon& rhs) {
+    return _intersect_with_this(rhs);
+}
 
-PolygonList PolygonList::operator^(const PolygonList& rhs) { return _xor(rhs); }
+PolygonList PolygonList::operator^(const PolygonList& rhs) {
+    return _xor(rhs);
+}
 
-PolygonList PolygonList::operator^(const Polygon& rhs) { return _xor(rhs); }
+PolygonList PolygonList::operator^(const Polygon& rhs) {
+    return _xor(rhs);
+}
 
-PolygonList PolygonList::operator^=(const PolygonList& rhs) { return _xor_with_this(rhs); }
+PolygonList PolygonList::operator^=(const PolygonList& rhs) {
+    return _xor_with_this(rhs);
+}
 
-PolygonList PolygonList::operator^=(const Polygon& rhs) { return _xor_with_this(rhs); }
+PolygonList PolygonList::operator^=(const Polygon& rhs) {
+    return _xor_with_this(rhs);
+}
 
-PolygonList::PolygonList(const ClipperLib2::Paths& paths) { clipperLoad(paths); }
+PolygonList::PolygonList(const ClipperLib2::Paths& paths) {
+    clipperLoad(paths);
+}
 
 void PolygonList::clipperLoad(const ClipperLib2::Paths& paths) {
     clear();
     for (ClipperLib2::Path path : paths) {
         Polygon polygon;
-        for (ClipperLib2::IntPoint point : path) {
-            polygon += Point(point);
-        }
+        for (ClipperLib2::IntPoint point : path) { polygon += Point(point); }
         append(polygon);
     }
 }
@@ -353,9 +360,7 @@ ClipperLib2::Paths PolygonList::operator()() const {
     ClipperLib2::Paths paths;
     for (const Polygon& polygon : *this) {
         ClipperLib2::Path path;
-        for (Point point : polygon) {
-            path.push_back(point.toIntPoint());
-        }
+        for (Point point : polygon) { path.push_back(point.toIntPoint()); }
         paths.push_back(path);
     }
     return paths;
@@ -469,9 +474,7 @@ QVector<Polyline> PolygonList::_intersect(const Polyline& polyline) {
     ClipperLib2::OpenPathsFromPolyTree(poly_tree, paths);
 
     QVector<Polyline> rv;
-    for (ClipperLib2::Path path : paths) {
-        rv += Polyline(path);
-    }
+    for (ClipperLib2::Path path : paths) { rv += Polyline(path); }
     return rv;
 }
 
@@ -543,17 +546,14 @@ PolygonList PolygonList::_xor_with_this(const PolygonList& other) {
 
 Area PolygonList::netArea() {
     Area a;
-    for (Polygon p : *this) {
-        a = a + p.area();
-    }
+    for (Polygon p : *this) { a = a + p.area(); }
     return a;
 }
 
 void PolygonList::addAll(QVector<Polygon> polygons) {
     ClipperLib2::Clipper clipper;
     ClipperLib2::Paths paths;
-    for (Polygon poly : polygons)
-        clipper.AddPath(poly.getPath(), ClipperLib2::ptSubject, true);
+    for (Polygon poly : polygons) clipper.AddPath(poly.getPath(), ClipperLib2::ptSubject, true);
     clipper.Execute(ClipperLib2::ctUnion, paths, ClipperLib2::pftEvenOdd, ClipperLib2::pftEvenOdd);
     clipperLoad(paths);
 }
@@ -563,9 +563,7 @@ QVector<QPolygon> PolygonList::toQPolygons() const {
 
     for (const Polygon& poly : *this) {
         QPolygon cpoly;
-        for (const Point& point : poly) {
-            cpoly.push_back(point.toQPoint());
-        }
+        for (const Point& point : poly) { cpoly.push_back(point.toQPoint()); }
         ret.push_back(cpoly);
     }
 
@@ -582,10 +580,8 @@ QRect PolygonList::boundingRect() const {
 QVector<Polyline> PolygonList::getEdges() const {
     QVector<Polyline> edges;
 
-    for (const Polygon& poly : *this) {
-        edges += poly.getEdges();
-    }
+    for (const Polygon& poly : *this) { edges += poly.getEdges(); }
 
     return edges;
 }
-} // namespace ORNL
+}  // namespace ORNL

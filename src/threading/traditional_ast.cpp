@@ -44,9 +44,7 @@ void TraditionalAST::doSlice() {
     Diagnostics::logLine(QStringLiteral("Slicing preprocess complete"));
 
     int total_steps = 0;
-    for (QSharedPointer<Part> part : CSM->parts()) {
-        total_steps += part->countStepPairs();
-    }
+    for (QSharedPointer<Part> part : CSM->parts()) { total_steps += part->countStepPairs(); }
 
     // Instantiate the ideal thread amount.
     for (int i = 0, end = (total_steps > QThread::idealThreadCount() ? QThread::idealThreadCount() : total_steps);
@@ -60,14 +58,12 @@ void TraditionalAST::doSlice() {
 
     // For every selected step in every part, add the step to the queue.
     for (QSharedPointer<Part> part : CSM->parts()) {
-        if (part->rootMesh()->type() == MeshType::kClipping) // Skip parts that were used for clipping
+        if (part->rootMesh()->type() == MeshType::kClipping)  // Skip parts that were used for clipping
             continue;
 
         QList<QSharedPointer<Step>> allSteps = part->steps();
         for (QSharedPointer<Step> step : allSteps) {
-            if (step->isDirty() && !m_step_queue.contains(step)) {
-                m_step_queue.append(step);
-            }
+            if (step->isDirty() && !m_step_queue.contains(step)) { m_step_queue.append(step); }
         }
     }
 
@@ -75,8 +71,7 @@ void TraditionalAST::doSlice() {
 
     // For every thread available, give it a step to compute.
     for (StepThread* st : m_step_threads) {
-        if (m_step_queue.empty())
-            break;
+        if (m_step_queue.empty()) break;
 
         QSharedPointer<Step> step = m_step_queue.dequeue();
         st->setStep(step);
@@ -95,8 +90,7 @@ void TraditionalAST::doSlice() {
         this->postProcess();
         Diagnostics::logLine(QStringLiteral("Slicing postprocess complete"));
 
-        if (this->shouldCancel())
-            return;
+        if (this->shouldCancel()) return;
 
         if (!m_skip_gcode) {
             // Gcode output
@@ -106,8 +100,7 @@ void TraditionalAST::doSlice() {
             this->writeGCodeShutdown();
             Diagnostics::logLine(QStringLiteral("Slicing G-code generation complete"));
         }
-        if (this->shouldCancel())
-            return;
+        if (this->shouldCancel()) return;
 
         Diagnostics::logLine(QStringLiteral("Slicing sliceComplete emitted"));
         emit sliceComplete();
@@ -128,16 +121,15 @@ void TraditionalAST::cleanThread() {
         st->stop();
         delete st;
 
-        if (m_step_threads.isEmpty())
-            m_step_queue.clear();
+        if (m_step_threads.isEmpty()) m_step_queue.clear();
     }
     else {
-        if (m_queue_start_size == 0) // If there is nothing to compute then we are done
+        if (m_queue_start_size == 0)  // If there is nothing to compute then we are done
             emit statusUpdate(StatusUpdateStepType::kCompute, 100);
         else
-            emit statusUpdate(StatusUpdateStepType::kCompute,
-                              ((double)m_queue_start_size - (double)m_step_queue.size()) / (double)m_queue_start_size *
-                                  100);
+            emit statusUpdate(
+                StatusUpdateStepType::kCompute,
+                ((double)m_queue_start_size - (double)m_step_queue.size()) / (double)m_queue_start_size * 100);
 
         // If the queue is empty, then start destroying unused threads.
         if (m_step_queue.empty()) {
@@ -147,15 +139,13 @@ void TraditionalAST::cleanThread() {
 
             // If all threads have been destroyed, the slice is complete.
             if (m_step_threads.empty()) {
-
                 Diagnostics::logLine(QStringLiteral("Slicing compute complete; starting postprocess"));
                 this->postProcess();
                 Diagnostics::logLine(QStringLiteral("Slicing postprocess complete"));
 
                 m_elapsed_time = m_timer.elapsed();
 
-                if (this->shouldCancel())
-                    return;
+                if (this->shouldCancel()) return;
 
                 if (!m_skip_gcode) {
                     // Gcode output
@@ -165,8 +155,7 @@ void TraditionalAST::cleanThread() {
                     this->writeGCodeShutdown();
                     Diagnostics::logLine(QStringLiteral("Slicing G-code generation complete"));
                 }
-                if (this->shouldCancel())
-                    return;
+                if (this->shouldCancel()) return;
 
                 Diagnostics::logLine(QStringLiteral("Slicing sliceComplete emitted"));
                 emit sliceComplete();
@@ -185,4 +174,4 @@ void TraditionalAST::cleanThread() {
         QObject::disconnect(this, &TraditionalAST::stepStart, st, &StepThread::doStep);
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

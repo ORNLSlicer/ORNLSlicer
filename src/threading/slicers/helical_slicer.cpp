@@ -1,11 +1,11 @@
 #include "threading/slicers/helical_slicer.h"
 
+#include <QPair>
+#include <QTextStream>
 #include <algorithm>
 #include <cmath>
 #include <limits>
 
-#include <QPair>
-#include <QTextStream>
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
 #include <qdebug.h>
@@ -46,7 +46,9 @@ const QString kRadialCenterX = "radial_center_x";
 const QString kRadialCenterY = "radial_center_y";
 
 //! @brief Returns a positive setting value or a safe fallback.
-Distance positiveOrFallback(Distance value, Distance fallback) { return value > 0 ? value : fallback; }
+Distance positiveOrFallback(Distance value, Distance fallback) {
+    return value > 0 ? value : fallback;
+}
 
 //! @brief Physical fallback used when the radial layer spacing setting is invalid.
 const Distance kDefaultHelicalLayerHeight = 1.0 * mm;
@@ -76,7 +78,7 @@ struct HelicalBoundaryIntersection {
 struct HelixClipResult {
     QVector<Polyline> fragments;
     QVector<HelicalBoundaryIntersection> intersections;
-    bool has_inside_points = false;
+    bool has_inside_points  = false;
     bool has_outside_points = false;
 };
 
@@ -84,13 +86,11 @@ struct HelixClipResult {
 bool meshBounds(const QVector<QSharedPointer<MeshBase>>& meshes, Point& mesh_min, Point& mesh_max) {
     bool has_bounds = false;
     for (const QSharedPointer<MeshBase>& mesh : meshes) {
-        if (mesh == nullptr || mesh->vertices().isEmpty()) {
-            continue;
-        }
+        if (mesh == nullptr || mesh->vertices().isEmpty()) { continue; }
 
         if (!has_bounds) {
-            mesh_min = mesh->min();
-            mesh_max = mesh->max();
+            mesh_min   = mesh->min();
+            mesh_max   = mesh->max();
             has_bounds = true;
             continue;
         }
@@ -117,9 +117,7 @@ Point interpolate(const Point& start, const Point& end, double t) {
 //! @brief Returns the nearest cached cross section index for a point Z.
 int nearestSectionIndex(const QVector<HelicalCrossSection>& sections, const Point& point, Distance first_z,
                         Distance section_spacing) {
-    if (sections.isEmpty()) {
-        return -1;
-    }
+    if (sections.isEmpty()) { return -1; }
 
     const double raw_index = (point.z() - first_z()) / section_spacing();
     return std::clamp(static_cast<int>(std::llround(raw_index)), 0, static_cast<int>(sections.size()) - 1);
@@ -129,9 +127,7 @@ int nearestSectionIndex(const QVector<HelicalCrossSection>& sections, const Poin
 bool pointInsideModel(const QVector<HelicalCrossSection>& sections, const Point& point, Distance first_z,
                       Distance section_spacing) {
     const int index = nearestSectionIndex(sections, point, first_z, section_spacing);
-    if (index < 0 || sections[index].geometry.isEmpty()) {
-        return false;
-    }
+    if (index < 0 || sections[index].geometry.isEmpty()) { return false; }
 
     return sections[index].geometry.inside(point, true);
 }
@@ -139,20 +135,18 @@ bool pointInsideModel(const QVector<HelicalCrossSection>& sections, const Point&
 //! @brief Finds an approximate model-boundary point along a sampled helix segment.
 Point findBoundaryPoint(const Point& start, const Point& end, bool start_inside,
                         const QVector<HelicalCrossSection>& sections, Distance first_z, Distance section_spacing) {
-    Point low = start;
-    Point high = end;
+    Point low       = start;
+    Point high      = end;
     bool low_inside = start_inside;
 
     for (int i = 0; i < 12; ++i) {
-        const Point mid = interpolate(low, high, 0.5);
+        const Point mid       = interpolate(low, high, 0.5);
         const bool mid_inside = pointInsideModel(sections, mid, first_z, section_spacing);
         if (mid_inside == low_inside) {
-            low = mid;
+            low        = mid;
             low_inside = mid_inside;
         }
-        else {
-            high = mid;
-        }
+        else { high = mid; }
     }
 
     return start_inside ? low : high;
@@ -162,30 +156,24 @@ Point findBoundaryPoint(const Point& start, const Point& end, bool start_inside,
 HelixClipResult clipHelixToSections(const Polyline& helix, const QVector<HelicalCrossSection>& sections,
                                     Distance first_z, Distance section_spacing) {
     HelixClipResult result;
-    if (helix.size() < 2 || sections.isEmpty()) {
-        return result;
-    }
+    if (helix.size() < 2 || sections.isEmpty()) { return result; }
 
-    Point previous = helix.first();
-    bool previous_inside = pointInsideModel(sections, previous, first_z, section_spacing);
-    result.has_inside_points = previous_inside;
+    Point previous            = helix.first();
+    bool previous_inside      = pointInsideModel(sections, previous, first_z, section_spacing);
+    result.has_inside_points  = previous_inside;
     result.has_outside_points = !previous_inside;
 
     Polyline current_line;
-    if (previous_inside) {
-        current_line.push_back(previous);
-    }
+    if (previous_inside) { current_line.push_back(previous); }
 
     for (int i = 1, end = helix.size(); i < end; ++i) {
-        const Point current = helix[i];
+        const Point current       = helix[i];
         const bool current_inside = pointInsideModel(sections, current, first_z, section_spacing);
-        result.has_inside_points = result.has_inside_points || current_inside;
+        result.has_inside_points  = result.has_inside_points || current_inside;
         result.has_outside_points = result.has_outside_points || !current_inside;
 
         if (previous_inside && current_inside) {
-            if (current_line.isEmpty()) {
-                current_line.push_back(previous);
-            }
+            if (current_line.isEmpty()) { current_line.push_back(previous); }
             current_line.push_back(current);
         }
         else if (previous_inside && !current_inside) {
@@ -206,7 +194,7 @@ HelixClipResult clipHelixToSections(const Polyline& helix, const QVector<Helical
             current_line.push_back(current);
         }
 
-        previous = current;
+        previous        = current;
         previous_inside = current_inside;
     }
 
@@ -219,9 +207,7 @@ HelixClipResult clipHelixToSections(const Polyline& helix, const QVector<Helical
 
 //! @brief Keeps a continuous helix prefix through its highest-Z model-boundary crossing.
 QVector<Polyline> clipHelixAtHighestIntersection(const Polyline& helix, const HelixClipResult& clip_result) {
-    if (helix.size() < 2) {
-        return {};
-    }
+    if (helix.size() < 2) { return {}; }
 
     if (clip_result.intersections.isEmpty()) {
         return clip_result.has_inside_points && !clip_result.has_outside_points ? QVector<Polyline> {helix}
@@ -236,30 +222,22 @@ QVector<Polyline> clipHelixAtHighestIntersection(const Polyline& helix, const He
 
     Polyline clipped_helix;
     clipped_helix.reserve(highest_intersection->segment_end_index + 1);
-    for (int i = 0; i < highest_intersection->segment_end_index; ++i) {
-        clipped_helix.push_back(helix[i]);
-    }
+    for (int i = 0; i < highest_intersection->segment_end_index; ++i) { clipped_helix.push_back(helix[i]); }
 
     if (clipped_helix.isEmpty() || clipped_helix.last() != highest_intersection->point) {
         clipped_helix.push_back(highest_intersection->point);
     }
 
-    if (clipped_helix.size() < 2 || clipped_helix.length() <= kMinPathSegmentLength) {
-        return {};
-    }
+    if (clipped_helix.size() < 2 || clipped_helix.length() <= kMinPathSegmentLength) { return {}; }
 
     return {clipped_helix};
 }
 
 //! @brief Splits a sampled helical fragment into path-length-limited fragments.
 QVector<Polyline> splitPolylineByLength(const Polyline& polyline, Distance max_path_length) {
-    if (polyline.size() < 2) {
-        return {};
-    }
+    if (polyline.size() < 2) { return {}; }
 
-    if (max_path_length <= kMinPathSegmentLength || polyline.length() <= max_path_length) {
-        return {polyline};
-    }
+    if (max_path_length <= kMinPathSegmentLength || polyline.length() <= max_path_length) { return {polyline}; }
 
     QVector<Polyline> split_lines;
     Polyline current_line;
@@ -267,8 +245,8 @@ QVector<Polyline> splitPolylineByLength(const Polyline& polyline, Distance max_p
     Distance current_length = 0;
 
     for (int i = 1, end = polyline.size(); i < end; ++i) {
-        Point segment_start = polyline[i - 1];
-        const Point segment_end = polyline[i];
+        Point segment_start               = polyline[i - 1];
+        const Point segment_end           = polyline[i];
         Distance remaining_segment_length = segment_start.distance(segment_end);
 
         while (remaining_segment_length > 0) {
@@ -277,48 +255,38 @@ QVector<Polyline> splitPolylineByLength(const Polyline& polyline, Distance max_p
                 split_lines.push_back(current_line);
                 current_line.clear();
                 current_line.push_back(segment_start);
-                current_length = 0;
+                current_length        = 0;
                 remaining_path_length = max_path_length;
             }
 
             if (remaining_segment_length <= remaining_path_length) {
-                if (current_line.last() != segment_end) {
-                    current_line.push_back(segment_end);
-                }
+                if (current_line.last() != segment_end) { current_line.push_back(segment_end); }
                 current_length += remaining_segment_length;
                 remaining_segment_length = 0;
             }
             else {
                 const double split_fraction = remaining_path_length() / remaining_segment_length();
-                const Point split_point = interpolate(segment_start, segment_end, split_fraction);
-                if (current_line.last() != split_point) {
-                    current_line.push_back(split_point);
-                }
-                if (current_line.size() > 1) {
-                    split_lines.push_back(current_line);
-                }
+                const Point split_point     = interpolate(segment_start, segment_end, split_fraction);
+                if (current_line.last() != split_point) { current_line.push_back(split_point); }
+                if (current_line.size() > 1) { split_lines.push_back(current_line); }
 
                 current_line.clear();
                 current_line.push_back(split_point);
-                segment_start = split_point;
-                current_length = 0;
+                segment_start            = split_point;
+                current_length           = 0;
                 remaining_segment_length = segment_start.distance(segment_end);
             }
         }
     }
 
-    if (current_line.size() > 1) {
-        split_lines.push_back(current_line);
-    }
+    if (current_line.size() > 1) { split_lines.push_back(current_line); }
 
     return split_lines;
 }
 
 //! @brief Estimates progress loop iterations for an inclusive Distance range.
 int estimateInclusiveCount(Distance start, Distance end, Distance step) {
-    if (step <= 0 || start > end) {
-        return 1;
-    }
+    if (step <= 0 || start > end) { return 1; }
 
     return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
 }
@@ -326,18 +294,16 @@ int estimateInclusiveCount(Distance start, Distance end, Distance step) {
 //! @brief Returns the upper Z limit for generated cylindrical candidates.
 Distance cylindricalTopZ(const QSharedPointer<SettingsBase>& part_sb, Distance base_z, Distance mesh_top_z) {
     const Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
-    if (cylinder_height <= 0) {
-        return mesh_top_z;
-    }
+    if (cylinder_height <= 0) { return mesh_top_z; }
 
     const Distance capped_top_z(base_z + cylinder_height);
     return capped_top_z < mesh_top_z ? capped_top_z : mesh_top_z;
 }
-} // namespace
+}  // namespace
 
 HelicalSlicer::HelicalSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation) {
     m_syntax = GcodeSyntax::kArcSpecialties;
-    m_base = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
+    m_base   = QSharedPointer<ArcSpecialtiesWriter>::create(GcodeMetaList::ArcSpecialtiesMeta, GSM->getGlobal());
 }
 
 void HelicalSlicer::doSlice() {
@@ -351,16 +317,12 @@ void HelicalSlicer::doSlice() {
     this->setMaxSteps(0);
     this->preProcess();
 
-    if (this->shouldCancel()) {
-        return;
-    }
+    if (this->shouldCancel()) { return; }
 
     this->postProcess();
     m_elapsed_time = m_timer.elapsed();
 
-    if (this->shouldCancel()) {
-        return;
-    }
+    if (this->shouldCancel()) { return; }
 
     if (!m_skip_gcode) {
         this->writeGCodeSetup();
@@ -368,9 +330,7 @@ void HelicalSlicer::doSlice() {
         this->writeGCodeShutdown();
     }
 
-    if (this->shouldCancel()) {
-        return;
-    }
+    if (this->shouldCancel()) { return; }
 
     emit sliceComplete();
 }
@@ -389,10 +349,10 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     QVector<QPair<QString, HelicalPathHandedness>> effective_handedness;
 
     int last_preprocess_percent = -1;
-    int last_compute_percent = -1;
-    auto emitPartProgress = [this, &build_parts](StatusUpdateStepType type, int part_index, double part_fraction,
-                                                 int& last_percent) {
-        const double total_parts = std::max(1, static_cast<int>(build_parts.size()));
+    int last_compute_percent    = -1;
+    auto emitPartProgress       = [this, &build_parts](StatusUpdateStepType type, int part_index, double part_fraction,
+                                                       int& last_percent) {
+        const double total_parts           = std::max(1, static_cast<int>(build_parts.size()));
         const double bounded_part_fraction = std::clamp(part_fraction, 0.0, 1.0);
         const int percent =
             std::clamp(static_cast<int>(((part_index + bounded_part_fraction) / total_parts) * 100.0), 0, 100);
@@ -450,15 +410,13 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         const HelicalPathHandedness handedness =
             static_cast<HelicalPathHandedness>(part_sb->setting<int>(PS::Slicing::kHelicalPathHandedness));
         const bool helix_counterclockwise = handedness == HelicalPathHandedness::kRightHanded;
-        bool part_generated_paths = false;
-        Distance initial_radius = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
-        if (initial_radius < 0) {
-            initial_radius = 0.0 * micron;
-        }
+        bool part_generated_paths         = false;
+        Distance initial_radius           = part_sb->setting<Distance>(PS::Slicing::kCylinderInnerRadius);
+        if (initial_radius < 0) { initial_radius = 0.0 * micron; }
 
         const Distance base_z(mesh_min.z());
         const Distance top_z = cylindricalTopZ(part_sb, base_z, mesh_max.z());
-        Point center = helicalCenterForPart(part_sb, part, base_z);
+        Point center         = helicalCenterForPart(part_sb, part, base_z);
         const Distance max_radius(maxRadiusForMeshes(meshes, center));
 
         const Distance first_radius = initial_radius + (layer_height / 2.0);
@@ -471,9 +429,9 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
         }
 
         QVector<HelicalCrossSection> cross_sections;
-        bool has_geometry = false;
+        bool has_geometry                 = false;
         const int estimated_section_count = estimateInclusiveCount(first_bead_z, top_z, section_spacing);
-        int sections_processed = 0;
+        int sections_processed            = 0;
         for (Distance z = first_bead_z; z <= top_z; z += section_spacing) {
             Plane slicing_plane(Point(center.x(), center.y(), z()), QVector3D(0, 0, 1));
             PolygonList combined_geometry;
@@ -483,16 +441,10 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                 QVector3D average_normal;
                 PolygonList geometry =
                     CrossSection::doCrossSection(mesh, slicing_plane, shift, average_normal, part_sb);
-                if (geometry.isEmpty()) {
-                    continue;
-                }
+                if (geometry.isEmpty()) { continue; }
 
-                if (combined_geometry.isEmpty()) {
-                    combined_geometry = geometry;
-                }
-                else {
-                    combined_geometry += geometry;
-                }
+                if (combined_geometry.isEmpty()) { combined_geometry = geometry; }
+                else { combined_geometry += geometry; }
             }
 
             has_geometry = has_geometry || !combined_geometry.isEmpty();
@@ -510,16 +462,10 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                 QVector3D average_normal;
                 PolygonList geometry =
                     CrossSection::doCrossSection(mesh, slicing_plane, shift, average_normal, part_sb);
-                if (geometry.isEmpty()) {
-                    continue;
-                }
+                if (geometry.isEmpty()) { continue; }
 
-                if (combined_geometry.isEmpty()) {
-                    combined_geometry = geometry;
-                }
-                else {
-                    combined_geometry += geometry;
-                }
+                if (combined_geometry.isEmpty()) { combined_geometry = geometry; }
+                else { combined_geometry += geometry; }
             }
 
             has_geometry = has_geometry || !combined_geometry.isEmpty();
@@ -535,9 +481,9 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
 
         emitComputeProgress(parts_processed, 0.0);
         Point current_location(center.x(), center.y(), first_bead_z());
-        int helical_layer_number = 0;
+        int helical_layer_number         = 0;
         const int estimated_radius_count = estimateInclusiveCount(first_radius, max_radius, layer_height);
-        int radii_processed = 0;
+        int radii_processed              = 0;
         for (Distance radius = first_radius; radius <= max_radius; radius += layer_height) {
             QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
             layer_settings->makeLocalAdjustments(helical_layer_number);
@@ -556,17 +502,13 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
 
             const Distance max_path_length = layer_settings->setting<Distance>(PS::Slicing::kMaxHelicalPathLength);
             for (const Polyline& line : clipped_lines) {
-                if (line.size() < 2) {
-                    continue;
-                }
+                if (line.size() < 2) { continue; }
 
                 const QVector<Polyline> path_lines = splitPolylineByLength(line, max_path_length);
                 for (const Polyline& path_line : path_lines) {
                     Path path =
                         createPath(path_line, layer_settings, center, radius, helix_counterclockwise, current_location);
-                    if (path.size() > 0) {
-                        helical_layer->addPath(path);
-                    }
+                    if (path.size() > 0) { helical_layer->addPath(path); }
                 }
             }
 
@@ -630,7 +572,7 @@ void HelicalSlicer::writeGCode() {
     QTextStream stream(&m_temp_gcode_output_file);
 
     const double num_layers = std::max(1.0, static_cast<double>(m_helical_layers.size()));
-    int layer_number = 0;
+    int layer_number        = 0;
     for (const QSharedPointer<HelicalLayer>& layer : m_helical_layers) {
         stream << m_base->writeLayerChange(layer_number);
         stream << m_base->writeBeforeLayer(layer->getMinZ(), layer->getSb());
@@ -646,9 +588,7 @@ void HelicalSlicer::writeGCode() {
 }
 
 QSharedPointer<MeshBase> HelicalSlicer::copyMesh(const QSharedPointer<MeshBase>& mesh) {
-    if (mesh == nullptr) {
-        return nullptr;
-    }
+    if (mesh == nullptr) { return nullptr; }
 
     if (ClosedMesh* closed_mesh = dynamic_cast<ClosedMesh*>(mesh.get())) {
         return QSharedPointer<ClosedMesh>::create(*closed_mesh);
@@ -679,14 +619,12 @@ Point HelicalSlicer::helicalCenterForPart(const QSharedPointer<SettingsBase>& pa
 double HelicalSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>& meshes, const Point& center) {
     double max_radius = 0.0;
     for (const QSharedPointer<MeshBase>& mesh : meshes) {
-        if (mesh == nullptr) {
-            continue;
-        }
+        if (mesh == nullptr) { continue; }
 
         for (const MeshVertex& vertex : mesh->vertices()) {
             const double dx = static_cast<double>(vertex.location.x() - center.x());
             const double dy = static_cast<double>(vertex.location.y() - center.y());
-            max_radius = std::max(max_radius, std::hypot(dx, dy));
+            max_radius      = std::max(max_radius, std::hypot(dx, dy));
         }
     }
     return max_radius;
@@ -695,15 +633,11 @@ double HelicalSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>
 Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distance start_z, Distance top_z,
                                     Distance bead_width, HelicalPathHandedness handedness, Angle start_angle) {
     Polyline helix;
-    if (top_z <= start_z || bead_width <= 0) {
-        return helix;
-    }
+    if (top_z <= start_z || bead_width <= 0) { return helix; }
 
     const double vertical_rise_per_radian = bead_width() / (2.0 * M_PI);
-    const double max_t = (top_z() - start_z()) / vertical_rise_per_radian;
-    if (max_t <= 0.0) {
-        return helix;
-    }
+    const double max_t                    = (top_z() - start_z()) / vertical_rise_per_radian;
+    if (max_t <= 0.0) { return helix; }
 
     const double length_per_radian = std::hypot(radius(), vertical_rise_per_radian);
     const Distance target_segment_length =
@@ -714,7 +648,7 @@ Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distan
     helix.reserve(segments + 1);
     const double direction = handedness == HelicalPathHandedness::kLeftHanded ? -1.0 : 1.0;
     for (int i = 0; i <= segments; ++i) {
-        const double t = max_t * static_cast<double>(i) / static_cast<double>(segments);
+        const double t     = max_t * static_cast<double>(i) / static_cast<double>(segments);
         const double angle = start_angle() + direction * t;
         helix.push_back(Point(center.x() + radius() * std::cos(angle), center.y() + radius() * std::sin(angle),
                               start_z() + vertical_rise_per_radian * t));
@@ -743,35 +677,28 @@ QSharedPointer<SettingsBase> HelicalSlicer::createSegmentSettings(const QSharedP
 Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings,
                                const Point& center, Distance radius, bool counterclockwise, Point& current_location) {
     Path path;
-    if (polyline.size() < 2) {
-        return path;
-    }
+    if (polyline.size() < 2) { return path; }
 
-    const bool write_arcs = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
-    const int arcs_per_revolution = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
-    const QVector<Point> arc_points =
-        write_arcs
-            ? SlicingUtilities::GetCylindricalArcPoints(polyline, center, radius, arcs_per_revolution, counterclockwise)
-            : QVector<Point>();
-    const Point path_start = arc_points.size() > 1 ? arc_points.first() : polyline.first();
-    const Point path_end = arc_points.size() > 1 ? arc_points.last() : polyline.last();
+    const bool write_arcs           = layer_settings->setting<bool>(PRS::MachineSetup::kSupportG3);
+    const int arcs_per_revolution   = std::max(1, layer_settings->setting<int>(PS::Slicing::kArcsPerRevolution));
+    const QVector<Point> arc_points = write_arcs ? SlicingUtilities::GetCylindricalArcPoints(
+                                                       polyline, center, radius, arcs_per_revolution, counterclockwise)
+                                                 : QVector<Point>();
+    const Point path_start          = arc_points.size() > 1 ? arc_points.first() : polyline.first();
+    const Point path_end            = arc_points.size() > 1 ? arc_points.last() : polyline.last();
 
     QSharedPointer<SettingsBase> region_start_settings = createSegmentSettings(layer_settings, center, true);
-    QSharedPointer<SettingsBase> print_settings = createSegmentSettings(layer_settings, center, false);
+    QSharedPointer<SettingsBase> print_settings        = createSegmentSettings(layer_settings, center, false);
     QSharedPointer<TravelSegment> travel = QSharedPointer<TravelSegment>::create(current_location, path_start);
     travel->setSb(region_start_settings);
 
-    if (current_location.distance(path_start) > kMinPathSegmentLength) {
-        path.add(travel);
-    }
+    if (current_location.distance(path_start) > kMinPathSegmentLength) { path.add(travel); }
 
     if (arc_points.size() > 1) {
         for (int i = 1, end = arc_points.size(); i < end; ++i) {
             const bool is_arc = SlicingUtilities::IsCylindricalArcSegment(
                 arc_points[i - 1], arc_points[i], center, radius, arcs_per_revolution, counterclockwise);
-            if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) {
-                continue;
-            }
+            if (!is_arc && arc_points[i - 1].distance(arc_points[i]) <= kMinPathSegmentLength) { continue; }
 
             QSharedPointer<SegmentBase> segment;
             if (is_arc) {
@@ -780,9 +707,7 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
                 segment =
                     QSharedPointer<ArcSegment>::create(arc_points[i - 1], arc_points[i], arc_center, counterclockwise);
             }
-            else {
-                segment = QSharedPointer<LineSegment>::create(arc_points[i - 1], arc_points[i]);
-            }
+            else { segment = QSharedPointer<LineSegment>::create(arc_points[i - 1], arc_points[i]); }
 
             segment->setSb(i == 1 ? region_start_settings : print_settings);
             path.add(segment);
@@ -790,9 +715,7 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
     }
     else {
         for (int i = 1, end = polyline.size(); i < end; ++i) {
-            if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) {
-                continue;
-            }
+            if (polyline[i - 1].distance(polyline[i]) <= kMinPathSegmentLength) { continue; }
 
             QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(polyline[i - 1], polyline[i]);
             segment->setSb(i == 1 ? region_start_settings : print_settings);
@@ -800,10 +723,8 @@ Path HelicalSlicer::createPath(const Polyline& polyline, const QSharedPointer<Se
         }
     }
 
-    if (path.size() > 0) {
-        current_location = path_end;
-    }
+    if (path.size() > 0) { current_location = path_end; }
 
     return path;
 }
-} // namespace ORNL
+}  // namespace ORNL

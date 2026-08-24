@@ -1,8 +1,8 @@
 #include "gcode/parsers/mazak_parser.h"
 
+#include <QStringBuilder>
 #include <functional>
 
-#include <QStringBuilder>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 
@@ -12,7 +12,7 @@
 namespace ORNL {
 MazakParser::MazakParser(GcodeMeta meta, bool allowLayerAlter, QStringList& lines, QStringList& upperLines)
     : CommonParser(meta, allowLayerAlter, lines, upperLines) {
-    m_f_parameter = QChar('F');
+    m_f_parameter        = QChar('F');
     m_feedrate_reference = "#981";
     config();
 }
@@ -43,21 +43,19 @@ void MazakParser::G1Handler(QVector<QString> params) {
 
 // G441 (Turn Laser ON)
 void MazakParser::G441Handler(QVector<QString> params) {
-    if (!params.empty()) {
-        return;
-    }
+    if (!params.empty()) { return; }
 
     m_deposition_active = true;
 }
 
 // G442 (LASER OFF)
 void MazakParser::G442Handler(QVector<QString> params) {
-    if (!params.empty()) {
-        return;
-    }
+    if (!params.empty()) { return; }
 
     m_deposition_active = false;
 }
 
-void MazakParser::FeedRateHandler(QVector<QString> params) { m_feedrate = "F" % params[1]; }
-} // namespace ORNL
+void MazakParser::FeedRateHandler(QVector<QString> params) {
+    m_feedrate = "F" % params[1];
+}
+}  // namespace ORNL

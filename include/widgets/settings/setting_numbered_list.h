@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QTableWidget>
+
 #include <qgridlayout.h>
 #include <qlist.h>
 #include <qobject.h>
@@ -23,7 +24,7 @@ class SettingTab;
 class SettingNumberedList : public QTableWidget, public SettingRowBase {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Default Constructor
     //! \param parent: parent settingtab to setup events
     //! \param sb: global setting base
@@ -50,7 +51,7 @@ class SettingNumberedList : public QTableWidget, public SettingRowBase {
     //! \param enabled: enable/disable state
     void setEnabled(bool enabled) override;
 
-  signals:
+   signals:
     //! \brief Signal emitted when setting is modified by user
     //! \param key: key of setting modified
     void modified(QString key);
@@ -60,7 +61,7 @@ class SettingNumberedList : public QTableWidget, public SettingRowBase {
     //! warning, 0 does nothing.
     void warnParent(int count);
 
-  public slots:
+   public slots:
     //! \brief Slot to handle when user manually changes value
     //! \param val: value cast to appropriate type within each class
     virtual void valueChanged(QVariant val) override;
@@ -77,7 +78,7 @@ class SettingNumberedList : public QTableWidget, public SettingRowBase {
     //! \param event: captured drop event
     virtual void dropEvent(QDropEvent* event) override;
 
-  protected:
+   protected:
     //! \brief Sets error notification when dynamic dependency check fails
     //! \param msg: Message to display
     virtual void setNotification(QString msg) override;
@@ -88,4 +89,4 @@ class SettingNumberedList : public QTableWidget, public SettingRowBase {
     //! \brief Keeps track of if a warning has been emitted or not.
     bool m_warn;
 };
-} // namespace ORNL
+}  // namespace ORNL

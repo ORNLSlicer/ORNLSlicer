@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Meltio syntax
  */
 class MeltioWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     MeltioWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -78,7 +78,7 @@ class MeltioWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm, int extruder_number);
     //! \brief Writes G-Code to disable the extruder
@@ -94,5 +94,5 @@ class MeltioWriter : public WriterBase {
     //! \brief true is first print motion of the layer
     bool m_layer_start;
 
-}; // class MeltioWriter
-} // namespace ORNL
+};  // class MeltioWriter
+}  // namespace ORNL

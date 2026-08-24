@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
 #include <qmath.h>
@@ -107,9 +108,7 @@ void GCodeAMCMSaver::run() {
                newline;
     out << "PTP {A1 2.22261,A2 -70.64010,A3 83.97050,A4 103.99200,A5 44.42060,A6 -109.23300,E1 0.00000} C_PTP" %
                newline;
-    if (GSM->getGlobal()->setting<int>(ES::FileOutput::kAMCMDataLogging)) {
-        out << "Logging_Enabled=TRUE" % newline;
-    }
+    if (GSM->getGlobal()->setting<int>(ES::FileOutput::kAMCMDataLogging)) { out << "Logging_Enabled=TRUE" % newline; }
 
     QString line;
 
@@ -119,8 +118,8 @@ void GCodeAMCMSaver::run() {
             velocity = QString::number(
                 GSM->getGlobal()->setting<Velocity>(PS::Travel::kSpeed).to(m_selected_meta.m_velocity_unit) / 1000.0 /
                     60.0,
-                'f', 4); // Meta uses mm/min, but AMCM needs m/s
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+                'f', 4);  // Meta uses mm/min, but AMCM needs m/s
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G0) {
@@ -143,7 +142,7 @@ void GCodeAMCMSaver::run() {
                        ", E1 0.000} C_DIS" % newline;
         }
         else if (line.startsWith(G1)) {
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G1) {
@@ -202,11 +201,9 @@ void GCodeAMCMSaver::run() {
     }
 
     out << "CHAMP_EXTR_SYNC=FALSE" % newline;
-    if (GSM->getGlobal()->setting<int>(ES::FileOutput::kAMCMDataLogging)) {
-        out << "Logging_Enabled=FALSE" % newline;
-    }
+    if (GSM->getGlobal()->setting<int>(ES::FileOutput::kAMCMDataLogging)) { out << "Logging_Enabled=FALSE" % newline; }
     out << newline % "END";
     file.close();
 }
 
-} // namespace ORNL
+}  // namespace ORNL

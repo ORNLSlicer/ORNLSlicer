@@ -2,6 +2,7 @@
 
 #include <QPair>
 #include <QVector>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -29,7 +30,7 @@ namespace ORNL {
  * Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
-  public:
+   public:
     /*!
      * @brief Constructs an Arc Specialties writer.
      * @param meta Gcode syntax metadata for output units and comments.
@@ -156,7 +157,7 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the welder
     QString writeWelderOn();
     /*!
@@ -322,4 +323,4 @@ class ArcSpecialtiesWriter : public WriterBase {
     //! @brief Effective part-local handedness values reported in helical G-code headers.
     QVector<QPair<QString, HelicalPathHandedness>> m_helical_path_handedness;
 };
-} // namespace ORNL
+}  // namespace ORNL

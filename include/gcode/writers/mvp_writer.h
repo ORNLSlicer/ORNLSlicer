@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Cincinnati Inc. syntax
  */
 class MVPWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     MVPWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -74,7 +74,7 @@ class MVPWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
     //! \brief Writes G-Code to disable the extruder
@@ -93,5 +93,5 @@ class MVPWriter : public WriterBase {
 
     AngularVelocity m_current_rpm;
 
-}; // class MVPWriter
-} // namespace ORNL
+};  // class MVPWriter
+}  // namespace ORNL

@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QGraphicsDropShadowEffect>
+
 #include <qboxlayout.h>
 #include <qcheckbox.h>
 #include <qcombobox.h>
@@ -46,7 +47,7 @@ void ToolbarInput::setWrapping(bool w) {
 
 void ToolbarInput::setModel(QSharedPointer<PartMetaModel> m, ModelTrackingType type) {
     m_model = m;
-    m_type = type;
+    m_type  = type;
 
     switch (type) {
         case ModelTrackingType::kTranslation: {
@@ -101,8 +102,7 @@ void ToolbarInput::setValue(Axis axis, double val) {
 }
 
 void ToolbarInput::setIndex(int index) {
-    if (m_combo != nullptr)
-        m_combo->setCurrentIndex(index);
+    if (m_combo != nullptr) m_combo->setCurrentIndex(index);
 }
 
 double ToolbarInput::getValue(Axis axis) {
@@ -126,11 +126,17 @@ void ToolbarInput::setMaximumValue(double val) {
     m_input_z->setMaximum(val);
 }
 
-void ToolbarInput::setMaximumXValue(double val) { m_input_x->setMaximum(val); }
+void ToolbarInput::setMaximumXValue(double val) {
+    m_input_x->setMaximum(val);
+}
 
-void ToolbarInput::setMaximumYValue(double val) { m_input_y->setMaximum(val); }
+void ToolbarInput::setMaximumYValue(double val) {
+    m_input_y->setMaximum(val);
+}
 
-void ToolbarInput::setMaximumZValue(double val) { m_input_z->setMaximum(val); }
+void ToolbarInput::setMaximumZValue(double val) {
+    m_input_z->setMaximum(val);
+}
 
 void ToolbarInput::setMinimumValue(double val) {
     m_input_x->setMinimum(val);
@@ -138,23 +144,36 @@ void ToolbarInput::setMinimumValue(double val) {
     m_input_z->setMinimum(val);
 }
 
-void ToolbarInput::setMinimumXValue(double val) { m_input_x->setMinimum(val); }
+void ToolbarInput::setMinimumXValue(double val) {
+    m_input_x->setMinimum(val);
+}
 
-void ToolbarInput::setMinimumYValue(double val) { m_input_y->setMinimum(val); }
+void ToolbarInput::setMinimumYValue(double val) {
+    m_input_y->setMinimum(val);
+}
 
-void ToolbarInput::setMinimumZValue(double val) { m_input_z->setMinimum(val); }
+void ToolbarInput::setMinimumZValue(double val) {
+    m_input_z->setMinimum(val);
+}
 
-void ToolbarInput::setUnitText(QString unit) { m_label_unit->setText(unit); }
+void ToolbarInput::setUnitText(QString unit) {
+    m_label_unit->setText(unit);
+}
 
-void ToolbarInput::setXText(QString x) { m_label_x->setText(x); }
+void ToolbarInput::setXText(QString x) {
+    m_label_x->setText(x);
+}
 
-void ToolbarInput::setYText(QString y) { m_label_y->setText(y); }
+void ToolbarInput::setYText(QString y) {
+    m_label_y->setText(y);
+}
 
-void ToolbarInput::setZText(QString z) { m_label_z->setText(z); }
+void ToolbarInput::setZText(QString z) {
+    m_label_z->setText(z);
+}
 
 void ToolbarInput::readValue(double val) {
-    if (m_model.isNull() || m_selected_item.isNull())
-        return;
+    if (m_model.isNull() || m_selected_item.isNull()) return;
 
     QVector3D new_val;
 
@@ -178,8 +197,8 @@ void ToolbarInput::readValue(double val) {
         }
 
         case ModelTrackingType::kRotation: {
-            Angle conv = deg;
-            Angle pm_ang = PreferencesManager::getInstance()->getAngleUnit();
+            Angle conv    = deg;
+            Angle pm_ang  = PreferencesManager::getInstance()->getAngleUnit();
             double conv_d = conv.to(pm_ang);
 
             QObject::disconnect(m_model.get(), &PartMetaModel::transformUpdate, this,
@@ -204,8 +223,7 @@ void ToolbarInput::readValue(double val) {
 }
 
 void ToolbarInput::readUnit(int index) {
-    if (m_model.isNull() || m_selected_item.isNull())
-        return;
+    if (m_model.isNull() || m_selected_item.isNull()) return;
 
     Distance conversion;
     switch (index) {
@@ -308,8 +326,7 @@ void ToolbarInput::modelSelectionUpdate(QSharedPointer<PartMetaItem> item) {
 }
 
 void ToolbarInput::modelTranslationUpdate(QSharedPointer<PartMetaItem> item) {
-    if (m_selected_item != item)
-        return;
+    if (m_selected_item != item) return;
 
     Distance conv;
     Distance pm_dist = PreferencesManager::getInstance()->getDistanceUnit();
@@ -333,11 +350,10 @@ void ToolbarInput::modelTranslationUpdate(QSharedPointer<PartMetaItem> item) {
 }
 
 void ToolbarInput::modelRotationUpdate(QSharedPointer<PartMetaItem> item) {
-    if (m_selected_item != item)
-        return;
+    if (m_selected_item != item) return;
 
-    Angle conv = deg;
-    Angle pm_ang = PreferencesManager::getInstance()->getAngleUnit();
+    Angle conv    = deg;
+    Angle pm_ang  = PreferencesManager::getInstance()->getAngleUnit();
     double conv_d = conv.to(pm_ang);
 
     QVector3D r = m_selected_item->rotation().toEulerAngles();
@@ -356,8 +372,7 @@ void ToolbarInput::modelRotationUpdate(QSharedPointer<PartMetaItem> item) {
 }
 
 void ToolbarInput::modelScaleUpdate(QSharedPointer<PartMetaItem> item) {
-    if (item != m_selected_item)
-        return;
+    if (item != m_selected_item) return;
 
     Distance conversion;
     switch (item->scaleUnitIndex()) {
@@ -403,8 +418,7 @@ void ToolbarInput::modelScaleUpdate(QSharedPointer<PartMetaItem> item) {
 }
 
 void ToolbarInput::modelRemovalUpdate(QSharedPointer<PartMetaItem> item) {
-    if (item == m_selected_item)
-        m_selected_item = nullptr;
+    if (item == m_selected_item) m_selected_item = nullptr;
 }
 
 void ToolbarInput::setupWidget() {
@@ -486,7 +500,9 @@ void ToolbarInput::setupStyle() {
     style->close();
 }
 
-void ToolbarInput::setupLayouts() { m_layout = new QHBoxLayout(this); }
+void ToolbarInput::setupLayouts() {
+    m_layout = new QHBoxLayout(this);
+}
 
 void ToolbarInput::setupInsert() {
     this->setLayout(m_layout);
@@ -556,11 +572,17 @@ QFrame* ToolbarInput::buildSeparator() {
     return line;
 }
 
-void ToolbarInput::disableX(bool has_settings_part) { m_input_x->setDisabled(has_settings_part); }
+void ToolbarInput::disableX(bool has_settings_part) {
+    m_input_x->setDisabled(has_settings_part);
+}
 
-void ToolbarInput::disableY(bool has_settings_part) { m_input_y->setDisabled(has_settings_part); }
+void ToolbarInput::disableY(bool has_settings_part) {
+    m_input_y->setDisabled(has_settings_part);
+}
 
-void ToolbarInput::disableZ(bool has_settings_part) { m_input_z->setDisabled(has_settings_part); }
+void ToolbarInput::disableZ(bool has_settings_part) {
+    m_input_z->setDisabled(has_settings_part);
+}
 
 void ToolbarInput::disableCombo(bool has_settings_part) {
     m_combo->setDisabled(has_settings_part);
@@ -572,4 +594,4 @@ void ToolbarInput::setPrecision(uint decimals) {
     m_input_y->setDecimals(decimals);
     m_input_z->setDecimals(decimals);
 }
-} // namespace ORNL
+}  // namespace ORNL

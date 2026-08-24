@@ -1,10 +1,10 @@
 #pragma once
 
+#include <QCoreApplication>
+#include <QMessageBox>
 #include <cstdint>
 #include <stdexcept>
 
-#include <QCoreApplication>
-#include <QMessageBox>
 #include <qcolor.h>
 #include <qtcoreexports.h>
 
@@ -27,14 +27,14 @@ enum MeshType { kBuild, kClipping, kSettings, kSupport };
  * \brief types of meshes that can be generated
  */
 enum MeshGeneratorType {
-    kNone = 0,
+    kNone                 = 0,
     kDefaultSettingRegion = 1,
-    kOpenTopBox = 2,
-    kRectangularBox = 3,
-    kTriangularPyramid = 4,
-    kCylinder = 5,
-    kCone = 6,
-    kHexagonalPrism = 7
+    kOpenTopBox           = 2,
+    kRectangularBox       = 3,
+    kTriangularPyramid    = 4,
+    kCylinder             = 5,
+    kCone                 = 6,
+    kHexagonalPrism       = 7
 };
 
 /*! \enum BuildVolumeType
@@ -182,20 +182,20 @@ inline QString toString(CylinderAxisSource mode) {
  * \enum AffectedArea
  * \brief The AffectedArea enum
  */
-enum class AffectedArea : int // was uint8_t
+enum class AffectedArea : int  // was uint8_t
 {
-    kNone = 0,
-    kPerimeter = 1 << 0,
-    kInset = 1 << 1,
-    kInfill = 1 << 2,
-    kTopSkin = 1 << 3,
-    kBottomSkin = 1 << 4,
-    kSkin = 1 << 5,
-    kSupport = 1 << 6,
-    kRaft = 1 << 7,
-    kBrim = 1 << 8,
-    kSkirt = 1 << 9,
-    kLaserScan = 1 << 10,
+    kNone        = 0,
+    kPerimeter   = 1 << 0,
+    kInset       = 1 << 1,
+    kInfill      = 1 << 2,
+    kTopSkin     = 1 << 3,
+    kBottomSkin  = 1 << 4,
+    kSkin        = 1 << 5,
+    kSupport     = 1 << 6,
+    kRaft        = 1 << 7,
+    kBrim        = 1 << 8,
+    kSkirt       = 1 << 9,
+    kLaserScan   = 1 << 10,
     kThermalScan = 1 << 11
 };
 
@@ -226,38 +226,38 @@ inline ThemeName themeFromString(const QString& theme) {
  * @brief Available output syntaxes and parser/writer dialects.
  */
 enum class GcodeSyntax : uint8_t {
-    kBeam = 0,
-    kCincinnati = 1,
-    kCommon = 2,
-    kDmgDmu = 3,
-    kGudel = 4,
-    kHaasInch = 5,
-    kHaasMetric = 6,
+    kBeam                 = 0,
+    kCincinnati           = 1,
+    kCommon               = 2,
+    kDmgDmu               = 3,
+    kGudel                = 4,
+    kHaasInch             = 5,
+    kHaasMetric           = 6,
     kHaasMetricNoComments = 7,
-    kHurco = 8,
-    kIngersoll = 9,
-    kMarlin = 10,
-    kJuggerBot = 11,
-    kMazak = 12,
-    kMVP = 13,
-    kRomiFanuc = 14,
-    kSiemens = 15,
-    kThermwood = 16,
-    kWolf = 17,
-    kRepRap = 18,
-    kMach4 = 19,
-    kAeroBasic = 20,
-    kMeld = 21,
-    kORNL = 22,
-    kOkuma = 23,
-    kTormach = 24,
-    kAML3D = 25,
-    kKraussMaffei = 26,
-    kSandia = 27,
-    kMeltio = 28,
-    kAdamantine = 29,
-    kORNLMetric = 30,
-    kArcSpecialties = 31
+    kHurco                = 8,
+    kIngersoll            = 9,
+    kMarlin               = 10,
+    kJuggerBot            = 11,
+    kMazak                = 12,
+    kMVP                  = 13,
+    kRomiFanuc            = 14,
+    kSiemens              = 15,
+    kThermwood            = 16,
+    kWolf                 = 17,
+    kRepRap               = 18,
+    kMach4                = 19,
+    kAeroBasic            = 20,
+    kMeld                 = 21,
+    kORNL                 = 22,
+    kOkuma                = 23,
+    kTormach              = 24,
+    kAML3D                = 25,
+    kKraussMaffei         = 26,
+    kSandia               = 27,
+    kMeltio               = 28,
+    kAdamantine           = 29,
+    kORNLMetric           = 30,
+    kArcSpecialties       = 31
 };
 
 inline QString toString(GcodeSyntax syntax) {
@@ -333,13 +333,13 @@ inline QString toString(GcodeSyntax syntax) {
  * \brief The InfillPatterns enum
  */
 enum class InfillPatterns : uint8_t {
-    kLines = 0,
-    kGrid = 1,
-    kConcentric = 2,
-    kTriangles = 3,
+    kLines                = 0,
+    kGrid                 = 1,
+    kConcentric           = 2,
+    kTriangles            = 3,
     kHexagonsAndTriangles = 4,
-    kHoneycomb = 5,
-    kRadialHatch = 6
+    kHoneycomb            = 5,
+    kRadialHatch          = 6
 };
 
 //! \brief Function for going from json to InfillPatterns
@@ -372,11 +372,11 @@ inline QString toString(InfillPatterns infill_type) {
  * \brief Types of regions, used to lookup when dealing with abstract region.
  */
 enum class RegionType : int {
-    kUnknown = 0,
+    kUnknown   = 0,
     kPerimeter = 1 << 0,
-    kInset = 1 << 1,
-    kInfill = 1 << 2,
-    kSkin = 1 << 3,
+    kInset     = 1 << 1,
+    kInfill    = 1 << 2,
+    kSkin      = 1 << 3,
     kSkirt,
     kBrim,
     kRaft,
@@ -413,54 +413,32 @@ inline constexpr RegionType operator|(const RegionType& lhs, const RegionType& r
     return static_cast<RegionType>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
-inline RegionType& operator|=(RegionType& lhs, const RegionType& rhs) { return lhs = lhs | rhs; }
+inline RegionType& operator|=(RegionType& lhs, const RegionType& rhs) {
+    return lhs = lhs | rhs;
+}
 
 inline constexpr RegionType operator&(const RegionType& lhs, const RegionType& rhs) {
     return static_cast<RegionType>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 
-inline RegionType& operator&=(RegionType& lhs, const RegionType& rhs) { return lhs = lhs & rhs; }
+inline RegionType& operator&=(RegionType& lhs, const RegionType& rhs) {
+    return lhs = lhs & rhs;
+}
 
 inline RegionType fromString(QString type) {
-    if (type == Constants::RegionTypeStrings::kUnknown) {
-        return RegionType::kUnknown;
-    }
-    else if (type == Constants::RegionTypeStrings::kPerimeter) {
-        return RegionType::kPerimeter;
-    }
-    else if (type == Constants::RegionTypeStrings::kInset) {
-        return RegionType::kInset;
-    }
-    else if (type == Constants::RegionTypeStrings::kSkin) {
-        return RegionType::kSkin;
-    }
-    else if (type == Constants::RegionTypeStrings::kInfill) {
-        return RegionType::kInfill;
-    }
-    else if (type == Constants::RegionTypeStrings::kSupport) {
-        return RegionType::kSupport;
-    }
-    else if (type == Constants::RegionTypeStrings::kSupportRoof) {
-        return RegionType::kSupportRoof;
-    }
-    else if (type == Constants::RegionTypeStrings::kRaft) {
-        return RegionType::kRaft;
-    }
-    else if (type == Constants::RegionTypeStrings::kBrim) {
-        return RegionType::kBrim;
-    }
-    else if (type == Constants::RegionTypeStrings::kSkirt) {
-        return RegionType::kSkirt;
-    }
-    else if (type == Constants::RegionTypeStrings::kLaserScan) {
-        return RegionType::kLaserScan;
-    }
-    else if (type == Constants::RegionTypeStrings::kThermalScan) {
-        return RegionType::kThermalScan;
-    }
-    else if (type == Constants::RegionTypeStrings::kSkeleton) {
-        return RegionType::kSkeleton;
-    }
+    if (type == Constants::RegionTypeStrings::kUnknown) { return RegionType::kUnknown; }
+    else if (type == Constants::RegionTypeStrings::kPerimeter) { return RegionType::kPerimeter; }
+    else if (type == Constants::RegionTypeStrings::kInset) { return RegionType::kInset; }
+    else if (type == Constants::RegionTypeStrings::kSkin) { return RegionType::kSkin; }
+    else if (type == Constants::RegionTypeStrings::kInfill) { return RegionType::kInfill; }
+    else if (type == Constants::RegionTypeStrings::kSupport) { return RegionType::kSupport; }
+    else if (type == Constants::RegionTypeStrings::kSupportRoof) { return RegionType::kSupportRoof; }
+    else if (type == Constants::RegionTypeStrings::kRaft) { return RegionType::kRaft; }
+    else if (type == Constants::RegionTypeStrings::kBrim) { return RegionType::kBrim; }
+    else if (type == Constants::RegionTypeStrings::kSkirt) { return RegionType::kSkirt; }
+    else if (type == Constants::RegionTypeStrings::kLaserScan) { return RegionType::kLaserScan; }
+    else if (type == Constants::RegionTypeStrings::kThermalScan) { return RegionType::kThermalScan; }
+    else if (type == Constants::RegionTypeStrings::kSkeleton) { return RegionType::kSkeleton; }
     throw UnknownRegionTypeException("Cannot convert this string to RegionType");
 }
 
@@ -501,20 +479,20 @@ inline QString toString(RegionType region_type) {
  * \brief The PathModifiers enum
  */
 enum class PathModifiers : uint16_t {
-    kNone = 0,
-    kReverseTipWipe = 1 << 0,
-    kForwardTipWipe = 1 << 1,
-    kPerimeterTipWipe = 1 << 2, // Rename to not include perimeter
-    kAngledTipWipe = 1 << 3,
-    kInitialStartup = 1 << 4,
-    kSlowDown = 1 << 5,
-    kCoasting = 1 << 6,
-    kPrestart = 1 << 7,
-    kSpiralLift = 1 << 8,
-    kRampingUp = 1 << 9,
-    kRampingDown = 1 << 10,
-    kLeadIn = 1 << 11,
-    kFlyingStart = 1 << 12
+    kNone             = 0,
+    kReverseTipWipe   = 1 << 0,
+    kForwardTipWipe   = 1 << 1,
+    kPerimeterTipWipe = 1 << 2,  // Rename to not include perimeter
+    kAngledTipWipe    = 1 << 3,
+    kInitialStartup   = 1 << 4,
+    kSlowDown         = 1 << 5,
+    kCoasting         = 1 << 6,
+    kPrestart         = 1 << 7,
+    kSpiralLift       = 1 << 8,
+    kRampingUp        = 1 << 9,
+    kRampingDown      = 1 << 10,
+    kLeadIn           = 1 << 11,
+    kFlyingStart      = 1 << 12
 };
 
 enum class TipWipeDirection { kOptimal = 0, kForward = 1, kReverse = 2, kAngled = 3 };
@@ -523,13 +501,17 @@ inline constexpr PathModifiers operator|(const PathModifiers& lhs, const PathMod
     return static_cast<PathModifiers>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
-inline PathModifiers& operator|=(PathModifiers& lhs, const PathModifiers& rhs) { return lhs = lhs | rhs; }
+inline PathModifiers& operator|=(PathModifiers& lhs, const PathModifiers& rhs) {
+    return lhs = lhs | rhs;
+}
 
 inline constexpr PathModifiers operator&(const PathModifiers& lhs, const PathModifiers& rhs) {
     return static_cast<PathModifiers>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 
-inline PathModifiers& operator&=(PathModifiers& lhs, const PathModifiers& rhs) { return lhs = lhs & rhs; }
+inline PathModifiers& operator&=(PathModifiers& lhs, const PathModifiers& rhs) {
+    return lhs = lhs & rhs;
+}
 
 inline QString toString(PathModifiers modifier_type) {
     switch (modifier_type) {
@@ -570,10 +552,10 @@ inline QString toString(PathModifiers modifier_type) {
  * \brief The Smoothing Type enum
  */
 enum class SmoothingType : uint8_t {
-    kDouglasPeucker = 0,
-    kRadialDistance = 1,
+    kDouglasPeucker        = 0,
+    kRadialDistance        = 1,
     kPerpendicularDistance = 2,
-    kReumannWitkam = 3
+    kReumannWitkam         = 3
 };
 
 /*!
@@ -581,22 +563,22 @@ enum class SmoothingType : uint8_t {
  * \brief The Path/ Island OrderOptimization enum
  */
 enum class IslandOrderOptimization : uint8_t {
-    kNextClosest = 0,
-    kNextFarthest = 1,
+    kNextClosest            = 0,
+    kNextFarthest           = 1,
     kShortestDistanceApprox = 2,
-    kShortestDistanceBrute = 3,
-    kLeastRecentlyVisited = 4,
-    kRandom = 5,
-    kCustomPoint = 6
+    kShortestDistanceBrute  = 3,
+    kLeastRecentlyVisited   = 4,
+    kRandom                 = 5,
+    kCustomPoint            = 6
 };
 
 enum class PathOrderOptimization : uint8_t {
-    kNextClosest = 0,
+    kNextClosest  = 0,
     kNextFarthest = 1,
-    kRandom = 2,
-    kOutsideIn = 3,
-    kInsideOut = 4,
-    kCustomPoint = 5
+    kRandom       = 2,
+    kOutsideIn    = 3,
+    kInsideOut    = 4,
+    kCustomPoint  = 5
 };
 
 inline PathOrderOptimization optionalPathOrderOptimization(int optimization,
@@ -624,11 +606,11 @@ inline bool optionalPathOrderUsesCustomLocation(int optimization) {
 }
 
 enum class PointOrderOptimization : uint8_t {
-    kNextClosest = 0,
-    kNextFarthest = 1,
-    kRandom = 2,
-    kConsecutive = 3,
-    kCustomPoint = 4,
+    kNextClosest         = 0,
+    kNextFarthest        = 1,
+    kRandom              = 2,
+    kConsecutive         = 3,
+    kCustomPoint         = 4,
     kCustomFarthestPoint = 5
 };
 
@@ -654,26 +636,26 @@ enum class Axis : uint8_t { kX, kY, kZ };
 enum class IslandType : uint8_t { kAll, kBrim, kPolymer, kRaft, kLaserScan, kThermalScan, kSkirt, kSupport };
 
 enum class MachineType : uint8_t {
-    kPellet = 0,
-    kFilament = 1,
-    kWire_Arc = 2,
+    kPellet     = 0,
+    kFilament   = 1,
+    kWire_Arc   = 2,
     kLaser_Wire = 3,
-    kConcrete = 4,
-    kThermoset = 5
+    kConcrete   = 4,
+    kThermoset  = 5
 };
 
 enum class PrintMaterial : uint8_t {
-    kABS20CF = 0,
-    kABS = 1,
-    kPPS = 2,
-    kPPS50CF = 3,
-    kPPSU = 4,
+    kABS20CF  = 0,
+    kABS      = 1,
+    kPPS      = 2,
+    kPPS50CF  = 3,
+    kPPSU     = 4,
     kPPSU25CF = 5,
-    kPESU = 6,
+    kPESU     = 6,
     kPESU25CF = 7,
-    kPLA = 8,
+    kPLA      = 8,
     kConcrete = 9,
-    kOther = 10
+    kOther    = 10
 };
 
 // ToDo: QMap might be preferred
@@ -769,9 +751,9 @@ inline QString toString(DisabledSettingVisibility visibility) {
  * the automatic threshold fallback. Thin Lines disables true-width previews.
  */
 enum class GCodePreviewMode : uint8_t {
-    kAuto = 0,
+    kAuto       = 0,
     kTrueWidths = 1,
-    kThinLines = 2,
+    kThinLines  = 2,
 };
 
 inline QString toString(GCodePreviewMode mode) {
@@ -974,11 +956,11 @@ inline constexpr const QColor VisualizationColorsDefaults(VisualizationColors co
 }
 
 enum class SegmentDisplayType : uint8_t {
-    kNone = 0x00,
-    kLine = 1 << 0,
-    kTravel = 1 << 1,
+    kNone    = 0x00,
+    kLine    = 1 << 0,
+    kTravel  = 1 << 1,
     kSupport = 1 << 2,
-    kAll = 0xff
+    kAll     = 0xff
 };
 
 inline constexpr SegmentDisplayType operator|(const SegmentDisplayType& lhs, const SegmentDisplayType& rhs) {
@@ -1007,21 +989,25 @@ inline constexpr TravelLiftType operator|(const TravelLiftType& lhs, const Trave
     return static_cast<TravelLiftType>(static_cast<int>(lhs) | static_cast<int>(rhs));
 }
 
-inline TravelLiftType& operator|=(TravelLiftType& lhs, const TravelLiftType& rhs) { return lhs = lhs | rhs; }
+inline TravelLiftType& operator|=(TravelLiftType& lhs, const TravelLiftType& rhs) {
+    return lhs = lhs | rhs;
+}
 
 inline constexpr TravelLiftType operator&(const TravelLiftType& lhs, const TravelLiftType& rhs) {
     return static_cast<TravelLiftType>(static_cast<int>(lhs) & static_cast<int>(rhs));
 }
 
-inline TravelLiftType& operator&=(TravelLiftType& lhs, const TravelLiftType& rhs) { return lhs = lhs & rhs; }
+inline TravelLiftType& operator&=(TravelLiftType& lhs, const TravelLiftType& rhs) {
+    return lhs = lhs & rhs;
+}
 
 enum class StatusUpdateStepType : uint8_t {
-    kPreProcess = 0,
-    kCompute = 1,
-    kPostProcess = 2,
+    kPreProcess     = 0,
+    kCompute        = 1,
+    kPostProcess    = 2,
     kGcodeGeneraton = 3,
-    kGcodeParsing = 4,
-    kVisualization = 5,
+    kGcodeParsing   = 4,
+    kVisualization  = 5,
 };
 
 inline QString toString(StatusUpdateStepType statusType) {
@@ -1051,4 +1037,4 @@ enum class TormachMode : uint8_t { kMode21 = 0, kMode40 = 1, kMode102 = 2, kMode
 
 enum class PolygonPartition : uint8_t { kConvex = 0, kMonoX = 1, kMonoY = 2 };
 
-} // namespace ORNL
+}  // namespace ORNL

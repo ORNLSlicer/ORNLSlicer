@@ -11,23 +11,25 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
-BSpline::BSpline(const Point& start) { m_knot_points.append(start); }
+BSpline::BSpline(const Point& start) {
+    m_knot_points.append(start);
+}
 
 void BSpline::append(const Point& knot) {
     assert(!m_is_closed && "Cannot add point to closed BSpline!");
 
-    if (knot == m_knot_points.first()) // This point will close the BSpline
+    if (knot == m_knot_points.first())  // This point will close the BSpline
         close();
     else {
         m_knot_points.append(knot);
 
-        if (m_knot_points.size() >= 3) // Compute new control points
+        if (m_knot_points.size() >= 3)  // Compute new control points
         {
             Point& a = m_knot_points[m_knot_points.size() - 3];
             Point& b = m_knot_points[m_knot_points.size() - 2];
             Point& c = m_knot_points[m_knot_points.size() - 1];
 
-            double t = 0.25;
+            double t                = 0.25;
             auto new_control_points = BezierSegment::ComputeControlPoints(a, b, c, t);
 
             m_control_points.append(new_control_points.first);
@@ -50,7 +52,7 @@ void BSpline::close() {
         control_points = BezierSegment::ComputeControlPoints(m_knot_points[m_knot_points.size() - 1], m_knot_points[0],
                                                              m_knot_points[1], t);
         m_control_points.append(control_points.first);
-        m_control_points.prepend(control_points.second); // Prepend this point since it belongs to the first BSpline
+        m_control_points.prepend(control_points.second);  // Prepend this point since it belongs to the first BSpline
 
         m_is_closed = true;
     }
@@ -89,8 +91,8 @@ QVector<QSharedPointer<BezierSegment>> BSpline::toBezierSegments() {
     assert(m_knot_points.size() > 2);
 
     int end = m_knot_points.size();
-    if (!m_is_closed) // If this is not closed, then we need to add extra control points on the ends to handle the
-                      // boundary conditions
+    if (!m_is_closed)  // If this is not closed, then we need to add extra control points on the ends to handle the
+                       // boundary conditions
     {
         // Clone first and last control points
         m_control_points.prepend(m_control_points.first());
@@ -100,7 +102,7 @@ QVector<QSharedPointer<BezierSegment>> BSpline::toBezierSegments() {
 
     for (int i = 0; i < end; ++i) {
         Point start_point = m_knot_points[i];
-        Point end_point = m_knot_points[(i + 1) % m_knot_points.size()];
+        Point end_point   = m_knot_points[(i + 1) % m_knot_points.size()];
 
         Point control_a = m_control_points[(i * 2)];
         Point control_b = m_control_points[(i * 2) + 1];
@@ -110,4 +112,4 @@ QVector<QSharedPointer<BezierSegment>> BSpline::toBezierSegments() {
 
     return segments;
 }
-} // namespace ORNL
+}  // namespace ORNL

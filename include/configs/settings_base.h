@@ -2,6 +2,7 @@
 
 #include <QSharedPointer>
 #include <QString>
+
 #include <nlohmann/json.hpp>
 
 #include "utilities/qt_json_conversion.h"
@@ -13,7 +14,7 @@ namespace ORNL {
  */
 
 class SettingsBase {
-  public:
+   public:
     //! \brief Default Constructor
     SettingsBase();
 
@@ -22,7 +23,8 @@ class SettingsBase {
      *
      * \note This function is templated and needs to stay in the header (best option)
      */
-    template <typename T> void setSetting(QString key, T value, int extruder_index = 0) {
+    template <typename T>
+    void setSetting(QString key, T value, int extruder_index = 0) {
         m_json[extruder_index][key.toStdString()] = value;
     }
 
@@ -31,7 +33,8 @@ class SettingsBase {
      *
      * \note This function is templated and needs to stay in the header (best option)
      */
-    template <typename T> T setting(QString key_root, int extruder_index = 0) const {
+    template <typename T>
+    T setting(QString key_root, int extruder_index = 0) const {
         // If this sb contains the key, return it.
         T return_value;
         // No longer use suffixing so full key is same as root
@@ -41,7 +44,7 @@ class SettingsBase {
             return_value = m_json[extruder_index][key_full.toStdString()].get<T>();
         }
         else {
-            return_value = T(); // Found nothing, return default value.
+            return_value = T();  // Found nothing, return default value.
         }
         return return_value;
     }
@@ -82,8 +85,8 @@ class SettingsBase {
     //! \param the layer number to adjust for
     void makeLocalAdjustments(int layer_number = 0);
 
-  protected:
+   protected:
     // Json array.
     fifojson m_json = fifojson::array({});
 };
-} // namespace ORNL
+}  // namespace ORNL

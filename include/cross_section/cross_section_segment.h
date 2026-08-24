@@ -14,7 +14,7 @@ class MeshVertex;
  * Based on the Cura Engine by Ultimaker
  */
 class CrossSectionSegment {
-  public:
+   public:
     CrossSectionSegment();
 
     //! \brief Start and end points
@@ -35,4 +35,4 @@ class CrossSectionSegment {
     //! \brief Face normal
     QVector3D normal;
 };
-} // namespace ORNL
+}  // namespace ORNL

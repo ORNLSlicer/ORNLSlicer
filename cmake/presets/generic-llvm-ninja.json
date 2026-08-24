@@ -2,22 +2,22 @@
     "version": 6,
     "configurePresets": [
         {
-            "name":        "generic-llvm-ninja",
+            "name": "generic-llvm-ninja",
             "displayName": "Generic (llvm-ninja)",
             "description": "Basic configuration with the LLVM toolchain using Ninja generator.",
-            "generator":   "Ninja Multi-Config",
-            "binaryDir":   "${sourceDir}/build/${presetName}",
+            "generator": "Ninja Multi-Config",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
-                "CMAKE_C_COMPILER":   "clang",
+                "CMAKE_C_COMPILER": "clang",
                 "CMAKE_CXX_COMPILER": "clang++"
             }
         },
         {
-            "name":        "generic-llvm-ninja-fast",
+            "name": "generic-llvm-ninja-fast",
             "displayName": "Generic Fast (llvm-ninja)",
             "description": "LLVM/Ninja configuration with unity builds enabled for faster clean builds.",
-            "inherits":    "generic-llvm-ninja",
-            "binaryDir":   "${sourceDir}/build/${presetName}",
+            "inherits": "generic-llvm-ninja",
+            "binaryDir": "${sourceDir}/build/${presetName}",
             "cacheVariables": {
                 "ORNLSLICER_ENABLE_UNITY_BUILD": "ON"
             }

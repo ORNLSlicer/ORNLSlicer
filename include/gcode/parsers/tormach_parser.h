@@ -16,7 +16,7 @@ namespace ORNL {
  *              - M64, M65
  */
 class TormachParser : public CommonParser {
-  public:
+   public:
     //! \brief Standard constructor that specifies meta type and whether or not
     //! to alter layers for minimal layer time
     //! \param meta GcodeMeta struct that includes information about units and
@@ -30,7 +30,7 @@ class TormachParser : public CommonParser {
     //! \brief Function to initialize syntax specific handlers
     virtual void config();
 
-  protected:
+   protected:
     //! \brief Handler for 'M64' command for turning on extruder
     //! \param params Accepted by function for formatting check, but are not
     //! used for the command
@@ -41,4 +41,4 @@ class TormachParser : public CommonParser {
     //! used for the command
     virtual void M65Handler(QVector<QString> params);
 };
-} // namespace ORNL
+}  // namespace ORNL

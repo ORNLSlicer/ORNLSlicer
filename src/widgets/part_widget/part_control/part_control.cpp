@@ -5,6 +5,7 @@
 #include <QListWidget>
 #include <QMenu>
 #include <QStack>
+
 #include <QtWidgets/QInputDialog>
 #include <qabstractitemview.h>
 #include <qboxlayout.h>
@@ -34,7 +35,9 @@ PartControl::PartControl(QWidget* parent) : QWidget(parent) {
     this->setupEvents();
 }
 
-int PartControl::count() { return m_tree_widget->topLevelItemCount(); }
+int PartControl::count() {
+    return m_tree_widget->topLevelItemCount();
+}
 
 QString PartControl::nameOfFirstPart() {
     return ((PartControlTreeItem*)m_tree_widget->topLevelItem(0))->getPart()->name();
@@ -66,7 +69,7 @@ void PartControl::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
 void PartControl::modelRemovalUpdate(QSharedPointer<PartMetaItem> pm) {
     QList<QTreeWidgetItem*> tl = m_tree_widget->findItems(pm->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
     PartControlTreeItem* tree_item = tree_item = (PartControlTreeItem*)tl.at(0);
-    PartControlTreeItem* tree_item_parent = (PartControlTreeItem*)tree_item->parent();
+    PartControlTreeItem* tree_item_parent      = (PartControlTreeItem*)tree_item->parent();
 
     // Move children to parent.
     QList<QTreeWidgetItem*> child_list = tree_item->takeChildren();
@@ -93,9 +96,7 @@ void PartControl::modelSelectionUpdate(QSharedPointer<PartMetaItem> pm) {
             p = (PartControlTreeItem*)p->parent();
         }
     }
-    else {
-        tree_item->setSelected(false);
-    }
+    else { tree_item->setSelected(false); }
     connect(m_tree_widget, &PartControlTreeWidget::itemSelectionChanged, this, &PartControl::handleSelectionChange);
 }
 
@@ -142,8 +143,7 @@ void PartControl::handleSelectionChange() {
     QList<QTreeWidgetItem*> tl = m_tree_widget->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive);
     for (auto curr_item : tl) {
         QSharedPointer<PartMetaItem> meta = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item);
-        if (meta.isNull())
-            continue;
+        if (meta.isNull()) continue;
 
         if (meta->graphicsPart()->locked()) {
             curr_item->setSelected(false);
@@ -151,12 +151,8 @@ void PartControl::handleSelectionChange() {
         }
 
         // Note: this extra checking here is to prevent unnecessary calls to views.
-        if (curr_item->isSelected() && !meta->isSelected()) {
-            meta->setSelected(true);
-        }
-        else if (!curr_item->isSelected() && meta->isSelected()) {
-            meta->setSelected(false);
-        }
+        if (curr_item->isSelected() && !meta->isSelected()) { meta->setSelected(true); }
+        else if (!curr_item->isSelected() && meta->isSelected()) { meta->setSelected(false); }
     }
 
     QObject::connect(m_model.get(), &PartMetaModel::selectionUpdate, this, &PartControl::modelSelectionUpdate);
@@ -167,18 +163,16 @@ void PartControl::handleParentingChange() {
 
     QList<QTreeWidgetItem*> tl = m_tree_widget->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive);
     for (auto curr_item : tl) {
-        QSharedPointer<PartMetaItem> meta = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item);
+        QSharedPointer<PartMetaItem> meta        = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item);
         QSharedPointer<PartMetaItem> item_parent = m_model->lookupByTreeItem((PartControlTreeItem*)curr_item->parent());
 
         // If the model's parent does not match the item's parent, then we need to update the model.
         if (meta->parent() != item_parent) {
             // Parent orphans the child.
-            if (!meta->parent().isNull())
-                meta->parent()->orphanChild(meta);
+            if (!meta->parent().isNull()) meta->parent()->orphanChild(meta);
 
             // New parent adopts the child.
-            if (!item_parent.isNull())
-                item_parent->adoptChild(meta);
+            if (!item_parent.isNull()) item_parent->adoptChild(meta);
 
             QList<QTreeWidgetItem*> tl =
                 m_tree_widget->findItems(meta->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
@@ -197,9 +191,7 @@ void PartControl::setFloatingStatus(const QString& name, bool status) {
 
     for (auto result : search) {
         auto tree_item = dynamic_cast<PartControlTreeItem*>(result);
-        if (tree_item != nullptr) {
-            tree_item->setFloating(status);
-        }
+        if (tree_item != nullptr) { tree_item->setFloating(status); }
     }
 }
 
@@ -208,9 +200,7 @@ void PartControl::setOutsideStatus(const QString& name, bool status) {
 
     for (auto result : search) {
         auto tree_item = dynamic_cast<PartControlTreeItem*>(result);
-        if (tree_item != nullptr) {
-            tree_item->setOutsideVolume(status);
-        }
+        if (tree_item != nullptr) { tree_item->setOutsideVolume(status); }
     }
 }
 
@@ -264,4 +254,4 @@ void PartControl::setupStyle() {
     effect->setColor(Constants::UI::Common::DropShadow::kColor);
     this->setGraphicsEffect(effect);
 }
-} // namespace ORNL
+}  // namespace ORNL

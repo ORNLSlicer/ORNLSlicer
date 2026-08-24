@@ -17,7 +17,7 @@ class PlaneObject;
  * \brief Printer that uses cartesian coordinates.
  */
 class CartesianPrinterObject : public PrinterObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param view: View to render to.
     //! \param sb: Settings to use.
@@ -31,13 +31,13 @@ class CartesianPrinterObject : public PrinterObject {
     //! \brief List of parts that are external to the build volume.
     QList<QSharedPointer<PartObject>> externalParts();
 
-  protected:
+   protected:
     //! \brief Hook for updating member variables.
     void updateMembers();
     //! \brief Hook for updating printer geometry.
     void updateGeometry();
 
-  private:
+   private:
     //! \brief Dims
     QVector3D m_min;
     QVector3D m_max;
@@ -54,4 +54,4 @@ class CartesianPrinterObject : public PrinterObject {
     //! \brief Reflective floor surface.
     QSharedPointer<PlaneObject> m_floor_plane;
 };
-} // namespace ORNL
+}  // namespace ORNL

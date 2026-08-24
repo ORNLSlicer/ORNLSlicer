@@ -13,6 +13,7 @@
 #include <QToolButton>
 #include <QWheelEvent>
 #include <QWidget>
+
 #include <qhashfunctions.h>
 #include <qnamespace.h>
 #include <qpoint.h>
@@ -30,7 +31,7 @@ namespace ORNL {
  */
 class QSlicerDoubleSpinBox : public QDoubleSpinBox {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param parent required qwidget pointer
     QSlicerDoubleSpinBox(QWidget* parent = 0) : QDoubleSpinBox(parent) {
@@ -38,7 +39,7 @@ class QSlicerDoubleSpinBox : public QDoubleSpinBox {
         setKeyboardTracking(false);
     }
 
-  protected:
+   protected:
     //! \brief mousePressEvent override
     //! \param QMouseEvent pointer
     virtual void mousePressEvent(QMouseEvent* event) {
@@ -69,8 +70,7 @@ class QSlicerDoubleSpinBox : public QDoubleSpinBox {
     //! \brief keyPressEvent override
     //! \param QKeyEvent pointer
     virtual void keyPressEvent(QKeyEvent* event) {
-        if (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down)
-            blockSignals(true);
+        if (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down) blockSignals(true);
         QDoubleSpinBox::keyPressEvent(event);
     }
 
@@ -84,8 +84,7 @@ class QSlicerDoubleSpinBox : public QDoubleSpinBox {
             }
         }
         QDoubleSpinBox::keyReleaseEvent(event);
-        if (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down)
-            blockSignals(false);
+        if (event->key() == Qt::Key_Up || event->key() == Qt::Key_Down) blockSignals(false);
     }
 
     //! \brief focusInEvent override
@@ -105,7 +104,7 @@ class QSlicerDoubleSpinBox : public QDoubleSpinBox {
         QDoubleSpinBox::focusOutEvent(event);
     }
 
-  private:
+   private:
     // Keeps track of the last value
     double m_last_value = 0;
 };
@@ -120,7 +119,7 @@ class PartMetaModel;
  */
 class ToolbarInput : public QFrame {
     Q_OBJECT
-  public:
+   public:
     //! \enum ModelTrackingType
     //! \brief the type of change this box should track
     enum class ModelTrackingType { kTranslation, kRotation, kScale };
@@ -143,7 +142,7 @@ class ToolbarInput : public QFrame {
     //! \param pos the new position
     void setPos(QPoint pos);
 
-  public slots:
+   public slots:
     //! \brief closes this input immediately(no animation)
     void closeInput();
 
@@ -239,7 +238,7 @@ class ToolbarInput : public QFrame {
     //! \brief setup stylesheets for controlling theme
     void setupStyle();
 
-  private slots:
+   private slots:
     //! \brief reads a value
     //! \param val the value to read
     void readValue(double val);
@@ -276,7 +275,7 @@ class ToolbarInput : public QFrame {
     //! \param item the item in question
     void modelRemovalUpdate(QSharedPointer<PartMetaItem> item);
 
-  private:
+   private:
     // Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -340,4 +339,4 @@ class ToolbarInput : public QFrame {
     // Keeps track of the open status
     bool is_open = false;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

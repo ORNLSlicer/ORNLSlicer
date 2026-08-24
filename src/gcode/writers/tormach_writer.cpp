@@ -1,6 +1,7 @@
 #include "gcode/writers/tormach_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -29,19 +30,19 @@ QString TormachWriter::writeSettingsHeader(GcodeSyntax syntax) {
 
 QString TormachWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                          int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_travel = true;
-    m_first_print = true;
-    m_layer_start = true;
-    m_tip_wipe = false;
-    m_min_z = 0.0f;
-    m_bead_number = 0;
-    m_minimum_x = minimum_x;
-    m_maximum_x = maximum_x;
-    m_minimum_y = minimum_y;
-    m_maximum_y = maximum_y;
+    m_first_travel      = true;
+    m_first_print       = true;
+    m_layer_start       = true;
+    m_tip_wipe          = false;
+    m_min_z             = 0.0f;
+    m_bead_number       = 0;
+    m_minimum_x         = minimum_x;
+    m_maximum_x         = maximum_x;
+    m_minimum_y         = minimum_y;
+    m_maximum_y         = maximum_y;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
@@ -69,8 +70,7 @@ QString TormachWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
         m_start_point = Point(minimum_x, minimum_y, 0);
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -81,8 +81,8 @@ QString TormachWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
 
 QString TormachWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
-    m_bead_number = 0;
+    m_layer_start  = true;
+    m_bead_number  = 0;
     QString rv;
     rv += "M1 " % commentLine("OPTIONAL STOP - LAYER CHANGE");
     return rv;
@@ -159,7 +159,7 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -172,7 +172,7 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
 
     // Write the lift
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
 
         rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
@@ -197,13 +197,13 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
     // Write the travel
     Point travel_destination = target_location;
     if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     // Write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
@@ -216,12 +216,12 @@ QString TormachWriter::writeTravel(Point start_location, Point target_location, 
 
 QString TormachWriter::writeLine(const Point& start_point, const Point& target_point,
                                  const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    int material_number = params->setting<int>(SS::kMaterialNumber);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    int rpm                      = params->setting<int>(SS::kExtruderSpeed);
+    int material_number          = params->setting<int>(SS::kMaterialNumber);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
@@ -273,7 +273,7 @@ QString TormachWriter::writeScan(Point target_point, Velocity speed, bool on_off
 QString TormachWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off the extruder
+        rv += writeExtruderOff(0);  // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -409,14 +409,14 @@ QString TormachWriter::writeCoordinates(Point destination) {
 
     Distance target_z = destination.z() + z_offset;
     if (qAbs(target_z - m_last_z) > 10) {
-        if (target_z > -1 && target_z < 1) // fix for small value creating negative 0 g-code output
+        if (target_z > -1 && target_z < 1)  // fix for small value creating negative 0 g-code output
         {
             target_z = 0;
         }
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -6,6 +6,7 @@
 #include <QLabel>
 #include <QPalette>
 #include <QPushButton>
+
 #include <qdialog.h>
 #include <qfont.h>
 #include <qnamespace.h>
@@ -25,11 +26,13 @@ QColor progressBarFillColor() {
                : QColor(0, 102, 44);
 }
 
-} // namespace
+}  // namespace
 
 namespace ORNL {
 
-SliceDialog::SliceDialog(QWidget* parent) : QDialog(parent) { this->setupUi(); }
+SliceDialog::SliceDialog(QWidget* parent) : QDialog(parent) {
+    this->setupUi();
+}
 
 void SliceDialog::setupUi() {
     this->setWindowTitle("Slice Progress");
@@ -72,4 +75,4 @@ void SliceDialog::updateStatus(StatusUpdateStepType type, int percentage) {
     m_progress_bars[(int)type]->setValue(percentage);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

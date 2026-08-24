@@ -16,7 +16,7 @@ namespace ORNL {
 //! \class BezierSegment
 //! \brief A segment type for a cubic bezier curve
 class BezierSegment : public SegmentBase {
-  public:
+   public:
     //! \brief Default Constructor
     BezierSegment();
 
@@ -89,9 +89,9 @@ class BezierSegment : public SegmentBase {
     //! \param shift: amount to shift by
     virtual void shift(Point shift) override;
 
-  private:
+   private:
     //! \brief Control points used to draw the curve
     Point m_control_a;
     Point m_control_b;
 };
-} // namespace ORNL
+}  // namespace ORNL

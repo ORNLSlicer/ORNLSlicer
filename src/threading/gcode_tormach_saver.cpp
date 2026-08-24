@@ -6,6 +6,7 @@
 #include <QStringBuilder>
 #include <QStringList>
 #include <QTextStream>
+
 #include <qcontainerfwd.h>
 #include <qfileinfo.h>
 #include <qobject.h>
@@ -25,7 +26,7 @@ GCodeTormachSaver::GCodeTormachSaver(QString tempLocation, QString path, QString
 void GCodeTormachSaver::run() {
     // First, get necessary parameters from settings to rotate all pathing
     QChar comma(','), newline('\n'), space(' '), x('X'), y('Y'), z('Z'), f('F'), s('S'), zero('0');
-    qint16 layerNum = 0;
+    qint16 layerNum   = 0;
     QStringList lines = m_text.split(newline);
     QString G0("G0"), G1("G1"), M3("M3"), M5("M5"), M64("M64"), M65("M65"), commaSpace(", ");
     QString xval, yval, zval, velocity, feedrate;
@@ -123,7 +124,7 @@ void GCodeTormachSaver::run() {
     for (QString line : lines) {
         if (line.startsWith(G0)) {
             out << "RAPID" % newline;
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G0) {
@@ -140,7 +141,7 @@ void GCodeTormachSaver::run() {
                        newline;
         }
         else if (line.startsWith(G1)) {
-            QString temp = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
+            QString temp            = line.mid(0, line.indexOf(m_selected_meta.m_comment_starting_delimiter));
             QVector<QString> params = temp.split(space);
 
             if (params[0] == G1) {
@@ -173,9 +174,7 @@ void GCodeTormachSaver::run() {
             layerNum++;
             out << "$$ Layer: " << layerNum << "\n";
         }
-        else if (line.startsWith("(UPDATE VOLTAGE FOR TIP WIPE)")) {
-            out << "$$ Set New Welder Voltage\n";
-        }
+        else if (line.startsWith("(UPDATE VOLTAGE FOR TIP WIPE)")) { out << "$$ Set New Welder Voltage\n"; }
     }
 
     out << "PPRINT/  files_x\\job_end.txt" % newline;
@@ -188,4 +187,4 @@ void GCodeTormachSaver::run() {
     file.close();
 }
 
-} // namespace ORNL
+}  // namespace ORNL

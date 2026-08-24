@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMenu>
+
 #include <qaction.h>
 #include <qlist.h>
 #include <qpoint.h>
@@ -19,7 +20,7 @@ namespace ORNL {
 class RightClickMenu : public QMenu {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: the widget this sits on
     explicit RightClickMenu(QWidget* parent);
@@ -30,7 +31,7 @@ class RightClickMenu : public QMenu {
     //! \param transparency: part's current transparency
     void show(const QPointF& pos, QList<QSharedPointer<PartMetaItem>> items);
 
-  private:
+   private:
     //! \brief sets up this menu's actions
     void setupActions();
 
@@ -65,4 +66,4 @@ class RightClickMenu : public QMenu {
 
     QList<QSharedPointer<PartMetaItem>> m_selected_items;
 };
-} // namespace ORNL
+}  // namespace ORNL

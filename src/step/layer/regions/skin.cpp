@@ -26,8 +26,7 @@ namespace {
 PolygonList polylineFootprint(const Polyline& line, Distance bead_width, const PolygonList& clipping_geometry) {
     PolygonList footprint;
     for (int i = 0, end = line.size() - 1; i < end; ++i) {
-        if (line[i] == line[i + 1])
-            continue;
+        if (line[i] == line[i + 1]) continue;
 
         footprint += Polyline({line[i], line[i + 1]}).makeReal(bead_width);
     }
@@ -52,22 +51,20 @@ QVector<Polyline> printableLines(const QVector<Polyline>& lines, Distance min_pa
 PolygonList printableFootprint(const QVector<Polyline>& lines, Distance bead_width,
                                const PolygonList& clipping_geometry) {
     PolygonList footprint;
-    for (const Polyline& line : lines)
-        footprint += polylineFootprint(line, bead_width, clipping_geometry);
+    for (const Polyline& line : lines) footprint += polylineFootprint(line, bead_width, clipping_geometry);
 
     return footprint;
 }
 
 PolygonList futurePerimeterSupport(const PolygonList& current_geometry, const PolygonList& upper_geometry,
                                    Distance support_width) {
-    if (support_width <= 0 || upper_geometry.isEmpty())
-        return PolygonList();
+    if (support_width <= 0 || upper_geometry.isEmpty()) return PolygonList();
 
     // Extract the upper layer's perimeter band so top skin can support future walls.
     PolygonList support_geometry = upper_geometry - upper_geometry.offset(-support_width);
     return support_geometry & current_geometry;
 }
-} // namespace
+}  // namespace
 
 Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVector<SettingsPolygon>& settings_polygons)
     : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kSkin) {
@@ -79,9 +76,7 @@ QString Skin::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kSkin);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kSkin);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kSkin);
     }
     gcode += writer->writeAfterRegion(RegionType::kSkin);
@@ -94,15 +89,15 @@ void Skin::compute(uint layer_num) {
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kSkinNum));
 
     Distance overlap = m_sb->setting<Distance>(PS::Skin::kOverlap);
-    m_geometry = m_geometry.offset(overlap);
+    m_geometry       = m_geometry.offset(overlap);
 
-    Distance beadWidth = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
-    Distance minPathLength = m_sb->setting<Distance>(PS::Skin::kMinPathLength);
+    Distance beadWidth        = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
+    Distance minPathLength    = m_sb->setting<Distance>(PS::Skin::kMinPathLength);
     Distance minSegmentLength = m_sb->setting<Distance>(PS::Skin::kMinSegmentLength);
-    Angle patternAngle = m_sb->setting<Angle>(PS::Skin::kAngle);
+    Angle patternAngle        = m_sb->setting<Angle>(PS::Skin::kAngle);
 
-    int top_count = m_sb->setting<int>(PS::Skin::kTopCount);
-    int bottom_count = m_sb->setting<int>(PS::Skin::kBottomCount);
+    int top_count     = m_sb->setting<int>(PS::Skin::kTopCount);
+    int bottom_count  = m_sb->setting<int>(PS::Skin::kBottomCount);
     int gradual_count = m_sb->setting<int>(PS::Skin::kInfillSteps);
 
     //! If skin region belongs to top or bottom layer there is no need to compute top or bottom skin
@@ -116,11 +111,10 @@ void Skin::compute(uint layer_num) {
             { computeBottomSkin(bottom_count); }
         }
     }
-    if (m_sb->setting<bool>(PS::Skin::kInfillEnable))
-        computeGradualSkinSteps(gradual_count);
+    if (m_sb->setting<bool>(PS::Skin::kInfillEnable)) computeGradualSkinSteps(gradual_count);
 
     if (!m_skin_geometry.isEmpty()) {
-        PolygonList skin_offset = m_skin_geometry.offset(-beadWidth / 2);
+        PolygonList skin_offset           = m_skin_geometry.offset(-beadWidth / 2);
         const InfillPatterns skin_pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
         QVector<Polyline> lines = createPatternForArea(skin_pattern, skin_offset, beadWidth, beadWidth, patternAngle);
         m_computed_geometry =
@@ -129,9 +123,9 @@ void Skin::compute(uint layer_num) {
     }
 
     if (!m_gradual_skin_geometry.isEmpty()) {
-        Angle infillPatternAngle = m_sb->setting<Angle>(PS::Skin::kInfillAngle);
+        Angle infillPatternAngle      = m_sb->setting<Angle>(PS::Skin::kInfillAngle);
         InfillPatterns gradualPattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kInfillPattern));
-        double percentage = 0;
+        double percentage             = 0;
         if (m_sb->setting<bool>(PS::Infill::kEnable))
             percentage =
                 m_sb->setting<double>(PS::Infill::kBeadWidth) / m_sb->setting<double>(PS::Infill::kLineSpacing);
@@ -198,8 +192,7 @@ void Skin::computeTopSkin(const int& top_count) {
 
     //! If skin is within top_count of top layer, compute common geometry
     if (m_upper_geometry_includes_top && m_upper_geometry.size() < top_count)
-        for (const PolygonList& poly : m_upper_geometry)
-            temp_geometry &= poly;
+        for (const PolygonList& poly : m_upper_geometry) temp_geometry &= poly;
     else
         temp_geometry.clear();
 
@@ -213,21 +206,18 @@ void Skin::computeTopSkin(const int& top_count) {
 }
 
 void Skin::computeBottomSkin(const int& bottom_count) {
-    if (bottom_count <= 0)
-        return;
+    if (bottom_count <= 0) return;
 
     PolygonList temp_geometry = m_geometry;
 
     //! If skin is within bottom_count of botton layer, compute common geometry
     if (m_lower_geometry_includes_bottom && m_lower_geometry.size() < bottom_count)
-        for (const PolygonList& poly : m_lower_geometry)
-            temp_geometry &= poly;
+        for (const PolygonList& poly : m_lower_geometry) temp_geometry &= poly;
     else
         temp_geometry.clear();
 
     //! Compute difference geometry
-    for (const PolygonList& poly : m_lower_geometry)
-        temp_geometry += m_geometry - poly;
+    for (const PolygonList& poly : m_lower_geometry) temp_geometry += m_geometry - poly;
 
     m_skin_geometry += temp_geometry;
 }
@@ -241,8 +231,7 @@ void Skin::computeGradualSkinSteps(const int& gradual_count) {
     if (m_gradual_geometry_includes_top && m_gradual_geometry.size() < gradual_count) {
         m_gradual_skin_geometry.push_back(m_geometry - m_skin_geometry - currentGradual);
 
-        while (m_gradual_skin_geometry.size() < gradual_count)
-            m_gradual_skin_geometry.push_back(PolygonList());
+        while (m_gradual_skin_geometry.size() < gradual_count) m_gradual_skin_geometry.push_back(PolygonList());
     }
 }
 
@@ -274,7 +263,7 @@ void Skin::optimize(int layerNumber, Point& current_location, bool& shouldNextPa
     poo.setConsecutiveReferencePoint(getPreviousLayerStartPoint());
 
     m_paths.clear();
-    bool supportsG3 = m_sb->setting<bool>(PRS::MachineSetup::kSupportG3);
+    bool supportsG3            = m_sb->setting<bool>(PRS::MachineSetup::kSupportG3);
     InfillPatterns skinPattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Skin::kPattern));
     optimizeHelper(poo, supportsG3, current_location, skinPattern, m_computed_geometry, m_skin_geometry,
                    pathOrderOptimization);
@@ -321,16 +310,14 @@ Path Skin::createPath(Polyline line, InfillPatterns pattern) {
     const bool is_closed_path = pattern == InfillPatterns::kConcentric;
 
     line = line.removeShortSegments(m_sb->setting<Distance>(PS::Skin::kMinSegmentLength), is_closed_path);
-    if (line.size() < (is_closed_path ? 3 : 2)) {
-        return Path();
-    }
+    if (line.size() < (is_closed_path ? 3 : 2)) { return Path(); }
 
-    Distance width = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
-    Distance height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity speed = m_sb->setting<Velocity>(PS::Skin::kSpeed);
-    Acceleration acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kInfill);
+    Distance width                 = m_sb->setting<Distance>(PS::Skin::kBeadWidth);
+    Distance height                = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    Velocity speed                 = m_sb->setting<Velocity>(PS::Skin::kSpeed);
+    Acceleration acceleration      = m_sb->setting<Acceleration>(PRS::Acceleration::kInfill);
     AngularVelocity extruder_speed = m_sb->setting<AngularVelocity>(PS::Skin::kExtruderSpeed);
-    int material_number = m_sb->setting<int>(MS::MultiMaterial::kSkinNum);
+    int material_number            = m_sb->setting<int>(MS::MultiMaterial::kSkinNum);
 
     Path newPath;
     for (int i = 0; i < line.size() - 1; i++) {
@@ -367,16 +354,22 @@ Path Skin::createPath(Polyline line, InfillPatterns pattern) {
     return newPath;
 }
 
-void Skin::addUpperGeometry(const PolygonList& poly_list) { m_upper_geometry.push_back(poly_list); }
+void Skin::addUpperGeometry(const PolygonList& poly_list) {
+    m_upper_geometry.push_back(poly_list);
+}
 
-void Skin::addLowerGeometry(const PolygonList& poly_list) { m_lower_geometry.push_back(poly_list); }
+void Skin::addLowerGeometry(const PolygonList& poly_list) {
+    m_lower_geometry.push_back(poly_list);
+}
 
-void Skin::addGradualGeometry(const PolygonList& poly_list) { m_gradual_geometry.push_back(poly_list); }
+void Skin::addGradualGeometry(const PolygonList& poly_list) {
+    m_gradual_geometry.push_back(poly_list);
+}
 
 void Skin::setGeometryIncludes(bool top, bool bottom, bool gradual) {
-    m_upper_geometry_includes_top = top;
+    m_upper_geometry_includes_top    = top;
     m_lower_geometry_includes_bottom = bottom;
-    m_gradual_geometry_includes_top = gradual;
+    m_gradual_geometry_includes_top  = gradual;
 }
 
 void Skin::calculateModifiers(Path& path, bool supportsG3) {
@@ -464,4 +457,4 @@ void Skin::calculateModifiers(Path& path, bool supportsG3) {
         }
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

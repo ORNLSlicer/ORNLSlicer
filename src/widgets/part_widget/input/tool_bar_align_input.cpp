@@ -2,6 +2,7 @@
 
 #include <QFile>
 #include <QGraphicsDropShadowEffect>
+
 #include <qboxlayout.h>
 #include <qeasingcurve.h>
 #include <qfiledevice.h>
@@ -19,7 +20,9 @@
 #include "utilities/constants.h"
 
 namespace ORNL {
-ToolbarAlignInput::ToolbarAlignInput(QWidget* parent) : QFrame(parent) { this->setupWidget(); }
+ToolbarAlignInput::ToolbarAlignInput(QWidget* parent) : QFrame(parent) {
+    this->setupWidget();
+}
 
 void ToolbarAlignInput::setPos(QPoint pos) {
     m_pos = pos;
@@ -179,4 +182,4 @@ QFrame* ToolbarAlignInput::buildSeparator() {
     return line;
 }
 
-} // Namespace ORNL
+}  // Namespace ORNL

@@ -20,7 +20,6 @@ namespace ORNL {
 SettingAccelSpinBox::SettingAccelSpinBox(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
                                          fifojson json, QGridLayout* layout, int index)
     : SettingDoubleSpinBox(parent, sb, key, json, layout, index) {
-
     Acceleration cur;
     m_warn = false;
     if (sb->contains(key))
@@ -47,7 +46,7 @@ SettingRowBase* SettingAccelSpinBox::createInstance(SettingTab* parent, QSharedP
 
 void SettingAccelSpinBox::valueChanged(QVariant val) {
     if (m_warn)
-        emit warnParent(-1); // if a value is changed, it changes for all selected settings bases, so remove a warning.
+        emit warnParent(-1);  // if a value is changed, it changes for all selected settings bases, so remove a warning.
     m_warn = false;
     Acceleration base_value;
     base_value.from(val.toDouble(), PreferencesManager::getInstance()->getAccelerationUnit());
@@ -62,12 +61,11 @@ void SettingAccelSpinBox::reloadValue() {
 
     bool consistent = true;
     Acceleration cur(reloadValueHelper<double>(consistent));
-    if (consistent)
-        setValue(cur.to(unit));
+    if (consistent) setValue(cur.to(unit));
 
     this->blockSignals(false);
     emit modified(m_key);
 
     emit warnParent(warningCountDelta(!consistent, m_warn));
 }
-} // namespace ORNL
+}  // namespace ORNL

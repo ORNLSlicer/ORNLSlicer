@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QThread>
+
 #include <qobject.h>
 #include <qtmetamacros.h>
 
@@ -14,7 +15,7 @@ namespace ORNL {
  */
 class GCodeSimulationOutput : public QThread {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param temp_location location of gcode file
     //! \param path path to output
@@ -35,7 +36,7 @@ class GCodeSimulationOutput : public QThread {
     //! \param f the new velocity command
     void calculateTime(const QString& x, const QString& y, const QString& z, const QString& w, const QString& f);
 
-  private:
+   private:
     //! \brief Temporary file location, output path, output filename, and text to output
     QString m_temp_location, m_path, m_filename, m_text;
 
@@ -54,5 +55,5 @@ class GCodeSimulationOutput : public QThread {
     //! \brief Meta info determined from file
     GcodeMeta m_selected_meta;
 
-}; // class GCodeSimulationOutput
-} // namespace ORNL
+};  // class GCodeSimulationOutput
+}  // namespace ORNL

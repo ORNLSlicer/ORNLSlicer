@@ -13,7 +13,7 @@ namespace ORNL {
  * AeroBasic 3D printer(s).
  */
 class AeroBasicParser : public CommonParser {
-  public:
+   public:
     //! \brief Standard constructor that specifies meta type and whether or not
     //! to alter layers for minimal layer time
     //! \param meta GcodeMeta struct that includes information about units and
@@ -47,4 +47,4 @@ class AeroBasicParser : public CommonParser {
     //! \brief Function to initialize syntax specific handlers
     virtual void config() override;
 };
-} // namespace ORNL
+}  // namespace ORNL

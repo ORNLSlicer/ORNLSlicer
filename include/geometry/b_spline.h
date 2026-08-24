@@ -12,7 +12,7 @@ namespace ORNL {
  *  \brief Geometry type for BSplines.
  */
 class BSpline {
-  public:
+   public:
     //! \brief Constructor
     //! \param start the first point on the spline
     explicit BSpline(const Point& start);
@@ -34,7 +34,7 @@ class BSpline {
     //! \return a list of bezier segments that comprise this spline
     QVector<QSharedPointer<BezierSegment>> toBezierSegments();
 
-  private:
+   private:
     //! \brief knots and controls that define curves
     QVector<Point> m_control_points;
     QVector<Point> m_knot_points;
@@ -42,4 +42,4 @@ class BSpline {
     //! \brief if this spline is a closed loop
     bool m_is_closed = false;
 };
-} // namespace ORNL
+}  // namespace ORNL

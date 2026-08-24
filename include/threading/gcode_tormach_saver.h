@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QThread>
+
 #include <qobject.h>
 #include <qtmetamacros.h>
 
@@ -13,7 +14,7 @@ namespace ORNL {
  */
 class GCodeTormachSaver : public QThread {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param tempLocation: location of gcode file
     //! \param path: path to output
@@ -25,12 +26,12 @@ class GCodeTormachSaver : public QThread {
     //! \brief Function that is run when start is called on this thread.
     void run() override;
 
-  private:
+   private:
     //! \brief Temporary file location, output path, output filename, and text to output
     QString m_temp_location, m_path, m_filename, m_text;
 
     //! \brief Meta info determined from file
     GcodeMeta m_selected_meta;
 
-}; // class GCodeTormachSaver
-} // namespace ORNL
+};  // class GCodeTormachSaver
+}  // namespace ORNL

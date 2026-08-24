@@ -1,6 +1,7 @@
 #include "windows/xtrudecalc.h"
 
 #include <QApplication>
+
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
 #include <qfont.h>
@@ -32,14 +33,14 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_mass_pref = PreferencesManager::getInstance()->getMassUnit();
     m_velo_pref = PreferencesManager::getInstance()->getVelocityUnit();
 
-    m_time_text = "(" + PreferencesManager::getInstance()->getTimeUnitText() + "):";
-    m_dist_text = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "):";
-    m_mass_text = "(" + PreferencesManager::getInstance()->getMassUnitText() + "):";
+    m_time_text    = "(" + PreferencesManager::getInstance()->getTimeUnitText() + "):";
+    m_dist_text    = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "):";
+    m_mass_text    = "(" + PreferencesManager::getInstance()->getMassUnitText() + "):";
     m_density_text = "(" + PreferencesManager::getInstance()->getMassUnitText() + "/" +
                      PreferencesManager::getInstance()->getDistanceUnitText() + "³):";
     m_spindle_text = "(rev/" + PreferencesManager::getInstance()->getTimeUnitText() + "):";
-    m_feed_text = "(" + PreferencesManager::getInstance()->getVelocityUnitText() + "):";
-    m_fpr_text = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "/rev):";
+    m_feed_text    = "(" + PreferencesManager::getInstance()->getVelocityUnitText() + "):";
+    m_fpr_text     = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "/rev):";
 
     // setFixedSize(420,260);
     setWindowTitle(QApplication::applicationDisplayName() + ": Xtrude Calculator");
@@ -48,22 +49,22 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     setWindowIcon(icon);
 
     // Printing Parameter Section
-    m_layout = new QGridLayout();
+    m_layout                = new QGridLayout();
     QLabel* lbl_PrintParams = new QLabel("Printing Parameters");
     QFont titleFont("Arial", 10, QFont::Bold);
     lbl_PrintParams->setFont(titleFont);
     m_layout->addWidget(lbl_PrintParams, 0, 0, 1, 2);
 
     QLabel* lbl_materialType = new QLabel("Material Type:");
-    QStringList commands = {"20% CF-ABS", "ABS",         "PPS", "50% CF-PPS", "PPSU", "25% CF-PPSU",
-                            "PESU",       "25% CF-PESU", "PLA", "Concrete",   "Other"};
-    m_material_type = new QComboBox();
+    QStringList commands     = {"20% CF-ABS", "ABS",         "PPS", "50% CF-PPS", "PPSU", "25% CF-PPSU",
+                                "PESU",       "25% CF-PESU", "PLA", "Concrete",   "Other"};
+    m_material_type          = new QComboBox();
     m_material_type->addItems(commands);
     m_layout->addWidget(lbl_materialType, 1, 0);
     m_layout->addWidget(m_material_type, 1, 1);
 
     m_density_label = new QLabel("Density " + m_density_text);
-    m_density = new QLineEdit();
+    m_density       = new QLineEdit();
     m_density->setReadOnly(true);
     m_density->setText(QString::number(toDensityValue(PrintMaterial::kABS20CF)() / m_dens_pref(), 'g', 5));
     m_density->setEnabled(false);
@@ -71,32 +72,32 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_layout->addWidget(m_density, 2, 1);
 
     m_spindle_speed_label = new QLabel("Test Spindle Speed " + m_spindle_text);
-    m_spindle_speed = new QLineEdit();
+    m_spindle_speed       = new QLineEdit();
     m_layout->addWidget(m_spindle_speed_label, 3, 0);
     m_layout->addWidget(m_spindle_speed, 3, 1);
 
     m_2mtm_label = new QLabel("2 Minute Test Mass " + m_mass_text);
-    m_2mtm = new QLineEdit();
+    m_2mtm       = new QLineEdit();
     m_layout->addWidget(m_2mtm_label, 4, 0);
     m_layout->addWidget(m_2mtm, 4, 1);
 
     m_min_layer_time_label = new QLabel("Minimum Layer Time " + m_time_text);
-    m_min_layer_time = new QLineEdit();
+    m_min_layer_time       = new QLineEdit();
     m_layout->addWidget(m_min_layer_time_label, 5, 0);
     m_layout->addWidget(m_min_layer_time, 5, 1);
 
     m_layer_height_label = new QLabel("Layer Height " + m_dist_text);
-    m_layer_height = new QLineEdit();
+    m_layer_height       = new QLineEdit();
     m_layout->addWidget(m_layer_height_label, 6, 0);
     m_layout->addWidget(m_layer_height, 6, 1);
 
     m_bead_width_label = new QLabel("Bead Width " + m_dist_text);
-    m_bead_width = new QLineEdit();
+    m_bead_width       = new QLineEdit();
     m_layout->addWidget(m_bead_width_label, 7, 0);
     m_layout->addWidget(m_bead_width, 7, 1);
 
     m_fpr_label = new QLabel("FPR " + m_fpr_text);
-    m_fpr = new QLineEdit();
+    m_fpr       = new QLineEdit();
     m_layout->addWidget(m_fpr_label, 9, 0);
     m_layout->addWidget(m_fpr, 9, 1);
     m_fpr->setEnabled(false);
@@ -107,19 +108,19 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_layout->addWidget(lbl_Option1, 0, 3, 1, 2);
 
     m_toolpath_length_label = new QLabel("Toolpath Length " + m_dist_text);
-    m_toolpath_length = new QLineEdit();
+    m_toolpath_length       = new QLineEdit();
     m_layout->addWidget(m_toolpath_length_label, 1, 3);
     m_layout->addWidget(m_toolpath_length, 1, 4);
 
     m_o1_feed_rate_label = new QLabel("Feed Rate " + m_feed_text);
-    m_o1_feed_rate = new QLineEdit();
+    m_o1_feed_rate       = new QLineEdit();
     m_o1_feed_rate->setReadOnly(true);
     m_layout->addWidget(m_o1_feed_rate_label, 2, 3);
     m_layout->addWidget(m_o1_feed_rate, 2, 4);
     m_o1_feed_rate->setEnabled(false);
 
     m_o1_spindle_speed_label = new QLabel("Spindle Speed " + m_spindle_text);
-    m_o1_spindle_speed = new QLineEdit();
+    m_o1_spindle_speed       = new QLineEdit();
     ;
     m_o1_spindle_speed->setReadOnly(true);
     m_layout->addWidget(m_o1_spindle_speed_label, 3, 3);
@@ -132,12 +133,12 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_layout->addWidget(lbl_Option2, 4, 3, 1, 2);
 
     m_d_spindle_speed_label = new QLabel("Desired Spindle Speed " + m_spindle_text);
-    m_d_spindle_speed = new QLineEdit();
+    m_d_spindle_speed       = new QLineEdit();
     m_layout->addWidget(m_d_spindle_speed_label, 5, 3);
     m_layout->addWidget(m_d_spindle_speed, 5, 4);
 
     m_o2_feed_rate_label = new QLabel("Feed Rate " + m_feed_text);
-    m_o2_feed_rate = new QLineEdit();
+    m_o2_feed_rate       = new QLineEdit();
     m_o2_feed_rate->setReadOnly(true);
     m_layout->addWidget(m_o2_feed_rate_label, 6, 3);
     m_layout->addWidget(m_o2_feed_rate, 6, 4);
@@ -149,19 +150,20 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     m_layout->addWidget(lbl_Option3, 7, 3, 1, 2);
 
     m_d_feed_rate_label = new QLabel("Desired Feed Rate " + m_feed_text);
-    m_d_feed_rate = new QLineEdit();
+    m_d_feed_rate       = new QLineEdit();
     m_layout->addWidget(m_d_feed_rate_label, 8, 3);
     m_layout->addWidget(m_d_feed_rate, 8, 4);
 
     m_o3_spindle_speed_label = new QLabel("Spindle Speed " + m_spindle_text);
-    m_o3_spindle_speed = new QLineEdit();
+    m_o3_spindle_speed       = new QLineEdit();
     m_o3_spindle_speed->setReadOnly(true);
     m_layout->addWidget(m_o3_spindle_speed_label, 9, 3);
     m_layout->addWidget(m_o3_spindle_speed, 9, 4);
     m_o3_spindle_speed->setEnabled(false);
 
-    QLabel* lbl_Option4 = new QLabel("(You can also use the FPR (i.e. feed per tooth with 1 tooth or simply feed per "
-                                     "rev) as your feed in Option 3)");
+    QLabel* lbl_Option4 = new QLabel(
+        "(You can also use the FPR (i.e. feed per tooth with 1 tooth or simply feed per "
+        "rev) as your feed in Option 3)");
     lbl_Option4->setWordWrap(true);
     lbl_Option4->setStyleSheet("QLabel { color : blue; }");
     m_layout->addWidget(lbl_Option4, 10, 3, 2, 2);
@@ -177,14 +179,14 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     genDirections->setFont(titleFont);
     m_layout->addWidget(genDirections, 13, 3);
 
-    m_directions =
-        new QLabel("Run a 2 minute test with a set spindle speed onto a scale. Input the results for the spindle "
-                   "speed, mass, density, and minimum layer time "
-                   "under Printing Parameters along with a desired bead width and layer height. Once all the data is "
-                   "entered, fill out an option to recieve a spindle speed and/or "
-                   "feed rate based on calculations from your entered data. Note that all units are based off user "
-                   "preferences and will change if preferences are modified whether "
-                   "the Xtrude calculator is opened or closed, and any entered data will become less precise.");
+    m_directions = new QLabel(
+        "Run a 2 minute test with a set spindle speed onto a scale. Input the results for the spindle "
+        "speed, mass, density, and minimum layer time "
+        "under Printing Parameters along with a desired bead width and layer height. Once all the data is "
+        "entered, fill out an option to recieve a spindle speed and/or "
+        "feed rate based on calculations from your entered data. Note that all units are based off user "
+        "preferences and will change if preferences are modified whether "
+        "the Xtrude calculator is opened or closed, and any entered data will become less precise.");
     m_directions->setWordWrap(true);
     m_directions->setAlignment(Qt::AlignTop);
     m_layout->addWidget(m_directions, 14, 3, 5, 2);
@@ -257,9 +259,7 @@ void XtrudeCalcWindow::checkUnitPref() {
     }
 
     check = m_2mtm->text().toDouble(&textOkay);
-    if (textOkay && !m_2mtm->text().isEmpty()) {
-        m_2mtm->setText(QString::number(check * m_mass_conv, 'g', 5));
-    }
+    if (textOkay && !m_2mtm->text().isEmpty()) { m_2mtm->setText(QString::number(check * m_mass_conv, 'g', 5)); }
 
     check = m_layer_height->text().toDouble(&textOkay);
     if (textOkay && !m_layer_height->text().isEmpty()) {
@@ -306,14 +306,14 @@ void XtrudeCalcWindow::checkUnitPref() {
     m_velo_pref = PreferencesManager::getInstance()->getVelocityUnit();
 
     // Rebuilds strings using new unit preferences
-    m_time_text = "(" + PreferencesManager::getInstance()->getTimeUnitText() + "):";
-    m_dist_text = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "):";
-    m_mass_text = "(" + PreferencesManager::getInstance()->getMassUnitText() + "):";
+    m_time_text    = "(" + PreferencesManager::getInstance()->getTimeUnitText() + "):";
+    m_dist_text    = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "):";
+    m_mass_text    = "(" + PreferencesManager::getInstance()->getMassUnitText() + "):";
     m_density_text = "(" + PreferencesManager::getInstance()->getMassUnitText() + "/" +
                      PreferencesManager::getInstance()->getDistanceUnitText() + "³):";
     m_spindle_text = "(rev/" + PreferencesManager::getInstance()->getTimeUnitText() + "):";
-    m_feed_text = "(" + PreferencesManager::getInstance()->getVelocityUnitText() + "):";
-    m_fpr_text = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "/rev):";
+    m_feed_text    = "(" + PreferencesManager::getInstance()->getVelocityUnitText() + "):";
+    m_fpr_text     = "(" + PreferencesManager::getInstance()->getDistanceUnitText() + "/rev):";
 
     // Rebuilds labels using strings
     m_density_label->setText("Density " + m_density_text);
@@ -370,8 +370,8 @@ void XtrudeCalcWindow::checkInputAndCalculate() {
     // check each user input field
     bool textOkay;
     bool toolpathok = true;
-    bool feedok = true;
-    bool spindok = true;
+    bool feedok     = true;
+    bool spindok    = true;
 
     double v_beadWidth;
     double v_layerHeight;
@@ -427,20 +427,18 @@ void XtrudeCalcWindow::checkInputAndCalculate() {
     double timeMod = PreferencesManager::getInstance()->getTimeUnit()() / minute();
     double disttimevelo =
         PreferencesManager::getInstance()->getDistanceUnit()() / PreferencesManager::getInstance()->getTimeUnit()();
-    double veloMod = PreferencesManager::getInstance()->getVelocityUnit()() / disttimevelo;
-    double massCalc = v_2mtm * timeMod / 2;
+    double veloMod              = PreferencesManager::getInstance()->getVelocityUnit()() / disttimevelo;
+    double massCalc             = v_2mtm * timeMod / 2;
     double extrusionCoefficient = massCalc / v_spindleSpeed;
-    double FPR = extrusionCoefficient / (v_density * v_layerHeight * v_beadWidth);
+    double FPR                  = extrusionCoefficient / (v_density * v_layerHeight * v_beadWidth);
     m_fpr->setText(QString::number(FPR, 'g', 5));
 
     // Option 1 check
     v_toolpathLength = m_toolpath_length->text().toDouble(&textOkay);
-    if (!textOkay && !m_toolpath_length->text().isEmpty()) {
-        toolpathok = false;
-    }
+    if (!textOkay && !m_toolpath_length->text().isEmpty()) { toolpathok = false; }
 
     else if (!m_toolpath_length->text().isEmpty()) {
-        o1feedRate = v_toolpathLength / (v_minLayerTime);
+        o1feedRate     = v_toolpathLength / (v_minLayerTime);
         o1spindleSpeed = o1feedRate / FPR;
         m_o1_feed_rate->setText(QString::number(o1feedRate / veloMod, 'g', 5));
         m_o1_spindle_speed->setText(QString::number(o1spindleSpeed, 'g', 5));
@@ -448,9 +446,7 @@ void XtrudeCalcWindow::checkInputAndCalculate() {
 
     // Option 2 check
     v_dSpindleSpeed = m_d_spindle_speed->text().toDouble(&textOkay);
-    if (!textOkay && !m_d_spindle_speed->text().isEmpty()) {
-        spindok = false;
-    }
+    if (!textOkay && !m_d_spindle_speed->text().isEmpty()) { spindok = false; }
 
     else if (!m_d_spindle_speed->text().isEmpty()) {
         o2feedRate = v_dSpindleSpeed * FPR;
@@ -459,9 +455,7 @@ void XtrudeCalcWindow::checkInputAndCalculate() {
 
     // Option 3 check
     v_dFeedRate = m_d_feed_rate->text().toDouble(&textOkay);
-    if (!textOkay && !m_d_feed_rate->text().isEmpty()) {
-        feedok = false;
-    }
+    if (!textOkay && !m_d_feed_rate->text().isEmpty()) { feedok = false; }
 
     else if (!m_d_feed_rate->text().isEmpty()) {
         o3spindleSpeed = v_dFeedRate / FPR;
@@ -504,10 +498,8 @@ void XtrudeCalcWindow::closeEvent(QCloseEvent* event) {
     m_material_type->setCurrentIndex(0);
 
     // set the focus back to the main window
-    if (m_parent->isMinimized()) {
-        m_parent->showNormal();
-    }
+    if (m_parent->isMinimized()) { m_parent->showNormal(); }
     // setFocus() doesn't deliver, but activateWindow() serves the purpose
     m_parent->activateWindow();
 }
-} // namespace ORNL
+}  // namespace ORNL

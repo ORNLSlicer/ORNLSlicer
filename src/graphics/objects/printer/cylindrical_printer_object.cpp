@@ -44,7 +44,7 @@ CylindricalPrinterObject::CylindricalPrinterObject(BaseView* view, QSharedPointe
     gopl->translate(m_floor_center);
     gopl->setUnderneath(true);
 
-    m_axes = goax;
+    m_axes        = goax;
     m_floor_plane = gopl;
 
     this->adoptChild(goax);
@@ -57,20 +57,21 @@ CylindricalPrinterObject::CylindricalPrinterObject(BaseView* view, QSharedPointe
     this->updateSeams();
 }
 
-QVector3D CylindricalPrinterObject::printerCenter() { return m_floor_center + this->translation(); }
+QVector3D CylindricalPrinterObject::printerCenter() {
+    return m_floor_center + this->translation();
+}
 
 QList<QSharedPointer<PartObject>> CylindricalPrinterObject::externalParts() {
     QList<QSharedPointer<PartObject>> ret;
 
-    float printerMinZ = this->minimum().z();
-    float printerMaxZ = this->maximum().z();
+    float printerMinZ   = this->minimum().z();
+    float printerMaxZ   = this->maximum().z();
     float radiusSquared = m_radius * m_radius;
-    QVector3D origin = this->printerCenter();
+    QVector3D origin    = this->printerCenter();
 
     for (auto& child : this->allChildren()) {
         auto gop = child.dynamicCast<PartObject>();
-        if (gop.isNull())
-            continue;
+        if (gop.isNull()) continue;
 
         QVector3D partMin = gop->minimum();
         QVector3D partMax = gop->maximum();
@@ -159,4 +160,4 @@ void CylindricalPrinterObject::updateGeometry() {
 
     this->translateAbsolute(translation);
 }
-} // namespace ORNL
+}  // namespace ORNL

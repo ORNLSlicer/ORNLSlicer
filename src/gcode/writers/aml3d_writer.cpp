@@ -1,6 +1,7 @@
 #include "gcode/writers/aml3d_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -29,21 +30,19 @@ QString AML3DWriter::writeSettingsHeader(GcodeSyntax syntax) {
 
 QString AML3DWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                        int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_travel = true;
-    m_first_print = true;
-    m_layer_start = true;
-    m_tip_wipe = false;
-    m_min_z = 0.0f;
+    m_first_travel      = true;
+    m_first_print       = true;
+    m_layer_start       = true;
+    m_tip_wipe          = false;
+    m_min_z             = 0.0f;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
         rv += "G1 F120 " % commentLine("SET INITIAL FEEDRATE");
-        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
-            rv += "M0" % commentSpaceLine("WAIT FOR USER");
-        }
+        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) { rv += "M0" % commentSpaceLine("WAIT FOR USER"); }
         rv += writeDwell(0.25);
     }
 
@@ -68,13 +67,10 @@ QString AML3DWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
         rv +=
             writePurge(m_sb->setting<int>(MS::Purge::kInitialScrewRPM), m_sb->setting<int>(MS::Purge::kInitialDuration),
                        m_sb->setting<int>(MS::Purge::kInitialTipWipeDelay));
-        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
-            rv += "M0" % commentSpaceLine("WAIT FOR USER");
-        }
+        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) { rv += "M0" % commentSpaceLine("WAIT FOR USER"); }
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -85,7 +81,7 @@ QString AML3DWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
 
 QString AML3DWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     rv += "M1 " % commentLine("OPTIONAL STOP - LAYER CHANGE");
     return rv;
@@ -161,7 +157,7 @@ QString AML3DWriter::writeTravel(Point start_location, Point target_location, Tr
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -175,7 +171,7 @@ QString AML3DWriter::writeTravel(Point start_location, Point target_location, Tr
     // write the lift
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
 
         rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
@@ -186,13 +182,13 @@ QString AML3DWriter::writeTravel(Point start_location, Point target_location, Tr
     if (m_first_travel)
         travel_destination.z(qAbs(m_sb->setting<Distance>(PRS::Dimensions::kZOffset)()));
     else if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
@@ -205,12 +201,12 @@ QString AML3DWriter::writeTravel(Point start_location, Point target_location, Tr
 
 QString AML3DWriter::writeLine(const Point& start_point, const Point& target_point,
                                const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    int material_number = params->setting<int>(SS::kMaterialNumber);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    int rpm                      = params->setting<int>(SS::kExtruderSpeed);
+    int material_number          = params->setting<int>(SS::kMaterialNumber);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
@@ -266,16 +262,14 @@ QString AML3DWriter::writeArc(const Point& start_point, const Point& end_point, 
                               const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm    = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
-    if (!m_deposition_active && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, 0, params);
-    }
+    if (!m_deposition_active && rpm > 0) { rv += writeExtruderOn(region_type, rpm, 0, params); }
 
     rv += ((ccw) ? m_G3 : m_G2);
 
@@ -302,7 +296,7 @@ QString AML3DWriter::writeArc(const Point& start_point, const Point& end_point, 
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // Add comment for gcode parser
@@ -322,7 +316,7 @@ QString AML3DWriter::writeScan(Point target_point, Velocity speed, bool on_off) 
 QString AML3DWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(0); // update to turn off the extruder
+        rv += writeExtruderOff(0);  // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty())
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -494,8 +488,8 @@ QString AML3DWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
-} // namespace ORNL
+}  // namespace ORNL

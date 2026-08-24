@@ -1,11 +1,11 @@
 {
-  "recommendations": [
-    "ms-vscode.cmake-tools",
-    "llvm-vs-code-extensions.lldb-dap",
-    "EditorConfig.EditorConfig",
-    "bbenoist.nix",
-    "llvm-vs-code-extensions.vscode-clangd",
-    "mkhl.direnv",
-    "xaver.clang-format"
-  ]
+    "recommendations": [
+        "ms-vscode.cmake-tools",
+        "llvm-vs-code-extensions.lldb-dap",
+        "EditorConfig.EditorConfig",
+        "bbenoist.nix",
+        "llvm-vs-code-extensions.vscode-clangd",
+        "mkhl.direnv",
+        "xaver.clang-format"
+    ]
 }

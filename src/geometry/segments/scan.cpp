@@ -17,21 +17,24 @@ ScanSegment::ScanSegment(Point start, Point end) : SegmentBase(start, end) {
     // NOP
 }
 
-QSharedPointer<SegmentBase> ScanSegment::clone() const { return QSharedPointer<ScanSegment>::create(*this); }
+QSharedPointer<SegmentBase> ScanSegment::clone() const {
+    return QSharedPointer<ScanSegment>::create(*this);
+}
 
 QString ScanSegment::writeGCode(QSharedPointer<WriterBase> writer) {
-    Velocity speed = this->getSb()->setting<Velocity>(SS::kSpeed);
+    Velocity speed      = this->getSb()->setting<Velocity>(SS::kSpeed);
     const QString gcode = writer->writeScan(m_end, speed, m_on_off);
-    if (!gcode.isEmpty())
-        writer->setCurrentPosition(m_end);
+    if (!gcode.isEmpty()) writer->setCurrentPosition(m_end);
     return gcode;
 }
 
-void ScanSegment::setDataCollection(bool on) { m_on_off = on; }
+void ScanSegment::setDataCollection(bool on) {
+    m_on_off = on;
+}
 
 float ScanSegment::getMinZ() {
     // don't want this min to impact the min for an entire layer, but still need to return something
     // so return the largest possible number
     return std::numeric_limits<float>::max();
 }
-} // namespace ORNL
+}  // namespace ORNL

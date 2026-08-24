@@ -8,6 +8,7 @@
 #include <QTextEdit>
 #include <QVector>
 #include <QWidget>
+
 #include <qboxlayout.h>
 #include <qhashfunctions.h>
 #include <qtmetamacros.h>
@@ -22,7 +23,7 @@ namespace ORNL {
  */
 class GcodeExport : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     explicit GcodeExport(QWidget* parent);
 
@@ -33,7 +34,7 @@ class GcodeExport : public QWidget {
     //! \brief Destructor
     ~GcodeExport();
 
-  public slots:
+   public slots:
     //! \brief Handler to receive necessary information once the slice is complete and
     //! gcode generated.  Necessary to add final header comments if user opts to supply any
     //! \param tempLocation current location of temporary gcode file
@@ -47,11 +48,11 @@ class GcodeExport : public QWidget {
     //! \brief Clears parsed G-code visualization segments while a new file is loading.
     void clearVisualizationInformation();
 
-  protected:
+   protected:
     //! \brief Close event override to reset form values
     void closeEvent(QCloseEvent* event);
 
-  private slots:
+   private slots:
     //! \brief Handler for export button click
     void exportGcode();
 
@@ -60,7 +61,7 @@ class GcodeExport : public QWidget {
     //! \param filename Name of the file saved
     void showComplete(QString path, QString filename);
 
-  private:
+   private:
     //! \brief Updates as-printed STL option availability based on visualization state.
     void updateAsPrintedModelOptionState();
 
@@ -92,5 +93,5 @@ class GcodeExport : public QWidget {
     //! \brief Default file name
     QString m_default_name;
 
-}; // class GcodeExport
-} // namespace ORNL
+};  // class GcodeExport
+}  // namespace ORNL

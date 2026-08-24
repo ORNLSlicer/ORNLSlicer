@@ -7,6 +7,7 @@
 #include <QRect>
 #include <QSizePolicy>
 #include <QToolTip>
+
 #include <qevent.h>
 #include <qnamespace.h>
 #include <qoverload.h>
@@ -17,11 +18,11 @@
 
 namespace ORNL {
 namespace {
-constexpr int kComponentLabelWidth = 18;
+constexpr int kComponentLabelWidth    = 18;
 constexpr int kComponentMinimumHeight = 22;
-constexpr int kComponentSpacing = 4;
-constexpr int kComponentGroupSpacing = 6;
-constexpr int kSpinBoxWidth = 96;
+constexpr int kComponentSpacing       = 4;
+constexpr int kComponentGroupSpacing  = 6;
+constexpr int kSpinBoxWidth           = 96;
 
 QLabel* createComponentLabel(QWidget* parent, const QString& text) {
     QLabel* label = new QLabel(text, parent);
@@ -41,13 +42,14 @@ void addComponentEditor(QHBoxLayout* layout, QWidget* parent, const QString& lab
     layout->addWidget(createComponentLabel(parent, label_text));
     layout->addWidget(spin_box);
 }
-} // namespace
+}  // namespace
 
 Vector2InputWidget::Vector2InputWidget(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString primary_key,
                                        QString secondary_key, fifojson json, QGridLayout* layout, int index,
                                        Distance primary_default, Distance secondary_default, QString primary_label,
                                        QString secondary_label)
-    : QWidget(parent), SettingRowBase(parent, sb, primary_key, json, layout, index),
+    : QWidget(parent),
+      SettingRowBase(parent, sb, primary_key, json, layout, index),
       m_components {{{primary_key, new QDoubleSpinBox(this), primary_default},
                      {secondary_key, new QDoubleSpinBox(this), secondary_default}}},
       m_warn(false) {
@@ -64,8 +66,7 @@ Vector2InputWidget::Vector2InputWidget(SettingTab* parent, QSharedPointer<Settin
         Component& component = m_components[i];
         ensureSetting(component.key, component.default_value);
 
-        if (i != 0)
-            vector_layout->addSpacing(kComponentGroupSpacing);
+        if (i != 0) vector_layout->addSpacing(kComponentGroupSpacing);
         addComponentEditor(vector_layout, this, labels[i], component.spin_box);
 
         configureSpinBox(component.spin_box);
@@ -102,11 +103,12 @@ void Vector2InputWidget::setEnabled(bool enabled) {
     applyWidgetState(static_cast<QWidget*>(this));
 }
 
-void Vector2InputWidget::valueChanged(QVariant val) { updateSetting(m_components[0].key, val.toDouble()); }
+void Vector2InputWidget::valueChanged(QVariant val) {
+    updateSetting(m_components[0].key, val.toDouble());
+}
 
 void Vector2InputWidget::reloadValue() {
-    for (Component& component : m_components)
-        component.spin_box->blockSignals(true);
+    for (Component& component : m_components) component.spin_box->blockSignals(true);
 
     m_unit_label->setText(PreferencesManager::getInstance()->getDistanceUnitText());
 
@@ -119,11 +121,9 @@ void Vector2InputWidget::reloadValue() {
         all_consistent = all_consistent && component_consistent;
     }
 
-    for (Component& component : m_components)
-        component.spin_box->blockSignals(false);
+    for (Component& component : m_components) component.spin_box->blockSignals(false);
 
-    for (const Component& component : m_components)
-        emit modified(component.key);
+    for (const Component& component : m_components) emit modified(component.key);
 
     if (!all_consistent) {
         setNotification("Multiple Values");
@@ -179,8 +179,7 @@ void Vector2InputWidget::configureSpinBox(QDoubleSpinBox* spin_box) {
 }
 
 void Vector2InputWidget::ensureSetting(const QString& key, Distance default_value) {
-    if (!m_sb->contains(key))
-        m_sb->setSetting(key, default_value());
+    if (!m_sb->contains(key)) m_sb->setSetting(key, default_value());
 }
 
 void Vector2InputWidget::updateSetting(const QString& key, double displayed_value) {
@@ -190,18 +189,14 @@ void Vector2InputWidget::updateSetting(const QString& key, double displayed_valu
     notifyValueAboutToChange(key);
 
     if (m_settings_bases.size() != 0) {
-        for (QSharedPointer<SettingsBase> range : m_settings_bases)
-            range->setSetting(key, base_value());
+        for (QSharedPointer<SettingsBase> range : m_settings_bases) range->setSetting(key, base_value());
 
         const Distance global_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : base_value;
         removeRedundantLocalOverrides<Distance>(key, global_value);
     }
-    else {
-        m_sb->setSetting(key, base_value());
-    }
+    else { m_sb->setSetting(key, base_value()); }
 
-    for (QSharedPointer<SettingRowBase> row : m_rows_to_notify)
-        row->checkDependencies();
+    for (QSharedPointer<SettingRowBase> row : m_rows_to_notify) row->checkDependencies();
 
     checkDynamicDependencies();
     updateWarningStateAfterEdit();
@@ -211,35 +206,31 @@ void Vector2InputWidget::updateSetting(const QString& key, double displayed_valu
 Distance Vector2InputWidget::reloadDistanceValue(const QString& key, Distance default_value, bool& consistent) {
     if (m_settings_bases.size() > 0) {
         const Distance global_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : default_value;
-        const Distance first_value = effectiveValueHelper<Distance>(key, 0, global_value);
+        const Distance first_value  = effectiveValueHelper<Distance>(key, 0, global_value);
 
         bool all_bases_consistent = true;
         for (int index = 1, end = m_settings_bases.size(); index < end; ++index)
             all_bases_consistent =
                 all_bases_consistent && effectiveValueHelper<Distance>(key, index, global_value) == first_value;
 
-        if (all_bases_consistent)
-            return first_value;
+        if (all_bases_consistent) return first_value;
 
         consistent = false;
         return default_value;
     }
 
-    if (m_sb->contains(key))
-        return m_sb->setting<Distance>(key);
+    if (m_sb->contains(key)) return m_sb->setting<Distance>(key);
 
     return default_value;
 }
 
 bool Vector2InputWidget::hasConsistentEffectiveValues(const QString& key, Distance default_value) {
-    if (m_settings_bases.size() <= 1)
-        return true;
+    if (m_settings_bases.size() <= 1) return true;
 
     const Distance global_value = m_sb->contains(key) ? m_sb->setting<Distance>(key) : default_value;
-    const Distance first_value = effectiveValueHelper<Distance>(key, 0, global_value);
+    const Distance first_value  = effectiveValueHelper<Distance>(key, 0, global_value);
     for (int index = 1, end = m_settings_bases.size(); index < end; ++index) {
-        if (effectiveValueHelper<Distance>(key, index, global_value) != first_value)
-            return false;
+        if (effectiveValueHelper<Distance>(key, index, global_value) != first_value) return false;
     }
 
     return true;
@@ -247,8 +238,7 @@ bool Vector2InputWidget::hasConsistentEffectiveValues(const QString& key, Distan
 
 bool Vector2InputWidget::hasAnyInconsistentValue() {
     for (const Component& component : m_components) {
-        if (!hasConsistentEffectiveValues(component.key, component.default_value))
-            return true;
+        if (!hasConsistentEffectiveValues(component.key, component.default_value)) return true;
     }
 
     return false;
@@ -269,12 +259,11 @@ void Vector2InputWidget::updateWarningStateAfterEdit() {
 
 void Vector2InputWidget::setSpinBoxValue(QDoubleSpinBox* spin_box, const QString& key, Distance default_value,
                                          bool only_if_consistent, bool& consistent) {
-    Distance unit = PreferencesManager::getInstance()->getDistanceUnit();
+    Distance unit           = PreferencesManager::getInstance()->getDistanceUnit();
     bool setting_consistent = true;
-    Distance value = reloadDistanceValue(key, default_value, setting_consistent);
-    consistent = setting_consistent;
+    Distance value          = reloadDistanceValue(key, default_value, setting_consistent);
+    consistent              = setting_consistent;
 
-    if (!only_if_consistent || setting_consistent)
-        spin_box->setValue(value.to(unit));
+    if (!only_if_consistent || setting_consistent) spin_box->setValue(value.to(unit));
 }
-} // namespace ORNL
+}  // namespace ORNL

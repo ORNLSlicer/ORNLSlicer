@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Cincinnati Inc. syntax
  */
 class CincinnatiWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     CincinnatiWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -84,7 +84,7 @@ class CincinnatiWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the tamper
     QString writeTamperOn();
     //! \brief Writes G-Code to disable the tamper
@@ -133,5 +133,5 @@ class CincinnatiWriter : public WriterBase {
     QString m_M10, m_M11, m_M64, m_M65;
     int m_material_number;
 
-}; // class CincinnatiWriter
-} // namespace ORNL
+};  // class CincinnatiWriter
+}  // namespace ORNL

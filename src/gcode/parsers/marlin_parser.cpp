@@ -1,8 +1,8 @@
 #include "gcode/parsers/marlin_parser.h"
 
+#include <QString>
 #include <functional>
 
-#include <QString>
 #include <qcontainerfwd.h>
 #include <qlatin1stringview.h>
 
@@ -14,7 +14,7 @@ MarlinParser::MarlinParser(GcodeMeta meta, bool allowLayerAlter, QStringList& li
     : CommonParser(meta, allowLayerAlter, lines, upperLines) {
     config();
 
-    m_home_string = QLatin1String("X0 Y0 Z0");
+    m_home_string     = QLatin1String("X0 Y0 Z0");
     m_home_parameters = m_home_string.split(' ');
 }
 
@@ -40,5 +40,7 @@ void MarlinParser::G92Handler(QVector<QString> params) {
 }
 
 // M83 ; use relative distances for extrusion
-void MarlinParser::M83Handler(QVector<QString> params) { m_e_absolute = false; }
-} // namespace ORNL
+void MarlinParser::M83Handler(QVector<QString> params) {
+    m_e_absolute = false;
+}
+}  // namespace ORNL

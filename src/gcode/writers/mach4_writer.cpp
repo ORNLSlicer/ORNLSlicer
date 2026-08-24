@@ -1,6 +1,7 @@
 #include "gcode/writers/mach4_writer.h"
 
 #include <QStringBuilder>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -21,13 +22,13 @@ Mach4Writer::Mach4Writer(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
 
 QString Mach4Writer::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                        int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
     m_deposition_active = false;
-    m_first_print = true;
-    m_first_travel = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
+    m_first_print       = true;
+    m_first_travel      = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += "M140 P" % QString::number(m_sb->setting<Temperature>(MS::Temperatures::kBed).to(degC)) %
@@ -49,9 +50,7 @@ QString Mach4Writer::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
         if (m_sb->setting<int>(MS::Filament::kRelative) > 0) {
             rv += "G91" % commentSpaceLine("USE RELATIVE EXTRUSION DISTANCES");
         }
-        else {
-            rv += "G90" % commentSpaceLine("USE ABSOLUTE EXTRUSION DISTANCES");
-        }
+        else { rv += "G90" % commentSpaceLine("USE ABSOLUTE EXTRUSION DISTANCES"); }
 
         rv += "G92 A0" % commentSpaceLine("RESET FILAMENT AXIS TO 0");
 
@@ -81,8 +80,7 @@ QString Mach4Writer::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
         m_start_point = Point(minimum_x, minimum_y, 0);
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -93,7 +91,7 @@ QString Mach4Writer::writeInitialSetup(Distance minimum_x, Distance minimum_y, D
 
 QString Mach4Writer::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     if (m_sb->setting<bool>(MS::Retraction::kEnable) && m_sb->setting<bool>(MS::Retraction::kLayerChange) &&
         new_min_z > sb->setting<Distance>(PS::Layer::kLayerHeight)) {
@@ -176,7 +174,7 @@ QString Mach4Writer::writeTravel(Point start_location, Point target_location, Tr
 
     Distance liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -195,7 +193,7 @@ QString Mach4Writer::writeTravel(Point start_location, Point target_location, Tr
 
     // write the lift
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G1 % m_f %
               QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
               writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
@@ -205,7 +203,7 @@ QString Mach4Writer::writeTravel(Point start_location, Point target_location, Tr
     // write the travel
     Point travel_destination = target_location;
     if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
           commentSpaceLine("TRAVEL");
@@ -225,14 +223,14 @@ QString Mach4Writer::writeTravel(Point start_location, Point target_location, Tr
 
 QString Mach4Writer::writeLine(const Point& start_point, const Point& target_point,
                                const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     QString rv;
 
     // check if extruder needs priming
-    bool needs_prime = !m_deposition_active;
+    bool needs_prime    = !m_deposition_active;
     m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
@@ -285,8 +283,7 @@ QString Mach4Writer::writeLine(const Point& start_point, const Point& target_poi
             }
         }
 
-        if (m_filament_location < 0)
-            rv += writePrime();
+        if (m_filament_location < 0) rv += writePrime();
     }
 
     rv += m_G1;
@@ -319,9 +316,9 @@ QString Mach4Writer::writeLine(const Point& start_point, const Point& target_poi
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance segment_length = start_point.distance(target_point);
-        Distance width = params->setting<Distance>(SS::kWidth);
-        Distance height = params->setting<Distance>(SS::kHeight);
+        Distance segment_length    = start_point.distance(target_point);
+        Distance width             = params->setting<Distance>(SS::kWidth);
+        Distance height            = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
         Distance segment_filament_length =
             (segment_length * width * height) / ((filament_diameter / 2) * (filament_diameter / 2) * 3.14159);
@@ -354,14 +351,14 @@ QString Mach4Writer::writeArc(const Point& start_point, const Point& end_point, 
                               const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // check if extruder needs priming
-    bool needs_prime = !m_deposition_active;
+    bool needs_prime    = !m_deposition_active;
     m_deposition_active = true;
 
     // If first printing segment, prime extruder, or at least undo any retraction, and update acceleration
@@ -414,8 +411,7 @@ QString Mach4Writer::writeArc(const Point& start_point, const Point& end_point, 
             }
         }
 
-        if (m_filament_location < 0)
-            rv += writePrime();
+        if (m_filament_location < 0) rv += writePrime();
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -439,7 +435,7 @@ QString Mach4Writer::writeArc(const Point& start_point, const Point& end_point, 
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // calculate and write E value if path is an extrusion path
@@ -461,9 +457,9 @@ QString Mach4Writer::writeArc(const Point& start_point, const Point& end_point, 
         else
             current_multiplier = m_sb->setting<double>(PS::Perimeter::kExtrusionMultiplier);
 
-        Distance length = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
-        Distance width = params->setting<Distance>(SS::kWidth);
-        Distance height = params->setting<Distance>(SS::kHeight);
+        Distance length            = ArcSegment(start_point, end_point, center_point, angle, ccw).length();
+        Distance width             = params->setting<Distance>(SS::kWidth);
+        Distance height            = params->setting<Distance>(SS::kHeight);
         Distance filament_diameter = m_sb->setting<Distance>(MS::Filament::kDiameter);
         Distance segment_filament_length =
             (length * width * height) / ((filament_diameter / 2) * (filament_diameter / 2) * 3.14159);
@@ -558,7 +554,9 @@ QString Mach4Writer::writeShutdown() {
     return rv;
 }
 
-QString Mach4Writer::writePurge(int RPM, int duration, int delay) { return {}; }
+QString Mach4Writer::writePurge(int RPM, int duration, int delay) {
+    return {};
+}
 
 QString Mach4Writer::writeDwell(Time time) {
     if (time > 0)
@@ -581,7 +579,7 @@ QString Mach4Writer::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
@@ -590,8 +588,7 @@ QString Mach4Writer::writeRetraction() {
     QString rv;
 
     if (m_filament_location >= 0 && m_sb->setting<bool>(MS::Retraction::kEnable)) {
-        if (m_filament_location != 0)
-            rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0");
+        if (m_filament_location != 0) rv += "G92 E0" % commentSpaceLine("RESET FILAMENT TO 0");
         m_filament_location = 0.0;
 
         rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(MS::Retraction::kSpeed).to(m_meta.m_velocity_unit)) %
@@ -627,4 +624,4 @@ QString Mach4Writer::writePrime() {
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

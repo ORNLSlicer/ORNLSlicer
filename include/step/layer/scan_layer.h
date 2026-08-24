@@ -17,7 +17,7 @@ class IslandBase;
  *  \brief Step that generates pathing for a laser or thermal scan.
  */
 class ScanLayer : public Step {
-  public:
+   public:
     //! \brief Constructor
     ScanLayer(int layer, const QSharedPointer<SettingsBase>& sb);
 
@@ -56,11 +56,11 @@ class ScanLayer : public Step {
     //! \brief Sets scan as first
     void setFirst();
 
-  private:
+   private:
     //! \brief Layer number
     int m_layer_num;
 
     //! \brief First travel connection.  Potentially requires a unique case.
     bool m_first_connect;
 };
-} // namespace ORNL
+}  // namespace ORNL

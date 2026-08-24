@@ -2,6 +2,7 @@
 
 #include <QColor>
 #include <QWidget>
+
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qlist.h>
@@ -12,7 +13,7 @@ namespace ORNL {
  * @brief Holds the path to the theme styles and the colors used for drawn objects
  */
 class Theme {
-  public:
+   public:
     //! @brief Constructor
     //! @param themeNum Number corresponding to the desired theme (should be taken from ThemeName enumerator)
     Theme(int themeNum);
@@ -177,7 +178,7 @@ class Theme {
     //! @return QString holding the folder path for the current theme
     QString getFolderPath();
 
-  private:
+   private:
     //! Folder path
     QString m_folder_path;
 
@@ -191,4 +192,4 @@ class Theme {
     QColor m_gcodeLineColor_base;
     QColor m_gcodeLineColor_highlight;
 };
-} // namespace ORNL
+}  // namespace ORNL

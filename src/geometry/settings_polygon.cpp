@@ -13,9 +13,7 @@ SettingsPolygon::SettingsPolygon(QVector<Polygon> geometry, QSharedPointer<Setti
     m_sb = sb;
 
     // Set geometry from cs.
-    if (!geometry.isEmpty()) {
-        this->addAll(geometry);
-    }
+    if (!geometry.isEmpty()) { this->addAll(geometry); }
 }
 
 QVector<Point> SettingsPolygon::clipLine(Point start, Point end) const {
@@ -47,7 +45,11 @@ QVector<Point> SettingsPolygon::clipLine(Point start, Point end) const {
     return rv;
 }
 
-QSharedPointer<SettingsBase> SettingsPolygon::getSettings() { return m_sb; }
+QSharedPointer<SettingsBase> SettingsPolygon::getSettings() {
+    return m_sb;
+}
 
-QSharedPointer<SettingsBase> SettingsPolygon::getSettings() const { return m_sb; }
-} // namespace ORNL
+QSharedPointer<SettingsBase> SettingsPolygon::getSettings() const {
+    return m_sb;
+}
+}  // namespace ORNL

@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QUuid>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -15,7 +16,7 @@
 
 namespace ORNL {
 class IslandBaseOrderOptimizer {
-  public:
+   public:
     //! \brief (Mode 1) Used to order islands in an order according to an optimization method
     //! \param current_position Point that represents current position, altered interally
     //! \param island_list List of islands to consider
@@ -60,7 +61,7 @@ class IslandBaseOrderOptimizer {
     //! \return Index for last island visited
     int getFirstIndexSelected();
 
-  private:
+   private:
     //! \brief Optimization information about last island visited in previous layers. Used only in the
     //! least recently used optimization mode.
     int m_last_island_visited;
@@ -189,4 +190,4 @@ class IslandBaseOrderOptimizer {
     int minDistanceLastPoint(QHash<QSet<int>, QMap<int, Distance>> DP_Distance_Map, QSet<int> point_set,
                              int ending_point_index);
 };
-} // namespace ORNL
+}  // namespace ORNL

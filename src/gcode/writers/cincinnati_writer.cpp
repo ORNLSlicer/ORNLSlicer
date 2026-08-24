@@ -1,9 +1,9 @@
 #include "gcode/writers/cincinnati_writer.h"
 
+#include <QStringBuilder>
 #include <cmath>
 #include <limits>
 
-#include <QStringBuilder>
 #include <qcontainerfwd.h>
 #include <qnumeric.h>
 #include <qsharedpointer.h>
@@ -19,29 +19,29 @@
 
 namespace ORNL {
 CincinnatiWriter::CincinnatiWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {
-    m_laser_prefix = "G104 P60000 ";
+    m_laser_prefix    = "G104 P60000 ";
     m_laser_delimiter = '|';
-    m_M10 = "M10";
-    m_M11 = "M11";
-    m_M64 = "M64";
-    m_M65 = "M65";
+    m_M10             = "M10";
+    m_M11             = "M11";
+    m_M64             = "M64";
+    m_M65             = "M65";
 }
 
 QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x,
                                             Distance maximum_y, int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_w         = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_travel = true;
-    m_is_lift = false;
-    m_is_travel = false;
-    m_z_travel = false;
-    m_w_travel = false;
-    m_first_print = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
-    m_material_number = -1;
+    m_first_travel      = true;
+    m_is_lift           = false;
+    m_is_travel         = false;
+    m_z_travel          = false;
+    m_w_travel          = false;
+    m_first_print       = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
+    m_material_number   = -1;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
@@ -55,9 +55,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
             rv += "M270 L1 " % commentLine("SET FEEDRATE MULTIPLIER TO 100%");
         }
         rv += "G1 F120 " % commentLine("SET INITIAL FEEDRATE");
-        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
-            rv += "M0" % commentSpaceLine("WAIT FOR USER");
-        }
+        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) { rv += "M0" % commentSpaceLine("WAIT FOR USER"); }
         rv += writeDwell(0.25);
 
         if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) != static_cast<int>(LayerChange::kW_only)) {
@@ -68,9 +66,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
                       " Z0" % commentSpaceLine("LIFT Z FOR SAFETY");
                 setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
             }
-            else {
-                rv += "G0 Z0 " % commentLine("LIFT Z FOR SAFETY");
-            }
+            else { rv += "G0 Z0 " % commentLine("LIFT Z FOR SAFETY"); }
             m_current_z = 0;
         }
     }
@@ -102,9 +98,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
         rv +=
             writePurge(m_sb->setting<int>(MS::Purge::kInitialScrewRPM), m_sb->setting<int>(MS::Purge::kInitialDuration),
                        m_sb->setting<int>(MS::Purge::kInitialTipWipeDelay));
-        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) {
-            rv += "M0" % commentSpaceLine("WAIT FOR USER");
-        }
+        if (m_sb->setting<int>(PRS::GCode::kEnableWaitForUser)) { rv += "M0" % commentSpaceLine("WAIT FOR USER"); }
     }
 
     if (m_sb->setting<bool>(PS::LaserScanner::kLaserScanner) &&
@@ -138,9 +132,7 @@ QString CincinnatiWriter::writeInitialSetup(Distance minimum_x, Distance minimum
               commentLine(Constants::RegionTypeStrings::kThermalScan % " - TRANSMIT FILENAME|#TEMPFILENAME#");
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") {
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
-    }
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") { rv += m_sb->setting<QString>(PRS::GCode::kStartCode); }
 
     rv += m_newline;
 
@@ -155,7 +147,7 @@ QString CincinnatiWriter::writeBeforeLayer(float new_min_z, QSharedPointer<Setti
     m_layer_start = true;
 
     const Distance& layer_height = sb->setting<Distance>(PS::Layer::kLayerHeight);
-    m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
+    m_spiral_layer               = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
     // Retrieve the slicing plane normal
     QVector3D slicing_vector = {sb->setting<float>(PS::Slicing::kSlicePlaneNormalX),
@@ -173,9 +165,7 @@ QString CincinnatiWriter::writeBeforeLayer(float new_min_z, QSharedPointer<Setti
         slicing_vector == QVector3D(0, 0, 1) && !m_spiral_layer) {
         // Means that a layer doesn't have geometry on it, didn't find a lower point don't want this to affect table
         // height
-        if (new_min_z == std::numeric_limits<float>::max()) {
-            new_min_z = m_min_z;
-        }
+        if (new_min_z == std::numeric_limits<float>::max()) { new_min_z = m_min_z; }
 
         float z_change = (new_min_z - m_min_z);
 
@@ -225,9 +215,13 @@ QString CincinnatiWriter::writeBeforeLayer(float new_min_z, QSharedPointer<Setti
     return rv;
 }
 
-QString CincinnatiWriter::writeBeforePart(QVector3D normal) { return QString(); }
+QString CincinnatiWriter::writeBeforePart(QVector3D normal) {
+    return QString();
+}
 
-QString CincinnatiWriter::writeBeforeIsland() { return QString(); }
+QString CincinnatiWriter::writeBeforeIsland() {
+    return QString();
+}
 
 QString CincinnatiWriter::writeBeforeScan(Point min, Point max, int layer, int boundingBox, Axis axis, Angle angle) {
     QString rv;
@@ -247,25 +241,13 @@ QString CincinnatiWriter::writeBeforeScan(Point min, Point max, int layer, int b
 QString CincinnatiWriter::writeBeforeRegion(RegionType type, int pathSize) {
     QString rv;
     if (!m_spiral_layer || m_first_print) {
-        if (type == RegionType::kPerimeter) {
-            rv += "M12 (PERIMETER SPINDLE ADJUSTMENT)\n";
-        }
-        else if (type == RegionType::kInset) {
-            rv += "M13 (INSET SPINDLE ADJUSTMENT)\n";
-        }
-        else if (type == RegionType::kSkin) {
-            rv += "M15 (SKIN SPINDLE ADJUSTMENT)\n";
-        }
-        else if (type == RegionType::kInfill) {
-            rv += "M14 (INFILL SPINDLE ADJUSTMENT)\n";
-        }
+        if (type == RegionType::kPerimeter) { rv += "M12 (PERIMETER SPINDLE ADJUSTMENT)\n"; }
+        else if (type == RegionType::kInset) { rv += "M13 (INSET SPINDLE ADJUSTMENT)\n"; }
+        else if (type == RegionType::kSkin) { rv += "M15 (SKIN SPINDLE ADJUSTMENT)\n"; }
+        else if (type == RegionType::kInfill) { rv += "M14 (INFILL SPINDLE ADJUSTMENT)\n"; }
         else if (type == RegionType::kSkeleton) {
-            if (m_sb->setting<bool>(PS::Skeleton::kUseSkinMcode)) {
-                rv += "M15 (SKIN SPINDLE ADJUSTMENT)\n";
-            }
-            else {
-                rv += "M13 (INSET SPINDLE ADJUSTMENT)\n";
-            }
+            if (m_sb->setting<bool>(PS::Skeleton::kUseSkinMcode)) { rv += "M15 (SKIN SPINDLE ADJUSTMENT)\n"; }
+            else { rv += "M13 (INSET SPINDLE ADJUSTMENT)\n"; }
         }
     }
     return rv;
@@ -311,9 +293,7 @@ QString CincinnatiWriter::writeBeforePath(RegionType type) {
             }
             rv += writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kSupport));
         }
-        else {
-            rv += writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kDefault));
-        }
+        else { rv += writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kDefault)); }
     }
     return rv;
 }
@@ -323,7 +303,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     QString rv;
 
     Point new_start_location;
-    RegionType rType = params->setting<RegionType>(SS::kRegionType);
+    RegionType rType           = params->setting<RegionType>(SS::kRegionType);
     bool w_active_first_travel = false;
 
     // Determine if travel length is short enough to keep deposition active.
@@ -334,28 +314,20 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
         rv += writeExtruderOn(rType == RegionType::kUnknown ? RegionType::kPerimeter : rType, rpm, params);
     }
 
-    if (m_first_travel) {
-        w_active_first_travel = true;
-    }
+    if (m_first_travel) { w_active_first_travel = true; }
 
     // Use updated start location if this is the first travel
-    if (m_first_travel) {
-        new_start_location = m_start_point;
-    }
-    else {
-        new_start_location = start_location;
-    }
+    if (m_first_travel) { new_start_location = m_start_point; }
+    else { new_start_location = start_location; }
 
     Distance liftDist;
     if (rType == RegionType::kLaserScan) {
         liftDist = m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerHeight) -
                    m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerHeightOffset);
     }
-    else {
-        liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
-    }
+    else { liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight); }
 
-    bool travel_lift_required = liftDist > 0; // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -369,9 +341,9 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     // write the lift
     if (travel_lift_required && !m_first_travel &&
         (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        m_is_lift = true;
-        m_is_travel = false;
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        m_is_lift              = true;
+        m_is_travel            = false;
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
             if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kW_only)) {
                 rv += m_G1 % m_f %
@@ -385,9 +357,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
                       writeCoordinates(lift_destination);
             }
         }
-        else {
-            rv += m_G0 % writeCoordinates(lift_destination);
-        }
+        else { rv += m_G0 % writeCoordinates(lift_destination); }
 
         if (m_w_travel) {
             rv += commentSpaceLine("TRAVEL LOWER W");
@@ -401,31 +371,27 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
 
     // write the travel
     Point travel_destination = target_location;
-    m_is_travel = true;
-    if (m_first_travel) {
-        travel_destination.z(qAbs(m_sb->setting<Distance>(PRS::Dimensions::kZOffset)()));
-    }
+    m_is_travel              = true;
+    if (m_first_travel) { travel_destination.z(qAbs(m_sb->setting<Distance>(PRS::Dimensions::kZOffset)())); }
     else if (travel_lift_required) {
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
     }
 
     if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
         rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %
               writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     }
-    else {
-        rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
-    }
+    else { rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL"); }
 
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel) {       // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel) {        // if this is the first travel
+        m_first_travel = false;  // update for next one
     }
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
-        m_is_lift = false;
+        m_is_lift   = false;
         m_is_travel = false;
         if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
             if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kW_only)) {
@@ -440,9 +406,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
                       writeCoordinates(target_location);
             }
         }
-        else {
-            rv += m_G0 % writeCoordinates(target_location);
-        }
+        else { rv += m_G0 % writeCoordinates(target_location); }
 
         if (m_w_travel) {
             rv += commentSpaceLine("TRAVEL LIFT W");
@@ -463,9 +427,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
                       QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
                       m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
             }
-            else {
-                rv += m_G0 % m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
-            }
+            else { rv += m_G0 % m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT"); }
         }
         else {
             if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
@@ -495,9 +457,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
                       QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
                       m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
             }
-            else {
-                rv += m_G0 % m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
-            }
+            else { rv += m_G0 % m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT"); }
         }
         else {
             if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
@@ -523,12 +483,12 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
 
 QString CincinnatiWriter::writeLine(const Point& start_point, const Point& target_point,
                                     const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
-    int material_number = params->setting<int>(SS::kMaterialNumber);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    int rpm                      = params->setting<int>(SS::kExtruderSpeed);
+    int material_number          = params->setting<int>(SS::kMaterialNumber);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     QString rv;
 
@@ -564,9 +524,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
         setFeedrate(speed);
         rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
 
-        if (!m_sb->setting<int>(MS::Extruder::kEnableM3S)) {
-            rv += m_s % QString::number(output_rpm);
-        }
+        if (!m_sb->setting<int>(MS::Extruder::kEnableM3S)) { rv += m_s % QString::number(output_rpm); }
         m_current_rpm = rpm;
 
         m_layer_start = false;
@@ -600,9 +558,7 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     }
 
     // Add path modifiers to comments
-    if (path_modifiers != PathModifiers::kNone) {
-        comment += m_space % toString(path_modifiers);
-    }
+    if (path_modifiers != PathModifiers::kNone) { comment += m_space % toString(path_modifiers); }
 
     // Add comment
     rv += commentSpaceLine(comment);
@@ -616,21 +572,19 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
                                    const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    float output_rpm = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
+    float output_rpm    = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     // update the material number if needed
     if (material_number != m_material_number && m_sb->setting<int>(MS::MultiMaterial::kEnable)) {
         if (m_sb->setting<int>(MS::MultiMaterial::kUseM222)) {
             rv += "M222 P" % QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL");
         }
-        else {
-            rv += "M237 L" % QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL");
-        }
+        else { rv += "M237 L" % QString::number(material_number) % commentSpaceLine("CHANGE MATERIAL"); }
         m_material_number = material_number;
     }
 
@@ -642,9 +596,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
         }
     }
 
-    if (!m_deposition_active && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm, params);
-    }
+    if (!m_deposition_active && rpm > 0) { rv += writeExtruderOn(region_type, rpm, params); }
 
     // Update extruder speed if not correct and if M3 S is desired rather than G* S which is issued later
     if (m_sb->setting<int>(MS::Extruder::kEnableM3S) && rpm != m_current_rpm) {
@@ -673,9 +625,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
     if (path_modifiers != PathModifiers::kNone) {
         rv += commentSpaceLine(toString(region_type) % m_space % toString(path_modifiers));
     }
-    else {
-        rv += commentSpaceLine(toString(region_type));
-    }
+    else { rv += commentSpaceLine(toString(region_type)); }
 
     return rv;
 }
@@ -689,9 +639,7 @@ QString CincinnatiWriter::writeScan(Point target_point, Velocity speed, bool on_
                   Constants::RegionTypeStrings::kLaserScan % " - START|" %
                   QString::number(m_sb->setting<Distance>(PS::LaserScanner::kLaserScannerStepDistance).to(mm), 'f', 4));
     }
-    else {
-        rv += m_laser_prefix % commentLine(Constants::RegionTypeStrings::kLaserScan % " - STOP");
-    }
+    else { rv += m_laser_prefix % commentLine(Constants::RegionTypeStrings::kLaserScan % " - STOP"); }
 
     rv += m_G1 % m_x % QString::number(Distance(target_point.x()).to(m_meta.m_distance_unit), 'f', 4) % m_y %
           QString::number(Distance(target_point.y()).to(m_meta.m_distance_unit), 'f', 4) %
@@ -703,7 +651,7 @@ QString CincinnatiWriter::writeScan(Point target_point, Velocity speed, bool on_
 QString CincinnatiWriter::writeAfterPath(RegionType type) {
     QString rv;
     if (!m_spiral_layer) {
-        rv += writeExtruderOff(); // update to turn off the extruder
+        rv += writeExtruderOff();  // update to turn off the extruder
         if (type == RegionType::kPerimeter) {
             if (!m_sb->setting<QString>(PS::GCode::kPerimeterEnd).isEmpty()) {
                 rv += m_sb->setting<QString>(PS::GCode::kPerimeterEnd) % m_newline;
@@ -738,7 +686,9 @@ QString CincinnatiWriter::writeAfterPath(RegionType type) {
     return rv;
 }
 
-QString CincinnatiWriter::writeAfterRegion(RegionType type) { return QString(); }
+QString CincinnatiWriter::writeAfterRegion(RegionType type) {
+    return QString();
+}
 
 QString CincinnatiWriter::writeAfterScan(Distance beadWidth, Distance laserStep, Distance laserResolution) {
     int xDistance = round((beadWidth.to(mm) / laserStep.to(mm)));
@@ -749,9 +699,13 @@ QString CincinnatiWriter::writeAfterScan(Distance beadWidth, Distance laserStep,
                        m_laser_delimiter % QString::number(yDistance));
 }
 
-QString CincinnatiWriter::writeAfterIsland() { return QString(); }
+QString CincinnatiWriter::writeAfterIsland() {
+    return QString();
+}
 
-QString CincinnatiWriter::writeAfterPart() { return QString(); }
+QString CincinnatiWriter::writeAfterPart() {
+    return QString();
+}
 
 QString CincinnatiWriter::writeAfterLayer() {
     QString rv;
@@ -783,14 +737,12 @@ QString CincinnatiWriter::writeShutdown() {
 
 QString CincinnatiWriter::writeFinalLift() {
     const Distance final_lift = m_sb->setting<Distance>(PS::Travel::kFinalLiftDistance);
-    if (final_lift <= 0 || !hasCurrentPosition()) {
-        return QString();
-    }
+    if (final_lift <= 0 || !hasCurrentPosition()) { return QString(); }
 
     QString rv;
     const Point lift_destination = getCurrentPosition() + getLiftVector(final_lift);
 
-    m_is_lift = true;
+    m_is_lift   = true;
     m_is_travel = false;
 
     if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
@@ -807,16 +759,10 @@ QString CincinnatiWriter::writeFinalLift() {
             setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
         }
     }
-    else {
-        rv += m_G0 % writeCoordinates(lift_destination);
-    }
+    else { rv += m_G0 % writeCoordinates(lift_destination); }
 
-    if (m_w_travel) {
-        rv += commentSpaceLine("TRAVEL FINAL LIFT W");
-    }
-    else {
-        rv += commentSpaceLine("TRAVEL FINAL LIFT Z");
-    }
+    if (m_w_travel) { rv += commentSpaceLine("TRAVEL FINAL LIFT W"); }
+    else { rv += commentSpaceLine("TRAVEL FINAL LIFT Z"); }
 
     setCurrentPosition(lift_destination);
     m_is_lift = false;
@@ -832,9 +778,7 @@ QString CincinnatiWriter::writeDwell(Time time) {
     if (time > 0) {
         return m_G4 % m_p % QString::number(time.to(m_meta.m_time_unit), 'f', 4) % commentSpaceLine("DWELL");
     }
-    else {
-        return QString();
-    }
+    else { return QString(); }
 }
 
 QString CincinnatiWriter::writeTamperOn() {
@@ -842,18 +786,12 @@ QString CincinnatiWriter::writeTamperOn() {
         return m_M64 % m_l % QString::number(m_sb->setting<Voltage>(PRS::Auxiliary::kTamperVoltage).to(V)) %
                commentSpaceLine("TURN TAMPER ON");
     }
-    else {
-        return QString();
-    }
+    else { return QString(); }
 }
 
 QString CincinnatiWriter::writeTamperOff() {
-    if (m_sb->setting<int>(PRS::Auxiliary::kEnableTamper)) {
-        return m_M65 % commentSpaceLine("TURN TAMPER OFF");
-    }
-    else {
-        return QString();
-    }
+    if (m_sb->setting<int>(PRS::Auxiliary::kEnableTamper)) { return m_M65 % commentSpaceLine("TURN TAMPER OFF"); }
+    else { return QString(); }
 }
 
 QString CincinnatiWriter::writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params) {
@@ -945,10 +883,9 @@ QString CincinnatiWriter::writeExtruderOff() {
 }
 
 QString CincinnatiWriter::writeAcceleration(Acceleration acc) {
-    float ci_acc = acc.to(m_meta.m_acceleration_unit) / 386.08858; // Convert to units of G
+    float ci_acc = acc.to(m_meta.m_acceleration_unit) / 386.08858;  // Convert to units of G
 
-    if (ci_acc == 0)
-        return QString();
+    if (ci_acc == 0) return QString();
 
     ci_acc = (1 / ci_acc * 1000000 * 25.4 / 162560) / (1000 * 9.81);
     return "M66 L" % QString::number(ci_acc, 'g', 4) % commentSpaceLine("SET ACCELERATION");
@@ -972,7 +909,7 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
     // only output Z/W coordinate if there was a change in Z/W
     Distance temp_dest_z = destination.z();
     Distance temp_last_z = m_last_z;
-    Distance z_offset = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    Distance z_offset    = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
 
     if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kZ_only)) {
         // move in Z only
@@ -982,12 +919,12 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
         // to the next.
         if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_z < m_last_z)) {
-            target_z = m_last_z + m_sb->setting<Distance>(PS::Travel::kLiftHeight);
+            target_z  = m_last_z + m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
         else if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
                  m_is_travel == true && (target_z < m_last_z)) {
-            target_z = m_last_z;
+            target_z    = m_last_z;
             m_is_travel = false;
         }
 
@@ -996,12 +933,10 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
                 rv += m_z % "[#200 + " % QString::number(Distance(destination.z()).to(m_meta.m_distance_unit), 'f', 4) %
                       "]";
             }
-            else {
-                rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
-            }
+            else { rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4); }
             m_current_z = target_z;
-            m_last_z = target_z;
-            m_z_travel = true;
+            m_last_z    = target_z;
+            m_z_travel  = true;
         }
     }
     else if (m_sb->setting<int>(PRS::Dimensions::kLayerChangeAxis) == static_cast<int>(LayerChange::kW_only)) {
@@ -1012,23 +947,23 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
         // moving to the next.
         if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
             m_is_lift == true && (target_w > m_last_w)) {
-            target_w = m_last_w - m_sb->setting<Distance>(PS::Travel::kLiftHeight);
+            target_w  = m_last_w - m_sb->setting<Distance>(PS::Travel::kLiftHeight);
             m_is_lift = false;
         }
         else if (m_sb->setting<int>(PS::Optimizations::kLayerOrdering) == static_cast<int>(LayerOrdering::kByPart) &&
                  m_is_travel == true && (target_w > m_last_w)) {
-            target_w = m_last_w;
+            target_w    = m_last_w;
             m_is_travel = false;
         }
 
         if (qAbs(target_w - m_last_w) > 10 && !m_first_travel) {
             rv += m_w % QString::number(Distance(target_w).to(m_meta.m_distance_unit), 'f', 4);
             m_current_w = target_w;
-            m_last_w = target_w;
-            m_w_travel = true;
+            m_last_w    = target_w;
+            m_w_travel  = true;
         }
     }
-    else { // Both Z and W
+    else {  // Both Z and W
         if (m_spiral_layer) {
             if (m_first_travel) {
                 // use Z for first travels to lower extruder down - bed is raised to top by the initial setup
@@ -1040,12 +975,10 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
                                               4) %
                               "]";
                     }
-                    else {
-                        rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
-                    }
+                    else { rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4); }
                     m_current_z = target_z;
-                    m_last_z = target_z;
-                    m_z_travel = true;
+                    m_last_z    = target_z;
+                    m_z_travel  = true;
                 }
             }
             else {
@@ -1059,16 +992,14 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
                                               4) %
                               "]";
                     }
-                    else {
-                        rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
-                    }
+                    else { rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4); }
                     m_current_z = target_z;
-                    m_last_z = target_z;
-                    m_z_travel = true;
+                    m_last_z    = target_z;
+                    m_z_travel  = true;
                 }
                 else {
                     m_current_w = target_w;
-                    m_last_w = target_w;
+                    m_last_w    = target_w;
                     rv += m_w % QString::number(Distance(target_w).to(m_meta.m_distance_unit), 'f', 4);
                     m_w_travel = true;
                 }
@@ -1091,15 +1022,13 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
                           QString::number(Distance(destination.z() + m_current_w).to(m_meta.m_distance_unit), 'f', 4) %
                           "]";
                 }
-                else {
-                    rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
-                }
+                else { rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4); }
                 m_current_z = target_z;
-                m_last_z = target_z;
-                m_z_travel = true;
+                m_last_z    = target_z;
+                m_z_travel  = true;
             }
         }
     }
     return rv;
 }
-} // namespace ORNL
+}  // namespace ORNL

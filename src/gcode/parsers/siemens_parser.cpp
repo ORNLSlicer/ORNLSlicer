@@ -1,10 +1,10 @@
 #include "gcode/parsers/siemens_parser.h"
 
-#include <functional>
-
 #include <QString>
 #include <QStringList>
 #include <QVector>
+#include <functional>
+
 #include <qcontainerfwd.h>
 
 #include "gcode/gcode_meta.h"
@@ -33,4 +33,4 @@ void SiemensParser::ExtruderOffHandler(QVector<QString> params) {
     // redirect - essentially M5 command
     CommonParser::M5Handler(params);
 }
-} // namespace ORNL
+}  // namespace ORNL

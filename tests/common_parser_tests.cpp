@@ -1,9 +1,8 @@
+#include <QCoreApplication>
+#include <QStringList>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
-
-#include <QCoreApplication>
-#include <QStringList>
 
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/common_parser.h"
@@ -11,16 +10,13 @@
 
 namespace {
 bool expect(bool condition, const char* message) {
-    if (!condition)
-        std::cerr << message << '\n';
+    if (!condition) std::cerr << message << '\n';
     return condition;
 }
 
 QStringList upperLines(const QStringList& lines) {
     QStringList upper_lines;
-    for (const QString& line : lines) {
-        upper_lines.append(line.toUpper());
-    }
+    for (const QString& line : lines) { upper_lines.append(line.toUpper()); }
 
     return upper_lines;
 }
@@ -46,16 +42,15 @@ bool accumulatesTravelTimeForTravelCommentAfterDepositionMove() {
 
     try {
         const QList<QList<ORNL::GcodeCommand>> commands = parser.parseLines();
-        return commands.size() == 1 && commands.first().size() == 2 &&
-               commands.first().first().getDepositionActive() && !commands.first().last().getDepositionActive() &&
-               parser.getPrintingDistance() > 0.0 * ORNL::mm && parser.getTravelDistance() > 0.0 * ORNL::mm &&
-               parser.getTravelTime() > 0.0 * ORNL::s;
+        return commands.size() == 1 && commands.first().size() == 2 && commands.first().first().getDepositionActive() &&
+               !commands.first().last().getDepositionActive() && parser.getPrintingDistance() > 0.0 * ORNL::mm &&
+               parser.getTravelDistance() > 0.0 * ORNL::mm && parser.getTravelTime() > 0.0 * ORNL::s;
     } catch (const std::exception& ex) {
         std::cerr << ex.what() << '\n';
         return false;
     }
 }
-} // namespace
+}  // namespace
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);

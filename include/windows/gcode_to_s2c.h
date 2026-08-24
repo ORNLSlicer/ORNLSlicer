@@ -1,10 +1,10 @@
 #pragma once
 
-#include <optional>
-
 #include <QDialog>
 #include <QLabel>
 #include <QLineEdit>
+#include <optional>
+
 #include <qcheckbox.h>
 #include <qdialogbuttonbox.h>
 #include <qgridlayout.h>
@@ -17,18 +17,18 @@ namespace ORNL {
 
 class GcodeToS2CDialog : public QDialog {
     Q_OBJECT
-  public:
+   public:
     explicit GcodeToS2CDialog(QWidget* parent = nullptr);
 
     QString outputFilePath() const;
 
-  private slots:
+   private slots:
     void browseGcodeFile();
     void browseOutputFile();
     void refreshAcceptState();
     void accept() override;
 
-  private:
+   private:
     void setupUi();
     void setDefaultOutputPath();
     std::optional<fifojson> promptForMissingValue(const QString& key, const fifojson& master_entry);
@@ -43,4 +43,4 @@ class GcodeToS2CDialog : public QDialog {
     QDialogButtonBox* m_buttons;
 };
 
-} // namespace ORNL
+}  // namespace ORNL

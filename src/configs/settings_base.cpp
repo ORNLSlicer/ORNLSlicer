@@ -10,50 +10,54 @@
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
-SettingsBase::SettingsBase() { //: m_json(nlohmann::json::object()){
+SettingsBase::SettingsBase() {  //: m_json(nlohmann::json::object()){
     // NOP
 }
 
-void SettingsBase::populate(const QSharedPointer<SettingsBase> other) { this->populate(other->m_json); }
+void SettingsBase::populate(const QSharedPointer<SettingsBase> other) {
+    this->populate(other->m_json);
+}
 
 void SettingsBase::populate(const fifojson& j) {
     int index = 0;
     for (auto& array : j.items()) {
-        for (auto it : array.value().items()) {
-            m_json[index][it.key()] = it.value();
-        }
+        for (auto it : array.value().items()) { m_json[index][it.key()] = it.value(); }
         index++;
     }
 }
 
 void SettingsBase::splice(const fifojson& j) {
     for (auto& array : j.items()) {
-        for (auto it : array.value().items()) {
-            m_json.erase(it.key());
-        }
+        for (auto it : array.value().items()) { m_json.erase(it.key()); }
     }
 }
 
 bool SettingsBase::contains(QString key, int extruder_index) const {
-    if (m_json.size() == 0) {
-        return false;
-    }
-    if (extruder_index == 0) {
-        return m_json[extruder_index].contains(key.toStdString());
-    }
+    if (m_json.size() == 0) { return false; }
+    if (extruder_index == 0) { return m_json[extruder_index].contains(key.toStdString()); }
     else
         return false;
 }
 
-bool SettingsBase::empty() const { return m_json.empty(); }
+bool SettingsBase::empty() const {
+    return m_json.empty();
+}
 
-void SettingsBase::remove(QString key, int extruder_index) { m_json[extruder_index].erase((key).toStdString()); }
+void SettingsBase::remove(QString key, int extruder_index) {
+    m_json[extruder_index].erase((key).toStdString());
+}
 
-void SettingsBase::reset() { m_json.clear(); }
+void SettingsBase::reset() {
+    m_json.clear();
+}
 
-fifojson& SettingsBase::json() { return m_json; }
+fifojson& SettingsBase::json() {
+    return m_json;
+}
 
-void SettingsBase::json(const fifojson& j) { m_json = j; }
+void SettingsBase::json(const fifojson& j) {
+    m_json = j;
+}
 
 void SettingsBase::makeGlobalAdjustments() {
     // Spiralize - should print one single perimeter bead on every layer without and modifiers
@@ -121,7 +125,7 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
         double dx = setting<double>(PS::Optimizations::kCustomPointXIncrement);
         double dy = setting<double>(PS::Optimizations::kCustomPointYIncrement);
 
-        bool enable_second = setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
+        bool enable_second           = setting<bool>(PS::Optimizations::kEnableSecondCustomLocation);
         bool enable_second_every_two = setting<bool>(PS::Optimizations::kEnableSecondCustomLocationEveryTwo);
 
         if (enable_second && enable_second_every_two) {
@@ -152,11 +156,11 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
 
     if (setting<bool>(PS::Infill::kEnable)) {
         // modify the infill_angle for each specific layer before the setting being passed to the island and region
-        Angle infill_angle = setting<Angle>(PS::Infill::kAngle);
+        Angle infill_angle          = setting<Angle>(PS::Infill::kAngle);
         Angle infill_angle_rotation = setting<Angle>(PS::Infill::kAngleRotation);
 
         // For issue #239: combine infill for every X layers
-        int combineXLayers = setting<int>(PS::Infill::kCombineXLayers);
+        int combineXLayers    = setting<int>(PS::Infill::kCombineXLayers);
         int combineLayerShift = setting<int>(PS::Infill::kCombineLayerShift);
         if (combineXLayers > 1) {
             // layer_number is 0 based, while Layer::m_layer_nr is 1 based
@@ -165,29 +169,25 @@ void SettingsBase::makeLocalAdjustments(int layer_number) {
                  ((layer_number + 1 - combineLayerShift) % combineXLayers != 0))) {
                 setSetting(PS::Infill::kEnable, false);
             }
-            else {
-                infill_angle = infill_angle + infill_angle_rotation * (layer_number / combineXLayers);
-            }
+            else { infill_angle = infill_angle + infill_angle_rotation * (layer_number / combineXLayers); }
         }
-        else {
-            infill_angle = infill_angle + infill_angle_rotation * layer_number;
-        }
+        else { infill_angle = infill_angle + infill_angle_rotation * layer_number; }
         setSetting(PS::Infill::kAngle, infill_angle);
     }
 
     if (setting<bool>(PS::Skin::kEnable)) {
         // modify the skin_angle for each specific layer before the setting being passed to the island and region
-        Angle skin_angle = setting<Angle>(PS::Skin::kAngle);
+        Angle skin_angle          = setting<Angle>(PS::Skin::kAngle);
         Angle skin_angle_rotation = setting<Angle>(PS::Skin::kAngleRotation);
-        skin_angle = skin_angle + skin_angle_rotation * layer_number;
+        skin_angle                = skin_angle + skin_angle_rotation * layer_number;
         setSetting(PS::Skin::kAngle, skin_angle);
 
         if (setting<bool>(PS::Skin::kInfillEnable)) {
-            Angle skin_infill_angle = setting<Angle>(PS::Skin::kInfillAngle);
+            Angle skin_infill_angle          = setting<Angle>(PS::Skin::kInfillAngle);
             Angle skin_infill_angle_rotation = setting<Angle>(PS::Skin::kInfillRotation);
-            skin_infill_angle = skin_infill_angle + skin_infill_angle_rotation * layer_number;
+            skin_infill_angle                = skin_infill_angle + skin_infill_angle_rotation * layer_number;
             setSetting(PS::Skin::kInfillAngle, skin_infill_angle);
         }
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

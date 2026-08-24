@@ -27,9 +27,7 @@ QString ThermalScan::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kThermalScan);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kThermalScan);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kThermalScan);
     }
     gcode += writer->writeAfterRegion(RegionType::kThermalScan);
@@ -69,4 +67,4 @@ Path ThermalScan::createPath(Polyline line) {
 
     return newPath;
 }
-} // namespace ORNL
+}  // namespace ORNL

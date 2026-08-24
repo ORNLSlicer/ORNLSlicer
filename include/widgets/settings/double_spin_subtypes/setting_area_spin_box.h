@@ -21,7 +21,7 @@ class SettingTab;
 class SettingAreaSpinBox : public SettingDoubleSpinBox {
     Q_OBJECT
 
-  public:
+   public:
     //! \brief Default Constructor
     //! \param parent: parent settingtab to setup events
     //! \param sb: global setting base
@@ -38,7 +38,7 @@ class SettingAreaSpinBox : public SettingDoubleSpinBox {
     static SettingRowBase* createInstance(SettingTab* parent, QSharedPointer<SettingsBase> sb, QString key,
                                           fifojson json, QGridLayout* layout, int index);
 
-  public slots:
+   public slots:
     //! \brief Slot to handle when user manually changes value
     //! \param val: value cast to appropriate type within each class
     virtual void valueChanged(QVariant val) override;
@@ -47,4 +47,4 @@ class SettingAreaSpinBox : public SettingDoubleSpinBox {
     //! selects new setting profile
     virtual void reloadValue() override;
 };
-} // namespace ORNL
+}  // namespace ORNL

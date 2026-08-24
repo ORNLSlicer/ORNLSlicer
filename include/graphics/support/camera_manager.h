@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QMatrix4x4>
+
 #include <qpoint.h>
 #include <qvectornd.h>
 
@@ -12,7 +13,7 @@ namespace ORNL {
  * \brief Manages the camera for an OpenGL widget
  */
 class CameraManager {
-  public:
+   public:
     //! \brief Constructor
     CameraManager();
 
@@ -78,7 +79,7 @@ class CameraManager {
     //! \return the default zoom
     float getDefaultZoom();
 
-  private:
+   private:
     //! \brief Update the view matrix after new data is available.
     void updateViewMatrix();
 
@@ -88,10 +89,10 @@ class CameraManager {
     QVector3D m_pan;
 
     float m_default_zoom = Constants::OpenGL::kZoomDefault;
-    float m_max_zoom = Constants::OpenGL::kZoomMax;
+    float m_max_zoom     = Constants::OpenGL::kZoomMax;
 
     float m_pitch = 0;
-    float m_yaw = 0;
+    float m_yaw   = 0;
 
     QPointF m_drag_start;
 
@@ -103,6 +104,6 @@ class CameraManager {
     //! \brief View matrix that represents the translation and rotation of the camera
     QMatrix4x4 m_view;
 
-}; // class CameraManager
+};  // class CameraManager
 
-} // namespace ORNL
+}  // namespace ORNL

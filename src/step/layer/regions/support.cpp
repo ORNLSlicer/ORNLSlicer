@@ -33,9 +33,7 @@ QString Support::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kSupport);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kSupport);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kSupport);
     }
     gcode += writer->writeAfterRegion(RegionType::kSupport);
@@ -49,29 +47,27 @@ void Support::compute(uint layer_num) {
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
 
-    Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
-    Distance line_spacing = m_sb->setting<Distance>(PS::Support::kLineSpacing);
-    Area min_infill_area = m_sb->setting<Area>(PS::Support::kMinInfillArea);
-    InfillPatterns infill_pattern = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Support::kPattern));
-    const bool is_interface = m_sb->setting<bool>(PS::Support::kInterfaceRegion);
-    const bool is_base = m_sb->setting<bool>(PS::Support::kBaseRegion);
-    const bool is_tube_wall = m_sb->setting<bool>(PS::Support::kTubeWallRegion);
-    const bool is_dense = is_interface || is_base;
+    Distance bead_width            = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
+    Distance line_spacing          = m_sb->setting<Distance>(PS::Support::kLineSpacing);
+    Area min_infill_area           = m_sb->setting<Area>(PS::Support::kMinInfillArea);
+    InfillPatterns infill_pattern  = static_cast<InfillPatterns>(m_sb->setting<int>(PS::Support::kPattern));
+    const bool is_interface        = m_sb->setting<bool>(PS::Support::kInterfaceRegion);
+    const bool is_base             = m_sb->setting<bool>(PS::Support::kBaseRegion);
+    const bool is_tube_wall        = m_sb->setting<bool>(PS::Support::kTubeWallRegion);
+    const bool is_dense            = is_interface || is_base;
     const Angle interface_rotation = is_dense && layer_num % 2 == 1 ? 90 * deg : 0 * deg;
 
-    if (bead_width <= 0)
-        return;
+    if (bead_width <= 0) return;
 
     if (is_tube_wall) {
-        const int contour_count = qMax(1, m_sb->setting<int>(PS::Support::kTaperWallContours));
+        const int contour_count            = qMax(1, m_sb->setting<int>(PS::Support::kTaperWallContours));
         const PolygonList outer_boundaries = m_geometry.externalPolygonBoundaries();
         for (int contour = 0; contour < contour_count; ++contour) {
-            const Distance inset = bead_width / 2.0 + bead_width * contour;
+            const Distance inset               = bead_width / 2.0 + bead_width * contour;
             const PolygonList contour_geometry = outer_boundaries.offset(-inset);
             for (Polygon polygon : contour_geometry) {
                 Polyline line = polygon.toPolyline();
-                if (line.size() > 1)
-                    m_computed_perimeter_geometry.push_back(line);
+                if (line.size() > 1) m_computed_perimeter_geometry.push_back(line);
             }
         }
         return;
@@ -80,17 +76,15 @@ void Support::compute(uint layer_num) {
     // Invalid spacing previously caused an endless loop in support pattern
     // generation.  Falling back to two bead widths keeps old/incomplete
     // profiles printable while preserving sparse support.
-    if (line_spacing <= 0)
-        line_spacing = bead_width * 2.0;
+    if (line_spacing <= 0) line_spacing = bead_width * 2.0;
 
     const PolygonList support_geometry = m_geometry;
-    const int wall_contours = is_dense ? 1 : qMax(1, m_sb->setting<int>(PS::Support::kWallContours));
+    const int wall_contours            = is_dense ? 1 : qMax(1, m_sb->setting<int>(PS::Support::kWallContours));
     for (int contour = 0; contour < wall_contours; ++contour) {
         const Distance inset = bead_width / 2.0 + bead_width * contour;
         for (Polygon poly : support_geometry.offset(-inset)) {
             Polyline line = poly.toPolyline();
-            if (line.size() > 1)
-                m_computed_perimeter_geometry.push_back(line);
+            if (line.size() > 1) m_computed_perimeter_geometry.push_back(line);
         }
     }
 
@@ -103,7 +97,7 @@ void Support::compute(uint layer_num) {
                 computeLine(line_spacing, interface_rotation);
                 break;
             case InfillPatterns::kGrid:
-                computeGrid(line_spacing); // Default rotation angle = 0 deg
+                computeGrid(line_spacing);  // Default rotation angle = 0 deg
                 break;
             default:
                 // Support exposes Lines and Grid.  Treat stale or malformed
@@ -115,12 +109,11 @@ void Support::compute(uint layer_num) {
 }
 
 void Support::computeLine(Distance line_spacing, Angle rotation) {
-    const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
+    const Distance bead_width   = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
     PolygonList border_polygons = m_geometry.offset(-bead_width);
     if (!border_polygons.isEmpty()) {
         QVector<Polyline> lines = PatternGenerator::GenerateLines(border_polygons, line_spacing, rotation);
-        if (!lines.isEmpty())
-            m_computed_infill_geometry.push_back(lines);
+        if (!lines.isEmpty()) m_computed_infill_geometry.push_back(lines);
     }
 }
 
@@ -167,8 +160,7 @@ void Support::optimize(int layerNumber, Point& current_location, bool& shouldNex
 
     while (poo.getCurrentPolylineCount() > 0) {
         Polyline result = poo.linkNextPolyline();
-        if (result.size() > 2 && result.first() != result.last())
-            result.push_back(result.first());
+        if (result.size() > 2 && result.first() != result.last()) result.push_back(result.first());
         Path newPath = createPath(result);
 
         if (newPath.size() > 0) {
@@ -218,23 +210,19 @@ void Support::calculateModifiers(Path& path, bool supportsG3) {
 Path Support::createPath(Polyline line) {
     const bool is_closed_path = line.size() > 2 && line.first() == line.last();
     line = line.removeShortSegments(m_sb->setting<Distance>(PS::Support::kMinSegmentLength), is_closed_path);
-    if (line.size() < (is_closed_path ? 4 : 2)) {
-        return Path();
-    }
+    if (line.size() < (is_closed_path ? 4 : 2)) { return Path(); }
 
-    Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
-    Distance layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity speed = m_sb->setting<Velocity>(PS::Layer::kSpeed);
-    Acceleration acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kSupport);
+    Distance bead_width            = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
+    Distance layer_height          = m_sb->setting<Distance>(PS::Layer::kLayerHeight);
+    Velocity speed                 = m_sb->setting<Velocity>(PS::Layer::kSpeed);
+    Acceleration acceleration      = m_sb->setting<Acceleration>(PRS::Acceleration::kSupport);
     AngularVelocity extruder_speed = m_sb->setting<AngularVelocity>(PS::Layer::kExtruderSpeed);
-    int material_number = m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum);
+    int material_number            = m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum);
 
     Path newPath;
 
     for (int i = 0; i + 1 < line.size(); ++i) {
-        if (line[i] == line[i + 1]) {
-            continue;
-        }
+        if (line[i] == line[i + 1]) { continue; }
 
         QSharedPointer<LineSegment> segment = QSharedPointer<LineSegment>::create(line[i], line[i + 1]);
         segment->getSb()->setSetting(MS::Extruder::kInitialSpeed, m_sb->setting<int>(MS::Extruder::kInitialSpeed));
@@ -248,11 +236,7 @@ Path Support::createPath(Polyline line) {
         newPath.append(segment);
     }
 
-    if (newPath.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) {
-        return newPath;
-    }
-    else {
-        return Path();
-    }
+    if (newPath.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) { return newPath; }
+    else { return Path(); }
 }
-} // namespace ORNL
+}  // namespace ORNL

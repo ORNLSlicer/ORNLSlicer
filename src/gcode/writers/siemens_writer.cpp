@@ -1,6 +1,7 @@
 #include "gcode/writers/siemens_writer.h"
 
 #include <QStringBuilder>
+
 #include <qnumeric.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -21,14 +22,14 @@ SiemensWriter::SiemensWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>&
 
 QString SiemensWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                          int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
-    m_current_rpm = 0;
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_w         = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
+    m_current_rpm       = 0;
     m_deposition_active = false;
-    m_first_print = true;
-    m_first_travel = true;
-    m_layer_start = true;
-    m_min_z = 0.0f;
+    m_first_print       = true;
+    m_first_travel      = true;
+    m_layer_start       = true;
+    m_min_z             = 0.0f;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("SAFETY BLOCK - ESTABLISH OPERATIONAL MODES");
@@ -54,8 +55,7 @@ QString SiemensWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
         m_start_point = Point(minimum_x, minimum_y, 0);
     }
 
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -66,7 +66,7 @@ QString SiemensWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y,
 
 QString SiemensWriter::writeBeforeLayer(float new_min_z, QSharedPointer<SettingsBase> sb) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
-    m_layer_start = true;
+    m_layer_start  = true;
     QString rv;
     return rv;
 }
@@ -115,7 +115,7 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0; // do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0;  // do not write a lift on first travel
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -128,7 +128,7 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
 
     // write the lift
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly)) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G0 % writeCoordinates(lift_destination) % commentSpaceLine("TRAVEL LIFT Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
@@ -136,7 +136,7 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
     // write the travel
     Point travel_destination = target_location;
     if (travel_lift_required) {
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
     }
 
     rv += m_G0 % writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
@@ -148,16 +148,16 @@ QString SiemensWriter::writeTravel(Point start_location, Point target_location, 
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     return rv;
 }
 
 QString SiemensWriter::writeLine(const Point& start_point, const Point& target_point,
                                  const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     QString rv;
@@ -254,16 +254,14 @@ QString SiemensWriter::writeArc(const Point& start_point, const Point& end_point
                                 const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    int rpm = params->setting<int>(SS::kExtruderSpeed);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    int rpm             = params->setting<int>(SS::kExtruderSpeed);
     int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     // Turn on the extruder if it isn't already on
-    if (!m_deposition_active && rpm > 0) {
-        rv += writeExtruderOn(region_type, rpm);
-    }
+    if (!m_deposition_active && rpm > 0) { rv += writeExtruderOn(region_type, rpm); }
 
     rv += ((ccw) ? m_G3 : m_G2);
 
@@ -289,7 +287,7 @@ QString SiemensWriter::writeArc(const Point& start_point, const Point& end_point
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     // Add comment for gcode parser
@@ -371,7 +369,9 @@ QString SiemensWriter::writeShutdown() {
     return rv;
 }
 
-QString SiemensWriter::writePurge(int RPM, int duration, int delay) { return {}; }
+QString SiemensWriter::writePurge(int RPM, int duration, int delay) {
+    return {};
+}
 
 QString SiemensWriter::writeDwell(Time time) {
     if (time > 0)
@@ -380,9 +380,13 @@ QString SiemensWriter::writeDwell(Time time) {
         return {};
 }
 
-QString SiemensWriter::writeTamperOn() { return {}; }
+QString SiemensWriter::writeTamperOn() {
+    return {};
+}
 
-QString SiemensWriter::writeTamperOff() { return {}; }
+QString SiemensWriter::writeTamperOff() {
+    return {};
+}
 
 QString SiemensWriter::writeExtruderOn(RegionType type, int rpm) {
     QString rv;
@@ -409,9 +413,9 @@ QString SiemensWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

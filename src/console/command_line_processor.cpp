@@ -29,7 +29,7 @@ QStringList modelNameFilters() {
     }
     return filters;
 }
-} // namespace
+}  // namespace
 
 CommandLineConverter::CommandLineConverter() {
     m_master = QSharedPointer<SettingsBase>::create();
@@ -41,7 +41,6 @@ CommandLineConverter::CommandLineConverter() {
 }
 
 void CommandLineConverter::setupCommandLineParser(QCommandLineParser& parser) {
-
     // parser in-built options
     parser.addHelpOption();
 
@@ -139,8 +138,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
         QStringList stlList = parser.values(Constants::ConsoleOptionStrings::kInputStlFiles);
         for (int i = 0, end = stlList.size(); i < end; ++i) {
             validSTL = isValidModelFile(stlList[i]);
-            if (!validSTL)
-                return false;
+            if (!validSTL) return false;
 
             options->setSetting(Constants::ConsoleOptionStrings::kInputStlFiles + "_" + QString::number(i), stlList[i]);
         }
@@ -153,8 +151,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
     if (parser.isSet(Constants::ConsoleOptionStrings::kInputStlFilesDirectory)) {
         QDir dir(parser.value(Constants::ConsoleOptionStrings::kInputStlFilesDirectory));
         QStringList names = dir.entryList(modelNameFilters());
-        if (names.size() == 0)
-            return false;
+        if (names.size() == 0) return false;
 
         validSTLDirectory = true;
         for (int i = 0; i < names.size(); ++i)
@@ -216,8 +213,7 @@ bool CommandLineConverter::checkRequiredSettings(QCommandLineParser& parser, QSh
         QStringList stlList = parser.values(Constants::ConsoleOptionStrings::kInputSupportStlFiles);
         for (int i = 0, end = stlList.size(); i < end; ++i) {
             validSTL = isValidModelFile(stlList[i]);
-            if (!validSTL)
-                return false;
+            if (!validSTL) return false;
 
             options->setSetting(Constants::ConsoleOptionStrings::kInputSupportStlFiles + "_" + QString::number(i),
                                 stlList[i]);
@@ -393,4 +389,4 @@ bool CommandLineConverter::isValidModelFile(QString path) {
 
     return true;
 }
-} // namespace ORNL
+}  // namespace ORNL

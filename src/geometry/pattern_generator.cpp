@@ -47,8 +47,7 @@ QVector<Polyline> PatternGenerator::GenerateLines(PolygonList geometry, Distance
     //! Unrotate polygons
     for (int i = 0; i < cutlines.size(); i++) {
         cutlines[i] = cutlines[i].rotate(-rotation);
-        if (i % 2 == 0)
-            cutlines[i] = cutlines[i].reverse();
+        if (i % 2 == 0) cutlines[i] = cutlines[i].reverse();
     }
 
     return cutlines;
@@ -79,16 +78,13 @@ QVector<Polyline> PatternGenerator::GenerateConcentric(PolygonList& geometry, Di
         for (Polygon polygon : path_line) {
             Polyline polyline;
             polyline.reserve(polygon.size());
-            for (Point point : polygon) {
-                polyline << point;
-            }
+            for (Point point : polygon) { polyline << point; }
             cutlines.append(polyline);
         }
         path_line = path_line.offset(-lineSpacing);
     }
 
-    if (path_line.size() != 0)
-        geometry = path_line.offset(-beadWidth / 2);
+    if (path_line.size() != 0) geometry = path_line.offset(-beadWidth / 2);
 
     return cutlines;
 }
@@ -116,7 +112,7 @@ QVector<Polyline> PatternGenerator::GenerateTriangles(PolygonList geometry, Dist
 
         //! The space left over after all the max number of cutlines are generated
         Distance freeSpace = (max.toDistance3D().x - min.toDistance3D().x) % lineSpacing;
-        int cutCount = ceil(((max.toDistance3D().x - min.toDistance3D().x) / lineSpacing)());
+        int cutCount       = ceil(((max.toDistance3D().x - min.toDistance3D().x) / lineSpacing)());
 
         //! \note Always ensure that there is an odd number of lines so that there is always a line intersecting the
         //! center
@@ -124,9 +120,7 @@ QVector<Polyline> PatternGenerator::GenerateTriangles(PolygonList geometry, Dist
             --cutCount;
             freeSpace += lineSpacing;
         }
-        if (cutCount < 0) {
-            cutCount = 0;
-        }
+        if (cutCount < 0) { cutCount = 0; }
 
         //! start at the bounding box's minimum x value and go all the way to the bounding box's maximum x value.
         //! As we go along, every "line_spacing" distance we intersect the polygons with the grid lines
@@ -144,9 +138,7 @@ QVector<Polyline> PatternGenerator::GenerateTriangles(PolygonList geometry, Dist
         //! Unrotate polygons
         for (int i = 0; i < cutlines.size(); i++) {
             cutlines[i] = cutlines[i].rotate(-rotation);
-            if (i % 2 == 0) {
-                cutlines[i] = cutlines[i].reverse();
-            }
+            if (i % 2 == 0) { cutlines[i] = cutlines[i].reverse(); }
         }
 
         result.append(cutlines);
@@ -177,15 +169,13 @@ QVector<Polyline> PatternGenerator::GenerateHexagonsAndTriangles(PolygonList geo
         QVector<Polyline> cutlines;
 
         Distance freeSpace = (max.toDistance3D().x - min.toDistance3D().x) % lineSpacing;
-        int cutCount = ceil(((max.toDistance3D().x - min.toDistance3D().x) / lineSpacing)());
+        int cutCount       = ceil(((max.toDistance3D().x - min.toDistance3D().x) / lineSpacing)());
 
         if (cutCount % 2 == 1) {
             --cutCount;
             freeSpace += lineSpacing;
         }
-        if (cutCount < 0) {
-            cutCount = 0;
-        }
+        if (cutCount < 0) { cutCount = 0; }
 
         for (Distance x = min.toDistance3D().x + (freeSpace / 2); x < max.toDistance3D().x; x += lineSpacing) {
             // create the grid lines
@@ -198,9 +188,7 @@ QVector<Polyline> PatternGenerator::GenerateHexagonsAndTriangles(PolygonList geo
 
         for (int i = 0; i < cutlines.size(); i++) {
             cutlines[i] = cutlines[i].rotate(-rotation);
-            if (i % 2 == 0) {
-                cutlines[i] = cutlines[i].reverse();
-            }
+            if (i % 2 == 0) { cutlines[i] = cutlines[i].reverse(); }
         }
 
         result.append(cutlines);
@@ -225,7 +213,7 @@ QVector<Polyline> PatternGenerator::GenerateHoneyComb(PolygonList geometry, Dist
     }
 
     //! \note r^2 = 3/4 * R^2 is used to find the radius of a circumscribed polygon from a supplied side length
-    Distance verticalLineSpacing = sqrt(((lineSpacing * lineSpacing) * 0.75)) * 2;
+    Distance verticalLineSpacing   = sqrt(((lineSpacing * lineSpacing) * 0.75)) * 2;
     Distance horizontalLineSpacing = lineSpacing;
 
     QVector<Polyline> cutlines;
@@ -243,8 +231,7 @@ QVector<Polyline> PatternGenerator::GenerateHoneyComb(PolygonList geometry, Dist
         for (int xCount = 0; xCount < (xCutCount * 4); xCount++) {
             switch (xCount % 4) {
                 case 0: {
-                    if (xCount == 0)
-                        row << currentLocation;
+                    if (xCount == 0) row << currentLocation;
                     currentLocation = Point(currentLocation.x() + horizontalLineSpacing, currentLocation.y());
                     row << currentLocation;
                     break;
@@ -277,12 +264,8 @@ QVector<Polyline> PatternGenerator::GenerateHoneyComb(PolygonList geometry, Dist
             }
         }
 
-        if (yCount % 2) {
-            currentLocation = Point(min.x(), currentLocation.y() + beadWidth);
-        }
-        else {
-            currentLocation = Point(min.x(), currentLocation.y() + verticalLineSpacing + beadWidth);
-        }
+        if (yCount % 2) { currentLocation = Point(min.x(), currentLocation.y() + beadWidth); }
+        else { currentLocation = Point(min.x(), currentLocation.y() + verticalLineSpacing + beadWidth); }
 
         cutlines += geometry & row;
     }
@@ -290,9 +273,7 @@ QVector<Polyline> PatternGenerator::GenerateHoneyComb(PolygonList geometry, Dist
     //! \note Rotate back our cutlines to match the rotation
     for (int i = 0; i < cutlines.size(); i++) {
         cutlines[i] = cutlines[i].rotate(-rotation);
-        if (i % 2 == 0) {
-            cutlines[i] = cutlines[i].reverse();
-        }
+        if (i % 2 == 0) { cutlines[i] = cutlines[i].reverse(); }
     }
 
     return cutlines;
@@ -301,7 +282,7 @@ QVector<Polyline> PatternGenerator::GenerateHoneyComb(PolygonList geometry, Dist
 QVector<Polyline> PatternGenerator::GenerateRadialHatch(PolygonList geometry, Point center, Distance lineSpacing,
                                                         Angle sector_rotation, Angle infill_rotation) {
     PolygonList geometry_oriented = geometry.rotateAround(center, sector_rotation);
-    geometry_oriented = geometry_oriented.rotate(infill_rotation);
+    geometry_oriented             = geometry_oriented.rotate(infill_rotation);
 
     //! Get the bounding box for the polygons. outline_minimum is the minimum
     Point outline_minimum = geometry_oriented.min();
@@ -343,4 +324,4 @@ QVector<Polyline> PatternGenerator::GenerateRadialHatch(PolygonList geometry, Po
     }
     return cutlines;
 }
-} // namespace ORNL
+}  // namespace ORNL

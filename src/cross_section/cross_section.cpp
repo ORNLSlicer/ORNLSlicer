@@ -29,18 +29,18 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
 
         // rotate
         QVector3D point_vec = point_to_rotate.toQVector3D();
-        QVector3D result = rotation.rotatedVector(point_vec);
+        QVector3D result    = rotation.rotatedVector(point_vec);
 
         // reapply translate to account for origin offset
         result.setX(result.x() + shift_amount.x());
         result.setY(result.y() + shift_amount.y());
-        result.setZ(result.z() + shift_amount.z()); // restore original z offset (needed for consistent inverse)
+        result.setZ(result.z() + shift_amount.z());  // restore original z offset (needed for consistent inverse)
 
-        return Point(result); // will un-rotate and un-shift later, just before gcode writing
+        return Point(result);  // will un-rotate and un-shift later, just before gcode writing
     };
 
     QVector<MeshVertex> vertices = mesh->vertices();
-    QVector<MeshFace> faces = mesh->faces();
+    QVector<MeshFace> faces      = mesh->faces();
 
     /*
      * Check every face (triangle) to see if it is cut by the slicing plane
@@ -50,9 +50,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
     int num_intersections = 0;
     QVector3D normal_accumulator(0, 0, 0);
     // Compute shift once (unless caller wants to preserve provided shift reference)
-    if (!preserve_input_shift) {
-        shift = findSlicingPlaneMidPoint(mesh, slicing_plane);
-    }
+    if (!preserve_input_shift) { shift = findSlicingPlaneMidPoint(mesh, slicing_plane); }
 
     // Precompute rotation once
     QQuaternion rotation = MathUtils::CreateQuaternion(slicing_plane.normal(), QVector3D(0, 0, 1));
@@ -61,9 +59,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
         const MeshFace& face = faces[m];
 
         // Skip ignored faces
-        if (face.ignore) {
-            continue;
-        }
+        if (face.ignore) { continue; }
 
         const MeshVertex& v0 = vertices[face.vertex_index[0]];
         const MeshVertex& v1 = vertices[face.vertex_index[1]];
@@ -76,7 +72,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
 
         CrossSectionSegment segment;
         segment.end_vertex = nullptr;
-        int end_edge_idx = -1;
+        int end_edge_idx   = -1;
 
         /*
            Each point is evaluated in the plane equation to
@@ -95,12 +91,10 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
             // p2   p1
             // --------
             //   p0
-            end_edge_idx = 0;
+            end_edge_idx  = 0;
             segment.start = findIntersection(p0, p2, slicing_plane);
-            segment.end = findIntersection(p0, p1, slicing_plane);
-            if (p1_eval == 0) {
-                segment.end_vertex = &v1;
-            }
+            segment.end   = findIntersection(p0, p1, slicing_plane);
+            if (p1_eval == 0) { segment.end_vertex = &v1; }
             intersection = true;
         }
         else if (p0_eval > 0 && p1_eval < 0 && p2_eval < 0) {
@@ -108,52 +102,48 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
             // --------
             // p1  p2
 
-            end_edge_idx = 2;
+            end_edge_idx  = 2;
             segment.start = findIntersection(p1, p0, slicing_plane);
-            segment.end = findIntersection(p2, p0, slicing_plane);
-            intersection = true;
+            segment.end   = findIntersection(p2, p0, slicing_plane);
+            intersection  = true;
         }
         else if (p1_eval < 0 && p0_eval >= 0 && p2_eval >= 0) {
             // p0   p2
             // --------
             //   p1
-            end_edge_idx = 1;
+            end_edge_idx  = 1;
             segment.start = findIntersection(p1, p0, slicing_plane);
-            segment.end = findIntersection(p1, p2, slicing_plane);
-            if (p2_eval == 0) {
-                segment.end_vertex = &v2;
-            }
+            segment.end   = findIntersection(p1, p2, slicing_plane);
+            if (p2_eval == 0) { segment.end_vertex = &v2; }
             intersection = true;
         }
         else if (p1_eval > 0 && p0_eval < 0 && p2_eval < 0) {
             //   p1
             // --------
             // p2  p0
-            end_edge_idx = 0;
+            end_edge_idx  = 0;
             segment.start = findIntersection(p2, p1, slicing_plane);
-            segment.end = findIntersection(p0, p1, slicing_plane);
-            intersection = true;
+            segment.end   = findIntersection(p0, p1, slicing_plane);
+            intersection  = true;
         }
         else if (p2_eval < 0 && p1_eval >= 0 && p0_eval >= 0) {
             // p1   p0
             // --------
             //   p2
-            end_edge_idx = 2;
+            end_edge_idx  = 2;
             segment.start = findIntersection(p2, p1, slicing_plane);
-            segment.end = findIntersection(p2, p0, slicing_plane);
-            if (p0_eval == 0) {
-                segment.end_vertex = &v0;
-            }
+            segment.end   = findIntersection(p2, p0, slicing_plane);
+            if (p0_eval == 0) { segment.end_vertex = &v0; }
             intersection = true;
         }
         else if (p2_eval > 0 && p1_eval < 0 && p0_eval < 0) {
             //   p2
             // --------
             // p0  p1
-            end_edge_idx = 1;
+            end_edge_idx  = 1;
             segment.start = findIntersection(p0, p2, slicing_plane);
-            segment.end = findIntersection(p1, p2, slicing_plane);
-            intersection = true;
+            segment.end   = findIntersection(p1, p2, slicing_plane);
+            intersection  = true;
         }
         else {
             // Not all cases create a segment, because a point of a face
@@ -174,14 +164,14 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
 
         // Rotate into 2D frame using precomputed shift & rotation
         segment.start = rotatePoint(segment.start, rotation, shift);
-        segment.end = rotatePoint(segment.end, rotation, shift);
+        segment.end   = rotatePoint(segment.end, rotation, shift);
 
         // add segment to cross-section
         cs.insertFaceToSegment(m, cs.segments().size());
-        segment.face_index = m;
+        segment.face_index         = m;
         segment.end_other_face_idx = face.connected_face_index[end_edge_idx];
-        segment.added_to_polygon = false;
-        segment.normal = face.normal;
+        segment.added_to_polygon   = false;
+        segment.normal             = face.normal;
         cs.addSegment(segment);
     }
 
@@ -195,7 +185,7 @@ PolygonList CrossSection::doCrossSection(QSharedPointer<MeshBase> mesh, Plane& s
 }
 
 Point CrossSection::findSlicingPlaneMidPoint(QSharedPointer<MeshBase> mesh, Plane& slicing_plane) {
-    Point center = (mesh->min() + mesh->max()) / 2; // center of the bounding box
+    Point center           = (mesh->min() + mesh->max()) / 2;  // center of the bounding box
     Distance max_dimension = mesh->min().distance(mesh->max());
     QVector3D plane_normal = slicing_plane.normal().normalized() * max_dimension();
 
@@ -236,4 +226,4 @@ Point CrossSection::findIntersection(Point& vertex0, Point& vertex1, Plane& slic
     return intersection_point;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

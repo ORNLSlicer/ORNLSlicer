@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QLinkedList>
+
 #include <qcontainerfwd.h>
 #include <qlist.h>
 #include <qtypes.h>
@@ -21,7 +22,7 @@ namespace ORNL {
  * \note For more information about the abstract slicing architecture, see the documentation.
  */
 class IslandBase {
-  public:
+   public:
     //! \brief Constructor.
     //! \param geometry: the outlines
     //! \param sb: the settings
@@ -98,7 +99,7 @@ class IslandBase {
     //! \brief Fits eligible planar line segments in this island to G2/G3 arcs.
     void fitCircularArcs(const QSharedPointer<SettingsBase>& global_sb);
 
-  protected:
+   protected:
     //! \brief Prepares a region for optimization with layer metadata and previous-layer seam context.
     void prepareRegionForOptimization(const QSharedPointer<RegionBase>& region, int layerNumber,
                                       QVector<QSharedPointer<RegionBase>>& previousRegions);
@@ -118,4 +119,4 @@ class IslandBase {
     //! \brief Enum value of island type
     IslandType m_island_type;
 };
-} // namespace ORNL
+}  // namespace ORNL

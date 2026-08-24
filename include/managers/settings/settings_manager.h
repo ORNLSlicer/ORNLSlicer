@@ -5,6 +5,7 @@
 #include <QObject>
 #include <QSharedPointer>
 #include <QVector>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qtmetamacros.h>
@@ -34,7 +35,7 @@ enum class SettingsVersionUpdateMode {
  */
 class SettingsManager : public QObject {
     Q_OBJECT
-  public:
+   public:
     //! \brief Get the singleton instance of this object.
     static QSharedPointer<SettingsManager> getInstance();
 
@@ -173,7 +174,7 @@ class SettingsManager : public QObject {
     //! \param sb: Settings provided to console
     void setConsoleSettings(QSharedPointer<SettingsBase> sb);
 
-  signals:
+   signals:
     //! \brief Signal that something was loaded into the global.
     //! \param name Name of new settings file to use
     void globalLoaded(QString name);
@@ -184,7 +185,7 @@ class SettingsManager : public QObject {
     //! \brief Signal that new layer bar tempalate was saved.
     void newLayerBarTemplateSaved();
 
-  private:
+   private:
     //! \brief Constructor
     SettingsManager();
 
@@ -230,4 +231,4 @@ class SettingsManager : public QObject {
     //! \brief Displayed file names and their corresponding layer bar templates
     QMap<QString, QVector<SettingsRange>> m_all_layer_bar_templates;
 };
-} // namespace ORNL
+}  // namespace ORNL

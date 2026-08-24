@@ -2,6 +2,7 @@
 
 #include <QDir>
 #include <QObject>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -19,7 +20,7 @@ namespace ORNL {
  * \brief Abstract implementation of a step in the slicer process.
  */
 class Step {
-  public:
+   public:
     //! \brief Constructor
     Step(const QSharedPointer<SettingsBase>& sb = QSharedPointer<SettingsBase>::create());
     //! \brief Destructor
@@ -127,7 +128,7 @@ class Step {
     //! \return distance to shift
     QVector3D getRaftShift();
 
-  protected:
+   protected:
     //! \brief Settings for the step.
     QSharedPointer<SettingsBase> m_sb;
 
@@ -152,8 +153,8 @@ class Step {
     //! \brief The geometry on the layer.
     PolygonList m_geometry;
 
-  private:
+   private:
     //! \brief bool that holds dirty status
     bool m_dirty_bit;
 };
-} // namespace ORNL
+}  // namespace ORNL

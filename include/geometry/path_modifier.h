@@ -14,7 +14,7 @@ namespace ORNL {
  * @brief The PathModifierGenerator class provides functions for modifying paths.
  */
 class PathModifierGenerator {
-  public:
+   public:
     static void GenerateTravel(Path& path, Point current_location, Velocity velocity);
 
     /**
@@ -158,7 +158,7 @@ class PathModifierGenerator {
     static void GenerateSpiralLift(Path& path, Distance spiralWidth, Distance spiralHeight, int spiralPoints,
                                    Velocity spiralLiftVelocity, bool supportsG3);
 
-  private:
+   private:
     /**
      * @brief writeSegment writes a segment to the path.
      * @param path: The path to modify.
@@ -221,4 +221,4 @@ class PathModifierGenerator {
     //! \brief track the distance already covered
     static Distance tipWipeDistanceCovered;
 };
-} // namespace ORNL
+}  // namespace ORNL

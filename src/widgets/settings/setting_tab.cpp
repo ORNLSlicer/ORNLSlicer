@@ -47,26 +47,28 @@ QString componentSetting(const fifojson& component) {
     return jsonString(component, Constants::Settings::Input::kSetting);
 }
 
-QString componentLabel(const fifojson& component) { return jsonString(component, Constants::Settings::Input::kLabel); }
+QString componentLabel(const fifojson& component) {
+    return jsonString(component, Constants::Settings::Input::kLabel);
+}
 
 fifojson makeInputRowJson(const fifojson& setting_json, const fifojson& input) {
-    fifojson row_json = setting_json;
+    fifojson row_json                               = setting_json;
     row_json[Constants::Settings::Master::kDisplay] = input.at(Constants::Settings::Input::kDisplay);
     row_json[Constants::Settings::Master::kToolTip] = input.at(Constants::Settings::Input::kToolTip);
     row_json[Constants::Settings::Master::kDepends] = input.at(Constants::Settings::Input::kDepends);
-    row_json[Constants::Settings::Master::kMinor] = input.at(Constants::Settings::Input::kMinor);
-    row_json[Constants::Settings::Master::kMajor] = input.at(Constants::Settings::Input::kMajor);
-    row_json[Constants::Settings::Master::kLocal] = input.at(Constants::Settings::Input::kLocal);
+    row_json[Constants::Settings::Master::kMinor]   = input.at(Constants::Settings::Input::kMinor);
+    row_json[Constants::Settings::Master::kMajor]   = input.at(Constants::Settings::Input::kMajor);
+    row_json[Constants::Settings::Master::kLocal]   = input.at(Constants::Settings::Input::kLocal);
     return row_json;
 }
-} // namespace
+}  // namespace
 
 SettingTab::SettingTab(QWidget* parent, QString name, QIcon icon, int index, bool isHidden,
                        QSharedPointer<SettingsBase> sb)
     : QWidget(parent), m_name(name), m_icon(icon), m_sb(sb), m_index(index) {
     this->setupWidget(isHidden);
 
-    m_size = 0;
+    m_size          = 0;
     m_warning_count = 0;
 
     m_creation_mapping = {{"number", &SettingSpinBox::createInstance},
@@ -97,44 +99,44 @@ SettingTab::SettingTab(QWidget* parent, QString name, QIcon icon, int index, boo
 
 void SettingTab::setSettingBase(QSharedPointer<SettingsBase> sb) {
     m_sb = sb;
-    for (QSharedPointer<SettingRowBase> curr_row : m_rows) {
-        curr_row->setSettingsBase(m_sb);
-    }
+    for (QSharedPointer<SettingRowBase> curr_row : m_rows) { curr_row->setSettingsBase(m_sb); }
 }
 
-QList<QSharedPointer<SettingRowBase>> SettingTab::getRows() { return m_rows.values(); }
+QList<QSharedPointer<SettingRowBase>> SettingTab::getRows() {
+    return m_rows.values();
+}
 
 QSharedPointer<SettingRowBase> SettingTab::getRow(QString key) {
-    if (m_rows.contains(key))
-        return m_rows[key];
+    if (m_rows.contains(key)) return m_rows[key];
 
     return m_row_aliases.value(key);
 }
 
-int SettingTab::getIndex() { return m_index; }
+int SettingTab::getIndex() {
+    return m_index;
+}
 
-QString SettingTab::getName() { return m_name; }
+QString SettingTab::getName() {
+    return m_name;
+}
 
 bool SettingTab::hasShownRows() const {
     for (const QSharedPointer<SettingRowBase>& row : m_rows) {
-        if (row->isShown())
-            return true;
+        if (row->isShown()) return true;
     }
 
     return false;
 }
 
 void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input) {
-    if (m_row_aliases.contains(key))
-        return;
+    if (m_row_aliases.contains(key)) return;
 
     if (!input.is_null()) {
         const fifojson& components = input.at(Constants::Settings::Input::kComponents);
-        const QString primary_key = componentSetting(components.at(0));
-        if (key != primary_key)
-            return;
+        const QString primary_key  = componentSetting(components.at(0));
+        if (key != primary_key) return;
 
-        const fifojson row_json = makeInputRowJson(json, input);
+        const fifojson row_json  = makeInputRowJson(json, input);
         const std::string widget = input.at(Constants::Settings::Input::kWidget).get<std::string>();
 
         QSharedPointer<SettingRowBase> newRow;
@@ -181,7 +183,9 @@ void SettingTab::addRow(QString key, const fifojson& json, const fifojson& input
     ++m_size;
 }
 
-void SettingTab::keyModified(QString key) { emit modified(key); }
+void SettingTab::keyModified(QString key) {
+    emit modified(key);
+}
 
 void SettingTab::expandTab() {
     m_container->show();
@@ -198,19 +202,19 @@ void SettingTab::hideTab() {
     emit removeTabFromList(m_name);
 }
 
-void SettingTab::showTab() { m_header->showHeader(); }
+void SettingTab::showTab() {
+    m_header->showHeader();
+}
 
 void SettingTab::reload() {
-    for (QSharedPointer<SettingRowBase> curr_row : m_rows) {
-        curr_row->reloadValue();
-    }
+    for (QSharedPointer<SettingRowBase> curr_row : m_rows) { curr_row->reloadValue(); }
 }
 
 void SettingTab::settingsBasesSelected(QList<QSharedPointer<SettingsBase>> settings_bases,
                                        QList<QSharedPointer<SettingsBase>> inherited_bases) {
     if (m_settings_bases != settings_bases || m_inherited_settings_bases != inherited_bases) {
-        m_warning_count = 0; // reset the count of warnings if a new settings base has been selected
-        m_settings_bases = settings_bases;
+        m_warning_count            = 0;  // reset the count of warnings if a new settings base has been selected
+        m_settings_bases           = settings_bases;
         m_inherited_settings_bases = inherited_bases;
         for (QSharedPointer<SettingRowBase> curr_row : m_rows) {
             curr_row->setBases(m_settings_bases, m_inherited_settings_bases);
@@ -221,14 +225,10 @@ void SettingTab::settingsBasesSelected(QList<QSharedPointer<SettingsBase>> setti
 
 void SettingTab::headerWarning(int count) {
     emit warnPane(count);
-    m_warning_count = m_warning_count + count; // keep track of all warnings from children (setting_rows)
+    m_warning_count = m_warning_count + count;  // keep track of all warnings from children (setting_rows)
     // if there is more than 1 warning, change the header icon to show the warning
-    if (m_warning_count > 0) {
-        m_header->setIcon(QIcon(":/icons/warning.png"));
-    }
-    else {
-        m_header->setIcon(QIcon(":/icons/ornlslicer_logo.png"));
-    }
+    if (m_warning_count > 0) { m_header->setIcon(QIcon(":/icons/warning.png")); }
+    else { m_header->setIcon(QIcon(":/icons/ornlslicer_logo.png")); }
 }
 
 void SettingTab::setupWidget(bool isHidden) {
@@ -241,8 +241,7 @@ void SettingTab::setupWidget(bool isHidden) {
 void SettingTab::setupSubWidgets(bool isHidden) {
     // Header
     m_header = new SettingHeader(this, m_name, m_icon);
-    if (isHidden)
-        m_header->hide();
+    if (isHidden) m_header->hide();
 
     // Container
     m_container = new QFrame(this);
@@ -262,7 +261,9 @@ void SettingTab::setupLayouts() {
     m_container_layout->setColumnStretch(1, 1);
 }
 
-void SettingTab::setupStyle() { m_header->setupStyle(); }
+void SettingTab::setupStyle() {
+    m_header->setupStyle();
+}
 
 void SettingTab::setupInsert() {
     m_layout->addWidget(m_header);
@@ -274,4 +275,4 @@ void SettingTab::setupEvents() {
     connect(m_header, &SettingHeader::shrink, this, &SettingTab::shrinkTab);
     connect(m_header, &SettingHeader::hideHeader, this, &SettingTab::hideTab);
 }
-} // Namespace ORNL
+}  // Namespace ORNL

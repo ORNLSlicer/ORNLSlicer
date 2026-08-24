@@ -1,10 +1,10 @@
 #include "windows/layer_times_window.h"
 
-#include <climits>
-
 #include <QIcon>
 #include <QLabel>
 #include <QStringBuilder>
+#include <climits>
+
 #include <qgridlayout.h>
 #include <qlineedit.h>
 #include <qlist.h>
@@ -24,9 +24,9 @@ LayerTimesWindow::LayerTimesWindow(QWidget* parent) {
     icon.addFile(QStringLiteral(":/icons/ornlslicer_logo.png"), QSize(), QIcon::Normal, QIcon::Off);
     setWindowIcon(icon);
 
-    m_layout = new QGridLayout();
+    m_layout                = new QGridLayout();
     QLabel* lblMinLayerTime = new QLabel("Minimum Layer Time (seconds):");
-    m_min_layer_time_edit = new QLineEdit();
+    m_min_layer_time_edit   = new QLineEdit();
     m_layout->addWidget(lblMinLayerTime, 0, 0);
     m_layout->addWidget(m_min_layer_time_edit, 0, 1);
 
@@ -45,13 +45,13 @@ void LayerTimesWindow::setupEvents() {
 
 void LayerTimesWindow::updateTimeInformation(QList<Time> layer_times, QList<Time> adjusted_layer_times,
                                              QList<double> layer_FR_modifiers, bool adjusted_layer_time) {
-    m_layer_times = layer_times;
+    m_layer_times          = layer_times;
     m_adjusted_layer_times = adjusted_layer_times;
-    m_layer_FR_modifiers = layer_FR_modifiers;
-    m_adjusted_layer_time = adjusted_layer_time;
+    m_layer_FR_modifiers   = layer_FR_modifiers;
+    m_adjusted_layer_time  = adjusted_layer_time;
     m_min = INT_MAX, m_max = INT_MIN;
     m_min_index = -1, m_max_index = -1;
-    m_total_time = 0;
+    m_total_time          = 0;
     m_total_adjusted_time = 0;
 
     for (int i = 1; i < m_layer_times.size(); ++i) {
@@ -59,12 +59,12 @@ void LayerTimesWindow::updateTimeInformation(QList<Time> layer_times, QList<Time
 
         if (current_time < m_min) {
             m_min_index = i;
-            m_min = current_time;
+            m_min       = current_time;
         }
 
         if (current_time > m_max) {
             m_max_index = i;
-            m_max = current_time;
+            m_max       = current_time;
         }
 
         m_total_adjusted_time += m_adjusted_layer_times[i];
@@ -77,7 +77,7 @@ void LayerTimesWindow::updateTimeInformation(QList<Time> layer_times, QList<Time
 
 void LayerTimesWindow::updateText() {
     Time layerTimeThreshold(0);
-    bool flag = false;
+    bool flag          = false;
     layerTimeThreshold = Time(m_min_layer_time_edit->text().toInt(&flag));
 
     QString layerTimeString = "Total print time: " % MathUtils::formattedTimeSpan(m_total_time()) % "<br>";
@@ -101,7 +101,7 @@ void LayerTimesWindow::updateText() {
 
         Time display_time = current_time;
         if (m_adjusted_layer_time) {
-            display_time = m_adjusted_layer_times[i];
+            display_time         = m_adjusted_layer_times[i];
             double adjusted_time = m_adjusted_layer_times[i]();
             if (i > 0 && current_time > 1 && m_layer_FR_modifiers[i] != 1) {
                 oneLayer += " Adjusted " % MathUtils::formattedTimeSpanHHMMSS(adjusted_time) % ",";
@@ -111,15 +111,13 @@ void LayerTimesWindow::updateText() {
 
         oneLayer += " Total Time So Far " % MathUtils::formattedTimeSpanHHMMSS(currentTotal());
 
-        if (display_time < layerTimeThreshold) {
-            layerTimeString += "<font color=\"red\">" % oneLayer % "</font><br>";
-        }
-        else {
-            layerTimeString += oneLayer % "<br>";
-        }
+        if (display_time < layerTimeThreshold) { layerTimeString += "<font color=\"red\">" % oneLayer % "</font><br>"; }
+        else { layerTimeString += oneLayer % "<br>"; }
     }
     m_layer_times_edit->setText(layerTimeString);
 }
 
-void LayerTimesWindow::clear() { m_layer_times_edit->setText(""); }
-} // namespace ORNL
+void LayerTimesWindow::clear() {
+    m_layer_times_edit->setText("");
+}
+}  // namespace ORNL

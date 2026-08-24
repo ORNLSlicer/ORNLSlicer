@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QColor>
+
 #include <qquaternion.h>
 
 #include "graphics/graphics_object.h"
@@ -13,7 +14,7 @@ namespace ORNL {
  * The plane object is another commonly used object. It has the ability to lock itself to a specific rotation.
  */
 class PlaneObject : public CubeObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param length: Plane length.
     //! \param width: Plane width.
@@ -40,11 +41,11 @@ class PlaneObject : public CubeObject {
     //! \brief Scales the plane to a new length/width/thickness.
     void updateDimensions(float length, float width, float height);
 
-  protected:
+   protected:
     //! \brief Handles plane rotation locking.
     void transformationCallback();
 
-  private:
+   private:
     //! \brief Starting dims.
     float m_starting_length;
     float m_starting_width;
@@ -58,4 +59,4 @@ class PlaneObject : public CubeObject {
     //! \brief If locked or not.
     bool m_rotation_toggle = false;
 };
-} // namespace ORNL
+}  // namespace ORNL

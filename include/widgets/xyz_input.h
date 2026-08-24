@@ -5,6 +5,7 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QWidget>
+
 #include <qhashfunctions.h>
 #include <qtmetamacros.h>
 #include <qvectornd.h>
@@ -17,7 +18,7 @@ namespace ORNL {
  */
 class XYZInputWidget : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: A widget.
     XYZInputWidget(QWidget* parent = nullptr);
@@ -25,7 +26,7 @@ class XYZInputWidget : public QWidget {
     //! \brief Value of all 3 spinboxes.
     QVector3D value();
 
-  public slots:
+   public slots:
     //! \brief Shows front label.
     void showLabel(bool show);
     //! \brief Shows unit text.
@@ -60,7 +61,7 @@ class XYZInputWidget : public QWidget {
     //! \brief Sets spinbox increments.
     void setIncrement(double inc);
 
-  signals:
+   signals:
     //! \brief Signal that a spinbox has changed.
     void valueChanged(Axis ax, double val);
 
@@ -74,13 +75,13 @@ class XYZInputWidget : public QWidget {
     //! \brief Signal that any XYZ value has changed.
     void valueChanged(QVector3D xyz);
 
-  private slots:
+   private slots:
     //! \brief Relays info from spinboxes.
     void readValue(double val);
     //! \brief Copies x spinbox to y & z before relaying.
     void lockReadValue(double val);
 
-  private:
+   private:
     // Widget Setup
     void setupWidget();
     void setupEvents();
@@ -101,4 +102,4 @@ class XYZInputWidget : public QWidget {
     // Layout
     QHBoxLayout* m_layout;
 };
-} // namespace ORNL
+}  // namespace ORNL

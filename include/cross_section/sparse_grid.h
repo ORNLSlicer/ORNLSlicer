@@ -1,11 +1,11 @@
 #pragma once
 
+#include <QVector>
 #include <cstddef>
 #include <functional>
 #include <unordered_map>
 #include <utility>
 
-#include <QVector>
 #include <qassert.h>
 #include <qcontainerfwd.h>
 #include <qtypes.h>
@@ -23,8 +23,9 @@ namespace ORNL {
  * \note This is an abstract template class which doesn't have any functions
  * to insert elements. \see SparsePointGrid
  */
-template <class T> class SparseGrid {
-  public:
+template <class T>
+class SparseGrid {
+   public:
     //! \brief Constructs a sparse grid with the specified cell size.
     SparseGrid(qlonglong cell_size, size_t element_reserve = 0U, float max_load_factor = 1.0f);
 
@@ -53,7 +54,9 @@ template <class T> class SparseGrid {
     // TODO
     // defined here to fix declaration problems,
     // take a look at this commit to understand why
-    static const std::function<bool(const T&)> no_precondition() { return true; };
+    static const std::function<bool(const T&)> no_precondition() {
+        return true;
+    };
 
     //! \brief Find the nearest element to a given \p query_pt within \p
     //! radius.
@@ -84,10 +87,10 @@ template <class T> class SparseGrid {
 
     long long getCellSize() const;
 
-  protected:
-    using GridPoint = Point;
+   protected:
+    using GridPoint    = Point;
     using grid_coord_t = qlonglong;
-    using GridMap = std::unordered_multimap<GridPoint, T>;
+    using GridMap      = std::unordered_multimap<GridPoint, T>;
 
     //! \brief Process elements from the cell indicated by \p grid_pt
     bool processFromCell(const GridPoint& grid_pt, const std::function<bool(const T&)>& process_func) const;
@@ -115,8 +118,8 @@ template <class T> class SparseGrid {
      */
     long long toLowerCoord(const grid_coord_t& grid_coord) const;
 
-    GridMap m_grid;        //!< Map from grid locations (GridPoint) to elements (T).
-    qlonglong m_cell_size; //!< The cell (square) size.
+    GridMap m_grid;         //!< Map from grid locations (GridPoint) to elements (T).
+    qlonglong m_cell_size;  //!< The cell (square) size.
     grid_coord_t nonzero_sign(const grid_coord_t z) const;
 };
 
@@ -131,9 +134,7 @@ SGI_THIS::SparseGrid(qlonglong cell_size, size_t element_reserve, float max_load
 
     // Must be before the reserve call
     m_grid.max_load_factor(max_load_factor);
-    if (element_reserve != 0U) {
-        m_grid.reserve(element_reserve);
-    }
+    if (element_reserve != 0U) { m_grid.reserve(element_reserve); }
 }
 
 SGI_TEMPLATE
@@ -172,9 +173,7 @@ SGI_TEMPLATE
 bool SGI_THIS::processFromCell(const GridPoint& grid_pt, const std::function<bool(const T&)>& process_func) const {
     auto grid_range = m_grid.equal_range(grid_pt);
     for (auto iter = grid_range.first; iter != grid_range.second; iter++) {
-        if (!process_func(iter->second)) {
-            return false;
-        }
+        if (!process_func(iter->second)) { return false; }
     }
     return true;
 }
@@ -183,7 +182,7 @@ SGI_TEMPLATE
 void SGI_THIS::processLineCells(const QPair<Point, Point> line,
                                 const std::function<bool(GridPoint)>& process_cell_func) {
     Point start = line.first;
-    Point end = line.second;
+    Point end   = line.second;
 
     if (end.x() < start.x()) {
         // make sure X increases between start and end
@@ -191,9 +190,9 @@ void SGI_THIS::processLineCells(const QPair<Point, Point> line,
     }
 
     const GridPoint start_cell = toGridPoint(start);
-    const GridPoint end_cell = toGridPoint(end);
-    const qlonglong y_diff = end.y() - start.y();
-    const grid_coord_t y_dir = nonzero_sign(y_diff);
+    const GridPoint end_cell   = toGridPoint(end);
+    const qlonglong y_diff     = end.y() - start.y();
+    const grid_coord_t y_dir   = nonzero_sign(y_diff);
 
     grid_coord_t x_cell_start = start_cell.x();
 
@@ -202,15 +201,13 @@ void SGI_THIS::processLineCells(const QPair<Point, Point> line,
         // nearest y coordinate of the cells in the next row
         grid_coord_t nearest_next_y =
             toLowerCoord(cell_y + ((nonzero_sign(cell_y) == y_dir || cell_y == 0) ? y_dir : qlonglong(0)));
-        grid_coord_t x_cell_end; // The x coord of the last cell to include
-                                 // from this row
-        if (y_diff == 0) {
-            x_cell_end = end_cell.x();
-        }
+        grid_coord_t x_cell_end;  // The x coord of the last cell to include
+                                  // from this row
+        if (y_diff == 0) { x_cell_end = end_cell.x(); }
         else {
-            qlonglong area = (end.x() - start.x()) * (nearest_next_y - start.y());
-            qlonglong corresponding_x = start.x() + area / y_diff; //!< the x coordinate correspinding to
-                                                                   //!< nearest_next_y
+            qlonglong area            = (end.x() - start.x()) * (nearest_next_y - start.y());
+            qlonglong corresponding_x = start.x() + area / y_diff;  //!< the x coordinate correspinding to
+                                                                    //!< nearest_next_y
             x_cell_end = toGridCoord(corresponding_x + ((corresponding_x < 0) && ((area % y_diff) != 0)));
             if (x_cell_end < start_cell.x()) {
                 // process at least one cell!
@@ -221,12 +218,8 @@ void SGI_THIS::processLineCells(const QPair<Point, Point> line,
         for (grid_coord_t cell_x = x_cell_start; cell_x <= x_cell_end; cell_x++) {
             GridPoint grid_loc(cell_x, cell_y);
             bool continue_ = process_cell_func(grid_loc);
-            if (!continue_) {
-                return;
-            }
-            if (grid_loc == end_cell) {
-                return;
-            }
+            if (!continue_) { return; }
+            if (grid_loc == end_cell) { return; }
 
             // TODO: this causes at least a one cell overlap for each row,
             // which include extra cells when crossing precisely on the
@@ -252,9 +245,7 @@ void SGI_THIS::processNearby(const Point& query_pt, Distance radius,
         for (qlonglong grid_x = min_grid.x(); grid_x <= max_grid.x(); grid_x++) {
             GridPoint grid_pt(grid_x, grid_y);
             bool continue_ = processFromCell(grid_pt, process_func);
-            if (!continue_) {
-                return;
-            }
+            if (!continue_) { return; }
         }
     }
 }
@@ -296,18 +287,16 @@ query_pt, Distance radius) const
 SGI_TEMPLATE
 bool SGI_THIS::getNearest(const Point& query_pt, Distance radius, T& element_nearest,
                           const std::function<bool(const T& t)> precondition) const {
-    bool found = false;
-    Area best_dist2 = radius * radius;
+    bool found                                       = false;
+    Area best_dist2                                  = radius * radius;
     const std::function<bool(const T&)> process_func = [&query_pt, &element_nearest, &found, &best_dist2,
                                                         &precondition](const T& t) {
-        if (!precondition(t)) {
-            return true;
-        }
+        if (!precondition(t)) { return true; }
         Area dist2 = qPow((t.point - query_pt).distance()(), 2);
         if (dist2 < best_dist2) {
-            found = true;
+            found           = true;
             element_nearest = t;
-            best_dist2 = dist2;
+            best_dist2      = dist2;
         }
         return true;
     };
@@ -316,8 +305,12 @@ bool SGI_THIS::getNearest(const Point& query_pt, Distance radius, T& element_nea
 }
 
 SGI_TEMPLATE
-qlonglong SGI_THIS::getCellSize() const { return m_cell_size; }
+qlonglong SGI_THIS::getCellSize() const {
+    return m_cell_size;
+}
 
 SGI_TEMPLATE
-typename SGI_THIS::grid_coord_t SGI_THIS::nonzero_sign(const grid_coord_t z) const { return (z >= 0) - (z - 0); }
-} // namespace ORNL
+typename SGI_THIS::grid_coord_t SGI_THIS::nonzero_sign(const grid_coord_t z) const {
+    return (z >= 0) - (z - 0);
+}
+}  // namespace ORNL

@@ -32,7 +32,7 @@ class SettingsBase;
  * it intentionally bypasses polymer perimeter/infill/skin/support processing.
  */
 class RadialSlicer : public TraditionalAST {
-  public:
+   public:
     /*!
      * @brief Constructs a radial slicer that emits the selected radial-capable gcode syntax.
      * @param gcodeLocation Temporary gcode output path used by the slicing thread.
@@ -47,7 +47,7 @@ class RadialSlicer : public TraditionalAST {
      */
     void doSlice() override;
 
-  protected:
+   protected:
     /*!
      * @brief Builds radial layers by clipping cylindrical ring candidates against each model cross section.
      * @param opt_data Optional process data.  Currently unused by radial slicing.
@@ -65,7 +65,7 @@ class RadialSlicer : public TraditionalAST {
      */
     void writeGCode() override;
 
-  private:
+   private:
     /*!
      * @brief Copies a mesh so clipping can be applied without mutating the loaded model.
      * @param mesh Mesh to copy.
@@ -127,4 +127,4 @@ class RadialSlicer : public TraditionalAST {
     //! @brief Ordered radial layers generated during radial path computation.
     QList<QSharedPointer<RadialLayer>> m_radial_layers;
 };
-} // namespace ORNL
+}  // namespace ORNL

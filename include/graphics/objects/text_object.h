@@ -9,7 +9,7 @@ namespace ORNL {
  * \brief A graphic that renders a cube with a text texture. The object billboards to the camera if enabled.
  */
 class TextObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param view: The view this object renders to.
     //! \param str: String to display.
@@ -21,8 +21,8 @@ class TextObject : public GraphicsObject {
     //! \param str: String to display.
     void setText(QString str);
 
-  private:
+   private:
     //! \brief String
     QString m_str;
 };
-} // namespace ORNL
+}  // namespace ORNL

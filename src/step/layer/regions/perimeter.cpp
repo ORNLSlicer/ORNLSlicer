@@ -32,9 +32,7 @@ namespace ORNL {
 namespace {
 Polyline toOpenPolyline(Polygon poly) {
     Polyline line = poly.toPolyline();
-    if (!line.isEmpty()) {
-        line.pop_back();
-    }
+    if (!line.isEmpty()) { line.pop_back(); }
     return line;
 }
 
@@ -76,29 +74,23 @@ QVector<Polygon> validPathLines(const PolygonList& path_lines, Distance min_path
 
 Distance totalPathLineLength(const QVector<Polygon>& path_lines) {
     Distance total_length;
-    for (const Polygon& poly : path_lines) {
-        total_length += SpiralPath::closedPolylineLength(toOpenPolyline(poly));
-    }
+    for (const Polygon& poly : path_lines) { total_length += SpiralPath::closedPolylineLength(toOpenPolyline(poly)); }
     return total_length;
 }
 
 PolygonList pathLineFootprint(const Polygon& path_line, Distance bead_width, const PolygonList& clipping_geometry) {
     PolygonList outer_offset = path_line.offset(bead_width / 2);
     PolygonList inner_offset = path_line.offset(-bead_width / 2);
-    PolygonList footprint = outer_offset ^ inner_offset;
+    PolygonList footprint    = outer_offset ^ inner_offset;
 
     return footprint & clipping_geometry;
 }
 
 bool subtractPathLineFootprints(PolygonList& geometry, const QVector<Polygon>& path_lines, Distance bead_width) {
     PolygonList path_line_footprint;
-    for (const Polygon& poly : path_lines) {
-        path_line_footprint += pathLineFootprint(poly, bead_width, geometry);
-    }
+    for (const Polygon& poly : path_lines) { path_line_footprint += pathLineFootprint(poly, bead_width, geometry); }
 
-    if (path_line_footprint.isEmpty()) {
-        return false;
-    }
+    if (path_line_footprint.isEmpty()) { return false; }
 
     geometry -= path_line_footprint;
     return true;
@@ -112,8 +104,8 @@ PolygonList selectedBoundaryOffsetGeometry(const PolygonList& external_boundarie
     }
 
     PolygonList offset_external_geometry = external_boundaries.offset(-offset_distance);
-    PolygonList offset_geometry = offset_external_geometry - internal_boundaries;
-    offset_geometry.lost_geometry = offset_external_geometry.lost_geometry;
+    PolygonList offset_geometry          = offset_external_geometry - internal_boundaries;
+    offset_geometry.lost_geometry        = offset_external_geometry.lost_geometry;
     return offset_geometry;
 }
 
@@ -128,43 +120,39 @@ PolygonList selectedBoundaryPathLines(const PolygonList& external_boundaries, co
 
 PolygonList selectedBoundaryPathLines(const PolygonList& geometry, PerimeterBoundarySelection selection,
                                       Distance bead_width) {
-    if (selection == PerimeterBoundarySelection::kAll) {
-        return geometry.offset(-bead_width / 2);
-    }
+    if (selection == PerimeterBoundarySelection::kAll) { return geometry.offset(-bead_width / 2); }
 
     return selectedBoundaryPathLines(geometry.externalPolygonBoundaries(), geometry.internalPolygonBoundaries(),
                                      selection, bead_width / 2);
 }
 
-double netAreaAbs(PolygonList geometry) { return std::fabs(geometry.netArea()()); }
+double netAreaAbs(PolygonList geometry) {
+    return std::fabs(geometry.netArea()());
+}
 
 double negligibleAreaTolerance(double reference_area, Distance nominal_width) {
     return std::max(reference_area * 1.0e-6, nominal_width() * nominal_width() * 1.0e-4);
 }
 
-bool hasInternalBoundaries(const PolygonList& geometry) { return !geometry.internalPolygonBoundaries().isEmpty(); }
+bool hasInternalBoundaries(const PolygonList& geometry) {
+    return !geometry.internalPolygonBoundaries().isEmpty();
+}
 
 Distance clampedAdaptiveWidth(Distance requested_width, Distance nominal_width, Distance min_width,
                               Distance max_width) {
     double requested = requested_width();
-    if (!std::isfinite(requested) || requested <= 0) {
-        requested = nominal_width();
-    }
+    if (!std::isfinite(requested) || requested <= 0) { requested = nominal_width(); }
 
     double lower = std::max(0.0, min_width());
     double upper = max_width() > 0 ? max_width() : std::numeric_limits<double>::max();
-    if (upper < lower) {
-        upper = lower;
-    }
+    if (upper < lower) { upper = lower; }
 
     return Distance(std::clamp(requested, lower, upper));
 }
 
 bool geometryClearedByFootprints(PolygonList geometry, const QVector<Polygon>& path_lines, Distance bead_width,
                                  double reference_area, Distance nominal_width) {
-    if (!subtractPathLineFootprints(geometry, path_lines, bead_width)) {
-        return false;
-    }
+    if (!subtractPathLineFootprints(geometry, path_lines, bead_width)) { return false; }
 
     return geometry.isEmpty() || netAreaAbs(geometry) <= negligibleAreaTolerance(reference_area, nominal_width);
 }
@@ -172,9 +160,7 @@ bool geometryClearedByFootprints(PolygonList geometry, const QVector<Polygon>& p
 bool shellWidthCoversGeometry(PolygonList geometry, const QVector<Polygon>& path_lines, Distance bead_width,
                               Distance nominal_width) {
     const Distance path_length = totalPathLineLength(path_lines);
-    if (path_length <= 0) {
-        return false;
-    }
+    if (path_length <= 0) { return false; }
 
     const Distance full_area_width = Distance(netAreaAbs(geometry) / path_length());
     return std::fabs(full_area_width() - bead_width()) <= std::max(nominal_width() * 1.0e-4, 1.0e-6);
@@ -185,9 +171,7 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
                                                   PerimeterBoundarySelection selection, Distance min_width,
                                                   Distance max_width) {
     const double initial_area = netAreaAbs(geometry);
-    if (initial_area <= 0) {
-        return std::nullopt;
-    }
+    if (initial_area <= 0) { return std::nullopt; }
     const bool shell_geometry = selection == PerimeterBoundarySelection::kAll && hasInternalBoundaries(geometry);
 
     Distance candidate_width = nominal_width;
@@ -196,9 +180,7 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
         candidate_path_lines = validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width),
                                               min_path_length, min_segment_length);
         const Distance candidate_length = totalPathLineLength(candidate_path_lines);
-        if (candidate_length <= 0) {
-            return std::nullopt;
-        }
+        if (candidate_length <= 0) { return std::nullopt; }
 
         const Distance next_width =
             clampedAdaptiveWidth(Distance(initial_area / candidate_length()), nominal_width, min_width, max_width);
@@ -212,9 +194,7 @@ std::optional<Distance> fullCoverageAdaptiveWidth(PolygonList geometry, Distance
 
     candidate_path_lines = validPathLines(selectedBoundaryPathLines(geometry, selection, candidate_width),
                                           min_path_length, min_segment_length);
-    if (candidate_path_lines.isEmpty()) {
-        return std::nullopt;
-    }
+    if (candidate_path_lines.isEmpty()) { return std::nullopt; }
 
     if (geometryClearedByFootprints(geometry, candidate_path_lines, candidate_width, initial_area, nominal_width)) {
         return candidate_width;
@@ -241,25 +221,19 @@ Distance adaptiveContourWidthForGeometry(PolygonList geometry, Distance nominal_
     for (int i = 0; i < remaining_count && !preview_geometry.isEmpty(); ++i) {
         QVector<Polygon> preview_path_lines = validPathLines(
             selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length, min_segment_length);
-        if (preview_path_lines.isEmpty()) {
-            break;
-        }
+        if (preview_path_lines.isEmpty()) { break; }
 
         preview_length += totalPathLineLength(preview_path_lines);
-        if (!subtractPathLineFootprints(preview_geometry, preview_path_lines, nominal_width)) {
-            break;
-        }
+        if (!subtractPathLineFootprints(preview_geometry, preview_path_lines, nominal_width)) { break; }
     }
 
-    if (preview_length <= 0) {
-        return nominal_width;
-    }
+    if (preview_length <= 0) { return nominal_width; }
 
     const bool more_nominal_paths_fit =
         !validPathLines(selectedBoundaryPathLines(preview_geometry, selection, nominal_width), min_path_length,
                         min_segment_length)
              .isEmpty();
-    const double initial_area = netAreaAbs(geometry);
+    const double initial_area           = netAreaAbs(geometry);
     const double preview_remaining_area = netAreaAbs(preview_geometry);
     const double target_area =
         more_nominal_paths_fit ? std::max(0.0, initial_area - preview_remaining_area) : initial_area;
@@ -277,11 +251,9 @@ QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance no
         const Distance path_width =
             adaptiveContourWidthForGeometry(geometry, nominal_width, remaining_count - i, min_path_length,
                                             min_segment_length, selection, min_width, max_width);
-        PolygonList path_lines = selectedBoundaryPathLines(geometry, selection, path_width);
+        PolygonList path_lines            = selectedBoundaryPathLines(geometry, selection, path_width);
         QVector<Polygon> valid_path_lines = validPathLines(path_lines, min_path_length, min_segment_length);
-        if (valid_path_lines.isEmpty()) {
-            break;
-        }
+        if (valid_path_lines.isEmpty()) { break; }
 
         widths.push_back(path_width);
 
@@ -289,12 +261,8 @@ QVector<Distance> plannedAdaptiveContourWidths(PolygonList geometry, Distance no
             selection == PerimeterBoundarySelection::kAll && hasInternalBoundaries(geometry) &&
             shellWidthCoversGeometry(geometry, valid_path_lines, path_width, nominal_width);
 
-        if (!subtractPathLineFootprints(geometry, valid_path_lines, path_width)) {
-            break;
-        }
-        if (clear_shell_geometry) {
-            geometry.clear();
-        }
+        if (!subtractPathLineFootprints(geometry, valid_path_lines, path_width)) { break; }
+        if (clear_shell_geometry) { geometry.clear(); }
     }
 
     return widths;
@@ -305,17 +273,15 @@ Distance adaptiveContourWidth(PolygonList geometry, Distance nominal_width, int 
                               PerimeterBoundarySelection selection, Distance min_width, Distance max_width) {
     QVector<Distance> widths = plannedAdaptiveContourWidths(geometry, nominal_width, remaining_count, min_path_length,
                                                             min_segment_length, selection, min_width, max_width);
-    if (widths.isEmpty()) {
-        return nominal_width;
-    }
+    if (widths.isEmpty()) { return nominal_width; }
 
     return *std::max_element(widths.begin(), widths.end(),
                              [](const Distance& lhs, const Distance& rhs) { return lhs() < rhs(); });
 }
 
 double distanceXYToSegment(const Point& point, const Point& start, const Point& end) {
-    const double dx = end.x() - start.x();
-    const double dy = end.y() - start.y();
+    const double dx     = end.x() - start.x();
+    const double dy     = end.y() - start.y();
     const double len_sq = dx * dx + dy * dy;
     if (len_sq <= std::numeric_limits<double>::epsilon()) {
         return std::hypot(point.x() - start.x(), point.y() - start.y());
@@ -328,20 +294,16 @@ double distanceXYToSegment(const Point& point, const Point& start, const Point& 
 }
 
 bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double tolerance) {
-    if (line.size() < 2) {
-        return false;
-    }
+    if (line.size() < 2) { return false; }
 
     for (int i = 0; i < line.size(); ++i) {
-        if (distanceXYToSegment(point, line[i], line[(i + 1) % line.size()]) <= tolerance) {
-            return true;
-        }
+        if (distanceXYToSegment(point, line[i], line[(i + 1) % line.size()]) <= tolerance) { return true; }
     }
 
     return false;
 }
 
-} // namespace
+}  // namespace
 
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
                      const QVector<SettingsPolygon>& settings_polygons, PolygonList uncut_geometry)
@@ -352,9 +314,7 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kPerimeter);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kPerimeter);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kPerimeter);
     }
     gcode += writer->writeAfterRegion(RegionType::kPerimeter);
@@ -367,9 +327,9 @@ void Perimeter::compute(uint layer_num) {
     m_computed_widths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
-    Distance beadWidth = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-    int perimeter_count = m_sb->setting<int>(PS::Perimeter::kCount);
-    const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
+    Distance beadWidth                = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+    int perimeter_count               = m_sb->setting<int>(PS::Perimeter::kCount);
+    const Distance min_path_length    = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
     const Distance min_segment_length = m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength);
     const PerimeterBoundarySelection boundary_selection =
         static_cast<PerimeterBoundarySelection>(m_sb->setting<int>(PS::Perimeter::kBoundarySelection));
@@ -392,26 +352,20 @@ void Perimeter::compute(uint layer_num) {
                 appendValidPathLines(path_lines, m_computed_geometry, m_computed_widths, min_path_length, path_width,
                                      min_segment_length, skipped_path_line);
 
-            if (valid_path_lines.isEmpty()) {
-                break;
-            }
+            if (valid_path_lines.isEmpty()) { break; }
 
             const bool clear_shell_geometry =
                 boundary_selection == PerimeterBoundarySelection::kAll && hasInternalBoundaries(m_geometry) &&
                 shellWidthCoversGeometry(m_geometry, valid_path_lines, path_width, beadWidth);
 
-            if (!subtractPathLineFootprints(m_geometry, valid_path_lines, path_width)) {
-                break;
-            }
-            if (clear_shell_geometry) {
-                m_geometry.clear();
-            }
+            if (!subtractPathLineFootprints(m_geometry, valid_path_lines, path_width)) { break; }
+            if (clear_shell_geometry) { m_geometry.clear(); }
         }
         return;
     }
 
     if (boundary_selection == PerimeterBoundarySelection::kAll) {
-        PolygonList path_lines = m_geometry.offset(-beadWidth / 2);
+        PolygonList path_lines         = m_geometry.offset(-beadWidth / 2);
         bool use_footprint_subtraction = false;
 
         for (int perimeter_number = 0; !path_lines.isEmpty() && perimeter_number < perimeter_count;
@@ -421,15 +375,11 @@ void Perimeter::compute(uint layer_num) {
                 appendValidPathLines(path_lines, m_computed_geometry, m_computed_widths, min_path_length, beadWidth,
                                      min_segment_length, skipped_path_line);
 
-            if (valid_path_lines.isEmpty()) {
-                break;
-            }
+            if (valid_path_lines.isEmpty()) { break; }
 
             if (skipped_path_line || use_footprint_subtraction) {
                 use_footprint_subtraction = true;
-                if (!subtractPathLineFootprints(m_geometry, valid_path_lines, beadWidth)) {
-                    break;
-                }
+                if (!subtractPathLineFootprints(m_geometry, valid_path_lines, beadWidth)) { break; }
                 path_lines = selectedBoundaryPathLines(m_geometry, boundary_selection, beadWidth);
             }
             else {
@@ -445,7 +395,7 @@ void Perimeter::compute(uint layer_num) {
     // would no longer clip the offset.
     const PolygonList external_boundaries = original_geometry.externalPolygonBoundaries();
     const PolygonList internal_boundaries = original_geometry.internalPolygonBoundaries();
-    bool use_footprint_subtraction = false;
+    bool use_footprint_subtraction        = false;
     PolygonList path_lines;
 
     for (int perimeter_number = 0; perimeter_number < perimeter_count; ++perimeter_number) {
@@ -458,24 +408,18 @@ void Perimeter::compute(uint layer_num) {
                 selectedBoundaryPathLines(external_boundaries, internal_boundaries, boundary_selection, path_offset);
         }
 
-        if (path_lines.isEmpty()) {
-            break;
-        }
+        if (path_lines.isEmpty()) { break; }
 
         bool skipped_path_line = false;
         QVector<Polygon> valid_path_lines =
             appendValidPathLines(path_lines, m_computed_geometry, m_computed_widths, min_path_length, beadWidth,
                                  min_segment_length, skipped_path_line);
 
-        if (valid_path_lines.isEmpty()) {
-            break;
-        }
+        if (valid_path_lines.isEmpty()) { break; }
 
         if (skipped_path_line || use_footprint_subtraction) {
             use_footprint_subtraction = true;
-            if (!subtractPathLineFootprints(m_geometry, valid_path_lines, beadWidth)) {
-                break;
-            }
+            if (!subtractPathLineFootprints(m_geometry, valid_path_lines, beadWidth)) { break; }
         }
         else {
             const Distance remaining_offset = beadWidth * (perimeter_number + 1);
@@ -522,31 +466,24 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
     if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
         if (m_computed_geometry.size() > 0) {
-            poo.setGeometryToEvaluate(
-                m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
+            poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
 
             Polyline result = poo.linkSpiralPolyline2D(m_was_last_region_spiral,
                                                        m_sb->setting<Distance>(PS::Layer::Layer::kLayerHeight),
                                                        pointOrderOptimization);
 
             // Exit early if no perimeter path can be made
-            if (result.size() < 3) {
-                return;
-            }
+            if (result.size() < 3) { return; }
 
             // Create path from polyline
             Path newPath = createPath(result);
-            if (newPath.size() == 0) {
-                return;
-            }
+            if (newPath.size() == 0) { return; }
 
-            newPath.setCCW(result.orientation()); // Set orientation of path
-            newPath.getSegments().removeLast();   // Remove last segment of path to enable spiral path linking
+            newPath.setCCW(result.orientation());  // Set orientation of path
+            newPath.getSegments().removeLast();    // Remove last segment of path to enable spiral path linking
 
             // Exit early if perimeter path is too short
-            if (newPath.calculateLength() < m_sb->setting<Distance>(PS::Perimeter::kMinPathLength)) {
-                return;
-            }
+            if (newPath.calculateLength() < m_sb->setting<Distance>(PS::Perimeter::kMinPathLength)) { return; }
 
             if (!m_was_last_region_spiral) {
                 PathModifierGenerator::GenerateTravel(newPath, current_location,
@@ -561,26 +498,18 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
     else {
         if (static_cast<PrintDirection>(m_sb->setting<int>(PS::Ordering::kPerimeterReverseDirection)) !=
             PrintDirection::kReverse_off)
-            for (Polyline& line : m_computed_geometry) {
-                line = line.reverse();
-            }
+            for (Polyline& line : m_computed_geometry) { line = line.reverse(); }
 
         auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
             for (const Polyline& spiral_group : spiral_groups) {
-                if (spiral_group.size() < 3) {
-                    continue;
-                }
+                if (spiral_group.size() < 3) { continue; }
 
                 Path newPath = createPath(spiral_group);
                 newPath.setCCW(ccw);
 
-                if (newPath.size() > 0) {
-                    newPath.getSegments().removeLast();
-                }
+                if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
-                if (newPath.calculateLength() < min_path_length) {
-                    continue;
-                }
+                if (newPath.calculateLength() < min_path_length) { continue; }
 
                 if (newPath.size() > 0) {
                     calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
@@ -602,7 +531,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 QVector<Polyline> ordered_perimeters;
                 const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
-                const Distance bead_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+                const Distance bead_width      = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
 
                 while (spiral_poo.getCurrentPolylineCount() > 0) {
                     if (!ordered_perimeters.isEmpty()) {
@@ -612,17 +541,13 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                     Polyline result = spiral_poo.linkNextPolyline();
 
-                    if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) {
-                        continue;
-                    }
+                    if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) { continue; }
 
                     spiral_query_location = SpiralPath::transitionStartPoint(result, bead_width);
                     ordered_perimeters.push_back(result);
                 }
 
-                if (ordered_perimeters.isEmpty()) {
-                    return;
-                }
+                if (ordered_perimeters.isEmpty()) { return; }
 
                 if (ordered_perimeters.size() == 1) {
                     Polyline result = ordered_perimeters.first();
@@ -630,9 +555,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     Path newPath = createPath(result);
                     newPath.setCCW(result.orientation());
 
-                    if (newPath.calculateLength() < min_path_length) {
-                        return;
-                    }
+                    if (newPath.calculateLength() < min_path_length) { return; }
 
                     if (newPath.size() > 0) {
                         calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
@@ -659,8 +582,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
             QVector<Polyline> ordered_perimeters;
             QVector<Distance> ordered_perimeter_widths;
-            bool has_spiral_orientation = false;
-            bool spiral_orientation = false;
+            bool has_spiral_orientation    = false;
+            bool spiral_orientation        = false;
             const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
 
             while (spiral_poo.getCurrentPolylineCount() > 0) {
@@ -670,12 +593,10 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 Polyline result = spiral_poo.linkNextPolyline();
 
-                if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) {
-                    continue;
-                }
+                if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) { continue; }
 
                 if (!has_spiral_orientation) {
-                    spiral_orientation = result.orientation();
+                    spiral_orientation     = result.orientation();
                     has_spiral_orientation = true;
                 }
                 else if (result.orientation() != spiral_orientation) {
@@ -689,9 +610,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 spiral_query_location = SpiralPath::transitionStartPoint(result, result_width);
             }
 
-            if (ordered_perimeters.isEmpty()) {
-                return;
-            }
+            if (ordered_perimeters.isEmpty()) { return; }
 
             if (ordered_perimeters.size() == 1) {
                 PolylineOrderOptimizer first_loop_poo(current_location, layerNumber);
@@ -699,16 +618,12 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 first_loop_poo.setGeometryToEvaluate({ordered_perimeters.first()}, RegionType::kPerimeter,
                                                      PathOrderOptimization::kNextClosest);
                 Polyline result = first_loop_poo.linkNextPolyline();
-                if (result.size() < 3) {
-                    result = ordered_perimeters.first();
-                }
+                if (result.size() < 3) { result = ordered_perimeters.first(); }
 
                 Path newPath = createPath(result);
                 newPath.setCCW(result.orientation());
 
-                if (newPath.calculateLength() < min_path_length) {
-                    return;
-                }
+                if (newPath.calculateLength() < min_path_length) { return; }
 
                 if (newPath.size() > 0) {
                     calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
@@ -730,25 +645,20 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             return;
         }
 
-        poo.setGeometryToEvaluate(
-            m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
+        poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
 
         while (poo.getCurrentPolylineCount() > 0) {
             Polyline result = poo.linkNextPolyline();
 
             // Exit early if no perimeter path can be made
-            if (result.size() < 3) {
-                continue;
-            }
+            if (result.size() < 3) { continue; }
 
             // Create path from polyline
             Path newPath = createPath(result);
             newPath.setCCW(result.orientation());
 
             // Exit early if perimeter path is too short
-            if (newPath.calculateLength() < m_sb->setting<Distance>(PS::Perimeter::kMinPathLength)) {
-                continue;
-            }
+            if (newPath.calculateLength() < m_sb->setting<Distance>(PS::Perimeter::kMinPathLength)) { continue; }
 
             if (newPath.size() > 0) {
                 calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
@@ -765,17 +675,15 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
 Path Perimeter::createPath(Polyline line) {
     line = line.removeShortSegments(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), true);
-    if (line.size() < 3) {
-        return Path();
-    }
+    if (line.size() < 3) { return Path(); }
 
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;
 
         for (size_t i = 0; i < line.size(); ++i) {
-            const Point& start = line[i];
-            const Point& end = line[(i + 1) % line.size()];
+            const Point& start        = line[i];
+            const Point& end          = line[(i + 1) % line.size()];
             const Distance bead_width = beadWidthForSegment(start, end, m_sb);
 
             LSegmentPtr segment = LSegmentPtr::create(start, end);
@@ -789,9 +697,13 @@ Path Perimeter::createPath(Polyline line) {
     return createPathWithLocalizedSettings(line);
 }
 
-QVector<Polyline> Perimeter::getComputedGeometry() { return m_computed_geometry; }
+QVector<Polyline> Perimeter::getComputedGeometry() {
+    return m_computed_geometry;
+}
 
-void Perimeter::calculateModifiers(Path& path, bool supportsG3) { calculateModifiers(path, supportsG3, false); }
+void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
+    calculateModifiers(path, supportsG3, false);
+}
 
 void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe) {
     PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
@@ -888,13 +800,11 @@ Path Perimeter::createPathWithLocalizedSettings(const Polyline& line) {
     // Iterate through each segment of the polyline
     for (size_t i = 0; i < line.size(); ++i) {
         const Point& start = line[i];
-        const Point& end = line[(i + 1) % line.size()];
+        const Point& end   = line[(i + 1) % line.size()];
 
         // Clip the segment against the settings polygons
         QVector<Point> cuts;
-        for (const SettingsPolygon& polygon : m_settings_polygons) {
-            cuts += polygon.clipLine(start, end);
-        }
+        for (const SettingsPolygon& polygon : m_settings_polygons) { cuts += polygon.clipLine(start, end); }
 
         // Sort cuts based on their distance from the start point
         std::sort(cuts.begin(), cuts.end(),
@@ -921,7 +831,7 @@ Path Perimeter::createPathWithLocalizedSettings(const Polyline& line) {
                 }
             }
 
-            LSegmentPtr segment = LSegmentPtr::create(p0, p1);
+            LSegmentPtr segment       = LSegmentPtr::create(p0, p1);
             const Distance bead_width = beadWidthForSegment(p0, p1, parent_sb);
             populateSegmentSettings(segment->getSb(), parent_sb, bead_width, isAdaptedWidth(bead_width, parent_sb));
             path.append(segment);
@@ -940,8 +850,8 @@ void Perimeter::populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
     if (adapted && bead_width > 0) {
         const Distance ref_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
         const Velocity ref_speed = parent_sb->setting<Velocity>(PS::Perimeter::kSpeed);
-        const double min_speed = ref_speed() * 0.01;
-        speed = Velocity(std::max((ref_speed() * ref_width()) / bead_width(), min_speed));
+        const double min_speed   = ref_speed() * 0.01;
+        speed                    = Velocity(std::max((ref_speed() * ref_width()) / bead_width(), min_speed));
     }
 
     segment_sb->setSetting(SS::kWidth, bead_width);
@@ -957,26 +867,20 @@ void Perimeter::populateSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
 Distance Perimeter::beadWidthForSegment(const Point& start, const Point& end,
                                         const QSharedPointer<SettingsBase>& parent_sb) const {
     const Distance fallback_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-    if (!parent_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
-        return fallback_width;
-    }
+    if (!parent_sb->setting<bool>(PS::Perimeter::kAdaptive)) { return fallback_width; }
 
     Point midpoint = (start + end) * 0.5;
     const Distance tolerance(std::max(fallback_width() * 1.0e-3, 1.0e-6));
     for (int i = 0; i < m_computed_geometry.size() && i < m_computed_widths.size(); ++i) {
-        if (pointOnClosedPolylineXY(midpoint, m_computed_geometry[i], tolerance())) {
-            return m_computed_widths[i];
-        }
+        if (pointOnClosedPolylineXY(midpoint, m_computed_geometry[i], tolerance())) { return m_computed_widths[i]; }
     }
     if (!m_computed_widths.isEmpty()) {
         const Distance first_width = m_computed_widths.first();
-        const bool uniform_width = std::all_of(m_computed_widths.begin(), m_computed_widths.end(),
-                                               [first_width, tolerance](const Distance& width) {
+        const bool uniform_width   = std::all_of(m_computed_widths.begin(), m_computed_widths.end(),
+                                                 [first_width, tolerance](const Distance& width) {
                                                    return std::fabs(width() - first_width()) <= tolerance();
-                                               });
-        if (uniform_width) {
-            return first_width;
-        }
+                                                 });
+        if (uniform_width) { return first_width; }
     }
 
     return fallback_width;
@@ -986,4 +890,4 @@ bool Perimeter::isAdaptedWidth(const Distance& width, const QSharedPointer<Setti
     const Distance nominal_width = parent_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
     return std::fabs(width() - nominal_width()) > std::max(nominal_width() * 1.0e-3, 1.0e-6);
 }
-} // namespace ORNL
+}  // namespace ORNL

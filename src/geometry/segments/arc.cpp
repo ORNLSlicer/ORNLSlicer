@@ -34,17 +34,17 @@ ArcSegment::ArcSegment(Point start, Point middle, Point end) : SegmentBase(start
         case 0:
             throw IllegalArgumentException(
                 "Cannot construct an ArcSegment from collinear start, middle, and end points");
-        case 1: // Clockwise
+        case 1:  // Clockwise
             m_ccw = false;
             break;
-        case -1: // Counter-clockwise
+        case -1:  // Counter-clockwise
             m_ccw = true;
             break;
     }
 
-    m_start = start;
+    m_start  = start;
     m_center = CalculateCenter(start, middle, end);
-    m_end = end;
+    m_end    = end;
 
     updateAngle();
 }
@@ -66,24 +66,33 @@ void ArcSegment::createGraphic(std::vector<float>& vertices, std::vector<float>&
                                 colors, normals);
 }
 
-QSharedPointer<SegmentBase> ArcSegment::clone() const { return QSharedPointer<ArcSegment>::create(*this); }
+QSharedPointer<SegmentBase> ArcSegment::clone() const {
+    return QSharedPointer<ArcSegment>::create(*this);
+}
 
-Point ArcSegment::center() const { return m_center; }
+Point ArcSegment::center() const {
+    return m_center;
+}
 
-Angle ArcSegment::angle() const { return m_angle; }
+Angle ArcSegment::angle() const {
+    return m_angle;
+}
 
-void ArcSegment::setAngle(const Angle& angle) { m_angle = angle; }
+void ArcSegment::setAngle(const Angle& angle) {
+    m_angle = angle;
+}
 
-bool ArcSegment::counterclockwise() const { return m_ccw; }
+bool ArcSegment::counterclockwise() const {
+    return m_ccw;
+}
 
 QString ArcSegment::writeGCode(QSharedPointer<WriterBase> writer) {
-    Velocity speed = this->getSb()->setting<Velocity>(SS::kSpeed);
-    int extruderSpeed = this->getSb()->setting<int>(SS::kExtruderSpeed);
-    RegionType regionType = this->getSb()->setting<RegionType>(SS::kRegionType);
+    Velocity speed          = this->getSb()->setting<Velocity>(SS::kSpeed);
+    int extruderSpeed       = this->getSb()->setting<int>(SS::kExtruderSpeed);
+    RegionType regionType   = this->getSb()->setting<RegionType>(SS::kRegionType);
     PathModifiers modifiers = this->getSb()->setting<PathModifiers>(SS::kPathModifiers);
-    const QString gcode = writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
-    if (!gcode.isEmpty())
-        writer->setCurrentPosition(m_end);
+    const QString gcode     = writer->writeArc(m_start, m_end, m_center, m_angle, m_ccw, this->getSb());
+    if (!gcode.isEmpty()) writer->setCurrentPosition(m_end);
     return gcode;
 }
 
@@ -104,24 +113,24 @@ float ArcSegment::getMinZ() {
 Distance ArcSegment::length() {
     const double planar_radius = std::hypot(m_start.x() - m_center.x(), m_start.y() - m_center.y());
     const double planar_length = m_angle() * planar_radius;
-    const double z_delta = m_end.z() - m_start.z();
+    const double z_delta       = m_end.z() - m_start.z();
     return Distance(std::hypot(planar_length, z_delta));
 }
 
 Point ArcSegment::CalculateCenter(const Point& start, const Point& middle, const Point& end) {
-    const double ax = start.x() - end.x();
-    const double ay = start.y() - end.y();
-    const double bx = middle.x() - end.x();
-    const double by = middle.y() - end.y();
-    const double determinant = 2.0 * ((ax * by) - (ay * bx));
-    const double scale = qMax(1.0, qMax(qMax(qAbs(ax), qAbs(ay)), qMax(qAbs(bx), qAbs(by))));
+    const double ax                    = start.x() - end.x();
+    const double ay                    = start.y() - end.y();
+    const double bx                    = middle.x() - end.x();
+    const double by                    = middle.y() - end.y();
+    const double determinant           = 2.0 * ((ax * by) - (ay * bx));
+    const double scale                 = qMax(1.0, qMax(qMax(qAbs(ax), qAbs(ay)), qMax(qAbs(bx), qAbs(by))));
     const double determinant_tolerance = std::numeric_limits<double>::epsilon() * scale * scale * 16.0;
 
     if (qFuzzyIsNull(determinant) || qAbs(determinant) <= determinant_tolerance) {
         throw IllegalArgumentException("Cannot calculate an arc center from collinear or near-collinear points");
     }
 
-    const double start_offset_squared = (ax * ax) + (ay * ay);
+    const double start_offset_squared  = (ax * ax) + (ay * ay);
     const double middle_offset_squared = (bx * bx) + (by * by);
     const double x = end.x() + ((by * start_offset_squared) - (ay * middle_offset_squared)) / determinant;
     const double y = end.y() + ((ax * middle_offset_squared) - (bx * start_offset_squared)) / determinant;
@@ -134,16 +143,16 @@ Distance ArcSegment::Radius(const Point& a, const Point& b, const Point& c) {
 }
 
 double ArcSegment::SignedCurvature(const Point& a, const Point& b, const Point& c) {
-    double li = a.distance(b)();
+    double li  = a.distance(b)();
     double li1 = b.distance(c)();
-    double qi = a.distance(c)();
+    double qi  = a.distance(c)();
 
-    QVector3D li_v = b.toQVector3D() - a.toQVector3D();
+    QVector3D li_v  = b.toQVector3D() - a.toQVector3D();
     QVector3D li1_v = c.toQVector3D() - b.toQVector3D();
 
     double det = QVector3D::crossProduct(li_v, li1_v).z();
 
-    double numerator = 2 * det;
+    double numerator   = 2 * det;
     double denominator = li * li1 * qi;
 
     return numerator / denominator;
@@ -162,15 +171,14 @@ void ArcSegment::updateAngle() {
     else
         m_angle = Angle(b - a);
 
-    if (m_angle <= 0)
-        m_angle = (2.0f * M_PI) + m_angle;
+    if (m_angle <= 0) m_angle = (2.0f * M_PI) + m_angle;
 }
 
 void ArcSegment::rotate(QQuaternion rotation) {
     // rotate each point
-    QVector3D center_vec = m_center.toQVector3D();
+    QVector3D center_vec    = m_center.toQVector3D();
     QVector3D result_center = rotation.rotatedVector(center_vec);
-    m_center = Point(result_center);
+    m_center                = Point(result_center);
 
     SegmentBase::rotate(rotation);
 }
@@ -180,4 +188,4 @@ void ArcSegment::shift(Point shift) {
 
     SegmentBase::shift(shift);
 }
-} // namespace ORNL
+}  // namespace ORNL

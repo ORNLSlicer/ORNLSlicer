@@ -11,7 +11,7 @@ namespace ORNL {
  *  \brief A layer range of settings
  */
 class SettingsRange {
-  public:
+   public:
     //! \brief creates a new settings range
     //! \param low the lower layer number to start at
     //! \param high the upper layer number to end at
@@ -58,7 +58,7 @@ class SettingsRange {
     //! \param group the name of the group
     void setGroup(QString group);
 
-  private:
+   private:
     // Layer number locations
     int m_low;
     int m_high;
@@ -69,4 +69,4 @@ class SettingsRange {
     // Settings
     QSharedPointer<SettingsBase> m_sb;
 };
-} // namespace ORNL
+}  // namespace ORNL

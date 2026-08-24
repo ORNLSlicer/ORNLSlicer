@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QCommandLineParser>
+
 #include <qdir.h>
 #include <qsharedpointer.h>
 
@@ -13,8 +14,7 @@ namespace ORNL {
  * \brief Handles setup of QCommandLineParser and conversion to appropriate data structs.
  */
 class CommandLineConverter {
-
-  public:
+   public:
     //! \brief Constructor
     CommandLineConverter();
 
@@ -27,7 +27,7 @@ class CommandLineConverter {
     //! \param options: valid command line options
     bool convertOptions(QCommandLineParser& parser, QSharedPointer<SettingsBase> options);
 
-  private:
+   private:
     //! \brief Convert/Check options that are required for processing
     //! These include either a project file or STL/GlobalSettings pair and an output location.
     //! \param parser: parser with values
@@ -63,4 +63,4 @@ class CommandLineConverter {
     //! \brief Copy of master json for access to individual settings
     QSharedPointer<SettingsBase> m_master;
 };
-} // namespace ORNL
+}  // namespace ORNL

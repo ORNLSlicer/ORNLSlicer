@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QVector>
+
 #include <qsharedpointer.h>
 
 #include "step/layer/island/island_base.h"
@@ -16,7 +17,7 @@ namespace ORNL {
  * fixed and the path does not need to return to it, the search space is reduced from N! to (N-1)! permutations.
  */
 class TspBrute {
-  public:
+   public:
     //! \brief Computes the optimal path(shortest or longest) to visit all islands in a list.
     //! \note IslandBases are represented by their center of mass
     //! \note Can compute either shortest of longest path
@@ -32,7 +33,7 @@ class TspBrute {
     //! \brief Returns an order list of optimized islands
     QVector<QSharedPointer<IslandBase>> getOptimizedIslandBases();
 
-  protected:
+   protected:
     //! \brief The number of islands to order
     int m_number_of_islands;
 
@@ -80,4 +81,4 @@ class TspBrute {
     //! \brief Remove the element with specified value from a vector
     void removeValue(QVector<int>& index_list, int value);
 };
-} // namespace ORNL
+}  // namespace ORNL

@@ -1,5 +1,6 @@
 #include "geometry/mesh/closed_mesh.h"
 
+#include <QtDebug>
 #include <algorithm>
 #include <array>
 #include <cstddef>
@@ -37,7 +38,6 @@
 #include <CGAL/boost/graph/properties.h>
 #include <CGAL/boost/graph/properties_Polyhedron_3.h>
 #include <CGAL/exceptions.h>
-#include <QtDebug>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -58,18 +58,17 @@
 
 namespace ORNL {
 namespace {
-using PolyhedronFaceDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor;
+using PolyhedronFaceDescriptor     = boost::graph_traits<MeshTypes::Polyhedron>::face_descriptor;
 using PolyhedronHalfedgeDescriptor = boost::graph_traits<MeshTypes::Polyhedron>::halfedge_descriptor;
 
 constexpr std::size_t kMaxSmallModelBoundaryHalfedgesForHoleFilling = 32;
-constexpr std::size_t kMaxBoundaryHalfedgesForHoleFilling = 512;
-constexpr std::size_t kMaxBoundaryHalfedgeToFacetRatio = 8;
+constexpr std::size_t kMaxBoundaryHalfedgesForHoleFilling           = 512;
+constexpr std::size_t kMaxBoundaryHalfedgeToFacetRatio              = 8;
 
 std::size_t countBorderHalfedges(MeshTypes::Polyhedron& polyhedron) {
     std::size_t count = 0;
     for (PolyhedronHalfedgeDescriptor h : halfedges(polyhedron)) {
-        if (CGAL::is_border(h, polyhedron))
-            ++count;
+        if (CGAL::is_border(h, polyhedron)) ++count;
     }
 
     return count;
@@ -83,17 +82,14 @@ ClosedMesh::RepairResult holeFillingPreflightResult(MeshTypes::Polyhedron& polyh
     const std::size_t max_boundary_halfedges = std::max(kMaxSmallModelBoundaryHalfedgesForHoleFilling,
                                                         polyhedron.size_of_facets() / kMaxBoundaryHalfedgeToFacetRatio);
 
-    if (border_halfedges > max_boundary_halfedges) {
-        return ClosedMesh::RepairResult::kSkippedLargeBoundary;
-    }
+    if (border_halfedges > max_boundary_halfedges) { return ClosedMesh::RepairResult::kSkippedLargeBoundary; }
 
     return ClosedMesh::RepairResult::kSuccess;
 }
 
 std::optional<PolyhedronHalfedgeDescriptor> firstBorderHalfedge(MeshTypes::Polyhedron& polyhedron) {
     for (PolyhedronHalfedgeDescriptor h : halfedges(polyhedron)) {
-        if (CGAL::is_border(h, polyhedron))
-            return h;
+        if (CGAL::is_border(h, polyhedron)) return h;
     }
 
     return std::nullopt;
@@ -113,28 +109,22 @@ bool fillBorderHole(MeshTypes::Polyhedron& polyhedron, PolyhedronHalfedgeDescrip
 }
 
 ClosedMesh::RepairResult fillBorderHoles(MeshTypes::Polyhedron& polyhedron) {
-    const std::size_t border_halfedges = countBorderHalfedges(polyhedron);
+    const std::size_t border_halfedges        = countBorderHalfedges(polyhedron);
     ClosedMesh::RepairResult preflight_result = holeFillingPreflightResult(polyhedron, border_halfedges);
-    if (preflight_result != ClosedMesh::RepairResult::kSuccess)
-        return preflight_result;
+    if (preflight_result != ClosedMesh::RepairResult::kSuccess) return preflight_result;
 
     std::size_t remaining_attempts = border_halfedges;
 
     while (!polyhedron.is_closed()) {
-        if (remaining_attempts == 0) {
-            return ClosedMesh::RepairResult::kFailedHoleFilling;
-        }
+        if (remaining_attempts == 0) { return ClosedMesh::RepairResult::kFailedHoleFilling; }
 
         std::optional<PolyhedronHalfedgeDescriptor> border_halfedge = firstBorderHalfedge(polyhedron);
-        if (!border_halfedge.has_value()) {
-            return ClosedMesh::RepairResult::kFailedHoleFilling;
-        }
+        if (!border_halfedge.has_value()) { return ClosedMesh::RepairResult::kFailedHoleFilling; }
 
         --remaining_attempts;
 
         try {
-            if (!fillBorderHole(polyhedron, *border_halfedge))
-                return ClosedMesh::RepairResult::kFailedHoleFilling;
+            if (!fillBorderHole(polyhedron, *border_halfedge)) return ClosedMesh::RepairResult::kFailedHoleFilling;
         } catch (const CGAL::Failure_exception& error) {
             qWarning() << "CGAL hole filling failed:" << error.what();
             return ClosedMesh::RepairResult::kFailedHoleFilling;
@@ -146,14 +136,16 @@ ClosedMesh::RepairResult fillBorderHoles(MeshTypes::Polyhedron& polyhedron) {
 
     return ClosedMesh::RepairResult::kSuccess;
 }
-} // namespace
+}  // namespace
 
-ClosedMesh::ClosedMesh() : MeshBase() { m_is_closed = true; }
+ClosedMesh::ClosedMesh() : MeshBase() {
+    m_is_closed = true;
+}
 
 ClosedMesh::ClosedMesh(const QVector<MeshVertex>& vertices, const QVector<MeshFace>& faces)
     : MeshBase(vertices, faces) {
-    m_representation = MeshTypes::Polyhedron(PolyhedronFromVerticesAndFaces(m_vertices, m_faces));
-    m_original_representation = MeshTypes::Polyhedron(m_representation); // Create a copy
+    m_representation          = MeshTypes::Polyhedron(PolyhedronFromVerticesAndFaces(m_vertices, m_faces));
+    m_original_representation = MeshTypes::Polyhedron(m_representation);  // Create a copy
     updateDims();
     m_is_closed = true;
 }
@@ -161,8 +153,8 @@ ClosedMesh::ClosedMesh(const QVector<MeshVertex>& vertices, const QVector<MeshFa
 ClosedMesh::ClosedMesh(const QString& name, const QString& path, const QVector<MeshVertex>& vertices,
                        const QVector<MeshFace>& faces, MeshType type)
     : MeshBase(vertices, faces, name, path, type) {
-    m_representation = MeshTypes::Polyhedron(PolyhedronFromVerticesAndFaces(m_vertices, m_faces));
-    m_original_representation = MeshTypes::Polyhedron(m_representation); // Create a copy
+    m_representation          = MeshTypes::Polyhedron(PolyhedronFromVerticesAndFaces(m_vertices, m_faces));
+    m_original_representation = MeshTypes::Polyhedron(m_representation);  // Create a copy
     updateDims();
     m_is_closed = true;
 }
@@ -179,16 +171,18 @@ ClosedMesh::ClosedMesh(MeshTypes::Polyhedron poly, QString name, QString file) :
     CGAL::copy_face_graph(m_representation, m_original_representation);
     updateDims();
     m_original_dimensions = m_dimensions;
-    m_is_closed = true;
+    m_is_closed           = true;
 }
 
 ClosedMesh::ClosedMesh(QSharedPointer<ClosedMesh> mesh) : MeshBase(mesh) {
-    m_representation = mesh->m_representation;
+    m_representation          = mesh->m_representation;
     m_original_representation = mesh->m_original_representation;
-    m_is_closed = true;
+    m_is_closed               = true;
 }
 
-MeshTypes::Polyhedron ClosedMesh::polyhedron() { return m_representation; }
+MeshTypes::Polyhedron ClosedMesh::polyhedron() {
+    return m_representation;
+}
 
 void ClosedMesh::center() {
     //! Compose translation
@@ -235,14 +229,14 @@ QVector<Point> ClosedMesh::boundingBox() {
 
 Area ClosedMesh::area() {
     double area = 0.0;
-    area = CGAL::Polygon_mesh_processing::area(m_representation);
+    area        = CGAL::Polygon_mesh_processing::area(m_representation);
     Area a;
     return a.from(area, (micron * micron));
 }
 
 Volume ClosedMesh::volume() {
     double volume = 0.0;
-    volume = CGAL::Polygon_mesh_processing::volume(m_representation);
+    volume        = CGAL::Polygon_mesh_processing::volume(m_representation);
     Volume v;
     return v.from(volume, (micron * micron * micron));
 }
@@ -263,22 +257,22 @@ QVector<Point> ClosedMesh::intersect(Point start, Point end) {
     return intersection_points;
 }
 
-QVector<Point> ClosedMesh::intersect(LineSegment line) { return intersect(line.start(), line.end()); }
+QVector<Point> ClosedMesh::intersect(LineSegment line) {
+    return intersect(line.start(), line.end());
+}
 
 QVector<Point> ClosedMesh::intersect(Polyline line) {
     QVector<Point> intersections;
-    for (int i = 1, end = line.size(); i < end; ++i)
-        intersections.append(intersect(line[i - 1], line[i]));
+    for (int i = 1, end = line.size(); i < end; ++i) intersections.append(intersect(line[i - 1], line[i]));
 
     return intersections;
 }
 
 QVector<Point> ClosedMesh::intersect(Path path) {
     QVector<Point> intersections;
-    for (auto& seg : path)
-        intersections.append(intersect(seg->start(), seg->end()));
+    for (auto& seg : path) intersections.append(intersect(seg->start(), seg->end()));
 
-    if (path.front()->start() == path.back()->end()) // Is this path is a closed loop
+    if (path.front()->start() == path.back()->end())  // Is this path is a closed loop
         intersections.append(intersect(path.back()->end(), path.front()->start()));
 
     return intersections;
@@ -286,10 +280,9 @@ QVector<Point> ClosedMesh::intersect(Path path) {
 
 QVector<Point> ClosedMesh::intersect(Polygon poly) {
     QVector<Point> intersections;
-    for (int i = 1, end = poly.size(); i < end; ++i)
-        intersections.append(intersect(poly[i - 1], poly[i]));
+    for (int i = 1, end = poly.size(); i < end; ++i) intersections.append(intersect(poly[i - 1], poly[i]));
 
-    intersections.append(intersect(poly.last(), poly.first())); // Add loop back line
+    intersections.append(intersect(poly.last(), poly.first()));  // Add loop back line
 
     return intersections;
 }
@@ -305,19 +298,15 @@ std::pair<QVector<Polyline>, QVector<Polygon>> ClosedMesh::intersect(Plane plane
     QVector<Polygon> result_polygons;
 
     for (auto& cgal_polyline : cgal_polylines) {
-        if (cgal_polyline.front() == cgal_polyline.back()) // Can this be closed into a polygon?
+        if (cgal_polyline.front() == cgal_polyline.back())  // Can this be closed into a polygon?
         {
             Polygon new_polygon;
-            for (auto& point : cgal_polyline) {
-                new_polygon.append(Point::FromCGALPoint(point));
-            }
+            for (auto& point : cgal_polyline) { new_polygon.append(Point::FromCGALPoint(point)); }
             result_polygons.push_back(new_polygon);
         }
         else {
             Polyline new_line;
-            for (auto& point : cgal_polyline) {
-                new_line.append(Point::FromCGALPoint(point));
-            }
+            for (auto& point : cgal_polyline) { new_line.append(Point::FromCGALPoint(point)); }
             result_polylines.push_back(new_line);
         }
     }
@@ -330,8 +319,8 @@ void ClosedMesh::difference(ClosedMesh& clipper) {
 
     // Convert back to a mesh
     auto vertices_and_faces = FacesAndVerticesFromPolyhedron(m_representation);
-    m_vertices = vertices_and_faces.first;
-    m_faces = vertices_and_faces.second;
+    m_vertices              = vertices_and_faces.first;
+    m_faces                 = vertices_and_faces.second;
 
     updateDims();
 }
@@ -339,15 +328,15 @@ void ClosedMesh::difference(ClosedMesh& clipper) {
 void ClosedMesh::intersection(ClosedMesh mesh_to_intersect) {
     // Convert both to CGAL polyhedrons
     MeshTypes::Polyhedron subject = polyhedron();
-    MeshTypes::Polyhedron clip = mesh_to_intersect.polyhedron();
+    MeshTypes::Polyhedron clip    = mesh_to_intersect.polyhedron();
 
     MeshTypes::Polyhedron out;
     CGAL::Polygon_mesh_processing::corefine_and_compute_intersection(subject, clip, out);
 
     // Convert back to a mesh
     auto vertices_and_faces = FacesAndVerticesFromPolyhedron(out);
-    m_vertices = vertices_and_faces.first;
-    m_faces = vertices_and_faces.second;
+    m_vertices              = vertices_and_faces.first;
+    m_faces                 = vertices_and_faces.second;
 
     updateDims();
 }
@@ -355,15 +344,15 @@ void ClosedMesh::intersection(ClosedMesh mesh_to_intersect) {
 void ClosedMesh::mesh_union(ClosedMesh mesh_to_union) {
     // Convert both to CGAL polyhedrons
     MeshTypes::Polyhedron subject = polyhedron();
-    MeshTypes::Polyhedron clip = mesh_to_union.polyhedron();
+    MeshTypes::Polyhedron clip    = mesh_to_union.polyhedron();
 
     MeshTypes::Polyhedron out;
     CGAL::Polygon_mesh_processing::corefine_and_compute_union(subject, clip, out);
 
     // Convert back to a mesh
     auto vertices_and_faces = FacesAndVerticesFromPolyhedron(out);
-    m_vertices = vertices_and_faces.first;
-    m_faces = vertices_and_faces.second;
+    m_vertices              = vertices_and_faces.first;
+    m_faces                 = vertices_and_faces.second;
 
     updateDims();
 }
@@ -393,7 +382,7 @@ MeshTypes::SurfaceMesh ClosedMesh::extractUpwardFaces() {
         QVector3D normal = QVector3D::crossProduct(points[1] - points[0], points[2] - points[0]).normalized();
         // This face is upward facing
         if (normal.z() > 0.0)
-            segment_property_map[face] = 1; // Set a flag
+            segment_property_map[face] = 1;  // Set a flag
         else
             segment_property_map[face] = 0;
     }
@@ -433,9 +422,9 @@ std::pair<bool, Area> ClosedMesh::crossSectionalArea(Plane plane, QVector<Polygo
     CGAL::Polygon_mesh_slicer<MeshTypes::Polyhedron, MeshTypes::Kernel> slicer(m_representation);
     slicer(plane.toCGALPlane(), std::back_inserter(cross_section));
 
-    Area a = 0;
+    Area a            = 0;
     bool intersecting = false;
-    if (cross_section.size() == 0) // No cross section generated
+    if (cross_section.size() == 0)  // No cross section generated
         a = 0;
     else {
         for (auto section : cross_section) {
@@ -457,8 +446,8 @@ MeshTypes::Polyhedron ClosedMesh::PolyhedronFromVerticesAndFaces(QVector<MeshVer
     return mesh;
 }
 
-std::pair<QVector<MeshVertex>, QVector<MeshFace>>
-ClosedMesh::FacesAndVerticesFromPolyhedron(MeshTypes::Polyhedron& mesh) {
+std::pair<QVector<MeshVertex>, QVector<MeshFace>> ClosedMesh::FacesAndVerticesFromPolyhedron(
+    MeshTypes::Polyhedron& mesh) {
     QVector<MeshFace> mesh_faces;
     mesh_faces.reserve(CGAL::faces(mesh).size());
 
@@ -522,17 +511,13 @@ ClosedMesh::RepairResult ClosedMesh::CleanPolyhedronWithStatus(MeshTypes::Polyhe
         std::vector<PolyhedronHalfedgeDescriptor> non_manifold_vertices;
         CGAL::Polygon_mesh_processing::non_manifold_vertices(polyhedron, std::back_inserter(non_manifold_vertices));
 
-        if (!non_manifold_vertices.empty()) {
-            return RepairResult::kSkippedNonManifoldBoundary;
-        }
+        if (!non_manifold_vertices.empty()) { return RepairResult::kSkippedNonManifoldBoundary; }
 
         RepairResult hole_filling_result = fillBorderHoles(polyhedron);
-        if (hole_filling_result != RepairResult::kSuccess)
-            return hole_filling_result;
+        if (hole_filling_result != RepairResult::kSuccess) return hole_filling_result;
     }
 
-    if (!polyhedron.is_closed())
-        return RepairResult::kRepairLeftOpen;
+    if (!polyhedron.is_closed()) return RepairResult::kRepairLeftOpen;
 
     try {
         if (!CGAL::Polygon_mesh_processing::does_self_intersect(
@@ -563,8 +548,7 @@ ClosedMesh::RepairResult ClosedMesh::CleanPolyhedronWithStatus(MeshTypes::Polyhe
     }
     polyhedron = self_intersection_repair;
 
-    if (!polyhedron.is_closed())
-        return RepairResult::kRepairLeftOpen;
+    if (!polyhedron.is_closed()) return RepairResult::kRepairLeftOpen;
 
     return RepairResult::kSuccess;
 }
@@ -601,10 +585,9 @@ void ClosedMesh::convert() {
 bool ClosedMesh::CheckIntersectingCurves(Plane& plane, QVector<Polygon> boundary_curves) {
     for (Polygon curve : boundary_curves) {
         for (Point p : curve) {
-            if (plane.evaluatePoint(p) >= 0)
-                return true;
+            if (plane.evaluatePoint(p) >= 0) return true;
         }
     }
     return false;
 }
-} // namespace ORNL
+}  // namespace ORNL

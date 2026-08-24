@@ -1,12 +1,12 @@
 #pragma once
 
+#include <QFileInfo>
+#include <QThread>
 #include <cstddef>
 #include <utility>
 
 #include <CGAL/Modifier_base.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
-#include <QFileInfo>
-#include <QThread>
 #include <assimp/mesh.h>
 #include <assimp/scene.h>
 #include <qcontainerfwd.h>
@@ -31,13 +31,13 @@ class MeshFace;
  */
 class MeshLoader : public QThread {
     Q_OBJECT
-  public:
+   public:
     //! \struct MeshData
     //! \brief Holds a pointer to a mesh and the raw data/ size
     struct MeshData {
         QSharedPointer<MeshBase> mesh = nullptr;
-        void* raw_data = nullptr;
-        size_t size = 0;
+        void* raw_data                = nullptr;
+        size_t size                   = 0;
     };
 
     //! \brief Constructor for thread
@@ -60,14 +60,14 @@ class MeshLoader : public QThread {
                                         QMatrix4x4 transform = QMatrix4x4(), Distance unit = Distance(mm),
                                         void* raw_data = nullptr, size_t file_size = 0);
 
-  signals:
+   signals:
     //! \brief Sends the model to the project manager
     void newMesh(MeshData data);
 
     //! \brief Emits error signal
     void error(QString msg);
 
-  private:
+   private:
     //! \brief loads raw data from a path
     //! \param file_path the path to load from
     //! \return a pair containing the raw data as a void ptr and the size in bytes
@@ -80,8 +80,9 @@ class MeshLoader : public QThread {
 
     //! \class MeshBuilderAssimp
     //! \brief CGAL builder to convert an assimp mesh into a CGAL polyhedron
-    template <class HDS> class MeshBuilderAssimp : public CGAL::Modifier_base<HDS> {
-      public:
+    template <class HDS>
+    class MeshBuilderAssimp : public CGAL::Modifier_base<HDS> {
+       public:
         //! \brief Builds a polyhedron incrementally using faces
         //! \param vertices: the mesh's vertices
         //! \param faces: the mesh's faces
@@ -94,7 +95,7 @@ class MeshLoader : public QThread {
 
             // Add all vertices
             for (unsigned int i = 0; i < m_mesh->mNumVertices; i++) {
-                builder.add_vertex(MeshTypes::Point_3(m_mesh->mVertices[i].x * 1000, // Scale from mm to micron
+                builder.add_vertex(MeshTypes::Point_3(m_mesh->mVertices[i].x * 1000,  // Scale from mm to micron
                                                       m_mesh->mVertices[i].y * 1000, m_mesh->mVertices[i].z * 1000));
             }
 
@@ -121,13 +122,14 @@ class MeshLoader : public QThread {
 
             builder.end_surface();
 
-            if (builder.check_unconnected_vertices())
-                builder.remove_unconnected_vertices();
+            if (builder.check_unconnected_vertices()) builder.remove_unconnected_vertices();
         }
 
-        bool wasError() { return m_error; }
+        bool wasError() {
+            return m_error;
+        }
 
-      private:
+       private:
         aiMesh* m_mesh;
         bool m_error = false;
     };
@@ -147,5 +149,5 @@ class MeshLoader : public QThread {
     //! \brief the default unit scaling to apply
     Distance m_unit;
 
-}; // class MeshLoader
-} // namespace ORNL
+};  // class MeshLoader
+}  // namespace ORNL

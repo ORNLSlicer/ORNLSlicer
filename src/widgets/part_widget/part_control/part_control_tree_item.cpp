@@ -22,7 +22,9 @@ PartControlTreeItem::PartControlTreeItem(QSharedPointer<PartMetaItem> pm) {
     this->updateMeshType(m_part->rootMesh()->type());
 }
 
-QSharedPointer<Part> PartControlTreeItem::getPart() { return m_part; }
+QSharedPointer<Part> PartControlTreeItem::getPart() {
+    return m_part;
+}
 
 void PartControlTreeItem::updateMeshType(MeshType type) {
     m_mesh_type = type;
@@ -83,11 +85,9 @@ void PartControlTreeItem::updateToolTip() {
         tooltip.append(
             "\nThis model contains errors and is not a closed volume. Some ORNLSlicer features may be unavailable.");
 
-    if (!m_is_mesh_inside_volume)
-        tooltip.append("\nThis model is outside the print volume.");
+    if (!m_is_mesh_inside_volume) tooltip.append("\nThis model is outside the print volume.");
 
-    if (m_is_mesh_floating)
-        tooltip.append("\nThis model is floating.");
+    if (m_is_mesh_floating) tooltip.append("\nThis model is floating.");
 
     this->setToolTip(0, tooltip);
 }
@@ -113,8 +113,7 @@ PartControlTreeItem::Container::Container(QString name, bool closed, QWidget* pa
     error_label->setPixmap(error_icon.pixmap(QSize(20, 20)));
     layout->addWidget(error_label);
 
-    if (closed)
-        error_label->setVisible(false);
+    if (closed) error_label->setVisible(false);
 
     QIcon align_icon(":/icons/alert_outline_orange.png");
     m_alignment_badge = new QLabel(this);
@@ -126,12 +125,10 @@ PartControlTreeItem::Container::Container(QString name, bool closed, QWidget* pa
 }
 
 void PartControlTreeItem::Container::showOutsideVolumeBadge(bool show) {
-    if (m_alignment_badge != nullptr)
-        m_alignment_badge->setVisible(show);
+    if (m_alignment_badge != nullptr) m_alignment_badge->setVisible(show);
 }
 
 void PartControlTreeItem::Container::showFloatingBadge(bool show) {
-    if (m_alignment_badge != nullptr)
-        m_alignment_badge->setVisible(show);
+    if (m_alignment_badge != nullptr) m_alignment_badge->setVisible(show);
 }
-} // namespace ORNL
+}  // namespace ORNL

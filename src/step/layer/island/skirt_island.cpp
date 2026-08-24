@@ -28,8 +28,7 @@ void SkirtIsland::optimize(int layerNumber, Point& currentLocation,
         prepareRegionForOptimization(r, layerNumber, previousRegions);
         r->optimize(layerNumber, currentLocation, unused);
 
-        if (r->getPaths().size() > 0)
-            previousRegions.push_back(r);
+        if (r->getPaths().size() > 0) previousRegions.push_back(r);
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -24,7 +24,7 @@ class WriterBase;
  * \brief Base class for all movements.
  */
 class SegmentBase {
-  public:
+   public:
     //! \brief Constructor
     SegmentBase(Point start, Point end);
 
@@ -167,10 +167,14 @@ class SegmentBase {
         SegmentInfoMeta() {}
 
         //! \brief Check if motion is in XY plane
-        bool isXYmove() { return start.x() != end.x() || start.y() != end.y(); }
+        bool isXYmove() {
+            return start.x() != end.x() || start.y() != end.y();
+        }
 
         //! \brief Compute Z motion change
-        float getZChange() { return end.z() - start.z(); }
+        float getZChange() {
+            return end.z() - start.z();
+        }
 
         //! \brief Compute the 2d angle along X axis (couter clock wise)
         float getCCWXAngle() {
@@ -180,12 +184,8 @@ class SegmentBase {
             float angle = 360;
             if (x != 0 || y != 0) {
                 float delta = 0;
-                if ((y >= 0 && x < 0) || (y < 0 && x < 0)) {
-                    delta = 180;
-                }
-                else if (y < 0 && x >= 0) {
-                    delta = 360;
-                }
+                if ((y >= 0 && x < 0) || (y < 0 && x < 0)) { delta = 180; }
+                else if (y < 0 && x >= 0) { delta = 360; }
 
                 angle = delta + atan(y / x) * 180 / 3.14159265358979323846;
             }
@@ -194,7 +194,7 @@ class SegmentBase {
         }
     } m_segment_info_meta;
 
-  protected:
+   protected:
     //! \brief  Start point for segment.
     Point m_start;
 
@@ -237,4 +237,4 @@ class SegmentBase {
     //! \brief Cylindrical axis used to orient true-width bead geometry.
     Point m_cylindrical_bead_center;
 };
-} // namespace ORNL
+}  // namespace ORNL

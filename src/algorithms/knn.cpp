@@ -11,15 +11,15 @@
 namespace ORNL {
 
 kNN::kNN(const QVector<Point>& referencePoints, const QVector<Point>& queryPoints, int kNeighbors) {
-    m_point_dimension = 3;
-    m_kNeighbors = kNeighbors;
+    m_point_dimension     = 3;
+    m_kNeighbors          = kNeighbors;
     m_referencePointsSize = referencePoints.size();
-    m_queryPointsSize = queryPoints.size();
+    m_queryPointsSize     = queryPoints.size();
 
     m_referencePoints = static_cast<float*>(malloc(referencePoints.size() * m_point_dimension * sizeof(float)));
-    m_queryPoints = static_cast<float*>(malloc(queryPoints.size() * m_point_dimension * sizeof(float)));
+    m_queryPoints     = static_cast<float*>(malloc(queryPoints.size() * m_point_dimension * sizeof(float)));
 
-    m_knn_dist = static_cast<float*>(malloc((queryPoints.size()) * m_kNeighbors * sizeof(float)));
+    m_knn_dist  = static_cast<float*>(malloc((queryPoints.size()) * m_kNeighbors * sizeof(float)));
     m_knn_index = static_cast<int*>(malloc((queryPoints.size()) * m_kNeighbors * sizeof(int)));
 
     int refIndex = 0;
@@ -65,17 +65,13 @@ void kNN::execute() {
 
 QVector<Distance> kNN::getNearestDistances() {
     QVector<Distance> nearestDistances;
-    for (int i = 0; i < (m_queryPointsSize * m_kNeighbors); i++) {
-        nearestDistances.push_back(m_knn_dist[i]);
-    }
+    for (int i = 0; i < (m_queryPointsSize * m_kNeighbors); i++) { nearestDistances.push_back(m_knn_dist[i]); }
     return nearestDistances;
 }
 
 QVector<int> kNN::getNearestIndices() {
     QVector<int> nearestIndices;
-    for (int i = 0; i < (m_queryPointsSize * m_kNeighbors); i++) {
-        nearestIndices.push_back(m_knn_index[i]);
-    }
+    for (int i = 0; i < (m_queryPointsSize * m_kNeighbors); i++) { nearestIndices.push_back(m_knn_index[i]); }
     return nearestIndices;
 }
 
@@ -85,26 +81,23 @@ void kNN::modified_insertion_sort(float* dist, int* index, int length, int k) {
 
     // Go through all points
     for (int i = 1; i < length; ++i) {
-
         // Store current distance and associated index
         float curr_dist = dist[i];
-        int curr_index = i;
+        int curr_index  = i;
 
         // Skip the current value if its index is >= k and if it's higher the k-th slready sorted mallest value
-        if (i >= k && curr_dist >= dist[k - 1]) {
-            continue;
-        }
+        if (i >= k && curr_dist >= dist[k - 1]) { continue; }
 
         // Shift values (and indexes) higher that the current distance to the right
         int j = std::min(i, k - 1);
         while (j > 0 && dist[j - 1] > curr_dist) {
-            dist[j] = dist[j - 1];
+            dist[j]  = dist[j - 1];
             index[j] = index[j - 1];
             --j;
         }
 
         // Write the current distance and index at their position
-        dist[j] = curr_dist;
+        dist[j]  = curr_dist;
         index[j] = curr_index;
     }
 }
@@ -121,17 +114,15 @@ float kNN::compute_distance(const float* ref, int ref_nb, const float* query, in
 
 bool kNN::knn_c(const float* ref, int ref_nb, const float* query, int query_nb, int dim, int k, float* knn_dist,
                 int* knn_index) {
-
     // Allocate local array to store all the distances / indexes for a given query point
     float* dist = static_cast<float*>(malloc(ref_nb * sizeof(float)));
-    int* index = static_cast<int*>(malloc(ref_nb * sizeof(int)));
+    int* index  = static_cast<int*>(malloc(ref_nb * sizeof(int)));
 
     // Process one query point at the time
     for (int i = 0; i < query_nb; ++i) {
-
         // Compute all distances / indexes
         for (int j = 0; j < ref_nb; ++j) {
-            dist[j] = compute_distance(ref, ref_nb, query, query_nb, dim, j, i);
+            dist[j]  = compute_distance(ref, ref_nb, query, query_nb, dim, j, i);
             index[j] = j;
         }
 
@@ -140,7 +131,7 @@ bool kNN::knn_c(const float* ref, int ref_nb, const float* query, int query_nb, 
 
         // Copy k smallest distances and their associated index
         for (int j = 0; j < k; ++j) {
-            knn_dist[j * query_nb + i] = dist[j];
+            knn_dist[j * query_nb + i]  = dist[j];
             knn_index[j * query_nb + i] = index[j];
         }
     }
@@ -151,4 +142,4 @@ bool kNN::knn_c(const float* ref, int ref_nb, const float* query, int query_nb, 
     return true;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

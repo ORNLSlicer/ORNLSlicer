@@ -20,7 +20,7 @@ namespace ORNL {
  * Radial Hatch
  */
 class PatternGenerator {
-  public:
+   public:
     /*!
      * \brief Creates parallel lines as paths.
      * \param geometry: The bounds of the geometry under consideration
@@ -109,4 +109,4 @@ class PatternGenerator {
     static QVector<Polyline> GenerateRadialHatch(PolygonList geometry, Point center, Distance lineSpacing,
                                                  Angle sector_rotation, Angle infill_rotation);
 };
-} // namespace ORNL
+}  // namespace ORNL

@@ -59,7 +59,7 @@ namespace ORNL {
 ImageSlicer::ImageSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation, true) {}
 
 void ImageSlicer::preProcess(nlohmann::json opt_data) {
-    QVector<QSharedPointer<Part>> parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
+    QVector<QSharedPointer<Part>> parts     = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
     QVector<QSharedPointer<Part>> moreParts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kSupport);
     parts += moreParts;
 
@@ -98,8 +98,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
 
         std::tie(slicing_plane, mesh_min, mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(GSM->getGlobal(), mesh);
 
-        if (slicing_plane.point().z() < lowestSlicingPlane.point().z())
-            lowestSlicingPlane = slicing_plane;
+        if (slicing_plane.point().z() < lowestSlicingPlane.point().z()) lowestSlicingPlane = slicing_plane;
 
         currentMesh.m_min = mesh->min();
         currentMesh.m_max = mesh->max();
@@ -107,8 +106,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
         QFileInfo fi(part->sourceFilePath());
         currentMesh.m_original_name = fi.completeBaseName();
 
-        if (mesh_max.z() > globalMax.z())
-            globalMax = mesh_max;
+        if (mesh_max.z() > globalMax.z()) globalMax = mesh_max;
 
         if (mesh->type() == MeshType::kSupport) {
             currentMesh.m_id = 65535;
@@ -130,8 +128,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
     });
 
     // Ids are now conveniently mesh location in vector
-    for (int i = 0; i < allMeshes.size(); ++i)
-        allMeshes[i].m_id = i + 1;
+    for (int i = 0; i < allMeshes.size(); ++i) allMeshes[i].m_id = i + 1;
 
     // include support meshes, id was previously set to static value
     allMeshes += supportMeshes;
@@ -148,8 +145,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
             QVector<double> heights = QVector<double>(vec.begin(), vec.end());
             for (double height : heights) {
                 int layer = qRound(height / layerHeight()) - 1;
-                if (layer < 0)
-                    layer = 0;
+                if (layer < 0) layer = 0;
                 layers.push_back(layer);
             }
         }
@@ -172,8 +168,7 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
             if (i == layers[0]) {
                 slicing_planes.push_back(SlicingPlaneWithLayer(i, next_plane));
                 layers.pop_front();
-                if (layers.size() == 0)
-                    break;
+                if (layers.size() == 0) break;
             }
         }
         else
@@ -184,10 +179,10 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
 
     double xResolution = GSM->getGlobal()->setting<double>(PS::Slicing::kImagePixelSizeX);
     double yResolution = GSM->getGlobal()->setting<double>(PS::Slicing::kImagePixelSizeY);
-    int volumeXDim = std::ceil((GSM->getGlobal()->setting<double>(PRS::Dimensions::kXMax) -
-                                GSM->getGlobal()->setting<double>(PRS::Dimensions::kXMin)) /
-                               xResolution) +
-                     1;
+    int volumeXDim     = std::ceil((GSM->getGlobal()->setting<double>(PRS::Dimensions::kXMax) -
+                                    GSM->getGlobal()->setting<double>(PRS::Dimensions::kXMin)) /
+                                   xResolution) +
+                         1;
 
     int volumeYDim = std::ceil((GSM->getGlobal()->setting<double>(PRS::Dimensions::kYMax) -
                                 GSM->getGlobal()->setting<double>(PRS::Dimensions::kYMin)) /
@@ -208,12 +203,10 @@ void ImageSlicer::preProcess(nlohmann::json opt_data) {
                                                                   average_normal, GSM->getGlobal());
 
                 for (int k = result.size() - 1; k >= 0; --k) {
-                    if (result[k].size() <= 2)
-                        result.removeAt(k);
+                    if (result[k].size() <= 2) result.removeAt(k);
                 }
 
-                if (!result.empty())
-                    currentCrossSections.push_back(PolygonListAndColor(result, allMeshes[j].m_id));
+                if (!result.empty()) currentCrossSections.push_back(PolygonListAndColor(result, allMeshes[j].m_id));
             }
         }
 
@@ -306,8 +299,7 @@ void ImageSlicer::createImageStencilVTK(QVector<PolygonListAndColor> geometryAnd
             for (int y = minPt.y(); y < maxPt.y(); ++y) {
                 double val =
                     imageStencilToImage->GetOutput()->GetScalarComponentAsDouble(x - minPt.x(), y - minPt.y(), 0, 0);
-                if (val > 0)
-                    fullImage->SetScalarComponentFromDouble(x, y, 0, 0, val);
+                if (val > 0) fullImage->SetScalarComponentFromDouble(x, y, 0, 0, val);
             }
         }
     }
@@ -333,19 +325,20 @@ void ImageSlicer::parallelForDynamic(int start, int end, int batchSize, const st
         threads.emplace_back([&]() {
             while (true) {
                 int i = index.fetch_add(batchSize);
-                if (i >= end)
-                    break;
+                if (i >= end) break;
 
                 int i_end = std::min(i + batchSize, end);
-                for (int j = i; j < i_end; ++j) {
-                    func(j);
-                }
+                for (int j = i; j < i_end; ++j) { func(j); }
             }
         });
     }
 }
 
-void ImageSlicer::postProcess(nlohmann::json opt_data) { emit statusUpdate(StatusUpdateStepType::kPostProcess, 100); }
+void ImageSlicer::postProcess(nlohmann::json opt_data) {
+    emit statusUpdate(StatusUpdateStepType::kPostProcess, 100);
+}
 
-void ImageSlicer::writeGCode() { emit statusUpdate(StatusUpdateStepType::kGcodeGeneraton, 100); }
-} // namespace ORNL
+void ImageSlicer::writeGCode() {
+    emit statusUpdate(StatusUpdateStepType::kGcodeGeneraton, 100);
+}
+}  // namespace ORNL

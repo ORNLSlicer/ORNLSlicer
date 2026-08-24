@@ -107,9 +107,9 @@ ClosedMesh MeshFactory::CreateTriaglePyramidMesh(const Distance& length) {
     vertices.push_back(MeshVertex(QVector3D(0, 0, 0)));
     vertices.push_back(MeshVertex(QVector3D(0, length(), 0)));
     vertices.push_back(MeshVertex(QVector3D(qSqrt(qPow(length(), 2) - qPow(length() / 2.0, 2)), length() / 2.0, 0)));
-    double x = (length() / 2.0) * 0.57735; // tan(30 deg)
-    double y = length() / 2.0;
-    double h = qSqrt(qPow(x, 2) + qPow(y, 2));
+    double x      = (length() / 2.0) * 0.57735;  // tan(30 deg)
+    double y      = length() / 2.0;
+    double h      = qSqrt(qPow(x, 2) + qPow(y, 2));
     double height = qSqrt(qPow(length(), 2) - qPow(h, 2));
     vertices.push_back(MeshVertex(QVector3D(x, y, height)));
 
@@ -166,21 +166,21 @@ ClosedMesh MeshFactory::CreateCylinderMesh(const Distance& radius, const Distanc
     }
 
     int bottom_center_index = vertices.size();
-    vertices.push_back(QVector3D(radius(), radius(), 0)); // Bottom center
+    vertices.push_back(QVector3D(radius(), radius(), 0));  // Bottom center
     int top_center_index = vertices.size();
-    vertices.push_back(QVector3D(radius(), radius(), height())); // Top center
+    vertices.push_back(QVector3D(radius(), radius(), height()));  // Top center
 
     // Side faces
     for (int i = 0; i < resolution; ++i) {
         // Add first triangle
-        int* v1 = new int[3] {i, (i + 1) % resolution, ((i + 1) % resolution) + resolution};
+        int* v1      = new int[3] {i, (i + 1) % resolution, ((i + 1) % resolution) + resolution};
         auto normal1 = QVector3D::crossProduct(vertices[v1[0]].location - vertices[v1[2]].location,
                                                vertices[v1[1]].location - vertices[v1[2]].location)
                            .normalized();
         faces.push_back(MeshFace(v1, new int[3], normal1));
 
         // Add second triangle
-        int* v2 = new int[3] {((i + 1) % resolution) + resolution, i + resolution, i};
+        int* v2      = new int[3] {((i + 1) % resolution) + resolution, i + resolution, i};
         auto normal2 = QVector3D::crossProduct(vertices[v2[0]].location - vertices[v2[2]].location,
                                                vertices[v2[1]].location - vertices[v2[2]].location)
                            .normalized();
@@ -201,8 +201,7 @@ ClosedMesh MeshFactory::CreateCylinderMesh(const Distance& radius, const Distanc
     // Bottom circle faces
     for (int i = resolution; i < (resolution * 2); ++i) {
         int next = i + 1;
-        if (next == resolution * 2)
-            next = resolution;
+        if (next == resolution * 2) next = resolution;
         int* v = new int[3] {i, next, top_center_index};
 
         auto normal = QVector3D::crossProduct(vertices[v[0]].location - vertices[v[2]].location,
@@ -232,7 +231,7 @@ ClosedMesh MeshFactory::CreateConeMesh(const Distance& radius, const Distance& h
     }
 
     int bottom_center_index = vertices.size();
-    vertices.push_back(QVector3D(radius(), radius(), 0)); // Bottom center
+    vertices.push_back(QVector3D(radius(), radius(), 0));  // Bottom center
 
     // Bottom circle faces
     for (int i = 0; i < resolution; ++i) {
@@ -246,7 +245,7 @@ ClosedMesh MeshFactory::CreateConeMesh(const Distance& radius, const Distance& h
     }
 
     int tip_index = vertices.size();
-    vertices.push_back(QVector3D(radius(), radius(), height())); // Tip
+    vertices.push_back(QVector3D(radius(), radius(), height()));  // Tip
 
     // Side faces
     for (int i = 0; i < resolution; ++i) {
@@ -264,4 +263,4 @@ ClosedMesh MeshFactory::CreateConeMesh(const Distance& radius, const Distance& h
     return m;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

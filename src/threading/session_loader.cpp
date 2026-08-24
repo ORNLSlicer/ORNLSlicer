@@ -36,21 +36,18 @@ void SessionLoader::run() {
 
 void SessionLoader::saveSession() {
     struct zip_t* zip = zip_open(m_filename.toUtf8(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'w');
-    if (zip == nullptr)
-        return;
+    if (zip == nullptr) return;
 
     QSet<QString> active_model_names;
     auto addActiveModelName = [&active_model_names](const QString& name) {
-        if (name.isEmpty())
-            return;
+        if (name.isEmpty()) return;
 
         QFileInfo file_info(name);
         active_model_names.insert(name);
         active_model_names.insert(file_info.fileName());
 
         QString base_name = file_info.baseName();
-        if (!base_name.isEmpty())
-            active_model_names.insert(base_name);
+        if (!base_name.isEmpty()) active_model_names.insert(base_name);
     };
 
     auto parts = CSM->parts();
@@ -95,7 +92,7 @@ void SessionLoader::saveSession() {
 
     // Add part transforms
     jsons.append({Constants::Settings::Session::Files::kSession,
-                  CSM->partsJson()}); // TODO: this need updated to reflect parent/ child relationships
+                  CSM->partsJson()});  // TODO: this need updated to reflect parent/ child relationships
 
     // Add global settings
     jsons.append({Constants::Settings::Session::Files::kGlobal, GSM->globalJson()});
@@ -104,9 +101,9 @@ void SessionLoader::saveSession() {
     json part_jsons;
     for (auto& part : CSM->parts()) {
         json json;
-        json[Constants::Settings::Session::LocalFile::kName] = part->name();
+        json[Constants::Settings::Session::LocalFile::kName]     = part->name();
         json[Constants::Settings::Session::LocalFile::kSettings] = part->getSb()->json();
-        json[Constants::Settings::Session::LocalFile::kRanges] = part->SettingsRangesToJson();
+        json[Constants::Settings::Session::LocalFile::kRanges]   = part->SettingsRangesToJson();
         part_jsons.push_back(json);
     }
     jsons.append({Constants::Settings::Session::Files::kLocal, part_jsons});
@@ -133,26 +130,24 @@ void SessionLoader::saveSession() {
 
 fifojson SessionLoader::getSettingsFromZip() {
     struct zip_t* zip = zip_open(m_filename.toUtf8(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'r');
-    fifojson result = fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal));
+    fifojson result   = fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal));
     zip_close(zip);
     return result;
 }
 
 void SessionLoader::updateSettingsJson(fifojson j, bool writeToProject) {
-    m_new_json = j;
-    m_has_new_json = true;
+    m_new_json              = j;
+    m_has_new_json          = true;
     m_should_write_new_json = writeToProject;
 }
 
 void SessionLoader::loadSession() {
-
     if (m_has_new_json && m_should_write_new_json) {
         struct zip_t* zip = zip_open(m_filename.toUtf8(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'd');
-        if (zip == nullptr)
-            return;
+        if (zip == nullptr) return;
 
         std::string entry = Constants::Settings::Session::Files::kGlobal;
-        char* entries[] = {&entry[0]};
+        char* entries[]   = {&entry[0]};
         zip_entries_delete(zip, entries, 1);
 
         std::string dump = m_new_json.dump(4);
@@ -165,8 +160,7 @@ void SessionLoader::loadSession() {
 
     struct zip_t* zip = zip_open(m_filename.toUtf8(), ZIP_DEFAULT_COMPRESSION_LEVEL, 'r');
 
-    if (zip == nullptr)
-        return;
+    if (zip == nullptr) return;
 
     // Load every model in the project file.
     int entries = zip_entries_total(zip);
@@ -181,7 +175,7 @@ void SessionLoader::loadSession() {
             continue;
         }
 
-        QString int_name = name.split("/").back(); //"#SESSION#/" + name.split("/").back();
+        QString int_name = name.split("/").back();  //"#SESSION#/" + name.split("/").back();
 
         // Load a mesh.
         void* data = nullptr;
@@ -194,10 +188,9 @@ void SessionLoader::loadSession() {
     }
 
     // Load global settings
-    fifojson global_settings = m_has_new_json
-                                   ? m_new_json
-                                   : fifojson::parse(
-                                         loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal));
+    fifojson global_settings =
+        m_has_new_json ? m_new_json
+                       : fifojson::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kGlobal));
     GSM->loadGlobalJson(global_settings);
 
     // Load transforms
@@ -206,7 +199,7 @@ void SessionLoader::loadSession() {
     // Load part settings and ranges
     auto parts_and_ranges = json::parse(loadStringFromZip(zip, Constants::Settings::Session::Files::kLocal));
     for (auto& part_json : parts_and_ranges) {
-        std::string name = part_json[Constants::Settings::Session::LocalFile::kName];
+        std::string name          = part_json[Constants::Settings::Session::LocalFile::kName];
         QSharedPointer<Part> part = CSM->getPart(QString::fromStdString(name));
         if (part.isNull()) {
             emit error("Project references settings for a part that was not loaded: " + QString::fromStdString(name));
@@ -240,4 +233,4 @@ std::string SessionLoader::loadStringFromZip(struct zip_t* zip, const std::strin
 
     return str;
 }
-} // namespace ORNL
+}  // namespace ORNL

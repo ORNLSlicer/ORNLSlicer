@@ -39,29 +39,37 @@ MeshBase::MeshBase(const QVector<MeshVertex>& vertices, const QVector<MeshFace>&
 }
 
 MeshBase::MeshBase(const QSharedPointer<MeshBase> mesh) {
-    m_name = mesh->m_name;
-    m_file = mesh->m_file;
-    m_type = mesh->m_type;
-    m_gen_type = mesh->m_gen_type;
-    m_imported_unit = mesh->m_imported_unit;
-    m_vertices = mesh->m_vertices;
+    m_name              = mesh->m_name;
+    m_file              = mesh->m_file;
+    m_type              = mesh->m_type;
+    m_gen_type          = mesh->m_gen_type;
+    m_imported_unit     = mesh->m_imported_unit;
+    m_vertices          = mesh->m_vertices;
     m_vertices_original = m_vertices_aligned = mesh->m_vertices_aligned;
-    m_faces = mesh->m_faces;
+    m_faces                                  = mesh->m_faces;
     m_faces_original = m_faces_aligned = mesh->m_faces_aligned;
-    m_transformation = mesh->m_transformation;
-    m_dimensions = mesh->m_dimensions;
-    m_original_dimensions = mesh->m_original_dimensions;
-    m_min = mesh->m_min;
-    m_max = mesh->m_max;
+    m_transformation                   = mesh->m_transformation;
+    m_dimensions                       = mesh->m_dimensions;
+    m_original_dimensions              = mesh->m_original_dimensions;
+    m_min                              = mesh->m_min;
+    m_max                              = mesh->m_max;
 }
 
-const QVector<MeshVertex> MeshBase::vertices() { return m_vertices; }
+const QVector<MeshVertex> MeshBase::vertices() {
+    return m_vertices;
+}
 
-const QVector<MeshFace> MeshBase::faces() { return m_faces; }
+const QVector<MeshFace> MeshBase::faces() {
+    return m_faces;
+}
 
-const QVector<MeshVertex> MeshBase::originalVertices() { return m_vertices_aligned; }
+const QVector<MeshVertex> MeshBase::originalVertices() {
+    return m_vertices_aligned;
+}
 
-const QVector<MeshFace> MeshBase::originalFaces() { return m_faces_aligned; }
+const QVector<MeshFace> MeshBase::originalFaces() {
+    return m_faces_aligned;
+}
 
 void MeshBase::setTransformation(const QMatrix4x4& matrix) {
     QQuaternion rotation;
@@ -73,7 +81,7 @@ void MeshBase::setTransformation(const QMatrix4x4& matrix) {
     m_transformation = matrix;
 
     m_vertices = m_vertices_aligned;
-    m_faces = m_faces_aligned;
+    m_faces    = m_faces_aligned;
 
     //        QVector3D center = originalCentroid().toQVector3D();
     //        QMatrix4x4 part_center;
@@ -110,9 +118,7 @@ void MeshBase::setTransformations(const QVector<QMatrix4x4> matrixes) {
             this->alignAxis(
                 MathUtils::composeTransformMatrix(translationL, QQuaternion(1, 0, 0, 0), QVector3D(1, 1, 1)));
         }
-        else {
-            this->setTransformation(matrix);
-        }
+        else { this->setTransformation(matrix); }
 
         m_all_transformations.append(matrix);
     }
@@ -123,9 +129,9 @@ void MeshBase::setTransformations(const QVector<QMatrix4x4> matrixes) {
 }
 
 void MeshBase::alignAxis(const QMatrix4x4& matrix) {
-    m_transformation = matrix;
+    m_transformation   = matrix;
     m_vertices_aligned = m_vertices;
-    m_faces_aligned = m_faces;
+    m_faces_aligned    = m_faces;
 
     convert();
     updateDims();
@@ -135,7 +141,7 @@ void MeshBase::alignAxis(const QMatrix4x4& matrix) {
 void MeshBase::resetAlignedAxis(const QMatrix4x4& matrix) {
     m_all_transformations.clear();
 
-    m_transformation = matrix;
+    m_transformation   = matrix;
     m_vertices_aligned = m_vertices = m_vertices_original;
     m_faces_aligned = m_faces = m_faces_original;
 
@@ -145,7 +151,9 @@ void MeshBase::resetAlignedAxis(const QMatrix4x4& matrix) {
     m_original_dimensions = m_dimensions;
 }
 
-const QMatrix4x4& MeshBase::transformation() const { return m_transformation; }
+const QMatrix4x4& MeshBase::transformation() const {
+    return m_transformation;
+}
 
 QVector<QMatrix4x4> MeshBase::transformations() {
     QVector<QMatrix4x4> transformations = m_all_transformations;
@@ -159,30 +167,18 @@ QVector<QMatrix4x4> MeshBase::transformations() {
 void MeshBase::scale(Distance3D bounds) {
     QMatrix4x4 scale_matrix;
     QVector3D scale(1, 1, 1);
-    if (bounds.x < m_dimensions.x) {
-        scale.setX((bounds.x() / m_dimensions.x()));
-    }
-    if (bounds.y < m_dimensions.y) {
-        scale.setY((bounds.y() / m_dimensions.y()));
-    }
-    if (bounds.z < m_dimensions.z) {
-        scale.setZ((bounds.z() / m_dimensions.z()));
-    }
+    if (bounds.x < m_dimensions.x) { scale.setX((bounds.x() / m_dimensions.x())); }
+    if (bounds.y < m_dimensions.y) { scale.setY((bounds.y() / m_dimensions.y())); }
+    if (bounds.z < m_dimensions.z) { scale.setZ((bounds.z() / m_dimensions.z())); }
     scale_matrix.scale(scale);
     this->setTransformation(scale_matrix);
 }
 
 void MeshBase::scaleUniform(Distance3D bounds) {
     double scale_factor = std::numeric_limits<double>::max();
-    if (bounds.x < m_dimensions.x) {
-        scale_factor = std::min(scale_factor, (bounds.x() / m_dimensions.x()));
-    }
-    if (bounds.y < m_dimensions.y) {
-        scale_factor = std::min(scale_factor, (bounds.y() / m_dimensions.y()));
-    }
-    if (bounds.z < m_dimensions.z) {
-        scale_factor = std::min(scale_factor, (bounds.z() / m_dimensions.z()));
-    }
+    if (bounds.x < m_dimensions.x) { scale_factor = std::min(scale_factor, (bounds.x() / m_dimensions.x())); }
+    if (bounds.y < m_dimensions.y) { scale_factor = std::min(scale_factor, (bounds.y() / m_dimensions.y())); }
+    if (bounds.z < m_dimensions.z) { scale_factor = std::min(scale_factor, (bounds.z() / m_dimensions.z())); }
     QMatrix4x4 scale_matrix;
     QVector3D scale(scale_factor, scale_factor, scale_factor);
     scale_matrix.scale(scale);
@@ -191,78 +187,104 @@ void MeshBase::scaleUniform(Distance3D bounds) {
 
 Point MeshBase::centroid() {
     QVector3D center;
-    for (MeshVertex mesh_vertex : m_vertices) {
-        center += mesh_vertex.location;
-    }
+    for (MeshVertex mesh_vertex : m_vertices) { center += mesh_vertex.location; }
     return Point(center / float(m_vertices.size()));
 }
 
 Point MeshBase::originalCentroid() {
     QVector3D center;
-    for (MeshVertex& mesh_vertex : m_vertices_aligned) {
-        center += mesh_vertex.location;
-    }
+    for (MeshVertex& mesh_vertex : m_vertices_aligned) { center += mesh_vertex.location; }
     return Point(center / float(m_vertices_aligned.size()));
 }
 
-Distance3D MeshBase::dimensions() { return m_dimensions; }
+Distance3D MeshBase::dimensions() {
+    return m_dimensions;
+}
 
-Distance3D MeshBase::originalDimensions() { return m_original_dimensions; }
+Distance3D MeshBase::originalDimensions() {
+    return m_original_dimensions;
+}
 
-Point MeshBase::max() { return m_max; }
+Point MeshBase::max() {
+    return m_max;
+}
 
-Point MeshBase::min() { return m_min; }
+Point MeshBase::min() {
+    return m_min;
+}
 
 std::pair<Point, Point> MeshBase::getAxisExtrema(QVector3D vector) {
     Point min, max;
 
-    Plane plane = Plane(m_min, vector);
-    Distance min_distance = plane.distanceToPoint(m_max); // init to max dist
-    Distance max_distance = plane.distanceToPoint(m_min); // init to min dist
+    Plane plane           = Plane(m_min, vector);
+    Distance min_distance = plane.distanceToPoint(m_max);  // init to max dist
+    Distance max_distance = plane.distanceToPoint(m_min);  // init to min dist
     for (MeshVertex vertex : m_vertices) {
         Distance distance = plane.distanceToPoint(vertex.location);
         if (distance < min_distance) {
             min_distance = distance;
-            min = vertex.location;
+            min          = vertex.location;
         }
         else if (distance > max_distance) {
             max_distance = distance;
-            max = vertex.location;
+            max          = vertex.location;
         }
     }
 
     return std::make_pair(min, max);
 }
 
-const QString& MeshBase::name() { return m_name; }
+const QString& MeshBase::name() {
+    return m_name;
+}
 
-void MeshBase::setName(const QString& name) { m_name = name; }
+void MeshBase::setName(const QString& name) {
+    m_name = name;
+}
 
-const QString& MeshBase::path() { return m_file; }
+const QString& MeshBase::path() {
+    return m_file;
+}
 
-void MeshBase::setPath(const QString& path) { m_file = path; }
+void MeshBase::setPath(const QString& path) {
+    m_file = path;
+}
 
-Distance MeshBase::unit() { return m_imported_unit; }
+Distance MeshBase::unit() {
+    return m_imported_unit;
+}
 
-void MeshBase::setUnit(const Distance unit) { m_imported_unit = unit; }
+void MeshBase::setUnit(const Distance unit) {
+    m_imported_unit = unit;
+}
 
-const MeshType MeshBase::type() { return m_type; }
+const MeshType MeshBase::type() {
+    return m_type;
+}
 
-void MeshBase::setType(const MeshType type) { m_type = type; }
+void MeshBase::setType(const MeshType type) {
+    m_type = type;
+}
 
-bool MeshBase::isClosed() { return m_is_closed; }
+bool MeshBase::isClosed() {
+    return m_is_closed;
+}
 
-const MeshGeneratorType MeshBase::genType() { return m_gen_type; }
+const MeshGeneratorType MeshBase::genType() {
+    return m_gen_type;
+}
 
-void MeshBase::setGenType(MeshGeneratorType type) { m_gen_type = type; }
+void MeshBase::setGenType(MeshGeneratorType type) {
+    m_gen_type = type;
+}
 
 std::pair<float*, uint> MeshBase::glVertexArray() {
-    float* vertices_array = new float[9 * m_faces_aligned.size()];
+    float* vertices_array    = new float[9 * m_faces_aligned.size()];
     QVector<MeshVertex> vert = m_vertices_aligned;
 
     int i = 0;
     for (MeshFace mesh_face : m_faces_aligned) {
-        vertices_array[i] = vert.at(mesh_face.vertex_index[0]).location.x();
+        vertices_array[i]     = vert.at(mesh_face.vertex_index[0]).location.x();
         vertices_array[i + 1] = vert.at(mesh_face.vertex_index[0]).location.y();
         vertices_array[i + 2] = vert.at(mesh_face.vertex_index[0]).location.z();
 
@@ -284,7 +306,7 @@ std::pair<float*, uint> MeshBase::glNormalArray() {
 
     int i = 0;
     for (MeshFace mesh_face : m_faces_aligned) {
-        normals_array[i] = mesh_face.normal.x();
+        normals_array[i]     = mesh_face.normal.x();
         normals_array[i + 1] = mesh_face.normal.y();
         normals_array[i + 2] = mesh_face.normal.z();
 
@@ -329,17 +351,14 @@ void MeshBase::updateDims() {
 int MeshBase::GetFaceIdxWithPoints(int idx0, int idx1, int notFaceIdx, QVector<MeshVertex>& vertices) {
     for (unsigned int i = 0; i < vertices[idx0].connected_faces.size(); i++) {
         int f0 = vertices[idx0].connected_faces[i];
-        if (f0 == notFaceIdx)
-            continue;
+        if (f0 == notFaceIdx) continue;
         for (unsigned int j = 0; j < vertices[idx1].connected_faces.size(); j++) {
             int f1 = vertices[idx1].connected_faces[j];
-            if (f1 == notFaceIdx)
-                continue;
-            if (f0 == f1)
-                return f0;
+            if (f1 == notFaceIdx) continue;
+            if (f0 == f1) return f0;
         }
     }
     return -1;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

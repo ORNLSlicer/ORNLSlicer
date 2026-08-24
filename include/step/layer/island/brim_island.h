@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief Island that polymer builds use.
  */
 class BrimIsland : public IslandBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param geometry: the outlines
     //! \param sb: the settings
@@ -29,4 +29,4 @@ class BrimIsland : public IslandBase {
     void optimize(int layerNumber, Point& currentLocation,
                   QVector<QSharedPointer<RegionBase>>& previousRegions) override;
 };
-} // namespace ORNL
+}  // namespace ORNL

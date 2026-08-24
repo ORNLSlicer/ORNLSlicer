@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief Island that polymer builds use.
  */
 class PolymerIsland : public IslandBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param geometry: the outlines
     //! \param sb: the settings
@@ -32,4 +32,4 @@ class PolymerIsland : public IslandBase {
     //! \brief Reorder regions based on previously identified order
     void reorderRegions();
 };
-} // namespace ORNL
+}  // namespace ORNL

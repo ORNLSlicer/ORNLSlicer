@@ -31,9 +31,7 @@ QString Raft::writeGCode(QSharedPointer<WriterBase> writer) {
     gcode += writer->writeBeforeRegion(RegionType::kRaft);
     for (Path path : m_paths) {
         gcode += writer->writeBeforePath(RegionType::kRaft);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) {
-            gcode += segment->writeGCode(writer);
-        }
+        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
         gcode += writer->writeAfterPath(RegionType::kRaft);
     }
     gcode += writer->writeAfterRegion(RegionType::kRaft);
@@ -107,12 +105,12 @@ void Raft::calculateModifiers(Path& path, bool supportsG3) {
 
 Path Raft::createPath(Polyline line) {
     // Populate the paths.
-    Distance default_width = this->getSb()->setting<Distance>(MS::PlatformAdhesion::kRaftBeadWidth);
-    Distance default_height = this->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-    Velocity default_speed = m_sb->setting<Velocity>(PS::Layer::kSpeed);
-    Acceleration default_acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kDefault);
+    Distance default_width                 = this->getSb()->setting<Distance>(MS::PlatformAdhesion::kRaftBeadWidth);
+    Distance default_height                = this->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
+    Velocity default_speed                 = m_sb->setting<Velocity>(PS::Layer::kSpeed);
+    Acceleration default_acceleration      = m_sb->setting<Acceleration>(PRS::Acceleration::kDefault);
     AngularVelocity default_extruder_speed = m_sb->setting<AngularVelocity>(PS::Layer::kExtruderSpeed);
-    int material_number = m_sb->setting<int>(MS::MultiMaterial::kInfillNum);
+    int material_number                    = m_sb->setting<int>(MS::MultiMaterial::kInfillNum);
 
     Path newPath;
     for (int i = 0, end = line.size() - 1; i < end; ++i) {
@@ -130,11 +128,7 @@ Path Raft::createPath(Polyline line) {
         newPath.append(segment);
     }
 
-    if (newPath.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) {
-        return newPath;
-    }
-    else {
-        return Path();
-    }
+    if (newPath.calculateLength() > m_sb->setting<Distance>(PS::Layer::kMinExtrudeLength)) { return newPath; }
+    else { return Path(); }
 }
-} // namespace ORNL
+}  // namespace ORNL

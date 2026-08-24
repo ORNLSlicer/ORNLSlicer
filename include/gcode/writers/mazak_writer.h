@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Mazak syntax
  */
 class MazakWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     MazakWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -75,7 +75,7 @@ class MazakWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm);
     //! \brief Writes G-Code to disable the extruder
@@ -96,5 +96,5 @@ class MazakWriter : public WriterBase {
     //! \brief preallocated prefixs commonly used in this syntax
     int m_material_number;
 
-}; // class MazakWriter
-} // namespace ORNL
+};  // class MazakWriter
+}  // namespace ORNL

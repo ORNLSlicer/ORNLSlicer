@@ -32,7 +32,7 @@ namespace ORNL {
  * \list kRandom: links to a random vertex each time
  */
 class PolylineOrderOptimizer {
-  public:
+   public:
     //! \brief Constructor
     //! \note Layer number is only needed if kConsecutive linking is used
     PolylineOrderOptimizer(Point& start, uint layer_number);
@@ -88,7 +88,7 @@ class PolylineOrderOptimizer {
     //! \param pt: Seam point
     void setStartPointOverride(Point pt);
 
-  private:
+   private:
     //! \brief Node to hold topological data
     //! \param m_poly: Polygon representing current Polyline. Used for inside/outside comparison.
     //! \param m_Polyline_index: Polyline index in m_Polylines that node represents.
@@ -101,7 +101,7 @@ class PolylineOrderOptimizer {
         TopologicalNode() {}
         TopologicalNode(int index, Polyline poly) {
             m_Polyline_index = index;
-            m_poly = poly;
+            m_poly           = poly;
         }
     };
 
@@ -255,6 +255,6 @@ class PolylineOrderOptimizer {
 
     /// @brief Selection state used to alternate the two exterior edges when ordering open lines outside-in
     int m_open_path_selection_count = 0;
-    bool m_outside_in_from_front = true;
+    bool m_outside_in_from_front    = true;
 };
-} // namespace ORNL
+}  // namespace ORNL

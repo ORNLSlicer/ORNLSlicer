@@ -16,7 +16,7 @@
 namespace ORNL {
 ArrowObject::ArrowObject(BaseView* view, QVector3D begin, QVector3D end, QColor color) {
     m_begin = begin;
-    m_end = end;
+    m_end   = end;
     m_color = color;
 
     this->initArrow(view);
@@ -25,7 +25,7 @@ ArrowObject::ArrowObject(BaseView* view, QVector3D begin, QVector3D end, QColor 
 ArrowObject::ArrowObject(BaseView* view, QSharedPointer<GraphicsObject> begin, QSharedPointer<GraphicsObject> end,
                          QColor color) {
     m_begin = begin->center();
-    m_end = end->center();
+    m_end   = end->center();
     m_color = color;
 
     m_head_tracking = end;
@@ -61,11 +61,10 @@ void ArrowObject::setEnd(QVector3D end) {
 }
 
 void ArrowObject::updateEndpoints() {
-    if (m_head_tracking.isNull() || m_tail_tracking.isNull())
-        return;
+    if (m_head_tracking.isNull() || m_tail_tracking.isNull()) return;
 
     m_begin = m_tail_tracking->center();
-    m_end = m_head_tracking->center();
+    m_end   = m_head_tracking->center();
 
     float len = m_begin.distanceToPoint(m_end);
 
@@ -124,7 +123,7 @@ void ArrowObject::initArrow(BaseView* view) {
 }
 
 QMatrix4x4 ArrowObject::findTransform(QVector3D begin, QVector3D end) {
-    QVector3D dir_vec = end - begin;
+    QVector3D dir_vec   = end - begin;
     QVector3D start_vec = QVector3D(begin.distanceToPoint(end), 0, 0);
 
     QQuaternion rotation = QQuaternion::rotationTo(start_vec, dir_vec);
@@ -136,4 +135,4 @@ QMatrix4x4 ArrowObject::findTransform(QVector3D begin, QVector3D end) {
     return tfm;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

@@ -6,7 +6,7 @@
 
 namespace ORNL {
 class GapCloserResult {
-  public:
+   public:
     GapCloserResult();
     Distance length;
     int polygon_idx;
@@ -14,4 +14,4 @@ class GapCloserResult {
     uint point_idx_b;
     bool a_to_b;
 };
-} // namespace ORNL
+}  // namespace ORNL

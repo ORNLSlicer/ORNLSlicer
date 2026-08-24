@@ -15,7 +15,7 @@
 
 namespace ORNL {
 class ThermalScan : public RegionBase {
-  public:
+   public:
     //! \brief Constructor
     //! \param sb: the settings
     //! \param settings_polygons: a vector of settings polygons to apply
@@ -39,7 +39,7 @@ class ThermalScan : public RegionBase {
     //! \return Polyline converted to path
     Path createPath(Polyline line) override;
 
-  private:
+   private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
@@ -48,4 +48,4 @@ class ThermalScan : public RegionBase {
     //! \brief Holds the computed geometry before it is converted into paths
     Polyline m_computed_geometry;
 };
-} // namespace ORNL
+}  // namespace ORNL

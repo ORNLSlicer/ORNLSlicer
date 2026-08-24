@@ -19,35 +19,29 @@
 #include "units/unit.h"
 
 namespace ORNL {
-Polyline::Polyline(const QVector<Point>& path) { QVector<Point>::operator+=(path); }
+Polyline::Polyline(const QVector<Point>& path) {
+    QVector<Point>::operator+=(path);
+}
 
 Polyline::Polyline(const QVector<ClipperLib2::IntPoint>& path) {
-    for (ClipperLib2::IntPoint p : path) {
-        append(Point(p));
-    }
+    for (ClipperLib2::IntPoint p : path) { append(Point(p)); }
 }
 
 Polyline::Polyline(const ClipperLib2::Path& path) {
-    for (ClipperLib2::IntPoint p : path) {
-        append(Point(p));
-    }
+    for (ClipperLib2::IntPoint p : path) { append(Point(p)); }
 }
 
 Polyline::Polyline(const std::vector<MeshTypes::Point_3>& cgal_polyline) {
-    for (auto p : cgal_polyline) {
-        append(Point(p));
-    }
+    for (auto p : cgal_polyline) { append(Point(p)); }
 }
 
 Polyline::Polyline(const QVector<QPair<double, double>>& pts) {
-    for (auto pt : pts) {
-        append(Point(pt.first, pt.second));
-    }
+    for (auto pt : pts) { append(Point(pt.first, pt.second)); }
 }
 
 Distance Polyline::length() const {
     Distance this_length = Distance(0);
-    Point p0 = operator[](0);
+    Point p0             = operator[](0);
     for (int i = 1; i < size(); i++) {
         Point p1 = operator[](i);
         this_length += p1.distance(p0);
@@ -66,32 +60,24 @@ Polyline Polyline::concatenate(Polyline rhs, bool this_end_point, bool rhs_end_p
             }
         }
         else {
-            for (const Point& point : rhs) {
-                concatenated_polyline.append(point);
-            }
+            for (const Point& point : rhs) { concatenated_polyline.append(point); }
         }
-    } //! if this_end_point != rhs_end_point
+    }  //! if this_end_point != rhs_end_point
     else {
         if (this_end_point == true) {
-            for (const Point& point : rhs) {
-                concatenated_polyline.prepend(point);
-            }
+            for (const Point& point : rhs) { concatenated_polyline.prepend(point); }
         }
         else {
-            for (int i = rhs.size() - 1; i >= 0; --i) {
-                concatenated_polyline.append(rhs[i]);
-            }
+            for (int i = rhs.size() - 1; i >= 0; --i) { concatenated_polyline.append(rhs[i]); }
         }
-    } //! if this_end_point == rhs_end_point
+    }  //! if this_end_point == rhs_end_point
 
     return concatenated_polyline;
 }
 
 Polyline Polyline::reverse() {
     Polyline reversed_polyline;
-    for (Point& point : *this) {
-        reversed_polyline.prepend(point);
-    }
+    for (Point& point : *this) { reversed_polyline.prepend(point); }
     return reversed_polyline;
 }
 
@@ -101,12 +87,12 @@ bool Polyline::shorterThan(Distance check_length) const {
 }
 
 Point Polyline::closestPointTo(const Point& rhs) const {
-    Point ret = rhs;
+    Point ret         = rhs;
     Distance bestDist = Distance(std::numeric_limits<float>::max());
     for (Point point : (*this)) {
         Distance dist = rhs.distance(point);
         if (dist < bestDist) {
-            ret = point;
+            ret      = point;
             bestDist = dist;
         }
     }
@@ -124,29 +110,22 @@ Polyline Polyline::simplify(Distance tol) {
     psimpl::simplify_douglas_peucker<2>(polyline.begin(), polyline.end(), tol(), std::back_inserter(result));
 
     Polyline simplified;
-    for (uint n = 0, end = result.size(); n < end; n += 2)
-        simplified.append(Point(result[n], result[n + 1]));
+    for (uint n = 0, end = result.size(); n < end; n += 2) simplified.append(Point(result[n], result[n + 1]));
 
     return simplified;
 }
 
 Polyline Polyline::removeShortSegments(Distance min_segment_length, bool closed) const {
-    if (min_segment_length <= 0 || size() < 2) {
-        return *this;
-    }
+    if (min_segment_length <= 0 || size() < 2) { return *this; }
 
     Polyline cleaned(*this);
     const bool repeats_start = closed && cleaned.size() > 1 && cleaned.first() == cleaned.last();
-    if (repeats_start) {
-        cleaned.removeLast();
-    }
+    if (repeats_start) { cleaned.removeLast(); }
 
     const int min_points = closed ? 3 : 2;
-    if (cleaned.size() < min_points) {
-        return Polyline();
-    }
+    if (cleaned.size() < min_points) { return Polyline(); }
 
-    auto pointAfter = [](int index, int point_count) { return (index + 1) % point_count; };
+    auto pointAfter  = [](int index, int point_count) { return (index + 1) % point_count; };
     auto pointBefore = [](int index, int point_count) { return (index + point_count - 1) % point_count; };
 
     auto replacementLength = [&](int remove_index) {
@@ -156,29 +135,23 @@ Polyline Polyline::removeShortSegments(Distance min_segment_length, bool closed)
 
     bool removed_point = true;
     while (removed_point && cleaned.size() > min_points) {
-        removed_point = false;
+        removed_point           = false;
         const int segment_count = closed ? cleaned.size() : cleaned.size() - 1;
 
         for (int segment_index = 0; segment_index < segment_count; ++segment_index) {
             const int next_index = pointAfter(segment_index, cleaned.size());
-            if (cleaned[segment_index].distance(cleaned[next_index]) >= min_segment_length) {
-                continue;
-            }
+            if (cleaned[segment_index].distance(cleaned[next_index]) >= min_segment_length) { continue; }
 
             int remove_index = next_index;
             if (closed) {
                 remove_index =
                     replacementLength(segment_index) <= replacementLength(next_index) ? segment_index : next_index;
             }
-            else if (segment_index == 0) {
-                remove_index = next_index;
-            }
-            else if (next_index == cleaned.size() - 1) {
-                remove_index = segment_index;
-            }
+            else if (segment_index == 0) { remove_index = next_index; }
+            else if (next_index == cleaned.size() - 1) { remove_index = segment_index; }
             else {
                 const Distance remove_segment_start_length = cleaned[segment_index - 1].distance(cleaned[next_index]);
-                const Distance remove_segment_end_length = cleaned[segment_index].distance(cleaned[next_index + 1]);
+                const Distance remove_segment_end_length   = cleaned[segment_index].distance(cleaned[next_index + 1]);
                 remove_index = remove_segment_start_length <= remove_segment_end_length ? segment_index : next_index;
             }
 
@@ -188,30 +161,22 @@ Polyline Polyline::removeShortSegments(Distance min_segment_length, bool closed)
         }
     }
 
-    if (cleaned.size() < min_points) {
-        return Polyline();
-    }
+    if (cleaned.size() < min_points) { return Polyline(); }
 
     const int segment_count = closed ? cleaned.size() : cleaned.size() - 1;
     for (int segment_index = 0; segment_index < segment_count; ++segment_index) {
         const int next_index = pointAfter(segment_index, cleaned.size());
-        if (cleaned[segment_index].distance(cleaned[next_index]) < min_segment_length) {
-            return Polyline();
-        }
+        if (cleaned[segment_index].distance(cleaned[next_index]) < min_segment_length) { return Polyline(); }
     }
 
-    if (repeats_start) {
-        cleaned.push_back(cleaned.first());
-    }
+    if (repeats_start) { cleaned.push_back(cleaned.first()); }
 
     return cleaned;
 }
 
 Polygon Polyline::close() {
     Polygon ret(operator()());
-    if (ret.back() == ret.front()) {
-        ret.pop_back();
-    }
+    if (ret.back() == ret.front()) { ret.pop_back(); }
     return ret;
 }
 
@@ -280,24 +245,20 @@ Polyline Polyline::rotateAround(Point center, Angle rotation_angle, QVector3D ax
 bool Polyline::inside(const Point& point, bool border_result) const {
     if (this->first() == this->last()) {
         int res = ClipperLib2::PointInPolygon(point.toIntPoint(), (*this)());
-        if (res == -1) {
-            return border_result;
-        }
+        if (res == -1) { return border_result; }
         return res == 1;
     }
     return false;
 }
 
-bool Polyline::orientation() const { return ClipperLib2::Orientation((*this)()); }
+bool Polyline::orientation() const {
+    return ClipperLib2::Orientation((*this)());
+}
 
 Polyline Polyline::operator+(Polyline rhs) {
-    if (last() == rhs.first()) {
-        rhs.removeFirst();
-    }
+    if (last() == rhs.first()) { rhs.removeFirst(); }
     Polyline polyline(*this);
-    for (int i = 0; i < rhs.size(); i++) {
-        polyline.push_back(rhs[i]);
-    }
+    for (int i = 0; i < rhs.size(); i++) { polyline.push_back(rhs[i]); }
     return polyline;
 }
 
@@ -308,12 +269,8 @@ Polyline Polyline::operator+(const Point& rhs) {
 }
 
 Polyline& Polyline::operator+=(Polyline rhs) {
-    if (this->size() > 0 && last() == rhs.first()) {
-        rhs.removeFirst();
-    }
-    for (int i = 0; i < rhs.size(); i++) {
-        push_back(rhs[i]);
-    }
+    if (this->size() > 0 && last() == rhs.first()) { rhs.removeFirst(); }
+    for (int i = 0; i < rhs.size(); i++) { push_back(rhs[i]); }
     return *this;
 }
 
@@ -332,9 +289,7 @@ QVector<Polyline> Polyline::operator-(const Polygon& rhs) {
     ClipperLib2::OpenPathsFromPolyTree(poly_tree, paths);
 
     QVector<Polyline> rv;
-    for (ClipperLib2::Path path : paths) {
-        rv += Polyline(path);
-    }
+    for (ClipperLib2::Path path : paths) { rv += Polyline(path); }
     return rv;
 }
 
@@ -348,26 +303,18 @@ QVector<Polyline> Polyline::operator-(const PolygonList& rhs) {
     ClipperLib2::OpenPathsFromPolyTree(poly_tree, paths);
 
     QVector<Polyline> rv;
-    for (ClipperLib2::Path path : paths) {
-        rv += Polyline(path);
-    }
+    for (ClipperLib2::Path path : paths) { rv += Polyline(path); }
     return rv;
 }
 
 Point Polyline::min() const {
     Point rv(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(), std::numeric_limits<float>::max());
     for (const Point& point : *this) {
-        if (point.x() < rv.x()) {
-            rv.x(point.x());
-        }
+        if (point.x() < rv.x()) { rv.x(point.x()); }
 
-        if (point.y() < rv.y()) {
-            rv.y(point.y());
-        }
+        if (point.y() < rv.y()) { rv.y(point.y()); }
 
-        if (point.z() < rv.z()) {
-            rv.z(point.z());
-        }
+        if (point.z() < rv.z()) { rv.z(point.z()); }
     }
     return rv;
 }
@@ -376,17 +323,11 @@ Point Polyline::max() const {
     Point rv(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(),
              std::numeric_limits<float>::lowest());
     for (const Point& point : *this) {
-        if (point.x() > rv.x()) {
-            rv.x(point.x());
-        }
+        if (point.x() > rv.x()) { rv.x(point.x()); }
 
-        if (point.y() > rv.y()) {
-            rv.y(point.y());
-        }
+        if (point.y() > rv.y()) { rv.y(point.y()); }
 
-        if (point.z() > rv.z()) {
-            rv.z(point.z());
-        }
+        if (point.z() > rv.z()) { rv.z(point.z()); }
     }
     return rv;
 }
@@ -398,9 +339,7 @@ QVector<Point> Polyline::operator&(const Polyline& rhs) {
 
 ClipperLib2::Path Polyline::operator()() const {
     ClipperLib2::Path path;
-    for (Point p : (*this)) {
-        path.push_back(p.toIntPoint());
-    }
+    for (Point p : (*this)) { path.push_back(p.toIntPoint()); }
     return path;
 }
-} // namespace ORNL
+}  // namespace ORNL

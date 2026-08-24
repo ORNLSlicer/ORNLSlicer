@@ -1,6 +1,7 @@
 #include "gcode/writers/aerobasic_writer.h"
 
 #include <QStringBuilder>
+
 #include <qhashfunctions.h>
 #include <qnumeric.h>
 #include <qsharedpointer.h>
@@ -25,12 +26,12 @@ QString AeroBasicWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
                                            Distance maximum_y, int num_layers) {
     QString rv;
 
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_z         = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
     m_filament_location = 0.0;
 
-    m_first_print = true;
+    m_first_print  = true;
     m_first_travel = true;
-    m_min_z = 0.0f;
+    m_min_z        = 0.0f;
 
     rv += commentLine("Layer height: " %
                       QString::number(m_sb->setting<Distance>(PS::Layer::kLayerHeight).to(m_meta.m_distance_unit)));
@@ -53,8 +54,7 @@ QString AeroBasicWriter::writeInitialSetup(Distance minimum_x, Distance minimum_
     }
 
     // Adds user-defined start code
-    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "")
-        rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
+    if (m_sb->setting<QString>(PRS::GCode::kStartCode) != "") rv += m_sb->setting<QString>(PRS::GCode::kStartCode);
 
     rv += m_newline;
 
@@ -132,8 +132,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     QString rv;
 
     // Disable extruder for travels
-    if (m_deposition_active)
-        rv += "$DO[0].X=0" % commentLine("Extruder Off for travel");
+    if (m_deposition_active) rv += "$DO[0].X=0" % commentLine("Extruder Off for travel");
 
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
@@ -160,7 +159,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
 
     // write the lift
     if (travel_lift_required) {
-        Point lift_destination = new_start_location + travel_lift; // lift destination is above start location
+        Point lift_destination = new_start_location + travel_lift;  // lift destination is above start location
         rv += m_G1 % writeCoordinates(lift_destination) % m_f %
               QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
               commentSpaceLine("TRAVEL LIFT Z");
@@ -171,7 +170,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     // write the travel
     Point travel_destination = target_location;
     if (travel_lift_required)
-        travel_destination = travel_destination + travel_lift; // travel destination is above the target point
+        travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G1 % writeCoordinates(travel_destination) % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) %
           commentSpaceLine("TRAVEL");
@@ -188,8 +187,7 @@ QString AeroBasicWriter::writeTravel(Point start_location, Point target_location
     }
 
     // Enable extruder after travel
-    if (m_deposition_active)
-        rv += "$DO[0].X=1" % commentLine("Extruder On after travel");
+    if (m_deposition_active) rv += "$DO[0].X=1" % commentLine("Extruder On after travel");
 
     m_first_travel = false;
     return rv;
@@ -199,8 +197,8 @@ QString AeroBasicWriter::writeLine(const Point& start_point, const Point& target
                                    const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed               = params->setting<Velocity>(SS::kSpeed);
+    RegionType region_type       = params->setting<RegionType>(SS::kRegionType);
     PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     rv += m_G1;
@@ -229,8 +227,8 @@ QString AeroBasicWriter::writeArc(const Point& start_point, const Point& end_poi
                                   const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
-    auto region_type = params->setting<RegionType>(SS::kRegionType);
+    Velocity speed      = params->setting<Velocity>(SS::kSpeed);
+    auto region_type    = params->setting<RegionType>(SS::kRegionType);
     auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
 
     rv += ((ccw) ? m_G3 : m_G2);
@@ -248,7 +246,7 @@ QString AeroBasicWriter::writeArc(const Point& start_point, const Point& end_poi
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
 
     rv += m_r % QString::number(Distance(end_point.y()).to(m_meta.m_distance_unit), 'f', 4);
@@ -334,7 +332,9 @@ QString AeroBasicWriter::writeShutdown() {
     return rv;
 }
 
-QString AeroBasicWriter::writePurge(int RPM, int duration, int delay) { return {}; }
+QString AeroBasicWriter::writePurge(int RPM, int duration, int delay) {
+    return {};
+}
 
 QString AeroBasicWriter::writeDwell(Time time) {
     if (time > 0)
@@ -357,7 +357,7 @@ QString AeroBasicWriter::writeCoordinates(Point destination) {
     if (qAbs(target_z - m_last_z) > 10) {
         rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4);
         m_current_z = target_z;
-        m_last_z = target_z;
+        m_last_z    = target_z;
     }
     return rv;
 }
@@ -371,4 +371,4 @@ QString AeroBasicWriter::writePrime() {
     QString rv;
     return rv;
 }
-} // namespace ORNL
+}  // namespace ORNL

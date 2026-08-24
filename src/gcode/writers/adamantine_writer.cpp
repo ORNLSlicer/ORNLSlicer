@@ -1,6 +1,7 @@
 #include "gcode/writers/adamantine_writer.h"
 
 #include <QStringBuilder>
+
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -22,33 +23,33 @@ QString AdamantineWriter::writeInitialSetup(Distance minimum_x, Distance minimum
     QString rv;
     rv = "Mode" % m_space % "x" % m_space % "y" % m_space % "z" % m_space % "pmod" % m_space % "param\n";
     return rv;
-} // writeInitialSetup
+}  // writeInitialSetup
 
 QString AdamantineWriter::writeBeforeLayer(float min_z, QSharedPointer<SettingsBase> sb) {
     QString rv;
     return rv;
-} // writeBeforeLayer
+}  // writeBeforeLayer
 
 QString AdamantineWriter::writeBeforePart(QVector3D normal) {
     QString rv;
     return rv;
-} // writeBeforePart
+}  // writeBeforePart
 
 QString AdamantineWriter::writeBeforeIsland() {
     QString rv;
     return rv;
-} // writeBeforeIsland
+}  // writeBeforeIsland
 
 QString AdamantineWriter::writeBeforeRegion(RegionType type, int pathSize) {
     QString rv;
     return rv;
-} // writeBeforeRegion
+}  // writeBeforeRegion
 
 QString AdamantineWriter::writeBeforePath(RegionType type) {
     m_region_type = type;
     QString rv;
     return rv;
-} // writeBeforePath
+}  // writeBeforePath
 
 QString AdamantineWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                       QSharedPointer<SettingsBase> params) {
@@ -88,7 +89,7 @@ QString AdamantineWriter::writeTravel(Point start_location, Point target_locatio
     // else
     return rv;
 
-} // writeTravel
+}  // writeTravel
 
 QString AdamantineWriter::writeLine(const Point& start_point, const Point& target_point,
                                     const QSharedPointer<SettingsBase> params) {
@@ -106,43 +107,43 @@ QString AdamantineWriter::writeLine(const Point& start_point, const Point& targe
           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 5) % "\n";
     return rv;
 
-} // writeLine
+}  // writeLine
 
 QString AdamantineWriter::writeAfterPath(RegionType type) {
     QString rv;
     return rv;
-} // writeAfterPath
+}  // writeAfterPath
 
 QString AdamantineWriter::writeAfterRegion(RegionType type) {
     QString rv;
     return rv;
-} // writeAfterRegion
+}  // writeAfterRegion
 
 QString AdamantineWriter::writeAfterIsland() {
     QString rv;
     return rv;
-} // writeAfterIsland
+}  // writeAfterIsland
 
 QString AdamantineWriter::writeAfterPart() {
     QString rv;
     rv = "Number of path segments\n" % QString::number(counter);
     return rv;
-} // writeAfterPart
+}  // writeAfterPart
 
 QString AdamantineWriter::writeAfterLayer() {
     QString rv;
     return rv;
-} // writeAfterLayer
+}  // writeAfterLayer
 
 QString AdamantineWriter::writeShutdown() {
     QString rv;
     return rv;
-} // writeShutdown
+}  // writeShutdown
 
 QString AdamantineWriter::writeDwell(Time time) {
     if (time >= 0)
         return QString::number(time.to(m_meta.m_time_unit), 'f', 4);
     else
         return {};
-} // writeDwell
-} // namespace ORNL
+}  // writeDwell
+}  // namespace ORNL

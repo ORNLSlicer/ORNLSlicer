@@ -16,7 +16,7 @@ namespace ORNL {
  * \brief The gcode writer for the Tormach syntax
  */
 class TormachWriter : public WriterBase {
-  public:
+   public:
     //! \brief Constructor
     TormachWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
@@ -87,7 +87,7 @@ class TormachWriter : public WriterBase {
     //! \brief Writes G-Code for a pause, G4
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief Writes G-Code to enable the extruder
     QString writeExtruderOn(RegionType type, int rpm, int extruder_number);
     //! \brief Writes G-Code to disable the extruder
@@ -119,5 +119,5 @@ class TormachWriter : public WriterBase {
     //! \brief maximum yvalue used for travel pause
     Distance m_maximum_y;
 
-}; // class TORMACHWriter
-} // namespace ORNL
+};  // class TORMACHWriter
+}  // namespace ORNL

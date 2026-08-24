@@ -5,6 +5,7 @@
 #include <QIcon>
 #include <QSpinBox>
 #include <QToolButton>
+
 #include <qgridlayout.h>
 #include <qhashfunctions.h>
 #include <qlabel.h>
@@ -25,9 +26,15 @@ namespace ORNL {
 
 SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb, QString key, fifojson json,
                                QGridLayout* layout, int index)
-    : m_index(index), m_layout(layout), m_key(key), m_sb(sb), m_row_visible(true), m_row_enabled(true),
-      m_dependency_enabled(true), m_json(json) {
-    m_theme_path = PreferencesManager::getInstance()->getTheme().getFolderPath();
+    : m_index(index),
+      m_layout(layout),
+      m_key(key),
+      m_sb(sb),
+      m_row_visible(true),
+      m_row_enabled(true),
+      m_dependency_enabled(true),
+      m_json(json) {
+    m_theme_path          = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
 
     m_key_label.reset(new QLabel());
@@ -63,7 +70,9 @@ void SettingRowBase::clearDependencyLogic() {
     m_dependency_logic.children.clear();
 }
 
-QString SettingRowBase::getLabelText() { return m_key_label->text(); }
+QString SettingRowBase::getLabelText() {
+    return m_key_label->text();
+}
 
 // This is to style inheritents of setting_row_base (i.e., all the different types of settings)
 bool SettingRowBase::setStyleFromFile(QWidget* target, QString file) {
@@ -108,9 +117,7 @@ void SettingRowBase::styleLabel(bool isConsistent) {
                 "<html><body><p><b>Locally overridden.</b> Click the reset button to use the inherited value.</p><p>" +
                 QString::fromStdString(m_json.at(Constants::Settings::Master::kToolTip)) + "</p></body></html>");
         }
-        else {
-            m_key_label->setToolTip(tooltip);
-        }
+        else { m_key_label->setToolTip(tooltip); }
     }
     else {
         this->styleLabelFromFile(m_theme_path + "setting_rows_warning.qss");
@@ -120,25 +127,29 @@ void SettingRowBase::styleLabel(bool isConsistent) {
     updateResetButton();
 }
 
-bool SettingRowBase::isLocal() { return m_json[Constants::Settings::Master::kLocal]; }
+bool SettingRowBase::isLocal() {
+    return m_json[Constants::Settings::Master::kLocal];
+}
 
-fifojson SettingRowBase::getDependencies() { return m_json[Constants::Settings::Master::kDepends]; }
+fifojson SettingRowBase::getDependencies() {
+    return m_json[Constants::Settings::Master::kDepends];
+}
 
 void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) {
-    if (!m_rows_to_notify.contains(row)) {
-        m_rows_to_notify.push_back(row);
-    }
+    if (!m_rows_to_notify.contains(row)) { m_rows_to_notify.push_back(row); }
 }
 
 void SettingRowBase::setBases(QList<QSharedPointer<SettingsBase>> settings_bases,
                               QList<QSharedPointer<SettingsBase>> inherited_bases) {
     m_warning_state_reset_pending = m_settings_bases != settings_bases || m_inherited_settings_bases != inherited_bases;
-    m_settings_bases = settings_bases;
-    m_inherited_settings_bases = inherited_bases;
+    m_settings_bases              = settings_bases;
+    m_inherited_settings_bases    = inherited_bases;
     updateResetButton();
 }
 
-QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() { return m_settings_bases; }
+QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() {
+    return m_settings_bases;
+}
 
 void SettingRowBase::checkDependencies() {
     setDependencyEnabled(checkLogic(m_dependency_logic));
@@ -155,7 +166,9 @@ void SettingRowBase::show() {
     applyBaseWidgetState();
 }
 
-bool SettingRowBase::isShown() const { return rowWidgetsVisible(); }
+bool SettingRowBase::isShown() const {
+    return rowWidgetsVisible();
+}
 
 bool SettingRowBase::rowWidgetsVisible() const {
     const bool show_disabled =
@@ -163,11 +176,12 @@ bool SettingRowBase::rowWidgetsVisible() const {
     return m_row_visible && (m_dependency_enabled || show_disabled);
 }
 
-bool SettingRowBase::rowWidgetsEnabled() const { return m_row_enabled && m_dependency_enabled; }
+bool SettingRowBase::rowWidgetsEnabled() const {
+    return m_row_enabled && m_dependency_enabled;
+}
 
 void SettingRowBase::applyWidgetState(QWidget* widget) const {
-    if (widget == nullptr)
-        return;
+    if (widget == nullptr) return;
 
     widget->setVisible(rowWidgetsVisible());
     widget->setEnabled(rowWidgetsEnabled());
@@ -178,8 +192,7 @@ void SettingRowBase::applyBaseWidgetState() {
     const bool enabled = rowWidgetsEnabled();
 
     for (QWidget* widget : m_row_widgets) {
-        if (widget == nullptr)
-            continue;
+        if (widget == nullptr) continue;
 
         widget->setVisible(visible);
         widget->setEnabled(enabled);
@@ -199,8 +212,7 @@ void SettingRowBase::applyBaseWidgetState() {
 }
 
 void SettingRowBase::registerRowWidget(QWidget* widget) {
-    if (widget == nullptr || m_row_widgets.contains(widget))
-        return;
+    if (widget == nullptr || m_row_widgets.contains(widget)) return;
 
     m_row_widgets.push_back(widget);
     applyWidgetState(widget);
@@ -212,41 +224,45 @@ void SettingRowBase::setEnabled(bool enabled) {
 }
 
 void SettingRowBase::setDependencyEnabled(bool enabled) {
-    const bool changed = m_dependency_enabled != enabled;
+    const bool changed   = m_dependency_enabled != enabled;
     m_dependency_enabled = enabled;
     applyBaseWidgetState();
 
     if (changed) {
-        for (QSharedPointer<SettingRowBase> row : m_rows_to_notify) {
-            row->checkDependencies();
-        }
+        for (QSharedPointer<SettingRowBase> row : m_rows_to_notify) { row->checkDependencies(); }
     }
 }
 
-void SettingRowBase::setDependencyLogic(DependencyNode root) { m_dependency_logic = root; }
+void SettingRowBase::setDependencyLogic(DependencyNode root) {
+    m_dependency_logic = root;
+}
 
-void SettingRowBase::setSettingsBase(QSharedPointer<SettingsBase> sb) { m_sb = sb; }
+void SettingRowBase::setSettingsBase(QSharedPointer<SettingsBase> sb) {
+    m_sb = sb;
+}
 
-void SettingRowBase::setValueChangeCallback(ValueChangeCallback callback) { m_value_change_callback = callback; }
+void SettingRowBase::setValueChangeCallback(ValueChangeCallback callback) {
+    m_value_change_callback = callback;
+}
 
 void SettingRowBase::notifyValueAboutToChange(const QString& key) {
-    if (m_value_change_callback) {
-        m_value_change_callback(key, m_settings_bases);
-    }
+    if (m_value_change_callback) { m_value_change_callback(key, m_settings_bases); }
 }
 
 int SettingRowBase::warningCountDelta(bool warning_active, bool& previous_warning_active) {
     if (m_warning_state_reset_pending) {
-        previous_warning_active = false;
+        previous_warning_active       = false;
         m_warning_state_reset_pending = false;
     }
 
-    const int delta = static_cast<int>(warning_active) - static_cast<int>(previous_warning_active);
+    const int delta         = static_cast<int>(warning_active) - static_cast<int>(previous_warning_active);
     previous_warning_active = warning_active;
     return delta;
 }
 
-void SettingRowBase::setLocalOverrideKeys(QList<QString> keys) { m_local_override_keys = keys; }
+void SettingRowBase::setLocalOverrideKeys(QList<QString> keys) {
+    m_local_override_keys = keys;
+}
 
 QString SettingRowBase::baseToolTip() const {
     return "<html><body><p>" + QString::fromStdString(m_json.at(Constants::Settings::Master::kToolTip)) +
@@ -254,14 +270,12 @@ QString SettingRowBase::baseToolTip() const {
 }
 
 bool SettingRowBase::hasLocalOverride() const {
-    if (m_settings_bases.isEmpty())
-        return false;
+    if (m_settings_bases.isEmpty()) return false;
 
     for (int index = 0, end = m_settings_bases.size(); index < end; ++index) {
         const QSharedPointer<SettingsBase>& settings_base = m_settings_bases[index];
         for (const QString& key : m_local_override_keys) {
-            if (settings_base->contains(key) && !matchesInheritedValue(key, index))
-                return true;
+            if (settings_base->contains(key) && !matchesInheritedValue(key, index)) return true;
         }
     }
 
@@ -269,8 +283,7 @@ bool SettingRowBase::hasLocalOverride() const {
 }
 
 bool SettingRowBase::matchesInheritedValue(const QString& key, int index) const {
-    if (index < 0 || index >= m_settings_bases.size() || !m_settings_bases[index]->contains(key))
-        return true;
+    if (index < 0 || index >= m_settings_bases.size() || !m_settings_bases[index]->contains(key)) return true;
 
     const fifojson local_value = m_settings_bases[index]->setting<fifojson>(key);
     if (index < m_inherited_settings_bases.size()) {
@@ -279,8 +292,7 @@ bool SettingRowBase::matchesInheritedValue(const QString& key, int index) const 
             return local_value == inherited_base->setting<fifojson>(key);
     }
 
-    if (m_sb->contains(key))
-        return local_value == m_sb->setting<fifojson>(key);
+    if (m_sb->contains(key)) return local_value == m_sb->setting<fifojson>(key);
 
     if (key == m_key && m_json.contains(Constants::Settings::Master::kDefault))
         return local_value == m_json[Constants::Settings::Master::kDefault];
@@ -289,8 +301,7 @@ bool SettingRowBase::matchesInheritedValue(const QString& key, int index) const 
 }
 
 void SettingRowBase::updateResetButton() {
-    if (m_reset_button.isNull())
-        return;
+    if (m_reset_button.isNull()) return;
 
     const bool should_show = rowWidgetsVisible() && hasLocalOverride();
     m_reset_button->setVisible(should_show);
@@ -298,8 +309,7 @@ void SettingRowBase::updateResetButton() {
 }
 
 void SettingRowBase::resetLocalOverrides() {
-    if (m_settings_bases.isEmpty())
-        return;
+    if (m_settings_bases.isEmpty()) return;
 
     for (const QString& key : m_local_override_keys) {
         bool key_removed = false;
@@ -316,26 +326,18 @@ void SettingRowBase::resetLocalOverrides() {
 
     reloadValue();
 
-    for (QSharedPointer<SettingRowBase> row : m_rows_to_notify)
-        row->checkDependencies();
+    for (QSharedPointer<SettingRowBase> row : m_rows_to_notify) row->checkDependencies();
 
     checkDynamicDependencies();
     updateResetButton();
 }
 
 bool SettingRowBase::checkLogic(DependencyNode root) {
-    if (root.key == "AND") {
-        return checkLogic(root.children[0]) && checkLogic(root.children[1]);
-    }
-    else if (root.key == "OR") {
-        return checkLogic(root.children[0]) || checkLogic(root.children[1]);
-    }
-    else if (root.key == "NOT") {
-        return !checkLogic(root.children[0]);
-    }
+    if (root.key == "AND") { return checkLogic(root.children[0]) && checkLogic(root.children[1]); }
+    else if (root.key == "OR") { return checkLogic(root.children[0]) || checkLogic(root.children[1]); }
+    else if (root.key == "NOT") { return !checkLogic(root.children[0]); }
     else {
-        if (root.dependentRow.isNull())
-            return true;
+        if (root.dependentRow.isNull()) return true;
 
         if (QCheckBox* checkBox = dynamic_cast<QCheckBox*>(root.dependentRow.get())) {
             for (auto& el : root.val.items()) {
@@ -368,4 +370,4 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
 }
 
 void SettingRowBase::checkDynamicDependencies() {}
-} // Namespace ORNL
+}  // Namespace ORNL

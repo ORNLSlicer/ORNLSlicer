@@ -30,14 +30,14 @@ BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QShar
                                QVector<QSharedPointer<Part>> settings_parts,
                                QMap<uint, QSharedPointer<SettingsRange>> ranges, int previous_buffer, int future_buffer,
                                bool use_cgal_cross_section, bool include_build_plate_gap) {
-    m_mesh = mesh;
-    m_settings = settings;
-    m_settings_parts = settings_parts;
-    m_settings_ranges = ranges;
+    m_mesh                   = mesh;
+    m_settings               = settings;
+    m_settings_parts         = settings_parts;
+    m_settings_ranges        = ranges;
     m_use_cgal_cross_section = use_cgal_cross_section;
 
     m_previous_buffer_size = previous_buffer;
-    m_future_buffer_size = future_buffer;
+    m_future_buffer_size   = future_buffer;
 
     std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh);
 
@@ -53,15 +53,13 @@ BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QShar
     }
 
     // Fill previous slots will nullptr to start
-    for (int i = 0; i < previous_buffer; ++i)
-        m_buffered_slices.enqueue(nullptr);
+    for (int i = 0; i < previous_buffer; ++i) m_buffered_slices.enqueue(nullptr);
 
     // Take first slice
     m_buffered_slices.enqueue(processSingleSlice());
 
     // Process future slice up to buffer size
-    for (int i = 0; i < future_buffer; ++i)
-        m_buffered_slices.enqueue(processSingleSlice());
+    for (int i = 0; i < future_buffer; ++i) m_buffered_slices.enqueue(processSingleSlice());
 }
 
 QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processNextSlice() {
@@ -83,8 +81,7 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::peekNextSlice() {
 
 QQueue<QSharedPointer<BufferedSlicer::SliceMeta>> BufferedSlicer::getPreviousSlices() {
     QQueue<QSharedPointer<BufferedSlicer::SliceMeta>> previous_slices;
-    for (int i = m_previous_buffer_size - 1; i >= 0; --i)
-        previous_slices.enqueue(m_buffered_slices[i]);
+    for (int i = m_previous_buffer_size - 1; i >= 0; --i) previous_slices.enqueue(m_buffered_slices[i]);
 
     return previous_slices;
 }
@@ -97,7 +94,9 @@ QQueue<QSharedPointer<BufferedSlicer::SliceMeta>> BufferedSlicer::getFutureSlice
     return future_slices;
 }
 
-int BufferedSlicer::getSliceCount() { return m_slice_count - m_future_buffer_size; }
+int BufferedSlicer::getSliceCount() {
+    return m_slice_count - m_future_buffer_size;
+}
 
 QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
     QSharedPointer<SliceMeta> slice_meta = nullptr;
@@ -106,13 +105,13 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
     if (m_slicing_plane.evaluatePoint(m_mesh_max) > 0) {
         // Create new layer settings
         QSharedPointer<SettingsBase> layer_specific_settings =
-            QSharedPointer<SettingsBase>::create(*m_settings); // Copy part settings
+            QSharedPointer<SettingsBase>::create(*m_settings);  // Copy part settings
 
         // Apply settings ranges if available
         for (const QSharedPointer<SettingsRange>& range : m_settings_ranges) {
             if (range->includesIndex(m_slice_count) && !range->getSb()->json().is_null()) {
                 QSharedPointer<SettingsBase> range_sb = range->getSb();
-                layer_specific_settings->populate(range_sb); // Apply range settings overrides
+                layer_specific_settings->populate(range_sb);  // Apply range settings overrides
             }
         }
         layer_specific_settings->makeLocalAdjustments(m_slice_count);
@@ -122,23 +121,20 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
         m_last_layer_height = layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight);
 
         // If the slicing plane is beyond the max_point of the part, stop
-        if (m_slicing_plane.evaluatePoint(m_mesh_max) < 0)
-            return nullptr;
+        if (m_slicing_plane.evaluatePoint(m_mesh_max) < 0) return nullptr;
 
-        Point shift_amount = Point(0, 0, 0); // cross sectioning will add data (primary mesh)
+        Point shift_amount = Point(0, 0, 0);  // cross sectioning will add data (primary mesh)
         QVector3D average_normal;
 
         PolygonList geometry;
         QVector<Polyline> opt_polylines;
 
         if (m_use_cgal_cross_section) {
-            auto result = m_mesh->intersect(m_slicing_plane);
+            auto result   = m_mesh->intersect(m_slicing_plane);
             opt_polylines = result.first;
 
             // Extract polygons
-            for (auto polygon : result.second) {
-                geometry += polygon;
-            }
+            for (auto polygon : result.second) { geometry += polygon; }
 
             shift_amount = CrossSection::findSlicingPlaneMidPoint(m_mesh, m_slicing_plane);
         }
@@ -170,7 +166,7 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
 
 void BufferedSlicer::computeSettingsPolygons(QVector<SettingsPolygon>& settings_polygons, const Point& base_shift) {
     for (const auto& settings_part : m_settings_parts) {
-        Point part_shift = base_shift; // preserve base shift
+        Point part_shift = base_shift;  // preserve base shift
         QVector3D tmp_vec;
         PolygonList geometry = CrossSection::doCrossSection(settings_part->rootMesh(), m_slicing_plane, part_shift,
                                                             tmp_vec, settings_part->getSb(), true);
@@ -178,18 +174,14 @@ void BufferedSlicer::computeSettingsPolygons(QVector<SettingsPolygon>& settings_
         if (part_shift != base_shift) {
             Point delta = base_shift - part_shift;
             for (Polygon& poly : geometry) {
-                for (Point& p : poly) {
-                    p = p + delta;
-                }
+                for (Point& p : poly) { p = p + delta; }
             }
         }
         QVector<Polygon> geom_vec;
         geom_vec.reserve(geometry.size());
-        for (const Polygon& poly : geometry) {
-            geom_vec.push_back(poly);
-        }
+        for (const Polygon& poly : geometry) { geom_vec.push_back(poly); }
         auto sb = settings_part->getSb();
         settings_polygons.push_back(SettingsPolygon(geom_vec, sb));
     }
 }
-} // namespace ORNL
+}  // namespace ORNL

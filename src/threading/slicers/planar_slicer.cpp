@@ -50,10 +50,10 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
 
             // Check for overlaps of settings parts and prevent them
             if (SlicingUtilities::doPartsOverlap(parts.settings_parts, Plane(Point(1, 1, 1), QVector3D(0, 0, 1)))) {
-                return true; // Cancel Slicing
+                return true;  // Cancel Slicing
             }
 
-            return false; // No error, so continune slicing
+            return false;  // No error, so continune slicing
         });
 
     pp.addPartProcessing([this](QSharedPointer<Part> part, QSharedPointer<SettingsBase> part_sb) {
@@ -70,7 +70,7 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
         SlicingUtilities::ClipMesh(mesh, clipping_meshes);
 
-        return false; // No error, so continune slicing
+        return false;  // No error, so continune slicing
     });
 
     pp.addStepBuilder(
@@ -146,7 +146,7 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
                 }
             }
 
-            return false; // No error, so continune slicing
+            return false;  // No error, so continune slicing
         });
 
     pp.addCrossSectionProcessing([this](Preprocessor::ActivePartMeta& meta) {
@@ -171,11 +171,9 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         processThermalScan(meta.part, meta.part_sb);
 
         // Update max steps
-        if (meta.part->countStepPairs() > this->getMaxSteps()) {
-            this->setMaxSteps(meta.part->countStepPairs());
-        }
+        if (meta.part->countStepPairs() > this->getMaxSteps()) { this->setMaxSteps(meta.part->countStepPairs()); }
 
-        return false; // No error, so continune slicing
+        return false;  // No error, so continune slicing
     });
 
     pp.addStatusUpdate([this](double percentage) { emit statusUpdate(StatusUpdateStepType::kPreProcess, percentage); });
@@ -185,7 +183,7 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
             // Compute and populate global layers
             processGlobalLayers(parts.build_parts, global_settings);
 
-            return false; // No error, so continune slicing
+            return false;  // No error, so continune slicing
         });
 
     pp.processAll();
@@ -203,11 +201,11 @@ void PlanarSlicer::processSkin(QSharedPointer<Part> part, int part_start, int la
 
                 //! Gather skin counts
                 int bottom_count = layer->getSb()->setting<int>(PS::Skin::kBottomCount);
-                int top_count = layer->getSb()->setting<int>(PS::Skin::kTopCount);
+                int top_count    = layer->getSb()->setting<int>(PS::Skin::kTopCount);
 
                 //! Set bounds
-                int upper_bound = qMin(layer_nr + top_count, last_layer_count + part_start - 1);
-                int lower_bound = qMax(layer_nr - bottom_count, part_start);
+                int upper_bound   = qMin(layer_nr + top_count, last_layer_count + part_start - 1);
+                int lower_bound   = qMax(layer_nr - bottom_count, part_start);
                 int gradual_bound = qMin(upper_bound + gradual_steps, last_layer_count + part_start - 1);
 
                 //! Determine if upper and lower ranges include top and bottom layer respectively
@@ -240,10 +238,10 @@ void PlanarSlicer::processSkin(QSharedPointer<Part> part, int part_start, int la
 void PlanarSlicer::processRaft(QSharedPointer<Part> part, int part_start, QSharedPointer<SettingsBase> part_sb) {
     if (!part->steps(StepType::kLayer).empty()) {
         if (part_sb->setting<bool>(MS::PlatformAdhesion::kRaftEnable)) {
-            int raft_layers = part_sb->setting<int>(MS::PlatformAdhesion::kRaftLayers);
+            int raft_layers        = part_sb->setting<int>(MS::PlatformAdhesion::kRaftLayers);
             Distance height_offset = 0.0;
 
-            auto steps = part->steps(StepType::kLayer);
+            auto steps       = part->steps(StepType::kLayer);
             auto first_layer = steps.first().dynamicCast<Layer>();
             QVector<QSharedPointer<Layer>> new_raft_layers;
             for (int i = 0; i < raft_layers; ++i) {
@@ -257,18 +255,14 @@ void PlanarSlicer::processRaft(QSharedPointer<Part> part, int part_start, QShare
             }
 
             // Offset steps based on height added by raft layers
-            for (auto step : steps)
-                step->setRaftShift(first_layer->getSlicingPlane().normal() * height_offset());
+            for (auto step : steps) step->setRaftShift(first_layer->getSlicingPlane().normal() * height_offset());
 
             // Add new raft steps
-            for (int i = new_raft_layers.size() - 1; i >= 0; --i)
-                part->prependStep(new_raft_layers[i]);
+            for (int i = new_raft_layers.size() - 1; i >= 0; --i) part->prependStep(new_raft_layers[i]);
         }
         else {
             if (part_start != 0) {
-                for (int i = 0; i < part_start; ++i) {
-                    part->removeStepAtIndex(0);
-                }
+                for (int i = 0; i < part_start; ++i) { part->removeStepAtIndex(0); }
             }
         }
     }
@@ -320,9 +314,7 @@ void PlanarSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<Se
             if (m_saved_layer_settings.first()->setting<bool>(PS::LaserScanner::kEnableBedScan)) {
                 LayerAdditions::addLaserScan(part, 0, 0, part->step(0, StepType::kLayer), m_temp_gcode_dir);
             }
-            else {
-                part->removeStepFromGroup(0, StepType::kScan);
-            }
+            else { part->removeStepFromGroup(0, StepType::kScan); }
 
             int scan_layer_skip = m_saved_layer_settings.first()->setting<int>(PS::LaserScanner::kScanLayerSkip);
             for (int current_layer = 1, layer_count = part->countStepPairs(); current_layer < layer_count;
@@ -342,9 +334,7 @@ void PlanarSlicer::processLaserScan(QSharedPointer<Part> part, QSharedPointer<Se
             }
         }
         else {
-            for (int i = part->countStepPairs() - 1; i >= 0; --i) {
-                part->removeStepFromGroup(i, StepType::kScan);
-            }
+            for (int i = part->countStepPairs() - 1; i >= 0; --i) { part->removeStepFromGroup(i, StepType::kScan); }
         }
     }
 }
@@ -369,8 +359,7 @@ bool PlanarSlicer::anythingDirty() {
 }
 
 void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, int partStart) {
-    if (layer_count < 2 || part->steps().isEmpty())
-        return;
+    if (layer_count < 2 || part->steps().isEmpty()) return;
 
     QVector<QSharedPointer<Layer>> layers;
     QVector<PolygonList> model_geometry;
@@ -378,20 +367,17 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
     model_geometry.reserve(layer_count);
     for (int i = 0; i < layer_count; ++i) {
         auto layer = part->step(partStart + i, StepType::kLayer).dynamicCast<Layer>();
-        if (layer.isNull())
-            return;
+        if (layer.isNull()) return;
         layers.push_back(layer);
         model_geometry.push_back(layer->getGeometry());
     }
 
     auto removeSmallAreas = [](PolygonList geometry, Area minimum_area) {
-        if (minimum_area <= 0)
-            return geometry;
+        if (minimum_area <= 0) return geometry;
 
         PolygonList filtered;
         for (PolygonList island : geometry.splitIntoParts(true)) {
-            if (island.netArea() >= minimum_area)
-                filtered |= island;
+            if (island.netArea() >= minimum_area) filtered |= island;
         }
         return filtered;
     };
@@ -428,12 +414,11 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
 
     auto isBridgeable = [&makeRectangle](PolygonList component, const PolygonList& model_below, Distance maximum_length,
                                          Distance anchor_width) {
-        if (component.isEmpty() || model_below.isEmpty() || maximum_length <= 0)
-            return false;
+        if (component.isEmpty() || model_below.isEmpty() || maximum_length <= 0) return false;
 
         const Point minimum = component.min();
         const Point maximum = component.max();
-        const double width = maximum.x() - minimum.x();
+        const double width  = maximum.x() - minimum.x();
         const double height = maximum.y() - minimum.y();
         const double anchor = qMax(anchor_width(), 1.0);
 
@@ -447,8 +432,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
                 makeRectangle(minimum.x() - anchor, minimum.y() - anchor, minimum.x() + anchor, maximum.y() + anchor);
             const PolygonList right =
                 makeRectangle(maximum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
-            if (intersectsModel(left) && intersectsModel(right))
-                return true;
+            if (intersectsModel(left) && intersectsModel(right)) return true;
         }
 
         if (Distance(height) <= maximum_length) {
@@ -456,8 +440,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
                 makeRectangle(minimum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, minimum.y() + anchor);
             const PolygonList top =
                 makeRectangle(minimum.x() - anchor, maximum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
-            if (intersectsModel(bottom) && intersectsModel(top))
-                return true;
+            if (intersectsModel(bottom) && intersectsModel(top)) return true;
         }
         return false;
     };
@@ -476,8 +459,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
     for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
         for (const SettingsPolygon& polygon : layers[layer_index]->getSettingsPolygons()) {
             const auto settings = polygon.getSettings();
-            if (!settings->contains(PS::Support::kEnable))
-                continue;
+            if (!settings->contains(PS::Support::kEnable)) continue;
             if (settings->setting<bool>(PS::Support::kEnable))
                 enforcer_geometry[layer_index] |= polygon;
             else
@@ -502,11 +484,11 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         if (!supported_from_below.isEmpty() && self_supporting_offset > 0)
             supported_from_below = supported_from_below.offset(self_supporting_offset);
 
-        PolygonList overhang = model_geometry[upper_index] - supported_from_below;
+        PolygonList overhang    = model_geometry[upper_index] - supported_from_below;
         const Area minimum_area = upper_layer->getSb()->setting<Area>(PS::Support::kMinArea);
-        overhang = removeSmallAreas(overhang, minimum_area);
+        overhang                = removeSmallAreas(overhang, minimum_area);
 
-        const bool suppress_bridges = upper_layer->getSb()->setting<bool>(PS::Support::kBridgeSuppression);
+        const bool suppress_bridges          = upper_layer->getSb()->setting<bool>(PS::Support::kBridgeSuppression);
         const Distance maximum_bridge_length = upper_layer->getSb()->setting<Distance>(PS::Support::kBridgeMaxLength);
         if (suppress_bridges && maximum_bridge_length > 0 && !overhang.isEmpty()) {
             PolygonList unsupported_overhang;
@@ -523,12 +505,10 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
 
         const int layer_offset = qMax(0, upper_layer->getSb()->setting<int>(PS::Support::kLayerOffset));
         const int target_layer = upper_index - layer_offset - 1;
-        if (target_layer < 0)
-            continue;
+        if (target_layer < 0) continue;
 
         overhang -= blocker_geometry[target_layer];
-        if (overhang.isEmpty())
-            continue;
+        if (overhang.isEmpty()) continue;
 
         support_geometry[target_layer] |= overhang;
 
@@ -545,29 +525,24 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         // Anchor the taper directly below the dense interface.  With no
         // interface configured, the taper begins at the top support layer.
         const int taper_start_layer = target_layer - interface_layers;
-        if (taper_start_layer >= 0)
-            taper_start_geometry[taper_start_layer] |= interface_contact;
+        if (taper_start_layer >= 0) taper_start_geometry[taper_start_layer] |= interface_contact;
 
         if (upper_layer->getSb()->setting<int>(PS::Support::kStructure) == 1) {
-            Distance diameter = upper_layer->getSb()->setting<Distance>(PS::Support::kOrganicBranchDiameter);
+            Distance diameter         = upper_layer->getSb()->setting<Distance>(PS::Support::kOrganicBranchDiameter);
             const Distance bead_width = upper_layer->getSb()->setting<Distance>(PS::Layer::kBeadWidth);
-            if (diameter <= 0)
-                diameter = bead_width * 3.0;
+            if (diameter <= 0) diameter = bead_width * 3.0;
 
             Distance spacing = upper_layer->getSb()->setting<Distance>(PS::Support::kOrganicBranchSpacing);
             if (spacing <= 0)
                 spacing = max(diameter * 4.0, upper_layer->getSb()->setting<Distance>(PS::Support::kLineSpacing) * 4.0);
-            if (spacing <= 0)
-                spacing = diameter * 2.0;
+            if (spacing <= 0) spacing = diameter * 2.0;
 
             Angle branch_angle = upper_layer->getSb()->setting<Angle>(PS::Support::kOrganicBranchAngle);
-            if (branch_angle <= 0)
-                branch_angle = 25.0 * deg;
+            if (branch_angle <= 0) branch_angle = 25.0 * deg;
 
             for (PolygonList contact_area : overhang.splitIntoParts(true)) {
                 Point root = contact_area.boundingRectCenter();
-                if (!contact_area.inside(root, true))
-                    root = contact_area.first().first();
+                if (!contact_area.inside(root, true)) root = contact_area.first().first();
 
                 QVector<Point> contacts;
                 const Point minimum = contact_area.min();
@@ -575,12 +550,10 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
                 for (double x = minimum.x() + spacing() / 2.0; x < maximum.x(); x += spacing()) {
                     for (double y = minimum.y() + spacing() / 2.0; y < maximum.y(); y += spacing()) {
                         Point candidate(x, y);
-                        if (contact_area.inside(candidate, true))
-                            contacts.push_back(candidate);
+                        if (contact_area.inside(candidate, true)) contacts.push_back(candidate);
                     }
                 }
-                if (contacts.isEmpty())
-                    contacts.push_back(root);
+                if (contacts.isEmpty()) contacts.push_back(root);
 
                 for (const Point& contact : contacts)
                     organic_branches.push_back({target_layer, contact, root, diameter, branch_angle});
@@ -605,8 +578,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
         if (!model_geometry[layer_index].isEmpty()) {
             PolygonList clearance = model_geometry[layer_index];
-            if (xy_distance > 0)
-                clearance = clearance.offset(xy_distance);
+            if (xy_distance > 0) clearance = clearance.offset(xy_distance);
             support_geometry[layer_index] -= clearance;
         }
     }
@@ -619,17 +591,16 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         QVector<PolygonList> organic_geometry(layer_count);
         for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
             for (const OrganicBranch& branch : organic_branches) {
-                if (layer_index > branch.target_layer || support_geometry[layer_index].isEmpty())
-                    continue;
+                if (layer_index > branch.target_layer || support_geometry[layer_index].isEmpty()) continue;
 
                 const double vertical_distance = layers[branch.target_layer]->getSlicingPlane().point().distance(
                     layers[layer_index]->getSlicingPlane().point())();
-                const double dx = branch.root.x() - branch.contact.x();
-                const double dy = branch.root.y() - branch.contact.y();
+                const double dx               = branch.root.x() - branch.contact.x();
+                const double dy               = branch.root.y() - branch.contact.y();
                 const double distance_to_root = std::hypot(dx, dy);
                 const double max_shift = vertical_distance * std::tan(qBound(0.0, branch.angle(), (60.0 * deg)()));
-                const double shift = qMin(distance_to_root, max_shift);
-                const double ratio = distance_to_root > 0.0 ? shift / distance_to_root : 0.0;
+                const double shift     = qMin(distance_to_root, max_shift);
+                const double ratio     = distance_to_root > 0.0 ? shift / distance_to_root : 0.0;
                 Point center(branch.contact.x() + dx * ratio, branch.contact.y() + dy * ratio);
 
                 // Branches widen gently toward the bed and naturally merge when
@@ -661,8 +632,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
         if (!model_geometry[layer_index].isEmpty()) {
             PolygonList model_clearance = model_geometry[layer_index];
-            if (xy_distance > 0)
-                model_clearance = model_clearance.offset(xy_distance);
+            if (xy_distance > 0) model_clearance = model_clearance.offset(xy_distance);
             forbidden |= model_clearance;
         }
         support_geometry[layer_index] -= forbidden;
@@ -677,8 +647,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         const Distance base_expansion =
             max(Distance(0), layers[0]->getSb()->setting<Distance>(PS::Support::kBaseExpansion));
         PolygonList base_footprint = support_geometry[0];
-        if (base_expansion > 0)
-            base_footprint = base_footprint.offset(base_expansion);
+        if (base_expansion > 0) base_footprint = base_footprint.offset(base_expansion);
 
         for (int layer_index = 0; layer_index < qMin(layer_count, base_layers); ++layer_index) {
             PolygonList layer_base = base_footprint;
@@ -688,8 +657,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
                 const Distance xy_distance =
                     max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
                 PolygonList model_clearance = model_geometry[layer_index];
-                if (xy_distance > 0)
-                    model_clearance = model_clearance.offset(xy_distance);
+                if (xy_distance > 0) model_clearance = model_clearance.offset(xy_distance);
                 layer_base -= model_clearance;
             }
 
@@ -702,7 +670,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
     // component may also land on model geometry; Build Plate Only deliberately
     // excludes that foundation.  Invalid components are removed before path
     // generation so disconnected islands cannot silently print in midair.
-    const int placement = layers[0]->getSb()->setting<int>(PS::Support::kPlacement);
+    const int placement         = layers[0]->getSb()->setting<int>(PS::Support::kPlacement);
     const bool build_plate_only = placement == 1;
     const bool validate_support = layers[0]->getSb()->setting<bool>(PS::Support::kValidation);
     if (validate_support || build_plate_only) {
@@ -723,12 +691,11 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
 
         for (int layer_index = 1; layer_index < layer_count; ++layer_index) {
             PolygonList foundation = valid_support[layer_index - 1];
-            if (!build_plate_only)
-                foundation |= model_geometry[layer_index - 1];
+            if (!build_plate_only) foundation |= model_geometry[layer_index - 1];
 
             for (PolygonList component : support_geometry[layer_index].splitIntoParts(true)) {
-                PolygonList overlap_source = component;
-                PolygonList overlap = overlap_source & foundation;
+                PolygonList overlap_source  = component;
+                PolygonList overlap         = overlap_source & foundation;
                 const double component_area = component.netArea()();
                 const double overlap_ratio =
                     component_area > 0.0 ? qMax(0.0, overlap.netArea()() / component_area) : 0.0;
@@ -748,8 +715,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
 
     auto makeTaperSeed = [](const PolygonList& geometry, Distance growth) {
         PolygonList seeds;
-        if (geometry.isEmpty() || growth <= 0)
-            return seeds;
+        if (geometry.isEmpty() || growth <= 0) return seeds;
 
         // Erode each component to its innermost region, then back off by one
         // layer of taper growth.  This creates a small central void immediately
@@ -758,8 +724,8 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         for (PolygonList component : geometry.splitIntoParts(true)) {
             const Point minimum = component.min();
             const Point maximum = component.max();
-            double lower_inset = 0.0;
-            double upper_inset = std::hypot(maximum.x() - minimum.x(), maximum.y() - minimum.y());
+            double lower_inset  = 0.0;
+            double upper_inset  = std::hypot(maximum.x() - minimum.x(), maximum.y() - minimum.y());
 
             for (int iteration = 0; iteration < 32; ++iteration) {
                 const double inset = (lower_inset + upper_inset) / 2.0;
@@ -785,22 +751,19 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             const auto& settings = layers[layer_index]->getSb();
             const bool hollow_taper =
                 settings->setting<bool>(PS::Support::kTaper) && settings->setting<int>(PS::Support::kStructure) == 0;
-            if (!hollow_taper || support_geometry[layer_index].isEmpty())
-                continue;
+            if (!hollow_taper || support_geometry[layer_index].isEmpty()) continue;
 
-            const Distance bead_width = settings->setting<Distance>(PS::Layer::kBeadWidth);
-            const int wall_contours = qMax(1, settings->setting<int>(PS::Support::kTaperWallContours));
-            const Distance wall_width = bead_width * wall_contours;
+            const Distance bead_width      = settings->setting<Distance>(PS::Layer::kBeadWidth);
+            const int wall_contours        = qMax(1, settings->setting<int>(PS::Support::kTaperWallContours));
+            const Distance wall_width      = bead_width * wall_contours;
             const PolygonList maximum_hole = support_geometry[layer_index].offset(-wall_width);
-            if (maximum_hole.isEmpty())
-                continue;
+            if (maximum_hole.isEmpty()) continue;
 
             PolygonList allowed_hole = maximum_hole;
-            PolygonList dense_mask = interface_geometry[layer_index];
+            PolygonList dense_mask   = interface_geometry[layer_index];
             dense_mask |= base_geometry[layer_index];
             allowed_hole -= support_geometry[layer_index] & dense_mask;
-            if (allowed_hole.isEmpty())
-                continue;
+            if (allowed_hole.isEmpty()) continue;
 
             Distance taper_step(0);
             if (layer_index + 1 < layer_count) {
@@ -814,8 +777,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             PolygonList holes;
             if (layer_index + 1 < layer_count && !taper_hole_geometry[layer_index + 1].isEmpty()) {
                 PolygonList propagated_holes = taper_hole_geometry[layer_index + 1];
-                if (taper_step > 0)
-                    propagated_holes = propagated_holes.offset(taper_step);
+                if (taper_step > 0) propagated_holes = propagated_holes.offset(taper_step);
                 propagated_holes &= allowed_hole;
                 holes |= propagated_holes;
             }
@@ -831,7 +793,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
     for (int layer_index = 0; layer_index < layer_count; ++layer_index) {
         QVector<QSharedPointer<IslandBase>> support_islands;
         const PolygonList interface_dense_geometry = support_geometry[layer_index] & interface_geometry[layer_index];
-        PolygonList base_dense_geometry = support_geometry[layer_index] & base_geometry[layer_index];
+        PolygonList base_dense_geometry            = support_geometry[layer_index] & base_geometry[layer_index];
         base_dense_geometry -= interface_dense_geometry;
         PolygonList dense_geometry = interface_dense_geometry;
         dense_geometry |= base_dense_geometry;
@@ -854,9 +816,7 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             sparse_geometry -= tube_wall_geometry;
             sparse_geometry -= dense_geometry;
         }
-        else {
-            sparse_geometry = support_geometry[layer_index] - dense_geometry;
-        }
+        else { sparse_geometry = support_geometry[layer_index] - dense_geometry; }
 
         for (const PolygonList& geometry : sparse_geometry.splitIntoParts(true)) {
             auto settings = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
@@ -890,10 +850,9 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         }
 
         for (const PolygonList& geometry : interface_dense_geometry.splitIntoParts(true)) {
-            auto settings = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
+            auto settings              = QSharedPointer<SettingsBase>::create(*layers[layer_index]->getSb());
             Distance interface_spacing = settings->setting<Distance>(PS::Support::kInterfaceLineSpacing);
-            if (interface_spacing <= 0)
-                interface_spacing = settings->setting<Distance>(PS::Layer::kBeadWidth);
+            if (interface_spacing <= 0) interface_spacing = settings->setting<Distance>(PS::Layer::kBeadWidth);
 
             settings->setSetting(PS::Support::kInterfaceRegion, true);
             settings->setSetting(PS::Support::kBaseRegion, false);
@@ -926,18 +885,16 @@ void PlanarSlicer::postProcess(nlohmann::json opt_data) {
         QVector<QSharedPointer<RegionBase>> previous_regions;
 
         for (int g_layer_num = 0, max_layers = m_global_layers.size(); g_layer_num < max_layers; ++g_layer_num) {
-            auto islands = m_global_layers[g_layer_num]->getIslands();
+            auto islands     = m_global_layers[g_layer_num]->getIslands();
             int region_count = 0;
-            int path_count = 0;
+            int path_count   = 0;
             for (const auto& island : islands) {
-                if (island.isNull())
-                    continue;
+                if (island.isNull()) continue;
 
                 const auto regions = island->getRegions();
                 region_count += regions.size();
                 for (const auto& region : regions) {
-                    if (!region.isNull())
-                        path_count += region->getPaths().size();
+                    if (!region.isNull()) path_count += region->getPaths().size();
                 }
             }
             Diagnostics::logLine(QString("Planar postprocess layer %1/%2 islands=%3 regions=%4 paths=%5")
@@ -963,7 +920,7 @@ void PlanarSlicer::postProcess(nlohmann::json opt_data) {
         }
     }
     else {
-        emit statusUpdate(StatusUpdateStepType::kPostProcess, 100); // Mark layerbar as done
+        emit statusUpdate(StatusUpdateStepType::kPostProcess, 100);  // Mark layerbar as done
     }
 
     Diagnostics::logLine(QStringLiteral("Planar postprocess finished"));
@@ -974,7 +931,7 @@ void PlanarSlicer::writeGCode() {
 
     // for updating status window
     double current_layer = 0;
-    double num_layers = m_global_layers.size();
+    double num_layers    = m_global_layers.size();
 
     // have each layer write its own gcode
     for (auto g_layer : m_global_layers) {
@@ -991,4 +948,4 @@ void PlanarSlicer::writeGCode() {
 
     stream << m_base->writeAfterPart();
 }
-} // namespace ORNL
+}  // namespace ORNL

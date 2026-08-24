@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QVector>
 #include <cstdint>
 
-#include <QVector>
 #include <clipper.hpp>
 #include <qcontainerfwd.h>
 #include <qpolygon.h>
@@ -27,7 +27,7 @@ const static int clipper_init = (0);
  * Ultimaker](https://github.com/Ultimaker/CuraEngine/blob/master/src/utils/polygon.h)
  */
 class PolygonList : public QVector<Polygon> {
-  public:
+   public:
     using QVector<Polygon>::QVector;
 
     PolygonList();
@@ -112,10 +112,10 @@ class PolygonList : public QVector<Polygon> {
      */
     QVector<PolygonList> splitIntoParts(bool unionAll = false) const;
 
-  private:
+   private:
     void splitIntoParts_processPolyTreeNode(ClipperLib2::PolyNode* node, QVector<PolygonList>& ret) const;
 
-  public:
+   public:
     //! \brief Removes overlapping consecutive line segments which don't
     //! delimit a positive area.
     PolygonList removeDegenerateVertices();
@@ -221,11 +221,11 @@ class PolygonList : public QVector<Polygon> {
     //! \brief Tracks geometry that is lost as a result of inward offsetting
     QVector<Polygon> lost_geometry;
 
-  protected:
+   protected:
     //! \brief Private operator for use with internal clipper functions
     ClipperLib2::Paths operator()() const;
 
-  private:
+   private:
     //! \brief Private constructor for use with internal clipper functions
     PolygonList(const ClipperLib2::Paths& paths);
 
@@ -321,6 +321,6 @@ class PolygonList : public QVector<Polygon> {
     using QVector<Polygon>::push_front;
     using QVector<Polygon>::insert;
 
-}; // class PolygonList
+};  // class PolygonList
 
-} // namespace ORNL
+}  // namespace ORNL

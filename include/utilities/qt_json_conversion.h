@@ -5,6 +5,7 @@
 #include <QString>
 #include <QVector3D>
 #include <QVector>
+
 #include <nlohmann/json.hpp>
 
 // Needed for cross compile - includes defintions that qt is looking

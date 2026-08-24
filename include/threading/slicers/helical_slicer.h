@@ -32,7 +32,7 @@ class SettingsBase;
  * it intentionally bypasses polymer perimeter/infill/skin/support processing.
  */
 class HelicalSlicer : public TraditionalAST {
-  public:
+   public:
     /*!
      * @brief Constructs a helical slicer using the selected cylindrical G-code syntax.
      * @param gcodeLocation Temporary gcode output path used by the slicing thread.
@@ -47,7 +47,7 @@ class HelicalSlicer : public TraditionalAST {
      */
     void doSlice() override;
 
-  protected:
+   protected:
     /*!
      * @brief Builds helical layers by clipping helix candidates against each model cross section.
      * @param opt_data Optional process data.  Currently unused by helical slicing.
@@ -65,7 +65,7 @@ class HelicalSlicer : public TraditionalAST {
      */
     void writeGCode() override;
 
-  private:
+   private:
     /*!
      * @brief Copies a mesh so clipping can be applied without mutating the loaded model.
      * @param mesh Mesh to copy.
@@ -131,4 +131,4 @@ class HelicalSlicer : public TraditionalAST {
     //! @brief Ordered helical layers generated during helical path computation.
     QList<QSharedPointer<HelicalLayer>> m_helical_layers;
 };
-} // namespace ORNL
+}  // namespace ORNL

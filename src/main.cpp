@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QStyleFactory>
+
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
 #include <qcoreapplication.h>

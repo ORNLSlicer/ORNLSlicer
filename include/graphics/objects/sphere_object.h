@@ -14,7 +14,7 @@ namespace ORNL {
  * This class is a base object type that can be used as primative for other objects.
  */
 class SphereObject : public GraphicsObject {
-  public:
+   public:
     //! \brief Constructor
     //! \param view: View to render to.
     //! \param radius: OpenGL radius.
@@ -22,8 +22,8 @@ class SphereObject : public GraphicsObject {
     //! \param render_mode: OpenGL render mode. Use GL_TRIANGLES, GL_LINES, etc.
     SphereObject(BaseView* view, float radius, QColor color, ushort render_mode = GL_TRIANGLES);
 
-  private:
+   private:
     //! \brief Radius
     float m_radius;
 };
-} // namespace ORNL
+}  // namespace ORNL

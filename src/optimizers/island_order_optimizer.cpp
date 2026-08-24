@@ -1,11 +1,11 @@
 
 #include "optimizers/island_order_optimizer.h"
 
+#include <QRandomGenerator>
 #include <algorithm>
 #include <cassert>
 #include <limits>
 
-#include <QRandomGenerator>
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qlist.h>
@@ -27,9 +27,11 @@ namespace ORNL {
 IslandBaseOrderOptimizer::IslandBaseOrderOptimizer(Point& current_positon,
                                                    QList<QSharedPointer<IslandBase>> island_list,
                                                    int last_island_visited, IslandOrderOptimization order_optimization)
-    : m_last_island_visited(last_island_visited), m_start(current_positon), m_order_optimization(order_optimization),
+    : m_last_island_visited(last_island_visited),
+      m_start(current_positon),
+      m_order_optimization(order_optimization),
       m_first_index(-1) {
-    m_island_list = island_list;
+    m_island_list        = island_list;
     m_was_first_selected = false;
 }
 
@@ -38,7 +40,7 @@ IslandBaseOrderOptimizer::IslandBaseOrderOptimizer(Point current_positon,
                                                    IslandOrderOptimization order_optimization)
     : m_start(current_positon), m_order_optimization(order_optimization) {
     m_part_island_list = part_island_list;
-    m_island_list = m_part_island_list.keys();
+    m_island_list      = m_part_island_list.keys();
 }
 
 void IslandBaseOrderOptimizer::setStartPoint(Point start_point) {
@@ -56,17 +58,19 @@ void IslandBaseOrderOptimizer::setOrderOptimization(IslandOrderOptimization orde
     m_tsp_result.clear();
 }
 
-int IslandBaseOrderOptimizer::getLastIslandBaseVisited() { return m_last_island_visited; }
+int IslandBaseOrderOptimizer::getLastIslandBaseVisited() {
+    return m_last_island_visited;
+}
 
-int IslandBaseOrderOptimizer::getFirstIndexSelected() { return m_first_index; }
+int IslandBaseOrderOptimizer::getFirstIndexSelected() {
+    return m_first_index;
+}
 
 int IslandBaseOrderOptimizer::computeNextIndex() {
-    if (m_island_list.isEmpty())
-        return -1;
+    if (m_island_list.isEmpty()) return -1;
 
     //! \note No need to optimize if we only have a single island
-    if (m_island_list.size() < 2)
-        return 0;
+    if (m_island_list.size() < 2) return 0;
 
     int index;
     switch (m_order_optimization) {
@@ -106,8 +110,7 @@ int IslandBaseOrderOptimizer::computeNextIndex() {
             break;
     }
 
-    if (index < 0 || index >= m_island_list.size())
-        return -1;
+    if (index < 0 || index >= m_island_list.size()) return -1;
 
     m_island_list.removeAt(index);
 
@@ -118,14 +121,12 @@ QList<QUuid> IslandBaseOrderOptimizer::computePartOrder() {
     QList<QUuid> result;
 
     while (m_part_island_list.size() > 0) {
-        if (m_island_list.isEmpty())
-            break;
+        if (m_island_list.isEmpty()) break;
 
         // make a copy of the island list to get reference to island from result of computeNext()
         QList<QSharedPointer<IslandBase>> islandSave = m_island_list;
-        int index = computeNextIndex();
-        if (index < 0 || index >= islandSave.size())
-            break;
+        int index                                    = computeNextIndex();
+        if (index < 0 || index >= islandSave.size()) break;
 
         QSharedPointer<IslandBase> next_island = islandSave[index];
 
@@ -157,7 +158,9 @@ QList<QUuid> IslandBaseOrderOptimizer::computePartOrder() {
     return result;
 }
 
-int IslandBaseOrderOptimizer::computeRandom() { return QRandomGenerator::global()->bounded(m_island_list.size()); }
+int IslandBaseOrderOptimizer::computeRandom() {
+    return QRandomGenerator::global()->bounded(m_island_list.size());
+}
 
 int IslandBaseOrderOptimizer::computeLeastRecentlyVisited() {
     if (m_last_island_visited == -1)
@@ -166,7 +169,7 @@ int IslandBaseOrderOptimizer::computeLeastRecentlyVisited() {
         m_last_island_visited = m_last_island_visited % m_island_list.size();
 
     if (!m_was_first_selected) {
-        m_first_index = m_last_island_visited;
+        m_first_index        = m_last_island_visited;
         m_was_first_selected = true;
     }
 
@@ -175,30 +178,28 @@ int IslandBaseOrderOptimizer::computeLeastRecentlyVisited() {
 
 int IslandBaseOrderOptimizer::extremumIslandBase(Point start_point, bool closest) {
     Distance start_point_distance = closest ? Distance(std::numeric_limits<float>::max()) : Distance(0);
-    int extremum_island_index = -1;
+    int extremum_island_index     = -1;
     for (int i = 0, end = m_island_list.size(); i < end; ++i) {
         QSharedPointer<IslandBase> isl = m_island_list[i];
-        if (isl.isNull() || isl->getGeometry().isEmpty())
-            continue;
+        if (isl.isNull() || isl->getGeometry().isEmpty()) continue;
 
         Polygon polygon = isl->getGeometry()[0];
-        if (polygon.isEmpty())
-            continue;
+        if (polygon.isEmpty()) continue;
 
         for (Point point : polygon) {
             Distance dis = point.distance(start_point);
             if (closest) {
                 if (dis < start_point_distance) {
-                    start_point_distance = dis;
+                    start_point_distance  = dis;
                     extremum_island_index = i;
-                    m_start = point;
+                    m_start               = point;
                 }
             }
             else {
                 if (dis > start_point_distance) {
-                    start_point_distance = dis;
+                    start_point_distance  = dis;
                     extremum_island_index = i;
-                    m_start = point;
+                    m_start               = point;
                 }
             }
         }
@@ -208,12 +209,8 @@ int IslandBaseOrderOptimizer::extremumIslandBase(Point start_point, bool closest
 
 int IslandBaseOrderOptimizer::computeExtremumDistance(bool shortest) {
     int first_island_index;
-    if (shortest) {
-        first_island_index = this->extremumIslandBase(m_start, true);
-    }
-    else {
-        first_island_index = this->extremumIslandBase(m_start, false);
-    }
+    if (shortest) { first_island_index = this->extremumIslandBase(m_start, true); }
+    else { first_island_index = this->extremumIslandBase(m_start, false); }
 
     // Only compute once. Use stored result otherwise
     if (m_tsp_result.empty()) {
@@ -222,11 +219,9 @@ int IslandBaseOrderOptimizer::computeExtremumDistance(bool shortest) {
         m_tsp_result = tsp.getOptimizedIslandBases();
     }
 
-    if (first_island_index < 0 || m_tsp_result.size() <= 0)
-        return -1;
+    if (first_island_index < 0 || m_tsp_result.size() <= 0) return -1;
 
     for (int i = 0, end = m_island_list.size(); i < end; ++i) {
-
         if (m_island_list[i] == m_tsp_result[0]) {
             m_tsp_result.removeFirst();
             return i;
@@ -237,9 +232,7 @@ int IslandBaseOrderOptimizer::computeExtremumDistance(bool shortest) {
 
 void IslandBaseOrderOptimizer::removeValue(QVector<int>& index_list, int value) {
     for (int i = 0, end = index_list.size(); i < end; ++i) {
-        if (index_list[i] == value) {
-            index_list.remove(i);
-        }
+        if (index_list[i] == value) { index_list.remove(i); }
     }
 }
 
@@ -258,13 +251,11 @@ int IslandBaseOrderOptimizer::computeNextFarthest() {
 int IslandBaseOrderOptimizer::computeApproximate() {
     QVector<Point> center_list;
     for (QSharedPointer<IslandBase>& island : m_island_list) {
-        if (island.isNull() || island.data()->getGeometry().isEmpty())
-            continue;
+        if (island.isNull() || island.data()->getGeometry().isEmpty()) continue;
 
         center_list += island.data()->getGeometry()[0].boundingRectCenter();
     }
-    if (center_list.size() != m_island_list.size())
-        return computeNextClosest();
+    if (center_list.size() != m_island_list.size()) return computeNextClosest();
 
     //! \note Find the minimal spanning tree, represented with an adjacency matrix
     QVector<QVector<int>> minimal_spanning_tree = minimalSpanningTree(center_list);
@@ -274,13 +265,9 @@ int IslandBaseOrderOptimizer::computeApproximate() {
     for (int i = 0, end = m_island_list.size(); i < end; ++i) {
         int degree = 0;
         for (int& value : minimal_spanning_tree[i]) {
-            if (value) {
-                ++degree;
-            }
+            if (value) { ++degree; }
         }
-        if (degree % 2 == 1) {
-            odd_degree_points_indice += i;
-        }
+        if (degree % 2 == 1) { odd_degree_points_indice += i; }
     }
 
     //! \note Find the minimal weight perfect matching for odd degree vertice
@@ -309,32 +296,26 @@ int IslandBaseOrderOptimizer::computeApproximate() {
 
 QVector<QVector<int>> IslandBaseOrderOptimizer::minimalSpanningTree(QVector<Point> vertice) {
     QVector<QVector<int>> minimal_spanning_tree(vertice.size());
-    for (QVector<int>& vertex : minimal_spanning_tree) {
-        vertex.fill(0, vertice.size());
-    }
+    for (QVector<int>& vertex : minimal_spanning_tree) { vertex.fill(0, vertice.size()); }
 
     //! \note Vector of all the edges, each edge is in format {length, {vertex_1, vertex_2}}
     QVector<QPair<Distance, QPair<int, int>>> edges;
     for (int i = 0, end = vertice.size(); i < end; ++i) {
-        for (int j = 0; j < i; ++j) {
-            edges += {vertice[i].distance(vertice[j]), {i, j}};
-        }
+        for (int j = 0; j < i; ++j) { edges += {vertice[i].distance(vertice[j]), {i, j}}; }
     }
     std::sort(edges.begin(), edges.end());
 
     //! \note Keep picking current shortest edge, if it forms a circle, drop it (Kruskal algorithm)
     QVector<QSet<int>> chosen_vertice;
     while (!(chosen_vertice.size() == 1 && chosen_vertice.first().size() == vertice.size())) {
-        int first_vertex_index = edges.first().second.first;
+        int first_vertex_index  = edges.first().second.first;
         int second_vertex_index = edges.first().second.second;
-        int set_num_first = findSet(chosen_vertice, first_vertex_index);
-        int set_num_second = findSet(chosen_vertice, second_vertex_index);
-        bool not_cycle = false;
+        int set_num_first       = findSet(chosen_vertice, first_vertex_index);
+        int set_num_second      = findSet(chosen_vertice, second_vertex_index);
+        bool not_cycle          = false;
         if (set_num_first != set_num_second) {
             not_cycle = true;
-            if (set_num_first == -1 && set_num_second != -1) {
-                chosen_vertice[set_num_second] += first_vertex_index;
-            }
+            if (set_num_first == -1 && set_num_second != -1) { chosen_vertice[set_num_second] += first_vertex_index; }
             else if (set_num_second == -1 && set_num_first != -1) {
                 chosen_vertice[set_num_first] += second_vertex_index;
             }
@@ -359,13 +340,13 @@ QVector<QVector<int>> IslandBaseOrderOptimizer::minimalSpanningTree(QVector<Poin
 
 int IslandBaseOrderOptimizer::findSet(QVector<QSet<int>> chosen_vertice, int vertex_index) {
     int set_num = -1;
-    bool found = false;
+    bool found  = false;
     if (!chosen_vertice.empty()) {
         for (int i = 0, end = chosen_vertice.size(); i < end && !found; ++i) {
             for (int vertex : chosen_vertice[i]) {
                 if (vertex == vertex_index) {
                     set_num = i;
-                    found = true;
+                    found   = true;
                     break;
                 }
             }
@@ -380,8 +361,8 @@ QVector<QPair<int, int>> IslandBaseOrderOptimizer::minimalMatching(QVector<int> 
     QVector<QPair<Distance, QPair<int, int>>> distance_ordered_edges;
     for (int i = 0, end = odd_degree_points_indice.size() - 1; i < end; ++i) {
         for (int j = i + 1, end = odd_degree_points_indice.size(); j < end; ++j) {
-            int index_0 = odd_degree_points_indice[i];
-            int index_1 = odd_degree_points_indice[j];
+            int index_0       = odd_degree_points_indice[i];
+            int index_1       = odd_degree_points_indice[j];
             Distance distance = center_list[index_0].distance(center_list[index_1]);
             distance_ordered_edges += {distance, {index_0, index_1}};
         }
@@ -401,9 +382,7 @@ QVector<QPair<int, int>> IslandBaseOrderOptimizer::minimalMatching(QVector<int> 
                 distance_ordered_edges[i].second.second == match_pair.second) {
                 distance_ordered_edges.remove(i);
             }
-            else {
-                ++i;
-            }
+            else { ++i; }
         }
     }
     return minimal_matching;
@@ -413,7 +392,7 @@ QVector<int> IslandBaseOrderOptimizer::shortcutEulerianTour(QVector<QVector<int>
     QVector<int> Eulerian_tour;
 
     int current_vertex_index = 0;
-    int graph_size = graph.size();
+    int graph_size           = graph.size();
 
     QVector<bool> visited;
     visited.fill(false, graph_size);
@@ -436,7 +415,7 @@ QVector<int> IslandBaseOrderOptimizer::shortcutEulerianTour(QVector<QVector<int>
             --graph[current_vertex_index][tmp_next];
             --graph[tmp_next][current_vertex_index];
             current_vertex_index = tmp_next;
-            found_next = true;
+            found_next           = true;
         }
         else {
             for (int i = 0; i < graph_size; ++i) {
@@ -452,7 +431,7 @@ QVector<int> IslandBaseOrderOptimizer::shortcutEulerianTour(QVector<QVector<int>
                     if (reachable_after_remove == reachable_before_remove) {
                         //! \note This is not a bridge, visit this edge
                         current_vertex_index = i;
-                        found_next = true;
+                        found_next           = true;
                         break;
                     }
                     else {
@@ -473,21 +452,17 @@ QVector<int> IslandBaseOrderOptimizer::shortcutEulerianTour(QVector<QVector<int>
             visited[Eulerian_tour[i]] = true;
             ++i;
         }
-        else {
-            Eulerian_tour.remove(i);
-        }
+        else { Eulerian_tour.remove(i); }
     }
 
     return Eulerian_tour;
 }
 
 int IslandBaseOrderOptimizer::DFSCount(int start_vertex, QVector<QVector<int>> graph, QVector<bool>& visited) {
-    int count = 1;
+    int count             = 1;
     visited[start_vertex] = true;
     for (int i = 0, end = graph.size(); i < end; ++i) {
-        if (graph[start_vertex][i] > 0 && !visited[i]) {
-            count += DFSCount(i, graph, visited);
-        }
+        if (graph[start_vertex][i] > 0 && !visited[i]) { count += DFSCount(i, graph, visited); }
     }
     return count;
 }
@@ -507,9 +482,7 @@ QSet<QSet<int>> IslandBaseOrderOptimizer::chooseSet(int size, int first_island_i
 void IslandBaseOrderOptimizer::recursiveChoose(int size, QSet<int> set, QSet<int> recurse_subset,
                                                QSet<QSet<int>>& subsets) {
     if (size <= set.size()) {
-        if (size == 0) {
-            subsets += recurse_subset;
-        }
+        if (size == 0) { subsets += recurse_subset; }
         else {
             QSet<int> this_set = set;
             for (int value : this_set) {
@@ -534,7 +507,7 @@ int IslandBaseOrderOptimizer::minDistanceLastPoint(QHash<QSet<int>, QMap<int, Di
                 m_island_list[last_point].data()->getGeometry()[0].boundingRectCenter().distance(
                     m_island_list[ending_point_index].data()->getGeometry()[0].boundingRectCenter());
             if (current_distance < shortestDistance) {
-                shortestDistance = current_distance;
+                shortestDistance        = current_distance;
                 min_distance_last_point = last_point;
             }
         }
@@ -543,4 +516,4 @@ int IslandBaseOrderOptimizer::minDistanceLastPoint(QHash<QSet<int>, QMap<int, Di
     return min_distance_last_point;
 }
 
-} // namespace ORNL
+}  // namespace ORNL

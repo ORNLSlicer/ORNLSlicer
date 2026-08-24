@@ -1,10 +1,10 @@
 #pragma once
 
+#include <QString>
 #include <utility>
 
 #include <CGAL/Modifier_base.h>
 #include <CGAL/Polyhedron_incremental_builder_3.h>
-#include <QString>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
 #include <qsharedpointer.h>
@@ -26,7 +26,7 @@ namespace ORNL {
 //! \class ClosedMesh
 //! \brief A class that represents a closed 3D volume
 class ClosedMesh : public MeshBase {
-  public:
+   public:
     enum class RepairResult {
         kSuccess,
         kSkippedLargeBoundary,
@@ -161,8 +161,8 @@ class ClosedMesh : public MeshBase {
     //! \pre Must be a triangulated and closed mesh
     //! \param mesh: the CGAL mesh polyhedron to be converted
     //! \return a list of vertices and faces that represent the object as a pair
-    static std::pair<QVector<MeshVertex>, QVector<MeshFace>>
-    FacesAndVerticesFromPolyhedron(MeshTypes::Polyhedron& mesh);
+    static std::pair<QVector<MeshVertex>, QVector<MeshFace>> FacesAndVerticesFromPolyhedron(
+        MeshTypes::Polyhedron& mesh);
 
     //! \brief Attempts to clean a supplied polyhedron for closed-mesh import.
     //! \param polyhedron Candidate polyhedron to clean in place.
@@ -182,7 +182,7 @@ class ClosedMesh : public MeshBase {
 
     MeshTypes::SurfaceMesh extractUpwardFaces() override;
 
-  private:
+   private:
     //! \brief converts vertices and faces into polyhedron, used to keep the two in sync
     void convert() override;
 
@@ -193,8 +193,9 @@ class ClosedMesh : public MeshBase {
     static bool CheckIntersectingCurves(Plane& plane, QVector<Polygon> boundary_curves);
 
     //! \brief Instructs CGAL how to build a polyhedron mesh from vertices and faces
-    template <class HDS> class MeshBuilder : public CGAL::Modifier_base<HDS> {
-      public:
+    template <class HDS>
+    class MeshBuilder : public CGAL::Modifier_base<HDS> {
+       public:
         //! \brief Builds a polyhedron incrementally using faces
         //! \param vertices: the mesh's vertices
         //! \param faces: the mesh's faces
@@ -205,9 +206,7 @@ class ClosedMesh : public MeshBase {
             builder.begin_surface(m_vertices.length(), m_faces.length());
 
             // Add all vertices
-            for (MeshVertex v : m_vertices) {
-                builder.add_vertex(v.toPoint3());
-            }
+            for (MeshVertex v : m_vertices) { builder.add_vertex(v.toPoint3()); }
 
             // Add all faces and connect to vertices
             for (MeshFace f : m_faces) {
@@ -221,7 +220,7 @@ class ClosedMesh : public MeshBase {
             builder.end_surface();
         }
 
-      private:
+       private:
         QVector<MeshVertex> m_vertices;
         QVector<MeshFace> m_faces;
     };
@@ -232,4 +231,4 @@ class ClosedMesh : public MeshBase {
     //! \brief the original CGAL representation of this mesh
     MeshTypes::Polyhedron m_original_representation;
 };
-} // namespace ORNL
+}  // namespace ORNL

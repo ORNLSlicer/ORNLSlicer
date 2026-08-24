@@ -13,9 +13,9 @@
 namespace ORNL {
 
 TspBrute::TspBrute(const QVector<QSharedPointer<IslandBase>>& islands, int startIndex, bool shortest) {
-    m_islands = islands;
-    m_start_index = startIndex;
-    m_shortest = shortest;
+    m_islands           = islands;
+    m_start_index       = startIndex;
+    m_shortest          = shortest;
     m_number_of_islands = islands.size();
 
     QVector<Point> centers;
@@ -29,9 +29,7 @@ TspBrute::TspBrute(const QVector<QSharedPointer<IslandBase>>& islands, int start
 
     QVector<Distance> distances = knn.getNearestDistances();
     for (int i = m_islands.size(); i < distances.size(); i++) {
-        if (distances[i] == 0.0) {
-            m_same_center = true;
-        }
+        if (distances[i] == 0.0) { m_same_center = true; }
     }
 }
 
@@ -40,18 +38,12 @@ void TspBrute::execute() {
     QVector<QSharedPointer<IslandBase>> tmp_island_path;
     QVector<int> island_index_list;
 
-    for (int i = 0; i < m_number_of_islands; ++i) {
-        island_index_list += i;
-    }
+    for (int i = 0; i < m_number_of_islands; ++i) { island_index_list += i; }
 
     Distance overall_extremum_distance;
     Distance tmp_accumulate_distance = Distance(0);
-    if (m_shortest) {
-        overall_extremum_distance = Distance(std::numeric_limits<float>::max());
-    }
-    else {
-        overall_extremum_distance = Distance(0);
-    }
+    if (m_shortest) { overall_extremum_distance = Distance(std::numeric_limits<float>::max()); }
+    else { overall_extremum_distance = Distance(0); }
 
     this->removeValue(island_index_list, m_start_index);
 
@@ -74,18 +66,17 @@ void TspBrute::tsp_brute_force_traverse(QVector<int> island_index_list, Distance
                                         Distance tmp_accumulate_distance,
                                         QVector<QSharedPointer<IslandBase>>& optimized_island_path,
                                         QVector<QSharedPointer<IslandBase>> tmp_island_path, bool shortest) {
-
     if (island_index_list.empty()) {
         if (shortest) {
             if (tmp_accumulate_distance <= overall_extremum_distance) {
                 overall_extremum_distance = tmp_accumulate_distance;
-                optimized_island_path = tmp_island_path;
+                optimized_island_path     = tmp_island_path;
             }
         }
         else {
             if (tmp_accumulate_distance > overall_extremum_distance) {
                 overall_extremum_distance = tmp_accumulate_distance;
-                optimized_island_path = tmp_island_path;
+                optimized_island_path     = tmp_island_path;
             }
         }
     }
@@ -118,15 +109,15 @@ void TspBrute::tsp_brute_force_traverse(QVector<int> island_index_list, Distance
         if (shortest) {
             if (tmp_accumulate_distance < overall_extremum_distance) {
                 overall_extremum_distance = tmp_accumulate_distance;
-                optimized_island_path = tmp_island_path;
-                lastVertexVisited = temp_lastVertexVisited;
+                optimized_island_path     = tmp_island_path;
+                lastVertexVisited         = temp_lastVertexVisited;
             }
         }
         else {
             if (tmp_accumulate_distance > overall_extremum_distance) {
                 overall_extremum_distance = tmp_accumulate_distance;
-                optimized_island_path = tmp_island_path;
-                lastVertexVisited = temp_lastVertexVisited;
+                optimized_island_path     = tmp_island_path;
+                lastVertexVisited         = temp_lastVertexVisited;
             }
         }
     }
@@ -143,17 +134,17 @@ void TspBrute::tsp_brute_force_traverse(QVector<int> island_index_list, Distance
 
             // Find next outermost valid path
             Path next_Outermost_path;
-            bool found_valid_path = false;
+            bool found_valid_path     = false;
             auto& next_island_regions = m_islands[island_index_list[i]]->getRegions();
             for (int j = next_island_regions.size() - 1; i > 0; --i) {
                 if (next_island_regions[j]->getPaths().size() > 0) {
                     next_Outermost_path = next_island_regions[j]->getPaths().first();
-                    found_valid_path = true;
+                    found_valid_path    = true;
                     break;
                 }
             }
 
-            if (!found_valid_path) // There is no path in the next island, so skip it
+            if (!found_valid_path)  // There is no path in the next island, so skip it
                 return;
 
             for (int j = 0; j < next_Outermost_path.size(); j++) {
@@ -171,12 +162,12 @@ void TspBrute::tsp_brute_force_traverse(QVector<int> island_index_list, Distance
 
 void TspBrute::removeValue(QVector<int>& index_list, int value) {
     for (int i = 0; i < index_list.size(); ++i) {
-        if (index_list[i] == value) {
-            index_list.remove(i);
-        }
+        if (index_list[i] == value) { index_list.remove(i); }
     }
 }
 
-QVector<QSharedPointer<IslandBase>> TspBrute::getOptimizedIslandBases() { return m_optimized_islands; }
+QVector<QSharedPointer<IslandBase>> TspBrute::getOptimizedIslandBases() {
+    return m_optimized_islands;
+}
 
-} // namespace ORNL
+}  // namespace ORNL

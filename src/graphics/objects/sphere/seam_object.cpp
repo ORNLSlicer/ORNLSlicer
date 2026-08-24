@@ -11,4 +11,4 @@ namespace ORNL {
 SeamObject::SeamObject(BaseView* view, QColor color) : SphereObject(view, .25, color, GL_TRIANGLES) {
     this->setOnTop(true);
 }
-} // namespace ORNL
+}  // namespace ORNL

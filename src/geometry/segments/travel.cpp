@@ -14,16 +14,19 @@ TravelSegment::TravelSegment(Point start, Point end, TravelLiftType liftType)
     // NOP
 }
 
-QSharedPointer<SegmentBase> TravelSegment::clone() const { return QSharedPointer<TravelSegment>::create(*this); }
+QSharedPointer<SegmentBase> TravelSegment::clone() const {
+    return QSharedPointer<TravelSegment>::create(*this);
+}
 
 QString TravelSegment::writeGCode(QSharedPointer<WriterBase> writer) {
     const QString gcode = writer->writeTravel(m_start, m_end, m_lift_type, this->getSb());
-    if (!gcode.isEmpty())
-        writer->setCurrentPosition(m_end);
+    if (!gcode.isEmpty()) writer->setCurrentPosition(m_end);
     return gcode;
 }
 
-void TravelSegment::setLiftType(TravelLiftType newLiftType) { m_lift_type = newLiftType; }
+void TravelSegment::setLiftType(TravelLiftType newLiftType) {
+    m_lift_type = newLiftType;
+}
 
 float TravelSegment::getMinZ() {
     if (m_start.z() < m_end.z())
@@ -31,4 +34,4 @@ float TravelSegment::getMinZ() {
     else
         return m_end.z();
 }
-} // namespace ORNL
+}  // namespace ORNL

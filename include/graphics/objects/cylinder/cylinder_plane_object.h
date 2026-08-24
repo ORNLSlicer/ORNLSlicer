@@ -10,7 +10,7 @@ namespace ORNL {
  * \brief A plane object that is a circle.
  */
 class CylinderPlaneObject : public CylinderObject {
-  public:
+   public:
     //! \brief Constructor.
     //! \param view: View to render to.
     //! \param radius: Plane radius.
@@ -33,10 +33,10 @@ class CylinderPlaneObject : public CylinderObject {
     //! \todo Inner radius is currently unused.
     void updateDimensions(float outer_radius, float inner_radius = -1);
 
-  private:
+   private:
     //! \brief Radius
     float m_starting_outer_radius;
     //! \brief Color
     QColor m_color;
 };
-} // namespace ORNL
+}  // namespace ORNL

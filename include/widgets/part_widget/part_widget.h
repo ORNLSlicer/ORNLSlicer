@@ -9,6 +9,7 @@
 #include <QTabWidget>
 #include <QToolButton>
 #include <QWidget>
+
 #include <qlist.h>
 #include <qobject.h>
 #include <qpair.h>
@@ -31,7 +32,7 @@ namespace ORNL {
  */
 class PartWidget : public QWidget {
     Q_OBJECT
-  public:
+   public:
     //! \brief Constructor
     //! \param parent: a widget
     PartWidget(QWidget* parent = nullptr);
@@ -49,7 +50,7 @@ class PartWidget : public QWidget {
     //! \brief Get the view for this widget.
     PartView* view();
 
-  signals:
+   signals:
     //! \brief Signal of parts that have been selected.
     void selected(QSet<QSharedPointer<Part>> pl, QSharedPointer<Part> mp);
 
@@ -69,7 +70,7 @@ class PartWidget : public QWidget {
     //! \brief Signal that the part rotation message needs to be displayed in main windows status bar
     void displayRotationInfoMsg();
 
-  public slots:
+   public slots:
     //! \brief sets the style of the widget according to current theme
     void setupStyle();
 
@@ -157,7 +158,7 @@ class PartWidget : public QWidget {
     //! \note this is pending a better refactor
     void updatePartTransformations();
 
-  private slots:
+   private slots:
     //! \brief Updates to model.
     void modelAdditionUpdate(QSharedPointer<PartMetaItem> item);
     void modelSelectionUpdate(QSharedPointer<PartMetaItem> item);
@@ -174,7 +175,7 @@ class PartWidget : public QWidget {
     //! \brief Updates the measurement readout overlay.
     void setMeasurementReadout(QString readout);
 
-  private:
+   private:
     //! \brief Repositions the measurement readout beside the part toolbar.
     void positionMeasurementReadout();
 
@@ -232,4 +233,4 @@ class PartWidget : public QWidget {
     //! \brief Model for parts loaded.
     QSharedPointer<PartMetaModel> m_model;
 };
-} // Namespace ORNL
+}  // Namespace ORNL

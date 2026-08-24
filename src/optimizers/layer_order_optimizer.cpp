@@ -36,19 +36,17 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
                                     global_sb->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
         slicing_vector.normalize();
 
-        bool steps_left = true;
+        bool steps_left      = true;
         int num_global_steps = 0;
 
         // Make a map to track the step/layer number each part is currently on
         // Start each part at zero
         QMap<QUuid, int> current_layer;
-        for (auto& part : build_parts)
-            current_layer.insert(part->getId(), 0);
+        for (auto& part : build_parts) current_layer.insert(part->getId(), 0);
 
         while (steps_left) {
-
             // Check the current step of all the parts, find the minimum plane
-            QUuid part_with_min_plane = QUuid(); // null quuid initially
+            QUuid part_with_min_plane = QUuid();  // null quuid initially
             Plane min_plane;
             Distance min_dist;
 
@@ -57,14 +55,13 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
                 QUuid part_id = part->getId();
 
                 // Skip the part if all its layers have been assigned to a global layer
-                if (current_layer[part_id] >= part->countStepPairs())
-                    continue;
+                if (current_layer[part_id] >= part->countStepPairs()) continue;
 
                 // Get the current layer for this part
                 QSharedPointer<Step> current_step = part->getStepPair(current_layer[part_id]).printing_layer;
 
                 // calculate the distance from
-                Plane layer_plane = current_step->getSlicingPlane();
+                Plane layer_plane     = current_step->getSlicingPlane();
                 Distance layer_height = current_step->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
                 layer_plane.shiftAlongNormal(layer_height() / 2.0);
 
@@ -74,8 +71,8 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
                 // If this is the first plane in this loop, or its lower than the current min, set this layer as the min
                 if (part_with_min_plane.isNull() || layer_dist < min_dist) {
                     part_with_min_plane = part_id;
-                    min_plane = layer_plane;
-                    min_dist = layer_dist;
+                    min_plane           = layer_plane;
+                    min_dist            = layer_dist;
                 }
             }
 
@@ -86,8 +83,7 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
                 QUuid part_id = part->getId();
 
                 // skip the part if all its layers have been assigned to a global layer
-                if (current_layer[part_id] >= part->countStepPairs())
-                    continue;
+                if (current_layer[part_id] >= part->countStepPairs()) continue;
 
                 // get the current layer for this part
                 QSharedPointer<Step> current_step = part->getStepPair(current_layer[part_id]).printing_layer;
@@ -114,14 +110,13 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
             for (auto& part : build_parts)
                 steps_left = steps_left || (current_layer[part->getId()] < part->countStepPairs());
 
-        } // end while(steps left)
+        }  // end while(steps left)
     }
     else if (order_method == LayerOrdering::kByLayerNumber) {
         // look at all the parts to find the maximum number of steps
         // this will be the number of global layers
         int max_steps = 0;
-        for (auto part : build_parts)
-            max_steps = qMax(max_steps, part->countStepPairs());
+        for (auto part : build_parts) max_steps = qMax(max_steps, part->countStepPairs());
 
         global_layers.reserve(max_steps);
 
@@ -142,8 +137,7 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
     else if (order_method == LayerOrdering::kByPart) {
         // printing parts sequentially, so every part layer gets its own global layer
         int max_steps = 0;
-        for (auto part : build_parts)
-            max_steps += part->countStepPairs();
+        for (auto part : build_parts) max_steps += part->countStepPairs();
 
         global_layers.reserve(max_steps);
 
@@ -159,9 +153,9 @@ QList<QSharedPointer<GlobalLayer>> LayerOrderOptimizer::populateSteps(QSharedPoi
         }
     }
     else {
-        Q_ASSERT(false); // invalid order method
+        Q_ASSERT(false);  // invalid order method
     }
 
     return global_layers;
 }
-} // namespace ORNL
+}  // namespace ORNL

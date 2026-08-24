@@ -9,6 +9,7 @@
 #include <QTableWidget>
 #include <QTableWidgetItem>
 #include <QToolTip>
+
 #include <qbrush.h>
 #include <qcontainerfwd.h>
 #include <qcursor.h>
@@ -32,10 +33,11 @@
 #include "part/part.h"
 
 namespace ORNL {
-CsDebugDialog::CsDebugDialog(QWidget* parent) : QDialog(parent) { this->setupUi(); }
+CsDebugDialog::CsDebugDialog(QWidget* parent) : QDialog(parent) {
+    this->setupUi();
+}
 
 void CsDebugDialog::paintGraphicsView(int height) {
-
     // Each part is maintained such that the cross section the user selects will appear parallel
     // to the XZ plane, as this aligns with the wall. However, the cross section algorithm only takes
     // horizontal (XY) cross sections. In order to display the correct cross section, we need to
@@ -60,11 +62,10 @@ void CsDebugDialog::paintGraphicsView(int height) {
     // For each list in the split polygons, construct a QPolygon.
     for (const PolygonList& poly : splitpoly) {
         QVector<QPolygon> qpolylist = poly.toQPolygons();
-        QPolygon qpoly = qpolylist.front();
+        QPolygon qpoly              = qpolylist.front();
 
         // Starting at one, subtract all holes.
-        for (int i = 1; i < qpolylist.size(); i++)
-            qpoly = qpoly.subtracted(qpolylist[i]);
+        for (int i = 1; i < qpolylist.size(); i++) qpoly = qpoly.subtracted(qpolylist[i]);
 
         gs->addPolygon(qpoly, QPen(Qt::black), QBrush(Qt::red));
     }
@@ -88,10 +89,10 @@ void CsDebugDialog::updateAxis(int idx) {
 
     QMatrix4x4 rotation;
     switch (idx) {
-        case 0: // YZ
+        case 0:  // YZ
             rotation.rotate(QQuaternion::fromAxisAndAngle(QVector3D(0, 0, 1), 90.0f));
             break;
-        case 2: // XY
+        case 2:  // XY
             rotation.rotate(QQuaternion::fromAxisAndAngle(QVector3D(1, 0, 0), 90.0f));
             break;
         default:
@@ -115,14 +116,15 @@ void CsDebugDialog::selectFromRow(int row, int col) {
 }
 
 void CsDebugDialog::changeLayer(int height) {
-    if (m_part.isNull())
-        return;
+    if (m_part.isNull()) return;
     this->paintGraphicsView(height);
 
     QToolTip::showText(QCursor::pos(), QString::number(height));
 }
 
-void CsDebugDialog::changePart(QSharedPointer<Part> part) { m_part = part; }
+void CsDebugDialog::changePart(QSharedPointer<Part> part) {
+    m_part = part;
+}
 
 void CsDebugDialog::updateScroll() {
     m_scrollbar->setMinimum(m_scroll_min);
@@ -161,7 +163,9 @@ void CsDebugDialog::setupWidgets() {
     m_spinbox = new QSpinBox(this);
 }
 
-void CsDebugDialog::setupLayouts() { m_layout = new QHBoxLayout(this); }
+void CsDebugDialog::setupLayouts() {
+    m_layout = new QHBoxLayout(this);
+}
 
 void CsDebugDialog::setupTable() {
     // Create the table with our desired dimensions.
@@ -227,4 +231,4 @@ void CsDebugDialog::setupEvents() {
     //        connect(m_scrollbar, &QScrollBar::sliderMoved, m_spinbox, &QSpinBox::setValue);
 }
 
-} // namespace ORNL
+}  // namespace ORNL

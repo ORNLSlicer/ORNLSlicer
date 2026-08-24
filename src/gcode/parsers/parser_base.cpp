@@ -1,14 +1,14 @@
 #include "gcode/parsers/parser_base.h"
 
-#include <algorithm>
-#include <functional>
-#include <string>
-
 #include <QDebug>
 #include <QRegularExpressionMatch>
 #include <QString>
 #include <QStringList>
 #include <QTextStream>
+#include <algorithm>
+#include <functional>
+#include <string>
+
 #include <qcontainerfwd.h>
 #include <qhash.h>
 #include <qnamespace.h>
@@ -19,7 +19,7 @@
 namespace ORNL {
 ParserBase::ParserBase() {
     m_block_split_delimiter = QRegularExpression("[\\(*\\)*\\,*\\s]|/");
-    m_leading_colon = QChar(':');
+    m_leading_colon         = QChar(':');
     m_beginning_layer_matcher.setPattern("BEGINNING LAYER");
     m_layer_pattern = QRegularExpression("W*(\\d+)W*");
 }
@@ -46,9 +46,7 @@ GcodeCommand ParserBase::parseCommand(QString command_string, int line_number) {
     if (command_string_split.isEmpty()) {
         if (m_beginning_layer_matcher.indexIn(m_current_gcode_command.getComment()) != -1) {
             auto match = m_layer_pattern.match(m_current_gcode_command.getComment());
-            if (match.hasMatch() && match.captured(0).toInt() > 0) {
-                m_current_gcode_command.setEndOfLayer(true);
-            }
+            if (match.hasMatch() && match.captured(0).toInt() > 0) { m_current_gcode_command.setEndOfLayer(true); }
         }
 
         return m_current_gcode_command;
@@ -58,9 +56,8 @@ GcodeCommand ParserBase::parseCommand(QString command_string, int line_number) {
     // for later matching.  Must have QString to match in hash so no need to keep ref.
     // However, all other parameters can remain as ref.
     std::string stdCommand = command_string_split[0].toStdString();
-    int firstNonZero = std::min(stdCommand.find_first_not_of('0', 1), stdCommand.size() - 1);
-    if (firstNonZero != 1)
-        stdCommand.erase(1, firstNonZero);
+    int firstNonZero       = std::min(stdCommand.find_first_not_of('0', 1), stdCommand.size() - 1);
+    if (firstNonZero != 1) stdCommand.erase(1, firstNonZero);
     QString command = QString::fromStdString(stdCommand);
 
     QHash<QString, std::function<void(QVector<QString>)>>::iterator temp_iter;
@@ -88,27 +85,27 @@ void ParserBase::resetInternalState() {
 }
 
 void ParserBase::addCommandMapping(QString command_string, std::function<void(QVector<QString>)> function_handle) {
-    if (m_command_mapping.contains(command_string))
-        m_command_mapping.remove(command_string);
+    if (m_command_mapping.contains(command_string)) m_command_mapping.remove(command_string);
 
     m_command_mapping.insert(command_string, function_handle);
 }
 
 void ParserBase::setBlockCommentDelimiters(const QString beginning_delimiter, const QString ending_delimiter) {
     m_block_comment_starting_delimiter = beginning_delimiter;
-    m_block_comment_ending_delimiter = ending_delimiter;
+    m_block_comment_ending_delimiter   = ending_delimiter;
     m_block_comment_starting_delimiter_matcher.setPattern(beginning_delimiter);
     m_block_comment_ending_delimiter_matcher.setPattern(ending_delimiter);
 }
 
 bool ParserBase::startsWithDelimiter(QString& str) {
-    if (m_block_comment_starting_delimiter_matcher.indexIn(str) == 0)
-        return true;
+    if (m_block_comment_starting_delimiter_matcher.indexIn(str) == 0) return true;
 
     return false;
 }
 
-void ParserBase::setLineCommentString(const QString line_comment) { m_line_comment = line_comment; }
+void ParserBase::setLineCommentString(const QString line_comment) {
+    m_line_comment = line_comment;
+}
 
 void ParserBase::extractComments(QString& command) {
     int start_index = m_block_comment_starting_delimiter_matcher.indexIn(command);
@@ -125,9 +122,7 @@ void ParserBase::extractComments(QString& command) {
                                               << "With GCode command string: " << getCurrentCommandString();
                 throw IllegalParameterException(exceptionString);
             }
-            else {
-                end_index = end_index - start_index - m_block_comment_ending_delimiter.size();
-            }
+            else { end_index = end_index - start_index - m_block_comment_ending_delimiter.size(); }
         }
 
         QString comment(command.mid(start_index + m_block_comment_starting_delimiter.size(), end_index));
@@ -154,9 +149,7 @@ QString ParserBase::parseComment(QString& line) {
                                           << "With GCode command string: " << getCurrentCommandString();
             throw IllegalParameterException(exceptionString);
         }
-        else {
-            end_index = end_index - start_index;
-        }
+        else { end_index = end_index - start_index; }
     }
     else
         end_index = line.length() - 1;
@@ -179,11 +172,19 @@ void ParserBase::setCurrentCommand(QString command) {
     }
 }
 
-const QString& ParserBase::getCurrentCommandString() const { return m_current_command_string; }
+const QString& ParserBase::getCurrentCommandString() const {
+    return m_current_command_string;
+}
 
-void ParserBase::setLineNumber(int linenumber) { m_current_gcode_command.setLineNumber(linenumber); }
+void ParserBase::setLineNumber(int linenumber) {
+    m_current_gcode_command.setLineNumber(linenumber);
+}
 
-QString ParserBase::getCommentStartDelimiter() { return m_block_comment_starting_delimiter; }
+QString ParserBase::getCommentStartDelimiter() {
+    return m_block_comment_starting_delimiter;
+}
 
-QString ParserBase::getCommentEndDelimiter() { return m_block_comment_ending_delimiter; }
-} // namespace ORNL
+QString ParserBase::getCommentEndDelimiter() {
+    return m_block_comment_ending_delimiter;
+}
+}  // namespace ORNL

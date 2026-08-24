@@ -22,18 +22,14 @@ void BeamParser::config() {
 }
 
 void BeamParser::M110Handler(QVector<QString> params) {
-    if (!params.empty()) {
-        return;
-    }
+    if (!params.empty()) { return; }
 
     m_deposition_active = true;
 }
 
 void BeamParser::M111Handler(QVector<QString> params) {
-    if (!params.empty()) {
-        return;
-    }
+    if (!params.empty()) { return; }
 
     m_deposition_active = false;
 }
-} // namespace ORNL
+}  // namespace ORNL

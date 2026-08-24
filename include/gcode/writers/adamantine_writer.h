@@ -18,7 +18,7 @@ namespace ORNL {
  */
 class AdamantineWriter : public WriterBase {
     // WriterBase interface
-  public:
+   public:
     //! \brief Constructor
     AdamantineWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
     // Required functions
@@ -41,9 +41,9 @@ class AdamantineWriter : public WriterBase {
     QString writeShutdown() override;
     QString writeDwell(Time time) override;
 
-  private:
+   private:
     //! \brief State variables
     RegionType m_region_type;
     int counter;
 };
-} // namespace ORNL
+}  // namespace ORNL
