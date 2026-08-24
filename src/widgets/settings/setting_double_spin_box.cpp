@@ -25,9 +25,9 @@
 namespace ORNL {
 namespace {
 constexpr int kModifyFeedrateLayerTimeMethod = 1;
-constexpr int kFrictionStirMachineType = static_cast<int>(MachineType::kFrictionStir);
-constexpr int kMeldSyntax = static_cast<int>(GcodeSyntax::kMeld);
-constexpr double kMaximumDepositionRate = 10000.0;
+constexpr int kFrictionStirMachineType       = static_cast<int>(MachineType::kFrictionStir);
+constexpr int kMeldSyntax                    = static_cast<int>(GcodeSyntax::kMeld);
+constexpr double kMaximumDepositionRate      = 10000.0;
 
 const QString kInfillMaximumPathLength = "infill_maximum_path_length";
 
@@ -115,7 +115,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
     }
 
     QString unitText;
-    QString type = json[Constants::Settings::Master::kType];
+    QString type         = json[Constants::Settings::Master::kType];
     double displayed_cur = cur;
     if (type == "rpm") {
         this->setMaximum(9999.99);
@@ -128,7 +128,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
             this->setMaximum(Constants::Limits::Maximums::kMaxSpeed.to(unit));
             this->setDecimals(m_precision);
             displayed_cur = displayedDepositionRateValue(cur);
-            unitText = PreferencesManager::getInstance()->getVelocityUnitText();
+            unitText      = PreferencesManager::getInstance()->getVelocityUnitText();
         }
         else if (usesIntegerDepositionRate()) {
             this->setMaximum(kMaximumDepositionRate);
@@ -139,7 +139,7 @@ SettingDoubleSpinBox::SettingDoubleSpinBox(SettingTab* parent, QSharedPointer<Se
             unitText = "rpm";
         }
     }
-    else if (type == "percentage100") // Percentage values with a maximum value of 100
+    else if (type == "percentage100")  // Percentage values with a maximum value of 100
     {
         this->setMinimum(0);
         this->setMaximum(100);
@@ -221,9 +221,8 @@ void SettingDoubleSpinBox::reloadValue() {
     this->blockSignals(true);
     updateDepositionRatePresentation();
     bool consistent = true;
-    double cur = reloadValueHelper<double>(consistent);
-    if (consistent)
-        setValue(displayedDepositionRateValue(cur));
+    double cur      = reloadValueHelper<double>(consistent);
+    if (consistent) setValue(displayedDepositionRateValue(cur));
 
     this->blockSignals(false);
     emit modified(m_key);
@@ -326,14 +325,18 @@ int SettingDoubleSpinBox::effectiveInt(const QString& key, int settings_base_ind
     return global_value;
 }
 
-bool SettingDoubleSpinBox::usesIntegerDepositionRate() const { return usesIntegerDepositionRate(0); }
+bool SettingDoubleSpinBox::usesIntegerDepositionRate() const {
+    return usesIntegerDepositionRate(0);
+}
 
 bool SettingDoubleSpinBox::usesIntegerDepositionRate(int settings_base_index) const {
     return effectiveInt(PRS::MachineSetup::kMachineType, settings_base_index) == kFrictionStirMachineType &&
            !usesMeldVelocityDepositionRate(settings_base_index);
 }
 
-bool SettingDoubleSpinBox::usesMeldVelocityDepositionRate() const { return usesMeldVelocityDepositionRate(0); }
+bool SettingDoubleSpinBox::usesMeldVelocityDepositionRate() const {
+    return usesMeldVelocityDepositionRate(0);
+}
 
 bool SettingDoubleSpinBox::usesMeldVelocityDepositionRate(int settings_base_index) const {
     return effectiveInt(PRS::MachineSetup::kSyntax, settings_base_index) == kMeldSyntax &&
@@ -361,13 +364,11 @@ double SettingDoubleSpinBox::storedDepositionRateValue(double displayed_value) c
 
 void SettingDoubleSpinBox::syncDisplayedDepositionRateValue() {
     const QString type = masterString(m_json, Constants::Settings::Master::kType);
-    if (type != "deposition_rate")
-        return;
+    if (type != "deposition_rate") return;
 
-    bool consistent = true;
+    bool consistent  = true;
     const double cur = reloadValueHelper<double>(consistent);
-    if (!consistent)
-        return;
+    if (!consistent) return;
 
     const bool was_blocked = blockSignals(true);
     setValue(displayedDepositionRateValue(cur));
@@ -376,8 +377,7 @@ void SettingDoubleSpinBox::syncDisplayedDepositionRateValue() {
 
 void SettingDoubleSpinBox::updateDepositionRatePresentation() {
     const QString type = masterString(m_json, Constants::Settings::Master::kType);
-    if (type != "deposition_rate")
-        return;
+    if (type != "deposition_rate") return;
 
     if (usesMeldVelocityDepositionRate()) {
         const Velocity unit = PreferencesManager::getInstance()->getVelocityUnit();
@@ -389,8 +389,7 @@ void SettingDoubleSpinBox::updateDepositionRatePresentation() {
             display.replace("Extruder Speed", "Deposition Rate");
             m_key_label->setText(display);
         }
-        if (!m_unit_label.isNull())
-            m_unit_label->setText(PreferencesManager::getInstance()->getVelocityUnitText());
+        if (!m_unit_label.isNull()) m_unit_label->setText(PreferencesManager::getInstance()->getVelocityUnitText());
     }
     else if (usesIntegerDepositionRate()) {
         setDecimals(0);
@@ -400,16 +399,13 @@ void SettingDoubleSpinBox::updateDepositionRatePresentation() {
             display.replace("Extruder Speed", "Deposition Value");
             m_key_label->setText(display);
         }
-        if (!m_unit_label.isNull())
-            m_unit_label->setText("");
+        if (!m_unit_label.isNull()) m_unit_label->setText("");
     }
     else {
         setDecimals(2);
         setMaximum(kMaximumDepositionRate);
-        if (!m_key_label.isNull())
-            m_key_label->setText(masterString(m_json, Constants::Settings::Master::kDisplay));
-        if (!m_unit_label.isNull())
-            m_unit_label->setText("rpm");
+        if (!m_key_label.isNull()) m_key_label->setText(masterString(m_json, Constants::Settings::Master::kDisplay));
+        if (!m_unit_label.isNull()) m_unit_label->setText("rpm");
     }
 }
 
@@ -440,8 +436,8 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
     if (m_sb.isNull()) return QString();
 
     const QString display = masterString(m_json, Constants::Settings::Master::kDisplay);
-    const QString type = masterString(m_json, Constants::Settings::Master::kType);
-    const double value = effectiveDouble(settings_base_index);
+    const QString type    = masterString(m_json, Constants::Settings::Master::kType);
+    const double value    = effectiveDouble(settings_base_index);
     const bool rpm_based_deposition =
         type == "rpm" || (type == "deposition_rate" && !usesIntegerDepositionRate(settings_base_index) &&
                           !usesMeldVelocityDepositionRate(settings_base_index));

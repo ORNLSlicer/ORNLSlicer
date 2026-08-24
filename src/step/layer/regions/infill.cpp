@@ -28,7 +28,9 @@ Infill::Infill(const QSharedPointer<SettingsBase>& sb, const int index,
     // NOP
 }
 
-QString Infill::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kInfill); }
+QString Infill::writeGCode(QSharedPointer<WriterBase> writer) {
+    return writeRegionGCode(writer, RegionType::kInfill);
+}
 
 void Infill::compute(uint layer_num) {
     m_layer_num = layer_num;

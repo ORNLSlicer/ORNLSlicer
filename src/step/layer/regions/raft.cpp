@@ -26,7 +26,9 @@ Raft::Raft(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon
     // NOP
 }
 
-QString Raft::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kRaft); }
+QString Raft::writeGCode(QSharedPointer<WriterBase> writer) {
+    return writeRegionGCode(writer, RegionType::kRaft);
+}
 
 void Raft::compute(uint layer_num) {
     m_paths.clear();

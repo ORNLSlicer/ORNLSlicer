@@ -7,14 +7,12 @@
 
 namespace {
 bool expect(bool condition, const char* message) {
-    if (!condition)
-        std::cerr << message << '\n';
+    if (!condition) std::cerr << message << '\n';
     return condition;
 }
 
 void enableFrictionStirIncompatibleSettings(ORNL::SettingsBase& settings) {
-    settings.setSetting(ORNL::PRS::MachineSetup::kMachineType,
-                        static_cast<int>(ORNL::MachineType::kFrictionStir));
+    settings.setSetting(ORNL::PRS::MachineSetup::kMachineType, static_cast<int>(ORNL::MachineType::kFrictionStir));
     settings.setSetting(ORNL::PS::SpecialModes::kEnableWidthHeight, true);
     settings.setSetting(ORNL::PS::Support::kEnable, true);
     settings.setSetting(ORNL::ES::Ramping::kTrajectoryAngleEnabled, true);
@@ -60,7 +58,7 @@ bool incompatibleSettingsDisabled(const ORNL::SettingsBase& settings) {
                      "Expected purge during dwell to be disabled for Friction Stir.");
     return passed;
 }
-} // namespace
+}  // namespace
 
 int main() {
     ORNL::SettingsBase settings;

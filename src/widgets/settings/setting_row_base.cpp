@@ -27,9 +27,16 @@ namespace ORNL {
 
 SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb, QString key, fifojson json,
                                QGridLayout* layout, int index)
-    : m_index(index), m_layout(layout), m_key(key), m_sb(sb), m_row_visible(true), m_row_enabled(true),
-      m_dependency_enabled(true), m_hidden_by_process_dependency(false), m_json(json) {
-    m_theme_path = PreferencesManager::getInstance()->getTheme().getFolderPath();
+    : m_index(index),
+      m_layout(layout),
+      m_key(key),
+      m_sb(sb),
+      m_row_visible(true),
+      m_row_enabled(true),
+      m_dependency_enabled(true),
+      m_hidden_by_process_dependency(false),
+      m_json(json) {
+    m_theme_path          = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
 
     m_key_label.reset(new QLabel());
@@ -166,15 +173,16 @@ bool SettingRowBase::isShown() const {
     return rowWidgetsVisible();
 }
 
-bool SettingRowBase::dependencyEnabled() const { return m_dependency_enabled; }
+bool SettingRowBase::dependencyEnabled() const {
+    return m_dependency_enabled;
+}
 
 bool SettingRowBase::hiddenByProcessDependency() const {
     return m_hidden_by_process_dependency && !m_dependency_enabled;
 }
 
 bool SettingRowBase::rowWidgetsVisible() const {
-    if (hiddenByProcessDependency())
-        return false;
+    if (hiddenByProcessDependency()) return false;
 
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
@@ -339,19 +347,18 @@ void SettingRowBase::resetLocalOverrides() {
 
 bool SettingRowBase::checkLogic(DependencyNode root) {
     if (root.key == "AND") {
-        const bool left = checkLogic(root.children[0]);
+        const bool left  = checkLogic(root.children[0]);
         const bool right = checkLogic(root.children[1]);
         return left && right;
     }
     else if (root.key == "OR") {
-        const bool left = checkLogic(root.children[0]);
+        const bool left  = checkLogic(root.children[0]);
         const bool right = checkLogic(root.children[1]);
         return left || right;
     }
     else if (root.key == "NOT") {
         const bool child_result = checkLogic(root.children[0]);
-        if (child_result && isActiveProcessDependency(root.children[0]))
-            m_hidden_by_process_dependency = true;
+        if (child_result && isActiveProcessDependency(root.children[0])) m_hidden_by_process_dependency = true;
 
         return !child_result;
     }
@@ -405,8 +412,7 @@ bool SettingRowBase::checkLogic(DependencyNode root) {
 }
 
 bool SettingRowBase::isActiveProcessDependency(const DependencyNode& root) const {
-    if (root.dependentRow.isNull())
-        return false;
+    if (root.dependentRow.isNull()) return false;
 
     if (root.dependentRow->m_key == PRS::MachineSetup::kMachineType) {
         return m_sb->setting<int>(PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);

@@ -284,7 +284,9 @@ Inset::Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVec
     // NOP
 }
 
-QString Inset::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kInset); }
+QString Inset::writeGCode(QSharedPointer<WriterBase> writer) {
+    return writeRegionGCode(writer, RegionType::kInset);
+}
 
 void Inset::compute(uint layer_num) {
     m_paths.clear();

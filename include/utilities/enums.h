@@ -664,12 +664,12 @@ enum class Axis : uint8_t { kX, kY, kZ };
 enum class IslandType : uint8_t { kAll, kBrim, kPolymer, kRaft, kLaserScan, kThermalScan, kSkirt, kSupport };
 
 enum class MachineType : uint8_t {
-    kPellet     = 0,
-    kFilament   = 1,
-    kWire_Arc   = 2,
-    kLaser_Wire = 3,
-    kConcrete = 4,
-    kThermoset = 5,
+    kPellet       = 0,
+    kFilament     = 1,
+    kWire_Arc     = 2,
+    kLaser_Wire   = 3,
+    kConcrete     = 4,
+    kThermoset    = 5,
     kFrictionStir = 6
 };
 

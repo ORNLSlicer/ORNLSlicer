@@ -1,9 +1,8 @@
 #include "gcode/writers/meld_writer.h"
 
+#include <QStringBuilder>
 #include <algorithm>
 #include <cmath>
-
-#include <QStringBuilder>
 
 #include <qhashfunctions.h>
 #include <qnumeric.h>
@@ -36,33 +35,33 @@ const QString kMeldScalingCenterY = "meld_scaling_center_y";
 const QString kMeldScalingRadius = "meld_scaling_radius";
 
 constexpr double kDepositionOutputTolerance = 1.0e-5;
-constexpr double kMeldVelocityOutputScale = 1000.0;
+constexpr double kMeldVelocityOutputScale   = 1000.0;
 
 Distance averageEndpointRadius(const Point& start_point, const Point& target_point, const Point& center) {
     const double start_radius = std::hypot(start_point.x() - center.x(), start_point.y() - center.y());
-    const double end_radius = std::hypot(target_point.x() - center.x(), target_point.y() - center.y());
+    const double end_radius   = std::hypot(target_point.x() - center.x(), target_point.y() - center.y());
     return Distance((start_radius + end_radius) / 2.0);
 }
 
 double meldVelocityOutputValue(double deposition_value) {
     return Velocity(deposition_value).to(in / minute) * kMeldVelocityOutputScale;
 }
-} // namespace
+}  // namespace
 
 MeldWriter::MeldWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {}
 
 QString MeldWriter::writeInitialSetup(Distance minimum_x, Distance minimum_y, Distance maximum_x, Distance maximum_y,
                                       int num_layers) {
-    m_current_z = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
-    m_current_w = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
+    m_current_z                          = m_sb->setting<Distance>(PRS::Dimensions::kZOffset);
+    m_current_w                          = m_sb->setting<Distance>(PRS::Dimensions::kWMax);
     m_current_deposition_commanded_value = 0.0;
-    m_current_deposition_output_value = 0.0;
-    m_deposition_active = false;
-    m_first_travel      = true;
-    m_first_print       = true;
-    m_layer_start       = true;
-    m_min_z             = 0.0f;
-    m_material_number   = -1;
+    m_current_deposition_output_value    = 0.0;
+    m_deposition_active                  = false;
+    m_first_travel                       = true;
+    m_first_print                        = true;
+    m_layer_start                        = true;
+    m_min_z                              = 0.0f;
+    m_material_number                    = -1;
     QString rv;
     if (m_sb->setting<int>(PRS::GCode::kEnableStartupCode)) {
         rv += commentLine("preamble");
@@ -194,9 +193,7 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
     else if (travel_lift_required)
         travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
-    if (m_first_travel) {
-        rv += m_G0 % writeXYCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
-    }
+    if (m_first_travel) { rv += m_G0 % writeXYCoordinates(travel_destination) % commentSpaceLine("TRAVEL"); }
     else {
         rv += m_G1 % m_f % QString::number(speed.to(m_meta.m_velocity_unit)) % writeCoordinates(travel_destination) %
               commentSpaceLine("TRAVEL");
@@ -206,8 +203,7 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {
         rv += m_G1 % m_f % QString::number(zSpeed.to(m_meta.m_velocity_unit)) %
-              writeCoordinates(target_location, true) %
-              commentSpaceLine("TRAVEL LOWER Z");
+              writeCoordinates(target_location, true) % commentSpaceLine("TRAVEL LOWER Z");
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
@@ -216,19 +212,19 @@ QString MeldWriter::writeTravel(Point start_location, Point target_location, Tra
         rv += "L003" % m_newline;
     }
 
-    if (m_first_travel)         // if this is the first travel
-        m_first_travel = false; // update for next one
+    if (m_first_travel)          // if this is the first travel
+        m_first_travel = false;  // update for next one
 
     return rv;
 }
 
 QString MeldWriter::writeLine(const Point& start_point, const Point& target_point,
                               const QSharedPointer<SettingsBase> params) {
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
+    Velocity speed                = params->setting<Velocity>(SS::kSpeed);
     const double deposition_value = params->setting<double>(SS::kExtruderSpeed);
-    RegionType region_type = params->setting<RegionType>(SS::kRegionType);
-    PathModifiers path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    const double output_value = depositionOutputValue(deposition_value, params, start_point, target_point);
+    RegionType region_type        = params->setting<RegionType>(SS::kRegionType);
+    PathModifiers path_modifiers  = params->setting<PathModifiers>(SS::kPathModifiers);
+    const double output_value     = depositionOutputValue(deposition_value, params, start_point, target_point);
 
     QString rv;
 
@@ -236,15 +232,11 @@ QString MeldWriter::writeLine(const Point& start_point, const Point& target_poin
     if (m_deposition_active == false && deposition_value > 0) {
         rv += writeExtruderOn(region_type, deposition_value, params, start_point, target_point);
     }
-    if (deposition_value == 0 && m_deposition_active == true) {
-        rv += writeExtruderOff();
-    }
+    if (deposition_value == 0 && m_deposition_active == true) { rv += writeExtruderOff(); }
 
     const bool update_deposition = m_deposition_active && deposition_value > 0 && depositionOutputChanged(output_value);
     const bool use_actuator_update = update_deposition && depositionUpdateUsesActuatorCommand();
-    if (use_actuator_update) {
-        rv += writeDepositionUpdate(deposition_value, output_value);
-    }
+    if (use_actuator_update) { rv += writeDepositionUpdate(deposition_value, output_value); }
 
     rv += m_G1;
     // update feedrate if needed
@@ -254,9 +246,7 @@ QString MeldWriter::writeLine(const Point& start_point, const Point& target_poin
         m_layer_start = false;
     }
 
-    if (update_deposition && !use_actuator_update) {
-        rv += writeDepositionUpdate(deposition_value, output_value);
-    }
+    if (update_deposition && !use_actuator_update) { rv += writeDepositionUpdate(deposition_value, output_value); }
 
     // writes WXYZ to destination
     rv += writeCoordinates(target_point);
@@ -276,12 +266,12 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
                              const Angle& angle, const bool& ccw, const QSharedPointer<SettingsBase> params) {
     QString rv;
 
-    Velocity speed = params->setting<Velocity>(SS::kSpeed);
+    Velocity speed                = params->setting<Velocity>(SS::kSpeed);
     const double deposition_value = params->setting<double>(SS::kExtruderSpeed);
-    int material_number = params->setting<int>(SS::kMaterialNumber);
-    auto region_type    = params->setting<RegionType>(SS::kRegionType);
-    auto path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
-    const double output_value = depositionOutputValue(deposition_value, params, start_point, end_point);
+    int material_number           = params->setting<int>(SS::kMaterialNumber);
+    auto region_type              = params->setting<RegionType>(SS::kRegionType);
+    auto path_modifiers           = params->setting<PathModifiers>(SS::kPathModifiers);
+    const double output_value     = depositionOutputValue(deposition_value, params, start_point, end_point);
 
     // Turn on the extruder if it isn't already on
     if (!m_deposition_active && deposition_value > 0) {
@@ -290,9 +280,7 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
 
     const bool update_deposition = m_deposition_active && deposition_value > 0 && depositionOutputChanged(output_value);
     const bool use_actuator_update = update_deposition && depositionUpdateUsesActuatorCommand();
-    if (use_actuator_update) {
-        rv += writeDepositionUpdate(deposition_value, output_value);
-    }
+    if (use_actuator_update) { rv += writeDepositionUpdate(deposition_value, output_value); }
 
     rv += ((ccw) ? m_G3 : m_G2);
 
@@ -300,9 +288,7 @@ QString MeldWriter::writeArc(const Point& start_point, const Point& end_point, c
         setFeedrate(speed);
         rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
     }
-    if (update_deposition && !use_actuator_update) {
-        rv += writeDepositionUpdate(deposition_value, output_value);
-    }
+    if (update_deposition && !use_actuator_update) { rv += writeDepositionUpdate(deposition_value, output_value); }
 
     rv += m_i % QString::number(Distance(center_point.x() - start_point.x()).to(m_meta.m_distance_unit), 'f', 4) % m_j %
           QString::number(Distance(center_point.y() - start_point.y()).to(m_meta.m_distance_unit), 'f', 4) % m_x %
@@ -411,13 +397,13 @@ QString MeldWriter::writeDwell(Time time) {
 }
 
 QString MeldWriter::writeExtruderOn(RegionType type, double deposition_value,
-                                    const QSharedPointer<SettingsBase>& params,
-                                    const Point& start_point, const Point& target_point) {
+                                    const QSharedPointer<SettingsBase>& params, const Point& start_point,
+                                    const Point& target_point) {
     QString rv;
     m_deposition_active = true;
     const bool friction_stir =
         m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFrictionStir;
-    const double initial_deposition_value = friction_stir ? 0.0 : getInitialExtruderSpeed(params);
+    const double initial_deposition_value  = friction_stir ? 0.0 : getInitialExtruderSpeed(params);
     const double actuator_deposition_value = initial_deposition_value > 0 ? initial_deposition_value : deposition_value;
     const double output_value = depositionOutputValue(actuator_deposition_value, params, start_point, target_point);
 
@@ -462,14 +448,13 @@ QString MeldWriter::writeExtruderOn(RegionType type, double deposition_value,
             // prevents an immediate duplicate update without removing any G1 S parameter.
             const bool force_feedrate_update =
                 m_sb->setting<int>(MS::Cooling::kForceMinLayerTime) &&
-                m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) ==
-                    (int)ForceMinimumLayerTime::kSlow_Feedrate;
+                m_sb->setting<int>(MS::Cooling::kForceMinLayerTimeMethod) == (int)ForceMinimumLayerTime::kSlow_Feedrate;
             if (!force_feedrate_update || depositionUpdateUsesActuatorCommand()) {
                 setCurrentDepositionValue(deposition_value, output_value);
             }
             else {
                 m_current_deposition_commanded_value = 0.0;
-                m_current_deposition_output_value = -1.0;
+                m_current_deposition_output_value    = -1.0;
             }
         }
     }
@@ -509,20 +494,15 @@ double MeldWriter::depositionOutputValue(double deposition_value, const QSharedP
         return deposition_value * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
 
     const double output_value = meldVelocityOutputValue(deposition_value);
-    if (!m_sb->setting<bool>(PRS::MachineSpeed::kMeldDepositionRateScaling))
-        return output_value;
+    if (!m_sb->setting<bool>(PRS::MachineSpeed::kMeldDepositionRateScaling)) return output_value;
 
-    if (params == nullptr || !params->contains(SS::kWidth))
-        return output_value;
+    if (params == nullptr || !params->contains(SS::kWidth)) return output_value;
 
     const Distance bead_width = params->setting<Distance>(SS::kWidth);
-    if (bead_width <= 0)
-        return output_value;
+    if (bead_width <= 0) return output_value;
 
     Distance radius;
-    if (params->contains(kMeldScalingRadius)) {
-        radius = params->setting<Distance>(kMeldScalingRadius);
-    }
+    if (params->contains(kMeldScalingRadius)) { radius = params->setting<Distance>(kMeldScalingRadius); }
     else if (params->contains(kRadialCenterX) && params->contains(kRadialCenterY)) {
         radius = averageEndpointRadius(start_point, target_point,
                                        Point(params->setting<Distance>(kRadialCenterX),
@@ -534,12 +514,9 @@ double MeldWriter::depositionOutputValue(double deposition_value, const QSharedP
                                   Point(params->setting<Distance>(kMeldScalingCenterX),
                                         params->setting<Distance>(kMeldScalingCenterY), Distance(start_point.z())));
     }
-    else {
-        return output_value;
-    }
+    else { return output_value; }
 
-    if (radius < 0)
-        return output_value;
+    if (radius < 0) return output_value;
 
     const double scale = std::min(1.0, (2.0 * radius()) / bead_width());
     return output_value * scale;
@@ -553,7 +530,7 @@ bool MeldWriter::depositionOutputChanged(double deposition_value) const {
 
 void MeldWriter::setCurrentDepositionValue(double commanded_value, double output_value) {
     m_current_deposition_commanded_value = commanded_value;
-    m_current_deposition_output_value = output_value;
+    m_current_deposition_output_value    = output_value;
 }
 
 QString MeldWriter::writeXYCoordinates(Point destination) {

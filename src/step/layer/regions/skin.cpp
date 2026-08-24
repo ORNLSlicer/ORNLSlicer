@@ -71,7 +71,9 @@ Skin::Skin(const QSharedPointer<SettingsBase>& sb, const int index, const QVecto
     // NOP
 }
 
-QString Skin::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kSkin); }
+QString Skin::writeGCode(QSharedPointer<WriterBase> writer) {
+    return writeRegionGCode(writer, RegionType::kSkin);
+}
 
 void Skin::compute(uint layer_num) {
     m_paths.clear();

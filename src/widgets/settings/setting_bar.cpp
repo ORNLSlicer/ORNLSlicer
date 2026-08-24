@@ -392,8 +392,8 @@ QStringList SettingBar::syncFrictionStirMachineTypeSettings(const QString& setti
 
     if (setting_key == PRS::MachineSetup::kSyntax) {
         const GcodeSyntax syntax = sb->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-        const int machine_type = sb->setting<int>(PRS::MachineSetup::kMachineType);
-        const int friction_stir = static_cast<int>(MachineType::kFrictionStir);
+        const int machine_type   = sb->setting<int>(PRS::MachineSetup::kMachineType);
+        const int friction_stir  = static_cast<int>(MachineType::kFrictionStir);
 
         if (syntax == GcodeSyntax::kMeld && machine_type != friction_stir) {
             emit settingAboutToChange(PRS::MachineSetup::kMachineType, QList<QSharedPointer<SettingsBase>>());

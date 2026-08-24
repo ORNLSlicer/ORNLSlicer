@@ -30,7 +30,9 @@ Brim::Brim(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon
     // NOP
 }
 
-QString Brim::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kBrim); }
+QString Brim::writeGCode(QSharedPointer<WriterBase> writer) {
+    return writeRegionGCode(writer, RegionType::kBrim);
+}
 
 void Brim::compute(uint layer_num) {
     m_paths.clear();

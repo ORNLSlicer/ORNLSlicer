@@ -1,8 +1,7 @@
-#include <cstdlib>
-#include <iostream>
-
 #include <QSharedPointer>
 #include <QString>
+#include <cstdlib>
+#include <iostream>
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
@@ -20,8 +19,7 @@ ORNL::Velocity depositionRate(double inches_per_minute) {
 }
 
 bool expect(bool condition, const char* message) {
-    if (!condition)
-        std::cerr << message << '\n';
+    if (!condition) std::cerr << message << '\n';
     return condition;
 }
 
@@ -66,22 +64,21 @@ QString firstLineForRadius(bool scaling_enabled, ORNL::Distance radius, bool for
     writer.writeInitialSetup(ORNL::Distance(), ORNL::Distance(), ORNL::Distance(), ORNL::Distance(), 1);
     return writer.writeLine(ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(1.0f, 0.0f, 0.0f), segmentSettings(radius));
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;
 
     const QString scaled_line = firstLineForRadius(true, ORNL::Distance(2.0));
-    passed &= expect(scaled_line.contains("M24 S4000"),
-                     "Expected 10 in/min * 1000 * min(1, 2*2/10) to emit M24 S4000.");
+    passed &=
+        expect(scaled_line.contains("M24 S4000"), "Expected 10 in/min * 1000 * min(1, 2*2/10) to emit M24 S4000.");
 
     const QString capped_line = firstLineForRadius(true, ORNL::Distance(8.0));
-    passed &= expect(capped_line.contains("M24 S10000"),
-                     "Expected scaling to cap at the commanded 10 in/min value.");
+    passed &= expect(capped_line.contains("M24 S10000"), "Expected scaling to cap at the commanded 10 in/min value.");
 
     const QString disabled_line = firstLineForRadius(false, ORNL::Distance(2.0));
-    passed &= expect(disabled_line.contains("M24 S10000"),
-                     "Expected disabled scaling to emit M24 S10000 for 10 in/min.");
+    passed &=
+        expect(disabled_line.contains("M24 S10000"), "Expected disabled scaling to emit M24 S10000 for 10 in/min.");
 
     const QString forced_feedrate_line = firstLineForRadius(false, ORNL::Distance(2.0), true);
     passed &= expect(forced_feedrate_line.count("M24 S10000") == 1,
@@ -93,18 +90,18 @@ int main() {
     travel_settings->setSetting(ORNL::PS::Travel::kLiftHeight, ORNL::Distance(1.0));
     ORNL::MeldWriter travel_writer(ORNL::GcodeMetaList::MeldMeta, travel_settings);
     travel_writer.writeInitialSetup(ORNL::Distance(), ORNL::Distance(), ORNL::Distance(), ORNL::Distance(), 1);
-    const QString first_travel = travel_writer.writeTravel(
-        ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(2.0f, 3.0f, 0.0f), ORNL::TravelLiftType::kBoth,
-        segmentSettings(ORNL::Distance(2.0)));
+    const QString first_travel =
+        travel_writer.writeTravel(ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(2.0f, 3.0f, 0.0f),
+                                  ORNL::TravelLiftType::kBoth, segmentSettings(ORNL::Distance(2.0)));
     travel_settings->setSetting(ORNL::PS::Travel::kLiftHeight, ORNL::Distance(0.0));
-    const QString second_travel = travel_writer.writeTravel(
-        ORNL::Point(2.0f, 3.0f, 0.0f), ORNL::Point(4.0f, 5.0f, 0.0f), ORNL::TravelLiftType::kNoLift,
-        segmentSettings(ORNL::Distance(2.0)));
+    const QString second_travel =
+        travel_writer.writeTravel(ORNL::Point(2.0f, 3.0f, 0.0f), ORNL::Point(4.0f, 5.0f, 0.0f),
+                                  ORNL::TravelLiftType::kNoLift, segmentSettings(ORNL::Distance(2.0)));
     const QString first_line_after_travel = travel_writer.writeLine(
         ORNL::Point(4.0f, 5.0f, 0.0f), ORNL::Point(5.0f, 5.0f, 0.0f), segmentSettings(ORNL::Distance(8.0)));
     const QString first_travel_line = first_travel.section('\n', 0, 0);
-    const QString first_lower_line = first_travel.section('\n', 1, 1);
-    const QString travel_sequence = first_travel + second_travel + first_line_after_travel;
+    const QString first_lower_line  = first_travel.section('\n', 1, 1);
+    const QString travel_sequence   = first_travel + second_travel + first_line_after_travel;
 
     passed &= expect(first_travel_line.startsWith("G0 X"), "Expected first Meld travel to use G0.");
     passed &= expect(!first_travel_line.contains(" F"), "Expected first Meld travel to omit feedrate.");
@@ -129,8 +126,8 @@ int main() {
     const QString next_spiralized_line = spiralize_writer.writeLine(
         ORNL::Point(1.0f, 0.0f, 0.0f), ORNL::Point(2.0f, 0.0f, 0.0f), segmentSettings(ORNL::Distance(1.0)));
 
-    passed &= expect(first_spiralized_line.contains("M24 S4000"),
-                     "Expected first active line to emit scaled M24 S4000.");
+    passed &=
+        expect(first_spiralized_line.contains("M24 S4000"), "Expected first active line to emit scaled M24 S4000.");
     passed &= expect(next_spiralized_line.contains("M24 S2000"),
                      "Expected active Meld actuator output to refresh with M24 when scaled deposition changes.");
     passed &= expect(!next_spiralized_line.contains("M25"),

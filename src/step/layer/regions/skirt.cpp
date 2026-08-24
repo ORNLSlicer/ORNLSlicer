@@ -29,7 +29,9 @@ Skirt::Skirt(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolyg
     // NOP
 }
 
-QString Skirt::writeGCode(QSharedPointer<WriterBase> writer) { return writeRegionGCode(writer, RegionType::kSkirt); }
+QString Skirt::writeGCode(QSharedPointer<WriterBase> writer) {
+    return writeRegionGCode(writer, RegionType::kSkirt);
+}
 
 void Skirt::compute(uint layer_num) {
     m_paths.clear();

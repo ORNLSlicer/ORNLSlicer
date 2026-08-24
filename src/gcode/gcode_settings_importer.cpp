@@ -196,21 +196,11 @@ bool validateDoubleRange(const QString& key, const QString& type, double value, 
         minimum = Constants::Limits::Minimums::kMinUnitlessFloat;
         maximum = Constants::Limits::Maximums::kMaxUnitlessFloat;
     }
-    else if (type == "percentage") {
-        maximum = 500.0;
-    }
-    else if (type == "percentage100") {
-        maximum = 100.0;
-    }
-    else if (type == "rpm") {
-        maximum = 9999.99;
-    }
-    else if (type == "deposition_rate") {
-        maximum = 10000.0;
-    }
-    else if (type == "density") {
-        maximum = 9999.9999;
-    }
+    else if (type == "percentage") { maximum = 500.0; }
+    else if (type == "percentage100") { maximum = 100.0; }
+    else if (type == "rpm") { maximum = 9999.99; }
+    else if (type == "deposition_rate") { maximum = 10000.0; }
+    else if (type == "density") { maximum = 9999.9999; }
     else if (type == "angle") {
         minimum = Constants::Limits::Minimums::kMinAngle();
         maximum = Constants::Limits::Maximums::kMaxAngle();
