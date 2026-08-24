@@ -4,6 +4,7 @@
   inputs = {
     # Upstream still publishes this ref as `slicer2`; no `ornlslicer` ref exists yet.
     nixpkgs.url  = gitlab:mdf/nixpkgs/slicer2?host=code.ornl.gov;
+    llvmNixpkgs.url = github:NixOS/nixpkgs/nixos-unstable;
     utils.url    = github:numtide/flake-utils;
     appimage = {
       url = github:ralismark/nix-appimage;
@@ -16,16 +17,20 @@
         inherit system;
         inherit (import ./nix/nixpkgs/config.nix {}) overlays config;
       };
+      llvmPkgs = import inputs.llvmNixpkgs {
+        inherit system;
+      };
 
       stdenv = llvm.stdenv;
 
       llvm = rec {
         packages = pkgs.llvmPackages_18;
+        toolingPackages = llvmPkgs.llvmPackages_22;
         stdenv   = packages.stdenv;
 
         tooling = rec {
-          lldb = packages.lldb;
-          clang-tools = packages.clang-tools;
+          lldb = toolingPackages.lldb;
+          clang-tools = toolingPackages.clang-tools;
           clang-tools-libcxx = clang-tools.override {
               enableLibcxx = true;
           };
