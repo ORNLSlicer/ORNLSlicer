@@ -84,9 +84,7 @@ void RadialLayer::calculateModifiers(Point& currentLocation) {
     print_paths.reserve(m_paths.size());
     for (Path path : m_paths) {
         path.removeTravels();
-        if (firstPrintSegment(path) != nullptr) {
-            print_paths.push_back(path);
-        }
+        if (firstPrintSegment(path) != nullptr) { print_paths.push_back(path); }
     }
 
     if (print_paths.isEmpty()) {

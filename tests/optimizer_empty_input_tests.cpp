@@ -14,8 +14,8 @@
 #include "optimizers/island_order_optimizer.h"
 #include "optimizers/path_order_optimizer.h"
 #include "optimizers/polyline_order_optimizer.h"
-#include "step/layer/radial_layer.h"
 #include "step/layer/island/island_base.h"
+#include "step/layer/radial_layer.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
@@ -41,9 +41,7 @@ ORNL::Path linePath(float start_x, float end_x) {
 
 ORNL::Path pathFromPoints(const QVector<ORNL::Point>& points) {
     ORNL::Path path;
-    for (int i = 0, end = points.size() - 1; i < end; ++i) {
-        path.append(lineSegment(points[i], points[i + 1]));
-    }
+    for (int i = 0, end = points.size() - 1; i < end; ++i) { path.append(lineSegment(points[i], points[i + 1])); }
 
     return path;
 }
@@ -59,7 +57,7 @@ QSharedPointer<ORNL::SettingsBase> cylindricalSettings(ORNL::PathOrderOptimizati
     settings->setSetting(ORNL::PS::Optimizations::kLocalRandomnessEnable, false);
     return settings;
 }
-} // namespace
+}  // namespace
 
 int main() {
     bool passed = true;
@@ -169,9 +167,8 @@ int main() {
                      "Expected radial linking to honor cylindrical next farthest path order.");
 
     ORNL::Path closed_radial_path =
-        pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
-                        ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f),
-                        ORNL::Point(0.0f, 0.0f, 0.0f)});
+        pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 10.0f, 0.0f),
+                        ORNL::Point(0.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 0.0f, 0.0f)});
 
     ORNL::Point closed_radial_closest_start(9.8f, 10.0f, 0.0f);
     ORNL::PathOrderOptimizer closed_radial_closest_optimizer(
@@ -196,17 +193,15 @@ int main() {
                          closed_radial_farthest_result[1]->start() == ORNL::Point(10.0f, 10.0f, 0.0f),
                      "Expected closed radial farthest linking to rotate to the farthest segment start.");
 
-    ORNL::Path open_radial_path =
-        pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
-                        ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)});
+    ORNL::Path open_radial_path = pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
+                                                  ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)});
     ORNL::Point open_radial_start(9.8f, 0.0f, 0.0f);
     ORNL::PathOrderOptimizer open_radial_optimizer(
         open_radial_start, 0,
         cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest));
     open_radial_optimizer.setPathsToEvaluate({open_radial_path});
     ORNL::Path open_radial_result = open_radial_optimizer.linkNextRadialPath();
-    passed &= expect(open_radial_result.size() > 1 &&
-                         open_radial_result[1]->start() == ORNL::Point(0.0f, 0.0f, 0.0f),
+    passed &= expect(open_radial_result.size() > 1 && open_radial_result[1]->start() == ORNL::Point(0.0f, 0.0f, 0.0f),
                      "Expected open radial closest linking to remain endpoint-only.");
 
     QSharedPointer<ORNL::SettingsBase> radial_layer_settings =
@@ -215,9 +210,9 @@ int main() {
     radial_layer.addPath(pathFromPoints({ORNL::Point(100.0f, 0.0f, 0.0f), ORNL::Point(110.0f, 0.0f, 0.0f),
                                          ORNL::Point(110.0f, 10.0f, 0.0f), ORNL::Point(100.0f, 10.0f, 0.0f),
                                          ORNL::Point(100.0f, 0.0f, 0.0f)}));
-    radial_layer.addPath(pathFromPoints({ORNL::Point(0.0f, 0.0f, 1.0f), ORNL::Point(10.0f, 0.0f, 1.0f),
-                                         ORNL::Point(10.0f, 10.0f, 1.0f), ORNL::Point(0.0f, 10.0f, 1.0f),
-                                         ORNL::Point(0.0f, 0.0f, 1.0f)}));
+    radial_layer.addPath(
+        pathFromPoints({ORNL::Point(0.0f, 0.0f, 1.0f), ORNL::Point(10.0f, 0.0f, 1.0f), ORNL::Point(10.0f, 10.0f, 1.0f),
+                        ORNL::Point(0.0f, 10.0f, 1.0f), ORNL::Point(0.0f, 0.0f, 1.0f)}));
     ORNL::Point radial_layer_current_location(9.8f, 10.0f, 0.0f);
     radial_layer.calculateModifiers(radial_layer_current_location);
     passed &= expect(radial_layer_current_location == ORNL::Point(100.0f, 10.0f, 0.0f),
@@ -240,12 +235,12 @@ int main() {
         cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest));
     helical_closest_reverse_optimizer.setPathsToEvaluate({linePath(10.0f, 1.0f), linePath(20.0f, 21.0f)});
     ORNL::Path helical_closest_reverse_result = helical_closest_reverse_optimizer.linkNextHelicalPath();
-    passed &= expect(helical_closest_reverse_result.size() > 1 &&
-                         helical_closest_reverse_result[1]->start().x() == 1.0f,
-                     "Expected helical closest linking to enter from the nearest end endpoint.");
-    passed &= expect(helical_closest_reverse_result.size() > 1 &&
-                         helical_closest_reverse_result.back()->end().x() == 10.0f,
-                     "Expected helical closest linking to reverse the fragment when entering from the end endpoint.");
+    passed &=
+        expect(helical_closest_reverse_result.size() > 1 && helical_closest_reverse_result[1]->start().x() == 1.0f,
+               "Expected helical closest linking to enter from the nearest end endpoint.");
+    passed &=
+        expect(helical_closest_reverse_result.size() > 1 && helical_closest_reverse_result.back()->end().x() == 10.0f,
+               "Expected helical closest linking to reverse the fragment when entering from the end endpoint.");
 
     ORNL::Point helical_farthest_start(0.0f, 0.0f, 0.0f);
     ORNL::PathOrderOptimizer helical_farthest_optimizer(

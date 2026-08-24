@@ -14,18 +14,16 @@ const Distance kMinHelixSegmentLength = 100.0 * micron;
 
 Point pointAtRevolutions(const Point& center, Distance radius, Distance start_z, Distance bead_width,
                          HelicalPathHandedness handedness, Angle start_angle, double revolutions) {
-    const double t = revolutions * 2.0 * M_PI;
+    const double t         = revolutions * 2.0 * M_PI;
     const double direction = handedness == HelicalPathHandedness::kLeftHanded ? -1.0 : 1.0;
-    const double angle = start_angle() + direction * t;
+    const double angle     = start_angle() + direction * t;
 
     return Point(center.x() + radius() * std::cos(angle), center.y() + radius() * std::sin(angle),
                  start_z() + bead_width() * revolutions);
 }
 
 double revolutionsAtZ(Distance z, Distance start_z, Distance bead_width) {
-    if (bead_width <= 0) {
-        return 0.0;
-    }
+    if (bead_width <= 0) { return 0.0; }
 
     return (z() - start_z()) / bead_width();
 }
@@ -40,41 +38,33 @@ bool appendDistinct(Polyline& polyline, const Point& point) {
 }
 
 QVector<Polyline> filteredResult(const Polyline& polyline, Distance min_path_segment_length) {
-    if (polyline.size() < 2 || polyline.length() <= min_path_segment_length) {
-        return {};
-    }
+    if (polyline.size() < 2 || polyline.length() <= min_path_segment_length) { return {}; }
 
     return {polyline};
 }
 
 Polyline exactIntersectionPrefix(const Polyline& helix, const HelicalPathBoundaryIntersection& intersection) {
     Polyline clipped_helix;
-    if (helix.isEmpty()) {
-        return clipped_helix;
-    }
+    if (helix.isEmpty()) { return clipped_helix; }
 
     const int prefix_end = std::clamp(intersection.segment_end_index, 0, static_cast<int>(helix.size()));
     clipped_helix.reserve(prefix_end + 1);
-    for (int i = 0; i < prefix_end; ++i) {
-        clipped_helix.push_back(helix[i]);
-    }
+    for (int i = 0; i < prefix_end; ++i) { clipped_helix.push_back(helix[i]); }
 
     appendDistinct(clipped_helix, intersection.point);
     return clipped_helix;
 }
-} // namespace
+}  // namespace
 
 Polyline HelicalPathRounding::createHelixForRevolutions(const Point& center, Distance radius, Distance start_z,
                                                         Distance bead_width, HelicalPathHandedness handedness,
                                                         Angle start_angle, double revolutions) {
     Polyline helix;
-    if (revolutions <= 0.0 || bead_width <= 0) {
-        return helix;
-    }
+    if (revolutions <= 0.0 || bead_width <= 0) { return helix; }
 
-    const double max_t = revolutions * 2.0 * M_PI;
+    const double max_t                    = revolutions * 2.0 * M_PI;
     const double vertical_rise_per_radian = bead_width() / (2.0 * M_PI);
-    const double length_per_radian = std::hypot(radius(), vertical_rise_per_radian);
+    const double length_per_radian        = std::hypot(radius(), vertical_rise_per_radian);
     const Distance target_segment_length =
         bead_width / 2.0 > kMinHelixSegmentLength ? bead_width / 2.0 : kMinHelixSegmentLength;
     const int segments =
@@ -95,9 +85,7 @@ QVector<Polyline> HelicalPathRounding::clipAtHighestIntersection(
     bool has_outside_points, const Point& center, Distance radius, Distance start_z, Distance bead_width,
     HelicalPathHandedness handedness, Angle start_angle, HelicalPathZClipRounding rounding,
     Distance min_path_segment_length) {
-    if (helix.size() < 2) {
-        return {};
-    }
+    if (helix.size() < 2) { return {}; }
 
     if (intersections.isEmpty()) {
         return has_inside_points && !has_outside_points ? QVector<Polyline> {helix} : QVector<Polyline>();
@@ -113,17 +101,15 @@ QVector<Polyline> HelicalPathRounding::clipAtHighestIntersection(
         return filteredResult(exactIntersectionPrefix(helix, *highest_intersection), min_path_segment_length);
     }
 
-    const double raw_revolutions = revolutionsAtZ(Distance(highest_intersection->point.z()), start_z, bead_width);
+    const double raw_revolutions     = revolutionsAtZ(Distance(highest_intersection->point.z()), start_z, bead_width);
     const double rounded_revolutions = rounding == HelicalPathZClipRounding::kCompleteRevolution
                                            ? std::ceil(raw_revolutions - kRevolutionTolerance)
                                            : std::floor(raw_revolutions + kRevolutionTolerance);
 
-    if (rounded_revolutions <= kRevolutionTolerance) {
-        return {};
-    }
+    if (rounded_revolutions <= kRevolutionTolerance) { return {}; }
 
     return filteredResult(
         createHelixForRevolutions(center, radius, start_z, bead_width, handedness, start_angle, rounded_revolutions),
         min_path_segment_length);
 }
-} // namespace ORNL
+}  // namespace ORNL

@@ -106,13 +106,15 @@ QString formatDistance(Distance value, Distance unit) {
 }
 
 //! @brief Formats an angle using the output unit declared by the active gcode metadata.
-QString formatAngle(Angle value, Angle unit) { return QString::number(value.to(unit), 'f', 4) % unit.toString(); }
+QString formatAngle(Angle value, Angle unit) {
+    return QString::number(value.to(unit), 'f', 4) % unit.toString();
+}
 
 //! @brief Returns the display label for supported cylindrical path order choices.
 QString cylindricalPathOrderText(PathOrderOptimization path_order) {
     return path_order == PathOrderOptimization::kNextFarthest ? "Next Farthest" : "Next Closest";
 }
-} // namespace
+}  // namespace
 
 ArcSpecialtiesWriter::ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
     : WriterBase(meta, sb) {}
@@ -145,8 +147,9 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         text += commentLine("Cylindrical Path Order Optimization: " %
                             cylindricalPathOrderText(static_cast<PathOrderOptimization>(
                                 m_sb->setting<int>(PS::Optimizations::kCylindricalPathOrder))));
-        text += commentLine("Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
-                            "offset");
+        text += commentLine(
+            "Motion Coordinates: X/Y/Z are user-frame endpoint coordinates relative to the active work "
+            "offset");
         text += commentLine(
             "G-Code Coordinate Frame Rotation: X=" %
             formatAngle(m_sb->setting<Angle>(PRS::MachineSetup::kGCodeCoordinateFrameRotationX), m_meta.m_angle_unit) %

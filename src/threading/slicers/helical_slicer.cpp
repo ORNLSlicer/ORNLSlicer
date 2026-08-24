@@ -70,7 +70,7 @@ struct HelicalCrossSection {
 struct HelixClipResult {
     QVector<Polyline> fragments;
     QVector<HelicalPathBoundaryIntersection> intersections;
-    bool has_inside_points = false;
+    bool has_inside_points  = false;
     bool has_outside_points = false;
 };
 
@@ -309,7 +309,7 @@ void HelicalSlicer::doSlice() {
 void HelicalSlicer::preProcess(nlohmann::json opt_data) {
     m_helical_layers.clear();
     m_has_generated_path_max_z = false;
-    m_generated_path_max_z = 0;
+    m_generated_path_max_z     = 0;
     this->setMaxSteps(0);
 
     QSharedPointer<SettingsBase> global_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
@@ -494,7 +494,7 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
                         for (const Point& point : path_line) {
                             const Distance point_z(point.z());
                             if (!m_has_generated_path_max_z || point_z > m_generated_path_max_z) {
-                                m_generated_path_max_z = point_z;
+                                m_generated_path_max_z     = point_z;
                                 m_has_generated_path_max_z = true;
                             }
                         }
@@ -627,9 +627,7 @@ double HelicalSlicer::maxRadiusForMeshes(const QVector<QSharedPointer<MeshBase>>
 
 Polyline HelicalSlicer::createHelix(const Point& center, Distance radius, Distance start_z, Distance top_z,
                                     Distance bead_width, HelicalPathHandedness handedness, Angle start_angle) {
-    if (top_z <= start_z || bead_width <= 0) {
-        return {};
-    }
+    if (top_z <= start_z || bead_width <= 0) { return {}; }
 
     return HelicalPathRounding::createHelixForRevolutions(center, radius, start_z, bead_width, handedness, start_angle,
                                                           (top_z() - start_z()) / bead_width());
