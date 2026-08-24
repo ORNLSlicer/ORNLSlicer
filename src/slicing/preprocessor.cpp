@@ -11,7 +11,6 @@
 #include "part/part.h"
 #include "slicing/buffered_slicer.h"
 #include "slicing/slicing_utilities.h"
-#include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -30,9 +29,9 @@ Preprocessor::Preprocessor(bool use_cgal_cross_section, bool include_build_plate
 void Preprocessor::processAll() {
     QSharedPointer<SettingsBase> global_sb = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
 
-    if (m_initial_processing != nullptr)
-        if (m_initial_processing(m_parts, global_sb)) return;  // halt slicing
-
+    if (m_initial_processing != nullptr) {
+        if (m_initial_processing(m_parts, global_sb)) { return; }  // halt slicing
+    }
     int total_num_parts = m_parts.build_parts.size();
     int parts_done      = 0;
     for (const QSharedPointer<Part>& part : m_parts.build_parts) {
@@ -42,9 +41,9 @@ void Preprocessor::processAll() {
 
         ActivePartMeta part_meta(part, part_sb);
 
-        if (m_part_processing != nullptr)
-            if (m_part_processing(part, part_sb)) return;  // halt slicing
-
+        if (m_part_processing != nullptr) {
+            if (m_part_processing(part, part_sb)) { return; }  // halt slicing
+        }
         part_meta.steps_processed = part->countStepPairs();
         part_meta.part_start      = SlicingUtilities::GetPartStart(part, part_meta.steps_processed);
 
@@ -52,13 +51,12 @@ void Preprocessor::processAll() {
             QSharedPointer<MeshBase> mesh;
             // Make a new copy of the mesh to prevent the original one from being contaminated
             auto closed_mesh = dynamic_cast<ClosedMesh*>(original_mesh.get());
-            if (closed_mesh != nullptr)
-                mesh = QSharedPointer<ClosedMesh>::create(ClosedMesh(*closed_mesh));
-            else
-                mesh = QSharedPointer<OpenMesh>::create(OpenMesh(*dynamic_cast<OpenMesh*>(original_mesh.get())));
+            if (closed_mesh != nullptr) { mesh = QSharedPointer<ClosedMesh>::create(ClosedMesh(*closed_mesh)); }
+            else { mesh = QSharedPointer<OpenMesh>::create(OpenMesh(*dynamic_cast<OpenMesh*>(original_mesh.get()))); }
 
-            if (m_mesh_processing != nullptr)
-                if (m_mesh_processing(mesh, part_sb)) return;  // halt slicing
+            if (m_mesh_processing != nullptr) {
+                if (m_mesh_processing(mesh, part_sb)) { return; }  // halt slicing
+            }
 
             part_meta.steps_processed = part->countStepPairs();
             part_meta.part_start      = SlicingUtilities::GetPartStart(part, part_meta.steps_processed);
@@ -70,27 +68,29 @@ void Preprocessor::processAll() {
             do {
                 next_layer_meta = slicer.processNextSlice();
 
-                if (next_layer_meta == nullptr) break;
+                if (next_layer_meta == nullptr) { break; }
 
                 // Build steps using slicing info
-                if (m_step_builder != nullptr)
-                    if (m_step_builder(next_layer_meta, part_meta)) return;  // halt slicing
-
+                if (m_step_builder != nullptr) {
+                    if (m_step_builder(next_layer_meta, part_meta)) { return; }  // halt slicing
+                }
                 last_step_count = next_layer_meta->number;
             } while (next_layer_meta != nullptr);
 
             part_meta.last_step_count = last_step_count;
 
-            if (m_cross_section_processing != nullptr)
-                if (m_cross_section_processing(part_meta)) return;  // halt slicing
+            if (m_cross_section_processing != nullptr) {
+                if (m_cross_section_processing(part_meta)) { return; }  // halt slicing
+            }
         }
 
         ++parts_done;
-        if (m_status_update != nullptr) m_status_update((double)parts_done / (double)total_num_parts * 100);
+        if (m_status_update != nullptr) { m_status_update((double)parts_done / (double)total_num_parts * 100); }
     }
 
-    if (m_final_processing != nullptr)
-        if (m_final_processing(m_parts, global_sb)) return;  // halt slicing
+    if (m_final_processing != nullptr) {
+        if (m_final_processing(m_parts, global_sb)) { return; }  // halt slicing
+    }
 }
 
 void Preprocessor::addInitialProcessing(Processing processing) {
