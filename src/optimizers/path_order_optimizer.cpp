@@ -292,9 +292,8 @@ Path PathOrderOptimizer::linkNextRadialPath() {
     if (m_paths.isEmpty()) { return new_path; }
 
     RadialPathSelection location = radialPathSelection();
-    int index = location.path_index;
-    if (index < 0 || index >= m_paths.size())
-        return new_path;
+    int index                    = location.path_index;
+    if (index < 0 || index >= m_paths.size()) return new_path;
 
     new_path = m_paths[index];
     new_path.setCCW(m_paths[index].getCCW());
@@ -315,9 +314,7 @@ Path PathOrderOptimizer::linkNextRadialPath() {
     new_path.append(travel_segment);
 
     if (location.start_from_front) {
-        for (QSharedPointer<SegmentBase> seg : m_paths[index]) {
-            new_path.append(seg);
-        }
+        for (QSharedPointer<SegmentBase> seg : m_paths[index]) { new_path.append(seg); }
     }
     else {
         QList<QSharedPointer<SegmentBase>> segments = m_paths[index].getSegments();
@@ -336,14 +333,11 @@ Path PathOrderOptimizer::linkNextRadialPath() {
 
 Path PathOrderOptimizer::linkNextHelicalPath() {
     Path new_path;
-    if (m_paths.isEmpty()) {
-        return new_path;
-    }
+    if (m_paths.isEmpty()) { return new_path; }
 
     OpenPathSelection location = helicalOpenPath();
-    const int index = location.path_index;
-    if (index < 0 || index >= m_paths.size())
-        return new_path;
+    const int index            = location.path_index;
+    if (index < 0 || index >= m_paths.size()) return new_path;
 
     new_path.setCCW(m_paths[index].getCCW());
 
@@ -354,9 +348,7 @@ Path PathOrderOptimizer::linkNextHelicalPath() {
     new_path.append(travel_segment);
 
     if (location.start_from_front) {
-        for (QSharedPointer<SegmentBase> seg : m_paths[index]) {
-            new_path.append(seg);
-        }
+        for (QSharedPointer<SegmentBase> seg : m_paths[index]) { new_path.append(seg); }
     }
     else {
         QList<QSharedPointer<SegmentBase>> segments = m_paths[index].getSegments();
@@ -375,29 +367,26 @@ Path PathOrderOptimizer::linkNextHelicalPath() {
 
 PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection() {
     RadialPathSelection selection;
-    if (m_paths.isEmpty())
-        return selection;
+    if (m_paths.isEmpty()) return selection;
 
     PathOrderOptimization path_order = cylindricalPathOrderOptimization();
-    Point query_point = radialPathQueryPoint(path_order);
-    const bool find_farthest = path_order == PathOrderOptimization::kNextFarthest;
+    Point query_point                = radialPathQueryPoint(path_order);
+    const bool find_farthest         = path_order == PathOrderOptimization::kNextFarthest;
 
     double selected_distance = 0.0;
     for (int i = 0, end = m_paths.size(); i < end; ++i) {
         if (m_paths[i].isClosed()) {
             for (int j = 0, segment_count = m_paths[i].size(); j < segment_count; ++j) {
                 QSharedPointer<SegmentBase> segment = m_paths[i][j];
-                if (segment.isNull()) {
-                    continue;
-                }
+                if (segment.isNull()) { continue; }
 
                 const double distance = query_point.distance(segment->start())();
                 if (selection.path_index < 0 || (find_farthest && distance > selected_distance) ||
                     (!find_farthest && distance < selected_distance)) {
-                    selected_distance = distance;
-                    selection.path_index = i;
-                    selection.segment_index = j;
-                    selection.start_from_front = true;
+                    selected_distance           = distance;
+                    selection.path_index        = i;
+                    selection.segment_index     = j;
+                    selection.start_from_front  = true;
                     selection.rotate_to_segment = true;
                 }
             }
@@ -406,18 +395,16 @@ PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection(
             const double distance = nearestOpenEndpointDistance(query_point, m_paths[i])();
             if (selection.path_index < 0 || (find_farthest && distance > selected_distance) ||
                 (!find_farthest && distance < selected_distance)) {
-                selected_distance = distance;
-                selection.path_index = i;
-                selection.segment_index = 0;
-                selection.start_from_front = true;
+                selected_distance           = distance;
+                selection.path_index        = i;
+                selection.segment_index     = 0;
+                selection.start_from_front  = true;
                 selection.rotate_to_segment = false;
             }
         }
     }
 
-    if (selection.path_index < 0 || selection.rotate_to_segment) {
-        return selection;
-    }
+    if (selection.path_index < 0 || selection.rotate_to_segment) { return selection; }
 
     PointOrderOptimization point_order =
         static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
@@ -433,28 +420,27 @@ PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection(
 
 PathOrderOptimizer::OpenPathSelection PathOrderOptimizer::helicalOpenPath() const {
     OpenPathSelection selection;
-    if (m_paths.isEmpty())
-        return selection;
+    if (m_paths.isEmpty()) return selection;
 
     const PathOrderOptimization path_order = cylindricalPathOrderOptimization();
-    const Point query_point = m_current_location;
-    const bool find_farthest = path_order == PathOrderOptimization::kNextFarthest;
+    const Point query_point                = m_current_location;
+    const bool find_farthest               = path_order == PathOrderOptimization::kNextFarthest;
 
     double selected_distance = 0.0;
     for (int i = 0, end = m_paths.size(); i < end; ++i) {
         const double start_distance = query_point.distance(m_paths[i].front()->start())();
         if (selection.path_index < 0 || (find_farthest && start_distance > selected_distance) ||
             (!find_farthest && start_distance < selected_distance)) {
-            selected_distance = start_distance;
-            selection.path_index = i;
+            selected_distance          = start_distance;
+            selection.path_index       = i;
             selection.start_from_front = true;
         }
 
         const double end_distance = query_point.distance(m_paths[i].back()->end())();
         if ((find_farthest && end_distance > selected_distance) ||
             (!find_farthest && end_distance < selected_distance)) {
-            selected_distance = end_distance;
-            selection.path_index = i;
+            selected_distance          = end_distance;
+            selection.path_index       = i;
             selection.start_from_front = false;
         }
     }

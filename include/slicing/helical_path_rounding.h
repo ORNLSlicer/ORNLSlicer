@@ -23,5 +23,5 @@ QVector<Polyline> clipAtHighestIntersection(const Polyline& helix,
                                             Distance radius, Distance start_z, Distance bead_width,
                                             HelicalPathHandedness handedness, Angle start_angle,
                                             HelicalPathZClipRounding rounding, Distance min_path_segment_length);
-} // namespace HelicalPathRounding
-} // namespace ORNL
+}  // namespace HelicalPathRounding
+}  // namespace ORNL

@@ -104,15 +104,15 @@ class PathOrderOptimizer {
 
     //! \brief Selected radial path and entry point.
     struct RadialPathSelection {
-        int path_index = -1;
-        int segment_index = 0;
-        bool start_from_front = true;
+        int path_index         = -1;
+        int segment_index      = 0;
+        bool start_from_front  = true;
         bool rotate_to_segment = false;
     };
 
     //! \brief Selected open path endpoint.
     struct OpenPathSelection {
-        int path_index = -1;
+        int path_index        = -1;
         bool start_from_front = true;
     };
 
