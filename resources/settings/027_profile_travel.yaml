@@ -13,6 +13,18 @@ settings:
     namespace: "Profile::Travel"
     symbol: "kTravelSpeed"
     local: true
+  - name: "disable_travel_feedrate_scaling"
+    display: "Disable Feedrate Scaling for Travel"
+    type: "boolean"
+    tooltip: "If selected, minimum layer time feedrate adjustments will not change travel move speeds."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
+    options: []
+    default: false
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Travel"
+    symbol: "kDisableTravelFeedrateScaling"
+    local: false
   - name: "minimum_infill_travel_length"
     display: "Minimum Infill Travel Length"
     type: "distance"

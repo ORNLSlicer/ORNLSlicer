@@ -43,7 +43,8 @@ double parseFooterSettingValue(const QString& value) {
 
 bool isDisableFeedrateScalingSetting(const QString& key) {
     return key == MS::Startup::kDisableFeedrateScaling || key == MS::Slowdown::kDisableFeedrateScaling ||
-           key == MS::TipWipe::kDisableFeedrateScaling || key == MS::SpiralLift::kDisableFeedrateScaling;
+           key == MS::TipWipe::kDisableFeedrateScaling || key == MS::SpiralLift::kDisableFeedrateScaling ||
+           key == PS::Travel::kDisableFeedrateScaling;
 }
 
 double positiveSweep(double sweep) {
@@ -350,8 +351,13 @@ bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command
         return true;
     }
 
-    return fileBoolSetting(MS::SpiralLift::kDisableFeedrateScaling) &&
-           comment.contains(Constants::PathModifierStrings::kSpiralLift);
+    if (fileBoolSetting(MS::SpiralLift::kDisableFeedrateScaling) &&
+        comment.contains(Constants::PathModifierStrings::kSpiralLift)) {
+        return true;
+    }
+
+    return fileBoolSetting(PS::Travel::kDisableFeedrateScaling) &&
+           comment.contains(Constants::RegionTypeStrings::kTravel);
 }
 
 bool CommonParser::currentMotionDepositsMaterial() const {

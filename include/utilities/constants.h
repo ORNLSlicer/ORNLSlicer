@@ -776,6 +776,7 @@ class Constants {
             static const QString kEnableTravelPause;
             static const QString kEnableTravelCentroidMove;
             static const QString kTravelPauseDuration;
+            static const QString kDisableFeedrateScaling;
         };
 
         class GCode {
