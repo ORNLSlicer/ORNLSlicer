@@ -3,7 +3,6 @@
 #include <QTextStream>
 #include <algorithm>
 #include <cmath>
-#include <limits>
 
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
@@ -30,7 +29,7 @@
 #include "managers/settings/settings_manager.h"
 #include "part/part.h"
 #include "slicing/slicing_utilities.h"
-#include "step/layer/radial_layer.h"
+#include "step/layer/cylindrical_layer.h"
 #include "threading/traditional_ast.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -304,8 +303,8 @@ void RadialSlicer::preProcess(nlohmann::json opt_data) {
             QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
             layer_settings->makeLocalAdjustments(radial_layer_number);
 
-            QSharedPointer<RadialLayer> radial_layer =
-                QSharedPointer<RadialLayer>::create(radial_layer_number + 1, layer_settings);
+            QSharedPointer<CylindricalLayer> radial_layer = QSharedPointer<CylindricalLayer>::create(
+                radial_layer_number + 1, layer_settings, CylindricalPathPattern::kRadial);
 
             for (RadialCrossSection& section : cross_sections) {
                 Polyline circle = createCircle(center, radius, section.z, bead_width,
@@ -375,7 +374,7 @@ void RadialSlicer::writeGCode() {
 
     const double num_layers = std::max(1.0, static_cast<double>(m_radial_layers.size()));
     int layer_number        = 0;
-    for (const QSharedPointer<RadialLayer>& layer : m_radial_layers) {
+    for (const QSharedPointer<CylindricalLayer>& layer : m_radial_layers) {
         stream << m_base->writeLayerChange(layer_number);
         stream << m_base->writeBeforeLayer(layer->getMinZ(), layer->getSb());
         stream << layer->writeGCode(m_base);

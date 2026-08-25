@@ -11,8 +11,8 @@
 #include "units/unit.h"
 
 namespace ORNL {
+class CylindricalLayer;
 class Part;
-class RadialLayer;
 class SettingsBase;
 
 /*!
@@ -28,8 +28,8 @@ class SettingsBase;
  * are spaced by the full bead width, and whose upper limit is the retained mesh's
  * maximum Z.
  *
- * This slicer builds paths directly and stores them in RadialLayer instances;
- * it intentionally bypasses polymer perimeter/infill/skin/support processing.
+ * This slicer stores generated paths in CylindricalLayer and bypasses the normal
+ * polymer region stack.
  */
 class RadialSlicer : public TraditionalAST {
    public:
@@ -124,7 +124,7 @@ class RadialSlicer : public TraditionalAST {
     Path createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings, const Point& center,
                     Distance radius, Point& current_location);
 
-    //! @brief Ordered radial layers generated during radial path computation.
-    QList<QSharedPointer<RadialLayer>> m_radial_layers;
+    //! @brief Ordered cylindrical layers generated during radial path computation.
+    QList<QSharedPointer<CylindricalLayer>> m_radial_layers;
 };
 }  // namespace ORNL

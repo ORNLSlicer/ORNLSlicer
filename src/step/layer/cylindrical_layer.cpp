@@ -1,4 +1,4 @@
-#include "step/layer/helical_layer.h"
+#include "step/layer/cylindrical_layer.h"
 
 #include <algorithm>
 #include <limits>
@@ -19,13 +19,7 @@
 
 namespace ORNL {
 namespace {
-//! @brief Segment setting key used by the radial writer to recover the cylinder center X.
-const QString kRadialCenterX = "radial_center_x";
-
-//! @brief Segment setting key used by the radial writer to recover the cylinder center Y.
-const QString kRadialCenterY = "radial_center_y";
-
-//! @brief Returns the first printable helical segment in a path, or nullptr when the path only contains travels.
+//! @brief Returns the first printable cylindrical segment in a path, or nullptr when the path only contains travels.
 QSharedPointer<SegmentBase> firstPrintSegment(const Path& path) {
     for (const QSharedPointer<SegmentBase>& segment : path) {
         if (dynamic_cast<TravelSegment*>(segment.data()) == nullptr) { return segment; }
@@ -42,8 +36,8 @@ QSharedPointer<SettingsBase> firstPrintSettings(const Path& path, const QSharedP
     return fallback;
 }
 
-//! @brief Restores helical print metadata and gives optimizer-created travels center settings.
-void restoreHelicalPathSettings(Path& path, const QSharedPointer<SettingsBase>& layer_settings) {
+//! @brief Restores cylindrical print metadata and gives optimizer-created travels center settings.
+void restoreCylindricalPathSettings(Path& path, const QSharedPointer<SettingsBase>& layer_settings) {
     QSharedPointer<SettingsBase> print_settings = firstPrintSettings(path, layer_settings);
 
     for (const QSharedPointer<SegmentBase>& segment : path) {
@@ -59,13 +53,15 @@ void restoreHelicalPathSettings(Path& path, const QSharedPointer<SettingsBase>& 
 }
 }  // namespace
 
-HelicalLayer::HelicalLayer(uint layer_nr, const QSharedPointer<SettingsBase>& sb) : Layer(layer_nr, sb) {}
+CylindricalLayer::CylindricalLayer(uint layer_nr, const QSharedPointer<SettingsBase>& sb,
+                                   CylindricalPathPattern path_pattern)
+    : Layer(layer_nr, sb), m_path_pattern(path_pattern) {}
 
-void HelicalLayer::addPath(const Path& path) {
+void CylindricalLayer::addPath(const Path& path) {
     if (path.size() > 0) { m_paths.push_back(path); }
 }
 
-QString HelicalLayer::writeGCode(QSharedPointer<WriterBase> writer) {
+QString CylindricalLayer::writeGCode(QSharedPointer<WriterBase> writer) {
     if (m_paths.isEmpty()) { return writer->writeEmptyStep(); }
 
     QString gcode;
@@ -82,11 +78,11 @@ QString HelicalLayer::writeGCode(QSharedPointer<WriterBase> writer) {
     return gcode;
 }
 
-void HelicalLayer::compute() {
-    // Paths are generated up front by HelicalSlicer.
+void CylindricalLayer::compute() {
+    // Paths are generated up front by the cylindrical slicers.
 }
 
-void HelicalLayer::calculateModifiers(Point& currentLocation) {
+void CylindricalLayer::calculateModifiers(Point& currentLocation) {
     QVector<Path> print_paths;
     print_paths.reserve(m_paths.size());
     for (Path path : m_paths) {
@@ -103,10 +99,12 @@ void HelicalLayer::calculateModifiers(Point& currentLocation) {
     ordered_paths.reserve(print_paths.size());
     PathOrderOptimizer path_optimizer(currentLocation, getLayerNumber(), m_sb);
     path_optimizer.setPathsToEvaluate(print_paths);
+
     while (path_optimizer.getCurrentPathCount() > 0) {
-        Path next_path = path_optimizer.linkNextHelicalPath();
+        Path next_path = m_path_pattern == CylindricalPathPattern::kHelical ? path_optimizer.linkNextHelicalPath()
+                                                                            : path_optimizer.linkNextRadialPath();
         if (next_path.size() > 0) {
-            restoreHelicalPathSettings(next_path, m_sb);
+            restoreCylindricalPathSettings(next_path, m_sb);
             ordered_paths.push_back(next_path);
         }
     }
@@ -114,13 +112,13 @@ void HelicalLayer::calculateModifiers(Point& currentLocation) {
     m_paths = ordered_paths;
 }
 
-Point HelicalLayer::getStartLocation() const {
+Point CylindricalLayer::getStartLocation() const {
     if (m_paths.isEmpty() || m_paths.first().size() == 0) { return Point(0, 0, 0); }
 
     return m_paths.first().front()->start();
 }
 
-float HelicalLayer::getMinZ() {
+float CylindricalLayer::getMinZ() {
     float min_z = std::numeric_limits<float>::max();
     for (const Path& path : m_paths) {
         for (const QSharedPointer<SegmentBase>& segment : path) { min_z = std::min(min_z, segment->getMinZ()); }
@@ -129,13 +127,13 @@ float HelicalLayer::getMinZ() {
     return min_z == std::numeric_limits<float>::max() ? 0.0f : min_z;
 }
 
-Point HelicalLayer::getEndLocation() {
+Point CylindricalLayer::getEndLocation() {
     if (m_paths.isEmpty() || m_paths.last().size() == 0) { return Point(0, 0, 0); }
 
     return m_paths.last().back()->end();
 }
 
-bool HelicalLayer::hasPaths() const {
+bool CylindricalLayer::hasPaths() const {
     return !m_paths.isEmpty();
 }
 }  // namespace ORNL
