@@ -718,6 +718,7 @@ const QString Constants::ProfileSettings::Travel::kFinalLiftDistance        = "f
 const QString Constants::ProfileSettings::Travel::kEnableTravelPause        = "enable_travel_pause";
 const QString Constants::ProfileSettings::Travel::kEnableTravelCentroidMove = "travel_centroid_move";
 const QString Constants::ProfileSettings::Travel::kTravelPauseDuration      = "travel_pause_duration";
+const QString Constants::ProfileSettings::Travel::kDisableFeedrateScaling   = "disable_travel_feedrate_scaling";
 
 // G-Code
 const QString Constants::ProfileSettings::GCode::kPerimeterStart = "perimeter_start_code";
@@ -1212,6 +1213,8 @@ const QHash<QString, QString> Constants::GcodeFileVariables::kNecessaryVariables
      Constants::MaterialSettings::TipWipe::kDisableFeedrateScaling},
     {Constants::MaterialSettings::SpiralLift::kDisableFeedrateScaling.toUpper(),
      Constants::MaterialSettings::SpiralLift::kDisableFeedrateScaling},
+    {Constants::ProfileSettings::Travel::kDisableFeedrateScaling.toUpper(),
+     Constants::ProfileSettings::Travel::kDisableFeedrateScaling},
     {Constants::MaterialSettings::Density::kMaterialType.toUpper(),
      Constants::MaterialSettings::Density::kMaterialType},
     {Constants::MaterialSettings::Density::kDensity.toUpper(), Constants::MaterialSettings::Density::kDensity},
