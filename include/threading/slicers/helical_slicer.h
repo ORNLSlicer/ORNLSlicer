@@ -12,7 +12,7 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
-class HelicalLayer;
+class CylindricalLayer;
 class Part;
 class SettingsBase;
 
@@ -28,8 +28,8 @@ class SettingsBase;
  * initial radius.  The sampled helix is clipped against horizontal model cross
  * sections before being emitted as direct paths.
  *
- * This slicer builds paths directly and stores them in HelicalLayer instances;
- * it intentionally bypasses polymer perimeter/infill/skin/support processing.
+ * This slicer stores generated paths in CylindricalLayer and bypasses the normal
+ * polymer region stack.
  */
 class HelicalSlicer : public TraditionalAST {
    public:
@@ -128,8 +128,8 @@ class HelicalSlicer : public TraditionalAST {
     Path createPath(const Polyline& polyline, const QSharedPointer<SettingsBase>& layer_settings, const Point& center,
                     Distance radius, bool counterclockwise, Point& current_location);
 
-    //! @brief Ordered helical layers generated during helical path computation.
-    QList<QSharedPointer<HelicalLayer>> m_helical_layers;
+    //! @brief Ordered cylindrical layers generated during helical path computation.
+    QList<QSharedPointer<CylindricalLayer>> m_helical_layers;
 
     //! @brief Whether generated helical paths exceeded or confirmed the mesh-derived build maximum.
     bool m_has_generated_path_max_z = false;

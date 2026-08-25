@@ -14,8 +14,8 @@
 #include "optimizers/island_order_optimizer.h"
 #include "optimizers/path_order_optimizer.h"
 #include "optimizers/polyline_order_optimizer.h"
+#include "step/layer/cylindrical_layer.h"
 #include "step/layer/island/island_base.h"
-#include "step/layer/radial_layer.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
@@ -206,7 +206,7 @@ int main() {
 
     QSharedPointer<ORNL::SettingsBase> radial_layer_settings =
         cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest);
-    ORNL::RadialLayer radial_layer(0, radial_layer_settings);
+    ORNL::CylindricalLayer radial_layer(0, radial_layer_settings, ORNL::CylindricalPathPattern::kRadial);
     radial_layer.addPath(pathFromPoints({ORNL::Point(100.0f, 0.0f, 0.0f), ORNL::Point(110.0f, 0.0f, 0.0f),
                                          ORNL::Point(110.0f, 10.0f, 0.0f), ORNL::Point(100.0f, 10.0f, 0.0f),
                                          ORNL::Point(100.0f, 0.0f, 0.0f)}));

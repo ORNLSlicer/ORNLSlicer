@@ -4,7 +4,6 @@
 #include <QTextStream>
 #include <algorithm>
 #include <cmath>
-#include <limits>
 
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
@@ -32,7 +31,7 @@
 #include "part/part.h"
 #include "slicing/helical_path_rounding.h"
 #include "slicing/slicing_utilities.h"
-#include "step/layer/helical_layer.h"
+#include "step/layer/cylindrical_layer.h"
 #include "threading/traditional_ast.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -464,8 +463,8 @@ void HelicalSlicer::preProcess(nlohmann::json opt_data) {
             QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
             layer_settings->makeLocalAdjustments(helical_layer_number);
 
-            QSharedPointer<HelicalLayer> helical_layer =
-                QSharedPointer<HelicalLayer>::create(helical_layer_number + 1, layer_settings);
+            QSharedPointer<CylindricalLayer> helical_layer = QSharedPointer<CylindricalLayer>::create(
+                helical_layer_number + 1, layer_settings, CylindricalPathPattern::kHelical);
 
             const Angle helical_start_angle = layer_settings->setting<Angle>(PS::Slicing::kHelicalPathStartAngle);
             Polyline helix =
@@ -568,7 +567,7 @@ void HelicalSlicer::writeGCode() {
 
     const double num_layers = std::max(1.0, static_cast<double>(m_helical_layers.size()));
     int layer_number        = 0;
-    for (const QSharedPointer<HelicalLayer>& layer : m_helical_layers) {
+    for (const QSharedPointer<CylindricalLayer>& layer : m_helical_layers) {
         stream << m_base->writeLayerChange(layer_number);
         stream << m_base->writeBeforeLayer(layer->getMinZ(), layer->getSb());
         stream << layer->writeGCode(m_base);
