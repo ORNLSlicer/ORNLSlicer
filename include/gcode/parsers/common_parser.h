@@ -211,6 +211,9 @@ class CommonParser : public ParserBase {
     //! \return travel time in gcode file
     Time getTravelTime();
 
+    //! \brief Returns the estimated total travel time after feedrate adjustment.
+    Time getAdjustedTravelTime();
+
     //! \brief Returns whether or not any lines were altered to enforce minimum layer times or expand/contract
     bool getWasModified();
 
@@ -531,6 +534,11 @@ class CommonParser : public ParserBase {
 
     //! \brief Reads a numeric F token from a command before its comment.
     bool commandFeedrate(const QString& line, double& feedrate);
+
+    //! \brief Returns the time delta caused by feedrate adjustment for a parsed motion command.
+    Time adjustedFeedrateTimeDeltaForCommand(const GcodeCommand& command,
+                                             QMap<int, double>::const_iterator& explicit_feedrate,
+                                             bool& emitted_feedrate_set, double& emitted_feedrate);
 
     //! \brief Inserts feedrates where scaled and protected modal spans meet.
     void materializeFeedrateTransitions(double modifier);

@@ -5,6 +5,7 @@
 #include <QFileInfo>
 #include <QStringBuilder>
 #include <QTextStream>
+#include <algorithm>
 #include <cmath>
 #include <limits>
 #include <optional>
@@ -323,6 +324,11 @@ void GCodeLoader::run() {
                 (m_parser->getPrintingDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
             double travelDistanceValue =
                 (m_parser->getTravelDistance() / PreferencesManager::getInstance()->getDistanceUnit())();
+            const bool has_adjusted_feedrates =
+                std::any_of(layer_FR_modifiers.cbegin(), layer_FR_modifiers.cend(),
+                            [](double modifier) { return modifier > 0 && modifier != 1.0; });
+            const Time travel_time_estimate =
+                has_adjusted_feedrates ? m_parser->getAdjustedTravelTime() : m_parser->getTravelTime();
             double massValue = (total_mass / PreferencesManager::getInstance()->getMassUnit())();
             keyInfo = keyInfo % "Volume: " % QString::number(volumeValue) % " " %
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" % "Printing Distance: " %
@@ -330,8 +336,8 @@ void GCodeLoader::run() {
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Travel Distance: " %
                       QString::number(travelDistanceValue) % " " %
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
-                      "Total Travel Time Estimate: " % MathUtils::formattedTimeSpan(m_parser->getTravelTime()()) %
-                      "\n" % "Total Distance: " % QString::number(distanceValue) % " " %
+                      "Total Travel Time Estimate: " % MathUtils::formattedTimeSpan(travel_time_estimate()) % "\n" %
+                      "Total Distance: " % QString::number(distanceValue) % " " %
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Approximate Weight (" %
                       toString(m_material) % "): " % QString::number(massValue) % " " %
                       PreferencesManager::getInstance()->getMassUnit().toString() % "\n";
