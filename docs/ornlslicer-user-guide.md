@@ -1625,7 +1625,7 @@ operate on text; otherwise they operate on selected parts where supported.
 <!-- BEGIN GENERATED SETTINGS REFERENCE -->
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 542 scalar manufacturing settings exposed by the canonical catalog. The 5 grouped controls combine related scalar values, producing 535 visible setting rows across 37 categories.
+This generated appendix documents all 544 scalar manufacturing settings exposed by the canonical catalog. The 5 grouped controls combine related scalar values, producing 537 visible setting rows across 37 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1674,7 +1674,7 @@ The catalog is organized as follows:
 | [Material](#e3-material-settings) | [Cooling](#settings-material-cooling) | 10 |
 | [Material](#e3-material-settings) | [Platform Adhesion](#settings-material-platform-adhesion) | 14 |
 | [Material](#e3-material-settings) | [Multi-Material](#settings-material-multi-material) | 11 |
-| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 19 |
+| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 20 |
 | [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 6 |
 | [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 20 |
 | [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 13 |
@@ -1685,7 +1685,7 @@ The catalog is organized as follows:
 | [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 9 |
 | [Profile](#e4-profile-settings) | [G-Code](#settings-profile-g-code) | 12 |
 | [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 16 |
-| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 33 |
+| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 34 |
 | [Profile](#e4-profile-settings) | [Ordering](#settings-profile-ordering) | 3 |
 | [Profile](#e4-profile-settings) | [Laser Scanner](#settings-profile-laser-scanner) | 23 |
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
@@ -5408,6 +5408,25 @@ the model. Clip Z keeps the continuous helix through the highest Z intersection.
   - `Clip`
   - `Clip Z`
 
+<a id="setting-helical_path_z_clip_rounding"></a>
+
+##### Helical Z Clip Rounding (`helical_path_z_clip_rounding`)
+
+Controls how Clip Z rounds the helical path endpoint at the highest model intersection. Exact
+Intersection stops at the intersection. Complete Revolution continues to the next full revolution.
+Last Full Revolution stops at the previous full revolution.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Exact Intersection`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** ((Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`) and
+  Helical Path Boundary Policy is `Clip Z`).
+- **Choices:**
+  - `Exact Intersection`
+  - `Complete Revolution`
+  - `Last Full Revolution`
+
 <a id="setting-helical_path_handedness"></a>
 
 ##### Helical Path Handedness (`helical_path_handedness`)
@@ -7788,6 +7807,21 @@ or a user-defined reference point.
   - `Outside In` — Traverses contour hierarchy from exterior paths toward interior paths.
   - `Inside Out` — Traverses contour hierarchy from interior paths toward exterior paths.
   - `Custom Location` — Uses the custom X/Y location as the reference for nearest-path selection.
+
+<a id="setting-cylindrical_path_order_optimization"></a>
+
+##### Cylindrical Path Order Optimization (`cylindrical_path_order_optimization`)
+
+Type of path order optimizer to use for radial and helical cylindrical slicing paths.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Next Closest`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Cylindrical`.
+- **Choices:**
+  - `Next Closest`
+  - `Next Farthest`
 
 <a id="setting-perimeter_path_order_optimization"></a>
 
