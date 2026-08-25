@@ -29,10 +29,9 @@
 #include "part/part.h"
 #include "threading/mesh_loader.h"
 #include "threading/session_loader.h"
-#include "threading/slicers/helical_slicer.h"
+#include "threading/slicers/cylindrical_slicer.h"
 #include "threading/slicers/image_slicer.h"
 #include "threading/slicers/planar_slicer.h"
-#include "threading/slicers/radial_slicer.h"
 #include "units/derivative_units.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -570,9 +569,6 @@ bool SessionManager::isBuildMode() {
 bool SessionManager::doSlice() {
     const GcodeSyntax syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
     const SlicingMode type   = static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode));
-    const CylindricalPathPattern path_pattern =
-        static_cast<CylindricalPathPattern>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathPattern));
-
     if (type == SlicingMode::kCylindrical && !supportsCylindricalSlicing(syntax)) {
         const QString message = "Cylindrical slicing requires Printer > Machine Setup > Syntax to be Arc Specialties.";
         qWarning() << message;
@@ -589,7 +585,7 @@ bool SessionManager::doSlice() {
         this->changeSlicer(type);
     else {
         // See if it has changed
-        if (m_slicing_mode != type || (type == SlicingMode::kCylindrical && m_cylindrical_path_pattern != path_pattern))
+        if (m_slicing_mode != type)
             this->changeSlicer(type);
         else
             m_ast->setGcodeOutput(tempGcodeFile);
@@ -652,9 +648,6 @@ qint64 SessionManager::getSliceTimeElapsed() {
 bool SessionManager::changeSlicer(SlicingMode type) {
     // Disconnect the signals from the AST.
     QObject::disconnect(this, &SessionManager::startSlice, nullptr, nullptr);
-    const CylindricalPathPattern path_pattern =
-        static_cast<CylindricalPathPattern>(GSM->getGlobal()->setting<int>(PS::Slicing::kCylindricalPathPattern));
-
     // Reset the AST with a new slicer.
     switch (type) {
         case SlicingMode::kPlanar:
@@ -664,8 +657,7 @@ bool SessionManager::changeSlicer(SlicingMode type) {
             m_ast.reset(new ImageSlicer(tempGcodeFile));
             break;
         case SlicingMode::kCylindrical:
-            if (path_pattern == CylindricalPathPattern::kHelical) { m_ast.reset(new HelicalSlicer(tempGcodeFile)); }
-            else { m_ast.reset(new RadialSlicer(tempGcodeFile)); }
+            m_ast.reset(new CylindricalSlicer(tempGcodeFile));
             break;
         default:
             qWarning() << "Unknown slicing mode requested. Falling back to Planar slicer.";
@@ -674,8 +666,7 @@ bool SessionManager::changeSlicer(SlicingMode type) {
             break;
     }
 
-    m_slicing_mode             = type;
-    m_cylindrical_path_pattern = type == SlicingMode::kCylindrical ? path_pattern : CylindricalPathPattern::kRadial;
+    m_slicing_mode = type;
 
     // Reset part steps
     for (QSharedPointer<Part> part : m_parts) { part->clearSteps(); }
