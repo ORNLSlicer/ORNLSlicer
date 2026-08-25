@@ -412,6 +412,44 @@ bool CommonParser::commandFeedrate(const QString& line, double& feedrate) {
     return converted;
 }
 
+Time CommonParser::adjustedFeedrateTimeDeltaForCommand(const GcodeCommand& command,
+                                                       QMap<int, double>::const_iterator& explicit_feedrate,
+                                                       bool& emitted_feedrate_set, double& emitted_feedrate) {
+    const int line_number = command.getLineNumber();
+    while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() < line_number) {
+        emitted_feedrate     = explicit_feedrate.value();
+        emitted_feedrate_set = true;
+        ++explicit_feedrate;
+    }
+
+    const double original_feedrate   = m_command_modal_feedrates.value(line_number, 0.0);
+    double explicit_command_feedrate = 0.0;
+    if (line_number >= 0 && line_number < m_lines.size() &&
+        commandFeedrate(m_lines[line_number], explicit_command_feedrate)) {
+        emitted_feedrate     = explicit_command_feedrate;
+        emitted_feedrate_set = true;
+    }
+    else if (command.getParameters().contains(m_f_parameter.toLatin1()) && original_feedrate > 0) {
+        // Macro feedrates such as F#981 cannot be read back numerically, but their authored value was
+        // resolved while parsing and remains unchanged unless setCommandFeedrate replaced the token.
+        emitted_feedrate     = original_feedrate;
+        emitted_feedrate_set = true;
+    }
+
+    Time delta;
+    const Time command_adjustable_time = m_command_G1F_times.value(line_number);
+    if (command_adjustable_time > 0 && original_feedrate > 0 && emitted_feedrate_set && emitted_feedrate > 0) {
+        const double effective_modifier = emitted_feedrate / original_feedrate;
+        delta                           = command_adjustable_time / effective_modifier - command_adjustable_time;
+    }
+
+    while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() == line_number) {
+        ++explicit_feedrate;
+    }
+
+    return delta;
+}
+
 void CommonParser::materializeFeedrateTransitions(double modifier) {
     bool emitted_feedrate_set = false;
     double emitted_feedrate   = 0.0;
@@ -955,36 +993,8 @@ QList<Time> CommonParser::getAdjustedLayerTimes() {
 
     for (int layer = 0; layer < m_motion_commands.size() && layer < adjusted_layer_times.size(); ++layer) {
         for (const GcodeCommand& command : m_motion_commands[layer]) {
-            const int line_number = command.getLineNumber();
-            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() < line_number) {
-                emitted_feedrate     = explicit_feedrate.value();
-                emitted_feedrate_set = true;
-                ++explicit_feedrate;
-            }
-
-            const double original_feedrate   = m_command_modal_feedrates.value(line_number, 0.0);
-            double explicit_command_feedrate = 0.0;
-            if (line_number >= 0 && line_number < m_lines.size() &&
-                commandFeedrate(m_lines[line_number], explicit_command_feedrate)) {
-                emitted_feedrate     = explicit_command_feedrate;
-                emitted_feedrate_set = true;
-            }
-            else if (command.getParameters().contains(m_f_parameter.toLatin1()) && original_feedrate > 0) {
-                // Macro feedrates such as F#981 cannot be read back numerically, but their authored value was
-                // resolved while parsing and remains unchanged unless setCommandFeedrate replaced the token.
-                emitted_feedrate     = original_feedrate;
-                emitted_feedrate_set = true;
-            }
-
-            const Time command_adjustable_time = m_command_G1F_times.value(line_number);
-            if (command_adjustable_time > 0 && original_feedrate > 0 && emitted_feedrate_set && emitted_feedrate > 0) {
-                const double effective_modifier = emitted_feedrate / original_feedrate;
-                adjusted_layer_times[layer] += command_adjustable_time / effective_modifier - command_adjustable_time;
-            }
-
-            while (explicit_feedrate != m_explicit_modal_feedrates.cend() && explicit_feedrate.key() == line_number) {
-                ++explicit_feedrate;
-            }
+            adjusted_layer_times[layer] +=
+                adjustedFeedrateTimeDeltaForCommand(command, explicit_feedrate, emitted_feedrate_set, emitted_feedrate);
         }
     }
 
@@ -1013,6 +1023,28 @@ Distance CommonParser::getTravelDistance() {
 
 Time CommonParser::getTravelTime() {
     return m_travel_time;
+}
+
+Time CommonParser::getAdjustedTravelTime() {
+    Time adjusted_travel_time = m_travel_time;
+
+    const bool has_adjusted_feedrates = std::any_of(m_layer_FR_modifiers.cbegin(), m_layer_FR_modifiers.cend(),
+                                                    [](double modifier) { return modifier > 0 && modifier != 1.0; });
+    if (!has_adjusted_feedrates) return adjusted_travel_time;
+
+    bool emitted_feedrate_set = false;
+    double emitted_feedrate   = 0.0;
+    auto explicit_feedrate    = m_explicit_modal_feedrates.cbegin();
+
+    for (const QList<GcodeCommand>& layer_commands : m_motion_commands) {
+        for (const GcodeCommand& command : layer_commands) {
+            const Time delta =
+                adjustedFeedrateTimeDeltaForCommand(command, explicit_feedrate, emitted_feedrate_set, emitted_feedrate);
+            if (!command.getDepositionActive()) { adjusted_travel_time += delta; }
+        }
+    }
+
+    return adjusted_travel_time;
 }
 
 bool CommonParser::getWasModified() {
