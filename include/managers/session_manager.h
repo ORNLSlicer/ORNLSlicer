@@ -332,9 +332,6 @@ class SessionManager : public QObject {
     //! \brief Default slicing mode is planar.
     SlicingMode m_slicing_mode = SlicingMode::kPlanar;
 
-    //! \brief Active cylindrical path pattern when cylindrical slicing is selected.
-    CylindricalPathPattern m_cylindrical_path_pattern = CylindricalPathPattern::kRadial;
-
     //! \brief Mutex to serialize final step of loading parts.  Map of parts
     //! must be accessed sequentially.
     QMutex m_load_mutex;
