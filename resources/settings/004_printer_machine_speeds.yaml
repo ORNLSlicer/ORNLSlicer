@@ -29,7 +29,7 @@ settings:
     display: "Minimum Extruder Speed"
     type: "rpm"
     tooltip: "Minimum speed of the extruder"
-    depends: {}
+    depends: {"NOT":[{"machine_type":6}]}
     options: []
     default: 0
     minor: "Machine Speeds"
@@ -41,7 +41,7 @@ settings:
     display: "Maximum Extruder Speed"
     type: "rpm"
     tooltip: "Maximum speed of the extruder"
-    depends: {}
+    depends: {"NOT":[{"machine_type":6}]}
     options: []
     default: 0
     minor: "Machine Speeds"
@@ -84,4 +84,28 @@ settings:
     major: "Printer"
     namespace: "Printer::MachineSpeeds"
     symbol: "kExtruderGearRatio"
+    local: false
+  - name: "meld_deposition_rate_scaling"
+    display: "Meld Deposition Rate Scaling"
+    type: "boolean"
+    tooltip: "If selected, Meld Friction Stir deposition values are scaled for small cylindrical layers using output deposition rate = commanded deposition rate * min(1, 2r/w), where r is layer radius and w is bead width."
+    depends: {"AND":[{"syntax":21},{"machine_type":6}]}
+    options: []
+    default: false
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMeldDepositionRateScaling"
+    local: false
+  - name: "meld_discrete_feed_commands"
+    display: "Enable Meld Discrete Feed Commands"
+    type: "boolean"
+    tooltip: "Uses discrete feed commands for g-code output"
+    depends: {"syntax":21}
+    options: []
+    default: false
+    minor: "Machine Speeds"
+    major: "Printer"
+    namespace: "Printer::MachineSpeeds"
+    symbol: "kMeldDiscrete"
     local: false

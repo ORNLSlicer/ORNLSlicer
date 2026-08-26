@@ -77,14 +77,38 @@ class MeldWriter : public WriterBase {
 
    private:
     //! \brief Writes G-Code to enable the extruder
-    QString writeExtruderOn(RegionType type, int rpm, const QSharedPointer<SettingsBase>& params = nullptr);
+    QString writeExtruderOn(RegionType type, double deposition_value, const QSharedPointer<SettingsBase>& params,
+                            const Point& start_point, const Point& target_point);
     //! \brief Writes G-Code to disable the extruder
     QString writeExtruderOff();
 
-    //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
-    QString writeCoordinates(Point destination);
+    //! \brief Writes G-Code to update the active deposition control value.
+    QString writeDepositionUpdate(double deposition_value, double output_value);
 
-    AngularVelocity m_current_rpm;
+    //! \brief Returns true when an active deposition update should be written as a discrete actuator command.
+    bool depositionUpdateUsesActuatorCommand() const;
+
+    //! \brief Returns the machine-specific value to write for deposition control.
+    double depositionOutputValue(double deposition_value, const QSharedPointer<SettingsBase>& params,
+                                 const Point& start_point, const Point& target_point) const;
+
+    //! \brief Returns true when a deposition output update should be emitted.
+    bool depositionOutputChanged(double deposition_value) const;
+
+    //! \brief Tracks the most recently emitted deposition control values.
+    void setCurrentDepositionValue(double commanded_value, double output_value);
+
+    //! \brief Writes gcode coordinates XY for a move or travel to the destination point
+    QString writeXYCoordinates(Point destination);
+
+    //! \brief Writes gcode coordinates WXYZ for a move or travel to the destination point
+    QString writeCoordinates(Point destination, bool force_z = false);
+
+    //! \brief Current commanded deposition value carried through path settings.
+    double m_current_deposition_commanded_value = 0.0;
+
+    //! \brief Current machine-specific deposition control value emitted to G-Code.
+    double m_current_deposition_output_value = 0.0;
 
     //! \brief true if first travel, false for subsequent travels
     bool m_first_travel;

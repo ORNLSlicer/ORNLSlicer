@@ -41,7 +41,7 @@ settings:
     display: "Purge During Dwell"
     type: "boolean"
     tooltip: "If selected, a purge command is issued during dwells forced by the minimum layer time cooling settings"
-    depends: {"AND":[{"slicing_mode":0},{"minimum_layer_time_method":0}]}
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"minimum_layer_time_method":0},{"NOT":[{"machine_type":6}]}]}]}
     options: []
     default: false
     minor: "Purge"

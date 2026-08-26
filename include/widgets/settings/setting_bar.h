@@ -198,6 +198,13 @@ class SettingBar : public QWidget {
     QStringList syncCylindricalSlicingSettings(const QString& setting_key);
 
     /*!
+     * \brief Selects the Friction Stir machine type when the Meld syntax is selected.
+     * \param setting_key Setting that triggered the sync check.
+     * \return Additional setting keys changed by the sync.
+     */
+    QStringList syncFrictionStirMachineTypeSettings(const QString& setting_key);
+
+    /*!
      * \brief Reloads the visible setting row for a programmatically updated setting.
      * \param setting_key Setting row key to reload.
      */

@@ -85,6 +85,7 @@ SettingTab::SettingTab(QWidget* parent, QString name, QIcon icon, int index, boo
                           {"string", &SettingLineEdit::createInstance},
                           {"multiline_text", &SettingPlainTextEdit::createInstance},
                           {"density", &SettingDoubleSpinBox::createInstance},
+                          {"deposition_rate", &SettingDoubleSpinBox::createInstance},
                           {"ang_vel", &SettingAngVelSpinBox::createInstance},
                           {"time", &SettingTimeSpinBox::createInstance},
                           {"percentage", &SettingDoubleSpinBox::createInstance},

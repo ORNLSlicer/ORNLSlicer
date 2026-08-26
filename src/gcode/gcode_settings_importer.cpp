@@ -12,6 +12,7 @@
 #include "managers/settings/settings_manager.h"
 #include "managers/settings/settings_version_control.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
 namespace {
@@ -198,6 +199,7 @@ bool validateDoubleRange(const QString& key, const QString& type, double value, 
     else if (type == "percentage") { maximum = 500.0; }
     else if (type == "percentage100") { maximum = 100.0; }
     else if (type == "rpm") { maximum = 9999.99; }
+    else if (type == "deposition_rate") { maximum = 10000.0; }
     else if (type == "density") { maximum = 9999.9999; }
     else if (type == "angle") {
         minimum = Constants::Limits::Minimums::kMinAngle();
@@ -215,9 +217,9 @@ bool validateDoubleRange(const QString& key, const QString& type, double value, 
 
 bool isDoubleType(const QString& type) {
     return type == "location" || type == "distance" || type == "unitless_float" || type == "voltage" ||
-           type == "speed" || type == "rpm" || type == "accel" || type == "density" || type == "ang_vel" ||
-           type == "time" || type == "percentage" || type == "percentage100" || type == "temperature" ||
-           type == "angle" || type == "area";
+           type == "speed" || type == "rpm" || type == "deposition_rate" || type == "accel" || type == "density" ||
+           type == "ang_vel" || type == "time" || type == "percentage" || type == "percentage100" ||
+           type == "temperature" || type == "angle" || type == "area";
 }
 
 double settingDouble(const fifojson& settings, const QString& key) {
@@ -249,6 +251,11 @@ int settingInt(const fifojson& settings, const QString& key) {
     if (integerValue(value.value(), result)) return result;
 
     return static_cast<int>(settingDouble(settings, key));
+}
+
+bool usesMeldVelocityDepositionRate(const fifojson& settings) {
+    return settingInt(settings, PRS::MachineSetup::kSyntax) == static_cast<int>(GcodeSyntax::kMeld) &&
+           settingInt(settings, PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
 }
 
 bool jsonValuesMatch(const fifojson& actual, const fifojson& expected) {
@@ -372,7 +379,9 @@ void validateActiveStaticSettings(const fifojson& settings, const fifojson& mast
 
         fifojson normalized;
         QString error;
-        if (!GcodeSettingsImporter::validateValue(key, item.value(), value.value(), normalized, error, true))
+        const bool enforce_ranges =
+            !(settingType(item.value()) == "deposition_rate" && usesMeldVelocityDepositionRate(settings));
+        if (!GcodeSettingsImporter::validateValue(key, item.value(), value.value(), normalized, error, enforce_ranges))
             errors.append(error);
     }
 }
@@ -393,8 +402,11 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
     const bool has_max_extruder_speed = max_extruder_speed > 0.0;
     const bool invalid_extruder_range =
         has_min_extruder_speed && has_max_extruder_speed && min_extruder_speed > max_extruder_speed;
+    const bool integer_deposition =
+        settingInt(settings, PRS::MachineSetup::kMachineType) == static_cast<int>(MachineType::kFrictionStir);
+    const bool meld_velocity_deposition = usesMeldVelocityDepositionRate(settings);
 
-    if (invalid_extruder_range) {
+    if (!integer_deposition && invalid_extruder_range) {
         errors.append("Minimum Extruder Speed (" + numberText(min_extruder_speed) +
                       ") is greater than Maximum Extruder Speed (" + numberText(max_extruder_speed) + ").");
     }
@@ -414,7 +426,13 @@ void validateDynamicSettings(const fifojson& settings, const fifojson& master, Q
         const double value    = settingDouble(settings, key);
         const QString display = settingDisplay(key, master);
 
-        if (type == "rpm" && key != PRS::MachineSpeed::kMinExtruderSpeed &&
+        if (type == "deposition_rate" && integer_deposition && !meld_velocity_deposition &&
+            std::abs(value - std::round(value)) > kIntegerTolerance) {
+            errors.append(display + " must be a whole-number deposition value for Friction Stir.");
+        }
+
+        const bool rpm_based_deposition = type == "rpm" || (type == "deposition_rate" && !integer_deposition);
+        if (rpm_based_deposition && key != PRS::MachineSpeed::kMinExtruderSpeed &&
             key != PRS::MachineSpeed::kMaxExtruderSpeed && !invalid_extruder_range) {
             if (has_min_extruder_speed && value < min_extruder_speed) {
                 errors.append(display + " (" + numberText(value) + ") is below Minimum Extruder Speed (" +

@@ -5,7 +5,7 @@ settings:
     display: "Add Raft"
     type: "boolean"
     tooltip: "If selected, a raft will be printed below the part to help account for an unlevel build surface"
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: false
     minor: "Platform Adhesion"
@@ -53,7 +53,7 @@ settings:
     display: "Add Brim"
     type: "boolean"
     tooltip: "If selected, a brim will be attached to the part at the base to help with platform adhesion"
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: false
     minor: "Platform Adhesion"
@@ -101,7 +101,7 @@ settings:
     display: "Add Skirt"
     type: "boolean"
     tooltip: "If selected, a skirt will be printed around the object to prime the extruder"
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: false
     minor: "Platform Adhesion"

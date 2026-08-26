@@ -5,7 +5,7 @@ settings:
     display: "Enable Trajectory Auto Speed Ramping"
     type: "boolean"
     tooltip: "If selected, will ramp speed for a certain distance at the intersections"
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: false
     minor: "Auto Speed Ramping"

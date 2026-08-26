@@ -19,7 +19,7 @@ class SettingTab;
 
 //! \brief Widget to provide custom double spin box
 //! Based on QDoubleSpinBox with overridden wheelEvent functionality
-//! Supports the following settig types: unitless_float, rpm, density, percentage
+//! Supports the following setting types: unitless_float, rpm, deposition_rate, density, percentage
 class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
     Q_OBJECT
 
@@ -107,6 +107,30 @@ class SettingDoubleSpinBox : public QDoubleSpinBox, public SettingRowBase {
 
     //! \brief Returns another integer setting's effective value for one selected base.
     int effectiveInt(const QString& key, int settings_base_index) const;
+
+    //! \brief Returns whether this row should present deposition control as an integer value.
+    bool usesIntegerDepositionRate() const;
+
+    //! \brief Returns whether one selected base should present deposition control as an integer value.
+    bool usesIntegerDepositionRate(int settings_base_index) const;
+
+    //! \brief Returns whether this row should present Meld deposition control as a velocity.
+    bool usesMeldVelocityDepositionRate() const;
+
+    //! \brief Returns whether one selected base should present Meld deposition control as a velocity.
+    bool usesMeldVelocityDepositionRate(int settings_base_index) const;
+
+    //! \brief Converts a stored deposition-rate value to the currently displayed value.
+    double displayedDepositionRateValue(double stored_value) const;
+
+    //! \brief Converts a displayed deposition-rate value back to the stored value.
+    double storedDepositionRateValue(double displayed_value) const;
+
+    //! \brief Refreshes the visible spin-box value from the stored value using the current presentation.
+    void syncDisplayedDepositionRateValue();
+
+    //! \brief Updates deposition-rate decimals and unit text for the selected machine type.
+    void updateDepositionRatePresentation();
 
     //! \brief Returns whether selected settings bases agree on this row's effective value.
     bool hasConsistentEffectiveDouble() const;

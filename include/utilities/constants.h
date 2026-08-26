@@ -246,6 +246,8 @@ class Constants {
             static const QString kWTableSpeed;
             static const QString kZSpeed;
             static const QString kGearRatio;
+            static const QString kMeldDepositionRateScaling;
+            static const QString kMeldDiscrete;
         };
 
         class Acceleration {
@@ -937,7 +939,6 @@ class Constants {
         class FileOutput {
            public:
             static const QString kMeldCompanionOutput;
-            static const QString kMeldDiscrete;
             static const QString kTormachOutput;
             static const QString kTormachMode;
             static const QString kAML3DOutput;

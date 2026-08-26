@@ -30,15 +30,7 @@ Skirt::Skirt(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolyg
 }
 
 QString Skirt::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kSkirt);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kSkirt);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kSkirt);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kSkirt);
-    return gcode;
+    return writeRegionGCode(writer, RegionType::kSkirt);
 }
 
 void Skirt::compute(uint layer_num) {

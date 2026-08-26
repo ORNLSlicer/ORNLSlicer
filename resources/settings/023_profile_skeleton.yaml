@@ -89,9 +89,9 @@ settings:
     local: true
   - name: "skeleton_extruder_speed"
     display: "Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder speed for skeletons."
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    type: "deposition_rate"
+    tooltip: "Deposition control value for skeletons. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}]}
     options: []
     default: 0
     minor: "Skeleton"
@@ -249,8 +249,8 @@ settings:
     local: true
   - name: "skeleton_prestart_extruder_speed"
     display: "Skeleton Prestart Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder speed for skeleton prestart paths."
+    type: "deposition_rate"
+    tooltip: "Deposition control value for skeleton prestart paths. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"skeleton_prestart":true}]}]}
     options: []
     default: 0

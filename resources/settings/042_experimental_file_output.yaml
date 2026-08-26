@@ -13,18 +13,6 @@ settings:
     namespace: "Experimental::FileOutput"
     symbol: "kEnableMeldCompanionFileOutput"
     local: false
-  - name: "meld_discrete_feed_commands"
-    display: "Enable Meld Discrete Feed Commands"
-    type: "boolean"
-    tooltip: "Uses discrete feed commands for g-code output"
-    depends: {"syntax":21}
-    options: []
-    default: false
-    minor: "File Output"
-    major: "Experimental"
-    namespace: "Experimental::FileOutput"
-    symbol: "kEnableMeldDiscreteFeedCommands"
-    local: false
   - name: "tormach_file_output"
     display: "Enable Tormach File Output"
     type: "boolean"

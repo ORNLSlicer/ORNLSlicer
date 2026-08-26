@@ -294,13 +294,15 @@ const QString Constants::PrinterSettings::Auxiliary::kEnableTamper  = "enable_ta
 const QString Constants::PrinterSettings::Auxiliary::kTamperVoltage = "tamper_voltage";
 
 // Machine Speed
-const QString Constants::PrinterSettings::MachineSpeed::kMinXYSpeed       = "min_xy_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kMaxXYSpeed       = "max_xy_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kMinExtruderSpeed = "min_extruder_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kMaxExtruderSpeed = "max_extruder_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed      = "w_table_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kZSpeed           = "z_speed";
-const QString Constants::PrinterSettings::MachineSpeed::kGearRatio        = "extruder_gear_ratio";
+const QString Constants::PrinterSettings::MachineSpeed::kMinXYSpeed                = "min_xy_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kMaxXYSpeed                = "max_xy_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kMinExtruderSpeed          = "min_extruder_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kMaxExtruderSpeed          = "max_extruder_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kWTableSpeed               = "w_table_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kZSpeed                    = "z_speed";
+const QString Constants::PrinterSettings::MachineSpeed::kGearRatio                 = "extruder_gear_ratio";
+const QString Constants::PrinterSettings::MachineSpeed::kMeldDepositionRateScaling = "meld_deposition_rate_scaling";
+const QString Constants::PrinterSettings::MachineSpeed::kMeldDiscrete              = "meld_discrete_feed_commands";
 
 // Acceleration
 const QString Constants::PrinterSettings::Acceleration::kEnableDynamic = "enable_dynamic_acceleration";
@@ -880,7 +882,6 @@ const QString Constants::ExperimentalSettings::Ramping::kTrajectoryAngleExtruder
 
 // File Output
 const QString Constants::ExperimentalSettings::FileOutput::kMeldCompanionOutput = "additional_meld_output";
-const QString Constants::ExperimentalSettings::FileOutput::kMeldDiscrete        = "meld_discrete_feed_commands";
 const QString Constants::ExperimentalSettings::FileOutput::kTormachOutput       = "tormach_file_output";
 const QString Constants::ExperimentalSettings::FileOutput::kTormachMode         = "tormach_mode";
 const QString Constants::ExperimentalSettings::FileOutput::kAML3DOutput         = "aml3d_file_output";

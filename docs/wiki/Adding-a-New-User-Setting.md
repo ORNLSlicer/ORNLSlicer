@@ -16,6 +16,7 @@ Each setting entry has these fields:
   - area
   - boolean
   - density
+  - deposition_rate
   - distance
   - enumeration
   - location

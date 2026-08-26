@@ -57,6 +57,7 @@ settings:
       - "Laser_Wire"
       - "Concrete"
       - "Thermoset"
+      - "Friction Stir"
     default: 0
     minor: "Machine Setup"
     major: "Printer"

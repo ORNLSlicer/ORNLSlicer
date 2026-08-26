@@ -51,9 +51,9 @@ settings:
     local: true
   - name: "default_extruder_speed"
     display: "Default Extruder Speed"
-    type: "rpm"
-    tooltip: "Default extruder speed for paths that don't have a defined extruder speed"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
+    type: "deposition_rate"
+    tooltip: "Default deposition control value for paths that don't have a defined value. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}
     options: []
     default: 0
     minor: "Layer"
@@ -65,7 +65,7 @@ settings:
     display: "Minimum Extrude Length"
     type: "distance"
     tooltip: "Default minimum extrusion length. Paths less than this are eliminated. Currently used for brim, raft, and support paths."
-    depends: {"slicing_mode":0}
+    depends: {"AND":[{"slicing_mode":0},{"NOT":[{"machine_type":6}]}]}
     options: []
     default: 0
     minor: "Layer"

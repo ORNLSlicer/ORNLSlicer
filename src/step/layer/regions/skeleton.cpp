@@ -70,15 +70,7 @@ Skeleton::Skeleton(const QSharedPointer<SettingsBase>& sb, const int index,
     : RegionBase(sb, index, settings_polygons, PolygonList(), RegionType::kSkeleton) {}
 
 QString Skeleton::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kSkeleton);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kSkeleton);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kSkeleton);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kSkeleton);
-    return gcode;
+    return writeRegionGCode(writer, RegionType::kSkeleton);
 }
 
 void Skeleton::compute(uint layer_num) {

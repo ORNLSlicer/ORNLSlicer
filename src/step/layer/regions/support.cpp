@@ -29,15 +29,7 @@ Support::Support(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsP
 }
 
 QString Support::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kSupport);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kSupport);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kSupport);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kSupport);
-    return gcode;
+    return writeRegionGCode(writer, RegionType::kSupport);
 }
 
 void Support::compute(uint layer_num) {

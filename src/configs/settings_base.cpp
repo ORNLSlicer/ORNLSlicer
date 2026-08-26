@@ -85,6 +85,25 @@ void SettingsBase::makeGlobalAdjustments() {
 
         setSetting(MS::TipWipe::kPerimeterEnable, false);
     }
+
+    if (setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kFrictionStir) {
+        setSetting(PS::SpecialModes::kEnableWidthHeight, false);
+        setSetting(PS::Support::kEnable, false);
+        setSetting(ES::Ramping::kTrajectoryAngleEnabled, false);
+
+        setSetting(MS::PlatformAdhesion::kRaftEnable, false);
+        setSetting(MS::PlatformAdhesion::kBrimEnable, false);
+        setSetting(MS::PlatformAdhesion::kSkirtEnable, false);
+
+        setSetting(MS::SpiralLift::kPerimeterEnable, false);
+        setSetting(MS::SpiralLift::kInsetEnable, false);
+        setSetting(MS::SpiralLift::kSkinEnable, false);
+        setSetting(MS::SpiralLift::kInfillEnable, false);
+        setSetting(MS::SpiralLift::kLayerEnable, false);
+        setSetting(MS::SpiralLift::kDisableFeedrateScaling, false);
+
+        setSetting(MS::Purge::kEnablePurgeDwell, false);
+    }
 }
 
 void SettingsBase::makeLocalAdjustments(int layer_number) {

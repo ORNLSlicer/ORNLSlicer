@@ -27,15 +27,7 @@ Raft::Raft(const QSharedPointer<SettingsBase>& sb, const QVector<SettingsPolygon
 }
 
 QString Raft::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kRaft);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kRaft);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kRaft);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kRaft);
-    return gcode;
+    return writeRegionGCode(writer, RegionType::kRaft);
 }
 
 void Raft::compute(uint layer_num) {

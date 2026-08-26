@@ -155,6 +155,16 @@ class RegionBase {
     //! \param supportsG3: whether or not the system supports G3 command
     virtual void calculateModifiers(Path& path, bool supportsG3) = 0;
 
+    //! \brief Writes all paths in this region and annotates Meld scaling metadata when needed.
+    //! \param writer Writer type to use for gcode output.
+    //! \param region_type Region type being written.
+    //! \return Region gcode.
+    QString writeRegionGCode(QSharedPointer<WriterBase> writer, RegionType region_type);
+
+    //! \brief Annotates print segments with path radius metadata for Meld deposition-rate scaling.
+    //! \param path Path to annotate.
+    void annotateMeldDepositionRateScalingPath(Path& path) const;
+
     //! \brief The geometery this region will work on.
     PolygonList m_geometry;
 

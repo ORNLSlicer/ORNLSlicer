@@ -102,9 +102,9 @@ settings:
     local: true
   - name: "perimeter_extruder_speed"
     display: "Perimeter Extruder Speed"
-    type: "rpm"
-    tooltip: "Extruder speed for perimeter paths"
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    type: "deposition_rate"
+    tooltip: "Deposition control value for perimeter paths. Meld Friction Stir uses velocity; M24 S outputs in/min * 1000. Other machine types use RPM."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"OR":[{"machine_type":5},{"machine_type":6}]}]}]}]}]}]}
     options: []
     default: 0
     minor: "Perimeter"

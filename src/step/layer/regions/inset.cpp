@@ -285,15 +285,7 @@ Inset::Inset(const QSharedPointer<SettingsBase>& sb, const int index, const QVec
 }
 
 QString Inset::writeGCode(QSharedPointer<WriterBase> writer) {
-    QString gcode;
-    gcode += writer->writeBeforeRegion(RegionType::kInset);
-    for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kInset);
-        for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kInset);
-    }
-    gcode += writer->writeAfterRegion(RegionType::kInset);
-    return gcode;
+    return writeRegionGCode(writer, RegionType::kInset);
 }
 
 void Inset::compute(uint layer_num) {
