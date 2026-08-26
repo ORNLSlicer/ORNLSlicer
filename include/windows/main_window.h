@@ -246,6 +246,15 @@ class MainWindow : public QMainWindow {
     //! \brief Load a template file from a known path.
     void loadTemplateFile(const QString& filename);
 
+    //! \brief Rebuild the recent files submenu from session history.
+    void updateRecentFilesMenu();
+
+    //! \brief Load a project from recent file history.
+    void loadRecentProjectFile(const QString& filename);
+
+    //! \brief Load a model from recent file history.
+    void loadRecentModelFile(const QString& filename);
+
    private:
     //! \brief Struct to retain action information efficiently.
     struct menu_info {
@@ -398,6 +407,7 @@ class MainWindow : public QMainWindow {
 
     //! \brief QMenus
     QMenu* m_menu_file;
+    QMenu* m_menu_recent_files;
     QMenu* m_menu_edit;
     QMenu* m_menu_view;
     QMenu* m_menu_zoom;

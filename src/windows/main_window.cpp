@@ -1,5 +1,6 @@
 #include "windows/main_window.h"
 
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
@@ -81,6 +82,14 @@
 namespace ORNL {
 constexpr int kPartTransformUndoCommandId = 1;
 constexpr int kSettingValueUndoCommandId  = 2;
+
+QString recentFileActionText(const QString& path) {
+    QFileInfo file_info(path);
+    const QString directory = QDir::toNativeSeparators(file_info.absolutePath());
+    if (directory.isEmpty()) return file_info.fileName();
+
+    return QString("%1 (%2)").arg(file_info.fileName(), directory);
+}
 
 class PartTransformUndoCommand : public QUndoCommand {
    public:
@@ -456,6 +465,8 @@ void MainWindow::setupBars() {
     m_menubar->setGeometry(QRect(0, 0, Constants::UI::MainWindow::kWindowSize.width(), 19));
     m_menu_file = new QMenu(m_menubar);
     m_menu_file->setObjectName(QStringLiteral("m_menu_file"));
+    m_menu_recent_files = new QMenu(m_menubar);
+    m_menu_recent_files->setObjectName(QStringLiteral("m_menu_recent_files"));
     m_menu_edit = new QMenu(m_menubar);
     m_menu_edit->setObjectName(QStringLiteral("m_menu_edit"));
     m_menu_view = new QMenu(m_menubar);
@@ -613,6 +624,7 @@ void MainWindow::setupActions() {
     m_menu_file->addAction(m_actions["sel_printer"].action);
     m_menu_file->addAction(m_actions["load_model"].action);
     m_menu_file->addAction(m_actions["load_point_cloud"].action);
+    m_menu_file->addMenu(m_menu_recent_files);
     m_menu_file->addAction(m_actions["last_session"].action);
     m_menu_file->addSeparator();
     m_menu_file->addAction(m_actions["slice"].action);
@@ -762,6 +774,7 @@ void MainWindow::setupInsert() {
 
 void MainWindow::setupEvents() {
     // Menu connections.
+    connect(m_menu_recent_files, &QMenu::aboutToShow, this, &MainWindow::updateRecentFilesMenu);
     connect(m_actions["last_session"].action, &QAction::triggered, this, &MainWindow::autoLoad);
     connect(m_actions["screenshot"].action, &QAction::triggered, m_part_widget, &PartWidget::takeScreenshot);
 
@@ -1305,6 +1318,7 @@ void MainWindow::retranslateUi() {
     }
 
     m_menu_file->setTitle(QApplication::translate("MainWindow", "File", nullptr));
+    m_menu_recent_files->setTitle(QApplication::translate("MainWindow", "Recent Files", nullptr));
     m_menu_edit->setTitle(QApplication::translate("MainWindow", "Edit", nullptr));
     m_menu_zoom->setTitle(QApplication::translate("MainWindow", "Zoom", nullptr));
     m_menu_toolbars->setTitle(QApplication::translate("MainWindow", "Toolbars", nullptr));
@@ -1473,6 +1487,98 @@ void MainWindow::updateStatus(QString status) {
     m_statusbar->showMessage(status);
 }
 
+void MainWindow::updateRecentFilesMenu() {
+    m_menu_recent_files->clear();
+
+    const QStringList project_files = CSM->getRecentProjectFiles();
+    const QStringList model_files   = CSM->getRecentModelFiles();
+    bool has_recent_files           = false;
+
+    if (!project_files.isEmpty()) {
+        QAction* heading = m_menu_recent_files->addAction(QApplication::translate("MainWindow", "Projects", nullptr));
+        heading->setEnabled(false);
+
+        for (const QString& filename : project_files) {
+            QAction* action =
+                m_menu_recent_files->addAction(QIcon(":/icons/open_project_black.png"), recentFileActionText(filename));
+            action->setToolTip(QDir::toNativeSeparators(filename));
+            connect(action, &QAction::triggered, this, [this, filename] { loadRecentProjectFile(filename); });
+            has_recent_files = true;
+        }
+    }
+
+    if (!model_files.isEmpty()) {
+        if (has_recent_files) m_menu_recent_files->addSeparator();
+
+        QAction* heading = m_menu_recent_files->addAction(QApplication::translate("MainWindow", "Models", nullptr));
+        heading->setEnabled(false);
+
+        for (const QString& filename : model_files) {
+            QAction* action =
+                m_menu_recent_files->addAction(QIcon(":/icons/file_black.png"), recentFileActionText(filename));
+            action->setToolTip(QDir::toNativeSeparators(filename));
+            connect(action, &QAction::triggered, this, [this, filename] { loadRecentModelFile(filename); });
+            has_recent_files = true;
+        }
+    }
+
+    if (!has_recent_files) {
+        QAction* empty =
+            m_menu_recent_files->addAction(QApplication::translate("MainWindow", "No Recent Files", nullptr));
+        empty->setEnabled(false);
+        return;
+    }
+
+    m_menu_recent_files->addSeparator();
+    QAction* clear_action = m_menu_recent_files->addAction(
+        QIcon(":/icons/delete_black.png"), QApplication::translate("MainWindow", "Clear Recent Files", nullptr));
+    connect(clear_action, &QAction::triggered, this, [this] {
+        CSM->clearRecentFiles();
+        QTimer::singleShot(0, this, &MainWindow::updateRecentFilesMenu);
+    });
+}
+
+void MainWindow::loadRecentProjectFile(const QString& filename) {
+    QFileInfo file_info(filename);
+    if (!file_info.exists() || !file_info.isFile()) {
+        CSM->removeRecentFile(filename);
+        QTimer::singleShot(0, this, &MainWindow::updateRecentFilesMenu);
+        updateStatus("Recent project file not found: " + QDir::toNativeSeparators(filename));
+        return;
+    }
+
+    if (!confirmProjectClose()) return;
+
+    SessionLoader* loader = loadASession(file_info.absoluteFilePath());
+    if (loader == nullptr) {
+        updateStatus("Could not load recent project: " + QDir::toNativeSeparators(filename));
+        return;
+    }
+
+    connect(loader, &SessionLoader::loadSucceeded, this,
+            [this, title = file_info.fileName()] { this->setTitleInfo(title); });
+
+    m_statusbar->showMessage("Session loaded");
+    m_cmdbar->append("Session loaded: " + file_info.absoluteFilePath());
+    CSM->setMostRecentProjectLocation(file_info.absolutePath());
+    CSM->addRecentProjectFile(file_info.absoluteFilePath());
+}
+
+void MainWindow::loadRecentModelFile(const QString& filename) {
+    QFileInfo file_info(filename);
+    if (!file_info.exists() || !file_info.isFile()) {
+        CSM->removeRecentFile(filename);
+        QTimer::singleShot(0, this, &MainWindow::updateRecentFilesMenu);
+        updateStatus("Recent model file not found: " + QDir::toNativeSeparators(filename));
+        return;
+    }
+
+    const QString filepath = file_info.absoluteFilePath();
+    m_cmdbar->append("Loading model: " + filepath);
+    m_statusbar->showMessage("Loading model: " + filepath);
+    CSM->loadModel(filepath, true, MeshType::kBuild);
+}
+
 bool MainWindow::saveSessionToSelectedFile(bool notifyOnSuccess, bool waitForSave, QString* selectedFile) {
     QFileDialog save_dialog;
     save_dialog.setWindowTitle("Save project");
@@ -1575,16 +1681,19 @@ void MainWindow::loadSession() {
 
     QString filename = load_dialog.selectedFiles().first();
     if (filename.isEmpty()) return;
+    if (!confirmProjectClose()) return;
 
     SessionLoader* loader = loadASession(filename);
     if (loader != nullptr) {
         connect(loader, &SessionLoader::loadSucceeded, this,
                 [this, title = QFileInfo(filename).fileName()] { this->setTitleInfo(title); });
-    }
-    m_statusbar->showMessage("Session loaded");
-    m_cmdbar->append("Session loaded: " + filename);
+        CSM->setMostRecentProjectLocation(QFileInfo(filename).absolutePath());
+        CSM->addRecentProjectFile(filename);
+        updateRecentFilesMenu();
 
-    CSM->setMostRecentProjectLocation(QFileInfo(filename).absolutePath());
+        m_statusbar->showMessage("Session loaded");
+        m_cmdbar->append("Session loaded: " + filename);
+    }
 }
 
 SessionLoader* MainWindow::loadASession(const QString& filename) {
@@ -1730,6 +1839,7 @@ void MainWindow::setLock(bool lock) {
     m_actions["load_point_cloud"].action->setDisabled(lock);
     m_actions["last_session"].action->setDisabled(lock);
     m_actions["slice"].action->setDisabled(lock);
+    m_menu_recent_files->setDisabled(lock);
 
     m_menu_edit->setDisabled(lock);
     m_menu_settings->setDisabled(lock);
