@@ -282,10 +282,12 @@ QString JuggerBotWriter::writeArc(const Point& start_point, const Point& end_poi
     if (requiresWriteExtruderOn && rpm > 0) { rv += writeExtruderOn(region_type, rpm, width, height, params); }
 
     Area bead_area = beadAreaForCommand(region_type, width, height, params);
-    if (!requiresWriteExtruderOn && m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight) && rpm > 0 &&
-        m_current_bead_area != bead_area) {
-        rv += m_M3 % m_s % beadAreaSValue(bead_area) % commentSpaceLine("UPDATE BEAD AREA");
-        m_current_bead_area = bead_area;
+    if (!requiresWriteExtruderOn && m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
+        if (rpm > 0 && m_current_bead_area != bead_area) {
+            rv += m_M3 % m_s % beadAreaSValue(bead_area) % commentSpaceLine("UPDATE BEAD AREA");
+            m_current_bead_area = bead_area;
+        }
+        else if (rpm == 0) { rv += writeExtruderOff(); }
     }
 
     rv += ((ccw) ? m_G3 : m_G2);
