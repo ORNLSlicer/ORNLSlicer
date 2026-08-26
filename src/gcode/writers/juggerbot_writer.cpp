@@ -203,8 +203,7 @@ QString JuggerBotWriter::writeLine(const Point& start_point, const Point& target
     float output_rpm             = rpm * m_sb->setting<float>(PRS::MachineSpeed::kGearRatio);
     Distance width               = params->setting<Distance>(SS::kWidth);
     Distance height              = params->setting<Distance>(SS::kHeight);
-    Area bead_area = (width - height) * height +
-                     (pi() * (height / 2) * (height / 2));  // Rectangle with two half circles used as cross-section
+    Area bead_area               = beadAreaForCommand(region_type, width, height, params);
 
     QString rv;
 
@@ -233,13 +232,7 @@ QString JuggerBotWriter::writeLine(const Point& start_point, const Point& target
         rv += writeExtruderOff();
     }
     else if (m_current_bead_area != bead_area && m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight) && rpm > 0) {
-        rv +=
-            m_M3 % m_s %
-            QString::number((Distance(width).to(m_meta.m_distance_unit) - Distance(height).to(m_meta.m_distance_unit)) *
-                                Distance(height).to(m_meta.m_distance_unit) +
-                            (pi() * (Distance(height).to(m_meta.m_distance_unit) / 2) *
-                             (Distance(height).to(m_meta.m_distance_unit) / 2))) %
-            commentSpaceLine("UPDATE BEAD AREA");
+        rv += m_M3 % m_s % beadAreaSValue(bead_area) % commentSpaceLine("UPDATE BEAD AREA");
         m_current_bead_area = bead_area;
     }
 
@@ -288,13 +281,20 @@ QString JuggerBotWriter::writeArc(const Point& start_point, const Point& end_poi
 
     if (requiresWriteExtruderOn && rpm > 0) { rv += writeExtruderOn(region_type, rpm, width, height, params); }
 
+    Area bead_area = beadAreaForCommand(region_type, width, height, params);
+    if (!requiresWriteExtruderOn && m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight) && rpm > 0 &&
+        m_current_bead_area != bead_area) {
+        rv += m_M3 % m_s % beadAreaSValue(bead_area) % commentSpaceLine("UPDATE BEAD AREA");
+        m_current_bead_area = bead_area;
+    }
+
     rv += ((ccw) ? m_G3 : m_G2);
 
     if (getFeedrate() != speed) {
         setFeedrate(speed);
         rv += m_f % QString::number(speed.to(m_meta.m_velocity_unit));
     }
-    if (rpm != m_current_rpm) {
+    if (rpm != m_current_rpm && !m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
         rv += m_s % QString::number(rpm);
         m_current_rpm = rpm;
     }
@@ -406,12 +406,42 @@ QString JuggerBotWriter::writeDwell(Time time) {
         return {};
 }
 
+Area JuggerBotWriter::beadAreaForCommand(RegionType type, Distance width, Distance height,
+                                         const QSharedPointer<SettingsBase>& params) const {
+    Area area = (width - height) * height +
+                (pi() * (height / 2) * (height / 2));  // Rectangle with two half circles used as cross-section
+    area *= extrusionMultiplier(type, params);
+    return area;
+}
+
+double JuggerBotWriter::extrusionMultiplier(RegionType type, const QSharedPointer<SettingsBase>& params) const {
+    QString multiplier_key;
+
+    if (type == RegionType::kInset)
+        multiplier_key = PS::Inset::kExtrusionMultiplier;
+    else if (type == RegionType::kSkeleton)
+        multiplier_key = PS::Skeleton::kExtrusionMultiplier;
+    else if (type == RegionType::kSkin)
+        multiplier_key = PS::Skin::kExtrusionMultiplier;
+    else if (type == RegionType::kInfill)
+        multiplier_key = PS::Infill::kExtrusionMultiplier;
+    else
+        multiplier_key = PS::Perimeter::kExtrusionMultiplier;
+
+    if (params != nullptr && params->contains(multiplier_key)) { return params->setting<double>(multiplier_key); }
+
+    return m_sb->setting<double>(multiplier_key);
+}
+
+QString JuggerBotWriter::beadAreaSValue(Area bead_area) const {
+    return QString::number(bead_area.to(m_meta.m_distance_unit * m_meta.m_distance_unit));
+}
+
 QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance width, Distance height,
                                          const QSharedPointer<SettingsBase>& params) {
     m_deposition_active = true;
     QString rv;
-    Area bead_area  = (width - height) * height +
-                      (pi() * (height / 2) * (height / 2));  // Rectangle with two half circles used as cross-section
+    Area bead_area  = beadAreaForCommand(type, width, height, params);
     int initial_rpm = getInitialExtruderSpeed(params);
 
     if (!m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight)) {
@@ -473,12 +503,7 @@ QString JuggerBotWriter::writeExtruderOn(RegionType type, int rpm, Distance widt
         // rv += m_M3 % m_s % QString::number(output_rpm) % commentSpaceLine("UPDATE EXTRUDER RPM");
     }
     else {
-        rv +=
-            m_M3 % m_s %
-            QString::number((Distance(width).to(m_meta.m_distance_unit) - Distance(height).to(m_meta.m_distance_unit)) *
-                                Distance(height).to(m_meta.m_distance_unit) +
-                            (pi() * (Distance(height).to(m_meta.m_distance_unit) / 2) *
-                             (Distance(height).to(m_meta.m_distance_unit) / 2)));
+        rv += m_M3 % m_s % beadAreaSValue(bead_area);
         rv += commentSpaceLine("SET BEAD AREA");
         m_current_bead_area = bead_area;
         m_current_rpm       = rpm;
