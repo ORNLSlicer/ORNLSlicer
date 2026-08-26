@@ -1,12 +1,29 @@
 #include "windows/main_window.h"
 
+#include <QColor>
+#include <QDialog>
+#include <QDialogButtonBox>
+#include <QDir>
 #include <QFile>
 #include <QFileDialog>
 #include <QFileInfo>
+#include <QHBoxLayout>
+#include <QIODevice>
+#include <QProcess>
+#include <QPushButton>
+#include <QRegularExpression>
+#include <QScrollBar>
 #include <QSettings>
 #include <QStatusBar>
+#include <QTextBlock>
+#include <QTextBlockFormat>
+#include <QTextBrowser>
+#include <QTextCharFormat>
+#include <QTextCursor>
+#include <QTextDocument>
 #include <QTimer>
 #include <QUndoCommand>
+#include <QVBoxLayout>
 
 #include <qaction.h>
 #include <qapplication.h>
@@ -39,6 +56,7 @@
 #include <qsize.h>
 #include <qsizepolicy.h>
 #include <qstandardpaths.h>
+#include <qstringlist.h>
 #include <qstringliteral.h>
 #include <qtabbar.h>
 #include <qtabwidget.h>
@@ -77,6 +95,420 @@
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
 #include "windows/xtrudecalc.h"
+
+namespace {
+struct FileOpener {
+    QString program;
+    QStringList arguments;
+};
+
+struct GuideNavigationState {
+    QList<int> back_positions;
+    QList<int> forward_positions;
+};
+
+QString userGuidePath(const QString& manual_file) {
+    const QString relative_doc_path = QStringLiteral("doc/ornlslicer/") + manual_file;
+    const QString app_dir           = qApp->applicationDirPath();
+
+    QStringList candidates = {
+        app_dir + QStringLiteral("/../share/") + relative_doc_path,
+        app_dir + QStringLiteral("/share/") + relative_doc_path,
+        app_dir + QStringLiteral("/../") + relative_doc_path,
+    };
+
+    const QString data_path = QStandardPaths::locate(QStandardPaths::GenericDataLocation, relative_doc_path);
+    if (!data_path.isEmpty()) candidates.prepend(data_path);
+
+    QString source_tree_candidate = app_dir;
+    for (int depth = 0; depth < 6; ++depth) {
+        candidates.append(source_tree_candidate + QStringLiteral("/docs/") + manual_file);
+        source_tree_candidate += QStringLiteral("/..");
+    }
+
+    for (const QString& candidate : candidates) {
+        const QFileInfo file_info(QDir::cleanPath(candidate));
+        if (file_info.exists() && file_info.isFile()) return file_info.absoluteFilePath();
+    }
+
+    return {};
+}
+
+QString fileOpenerExecutable(const QString& program) {
+    if (program.contains(QChar('/')) || program.contains(QChar('\\'))) {
+        const QFileInfo file_info(program);
+        if (file_info.exists() && file_info.isExecutable()) return file_info.absoluteFilePath();
+
+        return {};
+    }
+
+    return QStandardPaths::findExecutable(program);
+}
+
+bool startDetachedFileOpener(const FileOpener& opener) {
+    const QString executable = fileOpenerExecutable(opener.program);
+
+    if (executable.isEmpty()) return false;
+
+    return QProcess::startDetached(executable, opener.arguments);
+}
+
+bool runFileLauncher(const FileOpener& opener) {
+    const QString executable = fileOpenerExecutable(opener.program);
+
+    if (executable.isEmpty()) return false;
+
+    QProcess process;
+    process.start(executable, opener.arguments);
+
+    if (!process.waitForStarted(1000)) return false;
+
+    if (!process.waitForFinished(3000)) {
+        process.kill();
+        process.waitForFinished(1000);
+        return false;
+    }
+
+    return process.exitStatus() == QProcess::NormalExit && process.exitCode() == 0;
+}
+
+bool openLocalFile(const QString& path) {
+#if !defined(Q_OS_LINUX)
+    if (QDesktopServices::openUrl(QUrl::fromLocalFile(path))) return true;
+#endif
+
+    const QString native_path              = QDir::toNativeSeparators(path);
+    const QList<FileOpener> file_launchers = {
+#ifdef Q_OS_WIN
+        {QStringLiteral("cmd"), {QStringLiteral("/C"), QStringLiteral("start"), QString(), native_path}},
+#elif defined(Q_OS_MACOS)
+        {QStringLiteral("open"), {path}},
+#else
+        {QStringLiteral("gio"), {QStringLiteral("open"), path}},
+        {QStringLiteral("/usr/bin/gio"), {QStringLiteral("open"), path}},
+        {QStringLiteral("xdg-open"), {path}},
+        {QStringLiteral("/usr/bin/xdg-open"), {path}},
+        {QStringLiteral("kde-open5"), {path}},
+        {QStringLiteral("kde-open"), {path}},
+        {QStringLiteral("gnome-open"), {path}},
+        {QStringLiteral("wslview"), {path}},
+#endif
+    };
+
+    for (const FileOpener& opener : file_launchers) {
+        if (runFileLauncher(opener)) return true;
+    }
+
+    const QList<FileOpener> direct_openers = {
+#if !defined(Q_OS_WIN) && !defined(Q_OS_MACOS)
+        {QStringLiteral("evince"), {path}},
+        {QStringLiteral("okular"), {path}},
+        {QStringLiteral("atril"), {path}},
+        {QStringLiteral("xreader"), {path}},
+        {QStringLiteral("qpdfview"), {path}},
+        {QStringLiteral("zathura"), {path}},
+        {QStringLiteral("firefox"), {path}},
+        {QStringLiteral("google-chrome"), {path}},
+        {QStringLiteral("google-chrome-stable"), {path}},
+        {QStringLiteral("chromium"), {path}},
+        {QStringLiteral("chromium-browser"), {path}},
+        {QStringLiteral("brave-browser"), {path}},
+        {QStringLiteral("microsoft-edge"), {path}},
+#endif
+    };
+
+    for (const FileOpener& opener : direct_openers) {
+        if (startDetachedFileOpener(opener)) return true;
+    }
+
+    return false;
+}
+
+QString markdownHeadingAnchor(const QString& heading_text) {
+    QString anchor;
+    bool previous_was_separator = false;
+
+    for (const QChar& character : heading_text.toLower()) {
+        if (character.isLetterOrNumber()) {
+            anchor.append(character);
+            previous_was_separator = false;
+        }
+        else if (character.isSpace() || character == QChar('-')) {
+            if (!anchor.isEmpty() && !previous_was_separator) {
+                anchor.append(QChar('-'));
+                previous_was_separator = true;
+            }
+        }
+    }
+
+    if (anchor.endsWith(QChar('-'))) anchor.chop(1);
+
+    return anchor;
+}
+
+QSet<QString> localMarkdownLinkTargets(const QString& markdown) {
+    QSet<QString> targets;
+    const QRegularExpression local_link_pattern(QStringLiteral("\\]\\(#([^\\)]+)\\)"));
+    QRegularExpressionMatchIterator matches = local_link_pattern.globalMatch(markdown);
+
+    while (matches.hasNext()) {
+        const QRegularExpressionMatch match = matches.next();
+        targets.insert(match.captured(1));
+    }
+
+    return targets;
+}
+
+QString markdownWithHeadingAnchors(const QString& markdown) {
+    const QSet<QString> linked_targets = localMarkdownLinkTargets(markdown);
+    const QRegularExpression heading_pattern(QStringLiteral("^\\s{0,3}#{1,6}\\s+(.+?)\\s*#*\\s*$"));
+    const QRegularExpression explicit_anchor_pattern(
+        QStringLiteral("^\\s*<a\\s+(?:id|name)=\"([^\"]+)\"\\s*></a>\\s*$"));
+    QStringList output;
+    QSet<QString> emitted_targets;
+
+    const QStringList lines = markdown.split(QChar('\n'));
+    output.reserve(lines.size() + linked_targets.size());
+
+    for (const QString& line : lines) {
+        const QRegularExpressionMatch explicit_anchor_match = explicit_anchor_pattern.match(line);
+        if (explicit_anchor_match.hasMatch()) {
+            output.append(QStringLiteral("<a name=\"%1\"></a>").arg(explicit_anchor_match.captured(1).toHtmlEscaped()));
+            continue;
+        }
+
+        const QRegularExpressionMatch match = heading_pattern.match(line);
+        if (match.hasMatch()) {
+            const QString anchor = markdownHeadingAnchor(match.captured(1).trimmed());
+            if (linked_targets.contains(anchor) && !emitted_targets.contains(anchor)) {
+                output.append(QStringLiteral("<a name=\"%1\"></a>").arg(anchor.toHtmlEscaped()));
+                emitted_targets.insert(anchor);
+            }
+        }
+
+        output.append(line);
+    }
+
+    return output.join(QChar('\n'));
+}
+
+QMap<QString, QString> explicitMarkdownAnchorAliases(const QString& markdown) {
+    const QRegularExpression explicit_anchor_pattern(
+        QStringLiteral("^\\s*<a\\s+(?:id|name)=\"([^\"]+)\"\\s*></a>\\s*$"));
+    const QRegularExpression heading_pattern(QStringLiteral("^\\s{0,3}#{1,6}\\s+(.+?)\\s*#*\\s*$"));
+    QMap<QString, QString> aliases;
+    QStringList pending_anchors;
+
+    const QStringList lines = markdown.split(QChar('\n'));
+    for (const QString& line : lines) {
+        const QRegularExpressionMatch explicit_anchor_match = explicit_anchor_pattern.match(line);
+        if (explicit_anchor_match.hasMatch()) {
+            pending_anchors.append(explicit_anchor_match.captured(1));
+            continue;
+        }
+
+        const QRegularExpressionMatch heading_match = heading_pattern.match(line);
+        if (heading_match.hasMatch()) {
+            const QString heading_anchor = markdownHeadingAnchor(heading_match.captured(1).trimmed());
+            for (const QString& anchor : pending_anchors) aliases.insert(anchor, heading_anchor);
+            pending_anchors.clear();
+            continue;
+        }
+
+        if (!line.trimmed().isEmpty()) pending_anchors.clear();
+    }
+
+    return aliases;
+}
+
+QMap<QString, int> markdownTargetPositions(const QTextDocument* document, const QSet<QString>& linked_targets,
+                                           const QMap<QString, QString>& explicit_anchor_aliases) {
+    QMap<QString, int> positions;
+    QSet<QString> heading_targets = linked_targets;
+
+    for (auto alias = explicit_anchor_aliases.cbegin(); alias != explicit_anchor_aliases.cend(); ++alias) {
+        if (linked_targets.contains(alias.key())) heading_targets.insert(alias.value());
+    }
+
+    for (QTextBlock block = document->begin(); block != document->end(); block = block.next()) {
+        if (block.blockFormat().headingLevel() == 0) continue;
+
+        const QString anchor = markdownHeadingAnchor(block.text().trimmed());
+        if (heading_targets.contains(anchor) && !positions.contains(anchor)) positions.insert(anchor, block.position());
+    }
+
+    for (auto alias = explicit_anchor_aliases.cbegin(); alias != explicit_anchor_aliases.cend(); ++alias) {
+        if (!linked_targets.contains(alias.key()) || !positions.contains(alias.value())) continue;
+
+        positions.insert(alias.key(), positions[alias.value()]);
+    }
+
+    return positions;
+}
+
+void styleGuideDiagramPlaceholders(QTextDocument* document) {
+    QTextCharFormat placeholder_format;
+    placeholder_format.setForeground(QColor(Qt::red));
+
+    for (QTextBlock block = document->begin(); block != document->end(); block = block.next()) {
+        if (!block.text().contains(QStringLiteral("Diagram placeholder"))) continue;
+
+        QTextCursor cursor(block);
+        cursor.select(QTextCursor::BlockUnderCursor);
+        cursor.mergeCharFormat(placeholder_format);
+    }
+}
+
+void updateGuideNavigationButtons(const GuideNavigationState& state, QPushButton* back_button,
+                                  QPushButton* forward_button) {
+    back_button->setEnabled(!state.back_positions.isEmpty());
+    forward_button->setEnabled(!state.forward_positions.isEmpty());
+}
+
+int guideScrollPosition(const QTextBrowser* browser) {
+    return browser->verticalScrollBar()->value();
+}
+
+void pushGuideHistoryPosition(QList<int>& positions, int position) {
+    if (!positions.isEmpty() && positions.last() == position) return;
+
+    positions.append(position);
+    if (positions.size() > 100) positions.removeFirst();
+}
+
+void restoreGuideScrollPosition(QTextBrowser* browser, int position) {
+    QScrollBar* scroll_bar = browser->verticalScrollBar();
+    scroll_bar->setValue(qBound(scroll_bar->minimum(), position, scroll_bar->maximum()));
+}
+
+bool jumpToGuideTarget(QTextBrowser* browser, const QMap<QString, int>& target_positions, const QString& target) {
+    const auto position = target_positions.constFind(target);
+    if (position != target_positions.cend()) {
+        const QTextBlock block = browser->document()->findBlock(*position);
+        if (block.isValid()) {
+            QTextCursor cursor(block);
+            browser->setTextCursor(cursor);
+            browser->ensureCursorVisible();
+            return true;
+        }
+    }
+
+    browser->scrollToAnchor(target);
+    return false;
+}
+
+void findGuideText(QTextBrowser* browser, const QString& term, bool backward) {
+    if (term.trimmed().isEmpty()) return;
+
+    QTextDocument::FindFlags flags;
+    if (backward) flags |= QTextDocument::FindBackward;
+
+    QTextCursor cursor = browser->document()->find(term, browser->textCursor(), flags);
+    if (cursor.isNull()) {
+        QTextCursor boundary(browser->document());
+        boundary.movePosition(backward ? QTextCursor::End : QTextCursor::Start);
+        cursor = browser->document()->find(term, boundary, flags);
+    }
+
+    if (cursor.isNull()) return;
+
+    browser->setTextCursor(cursor);
+    browser->ensureCursorVisible();
+}
+
+bool showMarkdownUserGuide(QWidget* parent, const QString& path) {
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+
+    auto dialog = new QDialog(parent);
+    dialog->setAttribute(Qt::WA_DeleteOnClose);
+    dialog->setWindowTitle(QStringLiteral("User Guide"));
+    dialog->resize(1000, 750);
+
+    auto layout                = new QVBoxLayout(dialog);
+    auto toolbar_layout        = new QHBoxLayout();
+    auto back_button           = new QPushButton(QStringLiteral("Back"), dialog);
+    auto forward_button        = new QPushButton(QStringLiteral("Forward"), dialog);
+    auto search_edit           = new QLineEdit(dialog);
+    auto previous_match_button = new QPushButton(QStringLiteral("Previous"), dialog);
+    auto next_match_button     = new QPushButton(QStringLiteral("Next"), dialog);
+
+    search_edit->setClearButtonEnabled(true);
+    search_edit->setPlaceholderText(QStringLiteral("Find in guide"));
+    back_button->setEnabled(false);
+    forward_button->setEnabled(false);
+
+    toolbar_layout->addWidget(back_button);
+    toolbar_layout->addWidget(forward_button);
+    toolbar_layout->addStretch();
+    toolbar_layout->addWidget(search_edit, 1);
+    toolbar_layout->addWidget(previous_match_button);
+    toolbar_layout->addWidget(next_match_button);
+    layout->addLayout(toolbar_layout);
+
+    auto browser = new QTextBrowser(dialog);
+    browser->setOpenLinks(false);
+    browser->setSearchPaths({QFileInfo(path).absolutePath()});
+
+    const QString markdown             = QString::fromUtf8(file.readAll());
+    const QSet<QString> linked_targets = localMarkdownLinkTargets(markdown);
+    browser->setMarkdown(markdownWithHeadingAnchors(markdown));
+    styleGuideDiagramPlaceholders(browser->document());
+
+    const QMap<QString, QString> explicit_anchor_aliases = explicitMarkdownAnchorAliases(markdown);
+    auto target_positions                                = QSharedPointer<QMap<QString, int>>::create(
+        markdownTargetPositions(browser->document(), linked_targets, explicit_anchor_aliases));
+    auto navigation_state = QSharedPointer<GuideNavigationState>::create();
+    QObject::connect(back_button, &QPushButton::clicked, browser,
+                     [browser, navigation_state, back_button, forward_button] {
+                         if (navigation_state->back_positions.isEmpty()) return;
+
+                         pushGuideHistoryPosition(navigation_state->forward_positions, guideScrollPosition(browser));
+                         const int position = navigation_state->back_positions.takeLast();
+                         restoreGuideScrollPosition(browser, position);
+                         updateGuideNavigationButtons(*navigation_state, back_button, forward_button);
+                     });
+    QObject::connect(forward_button, &QPushButton::clicked, browser,
+                     [browser, navigation_state, back_button, forward_button] {
+                         if (navigation_state->forward_positions.isEmpty()) return;
+
+                         pushGuideHistoryPosition(navigation_state->back_positions, guideScrollPosition(browser));
+                         const int position = navigation_state->forward_positions.takeLast();
+                         restoreGuideScrollPosition(browser, position);
+                         updateGuideNavigationButtons(*navigation_state, back_button, forward_button);
+                     });
+    QObject::connect(search_edit, &QLineEdit::returnPressed, browser,
+                     [browser, search_edit] { findGuideText(browser, search_edit->text(), false); });
+    QObject::connect(previous_match_button, &QPushButton::clicked, browser,
+                     [browser, search_edit] { findGuideText(browser, search_edit->text(), true); });
+    QObject::connect(next_match_button, &QPushButton::clicked, browser,
+                     [browser, search_edit] { findGuideText(browser, search_edit->text(), false); });
+    QObject::connect(browser, &QTextBrowser::anchorClicked, browser,
+                     [browser, target_positions, navigation_state, back_button, forward_button](const QUrl& url) {
+                         if (!url.fragment().isEmpty() && (url.isRelative() || url.path().isEmpty())) {
+                             const int previous_position = guideScrollPosition(browser);
+                             if (jumpToGuideTarget(browser, *target_positions, url.fragment())) {
+                                 pushGuideHistoryPosition(navigation_state->back_positions, previous_position);
+                                 navigation_state->forward_positions.clear();
+                                 updateGuideNavigationButtons(*navigation_state, back_button, forward_button);
+                             }
+                             return;
+                         }
+
+                         QDesktopServices::openUrl(url);
+                     });
+    layout->addWidget(browser);
+
+    auto buttons = new QDialogButtonBox(QDialogButtonBox::Close, dialog);
+    QObject::connect(buttons, &QDialogButtonBox::rejected, dialog, &QDialog::close);
+    layout->addWidget(buttons);
+
+    dialog->show();
+    dialog->raise();
+    dialog->activateWindow();
+    return true;
+}
+}  // namespace
 
 namespace ORNL {
 constexpr int kPartTransformUndoCommandId = 1;
@@ -874,8 +1306,24 @@ void MainWindow::setupEvents() {
     });
 
     connect(m_actions["manual"].action, &QAction::triggered, this, [this] {
-        QDesktopServices::openUrl(
-            QUrl::fromLocalFile(qApp->applicationDirPath() + "/../share/doc/ornlslicer/ornlslicer-user-guide.pdf"));
+        const QString manual_path   = userGuidePath(QStringLiteral("ornlslicer-user-guide.pdf"));
+        const QString markdown_path = userGuidePath(QStringLiteral("ornlslicer-user-guide.md"));
+
+        if (!manual_path.isEmpty() && openLocalFile(manual_path)) return;
+
+        if (!markdown_path.isEmpty() && showMarkdownUserGuide(this, markdown_path)) return;
+
+        if (manual_path.isEmpty() && markdown_path.isEmpty()) {
+            QMessageBox::warning(this, "User Guide",
+                                 "Could not find the user guide in the installed documentation or source documentation "
+                                 "directories.");
+            return;
+        }
+
+        const QString found_path = manual_path.isEmpty() ? markdown_path : manual_path;
+        QMessageBox::warning(
+            this, "User Guide",
+            "Could not open the user guide. Install a PDF viewer or set a default PDF application.\n" + found_path);
     });
     connect(m_actions["repo"].action, &QAction::triggered, this,
             [this] { QDesktopServices::openUrl(QUrl("https://github.com/ORNLSlicer/ORNLSlicer")); });

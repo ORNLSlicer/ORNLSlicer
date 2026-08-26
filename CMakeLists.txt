@@ -461,5 +461,10 @@ if(WIN32)
     install(FILES $<TARGET_RUNTIME_DLLS:${PROJECT_NAME}_cli> DESTINATION ${CMAKE_INSTALL_BINDIR})
 endif()
 
-install(FILES ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES
+    ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf
+    ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.md
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}
+)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/docs/user-guide-images DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})

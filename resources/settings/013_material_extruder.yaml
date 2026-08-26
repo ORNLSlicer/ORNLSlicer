@@ -40,7 +40,7 @@ settings:
   - name: "extruder_on_delay_perimeter"
     display: "Perimeter Extruder On Delay"
     type: "time"
-    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for perimeters"
+    tooltip: "Reserved catalog delay before perimeter motion. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
@@ -52,7 +52,7 @@ settings:
   - name: "extruder_on_delay_inset"
     display: "Inset Extruder On Delay"
     type: "time"
-    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for insets"
+    tooltip: "Reserved catalog delay before inset motion. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
@@ -64,7 +64,7 @@ settings:
   - name: "extruder_on_delay_skin"
     display: "Skin Extruder On Delay"
     type: "time"
-    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for skins"
+    tooltip: "Reserved catalog delay before skin motion. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skin":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
@@ -76,7 +76,7 @@ settings:
   - name: "extruder_on_delay_infill"
     display: "Infill Extruder On Delay"
     type: "time"
-    tooltip: "Sets the time that the extruder is turned on before the print head begins moving\u00a0for infill"
+    tooltip: "Reserved catalog delay before infill motion. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
@@ -88,7 +88,7 @@ settings:
   - name: "extruder_on_delay_skeleton"
     display: "Skeleton Extruder On Delay"
     type: "time"
-    tooltip: "Sets the time that the extruder is turned on before the print head begins moving for skeletons"
+    tooltip: "Reserved catalog delay before skeleton motion. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"skeleton":true},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}
     options: []
     default: 0
@@ -100,7 +100,7 @@ settings:
   - name: "extruder_off_delay"
     display: "Extruder Off Delay"
     type: "time"
-    tooltip: "Sets the time that the extruder is turned offf after the print head stops moving"
+    tooltip: "Reserved catalog delay after print-head motion stops. The current slicing and writer paths do not read this value, so it has no effect."
     depends: {"AND":[{"slicing_mode":0},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}
     options: []
     default: 0

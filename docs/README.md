@@ -6,12 +6,51 @@ This directory is the canonical documentation source for ORNLSlicer.
 
 ## Start Here
 
-- [ORNLSlicer User Guide](ornlslicer-user-guide.pdf)
+- [ORNLSlicer User Guide](ornlslicer-user-guide.md)
 - [Getting Started](wiki/Getting-Started.md)
 - [Cylindrical Slicing](slicing/cylindrical-slicing.md)
 - [Arc Specialties G-code](gcode/arc-specialties.md)
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
+
+The Markdown user guide is the canonical manual source. Its exhaustive settings
+appendix is generated from `resources/settings/*.yaml`; choice-level and
+implementation notes that are not part of the UI schema live in
+`scripts/generate_settings_reference.py`. After changing either source, refresh
+and verify the appendix from the repository root:
+
+```bash
+python3 scripts/generate_master_config.py \
+  resources/settings \
+  resources/configs/master.conf \
+  resources/configs/setting_inputs.conf
+python3 -B scripts/generate_settings_reference.py
+python3 -B scripts/generate_settings_reference.py --check
+```
+
+Regenerate the same-stem `ornlslicer-user-guide.pdf` for a release rather than
+editing the PDF directly. With Pandoc and a LaTeX engine installed, run:
+
+```bash
+FORCE_SOURCE_DATE=1 SOURCE_DATE_EPOCH=1735689600 TZ=UTC \
+pandoc --from=gfm docs/ornlslicer-user-guide.md \
+  --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
+  --include-in-header=docs/pandoc/user-guide-header.tex \
+  --metadata title-meta="ORNLSlicer User Guide" \
+  --output=docs/ornlslicer-user-guide.pdf
+```
+
+CI uses the same stable timestamp and timezone when building generated PDF
+artifacts to reduce build-time metadata churn.
+
+The Lua filter colors diagram-placeholder callouts red in generated PDF/HTML
+outputs so unreplaced manual figures are easy to spot before release.
+
+The guide's replaceable figure placeholders live in
+`docs/user-guide-images/figureNN.png`, using zero-padded names such as
+`figure01.png` so the files stay sorted. Replace the image contents while
+keeping the same filename, then regenerate the guide; the Markdown fallback and
+PDF will pick up the updated figure automatically.
 
 ## Architecture
 
