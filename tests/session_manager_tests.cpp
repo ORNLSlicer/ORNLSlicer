@@ -1,5 +1,8 @@
 #include <QCoreApplication>
 #include <QEventLoop>
+#include <QFileInfo>
+#include <QStandardPaths>
+#include <QStringList>
 #include <QTemporaryDir>
 #include <QTimer>
 #include <cstdlib>
@@ -73,14 +76,66 @@ std::optional<fifojson> readGlobalFromProject(const QString& path) {
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
+    QStandardPaths::setTestModeEnabled(true);
 
     QTemporaryDir temp_dir;
     if (!expect(temp_dir.isValid(), "Could not create temporary directory.")) return EXIT_FAILURE;
 
+    auto session = ORNL::CSM;
+    session->clearRecentFiles();
+
+    const QString project_one     = temp_dir.path() + "/alpha.s2p";
+    const QString project_two     = temp_dir.path() + "/beta.S2P";
+    const QString project_ignored = temp_dir.path() + "/notes.txt";
+
+    session->addRecentProjectFile(project_one);
+    session->addRecentProjectFile(project_two);
+    session->addRecentProjectFile(project_one);
+    session->addRecentProjectFile(project_ignored);
+
+    QStringList recent_projects = session->getRecentProjectFiles();
+    if (!expect(recent_projects.size() == 2, "Recent project history should deduplicate and filter by extension."))
+        return EXIT_FAILURE;
+    if (!expect(recent_projects[0] == QFileInfo(project_one).absoluteFilePath(),
+                "Most recently reopened project should move to the front."))
+        return EXIT_FAILURE;
+    if (!expect(recent_projects[1] == QFileInfo(project_two).absoluteFilePath(),
+                "Previous project should remain after a duplicate is moved."))
+        return EXIT_FAILURE;
+
+    for (int i = 0; i < 12; ++i) { session->addRecentModelFile(temp_dir.path() + QString("/model-%1.stl").arg(i)); }
+    session->addRecentModelFile(temp_dir.path() + "/fixture.s2p");
+
+    QStringList recent_models = session->getRecentModelFiles();
+    if (!expect(recent_models.size() == 10, "Recent model history should be capped at ten files.")) return EXIT_FAILURE;
+    if (!expect(recent_models[0] == QFileInfo(temp_dir.path() + "/model-11.stl").absoluteFilePath(),
+                "Newest model should be first in recent model history."))
+        return EXIT_FAILURE;
+    if (!expect(recent_models.back() == QFileInfo(temp_dir.path() + "/model-2.stl").absoluteFilePath(),
+                "Recent model history should drop entries past the cap."))
+        return EXIT_FAILURE;
+
+    const QString step_model = temp_dir.path() + "/bracket.step";
+    session->addRecentModelFile(step_model);
+    recent_models = session->getRecentModelFiles();
+    if (!expect(recent_models[0] == QFileInfo(step_model).absoluteFilePath(),
+                "STEP model should be accepted in recent model history."))
+        return EXIT_FAILURE;
+
+    session->removeRecentFile(step_model);
+    if (!expect(!session->getRecentModelFiles().contains(QFileInfo(step_model).absoluteFilePath()),
+                "Removed recent model should not remain in history."))
+        return EXIT_FAILURE;
+
+    session->clearRecentFiles();
+    if (!expect(session->getRecentProjectFiles().isEmpty() && session->getRecentModelFiles().isEmpty(),
+                "Clearing recent files should clear both project and model history."))
+        return EXIT_FAILURE;
+
     QString project_path = temp_dir.path() + "/old-settings-project.s2p";
     if (!expect(writeProjectWithOldGlobal(project_path), "Could not write project fixture.")) return EXIT_FAILURE;
 
-    ORNL::SessionLoader* loader = ORNL::CSM->loadSession(false, project_path, false);
+    ORNL::SessionLoader* loader = session->loadSession(false, project_path, false);
     if (!expect(loader != nullptr, "CLI-style session load rejected the old project before auto-updating settings."))
         return EXIT_FAILURE;
 

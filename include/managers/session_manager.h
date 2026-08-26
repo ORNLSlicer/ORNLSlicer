@@ -14,6 +14,7 @@
 #include <qmutex.h>
 #include <qobject.h>
 #include <qsharedpointer.h>
+#include <qstringlist.h>
 #include <qtmetamacros.h>
 #include <qtypes.h>
 
@@ -125,6 +126,24 @@ class SessionManager : public QObject {
 
     //! \brief Accessor to set history for the most recently selected http config
     void setMostRecentHTTPConfig(QString config);
+
+    //! \brief Accessor to get recently used project files.
+    QStringList getRecentProjectFiles() const;
+
+    //! \brief Accessor to get recently used model files.
+    QStringList getRecentModelFiles() const;
+
+    //! \brief Add a project file to recent history.
+    void addRecentProjectFile(QString path);
+
+    //! \brief Add a model file to recent history.
+    void addRecentModelFile(QString path);
+
+    //! \brief Remove a file from recent project and model history.
+    void removeRecentFile(QString path);
+
+    //! \brief Clear recent project and model file history.
+    void clearRecentFiles();
 
     //! \brief Sets the pointer to part to copy
     //! \param new_part: part to copy for later paste
@@ -301,6 +320,8 @@ class SessionManager : public QObject {
     QString m_most_recent_setting_folder_location;
     QString m_most_recent_layer_bar_setting_folder_location;
     QString m_most_recent_http_config;
+    QStringList m_recent_project_files;
+    QStringList m_recent_model_files;
 
     //! \brief boolean to track when history needs written to file on close
     bool m_dirty_history;

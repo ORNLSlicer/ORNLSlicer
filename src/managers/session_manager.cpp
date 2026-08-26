@@ -4,6 +4,7 @@
 #include <QCoreApplication>
 #include <QStandardPaths>
 #include <cstdlib>
+#include <string>
 
 #include <qcontainerfwd.h>
 #include <qdir.h>
@@ -42,8 +43,60 @@
 
 namespace ORNL {
 namespace {
+constexpr int kMaxRecentFiles = 10;
+
 bool supportsCylindricalSlicing(GcodeSyntax syntax) {
     return syntax == GcodeSyntax::kArcSpecialties;
+}
+
+QString absoluteFilePath(const QString& path) {
+    return QFileInfo(path).absoluteFilePath();
+}
+
+bool hasSuffix(const QString& path, const QStringList& suffixes) {
+    return suffixes.contains(QFileInfo(path).suffix().toLower());
+}
+
+QStringList readStringList(const fifojson& j, const char* key) {
+    QStringList values;
+    if (!j.contains(key) || !j[key].is_array()) return values;
+
+    for (const fifojson& value : j[key]) {
+        if (!value.is_string()) continue;
+
+        values.push_back(QString::fromStdString(value.get<std::string>()));
+    }
+
+    return values;
+}
+
+QStringList sanitizedRecentFiles(const QStringList& files, const QStringList& suffixes) {
+    QStringList result;
+    for (const QString& file : files) {
+        const QString path = absoluteFilePath(file);
+        if (path.isEmpty() || !hasSuffix(path, suffixes) || result.contains(path)) continue;
+
+        result.push_back(path);
+        if (result.size() >= kMaxRecentFiles) break;
+    }
+
+    return result;
+}
+
+void addRecentFile(QStringList& files, QString path) {
+    path = absoluteFilePath(path);
+    if (path.isEmpty()) return;
+
+    files.removeAll(path);
+    files.prepend(path);
+
+    while (files.size() > kMaxRecentFiles) { files.removeLast(); }
+}
+
+fifojson stringListToJson(const QStringList& values) {
+    fifojson result = fifojson::array();
+    for (const QString& value : values) { result.push_back(value); }
+    return result;
 }
 }  // namespace
 
@@ -54,7 +107,7 @@ QSharedPointer<SessionManager> SessionManager::getInstance() {
     return m_singleton;
 }
 
-SessionManager::SessionManager() : m_file(QString()), m_sensor_files_generated(false) {
+SessionManager::SessionManager() : m_file(QString()), m_dirty_history(false), m_sensor_files_generated(false) {
     // Create static location for gcode output for session
     QString appPathStr = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
     QDir appPath(appPathStr);
@@ -106,6 +159,9 @@ void SessionManager::loadHistory() {
         m_most_recent_setting_folder_location           = j.value("setting_folder_location", defaultLocation);
         m_most_recent_layer_bar_setting_folder_location = j.value("layer_bar_setting_folder_location", defaultLocation);
         m_most_recent_http_config                       = j.value("http_config", QString());
+        m_recent_project_files = sanitizedRecentFiles(readStringList(j, "recent_project_files"), {"s2p"});
+        m_recent_model_files =
+            sanitizedRecentFiles(readStringList(j, "recent_model_files"), {"stl", "3mf", "obj", "amf", "step", "stp"});
 
         file.close();
     }
@@ -119,6 +175,8 @@ void SessionManager::loadHistory() {
             m_most_recent_setting_folder_location = m_most_recent_layer_bar_setting_folder_location =
                 QStandardPaths::writableLocation(QStandardPaths::DesktopLocation);
         m_most_recent_http_config = QString();
+        m_recent_project_files.clear();
+        m_recent_model_files.clear();
 
         m_dirty_history = true;
     }
@@ -138,6 +196,8 @@ void SessionManager::saveHistory() {
         j["setting_folder_location"] = m_most_recent_setting_folder_location;
         j["layer_bar_setting_folder_location"] = m_most_recent_layer_bar_setting_folder_location;
         j["http_config"]                       = m_most_recent_http_config;
+        j["recent_project_files"]              = stringListToJson(m_recent_project_files);
+        j["recent_model_files"]                = stringListToJson(m_recent_model_files);
 
         // Causes segfault if QStandardPaths is referenced here?
         // QDir path = QStandardPaths::writableLocation(QStandardPaths::AppDataLocation);
@@ -183,7 +243,10 @@ bool SessionManager::loadModel(QString filename, bool saveLocation, MeshType mt,
         loader->start();
     }
 
-    if (saveLocation) setMostRecentModelLocation(file_info.absoluteFilePath());
+    if (saveLocation) {
+        setMostRecentModelLocation(file_info.absoluteFilePath());
+        addRecentModelFile(filename);
+    }
 
     return true;
 }
@@ -264,6 +327,8 @@ void SessionManager::reloadPart(QSharedPointer<PartMetaItem> pm) {
     }
 
     QFileInfo file_info(filename);
+    setMostRecentModelLocation(file_info.absoluteFilePath());
+    addRecentModelFile(filename);
 
     MeshLoader* loader = new MeshLoader(filename, pm->part()->getMeshType(), QMatrix4x4(),
                                         PreferencesManager::getInstance()->getImportUnit());
@@ -290,6 +355,8 @@ void SessionManager::replacePart(QSharedPointer<PartMetaItem> pm, QString filena
     }
 
     QFileInfo file_info(filename);
+    setMostRecentModelLocation(file_info.absoluteFilePath());
+    addRecentModelFile(filename);
 
     MeshLoader* loader = new MeshLoader(filename, pm->part()->getMeshType(), QMatrix4x4(),
                                         PreferencesManager::getInstance()->getImportUnit());
@@ -631,7 +698,10 @@ SessionLoader* SessionManager::saveSession(QString path, bool shouldTrack, bool 
     loader->start();
     m_file = path;
 
-    if (shouldTrack) setMostRecentProjectLocation(QFileInfo(path).absolutePath());
+    if (shouldTrack) {
+        setMostRecentProjectLocation(QFileInfo(path).absolutePath());
+        addRecentProjectFile(path);
+    }
 
     return loader;
 }
@@ -734,6 +804,44 @@ QString SessionManager::getMostRecentHTTPConfig() {
 
 void SessionManager::setMostRecentHTTPConfig(QString config) {
     m_most_recent_http_config = config;
+}
+
+QStringList SessionManager::getRecentProjectFiles() const {
+    return m_recent_project_files;
+}
+
+QStringList SessionManager::getRecentModelFiles() const {
+    return m_recent_model_files;
+}
+
+void SessionManager::addRecentProjectFile(QString path) {
+    if (!hasSuffix(path, {"s2p"})) return;
+
+    addRecentFile(m_recent_project_files, path);
+    m_dirty_history = true;
+}
+
+void SessionManager::addRecentModelFile(QString path) {
+    if (!hasSuffix(path, {"stl", "3mf", "obj", "amf", "step", "stp"})) return;
+
+    addRecentFile(m_recent_model_files, path);
+    m_dirty_history = true;
+}
+
+void SessionManager::removeRecentFile(QString path) {
+    path = absoluteFilePath(path);
+
+    const bool removed_project = m_recent_project_files.removeAll(path) > 0;
+    const bool removed_model   = m_recent_model_files.removeAll(path) > 0;
+    if (removed_project || removed_model) m_dirty_history = true;
+}
+
+void SessionManager::clearRecentFiles() {
+    if (m_recent_project_files.isEmpty() && m_recent_model_files.isEmpty()) return;
+
+    m_recent_project_files.clear();
+    m_recent_model_files.clear();
+    m_dirty_history = true;
 }
 
 void SessionManager::setDefaultGcodeDir(QString dir) {
