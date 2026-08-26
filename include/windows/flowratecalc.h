@@ -32,6 +32,12 @@ class FlowrateCalcWindow : public QWidget {
     void closeEvent(QCloseEvent* event);
 
    private slots:
+    //! \brief Update distance labels and entered values when distance units change
+    void distanceUnitsChanged(Distance new_value, Distance old_value);
+
+    //! \brief Update velocity labels and calculated values when velocity units change
+    void velocityUnitsChanged(Velocity new_value, Velocity old_value);
+
     //! \brief Check that all inputs are valid and perform necessary calculations
     //! Inputs are checked automatically as a user alters them
     void checkInputAndCalculate();
@@ -47,8 +53,16 @@ class FlowrateCalcWindow : public QWidget {
     //! \brief Setup events for widget components
     void setupEvents();
 
+    //! \brief Update labels that display preference-controlled units
+    void updateUnitLabels();
+
     //! \brief Layout for widget
     QGridLayout* m_layout;
+
+    //! \brief Unit-aware labels
+    QLabel* m_bead_width_label;
+    QLabel* m_layer_height_label;
+    QLabel* m_gantry_speed_label;
 
     //! \brief Individual input components
     QLineEdit* m_speed_rpm;
