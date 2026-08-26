@@ -132,6 +132,20 @@ int main(int argc, char* argv[]) {
                 "Clearing recent files should clear both project and model history."))
         return EXIT_FAILURE;
 
+    const QString clipping_model = temp_dir.path() + "/clipping.stl";
+    const QString settings_model = temp_dir.path() + "/settings.stl";
+    const QString build_model    = temp_dir.path() + "/build.stl";
+    session->addRecentModelFile(clipping_model, ORNL::MeshType::kClipping);
+    session->addRecentModelFile(settings_model, ORNL::MeshType::kSettings);
+    session->addRecentModelFile(build_model, ORNL::MeshType::kBuild);
+
+    recent_models = session->getRecentModelFiles();
+    if (!expect(recent_models.size() == 1, "Only build models should be added to recent model history."))
+        return EXIT_FAILURE;
+    if (!expect(recent_models[0] == QFileInfo(build_model).absoluteFilePath(),
+                "Build model should be retained after non-build model history entries are ignored."))
+        return EXIT_FAILURE;
+
     QString project_path = temp_dir.path() + "/old-settings-project.s2p";
     if (!expect(writeProjectWithOldGlobal(project_path), "Could not write project fixture.")) return EXIT_FAILURE;
 

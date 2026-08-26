@@ -136,8 +136,8 @@ class SessionManager : public QObject {
     //! \brief Add a project file to recent history.
     void addRecentProjectFile(QString path);
 
-    //! \brief Add a model file to recent history.
-    void addRecentModelFile(QString path);
+    //! \brief Add a build model file to recent history.
+    void addRecentModelFile(QString path, MeshType mt = MeshType::kBuild);
 
     //! \brief Remove a file from recent project and model history.
     void removeRecentFile(QString path);

@@ -245,7 +245,7 @@ bool SessionManager::loadModel(QString filename, bool saveLocation, MeshType mt,
 
     if (saveLocation) {
         setMostRecentModelLocation(file_info.absoluteFilePath());
-        addRecentModelFile(filename);
+        addRecentModelFile(filename, mt);
     }
 
     return true;
@@ -327,11 +327,12 @@ void SessionManager::reloadPart(QSharedPointer<PartMetaItem> pm) {
     }
 
     QFileInfo file_info(filename);
+    const MeshType mesh_type = pm->part()->getMeshType();
     setMostRecentModelLocation(file_info.absoluteFilePath());
-    addRecentModelFile(filename);
+    addRecentModelFile(filename, mesh_type);
 
-    MeshLoader* loader = new MeshLoader(filename, pm->part()->getMeshType(), QMatrix4x4(),
-                                        PreferencesManager::getInstance()->getImportUnit());
+    MeshLoader* loader =
+        new MeshLoader(filename, mesh_type, QMatrix4x4(), PreferencesManager::getInstance()->getImportUnit());
 
     connect(loader, &MeshLoader::finished, loader, &MeshLoader::deleteLater);
 
@@ -355,11 +356,12 @@ void SessionManager::replacePart(QSharedPointer<PartMetaItem> pm, QString filena
     }
 
     QFileInfo file_info(filename);
+    const MeshType mesh_type = pm->part()->getMeshType();
     setMostRecentModelLocation(file_info.absoluteFilePath());
-    addRecentModelFile(filename);
+    addRecentModelFile(filename, mesh_type);
 
-    MeshLoader* loader = new MeshLoader(filename, pm->part()->getMeshType(), QMatrix4x4(),
-                                        PreferencesManager::getInstance()->getImportUnit());
+    MeshLoader* loader =
+        new MeshLoader(filename, mesh_type, QMatrix4x4(), PreferencesManager::getInstance()->getImportUnit());
 
     connect(loader, &MeshLoader::finished, loader, &MeshLoader::deleteLater);
 
@@ -821,8 +823,8 @@ void SessionManager::addRecentProjectFile(QString path) {
     m_dirty_history = true;
 }
 
-void SessionManager::addRecentModelFile(QString path) {
-    if (!hasSuffix(path, {"stl", "3mf", "obj", "amf", "step", "stp"})) return;
+void SessionManager::addRecentModelFile(QString path, MeshType mt) {
+    if (mt != MeshType::kBuild || !hasSuffix(path, {"stl", "3mf", "obj", "amf", "step", "stp"})) return;
 
     addRecentFile(m_recent_model_files, path);
     m_dirty_history = true;
