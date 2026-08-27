@@ -86,34 +86,65 @@ float beadDisplayWidth(Distance bead_width) {
     return static_cast<float>(bead_width()) * Constants::OpenGL::kObjectToView;
 }
 
+Distance beadWidthSetting(const QString& setting_key, const QSharedPointer<SettingsBase>& sb,
+                          const QHash<QString, double>& file_settings) {
+    const QSharedPointer<SettingsBase> global = GSM->getGlobal();
+    if (sb != nullptr && global != nullptr && sb.data() != global.data() && sb->contains(setting_key)) {
+        return sb->setting<Distance>(setting_key);
+    }
+
+    const auto file_setting = file_settings.constFind(setting_key);
+    if (file_setting != file_settings.constEnd()) { return Distance(file_setting.value()); }
+
+    if (sb != nullptr && sb->contains(setting_key)) { return sb->setting<Distance>(setting_key); }
+
+    return Distance();
+}
+
 Distance beadWidthForComment(const QString& comment, const QSharedPointer<SettingsBase>& sb,
-                             Distance comment_distance_unit) {
+                             const QHash<QString, double>& file_settings, Distance comment_distance_unit) {
     if (comment.contains(Constants::RegionTypeStrings::kRadial) ||
         comment.contains(Constants::RegionTypeStrings::kHelical)) {
-        return sb->setting<Distance>(PS::Layer::kBeadWidth);
+        return beadWidthSetting(PS::Layer::kBeadWidth, sb, file_settings);
     }
     if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kPerimeter)) {
         return beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kPerimeter,
-                                          sb->setting<Distance>(PS::Perimeter::kBeadWidth), comment_distance_unit);
+                                          beadWidthSetting(PS::Perimeter::kBeadWidth, sb, file_settings),
+                                          comment_distance_unit);
     }
     if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
-        return sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+        return beadWidthSetting(PS::Perimeter::kBeadWidth, sb, file_settings);
     }
     if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kInset)) {
         return beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kInset,
-                                          sb->setting<Distance>(PS::Inset::kBeadWidth), comment_distance_unit);
+                                          beadWidthSetting(PS::Inset::kBeadWidth, sb, file_settings),
+                                          comment_distance_unit);
     }
-    if (comment.contains(Constants::RegionTypeStrings::kInset)) { return sb->setting<Distance>(PS::Inset::kBeadWidth); }
+    if (comment.contains(Constants::RegionTypeStrings::kInset)) {
+        return beadWidthSetting(PS::Inset::kBeadWidth, sb, file_settings);
+    }
     if (comment.contains(Constants::RegionTypeStrings::kSkeleton)) {
         return beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kSkeleton,
-                                          sb->setting<Distance>(PS::Skeleton::kBeadWidth), comment_distance_unit);
+                                          beadWidthSetting(PS::Skeleton::kBeadWidth, sb, file_settings),
+                                          comment_distance_unit);
     }
-    if (comment.contains(Constants::RegionTypeStrings::kSkin)) { return sb->setting<Distance>(PS::Skin::kBeadWidth); }
+    if (comment.contains(Constants::RegionTypeStrings::kSkin)) {
+        return beadWidthSetting(PS::Skin::kBeadWidth, sb, file_settings);
+    }
     if (comment.contains(Constants::RegionTypeStrings::kInfill)) {
-        return sb->setting<Distance>(PS::Infill::kBeadWidth);
+        return beadWidthSetting(PS::Infill::kBeadWidth, sb, file_settings);
+    }
+    if (comment.contains(Constants::RegionTypeStrings::kRaft)) {
+        return beadWidthSetting(MS::PlatformAdhesion::kRaftBeadWidth, sb, file_settings);
+    }
+    if (comment.contains(Constants::RegionTypeStrings::kBrim)) {
+        return beadWidthSetting(MS::PlatformAdhesion::kBrimBeadWidth, sb, file_settings);
+    }
+    if (comment.contains(Constants::RegionTypeStrings::kSkirt)) {
+        return beadWidthSetting(MS::PlatformAdhesion::kSkirtBeadWidth, sb, file_settings);
     }
 
-    return sb->setting<Distance>(PS::Layer::kBeadWidth);
+    return beadWidthSetting(PS::Layer::kBeadWidth, sb, file_settings);
 }
 
 const QString kCylindricalAxisXComment            = "AXIS_X=";
@@ -284,6 +315,7 @@ void GCodeLoader::run() {
 
             m_parser->parseHeader();
             QHash<QString, double> visualizationSettings = m_parser->parseFooter();
+            m_file_settings                              = visualizationSettings;
             QList<QList<GcodeCommand>> m_motion_commands = m_parser->parseLines();
 
             if (m_parser->getWasModified()) {
@@ -832,7 +864,8 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, Se
         m_modifier_colors.contains(color) ? 1.1f : 1.0f;  // Scale modifier segments by 1.1 for better visibility
 
     // Set the display width of the segment based on its region type
-    display_width = beadDisplayWidth(beadWidthForComment(comment, m_sb, m_selected_meta.m_distance_unit));
+    display_width =
+        beadDisplayWidth(beadWidthForComment(comment, m_sb, m_file_settings, m_selected_meta.m_distance_unit));
 
     // Set the display info of the segment
     segment->setDisplayInfo(display_width * scale, display_length, display_height * scale, type, color, line_num,
@@ -870,7 +903,7 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
         QString().asprintf("%0.2f", length) % " " % PreferencesManager::getInstance()->getDistanceUnitText();
 
     if (deposition_active) {
-        const Distance width = beadWidthForComment(comment, m_sb, m_selected_meta.m_distance_unit);
+        const Distance width = beadWidthForComment(comment, m_sb, m_file_settings, m_selected_meta.m_distance_unit);
         segment->m_segment_info_meta.width =
             QString().asprintf("%0.3f", width.to(PreferencesManager::getInstance()->getDistanceUnit())) % " " %
             PreferencesManager::getInstance()->getDistanceUnitText();

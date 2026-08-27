@@ -243,5 +243,8 @@ class GCodeLoader : public QThread {
 
     //! \brief Current settings for gcode loader
     QSharedPointer<SettingsBase> m_sb;
+
+    //! \brief Settings parsed from the loaded file footer for visualization fallbacks.
+    QHash<QString, double> m_file_settings;
 };  // class GCodeLoader
 }  // namespace ORNL
