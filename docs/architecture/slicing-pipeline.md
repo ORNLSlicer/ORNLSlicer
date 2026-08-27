@@ -15,22 +15,24 @@ output suffix, and emits `startSlice` to the active slicer.
 | `SlicingMode` | Additional Selection | Implementation | Output Model |
 | --- | --- | --- | --- |
 | `kPlanar` | None | `PlanarSlicer` | Cross-sectioned layers with islands and regions |
-| `kCylindrical` | `CylindricalPathPattern::kRadial` | `RadialSlicer` | Concentric radial paths stored directly on `RadialLayer` |
-| `kCylindrical` | `CylindricalPathPattern::kHelical` | `HelicalSlicer` | Rising helical paths stored directly on `HelicalLayer` |
+| `kCylindrical` | `CylindricalPathPattern::kRadial` | `CylindricalSlicer` | Concentric radial paths stored directly on `CylindricalLayer` |
+| `kCylindrical` | `CylindricalPathPattern::kHelical` | `CylindricalSlicer` | Rising helical paths stored directly on `CylindricalLayer` |
 | `kImage` | None | `ImageSlicer` | Image slices rather than ordinary machine G-code |
 
 Cylindrical slicing currently requires the Arc Specialties G-code syntax. The
-guard lives in `SessionManager::doSlice()`, and the cylindrical slicers select
+guard lives in `SessionManager::doSlice()`, and the cylindrical slicer selects
 `ArcSpecialtiesWriter` directly. Planar slicing can also use Arc Specialties
 through the common writer selection path. User-facing cylindrical behavior is
 documented in [Cylindrical Slicing](../slicing/cylindrical-slicing.md), and the
 controller dialect is documented in [Arc Specialties](../gcode/arc-specialties.md).
 
-`SessionManager::changeSlicer()` replaces the slicer when the mode or
-cylindrical pattern changes, clears existing part steps, and reconnects
-the start trigger plus progress/status and completion signals. Cancellation is
-requested separately through `SessionManager::cancelSlice()`, which calls the
-active slicer's `setCancel()` method.
+`SessionManager::changeSlicer()` replaces the slicer when the mode changes,
+clears existing part steps, and reconnects the start trigger plus
+progress/status and completion signals. `CylindricalSlicer` reads
+`CylindricalPathPattern` during preprocessing, so radial-vs-helical changes do
+not require replacing the concrete slicer. Cancellation is requested separately
+through `SessionManager::cancelSlice()`, which calls the active slicer's
+`setCancel()` method.
 
 ## Pipeline Phases
 
@@ -78,11 +80,11 @@ islands, and adds optional support, raft, brim, skirt, laser-scan, and
 thermal-scan structures. It then uses `LayerOrderOptimizer` to group compatible
 steps from multiple parts into `GlobalLayer` objects.
 
-Radial and helical slicers have specialized preprocessors. They copy and clip
-meshes, compute horizontal cross-sections, generate circular or helical
-polylines against those sections, and store resulting `Path` objects directly
-on their specialized layers. They intentionally do not create polymer islands
-or regions.
+`CylindricalSlicer` has specialized radial and helical preprocessing branches.
+They copy and clip meshes, compute horizontal cross-sections, generate circular
+or helical polylines against those sections, and store resulting `Path` objects
+directly on `CylindricalLayer`. Cylindrical slicing intentionally does not
+create polymer islands or regions.
 
 Image slicing owns its image-generation preprocessing and does not use the
 ordinary machine G-code body.
@@ -102,8 +104,8 @@ pathing types, not in a GUI callback. `TraditionalAST` owns queue progress and
 decides when it is safe to start postprocessing.
 
 The specialized modes are intentional exceptions to that common hierarchy.
-`RadialLayer::compute()` and `HelicalLayer::compute()` are currently no-ops
-because their paths are generated during preprocessing and modified later.
+`CylindricalLayer::compute()` is currently a no-op because cylindrical paths are
+generated during preprocessing and modified later.
 Image slicing creates no `Step` objects; it generates VTK image stencils during
 preprocessing with its own `std::jthread` worker pool.
 
@@ -116,7 +118,7 @@ ordering.
   `LayerOrderOptimizer` in the preprocessor's final hook. Postprocessing
   unorients each global layer, orders and connects its islands/paths and
   travels, applies path modifiers, and restores printer coordinates.
-- Radial and helical slicing apply modifiers over their directly owned paths
+- Cylindrical slicing applies modifiers over its directly owned paths
   while preserving the current tool location between layers.
 - Concrete slicers emit postprocess progress and honor the shared cancellation
   flag before output begins.
@@ -140,7 +142,7 @@ The slicers do not all consume the same override scopes.
 | Mode | Effective Settings Scope |
 | --- | --- |
 | Planar | Adjusted global copy, part overrides, matching layer ranges, local adjustments, and spatial settings polygons |
-| Radial/helical | Adjusted global copy, part overrides, and per-layer local adjustments; layer ranges and settings-part polygons are not currently applied |
+| Cylindrical | Adjusted global copy, part overrides, and per-layer local adjustments; layer ranges and settings-part polygons are not currently applied |
 | Image | Active global values read directly while generating image stencils |
 
 When adding an override mechanism, trace the concrete slicer's preprocessing
@@ -189,9 +191,9 @@ Responsibilities are deliberately layered:
 `GlobalLayer` is not a `Step`. It is a planar cross-part aggregate that groups
 `StepPair` objects for ordering, postprocessing, and G-code generation.
 
-`RadialLayer` and `HelicalLayer` derive through `Layer`, but their specialized
-implementations own `Path` objects directly. Do not assume every layer has an
-island/region hierarchy.
+`CylindricalLayer` derives through `Layer`, but its specialized implementation
+owns `Path` objects directly. Do not assume every layer has an island/region
+hierarchy.
 
 ## Geometry and Coordinates
 
