@@ -306,7 +306,21 @@ void PreferencesWindow::setupLayout() {
 
     visualization_tab_layout->addWidget(new QLabel("True-width vertex threshold:"), 1, 0, Qt::AlignTop);
     visualization_tab_layout->addWidget(m_gcode_preview_vertex_threshold_spinbox, 1, 1, Qt::AlignTop);
-    visualization_tab_layout->setRowStretch(2, 1);
+
+    m_optimization_points_visible_by_default_checkbox = new QCheckBox("Show optimization points by default");
+    m_optimization_points_visible_by_default_checkbox->setChecked(
+        PreferencesManager::getInstance()->getOptimizationPointsVisibleByDefaultPreference());
+    m_optimization_points_visible_by_default_checkbox->setToolTip("Show custom optimization points automatically");
+
+    visualization_tab_layout->addWidget(m_optimization_points_visible_by_default_checkbox, 2, 0, 1, 2, Qt::AlignTop);
+
+    m_gcode_info_visible_by_default_checkbox = new QCheckBox("Show bead / segment info by default");
+    m_gcode_info_visible_by_default_checkbox->setChecked(
+        PreferencesManager::getInstance()->getGCodeInfoVisibleByDefaultPreference());
+    m_gcode_info_visible_by_default_checkbox->setToolTip("Show the g-code Bead / Segment Info panel automatically");
+
+    visualization_tab_layout->addWidget(m_gcode_info_visible_by_default_checkbox, 3, 0, 1, 2, Qt::AlignTop);
+    visualization_tab_layout->setRowStretch(4, 1);
 
     connect(m_gcode_preview_mode_combobox, QOverload<int>::of(&QComboBox::currentIndexChanged), this, [this] {
         PreferencesManager::getInstance()->setGCodePreviewModePreference(
@@ -314,6 +328,11 @@ void PreferencesWindow::setupLayout() {
     });
     connect(m_gcode_preview_vertex_threshold_spinbox, QOverload<int>::of(&QSpinBox::valueChanged),
             PreferencesManager::getInstance().get(), &PreferencesManager::setGCodePreviewVertexThresholdPreference);
+    connect(m_optimization_points_visible_by_default_checkbox, &QCheckBox::clicked,
+            PreferencesManager::getInstance().get(),
+            &PreferencesManager::setOptimizationPointsVisibleByDefaultPreference);
+    connect(m_gcode_info_visible_by_default_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
+            &PreferencesManager::setGCodeInfoVisibleByDefaultPreference);
 
     // Visualization Colors tab
     QScrollArea* scrollArea = new QScrollArea(m_tab_widget);
@@ -492,6 +511,10 @@ void PreferencesWindow::importPreferences() {
         m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
         m_gcode_preview_vertex_threshold_spinbox->setValue(
             m_preferences_manager->getGCodePreviewVertexThresholdPreference());
+        m_optimization_points_visible_by_default_checkbox->setChecked(
+            m_preferences_manager->getOptimizationPointsVisibleByDefaultPreference());
+        m_gcode_info_visible_by_default_checkbox->setChecked(
+            m_preferences_manager->getGCodeInfoVisibleByDefaultPreference());
         int disabledSettingVisibilityIndex = m_disabled_setting_visibility_combobox->findData(
             static_cast<int>(m_preferences_manager->getDisabledSettingVisibilityPreference()));
         m_disabled_setting_visibility_combobox->setCurrentIndex(std::max(0, disabledSettingVisibilityIndex));

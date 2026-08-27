@@ -148,9 +148,9 @@ void PartView::showOverhang(bool show) {
 }
 
 void PartView::showSeams(bool show) {
-    m_printer->setSeamsHidden(!show);
-
     m_state.seams_shown = show;
+
+    if (!m_printer.isNull()) { m_printer->setSeamsHidden(!show); }
 
     this->update();
 }
@@ -476,6 +476,8 @@ void PartView::initView() {
             m_printer = QSharedPointer<CartesianPrinterObject>::create(this, m_sb, false);
             break;
     }
+
+    m_printer->setSeamsHidden(!m_state.seams_shown);
 
     QVector3D max = m_printer->maximum();
     QVector3D min = m_printer->minimum();

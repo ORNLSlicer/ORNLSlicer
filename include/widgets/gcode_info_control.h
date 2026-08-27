@@ -125,6 +125,7 @@ class GCodeInfoControl : public QWidget {
     QLabel* m_infolbl_speed;
     QLabel* m_infolbl_extruder_speed;
     QLabel* m_infolbl_length;
+    QLabel* m_infolbl_width;
     QLabel* m_infolbl_center_distance;
     QLabel* m_infolbl_layer_no;
     QLabel* m_infolbl_line_no;

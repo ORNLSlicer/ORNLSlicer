@@ -110,9 +110,12 @@ void MainToolbar::setupSubWidgets() {
 
     // Seam buttons
     m_seam_btn = buildIconButton(":/icons/map_markers_black.png", "Show optimization points", true);
-    handleModifiedSetting("");
     this->addWidget(m_seam_btn);
-    connect(m_seam_btn, &QToolButton::toggled, this, [this](bool checked) { emit showSeams(checked); });
+    connect(m_seam_btn, &QToolButton::toggled, this, [this](bool checked) {
+        m_optimization_points_user_toggled = true;
+        emit showSeams(checked);
+    });
+    handleModifiedSetting("");
 
     // Overhang Button
     m_overhang_button = buildIconButton(":/icons/support_overhang.png", "Show support overhangs", true);
@@ -127,6 +130,7 @@ void MainToolbar::setupSubWidgets() {
 
     // Bead Inspection Tool / Segment Info Button
     m_segment_info_button = buildIconButton(":/icons/info.png", "Show g-code Bead / Segment Info", true);
+    m_segment_info_button->setChecked(PreferencesManager::getInstance()->getGCodeInfoVisibleByDefaultPreference());
     this->addWidget(m_segment_info_button);
     m_segment_info_button->setEnabled(false);
     connect(m_segment_info_button, &QToolButton::toggled, this,
@@ -519,6 +523,10 @@ void MainToolbar::setOrthoGcodeChecked(bool status) {
     m_2d_gcode_btn->setChecked(status);
 }
 
+void MainToolbar::syncOptimizationPointVisibility() {
+    emit showSeams(m_seam_btn->isEnabled() && m_seam_btn->isChecked());
+}
+
 void MainToolbar::handleModifiedSetting(const QString& setting_key) {
     IslandOrderOptimization islandOrder =
         static_cast<IslandOrderOptimization>(GSM->getGlobal()->setting<int>(PS::Optimizations::kIslandOrder));
@@ -530,12 +538,22 @@ void MainToolbar::handleModifiedSetting(const QString& setting_key) {
         !usesCustomPointLocation(pointOrder)) {
         m_seam_btn->setDisabled(true);
         m_seam_btn->setToolTip("Custom optimization points are not set");
-        m_seam_btn->setChecked(false);
-        emit showSeams(false);
+        if (m_seam_btn->isChecked()) {
+            const QSignalBlocker blocker(m_seam_btn);
+            m_seam_btn->setChecked(false);
+            emit showSeams(false);
+        }
     }
     else {
         m_seam_btn->setDisabled(false);
         m_seam_btn->setToolTip("Show optimization points");
+        if (!m_optimization_points_user_toggled &&
+            PreferencesManager::getInstance()->getOptimizationPointsVisibleByDefaultPreference() &&
+            !m_seam_btn->isChecked()) {
+            const QSignalBlocker blocker(m_seam_btn);
+            m_seam_btn->setChecked(true);
+            emit showSeams(true);
+        }
     }
 }
 }  // namespace ORNL

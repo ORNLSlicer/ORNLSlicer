@@ -159,6 +159,10 @@ class WriterBase {
     //! \brief Writes a comment with a preceding space, then ends the line
     QString commentSpaceLine(const QString& text);
 
+    //! \brief Builds the parser-facing region comment, including adapted bead width when present.
+    QString regionComment(RegionType region_type, PathModifiers path_modifiers,
+                          const QSharedPointer<SettingsBase>& params, bool include_skeleton_width = false) const;
+
     //! \brief gets a vector in the direction normal to the plane and of a length = travel lift height
     QVector3D getTravelLift();
 

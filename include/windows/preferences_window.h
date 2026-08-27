@@ -96,6 +96,8 @@ class PreferencesWindow : public QMainWindow {
     QComboBox* m_gcode_preview_mode_combobox;
     QComboBox* m_disabled_setting_visibility_combobox;
     QSpinBox* m_gcode_preview_vertex_threshold_spinbox;
+    QCheckBox* m_gcode_info_visible_by_default_checkbox;
+    QCheckBox* m_optimization_points_visible_by_default_checkbox;
     QCheckBox* m_warn_unsaved_project_on_close_checkbox;
 
     //! \brief List of groupboxes that hold radio buttons for various preferences

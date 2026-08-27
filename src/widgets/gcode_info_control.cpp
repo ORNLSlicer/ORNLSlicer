@@ -206,6 +206,7 @@ void GCodeInfoControl::fillSegmentInfo(uint lineNo) {
             m_infolbl_speed->setText(seg->m_segment_info_meta.speed);
             m_infolbl_extruder_speed->setText(seg->m_segment_info_meta.extruderSpeed);
             m_infolbl_length->setText(seg->m_segment_info_meta.length);
+            m_infolbl_width->setText(seg->m_segment_info_meta.width);
             m_infolbl_layer_no->setText(QString::number(seg->layerNumber()));
             m_infolbl_line_no->setText(QString::number(lineNo));
             m_current_segment = seg;
@@ -220,6 +221,7 @@ void GCodeInfoControl::fillSegmentInfo(uint lineNo) {
     m_infolbl_speed->setText("");
     m_infolbl_extruder_speed->setText("");
     m_infolbl_length->setText("");
+    m_infolbl_width->setText("");
     m_infolbl_center_distance->setText("");
     m_infolbl_layer_no->setText("");
     m_infolbl_line_no->setText("");
@@ -349,6 +351,7 @@ void GCodeInfoControl::setupWidget() {
     m_infolbl_speed           = new QLabel;
     m_infolbl_extruder_speed  = new QLabel;
     m_infolbl_length          = new QLabel;
+    m_infolbl_width           = new QLabel;
     m_infolbl_center_distance = new QLabel;
     m_infolbl_layer_no        = new QLabel;
     m_infolbl_line_no         = new QLabel;
@@ -382,12 +385,14 @@ void GCodeInfoControl::setupWidget() {
     m_info_grid->addWidget(m_infolbl_extruder_speed, 4, 1);
     m_info_grid->addWidget(new QLabel("Length"), 5, 0);
     m_info_grid->addWidget(m_infolbl_length, 5, 1);
-    m_info_grid->addWidget(new QLabel("Centerline Distance"), 6, 0);
-    m_info_grid->addWidget(m_infolbl_center_distance, 6, 1);
-    m_info_grid->addWidget(new QLabel("Layer #"), 7, 0);
-    m_info_grid->addWidget(m_infolbl_layer_no, 7, 1);
-    m_info_grid->addWidget(new QLabel("G-Code Line #"), 8, 0);
-    m_info_grid->addWidget(m_infolbl_line_no, 8, 1);
+    m_info_grid->addWidget(new QLabel("Bead Width"), 6, 0);
+    m_info_grid->addWidget(m_infolbl_width, 6, 1);
+    m_info_grid->addWidget(new QLabel("Centerline Distance"), 7, 0);
+    m_info_grid->addWidget(m_infolbl_center_distance, 7, 1);
+    m_info_grid->addWidget(new QLabel("Layer #"), 8, 0);
+    m_info_grid->addWidget(m_infolbl_layer_no, 8, 1);
+    m_info_grid->addWidget(new QLabel("G-Code Line #"), 9, 0);
+    m_info_grid->addWidget(m_infolbl_line_no, 9, 1);
 
     fillSegmentInfo(0);
 }

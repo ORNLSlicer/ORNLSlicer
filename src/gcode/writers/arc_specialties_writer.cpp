@@ -574,7 +574,7 @@ QString ArcSpecialtiesWriter::writeLine(const Point&, const Point& target_point,
 
     if (speed <= 0) { speed = 10.0 * mm / s; }
 
-    rv += writeMotion("G01", target_point, speed, params, printMoveComment());
+    rv += writeMotion("G01", target_point, speed, params, printMoveComment(params));
     return rv;
 }
 
@@ -599,7 +599,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     rv += QString(ccw ? "G03" : "G02") % writeCoordinates(end_point, params, kToolFrameZR) %
           writeArcCenterParameters(start_point, center_point) % m_f %
           QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4) % inline_optional_stop %
-          commentSpaceLine(printMoveComment());
+          commentSpaceLine(printMoveComment(params));
     return rv;
 }
 
@@ -877,12 +877,17 @@ bool ArcSpecialtiesWriter::isHelicalPathPattern() const {
     return isCylindricalSlicingMode() && path_pattern == CylindricalPathPattern::kHelical;
 }
 
-QString ArcSpecialtiesWriter::printMoveComment() const {
+QString ArcSpecialtiesWriter::printMoveComment(const QSharedPointer<SettingsBase>& params) const {
     if (isCylindricalSlicingMode()) {
         return isHelicalPathPattern() ? Constants::RegionTypeStrings::kHelical : Constants::RegionTypeStrings::kRadial;
     }
 
-    return toString(m_region_type);
+    PathModifiers path_modifiers = PathModifiers::kNone;
+    if (params != nullptr && params->contains(SS::kPathModifiers)) {
+        path_modifiers = params->setting<PathModifiers>(SS::kPathModifiers);
+    }
+
+    return regionComment(m_region_type, path_modifiers, params);
 }
 
 bool ArcSpecialtiesWriter::isCylindricalSlicingMode() const {

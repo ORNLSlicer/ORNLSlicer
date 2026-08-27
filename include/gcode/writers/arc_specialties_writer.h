@@ -291,9 +291,10 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     /*!
      * @brief Returns the print-move comment for the active slicing mode and path type.
+     * @param params Segment settings used to report parser-facing region metadata.
      * @return Region, radial, or helical comment text.
      */
-    QString printMoveComment() const;
+    QString printMoveComment(const QSharedPointer<SettingsBase>& params) const;
 
     /*!
      * @brief Returns whether the writer is emitting cylindrical radial or helical paths.

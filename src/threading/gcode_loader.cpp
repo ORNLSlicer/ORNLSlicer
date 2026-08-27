@@ -86,6 +86,36 @@ float beadDisplayWidth(Distance bead_width) {
     return static_cast<float>(bead_width()) * Constants::OpenGL::kObjectToView;
 }
 
+Distance beadWidthForComment(const QString& comment, const QSharedPointer<SettingsBase>& sb,
+                             Distance comment_distance_unit) {
+    if (comment.contains(Constants::RegionTypeStrings::kRadial) ||
+        comment.contains(Constants::RegionTypeStrings::kHelical)) {
+        return sb->setting<Distance>(PS::Layer::kBeadWidth);
+    }
+    if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kPerimeter)) {
+        return beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kPerimeter,
+                                          sb->setting<Distance>(PS::Perimeter::kBeadWidth), comment_distance_unit);
+    }
+    if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
+        return sb->setting<Distance>(PS::Perimeter::kBeadWidth);
+    }
+    if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kInset)) {
+        return beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kInset,
+                                          sb->setting<Distance>(PS::Inset::kBeadWidth), comment_distance_unit);
+    }
+    if (comment.contains(Constants::RegionTypeStrings::kInset)) { return sb->setting<Distance>(PS::Inset::kBeadWidth); }
+    if (comment.contains(Constants::RegionTypeStrings::kSkeleton)) {
+        return beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kSkeleton,
+                                          sb->setting<Distance>(PS::Skeleton::kBeadWidth), comment_distance_unit);
+    }
+    if (comment.contains(Constants::RegionTypeStrings::kSkin)) { return sb->setting<Distance>(PS::Skin::kBeadWidth); }
+    if (comment.contains(Constants::RegionTypeStrings::kInfill)) {
+        return sb->setting<Distance>(PS::Infill::kBeadWidth);
+    }
+
+    return sb->setting<Distance>(PS::Layer::kBeadWidth);
+}
+
 const QString kCylindricalAxisXComment            = "AXIS_X=";
 const QString kCylindricalAxisYComment            = "AXIS_Y=";
 const QString kWorldApproachTravelComment         = "WORLD APPROACH TRAVEL";
@@ -802,40 +832,7 @@ void GCodeLoader::setSegmentDisplayInfo(QSharedPointer<SegmentBase>& segment, Se
         m_modifier_colors.contains(color) ? 1.1f : 1.0f;  // Scale modifier segments by 1.1 for better visibility
 
     // Set the display width of the segment based on its region type
-    if (comment.contains(Constants::RegionTypeStrings::kRadial) ||
-        comment.contains(Constants::RegionTypeStrings::kHelical)) {
-        display_width = m_sb->setting<float>(PS::Layer::kBeadWidth) * Constants::OpenGL::kObjectToView;
-    }
-    else if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kPerimeter)) {
-        display_width = beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kPerimeter,
-                                                                    m_sb->setting<Distance>(PS::Perimeter::kBeadWidth),
-                                                                    m_selected_meta.m_distance_unit));
-    }
-    else if (comment.contains(Constants::RegionTypeStrings::kPerimeter)) {
-        display_width = m_sb->setting<float>(PS::Perimeter::kBeadWidth) * Constants::OpenGL::kObjectToView;
-    }
-    else if (comment.startsWith(QStringLiteral("AD-") % Constants::RegionTypeStrings::kInset)) {
-        display_width = beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kInset,
-                                                                    m_sb->setting<Distance>(PS::Inset::kBeadWidth),
-                                                                    m_selected_meta.m_distance_unit));
-    }
-    else if (comment.contains("INSET")) {
-        display_width = m_sb->setting<float>(PS::Inset::kBeadWidth) * Constants::OpenGL::kObjectToView;
-    }
-    else if (comment.contains("SKELETON")) {
-        display_width = beadDisplayWidth(beadWidthFromRegionComment(comment, Constants::RegionTypeStrings::kSkeleton,
-                                                                    m_sb->setting<Distance>(PS::Skeleton::kBeadWidth),
-                                                                    m_selected_meta.m_distance_unit));
-    }
-    else if (comment.contains("SKIN")) {
-        display_width = m_sb->setting<float>(PS::Skin::kBeadWidth) * Constants::OpenGL::kObjectToView;
-    }
-    else if (comment.contains("INFILL")) {
-        display_width = m_sb->setting<float>(PS::Infill::kBeadWidth) * Constants::OpenGL::kObjectToView;
-    }
-    else {  // Default to layer bead width
-        display_width = m_sb->setting<float>(PS::Layer::kBeadWidth) * Constants::OpenGL::kObjectToView;
-    }
+    display_width = beadDisplayWidth(beadWidthForComment(comment, m_sb, m_selected_meta.m_distance_unit));
 
     // Set the display info of the segment
     segment->setDisplayInfo(display_width * scale, display_length, display_height * scale, type, color, line_num,
@@ -871,6 +868,14 @@ void GCodeLoader::setSegmentMetaInfo(QSharedPointer<SegmentBase>& segment, const
         m_info_start_pos.distanceToPoint(info_end_pos) / PreferencesManager::getInstance()->getDistanceUnit()();
     segment->m_segment_info_meta.length =
         QString().asprintf("%0.2f", length) % " " % PreferencesManager::getInstance()->getDistanceUnitText();
+
+    if (deposition_active) {
+        const Distance width = beadWidthForComment(comment, m_sb, m_selected_meta.m_distance_unit);
+        segment->m_segment_info_meta.width =
+            QString().asprintf("%0.3f", width.to(PreferencesManager::getInstance()->getDistanceUnit())) % " " %
+            PreferencesManager::getInstance()->getDistanceUnitText();
+    }
+    else { segment->m_segment_info_meta.width = ""; }
 }
 
 QVector<QSharedPointer<SegmentBase>> GCodeLoader::generateVisualSegment(

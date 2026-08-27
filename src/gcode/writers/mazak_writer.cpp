@@ -236,10 +236,7 @@ QString MazakWriter::writeLine(const Point& start_point, const Point& target_poi
     rv += writeCoordinates(target_point);
 
     // add comment for gcode parser
-    if (path_modifiers != PathModifiers::kNone)
-        rv += commentSpaceLine(toString(region_type) % m_space % toString(path_modifiers));
-    else
-        rv += commentSpaceLine(toString(region_type));
+    rv += commentSpaceLine(regionComment(region_type, path_modifiers, params));
 
     m_first_print = false;
 
@@ -288,10 +285,7 @@ QString MazakWriter::writeArc(const Point& start_point, const Point& end_point, 
     }
 
     // Add comment for gcode parser
-    if (path_modifiers != PathModifiers::kNone)
-        rv += commentSpaceLine(toString(region_type) % m_space % toString(path_modifiers));
-    else
-        rv += commentSpaceLine(toString(region_type));
+    rv += commentSpaceLine(regionComment(region_type, path_modifiers, params));
 
     return rv;
 }
