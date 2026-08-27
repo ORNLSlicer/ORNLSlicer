@@ -42,8 +42,6 @@ jobs:
     env:
       BASE_BRANCH: develop
       GH_TOKEN: ${{ secrets.AUTO_REBASE_TOKEN || github.token }}
-      TARGETS_FILE: ${{ runner.temp }}/auto-rebase-targets.txt
-      FAILED_FILE: ${{ runner.temp }}/auto-rebase-failed.txt
     steps:
       - name: Checkout develop
         uses: actions/checkout@v5
@@ -72,6 +70,7 @@ jobs:
         run: |
           set -euo pipefail
 
+          TARGETS_FILE="/tmp/auto-rebase-targets.txt"
           : > "$TARGETS_FILE"
 
           if [[ "$EVENT_NAME" == "pull_request" ]]; then
@@ -122,6 +121,8 @@ jobs:
         run: |
           set -euo pipefail
 
+          TARGETS_FILE="/tmp/auto-rebase-targets.txt"
+          FAILED_FILE="/tmp/auto-rebase-failed.txt"
           git fetch origin "+refs/heads/$BASE_BRANCH:refs/remotes/origin/$BASE_BRANCH"
           : > "$FAILED_FILE"
 
