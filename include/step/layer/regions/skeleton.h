@@ -78,6 +78,9 @@ class Skeleton : public RegionBase {
     //! \brief Generates a graph representation of skeleton geometry for cleaning
     void generateSkeletonGraph();
 
+    //! \brief Prunes low-significance skeleton graph branches using the Vanishing Angle measure
+    void pruneSkeletonGraphByVanishingAngle();
+
     //! \brief Cleans graph of skeleton geometry according to ClipperLib's CleanPolygon function
     //! \param cleaning_distance is the determinant distance used for cleaning the skeleton graph
     //! \note Deprecated: cleaning now takes place in simplifyOutputGeometry

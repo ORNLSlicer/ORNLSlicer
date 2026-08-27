@@ -5,7 +5,10 @@
 #include <cstddef>
 #include <limits>
 #include <map>
+#include <optional>
+#include <set>
 #include <tuple>
+#include <vector>
 
 #include <boost/graph/undirected_dfs.hpp>
 #include <boost/polygon/voronoi.hpp>
@@ -108,6 +111,10 @@ void Skeleton::compute(uint layer_num) {
 
         if (!m_skeleton_geometry.isEmpty()) {
             generateSkeletonGraph();
+            if (static_cast<SkeletonPruningMode>(m_sb->setting<int>(PS::Skeleton::kSkeletonPruningMode)) ==
+                SkeletonPruningMode::kVanishingAngle) {
+                pruneSkeletonGraphByVanishingAngle();
+            }
             extractCycles();
             extractSimplePaths();
             simplifyOutputGeometry();
@@ -350,6 +357,171 @@ void Skeleton::generateSkeletonGraph() {
         }
 
         add_edge(v0, v1, edge, m_skeleton_graph);
+    }
+}
+
+void Skeleton::pruneSkeletonGraphByVanishingAngle() {
+    const Angle threshold = m_sb->setting<Angle>(PS::Skeleton::kSkeletonVanishingAngleThreshold);
+    if (!std::isfinite(threshold()) || threshold <= 0 || boost::num_edges(m_skeleton_graph) == 0) return;
+
+    const QVector<Polyline> boundary_edges = m_geometry.getEdges();
+    if (boundary_edges.isEmpty()) return;
+
+    struct BoundaryHit {
+        Point point;
+        double distance = std::numeric_limits<double>::max();
+        bool valid      = false;
+    };
+
+    auto pointsAreDistinct = [](const Point& a, const Point& b) {
+        return a.distance(b)() > std::numeric_limits<float>::epsilon();
+    };
+
+    auto objectAngleSin = [&boundary_edges, &pointsAreDistinct](const Polyline& skeleton_edge) {
+        if (skeleton_edge.size() < 2) return 0.0;
+
+        const Point& start = skeleton_edge.first();
+        const Point& end   = skeleton_edge.last();
+        const Point midpoint((start.x() + end.x()) * 0.5f, (start.y() + end.y()) * 0.5f, (start.z() + end.z()) * 0.5f);
+
+        BoundaryHit nearest;
+        BoundaryHit second_nearest;
+
+        for (const Polyline& boundary_edge : boundary_edges) {
+            if (boundary_edge.size() < 2) continue;
+
+            if (boundary_edge.first().distance(boundary_edge.last())() <= std::numeric_limits<double>::epsilon())
+                continue;
+
+            const auto [point, distance] =
+                MathUtils::nearestPointOnSegment(boundary_edge.first(), boundary_edge.last(), midpoint);
+            if (!std::isfinite(distance)) continue;
+
+            if (!nearest.valid || distance < nearest.distance) {
+                if (nearest.valid && pointsAreDistinct(point, nearest.point)) { second_nearest = nearest; }
+                nearest = {point, distance, true};
+            }
+            else if (pointsAreDistinct(point, nearest.point) &&
+                     (!second_nearest.valid || distance < second_nearest.distance)) {
+                second_nearest = {point, distance, true};
+            }
+        }
+
+        if (!nearest.valid || !second_nearest.valid) return 0.0;
+
+        const double v1_x      = nearest.point.x() - midpoint.x();
+        const double v1_y      = nearest.point.y() - midpoint.y();
+        const double v2_x      = second_nearest.point.x() - midpoint.x();
+        const double v2_y      = second_nearest.point.y() - midpoint.y();
+        const double v1_length = std::hypot(v1_x, v1_y);
+        const double v2_length = std::hypot(v2_x, v2_y);
+
+        if (v1_length <= std::numeric_limits<double>::epsilon() || v2_length <= std::numeric_limits<double>::epsilon())
+            return 0.0;
+
+        const double cosine = std::clamp(((v1_x * v2_x) + (v1_y * v2_y)) / (v1_length * v2_length), -1.0, 1.0);
+        return std::sin(std::acos(cosine) * 0.5);
+    };
+
+    std::map<SkeletonEdge, double> edge_object_angle_sin;
+    auto [edge_iter, edge_end] = boost::edges(m_skeleton_graph);
+    while (edge_iter != edge_end) {
+        edge_object_angle_sin[*edge_iter] = objectAngleSin(m_skeleton_graph[*edge_iter]);
+        ++edge_iter;
+    }
+
+    struct VanishingTreeCandidate {
+        std::set<SkeletonEdge> edges;
+        std::set<SkeletonVertex> vertices;
+        double angle = std::numeric_limits<double>::max();
+    };
+
+    auto oppositeVertex = [this](const SkeletonEdge& edge, const SkeletonVertex& vertex) {
+        const SkeletonVertex source = boost::source(edge, m_skeleton_graph);
+        const SkeletonVertex target = boost::target(edge, m_skeleton_graph);
+        return source == vertex ? target : source;
+    };
+
+    auto collectOuterTree = [&](const SkeletonEdge& excluded_edge, const SkeletonVertex& root,
+                                const SkeletonVertex& anchor) -> std::optional<VanishingTreeCandidate> {
+        VanishingTreeCandidate candidate;
+        std::vector<SkeletonVertex> stack {root};
+        candidate.vertices.insert(root);
+
+        while (!stack.empty()) {
+            const SkeletonVertex vertex = stack.back();
+            stack.pop_back();
+
+            auto [out_edge, out_edge_end] = boost::out_edges(vertex, m_skeleton_graph);
+            while (out_edge != out_edge_end) {
+                const SkeletonEdge current_edge = *out_edge;
+                ++out_edge;
+
+                if (current_edge == excluded_edge) continue;
+
+                const SkeletonVertex neighbor = oppositeVertex(current_edge, vertex);
+                if (neighbor == anchor) return std::nullopt;
+
+                candidate.edges.insert(current_edge);
+                if (!candidate.vertices.contains(neighbor)) {
+                    candidate.vertices.insert(neighbor);
+                    stack.push_back(neighbor);
+                }
+            }
+        }
+
+        if (candidate.edges.size() != candidate.vertices.size() - 1) return std::nullopt;
+
+        candidate.edges.insert(excluded_edge);
+
+        double numerator   = 0.0;
+        double denominator = 0.0;
+        for (const SkeletonEdge& edge : candidate.edges) {
+            const double length    = m_skeleton_graph[edge].length()();
+            const double angle_sin = edge_object_angle_sin[edge];
+            if (!std::isfinite(length) || !std::isfinite(angle_sin)) return std::nullopt;
+
+            numerator += length * angle_sin;
+            denominator += length;
+        }
+
+        if (denominator <= std::numeric_limits<double>::epsilon()) return std::nullopt;
+
+        candidate.angle = std::asin(std::clamp(numerator / denominator, 0.0, 1.0));
+        if (!std::isfinite(candidate.angle)) return std::nullopt;
+
+        return candidate;
+    };
+
+    while (boost::num_edges(m_skeleton_graph) > 0) {
+        std::optional<VanishingTreeCandidate> best_candidate;
+
+        auto [edge, edge_end] = boost::edges(m_skeleton_graph);
+        while (edge != edge_end) {
+            const SkeletonEdge current_edge = *edge;
+            ++edge;
+
+            const SkeletonVertex source = boost::source(current_edge, m_skeleton_graph);
+            const SkeletonVertex target = boost::target(current_edge, m_skeleton_graph);
+
+            for (const auto& candidate :
+                 {collectOuterTree(current_edge, source, target), collectOuterTree(current_edge, target, source)}) {
+                if (candidate && std::isfinite(candidate->angle) &&
+                    (!best_candidate || candidate->angle < best_candidate->angle)) {
+                    best_candidate = candidate;
+                }
+            }
+        }
+
+        if (!best_candidate || best_candidate->angle >= threshold()) break;
+
+        for (const SkeletonEdge& edge_to_remove : best_candidate->edges) {
+            boost::remove_edge(edge_to_remove, m_skeleton_graph);
+        }
+
+        for (const SkeletonVertex& vertex : best_candidate->vertices) {
+            if (boost::degree(vertex, m_skeleton_graph) == 0) { boost::remove_vertex(vertex, m_skeleton_graph); }
+        }
     }
 }
 

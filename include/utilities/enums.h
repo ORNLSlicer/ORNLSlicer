@@ -417,6 +417,10 @@ enum class RegionType : int {
 
 enum class SkeletonInput : int { kSegments, kPoints };
 
+//! \enum SkeletonPruningMode
+//! \brief Optional graph pruning modes for skeleton generation
+enum class SkeletonPruningMode : int { kNone, kVanishingAngle };
+
 //! \enum SkeletonFilter
 //! \brief Types of filters for adaptive skeleton bead widths
 enum class SkeletonFilter : int { kClamp, kPrune };
