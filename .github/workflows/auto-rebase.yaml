@@ -5,7 +5,7 @@ on:
   push:
     branches:
       - develop
-  pull_request:
+  pull_request_target:
     branches:
       - develop
     types:
@@ -41,8 +41,20 @@ jobs:
         shell: bash
     env:
       BASE_BRANCH: develop
-      GH_TOKEN: ${{ secrets.AUTO_REBASE_TOKEN || github.token }}
+      # Use a real automation credential so rebased pushes trigger push-based CI.
+      GH_TOKEN: ${{ secrets.AUTO_REBASE_TOKEN }}
     steps:
+      - name: Verify auto-rebase token
+        env:
+          AUTO_REBASE_TOKEN: ${{ secrets.AUTO_REBASE_TOKEN }}
+        run: |
+          set -euo pipefail
+
+          if [[ -z "$AUTO_REBASE_TOKEN" ]]; then
+            echo "::error title=Missing AUTO_REBASE_TOKEN::Configure a PAT or GitHub App token in the AUTO_REBASE_TOKEN secret. Rebased pushes made with github.token do not trigger this repository's push-based CI."
+            exit 1
+          fi
+
       - name: Checkout develop
         uses: actions/checkout@v5
         with:
