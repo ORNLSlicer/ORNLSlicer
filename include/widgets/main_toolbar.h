@@ -101,6 +101,9 @@ class MainToolbar : public QToolBar {
     //! \param status if the g-code view is using orthographic projection
     void setOrthoGcodeChecked(bool status);
 
+    //! \brief emits the current optimization point visibility state
+    void syncOptimizationPointVisibility();
+
    private:
     //! \brief sets up the widget
     void setup();
@@ -164,5 +167,8 @@ class MainToolbar : public QToolBar {
 
     //! \brief if selected part has layer-specific settings available for visualization
     bool m_layer_settings_range_available = false;
+
+    //! \brief tracks whether the optimization point toggle has been manually changed this session
+    bool m_optimization_points_user_toggled = false;
 };
 }  // namespace ORNL

@@ -7,6 +7,7 @@
 #include <qtypes.h>
 #include <qvectornd.h>
 
+#include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
 #include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
@@ -66,6 +67,26 @@ QString WriterBase::commentLine(const QString& text) {
 QString WriterBase::commentSpaceLine(const QString& text) {
     return QString(m_space % m_meta.m_comment_starting_delimiter % text % m_meta.m_comment_ending_delimiter %
                    m_newline);
+}
+
+QString WriterBase::regionComment(RegionType region_type, PathModifiers path_modifiers,
+                                  const QSharedPointer<SettingsBase>& params, bool include_skeleton_width) const {
+    QString comment        = toString(region_type);
+    const bool has_width   = params != nullptr && params->contains(SS::kWidth);
+    const bool has_adapted = params != nullptr && params->contains(SS::kAdapted);
+
+    if (has_width && has_adapted && params->setting<bool>(SS::kAdapted)) {
+        comment = QStringLiteral("AD-") % comment % QStringLiteral("-") %
+                  QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
+    }
+    else if (include_skeleton_width && has_width && region_type == RegionType::kSkeleton) {
+        comment +=
+            QStringLiteral("-") % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
+    }
+
+    if (path_modifiers != PathModifiers::kNone) { comment += m_space % toString(path_modifiers); }
+
+    return comment;
 }
 
 QVector3D WriterBase::getTravelLift() {

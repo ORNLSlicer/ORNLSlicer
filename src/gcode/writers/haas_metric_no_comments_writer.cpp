@@ -258,10 +258,7 @@ QString HaasMetricNoCommentsWriter::writeArc(const Point& start_point, const Poi
     }
 
     // Add comment for gcode parser
-    if (path_modifiers != PathModifiers::kNone)
-        rv += commentSpaceLine(toString(region_type) % m_space % toString(path_modifiers));
-    else
-        rv += commentSpaceLine(toString(region_type));
+    rv += commentSpaceLine(regionComment(region_type, path_modifiers, params));
 
     return rv;
 }

@@ -1071,6 +1071,8 @@ void MainWindow::setupEvents() {
         m_export_window->setDefaultName(m_part_widget->getFirstPartName());
     });
 
+    m_main_toolbar->syncOptimizationPointVisibility();
+
     connect(CSM.get(), &SessionManager::requestTransformationUpdate, m_part_widget,
             &PartWidget::updatePartTransformations);
 

@@ -160,6 +160,9 @@ class SegmentBase {
         //! \brief Length for segment info display.
         QString length;
 
+        //! \brief Bead/extrusion width for segment info display.
+        QString width;
+
         //! \brief Region type for segment info display.
         QString type;
 

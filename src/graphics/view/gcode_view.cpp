@@ -413,6 +413,8 @@ void GCodeView::initView() {
             break;
     }
 
+    m_printer->setSeamsHidden(!m_state.seams_shown);
+
     m_camera->setDefaultZoom(m_printer->getDefaultZoom());
 
     this->addObject(m_printer);
@@ -649,9 +651,9 @@ void GCodeView::updatePrinterSettings(QSharedPointer<SettingsBase> sb) {
 }
 
 void GCodeView::showSeams(bool show) {
-    m_printer->setSeamsHidden(!show);
-
     m_state.seams_shown = show;
+
+    if (!m_printer.isNull()) { m_printer->setSeamsHidden(!show); }
 
     this->update();
 }

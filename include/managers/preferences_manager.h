@@ -127,6 +127,12 @@ class PreferencesManager : public QObject {
     //! \return if true widths should be used
     bool getUseTrueWidthsPreference();
 
+    //! \brief Gets if g-code bead / segment info should be shown by default.
+    bool getGCodeInfoVisibleByDefaultPreference();
+
+    //! \brief Gets if optimization points should be shown by default.
+    bool getOptimizationPointsVisibleByDefaultPreference();
+
     //! \brief Returns the preferred g-code preview rendering mode.
     GCodePreviewMode getGCodePreviewModePreference();
 
@@ -354,6 +360,14 @@ class PreferencesManager : public QObject {
     //! \param use if true widths should be used
     void setUseTrueWidthsPreference(bool use);
 
+    //! \brief Sets if g-code bead / segment info should be shown by default
+    //! \param show if the info panel should be shown by default
+    void setGCodeInfoVisibleByDefaultPreference(bool show);
+
+    //! \brief Sets if optimization points should be shown by default
+    //! \param show if optimization points should be shown by default
+    void setOptimizationPointsVisibleByDefaultPreference(bool show);
+
     //! \brief Sets the preferred g-code preview rendering mode.
     //! \param mode selected preview mode
     void setGCodePreviewModePreference(GCodePreviewMode mode);
@@ -444,6 +458,8 @@ class PreferencesManager : public QObject {
     bool m_hide_travel_preference;
     bool m_hide_support_preference;
     bool m_use_true_widths_preference;
+    bool m_gcode_info_visible_by_default_preference;
+    bool m_optimization_points_visible_by_default_preference;
     GCodePreviewMode m_gcode_preview_mode_preference;
     int m_gcode_preview_vertex_threshold_preference;
     DisabledSettingVisibility m_disabled_setting_visibility_preference;

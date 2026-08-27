@@ -544,24 +544,8 @@ QString CincinnatiWriter::writeLine(const Point& start_point, const Point& targe
     // writes WXYZ to destination
     rv += writeCoordinates(target_point);
 
-    // Create comment for region type and path modifiers
-    QString comment = toString(region_type);
-
-    // If the bead width has been adapted, include the true width in the comment for reload/visualization.
-    if (params->setting<bool>(SS::kAdapted)) {
-        comment = "AD-" % comment;
-        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
-    }
-    // Skeleton comments have historically included width even when not adapted.
-    else if (region_type == RegionType::kSkeleton) {
-        comment += "-" % QString::number(params->setting<Distance>(SS::kWidth).to(m_meta.m_distance_unit));
-    }
-
-    // Add path modifiers to comments
-    if (path_modifiers != PathModifiers::kNone) { comment += m_space % toString(path_modifiers); }
-
-    // Add comment
-    rv += commentSpaceLine(comment);
+    // Add comment for gcode parser.
+    rv += commentSpaceLine(regionComment(region_type, path_modifiers, params, true));
 
     m_first_print = false;
 
@@ -622,10 +606,7 @@ QString CincinnatiWriter::writeArc(const Point& start_point, const Point& end_po
           QString::number(Distance(end_point.y()).to(m_meta.m_distance_unit), 'f', 4) % getZWValue(end_point);
 
     // Add comment for gcode parser
-    if (path_modifiers != PathModifiers::kNone) {
-        rv += commentSpaceLine(toString(region_type) % m_space % toString(path_modifiers));
-    }
-    else { rv += commentSpaceLine(toString(region_type)); }
+    rv += commentSpaceLine(regionComment(region_type, path_modifiers, params, true));
 
     return rv;
 }

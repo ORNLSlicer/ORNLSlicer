@@ -146,6 +146,7 @@ void GCodeWidget::setupWidget() {
 void GCodeWidget::setupSubWidgets() {
     // Segment info Control
     m_segment_info_control = QSharedPointer<GCodeInfoControl>(new GCodeInfoControl(this));
+    m_segment_info_control->setVisible(PreferencesManager::getInstance()->getGCodeInfoVisibleByDefaultPreference());
 
     // Set OpenGL Version information
     // Note: This format must be set before show() is called.

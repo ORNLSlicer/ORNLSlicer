@@ -129,6 +129,8 @@ PreferencesManager::PreferencesManager()
       m_hide_travel_preference(false),
       m_hide_support_preference(false),
       m_use_true_widths_preference(true),
+      m_gcode_info_visible_by_default_preference(false),
+      m_optimization_points_visible_by_default_preference(false),
       m_gcode_preview_mode_preference(GCodePreviewMode::kAuto),
       m_gcode_preview_vertex_threshold_preference(5000000),
       m_disabled_setting_visibility_preference(DisabledSettingVisibility::kGrey),
@@ -285,6 +287,12 @@ void PreferencesManager::importPreferences(QString filepath) {
 
         if (j.contains("use_true_widths")) setUseTrueWidthsPreference(j["use_true_widths"]);
 
+        if (j.contains("gcode_info_visible_by_default"))
+            setGCodeInfoVisibleByDefaultPreference(j["gcode_info_visible_by_default"]);
+
+        if (j.contains("optimization_points_visible_by_default"))
+            setOptimizationPointsVisibleByDefaultPreference(j["optimization_points_visible_by_default"]);
+
         if (j.contains("gcode_preview_mode")) setGCodePreviewModePreference(j["gcode_preview_mode"].get<int>());
 
         if (j.contains("gcode_preview_vertex_threshold"))
@@ -326,39 +334,41 @@ void PreferencesManager::exportPreferences(QString filepath) {
 fifojson PreferencesManager::json() {
     fifojson j;
 
-    j["import_unit"]                          = m_import_unit;
-    j["distance"]                             = m_distance_unit;
-    j["velocity"]                             = m_velocity_unit;
-    j["acceleration"]                         = m_acceleration_unit;
-    j["density"]                              = m_density_unit;
-    j["angle"]                                = m_angle_unit;
-    j["time"]                                 = m_time_unit;
-    j["temperature"]                          = m_temperature_unit;
-    j["voltage"]                              = m_voltage_unit;
-    j["mass"]                                 = m_mass_unit;
-    j["shift"]                                = m_project_shift_preference;
-    j["file_shift"]                           = m_file_shift_preference;
-    j["align"]                                = m_align_preference;
-    j["hide_travel"]                          = m_hide_travel_preference;
-    j["hide_support"]                         = m_hide_support_preference;
-    j["use_true_widths"]                      = m_use_true_widths_preference;
-    j["gcode_preview_mode"]                   = static_cast<int>(m_gcode_preview_mode_preference);
-    j["gcode_preview_vertex_threshold"]       = m_gcode_preview_vertex_threshold_preference;
-    j["disabled_setting_visibility"]          = static_cast<int>(m_disabled_setting_visibility_preference);
-    j["warn_unsaved_project_on_close"]        = m_warn_unsaved_project_on_close_preference;
-    j["hidden_settings"]                      = m_hidden_settings;
-    j["rotation"]                             = m_rotation_unit;
-    j["invert_camera"]                        = m_invert_camera;
-    j["theme"]                                = m_themeName;
-    j["is_window_maximized"]                  = m_is_maximized;
-    j["window_size"]                          = {m_window_size.width(), m_window_size.height()};
-    j["window_pos"]                           = {m_window_pos.x(), m_window_pos.y()};
-    j["use_implicit_transforms"]              = m_use_implicit_transforms;
-    j["always_drop_parts"]                    = m_always_drop_parts;
-    j["visualization_colors"]                 = getVisualizationHexColors();
-    j[kVisualizationColorMigrationVersionKey] = m_visualization_color_migration_version;
-    j["layer_lag"]                            = m_layer_lag;
-    j["segment_lag"]                          = m_segment_lag;
+    j["import_unit"]                            = m_import_unit;
+    j["distance"]                               = m_distance_unit;
+    j["velocity"]                               = m_velocity_unit;
+    j["acceleration"]                           = m_acceleration_unit;
+    j["density"]                                = m_density_unit;
+    j["angle"]                                  = m_angle_unit;
+    j["time"]                                   = m_time_unit;
+    j["temperature"]                            = m_temperature_unit;
+    j["voltage"]                                = m_voltage_unit;
+    j["mass"]                                   = m_mass_unit;
+    j["shift"]                                  = m_project_shift_preference;
+    j["file_shift"]                             = m_file_shift_preference;
+    j["align"]                                  = m_align_preference;
+    j["hide_travel"]                            = m_hide_travel_preference;
+    j["hide_support"]                           = m_hide_support_preference;
+    j["use_true_widths"]                        = m_use_true_widths_preference;
+    j["gcode_info_visible_by_default"]          = m_gcode_info_visible_by_default_preference;
+    j["optimization_points_visible_by_default"] = m_optimization_points_visible_by_default_preference;
+    j["gcode_preview_mode"]                     = static_cast<int>(m_gcode_preview_mode_preference);
+    j["gcode_preview_vertex_threshold"]         = m_gcode_preview_vertex_threshold_preference;
+    j["disabled_setting_visibility"]            = static_cast<int>(m_disabled_setting_visibility_preference);
+    j["warn_unsaved_project_on_close"]          = m_warn_unsaved_project_on_close_preference;
+    j["hidden_settings"]                        = m_hidden_settings;
+    j["rotation"]                               = m_rotation_unit;
+    j["invert_camera"]                          = m_invert_camera;
+    j["theme"]                                  = m_themeName;
+    j["is_window_maximized"]                    = m_is_maximized;
+    j["window_size"]                            = {m_window_size.width(), m_window_size.height()};
+    j["window_pos"]                             = {m_window_pos.x(), m_window_pos.y()};
+    j["use_implicit_transforms"]                = m_use_implicit_transforms;
+    j["always_drop_parts"]                      = m_always_drop_parts;
+    j["visualization_colors"]                   = getVisualizationHexColors();
+    j[kVisualizationColorMigrationVersionKey]   = m_visualization_color_migration_version;
+    j["layer_lag"]                              = m_layer_lag;
+    j["segment_lag"]                            = m_segment_lag;
 
     return j;
 }
@@ -469,6 +479,14 @@ bool PreferencesManager::getHideSupportPreference() {
 
 bool PreferencesManager::getUseTrueWidthsPreference() {
     return m_use_true_widths_preference;
+}
+
+bool PreferencesManager::getGCodeInfoVisibleByDefaultPreference() {
+    return m_gcode_info_visible_by_default_preference;
+}
+
+bool PreferencesManager::getOptimizationPointsVisibleByDefaultPreference() {
+    return m_optimization_points_visible_by_default_preference;
 }
 
 GCodePreviewMode PreferencesManager::getGCodePreviewModePreference() {
@@ -724,6 +742,16 @@ void PreferencesManager::setHideSupportPreference(bool hide) {
 void PreferencesManager::setUseTrueWidthsPreference(bool use) {
     m_use_true_widths_preference = use;
     m_dirty                      = true;
+}
+
+void PreferencesManager::setGCodeInfoVisibleByDefaultPreference(bool show) {
+    m_gcode_info_visible_by_default_preference = show;
+    m_dirty                                    = true;
+}
+
+void PreferencesManager::setOptimizationPointsVisibleByDefaultPreference(bool show) {
+    m_optimization_points_visible_by_default_preference = show;
+    m_dirty                                             = true;
 }
 
 void PreferencesManager::setGCodePreviewModePreference(GCodePreviewMode mode) {
