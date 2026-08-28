@@ -82,9 +82,24 @@ class BufferedSlicer {
     int getSliceCount();
 
    private:
+    //! \struct CrossSectionData
+    //! \brief Primary mesh cross-section data for a candidate slicing plane.
+    struct CrossSectionData {
+        PolygonList geometry;
+        QVector<Polyline> opt_polylines;
+        QVector3D average_normal;
+        Point shift_amount;
+    };
+
     //! \brief processes a single slice (cross-sections)
     //! \return a cross-section (SliceMeta) object
     QSharedPointer<BufferedSlicer::SliceMeta> processSingleSlice();
+
+    //! \brief cross-sections the primary mesh at a candidate plane
+    CrossSectionData computePrimaryCrossSection(Plane slicing_plane, const QSharedPointer<SettingsBase>& settings);
+
+    //! \brief selects a layer height limited by the configured variable-height surface error target
+    Distance computeCuspLimitedLayerHeight(const QSharedPointer<SettingsBase>& settings) const;
 
     //! \brief computes cross-sections for settings parts and extracts their geometry, aligned to a base shift
     //! \param settings_polygons a vector to fill with settings polygons
