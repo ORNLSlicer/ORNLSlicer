@@ -3,6 +3,7 @@
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QMainWindow>
 #include <QRadioButton>
@@ -100,6 +101,7 @@ class PreferencesWindow : public QMainWindow {
     QComboBox* m_theme_combobox;
     QComboBox* m_gcode_preview_mode_combobox;
     QComboBox* m_disabled_setting_visibility_combobox;
+    QDoubleSpinBox* m_step_stl_linear_deflection_spinbox;
     QSpinBox* m_gcode_preview_vertex_threshold_spinbox;
     QSpinBox* m_layer_lag_spinbox;
     QSpinBox* m_segment_lag_spinbox;
