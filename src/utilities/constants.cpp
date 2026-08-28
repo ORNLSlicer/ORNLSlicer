@@ -558,7 +558,11 @@ const QString Constants::MaterialSettings::MultiMaterial::kUseM222              
 //================================================================================
 
 // Layer
-const QString Constants::ProfileSettings::Layer::kLayerHeight      = "layer_height";
+const QString Constants::ProfileSettings::Layer::kLayerHeight               = "layer_height";
+const QString Constants::ProfileSettings::Layer::kEnableVariableLayerHeight = "variable_layer_height";
+const QString Constants::ProfileSettings::Layer::kMinLayerHeight            = "minimum_layer_height";
+const QString Constants::ProfileSettings::Layer::kVariableLayerHeightSurfaceError =
+    "variable_layer_height_surface_error";
 const QString Constants::ProfileSettings::Layer::kNozzleDiameter   = "nozzle_diameter";
 const QString Constants::ProfileSettings::Layer::kBeadWidth        = "default_width";
 const QString Constants::ProfileSettings::Layer::kSpeed            = "default_speed";

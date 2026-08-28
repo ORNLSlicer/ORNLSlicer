@@ -602,6 +602,9 @@ class Constants {
         class Layer {
            public:
             static const QString kLayerHeight;
+            static const QString kEnableVariableLayerHeight;
+            static const QString kMinLayerHeight;
+            static const QString kVariableLayerHeightSurfaceError;
             static const QString kNozzleDiameter;
             static const QString kBeadWidth;
             static const QString kSpeed;

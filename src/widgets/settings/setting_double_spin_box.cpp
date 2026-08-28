@@ -17,6 +17,7 @@
 #include "configs/settings_base.h"
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/settings/setting_row_base.h"
 
@@ -91,6 +92,32 @@ QString enabledSettingWarning(const QString& display, double value, const QStrin
 
     return display + " must be greater than zero " + required_description + " (currently " +
            formatTypedValue(value, type) + ").";
+}
+
+bool hasLayerHeightNozzleWarning(int machine_type) {
+    switch (static_cast<MachineType>(machine_type)) {
+        case MachineType::kPellet:
+        case MachineType::kFilament:
+        case MachineType::kConcrete:
+        case MachineType::kThermoset:
+            return true;
+        default:
+            return false;
+    }
+}
+
+QString layerHeightNozzleWarning(const QString& display, double layer_height, double nozzle_diameter,
+                                 int machine_type) {
+    if (!hasLayerHeightNozzleWarning(machine_type) || nozzle_diameter <= 0 || layer_height <= 0) return QString();
+
+    const double min_layer_height = nozzle_diameter * 0.1;
+    const double max_layer_height = nozzle_diameter * 0.75;
+    if (layer_height >= min_layer_height && layer_height <= max_layer_height) return QString();
+
+    return display + " (" + formatDistance(layer_height) +
+           ") is outside the recommended range of 0.1x to 0.75x "
+           "Nozzle Diameter (" +
+           formatDistance(min_layer_height) + " to " + formatDistance(max_layer_height) + ").";
 }
 }  // namespace
 
@@ -383,8 +410,23 @@ QString SettingDoubleSpinBox::dynamicDependencyWarning(int settings_base_index) 
 
     if (m_key == PRS::Dimensions::kDoffingHeight) return boundsWarning(display, value, w_min, w_max, "W");
 
-    if (m_key == PS::Layer::kLayerHeight && value <= 0)
-        return display + " must be greater than zero (currently " + formatDistance(value) + ").";
+    const QStringList layer_height_keys {PS::Layer::kLayerHeight, PS::Layer::kMinLayerHeight};
+    if (isOneOf(m_key, layer_height_keys)) {
+        if (value <= 0) return display + " must be greater than zero (currently " + formatDistance(value) + ").";
+
+        const double layer_height = effectiveDouble(PS::Layer::kLayerHeight, settings_base_index);
+        if (m_key == PS::Layer::kMinLayerHeight && layer_height > 0 && value >= layer_height)
+            return display + " (" + formatDistance(value) + ") must be less than Layer Height (" +
+                   formatDistance(layer_height) + ").";
+
+        const QString warning =
+            layerHeightNozzleWarning(display, value, effectiveDouble(PS::Layer::kNozzleDiameter, settings_base_index),
+                                     effectiveInt(PRS::MachineSetup::kMachineType, settings_base_index));
+        if (!warning.isEmpty()) return warning;
+    }
+
+    if (m_key == PS::Layer::kVariableLayerHeightSurfaceError && value <= 0)
+        return display + " must be greater than zero (currently " + formatTypedValue(value, type) + ").";
 
     const QStringList bead_width_keys {
         PS::Layer::kBeadWidth,
