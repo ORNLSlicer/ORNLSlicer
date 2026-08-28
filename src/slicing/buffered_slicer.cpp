@@ -1,5 +1,7 @@
 #include "slicing/buffered_slicer.h"
 
+#include <algorithm>
+#include <cmath>
 #include <tuple>
 
 #include <qcontainerfwd.h>
@@ -13,6 +15,8 @@
 #include "configs/settings_range.h"
 #include "cross_section/cross_section.h"
 #include "geometry/mesh/mesh_base.h"
+#include "geometry/mesh/mesh_face.h"
+#include "geometry/mesh/mesh_vertex.h"
 #include "geometry/polygon.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
@@ -21,8 +25,125 @@
 #include "slicing/slicing_utilities.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+constexpr double kProjectionEpsilon = 1.0e-6;
+constexpr double kSlabEpsilon       = 0.01;
+
+bool isJuggerBotSyntax(const QSharedPointer<SettingsBase>& settings) {
+    return settings->setting<int>(PRS::MachineSetup::kSyntax) == static_cast<int>(GcodeSyntax::kJuggerBot);
+}
+
+bool variableLayerHeightEnabled(const QSharedPointer<SettingsBase>& settings) {
+    return settings->setting<bool>(PS::Layer::kEnableVariableLayerHeight) && isJuggerBotSyntax(settings);
+}
+
+QSharedPointer<SettingsBase> layerSettingsForSlice(const QSharedPointer<SettingsBase>& settings,
+                                                   const QMap<uint, QSharedPointer<SettingsRange>>& ranges,
+                                                   int slice_count) {
+    QSharedPointer<SettingsBase> layer_specific_settings =
+        QSharedPointer<SettingsBase>::create(*settings);  // Copy part settings
+
+    // Apply settings ranges if available
+    for (const QSharedPointer<SettingsRange>& range : ranges) {
+        if (range->includesIndex(slice_count) && !range->getSb()->json().is_null()) {
+            QSharedPointer<SettingsBase> range_sb = range->getSb();
+            layer_specific_settings->populate(range_sb);  // Apply range settings overrides
+        }
+    }
+    layer_specific_settings->makeLocalAdjustments(slice_count);
+
+    return layer_specific_settings;
+}
+
+void includeBuildPlateGapIfNeeded(Plane& slicing_plane, const Point& mesh_min,
+                                  const QSharedPointer<SettingsBase>& settings, bool include_build_plate_gap) {
+    // A normal mesh slice starts at the mesh minimum.  For planar support,
+    // retain the otherwise-empty layers below a raised mesh so support can
+    // reach the physical build plate at Z = 0.
+    const QVector3D normal = slicing_plane.normal().normalized();
+    if (include_build_plate_gap && settings->setting<bool>(PS::Support::kEnable) && qFuzzyIsNull(normal.x()) &&
+        qFuzzyIsNull(normal.y()) && normal.z() > 0.0f && mesh_min.z() > 0.0f) {
+        Point build_plate_point = slicing_plane.point();
+        build_plate_point.z(0.0);
+        slicing_plane.point(build_plate_point);
+    }
+}
+
+bool faceOverlapsLayerSlab(Plane slicing_plane, const QVector<MeshVertex>& vertices, const MeshFace& face,
+                           double bottom, double top) {
+    double min_distance = slicing_plane.distanceToPoint(Point(vertices[face.vertex_index[0]].location));
+    double max_distance = min_distance;
+
+    for (int i = 1; i < 3; ++i) {
+        const double distance = slicing_plane.distanceToPoint(Point(vertices[face.vertex_index[i]].location));
+        min_distance          = std::min(min_distance, distance);
+        max_distance          = std::max(max_distance, distance);
+    }
+
+    if (max_distance - min_distance <= kSlabEpsilon) { return false; }
+
+    return min_distance <= top + kSlabEpsilon && max_distance >= bottom - kSlabEpsilon;
+}
+
+double faceNormalProjection(const QVector<MeshVertex>& vertices, const MeshFace& face,
+                            const QVector3D& slicing_normal) {
+    const QVector3D p0 = vertices[face.vertex_index[0]].location;
+    const QVector3D p1 = vertices[face.vertex_index[1]].location;
+    const QVector3D p2 = vertices[face.vertex_index[2]].location;
+
+    QVector3D face_normal = QVector3D::crossProduct(p1 - p0, p2 - p0);
+    if (face_normal.lengthSquared() <= kProjectionEpsilon) { return 0.0; }
+
+    face_normal.normalize();
+    return std::abs(QVector3D::dotProduct(face_normal, slicing_normal));
+}
+
+double maxSurfaceNormalProjectionInLayerSlab(const QSharedPointer<MeshBase>& mesh, Plane slicing_plane,
+                                             Distance last_layer_height, Distance layer_height) {
+    const QVector<MeshVertex> vertices = mesh->vertices();
+    const QVector<MeshFace> faces      = mesh->faces();
+
+    QVector3D slicing_normal = slicing_plane.normal();
+    if (slicing_normal.lengthSquared() <= kProjectionEpsilon) { return 0.0; }
+    slicing_normal.normalize();
+
+    const double bottom = last_layer_height() / 2.0;
+    const double top    = bottom + layer_height();
+
+    double max_projection = 0.0;
+    for (const MeshFace& face : faces) {
+        if (face.ignore || !faceOverlapsLayerSlab(slicing_plane, vertices, face, bottom, top)) { continue; }
+
+        max_projection = std::max(max_projection, faceNormalProjection(vertices, face, slicing_normal));
+    }
+
+    return max_projection;
+}
+
+Distance cuspLimitedLayerHeight(const QSharedPointer<MeshBase>& mesh, Plane slicing_plane, Distance last_layer_height,
+                                const QSharedPointer<SettingsBase>& settings) {
+    const Distance standard_layer_height = settings->setting<Distance>(PS::Layer::kLayerHeight);
+    if (!variableLayerHeightEnabled(settings)) { return standard_layer_height; }
+
+    const Distance minimum_layer_height = settings->setting<Distance>(PS::Layer::kMinLayerHeight);
+    const Distance target_surface_error = settings->setting<Distance>(PS::Layer::kVariableLayerHeightSurfaceError);
+
+    if (standard_layer_height <= 0 || minimum_layer_height <= 0 || minimum_layer_height >= standard_layer_height ||
+        target_surface_error <= 0) {
+        return standard_layer_height;
+    }
+
+    const double max_projection =
+        maxSurfaceNormalProjectionInLayerSlab(mesh, slicing_plane, last_layer_height, standard_layer_height);
+    if (max_projection <= kProjectionEpsilon) { return standard_layer_height; }
+
+    const double cusp_limited_height = target_surface_error() / max_projection;
+    return Distance(std::clamp(cusp_limited_height, minimum_layer_height(), standard_layer_height()));
+}
+}  // namespace
 
 BufferedSlicer::BufferedSlicer() {}
 
@@ -40,17 +161,7 @@ BufferedSlicer::BufferedSlicer(const QSharedPointer<MeshBase>& mesh, const QShar
     m_future_buffer_size   = future_buffer;
 
     std::tie(m_slicing_plane, m_mesh_min, m_mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(m_settings, m_mesh);
-
-    // A normal mesh slice starts at the mesh minimum.  For planar support,
-    // retain the otherwise-empty layers below a raised mesh so support can
-    // reach the physical build plate at Z = 0.
-    const QVector3D normal = m_slicing_plane.normal().normalized();
-    if (include_build_plate_gap && m_settings->setting<bool>(PS::Support::kEnable) && qFuzzyIsNull(normal.x()) &&
-        qFuzzyIsNull(normal.y()) && normal.z() > 0.0f && m_mesh_min.z() > 0.0f) {
-        Point build_plate_point = m_slicing_plane.point();
-        build_plate_point.z(0.0);
-        m_slicing_plane.point(build_plate_point);
-    }
+    includeBuildPlateGapIfNeeded(m_slicing_plane, m_mesh_min, m_settings, include_build_plate_gap);
 
     // Fill previous slots will nullptr to start
     for (int i = 0; i < previous_buffer; ++i) m_buffered_slices.enqueue(nullptr);
@@ -98,62 +209,79 @@ int BufferedSlicer::getSliceCount() {
     return m_slice_count - m_future_buffer_size;
 }
 
+int BufferedSlicer::computeSliceCount(const QSharedPointer<MeshBase>& mesh,
+                                      const QSharedPointer<SettingsBase>& settings,
+                                      QMap<uint, QSharedPointer<SettingsRange>> ranges, bool include_build_plate_gap) {
+    if (mesh.isNull() || settings.isNull()) { return 0; }
+
+    Plane slicing_plane;
+    Point mesh_min;
+    Point mesh_max;
+    std::tie(slicing_plane, mesh_min, mesh_max) = SlicingUtilities::GetDefaultSlicingAxis(settings, mesh);
+    includeBuildPlateGapIfNeeded(slicing_plane, mesh_min, settings, include_build_plate_gap);
+
+    int slice_count = 0;
+    Distance last_layer_height;
+    constexpr int kMaxSliceCount = 1000000;
+    while (slicing_plane.evaluatePoint(mesh_max) > 0 && slice_count < kMaxSliceCount) {
+        QSharedPointer<SettingsBase> layer_specific_settings = layerSettingsForSlice(settings, ranges, slice_count);
+
+        if (layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight) <= 0) { break; }
+
+        layer_specific_settings->setSetting(
+            PS::Layer::kLayerHeight,
+            cuspLimitedLayerHeight(mesh, slicing_plane, last_layer_height, layer_specific_settings));
+
+        Plane candidate_plane = slicing_plane;
+        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, candidate_plane, last_layer_height);
+
+        if (candidate_plane.evaluatePoint(mesh_max) < 0) { break; }
+
+        slicing_plane     = candidate_plane;
+        last_layer_height = layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight);
+        ++slice_count;
+    }
+
+    return slice_count;
+}
+
 QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
     QSharedPointer<SliceMeta> slice_meta = nullptr;
 
     // If mesh_max is above the slicing plane (ie, the slicing plane intersects the part)
     if (m_slicing_plane.evaluatePoint(m_mesh_max) > 0) {
-        // Create new layer settings
         QSharedPointer<SettingsBase> layer_specific_settings =
-            QSharedPointer<SettingsBase>::create(*m_settings);  // Copy part settings
+            layerSettingsForSlice(m_settings, m_settings_ranges, m_slice_count);
 
-        // Apply settings ranges if available
-        for (const QSharedPointer<SettingsRange>& range : m_settings_ranges) {
-            if (range->includesIndex(m_slice_count) && !range->getSb()->json().is_null()) {
-                QSharedPointer<SettingsBase> range_sb = range->getSb();
-                layer_specific_settings->populate(range_sb);  // Apply range settings overrides
-            }
-        }
-        layer_specific_settings->makeLocalAdjustments(m_slice_count);
+        if (layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight) <= 0) { return nullptr; }
 
-        // Shift along slicing axis or skeleton
-        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, m_slicing_plane, m_last_layer_height);
+        layer_specific_settings->setSetting(PS::Layer::kLayerHeight,
+                                            computeCuspLimitedLayerHeight(layer_specific_settings));
+
+        Plane candidate_plane = m_slicing_plane;
+        SlicingUtilities::ShiftSlicingPlane(layer_specific_settings, candidate_plane, m_last_layer_height);
+
+        if (candidate_plane.evaluatePoint(m_mesh_max) < 0) return nullptr;
+
+        CrossSectionData cross_section = computePrimaryCrossSection(candidate_plane, layer_specific_settings);
+
+        m_slicing_plane     = candidate_plane;
         m_last_layer_height = layer_specific_settings->setting<Distance>(PS::Layer::kLayerHeight);
-
-        // If the slicing plane is beyond the max_point of the part, stop
-        if (m_slicing_plane.evaluatePoint(m_mesh_max) < 0) return nullptr;
-
-        Point shift_amount = Point(0, 0, 0);  // cross sectioning will add data (primary mesh)
-        QVector3D average_normal;
-
-        PolygonList geometry;
-        QVector<Polyline> opt_polylines;
-
-        if (m_use_cgal_cross_section) {
-            auto result   = m_mesh->intersect(m_slicing_plane);
-            opt_polylines = result.first;
-
-            // Extract polygons
-            for (auto polygon : result.second) { geometry += polygon; }
-
-            shift_amount = CrossSection::findSlicingPlaneMidPoint(m_mesh, m_slicing_plane);
-        }
-        else {
-            geometry = CrossSection::doCrossSection(m_mesh, m_slicing_plane, shift_amount, average_normal,
-                                                    layer_specific_settings, false);
-        }
-
-        if (layer_specific_settings->setting<bool>(PS::SpecialModes::kEnableOversize) && geometry.size() > 0) {
-            geometry = geometry.offset(layer_specific_settings->setting<double>(PS::SpecialModes::kOversizeDistance));
-        }
 
         // Settings regions
         QVector<SettingsPolygon> settings_polygons;
-        computeSettingsPolygons(settings_polygons, shift_amount);
+        computeSettingsPolygons(settings_polygons, cross_section.shift_amount);
 
         SliceMeta meta = {
-            m_slice_count, layer_specific_settings, geometry,      m_slicing_plane, settings_polygons, average_normal,
-            shift_amount,  m_additional_shift,      opt_polylines,
+            m_slice_count,
+            layer_specific_settings,
+            cross_section.geometry,
+            m_slicing_plane,
+            settings_polygons,
+            cross_section.average_normal,
+            cross_section.shift_amount,
+            m_additional_shift,
+            cross_section.opt_polylines,
         };
 
         slice_meta = QSharedPointer<SliceMeta>::create(meta);
@@ -162,6 +290,37 @@ QSharedPointer<BufferedSlicer::SliceMeta> BufferedSlicer::processSingleSlice() {
     }
 
     return slice_meta;
+}
+
+BufferedSlicer::CrossSectionData BufferedSlicer::computePrimaryCrossSection(
+    Plane slicing_plane, const QSharedPointer<SettingsBase>& settings) {
+    CrossSectionData cross_section;
+    cross_section.shift_amount = Point(0, 0, 0);  // cross sectioning will add data from the primary mesh
+
+    if (m_use_cgal_cross_section) {
+        auto result                 = m_mesh->intersect(slicing_plane);
+        cross_section.opt_polylines = result.first;
+
+        // Extract polygons
+        for (auto polygon : result.second) { cross_section.geometry += polygon; }
+
+        cross_section.shift_amount = CrossSection::findSlicingPlaneMidPoint(m_mesh, slicing_plane);
+    }
+    else {
+        cross_section.geometry = CrossSection::doCrossSection(m_mesh, slicing_plane, cross_section.shift_amount,
+                                                              cross_section.average_normal, settings, false);
+    }
+
+    if (settings->setting<bool>(PS::SpecialModes::kEnableOversize) && cross_section.geometry.size() > 0) {
+        cross_section.geometry =
+            cross_section.geometry.offset(settings->setting<double>(PS::SpecialModes::kOversizeDistance));
+    }
+
+    return cross_section;
+}
+
+Distance BufferedSlicer::computeCuspLimitedLayerHeight(const QSharedPointer<SettingsBase>& settings) const {
+    return cuspLimitedLayerHeight(m_mesh, m_slicing_plane, m_last_layer_height, settings);
 }
 
 void BufferedSlicer::computeSettingsPolygons(QVector<SettingsPolygon>& settings_polygons, const Point& base_shift) {

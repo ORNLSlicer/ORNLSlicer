@@ -240,6 +240,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_mesh_repair_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME mesh_repair_tests COMMAND ${PROJECT_NAME}_mesh_repair_tests)
 
+    add_executable(${PROJECT_NAME}_variable_layer_height_tests tests/variable_layer_height_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_variable_layer_height_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_variable_layer_height_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME variable_layer_height_tests COMMAND ${PROJECT_NAME}_variable_layer_height_tests)
+
     add_executable(${PROJECT_NAME}_point_order_optimizer_tests tests/point_order_optimizer_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_point_order_optimizer_tests
