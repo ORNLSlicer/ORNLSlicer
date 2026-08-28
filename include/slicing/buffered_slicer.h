@@ -81,6 +81,12 @@ class BufferedSlicer {
     //! \return the number of slices taken
     int getSliceCount();
 
+    //! \brief computes how many slices a mesh will produce without calculating cross-section geometry
+    static int computeSliceCount(
+        const QSharedPointer<MeshBase>& mesh, const QSharedPointer<SettingsBase>& settings,
+        QMap<uint, QSharedPointer<SettingsRange>> ranges = QMap<uint, QSharedPointer<SettingsRange>>(),
+        bool include_build_plate_gap                     = false);
+
    private:
     //! \struct CrossSectionData
     //! \brief Primary mesh cross-section data for a candidate slicing plane.

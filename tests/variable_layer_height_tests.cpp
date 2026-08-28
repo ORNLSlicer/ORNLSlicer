@@ -125,8 +125,10 @@ QSharedPointer<ORNL::SettingsBase> slicingSettings(bool enable_variable_layer_he
 }
 
 std::vector<double> layerHeightsFor(QSharedPointer<ORNL::ClosedMesh> mesh, bool enable_variable_layer_height,
-                                    ORNL::GcodeSyntax syntax = ORNL::GcodeSyntax::kJuggerBot) {
-    ORNL::BufferedSlicer slicer(mesh, slicingSettings(enable_variable_layer_height, syntax), {}, {}, 0, 0, true, false);
+                                    ORNL::GcodeSyntax syntax    = ORNL::GcodeSyntax::kJuggerBot,
+                                    bool use_cgal_cross_section = true) {
+    ORNL::BufferedSlicer slicer(mesh, slicingSettings(enable_variable_layer_height, syntax), {}, {}, 0, 0,
+                                use_cgal_cross_section, false);
 
     std::vector<double> layer_heights;
     for (int i = 0; i < 32; ++i) {
@@ -183,14 +185,28 @@ int main() {
     passed &= expect(allNear(stable_variable_heights, 5.0),
                      "Expected variable layer height to prefer standard layers for vertical-wall geometry.");
 
-    const std::vector<double> tapered_variable_heights = layerHeightsFor(
-        makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm)), true);
+    QSharedPointer<ORNL::ClosedMesh> tapered_mesh =
+        makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm));
+    const std::vector<double> tapered_variable_heights = layerHeightsFor(tapered_mesh, true);
     passed &= expect(tapered_variable_heights.size() > fixed_heights.size(),
                      "Expected sloped variable-height slicing to add refinement layers.");
     passed &= expect(allInRange(tapered_variable_heights, 1.0, 5.0),
                      "Expected cusp-limited layer heights to stay within configured bounds.");
     passed &= expect(anyBetween(tapered_variable_heights, 1.0, 5.0),
                      "Expected cusp-limited slicing to use intermediate adaptive layer heights.");
+
+    const int tapered_count =
+        ORNL::BufferedSlicer::computeSliceCount(tapered_mesh, slicingSettings(true, ORNL::GcodeSyntax::kJuggerBot));
+    passed &= expect(tapered_count == static_cast<int>(tapered_variable_heights.size()),
+                     "Expected geometry-free slice count to match buffered variable-height slicing.");
+
+    const std::vector<double> non_cgal_variable_heights =
+        layerHeightsFor(makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm)),
+                        true, ORNL::GcodeSyntax::kJuggerBot, false);
+    passed &= expect(non_cgal_variable_heights.size() == tapered_variable_heights.size(),
+                     "Expected non-CGAL cross-section path to preserve variable layer count.");
+    passed &= expect(allInRange(non_cgal_variable_heights, 1.0, 5.0),
+                     "Expected non-CGAL variable-height layers to stay within configured bounds.");
 
     const std::vector<double> non_jugger_variable_heights =
         layerHeightsFor(makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm)),
