@@ -3,6 +3,7 @@
 #include <QCheckBox>
 #include <QCloseEvent>
 #include <QComboBox>
+#include <QDoubleSpinBox>
 #include <QGroupBox>
 #include <QMainWindow>
 #include <QRadioButton>
@@ -95,6 +96,7 @@ class PreferencesWindow : public QMainWindow {
     QComboBox* m_theme_combobox;
     QComboBox* m_gcode_preview_mode_combobox;
     QComboBox* m_disabled_setting_visibility_combobox;
+    QDoubleSpinBox* m_step_stl_linear_deflection_spinbox;
     QSpinBox* m_gcode_preview_vertex_threshold_spinbox;
     QCheckBox* m_gcode_info_visible_by_default_checkbox;
     QCheckBox* m_optimization_points_visible_by_default_checkbox;

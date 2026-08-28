@@ -172,6 +172,10 @@ class PreferencesManager : public QObject {
     //! \return if parts should always be dropped
     bool getAlwaysDropParts();
 
+    //! \brief Gets the linear deflection used when triangulating STEP files.
+    //! \return STEP triangulation linear deflection
+    Distance getStepStlLinearDeflection();
+
     //! \brief Get the lag between layers
     //! \return lag in milliseconds
     int getLayerLag();
@@ -406,6 +410,14 @@ class PreferencesManager : public QObject {
     //! \param should if the part should be dropped
     void setShouldAlwaysDrop(bool should);
 
+    //! \brief Sets the linear deflection used when triangulating STEP files.
+    //! \param deflection STEP triangulation linear deflection
+    void setStepStlLinearDeflection(Distance deflection);
+
+    //! \brief Sets the linear deflection used when triangulating STEP files from millimeters.
+    //! \param deflection_mm STEP triangulation linear deflection in millimeters
+    void setStepStlLinearDeflection(double deflection_mm);
+
     //! \brief Sets if the window should be maximized
     //! \param isMaximized: whether or not the window is maximized
     void setWindowMaximizedPreference(bool isMaximized);
@@ -485,6 +497,7 @@ class PreferencesManager : public QObject {
     //! \brief Part preferences
     bool m_use_implicit_transforms;
     bool m_always_drop_parts;
+    Distance m_step_stl_linear_deflection;
 
     //! \brief Layer preferences
     int m_layer_lag;
