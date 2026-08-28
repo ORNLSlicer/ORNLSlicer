@@ -55,7 +55,6 @@
 
 namespace ORNL {
 namespace {
-constexpr double kStepLinearDeflectionMm       = 0.1;
 constexpr double kStepAngularDeflectionRadians = 0.1;
 
 bool isStepFile(const QString& suffix) {
@@ -92,7 +91,8 @@ MeshTypes::SurfaceMesh buildSurfaceMeshFromStep(const QString& file_path) {
     TopoDS_Shape shape = reader.OneShape();
     if (shape.IsNull()) return surface_mesh;
 
-    BRepMesh_IncrementalMesh mesher(shape, kStepLinearDeflectionMm, false, kStepAngularDeflectionRadians, true);
+    const double linear_deflection_mm = PreferencesManager::getInstance()->getStepStlLinearDeflection().to(mm);
+    BRepMesh_IncrementalMesh mesher(shape, linear_deflection_mm, false, kStepAngularDeflectionRadians, true);
     mesher.Perform();
     if (!mesher.IsDone()) return surface_mesh;
 
