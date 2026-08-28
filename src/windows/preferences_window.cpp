@@ -1,5 +1,6 @@
 #include "windows/preferences_window.h"
 
+#include <QDoubleSpinBox>
 #include <QFileDialog>
 #include <QGridLayout>
 #include <QLabel>
@@ -242,6 +243,22 @@ void PreferencesWindow::setupLayout() {
     auto_drop_parts_checkbox->setChecked(PreferencesManager::getInstance()->getAlwaysDropParts());
     connect(auto_drop_parts_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
             &PreferencesManager::setShouldAlwaysDrop);
+
+    m_step_stl_linear_deflection_spinbox = new QDoubleSpinBox();
+    m_step_stl_linear_deflection_spinbox->setDecimals(3);
+    m_step_stl_linear_deflection_spinbox->setMinimum(0.001);
+    m_step_stl_linear_deflection_spinbox->setMaximum(10.0);
+    m_step_stl_linear_deflection_spinbox->setSingleStep(0.01);
+    m_step_stl_linear_deflection_spinbox->setSuffix(" mm");
+    m_step_stl_linear_deflection_spinbox->setValue(
+        PreferencesManager::getInstance()->getStepStlLinearDeflection().to(mm));
+    m_step_stl_linear_deflection_spinbox->setToolTip(
+        "Smaller values generate finer STL triangulation when importing STEP files.");
+    parts_tab_layout->addWidget(new QLabel("STEP STL tolerance:"), 2, 0, Qt::AlignTop);
+    parts_tab_layout->addWidget(m_step_stl_linear_deflection_spinbox, 2, 1, Qt::AlignTop);
+    connect(m_step_stl_linear_deflection_spinbox, QOverload<double>::of(&QDoubleSpinBox::valueChanged),
+            PreferencesManager::getInstance().get(),
+            QOverload<double>::of(&PreferencesManager::setStepStlLinearDeflection));
 
     parts_tab_layout->setRowStretch(3, 1);
 
@@ -511,6 +528,7 @@ void PreferencesWindow::importPreferences() {
         m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
         m_gcode_preview_vertex_threshold_spinbox->setValue(
             m_preferences_manager->getGCodePreviewVertexThresholdPreference());
+        m_step_stl_linear_deflection_spinbox->setValue(m_preferences_manager->getStepStlLinearDeflection().to(mm));
         m_optimization_points_visible_by_default_checkbox->setChecked(
             m_preferences_manager->getOptimizationPointsVisibleByDefaultPreference());
         m_gcode_info_visible_by_default_checkbox->setChecked(

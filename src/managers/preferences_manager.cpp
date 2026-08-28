@@ -32,6 +32,14 @@ namespace ORNL {
 namespace {
 constexpr int kVisualizationColorMigrationVersion            = 1;
 constexpr const char* kVisualizationColorMigrationVersionKey = "visualization_color_migration_version";
+constexpr const char* kStepStlLinearDeflectionKey            = "step_stl_linear_deflection";
+const Distance kDefaultStepStlLinearDeflection               = 0.1 * mm;
+const Distance kMinimumStepStlLinearDeflection               = 0.001 * mm;
+const Distance kMaximumStepStlLinearDeflection               = 10.0 * mm;
+
+Distance clampStepStlLinearDeflection(Distance deflection) {
+    return Distance(std::clamp(deflection(), kMinimumStepStlLinearDeflection(), kMaximumStepStlLinearDeflection()));
+}
 
 /*!
  * \brief Resolve a persisted visualization color name to its enum value.
@@ -144,6 +152,7 @@ PreferencesManager::PreferencesManager()
       m_window_pos(-1, -1),
       m_use_implicit_transforms(false),
       m_always_drop_parts(false),
+      m_step_stl_linear_deflection(kDefaultStepStlLinearDeflection),
       m_layer_lag(100),
       m_segment_lag(10),
       m_visualization_color_migration_version(kVisualizationColorMigrationVersion) {
@@ -287,6 +296,9 @@ void PreferencesManager::importPreferences(QString filepath) {
 
         if (j.contains("use_true_widths")) setUseTrueWidthsPreference(j["use_true_widths"]);
 
+        if (j.contains(kStepStlLinearDeflectionKey))
+            setStepStlLinearDeflection(j[kStepStlLinearDeflectionKey].get<Distance>());
+
         if (j.contains("gcode_info_visible_by_default"))
             setGCodeInfoVisibleByDefaultPreference(j["gcode_info_visible_by_default"]);
 
@@ -365,6 +377,7 @@ fifojson PreferencesManager::json() {
     j["window_pos"]                             = {m_window_pos.x(), m_window_pos.y()};
     j["use_implicit_transforms"]                = m_use_implicit_transforms;
     j["always_drop_parts"]                      = m_always_drop_parts;
+    j[kStepStlLinearDeflectionKey]              = m_step_stl_linear_deflection;
     j["visualization_colors"]                   = getVisualizationHexColors();
     j[kVisualizationColorMigrationVersionKey]   = m_visualization_color_migration_version;
     j["layer_lag"]                              = m_layer_lag;
@@ -538,6 +551,10 @@ bool PreferencesManager::getUseImplicitTransforms() {
 
 bool PreferencesManager::getAlwaysDropParts() {
     return m_always_drop_parts;
+}
+
+Distance PreferencesManager::getStepStlLinearDeflection() {
+    return m_step_stl_linear_deflection;
 }
 
 int PreferencesManager::getLayerLag() {
@@ -823,6 +840,15 @@ void PreferencesManager::setUseImplicitTransforms(bool use) {
 
 void PreferencesManager::setShouldAlwaysDrop(bool should) {
     m_always_drop_parts = should;
+}
+
+void PreferencesManager::setStepStlLinearDeflection(Distance deflection) {
+    m_step_stl_linear_deflection = clampStepStlLinearDeflection(deflection);
+    m_dirty                      = true;
+}
+
+void PreferencesManager::setStepStlLinearDeflection(double deflection_mm) {
+    setStepStlLinearDeflection(deflection_mm * mm);
 }
 
 void PreferencesManager::setWindowMaximizedPreference(bool isMaximized) {
