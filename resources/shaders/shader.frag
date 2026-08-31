@@ -51,7 +51,10 @@ void main()
     //and no edges are rendered.
     float edgeIntensity =  exp2(edgeIntensityCoefficient*nearD) * float(usingSolidWireframeMode);
 
-    vec3 result = clamp((ambient + diffuse + specular + rim) * vec3(vColor), 0.0, 1.0) * (1.0-edgeIntensity);
+    // Sample texture to use in shader.
+    vec4 tex = texture(textureSamp, texcoord_uv);
+
+    vec3 result = clamp((ambient + diffuse + specular + rim) * tex.rgb * vec3(vColor), 0.0, 1.0) * (1.0-edgeIntensity);
     fColor =  vec4(0.1,0.1,0.1,0) + vec4(result, vColor.a);
 
 
