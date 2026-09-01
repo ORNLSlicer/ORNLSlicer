@@ -303,6 +303,70 @@ bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double to
     return false;
 }
 
+bool pointOnAnyClosedPolylineXY(const Point& point, const QVector<Polyline>& lines, double tolerance) {
+    for (const Polyline& line : lines) {
+        if (pointOnClosedPolylineXY(point, line, tolerance)) { return true; }
+    }
+
+    return false;
+}
+
+Distance widthForSegmentOnGeometry(const Point& start, const Point& end, const QVector<Polyline>& geometry,
+                                   const QVector<Distance>& widths, Distance fallback_width) {
+    Point midpoint = (start + end) * 0.5;
+    const Distance tolerance(std::max(fallback_width() * 1.0e-3, 1.0e-6));
+
+    for (int i = 0; i < geometry.size() && i < widths.size(); ++i) {
+        if (pointOnClosedPolylineXY(midpoint, geometry[i], tolerance())) { return widths[i]; }
+    }
+
+    if (!widths.isEmpty()) {
+        const Distance first_width = widths.first();
+        const bool uniform_width =
+            std::all_of(widths.begin(), widths.end(), [first_width, tolerance](const Distance& width) {
+                return std::fabs(width() - first_width()) <= tolerance();
+            });
+        if (uniform_width) { return first_width; }
+    }
+
+    return fallback_width;
+}
+
+Distance widthForLineOnGeometry(const Polyline& line, const QVector<Polyline>& geometry,
+                                const QVector<Distance>& widths, Distance fallback_width) {
+    if (line.size() < 2) { return fallback_width; }
+
+    return widthForSegmentOnGeometry(line.front(), line[1], geometry, widths, fallback_width);
+}
+
+bool isInsetAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb) {
+    const Distance nominal_width = parent_sb->setting<Distance>(PS::Inset::kBeadWidth);
+    return std::fabs(width() - nominal_width()) > std::max(nominal_width() * 1.0e-3, 1.0e-6);
+}
+
+void populateInsetSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
+                                  const QSharedPointer<SettingsBase>& parent_sb, const Distance& bead_width,
+                                  bool adapted) {
+    segment_sb->populate(parent_sb);
+
+    Velocity speed = parent_sb->setting<Velocity>(PS::Inset::kSpeed);
+    if (adapted && bead_width > 0) {
+        const Distance ref_width = parent_sb->setting<Distance>(PS::Inset::kBeadWidth);
+        const Velocity ref_speed = parent_sb->setting<Velocity>(PS::Inset::kSpeed);
+        const double min_speed   = ref_speed() * 0.01;
+        speed                    = Velocity(std::max((ref_speed() * ref_width()) / bead_width(), min_speed));
+    }
+
+    segment_sb->setSetting(SS::kWidth, bead_width);
+    segment_sb->setSetting(SS::kHeight, parent_sb->setting<Distance>(PS::Layer::kLayerHeight));
+    segment_sb->setSetting(SS::kSpeed, speed);
+    segment_sb->setSetting(SS::kAccel, parent_sb->setting<Acceleration>(PRS::Acceleration::kInset));
+    segment_sb->setSetting(SS::kExtruderSpeed, parent_sb->setting<AngularVelocity>(PS::Inset::kExtruderSpeed));
+    segment_sb->setSetting(SS::kMaterialNumber, parent_sb->setting<int>(MS::MultiMaterial::kInsetNum));
+    segment_sb->setSetting(SS::kRegionType, RegionType::kInset);
+    segment_sb->setSetting(SS::kAdapted, adapted);
+}
+
 }  // namespace
 
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
@@ -325,6 +389,8 @@ void Perimeter::compute(uint layer_num) {
     m_paths.clear();
     m_computed_geometry.clear();
     m_computed_widths.clear();
+    m_connected_inset_geometry.clear();
+    m_connected_inset_widths.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth                = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
@@ -500,6 +566,10 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             PrintDirection::kReverse_off)
             for (Polyline& line : m_computed_geometry) { line = line.reverse(); }
 
+        const bool connect_to_spiral_insets =
+            m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnable) &&
+            m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) && !m_connected_inset_geometry.isEmpty();
+
         auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
             for (const Polyline& spiral_group : spiral_groups) {
                 if (spiral_group.size() < 3) { continue; }
@@ -512,6 +582,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 if (newPath.calculateLength() < min_path_length) { continue; }
 
                 if (newPath.size() > 0) {
+                    if (connect_to_spiral_insets) { applyConnectedInsetSettings(newPath); }
+
                     calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
                     PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
@@ -523,6 +595,56 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
         };
 
         if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
+            const bool complete_path_before_connecting =
+                m_sb->setting<bool>(PS::Perimeter::kCompletePathBeforeConnecting);
+
+            auto appendConnectedInsetLoops = [&](QVector<Polyline>& ordered_loops, QVector<Distance>& ordered_widths,
+                                                 Point& spiral_query_location, bool normalize_orientation,
+                                                 bool& has_spiral_orientation, bool& spiral_orientation) {
+                if (!connect_to_spiral_insets) { return; }
+
+                PolylineOrderOptimizer inset_poo(spiral_query_location, layerNumber);
+                configureOptimizer(inset_poo, PointOrderOptimization::kNextClosest);
+                QVector<Polyline> inset_geometry = m_connected_inset_geometry;
+                if (static_cast<PrintDirection>(m_sb->setting<int>(PS::Ordering::kInsetReverseDirection)) !=
+                    PrintDirection::kReverse_off) {
+                    for (Polyline& line : inset_geometry) { line = line.reverse(); }
+                }
+                inset_poo.setGeometryToEvaluate(inset_geometry, RegionType::kInset,
+                                                PathOrderOptimization::kNextClosest);
+
+                const Distance inset_min_path_length = m_sb->setting<Distance>(PS::Inset::kMinPathLength);
+                const Distance inset_nominal_width   = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
+
+                while (inset_poo.getCurrentPolylineCount() > 0) {
+                    inset_poo.setPointParameters(PointOrderOptimization::kNextClosest, false, 0, 0, false, 0, false);
+
+                    Polyline result = inset_poo.linkNextPolyline();
+
+                    if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < inset_min_path_length) {
+                        continue;
+                    }
+
+                    if (normalize_orientation) {
+                        if (!has_spiral_orientation) {
+                            spiral_orientation     = result.orientation();
+                            has_spiral_orientation = true;
+                        }
+                        else if (result.orientation() != spiral_orientation) {
+                            result = result.reverse();
+                            result.move(result.size() - 1, 0);
+                        }
+                    }
+
+                    const Distance result_width = widthForLineOnGeometry(result, m_connected_inset_geometry,
+                                                                         m_connected_inset_widths, inset_nominal_width);
+                    ordered_widths.push_back(result_width);
+                    ordered_loops.push_back(result);
+                    spiral_query_location =
+                        SpiralPath::transitionStartPoint(result, result_width, complete_path_before_connecting);
+                }
+            };
+
             if (!m_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
                 Point spiral_query_location = current_location;
                 PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
@@ -530,6 +652,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 spiral_poo.setGeometryToEvaluate(m_computed_geometry, RegionType::kPerimeter, pathOrderOptimization);
 
                 QVector<Polyline> ordered_perimeters;
+                QVector<Distance> ordered_widths;
                 const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
                 const Distance bead_width      = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
 
@@ -543,11 +666,18 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                     if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) { continue; }
 
-                    spiral_query_location = SpiralPath::transitionStartPoint(result, bead_width);
+                    spiral_query_location =
+                        SpiralPath::transitionStartPoint(result, bead_width, complete_path_before_connecting);
                     ordered_perimeters.push_back(result);
+                    ordered_widths.push_back(bead_width);
                 }
 
                 if (ordered_perimeters.isEmpty()) { return; }
+
+                bool has_spiral_orientation = false;
+                bool spiral_orientation     = false;
+                appendConnectedInsetLoops(ordered_perimeters, ordered_widths, spiral_query_location, false,
+                                          has_spiral_orientation, spiral_orientation);
 
                 if (ordered_perimeters.size() == 1) {
                     Polyline result = ordered_perimeters.first();
@@ -569,7 +699,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     return;
                 }
 
-                appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_perimeters, bead_width),
+                appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_perimeters, ordered_widths, bead_width,
+                                                                       complete_path_before_connecting),
                                   ordered_perimeters.front().orientation(), min_path_length);
 
                 return;
@@ -607,10 +738,14 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 const Distance result_width = beadWidthForSegment(result.front(), result[1], m_sb);
                 ordered_perimeter_widths.push_back(result_width);
                 ordered_perimeters.push_back(result);
-                spiral_query_location = SpiralPath::transitionStartPoint(result, result_width);
+                spiral_query_location =
+                    SpiralPath::transitionStartPoint(result, result_width, complete_path_before_connecting);
             }
 
             if (ordered_perimeters.isEmpty()) { return; }
+
+            appendConnectedInsetLoops(ordered_perimeters, ordered_perimeter_widths, spiral_query_location, true,
+                                      has_spiral_orientation, spiral_orientation);
 
             if (ordered_perimeters.size() == 1) {
                 PolylineOrderOptimizer first_loop_poo(current_location, layerNumber);
@@ -638,9 +773,9 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
             const Distance nominal_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
-            appendSpiralPaths(
-                SpiralPath::linkClosedPolylineGroups(ordered_perimeters, ordered_perimeter_widths, nominal_width),
-                ordered_perimeters.front().orientation(), min_path_length);
+            appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_perimeters, ordered_perimeter_widths,
+                                                                   nominal_width, complete_path_before_connecting),
+                              ordered_perimeters.front().orientation(), min_path_length);
 
             return;
         }
@@ -699,6 +834,11 @@ Path Perimeter::createPath(Polyline line) {
 
 QVector<Polyline> Perimeter::getComputedGeometry() {
     return m_computed_geometry;
+}
+
+void Perimeter::setConnectedInsetGeometry(const QVector<Polyline>& geometry, const QVector<Distance>& widths) {
+    m_connected_inset_geometry = geometry;
+    m_connected_inset_widths   = widths;
 }
 
 void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
@@ -884,6 +1024,44 @@ Distance Perimeter::beadWidthForSegment(const Point& start, const Point& end,
     }
 
     return fallback_width;
+}
+
+void Perimeter::applyConnectedInsetSettings(Path& path) const {
+    if (m_connected_inset_geometry.isEmpty()) { return; }
+
+    const Distance fallback_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
+    const Distance tolerance(std::max(fallback_width() * 1.0e-3, 1.0e-6));
+    bool using_inset_settings = false;
+
+    for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
+        if (segment == nullptr) { continue; }
+
+        const bool midpoint_on_inset =
+            pointOnAnyClosedPolylineXY(segment->midpoint(), m_connected_inset_geometry, tolerance());
+        const bool end_on_inset = pointOnAnyClosedPolylineXY(segment->end(), m_connected_inset_geometry, tolerance());
+        if (midpoint_on_inset || end_on_inset) { using_inset_settings = true; }
+
+        if (!using_inset_settings) { continue; }
+
+        QSharedPointer<SettingsBase> parent_sb = QSharedPointer<SettingsBase>::create(*m_sb);
+        for (const SettingsPolygon& polygon : m_settings_polygons) {
+            if (polygon.inside(segment->midpoint())) {
+                parent_sb->populate(polygon.getSettings());
+                break;
+            }
+        }
+
+        const Distance bead_width = connectedInsetWidthForSegment(segment->start(), segment->end());
+        populateInsetSegmentSettings(segment->getSb(), parent_sb, bead_width,
+                                     isInsetAdaptedWidth(bead_width, parent_sb));
+    }
+}
+
+Distance Perimeter::connectedInsetWidthForSegment(const Point& start, const Point& end) const {
+    const Distance fallback_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
+    if (!m_sb->setting<bool>(PS::Inset::kAdaptive)) { return fallback_width; }
+
+    return widthForSegmentOnGeometry(start, end, m_connected_inset_geometry, m_connected_inset_widths, fallback_width);
 }
 
 bool Perimeter::isAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb) {

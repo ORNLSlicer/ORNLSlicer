@@ -427,6 +427,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
     };
 
     if (m_sb->setting<bool>(PS::Inset::kEnableSpiralInset)) {
+        const bool complete_path_before_connecting = m_sb->setting<bool>(PS::Inset::kCompletePathBeforeConnecting);
+
         if (!m_sb->setting<bool>(PS::Inset::kAdaptive)) {
             Point spiral_query_location = current_location;
             PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
@@ -446,7 +448,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 
                 if (result.size() < 3 || SpiralPath::closedPolylineLength(result) < min_path_length) { continue; }
 
-                spiral_query_location = SpiralPath::transitionStartPoint(result, bead_width);
+                spiral_query_location =
+                    SpiralPath::transitionStartPoint(result, bead_width, complete_path_before_connecting);
                 ordered_insets.push_back(result);
             }
 
@@ -472,8 +475,9 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
                 return;
             }
 
-            appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_insets, bead_width),
-                              ordered_insets.front().orientation(), min_path_length);
+            appendSpiralPaths(
+                SpiralPath::linkClosedPolylineGroups(ordered_insets, bead_width, complete_path_before_connecting),
+                ordered_insets.front().orientation(), min_path_length);
 
             return;
         }
@@ -510,7 +514,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
             const Distance result_width = beadWidthForSegment(result.front(), result[1], m_sb);
             ordered_inset_widths.push_back(result_width);
             ordered_insets.push_back(result);
-            spiral_query_location = SpiralPath::transitionStartPoint(result, result_width);
+            spiral_query_location =
+                SpiralPath::transitionStartPoint(result, result_width, complete_path_before_connecting);
         }
 
         if (ordered_insets.isEmpty()) { return; }
@@ -541,7 +546,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         }
 
         const Distance nominal_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
-        appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_insets, ordered_inset_widths, nominal_width),
+        appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_insets, ordered_inset_widths, nominal_width,
+                                                               complete_path_before_connecting),
                           ordered_insets.front().orientation(), min_path_length);
 
         return;
@@ -598,6 +604,10 @@ Path Inset::createPath(Polyline line) {
 
 QVector<Polyline> Inset::getComputedGeometry() {
     return m_computed_geometry;
+}
+
+QVector<Distance> Inset::getComputedWidths() {
+    return m_computed_widths;
 }
 
 void Inset::calculateModifiers(Path& path, bool supportsG3) {
