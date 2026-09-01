@@ -24,7 +24,6 @@
 #include "graphics/objects/arrow_object.h"
 #include "graphics/objects/axes_object.h"
 #include "graphics/objects/cube/plane_object.h"
-#include "graphics/objects/text_object.h"
 #include "graphics/support/shape_factory.h"
 #include "part/part.h"
 #include "units/unit.h"
@@ -284,14 +283,6 @@ PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mod
     m_feature_edge_object = createFeatureEdgeObject(this->view(), mesh);
     this->updateFeatureEdgeAppearance();
 
-    // Make a label.
-    auto got = QSharedPointer<TextObject>::create(this->view(), m_part->name());
-    got->setOnTop(true);
-    got->hide();
-
-    this->adoptChild(got);
-    m_label_object = got;
-
     // Make axis.
     float length = this->maximum().x() - this->minimum().x();
     float width  = this->maximum().y() - this->minimum().y();
@@ -468,10 +459,6 @@ QSharedPointer<ArrowObject> PartObject::arrow() {
     return m_arrow_object;
 }
 
-QSharedPointer<TextObject> PartObject::label() {
-    return m_label_object;
-}
-
 QSharedPointer<AxesObject> PartObject::axes() {
     return m_axes_object;
 }
@@ -607,10 +594,6 @@ void PartObject::transformationCallback() {
     for (auto& goc : m_part_children) {
         if (!goc->arrow().isNull()) goc->arrow()->updateEndpoints();
     }
-
-    QVector3D label_pos = this->center();
-    label_pos.setZ(this->maximum().z() + 0.5);
-    m_label_object->translateAbsolute(label_pos, false);
 
     m_plane_object->scaleAbsolute(QVector3D(this->scaling().x(), this->scaling().y(), 1));
 

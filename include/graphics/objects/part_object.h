@@ -20,7 +20,6 @@ class Part;
 class ArrowObject;
 class AxesObject;
 class PlaneObject;
-class TextObject;
 
 /*!
  * \brief Displays a part in an OpenGL view.
@@ -63,8 +62,6 @@ class PartObject : public GraphicsObject {
 
     //! \brief Gets the arrow object.
     QSharedPointer<ArrowObject> arrow();
-    //! \brief Gets the label object.
-    QSharedPointer<TextObject> label();
     //! \brief Gets the axes object.
     QSharedPointer<AxesObject> axes();
     //! \brief Gets the plane object.
@@ -122,7 +119,6 @@ class PartObject : public GraphicsObject {
 
     //! \brief Sub-objects.
     QSharedPointer<ArrowObject> m_arrow_object;
-    QSharedPointer<TextObject> m_label_object;
     QSharedPointer<AxesObject> m_axes_object;
     QSharedPointer<PlaneObject> m_plane_object;
     QSharedPointer<GraphicsObject> m_slicing_cylinder_object;
