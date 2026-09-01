@@ -83,11 +83,11 @@ void GraphicsObject::render() {
     m_view->shaderProgram()->setUniformValue(m_shader_locs.model, m_transform);
     this->configureUniforms();
 
-    m_texture->bind();
+    m_texture->bind(0);
     m_vao->bind();
     this->draw();
     m_vao->release();
-    m_texture->release();
+    m_texture->release(0);
     // qDebug() << m_view->glGetError();
 
     // Restore global rendering values.
@@ -397,10 +397,13 @@ void GraphicsObject::populateGL(BaseView* view, const std::vector<float>& vertic
     m_shader_locs.uv      = m_view->shaderProgram()->attributeLocation(Constants::OpenGL::Shader::kUVName);
     m_shader_locs.usingSolidWireframeMode =
         m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kUsingSolidWireframeModeName);
+    m_shader_locs.textureSamp = m_view->shaderProgram()->uniformLocation(Constants::OpenGL::Shader::kTextureSampName);
 
     m_view->makeCurrent();
 
     m_view->shaderProgram()->bind();
+
+    m_view->shaderProgram()->setUniformValue(m_shader_locs.textureSamp, 0);
 
     m_vertices = vertices;
     m_normals  = normals;

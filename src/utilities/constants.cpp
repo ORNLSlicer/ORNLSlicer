@@ -1110,6 +1110,7 @@ const char* Constants::OpenGL::Shader::kLightingPositionName        = "lightPos"
 const char* Constants::OpenGL::Shader::kCameraPositionName          = "viewPos";
 const char* Constants::OpenGL::Shader::kAmbientStrengthName         = "ambientStrength";
 const char* Constants::OpenGL::Shader::kUsingSolidWireframeModeName = "usingSolidWireframeMode";
+const char* Constants::OpenGL::Shader::kTextureSampName             = "textureSamp";
 
 const char* Constants::OpenGL::Shader::kPositionName = "position";
 const char* Constants::OpenGL::Shader::kColorName    = "color";
@@ -1123,6 +1124,7 @@ const char* Constants::OpenGL::Shader::kStackingAxisName        = "stackingAxis"
 const char* Constants::OpenGL::Shader::kOverhangAngleName       = "overhangAngle";
 const char* Constants::OpenGL::Shader::kOverhangModeName        = "usingOverhangMode";
 const char* Constants::OpenGL::Shader::kRenderingPartObjectName = "renderingPartObject";
+
 //================================================================================
 // Slicer 1 Keys - used for gcode processing (all caps)
 //================================================================================
