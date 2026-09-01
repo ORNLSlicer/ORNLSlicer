@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <QMessageBox>
+#include <QPainter>
 #include <QStack>
 #include <QToolTip>
 #include <algorithm>
@@ -112,11 +113,15 @@ QList<QSharedPointer<Part>> PartView::externalParts() {
 }
 
 void PartView::showLabels(bool show) {
-    for (auto& gop : m_part_objects) { gop->label()->setHidden(!show); }
-
     m_state.names_shown = show;
 
     this->update();
+}
+
+void PartView::paintOverlay(QPainter& painter) {}
+
+bool PartView::hasOverlay() const {
+    return m_state.names_shown;
 }
 
 void PartView::showSlicingPlanes(bool show) {
@@ -943,7 +948,6 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
     gop->plane()->setLockedRotationQuaternion(slicingPlaneRotation());
     if (m_state.overhangs_shown) gop->showOverhang(true);
     updateSlicingGeometryPreview(gop);
-    if (m_state.names_shown) gop->label()->show();
     updateLayerSettingsRangePlane();
 
     this->blockModel();
