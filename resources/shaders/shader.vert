@@ -1,14 +1,16 @@
 #version 440
+
 layout(location = 0) in vec3 position;
 layout(location = 1) in vec3 normal;
 layout(location = 2) in vec4 color;
 layout(location = 3) in vec2 uv;
+
 out vec4 vColor;
-out vec3 fragPos;
-out vec3 vWorldPos;
+out vec3 vWorldPosition;
 out vec3 vWorldNormal;
 out vec2 texcoord_uv;
-out vec3 bary;
+noperspective out vec3 vBarycentric;
+
 uniform mat4 model;
 uniform mat4 view;
 uniform mat4 projection;
@@ -17,47 +19,41 @@ uniform float overhangAngle;
 uniform bool usingOverhangMode;
 uniform bool renderingPartObject;
 
-void main()
-{
-    vec4 temp = (model * vec4(position, 1));
-    vWorldPos = vec3(temp.x, temp.y, temp.z);
+const vec4 kOverhangColor = vec4(1.0, 0.0, 0.0, 1.0);
+const float kPi = 3.14159265358979323846;
+const float kHalfPi = kPi / 2.0;
+
+vec3 triangleBarycentricCoordinate() {
+    int vertexInTriangle = gl_VertexID % 3;
+
+    return vec3(vertexInTriangle == 0 ? 1.0 : 0.0,
+                vertexInTriangle == 1 ? 1.0 : 0.0,
+                vertexInTriangle == 2 ? 1.0 : 0.0);
+}
+
+float anglePastPerpendicularToStackingAxis(float normalAlignment) {
+    return acos(clamp(normalAlignment, -1.0, 1.0)) - kHalfPi;
+}
+
+void main() {
+    vec4 worldPosition = model * vec4(position, 1.0);
+    vWorldPosition = worldPosition.xyz;
     vColor = color;
     vWorldNormal = normalize(transpose(inverse(mat3(model))) * normal);
-    fragPos = vec3(model * vec4(position, 1.0));
-    gl_Position = projection * view * model * vec4(position, 1.0);
+    gl_Position = projection * view * worldPosition;
     texcoord_uv = uv;
-    //We need the know the baryocentric coordinate of each pixel to determine how
-    //close each pixel is to an edge of a triangle
-    bary = vec3(gl_VertexID % 3 == 0, gl_VertexID % 3 == 1, gl_VertexID % 3 == 2);
 
-    //Determine if this vertex is facing downwards
-    float upward = dot(stackingAxis, vWorldNormal);
+    // Emit per-triangle barycentric coordinates for fragment-shader edge detection.
+    vBarycentric = triangleBarycentricCoordinate();
 
-    //Z pointing down
-    if (upward < 0.0 && usingOverhangMode && renderingPartObject)
-    {
-        vec4 overhangColor = vec4(1, 0, 0, 1);
-        float M_PI = 3.14159265358979323846;
-        float faceAngle;
-        float val = dot(stackingAxis, vWorldNormal) / (length(vWorldNormal) * length(stackingAxis));
-        float clampedVal = clamp(val, -1.0, 1.0);
+    // Overhang mode highlights part faces that point below the stacking axis past the configured angle.
+    vec3 normalizedStackingAxis = normalize(stackingAxis);
+    float normalAlignment = dot(normalizedStackingAxis, vWorldNormal);
+    if (normalAlignment < 0.0 && usingOverhangMode && renderingPartObject) {
+        float faceAngle = anglePastPerpendicularToStackingAxis(normalAlignment);
 
-        if (val <= -1.0)
-            faceAngle = M_PI;
-        else if (val >= 1.0)
-            faceAngle = 0;
-        else
-            faceAngle = acos(val);
-        //Adjust the faceAngle by 90 degrees so that straight down is at 90 degrees
-        faceAngle = faceAngle - (M_PI / 2.0);
-        //if the angle of the face is greater than roughly 40 degrees (where 0 degrees would mean a face that is perpendicular
-        //to the stacking axis)
-        if (faceAngle > overhangAngle)
-        {
-            vColor = overhangColor;
+        if (faceAngle > overhangAngle) {
+            vColor = kOverhangColor;
         }
-
     }
-
-
 }
