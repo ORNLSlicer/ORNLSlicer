@@ -157,3 +157,15 @@ settings:
     namespace: "Profile::Inset"
     symbol: "kEnableSpiralInset"
     local: true
+  - name: "spiral_inset_complete_path_before_connecting"
+    display: "Complete path before connecting"
+    type: "boolean"
+    tooltip: "If selected, spiral insets will complete the current path before connecting to the next path."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"spiral_inset":true}]}]}
+    options: []
+    default: false
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kCompletePathBeforeConnecting"
+    local: true
