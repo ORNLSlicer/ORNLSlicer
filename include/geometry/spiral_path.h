@@ -1,6 +1,8 @@
 #pragma once
 
 #include <algorithm>
+#include <array>
+#include <cmath>
 #include <limits>
 
 #include <qcontainerfwd.h>
@@ -13,9 +15,28 @@
 namespace ORNL {
 namespace SpiralPath {
 namespace detail {
+struct RayLoopIntersection {
+    Point point;
+    double distance;
+    int segment_index;
+};
+
 inline Point pointAlongSegment(const Point& start, const Point& end, double ratio) {
     return Point(start.x() + ((end.x() - start.x()) * ratio), start.y() + ((end.y() - start.y()) * ratio),
                  start.z() + ((end.z() - start.z()) * ratio));
+}
+
+inline double cross2D(double lhs_x, double lhs_y, double rhs_x, double rhs_y) {
+    return (lhs_x * rhs_y) - (lhs_y * rhs_x);
+}
+
+inline bool normalize2D(double& x, double& y) {
+    const double length = std::sqrt((x * x) + (y * y));
+    if (length <= std::numeric_limits<double>::epsilon()) { return false; }
+
+    x /= length;
+    y /= length;
+    return true;
 }
 
 inline Point stopPointOnClosingSegment(const Polyline& line, Distance distance_before_start) {
@@ -151,6 +172,121 @@ inline void rotateToClosestForwardExistingPoint(Polyline& line, const Point& que
     for (int i = 0; i < rotation_index; ++i) { line.move(0, line.size() - 1); }
 }
 
+inline bool raySegmentIntersection(const Point& ray_start, double ray_direction_x, double ray_direction_y,
+                                   const Point& segment_start, const Point& segment_end, Point& intersection,
+                                   double& ray_distance) {
+    const double segment_x          = segment_end.x() - segment_start.x();
+    const double segment_y          = segment_end.y() - segment_start.y();
+    const double denom              = cross2D(ray_direction_x, ray_direction_y, segment_x, segment_y);
+    const double to_segment_start_x = segment_start.x() - ray_start.x();
+    const double to_segment_start_y = segment_start.y() - ray_start.y();
+    constexpr double epsilon        = 1.0e-6;
+
+    if (std::abs(denom) <= epsilon) {
+        if (std::abs(cross2D(to_segment_start_x, to_segment_start_y, ray_direction_x, ray_direction_y)) > epsilon) {
+            return false;
+        }
+
+        const double segment_start_projection =
+            (to_segment_start_x * ray_direction_x) + (to_segment_start_y * ray_direction_y);
+        const double segment_end_projection = ((segment_end.x() - ray_start.x()) * ray_direction_x) +
+                                              ((segment_end.y() - ray_start.y()) * ray_direction_y);
+
+        if (segment_start_projection < -epsilon && segment_end_projection < -epsilon) { return false; }
+
+        const bool use_segment_start =
+            segment_start_projection >= -epsilon &&
+            (segment_start_projection <= segment_end_projection || segment_end_projection < -epsilon);
+        ray_distance = std::max(0.0, use_segment_start ? segment_start_projection : segment_end_projection);
+        intersection = use_segment_start ? segment_start : segment_end;
+        return true;
+    }
+
+    double t = cross2D(to_segment_start_x, to_segment_start_y, segment_x, segment_y) / denom;
+    double u = cross2D(to_segment_start_x, to_segment_start_y, ray_direction_x, ray_direction_y) / denom;
+
+    if (t < -epsilon || u < -epsilon || u > 1.0 + epsilon) { return false; }
+
+    t = std::max(0.0, t);
+    u = std::clamp(u, 0.0, 1.0);
+
+    ray_distance = t;
+    intersection = pointAlongSegment(segment_start, segment_end, u);
+    return true;
+}
+
+inline bool findRayLoopIntersection(const Polyline& line, const Point& ray_start, double ray_direction_x,
+                                    double ray_direction_y, double max_distance, RayLoopIntersection& intersection) {
+    bool found              = false;
+    double closest_distance = std::numeric_limits<double>::max();
+
+    for (int i = 0, end = line.size(); i < end; ++i) {
+        const int next_index = (i + 1) % line.size();
+        Point candidate_point;
+        double candidate_distance = 0.0;
+        if (!raySegmentIntersection(ray_start, ray_direction_x, ray_direction_y, line[i], line[next_index],
+                                    candidate_point, candidate_distance)) {
+            continue;
+        }
+
+        if (candidate_distance <= max_distance + 1.0e-6 && candidate_distance < closest_distance) {
+            closest_distance = candidate_distance;
+            intersection     = {candidate_point, candidate_distance, i};
+            found            = true;
+        }
+    }
+
+    return found;
+}
+
+inline void rotateToSegmentPoint(Polyline& line, int segment_index, const Point& point) {
+    if (line.size() < 2) { return; }
+
+    const int next_index = (segment_index + 1) % line.size();
+    int rotation_index   = next_index;
+
+    if (point == line[segment_index]) { rotation_index = segment_index; }
+    else if (point == line[next_index]) { rotation_index = next_index; }
+    else { line.insert(next_index, point); }
+
+    for (int i = 0; i < rotation_index; ++i) { line.move(0, line.size() - 1); }
+}
+
+inline bool rotateToFortyFiveDegreeConnector(const Polyline& current_loop, Polyline& next_loop,
+                                             const Point& connector_start, Distance stop_distance) {
+    if (current_loop.size() < 2 || next_loop.size() < 2) { return false; }
+
+    double tangent_x = current_loop.front().x() - current_loop.back().x();
+    double tangent_y = current_loop.front().y() - current_loop.back().y();
+    if (!normalize2D(tangent_x, tangent_y)) { return false; }
+
+    const double normal_x             = -tangent_y;
+    const double normal_y             = tangent_x;
+    constexpr double forty_five_scale = 0.7071067811865476;
+    const double max_connector_length = std::max(stop_distance() * 2.0, 1.0e-6);
+    const std::array<std::array<double, 2>, 2> directions {{
+        {{(tangent_x + normal_x) * forty_five_scale, (tangent_y + normal_y) * forty_five_scale}},
+        {{(tangent_x - normal_x) * forty_five_scale, (tangent_y - normal_y) * forty_five_scale}},
+    }};
+
+    bool found = false;
+    RayLoopIntersection best {Point(), std::numeric_limits<double>::max(), 0};
+    for (const std::array<double, 2>& direction : directions) {
+        RayLoopIntersection candidate {Point(), std::numeric_limits<double>::max(), 0};
+        if (findRayLoopIntersection(next_loop, connector_start, direction[0], direction[1], max_connector_length,
+                                    candidate) &&
+            candidate.distance < best.distance) {
+            best  = candidate;
+            found = true;
+        }
+    }
+
+    if (!found) { return false; }
+
+    rotateToSegmentPoint(next_loop, best.segment_index, best.point);
+    return true;
+}
+
 inline Distance validWidthOrFallback(Distance width, Distance fallback_width) {
     return width > 0 ? width : fallback_width;
 }
@@ -159,18 +295,30 @@ inline Distance transitionDistance(Distance current_width, Distance next_width, 
     return (validWidthOrFallback(current_width, fallback_width) + validWidthOrFallback(next_width, fallback_width)) / 2;
 }
 
-inline Point prepareConnector(const Polyline& current_loop, Polyline& next_loop, Distance stop_distance) {
-    const Point rough_connector_start = stopPointOnClosingSegment(current_loop, stop_distance);
+inline Point transitionPoint(const Polyline& line, Distance distance_before_start, bool complete_before_connecting) {
+    if (complete_before_connecting && !line.isEmpty()) { return line.front(); }
+
+    return stopPointOnClosingSegment(line, distance_before_start);
+}
+
+inline Point prepareConnector(const Polyline& current_loop, Polyline& next_loop, Distance stop_distance,
+                              bool complete_before_connecting) {
+    const Point rough_connector_start = transitionPoint(current_loop, stop_distance, complete_before_connecting);
     const bool smooth_closing_segment = hasSmoothClosingSegment(current_loop);
     if (next_loop.size() >= 3) {
-        if (smooth_closing_segment) {
+        if (complete_before_connecting) {
+            if (!rotateToFortyFiveDegreeConnector(current_loop, next_loop, rough_connector_start, stop_distance)) {
+                rotateToClosestPoint(next_loop, rough_connector_start);
+            }
+        }
+        else if (smooth_closing_segment) {
             rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, current_loop.back(),
                                                 current_loop.front());
         }
         else { rotateToClosestPoint(next_loop, rough_connector_start); }
     }
 
-    if (smooth_closing_segment || next_loop.isEmpty()) { return rough_connector_start; }
+    if (complete_before_connecting || smooth_closing_segment || next_loop.isEmpty()) { return rough_connector_start; }
 
     return MathUtils::nearestPointOnSegment(current_loop.back(), current_loop.front(), next_loop.front()).first;
 }
@@ -218,10 +366,11 @@ inline Distance closedPolylineLength(const Polyline& line) {
 }
 
 /*!
- * \brief Returns the point on a closed loop's closing segment where a spiral transition should begin.
+ * \brief Returns the point where a spiral transition should begin.
  */
-inline Point transitionStartPoint(const Polyline& line, Distance distance_before_start) {
-    return detail::stopPointOnClosingSegment(line, distance_before_start);
+inline Point transitionStartPoint(const Polyline& line, Distance distance_before_start,
+                                  bool complete_before_connecting = false) {
+    return detail::transitionPoint(line, distance_before_start, complete_before_connecting);
 }
 
 /*!
@@ -233,10 +382,12 @@ inline Point transitionStartPoint(const Polyline& line, Distance distance_before
  * \param ordered_loops Closed loops without a repeated final point.
  * \param loop_widths Bead widths for the ordered loops.
  * \param fallback_width Width used when a per-loop width is not supplied.
+ * \param complete_before_connecting Close each loop before adding the connector to the next loop.
  * \return One or more polylines, each representing a connectable spiral group.
  */
 inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops,
-                                                  const QVector<Distance>& loop_widths, Distance fallback_width) {
+                                                  const QVector<Distance>& loop_widths, Distance fallback_width,
+                                                  bool complete_before_connecting = false) {
     QVector<detail::StitchLoop> loops;
     loops.reserve(ordered_loops.size());
     for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
@@ -276,16 +427,17 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
             detail::StitchLoop prepared_next_loop = next_loop;
             const Distance stop_distance =
                 detail::transitionDistance(current_loop.width, next_loop.width, fallback_width);
-            const Point connector_start =
-                detail::prepareConnector(current_loop.loop, prepared_next_loop.loop, stop_distance);
+            const Point connector_start = detail::prepareConnector(current_loop.loop, prepared_next_loop.loop,
+                                                                   stop_distance, complete_before_connecting);
 
             if (detail::canConnectLoops(current_loop, prepared_next_loop, connector_start, stop_distance)) {
                 if (spiral.back() != connector_start) { spiral += connector_start; }
                 current_loop = prepared_next_loop;
             }
             else {
-                const Point final_stop = detail::stopPointOnClosingSegment(
-                    current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width));
+                const Point final_stop = detail::transitionPoint(
+                    current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width),
+                    complete_before_connecting);
 
                 if (spiral.back() != final_stop) { spiral += final_stop; }
                 spiral_groups.push_back(spiral);
@@ -294,8 +446,9 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
             }
         }
         else {
-            const Point final_stop = detail::stopPointOnClosingSegment(
-                current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width));
+            const Point final_stop = detail::transitionPoint(
+                current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width),
+                complete_before_connecting);
 
             if (spiral.back() != final_stop) { spiral += final_stop; }
             spiral_groups.push_back(spiral);
@@ -306,13 +459,13 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
     return spiral_groups;
 }
 
-inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops,
-                                                  Distance final_stop_distance) {
+inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops, Distance final_stop_distance,
+                                                  bool complete_before_connecting = false) {
     QVector<Distance> loop_widths;
     loop_widths.reserve(ordered_loops.size());
     for (int i = 0, end = ordered_loops.size(); i < end; ++i) { loop_widths.push_back(final_stop_distance); }
 
-    return linkClosedPolylineGroups(ordered_loops, loop_widths, final_stop_distance);
+    return linkClosedPolylineGroups(ordered_loops, loop_widths, final_stop_distance, complete_before_connecting);
 }
 
 /*!
@@ -321,10 +474,11 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
  * \param ordered_loops Closed loops without a repeated final point.
  * \param loop_widths Bead widths for the ordered loops.
  * \param fallback_width Width used when a per-loop width is not supplied.
+ * \param complete_before_connecting Close each loop before adding the connector to the next loop.
  * \return One polyline that walks each loop and transitions to the next loop before fully closing.
  */
 inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, const QVector<Distance>& loop_widths,
-                                    Distance fallback_width) {
+                                    Distance fallback_width, bool complete_before_connecting = false) {
     QVector<detail::StitchLoop> loops;
     loops.reserve(ordered_loops.size());
     for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
@@ -362,15 +516,17 @@ inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, cons
             detail::StitchLoop next_loop = loops.takeFirst();
             const Distance stop_distance =
                 detail::transitionDistance(current_loop.width, next_loop.width, fallback_width);
-            const Point connector_start = detail::prepareConnector(current_loop.loop, next_loop.loop, stop_distance);
+            const Point connector_start =
+                detail::prepareConnector(current_loop.loop, next_loop.loop, stop_distance, complete_before_connecting);
 
             if (spiral.back() != connector_start) { spiral += connector_start; }
 
             current_loop = next_loop;
         }
         else {
-            const Point final_stop = detail::stopPointOnClosingSegment(
-                current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width));
+            const Point final_stop = detail::transitionPoint(
+                current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width),
+                complete_before_connecting);
 
             if (spiral.back() != final_stop) { spiral += final_stop; }
             break;
@@ -380,7 +536,8 @@ inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, cons
     return spiral;
 }
 
-inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, Distance final_stop_distance) {
+inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, Distance final_stop_distance,
+                                    bool complete_before_connecting = false) {
     QVector<Polyline> loops = ordered_loops;
     Polyline spiral;
 
@@ -391,25 +548,16 @@ inline Polyline linkClosedPolylines(const QVector<Polyline>& ordered_loops, Dist
         spiral += loop;
 
         if (loop_index + 1 < end) {
-            Polyline next_loop                = loops[loop_index + 1];
-            Point rough_connector_start       = detail::stopPointOnClosingSegment(loop, final_stop_distance);
-            const bool smooth_closing_segment = detail::hasSmoothClosingSegment(loop);
-            if (smooth_closing_segment) {
-                detail::rotateToClosestForwardExistingPoint(next_loop, rough_connector_start, loop.back(),
-                                                            loop.front());
-            }
-            else { detail::rotateToClosestPoint(next_loop, rough_connector_start); }
-            const Point next_start = next_loop.front();
-            Point connector_start;
-            if (smooth_closing_segment) { connector_start = rough_connector_start; }
-            else { connector_start = MathUtils::nearestPointOnSegment(loop.back(), loop.front(), next_start).first; }
+            Polyline next_loop = loops[loop_index + 1];
+            const Point connector_start =
+                detail::prepareConnector(loop, next_loop, final_stop_distance, complete_before_connecting);
 
             if (spiral.back() != connector_start) { spiral += connector_start; }
 
             loops[loop_index + 1] = next_loop;
         }
         else {
-            const Point final_stop = detail::stopPointOnClosingSegment(loop, final_stop_distance);
+            const Point final_stop = detail::transitionPoint(loop, final_stop_distance, complete_before_connecting);
 
             if (spiral.back() != final_stop) { spiral += final_stop; }
         }
