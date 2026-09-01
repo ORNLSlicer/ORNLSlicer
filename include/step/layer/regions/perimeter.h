@@ -47,6 +47,11 @@ class Perimeter : public RegionBase {
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
+    //! \brief Sets inset geometry that should be connected onto spiral perimeter output.
+    //! \param geometry: computed inset closed-loop paths
+    //! \param widths: bead widths associated with the inset paths
+    void setConnectedInsetGeometry(const QVector<Polyline>& geometry, const QVector<Distance>& widths);
+
    private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
@@ -92,11 +97,26 @@ class Perimeter : public RegionBase {
      */
     static bool isAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb);
 
+    //! \brief Applies inset segment settings after the connected perimeter-to-inset bridge.
+    //! \param path Path containing perimeter paths followed by connected inset paths.
+    void applyConnectedInsetSettings(Path& path) const;
+
+    //! \brief Returns the inset bead width for a connected inset segment.
+    //! \param start Segment start point.
+    //! \param end Segment end point.
+    Distance connectedInsetWidthForSegment(const Point& start, const Point& end) const;
+
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;
 
     //! \brief Holds the bead width associated with each computed contour in m_computed_geometry
     QVector<Distance> m_computed_widths;
+
+    //! \brief Holds computed inset geometry to connect after spiral perimeters.
+    QVector<Polyline> m_connected_inset_geometry;
+
+    //! \brief Holds the bead width associated with each connected inset contour.
+    QVector<Distance> m_connected_inset_widths;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;

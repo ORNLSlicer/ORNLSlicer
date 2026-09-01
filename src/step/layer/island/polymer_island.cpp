@@ -9,6 +9,7 @@
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
 #include "geometry/settings_polygon.h"
 #include "managers/settings/settings_manager.h"
 #include "step/layer/island/island_base.h"
@@ -70,7 +71,32 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
 
     bool wasLastSpiral = false;
 
+    QSharedPointer<Perimeter> connected_perimeter = getRegion(RegionType::kPerimeter).dynamicCast<Perimeter>();
+    QSharedPointer<Inset> connected_inset         = getRegion(RegionType::kInset).dynamicCast<Inset>();
+    QVector<Polyline> connected_inset_geometry;
+    QVector<Distance> connected_inset_widths;
+
+    if (!connected_perimeter.isNull() && !connected_inset.isNull()) {
+        connected_inset_geometry = connected_inset->getComputedGeometry();
+        connected_inset_widths   = connected_inset->getComputedWidths();
+    }
+
+    const bool connect_spiral_perimeter_to_inset =
+        !connected_perimeter.isNull() && !connected_inset.isNull() && !connected_inset_geometry.isEmpty() &&
+        connected_perimeter->getIndex() < connected_inset->getIndex() &&
+        m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter) &&
+        m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnableSpiralInset);
+
+    if (connect_spiral_perimeter_to_inset) {
+        connected_perimeter->setConnectedInsetGeometry(connected_inset_geometry, connected_inset_widths);
+    }
+
     for (QSharedPointer<RegionBase> r : m_regions) {
+        if (connect_spiral_perimeter_to_inset && r.data() == connected_inset.data()) {
+            connected_inset->getPaths().clear();
+            continue;
+        }
+
         if (previousRegions.size() > 0)
             wasLastSpiral = previousRegions.last()->getSb()->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 

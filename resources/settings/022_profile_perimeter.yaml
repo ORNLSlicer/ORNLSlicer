@@ -244,3 +244,27 @@ settings:
     namespace: "Profile::Perimeter"
     symbol: "kEnableSpiralPerimeter"
     local: true
+  - name: "spiral_perimeter_complete_path_before_connecting"
+    display: "Complete path before connecting"
+    type: "boolean"
+    tooltip: "If selected, spiral perimeters will complete the current path before connecting to the next path."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"spiral_perimeter":true}]}]}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kCompletePathBeforeConnecting"
+    local: true
+  - name: "spiral_perimeter_connect_to_insets"
+    display: "Connect to spiral insets"
+    type: "boolean"
+    tooltip: "If selected, spiral perimeters will connect directly to spiral insets."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"inset":true},{"AND":[{"spiral_perimeter":true},{"spiral_inset":true}]}]}]}]}
+    options: []
+    default: false
+    minor: "Perimeter"
+    major: "Profile"
+    namespace: "Profile::Perimeter"
+    symbol: "kConnectToInsets"
+    local: true
