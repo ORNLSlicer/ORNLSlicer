@@ -6,6 +6,7 @@
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QMouseEvent>
+#include <QPainter>
 
 #include <qmatrix4x4.h>
 #include <qnamespace.h>
@@ -375,6 +376,14 @@ bool BaseView::handleKeyPress(QKeyEvent* e) {
     return false;
 }
 
+void BaseView::paintOverlay(QPainter& painter) {
+    Q_UNUSED(painter);
+}
+
+bool BaseView::hasOverlay() const {
+    return false;
+}
+
 void BaseView::translateCamera(QVector3D v, bool absolute) {
     if (absolute) {
         m_camera->panAbsolute(v);
@@ -446,6 +455,16 @@ void BaseView::resizeGL(int width, int height) {
 }
 
 void BaseView::paintGL() {
+    // QPainter-based overlays can leave GL state changed after a frame.
+    this->glDisable(GL_SCISSOR_TEST);
+    this->glEnable(GL_CULL_FACE);
+    this->glEnable(GL_DEPTH_TEST);
+    this->glDepthFunc(GL_LESS);
+    this->glDepthMask(GL_TRUE);
+    this->glEnable(GL_BLEND);
+    this->glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    this->glPolygonMode(GL_FRONT_AND_BACK, GL_FILL);
+
     // Always clear color and depth buffer!
     this->glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -476,6 +495,17 @@ void BaseView::paintGL() {
     }
     // Since we bound shader program, we must release
     m_shader_program->release();
+
+    if (this->hasOverlay()) {
+        this->glUseProgram(0);
+        this->glDisable(GL_SCISSOR_TEST);
+        this->glDisable(GL_CULL_FACE);
+        this->glDisable(GL_DEPTH_TEST);
+        this->glDepthMask(GL_FALSE);
+
+        QPainter painter(this);
+        this->paintOverlay(painter);
+    }
 }
 
 void BaseView::setupStyle() {
