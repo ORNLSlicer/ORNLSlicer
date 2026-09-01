@@ -18,6 +18,8 @@
 #include "graphics/graphics_object.h"
 #include "part/part.h"
 
+class QPainter;
+
 namespace ORNL {
 // Forward
 class PartObject;
@@ -140,6 +142,12 @@ class PartView : public BaseView {
    protected:
     //! \brief Initalizes the view with the printer and the associated objects.
     void initView() override;
+
+    //! \brief Draws screen-space labels after the 3D scene is rendered.
+    void paintOverlay(QPainter& painter) override;
+
+    //! \brief Returns whether screen-space labels should be drawn.
+    bool hasOverlay() const override;
 
     //! \brief Handles the following: Alignment selection, translation selection, deselection
     void handleLeftClick(QPointF mouse_ndc_pos) override;
