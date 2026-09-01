@@ -586,6 +586,9 @@ const QString Constants::ProfileSettings::Perimeter::kEnableFlyingStart     = "p
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartDistance   = "perimeter_flying_start_distance";
 const QString Constants::ProfileSettings::Perimeter::kFlyingStartSpeed      = "perimeter_flying_start_speed";
 const QString Constants::ProfileSettings::Perimeter::kEnableSpiralPerimeter = "spiral_perimeter";
+const QString Constants::ProfileSettings::Perimeter::kCompletePathBeforeConnecting =
+    "spiral_perimeter_complete_path_before_connecting";
+const QString Constants::ProfileSettings::Perimeter::kConnectToInsets = "spiral_perimeter_connect_to_insets";
 
 // Inset
 const QString Constants::ProfileSettings::Inset::kEnable              = "inset";
@@ -601,6 +604,8 @@ const QString Constants::ProfileSettings::Inset::kMinPathLength       = "inset_m
 const QString Constants::ProfileSettings::Inset::kMinSegmentLength    = "inset_minimum_segment_length";
 const QString Constants::ProfileSettings::Inset::kOverlap             = "inset_overlap_distance";
 const QString Constants::ProfileSettings::Inset::kEnableSpiralInset   = "spiral_inset";
+const QString Constants::ProfileSettings::Inset::kCompletePathBeforeConnecting =
+    "spiral_inset_complete_path_before_connecting";
 
 // Skeleton
 const QString Constants::ProfileSettings::Skeleton::kEnable                        = "skeleton";

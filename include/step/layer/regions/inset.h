@@ -44,6 +44,10 @@ class Inset : public RegionBase {
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
+    //! \brief gets the bead widths associated with computed geometry
+    //! \return the computed bead widths
+    QVector<Distance> getComputedWidths();
+
    private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
