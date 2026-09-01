@@ -5,6 +5,7 @@
 #include <QStringList>
 #include <QTemporaryDir>
 #include <QTimer>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <optional>
@@ -12,6 +13,7 @@
 
 #include <zip/zip.h>
 
+#include "geometry/mesh/mesh_factory.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "threading/session_loader.h"
@@ -21,6 +23,10 @@ namespace {
 bool expect(bool condition, const char* message) {
     if (!condition) std::cerr << message << '\n';
     return condition;
+}
+
+bool nearlyEqual(double lhs, double rhs) {
+    return std::fabs(lhs - rhs) <= 1.0e-6;
 }
 
 bool writeZipEntry(zip_t* zip, const std::string& name, const std::string& text) {
@@ -71,6 +77,49 @@ std::optional<fifojson> readGlobalFromProject(const QString& path) {
     zip_close(zip);
 
     return fifojson::parse(text);
+}
+
+fifojson identityTransformJson() {
+    return fifojson::array({1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 0.0, 1.0});
+}
+
+bool generatedRadialPrimitiveReloadPreservesDimensions(ORNL::MeshGeneratorType gen_type, const QString& part_name) {
+    auto session = ORNL::CSM;
+    session->clearParts();
+
+    const ORNL::Distance radius(10.0);
+    const ORNL::Distance height(42.0);
+    ORNL::ClosedMesh source_mesh   = gen_type == ORNL::kCylinder ? ORNL::MeshFactory::CreateCylinderMesh(radius, height)
+                                                                 : ORNL::MeshFactory::CreateConeMesh(radius, height);
+    ORNL::Distance3D original_dims = source_mesh.originalDimensions();
+
+    fifojson part_json                                           = fifojson::object();
+    part_json[ORNL::Constants::Settings::Session::kFile]         = "";
+    part_json[ORNL::Constants::Settings::Session::kMeshType]     = static_cast<int>(ORNL::MeshType::kBuild);
+    part_json[ORNL::Constants::Settings::Session::kGenType]      = static_cast<int>(gen_type);
+    part_json[ORNL::Constants::Settings::Session::kOrgDims]["x"] = original_dims.x();
+    part_json[ORNL::Constants::Settings::Session::kOrgDims]["y"] = original_dims.y();
+    part_json[ORNL::Constants::Settings::Session::kOrgDims]["z"] = original_dims.z();
+    part_json[ORNL::Constants::Settings::Session::kTransforms]   = fifojson::array({identityTransformJson()});
+
+    fifojson session_json                                                             = fifojson::object();
+    session_json[ORNL::Constants::Settings::Session::kParts][part_name.toStdString()] = part_json;
+
+    if (!session->loadPartsJson(session_json)) {
+        session->clearParts();
+        return false;
+    }
+
+    fifojson reserialized = session->partsJson();
+    session->clearParts();
+
+    if (!reserialized[ORNL::Constants::Settings::Session::kParts].contains(part_name.toStdString())) return false;
+
+    const fifojson& loaded_dims = reserialized[ORNL::Constants::Settings::Session::kParts][part_name.toStdString()]
+                                              [ORNL::Constants::Settings::Session::kOrgDims];
+
+    return nearlyEqual(loaded_dims["x"], original_dims.x()) && nearlyEqual(loaded_dims["y"], original_dims.y()) &&
+           nearlyEqual(loaded_dims["z"], original_dims.z());
 }
 }  // namespace
 
@@ -144,6 +193,14 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     if (!expect(recent_models[0] == QFileInfo(build_model).absoluteFilePath(),
                 "Build model should be retained after non-build model history entries are ignored."))
+        return EXIT_FAILURE;
+
+    if (!expect(generatedRadialPrimitiveReloadPreservesDimensions(ORNL::kCylinder, "generated-cylinder"),
+                "Generated cylinder reload should preserve saved dimensions."))
+        return EXIT_FAILURE;
+
+    if (!expect(generatedRadialPrimitiveReloadPreservesDimensions(ORNL::kCone, "generated-cone"),
+                "Generated cone reload should preserve saved dimensions."))
         return EXIT_FAILURE;
 
     QString project_path = temp_dir.path() + "/old-settings-project.s2p";

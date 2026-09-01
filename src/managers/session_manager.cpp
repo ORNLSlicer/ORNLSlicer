@@ -3,6 +3,7 @@
 
 #include <QCoreApplication>
 #include <QStandardPaths>
+#include <algorithm>
 #include <cstdlib>
 #include <string>
 
@@ -80,6 +81,10 @@ QStringList sanitizedRecentFiles(const QStringList& files, const QStringList& su
     }
 
     return result;
+}
+
+Distance radialGeneratedMeshRadius(const Distance3D& dimensions) {
+    return Distance(std::max(dimensions.x(), dimensions.y()) / 2.0);
 }
 
 void addRecentFile(QStringList& files, QString path) {
@@ -527,7 +532,8 @@ bool SessionManager::loadPartsJson(fifojson j) {
                 break;
             }
             case kCylinder: {
-                auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(org_dims.y, org_dims.z));
+                auto mesh = QSharedPointer<ClosedMesh>::create(
+                    MeshFactory::CreateCylinderMesh(radialGeneratedMeshRadius(org_dims), org_dims.z));
                 mesh->setTransformations(mtrxes);
                 mesh->setType(mesh_type);
                 mesh->setName(name);
@@ -535,7 +541,8 @@ bool SessionManager::loadPartsJson(fifojson j) {
                 break;
             }
             case kCone: {
-                auto mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(org_dims.y, org_dims.z));
+                auto mesh = QSharedPointer<ClosedMesh>::create(
+                    MeshFactory::CreateConeMesh(radialGeneratedMeshRadius(org_dims), org_dims.z));
                 mesh->setTransformations(mtrxes);
                 mesh->setType(mesh_type);
                 mesh->setName(name);
