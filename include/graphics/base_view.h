@@ -18,6 +18,8 @@
 #include "graphics/graphics_object.h"
 #include "graphics/support/camera_manager.h"
 
+class QPainter;
+
 namespace ORNL {
 
 class AxesObject;
@@ -139,6 +141,12 @@ class BaseView : public QOpenGLWidget, public QOpenGLFunctions_3_3_Core {
     //! \brief Any one-time initialization that needs to be done for a subclass that isn't universal, otherwise
     //!        the initialization could be done in this class
     virtual void initView() = 0;
+
+    //! \brief Draws any 2D overlay content after the OpenGL scene is rendered.
+    virtual void paintOverlay(QPainter& painter);
+
+    //! \brief Returns whether this view has visible 2D overlay content for the current frame.
+    virtual bool hasOverlay() const;
 
     /*!
      * \title Virtual Methods - Mouse
