@@ -118,12 +118,6 @@ class Constants {
     };
 
     // Used?
-    class LegacyRegionTypeStrings {
-       public:
-        static const QString kThing;
-    };
-
-    // Used?
     class InfillPatternTypeStrings {
        public:
         static const QString kLines;

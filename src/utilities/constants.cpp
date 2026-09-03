@@ -130,11 +130,6 @@ const QString Constants::RegionTypeStrings::kThermalScan = "IR CAMERA";
 const QString Constants::RegionTypeStrings::kSkeleton    = "SKELETON";
 
 //================================================================================
-// Legacy Region Type Strings
-//================================================================================
-const QString Constants::LegacyRegionTypeStrings::kThing = "";
-
-//================================================================================
 // Infill Pattern Strings
 //================================================================================
 const QString Constants::InfillPatternTypeStrings::kLines                = "Lines";
