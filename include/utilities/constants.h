@@ -12,15 +12,11 @@
 
 namespace ORNL {
 /*!
- * \class Constants
- * \brief Class that holds all static constants
+ * @class Constants
+ * @brief Class that holds all static constants
  */
 class Constants {
    public:
-    /*!
-     * \class Units
-     * \brief Units strings used for preferences
-     */
     class Units {
        public:
         static const QString kInch;
@@ -187,12 +183,6 @@ class Constants {
             static const QString kGCodeCoordinateFrameRotationZ;
         };
 
-        // Categories
-        /*!
-         * \class Dimensions
-         *
-         * \brief Keys for machine dimensions
-         */
         class Dimensions {
            public:
             static const QString kBuildVolumeType;
@@ -269,11 +259,6 @@ class Constants {
             static const QString kRemoveComments;
         };
 
-        //            /*!
-        //             * \class SyntaxString
-        //             *
-        //             * \brief Keys for machine syntax
-        //             */
         class SyntaxString {
            public:
             static QString kAML3D;
@@ -312,10 +297,6 @@ class Constants {
         };
     };
 
-    /*!
-     * \class MaterialSettings
-     * \brief Keys for material settings
-     */
     class MaterialSettings {
        public:
         class Density {
@@ -588,11 +569,6 @@ class Constants {
 
     class ProfileSettings {
        public:
-        /*!
-         * \class Layer
-         *
-         * \brief Keys for layer settings
-         */
         class Layer {
            public:
             static const QString kLayerHeight;
@@ -956,7 +932,6 @@ class Constants {
 
     class Settings {
        public:
-        // NOTE: All keys here are std::strings since they will primarily be used with nlohmann::json.
         class Master {
            public:
             static const std::string kDisplay;
@@ -1031,8 +1006,6 @@ class Constants {
         };
     };
 
-    //! \class SegmentSettings
-    //! \brief The settings that segments use to define their output.
     class SegmentSettings {
        public:
         static const QString kHeight;
@@ -1052,10 +1025,6 @@ class Constants {
 
     class Limits {
        public:
-        /*!
-         * \class Maximums
-         * \brief Maximum values for various data types
-         */
         class Maximums {
            public:
             static const Distance kMaxDistance;
@@ -1072,10 +1041,6 @@ class Constants {
             static const float kInfFloat;
         };
 
-        /*!
-         * \class Minimums
-         * \brief Minimum values for various data types
-         */
         class Minimums {
            public:
             static const Distance kMinDistance;
@@ -1105,10 +1070,7 @@ class Constants {
         static const QColor kBlack;
         static const QVector<QColor> kModelColors;
     };
-    /*!
-     * \class UI
-     * \brief Constants for UI widgets
-     */
+
     class UI {
        public:
         class Common {
@@ -1194,10 +1156,6 @@ class Constants {
         };
     };
 
-    /*!
-     * \class OpenGL
-     * \brief The constants for the OpenGL widgets
-     */
     class OpenGL {
        public:
         static const double kZoomDefault;
