@@ -118,7 +118,31 @@ void PartView::showLabels(bool show) {
     this->update();
 }
 
-void PartView::paintOverlay(QPainter& painter) {}
+void PartView::paintOverlay(QPainter& painter) {
+    const QFontMetrics metrics(painter.font());
+    const QMatrix4x4 projection = this->projectionMatrix();
+    const QMatrix4x4 view = this->viewMatrix();
+    const QRect viewport(0, 0, this->width(), this->height());
+
+    for (const auto& gop : m_part_objects) {
+        if (gop->hidden()) {
+            continue;
+        }
+
+        QVector3D anchor_point = gop->center();
+        anchor_point.setZ(gop->maximum().z() + .25);
+        const QVector3D projected = anchor_point.project(view, projection, viewport);
+
+        // Projected y is in OpenGL orientation when Qt is needed.
+        const float screen_y = viewport.height() - projected.y();
+
+        const QString name = gop->name();
+        const QRect text_bounds = metrics.boundingRect(name);
+        const QPointF text_origin(projected.x() - text_bounds.width() * 0.5f, screen_y);
+
+        painter.drawText(text_origin, name);
+    }
+}
 
 bool PartView::hasOverlay() const {
     return m_state.names_shown;
