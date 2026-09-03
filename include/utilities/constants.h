@@ -1229,6 +1229,7 @@ class Constants {
             static const char* kCameraPositionName;
             static const char* kAmbientStrengthName;
             static const char* kUsingSolidWireframeModeName;
+            static const char* kTextureSampName;
 
             // Vertex Shader - Buffers
             static const char* kPositionName;

@@ -275,6 +275,7 @@ class GraphicsObject : public QEnableSharedFromThis<GraphicsObject> {
         int overhangMode;
         int stackingAxis;
         int renderingPartObject;
+        int textureSamp;
     } m_shader_locs;
 
     //! \brief Current state for the object.
