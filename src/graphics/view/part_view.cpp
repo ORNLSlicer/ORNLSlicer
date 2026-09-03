@@ -118,7 +118,35 @@ void PartView::showLabels(bool show) {
     this->update();
 }
 
-void PartView::paintOverlay(QPainter& painter) {}
+void PartView::paintOverlay(QPainter& painter) {
+    const QFontMetrics metrics(painter.font());
+    const QMatrix4x4 view       = this->viewMatrix();
+    const QMatrix4x4 projection = this->projectionMatrix();
+    const QRect viewport        = painter.viewport();
+
+    const QString theme = PreferencesManager::getInstance()->getThemeText();
+    const QColor color  = theme == Constants::UI::Themes::kDarkMode ? Qt::darkGreen : Qt::black;
+    painter.setPen(color);
+
+    for (const auto& gop : m_part_objects) {
+        if (gop->hidden()) { continue; }
+
+        QVector3D anchor_point = gop->center();
+        const float height     = gop->maximum().z() - gop->minimum().z();
+        const float z_offset   = std::max(0.1f, height / 5.0f);
+        anchor_point.setZ(gop->maximum().z() + z_offset);
+        const QVector3D projected = anchor_point.project(view, projection, viewport);
+
+        // Projected y is in OpenGL orientation when Qt is needed.
+        const float screen_y = viewport.height() - projected.y();
+
+        const QString name      = gop->name();
+        const QRect text_bounds = metrics.boundingRect(name);
+        const QPointF text_origin(projected.x() - text_bounds.width() * 0.5f, screen_y);
+
+        painter.drawText(text_origin, name);
+    }
+}
 
 bool PartView::hasOverlay() const {
     return m_state.names_shown;
