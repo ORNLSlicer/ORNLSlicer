@@ -40,7 +40,6 @@
 #include "graphics/objects/printer/printer_object.h"
 #include "graphics/objects/sphere/seam_object.h"
 #include "graphics/objects/sphere_object.h"
-#include "graphics/objects/text_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
@@ -58,8 +57,6 @@ namespace {
 constexpr float kMinimumLayerSettingsRangeThickness = 0.01f;
 constexpr float kMinimumSlicingCylinderHeight       = 0.01f;
 constexpr float kMeasurementMarkerRadius            = 0.025f;
-constexpr float kMeasurementLabelLift               = 0.08f;
-constexpr float kMeasurementLabelScale              = 0.08f;
 
 QString asciiDistanceUnitText(QString unit_text) {
     unit_text.replace(Constants::Units::kMicron, "um");
@@ -1264,11 +1261,9 @@ bool PartView::handleMeasurementClick(QPointF mouse_ndc_pos) {
 
     m_state.measurement_end_marker = createMeasurementMarker(picked_point);
     m_state.measurement_line       = createMeasurementLine(m_state.measurement_start, picked_point);
-    m_state.measurement_label      = createMeasurementLabel(m_state.measurement_start, picked_point);
 
     addObject(m_state.measurement_line);
     addObject(m_state.measurement_end_marker);
-    addObject(m_state.measurement_label);
 
     const double distance_microns =
         m_state.measurement_start.distanceToPoint(picked_point) * Constants::OpenGL::kViewToObject;
@@ -1296,10 +1291,8 @@ void PartView::updateMeasurementPreview(QPointF mouse_ndc_pos) {
 
     clearMeasurementPreview();
 
-    m_state.measurement_preview_line  = createMeasurementLine(m_state.measurement_start, picked_point);
-    m_state.measurement_preview_label = createMeasurementLabel(m_state.measurement_start, picked_point);
+    m_state.measurement_preview_line = createMeasurementLine(m_state.measurement_start, picked_point);
     addObject(m_state.measurement_preview_line);
-    addObject(m_state.measurement_preview_label);
 
     const double distance_microns =
         m_state.measurement_start.distanceToPoint(picked_point) * Constants::OpenGL::kViewToObject;
@@ -1308,9 +1301,7 @@ void PartView::updateMeasurementPreview(QPointF mouse_ndc_pos) {
 }
 
 bool PartView::clearMeasurementPreview() {
-    bool removed = removeMeasurementObject(m_state.measurement_preview_line);
-    removed      = removeMeasurementObject(m_state.measurement_preview_label) || removed;
-    return removed;
+    return removeMeasurementObject(m_state.measurement_preview_line);
 }
 
 bool PartView::pickMeasurementPoint(const QPointF& mouse_ndc_pos, QVector3D& point) {
@@ -1341,7 +1332,6 @@ void PartView::clearMeasurement() {
     removed      = removeMeasurementObject(m_state.measurement_start_marker) || removed;
     removed      = removeMeasurementObject(m_state.measurement_end_marker) || removed;
     removed      = removeMeasurementObject(m_state.measurement_line) || removed;
-    removed      = removeMeasurementObject(m_state.measurement_label) || removed;
 
     m_state.has_measurement_start = false;
     m_state.measurement_start     = QVector3D();
@@ -1376,17 +1366,6 @@ QSharedPointer<GraphicsObject> PartView::createMeasurementLine(const QVector3D& 
     auto line = QSharedPointer<GraphicsObject>::create(this, vertices, normals, colors, GL_LINES);
     line->setOnTop(true);
     return line;
-}
-
-QSharedPointer<GraphicsObject> PartView::createMeasurementLabel(const QVector3D& start, const QVector3D& end) {
-    const QVector3D midpoint      = (start + end) / 2.0f + QVector3D(0.0f, 0.0f, kMeasurementLabelLift);
-    const double distance_microns = start.distanceToPoint(end) * Constants::OpenGL::kViewToObject;
-
-    auto label = QSharedPointer<TextObject>::create(this, formatMeasurementDistance(distance_microns, true),
-                                                    kMeasurementLabelScale, true);
-    label->translateAbsolute(midpoint);
-    label->setOnTop(true);
-    return label;
 }
 
 QString PartView::formatMeasurementDistance(double microns, bool ascii_units) const {
