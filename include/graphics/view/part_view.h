@@ -290,14 +290,8 @@ class PartView : public BaseView {
         //! \brief Rendered line between measurement points.
         QSharedPointer<GraphicsObject> measurement_line;
 
-        //! \brief Rendered measurement label.
-        QSharedPointer<GraphicsObject> measurement_label;
-
         //! \brief Rendered live-preview measurement line.
         QSharedPointer<GraphicsObject> measurement_preview_line;
-
-        //! \brief Rendered live-preview measurement label.
-        QSharedPointer<GraphicsObject> measurement_preview_label;
 
         //! \brief If overhangs are shown.
         bool overhangs_shown = false;
@@ -381,9 +375,6 @@ class PartView : public BaseView {
 
     //! \brief Creates a rendered line between measurement points.
     QSharedPointer<GraphicsObject> createMeasurementLine(const QVector3D& start, const QVector3D& end);
-
-    //! \brief Creates a billboarded label for the completed measurement.
-    QSharedPointer<GraphicsObject> createMeasurementLabel(const QVector3D& start, const QVector3D& end);
 
     //! \brief Formats a measurement distance for display using user-preferred distance units.
     QString formatMeasurementDistance(double microns, bool ascii_units) const;
