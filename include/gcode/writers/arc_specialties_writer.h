@@ -24,10 +24,10 @@ namespace ORNL {
  * then applies the configured G-Code coordinate frame rotation before output. AP comes from the existing Axis A
  * setting. Planar paths use Axis C as a fixed CP positioner value, while cylindrical paths compute CP from each
  * transformed endpoint's angle around the transformed radial slicing center plus Axis C. Helical paths report CP as the
- * positive angular sweep from the transformed helical start angle plus Axis C. The initial TRAFO-off world approach
- * uses ZR=-90; work-object motion uses XR=180, YR=0, and ZR=-135. When Supports G2/G3 is enabled, print arcs are
- * emitted as G02/G03 with I/J center parameters; cylindrical radial and helical arcs are divided according to Arcs per
- * Revolution.
+ * positive angular sweep from transformed helical top dead center plus the configured start angle offset and Axis C.
+ * The initial TRAFO-off world approach uses ZR=-90; work-object motion uses XR=180, YR=0, and ZR=-135. When Supports
+ * G2/G3 is enabled, print arcs are emitted as G02/G03 with I/J center parameters; cylindrical radial and helical arcs
+ * are divided according to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
    public:
@@ -347,8 +347,8 @@ class ArcSpecialtiesWriter : public WriterBase {
     double cpAxisForPoint(const Point& destination, const QSharedPointer<SettingsBase>& params);
 
     /*!
-     * @brief Returns the transformed helical start angle used as the CP sweep reference.
-     * @param params Segment settings containing helical start-angle metadata.
+     * @brief Returns the transformed offset-adjusted helical start angle used as the CP sweep reference.
+     * @param params Segment settings containing helical start-angle offset metadata.
      * @return Start angle in degrees.
      */
     double helicalStartAngle(const QSharedPointer<SettingsBase>& params) const;

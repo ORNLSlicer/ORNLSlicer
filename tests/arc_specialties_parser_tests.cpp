@@ -185,7 +185,7 @@ bool writesCompactCylindricalPrintComments() {
                          static_cast<int>(ORNL::CylindricalPathPattern::kHelical));
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathStartAngle, 0.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, 0.0 * ORNL::degree);
     ORNL::ArcSpecialtiesWriter helical_writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString helical_line = helical_writer.writeLine(
         ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm), ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
@@ -214,7 +214,7 @@ QSharedPointer<ORNL::SettingsBase> helicalSegmentSettings(std::optional<ORNL::Re
     segment_settings->setSetting(QStringLiteral("radial_center_y"), 0.0 * ORNL::mm);
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathStartAngle, 0.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, 0.0 * ORNL::degree);
     if (region_type.has_value()) { segment_settings->setSetting(ORNL::SS::kRegionType, region_type.value()); }
     return segment_settings;
 }
@@ -251,7 +251,7 @@ bool writesG80ScheduleSpeedVariableForLineAndArc() {
     const QString arc       = lineContaining(arc_block, ";HELICAL PERIMETER");
 
     const QString expected_arc =
-        "G02 X=0.0000 Y=1.0000 Z=1.0000 XR=180.0000 YR=0.0000 ZR=-135.0000 AP=0.0000 CP=90.0000 "
+        "G02 X=0.0000 Y=1.0000 Z=1.0000 XR=180.0000 YR=0.0000 ZR=-135.0000 AP=0.0000 CP=0.0000 "
         "I=-1.0000 J=0.0000 FV.S.SPEED G81 ;HELICAL PERIMETER";
 
     return line.contains(" FV.S.SPEED ;HELICAL PERIMETER") && !line.contains("F600.0000") && arc == expected_arc;
@@ -678,7 +678,7 @@ bool writesHelicalZClipRoundingHeader() {
                          static_cast<int>(ORNL::HelicalPathZClipRounding::kCompleteRevolution));
     settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                          static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    settings->setSetting(ORNL::PS::Helical::kHelicalPathStartAngle, 90.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, 0.0 * ORNL::degree);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kBeadWidth, 4.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);

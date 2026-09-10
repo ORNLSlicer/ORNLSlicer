@@ -291,8 +291,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
         if (helical_mode) {
             text += commentLine(
-                "Helical Path Start Angle: " %
-                formatAngle(m_sb->setting<Angle>(PS::Helical::kHelicalPathStartAngle), m_meta.m_angle_unit));
+                "Helical Start Angle Offset: " %
+                formatAngle(m_sb->setting<Angle>(PS::Helical::kHelicalStartAngleOffset), m_meta.m_angle_unit));
             text += commentLine("Helical Region Pitch Fallback: " % formatDistance(bead_width, m_meta.m_distance_unit) %
                                 " when a region stepover is 0");
             text += commentLine("Helical Perimeter Revolutions: " %
@@ -1112,7 +1112,7 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
 }
 
 double ArcSpecialtiesWriter::helicalStartAngle(const QSharedPointer<SettingsBase>& params) const {
-    const Angle start_angle = params->setting<Angle>(PS::Helical::kHelicalPathStartAngle);
+    const Angle start_angle = 90.0 * degree + params->setting<Angle>(PS::Helical::kHelicalStartAngleOffset);
     const Point start_direction(std::cos(start_angle()), std::sin(start_angle()), 0.0);
     const Point transformed_start_direction = rotateGCodeCoordinateFrameDelta(start_direction);
     if (std::hypot(transformed_start_direction.x(), transformed_start_direction.y()) <=

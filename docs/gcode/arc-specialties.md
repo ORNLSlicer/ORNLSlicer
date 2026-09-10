@@ -46,7 +46,7 @@ For planar slicing, `CP` is the configured `Axis C` value normalized to `[0, 360
 
 For cylindrical slicing, the writer rotates the endpoint and cylinder center into the configured G-code frame, computes the endpoint angle around that transformed center, adds `Axis C`, and normalizes the result to `[0, 360)`.
 
-For helical cylindrical paths, `CP` reports positive angular sweep from the transformed `Helical Path Start Angle` plus `Axis C`. `Right Handed` helices advance with counter-clockwise G03 arcs, and `Left Handed` helices advance with clockwise G02 arcs. With no additional frame rotation, the default `90 deg` helical start angle, and `Axis C=0`, four equal quarter-revolution endpoints report `CP` values of `90`, `180`, `270`, and `0`.
+For helical cylindrical paths, `CP` reports positive angular sweep from the transformed top-dead-center start angle plus `Helical Start Angle Offset` and `Axis C`. `Right Handed` helices advance with counter-clockwise G03 arcs, and `Left Handed` helices advance with clockwise G02 arcs. With no additional frame rotation, the default `0 deg` offset, and `Axis C=0`, four equal quarter-revolution endpoints report `CP` values of `90`, `180`, `270`, and `0`.
 
 ## Arc Center Modes
 

@@ -2,6 +2,7 @@
 #include <QFile>
 #include <QStringBuilder>
 #include <QTemporaryDir>
+#include <cmath>
 #include <cstdlib>
 #include <iostream>
 #include <optional>
@@ -115,7 +116,8 @@ int main(int argc, char* argv[]) {
         ";slicing_vector_y 0.5\n"
         ";slicing_vector_z 0.75\n"
         ";image_resolution_x 0.8\n"
-        ";image_resolution_y 0.9\n";
+        ";image_resolution_y 0.9\n"
+        ";helical_path_start_angle 1.74532925\n";
     if (!expect(writeFile(legacy_path, legacy_gcode), "Could not write legacy key fixture.")) return EXIT_FAILURE;
 
     const ORNL::GcodeSettingsImporter::ImportResult legacy_result =
@@ -125,6 +127,7 @@ int main(int argc, char* argv[]) {
 
     const auto legacy_settings = legacy_result.settings_file[ORNL::Constants::SettingFileStrings::kSettings].at(0);
     using Slicing              = ORNL::Constants::ProfileSettings::Slicing;
+    using Helical              = ORNL::Constants::ProfileSettings::Helical;
     if (!expect(legacy_settings.at(Slicing::kSlicingMode.toStdString()).get<int>() == 0,
                 "Did not migrate legacy slicer_type footer key."))
         return EXIT_FAILURE;
@@ -142,6 +145,10 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     if (!expect(legacy_settings.at(Slicing::kImagePixelSizeY.toStdString()).get<double>() == 0.9,
                 "Did not migrate legacy image_resolution_y footer key."))
+        return EXIT_FAILURE;
+    if (!expect(std::abs(legacy_settings.at(Helical::kHelicalStartAngleOffset.toStdString()).get<double>() -
+                         (10.0 * ORNL::degree)()) < 1e-6,
+                "Did not migrate legacy helical_path_start_angle footer key to a top-dead-center offset."))
         return EXIT_FAILURE;
     if (!expect(legacy_result.unknown_keys.isEmpty(), "Migrated legacy footer keys were still reported as unknown."))
         return EXIT_FAILURE;
