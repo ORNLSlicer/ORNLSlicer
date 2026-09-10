@@ -20,7 +20,7 @@ class SettingsVersionControl {
     //! \param settings: settings to modify
     static void formatSettings(double version, fifojson& settings);
 
-    //! \brief Migrate known legacy setting keys to their current names without changing values
+    //! \brief Migrate known legacy setting keys to their current names and current semantics
     //! \param settings_group: a single settings object to modify
     static void migrateLegacySettingKeys(fifojson& settings_group);
 
@@ -74,5 +74,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_10_0To10_0(double& version, fifojson& settings);
+
+    //! \brief Rolls helical start angle from an absolute angle to an offset from top dead center for version 11.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_11_0To11_0(double& version, fifojson& settings);
 };
 }  // namespace ORNL

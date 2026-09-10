@@ -15,17 +15,17 @@ settings:
     namespace: "Profile::Helical"
     symbol: "kHelicalPathHandedness"
     local: true
-  - name: "helical_path_start_angle"
-    display: "Helical Path Start Angle"
+  - name: "helical_start_angle_offset"
+    display: "Helical Start Angle Offset"
     type: "angle"
-    tooltip: "Sets the angular start position for generated helical paths around the cylinder axis. 0 degrees starts on +X and 90 degrees starts on +Y."
+    tooltip: "Angular offset from top dead center for each generated helical path start. 0 degrees starts on +Y; positive values rotate counter-clockwise and negative values rotate clockwise."
     depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
     options: []
-    default: 90
+    default: 0
     minor: "Helical"
     major: "Profile"
     namespace: "Profile::Helical"
-    symbol: "kHelicalPathStartAngle"
+    symbol: "kHelicalStartAngleOffset"
     local: true
   - name: "helical_path_z_clip_rounding"
     display: "Helical Z Clip Rounding"

@@ -3,7 +3,7 @@
         "created_by": "ORNLSlicer",
         "created_on": "Mon Aug 10 13:10:48 2026",
         "last_modified": "Mon Aug 10 13:10:48 2026",
-        "version": 10.0,
+        "version": 11.0,
         "lock": "true"
     },
     "settings": [
@@ -337,7 +337,7 @@
             "radial_path_start_angle": 0,
             "helical_path_z_clip_rounding": 0,
             "helical_path_handedness": 0,
-            "helical_path_start_angle": 2.035402957908809,
+            "helical_start_angle_offset": 0,
             "arcs_per_revolution": 1,
             "image_pixel_size_x": 0,
             "image_pixel_size_y": 0,

@@ -42,6 +42,8 @@
 
 namespace ORNL {
 namespace {
+const Angle kHelicalTopDeadCenterStartAngle = 90.0 * degree;
+
 //! @brief Segment setting key used by the radial writer to recover the cylinder center X.
 const QString kRadialCenterX = "radial_center_x";
 
@@ -792,7 +794,8 @@ bool CylindricalSlicer::generateHelicalLayers(const QSharedPointer<Part>& part,
         QSharedPointer<CylindricalLayer> helical_layer = QSharedPointer<CylindricalLayer>::create(
             helical_layer_number + 1, layer_settings, CylindricalPathPattern::kHelical);
 
-        const Angle helical_start_angle = layer_settings->setting<Angle>(PS::Helical::kHelicalPathStartAngle);
+        const Angle helical_start_angle =
+            kHelicalTopDeadCenterStartAngle + layer_settings->setting<Angle>(PS::Helical::kHelicalStartAngleOffset);
         const QVector<HelicalRegionPolylineRun> available_runs = createHelicalRegionRuns(
             profile, center, radius, handedness, helical_start_angle, 0.0, available_revolutions);
         const Polyline helix                                          = flattenHelicalRegionRuns(available_runs);
