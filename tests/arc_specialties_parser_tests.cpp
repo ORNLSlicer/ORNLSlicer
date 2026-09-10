@@ -93,6 +93,20 @@ bool parsedLineWithScheduleSpeedKeepsCpForVisualization() {
                false);
 }
 
+bool parsesArcSpecialtiesOptStopModeAssignment() {
+    QStringList original_lines {"V.E.OptStopMode = 1"};
+    QStringList upper_lines {original_lines.first().toUpper()};
+    ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, original_lines, upper_lines);
+
+    try {
+        parser.parseLines();
+        return true;
+    } catch (const std::exception& ex) {
+        std::cerr << ex.what() << '\n';
+        return false;
+    }
+}
+
 bool parsesNumberedArcSpecialtiesMotion() {
     return parsedLineKeepsCpForVisualization(
                "N20002 G01 X=0.0000 Y=1.0000 Z=0.0000 XR=180.0000 YR=0.0000 ZR=-135.0000 "
@@ -275,19 +289,94 @@ bool writesLayerScopedBlockNumbersWhenEnabled() {
     second_layer += writer.writeTravel(ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm),
                                        ORNL::Point(1.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm),
                                        ORNL::TravelLiftType::kLiftLowerOnly, segment_settings);
+    second_layer += writer.writeLine(ORNL::Point(1.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm),
+                                     ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm, 2.0 * ORNL::mm), segment_settings);
 
-    return lineContaining(first_layer, ";BEGINNING LAYER: 1").startsWith(";") &&
+    const int first_opt_stop    = first_layer.indexOf("V.E.OptStopMode = 1\n");
+    const int first_schedule    = first_layer.indexOf("G80 [0] ;Infill Schedule\n");
+    const int second_opt_stop   = second_layer.indexOf("V.E.OptStopMode = 1\n");
+    const int second_welder_off = second_layer.indexOf(";WIRE ARC WELDER OFF");
+    const int second_schedule   = second_layer.indexOf("G80 [0] ;Infill Schedule\n");
+
+    return first_layer.contains(";BEGINNING LAYER: 1\nV.E.OptStopMode = 1\n") &&
+           second_layer.contains(";BEGINNING LAYER: 2\nV.E.OptStopMode = 1\n") &&
+           lineContaining(first_layer, ";BEGINNING LAYER: 1").startsWith(";") &&
            !lineContaining(first_layer, ";WORLD APPROACH TRAVEL").startsWith("N") &&
-           lineContaining(first_layer, "G80 [0] ;Infill Schedule").startsWith("N10000 G80") &&
-           lineContaining(first_layer, ";OPTIONAL STOP ROUTINE").startsWith("N10001 G81") &&
-           lineContaining(first_layer, ";TRAVEL LOWER").startsWith("N10002 G01") &&
+           lineContaining(first_layer, ";OPTIONAL STOP ROUTINE").startsWith("N10000 G81") &&
+           lineContaining(first_layer, ";TRAVEL LOWER").startsWith("N10001 G01") && first_opt_stop >= 0 &&
+           first_schedule > first_opt_stop &&
+           lineContaining(first_layer, "G80 [0] ;Infill Schedule").startsWith("N10002 G80") &&
            lineContaining(first_layer, ";WIRE ARC WELDER ON").startsWith("N10003 G82") &&
            lineContaining(first_layer, ";BLENDING ON").startsWith("N10004 G261") &&
            lineContaining(first_layer, ";HELICAL INFILL").startsWith("N10005 G01") &&
            lineContaining(second_layer, ";WIRE ARC WELDER OFF").startsWith("G83 [0]") &&
-           lineContaining(second_layer, "G80 [0] ;Infill Schedule").startsWith("N20000 G80") &&
-           lineContaining(second_layer, ";OPTIONAL STOP ROUTINE").startsWith("N20001 G81") &&
-           lineContaining(second_layer, ";TRAVEL LOWER").startsWith("N20002 G01");
+           second_welder_off > second_opt_stop &&
+           lineContaining(second_layer, ";OPTIONAL STOP ROUTINE").startsWith("N20000 G81") &&
+           lineContaining(second_layer, ";TRAVEL LOWER").startsWith("N20001 G01") && second_opt_stop >= 0 &&
+           second_schedule > second_opt_stop &&
+           lineContaining(second_layer, "G80 [0] ;Infill Schedule").startsWith("N20002 G80") &&
+           lineContaining(second_layer, ";HELICAL INFILL").startsWith("N20005 G01");
+}
+
+bool writesHelicalOptStopModeFromPostOrderingRotationDirection() {
+    QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
+    settings->setSetting(ORNL::PS::Optimizations::kCylindricalPathOrder,
+                         static_cast<int>(ORNL::PathOrderOptimization::kNextClosest));
+    settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelLength, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 0.0 * ORNL::mm);
+
+    QSharedPointer<ORNL::ArcSpecialtiesWriter> writer =
+        QSharedPointer<ORNL::ArcSpecialtiesWriter>::create(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+
+    auto write_ordered_layer = [&settings, &writer](uint layer_number, const ORNL::Point& current_location) {
+        const ORNL::Point generated_start(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm);
+        const ORNL::Point generated_end(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm);
+
+        QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
+        segment_settings->populate(settings);
+
+        ORNL::Path path;
+        QSharedPointer<ORNL::LineSegment> segment =
+            QSharedPointer<ORNL::LineSegment>::create(generated_start, generated_end);
+        segment->setSb(segment_settings);
+        path.append(segment);
+
+        ORNL::CylindricalLayer layer(layer_number + 1, settings, ORNL::CylindricalPathPattern::kHelical);
+        layer.addPath(path);
+        ORNL::Point optimized_current_location = current_location;
+        layer.calculateModifiers(optimized_current_location);
+
+        QString block;
+        block += writer->writeLayerChange(layer_number);
+        block += writer->writeBeforeLayer(layer.getMinZ(), layer.getSb());
+        block += layer.writeGCode(writer);
+        block += writer->writeAfterLayer();
+        return block;
+    };
+
+    const QString positive_layer = write_ordered_layer(0, ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm));
+    const QString negative_layer = write_ordered_layer(1, ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm));
+
+    const int positive_layer_marker = positive_layer.indexOf(";BEGINNING LAYER: 1");
+    const int positive_opt_stop     = positive_layer.indexOf("V.E.OptStopMode = 1\n");
+    const int positive_schedule     = positive_layer.indexOf("G80 [1] ;Perimeter Schedule\n");
+    const int positive_print        = positive_layer.indexOf(";HELICAL PERIMETER\n");
+    const int negative_layer_marker = negative_layer.indexOf(";BEGINNING LAYER: 2");
+    const int negative_opt_stop     = negative_layer.indexOf("V.E.OptStopMode = 2\n");
+    const int negative_schedule     = negative_layer.indexOf("G80 [1] ;Perimeter Schedule\n");
+    const int negative_print        = negative_layer.indexOf(";HELICAL PERIMETER\n");
+
+    return positive_layer.contains(";BEGINNING LAYER: 1\nV.E.OptStopMode = 1\n") &&
+           negative_layer.contains(";BEGINNING LAYER: 2\nV.E.OptStopMode = 2\n") && positive_layer_marker >= 0 &&
+           positive_opt_stop > positive_layer_marker && positive_schedule > positive_opt_stop &&
+           positive_print > positive_schedule && negative_layer_marker >= 0 &&
+           negative_opt_stop > negative_layer_marker && negative_schedule > negative_opt_stop &&
+           negative_print > negative_schedule && !positive_layer.contains("V.E.OptStopMode = 2") &&
+           !negative_layer.contains("V.E.OptStopMode = 1");
 }
 
 void setHelicalToolFrameSettings(const QSharedPointer<ORNL::SettingsBase>& settings) {
@@ -667,6 +756,8 @@ int main(int argc, char* argv[]) {
                      "Arc Specialties parser did not retain linear CP for visualization.");
     passed &= expect(parsedLineWithScheduleSpeedKeepsCpForVisualization(),
                      "Arc Specialties parser did not retain linear CP with the G80 schedule speed variable.");
+    passed &= expect(parsesArcSpecialtiesOptStopModeAssignment(),
+                     "Arc Specialties parser did not accept the OptStopMode assignment.");
     passed &=
         expect(parsesNumberedArcSpecialtiesMotion(), "Arc Specialties parser did not accept Beckhoff block numbers.");
     passed &= expect(rejectsDuplicateScheduleSpeedFeedrate(),
@@ -684,6 +775,8 @@ int main(int argc, char* argv[]) {
                      "Arc Specialties writer did not emit the G80 schedule speed variable for print motion.");
     passed &= expect(writesLayerScopedBlockNumbersWhenEnabled(),
                      "Arc Specialties writer did not emit layer-scoped block numbers.");
+    passed &= expect(writesHelicalOptStopModeFromPostOrderingRotationDirection(),
+                     "Arc Specialties writer did not emit helical OptStopMode from rotation direction.");
     passed &= expect(writesCompactCylindricalPrintComments(),
                      "Arc Specialties writer did not emit compact cylindrical comments.");
     passed &=
