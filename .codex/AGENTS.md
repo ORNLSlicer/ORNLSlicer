@@ -9,8 +9,6 @@
   the linked architecture page for the subsystem you touch.
 - Use `rg` to trace declarations, call sites, state owners, worker boundaries,
   and final consumers before editing behavior.
-- Keep diffs narrow. Avoid unrelated cleanup, broad formatting, and hand-edits
-  to generated files.
 
 ## Routing
 
