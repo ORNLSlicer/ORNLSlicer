@@ -893,7 +893,7 @@ class Constants {
         class Helical {
            public:
             static const QString kHelicalPathHandedness;
-            static const QString kHelicalStartAngleOffset;
+            static const QString kHelicalToolStartAngleOffset;
             static const QString kHelicalPathZClipRounding;
             static const QString kHelicalPerimeterRevolutions;
             static const QString kHelicalInsetRevolutions;

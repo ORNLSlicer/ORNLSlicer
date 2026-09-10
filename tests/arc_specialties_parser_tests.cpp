@@ -185,7 +185,7 @@ bool writesCompactCylindricalPrintComments() {
                          static_cast<int>(ORNL::CylindricalPathPattern::kHelical));
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, 0.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
     ORNL::ArcSpecialtiesWriter helical_writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString helical_line = helical_writer.writeLine(
         ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm), ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
@@ -214,7 +214,7 @@ QSharedPointer<ORNL::SettingsBase> helicalSegmentSettings(std::optional<ORNL::Re
     segment_settings->setSetting(QStringLiteral("radial_center_y"), 0.0 * ORNL::mm);
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, 0.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
     if (region_type.has_value()) { segment_settings->setSetting(ORNL::SS::kRegionType, region_type.value()); }
     return segment_settings;
 }
@@ -271,7 +271,7 @@ bool writesHelicalCpFromStartOffsetBaseline() {
     segment_settings->populate(settings);
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kLeftHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, -12.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
 
     const ORNL::Distance radius = 100.0 * ORNL::mm;
     auto point_at_angle         = [radius](double angle_degrees, ORNL::Distance z) {
@@ -722,7 +722,7 @@ bool writesHelicalZClipRoundingHeader() {
                          static_cast<int>(ORNL::HelicalPathZClipRounding::kCompleteRevolution));
     settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                          static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, 0.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kBeadWidth, 4.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);

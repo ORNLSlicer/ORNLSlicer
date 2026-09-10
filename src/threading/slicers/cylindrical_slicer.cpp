@@ -33,7 +33,7 @@
 #include "part/part.h"
 #include "slicing/helical_path_rounding.h"
 #include "slicing/helical_region_profile.h"
-#include "slicing/helical_start_angle.h"
+#include "slicing/helical_tool_start_angle.h"
 #include "slicing/slicing_utilities.h"
 #include "step/layer/cylindrical_layer.h"
 #include "threading/traditional_ast.h"
@@ -801,12 +801,12 @@ bool CylindricalSlicer::generateHelicalLayers(const QSharedPointer<Part>& part,
         QSharedPointer<CylindricalLayer> helical_layer = QSharedPointer<CylindricalLayer>::create(
             helical_layer_number + 1, layer_settings, CylindricalPathPattern::kHelical);
 
-        const Angle configured_start_angle_offset =
-            layer_settings->setting<Angle>(PS::Helical::kHelicalStartAngleOffset);
-        const Angle helical_start_angle_offset = HelicalStartAngle::effectiveOffset(
-            configured_start_angle_offset, helical_layer_number, z_clip_rounding, path_order);
-        layer_settings->setSetting(PS::Helical::kHelicalStartAngleOffset, helical_start_angle_offset);
-        const Angle helical_start_angle                        = HelicalStartAngle::geometricStartAngle();
+        const Angle configured_tool_start_angle_offset =
+            layer_settings->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset);
+        const Angle helical_tool_start_angle_offset = HelicalToolStartAngle::effectiveOffset(
+            configured_tool_start_angle_offset, helical_layer_number, z_clip_rounding, path_order);
+        layer_settings->setSetting(PS::Helical::kHelicalToolStartAngleOffset, helical_tool_start_angle_offset);
+        const Angle helical_start_angle                        = HelicalToolStartAngle::geometricStartAngle();
         const QVector<HelicalRegionPolylineRun> available_runs = createHelicalRegionRuns(
             profile, center, radius, handedness, helical_start_angle, 0.0, available_revolutions);
         const Polyline helix                                          = flattenHelicalRegionRuns(available_runs);

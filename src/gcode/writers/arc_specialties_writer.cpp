@@ -291,8 +291,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
         const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
         if (helical_mode) {
             text += commentLine(
-                "Helical Start Angle Offset: " %
-                formatAngle(m_sb->setting<Angle>(PS::Helical::kHelicalStartAngleOffset), m_meta.m_angle_unit));
+                "Helical Tool Start Angle Offset: " %
+                formatAngle(m_sb->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset), m_meta.m_angle_unit));
             text += commentLine("Helical Region Pitch Fallback: " % formatDistance(bead_width, m_meta.m_distance_unit) %
                                 " when a region stepover is 0");
             text += commentLine("Helical Perimeter Revolutions: " %
@@ -1106,7 +1106,7 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
         const double start_angle = helicalStartAngle(params);
         const double sweep_degrees =
             handedness == HelicalPathHandedness::kLeftHanded ? start_angle - cp_degrees : cp_degrees - start_angle;
-        cp_degrees = params->setting<Angle>(PS::Helical::kHelicalStartAngleOffset).to(degree) + sweep_degrees +
+        cp_degrees = params->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset).to(degree) + sweep_degrees +
                      m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
         return cp_degrees;
     }
