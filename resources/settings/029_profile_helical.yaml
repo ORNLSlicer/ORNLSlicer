@@ -18,7 +18,7 @@ settings:
   - name: "helical_start_angle_offset"
     display: "Helical Start Angle Offset"
     type: "angle"
-    tooltip: "Angular offset from top dead center for each generated helical path start. 0 degrees starts on +Y; positive values rotate counter-clockwise and negative values rotate clockwise."
+    tooltip: "Signed Arc Specialties CP offset at the generated helical path start. 0 degrees leaves CP aligned with the +Y top-dead-center start; the emitted X/Y helix still starts at top dead center."
     depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
     options: []
     default: 0

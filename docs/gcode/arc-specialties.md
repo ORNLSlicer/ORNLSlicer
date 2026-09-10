@@ -44,9 +44,9 @@ Rotation Z` to `-90 deg`.
 
 For planar slicing, `CP` is the configured `Axis C` value normalized to `[0, 360)`. The planar region stream is otherwise preserved, so print comments continue to use region names such as `Perimeter`, `Inset`, and `Skeleton`.
 
-For cylindrical slicing, the writer rotates the endpoint and cylinder center into the configured G-code frame, computes the endpoint angle around that transformed center, adds `Axis C`, and normalizes the result to `[0, 360)`.
+For radial cylindrical slicing, the writer rotates the endpoint and cylinder center into the configured G-code frame, computes the endpoint angle around that transformed center, adds `Axis C`, and normalizes the result to `[0, 360)`.
 
-For helical cylindrical paths, `CP` reports positive angular sweep from the transformed top-dead-center start angle plus `Helical Start Angle Offset` and `Axis C`. `Right Handed` helices advance with counter-clockwise G03 arcs, and `Left Handed` helices advance with clockwise G02 arcs. With no additional frame rotation, the default `0 deg` offset, and `Axis C=0`, four equal quarter-revolution endpoints report `CP` values of `90`, `180`, `270`, and `0`.
+For helical cylindrical paths, `CP` is `Axis C + Helical Start Angle Offset + angular sweep from the transformed helical start point`. The emitted helical X/Y coordinates still start at top dead center; the offset moves the CP baseline, not the programmed endpoint phase. `Right Handed` helices advance with counter-clockwise G03 arcs, and `Left Handed` helices advance with clockwise G02 arcs. Helical `CP` is intentionally signed and unwrapped, so a left-handed helix with `Helical Start Angle Offset=-12 deg`, no additional frame rotation, `Axis C=0`, and 12-degree arc segments reports `CP=-12` at the start/travel lower point, then `0`, `12`, `24`, and so on.
 
 ## Arc Center Modes
 

@@ -662,16 +662,18 @@ QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_loc
             travel_lower_required
                 ? firstTravelPointAboveTravelLowerDestination(travel_destination, target_location, lift_height)
                 : travel_destination;
+        const Point first_travel_cp_reference =
+            isHelicalPathPattern(params) ? target_location : first_travel_destination;
         const Point startup_world_approach = safeStartupWorldApproachPoint(first_travel_destination, params);
         rv += commentLine("INITIAL WORLD APPROACH");
         rv += writeMotion("G00", startup_world_approach, speed, params, kWorldApproachTravelComment,
-                          first_travel_destination);
+                          first_travel_cp_reference);
         rv += "#FLUSH WAIT" % m_newline;
         rv += m_newline;
         rv += commentLine("ENABLE WORK-OBJECT KINEMATICS");
         rv += writeStartupKinematics();
         if (!shouldBufferHelicalLayerPrefix(params)) { layer_rv += writePendingLayerChange(); }
-        layer_rv += writeMotion("G00", first_travel_destination, speed, params, "TRAVEL");
+        layer_rv += writeMotion("G00", first_travel_destination, speed, params, "TRAVEL", first_travel_cp_reference);
         layer_rv += writeBeginningBead();
     }
     else {
@@ -1102,8 +1104,11 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
         const HelicalPathHandedness handedness =
             static_cast<HelicalPathHandedness>(params->setting<int>(PS::Helical::kHelicalPathHandedness));
         const double start_angle = helicalStartAngle(params);
-        cp_degrees =
+        const double sweep_degrees =
             handedness == HelicalPathHandedness::kLeftHanded ? start_angle - cp_degrees : cp_degrees - start_angle;
+        cp_degrees = params->setting<Angle>(PS::Helical::kHelicalStartAngleOffset).to(degree) + sweep_degrees +
+                     m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
+        return cp_degrees;
     }
 
     cp_degrees += m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
@@ -1112,7 +1117,8 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
 }
 
 double ArcSpecialtiesWriter::helicalStartAngle(const QSharedPointer<SettingsBase>& params) const {
-    const Angle start_angle = 90.0 * degree + params->setting<Angle>(PS::Helical::kHelicalStartAngleOffset);
+    Q_UNUSED(params)
+    const Angle start_angle = 90.0 * degree;
     const Point start_direction(std::cos(start_angle()), std::sin(start_angle()), 0.0);
     const Point transformed_start_direction = rotateGCodeCoordinateFrameDelta(start_direction);
     if (std::hypot(transformed_start_direction.x(), transformed_start_direction.y()) <=
