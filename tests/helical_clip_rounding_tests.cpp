@@ -8,7 +8,7 @@
 #include "geometry/point.h"
 #include "geometry/polyline.h"
 #include "slicing/helical_path_rounding.h"
-#include "slicing/helical_start_angle.h"
+#include "slicing/helical_tool_start_angle.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
@@ -151,13 +151,13 @@ bool whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution() {
 bool directionAwareOffsetFollowsAlternatingCompleteClosestDirection() {
     const ORNL::Angle configured_offset = -12.0 * ORNL::degree;
 
-    const ORNL::Angle first_offset = ORNL::HelicalStartAngle::effectiveOffset(
+    const ORNL::Angle first_offset = ORNL::HelicalToolStartAngle::effectiveOffset(
         configured_offset, 0, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
         ORNL::PathOrderOptimization::kNextClosest);
-    const ORNL::Angle second_offset = ORNL::HelicalStartAngle::effectiveOffset(
+    const ORNL::Angle second_offset = ORNL::HelicalToolStartAngle::effectiveOffset(
         configured_offset, 1, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
         ORNL::PathOrderOptimization::kNextClosest);
-    const ORNL::Angle third_offset = ORNL::HelicalStartAngle::effectiveOffset(
+    const ORNL::Angle third_offset = ORNL::HelicalToolStartAngle::effectiveOffset(
         configured_offset, 2, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
         ORNL::PathOrderOptimization::kNextClosest);
 
@@ -166,19 +166,19 @@ bool directionAwareOffsetFollowsAlternatingCompleteClosestDirection() {
 }
 
 bool helicalGeometryStartAngleStaysAtTopDeadCenter() {
-    return near(ORNL::HelicalStartAngle::geometricStartAngle().to(ORNL::degree), 90.0);
+    return near(ORNL::HelicalToolStartAngle::geometricStartAngle().to(ORNL::degree), 90.0);
 }
 
 bool directionAwareOffsetRequiresPredictableCompleteClosestDirection() {
     const ORNL::Angle configured_offset = -12.0 * ORNL::degree;
 
-    const ORNL::Angle exact_offset = ORNL::HelicalStartAngle::effectiveOffset(
+    const ORNL::Angle exact_offset = ORNL::HelicalToolStartAngle::effectiveOffset(
         configured_offset, 1, ORNL::HelicalPathZClipRounding::kExactIntersection,
         ORNL::PathOrderOptimization::kNextClosest);
-    const ORNL::Angle last_full_offset = ORNL::HelicalStartAngle::effectiveOffset(
+    const ORNL::Angle last_full_offset = ORNL::HelicalToolStartAngle::effectiveOffset(
         configured_offset, 1, ORNL::HelicalPathZClipRounding::kLastFullRevolution,
         ORNL::PathOrderOptimization::kNextClosest);
-    const ORNL::Angle farthest_offset = ORNL::HelicalStartAngle::effectiveOffset(
+    const ORNL::Angle farthest_offset = ORNL::HelicalToolStartAngle::effectiveOffset(
         configured_offset, 1, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
         ORNL::PathOrderOptimization::kNextFarthest);
 

@@ -8,6 +8,7 @@
 #include <optional>
 
 #include "gcode/gcode_settings_importer.h"
+#include "managers/settings/settings_version_control.h"
 #include "utilities/constants.h"
 
 namespace {
@@ -54,12 +55,46 @@ bool validatesNonNegativeIntegerSettings() {
     return expect(!ORNL::GcodeSettingsImporter::validateValue("non_negative", master_entry, 1.5, normalized, error),
                   "Non-negative integer settings should reject fractional values.");
 }
+
+bool rollsHelicalToolStartAngleOffsetSettingFilesForward() {
+    using Helical = ORNL::Constants::ProfileSettings::Helical;
+
+    fifojson legacy_settings;
+    legacy_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion] = 10.0;
+    legacy_settings[ORNL::Constants::SettingFileStrings::kSettings] =
+        fifojson::array({fifojson::object({{"helical_path_start_angle", 1.74532925}})});
+    double legacy_version = 10.0;
+    ORNL::SettingsVersionControl::rollSettingsForward(legacy_version, legacy_settings);
+    const fifojson legacy_group = legacy_settings[ORNL::Constants::SettingFileStrings::kSettings].at(0);
+
+    fifojson intermediate_settings;
+    intermediate_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion] =
+        11.0;
+    intermediate_settings[ORNL::Constants::SettingFileStrings::kSettings] =
+        fifojson::array({fifojson::object({{"helical_start_angle_offset", -0.20943951}})});
+    double intermediate_version = 11.0;
+    ORNL::SettingsVersionControl::rollSettingsForward(intermediate_version, intermediate_settings);
+    const fifojson intermediate_group = intermediate_settings[ORNL::Constants::SettingFileStrings::kSettings].at(0);
+
+    const std::string new_key = Helical::kHelicalToolStartAngleOffset.toStdString();
+    return legacy_version == 12.0 &&
+           legacy_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion]
+                   .get<double>() == 12.0 &&
+           legacy_group.contains(new_key) && !legacy_group.contains("helical_path_start_angle") &&
+           std::abs(legacy_group.at(new_key).get<double>() - (10.0 * ORNL::degree)()) < 1e-6 &&
+           intermediate_version == 12.0 && intermediate_group.contains(new_key) &&
+           !intermediate_group.contains("helical_start_angle_offset") &&
+           std::abs(intermediate_group.at(new_key).get<double>() - (-12.0 * ORNL::degree)()) < 1e-6;
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     if (!validatesNonNegativeIntegerSettings()) return EXIT_FAILURE;
+    if (!expect(rollsHelicalToolStartAngleOffsetSettingFilesForward(),
+                "Did not roll helical tool start angle setting files forward."))
+        return EXIT_FAILURE;
 
     QTemporaryDir temp_dir;
     if (!expect(temp_dir.isValid(), "Could not create temporary directory.")) return EXIT_FAILURE;
@@ -146,11 +181,36 @@ int main(int argc, char* argv[]) {
     if (!expect(legacy_settings.at(Slicing::kImagePixelSizeY.toStdString()).get<double>() == 0.9,
                 "Did not migrate legacy image_resolution_y footer key."))
         return EXIT_FAILURE;
-    if (!expect(std::abs(legacy_settings.at(Helical::kHelicalStartAngleOffset.toStdString()).get<double>() -
+    if (!expect(std::abs(legacy_settings.at(Helical::kHelicalToolStartAngleOffset.toStdString()).get<double>() -
                          (10.0 * ORNL::degree)()) < 1e-6,
-                "Did not migrate legacy helical_path_start_angle footer key to a top-dead-center offset."))
+                "Did not migrate legacy helical_path_start_angle footer key to a tool start angle offset."))
         return EXIT_FAILURE;
     if (!expect(legacy_result.unknown_keys.isEmpty(), "Migrated legacy footer keys were still reported as unknown."))
+        return EXIT_FAILURE;
+
+    const QString intermediate_path = temp_dir.path() + "/intermediate.gcode";
+    const QString intermediate_gcode =
+        ";Settings Footer\n"
+        ";layer_height 200\n"
+        ";default_width 400\n"
+        ";helical_start_angle_offset -0.20943951\n";
+    if (!expect(writeFile(intermediate_path, intermediate_gcode), "Could not write intermediate key fixture."))
+        return EXIT_FAILURE;
+
+    const ORNL::GcodeSettingsImporter::ImportResult intermediate_result =
+        ORNL::GcodeSettingsImporter::importFile(intermediate_path, true);
+
+    if (!expect(intermediate_result.errors.isEmpty(), qPrintable(intermediate_result.errors.join("\n"))))
+        return EXIT_FAILURE;
+
+    const auto intermediate_settings =
+        intermediate_result.settings_file[ORNL::Constants::SettingFileStrings::kSettings].at(0);
+    if (!expect(std::abs(intermediate_settings.at(Helical::kHelicalToolStartAngleOffset.toStdString()).get<double>() -
+                         (-12.0 * ORNL::degree)()) < 1e-6,
+                "Did not migrate intermediate helical_start_angle_offset footer key directly."))
+        return EXIT_FAILURE;
+    if (!expect(intermediate_result.unknown_keys.isEmpty(),
+                "Migrated intermediate footer key was still reported as unknown."))
         return EXIT_FAILURE;
 
     const QString cancel_path = temp_dir.path() + "/cancel.gcode";

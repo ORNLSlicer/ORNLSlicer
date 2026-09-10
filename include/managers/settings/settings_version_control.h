@@ -79,5 +79,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_11_0To11_0(double& version, fifojson& settings);
+
+    //! \brief Rolls helical start angle offset to helical tool start angle offset for version 12.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_12_0To12_0(double& version, fifojson& settings);
 };
 }  // namespace ORNL
