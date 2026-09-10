@@ -8,6 +8,7 @@
 #include "geometry/point.h"
 #include "geometry/polyline.h"
 #include "slicing/helical_path_rounding.h"
+#include "slicing/helical_start_angle.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
@@ -146,6 +147,44 @@ bool whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution() {
     return nearDistance(end.x(), 10.0 * ORNL::mm) && nearDistance(end.y(), 0.0 * ORNL::mm) &&
            nearDistance(end.z(), 8.0 * ORNL::mm);
 }
+
+bool directionAwareOffsetFollowsAlternatingCompleteClosestDirection() {
+    const ORNL::Angle configured_offset = -12.0 * ORNL::degree;
+
+    const ORNL::Angle first_offset = ORNL::HelicalStartAngle::effectiveOffset(
+        configured_offset, 0, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
+        ORNL::PathOrderOptimization::kNextClosest);
+    const ORNL::Angle second_offset = ORNL::HelicalStartAngle::effectiveOffset(
+        configured_offset, 1, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
+        ORNL::PathOrderOptimization::kNextClosest);
+    const ORNL::Angle third_offset = ORNL::HelicalStartAngle::effectiveOffset(
+        configured_offset, 2, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
+        ORNL::PathOrderOptimization::kNextClosest);
+
+    return near(first_offset.to(ORNL::degree), -12.0) && near(second_offset.to(ORNL::degree), 12.0) &&
+           near(third_offset.to(ORNL::degree), -12.0);
+}
+
+bool helicalGeometryStartAngleStaysAtTopDeadCenter() {
+    return near(ORNL::HelicalStartAngle::geometricStartAngle().to(ORNL::degree), 90.0);
+}
+
+bool directionAwareOffsetRequiresPredictableCompleteClosestDirection() {
+    const ORNL::Angle configured_offset = -12.0 * ORNL::degree;
+
+    const ORNL::Angle exact_offset = ORNL::HelicalStartAngle::effectiveOffset(
+        configured_offset, 1, ORNL::HelicalPathZClipRounding::kExactIntersection,
+        ORNL::PathOrderOptimization::kNextClosest);
+    const ORNL::Angle last_full_offset = ORNL::HelicalStartAngle::effectiveOffset(
+        configured_offset, 1, ORNL::HelicalPathZClipRounding::kLastFullRevolution,
+        ORNL::PathOrderOptimization::kNextClosest);
+    const ORNL::Angle farthest_offset = ORNL::HelicalStartAngle::effectiveOffset(
+        configured_offset, 1, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
+        ORNL::PathOrderOptimization::kNextFarthest);
+
+    return near(exact_offset.to(ORNL::degree), -12.0) && near(last_full_offset.to(ORNL::degree), -12.0) &&
+           near(farthest_offset.to(ORNL::degree), -12.0);
+}
 }  // namespace
 
 int main() {
@@ -164,6 +203,14 @@ int main() {
                      "Expected complete rounding to round a wholly inside helix top to the next full revolution.");
     passed &= expect(whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution(),
                      "Expected last-full rounding to round a wholly inside helix top to the previous full revolution.");
+    passed &= expect(directionAwareOffsetFollowsAlternatingCompleteClosestDirection(),
+                     "Expected direction-aware helical offset to flip on every other Complete Revolution/Next Closest "
+                     "radius pass.");
+    passed &= expect(helicalGeometryStartAngleStaysAtTopDeadCenter(),
+                     "Expected emitted helical X/Y geometry to start at top dead center.");
+    passed &= expect(directionAwareOffsetRequiresPredictableCompleteClosestDirection(),
+                     "Expected direction-aware helical offset to keep the configured sign outside Complete "
+                     "Revolution/Next Closest.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

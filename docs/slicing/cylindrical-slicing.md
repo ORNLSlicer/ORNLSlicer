@@ -30,7 +30,7 @@ This slicer currently requires the `Arc Specialties` G-code syntax, but this pag
 
 `Helical` samples a rising region profile at each radius. The angular position is still a continuous helix:
 
-`x(t) = r cos(90 deg + start_angle_offset +/- t)`, `y(t) = r sin(90 deg + start_angle_offset +/- t)`
+`x(t) = r cos(90 deg +/- t)`, `y(t) = r sin(90 deg +/- t)`
 
 The first radius is half a `Layer Height` outward from `Cylinder Inner Radius`, and later radii advance by `Layer Height`. Each helix starts at the retained part base Z. Z is defined by the ordered helical region profile rather than one global rise-per-revolution value.
 
@@ -52,7 +52,7 @@ Infill revolutions are derived from the remaining available height after both pe
 
 `Infill Revolutions Rounding Policy` rounds that derived value with `Round`, `Floor`, or `Ceil`. If the rounded value is not positive, no infill band is generated. `Round` and `Ceil` can make the generated rounded profile extend above the retained model top or configured `Cylinder Height`; this is allowed when model clipping finds no exit within the available-height prefix.
 
-`Helical Start Angle Offset` shifts the first sampled point around each generated helix relative to top dead center. It defaults to `0 deg`, which starts on +Y. An offset of `10 deg` starts where the old absolute `100 deg` start angle did, and `-10 deg` starts where the old absolute `80 deg` start angle did. `Helical Path Handedness` selects the angular sweep while Z rises. `Right Handed` is the default and uses the existing counter-clockwise XY sweep. `Left Handed` mirrors the helix to a clockwise XY sweep without changing the first point, Z rise, or radius spacing.
+`Helical Start Angle Offset` sets the Arc Specialties CP baseline at the generated helical start point. It defaults to `0 deg`, leaving CP aligned with the +Y top-dead-center start. The offset does not rotate the emitted helical X/Y coordinates. For `Complete Revolution` helical clipping with `Next Closest` cylindrical path ordering, the offset sign mirrors on every other radius pass to follow the alternating print direction; for example, `-12 deg` becomes `12 deg` on the next reversed pass, then `-12 deg` again. `Helical Path Handedness` selects the angular sweep while Z rises. `Right Handed` is the default and uses the existing counter-clockwise XY sweep. `Left Handed` mirrors the helix to a clockwise XY sweep without changing the first point, Z rise, or radius spacing.
 
 `Cylinder Height` limits radial and helical candidate paths above the retained part base. Values of `0` or smaller use the retained part height, preserving the default model-bounded behavior.
 
@@ -73,7 +73,7 @@ Infill revolutions are derived from the remaining available height after both pe
 | `Cylinder Height` | Profile > Slicing | Upper height limit for generated cylindrical paths above the part base. Values less than or equal to `0` use the retained part height. |
 | `Cylindrical Path Order Optimization` | Profile > Optimizations | Selects `Next Closest` or `Next Farthest` ordering between retained radial or helical paths. Closed radial paths may rotate to the selected segment start. |
 | `Radial Path Start Angle` | Profile > Radial | For `Radial`, angular start position around the cylinder axis. |
-| `Helical Start Angle Offset` | Profile > Helical | For `Helical`, angular offset from top dead center around the cylinder axis. Defaults to `0 deg` for a +Y start. |
+| `Helical Start Angle Offset` | Profile > Helical | For `Helical`, Arc Specialties CP offset from the generated +Y start. In `Complete Revolution`/`Next Closest` helical output, the sign follows the alternating print direction by radius pass. |
 | `Helical Z Clip Rounding` | Profile > Helical | For `Helical`, controls whether the z-clipped path ends at the model intersection, the next complete revolution, or the previous complete revolution. |
 | `Helical Path Handedness` | Profile > Helical | For `Helical`, selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
 | `Perimeter Revolutions` / `Inset Revolutions` | Profile > Helical | Reserve matching shell revolutions at the beginning and end of each helical profile. |
@@ -101,7 +101,7 @@ When `Slicing Mode` is `Cylindrical` and `Cylindrical Path Pattern` is `Helical`
 | Setting | Effect |
 | --- | --- |
 | `Helical Path Handedness` | Selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
-| `Helical Start Angle Offset` | Sets the first angular position around the cylinder axis as an offset from top dead center. |
+| `Helical Start Angle Offset` | Sets the Arc Specialties CP baseline at the generated helical start point. |
 | `Helical Z Clip Rounding` | Selects exact, next-full-revolution, or previous-full-revolution z clipping in cumulative profile-revolution coordinates. |
 | `Perimeter Revolutions` | Number of perimeter revolutions reserved for helical region planning. |
 | `Inset Revolutions` | Number of inset revolutions reserved for helical region planning. |
@@ -122,7 +122,7 @@ For `Radial`, model clipping can split a path into one or more retained arcs:
 
 For `Helical`, model clipping checks only the available-height prefix of the generated region profile, from its generated start through the retained model top or configured `Cylinder Height`. If the checked path starts outside the model, the retained output starts at the first model entry instead of consuming lower shell regions in omitted space. If the checked path exits the model, `Helical Z Clip Rounding` controls the endpoint in cumulative profile-revolution coordinates: `Exact Intersection` stops at the highest-Z model exit, `Complete Revolution` continues to the next complete profile revolution, and `Last Full Revolution` stops at the previous complete profile revolution. If the rounded endpoint is not above the retained start, that radius is omitted.
 
-After clipping, the retained path is rebuilt from the retained start and top using the same helical region settings. Lower perimeter/inset shell bands begin at the retained path start, the retained lower perimeter starts at top dead center plus `Helical Start Angle Offset`, and `Infill Revolutions Rounding Policy` still controls the rebuilt infill region count.
+After clipping, the retained path is rebuilt from the retained start and top using the same helical region settings. Lower perimeter/inset shell bands begin at the retained path start, the retained lower perimeter starts at top dead center, and `Infill Revolutions Rounding Policy` still controls the rebuilt infill region count.
 
 When helical z clipping finds no boundary crossing, a checked prefix that is wholly inside the model keeps the full generated rounded profile, including any `Round` or `Ceil` height overrun. A checked prefix that is wholly outside, or partly outside without a detected crossing, is omitted.
 

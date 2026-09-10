@@ -257,6 +257,50 @@ bool writesG80ScheduleSpeedVariableForLineAndArc() {
     return line.contains(" FV.S.SPEED ;HELICAL PERIMETER") && !line.contains("F600.0000") && arc == expected_arc;
 }
 
+bool writesHelicalCpFromStartOffsetBaseline() {
+    QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(true);
+    settings->setSetting(ORNL::PRS::MachineSetup::kAxisA, 90.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 20.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelLength, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 0.0 * ORNL::mm);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
+    segment_settings->populate(settings);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
+                                 static_cast<int>(ORNL::HelicalPathHandedness::kLeftHanded));
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalStartAngleOffset, -12.0 * ORNL::degree);
+
+    const ORNL::Distance radius = 100.0 * ORNL::mm;
+    auto point_at_angle         = [radius](double angle_degrees, ORNL::Distance z) {
+        const double angle_radians = angle_degrees * M_PI / 180.0;
+        return ORNL::Point(radius * std::cos(angle_radians), radius * std::sin(angle_radians), z);
+    };
+    const ORNL::Point start = point_at_angle(90.0, 0.0 * ORNL::mm);
+    const ORNL::Point end   = point_at_angle(78.0, 1.0 * ORNL::mm);
+    const ORNL::Point center(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm);
+
+    ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+    QString block;
+    block += writer.writeLayerChange(0);
+    block += writer.writeBeforeLayer(0.0f, settings);
+    block += writer.writeBeforeRegion(ORNL::RegionType::kPerimeter, 1);
+    block += writer.writeTravel(start, start, ORNL::TravelLiftType::kLiftLowerOnly, segment_settings);
+    block += writer.writeArc(start, end, center, 12.0 * ORNL::degree, false, segment_settings);
+
+    const QString world_approach_line = lineContaining(block, ";WORLD APPROACH TRAVEL");
+    const QString travel_line         = lineContaining(block, ";TRAVEL");
+    const QString travel_lower_line   = lineContaining(block, ";TRAVEL LOWER");
+    const QString arc_line            = lineContaining(block, ";HELICAL PERIMETER");
+
+    return world_approach_line.contains("CP=-12.0000") && travel_line.contains("X=0.0000 Y=100.0000") &&
+           travel_line.contains("CP=-12.0000") && travel_lower_line.contains("X=0.0000 Y=100.0000") &&
+           travel_lower_line.contains("CP=-12.0000") && arc_line.contains("X=20.7912 Y=97.8148") &&
+           arc_line.contains("CP=0.0000");
+}
+
 bool writesLayerScopedBlockNumbersWhenEnabled() {
     QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
     settings->setSetting(ORNL::PRS::GCode::kArcSpecialtiesEmitBlockNumbers, true);
@@ -773,6 +817,8 @@ int main(int argc, char* argv[]) {
                      "Arc Specialties writer did not emit numeric speed without a G80 weld schedule file.");
     passed &= expect(writesG80ScheduleSpeedVariableForLineAndArc(),
                      "Arc Specialties writer did not emit the G80 schedule speed variable for print motion.");
+    passed &= expect(writesHelicalCpFromStartOffsetBaseline(),
+                     "Arc Specialties writer did not preserve the helical start-offset CP baseline.");
     passed &= expect(writesLayerScopedBlockNumbersWhenEnabled(),
                      "Arc Specialties writer did not emit layer-scoped block numbers.");
     passed &= expect(writesHelicalOptStopModeFromPostOrderingRotationDirection(),
