@@ -317,6 +317,12 @@ void SessionManager::addPart(QSharedPointer<MeshBase> new_mesh, QString filename
     m_load_mutex.unlock();
 }
 
+void SessionManager::renamePart(QSharedPointer<Part> part, QString new_name) {
+    m_parts.remove(part->name());
+    part->setName(new_name);
+    m_parts.insert(new_name, part);
+}
+
 void SessionManager::reloadPart(QSharedPointer<PartMetaItem> pm) {
     QString filename = pm->part()->sourceFilePath();
 

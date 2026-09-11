@@ -59,6 +59,7 @@ class PartControl : public QWidget {
     void modelSelectionUpdate(QSharedPointer<PartMetaItem> pm);
     void modelParentingUpdate(QSharedPointer<PartMetaItem> pm);
     void modelVisualUpdate(QSharedPointer<PartMetaItem> pm);
+    void modelNameUpdate(QSharedPointer<PartMetaItem> pm);
 
     //! \brief Handle selection update by the tree view.
     void handleSelectionChange();

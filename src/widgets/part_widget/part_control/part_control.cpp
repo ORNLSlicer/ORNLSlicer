@@ -52,6 +52,7 @@ void PartControl::setModel(QSharedPointer<PartMetaModel> m) {
     QObject::connect(m_model.get(), &PartMetaModel::itemAddedUpdate, this, &PartControl::modelAdditionUpdate);
     QObject::connect(m_model.get(), &PartMetaModel::itemRemovedUpdate, this, &PartControl::modelRemovalUpdate);
     QObject::connect(m_model.get(), &PartMetaModel::visualUpdate, this, &PartControl::modelVisualUpdate);
+    QObject::connect(m_model.get(), &PartMetaModel::nameUpdate, this, &PartControl::modelNameUpdate);
 }
 
 void PartControl::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
@@ -134,6 +135,17 @@ void PartControl::modelVisualUpdate(QSharedPointer<PartMetaItem> pm) {
     PartControlTreeItem* tree_item = tree_item = (PartControlTreeItem*)tl.at(0);
 
     tree_item->updateMeshType(pm->meshType());
+}
+
+void PartControl::modelNameUpdate(QSharedPointer<PartMetaItem> pm) {
+    QList<QTreeWidgetItem*> tl = m_tree_widget->findItems("*", Qt::MatchWildcard | Qt::MatchRecursive);
+    for (auto curr_item : tl) {
+        auto tree_item = dynamic_cast<PartControlTreeItem*>(curr_item);
+        if (tree_item && tree_item->getPart() == pm->part()) {
+            tree_item->setText(0, pm->part()->name());
+            break;
+        }
+    }
 }
 
 void PartControl::handleSelectionChange() {

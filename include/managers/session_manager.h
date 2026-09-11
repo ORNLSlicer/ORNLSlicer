@@ -174,6 +174,11 @@ class SessionManager : public QObject {
     //! loader thread has completed. \param filename the path to the file \param Mesh type mode, defaults to build
     void addPart(QSharedPointer<MeshBase> new_mesh, QString filename = "", MeshType mt = MeshType::kBuild);
 
+    //! \brief Renames a part and its key in the session.
+    //! \param part the part to have the key renamed
+    //! \param new_name the new name for the part
+    void renamePart(QSharedPointer<Part> part, QString new_name);
+
     //! \brief Reloads a part.
     void reloadPart(QSharedPointer<PartMetaItem> pm);
 

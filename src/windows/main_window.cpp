@@ -1010,6 +1010,8 @@ void MainWindow::setupEvents() {
             [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
     connect(m_part_widget->getPartMeta().get(), &PartMetaModel::transformUpdate, this,
             [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
+    connect(m_part_widget->getPartMeta().get(), &PartMetaModel::nameUpdate, this,
+            [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
 
     QSharedPointer<PartMetaModel> part_meta = m_part_widget->getPartMeta();
     connect(part_meta.get(), &PartMetaModel::itemAddedUpdate, this, &MainWindow::initializePartTransform);
