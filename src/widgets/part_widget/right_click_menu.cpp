@@ -25,6 +25,7 @@
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "utilities/constants.h"
+#include "utilities/dialog_utils.h"
 #include "utilities/enums.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 
@@ -133,6 +134,7 @@ void RightClickMenu::setupActions() {
     m_switch_to_clipper_action    = new QAction("Switch to Clipper", this);
     m_switch_to_setting_action    = new QAction("Switch to Setting", this);
     m_reset_transformation_action = new QAction("Reset Transformation", this);
+    m_rename_part_action          = new QAction("Rename Part", this);
     m_replace_part_action         = new QAction("Replace Part Model", this);
     m_reload_part_action          = new QAction("Reload Part Model(s)", this);
     m_delete_part_action          = new QAction("Delete Part(s)", this);
@@ -144,6 +146,7 @@ void RightClickMenu::setupActions() {
     m_switch_to_build_action->setIcon(QIcon(":/icons/print_head.png"));
     m_switch_to_setting_action->setIcon(QIcon(":/icons/settings_black.png"));
     m_reset_transformation_action->setIcon(QIcon(":/icons/restore.png"));
+    m_rename_part_action->setIcon(QIcon(":/icons/rename.png"));
     m_replace_part_action->setIcon(QIcon(":/icons/folder_black.png"));
     m_reload_part_action->setIcon(QIcon(":/icons/file_refresh_black.png"));
     m_delete_part_action->setIcon(QIcon(":/icons/delete_black.png"));
@@ -156,6 +159,7 @@ void RightClickMenu::setupActions() {
     this->addAction(m_switch_to_clipper_action);
     this->addAction(m_switch_to_setting_action);
     this->addSeparator();
+    this->addAction(m_rename_part_action);
     this->addAction(m_lock_part_action);
     this->addAction(m_set_instances_action);
     this->addAction(m_reset_transformation_action);
@@ -221,6 +225,13 @@ void RightClickMenu::setupEvents() {
 
     connect(m_reset_transformation_action, &QAction::triggered, this, [this]() {
         for (auto item : m_selected_items) item->resetTransformation();
+    });
+
+    connect(m_rename_part_action, &QAction::triggered, this, [this]() {
+        QSharedPointer<PartMetaItem> item = m_selected_items.first();
+        const QString new_name = DialogUtils::promptForName(this, "Rename Part", item->part()->name());
+
+        item->renamePart(new_name);
     });
 
     connect(m_replace_part_action, &QAction::triggered, this, [this]() {
@@ -375,10 +386,12 @@ void RightClickMenu::disableActions() {
         if (m_selected_items.size() == 1) {
             m_replace_part_action->setDisabled(false);
             m_set_instances_action->setDisabled(false);
+            m_rename_part_action->setDisabled(false);
         }
         else {
             m_replace_part_action->setDisabled(true);
             m_set_instances_action->setDisabled(true);
+            m_rename_part_action->setDisabled(true);
         }
     }
     else {
@@ -391,6 +404,7 @@ void RightClickMenu::disableActions() {
         m_reload_part_action->setDisabled(true);
         m_delete_part_action->setDisabled(true);
         m_set_instances_action->setDisabled(true);
+        m_rename_part_action->setDisabled(true);
         m_info_action->setDisabled(true);
         m_transparency_menu->setDisabled(true);
         m_wireframe_action->setDisabled(true);

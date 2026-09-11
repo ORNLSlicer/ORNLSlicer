@@ -79,6 +79,8 @@ class PartMetaModel : public QObject, public QEnableSharedFromThis<PartMetaModel
     void visualUpdate(QSharedPointer<PartMetaItem> pm);
     //! \brief Signal that an item has a new transformation.
     void transformUpdate(QSharedPointer<PartMetaItem> pm);
+    //! \brief Signal that an item has a name update.
+    void nameUpdate(QSharedPointer<PartMetaItem> pm);
 
     //! \brief Signal that any update has occured.
     void modelUpdated(QSharedPointer<PartMetaItem> pm);
