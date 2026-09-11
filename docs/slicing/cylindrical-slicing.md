@@ -52,7 +52,7 @@ Infill revolutions are derived from the remaining available height after both pe
 
 `Infill Revolutions Rounding Policy` rounds that derived value with `Round`, `Floor`, or `Ceil`. If the rounded value is not positive, no infill band is generated. `Round` and `Ceil` can make the generated rounded profile extend above the retained model top or configured `Cylinder Height`; this is allowed when model clipping finds no exit within the available-height prefix.
 
-`Helical Tool Start Angle Offset` sets the Arc Specialties CP baseline at the generated helical start point. It defaults to `0 deg`, leaving CP aligned with the +Y top-dead-center start. The offset does not rotate the emitted helical X/Y coordinates. For `Complete Revolution` helical clipping with `Next Closest` cylindrical path ordering, the offset sign mirrors on every other radius pass to follow the alternating print direction; for example, `-12 deg` becomes `12 deg` on the next reversed pass, then `-12 deg` again. `Helical Path Handedness` selects the angular sweep while Z rises. `Right Handed` is the default and uses the existing counter-clockwise XY sweep. `Left Handed` mirrors the helix to a clockwise XY sweep without changing the first point, Z rise, or radius spacing.
+`Helical Tool Start Angle Offset` sets the Arc Specialties CP and tool-frame baseline at the generated helical start point. It defaults to `0 deg`, leaving CP aligned with the +Y top-dead-center start. The offset does not rotate the emitted helical X/Y coordinates; it shifts `CP` by the effective offset and shifts both `XR` and `YR` by half of that effective offset. For `Complete Revolution` helical clipping with `Next Closest` cylindrical path ordering, the offset sign mirrors on every other radius pass to follow the alternating print direction; for example, `-12 deg` becomes `12 deg` on the next reversed pass, then `-12 deg` again. `Helical Path Handedness` selects the angular sweep while Z rises. `Right Handed` is the default and uses the existing counter-clockwise XY sweep. `Left Handed` mirrors the helix to a clockwise XY sweep without changing the first point, Z rise, or radius spacing.
 
 `Cylinder Height` limits radial and helical candidate paths above the retained part base. Values of `0` or smaller use the retained part height, preserving the default model-bounded behavior.
 
@@ -73,7 +73,7 @@ Infill revolutions are derived from the remaining available height after both pe
 | `Cylinder Height` | Profile > Slicing | Upper height limit for generated cylindrical paths above the part base. Values less than or equal to `0` use the retained part height. |
 | `Cylindrical Path Order Optimization` | Profile > Optimizations | Selects `Next Closest` or `Next Farthest` ordering between retained radial or helical paths. Closed radial paths may rotate to the selected segment start. |
 | `Radial Path Start Angle` | Profile > Radial | For `Radial`, angular start position around the cylinder axis. |
-| `Helical Tool Start Angle Offset` | Profile > Helical | For `Helical`, Arc Specialties CP offset from the generated +Y start. In `Complete Revolution`/`Next Closest` helical output, the sign follows the alternating print direction by radius pass. |
+| `Helical Tool Start Angle Offset` | Profile > Helical | For `Helical`, Arc Specialties CP offset from the generated +Y start, with half of the effective offset added to `XR` and `YR`. In `Complete Revolution`/`Next Closest` helical output, the sign follows the alternating print direction by radius pass. |
 | `Helical Z Clip Rounding` | Profile > Helical | For `Helical`, controls whether the z-clipped path ends at the model intersection, the next complete revolution, or the previous complete revolution. |
 | `Helical Path Handedness` | Profile > Helical | For `Helical`, selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
 | `Perimeter Revolutions` / `Inset Revolutions` | Profile > Helical | Reserve matching shell revolutions at the beginning and end of each helical profile. |
@@ -101,7 +101,7 @@ When `Slicing Mode` is `Cylindrical` and `Cylindrical Path Pattern` is `Helical`
 | Setting | Effect |
 | --- | --- |
 | `Helical Path Handedness` | Selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
-| `Helical Tool Start Angle Offset` | Sets the Arc Specialties CP baseline at the generated helical start point. |
+| `Helical Tool Start Angle Offset` | Sets the Arc Specialties CP baseline at the generated helical start point and adds half of the effective offset to `XR` and `YR`. |
 | `Helical Z Clip Rounding` | Selects exact, next-full-revolution, or previous-full-revolution z clipping in cumulative profile-revolution coordinates. |
 | `Perimeter Revolutions` | Number of perimeter revolutions reserved for helical region planning. |
 | `Inset Revolutions` | Number of inset revolutions reserved for helical region planning. |
