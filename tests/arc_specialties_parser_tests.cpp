@@ -295,10 +295,13 @@ bool writesHelicalCpFromStartOffsetBaseline() {
     const QString travel_lower_line   = lineContaining(block, ";TRAVEL LOWER");
     const QString arc_line            = lineContaining(block, ";HELICAL PERIMETER");
 
-    return world_approach_line.contains("CP=-12.0000") && travel_line.contains("X=0.0000 Y=100.0000") &&
-           travel_line.contains("CP=-12.0000") && travel_lower_line.contains("X=0.0000 Y=100.0000") &&
+    return world_approach_line.contains("XR=174.0000 YR=-6.0000 ZR=-90.0000") &&
+           world_approach_line.contains("CP=-12.0000") && travel_line.contains("X=0.0000 Y=100.0000") &&
+           travel_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") && travel_line.contains("CP=-12.0000") &&
+           travel_lower_line.contains("X=0.0000 Y=100.0000") &&
+           travel_lower_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") &&
            travel_lower_line.contains("CP=-12.0000") && arc_line.contains("X=20.7912 Y=97.8148") &&
-           arc_line.contains("CP=0.0000");
+           arc_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") && arc_line.contains("CP=0.0000");
 }
 
 bool writesLayerScopedBlockNumbersWhenEnabled() {
@@ -547,10 +550,15 @@ bool writesHelicalRegionToolFrameRotations() {
 
     const ORNL::Point start(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm);
     const ORNL::Point end(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm);
-    const QString block = writer.writeLine(start, end, helicalSegmentSettings(ORNL::RegionType::kPerimeter)) %
-                          writer.writeLine(start, end, helicalSegmentSettings(ORNL::RegionType::kInset)) %
-                          writer.writeLine(start, end, helicalSegmentSettings(ORNL::RegionType::kInfill)) %
-                          writer.writeLine(start, end, helicalSegmentSettings(ORNL::RegionType::kUnknown));
+    auto segmentSettings = [](std::optional<ORNL::RegionType> region_type) {
+        QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(region_type);
+        segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 8.0 * ORNL::degree);
+        return segment_settings;
+    };
+    const QString block = writer.writeLine(start, end, segmentSettings(ORNL::RegionType::kPerimeter)) %
+                          writer.writeLine(start, end, segmentSettings(ORNL::RegionType::kInset)) %
+                          writer.writeLine(start, end, segmentSettings(ORNL::RegionType::kInfill)) %
+                          writer.writeLine(start, end, segmentSettings(ORNL::RegionType::kUnknown));
 
     const QString perimeter_line = lineContaining(block, ";HELICAL PERIMETER");
     const QString inset_line     = lineContaining(block, ";HELICAL INSET");
@@ -564,10 +572,10 @@ bool writesHelicalRegionToolFrameRotations() {
         }
     }
 
-    return perimeter_line.contains("XR=11.0000 YR=12.0000 ZR=13.0000") &&
-           inset_line.contains("XR=21.0000 YR=22.0000 ZR=23.0000") &&
-           infill_line.contains("XR=31.0000 YR=32.0000 ZR=33.0000") &&
-           fallback_line.contains("XR=180.0000 YR=0.0000 ZR=-135.0000");
+    return perimeter_line.contains("XR=15.0000 YR=16.0000 ZR=13.0000") &&
+           inset_line.contains("XR=25.0000 YR=26.0000 ZR=23.0000") &&
+           infill_line.contains("XR=35.0000 YR=36.0000 ZR=33.0000") &&
+           fallback_line.contains("XR=184.0000 YR=4.0000 ZR=-135.0000");
 }
 
 bool writesHelicalTravelToolFrameRotation() {
@@ -582,6 +590,7 @@ bool writesHelicalTravelToolFrameRotation() {
 
     QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
     segment_settings->populate(settings);
+    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
 
     ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString travel_block = writer.writeTravel(ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
@@ -591,13 +600,14 @@ bool writesHelicalTravelToolFrameRotation() {
     const QString world_approach_line = lineContaining(travel_block, ";WORLD APPROACH TRAVEL");
     const QString first_travel_line   = lineContaining(travel_block, ";TRAVEL");
 
-    return world_approach_line.contains("XR=180.0000 YR=0.0000 ZR=-90.0000") &&
-           first_travel_line.contains("XR=41.0000 YR=42.0000 ZR=43.0000");
+    return world_approach_line.contains("XR=174.0000 YR=-6.0000 ZR=-90.0000") &&
+           first_travel_line.contains("XR=35.0000 YR=36.0000 ZR=43.0000");
 }
 
 bool writesHelicalToolFrameHeader() {
     QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
     setHelicalToolFrameSettings(settings);
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 8.0 * ORNL::degree);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kBeadWidth, 4.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Slicing::kCylinderInnerRadius, 5.0 * ORNL::mm);
@@ -618,10 +628,11 @@ bool writesHelicalToolFrameHeader() {
     ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString header = writer.writeSettingsHeader(ORNL::GcodeSyntax::kArcSpecialties);
 
-    return header.contains(";Helical Perimeter Tool Frame Rotation: XR=11.0000deg YR=12.0000deg ZR=13.0000deg") &&
-           header.contains(";Helical Inset Tool Frame Rotation: XR=21.0000deg YR=22.0000deg ZR=23.0000deg") &&
-           header.contains(";Helical Infill Tool Frame Rotation: XR=31.0000deg YR=32.0000deg ZR=33.0000deg") &&
-           header.contains(";Helical Travel Tool Frame Rotation: XR=41.0000deg YR=42.0000deg ZR=43.0000deg");
+    return header.contains(";Helical Perimeter Tool Frame Rotation: XR=15.0000deg YR=16.0000deg ZR=13.0000deg") &&
+           header.contains(";Helical Inset Tool Frame Rotation: XR=25.0000deg YR=26.0000deg ZR=23.0000deg") &&
+           header.contains(";Helical Infill Tool Frame Rotation: XR=35.0000deg YR=36.0000deg ZR=33.0000deg") &&
+           header.contains(";Helical Travel Tool Frame Rotation: XR=45.0000deg YR=46.0000deg ZR=43.0000deg") &&
+           header.contains(";Initial World Approach Tool Frame Rotation: XR=184.0000deg YR=4.0000deg ZR=-90.0000deg");
 }
 
 QString lineContaining(const QString& block, const QString& marker) {

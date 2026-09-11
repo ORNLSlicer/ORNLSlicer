@@ -50,6 +50,9 @@ constexpr double kToolFrameZR = -135.0;
 //! @brief Tool-frame ZR used for rapid travel moves.
 constexpr double kRapidTravelToolFrameZR = -90.0;
 
+//! @brief Arc Specialties helical tool-frame XR/YR compensation per degree of tool start-angle offset.
+constexpr double kHelicalToolStartAngleToolFrameScale = 0.5;
+
 //! @brief First-pass clearance above the highest point of the build parts for the startup world approach.
 static const Distance kStartupWorldApproachZBuffer = 100.0 * mm;
 
@@ -262,9 +265,8 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                                 "deg YR=" % QString::number(kToolFrameYR, 'f', 4) % "deg ZR=" %
                                 QString::number(kToolFrameZR, 'f', 4) % "deg");
         }
-        text += commentLine(QString("Initial World Approach Tool Frame Rotation: XR=") %
-                            QString::number(kToolFrameXR, 'f', 4) % "deg YR=" % QString::number(kToolFrameYR, 'f', 4) %
-                            "deg ZR=" % QString::number(kRapidTravelToolFrameZR, 'f', 4) % "deg");
+        text += commentLine("Initial World Approach Tool Frame Rotation: " %
+                            formatToolFrameRotation(toolFrameRotationForMotion(kWorldApproachTravelComment, m_sb)));
         text += commentLine(
             "Initial Approach: TRAFO-off world approach uses cylinder center XY and the greater of "
             "part maximum Z and Cylinder Height plus " %
@@ -970,18 +972,26 @@ ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationF
         return fallback;
     };
 
-    auto helicalToolFrameRotation = [&settingAngleOrDefault](const QString& x_key, const QString& y_key,
-                                                             const QString& z_key) {
-        return ToolFrameRotation {settingAngleOrDefault(x_key, kToolFrameXR),
-                                  settingAngleOrDefault(y_key, kToolFrameYR),
-                                  settingAngleOrDefault(z_key, kToolFrameZR)};
+    const bool helical_motion = isHelicalPathPattern(params);
+    const double helical_tool_start_angle_tool_frame_offset =
+        helical_motion ? settingAngleOrDefault(PS::Helical::kHelicalToolStartAngleOffset, 0.0) *
+                             kHelicalToolStartAngleToolFrameScale
+                       : 0.0;
+
+    auto helicalToolFrameRotation = [&settingAngleOrDefault, helical_tool_start_angle_tool_frame_offset](
+                                        const QString& x_key, const QString& y_key, const QString& z_key) {
+        return ToolFrameRotation {
+            settingAngleOrDefault(x_key, kToolFrameXR) + helical_tool_start_angle_tool_frame_offset,
+            settingAngleOrDefault(y_key, kToolFrameYR) + helical_tool_start_angle_tool_frame_offset,
+            settingAngleOrDefault(z_key, kToolFrameZR)};
     };
 
     if (comment == kWorldApproachTravelComment) {
-        return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kRapidTravelToolFrameZR};
+        return ToolFrameRotation {kToolFrameXR + helical_tool_start_angle_tool_frame_offset,
+                                  kToolFrameYR + helical_tool_start_angle_tool_frame_offset, kRapidTravelToolFrameZR};
     }
 
-    if (!isHelicalPathPattern()) { return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kToolFrameZR}; }
+    if (!helical_motion) { return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kToolFrameZR}; }
 
     if (comment.startsWith("TRAVEL")) {
         return helicalToolFrameRotation(PS::Helical::kHelicalTravelToolFrameXRotation,
@@ -1024,7 +1034,8 @@ ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationF
         }
     }
 
-    return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kToolFrameZR};
+    return ToolFrameRotation {kToolFrameXR + helical_tool_start_angle_tool_frame_offset,
+                              kToolFrameYR + helical_tool_start_angle_tool_frame_offset, kToolFrameZR};
 }
 
 Point ArcSpecialtiesWriter::firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
