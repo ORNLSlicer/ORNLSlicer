@@ -50,6 +50,7 @@ class RightClickMenu : public QMenu {
     QAction* m_switch_to_build_action;
     QAction* m_switch_to_setting_action;
     QAction* m_reset_transformation_action;
+    QAction* m_rename_part_action;
     QAction* m_reload_part_action;
     QAction* m_replace_part_action;
     QAction* m_delete_part_action;

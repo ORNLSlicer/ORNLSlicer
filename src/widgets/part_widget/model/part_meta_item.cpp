@@ -12,6 +12,7 @@
 #include <qtypes.h>
 #include <qvectornd.h>
 
+#include "managers/session_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 #include "utilities/mathutils.h"
@@ -55,6 +56,11 @@ PartMetaItem::PartMetaItem(QSharedPointer<Part> p) {
     std::tie(m_translation, m_rotation, m_scale) = MathUtils::decomposeTransformMatrix(m_transformation);
 
     emit modified(PartMetaUpdateType::kAddUpdate);
+}
+
+void PartMetaItem::renamePart(QString new_name) {
+    CSM->renamePart(m_part, new_name);
+    emit modified(PartMetaUpdateType::kNameUpdate);
 }
 
 void PartMetaItem::replaceInModel(QString filename) {

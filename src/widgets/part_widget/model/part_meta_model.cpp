@@ -340,6 +340,9 @@ void PartMetaModel::itemUpdated(PartMetaItem::PartMetaUpdateType type) {
         case ORNL::PartMetaItem::PartMetaUpdateType::kTransformUpdate:
             emit transformUpdate(sender);
             break;
+        case ORNL::PartMetaItem::PartMetaUpdateType::kNameUpdate:
+            emit nameUpdate(sender);
+            break;
     }
 
     emit modelUpdated(sender);
