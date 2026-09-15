@@ -30,6 +30,7 @@
 #include "managers/settings/settings_manager.h"
 #include "part/part.h"
 #include "utilities/constants.h"
+#include "utilities/dialog_utils.h"
 #include "utilities/enums.h"
 
 namespace ORNL {
@@ -419,23 +420,7 @@ void MainToolbar::enableCorrectOptions() {
 }
 
 QString MainToolbar::promptForName() {
-    bool ok;
-    QString name;
-
-    QString label = "Enter a Name:";
-
-    while (name.isEmpty()) {
-        name = QInputDialog::getText(this, tr("New Mesh Name"), label, QLineEdit::Normal, "", &ok);
-
-        if (!ok) break;
-
-        if (CSM->getPart(name) != nullptr) {
-            label = "Name already in use. Please enter another:";
-            name  = "";
-        }
-    }
-
-    return name;
+    return DialogUtils::promptForName(this, "New Mesh Name");
 }
 
 double MainToolbar::promptForSize(const QString& label_text, const QString& unit_text, const double unit_conversion,
