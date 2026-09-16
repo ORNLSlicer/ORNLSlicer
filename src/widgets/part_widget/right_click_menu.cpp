@@ -133,25 +133,25 @@ void RightClickMenu::setupActions() {
     m_switch_to_build_action      = new QAction("Switch to Build", this);
     m_switch_to_clipper_action    = new QAction("Switch to Clipper", this);
     m_switch_to_setting_action    = new QAction("Switch to Setting", this);
+    m_lock_part_action            = new QAction("Toggle Part Lock(s)", this);
+    m_set_instances_action        = new QAction("Set Number of Instances", this);
     m_reset_transformation_action = new QAction("Reset Transformation", this);
     m_rename_part_action          = new QAction("Rename Part", this);
     m_replace_part_action         = new QAction("Replace Part Model", this);
     m_reload_part_action          = new QAction("Reload Part Model(s)", this);
     m_delete_part_action          = new QAction("Delete Part(s)", this);
-    m_lock_part_action            = new QAction("Toggle Part Lock(s)", this);
-    m_set_instances_action        = new QAction("Set Number of Instances", this);
 
     m_info_action->setIcon(QIcon(":/icons/info.png"));
-    m_switch_to_clipper_action->setIcon(QIcon(":/icons/clip.png"));
     m_switch_to_build_action->setIcon(QIcon(":/icons/print_head.png"));
+    m_switch_to_clipper_action->setIcon(QIcon(":/icons/clip.png"));
     m_switch_to_setting_action->setIcon(QIcon(":/icons/settings_black.png"));
+    m_lock_part_action->setIcon(QIcon(":/icons/lock.png"));
+    m_set_instances_action->setIcon(QIcon(":/icons/copy_black.png"));
     m_reset_transformation_action->setIcon(QIcon(":/icons/restore.png"));
     m_rename_part_action->setIcon(QIcon(":/icons/rename.png"));
     m_replace_part_action->setIcon(QIcon(":/icons/folder_black.png"));
     m_reload_part_action->setIcon(QIcon(":/icons/file_refresh_black.png"));
     m_delete_part_action->setIcon(QIcon(":/icons/delete_black.png"));
-    m_lock_part_action->setIcon(QIcon(":/icons/lock.png"));
-    m_set_instances_action->setIcon(QIcon(":/icons/copy_black.png"));
 
     this->addAction(m_info_action);
     this->addSeparator();
@@ -159,10 +159,10 @@ void RightClickMenu::setupActions() {
     this->addAction(m_switch_to_clipper_action);
     this->addAction(m_switch_to_setting_action);
     this->addSeparator();
-    this->addAction(m_rename_part_action);
     this->addAction(m_lock_part_action);
     this->addAction(m_set_instances_action);
     this->addAction(m_reset_transformation_action);
+    this->addAction(m_rename_part_action);
     this->addAction(m_replace_part_action);
     this->addAction(m_reload_part_action);
     this->addAction(m_delete_part_action);
@@ -199,20 +199,20 @@ void RightClickMenu::setupActions() {
 void RightClickMenu::setupEvents() {
     connect(m_info_action, &QAction::triggered, this, &RightClickMenu::showInfoDialog);
 
-    connect(m_switch_to_clipper_action, &QAction::triggered, this, [this]() {
-        m_switch_to_build_action->setDisabled(false);
-        m_switch_to_setting_action->setDisabled(false);
-        m_switch_to_clipper_action->setDisabled(true);
-
-        for (auto item : m_selected_items) { item->setMeshType(MeshType::kClipping); }
-    });
-
     connect(m_switch_to_build_action, &QAction::triggered, this, [this]() {
         m_switch_to_build_action->setDisabled(true);
         m_switch_to_setting_action->setDisabled(false);
         m_switch_to_clipper_action->setDisabled(false);
 
         for (auto item : m_selected_items) { item->setMeshType(MeshType::kBuild); }
+    });
+
+    connect(m_switch_to_clipper_action, &QAction::triggered, this, [this]() {
+        m_switch_to_build_action->setDisabled(false);
+        m_switch_to_setting_action->setDisabled(false);
+        m_switch_to_clipper_action->setDisabled(true);
+
+        for (auto item : m_selected_items) { item->setMeshType(MeshType::kClipping); }
     });
 
     connect(m_switch_to_setting_action, &QAction::triggered, this, [this]() {
@@ -223,13 +223,29 @@ void RightClickMenu::setupEvents() {
         for (auto item : m_selected_items) { item->setMeshType(MeshType::kSettings); }
     });
 
+    connect(m_lock_part_action, &QAction::triggered, this, [this]() {
+        for (auto item : m_selected_items) { item->graphicsPart()->setLocked(!item->graphicsPart()->locked()); }
+    });
+
+    connect(m_set_instances_action, &QAction::triggered, this, [this]() {
+        if (m_selected_items.size() != 1) return;
+
+        QSharedPointer<PartMetaItem> item = m_selected_items.first();
+        bool accepted                     = false;
+        const int current_count           = item->instanceCount();
+        const int instance_count =
+            QInputDialog::getInt(this, "Set Number of Instances", "Instances:", current_count, 1, 1000, 1, &accepted);
+
+        if (accepted) item->setInstanceCount(instance_count);
+    });
+
     connect(m_reset_transformation_action, &QAction::triggered, this, [this]() {
         for (auto item : m_selected_items) item->resetTransformation();
     });
 
     connect(m_rename_part_action, &QAction::triggered, this, [this]() {
         QSharedPointer<PartMetaItem> item = m_selected_items.first();
-        const QString new_name = DialogUtils::promptForName(this, "Rename Part", item->part()->name());
+        const QString new_name            = DialogUtils::promptForName(this, "Rename Part", item->part()->name());
 
         item->renamePart(new_name);
     });
@@ -266,20 +282,7 @@ void RightClickMenu::setupEvents() {
             item->setWireframe(m_wireframe_action->isChecked());
         }
     });
-    connect(m_lock_part_action, &QAction::triggered, this, [this]() {
-        for (auto item : m_selected_items) { item->graphicsPart()->setLocked(!item->graphicsPart()->locked()); }
-    });
-    connect(m_set_instances_action, &QAction::triggered, this, [this]() {
-        if (m_selected_items.size() != 1) return;
 
-        QSharedPointer<PartMetaItem> item = m_selected_items.first();
-        bool accepted                     = false;
-        const int current_count           = item->instanceCount();
-        const int instance_count =
-            QInputDialog::getInt(this, "Set Number of Instances", "Instances:", current_count, 1, 1000, 1, &accepted);
-
-        if (accepted) item->setInstanceCount(instance_count);
-    });
     connect(m_solidwireframe_action, &QAction::triggered, this, [this]() {
         for (auto item : m_selected_items) {
             // Solid wireframe and wireframe cannot both be active, uncheck the other
@@ -375,37 +378,37 @@ void RightClickMenu::disableActions() {
             }
         }
 
+        m_info_action->setDisabled(m_selected_items.size() != 1);
         m_reset_transformation_action->setDisabled(false);
         m_reload_part_action->setDisabled(false);
         m_delete_part_action->setDisabled(false);
         m_transparency_menu->setDisabled(false);
         m_wireframe_action->setDisabled(false);
         m_solidwireframe_action->setDisabled(false);
-        m_info_action->setDisabled(m_selected_items.size() != 1);
 
         if (m_selected_items.size() == 1) {
-            m_replace_part_action->setDisabled(false);
             m_set_instances_action->setDisabled(false);
             m_rename_part_action->setDisabled(false);
+            m_replace_part_action->setDisabled(false);
         }
         else {
-            m_replace_part_action->setDisabled(true);
             m_set_instances_action->setDisabled(true);
             m_rename_part_action->setDisabled(true);
+            m_replace_part_action->setDisabled(true);
         }
     }
     else {
         // Disable all part options
-        m_switch_to_clipper_action->setDisabled(true);
+        m_info_action->setDisabled(true);
         m_switch_to_build_action->setDisabled(true);
+        m_switch_to_clipper_action->setDisabled(true);
         m_switch_to_setting_action->setDisabled(true);
+        m_set_instances_action->setDisabled(true);
         m_reset_transformation_action->setDisabled(true);
+        m_rename_part_action->setDisabled(true);
         m_replace_part_action->setDisabled(true);
         m_reload_part_action->setDisabled(true);
         m_delete_part_action->setDisabled(true);
-        m_set_instances_action->setDisabled(true);
-        m_rename_part_action->setDisabled(true);
-        m_info_action->setDisabled(true);
         m_transparency_menu->setDisabled(true);
         m_wireframe_action->setDisabled(true);
         m_solidwireframe_action->setDisabled(true);

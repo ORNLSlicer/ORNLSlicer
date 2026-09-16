@@ -46,18 +46,18 @@ class RightClickMenu : public QMenu {
 
     //! \brief actions to display
     QAction* m_info_action;
-    QAction* m_switch_to_clipper_action;
     QAction* m_switch_to_build_action;
+    QAction* m_switch_to_clipper_action;
     QAction* m_switch_to_setting_action;
+    QAction* m_lock_part_action;
+    QAction* m_set_instances_action;
     QAction* m_reset_transformation_action;
     QAction* m_rename_part_action;
-    QAction* m_reload_part_action;
     QAction* m_replace_part_action;
+    QAction* m_reload_part_action;
     QAction* m_delete_part_action;
     QAction* m_wireframe_action;
     QAction* m_solidwireframe_action;
-    QAction* m_lock_part_action;
-    QAction* m_set_instances_action;
 
     //! \brief Menu to hold transparency
     QMenu* m_transparency_menu;
