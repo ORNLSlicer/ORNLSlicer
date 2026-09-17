@@ -137,11 +137,14 @@ settings:
     local: false
   - name: "variable_for_z"
     display: "Use Variable for Z Position"
-    type: "boolean"
-    tooltip: "If selected, a variable, #200, is issued in place of the Z offset. Z motions are output as mathematical operations on the variable."
+    type: "enumeration"
+    tooltip: "If selected, a specified variable is issued in place of the Z offset. Z motions are output as mathematical operations on the variable."
     depends: {"syntax":1}
-    options: []
-    default: false
+    options:
+      - "Disabled"
+      - "#200"
+      - "#201"
+    default: 0
     minor: "Dimensions"
     major: "Printer"
     namespace: "Printer::Dimensions"
