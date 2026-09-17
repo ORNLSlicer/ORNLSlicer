@@ -46,9 +46,10 @@ class PathOrderOptimizer {
 
     /*!
      * @brief Links the next open helical fragment from the selected endpoint.
+     * @param starts_from_generated_end Optional output set true when the selected fragment is reversed.
      * @return Linked helical path with a travel prepended.
      */
-    Path linkNextHelicalPath();
+    Path linkNextHelicalPath(bool* starts_from_generated_end = nullptr);
 
     //! \brief Set paths to evaluate
     //! \param paths: Copy of paths to evaluate

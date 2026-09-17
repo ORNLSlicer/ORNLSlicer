@@ -13,6 +13,7 @@
 #include "geometry/segment_base.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/path_order_optimizer.h"
+#include "slicing/helical_tool_start_angle.h"
 #include "step/layer/layer.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -48,6 +49,31 @@ QSharedPointer<SettingsBase> firstPrintSettings(const Path& path, const QSharedP
     if (print_segment != nullptr) { return print_segment->getSb(); }
 
     return fallback;
+}
+
+//! @brief Returns the cylindrical path-order mode supported by direct cylindrical layers.
+PathOrderOptimization resolvedCylindricalPathOrder(const QSharedPointer<SettingsBase>& settings) {
+    const int path_order = settings->setting<int>(PS::Optimizations::kCylindricalPathOrder);
+    return path_order == static_cast<int>(PathOrderOptimization::kNextFarthest) ? PathOrderOptimization::kNextFarthest
+                                                                                : PathOrderOptimization::kNextClosest;
+}
+
+//! @brief Applies the helical tool offset sign that matches the ordered print direction.
+void applyHelicalToolOffsetForOrderedDirection(Path& path, const QSharedPointer<SettingsBase>& layer_settings,
+                                               bool starts_from_generated_end) {
+    const HelicalPathZClipRounding z_clip_rounding =
+        static_cast<HelicalPathZClipRounding>(layer_settings->setting<int>(PS::Helical::kHelicalPathZClipRounding));
+    const PathOrderOptimization path_order = resolvedCylindricalPathOrder(layer_settings);
+    const Angle configured_offset          = layer_settings->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset);
+    const Angle effective_offset = HelicalToolStartAngle::effectiveOffset(configured_offset, starts_from_generated_end,
+                                                                          z_clip_rounding, path_order);
+
+    layer_settings->setSetting(PS::Helical::kHelicalToolStartAngleOffset, effective_offset);
+    for (const QSharedPointer<SegmentBase>& segment : path) {
+        if (segment != nullptr && segment->getSb() != nullptr) {
+            segment->getSb()->setSetting(PS::Helical::kHelicalToolStartAngleOffset, effective_offset);
+        }
+    }
 }
 
 //! @brief Recomputes region-start flags after optimizer ordering or reversal.
@@ -184,10 +210,15 @@ void CylindricalLayer::calculateModifiers(Point& currentLocation) {
     path_optimizer.setPathsToEvaluate(print_paths);
 
     while (path_optimizer.getCurrentPathCount() > 0) {
-        Path next_path = m_path_pattern == CylindricalPathPattern::kHelical ? path_optimizer.linkNextHelicalPath()
-                                                                            : path_optimizer.linkNextRadialPath();
+        bool starts_from_generated_end = false;
+        Path next_path                 = m_path_pattern == CylindricalPathPattern::kHelical
+                                             ? path_optimizer.linkNextHelicalPath(&starts_from_generated_end)
+                                             : path_optimizer.linkNextRadialPath();
         if (next_path.size() > 0) {
             restoreCylindricalPathSettings(next_path, m_sb);
+            if (m_path_pattern == CylindricalPathPattern::kHelical) {
+                applyHelicalToolOffsetForOrderedDirection(next_path, m_sb, starts_from_generated_end);
+            }
             ordered_paths.push_back(next_path);
         }
     }

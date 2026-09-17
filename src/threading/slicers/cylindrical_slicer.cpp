@@ -405,13 +405,6 @@ int estimateInclusiveCount(Distance start, Distance end, Distance step) {
     return std::max(1, static_cast<int>(std::floor((end() - start()) / step())) + 1);
 }
 
-//! @brief Returns the cylindrical path-order mode supported by direct cylindrical layers.
-PathOrderOptimization resolvedCylindricalPathOrder(const QSharedPointer<SettingsBase>& settings) {
-    const int path_order = settings->setting<int>(PS::Optimizations::kCylindricalPathOrder);
-    return path_order == static_cast<int>(PathOrderOptimization::kNextFarthest) ? PathOrderOptimization::kNextFarthest
-                                                                                : PathOrderOptimization::kNextClosest;
-}
-
 //! @brief Returns the upper Z limit for generated cylindrical candidates.
 Distance cylindricalTopZ(const QSharedPointer<SettingsBase>& part_sb, Distance base_z, Distance mesh_top_z) {
     const Distance cylinder_height = part_sb->setting<Distance>(PS::Slicing::kCylinderHeight);
@@ -745,7 +738,6 @@ bool CylindricalSlicer::generateHelicalLayers(const QSharedPointer<Part>& part,
     const Distance profile_min_pitch = positiveOrFallback(profile.minPitch(), bead_width);
     const Distance section_spacing =
         profile_min_pitch / 2.0 > kMinSectionSpacing ? profile_min_pitch / 2.0 : kMinSectionSpacing;
-    const PathOrderOptimization path_order = resolvedCylindricalPathOrder(part_sb);
     QVector<Distance> section_zs;
     section_zs.push_back(start_z);
     if (kMinSectionSpacing < section_spacing && start_z + kMinSectionSpacing < profile_clip_top_z) {
@@ -801,11 +793,6 @@ bool CylindricalSlicer::generateHelicalLayers(const QSharedPointer<Part>& part,
         QSharedPointer<CylindricalLayer> helical_layer = QSharedPointer<CylindricalLayer>::create(
             helical_layer_number + 1, layer_settings, CylindricalPathPattern::kHelical);
 
-        const Angle configured_tool_start_angle_offset =
-            layer_settings->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset);
-        const Angle helical_tool_start_angle_offset = HelicalToolStartAngle::effectiveOffset(
-            configured_tool_start_angle_offset, helical_layer_number, z_clip_rounding, path_order);
-        layer_settings->setSetting(PS::Helical::kHelicalToolStartAngleOffset, helical_tool_start_angle_offset);
         const Angle helical_start_angle                        = HelicalToolStartAngle::geometricStartAngle();
         const QVector<HelicalRegionPolylineRun> available_runs = createHelicalRegionRuns(
             profile, center, radius, handedness, helical_start_angle, 0.0, available_revolutions);
