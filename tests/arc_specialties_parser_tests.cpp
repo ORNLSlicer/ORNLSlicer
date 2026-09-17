@@ -200,6 +200,11 @@ QSharedPointer<ORNL::SettingsBase> helicalWriterSettings(bool support_arcs) {
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kCylindrical));
     settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern,
                          static_cast<int>(ORNL::CylindricalPathPattern::kHelical));
+    settings->setSetting(ORNL::PS::Optimizations::kCylindricalPathOrder,
+                         static_cast<int>(ORNL::PathOrderOptimization::kNextClosest));
+    settings->setSetting(ORNL::PS::Helical::kHelicalPathZClipRounding,
+                         static_cast<int>(ORNL::HelicalPathZClipRounding::kExactIntersection));
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
     settings->setSetting(ORNL::PRS::MachineSetup::kSupportG3, support_arcs);
     settings->setSetting(ORNL::PRS::MachineSetup::kG2G3CenterPointInterpretation, 1);
     settings->setSetting(ORNL::PRS::MachineSetup::kAxisA, 0.0 * ORNL::degree);
@@ -369,6 +374,9 @@ bool writesHelicalOptStopModeFromPostOrderingRotationDirection() {
     QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
     settings->setSetting(ORNL::PS::Optimizations::kCylindricalPathOrder,
                          static_cast<int>(ORNL::PathOrderOptimization::kNextClosest));
+    settings->setSetting(ORNL::PS::Helical::kHelicalPathZClipRounding,
+                         static_cast<int>(ORNL::HelicalPathZClipRounding::kCompleteRevolution));
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
     settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
     settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 600.0 * ORNL::mm / ORNL::minute);
     settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
@@ -408,14 +416,16 @@ bool writesHelicalOptStopModeFromPostOrderingRotationDirection() {
     const QString positive_layer = write_ordered_layer(0, ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm));
     const QString negative_layer = write_ordered_layer(1, ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm));
 
-    const int positive_layer_marker = positive_layer.indexOf(";BEGINNING LAYER: 1");
-    const int positive_opt_stop     = positive_layer.indexOf("V.E.OptStopMode = 1\n");
-    const int positive_schedule     = positive_layer.indexOf("G80 [1] ;Perimeter Schedule\n");
-    const int positive_print        = positive_layer.indexOf(";HELICAL PERIMETER\n");
-    const int negative_layer_marker = negative_layer.indexOf(";BEGINNING LAYER: 2");
-    const int negative_opt_stop     = negative_layer.indexOf("V.E.OptStopMode = 2\n");
-    const int negative_schedule     = negative_layer.indexOf("G80 [1] ;Perimeter Schedule\n");
-    const int negative_print        = negative_layer.indexOf(";HELICAL PERIMETER\n");
+    const int positive_layer_marker   = positive_layer.indexOf(";BEGINNING LAYER: 1");
+    const int positive_opt_stop       = positive_layer.indexOf("V.E.OptStopMode = 1\n");
+    const int positive_schedule       = positive_layer.indexOf("G80 [1] ;Perimeter Schedule\n");
+    const int positive_print          = positive_layer.indexOf(";HELICAL PERIMETER\n");
+    const int negative_layer_marker   = negative_layer.indexOf(";BEGINNING LAYER: 2");
+    const int negative_opt_stop       = negative_layer.indexOf("V.E.OptStopMode = 2\n");
+    const int negative_schedule       = negative_layer.indexOf("G80 [1] ;Perimeter Schedule\n");
+    const int negative_print          = negative_layer.indexOf(";HELICAL PERIMETER\n");
+    const QString positive_print_line = lineContaining(positive_layer, ";HELICAL PERIMETER");
+    const QString negative_print_line = lineContaining(negative_layer, ";HELICAL PERIMETER");
 
     return positive_layer.contains(";BEGINNING LAYER: 1\nV.E.OptStopMode = 1\n") &&
            negative_layer.contains(";BEGINNING LAYER: 2\nV.E.OptStopMode = 2\n") && positive_layer_marker >= 0 &&
@@ -423,7 +433,8 @@ bool writesHelicalOptStopModeFromPostOrderingRotationDirection() {
            positive_print > positive_schedule && negative_layer_marker >= 0 &&
            negative_opt_stop > negative_layer_marker && negative_schedule > negative_opt_stop &&
            negative_print > negative_schedule && !positive_layer.contains("V.E.OptStopMode = 2") &&
-           !negative_layer.contains("V.E.OptStopMode = 1");
+           !negative_layer.contains("V.E.OptStopMode = 1") && positive_print_line.contains("XR=174.0000 YR=-6.0000") &&
+           negative_print_line.contains("XR=186.0000 YR=6.0000");
 }
 
 void setHelicalToolFrameSettings(const QSharedPointer<ORNL::SettingsBase>& settings) {

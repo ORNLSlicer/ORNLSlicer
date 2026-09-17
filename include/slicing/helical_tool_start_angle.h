@@ -7,13 +7,13 @@ namespace ORNL::HelicalToolStartAngle {
 /*!
  * @brief Returns the signed helical tool start-angle offset for one generated radius pass.
  * @param configured_tool_offset User-configured tool/CP offset at top dead center.
- * @param radius_pass_index Zero-based generated helical radius pass index.
+ * @param starts_from_generated_end Whether the ordered path prints from the generated path end.
  * @param z_clip_rounding User-selected helical Z clip rounding.
  * @param path_order Resolved cylindrical path order.
- * @return Configured or direction-mirrored offset for this radius pass.
+ * @return Configured or direction-mirrored offset for this ordered path.
  */
-Angle effectiveOffset(Angle configured_tool_offset, int radius_pass_index, HelicalPathZClipRounding z_clip_rounding,
-                      PathOrderOptimization path_order);
+Angle effectiveOffset(Angle configured_tool_offset, bool starts_from_generated_end,
+                      HelicalPathZClipRounding z_clip_rounding, PathOrderOptimization path_order);
 
 /*!
  * @brief Returns the fixed helical geometry start angle.

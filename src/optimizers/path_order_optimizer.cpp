@@ -331,13 +331,15 @@ Path PathOrderOptimizer::linkNextRadialPath() {
     return new_path;
 }
 
-Path PathOrderOptimizer::linkNextHelicalPath() {
+Path PathOrderOptimizer::linkNextHelicalPath(bool* starts_from_generated_end) {
     Path new_path;
+    if (starts_from_generated_end != nullptr) { *starts_from_generated_end = false; }
     if (m_paths.isEmpty()) { return new_path; }
 
     OpenPathSelection location = helicalOpenPath();
     const int index            = location.path_index;
     if (index < 0 || index >= m_paths.size()) return new_path;
+    if (starts_from_generated_end != nullptr) { *starts_from_generated_end = !location.start_from_front; }
 
     new_path.setCCW(m_paths[index].getCCW());
 
