@@ -57,6 +57,9 @@ namespace {
 constexpr float kMinimumLayerSettingsRangeThickness = 0.01f;
 constexpr float kMinimumSlicingCylinderHeight       = 0.01f;
 constexpr float kMeasurementMarkerRadius            = 0.025f;
+constexpr float kPartLabelHorizontalPadding         = 5.0f;
+constexpr float kPartLabelVerticalPadding           = 3.0f;
+constexpr float kPartLabelCornerRadius              = 2.0f;
 
 QString asciiDistanceUnitText(QString unit_text) {
     unit_text.replace(Constants::Units::kMicron, "um");
@@ -121,9 +124,11 @@ void PartView::paintOverlay(QPainter& painter) {
     const QMatrix4x4 projection = this->projectionMatrix();
     const QRect viewport        = painter.viewport();
 
-    const QString theme = PreferencesManager::getInstance()->getThemeText();
-    const QColor color  = theme == Constants::UI::Themes::kDarkMode ? Qt::darkGreen : Qt::black;
-    painter.setPen(color);
+    const QVector<double> background_color = PreferencesManager::getInstance()->getTheme().getBgColor();
+    const bool dark_background             = background_color[0] + background_color[1] + background_color[2] < 1.5;
+    const QColor label_background          = dark_background ? QColor(0, 0, 0, 190) : QColor(255, 255, 255, 220);
+    const QColor label_border              = dark_background ? QColor(255, 255, 255, 80) : QColor(0, 0, 0, 80);
+    const QColor label_text                = dark_background ? Qt::white : Qt::black;
 
     for (const auto& gop : m_part_objects) {
         if (gop->hidden()) { continue; }
@@ -139,8 +144,16 @@ void PartView::paintOverlay(QPainter& painter) {
 
         const QString name      = gop->name();
         const QRect text_bounds = metrics.boundingRect(name);
-        const QPointF text_origin(projected.x() - text_bounds.width() * 0.5f, screen_y);
+        const QRectF label_rect(projected.x() - text_bounds.width() * 0.5f - kPartLabelHorizontalPadding,
+                                screen_y - metrics.ascent() - kPartLabelVerticalPadding,
+                                text_bounds.width() + (kPartLabelHorizontalPadding * 2.0f),
+                                metrics.height() + (kPartLabelVerticalPadding * 2.0f));
+        const QPointF text_origin(label_rect.left() + kPartLabelHorizontalPadding, screen_y);
 
+        painter.setPen(label_border);
+        painter.setBrush(label_background);
+        painter.drawRoundedRect(label_rect, kPartLabelCornerRadius, kPartLabelCornerRadius);
+        painter.setPen(label_text);
         painter.drawText(text_origin, name);
     }
 }
