@@ -47,6 +47,7 @@
 #include "geometry/point.h"
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "slicing/buffered_slicer.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -1350,105 +1351,11 @@ void LayerBar::updateLayers() {
         return;
     }
 
-    // Retrieve the slice plane normal.
-    QVector3D slicing_vector = {GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX),
-                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY),
-                                GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ)};
-    slicing_vector.normalize();
+    QSharedPointer<SettingsBase> part_settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+    part_settings->populate(m_part->getSb());
 
-    // Retrieve the part min and max in the slicing plane normal direction
-    auto [part_min, part_max] = m_part->rootMesh()->getAxisExtrema(slicing_vector);
-
-    // Create the slicing plane
-    Plane slicing_plane(part_min, slicing_vector);
-
-    Distance global_layer_height;
-    if (m_part->getSb()->contains(PS::Layer::kLayerHeight)) {
-        global_layer_height = m_part->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-    }
-    else { global_layer_height = GSM->getGlobal()->setting<Distance>(PS::Layer::kLayerHeight); }
-
-    int layer_count = 0;
-    // if valid config ( normal and axis not perpendicular)
-    if (global_layer_height > 0) {
-        Point part_min, part_max;
-        std::tie(part_min, part_max) = m_part->rootMesh()->getAxisExtrema(slicing_plane.normal());
-
-        // move slicing plane to start at min on the part
-        slicing_plane.point(part_min);
-
-        Distance part_height = slicing_plane.distanceToPoint(part_max);
-
-        Point g_direction = part_min + (slicing_vector * global_layer_height());
-        global_layer_height =
-            slicing_plane.distanceToPoint(g_direction);  // height in direction normal to slicing plane
-
-        // count the layers
-        Distance current_height = 0;
-        layer_count             = 0;
-        auto ranges             = m_part->getSettingsRanges();
-        bool is_in_range        = false;
-        uint range_id;
-
-        while (current_height < part_height) {
-            // determine if layer is in a range, and if so, which range
-            is_in_range = false;
-            for (auto i = ranges.begin(), end = ranges.end(); i != end; ++i) {
-                auto range = i.value();
-                if (range->includesIndex(layer_count)) {
-                    if (!is_in_range) {
-                        // this is the first range we've found that contains the layer
-                        is_in_range = true;
-                        range_id    = i.key();
-                    }
-                    else {
-                        // The current layer is in multiple ranges
-                        // Precedenc: Use the narrowest range that this layer belongs too
-                        //    - single layer range is preferred to multi-layer range
-                        //    - the multi-layer range with the highest low-index is applied
-                        //    - for multi-layer ranges with same low-index, the range with
-                        //      the lower high index will be selected
-                        auto old_range = ranges[range_id];
-                        if (range->isSingle() ||                // new range is single, top priority
-                            range->low() > old_range->low() ||  // new range has higher low than old
-                            old_range->low() == range->low() &&
-                                range->high() < old_range->high())  // new range is narrower
-                        {
-                            range_id = i.key();
-                        }
-                        // otherwise the old range has priority, no need to change anything
-                    }
-                }
-            }
-
-            // If current layer is in range that modifies the layer_height, use range height otherwise use global/part
-            // height
-            if (is_in_range && ranges[range_id]->getSb()->contains(PS::Layer::kLayerHeight)) {
-                Distance range_height = ranges[range_id]->getSb()->setting<Distance>(PS::Layer::kLayerHeight);
-                Point p               = slicing_plane.point() + (slicing_vector * range_height());
-                range_height = slicing_plane.distanceToPoint(p);  // height in direction normal to slicing plane
-
-                current_height += range_height;
-            }
-            else { current_height += global_layer_height; }
-
-            ++layer_count;
-        }
-
-        // if the part is not an even division of the layer height, it is possible to over count
-        // Subtract the last layer if its cross-section (taken at the middle of the layer) is above the part height
-        Distance last_layer_height;
-        if (is_in_range && ranges[range_id]->getSb()->contains(PS::Layer::kLayerHeight)) {
-            Point p = slicing_plane.point() +
-                      (slicing_vector * ranges[range_id]->getSb()->setting<Distance>(PS::Layer::kLayerHeight)());
-            last_layer_height = slicing_plane.distanceToPoint(p);
-        }
-        else { last_layer_height = global_layer_height; }
-
-        if ((current_height - part_height) >= (last_layer_height / 2.0)) { --layer_count; }
-        m_layers = layer_count;
-    }
-    else { m_layers = 0; }
+    int layer_count = BufferedSlicer::computeSliceCount(m_part->rootMesh(), part_settings, m_part->getSettingsRanges());
+    m_layers        = layer_count;
     // if the number of layers decreased, remove any dots from
     // layers that don't exist anymore
     if (layer_count < m_position.size()) {
