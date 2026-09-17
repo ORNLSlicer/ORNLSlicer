@@ -42,9 +42,22 @@ int main(int argc, char* argv[]) {
             "Did not roll v11 helical_start_angle_offset setting forward."))
         return EXIT_FAILURE;
 
-    const double expected_version = 12.0;
+    const std::string z_key = ORNL::PRS::Dimensions::kUseVariableForZ.toStdString();
+    fifojson v12_settings;
+    v12_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion] = 12.0;
+    v12_settings[ORNL::Constants::SettingFileStrings::kSettings] = fifojson::array({fifojson::object({{z_key, true}})});
+    double v12_version                                           = 12.0;
+    ORNL::SettingsVersionControl::rollSettingsForward(v12_version, v12_settings);
+
+    const fifojson v12_group = v12_settings[ORNL::Constants::SettingFileStrings::kSettings].at(0);
+    if (!ORNL::Testing::expect(v12_group.contains(z_key) && v12_group.at(z_key).is_number_integer() &&
+                                   v12_group.at(z_key).get<int>() == static_cast<int>(ORNL::VariableZ::kVar200),
+                               "Did not roll boolean variable_for_z forward to enumeration index kVar200."))
+        return EXIT_FAILURE;
+
+    const double expected_version = 13.0;
     if (!ORNL::Testing::expect(
-            v10_version == expected_version && v11_version == expected_version,
+            v10_version == expected_version && v11_version == expected_version && v12_version == expected_version,
             "Did not roll setting files forward."))
         return EXIT_FAILURE;
 

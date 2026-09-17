@@ -425,9 +425,11 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
             if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
                 rv += m_G1 % m_f %
                       QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                      m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
+                      m_z % "[" % zVariableString() % "]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
             }
-            else { rv += m_G0 % m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT"); }
+            else {
+                rv += m_G0 % m_z % "[" % zVariableString() % "]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
+            }
         }
         else {
             if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
@@ -455,9 +457,11 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
             if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
                 rv += m_G1 % m_f %
                       QString::number(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed).to(m_meta.m_velocity_unit)) %
-                      m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
+                      m_z % "[" % zVariableString() % "]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
             }
-            else { rv += m_G0 % m_z % "[#200]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT"); }
+            else {
+                rv += m_G0 % m_z % "[" % zVariableString() % "]" % commentSpaceLine("TRAVEL SET PRINTING Z HEIGHT");
+            }
         }
         else {
             if (m_sb->setting<int>(PRS::MachineSetup::kForceG1)) {
@@ -911,8 +915,8 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
 
         if (qAbs(target_z - m_last_z) > 10) {
             if (m_sb->setting<int>(PRS::Dimensions::kUseVariableForZ)) {
-                rv += m_z % "[#200 + " % QString::number(Distance(destination.z()).to(m_meta.m_distance_unit), 'f', 4) %
-                      "]";
+                rv += m_z % "[" % zVariableString() % " + " %
+                      QString::number(Distance(destination.z()).to(m_meta.m_distance_unit), 'f', 4) % "]";
             }
             else { rv += m_z % QString::number(Distance(target_z).to(m_meta.m_distance_unit), 'f', 4); }
             m_current_z = target_z;
@@ -951,7 +955,7 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
                 Distance target_z = destination.z() + z_offset + m_current_w;
                 if (qAbs(target_z - m_last_z) > 10) {
                     if (m_sb->setting<int>(PRS::Dimensions::kUseVariableForZ)) {
-                        rv += m_z % "[#200 + " %
+                        rv += m_z % "[" % zVariableString() % " + " %
                               QString::number(Distance(destination.z() + m_current_w).to(m_meta.m_distance_unit), 'f',
                                               4) %
                               "]";
@@ -968,7 +972,7 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
                 if (target_w < m_sb->setting<Distance>(PRS::Dimensions::kWMin)) {
                     Distance target_z = destination.z() + z_offset + m_current_w;
                     if (m_sb->setting<int>(PRS::Dimensions::kUseVariableForZ)) {
-                        rv += m_z % "[#200 + " %
+                        rv += m_z % "[" % zVariableString() % " + " %
                               QString::number(Distance(destination.z() + m_current_w).to(m_meta.m_distance_unit), 'f',
                                               4) %
                               "]";
@@ -999,7 +1003,7 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
             Distance target_z = destination.z() + z_offset + m_current_w;
             if (qAbs(target_z - m_last_z) > 10) {
                 if (m_sb->setting<int>(PRS::Dimensions::kUseVariableForZ)) {
-                    rv += m_z % "[#200 + " %
+                    rv += m_z % "[" % zVariableString() % " + " %
                           QString::number(Distance(destination.z() + m_current_w).to(m_meta.m_distance_unit), 'f', 4) %
                           "]";
                 }
@@ -1011,5 +1015,17 @@ QString CincinnatiWriter::getZWValue(const Point& destination) {
         }
     }
     return rv;
+}
+
+QString CincinnatiWriter::zVariableString() const {
+    switch (static_cast<VariableZ>(m_sb->setting<int>(PRS::Dimensions::kUseVariableForZ))) {
+        case VariableZ::kVar201:
+            return "#201";
+        case VariableZ::kVar200:
+            return "#200";
+        case VariableZ::kNone:
+        default:
+            return "";
+    }
 }
 }  // namespace ORNL

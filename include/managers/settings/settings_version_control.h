@@ -84,5 +84,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_12_0To12_0(double& version, fifojson& settings);
+
+    //! \brief Rolls settings after converting variable for z position to an enumeration for version 13.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_13_0To13_0(double& version, fifojson& settings);
 };
 }  // namespace ORNL

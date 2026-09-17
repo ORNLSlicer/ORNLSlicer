@@ -753,6 +753,8 @@ inline Density toDensityValue(PrintMaterial material) {
     }
 }
 
+enum class VariableZ : uint8_t { kNone = 0, kVar200 = 1, kVar201 = 2 };
+
 enum class LayerChange : uint8_t { kZ_only = 0, kW_only = 1, kBoth_Z_and_W = 2 };
 
 enum class SeamSelection : uint8_t { kRandom, kOptimized, kRotating };

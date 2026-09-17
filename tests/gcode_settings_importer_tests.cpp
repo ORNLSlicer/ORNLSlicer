@@ -8,6 +8,7 @@
 #include "gcode/gcode_settings_importer.h"
 #include "test_utils.h"
 #include "utilities/constants.h"
+#include "utilities/enums.h"
 
 namespace {
 constexpr float kTolerance = 1.0e-6f;
@@ -169,32 +170,52 @@ int main(int argc, char* argv[]) {
                                "Migrated legacy footer keys were still reported as unknown."))
         return EXIT_FAILURE;
 
-    const QString intermediate_path = temp_dir.path() + "/intermediate.gcode";
-    const QString intermediate_gcode =
+    const QString v11_path = temp_dir.path() + "/v11.gcode";
+    const QString v11_gcode =
         ";Settings Footer\n"
         ";layer_height 200\n"
         ";default_width 400\n"
         ";helical_start_angle_offset -0.20943951\n";
-    if (!ORNL::Testing::expect(writeFile(intermediate_path, intermediate_gcode),
-                               "Could not write intermediate key fixture."))
+    if (!ORNL::Testing::expect(writeFile(v11_path, v11_gcode), "Could not write v11 key fixture.")) return EXIT_FAILURE;
+
+    const ORNL::GcodeSettingsImporter::ImportResult v11_result =
+        ORNL::GcodeSettingsImporter::importFile(v11_path, true);
+
+    if (!ORNL::Testing::expect(v11_result.errors.isEmpty(), qPrintable(v11_result.errors.join("\n"))))
         return EXIT_FAILURE;
 
-    const ORNL::GcodeSettingsImporter::ImportResult intermediate_result =
-        ORNL::GcodeSettingsImporter::importFile(intermediate_path, true);
-
-    if (!ORNL::Testing::expect(intermediate_result.errors.isEmpty(), qPrintable(intermediate_result.errors.join("\n"))))
-        return EXIT_FAILURE;
-
-    const auto intermediate_settings =
-        intermediate_result.settings_file[ORNL::Constants::SettingFileStrings::kSettings].at(0);
+    const auto v11_settings = v11_result.settings_file[ORNL::Constants::SettingFileStrings::kSettings].at(0);
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(
-                intermediate_settings.at(ORNL::PS::Helical::kHelicalToolStartAngleOffset.toStdString()).get<double>(),
+                v11_settings.at(ORNL::PS::Helical::kHelicalToolStartAngleOffset.toStdString()).get<double>(),
                 (-12.0 * ORNL::degree)(), kTolerance),
-            "Did not migrate intermediate helical_start_angle_offset footer key directly."))
+            "Did not migrate v11 helical_start_angle_offset footer key directly."))
         return EXIT_FAILURE;
-    if (!ORNL::Testing::expect(intermediate_result.unknown_keys.isEmpty(),
-                               "Migrated intermediate footer key was still reported as unknown."))
+    if (!ORNL::Testing::expect(v11_result.unknown_keys.isEmpty(),
+                               "Migrated v11 footer key was still reported as unknown."))
+        return EXIT_FAILURE;
+
+    const QString v12_path = temp_dir.path() + "/v12.gcode";
+    const QString v12_gcode =
+        ";Settings Footer\n"
+        ";layer_height 200\n"
+        ";default_width 400\n"
+        ";variable_for_z true\n";
+    if (!ORNL::Testing::expect(writeFile(v12_path, v12_gcode), "Could not write v12 key fixture.")) return EXIT_FAILURE;
+
+    const ORNL::GcodeSettingsImporter::ImportResult v12_result =
+        ORNL::GcodeSettingsImporter::importFile(v12_path, true);
+
+    if (!ORNL::Testing::expect(v12_result.errors.isEmpty(), qPrintable(v12_result.errors.join("\n"))))
+        return EXIT_FAILURE;
+
+    const auto v12_settings = v12_result.settings_file[ORNL::Constants::SettingFileStrings::kSettings].at(0);
+    if (!ORNL::Testing::expect(v12_settings.at(ORNL::PRS::Dimensions::kUseVariableForZ.toStdString()).get<int>() ==
+                                   static_cast<int>(ORNL::VariableZ::kVar200),
+                               "Did not import v12 boolean variable_for_z true as enum index kVar200."))
+        return EXIT_FAILURE;
+    if (!ORNL::Testing::expect(v12_result.unknown_keys.isEmpty(),
+                               "Migrated v12 footer key was still reported as unknown."))
         return EXIT_FAILURE;
 
     const QString cancel_path = temp_dir.path() + "/cancel.gcode";
