@@ -4,6 +4,7 @@
 #include <QRegularExpression>
 #include <array>
 #include <cmath>
+#include <cstdlib>
 #include <list>
 #include <string>
 #include <utility>
@@ -222,15 +223,25 @@ void renameSettingKey(fifojson& settings_group, const QString& old_key, const QS
     if (should_insert_new_key) settings_group[new_key_string] = old_value;
 }
 
+bool stringFromSettingValue(const fifojson& value, QString& result) {
+    if (value.is_string()) {
+        result = QString::fromStdString(value.get<std::string>());
+        return true;
+    }
+
+    return false;
+}
+
 bool numberFromSettingValue(const fifojson& value, double& result) {
     if (value.is_number()) {
         result = value.get<double>();
         return true;
     }
 
-    if (value.is_string()) {
+    QString str;
+    if (stringFromSettingValue(value, str)) {
         bool valid = false;
-        result     = QString::fromStdString(value.get<std::string>()).toDouble(&valid);
+        result     = str.toDouble(&valid);
         return valid;
     }
 
@@ -315,13 +326,48 @@ void migrateHelicalToolStartAngleOffset(fifojson& settings_group) {
     renameHelicalStartAngleOffsetToToolOffset(settings_group);
     renameHelicalPathStartAngleToToolOffset(settings_group);
 }
+
+bool boolFromSettingValue(const fifojson& value, bool& result) {
+    if (value.is_boolean()) {
+        result = value.get<bool>();
+        return true;
+    }
+
+    QString str;
+    if (stringFromSettingValue(value, str)) {
+        if (str == "true") {
+            result = true;
+            return true;
+        }
+        if (str == "false") {
+            result = false;
+            return true;
+        }
+    }
+
+    return false;
+}
+
+void migrateBooleanToInt(fifojson& settings_group, const QString& setting_key, int true_value = 1,
+                         int false_value = 0) {
+    if (!settings_group.is_object()) return;
+
+    auto setting = settings_group.find(setting_key.toStdString());
+    if (setting == settings_group.end()) return;
+
+    bool bool_val = false;
+    if (!boolFromSettingValue(setting.value(), bool_val)) return;
+
+    const int target_value = bool_val ? true_value : false_value;
+    if (setting->is_string()) { setting.value() = std::to_string(target_value); }
+    else { setting.value() = target_value; }
+}
 }  // namespace
 
 namespace ORNL {
 void SettingsVersionControl::rollSettingsForward(double& version, fifojson& settings) {
     if (version < 1) pre_1_0To1_0(version, settings);
-    if (version < 2)  // all versions converted to Version 2.0
-        pre_2_0To2_0(version, settings);
+    if (version < 2) pre_2_0To2_0(version, settings);
     if (version < 3) pre_3_0To3_0(version, settings);
     if (version < 4) pre_4_0To4_0(version, settings);
     if (version < 5) pre_5_0To5_0(version, settings);
@@ -332,6 +378,7 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
     if (version < 10) pre_10_0To10_0(version, settings);
     if (version < 11) pre_11_0To11_0(version, settings);
     if (version < 12) pre_12_0To12_0(version, settings);
+    if (version < 13) pre_13_0To13_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -350,6 +397,7 @@ void SettingsVersionControl::formatSettings(double version, fifojson& settings) 
 void SettingsVersionControl::migrateLegacySettingKeys(fifojson& settings_group) {
     migrateSlicingSettingKeys(settings_group);
     migrateHelicalToolStartAngleOffset(settings_group);
+    migrateBooleanToInt(settings_group, Constants::PrinterSettings::Dimensions::kUseVariableForZ);
 }
 
 void SettingsVersionControl::pre_1_0To1_0(double& version, fifojson& settings) {
@@ -573,6 +621,22 @@ void SettingsVersionControl::pre_12_0To12_0(double& version, fifojson& settings)
     }
 
     version  = 12.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_13_0To13_0(double& version, fifojson& settings) {
+    QString dt          = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion]      = 13.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value())
+            migrateBooleanToInt(settings_group, Constants::PrinterSettings::Dimensions::kUseVariableForZ);
+    }
+
+    version  = 13.0;
     settings = new_format;
 }
 }  // namespace ORNL
