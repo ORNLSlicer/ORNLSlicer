@@ -35,13 +35,17 @@ class PartMetaItem : public QObject, public QEnableSharedFromThis<PartMetaItem> 
         kParentingUpdate,
         kSelectionUpdate,
         kVisualUpdate,
-        kTransformUpdate
+        kTransformUpdate,
+        kNameUpdate
     };
 
    public:
     //! \brief Constructor.
     //! \param p: Part to creat from.
     PartMetaItem(QSharedPointer<Part> p);
+
+    //! \brief Renames the part.
+    void renamePart(QString new_name);
 
     void replaceInModel(QString filename);
 

@@ -57,6 +57,11 @@ PartMetaItem::PartMetaItem(QSharedPointer<Part> p) {
     emit modified(PartMetaUpdateType::kAddUpdate);
 }
 
+void PartMetaItem::renamePart(QString new_name) {
+    m_part->setName(new_name);
+    emit modified(PartMetaUpdateType::kNameUpdate);
+}
+
 void PartMetaItem::replaceInModel(QString filename) {
     m_model->replaceItem(this->sharedFromThis(), filename);
 }
