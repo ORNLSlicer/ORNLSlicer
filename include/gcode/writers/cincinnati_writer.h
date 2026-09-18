@@ -107,6 +107,9 @@ class CincinnatiWriter : public WriterBase {
     //! \return a gcode string that contains the correct move
     QString getZWValue(const Point& destination);
 
+    //! \brief returns the variable name string based on the variable Z setting
+    QString zVariableString() const;
+
     //! \brief State variables
     AngularVelocity m_current_rpm;
     int m_current_recipe;

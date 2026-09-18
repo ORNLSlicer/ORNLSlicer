@@ -2,8 +2,8 @@
     "header": {
         "created_by": "ORNLSlicer",
         "created_on": "Mon Aug 10 13:10:48 2026",
-        "last_modified": "Mon Aug 10 13:10:48 2026",
-        "version": 12.0,
+        "last_modified": "Fri Sep 18 15:41:42 2026",
+        "version": 13.0,
         "lock": "true"
     },
     "settings": [
@@ -41,7 +41,7 @@
             "x_offset": 0,
             "y_offset": 0,
             "z_offset": 0,
-            "variable_for_z": false,
+            "variable_for_z": 0,
             "enable_w_axis": false,
             "minimum_w": 0.0,
             "maximum_w": 0.0,
