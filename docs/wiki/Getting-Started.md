@@ -166,6 +166,16 @@ Nix is used to provide reproducible development environments.
 
 1. **Open a terminal** in VSCode: `Terminal > New Terminal`.
 
+   To build the Debug application from the terminal using 32 parallel jobs,
+   run:
+
+   ```bash
+   nix develop .#ornlslicerDev -L --command cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 32
+   ```
+
+   Adjust `32` to match the number of parallel jobs appropriate for your
+   development machine.
+
 2. **Configure the LLDB Debugger**:
    - Run:
      ```bash
