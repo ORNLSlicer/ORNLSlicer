@@ -1462,7 +1462,9 @@ void LayerBar::splitRange(LayerBar::dot_range* range) {
 }
 
 void LayerBar::handleModifiedSetting(QString key) {
-    if (key == PS::Layer::kLayerHeight || key == PS::Slicing::kSlicePlaneNormalX ||
+    if (key == PS::Layer::kLayerHeight || key == PS::Layer::kEnableVariableLayerHeight ||
+        key == PS::Layer::kMinLayerHeight || key == PS::Layer::kVariableLayerHeightSurfaceError ||
+        key == PRS::MachineSetup::kSyntax || key == PS::Slicing::kSlicePlaneNormalX ||
         key == PS::Slicing::kSlicePlaneNormalY || key == PS::Slicing::kSlicePlaneNormalZ) {
         updateLayers();
 
