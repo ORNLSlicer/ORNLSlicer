@@ -28,7 +28,7 @@ Windows limits file paths to 260 characters by default, which can break builds w
 
 - **For ORNL-managed machines**, follow the [ORNL-specific WSL2 guide](ORNL-WSL2-Installation.md).
 - **For all others**:
-  
+
   1. Open a **PowerShell** window.
   2. **Run**:
      ```powershell
@@ -156,7 +156,6 @@ Nix is used to provide reproducible development environments.
      - `CMake Tools`
      - `direnv`
      - `EditorConfig for VS Code`
-     - `github.copilot` (optional)
      - `LLDB DAP`
      - `Nix`
      - `WSL`
