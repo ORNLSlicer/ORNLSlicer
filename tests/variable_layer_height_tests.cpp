@@ -84,19 +84,20 @@ ORNL::MeshTypes::Polyhedron buildPolyhedron(const std::vector<ORNL::MeshTypes::P
     return polyhedron;
 }
 
-QSharedPointer<ORNL::ClosedMesh> makeFrustum(double bottom_width, double top_width, double height) {
+QSharedPointer<ORNL::ClosedMesh> makeFrustum(double bottom_width, double top_width, double height,
+                                             double z_offset = 0.0) {
     const double bottom_half = bottom_width / 2.0;
     const double top_half    = top_width / 2.0;
 
     const std::vector<ORNL::MeshTypes::Point_3> points = {
-        ORNL::MeshTypes::Point_3(-bottom_half, -bottom_half, 0.0),
-        ORNL::MeshTypes::Point_3(bottom_half, -bottom_half, 0.0),
-        ORNL::MeshTypes::Point_3(bottom_half, bottom_half, 0.0),
-        ORNL::MeshTypes::Point_3(-bottom_half, bottom_half, 0.0),
-        ORNL::MeshTypes::Point_3(-top_half, -top_half, height),
-        ORNL::MeshTypes::Point_3(top_half, -top_half, height),
-        ORNL::MeshTypes::Point_3(top_half, top_half, height),
-        ORNL::MeshTypes::Point_3(-top_half, top_half, height),
+        ORNL::MeshTypes::Point_3(-bottom_half, -bottom_half, z_offset),
+        ORNL::MeshTypes::Point_3(bottom_half, -bottom_half, z_offset),
+        ORNL::MeshTypes::Point_3(bottom_half, bottom_half, z_offset),
+        ORNL::MeshTypes::Point_3(-bottom_half, bottom_half, z_offset),
+        ORNL::MeshTypes::Point_3(-top_half, -top_half, z_offset + height),
+        ORNL::MeshTypes::Point_3(top_half, -top_half, z_offset + height),
+        ORNL::MeshTypes::Point_3(top_half, top_half, z_offset + height),
+        ORNL::MeshTypes::Point_3(-top_half, top_half, z_offset + height),
     };
 
     const std::vector<Triangle> triangles = {
@@ -169,6 +170,16 @@ bool anyBetween(const std::vector<double>& values, double min_value, double max_
 double internal(ORNL::Distance distance) {
     return distance();
 }
+
+int sliceCountFor(const QSharedPointer<ORNL::ClosedMesh>& mesh, const QSharedPointer<ORNL::SettingsBase>& settings,
+                  bool include_build_plate_gap) {
+    ORNL::BufferedSlicer slicer(mesh, settings, {}, {}, 0, 0, false, include_build_plate_gap);
+
+    int slice_count = 0;
+    while (!slicer.processNextSlice().isNull()) ++slice_count;
+
+    return slice_count;
+}
 }  // namespace
 
 int main() {
@@ -215,6 +226,20 @@ int main() {
                      "Expected non-JuggerBot syntax to ignore variable layer height.");
     passed &= expect(allNear(non_jugger_variable_heights, 5.0),
                      "Expected non-JuggerBot variable-height layers to remain fixed.");
+
+    QSharedPointer<ORNL::ClosedMesh> elevated_mesh = makeFrustum(internal(10.0 * ORNL::mm), internal(10.0 * ORNL::mm),
+                                                                 internal(10.0 * ORNL::mm), internal(10.0 * ORNL::mm));
+    QSharedPointer<ORNL::SettingsBase> support_settings = slicingSettings(false);
+    support_settings->setSetting(ORNL::PS::Support::kEnable, true);
+
+    const int support_gap_slice_count = sliceCountFor(elevated_mesh, support_settings, true);
+    const int computed_support_gap_count =
+        ORNL::BufferedSlicer::computeSliceCount(elevated_mesh, support_settings, {}, true);
+    passed &= expect(computed_support_gap_count == support_gap_slice_count,
+                     "Expected support-gap slice count to match production buffered slicing.");
+    passed &=
+        expect(computed_support_gap_count > ORNL::BufferedSlicer::computeSliceCount(elevated_mesh, support_settings),
+               "Expected support-gap slice count to include layers below an elevated mesh.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

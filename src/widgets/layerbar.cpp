@@ -1354,8 +1354,9 @@ void LayerBar::updateLayers() {
     QSharedPointer<SettingsBase> part_settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
     part_settings->populate(m_part->getSb());
 
-    int layer_count = BufferedSlicer::computeSliceCount(m_part->rootMesh(), part_settings, m_part->getSettingsRanges());
-    m_layers        = layer_count;
+    int layer_count =
+        BufferedSlicer::computeSliceCount(m_part->rootMesh(), part_settings, m_part->getSettingsRanges(), true);
+    m_layers = layer_count;
     // if the number of layers decreased, remove any dots from
     // layers that don't exist anymore
     if (layer_count < m_position.size()) {
