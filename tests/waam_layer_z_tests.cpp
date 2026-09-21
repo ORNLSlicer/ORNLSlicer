@@ -1,5 +1,6 @@
 #include <QCoreApplication>
 #include <QSharedPointer>
+#include <QStringList>
 #include <QVector3D>
 #include <QVector>
 #include <cmath>
@@ -8,6 +9,8 @@
 #include <string>
 
 #include "configs/settings_base.h"
+#include "gcode/gcode_meta.h"
+#include "gcode/writers/wolf_writer.h"
 #include "geometry/path.h"
 #include "geometry/plane.h"
 #include "geometry/point.h"
@@ -142,6 +145,56 @@ bool wireArcAdjustsAlongSlicingNormal() {
     return near(start.x(), lower_surface.x()) && near(start.y(), lower_surface.y()) &&
            near(start.z(), lower_surface.z());
 }
+
+QSharedPointer<ORNL::SettingsBase> wolfSettings() {
+    QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
+    settings->setSetting(ORNL::PRS::Dimensions::kZOffset, 1.5 * ORNL::mm);
+    settings->setSetting(ORNL::PRS::GCode::kStartCode, QString());
+    settings->setSetting(ORNL::PRS::MachineSetup::kMachineType, ORNL::MachineType::kWire_Arc);
+    settings->setSetting(ORNL::PS::Layer::kLayerHeight, 2.8 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kLiftHeight, 12.7 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 0.0 * ORNL::mm);
+    settings->setSetting(ORNL::PS::Travel::kSpeed, 1200.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalX, 0.0f);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalY, 0.0f);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalZ, 1.0f);
+    return settings;
+}
+
+bool wolfFirstApproachUsesTargetLiftAndOneOffset() {
+    QSharedPointer<ORNL::SettingsBase> settings = wolfSettings();
+    ORNL::WolfWriter writer(ORNL::GcodeMetaList::WolfMeta, settings);
+    writer.writeInitialSetup(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 1);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = QSharedPointer<ORNL::SettingsBase>::create();
+    segment_settings->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+
+    const QString travel    = writer.writeTravel(ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::Point(10.0 * ORNL::mm, 20.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::TravelLiftType::kBoth, segment_settings);
+    const QStringList lines = travel.split('\n', Qt::SkipEmptyParts);
+
+    return lines.size() == 2 && lines[0].contains(" Z14.2000") && lines[0].contains(";TRAVEL") &&
+           lines[1].contains(" Z1.5000") && lines[1].contains(";TRAVEL LOWER Z");
+}
+
+bool wolfNormalizesNegativeZero() {
+    QSharedPointer<ORNL::SettingsBase> settings = wolfSettings();
+    settings->setSetting(ORNL::PRS::Dimensions::kZOffset, 0.0 * ORNL::mm);
+    ORNL::WolfWriter writer(ORNL::GcodeMetaList::WolfMeta, settings);
+    writer.writeInitialSetup(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 1);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = QSharedPointer<ORNL::SettingsBase>::create();
+    segment_settings->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+
+    const QString travel    = writer.writeTravel(ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::Point(10.0 * ORNL::mm, 20.0 * ORNL::mm, -0.00001 * ORNL::mm),
+                                                 ORNL::TravelLiftType::kBoth, segment_settings);
+    const QStringList lines = travel.split('\n', Qt::SkipEmptyParts);
+
+    return lines.size() == 2 && lines[1].contains(" Z0.0000") && !lines[1].contains(" Z-0.0000");
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -156,6 +209,9 @@ int main(int argc, char* argv[]) {
                      "Wire Arc variable-height layer did not start on the preceding layer surface.");
     passed &= expect(wireArcAdjustsAlongSlicingNormal(),
                      "Wire Arc layer datum adjustment did not follow the slicing-plane normal.");
+    passed &= expect(wolfFirstApproachUsesTargetLiftAndOneOffset(),
+                     "Wolf first approach did not apply target lift and Z offset exactly once.");
+    passed &= expect(wolfNormalizesNegativeZero(), "Wolf emitted a negative-zero Z coordinate.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

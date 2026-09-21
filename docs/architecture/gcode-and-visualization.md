@@ -37,6 +37,11 @@ Concrete writer classes live under
 formatting and lifecycle hooks; subclasses override only the behavior that
 differs for a controller or machine family.
 
+`WolfWriter` treats the printer Z offset as machine calibration and applies it
+when coordinates are formatted. Its initial travel approaches from the
+configured lift above the first path target, so the offset is not folded into
+the geometric layer datum or applied more than once.
+
 `ArcSpecialtiesWriter` supports both the normal planar segment stream and the
 direct radial/helical cylindrical streams. Its controller-specific motion fields
 and positioner behavior are documented in
