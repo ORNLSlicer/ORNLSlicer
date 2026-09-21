@@ -212,6 +212,14 @@ restoration stages when adding geometry operations. Applying an operation in
 the wrong coordinate space commonly produces correct-looking 2-D paths at the
 wrong 3-D location.
 
+Cross-sections remain centered within each layer. During printer-coordinate
+restoration, Wire Arc layers place deposition paths on the lower material
+boundary (the surface receiving the bead), while ordinary non-spiral paths for
+other machine types retain the top-of-layer convention. The Wire Arc adjustment
+uses each layer's effective height and the slicing-plane normal, so
+variable-height and angled slicing preserve the same surface-reference
+contract.
+
 ## Extending the Pipeline
 
 ### Add or Change a Slicing Mode

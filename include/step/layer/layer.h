@@ -88,6 +88,9 @@ class Layer : public Step {
     QList<QSharedPointer<IslandBase>> m_island_order;
 
    private:
+    //! \brief Returns whether paths represent the surface receiving deposited material instead of the top of a layer.
+    bool usesDepositionSurfaceReference() const;
+
     //! \brief Builds the translation used to move paths between the flattened slicing frame and printer coordinates.
     Point getOrientationShift() const;
 
