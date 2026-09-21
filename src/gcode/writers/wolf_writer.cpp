@@ -138,7 +138,7 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
+    bool travel_lift_required = liftDist > 0 && lType != TravelLiftType::kNoLift;
 
     // Don't lift for short travel moves
     if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
@@ -158,11 +158,7 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
 
     // write the travel
     Point travel_destination = target_location;
-    if (m_first_travel)
-        // Approach from the configured clearance above the actual first target. writeCoordinates() applies the
-        // machine Z calibration exactly once.
-        travel_destination = target_location + travel_lift;
-    else if (travel_lift_required)
+    if (travel_lift_required)
         travel_destination = travel_destination + travel_lift;  // travel destination is above the target point
 
     rv += m_G1 % m_f % QString::number(m_sb->setting<Velocity>(PS::Travel::kSpeed).to(m_meta.m_velocity_unit)) %

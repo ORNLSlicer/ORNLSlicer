@@ -179,6 +179,39 @@ bool wolfFirstApproachUsesTargetLiftAndOneOffset() {
            lines[1].contains(" Z1.5000") && lines[1].contains(";TRAVEL LOWER Z");
 }
 
+bool wolfShortFirstTravelDoesNotLift() {
+    QSharedPointer<ORNL::SettingsBase> settings = wolfSettings();
+    settings->setSetting(ORNL::PS::Travel::kMinTravelForLift, 25.0 * ORNL::mm);
+    ORNL::WolfWriter writer(ORNL::GcodeMetaList::WolfMeta, settings);
+    writer.writeInitialSetup(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 1);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = QSharedPointer<ORNL::SettingsBase>::create();
+    segment_settings->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+
+    const QString travel    = writer.writeTravel(ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::Point(10.0 * ORNL::mm, 20.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::TravelLiftType::kBoth, segment_settings);
+    const QStringList lines = travel.split('\n', Qt::SkipEmptyParts);
+
+    return lines.size() == 1 && lines[0].contains(" Z1.5000") && lines[0].contains(";TRAVEL");
+}
+
+bool wolfFirstTravelHonorsNoLift() {
+    QSharedPointer<ORNL::SettingsBase> settings = wolfSettings();
+    ORNL::WolfWriter writer(ORNL::GcodeMetaList::WolfMeta, settings);
+    writer.writeInitialSetup(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 1);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = QSharedPointer<ORNL::SettingsBase>::create();
+    segment_settings->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+
+    const QString travel    = writer.writeTravel(ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::Point(10.0 * ORNL::mm, 20.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                 ORNL::TravelLiftType::kNoLift, segment_settings);
+    const QStringList lines = travel.split('\n', Qt::SkipEmptyParts);
+
+    return lines.size() == 1 && lines[0].contains(" Z1.5000") && lines[0].contains(";TRAVEL");
+}
+
 bool wolfNormalizesNegativeZero() {
     QSharedPointer<ORNL::SettingsBase> settings = wolfSettings();
     settings->setSetting(ORNL::PRS::Dimensions::kZOffset, 0.0 * ORNL::mm);
@@ -211,6 +244,9 @@ int main(int argc, char* argv[]) {
                      "Wire Arc layer datum adjustment did not follow the slicing-plane normal.");
     passed &= expect(wolfFirstApproachUsesTargetLiftAndOneOffset(),
                      "Wolf first approach did not apply target lift and Z offset exactly once.");
+    passed &= expect(wolfShortFirstTravelDoesNotLift(),
+                     "Wolf lifted a first travel shorter than the configured minimum lift distance.");
+    passed &= expect(wolfFirstTravelHonorsNoLift(), "Wolf lifted a first travel marked as no-lift.");
     passed &= expect(wolfNormalizesNegativeZero(), "Wolf emitted a negative-zero Z coordinate.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
