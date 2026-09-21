@@ -407,10 +407,22 @@ Point Layer::getEndLocation() {
     return Point(0, 0, 0);
 }
 
+bool Layer::usesDepositionSurfaceReference() const {
+    return m_sb->setting<MachineType>(PRS::MachineSetup::kMachineType) == MachineType::kWire_Arc;
+}
+
 Point Layer::getOrientationShift() const {
     Point orientation_shift = m_shift_amount;
 
-    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
+    if (usesDepositionSurfaceReference()) {
+        // Cross-sections are taken at the middle of each layer. Wire-arc paths describe the surface that receives
+        // material, so restore them to the lower layer boundary along the slicing direction.
+        const QVector3D normal             = m_slicing_plane.normal().normalized();
+        const Distance half_layer_height   = m_sb->setting<Distance>(PS::Layer::kLayerHeight) / 2.0;
+        const QVector3D surface_adjustment = normal * half_layer_height();
+        orientation_shift -= Point::fromQVector3D(surface_adjustment);
+    }
+    else if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) {
         // Spiralized paths start on the build surface instead of at a full layer height.
         const Distance half_layer_height = m_sb->setting<Distance>(PS::Layer::kLayerHeight) / 2.0;
         orientation_shift.z(m_shift_amount.z() - half_layer_height);
@@ -425,7 +437,7 @@ Point Layer::getOrientationShift() const {
 void Layer::applyMinimumZShift() {
     m_minimum_z_shift = 0;
 
-    if (m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) return;
+    if (usesDepositionSurfaceReference() || m_sb->setting<bool>(PS::SpecialModes::kEnableSpiralize)) return;
 
     const QVector3D normal             = m_slicing_plane.normal().normalized();
     constexpr float kMinimumZComponent = 1.0e-6f;
