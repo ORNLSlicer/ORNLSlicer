@@ -31,6 +31,7 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [Formatting](contributing/formatting.md)
 - [Documentation](contributing/documentation.md)
 - [Linux AppImage Packaging](contributing/linux-appimage.md)
+- [Cachix Workflow](contributing/cachix.md)
 
 ## Migrated Wiki Content
 

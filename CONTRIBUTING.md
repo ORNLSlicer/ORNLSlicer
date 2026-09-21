@@ -44,3 +44,7 @@ Use `clang-format` or the configured `pre-commit` hook before committing; pre-co
 ## [Documentation](docs/contributing/documentation.md)
 
 Document public APIs with Doxygen blocks (purpose, constraints, usage).
+
+## [Cachix Workflow](docs/contributing/cachix.md)
+
+Configure cache access and publish trusted Nix build outputs for reuse by developers and CI.

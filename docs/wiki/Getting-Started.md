@@ -132,6 +132,10 @@ Nix is used to provide reproducible development environments.
 
    > This may take time—downloads and builds will run automatically. Approve any prompts.
 
+   Contributors with write access to the project's binary cache should also
+   follow the [Cachix workflow](../contributing/cachix.md) to share trusted Nix
+   build outputs with other developers and CI.
+
 
 ## 8. Set Up Visual Studio Code
 
