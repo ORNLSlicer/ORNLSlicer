@@ -43,7 +43,11 @@ jobs:
         run: nix build -L .#${{ env.ci_derivation }} --accept-flake-config
       - name: Bundle Output
         run: |
-          nix bundle -L --bundler .#appimage .#${{ env.ci_derivation }} -o ${{ env.out_link }}
+          nix bundle -L \
+            --accept-flake-config \
+            --bundler .#appimage \
+            .#${{ env.ci_derivation }} \
+            -o ${{ env.out_link }}
           cp ${{ env.out_link }} ${{ env.artifact }}
       - name: Smoke Test AppImage
         run: |

@@ -89,8 +89,11 @@
         if system != "x86_64-linux"
         then builtins.throw "the ORNLSlicer AppImage bundler only supports x86_64-linux"
         else let
+          appimagePkgs = (import inputs.appimage.inputs.nixpkgs {
+            inherit system;
+          }).pkgsStatic;
           mkAppImage = inputs.appimage.lib.${system}.mkAppImage.override {
-            mkappimage-apprun = pkgs.callPackage ./nix/appimage { };
+            mkappimage-apprun = appimagePkgs.callPackage ./nix/appimage { };
           };
         in
           if drv.type == "app"
