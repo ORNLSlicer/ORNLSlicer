@@ -404,6 +404,43 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         for (Polyline& line : m_computed_geometry) { line = line.reverse(); }
     }
 
+    auto appendBranchAfterTipWipePaths = [&](const QVector<Polyline>& ordered_loops, const QVector<Distance>& widths,
+                                             Distance fallback_width, bool complete_before_connecting, bool ccw,
+                                             Distance min_path_length) {
+        Point branch_start = current_location;
+
+        for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
+            const Polyline& loop = ordered_loops[i];
+            if (loop.size() < 3) { continue; }
+
+            const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
+            const Point final_stop =
+                SpiralPath::transitionStartPoint(loop, loop_width, complete_before_connecting);
+
+            Polyline branch_line;
+            if (i > 0) { branch_line.push_back(branch_start); }
+            branch_line += loop;
+            if (branch_line.back() != final_stop) { branch_line.push_back(final_stop); }
+
+            Path newPath = createPath(branch_line);
+            newPath.setCCW(ccw);
+
+            if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
+
+            if (newPath.calculateLength() < min_path_length) { continue; }
+
+            if (newPath.size() > 0) {
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+                PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                current_location = newPath.back()->end();
+                branch_start     = current_location;
+                m_paths.push_back(newPath);
+            }
+        }
+    };
+
     auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
         for (const Polyline& spiral_group : spiral_groups) {
             if (spiral_group.size() < 3) { continue; }
@@ -428,6 +465,7 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 
     if (m_sb->setting<bool>(PS::Inset::kEnableSpiralInset)) {
         const bool complete_path_before_connecting = m_sb->setting<bool>(PS::Inset::kCompletePathBeforeConnecting);
+        const bool branch_after_tip_wipe           = m_sb->setting<bool>(PS::Inset::kBranchAfterTipWipe);
 
         if (!m_sb->setting<bool>(PS::Inset::kAdaptive)) {
             Point spiral_query_location = current_location;
@@ -454,6 +492,17 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
             }
 
             if (ordered_insets.isEmpty()) { return; }
+
+            if (branch_after_tip_wipe && ordered_insets.size() > 1) {
+                QVector<Distance> ordered_widths;
+                ordered_widths.reserve(ordered_insets.size());
+                for (int i = 0, end = ordered_insets.size(); i < end; ++i) { ordered_widths.push_back(bead_width); }
+
+                appendBranchAfterTipWipePaths(ordered_insets, ordered_widths, bead_width,
+                                              complete_path_before_connecting,
+                                              ordered_insets.front().orientation(), min_path_length);
+                return;
+            }
 
             if (ordered_insets.size() == 1) {
                 Polyline result = ordered_insets.first();
@@ -519,6 +568,14 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         }
 
         if (ordered_insets.isEmpty()) { return; }
+
+        if (branch_after_tip_wipe && ordered_insets.size() > 1) {
+            appendBranchAfterTipWipePaths(ordered_insets, ordered_inset_widths,
+                                          m_sb->setting<Distance>(PS::Inset::kBeadWidth),
+                                          complete_path_before_connecting,
+                                          ordered_insets.front().orientation(), min_path_length);
+            return;
+        }
 
         if (ordered_insets.size() == 1) {
             PolylineOrderOptimizer first_loop_poo(current_location, layerNumber);
