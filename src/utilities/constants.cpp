@@ -591,6 +591,8 @@ const QString Constants::ProfileSettings::Perimeter::kEnableSpiralPerimeter = "s
 const QString Constants::ProfileSettings::Perimeter::kCompletePathBeforeConnecting =
     "spiral_perimeter_complete_path_before_connecting";
 const QString Constants::ProfileSettings::Perimeter::kConnectToInsets = "spiral_perimeter_connect_to_insets";
+const QString Constants::ProfileSettings::Perimeter::kConnectToInsetsAfterTipWipe =
+    "spiral_perimeter_connect_to_insets_after_tip_wipe";
 
 // Inset
 const QString Constants::ProfileSettings::Inset::kEnable              = "inset";
