@@ -8,6 +8,7 @@
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
+#include "optimizers/point_order_optimizer.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
@@ -105,10 +106,13 @@ class PathOrderOptimizer {
 
     //! \brief Selected radial path and entry point.
     struct RadialPathSelection {
-        int path_index         = -1;
-        int segment_index      = 0;
-        bool start_from_front  = true;
-        bool rotate_to_segment = false;
+        int path_index          = -1;
+        int segment_index       = 0;
+        bool start_from_front   = true;
+        bool rotate_to_segment  = false;
+        bool insert_split_point = false;
+        Point split_point;
+        int insertion_index = 0;
     };
 
     //! \brief Selected open path endpoint.
@@ -191,6 +195,9 @@ class PathOrderOptimizer {
 
     //! \brief Adds a travel segment to the index point and shuffles the paths to be in order
     void addTravel(int index, Path& path);
+
+    //! \brief Adds a travel segment to the selected point and shuffles/splits the path to be in order
+    void addTravel(const PointOrderOptimizer::PointOrderSelection& selection, Path& path);
 
     //! \brief Links to a path using shortest or longest distance
     //! \param shortest: Whether to look for shortest or longest (shortest by default)

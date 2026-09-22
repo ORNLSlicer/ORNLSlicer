@@ -255,6 +255,24 @@ int main() {
                                         closed_radial_farthest_result[1]->start() == ORNL::Point(10.0f, 10.0f, 0.0f),
                                     "Expected closed radial farthest linking to rotate to the farthest segment start.");
 
+    QSharedPointer<ORNL::SettingsBase> closed_radial_consecutive_settings =
+        cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest);
+    closed_radial_consecutive_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                                   static_cast<int>(ORNL::PointOrderOptimization::kConsecutive));
+    closed_radial_consecutive_settings->setSetting<ORNL::Distance>(
+        ORNL::PS::Optimizations::kConsecutiveDistanceThreshold, ORNL::Distance(5.0));
+    ORNL::Point closed_radial_consecutive_start(0.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer closed_radial_consecutive_optimizer(closed_radial_consecutive_start, 2,
+                                                                 closed_radial_consecutive_settings);
+    closed_radial_consecutive_optimizer.setPathsToEvaluate({closed_radial_path});
+    ORNL::Path closed_radial_consecutive_result = closed_radial_consecutive_optimizer.linkNextRadialPath();
+    passed &= expect(closed_radial_consecutive_result.size() == 6,
+                     "Expected closed radial consecutive linking to split the selected print segment.");
+    passed &= expect(closed_radial_consecutive_result[1]->start() == ORNL::Point(5.0f, 0.0f, 0.0f),
+                     "Expected closed radial consecutive linking to start at the threshold split point.");
+    passed &= expect(closed_radial_consecutive_result.back()->end() == ORNL::Point(5.0f, 0.0f, 0.0f),
+                     "Expected closed radial consecutive linking to end at the threshold split point.");
+
     ORNL::Path open_radial_path = pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
                                                   ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)});
     ORNL::Point open_radial_start(9.8f, 0.0f, 0.0f);
