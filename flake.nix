@@ -85,7 +85,23 @@
     bundlers = rec {
       default = appimage;
 
-      appimage = inputs.appimage.bundlers.${system}.default;
+      appimage = drv:
+        if system != "x86_64-linux"
+        then builtins.throw "the ORNLSlicer AppImage bundler only supports x86_64-linux"
+        else let
+          mkAppImage = inputs.appimage.lib.${system}.mkAppImage.override {
+            mkappimage-apprun = pkgs.callPackage ./nix/appimage { };
+          };
+        in
+          if drv.type == "app"
+          then mkAppImage {
+            program = drv.program;
+          }
+          else if drv.type == "derivation"
+          then mkAppImage {
+            program = pkgs.lib.getExe drv;
+          }
+          else builtins.throw "the ORNLSlicer AppImage bundler only supports apps and derivations";
     };
 
     devShells = rec {
