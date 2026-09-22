@@ -68,10 +68,10 @@ ORNL::PolygonList squareAt(float x) {
 }
 
 QSharedPointer<ORNL::Layer> layerWithIsland(const QSharedPointer<ORNL::SettingsBase>& settings,
-                                            const QSharedPointer<TestIsland>& island) {
+                                            const QSharedPointer<TestIsland>& island,
+                                            const ORNL::Point& shift = ORNL::Point(0.0f, 0.0f, 0.0f)) {
     QSharedPointer<ORNL::Layer> layer = QSharedPointer<ORNL::Layer>::create(0, settings);
-    layer->setOrientation(ORNL::Plane(ORNL::Point(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 1.0f)),
-                          ORNL::Point(0.0f, 0.0f, 0.0f));
+    layer->setOrientation(ORNL::Plane(ORNL::Point(0.0f, 0.0f, 0.0f), QVector3D(0.0f, 0.0f, 1.0f)), shift);
     layer->addIsland(ORNL::IslandType::kPolymer, island);
     return layer;
 }
@@ -134,6 +134,30 @@ bool conflictingLayerIslandOrderSettingsUseGlobalSettings() {
     return optimizeGlobalLayer(global_layer, global_settings, optimized_order) &&
            optimized_order.first() == near_island.data();
 }
+
+bool globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict() {
+    QVector<const TestIsland*> optimized_order;
+    const QSharedPointer<ORNL::SettingsBase> global_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kCustomPoint);
+    global_settings->setSetting(ORNL::PS::Optimizations::kCustomIslandXLocation, 2000.0);
+    const QSharedPointer<ORNL::SettingsBase> closest_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    const QSharedPointer<ORNL::SettingsBase> farthest_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextFarthest);
+
+    QSharedPointer<TestIsland> near_island =
+        QSharedPointer<TestIsland>::create(squareAt(100.0f), closest_settings, &optimized_order);
+    QSharedPointer<TestIsland> far_island =
+        QSharedPointer<TestIsland>::create(squareAt(1000.0f), farthest_settings, &optimized_order);
+
+    ORNL::GlobalLayer global_layer(0);
+    addLayer(global_layer, "{00000000-0000-0000-0000-000000000001}", layerWithIsland(closest_settings, near_island));
+    addLayer(global_layer, "{00000000-0000-0000-0000-000000000002}",
+             layerWithIsland(farthest_settings, far_island, ORNL::Point(10.0f, 0.0f, 0.0f)));
+
+    return optimizeGlobalLayer(global_layer, global_settings, optimized_order) &&
+           optimized_order.first() == far_island.data();
+}
 }  // namespace
 
 int main() {
@@ -143,6 +167,8 @@ int main() {
                      "Expected global layers with common island-order settings to use layer settings.");
     passed &= expect(conflictingLayerIslandOrderSettingsUseGlobalSettings(),
                      "Expected conflicting global-layer island-order settings to fall back to global settings.");
+    passed &= expect(globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict(),
+                     "Expected global custom island-order fallback to use an anchor layer when frames conflict.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

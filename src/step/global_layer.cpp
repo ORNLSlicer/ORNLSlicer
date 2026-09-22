@@ -116,7 +116,6 @@ IslandOrderSelection commonIslandOrderSelection(const QMap<QUuid, QSharedPointer
             qWarning() << "Global layer has conflicting custom island order frames; using global settings";
             selection.settings_layer = nullptr;
         }
-        selection.anchor_layer = nullptr;
     }
 
     return selection;
