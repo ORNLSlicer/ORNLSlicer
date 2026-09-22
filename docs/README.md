@@ -30,6 +30,7 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [Style Guide](contributing/style-guide.md)
 - [Formatting](contributing/formatting.md)
 - [Documentation](contributing/documentation.md)
+- [Linux AppImage Packaging](contributing/linux-appimage.md)
 
 ## Migrated Wiki Content
 

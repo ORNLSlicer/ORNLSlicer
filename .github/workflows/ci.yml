@@ -22,7 +22,7 @@ jobs:
     env:
       ci_derivation: ornl.ornlslicer
       out_link: ornlslicer.appimage
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     defaults:
       run:
         working-directory: ./
@@ -45,6 +45,11 @@ jobs:
         run: |
           nix bundle -L --bundler .#appimage .#${{ env.ci_derivation }} -o ${{ env.out_link }}
           cp ${{ env.out_link }} ${{ env.artifact }}
+      - name: Smoke Test AppImage
+        run: |
+          test "$(id -u)" -ne 0
+          test "$(sysctl -n kernel.apparmor_restrict_unprivileged_userns)" = "1"
+          timeout 30s ./${{ env.artifact }} --help
       - name: Upload Artifacts
         uses: actions/upload-artifact@v6
         with:

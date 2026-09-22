@@ -169,5 +169,6 @@ If the disclaimer of warranty and limitation of liability provided above cannot 
 | `eigen` | MPL2 |
 | `json` | MIT |
 | `psimpl` | Mozilla Public License 1.1 |
+| `PRoot` | GPL-2.0-or-later |
 | `qtxlsxwriter` | MIT |
 | `zip` | Unlicensed; free to use in any capacity |
