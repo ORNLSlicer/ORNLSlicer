@@ -19,6 +19,8 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+class VisualizationColorPicker;
+
 /*!
  * \class PreferencesWindow
  * \brief Window that allows the user to change his/her preferences
@@ -61,6 +63,9 @@ class PreferencesWindow : public QMainWindow {
     //! \brief Setup the events for the various widgets.
     void setupEvents();
 
+    //! \brief Reload every preference control after importing a file.
+    void refreshFromPreferences();
+
     //! \brief Setup the events for the various widgets.
     //! \param choice Preference choice for current preference set
     //! \param displayStrings set of strings that make up the radio buttons in the group
@@ -96,9 +101,17 @@ class PreferencesWindow : public QMainWindow {
     QComboBox* m_gcode_preview_mode_combobox;
     QComboBox* m_disabled_setting_visibility_combobox;
     QSpinBox* m_gcode_preview_vertex_threshold_spinbox;
+    QSpinBox* m_layer_lag_spinbox;
+    QSpinBox* m_segment_lag_spinbox;
+    QCheckBox* m_invert_camera_checkbox;
+    QCheckBox* m_use_implicit_transforms_checkbox;
+    QCheckBox* m_always_drop_parts_checkbox;
     QCheckBox* m_gcode_info_visible_by_default_checkbox;
     QCheckBox* m_optimization_points_visible_by_default_checkbox;
     QCheckBox* m_warn_unsaved_project_on_close_checkbox;
+
+    //! \brief Visualization color controls shown in the preferences window.
+    QList<VisualizationColorPicker*> m_visualization_color_pickers;
 
     //! \brief List of groupboxes that hold radio buttons for various preferences
     QList<QGroupBox*> m_boxes;
