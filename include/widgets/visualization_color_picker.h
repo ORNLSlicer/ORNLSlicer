@@ -21,6 +21,9 @@ class VisualizationColorPicker : public QWidget {
     //! \param parent
     explicit VisualizationColorPicker(QString name, QColor color, QWidget* parent = nullptr);
 
+    //! \brief Reload the displayed color from the preferences manager
+    void refreshFromPreferences();
+
    private:
     //! \brief Mouse press event
     void mousePressEvent(QMouseEvent*);

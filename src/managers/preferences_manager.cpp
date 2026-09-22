@@ -1,6 +1,7 @@
 #include "managers/preferences_manager.h"
 
 #include <QDir>
+#include <QSignalBlocker>
 #include <QStandardPaths>
 #include <QString>
 #include <algorithm>
@@ -221,66 +222,103 @@ void PreferencesManager::importPreferences(QString filepath) {
     QFile file(filepath);
     if (file.exists()) {
         file.open(QIODevice::ReadOnly);
-        QString preferences = file.readAll();
-        fifojson j          = json::parse(preferences.toStdString());
-        if (j.find("import_unit") != j.end()) setImportUnit(j.value("import_unit", m_import_unit));
-        setDistanceUnit(j.value("distance", m_distance_unit));
-        setVelocityUnit(j.value("velocity", m_velocity_unit));
-        setAccelerationUnit(j.value("acceleration", m_acceleration_unit));
-        setDensityUnit(j.value("density", m_density_unit));
-        setAngleUnit(j.value("angle", m_angle_unit));
-        setTimeUnit(j.value("time", m_time_unit));
-        setTemperatureUnit(j.value("temperature", m_temperature_unit));
-        setVoltageUnit(j.value("voltage", m_voltage_unit));
-        setMassUnit(j.value("mass", m_mass_unit));
-        setTheme(j.value("theme", m_themeName));
-        setLayerLag(j.value("layer_lag", m_layer_lag));
-        setSegmentLag(j.value("segment_lag", m_segment_lag));
-        m_project_shift_preference = j.value("shift", m_project_shift_preference);
-        m_file_shift_preference    = j.value("file_shift", m_file_shift_preference);
-        m_align_preference         = j.value("align", m_align_preference);
-        m_hide_travel_preference   = j.value("hide_travel", m_hide_travel_preference);
-        m_hide_support_preference  = j.value("hide_support", m_hide_support_preference);
-        m_is_maximized             = j.value("is_window_maximized", m_is_maximized);
-        if (j.find("window_size") != j.end()) m_window_size = QSize(j["window_size"][0], j["window_size"][1]);
-        if (j.find("window_pos") != j.end()) m_window_pos = QPoint(j["window_pos"][0], j["window_pos"][1]);
+        QString preferences                    = file.readAll();
+        fifojson j                             = json::parse(preferences.toStdString());
+        const Distance oldImportUnit           = m_import_unit;
+        const Distance oldDistanceUnit         = m_distance_unit;
+        const Velocity oldVelocityUnit         = m_velocity_unit;
+        const Acceleration oldAccelerationUnit = m_acceleration_unit;
+        const Density oldDensityUnit           = m_density_unit;
+        const Angle oldAngleUnit               = m_angle_unit;
+        const Time oldTimeUnit                 = m_time_unit;
+        const Temperature oldTemperatureUnit   = m_temperature_unit;
+        const Voltage oldVoltageUnit           = m_voltage_unit;
+        const Mass oldMassUnit                 = m_mass_unit;
 
-        if (j.find("hidden_settings") != j.end())
-            m_hidden_settings = j.at("hidden_settings").get<std::unordered_map<std::string, std::list<std::string>>>();
+        const bool hasImportUnit                = j.contains("import_unit");
+        const bool hasDisabledSettingVisibility = j.contains("disabled_setting_visibility");
 
-        m_rotation_unit = j.value("rotation", m_rotation_unit);
+        {
+            // Unit changes normally reload every settings row. Block signals while the complete file is applied so
+            // consumers only rebuild once, after all imported values are available.
+            const QSignalBlocker signalBlocker(this);
 
-        if (j.find("invert_camera") != j.end()) setInvertCamera(j["invert_camera"]);
+            if (hasImportUnit) setImportUnit(j.value("import_unit", m_import_unit));
+            setDistanceUnit(j.value("distance", m_distance_unit));
+            setVelocityUnit(j.value("velocity", m_velocity_unit));
+            setAccelerationUnit(j.value("acceleration", m_acceleration_unit));
+            setDensityUnit(j.value("density", m_density_unit));
+            setAngleUnit(j.value("angle", m_angle_unit));
+            setTimeUnit(j.value("time", m_time_unit));
+            setTemperatureUnit(j.value("temperature", m_temperature_unit));
+            setVoltageUnit(j.value("voltage", m_voltage_unit));
+            setMassUnit(j.value("mass", m_mass_unit));
+            setTheme(j.value("theme", m_themeName));
+            setLayerLag(j.value("layer_lag", m_layer_lag));
+            setSegmentLag(j.value("segment_lag", m_segment_lag));
+            m_project_shift_preference = j.value("shift", m_project_shift_preference);
+            m_file_shift_preference    = j.value("file_shift", m_file_shift_preference);
+            m_align_preference         = j.value("align", m_align_preference);
+            m_hide_travel_preference   = j.value("hide_travel", m_hide_travel_preference);
+            m_hide_support_preference  = j.value("hide_support", m_hide_support_preference);
+            m_is_maximized             = j.value("is_window_maximized", m_is_maximized);
+            if (j.find("window_size") != j.end()) m_window_size = QSize(j["window_size"][0], j["window_size"][1]);
+            if (j.find("window_pos") != j.end()) m_window_pos = QPoint(j["window_pos"][0], j["window_pos"][1]);
 
-        if (j.contains("always_drop_parts")) setShouldAlwaysDrop(j["always_drop_parts"]);
+            if (j.find("hidden_settings") != j.end())
+                m_hidden_settings =
+                    j.at("hidden_settings").get<std::unordered_map<std::string, std::list<std::string>>>();
 
-        if (j.contains("use_implicit_transforms")) setUseImplicitTransforms(j["use_implicit_transforms"]);
+            m_rotation_unit = j.value("rotation", m_rotation_unit);
 
-        if (j.contains("use_true_widths")) setUseTrueWidthsPreference(j["use_true_widths"]);
+            if (j.find("invert_camera") != j.end()) setInvertCamera(j["invert_camera"]);
 
-        if (j.contains("gcode_info_visible_by_default"))
-            setGCodeInfoVisibleByDefaultPreference(j["gcode_info_visible_by_default"]);
+            if (j.contains("always_drop_parts")) setShouldAlwaysDrop(j["always_drop_parts"]);
 
-        if (j.contains("optimization_points_visible_by_default"))
-            setOptimizationPointsVisibleByDefaultPreference(j["optimization_points_visible_by_default"]);
+            if (j.contains("use_implicit_transforms")) setUseImplicitTransforms(j["use_implicit_transforms"]);
 
-        if (j.contains("gcode_preview_mode")) setGCodePreviewModePreference(j["gcode_preview_mode"].get<int>());
+            if (j.contains("use_true_widths")) setUseTrueWidthsPreference(j["use_true_widths"]);
 
-        if (j.contains("gcode_preview_vertex_threshold"))
-            setGCodePreviewVertexThresholdPreference(j["gcode_preview_vertex_threshold"].get<int>());
+            if (j.contains("gcode_info_visible_by_default"))
+                setGCodeInfoVisibleByDefaultPreference(j["gcode_info_visible_by_default"]);
 
-        if (j.contains("disabled_setting_visibility"))
-            setDisabledSettingVisibilityPreference(j["disabled_setting_visibility"].get<int>());
+            if (j.contains("optimization_points_visible_by_default"))
+                setOptimizationPointsVisibleByDefaultPreference(j["optimization_points_visible_by_default"]);
 
-        if (j.contains("warn_unsaved_project_on_close"))
-            setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
+            if (j.contains("gcode_preview_mode")) setGCodePreviewModePreference(j["gcode_preview_mode"].get<int>());
 
-        m_visualization_color_migration_version = j.value(kVisualizationColorMigrationVersionKey, 0);
+            if (j.contains("gcode_preview_vertex_threshold"))
+                setGCodePreviewVertexThresholdPreference(j["gcode_preview_vertex_threshold"].get<int>());
 
-        std::unordered_map<std::string, std::string> visualizationColorsHex;
-        if (j.find("visualization_colors") != j.end())
-            visualizationColorsHex = j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
-        setDefaultVisualizationColors(visualizationColorsHex);
+            if (hasDisabledSettingVisibility)
+                setDisabledSettingVisibilityPreference(j["disabled_setting_visibility"].get<int>());
+
+            if (j.contains("warn_unsaved_project_on_close"))
+                setWarnUnsavedProjectOnClosePreference(j["warn_unsaved_project_on_close"]);
+
+            m_visualization_color_migration_version = j.value(kVisualizationColorMigrationVersionKey, 0);
+
+            std::unordered_map<std::string, std::string> visualizationColorsHex;
+            if (j.find("visualization_colors") != j.end())
+                visualizationColorsHex =
+                    j.at("visualization_colors").get<std::unordered_map<std::string, std::string>>();
+            setDefaultVisualizationColors(visualizationColorsHex);
+        }
+
+        if (hasImportUnit) emit importUnitChanged(m_import_unit, oldImportUnit);
+        emit distanceUnitChanged(m_distance_unit, oldDistanceUnit);
+        emit velocityUnitChanged(m_velocity_unit, oldVelocityUnit);
+        emit accelerationUnitChanged(m_acceleration_unit, oldAccelerationUnit);
+        emit densityUnitChanged(m_density_unit, oldDensityUnit);
+        emit angleUnitChanged(m_angle_unit, oldAngleUnit);
+        emit timeUnitChanged(m_time_unit, oldTimeUnit);
+        emit temperatureUnitChanged(m_temperature_unit, oldTemperatureUnit);
+        emit voltageUnitChanged(m_voltage_unit, oldVoltageUnit);
+        emit massUnitChanged(m_mass_unit, oldMassUnit);
+        emit rotationUnitChanged(m_rotation_unit);
+        emit themeChanged();
+        if (hasDisabledSettingVisibility) emit disabledSettingVisibilityChanged();
+        emit anyUnitChanged();
 
         file.close();
     }

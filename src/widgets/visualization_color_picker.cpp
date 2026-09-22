@@ -48,6 +48,14 @@ VisualizationColorPicker::VisualizationColorPicker(QString name, QColor color, Q
     updateDisplay();
 }
 
+void VisualizationColorPicker::refreshFromPreferences() {
+    VisualizationColors colorEnum;
+    if (!VisualizationColorFromName(name, colorEnum)) return;
+
+    color = PreferencesManager::getInstance()->getVisualizationColor(colorEnum);
+    updateDisplay();
+}
+
 void VisualizationColorPicker::mousePressEvent(QMouseEvent*) {
     selectSetColor();
 }

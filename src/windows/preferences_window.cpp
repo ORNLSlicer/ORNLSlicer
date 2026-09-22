@@ -6,6 +6,7 @@
 #include <QMenu>
 #include <QMenuBar>
 #include <QScrollArea>
+#include <QSignalBlocker>
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QTabWidget>
@@ -213,11 +214,11 @@ void PreferencesWindow::setupLayout() {
     QGridLayout* camera_tab_layout = new QGridLayout();
     cameraWidget->setLayout(camera_tab_layout);
 
-    auto camera_checkbox = new QCheckBox();
+    m_invert_camera_checkbox = new QCheckBox();
     camera_tab_layout->addWidget(new QLabel("Invert Camera:"), 0, 0, Qt::AlignTop);
-    camera_tab_layout->addWidget(camera_checkbox, 0, 1, Qt::AlignTop);
-    camera_checkbox->setChecked(PreferencesManager::getInstance()->invertCamera());
-    connect(camera_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
+    camera_tab_layout->addWidget(m_invert_camera_checkbox, 0, 1, Qt::AlignTop);
+    m_invert_camera_checkbox->setChecked(PreferencesManager::getInstance()->invertCamera());
+    connect(m_invert_camera_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
             &PreferencesManager::setInvertCamera);
 
     // Parts
@@ -228,19 +229,19 @@ void PreferencesWindow::setupLayout() {
     part_tab_widget->setLayout(parts_tab_layout);
 
     // Implicit transforms
-    auto implicit_tranforms_checkbox = new QCheckBox();
+    m_use_implicit_transforms_checkbox = new QCheckBox();
     parts_tab_layout->addWidget(new QLabel("Use implicit transforms:"), 0, 0, Qt::AlignTop);
-    parts_tab_layout->addWidget(implicit_tranforms_checkbox, 0, 1, Qt::AlignTop);
-    implicit_tranforms_checkbox->setChecked(PreferencesManager::getInstance()->getUseImplicitTransforms());
-    connect(implicit_tranforms_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
+    parts_tab_layout->addWidget(m_use_implicit_transforms_checkbox, 0, 1, Qt::AlignTop);
+    m_use_implicit_transforms_checkbox->setChecked(PreferencesManager::getInstance()->getUseImplicitTransforms());
+    connect(m_use_implicit_transforms_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
             &PreferencesManager::setUseImplicitTransforms);
 
     // Drop parts on bed
-    auto auto_drop_parts_checkbox = new QCheckBox();
+    m_always_drop_parts_checkbox = new QCheckBox();
     parts_tab_layout->addWidget(new QLabel("Always drop parts to bed:"), 1, 0, Qt::AlignTop);
-    parts_tab_layout->addWidget(auto_drop_parts_checkbox, 1, 1, Qt::AlignTop);
-    auto_drop_parts_checkbox->setChecked(PreferencesManager::getInstance()->getAlwaysDropParts());
-    connect(auto_drop_parts_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
+    parts_tab_layout->addWidget(m_always_drop_parts_checkbox, 1, 1, Qt::AlignTop);
+    m_always_drop_parts_checkbox->setChecked(PreferencesManager::getInstance()->getAlwaysDropParts());
+    connect(m_always_drop_parts_checkbox, &QCheckBox::clicked, PreferencesManager::getInstance().get(),
             &PreferencesManager::setShouldAlwaysDrop);
 
     parts_tab_layout->setRowStretch(3, 1);
@@ -348,8 +349,9 @@ void PreferencesWindow::setupLayout() {
 
     int i = 0;
     for (const auto& color : PreferencesManager::getInstance()->getVisualizationColors()) {
-        color_tab_layout->addWidget(new VisualizationColorPicker(QString::fromStdString(color.first), color.second),
-                                    i++, 0, 1, 2, Qt::AlignTop);
+        auto* colorPicker = new VisualizationColorPicker(QString::fromStdString(color.first), color.second);
+        m_visualization_color_pickers.append(colorPicker);
+        color_tab_layout->addWidget(colorPicker, i++, 0, 1, 2, Qt::AlignTop);
     }
 
     // Lag tab
@@ -360,22 +362,22 @@ void PreferencesWindow::setupLayout() {
     lagWidget->setLayout(lag_tab_layout);
     lag_tab_layout->addWidget(new QLabel("Lag between layers (ms):"), 0, 0, Qt::AlignTop);
 
-    QSpinBox* layer_lag_box = new QSpinBox();
-    lag_tab_layout->addWidget(layer_lag_box, 0, 1, Qt::AlignTop);
-    layer_lag_box->setMinimum(1);
-    layer_lag_box->setMaximum(5000);
-    layer_lag_box->setValue(PreferencesManager::getInstance()->getLayerLag());
-    connect(layer_lag_box, QOverload<int>::of(&QSpinBox::valueChanged), PreferencesManager::getInstance().get(),
+    m_layer_lag_spinbox = new QSpinBox();
+    lag_tab_layout->addWidget(m_layer_lag_spinbox, 0, 1, Qt::AlignTop);
+    m_layer_lag_spinbox->setMinimum(1);
+    m_layer_lag_spinbox->setMaximum(5000);
+    m_layer_lag_spinbox->setValue(PreferencesManager::getInstance()->getLayerLag());
+    connect(m_layer_lag_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), PreferencesManager::getInstance().get(),
             &PreferencesManager::setLayerLag);
 
     lag_tab_layout->addWidget(new QLabel("Lag between segments (ms):"), 0, 3, Qt::AlignTop);
 
-    QSpinBox* segment_lag_box = new QSpinBox();
-    lag_tab_layout->addWidget(segment_lag_box, 0, 4, Qt::AlignTop);
-    segment_lag_box->setMinimum(1);
-    segment_lag_box->setMaximum(5000);
-    segment_lag_box->setValue(PreferencesManager::getInstance()->getSegmentLag());
-    connect(segment_lag_box, QOverload<int>::of(&QSpinBox::valueChanged), PreferencesManager::getInstance().get(),
+    m_segment_lag_spinbox = new QSpinBox();
+    lag_tab_layout->addWidget(m_segment_lag_spinbox, 0, 4, Qt::AlignTop);
+    m_segment_lag_spinbox->setMinimum(1);
+    m_segment_lag_spinbox->setMaximum(5000);
+    m_segment_lag_spinbox->setValue(PreferencesManager::getInstance()->getSegmentLag());
+    connect(m_segment_lag_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), PreferencesManager::getInstance().get(),
             &PreferencesManager::setSegmentLag);
 }
 
@@ -496,35 +498,61 @@ void PreferencesWindow::importPreferences() {
                                                     "*.preferences");
     if (!filepath.isNull()) {
         m_preferences_manager->importPreferences(filepath);
-        m_distance_unit_combobox->setCurrentText(m_preferences_manager->getDistanceUnitText());
-        m_velocity_unit_combobox->setCurrentText(m_preferences_manager->getVelocityUnitText());
-        m_acceleration_unit_combobox->setCurrentText(m_preferences_manager->getAccelerationUnitText());
-        m_density_unit_combobox->setCurrentText(m_preferences_manager->getDensityUnitText());
-        m_angle_unit_combobox->setCurrentText(m_preferences_manager->getAngleUnitText());
-        m_time_unit_combobox->setCurrentText(m_preferences_manager->getTimeUnitText());
-        m_temperature_unit_combobox->setCurrentText(m_preferences_manager->getTemperatureUnitText());
-        m_mass_unit_combobox->setCurrentText(m_preferences_manager->getMassUnitText());
-        m_voltage_unit_combobox->setCurrentText(m_preferences_manager->getVoltageUnitText());
-        m_rotation_unit_combobox->setCurrentText(m_preferences_manager->getRotationUnitText());
-        int previewModeIndex = m_gcode_preview_mode_combobox->findData(
-            static_cast<int>(m_preferences_manager->getGCodePreviewModePreference()));
-        m_gcode_preview_mode_combobox->setCurrentIndex(std::max(0, previewModeIndex));
-        m_gcode_preview_vertex_threshold_spinbox->setValue(
-            m_preferences_manager->getGCodePreviewVertexThresholdPreference());
-        m_optimization_points_visible_by_default_checkbox->setChecked(
-            m_preferences_manager->getOptimizationPointsVisibleByDefaultPreference());
-        m_gcode_info_visible_by_default_checkbox->setChecked(
-            m_preferences_manager->getGCodeInfoVisibleByDefaultPreference());
-        int disabledSettingVisibilityIndex = m_disabled_setting_visibility_combobox->findData(
-            static_cast<int>(m_preferences_manager->getDisabledSettingVisibilityPreference()));
-        m_disabled_setting_visibility_combobox->setCurrentIndex(std::max(0, disabledSettingVisibilityIndex));
-
-        setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
-        setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());
-        setPreferenceValue(m_boxes[2], m_preferences_manager->getFileShiftPreference());
-        m_warn_unsaved_project_on_close_checkbox->setChecked(
-            m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
+        refreshFromPreferences();
     }
+}
+
+void PreferencesWindow::refreshFromPreferences() {
+    auto setComboText = [](QComboBox* comboBox, const QString& text) {
+        const QSignalBlocker blocker(comboBox);
+        comboBox->setCurrentText(text);
+    };
+    auto setComboData = [](QComboBox* comboBox, int data) {
+        const QSignalBlocker blocker(comboBox);
+        comboBox->setCurrentIndex(std::max(0, comboBox->findData(data)));
+    };
+    auto setSpinBoxValue = [](QSpinBox* spinBox, int value) {
+        const QSignalBlocker blocker(spinBox);
+        spinBox->setValue(value);
+    };
+
+    setComboText(m_import_unit_combobox, m_preferences_manager->getImportUnit().toString());
+    setComboText(m_distance_unit_combobox, m_preferences_manager->getDistanceUnitText());
+    setComboText(m_velocity_unit_combobox, m_preferences_manager->getVelocityUnitText());
+    setComboText(m_acceleration_unit_combobox, m_preferences_manager->getAccelerationUnitText());
+    setComboText(m_density_unit_combobox, m_preferences_manager->getDensityUnitText());
+    setComboText(m_angle_unit_combobox, m_preferences_manager->getAngleUnitText());
+    setComboText(m_time_unit_combobox, m_preferences_manager->getTimeUnitText());
+    setComboText(m_temperature_unit_combobox, m_preferences_manager->getTemperatureUnitText());
+    setComboText(m_mass_unit_combobox, m_preferences_manager->getMassUnitText());
+    setComboText(m_voltage_unit_combobox, m_preferences_manager->getVoltageUnitText());
+    setComboText(m_rotation_unit_combobox, m_preferences_manager->getRotationUnitText());
+    setComboText(m_theme_combobox, m_preferences_manager->getThemeText());
+
+    setComboData(m_gcode_preview_mode_combobox,
+                 static_cast<int>(m_preferences_manager->getGCodePreviewModePreference()));
+    setComboData(m_disabled_setting_visibility_combobox,
+                 static_cast<int>(m_preferences_manager->getDisabledSettingVisibilityPreference()));
+    setSpinBoxValue(m_gcode_preview_vertex_threshold_spinbox,
+                    m_preferences_manager->getGCodePreviewVertexThresholdPreference());
+    setSpinBoxValue(m_layer_lag_spinbox, m_preferences_manager->getLayerLag());
+    setSpinBoxValue(m_segment_lag_spinbox, m_preferences_manager->getSegmentLag());
+
+    m_invert_camera_checkbox->setChecked(m_preferences_manager->invertCamera());
+    m_use_implicit_transforms_checkbox->setChecked(m_preferences_manager->getUseImplicitTransforms());
+    m_always_drop_parts_checkbox->setChecked(m_preferences_manager->getAlwaysDropParts());
+    m_optimization_points_visible_by_default_checkbox->setChecked(
+        m_preferences_manager->getOptimizationPointsVisibleByDefaultPreference());
+    m_gcode_info_visible_by_default_checkbox->setChecked(
+        m_preferences_manager->getGCodeInfoVisibleByDefaultPreference());
+    m_warn_unsaved_project_on_close_checkbox->setChecked(
+        m_preferences_manager->getWarnUnsavedProjectOnClosePreference());
+
+    setPreferenceValue(m_boxes[0], m_preferences_manager->getProjectShiftPreference());
+    setPreferenceValue(m_boxes[1], m_preferences_manager->getAlignPreference());
+    setPreferenceValue(m_boxes[2], m_preferences_manager->getFileShiftPreference());
+
+    for (VisualizationColorPicker* colorPicker : m_visualization_color_pickers) colorPicker->refreshFromPreferences();
 }
 
 void PreferencesWindow::updateThemeVisual() {
