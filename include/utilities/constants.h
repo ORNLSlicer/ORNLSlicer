@@ -609,6 +609,7 @@ class Constants {
             static const QString kEnableSpiralPerimeter;
             static const QString kCompletePathBeforeConnecting;
             static const QString kConnectToInsets;
+            static const QString kConnectToInsetsAfterTipWipe;
         };
 
         class Inset {
