@@ -569,34 +569,13 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
         const bool connect_to_spiral_insets =
             m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnable) &&
             m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) && !m_connected_inset_geometry.isEmpty();
-
-        auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
-            for (const Polyline& spiral_group : spiral_groups) {
-                if (spiral_group.size() < 3) { continue; }
-
-                Path newPath = createPath(spiral_group);
-                newPath.setCCW(ccw);
-
-                if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
-
-                if (newPath.calculateLength() < min_path_length) { continue; }
-
-                if (newPath.size() > 0) {
-                    if (connect_to_spiral_insets) { applyConnectedInsetSettings(newPath); }
-
-                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
-                    PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
-
-                    current_location = newPath.back()->end();
-                    m_paths.push_back(newPath);
-                }
-            }
-        };
+        const bool connect_to_insets_after_tip_wipe =
+            connect_to_spiral_insets && m_sb->setting<bool>(PS::Perimeter::kConnectToInsetsAfterTipWipe);
 
         if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
             const bool complete_path_before_connecting =
                 m_sb->setting<bool>(PS::Perimeter::kCompletePathBeforeConnecting);
+            bool connected_insets_appended_after_tip_wipe = false;
 
             auto appendConnectedInsetLoops = [&](QVector<Polyline>& ordered_loops, QVector<Distance>& ordered_widths,
                                                  Point& spiral_query_location, bool normalize_orientation,
@@ -645,6 +624,98 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 }
             };
 
+            auto appendConnectedInsetsAfterTipWipe = [&](Path& path, bool ccw) {
+                QVector<Path> additional_paths;
+                if (!connect_to_insets_after_tip_wipe || connected_insets_appended_after_tip_wipe ||
+                    path.size() == 0) {
+                    return additional_paths;
+                }
+
+                QVector<Polyline> ordered_insets;
+                QVector<Distance> ordered_inset_widths;
+                Point spiral_query_location = path.back()->end();
+                bool has_spiral_orientation = true;
+                bool spiral_orientation     = ccw;
+                appendConnectedInsetLoops(ordered_insets, ordered_inset_widths, spiral_query_location, true,
+                                          has_spiral_orientation, spiral_orientation);
+
+                if (ordered_insets.isEmpty()) { return additional_paths; }
+
+                const Distance inset_nominal_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
+                QVector<Polyline> inset_groups =
+                    SpiralPath::linkClosedPolylineGroups(ordered_insets, ordered_inset_widths, inset_nominal_width,
+                                                         complete_path_before_connecting);
+
+                Point previous_end      = path.back()->end();
+                bool append_to_tip_path = true;
+                bool appended_any       = false;
+                for (const Polyline& inset_group : inset_groups) {
+                    if (inset_group.size() < 3) { continue; }
+
+                    Polyline connected_group;
+                    if (append_to_tip_path) { connected_group.push_back(previous_end); }
+                    connected_group += inset_group;
+
+                    Path inset_path = createPath(connected_group);
+                    inset_path.setCCW(ccw);
+
+                    if (inset_path.size() > 0) { inset_path.getSegments().removeLast(); }
+                    if (inset_path.size() == 0) { continue; }
+
+                    applyConnectedInsetSettings(inset_path);
+
+                    if (append_to_tip_path) {
+                        path.append(inset_path);
+                        previous_end        = path.back()->end();
+                        append_to_tip_path = false;
+                        appended_any       = true;
+                    }
+                    else {
+                        PathModifierGenerator::GenerateTravel(inset_path, previous_end,
+                                                              m_sb->setting<Velocity>(PS::Travel::kSpeed));
+                        previous_end = inset_path.back()->end();
+                        additional_paths.push_back(inset_path);
+                        appended_any = true;
+                    }
+                }
+
+                if (appended_any) { connected_insets_appended_after_tip_wipe = true; }
+
+                return additional_paths;
+            };
+
+            auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
+                for (const Polyline& spiral_group : spiral_groups) {
+                    if (spiral_group.size() < 3) { continue; }
+
+                    Path newPath = createPath(spiral_group);
+                    newPath.setCCW(ccw);
+
+                    if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
+
+                    if (newPath.calculateLength() < min_path_length) { continue; }
+
+                    if (newPath.size() > 0) {
+                        if (connect_to_spiral_insets && !connect_to_insets_after_tip_wipe) {
+                            applyConnectedInsetSettings(newPath);
+                        }
+
+                        calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+                        QVector<Path> additional_paths = appendConnectedInsetsAfterTipWipe(newPath, ccw);
+                        PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                              m_sb->setting<Velocity>(PS::Travel::kSpeed));
+
+                        current_location = newPath.back()->end();
+                        m_paths.push_back(newPath);
+
+                        for (Path& additional_path : additional_paths) {
+                            current_location = additional_path.back()->end();
+                            m_paths.push_back(additional_path);
+                        }
+                    }
+                }
+            };
+
             if (!m_sb->setting<bool>(PS::Perimeter::kAdaptive)) {
                 Point spiral_query_location = current_location;
                 PolylineOrderOptimizer spiral_poo(spiral_query_location, layerNumber);
@@ -676,8 +747,10 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 bool has_spiral_orientation = false;
                 bool spiral_orientation     = false;
-                appendConnectedInsetLoops(ordered_perimeters, ordered_widths, spiral_query_location, false,
-                                          has_spiral_orientation, spiral_orientation);
+                if (!connect_to_insets_after_tip_wipe) {
+                    appendConnectedInsetLoops(ordered_perimeters, ordered_widths, spiral_query_location, false,
+                                              has_spiral_orientation, spiral_orientation);
+                }
 
                 if (ordered_perimeters.size() == 1) {
                     Polyline result = ordered_perimeters.first();
@@ -689,11 +762,17 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                     if (newPath.size() > 0) {
                         calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                        QVector<Path> additional_paths = appendConnectedInsetsAfterTipWipe(newPath, result.orientation());
                         PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                               m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
                         current_location = newPath.back()->end();
                         m_paths.push_back(newPath);
+
+                        for (Path& additional_path : additional_paths) {
+                            current_location = additional_path.back()->end();
+                            m_paths.push_back(additional_path);
+                        }
                     }
 
                     return;
@@ -744,8 +823,10 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
             if (ordered_perimeters.isEmpty()) { return; }
 
-            appendConnectedInsetLoops(ordered_perimeters, ordered_perimeter_widths, spiral_query_location, true,
-                                      has_spiral_orientation, spiral_orientation);
+            if (!connect_to_insets_after_tip_wipe) {
+                appendConnectedInsetLoops(ordered_perimeters, ordered_perimeter_widths, spiral_query_location, true,
+                                          has_spiral_orientation, spiral_orientation);
+            }
 
             if (ordered_perimeters.size() == 1) {
                 PolylineOrderOptimizer first_loop_poo(current_location, layerNumber);
@@ -762,11 +843,17 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 if (newPath.size() > 0) {
                     calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                    QVector<Path> additional_paths = appendConnectedInsetsAfterTipWipe(newPath, result.orientation());
                     PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
                     current_location = newPath.back()->end();
                     m_paths.push_back(newPath);
+
+                    for (Path& additional_path : additional_paths) {
+                        current_location = additional_path.back()->end();
+                        m_paths.push_back(additional_path);
+                    }
                 }
 
                 return;
