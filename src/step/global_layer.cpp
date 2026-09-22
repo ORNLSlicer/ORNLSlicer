@@ -208,7 +208,7 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
 
     // Do seam adjustment if necessary
     if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
-        Point start_override       = start;
+        Point start_override = start;
         if (!order_settings_layer.isNull()) {
             start_override = OptimizationAnchor::customIslandOrderPoint(
                 island_order_sb, order_settings_layer->getSlicingPlane(), order_settings_layer->getShift());
