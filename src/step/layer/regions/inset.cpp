@@ -407,18 +407,17 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
     auto appendBranchAfterTipWipePaths = [&](const QVector<Polyline>& ordered_loops, const QVector<Distance>& widths,
                                              Distance fallback_width, bool complete_before_connecting, bool ccw,
                                              Distance min_path_length) {
-        Point branch_start = current_location;
+        Path branched_path;
+        branched_path.setCCW(ccw);
 
         for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
             const Polyline& loop = ordered_loops[i];
             if (loop.size() < 3) { continue; }
 
             const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
-            const Point final_stop =
-                SpiralPath::transitionStartPoint(loop, loop_width, complete_before_connecting);
+            const Point final_stop    = SpiralPath::transitionStartPoint(loop, loop_width, complete_before_connecting);
 
             Polyline branch_line;
-            if (i > 0) { branch_line.push_back(branch_start); }
             branch_line += loop;
             if (branch_line.back() != final_stop) { branch_line.push_back(final_stop); }
 
@@ -430,15 +429,30 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
             if (newPath.calculateLength() < min_path_length) { continue; }
 
             if (newPath.size() > 0) {
-                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
-                PathModifierGenerator::GenerateTravel(newPath, current_location,
-                                                      m_sb->setting<Velocity>(PS::Travel::kSpeed));
+                QSharedPointer<SettingsBase> branch_settings =
+                    QSharedPointer<SettingsBase>::create(*newPath.front()->getSb());
+                branch_settings->setSetting(SS::kPathModifiers, PathModifiers::kNone);
 
-                current_location = newPath.back()->end();
-                branch_start     = current_location;
-                m_paths.push_back(newPath);
+                calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+
+                if (branched_path.size() == 0) {
+                    PathModifierGenerator::GenerateTravel(newPath, current_location,
+                                                          m_sb->setting<Velocity>(PS::Travel::kSpeed));
+                }
+                else {
+                    LSegmentPtr branch = LSegmentPtr::create(branched_path.back()->end(), newPath.front()->start());
+                    branch->setSb(branch_settings);
+                    branched_path.append(branch);
+                }
+
+                branched_path.append(newPath);
             }
         }
+
+        if (branched_path.size() == 0) { return; }
+
+        current_location = branched_path.back()->end();
+        m_paths.push_back(branched_path);
     };
 
     auto appendSpiralPaths = [&](const QVector<Polyline>& spiral_groups, bool ccw, Distance min_path_length) {
