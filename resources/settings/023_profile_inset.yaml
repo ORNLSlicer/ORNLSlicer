@@ -169,3 +169,15 @@ settings:
     namespace: "Profile::Inset"
     symbol: "kCompletePathBeforeConnecting"
     local: true
+  - name: "spiral_inset_branch_after_tip_wipe"
+    display: "Branch after tip wipe"
+    type: "boolean"
+    tooltip: "If selected, spiral insets will apply their tip wipe before branching to the next spiral path."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"spiral_inset":true}]}]}
+    options: []
+    default: false
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Inset"
+    symbol: "kBranchAfterTipWipe"
+    local: true
