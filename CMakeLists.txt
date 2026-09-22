@@ -284,6 +284,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_optimizer_empty_input_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME optimizer_empty_input_tests COMMAND ${PROJECT_NAME}_optimizer_empty_input_tests)
 
+    add_executable(${PROJECT_NAME}_global_layer_tests tests/global_layer_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_global_layer_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_global_layer_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME global_layer_tests COMMAND ${PROJECT_NAME}_global_layer_tests)
+
     add_executable(${PROJECT_NAME}_gcode_settings_importer_tests tests/gcode_settings_importer_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_gcode_settings_importer_tests

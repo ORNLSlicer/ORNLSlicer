@@ -2,6 +2,7 @@
 
 #include <algorithm>
 #include <limits>
+#include <optional>
 
 #include <qassert.h>
 #include <qcontainerfwd.h>
@@ -29,12 +30,96 @@
 
 namespace ORNL {
 namespace {
-QSharedPointer<Layer> firstPrintingLayer(const QMap<QUuid, QSharedPointer<Part::StepPair>>& step_pairs) {
-    for (auto it = step_pairs.constBegin(); it != step_pairs.constEnd(); ++it) {
-        if (!it.value().isNull() && !it.value()->printing_layer.isNull()) { return it.value()->printing_layer; }
+struct IslandOrderSettings {
+    IslandOrderOptimization method;
+    double custom_x;
+    double custom_y;
+    double custom_z;
+    float seam_vector_x;
+    float seam_vector_y;
+    float seam_vector_z;
+};
+
+struct IslandOrderSelection {
+    QSharedPointer<Layer> settings_layer;
+    QSharedPointer<Layer> anchor_layer;
+};
+
+IslandOrderSettings islandOrderSettings(const QSharedPointer<SettingsBase>& sb) {
+    return {static_cast<IslandOrderOptimization>(sb->setting<int>(PS::Optimizations::kIslandOrder)),
+            sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
+            sb->setting<double>(PS::Optimizations::kCustomIslandYLocation),
+            sb->setting<double>(PS::Optimizations::kCustomIslandZLocation),
+            sb->setting<float>(PS::Optimizations::kSeamAttractorVectorX),
+            sb->setting<float>(PS::Optimizations::kSeamAttractorVectorY),
+            sb->setting<float>(PS::Optimizations::kSeamAttractorVectorZ)};
+}
+
+bool sameRelevantIslandOrderSettings(const IslandOrderSettings& lhs, const IslandOrderSettings& rhs) {
+    if (lhs.method != rhs.method) return false;
+
+    if (lhs.method != IslandOrderOptimization::kCustomPoint) return true;
+
+    return lhs.custom_x == rhs.custom_x && lhs.custom_y == rhs.custom_y && lhs.custom_z == rhs.custom_z &&
+           lhs.seam_vector_x == rhs.seam_vector_x && lhs.seam_vector_y == rhs.seam_vector_y &&
+           lhs.seam_vector_z == rhs.seam_vector_z;
+}
+
+bool hasOrderableIsland(const QSharedPointer<Layer>& layer) {
+    if (layer.isNull()) return false;
+
+    for (const QSharedPointer<IslandBase>& island : layer->getIslands()) {
+        if (!island.isNull() && !island->getGeometry().isEmpty()) return true;
     }
 
-    return nullptr;
+    return false;
+}
+
+bool sameCustomIslandOrderFrame(const QSharedPointer<Layer>& lhs, const QSharedPointer<Layer>& rhs) {
+    Plane lhs_plane = lhs->getSlicingPlane();
+    return lhs_plane.isEqual(rhs->getSlicingPlane(), 0.01) && lhs->getShift() == rhs->getShift();
+}
+
+IslandOrderSelection commonIslandOrderSelection(const QMap<QUuid, QSharedPointer<Part::StepPair>>& step_pairs) {
+    std::optional<IslandOrderSettings> common_settings;
+    IslandOrderSelection selection;
+    bool settings_conflict = false;
+    bool frame_conflict    = false;
+
+    for (auto it = step_pairs.constBegin(); it != step_pairs.constEnd(); ++it) {
+        if (it.value().isNull() || !hasOrderableIsland(it.value()->printing_layer)) continue;
+
+        QSharedPointer<Layer> printing_layer = it.value()->printing_layer;
+        if (selection.anchor_layer.isNull()) { selection.anchor_layer = printing_layer; }
+        else if (!sameCustomIslandOrderFrame(selection.anchor_layer, printing_layer)) { frame_conflict = true; }
+
+        if (settings_conflict) continue;
+
+        const IslandOrderSettings settings = islandOrderSettings(it.value()->printing_layer->getSb());
+        if (!common_settings.has_value()) {
+            common_settings          = settings;
+            selection.settings_layer = printing_layer;
+            continue;
+        }
+
+        const bool same_settings = sameRelevantIslandOrderSettings(common_settings.value(), settings);
+        if (!same_settings) {
+            qWarning() << "Global layer has conflicting island order settings; using global settings";
+            settings_conflict        = true;
+            selection.settings_layer = nullptr;
+        }
+    }
+
+    if (frame_conflict) {
+        if (common_settings.has_value() && common_settings.value().method == IslandOrderOptimization::kCustomPoint &&
+            !selection.settings_layer.isNull()) {
+            qWarning() << "Global layer has conflicting custom island order frames; using global settings";
+            selection.settings_layer = nullptr;
+        }
+        selection.anchor_layer = nullptr;
+    }
+
+    return selection;
 }
 }  // namespace
 
@@ -134,9 +219,11 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
         }
     }
 
-    QSharedPointer<Layer> order_settings_layer = firstPrintingLayer(m_step_pairs);
+    IslandOrderSelection order_selection = commonIslandOrderSelection(m_step_pairs);
     QSharedPointer<SettingsBase> island_order_sb =
-        order_settings_layer.isNull() ? global_sb : order_settings_layer->getSb();
+        order_selection.settings_layer.isNull() ? global_sb : order_selection.settings_layer->getSb();
+    QSharedPointer<Layer> order_anchor_layer =
+        order_selection.settings_layer.isNull() ? order_selection.anchor_layer : order_selection.settings_layer;
 
     // get the island order method from the settings
     IslandOrderOptimization islandOrderMethod =
@@ -165,9 +252,9 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
         // 1.1.2) Get the right start point for the Island Order Optimizer part ordering
         Point start_point = start;
         if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
-            if (!order_settings_layer.isNull()) {
+            if (!order_anchor_layer.isNull()) {
                 start_point = OptimizationAnchor::customIslandOrderPoint(
-                    island_order_sb, order_settings_layer->getSlicingPlane(), order_settings_layer->getShift());
+                    island_order_sb, order_anchor_layer->getSlicingPlane(), order_anchor_layer->getShift());
             }
         }
 
@@ -209,9 +296,9 @@ void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& st
     // Do seam adjustment if necessary
     if (islandOrderMethod == IslandOrderOptimization::kCustomPoint) {
         Point start_override = start;
-        if (!order_settings_layer.isNull()) {
+        if (!order_anchor_layer.isNull()) {
             start_override = OptimizationAnchor::customIslandOrderPoint(
-                island_order_sb, order_settings_layer->getSlicingPlane(), order_settings_layer->getShift());
+                island_order_sb, order_anchor_layer->getSlicingPlane(), order_anchor_layer->getShift());
         }
 
         island_optimizer.setStartPoint(start_override);
