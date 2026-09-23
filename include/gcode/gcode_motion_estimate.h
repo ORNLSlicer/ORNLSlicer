@@ -65,9 +65,9 @@ class MotionEstimation {
     static Distance m_nominal_bead_height;
     static Distance m_last_print_z;
     static Distance m_last_print_w;
-    static Distance m_last_deposition_z;
-    static Distance m_last_deposition_w;
-    static bool m_layer_has_deposition;
+    static Distance m_layer_fallback_print_z;
+    static Distance m_layer_fallback_print_w;
+    static bool m_layer_has_fallback_print_anchor;
     static bool m_layer_has_inferred_print_anchor;
 
     static Distance m_previous_distance;
