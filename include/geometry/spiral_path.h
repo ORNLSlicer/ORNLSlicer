@@ -383,10 +383,9 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
     if (line.size() < 3) { return false; }
 
     constexpr double minimum_forward_dot = 1.0e-6;
-    constexpr double target_forward_dot  = 0.7071067811865476;
     Polyline best_candidate;
-    double best_angle_error   = std::numeric_limits<double>::max();
     double best_branch_length = std::numeric_limits<double>::max();
+    double best_forward_dot   = 0.0;
 
     auto branchQuality = [&](const Polyline& candidate, double& forward_dot, double& branch_length) {
         double direction_x = candidate.front().x() - candidate.back().x();
@@ -410,18 +409,15 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
         double branch_length = 0.0;
         if (!branchQuality(candidate, forward_dot, branch_length)) { return; }
 
-        const double angle_error = std::abs(forward_dot - target_forward_dot);
-        if (angle_error < best_angle_error ||
-            (std::abs(angle_error - best_angle_error) <= minimum_forward_dot && branch_length < best_branch_length)) {
+        if (branch_length < best_branch_length ||
+            (std::abs(branch_length - best_branch_length) <= minimum_forward_dot && forward_dot > best_forward_dot)) {
             best_candidate     = candidate;
-            best_angle_error   = angle_error;
             best_branch_length = branch_length;
+            best_forward_dot   = forward_dot;
         }
     };
 
-    double current_forward_dot   = 0.0;
-    double current_branch_length = 0.0;
-    if (branchQuality(line, current_forward_dot, current_branch_length)) { return true; }
+    considerCandidate(line);
 
     const double stop_offset = complete_before_connecting ? 0.0 : stop_distance();
     const double extension   = forward_wipe_distance() - stop_offset;
@@ -437,15 +433,14 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
         direction_x /= segment_length;
         direction_y /= segment_length;
 
-        const double target_x      = next_start.x() - segment_start.x();
-        const double target_y      = next_start.y() - segment_start.y();
-        const double target_along  = (target_x * direction_x) + (target_y * direction_y);
-        const double target_across = std::abs((target_x * direction_y) - (target_y * direction_x));
-        const double desired_forward_distance =
-            std::max(target_across, std::max(forward_wipe_distance() * 0.5, 1.0e-3));
-        const double seam_distance = target_along - extension - desired_forward_distance;
-        const double min_before    = stop_offset + min_length;
-        const double max_before    = segment_length - min_length;
+        const double target_x                 = next_start.x() - segment_start.x();
+        const double target_y                 = next_start.y() - segment_start.y();
+        const double target_along             = (target_x * direction_x) + (target_y * direction_y);
+        const double target_across            = std::abs((target_x * direction_y) - (target_y * direction_x));
+        const double desired_forward_distance = std::max(target_across * 1.0e-4, 1.0e-3);
+        const double seam_distance            = target_along - extension - desired_forward_distance;
+        const double min_before               = stop_offset + min_length;
+        const double max_before               = segment_length - min_length;
         if (seam_distance <= min_before || seam_distance >= max_before) { continue; }
 
         Polyline candidate = line;
