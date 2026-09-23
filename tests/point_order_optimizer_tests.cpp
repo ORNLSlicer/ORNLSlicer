@@ -6,6 +6,7 @@
 #include "optimizers/point_order_optimizer.h"
 #include "test_utils.h"
 #include "units/unit.h"
+#include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace {
@@ -20,6 +21,9 @@ ORNL::Polyline squareLoop() {
 int main() {
     bool passed                   = true;
     const ORNL::Polyline polyline = squareLoop();
+
+    passed &= expect(ORNL::PS::Optimizations::kConsecutiveDistanceThreshold == "consecutive_distance_threshold",
+                     "Expected consecutive threshold setting key to match project/resource setting name.");
 
     const auto physical_selection = ORNL::PointOrderOptimizer::linkToPoint(
         ORNL::Point(999.0f, 999.0f, 0.0f), polyline, 4, ORNL::PointOrderOptimization::kConsecutive, false,

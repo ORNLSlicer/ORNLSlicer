@@ -781,7 +781,7 @@ const QString Constants::ProfileSettings::Optimizations::kLocalRandomnessRadius 
 const QString Constants::ProfileSettings::Optimizations::kMinDistanceEnabled    = "enable_min_distance";
 const QString Constants::ProfileSettings::Optimizations::kMinDistanceThreshold  = "min_distance_threshold";
 const QString Constants::ProfileSettings::Optimizations::kConsecutiveDistanceThreshold =
-    "consecutive_path_distance_threshold";
+    "consecutive_distance_threshold";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointXLocation = "custom_point_order_x_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointYLocation = "custom_point_order_y_location";
 const QString Constants::ProfileSettings::Optimizations::kCustomPointZLocation = "custom_point_order_z_location";
