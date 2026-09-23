@@ -75,9 +75,11 @@ bool hasOrderableIsland(const QSharedPointer<Layer>& layer) {
     return false;
 }
 
-bool sameCustomIslandOrderFrame(const QSharedPointer<Layer>& lhs, const QSharedPointer<Layer>& rhs) {
-    Plane lhs_plane = lhs->getSlicingPlane();
-    return lhs_plane.isEqual(rhs->getSlicingPlane(), 0.01) && lhs->getShift() == rhs->getShift();
+bool sameCustomIslandOrderAnchor(const QSharedPointer<Layer>& lhs, const QSharedPointer<Layer>& rhs,
+                                 const QSharedPointer<SettingsBase>& sb) {
+    const Point lhs_anchor = OptimizationAnchor::customIslandOrderPoint(sb, lhs->getSlicingPlane(), lhs->getShift());
+    const Point rhs_anchor = OptimizationAnchor::customIslandOrderPoint(sb, rhs->getSlicingPlane(), rhs->getShift());
+    return lhs_anchor.distance(rhs_anchor)() <= 0.01;
 }
 
 IslandOrderSelection commonIslandOrderSelection(const QMap<QUuid, QSharedPointer<Part::StepPair>>& step_pairs) {
@@ -90,12 +92,11 @@ IslandOrderSelection commonIslandOrderSelection(const QMap<QUuid, QSharedPointer
         if (it.value().isNull() || !hasOrderableIsland(it.value()->printing_layer)) continue;
 
         QSharedPointer<Layer> printing_layer = it.value()->printing_layer;
+        const IslandOrderSettings settings   = islandOrderSettings(it.value()->printing_layer->getSb());
         if (selection.anchor_layer.isNull()) { selection.anchor_layer = printing_layer; }
-        else if (!sameCustomIslandOrderFrame(selection.anchor_layer, printing_layer)) { frame_conflict = true; }
 
         if (settings_conflict) continue;
 
-        const IslandOrderSettings settings = islandOrderSettings(it.value()->printing_layer->getSb());
         if (!common_settings.has_value()) {
             common_settings          = settings;
             selection.settings_layer = printing_layer;
@@ -107,6 +108,10 @@ IslandOrderSelection commonIslandOrderSelection(const QMap<QUuid, QSharedPointer
             qWarning() << "Global layer has conflicting island order settings; using global settings";
             settings_conflict        = true;
             selection.settings_layer = nullptr;
+        }
+        else if (settings.method == IslandOrderOptimization::kCustomPoint &&
+                 !sameCustomIslandOrderAnchor(selection.anchor_layer, printing_layer, printing_layer->getSb())) {
+            frame_conflict = true;
         }
     }
 

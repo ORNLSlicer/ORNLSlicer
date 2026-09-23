@@ -113,6 +113,29 @@ bool commonLayerIslandOrderSettingsAreUsed() {
            optimized_order.first() == far_island.data();
 }
 
+bool commonCustomIslandOrderSettingsIgnoreHorizontalShift() {
+    QVector<const TestIsland*> optimized_order;
+    const QSharedPointer<ORNL::SettingsBase> global_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    const QSharedPointer<ORNL::SettingsBase> layer_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kCustomPoint);
+    layer_settings->setSetting(ORNL::PS::Optimizations::kCustomIslandXLocation, 2000.0);
+
+    QSharedPointer<TestIsland> near_island =
+        QSharedPointer<TestIsland>::create(squareAt(100.0f), layer_settings, &optimized_order);
+    QSharedPointer<TestIsland> far_island =
+        QSharedPointer<TestIsland>::create(squareAt(1000.0f), layer_settings, &optimized_order);
+
+    ORNL::GlobalLayer global_layer(0);
+    addLayer(global_layer, "{00000000-0000-0000-0000-000000000001}",
+             layerWithIsland(layer_settings, near_island, ORNL::Point(100.0f, 0.0f, 0.0f)));
+    addLayer(global_layer, "{00000000-0000-0000-0000-000000000002}",
+             layerWithIsland(layer_settings, far_island, ORNL::Point(1000.0f, 0.0f, 0.0f)));
+
+    return optimizeGlobalLayer(global_layer, global_settings, optimized_order) &&
+           optimized_order.first() == far_island.data();
+}
+
 bool conflictingLayerIslandOrderSettingsUseGlobalSettings() {
     QVector<const TestIsland*> optimized_order;
     const QSharedPointer<ORNL::SettingsBase> global_settings =
@@ -165,6 +188,8 @@ int main() {
 
     passed &= expect(commonLayerIslandOrderSettingsAreUsed(),
                      "Expected global layers with common island-order settings to use layer settings.");
+    passed &= expect(commonCustomIslandOrderSettingsIgnoreHorizontalShift(),
+                     "Expected horizontal per-part shifts to preserve common custom island-order settings.");
     passed &= expect(conflictingLayerIslandOrderSettingsUseGlobalSettings(),
                      "Expected conflicting global-layer island-order settings to fall back to global settings.");
     passed &= expect(globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict(),
