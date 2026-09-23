@@ -2,18 +2,13 @@
 #include <QObject>
 #include <QTemporaryDir>
 #include <cstdlib>
-#include <iostream>
 
 #include "managers/preferences_manager.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace {
-bool expect(bool condition, const char* message) {
-    if (!condition) std::cerr << message << '\n';
-    return condition;
-}
-
 bool writePreferences(const QString& path, const fifojson& preferences) {
     QFile file(path);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) return false;
@@ -24,7 +19,7 @@ bool writePreferences(const QString& path, const fifojson& preferences) {
 
 int main() {
     QTemporaryDir temp_dir;
-    if (!expect(temp_dir.isValid(), "Could not create a temporary directory.")) return EXIT_FAILURE;
+    if (!ORNL::Testing::expect(temp_dir.isValid(), "Could not create a temporary directory.")) return EXIT_FAILURE;
 
     const auto preferences_manager = ORNL::PreferencesManager::getInstance();
     fifojson imported_preferences  = preferences_manager->json();
@@ -42,7 +37,8 @@ int main() {
     imported_preferences["visualization_colors"]["Travel"] = imported_travel_color.name().toStdString();
 
     const QString preferences_path = temp_dir.path() + "/import.preferences";
-    if (!expect(writePreferences(preferences_path, imported_preferences), "Could not write preference fixture."))
+    if (!ORNL::Testing::expect(writePreferences(preferences_path, imported_preferences),
+                               "Could not write preference fixture."))
         return EXIT_FAILURE;
 
     int aggregate_unit_change_count  = 0;
@@ -60,20 +56,21 @@ int main() {
     preferences_manager->importPreferences(preferences_path);
 
     bool passed = true;
-    passed &= expect(aggregate_unit_change_count == 1,
-                     "A preference import should emit one aggregate unit-change notification.");
-    passed &= expect(signal_observed_final_state, "Import consumers should only observe the complete imported state.");
-    passed &= expect(preferences_manager->getDistanceUnit() == imported_distance,
-                     "The imported distance unit was not applied.");
-    passed &= expect(preferences_manager->invertCamera() == imported_invert_camera,
-                     "The imported camera preference was not applied.");
-    passed &=
-        expect(preferences_manager->getLayerLag() == imported_layer_lag, "The imported layer lag was not applied.");
-    passed &= expect(preferences_manager->getSegmentLag() == imported_segment_lag,
-                     "The imported segment lag was not applied.");
-    passed &=
-        expect(preferences_manager->getVisualizationColor(ORNL::VisualizationColors::kTravel) == imported_travel_color,
-               "The imported visualization color was not applied.");
+    passed &= ORNL::Testing::expect(aggregate_unit_change_count == 1,
+                                    "A preference import should emit one aggregate unit-change notification.");
+    passed &= ORNL::Testing::expect(signal_observed_final_state,
+                                    "Import consumers should only observe the complete imported state.");
+    passed &= ORNL::Testing::expect(preferences_manager->getDistanceUnit() == imported_distance,
+                                    "The imported distance unit was not applied.");
+    passed &= ORNL::Testing::expect(preferences_manager->invertCamera() == imported_invert_camera,
+                                    "The imported camera preference was not applied.");
+    passed &= ORNL::Testing::expect(preferences_manager->getLayerLag() == imported_layer_lag,
+                                    "The imported layer lag was not applied.");
+    passed &= ORNL::Testing::expect(preferences_manager->getSegmentLag() == imported_segment_lag,
+                                    "The imported segment lag was not applied.");
+    passed &= ORNL::Testing::expect(
+        preferences_manager->getVisualizationColor(ORNL::VisualizationColors::kTravel) == imported_travel_color,
+        "The imported visualization color was not applied.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

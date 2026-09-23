@@ -3,10 +3,7 @@
 #include <QStringList>
 #include <QVector3D>
 #include <QVector>
-#include <cmath>
 #include <cstdlib>
-#include <iostream>
-#include <string>
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
@@ -19,6 +16,7 @@
 #include "step/layer/island/island_base.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -53,17 +51,6 @@ class TestIsland : public ORNL::IslandBase {
 
     void optimize(int, ORNL::Point&, QVector<QSharedPointer<ORNL::RegionBase>>&) override {}
 };
-
-bool expect(bool condition, const std::string& message) {
-    if (condition) return true;
-
-    std::cerr << message << '\n';
-    return false;
-}
-
-bool near(double actual, double expected) {
-    return std::abs(actual - expected) <= 1.0e-4;
-}
 
 QSharedPointer<ORNL::SettingsBase> layerSettings(ORNL::MachineType machine_type, ORNL::Distance layer_height) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
@@ -111,9 +98,9 @@ bool wireArcUsesSurfaceReferencedSequence() {
         reorientedLine(ORNL::MachineType::kWire_Arc, 2.8 * ORNL::mm,
                        ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 7.0 * ORNL::mm), QVector3D(0.0f, 0.0f, 1.0f));
 
-    return near(ORNL::Distance(first_layer->start().z()).to(ORNL::mm), 0.0) &&
-           near(ORNL::Distance(second_layer->start().z()).to(ORNL::mm), 2.8) &&
-           near(ORNL::Distance(third_layer->start().z()).to(ORNL::mm), 5.6);
+    return ORNL::Testing::near(ORNL::Distance(first_layer->start().z()).to(ORNL::mm), 0.0) &&
+           ORNL::Testing::near(ORNL::Distance(second_layer->start().z()).to(ORNL::mm), 2.8) &&
+           ORNL::Testing::near(ORNL::Distance(third_layer->start().z()).to(ORNL::mm), 5.6);
 }
 
 bool nonWireArcKeepsTopOfLayerReference() {
@@ -121,7 +108,7 @@ bool nonWireArcKeepsTopOfLayerReference() {
         reorientedLine(ORNL::MachineType::kPellet, 2.8 * ORNL::mm,
                        ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 1.4 * ORNL::mm), QVector3D(0.0f, 0.0f, 1.0f));
 
-    return near(ORNL::Distance(segment->start().z()).to(ORNL::mm), 2.8);
+    return ORNL::Testing::near(ORNL::Distance(segment->start().z()).to(ORNL::mm), 2.8);
 }
 
 bool wireArcUsesEachVariableLayerHeight() {
@@ -129,7 +116,7 @@ bool wireArcUsesEachVariableLayerHeight() {
         reorientedLine(ORNL::MachineType::kWire_Arc, 3.2 * ORNL::mm,
                        ORNL::Point(0.0 * ORNL::mm, 0.0 * ORNL::mm, 4.4 * ORNL::mm), QVector3D(0.0f, 0.0f, 1.0f));
 
-    return near(ORNL::Distance(segment->start().z()).to(ORNL::mm), 2.8);
+    return ORNL::Testing::near(ORNL::Distance(segment->start().z()).to(ORNL::mm), 2.8);
 }
 
 bool wireArcAdjustsAlongSlicingNormal() {
@@ -142,8 +129,7 @@ bool wireArcAdjustsAlongSlicingNormal() {
         ORNL::MachineType::kWire_Arc, 2.8 * ORNL::mm, ORNL::Point::fromQVector3D(slicing_plane_center), slicing_normal);
 
     const ORNL::Point start = segment->start();
-    return near(start.x(), lower_surface.x()) && near(start.y(), lower_surface.y()) &&
-           near(start.z(), lower_surface.z());
+    return ORNL::Testing::near3DPoint(start, lower_surface.x(), lower_surface.y(), lower_surface.z());
 }
 
 QSharedPointer<ORNL::SettingsBase> wolfSettings() {
@@ -234,20 +220,20 @@ int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     bool passed = true;
-    passed &= expect(wireArcUsesSurfaceReferencedSequence(),
-                     "Wire Arc layers did not follow the expected 0.0, 2.8, 5.6 mm surface sequence.");
-    passed &= expect(nonWireArcKeepsTopOfLayerReference(),
-                     "Non-Wire Arc layer no longer used the existing top-of-layer reference.");
-    passed &= expect(wireArcUsesEachVariableLayerHeight(),
-                     "Wire Arc variable-height layer did not start on the preceding layer surface.");
-    passed &= expect(wireArcAdjustsAlongSlicingNormal(),
-                     "Wire Arc layer datum adjustment did not follow the slicing-plane normal.");
-    passed &= expect(wolfFirstApproachUsesTargetLiftAndOneOffset(),
-                     "Wolf first approach did not apply target lift and Z offset exactly once.");
-    passed &= expect(wolfShortFirstTravelDoesNotLift(),
-                     "Wolf lifted a first travel shorter than the configured minimum lift distance.");
-    passed &= expect(wolfFirstTravelHonorsNoLift(), "Wolf lifted a first travel marked as no-lift.");
-    passed &= expect(wolfNormalizesNegativeZero(), "Wolf emitted a negative-zero Z coordinate.");
+    passed &= ORNL::Testing::expect(wireArcUsesSurfaceReferencedSequence(),
+                                    "Wire Arc layers did not follow the expected 0.0, 2.8, 5.6 mm surface sequence.");
+    passed &= ORNL::Testing::expect(nonWireArcKeepsTopOfLayerReference(),
+                                    "Non-Wire Arc layer no longer used the existing top-of-layer reference.");
+    passed &= ORNL::Testing::expect(wireArcUsesEachVariableLayerHeight(),
+                                    "Wire Arc variable-height layer did not start on the preceding layer surface.");
+    passed &= ORNL::Testing::expect(wireArcAdjustsAlongSlicingNormal(),
+                                    "Wire Arc layer datum adjustment did not follow the slicing-plane normal.");
+    passed &= ORNL::Testing::expect(wolfFirstApproachUsesTargetLiftAndOneOffset(),
+                                    "Wolf first approach did not apply target lift and Z offset exactly once.");
+    passed &= ORNL::Testing::expect(wolfShortFirstTravelDoesNotLift(),
+                                    "Wolf lifted a first travel shorter than the configured minimum lift distance.");
+    passed &= ORNL::Testing::expect(wolfFirstTravelHonorsNoLift(), "Wolf lifted a first travel marked as no-lift.");
+    passed &= ORNL::Testing::expect(wolfNormalizesNegativeZero(), "Wolf emitted a negative-zero Z coordinate.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -12,14 +12,13 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
 #include <limits>
-#include <string>
 
 #include "gcode/as_printed_model_exporter.h"
 #include "geometry/point.h"
 #include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
+#include "test_utils.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
@@ -28,7 +27,7 @@ constexpr float kLength             = 10.0f;
 constexpr float kWidth              = 2.0f;
 constexpr float kHeight             = 1.0f;
 constexpr float kCenterlineDiameter = 0.1f;
-constexpr float kTolerance          = 0.001f;
+constexpr float kTolerance          = 1.0e-3f;
 
 struct Bounds {
     QVector3D min = QVector3D(std::numeric_limits<float>::max(), std::numeric_limits<float>::max(),
@@ -36,13 +35,6 @@ struct Bounds {
     QVector3D max = QVector3D(std::numeric_limits<float>::lowest(), std::numeric_limits<float>::lowest(),
                               std::numeric_limits<float>::lowest());
 };
-
-bool expect(bool condition, const std::string& message) {
-    if (condition) return true;
-
-    std::cerr << message << '\n';
-    return false;
-}
 
 ORNL::Point pointFromMm(float x, float y, float z = 0.0f) {
     return ORNL::Point(x * ORNL::mm(), y * ORNL::mm(), z * ORNL::mm());
@@ -67,10 +59,6 @@ QVector3D normalFor(const ORNL::AsPrintedModelExporter::Triangle& triangle) {
     QVector3D normal = QVector3D::crossProduct(triangle.b - triangle.a, triangle.c - triangle.a);
     if (normal.lengthSquared() > std::numeric_limits<float>::epsilon()) { normal.normalize(); }
     return normal;
-}
-
-bool near(float actual, float expected, float tolerance = kTolerance) {
-    return std::abs(actual - expected) <= tolerance;
 }
 
 QSharedPointer<ORNL::SegmentBase> makeLineSegment(ORNL::SegmentDisplayType type, uint line_number,
@@ -145,7 +133,7 @@ int main(int argc, char* argv[]) {
     printable_only.push_back({makeLineSegment(ORNL::SegmentDisplayType::kLine, 1)});
 
     const auto printable_triangles = ORNL::AsPrintedModelExporter::generateTriangles(printable_only);
-    passed &= expect(!printable_triangles.empty(), "Expected printable bead mesh triangles.");
+    passed &= ORNL::Testing::expect(!printable_triangles.empty(), "Expected printable bead mesh triangles.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> mixed_segments;
     mixed_segments.push_back({makeLineSegment(ORNL::SegmentDisplayType::kLine, 1),
@@ -153,37 +141,41 @@ int main(int argc, char* argv[]) {
                               makeLineSegment(ORNL::SegmentDisplayType::kTravel, 3, 40.0f)});
 
     const auto default_triangles = ORNL::AsPrintedModelExporter::generateTriangles(mixed_segments);
-    passed &= expect(default_triangles.size() == printable_triangles.size(),
-                     "Expected support and travel segments to be excluded by default.");
+    passed &= ORNL::Testing::expect(default_triangles.size() == printable_triangles.size(),
+                                    "Expected support and travel segments to be excluded by default.");
 
     ORNL::AsPrintedModelExporter::Options include_all;
     include_all.include_support = true;
     include_all.include_travel  = true;
     const auto all_triangles    = ORNL::AsPrintedModelExporter::generateTriangles(mixed_segments, include_all);
-    passed &= expect(all_triangles.size() == printable_triangles.size() * 3,
-                     "Expected optional support and travel output to include all three segments.");
+    passed &= ORNL::Testing::expect(all_triangles.size() == printable_triangles.size() * 3,
+                                    "Expected optional support and travel output to include all three segments.");
 
     const Bounds printable_bounds = boundsFor(printable_triangles);
-    passed &= expect(near(printable_bounds.min.x(), 0.0f), "Expected STL vertices to start at local X zero.");
-    passed &= expect(near(printable_bounds.min.y(), 0.0f), "Expected STL vertices to start at local Y zero.");
-    passed &= expect(near(printable_bounds.min.z(), 0.0f), "Expected STL vertices to start at local Z zero.");
-    passed &= expect(near(printable_bounds.max.x() - printable_bounds.min.x(), kLength),
-                     "Expected bead length to be written in millimeters.");
+    passed &= ORNL::Testing::expect(ORNL::Testing::near3DPoint(printable_bounds.min, 0.0f, 0.0f, 0.0f, kTolerance),
+                                    "Expected STL vertices to start at local origin.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near(printable_bounds.max.x() - printable_bounds.min.x(), kLength, kTolerance),
+        "Expected bead length to be written in millimeters.");
 
     ORNL::AsPrintedModelExporter::Options centerline_options;
     centerline_options.geometry_mode = ORNL::AsPrintedModelExporter::GeometryMode::kCenterlines;
     const auto centerline_triangles =
         ORNL::AsPrintedModelExporter::generateTriangles(printable_only, centerline_options);
-    passed &= expect(!centerline_triangles.empty(), "Expected centerline STL triangles.");
-    passed &= expect(centerline_triangles.size() < printable_triangles.size(),
-                     "Expected centerline STL to use less geometry than true bead-width STL for a straight segment.");
+    passed &= ORNL::Testing::expect(!centerline_triangles.empty(), "Expected centerline STL triangles.");
+    passed &= ORNL::Testing::expect(
+        centerline_triangles.size() < printable_triangles.size(),
+        "Expected centerline STL to use less geometry than true bead-width STL for a straight segment.");
     const Bounds centerline_bounds = boundsFor(centerline_triangles);
-    passed &= expect(near(centerline_bounds.max.x() - centerline_bounds.min.x(), kLength),
-                     "Expected centerline STL length to follow the toolpath centerline.");
-    passed &= expect(near(centerline_bounds.max.y() - centerline_bounds.min.y(), kCenterlineDiameter),
-                     "Expected centerline STL width to ignore the true bead width.");
-    passed &= expect(near(centerline_bounds.max.z() - centerline_bounds.min.z(), kCenterlineDiameter),
-                     "Expected centerline STL height to use the centerline tube diameter.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near(centerline_bounds.max.x() - centerline_bounds.min.x(), kLength, kTolerance),
+        "Expected centerline STL length to follow the toolpath centerline.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near(centerline_bounds.max.y() - centerline_bounds.min.y(), kCenterlineDiameter, kTolerance),
+        "Expected centerline STL width to ignore the true bead width.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near(centerline_bounds.max.z() - centerline_bounds.min.z(), kCenterlineDiameter, kTolerance),
+        "Expected centerline STL height to use the centerline tube diameter.");
     bool checked_centerline_side_normal = false;
     for (const ORNL::AsPrintedModelExporter::Triangle& triangle : centerline_triangles) {
         const QVector3D normal = normalFor(triangle);
@@ -197,12 +189,13 @@ int main(int argc, char* argv[]) {
         if (outward.lengthSquared() <= std::numeric_limits<float>::epsilon()) { continue; }
         outward.normalize();
 
-        passed &= expect(QVector3D::dotProduct(normal, outward) > 0.0f,
-                         "Expected centerline STL side-wall normals to point outward.");
+        passed &= ORNL::Testing::expect(QVector3D::dotProduct(normal, outward) > 0.0f,
+                                        "Expected centerline STL side-wall normals to point outward.");
         checked_centerline_side_normal = true;
         break;
     }
-    passed &= expect(checked_centerline_side_normal, "Expected a centerline STL side-wall normal to test.");
+    passed &=
+        ORNL::Testing::expect(checked_centerline_side_normal, "Expected a centerline STL side-wall normal to test.");
 
     QSharedPointer<ORNL::SegmentBase> radial_segment =
         makeLineSegment(pointFromMm(10.0f, -5.0f), pointFromMm(10.0f, 5.0f), 4);
@@ -211,10 +204,12 @@ int main(int argc, char* argv[]) {
     radial_segments.push_back({radial_segment});
     const auto radial_triangles = ORNL::AsPrintedModelExporter::generateTriangles(radial_segments);
     const Bounds radial_bounds  = boundsFor(radial_triangles);
-    passed &= expect(near(radial_bounds.max.x() - radial_bounds.min.x(), kHeight),
-                     "Expected cylindrical bead radial thickness to match bead height.");
-    passed &= expect(near(radial_bounds.max.z() - radial_bounds.min.z(), kWidth),
-                     "Expected cylindrical bead vertical span to match bead width.");
+    passed &=
+        ORNL::Testing::expect(ORNL::Testing::near(radial_bounds.max.x() - radial_bounds.min.x(), kHeight, kTolerance),
+                              "Expected cylindrical bead radial thickness to match bead height.");
+    passed &=
+        ORNL::Testing::expect(ORNL::Testing::near(radial_bounds.max.z() - radial_bounds.min.z(), kWidth, kTolerance),
+                              "Expected cylindrical bead vertical span to match bead width.");
 
     QSharedPointer<ORNL::SegmentBase> transformed_axis_segment =
         makeLineSegment(pointFromMm(0.0f, 0.0f), pointFromMm(0.0f, 10.0f), 5);
@@ -224,8 +219,9 @@ int main(int argc, char* argv[]) {
     transformed_axis_segment->shift(pointFromMm(3.0f, 4.0f) * ORNL::Constants::OpenGL::kObjectToView);
     const ORNL::Point transformed_axis = transformed_axis_segment->cylindricalBeadCenter();
     const ORNL::Point expected_axis    = pointFromMm(1.0f, 5.0f) * ORNL::Constants::OpenGL::kObjectToView;
-    passed &= expect(near(transformed_axis.x(), expected_axis.x()) && near(transformed_axis.y(), expected_axis.y()),
-                     "Expected transformed segments to carry the cylindrical bead center.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near2DPoint(transformed_axis, expected_axis.x(), expected_axis.y(), kTolerance),
+        "Expected transformed segments to carry the cylindrical bead center.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> lfam_style_segments;
     const ORNL::Point lfam_start(120.0f * ORNL::in(), 42.5f * ORNL::in(), -15.25f * ORNL::in());
@@ -233,9 +229,11 @@ int main(int argc, char* argv[]) {
     lfam_style_segments.push_back({makeLineSegment(lfam_start, lfam_end, 1)});
     const auto lfam_triangles = ORNL::AsPrintedModelExporter::generateTriangles(lfam_style_segments);
     const Bounds lfam_bounds  = boundsFor(lfam_triangles);
-    passed &= expect(near(lfam_bounds.min.x(), 0.0f), "Expected LFAM-style export to use local X zero.");
-    passed &= expect(near(lfam_bounds.max.x() - lfam_bounds.min.x(), 16.0f * 25.4f, 0.01f),
-                     "Expected LFAM-style inch coordinates to export as millimeters.");
+    passed &= ORNL::Testing::expect(ORNL::Testing::near(lfam_bounds.min.x(), 0.0f, kTolerance),
+                                    "Expected LFAM-style export to use local X zero.");
+    passed &=
+        ORNL::Testing::expect(ORNL::Testing::near(lfam_bounds.max.x() - lfam_bounds.min.x(), 16.0f * 25.4f, 0.01f),
+                              "Expected LFAM-style inch coordinates to export as millimeters.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> filtered_segments;
     filtered_segments.push_back(
@@ -245,25 +243,28 @@ int main(int argc, char* argv[]) {
                          false),
          makeLineSegment(ORNL::SegmentDisplayType::kLine, 3)});
     const auto filtered_triangles = ORNL::AsPrintedModelExporter::generateTriangles(filtered_segments);
-    passed &= expect(filtered_triangles.size() == printable_triangles.size(),
-                     "Expected non-deposition and degenerate segments to be skipped by default.");
+    passed &= ORNL::Testing::expect(filtered_triangles.size() == printable_triangles.size(),
+                                    "Expected non-deposition and degenerate segments to be skipped by default.");
     const Bounds filtered_bounds = boundsFor(filtered_triangles);
-    passed &= expect(near(filtered_bounds.max.x() - filtered_bounds.min.x(), kLength),
-                     "Expected skipped segments not to expand the exported bounds.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near(filtered_bounds.max.x() - filtered_bounds.min.x(), kLength, kTolerance),
+        "Expected skipped segments not to expand the exported bounds.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> full_circle_arc_segments;
     const ORNL::Point arc_start = pointFromMm(10.0f, 0.0f);
     full_circle_arc_segments.push_back({makeArcSegment(arc_start, arc_start, pointFromMm(0.0f, 0.0f), 1)});
     const auto full_circle_arc_triangles = ORNL::AsPrintedModelExporter::generateTriangles(full_circle_arc_segments);
-    passed &= expect(!full_circle_arc_triangles.empty(),
-                     "Expected same-endpoint full-circle arcs to be exported as bead mesh triangles.");
+    passed &= ORNL::Testing::expect(!full_circle_arc_triangles.empty(),
+                                    "Expected same-endpoint full-circle arcs to be exported as bead mesh triangles.");
     const Bounds full_circle_arc_bounds = boundsFor(full_circle_arc_triangles);
-    passed &= expect(near(full_circle_arc_bounds.max.z() - full_circle_arc_bounds.min.z(), kHeight),
-                     "Expected arc bead mesh height to match the display bead height.");
+    passed &= ORNL::Testing::expect(
+        ORNL::Testing::near(full_circle_arc_bounds.max.z() - full_circle_arc_bounds.min.z(), kHeight, kTolerance),
+        "Expected arc bead mesh height to match the display bead height.");
     const auto centerline_full_circle_arc_triangles =
         ORNL::AsPrintedModelExporter::generateTriangles(full_circle_arc_segments, centerline_options);
-    passed &= expect(!centerline_full_circle_arc_triangles.empty(),
-                     "Expected same-endpoint full-circle arcs to be exported as centerline STL triangles.");
+    passed &=
+        ORNL::Testing::expect(!centerline_full_circle_arc_triangles.empty(),
+                              "Expected same-endpoint full-circle arcs to be exported as centerline STL triangles.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> corner_segments;
     corner_segments.push_back({makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(10.0f, 0.0f, 0.0f), 1),
@@ -274,8 +275,8 @@ int main(int argc, char* argv[]) {
     const auto corner_triangles_without_blends =
         ORNL::AsPrintedModelExporter::generateTriangles(corner_segments, without_blends);
     const auto corner_triangles_with_blends = ORNL::AsPrintedModelExporter::generateTriangles(corner_segments);
-    passed &= expect(corner_triangles_with_blends.size() > corner_triangles_without_blends.size(),
-                     "Expected connected corner segments to add blend triangles.");
+    passed &= ORNL::Testing::expect(corner_triangles_with_blends.size() > corner_triangles_without_blends.size(),
+                                    "Expected connected corner segments to add blend triangles.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> closed_corner_segments;
     closed_corner_segments.push_back(
@@ -288,47 +289,54 @@ int main(int argc, char* argv[]) {
         ORNL::AsPrintedModelExporter::generateTriangles(closed_corner_segments, without_blends);
     const auto closed_corner_triangles_with_blends =
         ORNL::AsPrintedModelExporter::generateTriangles(closed_corner_segments);
-    passed &= expect(closed_corner_triangles_with_blends.size() ==
-                         closed_corner_triangles_without_blends.size() + (open_two_segment_blend_count * 3),
-                     "Expected closed loops to blend each corner, including the start/end corner.");
+    passed &=
+        ORNL::Testing::expect(closed_corner_triangles_with_blends.size() ==
+                                  closed_corner_triangles_without_blends.size() + (open_two_segment_blend_count * 3),
+                              "Expected closed loops to blend each corner, including the start/end corner.");
 
     QTemporaryDir temp_dir;
-    passed &= expect(temp_dir.isValid(), "Could not create temporary directory.");
+    passed &= ORNL::Testing::expect(temp_dir.isValid(), "Could not create temporary directory.");
     if (temp_dir.isValid()) {
         const QString binary_stl_path = temp_dir.path() + "/as_printed_binary.stl";
         QString error;
-        passed &= expect(ORNL::AsPrintedModelExporter::writeStl(binary_stl_path, printable_only, &error),
-                         ("Could not write binary STL: " + error.toStdString()));
+        passed &= ORNL::Testing::expect(ORNL::AsPrintedModelExporter::writeStl(binary_stl_path, printable_only, &error),
+                                        ("Could not write binary STL: " + error.toStdString()));
 
         QByteArray binary_stl_bytes;
-        passed &= expect(readBytes(binary_stl_path, binary_stl_bytes), "Could not read generated binary STL.");
-        passed &= expect(binaryFacetCount(binary_stl_bytes) == static_cast<quint32>(printable_triangles.size()),
-                         "Generated binary STL facet count did not match generated triangles.");
-        passed &= expect(binary_stl_bytes.size() == 84 + (static_cast<int>(printable_triangles.size()) * 50),
-                         "Generated binary STL size did not match the binary STL triangle layout.");
+        passed &=
+            ORNL::Testing::expect(readBytes(binary_stl_path, binary_stl_bytes), "Could not read generated binary STL.");
+        passed &= ORNL::Testing::expect(
+            binaryFacetCount(binary_stl_bytes) == static_cast<quint32>(printable_triangles.size()),
+            "Generated binary STL facet count did not match generated triangles.");
+        passed &=
+            ORNL::Testing::expect(binary_stl_bytes.size() == 84 + (static_cast<int>(printable_triangles.size()) * 50),
+                                  "Generated binary STL size did not match the binary STL triangle layout.");
 
         const QString ascii_stl_path = temp_dir.path() + "/as_printed_ascii.stl";
         ORNL::AsPrintedModelExporter::Options ascii_options;
         ascii_options.format = ORNL::AsPrintedModelExporter::StlFormat::kAscii;
-        passed &= expect(ORNL::AsPrintedModelExporter::writeStl(ascii_stl_path, printable_only, &error, ascii_options),
-                         ("Could not write ASCII STL: " + error.toStdString()));
+        passed &= ORNL::Testing::expect(
+            ORNL::AsPrintedModelExporter::writeStl(ascii_stl_path, printable_only, &error, ascii_options),
+            ("Could not write ASCII STL: " + error.toStdString()));
         QString stl_text;
-        passed &= expect(readFile(ascii_stl_path, stl_text), "Could not read generated ASCII STL.");
-        passed &= expect(stl_text.startsWith(QStringLiteral("solid ornlslicer_as_printed")),
-                         "Generated ASCII STL did not contain the expected header.");
-        passed &= expect(countFacets(stl_text) == static_cast<int>(printable_triangles.size()),
-                         "Generated ASCII STL facet count did not match generated triangles.");
-        passed &= expect(QFileInfo(binary_stl_path).size() < QFileInfo(ascii_stl_path).size(),
-                         "Expected binary STL to be smaller than ASCII STL.");
+        passed &= ORNL::Testing::expect(readFile(ascii_stl_path, stl_text), "Could not read generated ASCII STL.");
+        passed &= ORNL::Testing::expect(stl_text.startsWith(QStringLiteral("solid ornlslicer_as_printed")),
+                                        "Generated ASCII STL did not contain the expected header.");
+        passed &= ORNL::Testing::expect(countFacets(stl_text) == static_cast<int>(printable_triangles.size()),
+                                        "Generated ASCII STL facet count did not match generated triangles.");
+        passed &= ORNL::Testing::expect(QFileInfo(binary_stl_path).size() < QFileInfo(ascii_stl_path).size(),
+                                        "Expected binary STL to be smaller than ASCII STL.");
 
         const QString centerline_stl_path = temp_dir.path() + "/as_printed_centerline.stl";
-        passed &= expect(
+        passed &= ORNL::Testing::expect(
             ORNL::AsPrintedModelExporter::writeStl(centerline_stl_path, printable_only, &error, centerline_options),
             ("Could not write centerline STL: " + error.toStdString()));
         QByteArray centerline_stl_bytes;
-        passed &= expect(readBytes(centerline_stl_path, centerline_stl_bytes), "Could not read centerline STL.");
-        passed &= expect(binaryFacetCount(centerline_stl_bytes) == static_cast<quint32>(centerline_triangles.size()),
-                         "Generated centerline STL facet count did not match generated centerline triangles.");
+        passed &= ORNL::Testing::expect(readBytes(centerline_stl_path, centerline_stl_bytes),
+                                        "Could not read centerline STL.");
+        passed &= ORNL::Testing::expect(
+            binaryFacetCount(centerline_stl_bytes) == static_cast<quint32>(centerline_triangles.size()),
+            "Generated centerline STL facet count did not match generated centerline triangles.");
     }
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;

@@ -1,6 +1,5 @@
 #include <cstdlib>
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include <CGAL/Modifier_base.h>
@@ -8,6 +7,7 @@
 
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/mesh/closed_mesh.h"
+#include "test_utils.h"
 
 namespace {
 struct Triangle {
@@ -109,13 +109,6 @@ ORNL::MeshTypes::Polyhedron buildClosedTetrahedron() {
 
     return buildPolyhedron(points, triangles);
 }
-
-bool expect(bool condition, const std::string& message) {
-    if (condition) return true;
-
-    std::cerr << message << '\n';
-    return false;
-}
 }  // namespace
 
 int main() {
@@ -123,16 +116,17 @@ int main() {
 
     ORNL::MeshTypes::Polyhedron open_strip     = buildLargeBoundaryOpenStrip();
     ORNL::ClosedMesh::RepairResult open_result = ORNL::ClosedMesh::CleanPolyhedronWithStatus(open_strip);
-    passed &= expect(open_result == ORNL::ClosedMesh::RepairResult::kSkippedLargeBoundary,
-                     "Expected large-boundary open strip repair to be skipped.");
-    passed &= expect(!open_strip.is_closed(), "Expected skipped open strip to remain open.");
+    passed &= ORNL::Testing::expect(open_result == ORNL::ClosedMesh::RepairResult::kSkippedLargeBoundary,
+                                    "Expected large-boundary open strip repair to be skipped.");
+    passed &= ORNL::Testing::expect(!open_strip.is_closed(), "Expected skipped open strip to remain open.");
 
     ORNL::MeshTypes::Polyhedron tetrahedron = buildClosedTetrahedron();
-    passed &= expect(tetrahedron.is_closed(), "Expected tetrahedron test fixture to start closed.");
+    passed &= ORNL::Testing::expect(tetrahedron.is_closed(), "Expected tetrahedron test fixture to start closed.");
     ORNL::ClosedMesh::RepairResult closed_result = ORNL::ClosedMesh::CleanPolyhedronWithStatus(tetrahedron);
-    passed &= expect(closed_result == ORNL::ClosedMesh::RepairResult::kSuccess,
-                     "Expected closed tetrahedron repair to succeed.");
-    passed &= expect(tetrahedron.is_closed(), "Expected closed tetrahedron to remain closed after repair.");
+    passed &= ORNL::Testing::expect(closed_result == ORNL::ClosedMesh::RepairResult::kSuccess,
+                                    "Expected closed tetrahedron repair to succeed.");
+    passed &=
+        ORNL::Testing::expect(tetrahedron.is_closed(), "Expected closed tetrahedron to remain closed after repair.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -2,23 +2,18 @@
 #include <QSharedPointer>
 #include <QString>
 #include <cstdlib>
-#include <iostream>
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
 #include "gcode/writers/juggerbot_writer.h"
 #include "geometry/point.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace {
 constexpr double kPi = 3.14159265358979323846;
-
-bool expect(bool condition, const char* message) {
-    if (!condition) std::cerr << message << '\n';
-    return condition;
-}
 
 QSharedPointer<ORNL::SettingsBase> writerSettings(double perimeter_multiplier) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
@@ -87,10 +82,12 @@ int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     bool passed = true;
-    passed &= expect(appliesExtrusionMultiplierToWidthHeightArcBeadArea(),
-                     "JuggerBot writer did not apply extrusion multiplier to width/height arc bead area.");
-    passed &= expect(turnsExtruderOffBeforeZeroRpmWidthHeightArc(),
-                     "JuggerBot writer did not turn the extruder off before a zero-rpm width/height arc.");
+    passed &=
+        ORNL::Testing::expect(appliesExtrusionMultiplierToWidthHeightArcBeadArea(),
+                              "JuggerBot writer did not apply extrusion multiplier to width/height arc bead area.");
+    passed &=
+        ORNL::Testing::expect(turnsExtruderOffBeforeZeroRpmWidthHeightArc(),
+                              "JuggerBot writer did not turn the extruder off before a zero-rpm width/height arc.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

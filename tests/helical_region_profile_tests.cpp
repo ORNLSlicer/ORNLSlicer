@@ -1,26 +1,15 @@
-#include <cmath>
 #include <cstdlib>
-#include <iostream>
-#include <string>
 
 #include "slicing/helical_region_profile.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace {
-bool expect(bool condition, const std::string& message) {
-    if (condition) { return true; }
+constexpr float kTolerance = 1.0e-6f;
 
-    std::cerr << message << '\n';
-    return false;
-}
-
-bool near(double actual, double expected, double tolerance = 1.0e-6) {
-    return std::abs(actual - expected) <= tolerance;
-}
-
-bool nearDistance(ORNL::Distance actual, ORNL::Distance expected, double tolerance_mm = 1.0e-6) {
-    return near(actual.to(ORNL::mm), expected.to(ORNL::mm), tolerance_mm);
+bool nearDistance(ORNL::Distance actual, ORNL::Distance expected, double tolerance_mm = kTolerance) {
+    return ORNL::Testing::near(actual.to(ORNL::mm), expected.to(ORNL::mm), tolerance_mm);
 }
 
 ORNL::HelicalRegionProfileParameters defaultParams() {
@@ -51,11 +40,12 @@ bool buildsOrderedProfileWithCumulativeZ() {
     bool passed = true;
     for (int i = 0, end = result.profile.bands.size(); i < end; ++i) {
         passed &= result.profile.bands[i].region_type == expected_regions[i];
-        passed &= near(result.profile.bands[i].start_revolutions, expected_start_revolutions[i]);
+        passed &=
+            ORNL::Testing::near(result.profile.bands[i].start_revolutions, expected_start_revolutions[i], kTolerance);
         passed &= nearDistance(result.profile.bands[i].start_z, expected_start_z[i]);
     }
 
-    return passed && near(result.profile.totalRevolutions(), 12.0) &&
+    return passed && ORNL::Testing::near(result.profile.totalRevolutions(), 12.0, kTolerance) &&
            nearDistance(result.profile.generatedTopZ(), 42.0 * ORNL::mm);
 }
 
@@ -90,8 +80,9 @@ bool roundsDerivedInfillRevolutions() {
     const ORNL::HelicalRegionProfileResult ceil_result = ORNL::buildHelicalRegionProfile(params);
 
     return round_result.valid() && floor_result.valid() && ceil_result.valid() &&
-           near(round_result.profile.totalRevolutions(), 2.0) && near(floor_result.profile.totalRevolutions(), 2.0) &&
-           near(ceil_result.profile.totalRevolutions(), 3.0);
+           ORNL::Testing::near(round_result.profile.totalRevolutions(), 2.0, kTolerance) &&
+           ORNL::Testing::near(floor_result.profile.totalRevolutions(), 2.0, kTolerance) &&
+           ORNL::Testing::near(ceil_result.profile.totalRevolutions(), 3.0, kTolerance);
 }
 
 bool allowsRoundedHeightOverrun() {
@@ -172,7 +163,7 @@ bool retainedProfileAnchorsBottomShellsToClippedStart() {
     if (!result.valid() || result.profile.bands.size() != 5) { return false; }
 
     return result.profile.bands[0].region_type == ORNL::RegionType::kPerimeter &&
-           near(result.profile.bands[0].start_revolutions, 0.0) &&
+           ORNL::Testing::near(result.profile.bands[0].start_revolutions, 0.0, kTolerance) &&
            nearDistance(result.profile.bands[0].start_z, 10.0 * ORNL::mm) &&
            result.profile.bands[1].region_type == ORNL::RegionType::kInset &&
            nearDistance(result.profile.bands[1].start_z, 12.0 * ORNL::mm);
@@ -193,8 +184,9 @@ bool retainedProfileRespectsInfillRevolutionsRounding() {
         ORNL::buildRetainedHelicalRegionProfile(params, 10.0 * ORNL::mm, 42.0 * ORNL::mm);
 
     return round_result.valid() && floor_result.valid() && ceil_result.valid() &&
-           near(infillRevolutions(round_result.profile), 6.0) && near(infillRevolutions(floor_result.profile), 5.0) &&
-           near(infillRevolutions(ceil_result.profile), 6.0) &&
+           ORNL::Testing::near(infillRevolutions(round_result.profile), 6.0, kTolerance) &&
+           ORNL::Testing::near(infillRevolutions(floor_result.profile), 5.0, kTolerance) &&
+           ORNL::Testing::near(infillRevolutions(ceil_result.profile), 6.0, kTolerance) &&
            nearDistance(round_result.profile.generatedTopZ(), 44.0 * ORNL::mm) &&
            nearDistance(floor_result.profile.generatedTopZ(), 40.0 * ORNL::mm) &&
            nearDistance(ceil_result.profile.generatedTopZ(), 44.0 * ORNL::mm);
@@ -214,9 +206,9 @@ bool retainedLastFullKeepsTopPerimeterWithoutInsets() {
     return matchesRegionSequence(result.profile,
                                  QVector<ORNL::RegionType> {ORNL::RegionType::kPerimeter, ORNL::RegionType::kInfill,
                                                             ORNL::RegionType::kPerimeter}) &&
-           near(result.profile.bands.last().start_revolutions, 4.0) &&
+           ORNL::Testing::near(result.profile.bands.last().start_revolutions, 4.0, kTolerance) &&
            nearDistance(result.profile.generatedTopZ(), 20.0 * ORNL::mm) &&
-           near(result.profile.totalRevolutions(), 5.0);
+           ORNL::Testing::near(result.profile.totalRevolutions(), 5.0, kTolerance);
 }
 
 bool retainedLastFullKeepsTopInsetAndPerimeter() {
@@ -233,10 +225,10 @@ bool retainedLastFullKeepsTopInsetAndPerimeter() {
                                  QVector<ORNL::RegionType> {ORNL::RegionType::kPerimeter, ORNL::RegionType::kInset,
                                                             ORNL::RegionType::kInfill, ORNL::RegionType::kInset,
                                                             ORNL::RegionType::kPerimeter}) &&
-           near(result.profile.bands[3].start_revolutions, 3.0) &&
-           near(result.profile.bands[4].start_revolutions, 4.0) &&
+           ORNL::Testing::near(result.profile.bands[3].start_revolutions, 3.0, kTolerance) &&
+           ORNL::Testing::near(result.profile.bands[4].start_revolutions, 4.0, kTolerance) &&
            nearDistance(result.profile.generatedTopZ(), 20.0 * ORNL::mm) &&
-           near(result.profile.totalRevolutions(), 5.0);
+           ORNL::Testing::near(result.profile.totalRevolutions(), 5.0, kTolerance);
 }
 
 bool retainedLastFullDoesNotGrowPastNonUniformRoundedTop() {
@@ -248,36 +240,41 @@ bool retainedLastFullDoesNotGrowPastNonUniformRoundedTop() {
                                  QVector<ORNL::RegionType> {ORNL::RegionType::kPerimeter, ORNL::RegionType::kInset,
                                                             ORNL::RegionType::kInfill, ORNL::RegionType::kInset,
                                                             ORNL::RegionType::kPerimeter}) &&
-           near(result.profile.bands[3].start_revolutions, 4.0) &&
-           near(result.profile.bands[4].start_revolutions, 5.0) &&
+           ORNL::Testing::near(result.profile.bands[3].start_revolutions, 4.0, kTolerance) &&
+           ORNL::Testing::near(result.profile.bands[4].start_revolutions, 5.0, kTolerance) &&
            nearDistance(result.profile.generatedTopZ(), 20.0 * ORNL::mm) &&
-           near(result.profile.totalRevolutions(), 6.0);
+           ORNL::Testing::near(result.profile.totalRevolutions(), 6.0, kTolerance);
 }
 }  // namespace
 
 int main() {
     bool passed = true;
 
-    passed &= expect(buildsOrderedProfileWithCumulativeZ(),
-                     "Expected perimeter/inset/infill/inset/perimeter profile with cumulative Z.");
+    passed &= ORNL::Testing::expect(buildsOrderedProfileWithCumulativeZ(),
+                                    "Expected perimeter/inset/infill/inset/perimeter profile with cumulative Z.");
+    passed &= ORNL::Testing::expect(usesBeadWidthOnlyForZeroStepovers(),
+                                    "Expected zero stepovers to fall back to Default Bead Width.");
+    passed &= ORNL::Testing::expect(roundsDerivedInfillRevolutions(),
+                                    "Expected Round, Floor, and Ceil infill revolution behavior.");
+    passed &= ORNL::Testing::expect(allowsRoundedHeightOverrun(),
+                                    "Expected Round and Ceil profile heights to overrun available top Z.");
+    passed &= ORNL::Testing::expect(clampsNonpositiveDerivedInfillToNoInfill(),
+                                    "Expected nonpositive derived infill revolutions to remove only the infill band.");
+    passed &= ORNL::Testing::expect(rejectsInvalidInputsWithReason(),
+                                    "Expected invalid helical profile inputs to include a reason.");
     passed &=
-        expect(usesBeadWidthOnlyForZeroStepovers(), "Expected zero stepovers to fall back to Default Bead Width.");
-    passed &= expect(roundsDerivedInfillRevolutions(), "Expected Round, Floor, and Ceil infill revolution behavior.");
+        ORNL::Testing::expect(retainedProfileAnchorsBottomShellsToClippedStart(),
+                              "Expected retained clipped starts to rebuild lower shell bands from the retained start.");
+    passed &= ORNL::Testing::expect(retainedProfileRespectsInfillRevolutionsRounding(),
+                                    "Expected retained clipped profiles to respect infill revolutions rounding.");
+    passed &= ORNL::Testing::expect(retainedLastFullKeepsTopPerimeterWithoutInsets(),
+                                    "Expected last-full retained clipping to keep the final revolution as perimeter.");
+    passed &= ORNL::Testing::expect(
+        retainedLastFullKeepsTopInsetAndPerimeter(),
+        "Expected last-full retained clipping to keep the second-last inset and final perimeter.");
     passed &=
-        expect(allowsRoundedHeightOverrun(), "Expected Round and Ceil profile heights to overrun available top Z.");
-    passed &= expect(clampsNonpositiveDerivedInfillToNoInfill(),
-                     "Expected nonpositive derived infill revolutions to remove only the infill band.");
-    passed &= expect(rejectsInvalidInputsWithReason(), "Expected invalid helical profile inputs to include a reason.");
-    passed &= expect(retainedProfileAnchorsBottomShellsToClippedStart(),
-                     "Expected retained clipped starts to rebuild lower shell bands from the retained start.");
-    passed &= expect(retainedProfileRespectsInfillRevolutionsRounding(),
-                     "Expected retained clipped profiles to respect infill revolutions rounding.");
-    passed &= expect(retainedLastFullKeepsTopPerimeterWithoutInsets(),
-                     "Expected last-full retained clipping to keep the final revolution as perimeter.");
-    passed &= expect(retainedLastFullKeepsTopInsetAndPerimeter(),
-                     "Expected last-full retained clipping to keep the second-last inset and final perimeter.");
-    passed &= expect(retainedLastFullDoesNotGrowPastNonUniformRoundedTop(),
-                     "Expected last-full retained clipping to keep non-uniform profiles at the rounded top.");
+        ORNL::Testing::expect(retainedLastFullDoesNotGrowPastNonUniformRoundedTop(),
+                              "Expected last-full retained clipping to keep non-uniform profiles at the rounded top.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

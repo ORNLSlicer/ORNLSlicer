@@ -2,30 +2,20 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
-#include <iostream>
-#include <string>
 
 #include "geometry/point.h"
 #include "geometry/polyline.h"
 #include "slicing/helical_path_rounding.h"
 #include "slicing/helical_tool_start_angle.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/enums.h"
 
 namespace {
-bool expect(bool condition, const std::string& message) {
-    if (condition) { return true; }
+constexpr float kTolerance = 1.0e-5f;
 
-    std::cerr << message << '\n';
-    return false;
-}
-
-bool near(double actual, double expected, double tolerance = 1.0e-5) {
-    return std::abs(actual - expected) <= tolerance;
-}
-
-bool nearDistance(float actual, ORNL::Distance expected, double tolerance_mm = 1.0e-5) {
-    return near(ORNL::Distance(actual).to(ORNL::mm), expected.to(ORNL::mm), tolerance_mm);
+bool nearDistance(float actual, ORNL::Distance expected, double tolerance_mm = kTolerance) {
+    return ORNL::Testing::near(ORNL::Distance(actual).to(ORNL::mm), expected.to(ORNL::mm), tolerance_mm);
 }
 
 ORNL::Point pointAtRevolutions(const ORNL::Point& center, ORNL::Distance radius, ORNL::Distance start_z,
@@ -161,12 +151,13 @@ bool directionAwareOffsetFollowsCompleteClosestOrderedDirection() {
         configured_offset, false, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
         ORNL::PathOrderOptimization::kNextClosest);
 
-    return near(first_offset.to(ORNL::degree), -12.0) && near(second_offset.to(ORNL::degree), 12.0) &&
-           near(third_offset.to(ORNL::degree), -12.0);
+    return ORNL::Testing::near(first_offset.to(ORNL::degree), -12.0, kTolerance) &&
+           ORNL::Testing::near(second_offset.to(ORNL::degree), 12.0, kTolerance) &&
+           ORNL::Testing::near(third_offset.to(ORNL::degree), -12.0, kTolerance);
 }
 
 bool helicalGeometryStartAngleStaysAtTopDeadCenter() {
-    return near(ORNL::HelicalToolStartAngle::geometricStartAngle().to(ORNL::degree), 90.0);
+    return ORNL::Testing::near(ORNL::HelicalToolStartAngle::geometricStartAngle().to(ORNL::degree), 90.0, kTolerance);
 }
 
 bool directionAwareOffsetRequiresPredictableCompleteClosestDirection() {
@@ -182,35 +173,42 @@ bool directionAwareOffsetRequiresPredictableCompleteClosestDirection() {
         configured_offset, true, ORNL::HelicalPathZClipRounding::kCompleteRevolution,
         ORNL::PathOrderOptimization::kNextFarthest);
 
-    return near(exact_offset.to(ORNL::degree), -12.0) && near(last_full_offset.to(ORNL::degree), -12.0) &&
-           near(farthest_offset.to(ORNL::degree), -12.0);
+    return ORNL::Testing::near(exact_offset.to(ORNL::degree), -12.0, kTolerance) &&
+           ORNL::Testing::near(last_full_offset.to(ORNL::degree), -12.0, kTolerance) &&
+           ORNL::Testing::near(farthest_offset.to(ORNL::degree), -12.0, kTolerance);
 }
 }  // namespace
 
 int main() {
     bool passed = true;
 
-    passed &= expect(exactRoundingKeepsIntersection(), "Expected exact rounding to keep the intersection endpoint.");
-    passed &= expect(lastFullRoundingStopsAtPreviousRevolution(),
-                     "Expected last-full rounding to stop at the previous complete revolution.");
-    passed &= expect(completeRoundingExtendsPastOriginalTopZ(),
-                     "Expected complete rounding to extend to the next full revolution.");
-    passed &= expect(lastFullBeforeOneRevolutionOmitsPath(),
-                     "Expected last-full rounding before one revolution to omit the path.");
-    passed &= expect(fullRevolutionEndpointPreservesStartAngleForBothHandednesses(),
-                     "Expected full-revolution endpoints to preserve start angle for both handednesses.");
-    passed &= expect(whollyInsideCompleteRoundsGeneratedTopToNextRevolution(),
-                     "Expected complete rounding to round a wholly inside helix top to the next full revolution.");
-    passed &= expect(whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution(),
-                     "Expected last-full rounding to round a wholly inside helix top to the previous full revolution.");
-    passed &= expect(directionAwareOffsetFollowsCompleteClosestOrderedDirection(),
-                     "Expected direction-aware helical offset to flip for reversed Complete Revolution/Next Closest "
-                     "ordered paths.");
-    passed &= expect(helicalGeometryStartAngleStaysAtTopDeadCenter(),
-                     "Expected emitted helical X/Y geometry to start at top dead center.");
-    passed &= expect(directionAwareOffsetRequiresPredictableCompleteClosestDirection(),
-                     "Expected direction-aware helical offset to keep the configured sign outside Complete "
-                     "Revolution/Next Closest.");
+    passed &= ORNL::Testing::expect(exactRoundingKeepsIntersection(),
+                                    "Expected exact rounding to keep the intersection endpoint.");
+    passed &= ORNL::Testing::expect(lastFullRoundingStopsAtPreviousRevolution(),
+                                    "Expected last-full rounding to stop at the previous complete revolution.");
+    passed &= ORNL::Testing::expect(completeRoundingExtendsPastOriginalTopZ(),
+                                    "Expected complete rounding to extend to the next full revolution.");
+    passed &= ORNL::Testing::expect(lastFullBeforeOneRevolutionOmitsPath(),
+                                    "Expected last-full rounding before one revolution to omit the path.");
+    passed &=
+        ORNL::Testing::expect(fullRevolutionEndpointPreservesStartAngleForBothHandednesses(),
+                              "Expected full-revolution endpoints to preserve start angle for both handednesses.");
+    passed &= ORNL::Testing::expect(
+        whollyInsideCompleteRoundsGeneratedTopToNextRevolution(),
+        "Expected complete rounding to round a wholly inside helix top to the next full revolution.");
+    passed &= ORNL::Testing::expect(
+        whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution(),
+        "Expected last-full rounding to round a wholly inside helix top to the previous full revolution.");
+    passed &= ORNL::Testing::expect(
+        directionAwareOffsetFollowsCompleteClosestOrderedDirection(),
+        "Expected direction-aware helical offset to flip for reversed Complete Revolution/Next Closest "
+        "ordered paths.");
+    passed &= ORNL::Testing::expect(helicalGeometryStartAngleStaysAtTopDeadCenter(),
+                                    "Expected emitted helical X/Y geometry to start at top dead center.");
+    passed &=
+        ORNL::Testing::expect(directionAwareOffsetRequiresPredictableCompleteClosestDirection(),
+                              "Expected direction-aware helical offset to keep the configured sign outside Complete "
+                              "Revolution/Next Closest.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

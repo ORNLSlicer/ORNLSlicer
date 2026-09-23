@@ -1,7 +1,6 @@
 #include <QCoreApplication>
 #include <QRegularExpression>
 #include <QStringList>
-#include <cmath>
 #include <cstdlib>
 #include <exception>
 #include <iostream>
@@ -9,14 +8,12 @@
 #include "gcode/gcode_meta.h"
 #include "gcode/parsers/common_parser.h"
 #include "managers/settings/settings_manager.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
 namespace {
-bool expect(bool condition, const char* message) {
-    if (!condition) std::cerr << message << '\n';
-    return condition;
-}
+constexpr float kTolerance = 1.0e-6f;
 
 QStringList upperLines(const QStringList& lines) {
     QStringList upper_lines;
@@ -112,8 +109,8 @@ bool keepsTravelFeedrateWhenTravelScalingDisabled() {
 
         return parser.getWasModified() && modifiers.size() > 1 && modifiers[1] > 0.0 && modifiers[1] < 1.0 &&
                lineFeedrate(original_lines[1], travel_feedrate) && lineFeedrate(original_lines[2], print_feedrate) &&
-               std::abs(travel_feedrate - 60.0) < 1.0e-6 && print_feedrate > 0.0 && print_feedrate < 60.0 &&
-               std::abs(adjusted_travel_time - travel_time) < 1.0e-6;
+               ORNL::Testing::near(travel_feedrate, 60.0, kTolerance) && print_feedrate > 0.0 &&
+               print_feedrate < 60.0 && ORNL::Testing::near(adjusted_travel_time, travel_time, kTolerance);
     } catch (const std::exception& ex) {
         std::cerr << ex.what() << '\n';
         return false;
@@ -154,14 +151,15 @@ int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     bool passed = true;
-    passed &= expect(accumulatesTravelTimeForNonDepositionMove(),
-                     "Common parser did not accumulate travel time for a travel move.");
-    passed &= expect(accumulatesTravelTimeForTravelCommentAfterDepositionMove(),
-                     "Common parser did not accumulate travel time for a travel comment after deposition.");
-    passed &= expect(keepsTravelFeedrateWhenTravelScalingDisabled(),
-                     "Common parser scaled a travel move when travel feedrate scaling was disabled.");
-    passed &= expect(adjustsTravelTimeWhenTravelFeedrateIsScaled(),
-                     "Common parser did not adjust travel time when travel feedrate was scaled.");
+    passed &= ORNL::Testing::expect(accumulatesTravelTimeForNonDepositionMove(),
+                                    "Common parser did not accumulate travel time for a travel move.");
+    passed &=
+        ORNL::Testing::expect(accumulatesTravelTimeForTravelCommentAfterDepositionMove(),
+                              "Common parser did not accumulate travel time for a travel comment after deposition.");
+    passed &= ORNL::Testing::expect(keepsTravelFeedrateWhenTravelScalingDisabled(),
+                                    "Common parser scaled a travel move when travel feedrate scaling was disabled.");
+    passed &= ORNL::Testing::expect(adjustsTravelTimeWhenTravelFeedrateIsScaled(),
+                                    "Common parser did not adjust travel time when travel feedrate was scaled.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

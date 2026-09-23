@@ -13,6 +13,7 @@
 #define private public
 #include "threading/gcode_loader.h"
 #undef private
+#include "test_utils.h"
 #include "utilities/enums.h"
 
 namespace {
@@ -62,13 +63,6 @@ const std::vector<ExpectedVisualizationColor>& expectedVisualizationColors() {
     return expected;
 }
 
-bool expect(bool condition, const std::string& message) {
-    if (condition) return true;
-
-    std::cerr << message << '\n';
-    return false;
-}
-
 bool throwsInvalidArgumentForName(ORNL::VisualizationColors color) {
     try {
         ORNL::VisualizationColorsName(color);
@@ -102,9 +96,10 @@ int main() {
     const auto& definitions = ORNL::VisualizationColorDefinitions();
     const auto& expected    = expectedVisualizationColors();
 
-    passed &= expect(definitions.size() == expected.size(), "Expected one visualization color definition per color.");
-    passed &= expect(definitions.size() == static_cast<std::size_t>(ORNL::VisualizationColors::Length),
-                     "Expected definitions to stop before the Length sentinel.");
+    passed &= ORNL::Testing::expect(definitions.size() == expected.size(),
+                                    "Expected one visualization color definition per color.");
+    passed &= ORNL::Testing::expect(definitions.size() == static_cast<std::size_t>(ORNL::VisualizationColors::Length),
+                                    "Expected definitions to stop before the Length sentinel.");
 
     std::set<ORNL::VisualizationColors> seen_colors;
     std::set<std::string> seen_names;
@@ -114,91 +109,102 @@ int main() {
         const ORNL::VisualizationColorDefinition& definition = definitions[i];
         const ExpectedVisualizationColor& current_expected   = expected[i];
 
-        passed &= expect(definition.color == current_expected.color, "Unexpected visualization color enum order.");
-        passed &= expect(QString(definition.name) == current_expected.name, "Unexpected visualization color name.");
-        passed &= expect(!QString(definition.name).isEmpty(), "Visualization color names must not be empty.");
-        passed &= expect(definition.default_color == current_expected.default_color,
-                         "Unexpected visualization default color.");
+        passed &= ORNL::Testing::expect(definition.color == current_expected.color,
+                                        "Unexpected visualization color enum order.");
+        passed &= ORNL::Testing::expect(QString(definition.name) == current_expected.name,
+                                        "Unexpected visualization color name.");
+        passed &=
+            ORNL::Testing::expect(!QString(definition.name).isEmpty(), "Visualization color names must not be empty.");
+        passed &= ORNL::Testing::expect(definition.default_color == current_expected.default_color,
+                                        "Unexpected visualization default color.");
 
         const auto ordinal = static_cast<std::size_t>(definition.color);
-        passed &= expect(ordinal < seen_by_ordinal.size(), "Visualization color enum value is outside the real range.");
+        passed &= ORNL::Testing::expect(ordinal < seen_by_ordinal.size(),
+                                        "Visualization color enum value is outside the real range.");
         if (ordinal < seen_by_ordinal.size()) {
-            passed &= expect(!seen_by_ordinal[ordinal], "Duplicate visualization color enum ordinal.");
+            passed &= ORNL::Testing::expect(!seen_by_ordinal[ordinal], "Duplicate visualization color enum ordinal.");
             seen_by_ordinal[ordinal] = true;
         }
 
-        passed &= expect(seen_colors.insert(definition.color).second, "Duplicate visualization color enum entry.");
-        passed &= expect(seen_names.insert(definition.name).second, "Duplicate visualization color name.");
+        passed &= ORNL::Testing::expect(seen_colors.insert(definition.color).second,
+                                        "Duplicate visualization color enum entry.");
+        passed &=
+            ORNL::Testing::expect(seen_names.insert(definition.name).second, "Duplicate visualization color name.");
 
         ORNL::VisualizationColors color_from_name;
-        passed &= expect(ORNL::VisualizationColorFromName(QString(definition.name), color_from_name),
-                         "Expected visualization color name lookup to succeed.");
-        passed &=
-            expect(color_from_name == definition.color, "Expected visualization color name lookup to return enum.");
+        passed &= ORNL::Testing::expect(ORNL::VisualizationColorFromName(QString(definition.name), color_from_name),
+                                        "Expected visualization color name lookup to succeed.");
+        passed &= ORNL::Testing::expect(color_from_name == definition.color,
+                                        "Expected visualization color name lookup to return enum.");
 
-        passed &= expect(ORNL::VisualizationColorsName(definition.color) == definition.name,
-                         "Expected public name helper to use the definition table.");
-        passed &= expect(ORNL::VisualizationColorsDefaults(definition.color) == definition.default_color,
-                         "Expected public default helper to use the definition table.");
+        passed &= ORNL::Testing::expect(ORNL::VisualizationColorsName(definition.color) == definition.name,
+                                        "Expected public name helper to use the definition table.");
+        passed &= ORNL::Testing::expect(ORNL::VisualizationColorsDefaults(definition.color) == definition.default_color,
+                                        "Expected public default helper to use the definition table.");
     }
 
-    for (bool seen : seen_by_ordinal) { passed &= expect(seen, "Missing visualization color enum ordinal."); }
+    for (bool seen : seen_by_ordinal) {
+        passed &= ORNL::Testing::expect(seen, "Missing visualization color enum ordinal.");
+    }
 
-    passed &= expect(ORNL::VisualizationColorsName(ORNL::VisualizationColors::kUnknown) == "Unknown",
-                     "Expected kUnknown to keep the Unknown persisted name.");
-    passed &= expect(ORNL::VisualizationColorsDefaults(ORNL::VisualizationColors::kUnknown) == QColor(0, 0, 0, 255),
-                     "Expected kUnknown to keep the black default color.");
-    passed &= expect(throwsInvalidArgumentForName(ORNL::VisualizationColors::Length),
-                     "Expected Length name lookup to throw.");
-    passed &= expect(throwsInvalidArgumentForDefault(ORNL::VisualizationColors::Length),
-                     "Expected Length default lookup to throw.");
+    passed &= ORNL::Testing::expect(ORNL::VisualizationColorsName(ORNL::VisualizationColors::kUnknown) == "Unknown",
+                                    "Expected kUnknown to keep the Unknown persisted name.");
+    passed &= ORNL::Testing::expect(
+        ORNL::VisualizationColorsDefaults(ORNL::VisualizationColors::kUnknown) == QColor(0, 0, 0, 255),
+        "Expected kUnknown to keep the black default color.");
+    passed &= ORNL::Testing::expect(throwsInvalidArgumentForName(ORNL::VisualizationColors::Length),
+                                    "Expected Length name lookup to throw.");
+    passed &= ORNL::Testing::expect(throwsInvalidArgumentForDefault(ORNL::VisualizationColors::Length),
+                                    "Expected Length default lookup to throw.");
 
     ORNL::VisualizationColors invalid_color;
-    passed &= expect(!ORNL::VisualizationColorFromName(QStringLiteral("NotAVisualizationColor"), invalid_color),
-                     "Expected unknown visualization color name lookup to fail.");
+    passed &= ORNL::Testing::expect(
+        !ORNL::VisualizationColorFromName(QStringLiteral("NotAVisualizationColor"), invalid_color),
+        "Expected unknown visualization color name lookup to fail.");
 
     const std::map<std::string, QColor> preference_colors =
         ORNL::PreferencesManager::getInstance()->getVisualizationColors();
-    passed &= expect(preference_colors.size() == definitions.size(),
-                     "Expected preferences to register every visualization color.");
+    passed &= ORNL::Testing::expect(preference_colors.size() == definitions.size(),
+                                    "Expected preferences to register every visualization color.");
 
     for (const ORNL::VisualizationColorDefinition& definition : definitions) {
         const auto color_it = preference_colors.find(definition.name);
-        passed &= expect(color_it != preference_colors.end(), "Expected visualization color in preferences.");
+        passed &=
+            ORNL::Testing::expect(color_it != preference_colors.end(), "Expected visualization color in preferences.");
         if (color_it != preference_colors.end()) {
-            passed &= expect(color_it->second == definition.default_color,
-                             "Expected preference visualization color default to match definition.");
+            passed &= ORNL::Testing::expect(color_it->second == definition.default_color,
+                                            "Expected preference visualization color default to match definition.");
         }
     }
 
     ORNL::GCodeLoader loader(QString(), false);
-    passed &= expect(loader.determineFontColor(QStringLiteral("HELICAL PERIMETER")) ==
-                         configuredColor(ORNL::VisualizationColors::kHelicalPerimeter),
-                     "Expected helical perimeter comments to use the helical perimeter color.");
-    passed &= expect(loader.determineFontColor(QStringLiteral("HELICAL INSET")) ==
-                         configuredColor(ORNL::VisualizationColors::kHelicalInset),
-                     "Expected helical inset comments to use the helical inset color.");
-    passed &= expect(loader.determineFontColor(QStringLiteral("HELICAL INFILL")) ==
-                         configuredColor(ORNL::VisualizationColors::kHelicalInfill),
-                     "Expected helical infill comments to use the helical infill color.");
-    passed &= expect(
+    passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("HELICAL PERIMETER")) ==
+                                        configuredColor(ORNL::VisualizationColors::kHelicalPerimeter),
+                                    "Expected helical perimeter comments to use the helical perimeter color.");
+    passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("HELICAL INSET")) ==
+                                        configuredColor(ORNL::VisualizationColors::kHelicalInset),
+                                    "Expected helical inset comments to use the helical inset color.");
+    passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("HELICAL INFILL")) ==
+                                        configuredColor(ORNL::VisualizationColors::kHelicalInfill),
+                                    "Expected helical infill comments to use the helical infill color.");
+    passed &= ORNL::Testing::expect(
         loader.determineFontColor(QStringLiteral("HELICAL")) == configuredColor(ORNL::VisualizationColors::kHelical),
         "Expected generic helical comments to keep the generic helical color.");
-    passed &= expect(loader.determineFontColor(QStringLiteral("HELICAL SUPPORT PERIMETER")) ==
-                         configuredColor(ORNL::VisualizationColors::kSupport),
-                     "Expected support comments to keep precedence over helical region colors.");
-    passed &= expect(loader.determineSegmentColor(2, QStringLiteral("HELICAL PERIMETER")) ==
-                         configuredColor(ORNL::VisualizationColors::kHelicalPerimeter),
-                     "Expected helical perimeter arcs to keep the helical perimeter color.");
-    passed &= expect(loader.determineSegmentColor(3, QStringLiteral("HELICAL INSET")) ==
-                         configuredColor(ORNL::VisualizationColors::kHelicalInset),
-                     "Expected helical inset arcs to keep the helical inset color.");
-    passed &= expect(loader.determineSegmentColor(2, QStringLiteral("PERIMETER")) ==
-                         configuredColor(ORNL::VisualizationColors::kPerimeterArc),
-                     "Expected planar perimeter arcs to keep the perimeter arc color.");
-    passed &= expect(loader.determineSegmentColor(3, QStringLiteral("INSET")) ==
-                         configuredColor(ORNL::VisualizationColors::kInsetArc),
-                     "Expected planar inset arcs to keep the inset arc color.");
+    passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("HELICAL SUPPORT PERIMETER")) ==
+                                        configuredColor(ORNL::VisualizationColors::kSupport),
+                                    "Expected support comments to keep precedence over helical region colors.");
+    passed &= ORNL::Testing::expect(loader.determineSegmentColor(2, QStringLiteral("HELICAL PERIMETER")) ==
+                                        configuredColor(ORNL::VisualizationColors::kHelicalPerimeter),
+                                    "Expected helical perimeter arcs to keep the helical perimeter color.");
+    passed &= ORNL::Testing::expect(loader.determineSegmentColor(3, QStringLiteral("HELICAL INSET")) ==
+                                        configuredColor(ORNL::VisualizationColors::kHelicalInset),
+                                    "Expected helical inset arcs to keep the helical inset color.");
+    passed &= ORNL::Testing::expect(loader.determineSegmentColor(2, QStringLiteral("PERIMETER")) ==
+                                        configuredColor(ORNL::VisualizationColors::kPerimeterArc),
+                                    "Expected planar perimeter arcs to keep the perimeter arc color.");
+    passed &= ORNL::Testing::expect(loader.determineSegmentColor(3, QStringLiteral("INSET")) ==
+                                        configuredColor(ORNL::VisualizationColors::kInsetArc),
+                                    "Expected planar inset arcs to keep the inset arc color.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

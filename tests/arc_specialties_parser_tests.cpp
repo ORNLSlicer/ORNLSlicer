@@ -18,14 +18,12 @@
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "step/layer/cylindrical_layer.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
 namespace {
-bool expect(bool condition, const char* message) {
-    if (!condition) std::cerr << message << '\n';
-    return condition;
-}
+constexpr float kTolerance = 1.0e-6f;
 
 bool parsesArcLine(const QString& line) {
     QStringList original_lines {line};
@@ -658,16 +656,12 @@ int occurrenceCount(const QString& block, const QString& marker) {
     return block.count(marker);
 }
 
-bool near(double actual, double expected) {
-    return std::abs(actual - expected) <= 1e-6;
-}
-
 bool infersLeftHandedHelicalAxisFromReversedCpDelta() {
     ORNL::Point center;
     const bool inferred = ORNL::ArcSpecialtiesAxisInference::cylindricalAxisFromCpDelta(
         QVector3D(1.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0), 0.0, 270.0, true, std::nullopt, center);
 
-    return inferred && near(center.x(), 0.0) && near(center.y(), 0.0);
+    return inferred && ORNL::Testing::near2DPoint(center, 0.0, 0.0, kTolerance);
 }
 
 bool rightHandedCpDeltaDoesNotMirrorAxis() {
@@ -675,7 +669,8 @@ bool rightHandedCpDeltaDoesNotMirrorAxis() {
     const bool inferred = ORNL::ArcSpecialtiesAxisInference::cylindricalAxisFromCpDelta(
         QVector3D(1.0, 0.0, 0.0), QVector3D(0.0, 1.0, 0.0), 0.0, 270.0, false, std::nullopt, center);
 
-    return inferred && !near(center.x(), 0.0) && !near(center.y(), 0.0);
+    return inferred && !ORNL::Testing::near(center.x(), 0.0, kTolerance) &&
+           !ORNL::Testing::near(center.y(), 0.0, kTolerance);
 }
 
 bool writesFirstTravelWithWorkObjectToolFrame() {
@@ -808,68 +803,75 @@ int main(int argc, char* argv[]) {
         "I=0.5000 J=0.0000 FV.S.SPEED G81 ;PERIMETER";
 
     bool passed = true;
-    passed &= expect(parsesArcLine(clockwise_arc), "Arc Specialties G02 did not ignore inline G81.");
-    passed &= expect(parsesArcLine(counter_clockwise_arc), "Arc Specialties G03 did not ignore inline G81.");
-    passed &= expect(parsesArcLine(clockwise_schedule_speed_arc),
-                     "Arc Specialties G02 did not accept the G80 schedule speed variable.");
-    passed &= expect(parsesArcLine(counter_clockwise_schedule_speed_arc),
-                     "Arc Specialties G03 did not accept the G80 schedule speed variable.");
-    passed &= expect(parsedArcKeepsCpForVisualization(clockwise_arc),
-                     "Arc Specialties parser did not retain CP for visualization.");
-    passed &= expect(parsedArcKeepsCpForVisualization(clockwise_schedule_speed_arc, false),
-                     "Arc Specialties parser did not retain CP with the G80 schedule speed variable.");
-    passed &= expect(parsedLineKeepsCpForVisualization(),
-                     "Arc Specialties parser did not retain linear CP for visualization.");
-    passed &= expect(parsedLineWithScheduleSpeedKeepsCpForVisualization(),
-                     "Arc Specialties parser did not retain linear CP with the G80 schedule speed variable.");
-    passed &= expect(parsesArcSpecialtiesOptStopModeAssignment(),
-                     "Arc Specialties parser did not accept the OptStopMode assignment.");
+    passed &= ORNL::Testing::expect(parsesArcLine(clockwise_arc), "Arc Specialties G02 did not ignore inline G81.");
     passed &=
-        expect(parsesNumberedArcSpecialtiesMotion(), "Arc Specialties parser did not accept Beckhoff block numbers.");
-    passed &= expect(rejectsDuplicateScheduleSpeedFeedrate(),
-                     "Arc Specialties parser did not reject duplicate schedule speed feedrates.");
-    passed &= expect(infersLeftHandedHelicalAxisFromReversedCpDelta(),
-                     "Arc Specialties loader did not reverse left-handed helical CP delta.");
-    passed &= expect(rightHandedCpDeltaDoesNotMirrorAxis(),
-                     "Arc Specialties loader unexpectedly reversed right-handed CP delta.");
-    passed &= expect(writesInlineArcOptionalStop(), "Arc Specialties writer did not emit inline G81 on G02/G03.");
-    passed &= expect(writesConfiguredG80WeldScheduleFile(),
-                     "Arc Specialties writer did not emit the configured G80 weld schedule file.");
-    passed &= expect(writesNumericSpeedWhenG80ScheduleFileIsEmpty(),
-                     "Arc Specialties writer did not emit numeric speed without a G80 weld schedule file.");
-    passed &= expect(writesG80ScheduleSpeedVariableForLineAndArc(),
-                     "Arc Specialties writer did not emit the G80 schedule speed variable for print motion.");
-    passed &= expect(writesHelicalCpFromStartOffsetBaseline(),
-                     "Arc Specialties writer did not preserve the helical start-offset CP baseline.");
-    passed &= expect(writesLayerScopedBlockNumbersWhenEnabled(),
-                     "Arc Specialties writer did not emit layer-scoped block numbers.");
-    passed &= expect(writesHelicalOptStopModeFromPostOrderingRotationDirection(),
-                     "Arc Specialties writer did not emit helical OptStopMode from rotation direction.");
-    passed &= expect(writesCompactCylindricalPrintComments(),
-                     "Arc Specialties writer did not emit compact cylindrical comments.");
+        ORNL::Testing::expect(parsesArcLine(counter_clockwise_arc), "Arc Specialties G03 did not ignore inline G81.");
+    passed &= ORNL::Testing::expect(parsesArcLine(clockwise_schedule_speed_arc),
+                                    "Arc Specialties G02 did not accept the G80 schedule speed variable.");
+    passed &= ORNL::Testing::expect(parsesArcLine(counter_clockwise_schedule_speed_arc),
+                                    "Arc Specialties G03 did not accept the G80 schedule speed variable.");
+    passed &= ORNL::Testing::expect(parsedArcKeepsCpForVisualization(clockwise_arc),
+                                    "Arc Specialties parser did not retain CP for visualization.");
+    passed &= ORNL::Testing::expect(parsedArcKeepsCpForVisualization(clockwise_schedule_speed_arc, false),
+                                    "Arc Specialties parser did not retain CP with the G80 schedule speed variable.");
+    passed &= ORNL::Testing::expect(parsedLineKeepsCpForVisualization(),
+                                    "Arc Specialties parser did not retain linear CP for visualization.");
     passed &=
-        expect(writesHelicalRegionLineComments(), "Arc Specialties writer did not emit helical line region comments.");
+        ORNL::Testing::expect(parsedLineWithScheduleSpeedKeepsCpForVisualization(),
+                              "Arc Specialties parser did not retain linear CP with the G80 schedule speed variable.");
+    passed &= ORNL::Testing::expect(parsesArcSpecialtiesOptStopModeAssignment(),
+                                    "Arc Specialties parser did not accept the OptStopMode assignment.");
+    passed &= ORNL::Testing::expect(parsesNumberedArcSpecialtiesMotion(),
+                                    "Arc Specialties parser did not accept Beckhoff block numbers.");
+    passed &= ORNL::Testing::expect(rejectsDuplicateScheduleSpeedFeedrate(),
+                                    "Arc Specialties parser did not reject duplicate schedule speed feedrates.");
+    passed &= ORNL::Testing::expect(infersLeftHandedHelicalAxisFromReversedCpDelta(),
+                                    "Arc Specialties loader did not reverse left-handed helical CP delta.");
+    passed &= ORNL::Testing::expect(rightHandedCpDeltaDoesNotMirrorAxis(),
+                                    "Arc Specialties loader unexpectedly reversed right-handed CP delta.");
+    passed &= ORNL::Testing::expect(writesInlineArcOptionalStop(),
+                                    "Arc Specialties writer did not emit inline G81 on G02/G03.");
+    passed &= ORNL::Testing::expect(writesConfiguredG80WeldScheduleFile(),
+                                    "Arc Specialties writer did not emit the configured G80 weld schedule file.");
     passed &=
-        expect(writesHelicalRegionArcComments(), "Arc Specialties writer did not emit helical arc region comments.");
-    passed &= expect(writesGenericHelicalCommentForMissingOrUnknownRegion(),
-                     "Arc Specialties writer did not fall back to generic helical comments.");
-    passed &= expect(helicalLayerFinalizesOnlyAtPhysicalPathEnd(),
-                     "Helical layer emitted region end G-code at internal region transitions.");
-    passed &= expect(writesHelicalRegionToolFrameRotations(),
-                     "Arc Specialties writer did not emit helical region tool-frame rotations.");
-    passed &= expect(writesHelicalTravelToolFrameRotation(),
-                     "Arc Specialties writer did not emit the helical travel tool-frame rotation.");
-    passed &= expect(writesHelicalToolFrameHeader(),
-                     "Arc Specialties writer did not report helical tool-frame rotations in the header.");
-    passed &= expect(writesFirstTravelWithWorkObjectToolFrame(), "Arc Specialties first travel did not use ZR=-135.");
-    passed &= expect(writesStartupWorldApproachAbovePartOrCylinderHeight(),
-                     "Arc Specialties startup world approach did not use part/cylinder safe Z.");
-    passed &= expect(writesStartupWorldApproachAboveGeneratedHelicalMaxZ(),
-                     "Arc Specialties startup world approach did not use generated helical safe Z.");
-    passed &= expect(writesHelicalZClipRoundingHeader(),
-                     "Arc Specialties writer did not emit the helical Z clip rounding header.");
-    passed &= expect(writesCylindricalTravelWithConfiguredArcDensity(),
-                     "Arc Specialties cylindrical travel did not honor Arcs per Revolution.");
+        ORNL::Testing::expect(writesNumericSpeedWhenG80ScheduleFileIsEmpty(),
+                              "Arc Specialties writer did not emit numeric speed without a G80 weld schedule file.");
+    passed &=
+        ORNL::Testing::expect(writesG80ScheduleSpeedVariableForLineAndArc(),
+                              "Arc Specialties writer did not emit the G80 schedule speed variable for print motion.");
+    passed &= ORNL::Testing::expect(writesHelicalCpFromStartOffsetBaseline(),
+                                    "Arc Specialties writer did not preserve the helical start-offset CP baseline.");
+    passed &= ORNL::Testing::expect(writesLayerScopedBlockNumbersWhenEnabled(),
+                                    "Arc Specialties writer did not emit layer-scoped block numbers.");
+    passed &= ORNL::Testing::expect(writesHelicalOptStopModeFromPostOrderingRotationDirection(),
+                                    "Arc Specialties writer did not emit helical OptStopMode from rotation direction.");
+    passed &= ORNL::Testing::expect(writesCompactCylindricalPrintComments(),
+                                    "Arc Specialties writer did not emit compact cylindrical comments.");
+    passed &= ORNL::Testing::expect(writesHelicalRegionLineComments(),
+                                    "Arc Specialties writer did not emit helical line region comments.");
+    passed &= ORNL::Testing::expect(writesHelicalRegionArcComments(),
+                                    "Arc Specialties writer did not emit helical arc region comments.");
+    passed &= ORNL::Testing::expect(writesGenericHelicalCommentForMissingOrUnknownRegion(),
+                                    "Arc Specialties writer did not fall back to generic helical comments.");
+    passed &= ORNL::Testing::expect(helicalLayerFinalizesOnlyAtPhysicalPathEnd(),
+                                    "Helical layer emitted region end G-code at internal region transitions.");
+    passed &= ORNL::Testing::expect(writesHelicalRegionToolFrameRotations(),
+                                    "Arc Specialties writer did not emit helical region tool-frame rotations.");
+    passed &= ORNL::Testing::expect(writesHelicalTravelToolFrameRotation(),
+                                    "Arc Specialties writer did not emit the helical travel tool-frame rotation.");
+    passed &=
+        ORNL::Testing::expect(writesHelicalToolFrameHeader(),
+                              "Arc Specialties writer did not report helical tool-frame rotations in the header.");
+    passed &= ORNL::Testing::expect(writesFirstTravelWithWorkObjectToolFrame(),
+                                    "Arc Specialties first travel did not use ZR=-135.");
+    passed &= ORNL::Testing::expect(writesStartupWorldApproachAbovePartOrCylinderHeight(),
+                                    "Arc Specialties startup world approach did not use part/cylinder safe Z.");
+    passed &= ORNL::Testing::expect(writesStartupWorldApproachAboveGeneratedHelicalMaxZ(),
+                                    "Arc Specialties startup world approach did not use generated helical safe Z.");
+    passed &= ORNL::Testing::expect(writesHelicalZClipRoundingHeader(),
+                                    "Arc Specialties writer did not emit the helical Z clip rounding header.");
+    passed &= ORNL::Testing::expect(writesCylindricalTravelWithConfiguredArcDensity(),
+                                    "Arc Specialties cylindrical travel did not honor Arcs per Revolution.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
