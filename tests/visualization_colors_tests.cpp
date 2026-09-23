@@ -58,6 +58,7 @@ const std::vector<ExpectedVisualizationColor>& expectedVisualizationColors() {
         {ORNL::VisualizationColors::kHelicalPerimeter, "HelicalPerimeter", QColor(0, 0, 255, 255)},
         {ORNL::VisualizationColors::kHelicalInset, "HelicalInset", QColor(0, 204, 255, 255)},
         {ORNL::VisualizationColors::kHelicalInfill, "HelicalInfill", QColor(0, 255, 0, 255)},
+        {ORNL::VisualizationColors::kSpiralConnection, "SpiralConnection", QColor(255, 215, 0, 255)},
     };
 
     return expected;
@@ -193,6 +194,12 @@ int main() {
     passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("HELICAL SUPPORT PERIMETER")) ==
                                         configuredColor(ORNL::VisualizationColors::kSupport),
                                     "Expected support comments to keep precedence over helical region colors.");
+    passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("PERIMETER SPIRAL CONNECTION")) ==
+                                        configuredColor(ORNL::VisualizationColors::kSpiralConnection),
+                                    "Expected perimeter spiral connections to use the connection color.");
+    passed &= ORNL::Testing::expect(loader.determineFontColor(QStringLiteral("INSET SPIRAL CONNECTION")) ==
+                                        configuredColor(ORNL::VisualizationColors::kSpiralConnection),
+                                    "Expected inset spiral connections to use the connection color.");
     passed &= ORNL::Testing::expect(loader.determineSegmentColor(2, QStringLiteral("HELICAL PERIMETER")) ==
                                         configuredColor(ORNL::VisualizationColors::kHelicalPerimeter),
                                     "Expected helical perimeter arcs to keep the helical perimeter color.");
@@ -206,5 +213,8 @@ int main() {
                                         configuredColor(ORNL::VisualizationColors::kInsetArc),
                                     "Expected planar inset arcs to keep the inset arc color.");
 
+    passed &= ORNL::Testing::expect(loader.determineSegmentColor(2, QStringLiteral("PERIMETER SPIRAL CONNECTION")) ==
+                                        configuredColor(ORNL::VisualizationColors::kSpiralConnection),
+                                    "Expected spiral connection arcs to keep the connection color.");
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -158,6 +158,7 @@ class Constants {
         static const QString kLeadIn;
         static const QString kFlyingStart;
         static const QString kPerimeterTipWipe;
+        static const QString kSpiralConnection;
     };
 
     class PrinterSettings {

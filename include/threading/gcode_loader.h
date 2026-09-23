@@ -177,7 +177,7 @@ class GCodeLoader : public QThread {
 
     //! \brief matchers for modifier identification for coloring
     QStringMatcher m_prestart, m_initial_startup, m_slowdown, m_forward_tipwipe, m_reverse_tipwipe, m_angled_tipwipe,
-        m_coasting, m_spirallift, m_rampingup, m_rampingdown, m_leadin;
+        m_coasting, m_spirallift, m_rampingup, m_rampingdown, m_leadin, m_spiral_connection;
 
     //! \brief matchers for type identification for coloring
     QStringMatcher m_perimeter, m_radial, m_helical, m_inset, m_infill, m_skin, m_skeleton, m_support, m_support_roof,
