@@ -169,16 +169,44 @@ PointOrderOptimizer::PointOrderSelection selectionAtSegmentRatio(const Path& pat
     return selection;
 }
 
-PointOrderOptimizer::PointOrderSelection farthestPathStart(const Path& path, const Point& reference) {
+PointOrderOptimizer::PointOrderSelection farthestPathPoint(const Path& path, const Point& reference) {
     PointOrderOptimizer::PointOrderSelection selection;
     double farthest_distance = -1.0;
+
+    auto consider = [&path, &reference, &selection, &farthest_distance](int segment_index, double ratio) {
+        const Point candidate = pointOnSegmentAtRatio(path[segment_index], ratio);
+        const double distance = planarDistance(reference, candidate);
+        if (distance > farthest_distance) {
+            farthest_distance = distance;
+            selection         = selectionAtSegmentRatio(path, segment_index, ratio);
+        }
+    };
+
     for (int i = 0; i < path.size(); ++i) {
         if (path[i].isNull()) continue;
 
-        const double distance = planarDistance(reference, path[i]->start());
-        if (distance > farthest_distance) {
-            farthest_distance        = distance;
-            selection.rotation_index = i;
+        consider(i, 0.0);
+        consider(i, 1.0);
+
+        const ArcSegment* arc = dynamic_cast<const ArcSegment*>(path[i].data());
+        if (arc == nullptr) continue;
+
+        const double radius = arcRadius(*arc);
+        const double sweep  = arc->angle()();
+        if (radius <= kDistanceTolerance || sweep <= kDistanceTolerance) continue;
+
+        const Point center        = arc->center();
+        const double reference_dx = static_cast<double>(reference.x() - center.x());
+        const double reference_dy = static_cast<double>(reference.y() - center.y());
+        if (std::hypot(reference_dx, reference_dy) <= kDistanceTolerance) continue;
+
+        const double start_angle    = std::atan2(static_cast<double>(arc->start().y() - center.y()),
+                                                 static_cast<double>(arc->start().x() - center.x()));
+        const double farthest_angle = std::atan2(reference_dy, reference_dx) + (kTwoPi / 2.0);
+        const double directed_delta = arc->counterclockwise() ? normalizedAngle(farthest_angle - start_angle)
+                                                              : normalizedAngle(start_angle - farthest_angle);
+        if (sweep >= kTwoPi - kDistanceTolerance || directed_delta <= sweep + kDistanceTolerance) {
+            consider(i, std::clamp(directed_delta / sweep, 0.0, 1.0));
         }
     }
 
@@ -200,7 +228,7 @@ PointOrderOptimizer::PointOrderSelection consecutivePathSelection(const Path& pa
     }
 
     if (total_length <= kDistanceTolerance) return selectionAtSegmentRatio(path, nearest.segment_index, nearest.ratio);
-    if (threshold() > total_length + kDistanceTolerance) return farthestPathStart(path, reference);
+    if (threshold() > total_length + kDistanceTolerance) return farthestPathPoint(path, reference);
 
     double start_offset = nearest.ratio * segment_lengths[nearest.segment_index];
     for (int i = 0; i < nearest.segment_index; ++i) start_offset += segment_lengths[i];

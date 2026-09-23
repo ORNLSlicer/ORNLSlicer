@@ -381,6 +381,21 @@ int main() {
                    closeTo(full_circle_start_arc->angle()() + full_circle_end_arc->angle()(), 2.0 * std::acos(-1.0)),
                "Expected a split full-circle arc to preserve one complete revolution.");
 
+    QSharedPointer<ORNL::SettingsBase> oversized_arc_threshold_settings =
+        QSharedPointer<ORNL::SettingsBase>::create(*closed_radial_arc_settings);
+    oversized_arc_threshold_settings->setSetting<ORNL::Distance>(ORNL::PS::Optimizations::kConsecutiveDistanceThreshold,
+                                                                 ORNL::Distance(100.0));
+    ORNL::Point oversized_arc_threshold_start(10.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer oversized_arc_threshold_optimizer(oversized_arc_threshold_start, 2,
+                                                               oversized_arc_threshold_settings);
+    oversized_arc_threshold_optimizer.setPathsToEvaluate({full_circle_arc_path});
+    const ORNL::Path oversized_arc_threshold_result = oversized_arc_threshold_optimizer.linkNextRadialPath();
+    passed &= expect(oversized_arc_threshold_result.size() == 3,
+                     "Expected an oversized consecutive threshold to split a full-circle arc at its farthest point.");
+    passed &= expect(oversized_arc_threshold_result.size() > 1 &&
+                         pointClose(oversized_arc_threshold_result[1]->start(), ORNL::Point(-10.0f, 0.0f, 0.0f)),
+                     "Expected an oversized consecutive threshold to fall back to the opposite point on the arc.");
+
     ORNL::Path open_radial_path = pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
                                                   ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)});
     ORNL::Point open_radial_start(9.8f, 0.0f, 0.0f);
