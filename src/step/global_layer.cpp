@@ -30,39 +30,13 @@
 
 namespace ORNL {
 namespace {
-struct IslandOrderSettings {
-    IslandOrderOptimization method;
-    double custom_x;
-    double custom_y;
-    double custom_z;
-    float seam_vector_x;
-    float seam_vector_y;
-    float seam_vector_z;
-};
-
 struct IslandOrderSelection {
     QSharedPointer<Layer> settings_layer;
     QSharedPointer<Layer> anchor_layer;
 };
 
-IslandOrderSettings islandOrderSettings(const QSharedPointer<SettingsBase>& sb) {
-    return {static_cast<IslandOrderOptimization>(sb->setting<int>(PS::Optimizations::kIslandOrder)),
-            sb->setting<double>(PS::Optimizations::kCustomIslandXLocation),
-            sb->setting<double>(PS::Optimizations::kCustomIslandYLocation),
-            sb->setting<double>(PS::Optimizations::kCustomIslandZLocation),
-            sb->setting<float>(PS::Optimizations::kSeamAttractorVectorX),
-            sb->setting<float>(PS::Optimizations::kSeamAttractorVectorY),
-            sb->setting<float>(PS::Optimizations::kSeamAttractorVectorZ)};
-}
-
-bool sameRelevantIslandOrderSettings(const IslandOrderSettings& lhs, const IslandOrderSettings& rhs) {
-    if (lhs.method != rhs.method) return false;
-
-    if (lhs.method != IslandOrderOptimization::kCustomPoint) return true;
-
-    return lhs.custom_x == rhs.custom_x && lhs.custom_y == rhs.custom_y && lhs.custom_z == rhs.custom_z &&
-           lhs.seam_vector_x == rhs.seam_vector_x && lhs.seam_vector_y == rhs.seam_vector_y &&
-           lhs.seam_vector_z == rhs.seam_vector_z;
+IslandOrderOptimization islandOrderMethod(const QSharedPointer<SettingsBase>& sb) {
+    return static_cast<IslandOrderOptimization>(sb->setting<int>(PS::Optimizations::kIslandOrder));
 }
 
 bool hasOrderableIsland(const QSharedPointer<Layer>& layer) {
@@ -75,50 +49,50 @@ bool hasOrderableIsland(const QSharedPointer<Layer>& layer) {
     return false;
 }
 
-bool sameCustomIslandOrderAnchor(const QSharedPointer<Layer>& lhs, const QSharedPointer<Layer>& rhs,
-                                 const QSharedPointer<SettingsBase>& sb) {
-    const Point lhs_anchor = OptimizationAnchor::customIslandOrderPoint(sb, lhs->getSlicingPlane(), lhs->getShift());
-    const Point rhs_anchor = OptimizationAnchor::customIslandOrderPoint(sb, rhs->getSlicingPlane(), rhs->getShift());
+bool sameCustomIslandOrderAnchor(const QSharedPointer<Layer>& lhs, const QSharedPointer<Layer>& rhs) {
+    const Point lhs_anchor =
+        OptimizationAnchor::customIslandOrderPoint(lhs->getSb(), lhs->getSlicingPlane(), lhs->getShift());
+    const Point rhs_anchor =
+        OptimizationAnchor::customIslandOrderPoint(rhs->getSb(), rhs->getSlicingPlane(), rhs->getShift());
     return lhs_anchor.distance(rhs_anchor)() <= 0.01;
 }
 
 IslandOrderSelection commonIslandOrderSelection(const QMap<QUuid, QSharedPointer<Part::StepPair>>& step_pairs) {
-    std::optional<IslandOrderSettings> common_settings;
+    std::optional<IslandOrderOptimization> common_method;
     IslandOrderSelection selection;
     bool settings_conflict = false;
-    bool frame_conflict    = false;
+    bool anchor_conflict   = false;
 
     for (auto it = step_pairs.constBegin(); it != step_pairs.constEnd(); ++it) {
         if (it.value().isNull() || !hasOrderableIsland(it.value()->printing_layer)) continue;
 
         QSharedPointer<Layer> printing_layer = it.value()->printing_layer;
-        const IslandOrderSettings settings   = islandOrderSettings(it.value()->printing_layer->getSb());
+        const IslandOrderOptimization method = islandOrderMethod(printing_layer->getSb());
         if (selection.anchor_layer.isNull()) { selection.anchor_layer = printing_layer; }
 
         if (settings_conflict) continue;
 
-        if (!common_settings.has_value()) {
-            common_settings          = settings;
+        if (!common_method.has_value()) {
+            common_method            = method;
             selection.settings_layer = printing_layer;
             continue;
         }
 
-        const bool same_settings = sameRelevantIslandOrderSettings(common_settings.value(), settings);
-        if (!same_settings) {
+        if (common_method.value() != method) {
             qWarning() << "Global layer has conflicting island order settings; using global settings";
             settings_conflict        = true;
             selection.settings_layer = nullptr;
         }
-        else if (settings.method == IslandOrderOptimization::kCustomPoint &&
-                 !sameCustomIslandOrderAnchor(selection.anchor_layer, printing_layer, printing_layer->getSb())) {
-            frame_conflict = true;
+        else if (method == IslandOrderOptimization::kCustomPoint &&
+                 !sameCustomIslandOrderAnchor(selection.anchor_layer, printing_layer)) {
+            anchor_conflict = true;
         }
     }
 
-    if (frame_conflict) {
-        if (common_settings.has_value() && common_settings.value().method == IslandOrderOptimization::kCustomPoint &&
+    if (anchor_conflict) {
+        if (common_method.has_value() && common_method.value() == IslandOrderOptimization::kCustomPoint &&
             !selection.settings_layer.isNull()) {
-            qWarning() << "Global layer has conflicting custom island order frames; using global settings";
+            qWarning() << "Global layer has conflicting custom island order anchors; using global settings";
             selection.settings_layer = nullptr;
         }
     }
