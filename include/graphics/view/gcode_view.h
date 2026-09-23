@@ -23,6 +23,7 @@
 
 namespace ORNL {
 // Forward
+class GraphicsObject;
 class PrinterObject;
 class SeamObject;
 
@@ -270,6 +271,9 @@ class GCodeView : public BaseView {
 
         //! \brief Optimization point currently being dragged.
         QSharedPointer<SeamObject> dragged_seam;
+
+        //! \brief Attractor guide for the optimization point currently being dragged.
+        QSharedPointer<GraphicsObject> dragged_seam_guide;
 
         //! \brief X setting controlled by the dragged optimization point.
         QString dragged_seam_x_setting;

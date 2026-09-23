@@ -127,13 +127,14 @@ PrinterObject::OptimizationPointPick PrinterObject::pickOptimizationPoint(const 
                                                                           const QMatrix4x4& view, QPointF mouse_ndc_pos,
                                                                           bool ortho) {
     QVector<OptimizationPointPick> candidates;
-    candidates.push_back({m_seams.custom_island_opt, PS::Optimizations::kCustomIslandXLocation,
-                          PS::Optimizations::kCustomIslandYLocation});
-    candidates.push_back(
-        {m_seams.custom_path_opt, PS::Optimizations::kCustomPathXLocation, PS::Optimizations::kCustomPathYLocation});
-    candidates.push_back(
-        {m_seams.custom_point_opt, PS::Optimizations::kCustomPointXLocation, PS::Optimizations::kCustomPointYLocation});
-    candidates.push_back({m_seams.custom_point_second_opt, PS::Optimizations::kCustomPointSecondXLocation,
+    candidates.push_back({m_seams.custom_island_opt, m_seams.custom_island_guide,
+                          PS::Optimizations::kCustomIslandXLocation, PS::Optimizations::kCustomIslandYLocation});
+    candidates.push_back({m_seams.custom_path_opt, m_seams.custom_path_guide, PS::Optimizations::kCustomPathXLocation,
+                          PS::Optimizations::kCustomPathYLocation});
+    candidates.push_back({m_seams.custom_point_opt, m_seams.custom_point_guide,
+                          PS::Optimizations::kCustomPointXLocation, PS::Optimizations::kCustomPointYLocation});
+    candidates.push_back({m_seams.custom_point_second_opt, m_seams.custom_point_second_guide,
+                          PS::Optimizations::kCustomPointSecondXLocation,
                           PS::Optimizations::kCustomPointSecondYLocation});
 
     float nearest = std::numeric_limits<float>::infinity();
