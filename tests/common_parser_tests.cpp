@@ -184,13 +184,7 @@ bool ignoresTipWipeZWhenInferringBeadHeight() {
         "M5",
     };
     const QStringList nominal_lines {
-        "M3 S45",
-        "G1 F60 X10 (PERIMETER)",
-        "M5",
-        "G0 X11 Z0 (TRAVEL)",
-        "M3 S45",
-        "G1 X21 (PERIMETER)",
-        "M5",
+        "M3 S45", "G1 F60 X10 (PERIMETER)", "M5", "G0 X11 Z0 (TRAVEL)", "M3 S45", "G1 X21 (PERIMETER)", "M5",
     };
 
     try {
@@ -198,8 +192,8 @@ bool ignoresTipWipeZWhenInferringBeadHeight() {
         const ORNL::Volume nominal_volume       = parsedVolume(nominal_lines);
         const ORNL::Distance bead_width         = 0.75 * ORNL::in;
         const ORNL::Distance bead_height        = 0.2 * ORNL::in;
-        const ORNL::Area bead_area = ((bead_width - bead_height) * bead_height) +
-                                     (M_PI * bead_height * bead_height / 4.0);
+        const ORNL::Area bead_area =
+            ((bead_width - bead_height) * bead_height) + (M_PI * bead_height * bead_height / 4.0);
 
         const double expected_extra_volume = (bead_area * (1.0 * ORNL::in))();
         const double observed_extra_volume = (volume_with_tip_wipe - nominal_volume)();
