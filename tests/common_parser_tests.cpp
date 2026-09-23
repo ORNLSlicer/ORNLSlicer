@@ -54,6 +54,30 @@ void configureLayerTimeSettings() {
     global_settings->setSetting(ORNL::PS::Layer::kLayerHeight, 0.2);
 }
 
+void configureVolumeSettings() {
+    auto global_settings = ORNL::GSM->getGlobal();
+    global_settings->setSetting(ORNL::MS::Cooling::kForceMinLayerTime, false);
+    global_settings->setSetting(ORNL::MS::Filament::kFilamentBAxis, false);
+    global_settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 1000000.0 * ORNL::in / ORNL::minute);
+    global_settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 1000000.0 * ORNL::in / ORNL::minute);
+    global_settings->setSetting(ORNL::PRS::MachineSpeed::kWTableSpeed, 1000000.0 * ORNL::in / ORNL::minute);
+    global_settings->setSetting(ORNL::PS::Layer::kBeadWidth, 0.75 * ORNL::in);
+    global_settings->setSetting(ORNL::PS::Perimeter::kBeadWidth, 0.75 * ORNL::in);
+    global_settings->setSetting(ORNL::PS::Layer::kLayerHeight, 0.2 * ORNL::in);
+}
+
+ORNL::Volume parsedVolume(QStringList original_lines) {
+    QStringList upper_lines = upperLines(original_lines);
+    ORNL::CommonParser parser(ORNL::GcodeMetaList::CincinnatiMeta, false, original_lines, upper_lines);
+
+    parser.parseLines();
+
+    ORNL::Volume total_volume = 0.0;
+    for (const ORNL::Volume& layer_volume : parser.getLayerVolumes()) { total_volume += layer_volume; }
+
+    return total_volume;
+}
+
 bool accumulatesTravelTimeForNonDepositionMove() {
     QStringList original_lines {"G1 F60 X1 ;TRAVEL"};
     QStringList upper_lines = upperLines(original_lines);
@@ -145,6 +169,47 @@ bool adjustsTravelTimeWhenTravelFeedrateIsScaled() {
         return false;
     }
 }
+
+bool ignoresTipWipeZWhenInferringBeadHeight() {
+    configureVolumeSettings();
+
+    const QStringList lines_with_tip_wipe {
+        "M3 S45",
+        "G1 F60 X10 (PERIMETER)",
+        "G1 X11 Z0.06 (PERIMETER FORWARD TIP WIPE)",
+        "M5",
+        "G0 X11 Z0 (TRAVEL)",
+        "M3 S45",
+        "G1 X21 (PERIMETER)",
+        "M5",
+    };
+    const QStringList nominal_lines {
+        "M3 S45",
+        "G1 F60 X10 (PERIMETER)",
+        "M5",
+        "G0 X11 Z0 (TRAVEL)",
+        "M3 S45",
+        "G1 X21 (PERIMETER)",
+        "M5",
+    };
+
+    try {
+        const ORNL::Volume volume_with_tip_wipe = parsedVolume(lines_with_tip_wipe);
+        const ORNL::Volume nominal_volume       = parsedVolume(nominal_lines);
+        const ORNL::Distance bead_width         = 0.75 * ORNL::in;
+        const ORNL::Distance bead_height        = 0.2 * ORNL::in;
+        const ORNL::Area bead_area = ((bead_width - bead_height) * bead_height) +
+                                     (M_PI * bead_height * bead_height / 4.0);
+
+        const double expected_extra_volume = (bead_area * (1.0 * ORNL::in))();
+        const double observed_extra_volume = (volume_with_tip_wipe - nominal_volume)();
+
+        return std::abs(observed_extra_volume - expected_extra_volume) < expected_extra_volume * 0.02;
+    } catch (const std::exception& ex) {
+        std::cerr << ex.what() << '\n';
+        return false;
+    }
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -160,6 +225,8 @@ int main(int argc, char* argv[]) {
                                     "Common parser scaled a travel move when travel feedrate scaling was disabled.");
     passed &= ORNL::Testing::expect(adjustsTravelTimeWhenTravelFeedrateIsScaled(),
                                     "Common parser did not adjust travel time when travel feedrate was scaled.");
+    passed &= ORNL::Testing::expect(ignoresTipWipeZWhenInferringBeadHeight(),
+                                    "Common parser let tip-wipe Z motion change inferred bead height.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

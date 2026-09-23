@@ -526,6 +526,9 @@ class CommonParser : public ParserBase {
     //! \brief Returns whether the current motion command deposits material.
     bool currentMotionDepositsMaterial() const;
 
+    //! \brief Returns whether this motion should be allowed to update inferred bead height.
+    bool currentMotionInfersBeadHeight() const;
+
     //! \brief Records the authored modal feedrate for a parsed motion command.
     void recordModalFeedrateForCommand(const GcodeCommand& command);
 
