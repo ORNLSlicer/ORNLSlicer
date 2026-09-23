@@ -237,6 +237,59 @@ bool keepsModifierOnlyLayerFromInflatingNextLayerHeight() {
         return false;
     }
 }
+
+bool keepsModifierOnlyTipWipeFromAnchoringNextLayerHeight() {
+    configureVolumeSettings();
+
+    const QStringList lines_with_tip_wipe {
+        "(BEGINNING LAYER: 1)",
+        "M3 S45",
+        "G1 F60 X10 Z0 (PERIMETER)",
+        "M5",
+        "(BEGINNING LAYER: 2)",
+        "M3 S45",
+        "G1 X11 Z0.2 (PERIMETER INITIAL STARTUP)",
+        "G1 X12 Z0.26 (PERIMETER FORWARD TIP WIPE)",
+        "M5",
+        "(BEGINNING LAYER: 3)",
+        "G0 X11 Z0.2 (TRAVEL)",
+        "M3 S45",
+        "G1 X21 Z0.4 (PERIMETER)",
+        "M5",
+    };
+    const QStringList nominal_lines {
+        "(BEGINNING LAYER: 1)",
+        "M3 S45",
+        "G1 F60 X10 Z0 (PERIMETER)",
+        "M5",
+        "(BEGINNING LAYER: 2)",
+        "M3 S45",
+        "G1 X11 Z0.2 (PERIMETER INITIAL STARTUP)",
+        "M5",
+        "(BEGINNING LAYER: 3)",
+        "G0 X11 Z0.2 (TRAVEL)",
+        "M3 S45",
+        "G1 X21 Z0.4 (PERIMETER)",
+        "M5",
+    };
+
+    try {
+        const ORNL::Volume volume_with_tip_wipe = parsedVolume(lines_with_tip_wipe);
+        const ORNL::Volume nominal_volume       = parsedVolume(nominal_lines);
+        const ORNL::Distance bead_width         = 0.75 * ORNL::in;
+        const ORNL::Distance bead_height        = 0.2 * ORNL::in;
+        const ORNL::Area bead_area =
+            ((bead_width - bead_height) * bead_height) + (M_PI * bead_height * bead_height / 4.0);
+
+        const double expected_extra_volume = (bead_area * (1.0 * ORNL::in))();
+        const double observed_extra_volume = (volume_with_tip_wipe - nominal_volume)();
+
+        return std::abs(observed_extra_volume - expected_extra_volume) < expected_extra_volume * 0.02;
+    } catch (const std::exception& ex) {
+        std::cerr << ex.what() << '\n';
+        return false;
+    }
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -256,6 +309,8 @@ int main(int argc, char* argv[]) {
                                     "Common parser let tip-wipe Z motion change inferred bead height.");
     passed &= ORNL::Testing::expect(keepsModifierOnlyLayerFromInflatingNextLayerHeight(),
                                     "Common parser let a modifier-only layer inflate the next inferred bead height.");
+    passed &= ORNL::Testing::expect(keepsModifierOnlyTipWipeFromAnchoringNextLayerHeight(),
+                                    "Common parser let a modifier-only tip wipe anchor the next inferred bead height.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

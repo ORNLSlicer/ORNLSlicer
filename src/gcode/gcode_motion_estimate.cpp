@@ -25,15 +25,15 @@ void MotionEstimation::Init() {
     m_previous_e        = 0;
     m_previous_vertical = true;  // initialize for the very first move
 
-    m_current_bead_width  = 0;
-    m_current_bead_height = 0;
-    m_nominal_bead_height = 0;
-    m_last_print_z        = 0;
-    m_last_print_w        = 0;
-    m_last_deposition_z   = 0;
-    m_last_deposition_w   = 0;
+    m_current_bead_width     = 0;
+    m_current_bead_height    = 0;
+    m_nominal_bead_height    = 0;
+    m_last_print_z           = 0;
+    m_last_print_w           = 0;
+    m_layer_fallback_print_z = 0;
+    m_layer_fallback_print_w = 0;
 
-    m_layer_has_deposition            = false;
+    m_layer_has_fallback_print_anchor = false;
     m_layer_has_inferred_print_anchor = false;
 
     m_incomingV = max_xy_speed;
@@ -47,13 +47,13 @@ void MotionEstimation::setBeadGeometry(Distance bead_width, Distance bead_height
 }
 
 void MotionEstimation::resetBeadHeight() {
-    if (!m_layer_has_inferred_print_anchor && m_layer_has_deposition) {
-        m_last_print_z = m_last_deposition_z;
-        m_last_print_w = m_last_deposition_w;
+    if (!m_layer_has_inferred_print_anchor && m_layer_has_fallback_print_anchor) {
+        m_last_print_z = m_layer_fallback_print_z;
+        m_last_print_w = m_layer_fallback_print_w;
     }
 
     m_current_bead_height             = 0;
-    m_layer_has_deposition            = false;
+    m_layer_has_fallback_print_anchor = false;
     m_layer_has_inferred_print_anchor = false;
 }
 
@@ -209,14 +209,16 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
 
             layer_volume += bead_area * path_length;
 
-            m_last_deposition_z    = m_current_z;
-            m_last_deposition_w    = m_current_w;
-            m_layer_has_deposition = true;
-
             if (infer_bead_height) {
                 m_last_print_z                    = m_current_z;
                 m_last_print_w                    = m_current_w;
                 m_layer_has_inferred_print_anchor = true;
+            }
+            else if (!m_layer_has_fallback_print_anchor) {
+                // Modifier-only layers should anchor on the layer-plane move, not a later wipe/lift move.
+                m_layer_fallback_print_z          = m_current_z;
+                m_layer_fallback_print_w          = m_current_w;
+                m_layer_has_fallback_print_anchor = true;
             }
         }
 
@@ -424,9 +426,9 @@ Distance MotionEstimation::m_current_bead_height;
 Distance MotionEstimation::m_nominal_bead_height;
 Distance MotionEstimation::m_last_print_z;
 Distance MotionEstimation::m_last_print_w;
-Distance MotionEstimation::m_last_deposition_z;
-Distance MotionEstimation::m_last_deposition_w;
-bool MotionEstimation::m_layer_has_deposition;
+Distance MotionEstimation::m_layer_fallback_print_z;
+Distance MotionEstimation::m_layer_fallback_print_w;
+bool MotionEstimation::m_layer_has_fallback_print_anchor;
 bool MotionEstimation::m_layer_has_inferred_print_anchor;
 
 Distance MotionEstimation::m_previous_distance;
