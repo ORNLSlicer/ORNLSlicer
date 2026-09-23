@@ -136,6 +136,31 @@ bool commonCustomIslandOrderSettingsIgnoreHorizontalShift() {
            optimized_order.first() == far_island.data();
 }
 
+bool equivalentCustomIslandOrderSettingsUseLayerAnchor() {
+    QVector<const TestIsland*> optimized_order;
+    const QSharedPointer<ORNL::SettingsBase> global_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kNextClosest);
+    const QSharedPointer<ORNL::SettingsBase> near_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kCustomPoint);
+    const QSharedPointer<ORNL::SettingsBase> far_settings =
+        settingsWithIslandOrder(ORNL::IslandOrderOptimization::kCustomPoint);
+    near_settings->setSetting(ORNL::PS::Optimizations::kCustomIslandXLocation, 2000.0);
+    far_settings->setSetting(ORNL::PS::Optimizations::kCustomIslandXLocation, 2000.0);
+    far_settings->setSetting(ORNL::PS::Optimizations::kCustomIslandZLocation, 100.0);
+
+    QSharedPointer<TestIsland> near_island =
+        QSharedPointer<TestIsland>::create(squareAt(100.0f), near_settings, &optimized_order);
+    QSharedPointer<TestIsland> far_island =
+        QSharedPointer<TestIsland>::create(squareAt(1000.0f), far_settings, &optimized_order);
+
+    ORNL::GlobalLayer global_layer(0);
+    addLayer(global_layer, "{00000000-0000-0000-0000-000000000001}", layerWithIsland(near_settings, near_island));
+    addLayer(global_layer, "{00000000-0000-0000-0000-000000000002}", layerWithIsland(far_settings, far_island));
+
+    return optimizeGlobalLayer(global_layer, global_settings, optimized_order) &&
+           optimized_order.first() == far_island.data();
+}
+
 bool conflictingLayerIslandOrderSettingsUseGlobalSettings() {
     QVector<const TestIsland*> optimized_order;
     const QSharedPointer<ORNL::SettingsBase> global_settings =
@@ -190,6 +215,8 @@ int main() {
                      "Expected global layers with common island-order settings to use layer settings.");
     passed &= expect(commonCustomIslandOrderSettingsIgnoreHorizontalShift(),
                      "Expected horizontal per-part shifts to preserve common custom island-order settings.");
+    passed &= expect(equivalentCustomIslandOrderSettingsUseLayerAnchor(),
+                     "Expected equivalent projected custom anchors to preserve layer island-order settings.");
     passed &= expect(conflictingLayerIslandOrderSettingsUseGlobalSettings(),
                      "Expected conflicting global-layer island-order settings to fall back to global settings.");
     passed &= expect(globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict(),
