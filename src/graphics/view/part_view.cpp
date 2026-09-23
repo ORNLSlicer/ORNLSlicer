@@ -286,6 +286,7 @@ bool PartView::beginOptimizationPointDrag(QPointF mouse_ndc_pos) {
 
     m_state.dragging_seam          = true;
     m_state.dragged_seam           = picked.object;
+    m_state.dragged_seam_guide     = picked.guide;
     m_state.dragged_seam_x_setting = picked.x_setting;
     m_state.dragged_seam_y_setting = picked.y_setting;
     m_state.dragged_seam_offset    = picked.object->translation() - bed_intersection;
@@ -306,6 +307,7 @@ bool PartView::updateOptimizationPointDrag(QPointF mouse_ndc_pos, bool finish) {
 
     QVector3D translation = bed_intersection + m_state.dragged_seam_offset;
     m_state.dragged_seam->translateAbsolute(translation);
+    if (!m_state.dragged_seam_guide.isNull()) { m_state.dragged_seam_guide->translateAbsolute(translation); }
 
     const double x = translation.x() * Constants::OpenGL::kViewToObject;
     const double y = translation.y() * Constants::OpenGL::kViewToObject;
@@ -330,6 +332,7 @@ void PartView::finishOptimizationPointDrag(QPointF mouse_ndc_pos) {
 
     m_state.dragging_seam = false;
     m_state.dragged_seam.reset();
+    m_state.dragged_seam_guide.reset();
     m_state.dragged_seam_x_setting.clear();
     m_state.dragged_seam_y_setting.clear();
     m_state.dragged_seam_offset = QVector3D();

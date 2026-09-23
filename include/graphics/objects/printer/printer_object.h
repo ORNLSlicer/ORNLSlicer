@@ -27,6 +27,7 @@ class PrinterObject : public GraphicsObject {
     //! \brief Pick result for draggable optimization point graphics.
     struct OptimizationPointPick {
         QSharedPointer<SeamObject> object;
+        QSharedPointer<GraphicsObject> guide;
         QString x_setting;
         QString y_setting;
 
