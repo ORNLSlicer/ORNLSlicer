@@ -234,5 +234,26 @@ int main() {
     passed &= ORNL::Testing::expect(edge_start_groups.size() == 1,
                                     "Expected an inset stack with a mid-edge outer start point to stay spiralized.");
 
+    ORNL::Polyline constrained_branch_loop = square(0.0, 0.0, 10.0, 10.0);
+    const ORNL::Point constrained_branch_target(1.0, -0.001, 0.0);
+    const bool found_constrained_branch = ORNL::SpiralPath::rotateToForwardBranchSeam(
+        constrained_branch_loop, constrained_branch_target, ORNL::Distance(0.0), ORNL::Distance(0.0), true,
+        ORNL::Distance(2.0));
+    passed &= expect(found_constrained_branch,
+                     "Expected an orthogonal forward branch when no local angled seam satisfies the constraints.");
+    passed &= expectPoint(constrained_branch_loop.front(), 0.0, 0.0,
+                          "Expected constrained branch selection to retain the nearest orthogonal seam.");
+    if (found_constrained_branch) {
+        const double tangent_x      = constrained_branch_loop.front().x() - constrained_branch_loop.back().x();
+        const double tangent_y      = constrained_branch_loop.front().y() - constrained_branch_loop.back().y();
+        const double connector_x    = constrained_branch_target.x() - constrained_branch_loop.front().x();
+        const double connector_y    = constrained_branch_target.y() - constrained_branch_loop.front().y();
+        const double normalized_dot = ((tangent_x * connector_x) + (tangent_y * connector_y)) /
+                                      std::sqrt(((tangent_x * tangent_x) + (tangent_y * tangent_y)) *
+                                                ((connector_x * connector_x) + (connector_y * connector_y)));
+        passed &= expect(normalized_dot > 0.0 && normalized_dot < 0.01,
+                         "Expected constrained branch selection to fall back to a near-orthogonal forward branch.");
+    }
+
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
