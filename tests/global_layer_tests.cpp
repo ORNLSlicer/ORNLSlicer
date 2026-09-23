@@ -2,8 +2,6 @@
 #include <QVector3D>
 #include <QVector>
 #include <cstdlib>
-#include <iostream>
-#include <string>
 
 #include "configs/settings_base.h"
 #include "geometry/plane.h"
@@ -15,6 +13,7 @@
 #include "step/layer/island/island_base.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
+#include "test_utils.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
@@ -34,13 +33,6 @@ class TestIsland : public ORNL::IslandBase {
    private:
     QVector<const TestIsland*>* m_optimized_order;
 };
-
-bool expect(bool condition, const std::string& message) {
-    if (condition) return true;
-
-    std::cerr << message << '\n';
-    return false;
-}
 
 QSharedPointer<ORNL::SettingsBase> settingsWithIslandOrder(ORNL::IslandOrderOptimization order) {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
@@ -211,16 +203,20 @@ bool globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict() {
 int main() {
     bool passed = true;
 
-    passed &= expect(commonLayerIslandOrderSettingsAreUsed(),
-                     "Expected global layers with common island-order settings to use layer settings.");
-    passed &= expect(commonCustomIslandOrderSettingsIgnoreHorizontalShift(),
-                     "Expected horizontal per-part shifts to preserve common custom island-order settings.");
-    passed &= expect(equivalentCustomIslandOrderSettingsUseLayerAnchor(),
-                     "Expected equivalent projected custom anchors to preserve layer island-order settings.");
-    passed &= expect(conflictingLayerIslandOrderSettingsUseGlobalSettings(),
-                     "Expected conflicting global-layer island-order settings to fall back to global settings.");
-    passed &= expect(globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict(),
-                     "Expected global custom island-order fallback to use an anchor layer when frames conflict.");
+    passed &= ORNL::Testing::expect(commonLayerIslandOrderSettingsAreUsed(),
+                                    "Expected global layers with common island-order settings to use layer settings.");
+    passed &=
+        ORNL::Testing::expect(commonCustomIslandOrderSettingsIgnoreHorizontalShift(),
+                              "Expected horizontal per-part shifts to preserve common custom island-order settings.");
+    passed &=
+        ORNL::Testing::expect(equivalentCustomIslandOrderSettingsUseLayerAnchor(),
+                              "Expected equivalent projected custom anchors to preserve layer island-order settings.");
+    passed &= ORNL::Testing::expect(
+        conflictingLayerIslandOrderSettingsUseGlobalSettings(),
+        "Expected conflicting global-layer island-order settings to fall back to global settings.");
+    passed &= ORNL::Testing::expect(
+        globalCustomIslandOrderUsesAnchorWhenLayerFramesConflict(),
+        "Expected global custom island-order fallback to use an anchor layer when frames conflict.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

@@ -1,10 +1,8 @@
 #include <QSharedPointer>
 #include <QVector>
 #include <algorithm>
-#include <cmath>
 #include <cstdlib>
 #include <iostream>
-#include <string>
 #include <vector>
 
 #include <CGAL/Modifier_base.h>
@@ -14,11 +12,14 @@
 #include "geometry/mesh/advanced/mesh_types.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "slicing/buffered_slicer.h"
+#include "test_utils.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
 namespace {
+constexpr float kTolerance = 1.0e-5f;
+
 struct Triangle {
     int a;
     int b;
@@ -142,19 +143,9 @@ std::vector<double> layerHeightsFor(QSharedPointer<ORNL::ClosedMesh> mesh, bool 
     return layer_heights;
 }
 
-bool expect(bool condition, const std::string& message) {
-    if (condition) return true;
-
-    std::cerr << message << '\n';
-    return false;
-}
-
-bool near(double actual, double expected) {
-    return std::abs(actual - expected) <= 1.0e-5;
-}
-
 bool allNear(const std::vector<double>& values, double expected) {
-    return std::all_of(values.begin(), values.end(), [expected](double value) { return near(value, expected); });
+    return std::all_of(values.begin(), values.end(),
+                       [expected](double value) { return ORNL::Testing::near(value, expected, kTolerance); });
 }
 
 bool allInRange(const std::vector<double>& values, double min_value, double max_value) {
@@ -187,45 +178,49 @@ int main() {
 
     const std::vector<double> fixed_heights = layerHeightsFor(
         makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm)), false);
-    passed &= expect(fixed_heights.size() == 2, "Expected fixed layer height slicing to produce two layers.");
-    passed &= expect(allNear(fixed_heights, 5.0), "Expected fixed layer height slicing to keep 5 mm layers.");
+    passed &=
+        ORNL::Testing::expect(fixed_heights.size() == 2, "Expected fixed layer height slicing to produce two layers.");
+    passed &=
+        ORNL::Testing::expect(allNear(fixed_heights, 5.0), "Expected fixed layer height slicing to keep 5 mm layers.");
 
     const std::vector<double> stable_variable_heights = layerHeightsFor(
         makeFrustum(internal(10.0 * ORNL::mm), internal(10.0 * ORNL::mm), internal(20.0 * ORNL::mm)), true);
-    passed &= expect(stable_variable_heights.size() == 4, "Expected stable geometry to produce four standard layers.");
-    passed &= expect(allNear(stable_variable_heights, 5.0),
-                     "Expected variable layer height to prefer standard layers for vertical-wall geometry.");
+    passed &= ORNL::Testing::expect(stable_variable_heights.size() == 4,
+                                    "Expected stable geometry to produce four standard layers.");
+    passed &=
+        ORNL::Testing::expect(allNear(stable_variable_heights, 5.0),
+                              "Expected variable layer height to prefer standard layers for vertical-wall geometry.");
 
     QSharedPointer<ORNL::ClosedMesh> tapered_mesh =
         makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm));
     const std::vector<double> tapered_variable_heights = layerHeightsFor(tapered_mesh, true);
-    passed &= expect(tapered_variable_heights.size() > fixed_heights.size(),
-                     "Expected sloped variable-height slicing to add refinement layers.");
-    passed &= expect(allInRange(tapered_variable_heights, 1.0, 5.0),
-                     "Expected cusp-limited layer heights to stay within configured bounds.");
-    passed &= expect(anyBetween(tapered_variable_heights, 1.0, 5.0),
-                     "Expected cusp-limited slicing to use intermediate adaptive layer heights.");
+    passed &= ORNL::Testing::expect(tapered_variable_heights.size() > fixed_heights.size(),
+                                    "Expected sloped variable-height slicing to add refinement layers.");
+    passed &= ORNL::Testing::expect(allInRange(tapered_variable_heights, 1.0, 5.0),
+                                    "Expected cusp-limited layer heights to stay within configured bounds.");
+    passed &= ORNL::Testing::expect(anyBetween(tapered_variable_heights, 1.0, 5.0),
+                                    "Expected cusp-limited slicing to use intermediate adaptive layer heights.");
 
     const int tapered_count =
         ORNL::BufferedSlicer::computeSliceCount(tapered_mesh, slicingSettings(true, ORNL::GcodeSyntax::kJuggerBot));
-    passed &= expect(tapered_count == static_cast<int>(tapered_variable_heights.size()),
-                     "Expected geometry-free slice count to match buffered variable-height slicing.");
+    passed &= ORNL::Testing::expect(tapered_count == static_cast<int>(tapered_variable_heights.size()),
+                                    "Expected geometry-free slice count to match buffered variable-height slicing.");
 
     const std::vector<double> non_cgal_variable_heights =
         layerHeightsFor(makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm)),
                         true, ORNL::GcodeSyntax::kJuggerBot, false);
-    passed &= expect(non_cgal_variable_heights.size() == tapered_variable_heights.size(),
-                     "Expected non-CGAL cross-section path to preserve variable layer count.");
-    passed &= expect(allInRange(non_cgal_variable_heights, 1.0, 5.0),
-                     "Expected non-CGAL variable-height layers to stay within configured bounds.");
+    passed &= ORNL::Testing::expect(non_cgal_variable_heights.size() == tapered_variable_heights.size(),
+                                    "Expected non-CGAL cross-section path to preserve variable layer count.");
+    passed &= ORNL::Testing::expect(allInRange(non_cgal_variable_heights, 1.0, 5.0),
+                                    "Expected non-CGAL variable-height layers to stay within configured bounds.");
 
     const std::vector<double> non_jugger_variable_heights =
         layerHeightsFor(makeFrustum(internal(10.0 * ORNL::mm), internal(1.0 * ORNL::mm), internal(10.0 * ORNL::mm)),
                         true, ORNL::GcodeSyntax::kMarlin);
-    passed &= expect(non_jugger_variable_heights.size() == fixed_heights.size(),
-                     "Expected non-JuggerBot syntax to ignore variable layer height.");
-    passed &= expect(allNear(non_jugger_variable_heights, 5.0),
-                     "Expected non-JuggerBot variable-height layers to remain fixed.");
+    passed &= ORNL::Testing::expect(non_jugger_variable_heights.size() == fixed_heights.size(),
+                                    "Expected non-JuggerBot syntax to ignore variable layer height.");
+    passed &= ORNL::Testing::expect(allNear(non_jugger_variable_heights, 5.0),
+                                    "Expected non-JuggerBot variable-height layers to remain fixed.");
 
     QSharedPointer<ORNL::ClosedMesh> elevated_mesh = makeFrustum(internal(10.0 * ORNL::mm), internal(10.0 * ORNL::mm),
                                                                  internal(10.0 * ORNL::mm), internal(10.0 * ORNL::mm));
@@ -235,11 +230,11 @@ int main() {
     const int support_gap_slice_count = sliceCountFor(elevated_mesh, support_settings, true);
     const int computed_support_gap_count =
         ORNL::BufferedSlicer::computeSliceCount(elevated_mesh, support_settings, {}, true);
-    passed &= expect(computed_support_gap_count == support_gap_slice_count,
-                     "Expected support-gap slice count to match production buffered slicing.");
-    passed &=
-        expect(computed_support_gap_count > ORNL::BufferedSlicer::computeSliceCount(elevated_mesh, support_settings),
-               "Expected support-gap slice count to include layers below an elevated mesh.");
+    passed &= ORNL::Testing::expect(computed_support_gap_count == support_gap_slice_count,
+                                    "Expected support-gap slice count to match production buffered slicing.");
+    passed &= ORNL::Testing::expect(
+        computed_support_gap_count > ORNL::BufferedSlicer::computeSliceCount(elevated_mesh, support_settings),
+        "Expected support-gap slice count to include layers below an elevated mesh.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
