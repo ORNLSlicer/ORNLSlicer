@@ -427,6 +427,15 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
                                                   m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
         }
 
+        for (int i = 0, end = branch_loops.size() - 1; i < end; ++i) {
+            if (branch_loops[i].size() < 3 || branch_loops[i + 1].size() < 3) { continue; }
+
+            const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
+            SpiralPath::angleForwardBranchConnection(branch_loops[i], branch_loops[i + 1], loop_width,
+                                                     tip_wipe_distance, complete_before_connecting,
+                                                     m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
+        }
+
         for (int i = 0, end = branch_loops.size(); i < end; ++i) {
             const Polyline& loop = branch_loops[i];
             if (loop.size() < 3) { continue; }
@@ -448,7 +457,7 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
             if (newPath.size() > 0) {
                 QSharedPointer<SettingsBase> branch_settings =
                     QSharedPointer<SettingsBase>::create(*newPath.front()->getSb());
-                branch_settings->setSetting(SS::kPathModifiers, PathModifiers::kNone);
+                branch_settings->setSetting(SS::kPathModifiers, PathModifiers::kSpiralConnection);
 
                 calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
 

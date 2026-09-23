@@ -60,8 +60,17 @@ ORNL::PolygonList circularGeometry() {
     return geometry;
 }
 
+ORNL::PolygonList squareGeometry() {
+    ORNL::PolygonList geometry;
+    ORNL::Polygon square;
+    square << ORNL::Point(-100.0, -100.0, 0.0) << ORNL::Point(100.0, -100.0, 0.0) << ORNL::Point(100.0, 100.0, 0.0)
+           << ORNL::Point(-100.0, 100.0, 0.0);
+    geometry += square;
+    return geometry;
+}
+
 bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string& region_name,
-                            ORNL::Distance max_branch_length) {
+                            ORNL::Distance max_branch_length, bool require_all_branches_angled = false) {
     constexpr double angled_dot_tolerance     = 0.15;
     constexpr double orthogonal_dot_tolerance = 0.075;
     bool passed = expect(paths.size() == 1, region_name + " branch should be emitted as one continuous path.");
@@ -69,6 +78,7 @@ bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string&
 
     const ORNL::Path& path  = paths.front();
     int travel_count        = 0;
+    int branch_count        = 0;
     int angled_branch_count = 0;
     bool found_branch       = false;
 
@@ -88,9 +98,11 @@ bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string&
         const ORNL::PathModifiers previous_modifiers =
             previous->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers);
         const ORNL::PathModifiers modifiers = segment->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers);
-        if (previous_modifiers == ORNL::PathModifiers::kForwardTipWipe && modifiers == ORNL::PathModifiers::kNone &&
+        if (previous_modifiers == ORNL::PathModifiers::kForwardTipWipe &&
+            modifiers == ORNL::PathModifiers::kSpiralConnection &&
             dynamic_cast<ORNL::LineSegment*>(segment.data()) != nullptr && segment->isPrintingSegment()) {
-            found_branch                 = true;
+            found_branch = true;
+            ++branch_count;
             const double outgoing_x      = previous->end().x() - previous->start().x();
             const double outgoing_y      = previous->end().y() - previous->start().y();
             const double branch_x        = segment->end().x() - segment->start().x();
@@ -120,6 +132,14 @@ bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string&
             const bool is_orthogonal =
                 normalized_dot <= orthogonal_dot_tolerance && std::abs(approach_dot) <= orthogonal_dot_tolerance;
             if (is_angled) { ++angled_branch_count; }
+            if (require_all_branches_angled && !is_angled) {
+                passed &=
+                    expect(false, region_name + " branch from (" + std::to_string(segment->start().x()) + "," +
+                                      std::to_string(segment->start().y()) + ") to (" +
+                                      std::to_string(segment->end().x()) + "," + std::to_string(segment->end().y()) +
+                                      ") should be angled (departure dot " + std::to_string(normalized_dot) +
+                                      ", approach dot " + std::to_string(approach_dot) + ").");
+            }
             passed &=
                 expect(is_angled || is_orthogonal,
                        region_name +
@@ -132,6 +152,12 @@ bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string&
     passed &= expect(travel_count == 1, region_name + " branch should contain only its initial travel.");
     passed &= expect(found_branch, region_name + " branch should extrude from the tip wipe to the next loop.");
     passed &= expect(angled_branch_count > 0, region_name + " should use an angled branch when space permits.");
+    if (require_all_branches_angled) {
+        passed &= expect(angled_branch_count == branch_count,
+                         region_name + " should angle every branch when the adjacent square edges have space (" +
+                             std::to_string(angled_branch_count) + " of " + std::to_string(branch_count) +
+                             " branches were angled).");
+    }
     return passed;
 }
 }  // namespace
@@ -201,6 +227,29 @@ int main() {
     inset_location = ORNL::Point(-10.0f, -10.0f, 0.0f);
     inset.optimize(0, inset_location, should_next_path_be_ccw);
     passed &= verifyContinuousBranch(inset.getPaths(), "Completed inset", ORNL::Distance(8.5));
+
+    QSharedPointer<ORNL::SettingsBase> square_inset_settings = defaultSettings();
+    square_inset_settings->setSetting(ORNL::PS::Inset::kCount, 100);
+    square_inset_settings->setSetting(ORNL::PS::Inset::kBeadWidth, ORNL::Distance(4.5));
+    square_inset_settings->setSetting(ORNL::PS::Inset::kEnableSpiralInset, true);
+    square_inset_settings->setSetting(ORNL::PS::Inset::kBranchAfterTipWipe, true);
+    square_inset_settings->setSetting(ORNL::PS::Inset::kCompletePathBeforeConnecting, true);
+    square_inset_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                      static_cast<int>(ORNL::PointOrderOptimization::kConsecutive));
+    square_inset_settings->setSetting(ORNL::PS::Optimizations::kConsecutiveDistanceThreshold, ORNL::Distance(100.0));
+    square_inset_settings->setSetting(ORNL::MS::TipWipe::kInsetEnable, true);
+    square_inset_settings->setSetting(ORNL::MS::TipWipe::kInsetDistance, ORNL::Distance(1.2));
+    square_inset_settings->setSetting(ORNL::MS::TipWipe::kInsetDirection,
+                                      static_cast<int>(ORNL::TipWipeDirection::kForward));
+
+    const ORNL::PolygonList square_geometry = squareGeometry();
+    ORNL::Inset square_inset(square_inset_settings, 0, {});
+    square_inset.setGeometry(square_geometry);
+    square_inset.compute(0);
+
+    ORNL::Point square_inset_location(-110.0, -110.0, 0.0);
+    square_inset.optimize(0, square_inset_location, should_next_path_be_ccw);
+    passed &= verifyContinuousBranch(square_inset.getPaths(), "Square inset", ORNL::Distance(8.0), true);
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
