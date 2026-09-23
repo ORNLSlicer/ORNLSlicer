@@ -204,6 +204,39 @@ bool ignoresTipWipeZWhenInferringBeadHeight() {
         return false;
     }
 }
+
+bool keepsModifierOnlyLayerFromInflatingNextLayerHeight() {
+    configureVolumeSettings();
+
+    const QStringList modifier_only_layer_lines {
+        "(BEGINNING LAYER: 1)",
+        "M3 S45",
+        "G1 F60 X10 Z0 (PERIMETER)",
+        "M5",
+        "(BEGINNING LAYER: 2)",
+        "M3 S45",
+        "G1 X11 Z0.2 (PERIMETER INITIAL STARTUP)",
+        "M5",
+        "(BEGINNING LAYER: 3)",
+        "M3 S45",
+        "G1 X21 Z0.4 (PERIMETER)",
+        "M5",
+    };
+    const QStringList nominal_layer_lines {
+        "(BEGINNING LAYER: 1)",    "M3 S45", "G1 F60 X10 Z0 (PERIMETER)", "M5",     "(BEGINNING LAYER: 2)",    "M3 S45",
+        "G1 X11 Z0.2 (PERIMETER)", "M5",     "(BEGINNING LAYER: 3)",      "M3 S45", "G1 X21 Z0.4 (PERIMETER)", "M5",
+    };
+
+    try {
+        const ORNL::Volume modifier_only_layer_volume = parsedVolume(modifier_only_layer_lines);
+        const ORNL::Volume nominal_layer_volume       = parsedVolume(nominal_layer_lines);
+
+        return std::abs((modifier_only_layer_volume - nominal_layer_volume)()) < nominal_layer_volume() * 0.02;
+    } catch (const std::exception& ex) {
+        std::cerr << ex.what() << '\n';
+        return false;
+    }
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -221,6 +254,8 @@ int main(int argc, char* argv[]) {
                                     "Common parser did not adjust travel time when travel feedrate was scaled.");
     passed &= ORNL::Testing::expect(ignoresTipWipeZWhenInferringBeadHeight(),
                                     "Common parser let tip-wipe Z motion change inferred bead height.");
+    passed &= ORNL::Testing::expect(keepsModifierOnlyLayerFromInflatingNextLayerHeight(),
+                                    "Common parser let a modifier-only layer inflate the next inferred bead height.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
