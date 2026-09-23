@@ -226,6 +226,7 @@ const QString Constants::PathModifierStrings::kRampingDown      = "RAMPING DOWN"
 const QString Constants::PathModifierStrings::kLeadIn           = "LEAD IN";
 const QString Constants::PathModifierStrings::kFlyingStart      = "FLYING START";
 const QString Constants::PathModifierStrings::kPerimeterTipWipe = "PERIMETER TIP WIPE";
+const QString Constants::PathModifierStrings::kSpiralConnection = "SPIRAL CONNECTION";
 
 //================================================================================
 // Printer Settings
@@ -590,9 +591,8 @@ const QString Constants::ProfileSettings::Perimeter::kFlyingStartSpeed      = "p
 const QString Constants::ProfileSettings::Perimeter::kEnableSpiralPerimeter = "spiral_perimeter";
 const QString Constants::ProfileSettings::Perimeter::kCompletePathBeforeConnecting =
     "spiral_perimeter_complete_path_before_connecting";
-const QString Constants::ProfileSettings::Perimeter::kBranchAfterTipWipe =
-    "spiral_perimeter_branch_after_tip_wipe";
-const QString Constants::ProfileSettings::Perimeter::kConnectToInsets = "spiral_perimeter_connect_to_insets";
+const QString Constants::ProfileSettings::Perimeter::kBranchAfterTipWipe = "spiral_perimeter_branch_after_tip_wipe";
+const QString Constants::ProfileSettings::Perimeter::kConnectToInsets    = "spiral_perimeter_connect_to_insets";
 
 // Inset
 const QString Constants::ProfileSettings::Inset::kEnable              = "inset";
