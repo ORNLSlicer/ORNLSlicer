@@ -306,6 +306,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_gcode_settings_importer_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME gcode_settings_importer_tests COMMAND ${PROJECT_NAME}_gcode_settings_importer_tests)
 
+    add_executable(${PROJECT_NAME}_settings_version_control_tests tests/settings_version_control_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_settings_version_control_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_settings_version_control_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME settings_version_control_tests COMMAND ${PROJECT_NAME}_settings_version_control_tests)
+
     add_executable(${PROJECT_NAME}_visualization_colors_tests tests/visualization_colors_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_visualization_colors_tests

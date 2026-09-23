@@ -2,12 +2,10 @@
 #include <QFile>
 #include <QStringBuilder>
 #include <QTemporaryDir>
-#include <cmath>
 #include <cstdlib>
 #include <optional>
 
 #include "gcode/gcode_settings_importer.h"
-#include "managers/settings/settings_version_control.h"
 #include "test_utils.h"
 #include "utilities/constants.h"
 
@@ -59,45 +57,12 @@ bool validatesNonNegativeIntegerSettings() {
         "Non-negative integer settings should reject fractional values.");
 }
 
-bool rollsHelicalToolStartAngleOffsetSettingFilesForward() {
-    using Helical = ORNL::Constants::ProfileSettings::Helical;
-
-    fifojson legacy_settings;
-    legacy_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion] = 10.0;
-    legacy_settings[ORNL::Constants::SettingFileStrings::kSettings] =
-        fifojson::array({fifojson::object({{"helical_path_start_angle", 1.74532925}})});
-    double legacy_version = 10.0;
-    ORNL::SettingsVersionControl::rollSettingsForward(legacy_version, legacy_settings);
-    const fifojson legacy_group = legacy_settings[ORNL::Constants::SettingFileStrings::kSettings].at(0);
-
-    fifojson intermediate_settings;
-    intermediate_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion] =
-        11.0;
-    intermediate_settings[ORNL::Constants::SettingFileStrings::kSettings] =
-        fifojson::array({fifojson::object({{"helical_start_angle_offset", -0.20943951}})});
-    double intermediate_version = 11.0;
-    ORNL::SettingsVersionControl::rollSettingsForward(intermediate_version, intermediate_settings);
-    const fifojson intermediate_group = intermediate_settings[ORNL::Constants::SettingFileStrings::kSettings].at(0);
-
-    const std::string new_key = Helical::kHelicalToolStartAngleOffset.toStdString();
-    return legacy_version == 12.0 &&
-           legacy_settings[ORNL::Constants::SettingFileStrings::kHeader][ORNL::Constants::SettingFileStrings::kVersion]
-                   .get<double>() == 12.0 &&
-           legacy_group.contains(new_key) && !legacy_group.contains("helical_path_start_angle") &&
-           std::abs(legacy_group.at(new_key).get<double>() - (10.0 * ORNL::degree)()) < 1e-6 &&
-           intermediate_version == 12.0 && intermediate_group.contains(new_key) &&
-           !intermediate_group.contains("helical_start_angle_offset") &&
-           std::abs(intermediate_group.at(new_key).get<double>() - (-12.0 * ORNL::degree)()) < 1e-6;
-}
 }  // namespace
 
 int main(int argc, char* argv[]) {
     QCoreApplication app(argc, argv);
 
     if (!validatesNonNegativeIntegerSettings()) return EXIT_FAILURE;
-    if (!ORNL::Testing::expect(rollsHelicalToolStartAngleOffsetSettingFilesForward(),
-                               "Did not roll helical tool start angle setting files forward."))
-        return EXIT_FAILURE;
 
     QTemporaryDir temp_dir;
     if (!ORNL::Testing::expect(temp_dir.isValid(), "Could not create temporary directory.")) return EXIT_FAILURE;
