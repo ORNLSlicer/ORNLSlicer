@@ -46,7 +46,8 @@ void MotionEstimation::resetBeadHeight() {
 }
 
 Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
-                                                  Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b) {
+                                                  bool infer_bead_height, Time& G1F_time, Time& layer_time,
+                                                  Volume& layer_volume, bool use_b) {
     static_cast<void>(layer);
 
     // minimum distance to be considered move for estimate calculation
@@ -117,15 +118,16 @@ Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, b
     // the rest is for a predominantly XY move
     Distance length = sqrt(dx * dx + dy * dy + dz * dz);
     return MotionEstimation::calculatePathTimeAndVolume(length, dx, dy, dz, dx, dy, dz, isFIncluded, isGOCommand,
-                                                        deposition_active, G1F_time, layer_time, layer_volume);
+                                                        deposition_active, infer_bead_height, G1F_time, layer_time,
+                                                        layer_volume);
 }
 
 Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Distance start_direction_x,
                                                       Distance start_direction_y, Distance start_direction_z,
                                                       Distance end_direction_x, Distance end_direction_y,
                                                       Distance end_direction_z, bool isFIncluded, bool isGOCommand,
-                                                      bool deposition_active, Time& G1F_time, Time& layer_time,
-                                                      Volume& layer_volume) {
+                                                      bool deposition_active, bool infer_bead_height, Time& G1F_time,
+                                                      Time& layer_time, Volume& layer_volume) {
     // minimum distance to be considered move for estimate calculation
     double m_min_threshold = 10;
 
@@ -182,7 +184,7 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
 
             const Distance min_inferred_height = height * 0.2;
             const Distance max_inferred_height = height * 5.0;
-            if (vertical_delta > m_min_threshold && vertical_delta >= min_inferred_height &&
+            if (infer_bead_height && vertical_delta > m_min_threshold && vertical_delta >= min_inferred_height &&
                 vertical_delta <= max_inferred_height) {
                 height                = vertical_delta;
                 m_current_bead_height = height;
@@ -194,8 +196,10 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
             Area bead_area = ((bead_width - height) * height) + (M_PI * height * height / 4.0);
 
             layer_volume += bead_area * path_length;
-            m_last_print_z = m_current_z;
-            m_last_print_w = m_current_w;
+            if (infer_bead_height) {
+                m_last_print_z = m_current_z;
+                m_last_print_w = m_current_w;
+            }
         }
 
         m_previous_distance = path_length;

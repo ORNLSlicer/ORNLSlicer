@@ -47,6 +47,22 @@ bool isDisableFeedrateScalingSetting(const QString& key) {
            key == PS::Travel::kDisableFeedrateScaling;
 }
 
+bool isBeadHeightInferenceModifier(const QString& comment) {
+    const Qt::CaseSensitivity sensitivity = Qt::CaseInsensitive;
+    return comment.contains(Constants::PathModifierStrings::kInitialStartup, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kSlowDown, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kForwardTipWipe, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kReverseTipWipe, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kAngledTipWipe, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kCoasting, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kSpiralLift, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kRampingUp, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kRampingDown, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kLeadIn, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kFlyingStart, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe, sensitivity);
+}
+
 double positiveSweep(double sweep) {
     const double full_circle = 2.0 * M_PI;
     while (sweep < 0.0) { sweep += full_circle; }
@@ -117,8 +133,8 @@ Distance CommonParser::getCurrentGXDistance() {
     const Time adjustable_time_before = m_layer_G1F_times[m_current_layer];
     const Distance distance           = MotionEstimation::calculateTimeAndVolume(
         m_current_layer, include_feedrate_adjustable_time, m_current_gcode_command.getCommandID() == 0,
-        currentMotionDepositsMaterial(), m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer],
-        m_layer_volumes[m_current_layer], uses_b);
+        currentMotionDepositsMaterial(), currentMotionInfersBeadHeight(), m_layer_G1F_times[m_current_layer],
+        m_layer_times[m_current_layer], m_layer_volumes[m_current_layer], uses_b);
 
     const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
     if (command_adjustable_time > 0) {
@@ -150,7 +166,8 @@ Distance CommonParser::getCurrentArcDistance(Distance start_x, Distance start_y,
     const Distance distance           = MotionEstimation::calculatePathTimeAndVolume(
         path_length, start_direction_x, start_direction_y, start_direction_z, end_direction_x, end_direction_y,
         end_direction_z, include_feedrate_adjustable_time, false, currentMotionDepositsMaterial(),
-        m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer], m_layer_volumes[m_current_layer]);
+        currentMotionInfersBeadHeight(), m_layer_G1F_times[m_current_layer], m_layer_times[m_current_layer],
+        m_layer_volumes[m_current_layer]);
 
     const Time command_adjustable_time = m_layer_G1F_times[m_current_layer] - adjustable_time_before;
     if (command_adjustable_time > 0) {
@@ -363,6 +380,10 @@ bool CommonParser::feedrateScalingDisabledForCommand(const GcodeCommand& command
 bool CommonParser::currentMotionDepositsMaterial() const {
     return m_deposition_active &&
            !m_current_gcode_command.getComment().contains(Constants::RegionTypeStrings::kTravel, Qt::CaseInsensitive);
+}
+
+bool CommonParser::currentMotionInfersBeadHeight() const {
+    return currentMotionDepositsMaterial() && !isBeadHeightInferenceModifier(m_current_gcode_command.getComment());
 }
 
 void CommonParser::recordModalFeedrateForCommand(const GcodeCommand& command) {

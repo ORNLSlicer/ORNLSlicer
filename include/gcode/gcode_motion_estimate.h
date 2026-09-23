@@ -20,15 +20,16 @@ class MotionEstimation {
     //! \param layer_volume, accumulated volume estimate for the entire layer
     //! \param use_b, if using B filament axis, time calculation is based on extrusion not X/Y/Z distance
     static Distance calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
-                                           Time& G1F_time, Time& layer_time, Volume& layer_volume, bool use_b);
+                                           bool infer_bead_height, Time& G1F_time, Time& layer_time,
+                                           Volume& layer_volume, bool use_b);
 
     //! \brief Calculate time and volume contribution for a non-linear path with a known path length.
     static Distance calculatePathTimeAndVolume(Distance path_length, Distance start_direction_x,
                                                Distance start_direction_y, Distance start_direction_z,
                                                Distance end_direction_x, Distance end_direction_y,
                                                Distance end_direction_z, bool isFIncluded, bool isGOCommand,
-                                               bool deposition_active, Time& G1F_time, Time& layer_time,
-                                               Volume& layer_volume);
+                                               bool deposition_active, bool infer_bead_height, Time& G1F_time,
+                                               Time& layer_time, Volume& layer_volume);
 
     //! \brief Set the bead dimensions to use for the next deposited volume estimate.
     //! \param bead_width Total bead width.
