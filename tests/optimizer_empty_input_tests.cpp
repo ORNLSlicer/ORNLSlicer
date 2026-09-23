@@ -1,6 +1,7 @@
 #include <QList>
 #include <QSharedPointer>
 #include <QVector>
+#include <cmath>
 #include <cstdlib>
 
 #include "configs/settings_base.h"
@@ -8,6 +9,7 @@
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/island_order_optimizer.h"
@@ -23,12 +25,29 @@
 
 namespace {
 
+bool closeTo(double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1.0e-4;
+}
+
+bool pointClose(const ORNL::Point& lhs, const ORNL::Point& rhs) {
+    return closeTo(lhs.x(), rhs.x()) && closeTo(lhs.y(), rhs.y()) && closeTo(lhs.z(), rhs.z());
+}
+
 QSharedPointer<ORNL::LineSegment> lineSegment(const ORNL::Point& start, const ORNL::Point& end,
                                               ORNL::RegionType region_type = ORNL::RegionType::kPerimeter,
                                               bool region_start            = false) {
     QSharedPointer<ORNL::LineSegment> segment = QSharedPointer<ORNL::LineSegment>::create(start, end);
     segment->getSb()->setSetting(ORNL::SS::kRegionType, region_type);
     segment->getSb()->setSetting(ORNL::SS::kIsRegionStartSegment, region_start);
+    return segment;
+}
+
+QSharedPointer<ORNL::ArcSegment> arcSegment(const ORNL::Point& start, const ORNL::Point& end, const ORNL::Point& center,
+                                            bool counterclockwise) {
+    QSharedPointer<ORNL::ArcSegment> segment =
+        QSharedPointer<ORNL::ArcSegment>::create(start, end, center, counterclockwise);
+    segment->getSb()->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+    segment->getSb()->setSetting(ORNL::SS::kIsRegionStartSegment, false);
     return segment;
 }
 
@@ -272,6 +291,53 @@ int main() {
                      "Expected closed radial consecutive linking to start at the threshold split point.");
     passed &= expect(closed_radial_consecutive_result.back()->end() == ORNL::Point(5.0f, 0.0f, 0.0f),
                      "Expected closed radial consecutive linking to end at the threshold split point.");
+
+    ORNL::Path closed_radial_arc_path;
+    const ORNL::Point arc_center(0.0f, 0.0f, 0.0f);
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(10.0f, 0.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f), arc_center, true));
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(0.0f, 10.0f, 0.0f), ORNL::Point(-10.0f, 0.0f, 0.0f), arc_center, true));
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(-10.0f, 0.0f, 0.0f), ORNL::Point(0.0f, -10.0f, 0.0f), arc_center, true));
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(0.0f, -10.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f), arc_center, true));
+
+    QSharedPointer<ORNL::SettingsBase> closed_radial_arc_settings =
+        cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest);
+    closed_radial_arc_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                           static_cast<int>(ORNL::PointOrderOptimization::kConsecutive));
+    closed_radial_arc_settings->setSetting<ORNL::Distance>(ORNL::PS::Optimizations::kConsecutiveDistanceThreshold,
+                                                           ORNL::Distance(5.0));
+    ORNL::Point closed_radial_arc_start(10.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer closed_radial_arc_optimizer(closed_radial_arc_start, 2, closed_radial_arc_settings);
+    closed_radial_arc_optimizer.setPathsToEvaluate({closed_radial_arc_path});
+    ORNL::Path closed_radial_arc_result = closed_radial_arc_optimizer.linkNextRadialPath();
+
+    const double arc_split_ratio = 5.0 / std::hypot(10.0, 10.0);
+    const double quarter_sweep   = std::acos(-1.0) / 2.0;
+    const double expected_angle  = quarter_sweep * arc_split_ratio;
+    const ORNL::Point expected_arc_split(10.0 * std::cos(expected_angle), 10.0 * std::sin(expected_angle), 0.0);
+    const ORNL::ArcSegment* split_start_arc = closed_radial_arc_result.size() > 1
+                                                  ? dynamic_cast<ORNL::ArcSegment*>(closed_radial_arc_result[1].data())
+                                                  : nullptr;
+    const ORNL::ArcSegment* split_end_arc =
+        closed_radial_arc_result.size() > 0 ? dynamic_cast<ORNL::ArcSegment*>(closed_radial_arc_result.back().data())
+                                            : nullptr;
+
+    passed &= expect(closed_radial_arc_result.size() == 6,
+                     "Expected closed radial consecutive linking to split an arc print segment.");
+    passed &= expect(split_start_arc != nullptr && split_end_arc != nullptr,
+                     "Expected closed radial consecutive arc linking to preserve arc segment types.");
+    passed &= expect(
+        closed_radial_arc_result.size() > 1 && pointClose(closed_radial_arc_result[1]->start(), expected_arc_split),
+        "Expected closed radial consecutive arc linking to start on the selected arc.");
+    passed &= expect(
+        closed_radial_arc_result.size() > 0 && pointClose(closed_radial_arc_result.back()->end(), expected_arc_split),
+        "Expected closed radial consecutive arc linking to end on the selected arc.");
+    passed &= expect(split_start_arc != nullptr && split_end_arc != nullptr &&
+                         closeTo(split_start_arc->angle()() + split_end_arc->angle()(), quarter_sweep),
+                     "Expected closed radial consecutive arc linking to refresh split arc sweep angles.");
 
     ORNL::Path open_radial_path = pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
                                                   ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)});
