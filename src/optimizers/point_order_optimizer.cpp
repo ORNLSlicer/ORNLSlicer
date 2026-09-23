@@ -273,6 +273,35 @@ PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::linkToConsecutive(
         segment_end_index  = (segment_end_index + 1) % polyline.size();
     }
 
+    // When the previous seam projects into the middle of a segment, the loop above stops at that segment's start.
+    // Traverse the remaining partial segment so thresholds up to the full loop length can still be satisfied.
+    if (nearest_selection.insert_split_point) {
+        const Point& segment_end               = nearest_selection.split_point;
+        const Distance segment_length          = planarDistance(segment_start, segment_end);
+        const Distance distance_to_segment_end = traversed_distance + segment_length;
+
+        if (distance_to_segment_end >= minDist) {
+            if (segment_length <= kDistanceTolerance) return nearest_selection;
+
+            const double segment_ratio = ((minDist - traversed_distance) / segment_length)();
+            Point split_point          = interpolateAlongSegment(segment_start, segment_end, segment_ratio);
+
+            if (split_point == segment_start) {
+                const int start_index = (nearest_selection.insertion_index - 1 + polyline.size()) % polyline.size();
+                return selectionFromIndex(start_index);
+            }
+
+            if (split_point == segment_end) return nearest_selection;
+
+            PointOrderSelection selection;
+            selection.rotation_index     = nearest_selection.insertion_index;
+            selection.insert_split_point = true;
+            selection.split_point        = split_point;
+            selection.insertion_index    = nearest_selection.insertion_index;
+            return selection;
+        }
+    }
+
     return selectionFromIndex(farthest_index);
 }
 

@@ -265,9 +265,12 @@ int main() {
                               "Expected closed radial closest linking to preserve segment direction after rotation.");
 
     ORNL::Point closed_radial_farthest_start(0.0f, 0.0f, 0.0f);
-    ORNL::PathOrderOptimizer closed_radial_farthest_optimizer(
-        closed_radial_farthest_start, 0,
-        cylindricalSettings(ORNL::PathOrderOptimization::kNextFarthest, ORNL::PathOrderOptimization::kNextClosest));
+    QSharedPointer<ORNL::SettingsBase> closed_radial_farthest_settings =
+        cylindricalSettings(ORNL::PathOrderOptimization::kNextFarthest, ORNL::PathOrderOptimization::kNextClosest);
+    closed_radial_farthest_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                                static_cast<int>(ORNL::PointOrderOptimization::kNextFarthest));
+    ORNL::PathOrderOptimizer closed_radial_farthest_optimizer(closed_radial_farthest_start, 0,
+                                                              closed_radial_farthest_settings);
     closed_radial_farthest_optimizer.setPathsToEvaluate({closed_radial_path});
     ORNL::Path closed_radial_farthest_result = closed_radial_farthest_optimizer.linkNextRadialPath();
     passed &= ORNL::Testing::expect(closed_radial_farthest_result.size() > 1 &&
