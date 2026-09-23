@@ -374,6 +374,99 @@ inline Point transitionStartPoint(const Polyline& line, Distance distance_before
 }
 
 /*!
+ * \brief Rotates a closed loop so its post-wipe branch continues forward to the next loop's start.
+ * \return Whether a forward branch seam was found.
+ */
+inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, Distance stop_distance,
+                                      Distance forward_wipe_distance, bool complete_before_connecting = false,
+                                      Distance min_segment_length = 0) {
+    if (line.size() < 3) { return false; }
+
+    constexpr double minimum_forward_dot = 1.0e-6;
+    constexpr double target_forward_dot  = 0.7071067811865476;
+    Polyline best_candidate;
+    double best_angle_error   = std::numeric_limits<double>::max();
+    double best_branch_length = std::numeric_limits<double>::max();
+
+    auto branchQuality = [&](const Polyline& candidate, double& forward_dot, double& branch_length) {
+        double direction_x = candidate.front().x() - candidate.back().x();
+        double direction_y = candidate.front().y() - candidate.back().y();
+        if (!detail::normalize2D(direction_x, direction_y)) { return false; }
+
+        const Point transition = detail::transitionPoint(candidate, stop_distance, complete_before_connecting);
+        const Point branch_start(transition.x() + (direction_x * forward_wipe_distance()),
+                                 transition.y() + (direction_y * forward_wipe_distance()), transition.z());
+        const double branch_x = next_start.x() - branch_start.x();
+        const double branch_y = next_start.y() - branch_start.y();
+        branch_length         = std::hypot(branch_x, branch_y);
+        if (branch_length <= std::numeric_limits<double>::epsilon()) { return false; }
+
+        forward_dot = ((direction_x * branch_x) + (direction_y * branch_y)) / branch_length;
+        return forward_dot > minimum_forward_dot;
+    };
+
+    auto considerCandidate = [&](const Polyline& candidate) {
+        double forward_dot   = 0.0;
+        double branch_length = 0.0;
+        if (!branchQuality(candidate, forward_dot, branch_length)) { return; }
+
+        const double angle_error = std::abs(forward_dot - target_forward_dot);
+        if (angle_error < best_angle_error ||
+            (std::abs(angle_error - best_angle_error) <= minimum_forward_dot && branch_length < best_branch_length)) {
+            best_candidate     = candidate;
+            best_angle_error   = angle_error;
+            best_branch_length = branch_length;
+        }
+    };
+
+    double current_forward_dot   = 0.0;
+    double current_branch_length = 0.0;
+    if (branchQuality(line, current_forward_dot, current_branch_length)) { return true; }
+
+    const double stop_offset = complete_before_connecting ? 0.0 : stop_distance();
+    const double extension   = forward_wipe_distance() - stop_offset;
+    const double min_length  = std::max(0.0, min_segment_length());
+
+    for (int segment_index = 0, end = line.size(); segment_index < end; ++segment_index) {
+        const Point& segment_start  = line[segment_index];
+        const Point& segment_end    = line[(segment_index + 1) % end];
+        double direction_x          = segment_end.x() - segment_start.x();
+        double direction_y          = segment_end.y() - segment_start.y();
+        const double segment_length = std::hypot(direction_x, direction_y);
+        if (segment_length <= std::numeric_limits<double>::epsilon()) { continue; }
+        direction_x /= segment_length;
+        direction_y /= segment_length;
+
+        const double target_x      = next_start.x() - segment_start.x();
+        const double target_y      = next_start.y() - segment_start.y();
+        const double target_along  = (target_x * direction_x) + (target_y * direction_y);
+        const double target_across = std::abs((target_x * direction_y) - (target_y * direction_x));
+        const double desired_forward_distance =
+            std::max(target_across, std::max(forward_wipe_distance() * 0.5, 1.0e-3));
+        const double seam_distance = target_along - extension - desired_forward_distance;
+        const double min_before    = stop_offset + min_length;
+        const double max_before    = segment_length - min_length;
+        if (seam_distance <= min_before || seam_distance >= max_before) { continue; }
+
+        Polyline candidate = line;
+        const Point seam   = detail::pointAlongSegment(segment_start, segment_end, seam_distance / segment_length);
+        detail::rotateToSegmentPoint(candidate, segment_index, seam);
+        considerCandidate(candidate);
+    }
+
+    for (int rotation_index = 1, end = line.size(); rotation_index < end; ++rotation_index) {
+        Polyline candidate = line;
+        for (int i = 0; i < rotation_index; ++i) { candidate.move(0, candidate.size() - 1); }
+        considerCandidate(candidate);
+    }
+
+    if (best_candidate.isEmpty()) { return false; }
+
+    line = best_candidate;
+    return true;
+}
+
+/*!
  * \brief Links ordered closed loops into open spiral-style polyline groups.
  *
  * Adjacent loops are joined with an extruding connector. When the candidate connector would jump between unrelated or

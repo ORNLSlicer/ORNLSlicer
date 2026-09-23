@@ -410,8 +410,25 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         Path branched_path;
         branched_path.setCCW(ccw);
 
-        for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
-            const Polyline& loop = ordered_loops[i];
+        QVector<Polyline> branch_loops = ordered_loops;
+        Distance tip_wipe_distance;
+        if (m_sb->setting<bool>(MS::TipWipe::kInsetEnable) &&
+            static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInsetDirection)) ==
+                TipWipeDirection::kForward) {
+            tip_wipe_distance = m_sb->setting<Distance>(MS::TipWipe::kInsetDistance);
+        }
+
+        for (int i = branch_loops.size() - 2; i >= 0; --i) {
+            if (branch_loops[i].size() < 3 || branch_loops[i + 1].isEmpty()) { continue; }
+
+            const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
+            SpiralPath::rotateToForwardBranchSeam(branch_loops[i], branch_loops[i + 1].front(), loop_width,
+                                                  tip_wipe_distance, complete_before_connecting,
+                                                  m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
+        }
+
+        for (int i = 0, end = branch_loops.size(); i < end; ++i) {
+            const Polyline& loop = branch_loops[i];
             if (loop.size() < 3) { continue; }
 
             const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
@@ -513,8 +530,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
                 for (int i = 0, end = ordered_insets.size(); i < end; ++i) { ordered_widths.push_back(bead_width); }
 
                 appendBranchAfterTipWipePaths(ordered_insets, ordered_widths, bead_width,
-                                              complete_path_before_connecting,
-                                              ordered_insets.front().orientation(), min_path_length);
+                                              complete_path_before_connecting, ordered_insets.front().orientation(),
+                                              min_path_length);
                 return;
             }
 
@@ -584,10 +601,9 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         if (ordered_insets.isEmpty()) { return; }
 
         if (branch_after_tip_wipe && ordered_insets.size() > 1) {
-            appendBranchAfterTipWipePaths(ordered_insets, ordered_inset_widths,
-                                          m_sb->setting<Distance>(PS::Inset::kBeadWidth),
-                                          complete_path_before_connecting,
-                                          ordered_insets.front().orientation(), min_path_length);
+            appendBranchAfterTipWipePaths(
+                ordered_insets, ordered_inset_widths, m_sb->setting<Distance>(PS::Inset::kBeadWidth),
+                complete_path_before_connecting, ordered_insets.front().orientation(), min_path_length);
             return;
         }
 
