@@ -1,5 +1,7 @@
 #pragma once
 
+#include <optional>
+
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 #include <qtypes.h>
@@ -261,6 +263,9 @@ class PathOrderOptimizer {
 
     //! \brief The layer number we are currently on
     int m_layer_num;
+
+    //! \brief Stable previous-layer seam used while ordering all radial paths in this layer
+    std::optional<Point> m_radial_consecutive_reference;
 
     //! \brief Holds partial/final topological order for level order walk
     QVector<QVector<int>> m_topo_order;
