@@ -691,9 +691,9 @@ PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection(
     if (selection.path_index < 0) { return selection; }
 
     if (selection.rotate_to_segment) {
+        PointOrderOptimizer::PointOrderSelection point_selection;
         if (point_order == PointOrderOptimization::kConsecutive) {
             const Distance threshold = m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold);
-            PointOrderOptimizer::PointOrderSelection point_selection;
             if (m_radial_consecutive_reference.has_value() && threshold > 0) {
                 point_selection =
                     consecutivePathSelection(m_paths[selection.path_index], *m_radial_consecutive_reference, threshold);
@@ -708,12 +708,23 @@ PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection(
                     m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius), false,
                     m_radial_consecutive_reference);
             }
-
-            selection.segment_index      = point_selection.rotation_index;
-            selection.insert_split_point = point_selection.insert_split_point;
-            selection.split_point        = point_selection.split_point;
-            selection.insertion_index    = point_selection.insertion_index;
         }
+        else {
+            const Point point_query = radialPointQueryPoint(point_order);
+            const Polyline line     = pathStartPoints(m_paths[selection.path_index]);
+            point_selection         = PointOrderOptimizer::linkToPoint(
+                point_query, line, m_layer_num, point_order,
+                m_sb->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
+                m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
+                m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
+                m_sb->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
+                m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+        }
+
+        selection.segment_index      = point_selection.rotation_index;
+        selection.insert_split_point = point_selection.insert_split_point;
+        selection.split_point        = point_selection.split_point;
+        selection.insertion_index    = point_selection.insertion_index;
 
         return selection;
     }
