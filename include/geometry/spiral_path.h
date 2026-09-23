@@ -382,10 +382,18 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
                                       Distance min_segment_length = 0) {
     if (line.size() < 3) { return false; }
 
-    constexpr double minimum_forward_dot = 1.0e-6;
-    Polyline best_candidate;
-    double best_branch_length = std::numeric_limits<double>::max();
-    double best_forward_dot   = 0.0;
+    constexpr double minimum_forward_dot     = 1.0e-6;
+    constexpr double target_forward_dot      = 0.7071067811865476;
+    constexpr double angled_dot_tolerance    = 0.1;
+    constexpr double max_angled_length_ratio = 1.5;
+
+    // Prefer a local angled branch, while retaining the nearest forward candidate as a bounded fallback.
+    Polyline nearest_candidate;
+    Polyline angled_candidate;
+    double nearest_branch_length = std::numeric_limits<double>::max();
+    double nearest_forward_dot   = 0.0;
+    double angled_branch_length  = std::numeric_limits<double>::max();
+    double angled_dot_error      = std::numeric_limits<double>::max();
 
     auto branchQuality = [&](const Polyline& candidate, double& forward_dot, double& branch_length) {
         double direction_x = candidate.front().x() - candidate.back().x();
@@ -409,11 +417,21 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
         double branch_length = 0.0;
         if (!branchQuality(candidate, forward_dot, branch_length)) { return; }
 
-        if (branch_length < best_branch_length ||
-            (std::abs(branch_length - best_branch_length) <= minimum_forward_dot && forward_dot > best_forward_dot)) {
-            best_candidate     = candidate;
-            best_branch_length = branch_length;
-            best_forward_dot   = forward_dot;
+        if (branch_length < nearest_branch_length ||
+            (std::abs(branch_length - nearest_branch_length) <= minimum_forward_dot &&
+             forward_dot > nearest_forward_dot)) {
+            nearest_candidate     = candidate;
+            nearest_branch_length = branch_length;
+            nearest_forward_dot   = forward_dot;
+        }
+
+        const double dot_error = std::abs(forward_dot - target_forward_dot);
+        if (dot_error <= angled_dot_tolerance &&
+            (branch_length < angled_branch_length ||
+             (std::abs(branch_length - angled_branch_length) <= minimum_forward_dot && dot_error < angled_dot_error))) {
+            angled_candidate     = candidate;
+            angled_branch_length = branch_length;
+            angled_dot_error     = dot_error;
         }
     };
 
@@ -433,20 +451,25 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
         direction_x /= segment_length;
         direction_y /= segment_length;
 
-        const double target_x                 = next_start.x() - segment_start.x();
-        const double target_y                 = next_start.y() - segment_start.y();
-        const double target_along             = (target_x * direction_x) + (target_y * direction_y);
-        const double target_across            = std::abs((target_x * direction_y) - (target_y * direction_x));
-        const double desired_forward_distance = std::max(target_across * 1.0e-4, 1.0e-3);
-        const double seam_distance            = target_along - extension - desired_forward_distance;
-        const double min_before               = stop_offset + min_length;
-        const double max_before               = segment_length - min_length;
-        if (seam_distance <= min_before || seam_distance >= max_before) { continue; }
+        const double target_x      = next_start.x() - segment_start.x();
+        const double target_y      = next_start.y() - segment_start.y();
+        const double target_along  = (target_x * direction_x) + (target_y * direction_y);
+        const double target_across = std::abs((target_x * direction_y) - (target_y * direction_x));
+        const double min_before    = stop_offset + min_length;
+        const double max_before    = segment_length - min_length;
 
-        Polyline candidate = line;
-        const Point seam   = detail::pointAlongSegment(segment_start, segment_end, seam_distance / segment_length);
-        detail::rotateToSegmentPoint(candidate, segment_index, seam);
-        considerCandidate(candidate);
+        auto considerSegmentSeam = [&](double desired_forward_distance) {
+            const double seam_distance = target_along - extension - desired_forward_distance;
+            if (seam_distance <= min_before || seam_distance >= max_before) { return; }
+
+            Polyline candidate = line;
+            const Point seam   = detail::pointAlongSegment(segment_start, segment_end, seam_distance / segment_length);
+            detail::rotateToSegmentPoint(candidate, segment_index, seam);
+            considerCandidate(candidate);
+        };
+
+        considerSegmentSeam(std::max(target_across * 1.0e-4, 1.0e-3));
+        if (target_across > minimum_forward_dot) { considerSegmentSeam(target_across); }
     }
 
     for (int rotation_index = 1, end = line.size(); rotation_index < end; ++rotation_index) {
@@ -455,9 +478,12 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
         considerCandidate(candidate);
     }
 
-    if (best_candidate.isEmpty()) { return false; }
+    if (nearest_candidate.isEmpty()) { return false; }
 
-    line = best_candidate;
+    const bool use_angled_candidate =
+        !angled_candidate.isEmpty() &&
+        angled_branch_length <= (nearest_branch_length * max_angled_length_ratio) + minimum_forward_dot;
+    line = use_angled_candidate ? angled_candidate : nearest_candidate;
     return true;
 }
 
