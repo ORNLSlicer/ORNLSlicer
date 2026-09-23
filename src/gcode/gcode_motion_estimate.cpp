@@ -30,6 +30,11 @@ void MotionEstimation::Init() {
     m_nominal_bead_height = 0;
     m_last_print_z        = 0;
     m_last_print_w        = 0;
+    m_last_deposition_z   = 0;
+    m_last_deposition_w   = 0;
+
+    m_layer_has_deposition            = false;
+    m_layer_has_inferred_print_anchor = false;
 
     m_incomingV = max_xy_speed;
 }
@@ -42,7 +47,14 @@ void MotionEstimation::setBeadGeometry(Distance bead_width, Distance bead_height
 }
 
 void MotionEstimation::resetBeadHeight() {
-    m_current_bead_height = 0;
+    if (!m_layer_has_inferred_print_anchor && m_layer_has_deposition) {
+        m_last_print_z = m_last_deposition_z;
+        m_last_print_w = m_last_deposition_w;
+    }
+
+    m_current_bead_height             = 0;
+    m_layer_has_deposition            = false;
+    m_layer_has_inferred_print_anchor = false;
 }
 
 Distance MotionEstimation::calculateTimeAndVolume(int layer, bool isFIncluded, bool isGOCommand, bool deposition_active,
@@ -196,9 +208,15 @@ Distance MotionEstimation::calculatePathTimeAndVolume(Distance path_length, Dist
             Area bead_area = ((bead_width - height) * height) + (M_PI * height * height / 4.0);
 
             layer_volume += bead_area * path_length;
+
+            m_last_deposition_z    = m_current_z;
+            m_last_deposition_w    = m_current_w;
+            m_layer_has_deposition = true;
+
             if (infer_bead_height) {
-                m_last_print_z = m_current_z;
-                m_last_print_w = m_current_w;
+                m_last_print_z                    = m_current_z;
+                m_last_print_w                    = m_current_w;
+                m_layer_has_inferred_print_anchor = true;
             }
         }
 
@@ -406,6 +424,10 @@ Distance MotionEstimation::m_current_bead_height;
 Distance MotionEstimation::m_nominal_bead_height;
 Distance MotionEstimation::m_last_print_z;
 Distance MotionEstimation::m_last_print_w;
+Distance MotionEstimation::m_last_deposition_z;
+Distance MotionEstimation::m_last_deposition_w;
+bool MotionEstimation::m_layer_has_deposition;
+bool MotionEstimation::m_layer_has_inferred_print_anchor;
 
 Distance MotionEstimation::m_previous_distance;
 Distance MotionEstimation::m_total_distance;

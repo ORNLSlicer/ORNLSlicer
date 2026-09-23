@@ -49,7 +49,8 @@ bool isDisableFeedrateScalingSetting(const QString& key) {
 
 bool isBeadHeightInferenceModifier(const QString& comment) {
     const Qt::CaseSensitivity sensitivity = Qt::CaseInsensitive;
-    return comment.contains(Constants::PathModifierStrings::kInitialStartup, sensitivity) ||
+    return comment.contains(Constants::PathModifierStrings::kPrestart, sensitivity) ||
+           comment.contains(Constants::PathModifierStrings::kInitialStartup, sensitivity) ||
            comment.contains(Constants::PathModifierStrings::kSlowDown, sensitivity) ||
            comment.contains(Constants::PathModifierStrings::kForwardTipWipe, sensitivity) ||
            comment.contains(Constants::PathModifierStrings::kReverseTipWipe, sensitivity) ||
