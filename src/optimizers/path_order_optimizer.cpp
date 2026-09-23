@@ -18,6 +18,7 @@
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
 #include "geometry/segment_base.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/point_order_optimizer.h"
@@ -28,6 +29,9 @@
 
 namespace ORNL {
 namespace {
+constexpr double kDistanceTolerance = 1.0e-6;
+constexpr double kTwoPi             = 6.28318530717958647692;
+
 Polyline pathStartPoints(const Path& path) {
     Polyline line;
     line.reserve(path.size());
@@ -46,18 +50,71 @@ int normalizedIndex(int index, int size) {
     return index;
 }
 
-bool splitLineSegment(Path& path, int insertion_index, const Point& split_point) {
+double chordRatioForPoint(const Point& start, const Point& end, const Point& point) {
+    const double dx          = static_cast<double>(end.x() - start.x());
+    const double dy          = static_cast<double>(end.y() - start.y());
+    const double denominator = (dx * dx) + (dy * dy);
+    if (denominator <= kDistanceTolerance) return 0.0;
+
+    const double point_dx = static_cast<double>(point.x() - start.x());
+    const double point_dy = static_cast<double>(point.y() - start.y());
+    return std::clamp(((point_dx * dx) + (point_dy * dy)) / denominator, 0.0, 1.0);
+}
+
+Angle arcSweepAngle(const Point& center, const Point& start, const Point& end, bool counterclockwise) {
+    const double start_angle = std::atan2(center.x() - start.x(), center.y() - start.y());
+    const double end_angle   = std::atan2(center.x() - end.x(), center.y() - end.y());
+    double sweep             = counterclockwise ? start_angle - end_angle : end_angle - start_angle;
+    if (sweep <= 0.0) sweep += kTwoPi;
+
+    return Angle(sweep);
+}
+
+Point pointOnArcAtChordRatio(const ArcSegment& arc, const Point& chord_point) {
+    const Point start  = arc.start();
+    const Point end    = arc.end();
+    const Point center = arc.center();
+    const double ratio = chordRatioForPoint(start, end, chord_point);
+    const double radius =
+        std::hypot(static_cast<double>(start.x() - center.x()), static_cast<double>(start.y() - center.y()));
+    const double start_angle =
+        std::atan2(static_cast<double>(start.y() - center.y()), static_cast<double>(start.x() - center.x()));
+    const double signed_sweep = arc.counterclockwise() ? arc.angle()() : -arc.angle()();
+    const double angle        = start_angle + (signed_sweep * ratio);
+
+    return Point(center.x() + (radius * std::cos(angle)), center.y() + (radius * std::sin(angle)),
+                 start.z() + ((end.z() - start.z()) * ratio));
+}
+
+void refreshArcSweep(const QSharedPointer<SegmentBase>& segment) {
+    ArcSegment* arc = dynamic_cast<ArcSegment*>(segment.data());
+    if (arc == nullptr) return;
+
+    arc->setAngle(arcSweepAngle(arc->center(), arc->start(), arc->end(), arc->counterclockwise()));
+}
+
+bool splitSegment(Path& path, int insertion_index, const Point& split_point) {
     if (path.size() == 0) return false;
 
     insertion_index                              = normalizedIndex(insertion_index, path.size());
     const int segment_index                      = insertion_index == 0 ? path.size() - 1 : insertion_index - 1;
     QSharedPointer<SegmentBase> original_segment = path[segment_index];
-    if (original_segment.isNull() || dynamic_cast<LineSegment*>(original_segment.data()) == nullptr) return false;
+    if (original_segment.isNull()) return false;
+
+    const ArcSegment* original_arc = dynamic_cast<ArcSegment*>(original_segment.data());
+    if (dynamic_cast<LineSegment*>(original_segment.data()) == nullptr && original_arc == nullptr) return false;
+
+    const Point adjusted_split_point =
+        original_arc == nullptr ? split_point : pointOnArcAtChordRatio(*original_arc, split_point);
+    if (adjusted_split_point == original_segment->start() || adjusted_split_point == original_segment->end())
+        return false;
 
     QSharedPointer<SegmentBase> first_segment  = original_segment->clone();
     QSharedPointer<SegmentBase> second_segment = original_segment->clone();
-    first_segment->setEnd(split_point);
-    second_segment->setStart(split_point);
+    first_segment->setEnd(adjusted_split_point);
+    second_segment->setStart(adjusted_split_point);
+    refreshArcSweep(first_segment);
+    refreshArcSweep(second_segment);
 
     path.removeAt(segment_index);
     if (insertion_index == 0) {
@@ -84,7 +141,7 @@ void applyPointSelectionToPath(Path& path, const PointOrderOptimizer::PointOrder
 
         if (!segment.isNull() && selection.split_point == segment->start()) { rotation_index = segment_index; }
         else if (!segment.isNull() && selection.split_point == segment->end()) { rotation_index = insertion_index; }
-        else if (splitLineSegment(path, insertion_index, selection.split_point)) {
+        else if (splitSegment(path, insertion_index, selection.split_point)) {
             rotation_index = insertion_index == 0 ? 0 : insertion_index;
         }
         else { rotation_index = insertion_index; }
