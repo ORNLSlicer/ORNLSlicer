@@ -271,7 +271,7 @@ settings:
   - name: "spiral_perimeter_connect_to_insets"
     display: "Connect to spiral insets"
     type: "boolean"
-    tooltip: "If selected, spiral perimeters will connect directly to spiral insets."
+    tooltip: "If selected, spiral perimeters will connect directly to spiral insets. The perimeter Branch after forward tip wipe option controls branching for the connected chain."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"perimeter":true},{"AND":[{"inset":true},{"AND":[{"spiral_perimeter":true},{"spiral_inset":true}]}]}]}]}
     options: []
     default: false
