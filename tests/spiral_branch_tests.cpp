@@ -1,5 +1,6 @@
 #include <QFile>
 #include <QSharedPointer>
+#include <algorithm>
 #include <cmath>
 #include <cstdlib>
 #include <iostream>
@@ -8,6 +9,8 @@
 #include <nlohmann/json.hpp>
 
 #include "configs/settings_base.h"
+#include "gcode/gcode_meta.h"
+#include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polygon.h"
@@ -23,6 +26,63 @@
 #include "utilities/qt_json_conversion.h"
 
 namespace {
+class RegionTrackingWriter final : public ORNL::WriterBase {
+   public:
+    explicit RegionTrackingWriter(const QSharedPointer<ORNL::SettingsBase>& settings)
+        : WriterBase(ORNL::GcodeMetaList::ORNLMeta, settings) {}
+
+    QString writeInitialSetup(ORNL::Distance, ORNL::Distance, ORNL::Distance, ORNL::Distance, int) override {
+        return {};
+    }
+    QString writeBeforeLayer(float, QSharedPointer<ORNL::SettingsBase>) override {
+        return {};
+    }
+    QString writeBeforePart(QVector3D) override {
+        return {};
+    }
+    QString writeBeforeIsland() override {
+        return {};
+    }
+    QString writeBeforeRegion(ORNL::RegionType, int) override {
+        return {};
+    }
+    QString writeBeforePath(ORNL::RegionType type) override {
+        before_path_regions.push_back(type);
+        return {};
+    }
+    QString writeTravel(ORNL::Point, ORNL::Point, ORNL::TravelLiftType, QSharedPointer<ORNL::SettingsBase>) override {
+        return {};
+    }
+    QString writeLine(const ORNL::Point&, const ORNL::Point&, const QSharedPointer<ORNL::SettingsBase>) override {
+        return {};
+    }
+    QString writeAfterPath(ORNL::RegionType type) override {
+        after_path_regions.push_back(type);
+        return {};
+    }
+    QString writeAfterRegion(ORNL::RegionType) override {
+        return {};
+    }
+    QString writeAfterIsland() override {
+        return {};
+    }
+    QString writeAfterPart() override {
+        return {};
+    }
+    QString writeAfterLayer() override {
+        return {};
+    }
+    QString writeShutdown() override {
+        return {};
+    }
+    QString writeDwell(ORNL::Time) override {
+        return {};
+    }
+
+    QVector<ORNL::RegionType> before_path_regions;
+    QVector<ORNL::RegionType> after_path_regions;
+};
+
 bool expect(bool condition, const std::string& message) {
     if (condition) return true;
 
@@ -226,6 +286,42 @@ bool containsPoint(const QVector<ORNL::Path>& paths, const ORNL::Point& point) {
     return false;
 }
 
+ORNL::RegionType printingRegion(const ORNL::Path& path, bool first) {
+    int index      = first ? 0 : path.size() - 1;
+    const int step = first ? 1 : -1;
+    while (index >= 0 && index < path.size()) {
+        if (path[index]->isPrintingSegment()) {
+            return path[index]->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType);
+        }
+        index += step;
+    }
+
+    return ORNL::RegionType::kPerimeter;
+}
+
+bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL::SettingsBase>& settings,
+                           const std::string& case_name) {
+    QSharedPointer<RegionTrackingWriter> writer = QSharedPointer<RegionTrackingWriter>::create(settings);
+    perimeter.writeGCode(writer.staticCast<ORNL::WriterBase>());
+
+    const QVector<ORNL::Path>& paths = perimeter.getPaths();
+    bool passed                      = expect(writer->before_path_regions.size() == paths.size(),
+                                              case_name + " should emit one before-path hook per path.");
+    passed &= expect(writer->after_path_regions.size() == paths.size(),
+                     case_name + " should emit one after-path hook per path.");
+
+    const int hook_count =
+        std::min({paths.size(), writer->before_path_regions.size(), writer->after_path_regions.size()});
+    for (int i = 0; i < hook_count; ++i) {
+        passed &= expect(writer->before_path_regions[i] == printingRegion(paths[i], true),
+                         case_name + " before-path hook should use the first printing segment's region.");
+        passed &= expect(writer->after_path_regions[i] == printingRegion(paths[i], false),
+                         case_name + " after-path hook should use the last printing segment's region.");
+    }
+
+    return passed;
+}
+
 bool verifySeparatedBranchGroups(const QVector<ORNL::Path>& paths, const std::string& region_name,
                                  ORNL::Distance max_branch_length) {
     bool passed = expect(paths.size() > 1, region_name + " should split unrelated loops into traveled path groups.");
@@ -363,6 +459,12 @@ int main() {
     lifted_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetLiftHeight, ORNL::Distance(3.0));
     lifted_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDirection,
                                        static_cast<int>(ORNL::TipWipeDirection::kForward));
+    lifted_branch_settings->setSetting(ORNL::MS::Slowdown::kInsetEnable, true);
+    lifted_branch_settings->setSetting(ORNL::MS::Slowdown::kInsetDistance, ORNL::Distance(2.0));
+    lifted_branch_settings->setSetting(ORNL::MS::Slowdown::kInsetLiftDistance, ORNL::Distance(4.0));
+    lifted_branch_settings->setSetting(ORNL::MS::Slowdown::kInsetCutoffDistance, ORNL::Distance(0.0));
+    lifted_branch_settings->setSetting(ORNL::MS::Slowdown::kInsetSpeed, ORNL::Velocity(1.0));
+    lifted_branch_settings->setSetting(ORNL::MS::Slowdown::kInsetExtruderSpeed, ORNL::AngularVelocity(1.0));
     lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kInsetEnable, true);
     lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftRadius, ORNL::Distance(1.0));
     lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftHeight, ORNL::Distance(1.0));
@@ -460,6 +562,7 @@ int main() {
                          "Expected connected paths to contain inset process settings.");
         passed &= expect(containsModifier(connected_perimeter->getPaths(), ORNL::PathModifiers::kForwardTipWipe),
                          "Expected connected paths to use the inset terminal tip wipe.");
+        passed &= verifyPathHookRegions(*connected_perimeter, connected_settings, "Connected perimeter");
     }
 
     for (const int perimeter_count : {1, 2}) {
@@ -472,6 +575,12 @@ int main() {
         lifted_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterLiftHeight, ORNL::Distance(3.0));
         lifted_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDirection,
                                               static_cast<int>(ORNL::TipWipeDirection::kForward));
+        lifted_connected_settings->setSetting(ORNL::MS::Slowdown::kPerimeterEnable, true);
+        lifted_connected_settings->setSetting(ORNL::MS::Slowdown::kPerimeterDistance, ORNL::Distance(2.0));
+        lifted_connected_settings->setSetting(ORNL::MS::Slowdown::kPerimeterLiftDistance, ORNL::Distance(4.0));
+        lifted_connected_settings->setSetting(ORNL::MS::Slowdown::kPerimeterCutoffDistance, ORNL::Distance(0.0));
+        lifted_connected_settings->setSetting(ORNL::MS::Slowdown::kPerimeterSpeed, ORNL::Velocity(1.0));
+        lifted_connected_settings->setSetting(ORNL::MS::Slowdown::kPerimeterExtruderSpeed, ORNL::AngularVelocity(1.0));
         lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kPerimeterEnable, true);
         lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftRadius, ORNL::Distance(1.0));
         lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftHeight, ORNL::Distance(1.0));
@@ -515,6 +624,10 @@ int main() {
     unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDistance, ORNL::Distance(2.0));
     unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDirection,
                                           static_cast<int>(ORNL::TipWipeDirection::kForward));
+    unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetEnable, true);
+    unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetDistance, ORNL::Distance(2.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetSpeed, ORNL::Velocity(1.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetExtruderSpeed, ORNL::AngularVelocity(1.0));
 
     ORNL::PolymerIsland unsafe_connected_island(separated_geometry, unsafe_connected_settings, {});
     unsafe_connected_island.compute(0);
@@ -538,6 +651,11 @@ int main() {
                          "Separated connected insets should still be emitted after a safe travel.");
         passed &= expect(unsafe_connected_inset->getPaths().isEmpty(),
                          "Traveled connected insets should not be emitted a second time.");
+        passed &= expect(containsModifierWithRegion(unsafe_connected_perimeter->getPaths(),
+                                                    ORNL::PathModifiers::kInitialStartup, ORNL::RegionType::kInset),
+                         "Traveled connected insets should receive inset startup modifiers.");
+        passed &=
+            verifyPathHookRegions(*unsafe_connected_perimeter, unsafe_connected_settings, "Separated connected inset");
     }
 
     QSharedPointer<ORNL::SettingsBase> separated_connected_settings = defaultSettings();
