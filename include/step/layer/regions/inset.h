@@ -64,12 +64,21 @@ class Inset : public RegionBase {
                             bool include_startup = true);
 
     /**
+     * @brief Creates either an open or closed path from a polyline.
+     * @param[in] line Polyline representing the path.
+     * @param[in] closed Whether to connect the final point back to the first point.
+     * @return Polyline converted to a path.
+     */
+    Path createPath(Polyline line, bool closed);
+
+    /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
      * @param[in] line Polyline representing the path.
+     * @param[in] closed Whether to connect the final point back to the first point.
      * @return Path with localized settings applied.
      * @warning Handles cases of overlapping settings regions by applying the first region found.
      */
-    Path createPathWithLocalizedSettings(const Polyline& line);
+    Path createPathWithLocalizedSettings(const Polyline& line, bool closed);
 
     /**
      * @brief Populates the segment settings with the passed settings base.

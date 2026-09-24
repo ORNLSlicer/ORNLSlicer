@@ -76,16 +76,23 @@ class Perimeter : public RegionBase {
     //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
     void calculateConnectedInsetEndModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
 
-    //! \brief Creates a path after applying a caller-selected minimum segment length.
-    Path createPath(Polyline line, Distance min_segment_length);
+    /**
+     * @brief Creates either an open or closed path with a caller-selected minimum segment length.
+     * @param[in] line Polyline representing the path.
+     * @param[in] min_segment_length Minimum retained segment length.
+     * @param[in] closed Whether to connect the final point back to the first point.
+     * @return Polyline converted to a path.
+     */
+    Path createPath(Polyline line, Distance min_segment_length, bool closed);
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
      * @param[in] line Polyline representing the path.
+     * @param[in] closed Whether to connect the final point back to the first point.
      * @return Path with localized settings applied.
      * @warning Handles cases of overlapping settings regions by applying the first region found.
      */
-    Path createPathWithLocalizedSettings(const Polyline& line);
+    Path createPathWithLocalizedSettings(const Polyline& line, bool closed);
 
     /**
      * @brief Populates the segment settings with the passed settings base.

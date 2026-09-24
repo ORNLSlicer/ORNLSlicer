@@ -437,8 +437,6 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
             }
 
             if (!path_open || segment_region != path_region) {
-                if (path_open) { gcode += writer->writeAfterPath(path_region); }
-
                 if (!region_open || segment_region != current_region) {
                     if (region_open) { gcode += writer->writeAfterRegion(current_region); }
                     gcode += writer->writeBeforeRegion(segment_region);
@@ -446,7 +444,7 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
                     region_open    = true;
                 }
 
-                gcode += writer->writeBeforePath(segment_region);
+                if (!path_open) { gcode += writer->writeBeforePath(segment_region); }
                 path_region = segment_region;
                 path_open   = true;
             }
@@ -619,11 +617,10 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             if (result.size() < 3) { return; }
 
             // Create path from polyline
-            Path newPath = createPath(result);
+            Path newPath = createPath(result, m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), false);
             if (newPath.size() == 0) { return; }
 
             newPath.setCCW(result.orientation());  // Set orientation of path
-            newPath.getSegments().removeLast();    // Remove last segment of path to enable spiral path linking
 
             // Exit early if perimeter path is too short
             if (newPath.calculateLength() < m_sb->setting<Distance>(PS::Perimeter::kMinPathLength)) { return; }
@@ -783,10 +780,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     connected_group += inset_group;
 
                     Path inset_path =
-                        createPath(connected_group, m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
+                        createPath(connected_group, m_sb->setting<Distance>(PS::Inset::kMinSegmentLength), false);
                     inset_path.setCCW(ccw);
-
-                    if (inset_path.size() > 0) { inset_path.getSegments().removeLast(); }
                     if (inset_path.size() == 0) { continue; }
 
                     applyConnectedInsetSettings(inset_path);
@@ -833,10 +828,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                         contains_connected_inset ? std::min(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength),
                                                             m_sb->setting<Distance>(PS::Inset::kMinSegmentLength))
                                                  : m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength);
-                    Path newPath = createPath(spiral_group, min_segment_length);
+                    Path newPath = createPath(spiral_group, min_segment_length, false);
                     newPath.setCCW(ccw);
-
-                    if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
                     if (newPath.calculateLength() < min_path_length && !contains_connected_inset) { continue; }
 
@@ -925,10 +918,9 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     branch_line += loop;
                     if (branch_line.back() != final_stop) { branch_line.push_back(final_stop); }
 
-                    Path newPath = createPath(branch_line);
+                    Path newPath =
+                        createPath(branch_line, m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), false);
                     newPath.setCCW(ccw);
-
-                    if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
                     if (newPath.calculateLength() < min_path_length) {
                         flushBranchedPath();
@@ -1201,18 +1193,19 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 }
 
 Path Perimeter::createPath(Polyline line) {
-    return createPath(line, m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength));
+    return createPath(line, m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), true);
 }
 
-Path Perimeter::createPath(Polyline line, Distance min_segment_length) {
-    line = line.removeShortSegments(min_segment_length, true);
-    if (line.size() < 3) { return Path(); }
+Path Perimeter::createPath(Polyline line, Distance min_segment_length, bool closed) {
+    line = line.removeShortSegments(min_segment_length, closed);
+    if (line.size() < (closed ? 3 : 2)) { return Path(); }
 
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;
 
-        for (size_t i = 0; i < line.size(); ++i) {
+        const size_t segment_count = closed ? line.size() : line.size() - 1;
+        for (size_t i = 0; i < segment_count; ++i) {
             const Point& start        = line[i];
             const Point& end          = line[(i + 1) % line.size()];
             const Distance bead_width = beadWidthForSegment(start, end, m_sb);
@@ -1225,7 +1218,7 @@ Path Perimeter::createPath(Polyline line, Distance min_segment_length) {
     }
 
     // ---------- Settings Regions ----------
-    return createPathWithLocalizedSettings(line);
+    return createPathWithLocalizedSettings(line, closed);
 }
 
 QVector<Polyline> Perimeter::getComputedGeometry() {
@@ -1416,11 +1409,12 @@ void Perimeter::calculateConnectedInsetEndModifiers(Path& path, bool supportsG3,
     }
 }
 
-Path Perimeter::createPathWithLocalizedSettings(const Polyline& line) {
+Path Perimeter::createPathWithLocalizedSettings(const Polyline& line, bool closed) {
     Path path;
 
     // Iterate through each segment of the polyline
-    for (size_t i = 0; i < line.size(); ++i) {
+    const size_t segment_count = closed ? line.size() : line.size() - 1;
+    for (size_t i = 0; i < segment_count; ++i) {
         const Point& start = line[i];
         const Point& end   = line[(i + 1) % line.size()];
 

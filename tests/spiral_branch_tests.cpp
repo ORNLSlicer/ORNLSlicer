@@ -240,6 +240,41 @@ bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string&
     return passed;
 }
 
+bool verifyLoopsCompleteBeforeWipe(const QVector<ORNL::Path>& paths, const std::string& region_name) {
+    bool passed             = true;
+    bool found_forward_wipe = false;
+
+    for (const ORNL::Path& path : paths) {
+        ORNL::Point loop_start;
+        bool has_loop_start = false;
+
+        for (const QSharedPointer<ORNL::SegmentBase>& segment : path) {
+            if (dynamic_cast<ORNL::TravelSegment*>(segment.data()) != nullptr) { continue; }
+
+            const ORNL::PathModifiers modifiers =
+                segment->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers);
+            if (modifiers == ORNL::PathModifiers::kSpiralConnection) {
+                has_loop_start = false;
+                continue;
+            }
+
+            if (!has_loop_start) {
+                loop_start     = segment->start();
+                has_loop_start = true;
+            }
+
+            if (modifiers == ORNL::PathModifiers::kForwardTipWipe) {
+                found_forward_wipe = true;
+                passed &= expect(segment->start().distance(loop_start) <= ORNL::Distance(1.0e-4),
+                                 region_name + " should complete each loop before its forward tip wipe.");
+            }
+        }
+    }
+
+    passed &= expect(found_forward_wipe, region_name + " should exercise a completed loop with a forward tip wipe.");
+    return passed;
+}
+
 bool containsModifier(const QVector<ORNL::Path>& paths, ORNL::PathModifiers modifier) {
     for (const ORNL::Path& path : paths) {
         for (int i = 0; i < path.size(); ++i) {
@@ -332,7 +367,8 @@ bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL
     perimeter.writeGCode(writer.staticCast<ORNL::WriterBase>());
 
     const QVector<ORNL::Path>& paths = perimeter.getPaths();
-    QVector<ORNL::RegionType> expected_path_regions;
+    QVector<ORNL::RegionType> expected_before_path_regions;
+    QVector<ORNL::RegionType> expected_after_path_regions;
     QVector<ORNL::RegionType> expected_region_regions;
     ORNL::RegionType current_region = ORNL::RegionType::kPerimeter;
     bool region_open                = false;
@@ -350,10 +386,14 @@ bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL
                     path_open ? path_region : (region_open ? current_region : ORNL::RegionType::kPerimeter);
             }
 
-            if (!path_open || segment_region != path_region) {
-                expected_path_regions.push_back(segment_region);
+            if (!path_open) {
+                expected_before_path_regions.push_back(segment_region);
                 path_region = segment_region;
                 path_open   = true;
+                ++path_region_count;
+            }
+            else if (segment_region != path_region) {
+                path_region = segment_region;
                 ++path_region_count;
             }
 
@@ -365,12 +405,13 @@ bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL
         }
 
         found_mixed_path |= path_region_count > 1;
+        if (path_open) { expected_after_path_regions.push_back(path_region); }
     }
 
-    bool passed = expect(writer->before_path_regions == expected_path_regions,
-                         case_name + " before-path hooks should follow every contiguous region span.");
-    passed &= expect(writer->after_path_regions == expected_path_regions,
-                     case_name + " after-path hooks should follow every contiguous region span.");
+    bool passed = expect(writer->before_path_regions == expected_before_path_regions,
+                         case_name + " should open each geometric path exactly once.");
+    passed &= expect(writer->after_path_regions == expected_after_path_regions,
+                     case_name + " should close each geometric path exactly once using its final region.");
     passed &= expect(writer->before_region_regions == expected_region_regions,
                      case_name + " before-region hooks should follow each process-region transition.");
     passed &= expect(writer->after_region_regions == expected_region_regions,
@@ -497,11 +538,13 @@ int main() {
     passed &= verifyContinuousBranch(perimeter.getPaths(), "Perimeter", ORNL::Distance(8.5));
 
     perimeter_settings->setSetting(ORNL::PS::Perimeter::kCompletePathBeforeConnecting, true);
+    perimeter_settings->setSetting(ORNL::PS::Perimeter::kMinSegmentLength, ORNL::Distance(1.0));
     perimeter_settings->setSetting(ORNL::PS::Ordering::kPerimeterReverseDirection,
                                    static_cast<int>(ORNL::PrintDirection::kReverse_off));
     perimeter_location = ORNL::Point(-10.0f, -10.0f, 0.0f);
     perimeter.optimize(0, perimeter_location, should_next_path_be_ccw);
     passed &= verifyContinuousBranch(perimeter.getPaths(), "Completed perimeter", ORNL::Distance(8.5));
+    passed &= verifyLoopsCompleteBeforeWipe(perimeter.getPaths(), "Completed perimeter");
 
     QSharedPointer<ORNL::SettingsBase> inset_settings = defaultSettings();
     inset_settings->setSetting(ORNL::PS::Inset::kCount, 5);
@@ -524,11 +567,13 @@ int main() {
     passed &= verifyContinuousBranch(inset.getPaths(), "Inset", ORNL::Distance(8.5));
 
     inset_settings->setSetting(ORNL::PS::Inset::kCompletePathBeforeConnecting, true);
+    inset_settings->setSetting(ORNL::PS::Inset::kMinSegmentLength, ORNL::Distance(1.0));
     inset_settings->setSetting(ORNL::PS::Ordering::kInsetReverseDirection,
                                static_cast<int>(ORNL::PrintDirection::kReverse_off));
     inset_location = ORNL::Point(-10.0f, -10.0f, 0.0f);
     inset.optimize(0, inset_location, should_next_path_be_ccw);
     passed &= verifyContinuousBranch(inset.getPaths(), "Completed inset", ORNL::Distance(8.5));
+    passed &= verifyLoopsCompleteBeforeWipe(inset.getPaths(), "Completed inset");
 
     QSharedPointer<ORNL::SettingsBase> lifted_branch_settings = defaultSettings();
     lifted_branch_settings->setSetting(ORNL::PS::Inset::kCount, 5);
