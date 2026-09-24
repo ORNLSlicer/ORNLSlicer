@@ -465,10 +465,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
             branch_line += loop;
             if (branch_line.back() != final_stop) { branch_line.push_back(final_stop); }
 
-            Path newPath = createPath(branch_line);
+            Path newPath = createPath(branch_line, false);
             newPath.setCCW(ccw);
-
-            if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
             if (newPath.calculateLength() < min_path_length) {
                 flushBranchedPath();
@@ -507,10 +505,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         for (const Polyline& spiral_group : spiral_groups) {
             if (spiral_group.size() < 3) { continue; }
 
-            Path newPath = createPath(spiral_group);
+            Path newPath = createPath(spiral_group, false);
             newPath.setCCW(ccw);
-
-            if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
             if (newPath.calculateLength() < min_path_length) { continue; }
 
@@ -698,14 +694,19 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 }
 
 Path Inset::createPath(Polyline line) {
-    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Inset::kMinSegmentLength), true);
-    if (line.size() < 3) { return Path(); }
+    return createPath(line, true);
+}
+
+Path Inset::createPath(Polyline line, bool closed) {
+    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Inset::kMinSegmentLength), closed);
+    if (line.size() < (closed ? 3 : 2)) { return Path(); }
 
     // ---------- No Settings Regions ----------
     if (m_settings_polygons.isEmpty()) {
         Path path;
 
-        for (size_t i = 0; i < line.size(); ++i) {
+        const size_t segment_count = closed ? line.size() : line.size() - 1;
+        for (size_t i = 0; i < segment_count; ++i) {
             const Point& start        = line[i];
             const Point& end          = line[(i + 1) % line.size()];
             const Distance bead_width = beadWidthForSegment(start, end, m_sb);
@@ -718,7 +719,7 @@ Path Inset::createPath(Polyline line) {
     }
 
     // ---------- Settings Regions ----------
-    return createPathWithLocalizedSettings(line);
+    return createPathWithLocalizedSettings(line, closed);
 }
 
 QVector<Polyline> Inset::getComputedGeometry() {
@@ -818,11 +819,12 @@ void Inset::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_w
     }
 }
 
-Path Inset::createPathWithLocalizedSettings(const Polyline& line) {
+Path Inset::createPathWithLocalizedSettings(const Polyline& line, bool closed) {
     Path path;
 
     // Iterate through each segment of the polyline
-    for (size_t i = 0; i < line.size(); ++i) {
+    const size_t segment_count = closed ? line.size() : line.size() - 1;
+    for (size_t i = 0; i < segment_count; ++i) {
         const Point& start = line[i];
         const Point& end   = line[(i + 1) % line.size()];
 
