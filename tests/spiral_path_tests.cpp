@@ -123,6 +123,25 @@ int main() {
                               "Expected final loop to close when complete-before-connecting is enabled.");
     }
 
+    QVector<ORNL::Polyline> mixed_completion_loops = adjacent_loops;
+    mixed_completion_loops.push_back(square(2.0, 2.0, 8.0, 8.0));
+    const QVector<ORNL::Distance> mixed_completion_widths(mixed_completion_loops.size(), bead_width);
+    const QVector<bool> mixed_completion_flags {false, true, true};
+    const QVector<ORNL::Polyline> mixed_completion_groups = ORNL::SpiralPath::linkClosedPolylineGroups(
+        mixed_completion_loops, mixed_completion_widths, bead_width, mixed_completion_flags);
+
+    passed &= expect(mixed_completion_groups.size() == 1,
+                     "Expected mixed completion policies to retain one adjacent spiral group.");
+    if (mixed_completion_groups.size() == 1) {
+        const ORNL::Polyline& mixed_group = mixed_completion_groups.front();
+        int middle_start_count            = 0;
+        for (const ORNL::Point& point : mixed_group) {
+            if (closeTo(point.x(), 1.0) && closeTo(point.y(), 1.0)) { ++middle_start_count; }
+        }
+        passed &= expect(middle_start_count == 2,
+                         "Expected the inset loop's completion policy to close it before the next connector.");
+    }
+
     QVector<ORNL::Polyline> smooth_completed_loops;
     smooth_completed_loops.push_back(smoothClosingOuterLoop());
     smooth_completed_loops.push_back(smoothClosingInnerLoop());

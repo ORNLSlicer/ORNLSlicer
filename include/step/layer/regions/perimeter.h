@@ -65,13 +65,19 @@ class Perimeter : public RegionBase {
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
     //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
-    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
+    //! \param continues_to_branch Whether the modified path immediately branches to another printing path.
+    //! \param include_startup Whether startup modifiers should be generated for this path.
+    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe, bool continues_to_branch = false,
+                            bool include_startup = true);
 
     //! \brief Applies end-of-path modifiers using inset settings.
     //! \param path Connected inset path receiving the modifiers.
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift.
     //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
     void calculateConnectedInsetEndModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
+
+    //! \brief Creates a path after applying a caller-selected minimum segment length.
+    Path createPath(Polyline line, Distance min_segment_length);
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
@@ -127,8 +133,8 @@ class Perimeter : public RegionBase {
     //! \brief Holds the bead width associated with each connected inset contour.
     QVector<Distance> m_connected_inset_widths;
 
-    //! \brief Whether connected inset geometry was emitted during the latest optimization.
-    bool m_connected_inset_geometry_consumed = false;
+    //! \brief Tracks which connected inset contours were emitted during the latest optimization.
+    QVector<bool> m_connected_inset_geometry_consumed;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;
