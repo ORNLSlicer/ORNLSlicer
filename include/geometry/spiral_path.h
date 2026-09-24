@@ -608,6 +608,105 @@ inline bool angleForwardBranchConnection(const Polyline& line, Polyline& next_lo
 }
 
 /*!
+ * \brief Rotates a receiving loop to a safe, preferably 45-degree seam from an already-emitted forward wipe.
+ * \return Whether the receiving loop is nested, forward of the wipe, and within the supplied connection distance.
+ */
+inline bool prepareForwardBranchConnection(const Polyline& current_loop, Polyline& next_loop, const Point& branch_start,
+                                           const Point& direction_start, Distance max_connector_length,
+                                           Distance min_segment_length = 0) {
+    if (current_loop.size() < 3 || next_loop.size() < 3 || !detail::loopsAreNested(current_loop, next_loop)) {
+        return false;
+    }
+
+    constexpr double minimum_forward_dot  = 1.0e-6;
+    constexpr double target_forward_dot   = 0.7071067811865476;
+    constexpr double angled_dot_tolerance = 0.1;
+
+    double direction_x = branch_start.x() - direction_start.x();
+    double direction_y = branch_start.y() - direction_start.y();
+    if (!detail::normalize2D(direction_x, direction_y)) { return false; }
+
+    const double max_length               = std::max(max_connector_length(), 1.0e-6);
+    const double min_segment_length_value = std::max(0.0, min_segment_length());
+    const double normal_x                 = -direction_y;
+    const double normal_y                 = direction_x;
+    const std::array<std::array<double, 2>, 2> directions {{
+        {{(direction_x + normal_x) * target_forward_dot, (direction_y + normal_y) * target_forward_dot}},
+        {{(direction_x - normal_x) * target_forward_dot, (direction_y - normal_y) * target_forward_dot}},
+    }};
+
+    Polyline best_candidate;
+    double best_length    = std::numeric_limits<double>::max();
+    double best_dot_error = std::numeric_limits<double>::max();
+
+    auto considerSeam = [&](int segment_index, const Point& seam) {
+        const Point& segment_start = next_loop[segment_index];
+        const Point& segment_end   = next_loop[(segment_index + 1) % next_loop.size()];
+        if (seam != segment_start && seam != segment_end &&
+            (segment_start.distance(seam)() < min_segment_length_value ||
+             seam.distance(segment_end)() < min_segment_length_value)) {
+            return;
+        }
+
+        Polyline candidate = next_loop;
+        detail::rotateToSegmentPoint(candidate, segment_index, seam);
+
+        const double branch_x      = candidate.front().x() - branch_start.x();
+        const double branch_y      = candidate.front().y() - branch_start.y();
+        const double branch_length = std::hypot(branch_x, branch_y);
+        if (branch_length <= std::numeric_limits<double>::epsilon() || branch_length > max_length) { return; }
+
+        double approach_x = candidate[1].x() - candidate.front().x();
+        double approach_y = candidate[1].y() - candidate.front().y();
+        if (!detail::normalize2D(approach_x, approach_y)) { return; }
+
+        const double forward_dot  = ((direction_x * branch_x) + (direction_y * branch_y)) / branch_length;
+        const double approach_dot = ((approach_x * branch_x) + (approach_y * branch_y)) / branch_length;
+        if (forward_dot <= minimum_forward_dot) { return; }
+
+        const double dot_error =
+            std::max(std::abs(forward_dot - target_forward_dot), std::abs(approach_dot - target_forward_dot));
+        if (dot_error <= angled_dot_tolerance &&
+            (dot_error < best_dot_error ||
+             (std::abs(dot_error - best_dot_error) <= minimum_forward_dot && branch_length < best_length))) {
+            best_candidate = candidate;
+            best_length    = branch_length;
+            best_dot_error = dot_error;
+        }
+    };
+
+    for (int segment_index = 0, end = next_loop.size(); segment_index < end; ++segment_index) {
+        const Point& segment_start = next_loop[segment_index];
+        const Point& segment_end   = next_loop[(segment_index + 1) % end];
+        for (const std::array<double, 2>& candidate_direction : directions) {
+            Point intersection;
+            double ray_distance = 0.0;
+            if (detail::raySegmentIntersection(branch_start, candidate_direction[0], candidate_direction[1],
+                                               segment_start, segment_end, intersection, ray_distance) &&
+                ray_distance <= max_length + minimum_forward_dot) {
+                considerSeam(segment_index, intersection);
+            }
+        }
+    }
+
+    if (!best_candidate.isEmpty()) {
+        next_loop = best_candidate;
+        return true;
+    }
+
+    Polyline fallback = next_loop;
+    detail::rotateToClosestForwardExistingPoint(fallback, branch_start, direction_start, branch_start);
+    const double branch_x      = fallback.front().x() - branch_start.x();
+    const double branch_y      = fallback.front().y() - branch_start.y();
+    const double branch_length = std::hypot(branch_x, branch_y);
+    const double forward_dot   = (direction_x * branch_x) + (direction_y * branch_y);
+    if (forward_dot <= minimum_forward_dot || branch_length > max_length + minimum_forward_dot) { return false; }
+
+    next_loop = fallback;
+    return true;
+}
+
+/*!
  * \brief Returns whether a post-wipe branch can safely connect two adjacent closed loops.
  *
  * The branch must move forward from the current loop, remain local to the transition width, and join nested geometry.
