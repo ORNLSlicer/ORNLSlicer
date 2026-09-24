@@ -85,14 +85,17 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
         !connected_perimeter.isNull() && !connected_inset.isNull() && !connected_inset_geometry.isEmpty() &&
         connected_perimeter->getIndex() < connected_inset->getIndex() &&
         m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter) &&
-        m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnableSpiralInset);
+        m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) &&
+        (!m_sb->setting<bool>(MS::MultiMaterial::kEnable) ||
+         m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum) == m_sb->setting<int>(MS::MultiMaterial::kInsetNum));
 
     if (connect_spiral_perimeter_to_inset) {
         connected_perimeter->setConnectedInsetGeometry(connected_inset_geometry, connected_inset_widths);
     }
 
     for (QSharedPointer<RegionBase> r : m_regions) {
-        if (connect_spiral_perimeter_to_inset && r.data() == connected_inset.data()) {
+        if (connect_spiral_perimeter_to_inset && r.data() == connected_inset.data() &&
+            connected_perimeter->connectedInsetGeometryConsumed()) {
             connected_inset->getPaths().clear();
             continue;
         }

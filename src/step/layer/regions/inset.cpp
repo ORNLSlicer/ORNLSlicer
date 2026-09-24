@@ -404,19 +404,18 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         for (Polyline& line : m_computed_geometry) { line = line.reverse(); }
     }
 
+    const bool forward_tip_wipe_enabled =
+        m_sb->setting<bool>(MS::TipWipe::kInsetEnable) &&
+        static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInsetDirection)) == TipWipeDirection::kForward;
+
     auto appendBranchAfterTipWipePaths = [&](const QVector<Polyline>& ordered_loops, const QVector<Distance>& widths,
                                              Distance fallback_width, bool complete_before_connecting, bool ccw,
                                              Distance min_path_length) {
         Path branched_path;
         branched_path.setCCW(ccw);
 
-        QVector<Polyline> branch_loops = ordered_loops;
-        Distance tip_wipe_distance;
-        if (m_sb->setting<bool>(MS::TipWipe::kInsetEnable) &&
-            static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInsetDirection)) ==
-                TipWipeDirection::kForward) {
-            tip_wipe_distance = m_sb->setting<Distance>(MS::TipWipe::kInsetDistance);
-        }
+        QVector<Polyline> branch_loops   = ordered_loops;
+        const Distance tip_wipe_distance = m_sb->setting<Distance>(MS::TipWipe::kInsetDistance);
 
         for (int i = branch_loops.size() - 2; i >= 0; --i) {
             if (branch_loops[i].size() < 3 || branch_loops[i + 1].isEmpty()) { continue; }
@@ -505,7 +504,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
 
     if (m_sb->setting<bool>(PS::Inset::kEnableSpiralInset)) {
         const bool complete_path_before_connecting = m_sb->setting<bool>(PS::Inset::kCompletePathBeforeConnecting);
-        const bool branch_after_tip_wipe           = m_sb->setting<bool>(PS::Inset::kBranchAfterTipWipe);
+        const bool branch_after_tip_wipe =
+            m_sb->setting<bool>(PS::Inset::kBranchAfterTipWipe) && forward_tip_wipe_enabled;
 
         if (!m_sb->setting<bool>(PS::Inset::kAdaptive)) {
             Point spiral_query_location = current_location;
