@@ -43,7 +43,8 @@ class RegionTrackingWriter final : public ORNL::WriterBase {
     QString writeBeforeIsland() override {
         return {};
     }
-    QString writeBeforeRegion(ORNL::RegionType, int) override {
+    QString writeBeforeRegion(ORNL::RegionType type, int) override {
+        before_region_regions.push_back(type);
         return {};
     }
     QString writeBeforePath(ORNL::RegionType type) override {
@@ -60,7 +61,8 @@ class RegionTrackingWriter final : public ORNL::WriterBase {
         after_path_regions.push_back(type);
         return {};
     }
-    QString writeAfterRegion(ORNL::RegionType) override {
+    QString writeAfterRegion(ORNL::RegionType type) override {
+        after_region_regions.push_back(type);
         return {};
     }
     QString writeAfterIsland() override {
@@ -81,6 +83,8 @@ class RegionTrackingWriter final : public ORNL::WriterBase {
 
     QVector<ORNL::RegionType> before_path_regions;
     QVector<ORNL::RegionType> after_path_regions;
+    QVector<ORNL::RegionType> before_region_regions;
+    QVector<ORNL::RegionType> after_region_regions;
 };
 
 bool expect(bool condition, const std::string& message) {
@@ -300,25 +304,79 @@ ORNL::RegionType printingRegion(const ORNL::Path& path, bool first) {
 }
 
 bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL::SettingsBase>& settings,
-                           const std::string& case_name) {
+                           const std::string& case_name, bool require_mixed_path = false) {
     QSharedPointer<RegionTrackingWriter> writer = QSharedPointer<RegionTrackingWriter>::create(settings);
     perimeter.writeGCode(writer.staticCast<ORNL::WriterBase>());
 
     const QVector<ORNL::Path>& paths = perimeter.getPaths();
-    bool passed                      = expect(writer->before_path_regions.size() == paths.size(),
-                                              case_name + " should emit one before-path hook per path.");
-    passed &= expect(writer->after_path_regions.size() == paths.size(),
-                     case_name + " should emit one after-path hook per path.");
+    QVector<ORNL::RegionType> expected_path_regions;
+    QVector<ORNL::RegionType> expected_region_regions;
+    ORNL::RegionType current_region = ORNL::RegionType::kPerimeter;
+    bool region_open                = false;
+    bool found_mixed_path           = false;
 
-    const int hook_count =
-        std::min({paths.size(), writer->before_path_regions.size(), writer->after_path_regions.size()});
-    for (int i = 0; i < hook_count; ++i) {
-        passed &= expect(writer->before_path_regions[i] == printingRegion(paths[i], true),
-                         case_name + " before-path hook should use the first printing segment's region.");
-        passed &= expect(writer->after_path_regions[i] == printingRegion(paths[i], false),
-                         case_name + " after-path hook should use the last printing segment's region.");
+    for (const ORNL::Path& path : paths) {
+        ORNL::RegionType path_region = ORNL::RegionType::kPerimeter;
+        bool path_open               = false;
+        int path_region_count        = 0;
+
+        for (const QSharedPointer<ORNL::SegmentBase>& segment : path) {
+            ORNL::RegionType segment_region = segment->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType);
+            if (segment_region == ORNL::RegionType::kUnknown) {
+                segment_region =
+                    path_open ? path_region : (region_open ? current_region : ORNL::RegionType::kPerimeter);
+            }
+
+            if (!path_open || segment_region != path_region) {
+                expected_path_regions.push_back(segment_region);
+                path_region = segment_region;
+                path_open   = true;
+                ++path_region_count;
+            }
+
+            if (!region_open || segment_region != current_region) {
+                expected_region_regions.push_back(segment_region);
+                current_region = segment_region;
+                region_open    = true;
+            }
+        }
+
+        found_mixed_path |= path_region_count > 1;
     }
 
+    bool passed = expect(writer->before_path_regions == expected_path_regions,
+                         case_name + " before-path hooks should follow every contiguous region span.");
+    passed &= expect(writer->after_path_regions == expected_path_regions,
+                     case_name + " after-path hooks should follow every contiguous region span.");
+    passed &= expect(writer->before_region_regions == expected_region_regions,
+                     case_name + " before-region hooks should follow each process-region transition.");
+    passed &= expect(writer->after_region_regions == expected_region_regions,
+                     case_name + " after-region hooks should follow each process-region transition.");
+    if (require_mixed_path) {
+        passed &= expect(found_mixed_path,
+                         case_name + " should exercise perimeter and inset settings in one continuous path.");
+    }
+    return passed;
+}
+
+bool verifyTraveledInsetPreservesPerimeterLift(const QVector<ORNL::Path>& paths, const std::string& case_name) {
+    bool passed               = true;
+    bool found_traveled_inset = false;
+
+    for (int i = 1; i < paths.size(); ++i) {
+        const ORNL::Path& path = paths[i];
+        if (path.size() == 0 || dynamic_cast<ORNL::TravelSegment*>(path.front().data()) == nullptr ||
+            printingRegion(path, true) != ORNL::RegionType::kInset) {
+            continue;
+        }
+
+        found_traveled_inset = true;
+        passed &= expect(
+            containsModifierWithRegion({paths[i - 1]}, ORNL::PathModifiers::kSpiralLift, ORNL::RegionType::kPerimeter),
+            case_name + " should retain the terminal perimeter lift before traveling to an inset.");
+    }
+
+    passed &= expect(found_traveled_inset, case_name + " should exercise a traveled inset fallback.");
     return passed;
 }
 
@@ -562,7 +620,7 @@ int main() {
                          "Expected connected paths to contain inset process settings.");
         passed &= expect(containsModifier(connected_perimeter->getPaths(), ORNL::PathModifiers::kForwardTipWipe),
                          "Expected connected paths to use the inset terminal tip wipe.");
-        passed &= verifyPathHookRegions(*connected_perimeter, connected_settings, "Connected perimeter");
+        passed &= verifyPathHookRegions(*connected_perimeter, connected_settings, "Connected perimeter", true);
     }
 
     for (const int perimeter_count : {1, 2}) {
@@ -622,8 +680,14 @@ int main() {
     unsafe_connected_settings->setSetting(ORNL::PS::Inset::kMinPathLength, ORNL::Distance(150.0));
     unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterEnable, true);
     unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDistance, ORNL::Distance(2.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterLiftHeight, ORNL::Distance(3.0));
     unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDirection,
                                           static_cast<int>(ORNL::TipWipeDirection::kForward));
+    unsafe_connected_settings->setSetting(ORNL::MS::SpiralLift::kPerimeterEnable, true);
+    unsafe_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftRadius, ORNL::Distance(1.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftHeight, ORNL::Distance(1.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftPoints, 8);
+    unsafe_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftSpeed, ORNL::Velocity(1.0));
     unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetEnable, true);
     unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetDistance, ORNL::Distance(2.0));
     unsafe_connected_settings->setSetting(ORNL::MS::Startup::kInsetSpeed, ORNL::Velocity(1.0));
@@ -656,6 +720,8 @@ int main() {
                          "Traveled connected insets should receive inset startup modifiers.");
         passed &=
             verifyPathHookRegions(*unsafe_connected_perimeter, unsafe_connected_settings, "Separated connected inset");
+        passed &= verifyTraveledInsetPreservesPerimeterLift(unsafe_connected_perimeter->getPaths(),
+                                                            "Separated connected inset");
     }
 
     QSharedPointer<ORNL::SettingsBase> separated_connected_settings = defaultSettings();
