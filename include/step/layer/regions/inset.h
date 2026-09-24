@@ -58,7 +58,10 @@ class Inset : public RegionBase {
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
     //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
-    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
+    //! \param continues_to_branch Whether the modified path immediately branches to another printing path.
+    //! \param include_startup Whether startup modifiers should be generated for this path.
+    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe, bool continues_to_branch = false,
+                            bool include_startup = true);
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.

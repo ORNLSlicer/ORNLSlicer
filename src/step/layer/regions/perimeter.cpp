@@ -391,7 +391,7 @@ void Perimeter::compute(uint layer_num) {
     m_computed_widths.clear();
     m_connected_inset_geometry.clear();
     m_connected_inset_widths.clear();
-    m_connected_inset_geometry_consumed = false;
+    m_connected_inset_geometry_consumed.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth                = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
@@ -581,11 +581,14 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
         if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
             const bool complete_path_before_connecting =
                 m_sb->setting<bool>(PS::Perimeter::kCompletePathBeforeConnecting);
+            const bool complete_inset_path_before_connecting =
+                m_sb->setting<bool>(PS::Inset::kCompletePathBeforeConnecting);
             bool connected_insets_appended_after_tip_wipe = false;
 
             auto appendConnectedInsetLoops = [&](QVector<Polyline>& ordered_loops, QVector<Distance>& ordered_widths,
-                                                 Point& spiral_query_location, bool normalize_orientation,
-                                                 bool& has_spiral_orientation, bool& spiral_orientation) {
+                                                 QVector<bool>& completion_flags, Point& spiral_query_location,
+                                                 bool normalize_orientation, bool& has_spiral_orientation,
+                                                 bool& spiral_orientation) {
                 if (!connect_to_spiral_insets) { return; }
 
                 PolylineOrderOptimizer inset_poo(spiral_query_location, layerNumber);
@@ -625,8 +628,9 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                                                                          m_connected_inset_widths, inset_nominal_width);
                     ordered_widths.push_back(result_width);
                     ordered_loops.push_back(result);
+                    completion_flags.push_back(complete_inset_path_before_connecting);
                     spiral_query_location =
-                        SpiralPath::transitionStartPoint(result, result_width, complete_path_before_connecting);
+                        SpiralPath::transitionStartPoint(result, result_width, complete_inset_path_before_connecting);
                 }
             };
 
@@ -638,17 +642,18 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 QVector<Polyline> ordered_insets;
                 QVector<Distance> ordered_inset_widths;
+                QVector<bool> inset_completion_flags;
                 Point spiral_query_location = path.back()->end();
                 bool has_spiral_orientation = true;
                 bool spiral_orientation     = ccw;
-                appendConnectedInsetLoops(ordered_insets, ordered_inset_widths, spiral_query_location, true,
-                                          has_spiral_orientation, spiral_orientation);
+                appendConnectedInsetLoops(ordered_insets, ordered_inset_widths, inset_completion_flags,
+                                          spiral_query_location, true, has_spiral_orientation, spiral_orientation);
 
                 if (ordered_insets.isEmpty()) { return additional_paths; }
 
                 const Distance inset_nominal_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
                 QVector<Polyline> inset_groups     = SpiralPath::linkClosedPolylineGroups(
-                    ordered_insets, ordered_inset_widths, inset_nominal_width, complete_path_before_connecting);
+                    ordered_insets, ordered_inset_widths, inset_nominal_width, inset_completion_flags);
 
                 Point previous_end      = path.back()->end();
                 bool append_to_tip_path = true;
@@ -660,7 +665,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     if (append_to_tip_path) { connected_group.push_back(previous_end); }
                     connected_group += inset_group;
 
-                    Path inset_path = createPath(connected_group);
+                    Path inset_path =
+                        createPath(connected_group, m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
                     inset_path.setCCW(ccw);
 
                     if (inset_path.size() > 0) { inset_path.getSegments().removeLast(); }
@@ -695,15 +701,25 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 for (const Polyline& spiral_group : spiral_groups) {
                     if (spiral_group.size() < 3) { continue; }
 
-                    Path newPath = createPath(spiral_group);
+                    const bool contains_connected_inset =
+                        std::any_of(spiral_group.begin(), spiral_group.end(), [&](const Point& point) {
+                            return pointOnAnyClosedPolylineXY(
+                                point, m_connected_inset_geometry,
+                                std::max(m_sb->setting<Distance>(PS::Inset::kBeadWidth)() * 1.0e-3, 1.0e-6));
+                        });
+                    const Distance min_segment_length =
+                        contains_connected_inset ? std::min(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength),
+                                                            m_sb->setting<Distance>(PS::Inset::kMinSegmentLength))
+                                                 : m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength);
+                    Path newPath = createPath(spiral_group, min_segment_length);
                     newPath.setCCW(ccw);
 
                     if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
-                    if (newPath.calculateLength() < min_path_length) { continue; }
+                    if (newPath.calculateLength() < min_path_length && !contains_connected_inset) { continue; }
 
                     if (newPath.size() > 0) {
-                        if (connect_to_spiral_insets && !connect_to_insets_after_tip_wipe) {
+                        if (contains_connected_inset && connect_to_spiral_insets && !connect_to_insets_after_tip_wipe) {
                             applyConnectedInsetSettings(newPath);
                         }
 
@@ -728,6 +744,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                                                      Distance min_path_length) {
                 Path branched_path;
                 branched_path.setCCW(ccw);
+                const int first_branch_path_index = m_paths.size();
 
                 QVector<Polyline> branch_loops   = ordered_loops;
                 const Distance tip_wipe_distance = m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance);
@@ -750,9 +767,30 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                                                              m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength));
                 }
 
+                QVector<bool> connect_to_next(branch_loops.size(), false);
+                for (int i = 0, end = branch_loops.size() - 1; i < end; ++i) {
+                    const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
+                    connect_to_next[i] =
+                        SpiralPath::canConnectAfterForwardWipe(branch_loops[i], branch_loops[i + 1], loop_width,
+                                                               tip_wipe_distance, complete_path_before_connecting);
+                }
+
+                auto flushBranchedPath = [&]() {
+                    if (branched_path.size() == 0) { return; }
+
+                    current_location = branched_path.back()->end();
+                    m_paths.push_back(branched_path);
+
+                    branched_path.clear();
+                    branched_path.setCCW(ccw);
+                };
+
                 for (int i = 0, end = branch_loops.size(); i < end; ++i) {
                     const Polyline& loop = branch_loops[i];
-                    if (loop.size() < 3) { continue; }
+                    if (loop.size() < 3) {
+                        flushBranchedPath();
+                        continue;
+                    }
 
                     const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
                     const Point final_stop =
@@ -767,16 +805,25 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                     if (newPath.size() > 0) { newPath.getSegments().removeLast(); }
 
-                    if (newPath.calculateLength() < min_path_length) { continue; }
+                    if (newPath.calculateLength() < min_path_length) {
+                        flushBranchedPath();
+                        continue;
+                    }
 
                     if (newPath.size() > 0) {
+                        const bool begins_group           = branched_path.size() == 0;
+                        const bool continues_to_next_loop = i < connect_to_next.size() && connect_to_next[i];
+                        const bool continues_to_connected_insets =
+                            connect_to_insets_after_tip_wipe && i == branch_loops.size() - 1;
+                        const bool continues_branch = continues_to_next_loop || continues_to_connected_insets;
                         QSharedPointer<SettingsBase> branch_settings =
                             QSharedPointer<SettingsBase>::create(*newPath.front()->getSb());
                         branch_settings->setSetting(SS::kPathModifiers, PathModifiers::kSpiralConnection);
 
-                        calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true);
+                        calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), true,
+                                           continues_branch, begins_group);
 
-                        if (branched_path.size() == 0) {
+                        if (begins_group) {
                             PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                                   m_sb->setting<Velocity>(PS::Travel::kSpeed));
                         }
@@ -788,19 +835,20 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                         }
 
                         branched_path.append(newPath);
+                        if (!continues_branch) { flushBranchedPath(); }
                     }
                 }
 
-                if (branched_path.size() == 0) { return; }
+                flushBranchedPath();
 
-                QVector<Path> additional_paths = appendConnectedInsetsAfterTipWipe(branched_path, ccw);
+                if (m_paths.size() > first_branch_path_index) {
+                    QVector<Path> additional_paths = appendConnectedInsetsAfterTipWipe(m_paths.last(), ccw);
+                    current_location               = m_paths.last().back()->end();
 
-                current_location = branched_path.back()->end();
-                m_paths.push_back(branched_path);
-
-                for (Path& additional_path : additional_paths) {
-                    current_location = additional_path.back()->end();
-                    m_paths.push_back(additional_path);
+                    for (Path& additional_path : additional_paths) {
+                        current_location = additional_path.back()->end();
+                        m_paths.push_back(additional_path);
+                    }
                 }
             };
 
@@ -812,6 +860,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                 QVector<Polyline> ordered_perimeters;
                 QVector<Distance> ordered_widths;
+                QVector<bool> completion_flags;
                 const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
                 const Distance bead_width      = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
 
@@ -829,6 +878,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                         SpiralPath::transitionStartPoint(result, bead_width, complete_path_before_connecting);
                     ordered_perimeters.push_back(result);
                     ordered_widths.push_back(bead_width);
+                    completion_flags.push_back(complete_path_before_connecting);
                 }
 
                 if (ordered_perimeters.isEmpty()) { return; }
@@ -842,8 +892,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 bool has_spiral_orientation = false;
                 bool spiral_orientation     = false;
                 if (!connect_to_insets_after_tip_wipe) {
-                    appendConnectedInsetLoops(ordered_perimeters, ordered_widths, spiral_query_location, false,
-                                              has_spiral_orientation, spiral_orientation);
+                    appendConnectedInsetLoops(ordered_perimeters, ordered_widths, completion_flags,
+                                              spiral_query_location, false, has_spiral_orientation, spiral_orientation);
                 }
 
                 if (ordered_perimeters.size() == 1) {
@@ -855,7 +905,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     if (newPath.calculateLength() < min_path_length) { return; }
 
                     if (newPath.size() > 0) {
-                        calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                        calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), false,
+                                           connect_to_insets_after_tip_wipe);
                         QVector<Path> additional_paths =
                             appendConnectedInsetsAfterTipWipe(newPath, result.orientation());
                         PathModifierGenerator::GenerateTravel(newPath, current_location,
@@ -874,7 +925,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 }
 
                 appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_perimeters, ordered_widths, bead_width,
-                                                                       complete_path_before_connecting),
+                                                                       completion_flags),
                                   ordered_perimeters.front().orientation(), min_path_length);
 
                 return;
@@ -887,6 +938,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
             QVector<Polyline> ordered_perimeters;
             QVector<Distance> ordered_perimeter_widths;
+            QVector<bool> completion_flags;
             bool has_spiral_orientation    = false;
             bool spiral_orientation        = false;
             const Distance min_path_length = m_sb->setting<Distance>(PS::Perimeter::kMinPathLength);
@@ -912,6 +964,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 const Distance result_width = beadWidthForSegment(result.front(), result[1], m_sb);
                 ordered_perimeter_widths.push_back(result_width);
                 ordered_perimeters.push_back(result);
+                completion_flags.push_back(complete_path_before_connecting);
                 spiral_query_location =
                     SpiralPath::transitionStartPoint(result, result_width, complete_path_before_connecting);
             }
@@ -926,8 +979,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
             }
 
             if (!connect_to_insets_after_tip_wipe) {
-                appendConnectedInsetLoops(ordered_perimeters, ordered_perimeter_widths, spiral_query_location, true,
-                                          has_spiral_orientation, spiral_orientation);
+                appendConnectedInsetLoops(ordered_perimeters, ordered_perimeter_widths, completion_flags,
+                                          spiral_query_location, true, has_spiral_orientation, spiral_orientation);
             }
 
             if (ordered_perimeters.size() == 1) {
@@ -944,7 +997,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 if (newPath.calculateLength() < min_path_length) { return; }
 
                 if (newPath.size() > 0) {
-                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3));
+                    calculateModifiers(newPath, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3), false,
+                                       connect_to_insets_after_tip_wipe);
                     QVector<Path> additional_paths = appendConnectedInsetsAfterTipWipe(newPath, result.orientation());
                     PathModifierGenerator::GenerateTravel(newPath, current_location,
                                                           m_sb->setting<Velocity>(PS::Travel::kSpeed));
@@ -963,7 +1017,7 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
             const Distance nominal_width = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
             appendSpiralPaths(SpiralPath::linkClosedPolylineGroups(ordered_perimeters, ordered_perimeter_widths,
-                                                                   nominal_width, complete_path_before_connecting),
+                                                                   nominal_width, completion_flags),
                               ordered_perimeters.front().orientation(), min_path_length);
 
             return;
@@ -998,7 +1052,11 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 }
 
 Path Perimeter::createPath(Polyline line) {
-    line = line.removeShortSegments(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), true);
+    return createPath(line, m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength));
+}
+
+Path Perimeter::createPath(Polyline line, Distance min_segment_length) {
+    line = line.removeShortSegments(min_segment_length, true);
     if (line.size() < 3) { return Path(); }
 
     // ---------- No Settings Regions ----------
@@ -1026,20 +1084,23 @@ QVector<Polyline> Perimeter::getComputedGeometry() {
 }
 
 void Perimeter::setConnectedInsetGeometry(const QVector<Polyline>& geometry, const QVector<Distance>& widths) {
-    m_connected_inset_geometry          = geometry;
-    m_connected_inset_widths            = widths;
-    m_connected_inset_geometry_consumed = false;
+    m_connected_inset_geometry = geometry;
+    m_connected_inset_widths   = widths;
+    m_connected_inset_geometry_consumed.fill(false, geometry.size());
 }
 
 bool Perimeter::connectedInsetGeometryConsumed() const {
-    return m_connected_inset_geometry_consumed;
+    return !m_connected_inset_geometry_consumed.isEmpty() &&
+           std::all_of(m_connected_inset_geometry_consumed.begin(), m_connected_inset_geometry_consumed.end(),
+                       [](bool consumed) { return consumed; });
 }
 
 void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
     calculateModifiers(path, supportsG3, false);
 }
 
-void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe) {
+void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe, bool continues_to_branch,
+                                   bool include_startup) {
     PathModifierGenerator::GenerateSharpCornerExtension(path, m_sb);
 
     if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
@@ -1064,12 +1125,13 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
             static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection));
         if (wipe_direction == TipWipeDirection::kForward ||
             (!open_loop_tip_wipe && wipe_direction == TipWipeDirection::kOptimal)) {
+            const Distance lift_height =
+                continues_to_branch ? Distance(0) : m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight);
             if (open_loop_tip_wipe && wipe_direction == TipWipeDirection::kForward) {
                 PathModifierGenerator::GenerateForwardTipWipeOpenLoop(
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kPerimeterSpeed),
-                    m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed),
-                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
+                    m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed), lift_height,
                     m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
             }
             else {
@@ -1077,8 +1139,7 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                     path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance),
                     m_sb->setting<Velocity>(MS::TipWipe::kPerimeterSpeed),
                     m_sb->setting<Angle>(MS::TipWipe::kPerimeterAngle),
-                    m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed),
-                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
+                    m_sb->setting<AngularVelocity>(MS::TipWipe::kPerimeterExtruderSpeed), lift_height,
                     m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
             }
         }
@@ -1100,13 +1161,13 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                                                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
                                                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
     }
-    if (!ends_with_connected_inset && m_sb->setting<bool>(MS::SpiralLift::kPerimeterEnable)) {
+    if (!continues_to_branch && !ends_with_connected_inset && m_sb->setting<bool>(MS::SpiralLift::kPerimeterEnable)) {
         PathModifierGenerator::GenerateSpiralLift(path, m_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
                                                   m_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
                                                   m_sb->setting<int>(MS::SpiralLift::kLiftPoints),
                                                   m_sb->setting<Velocity>(MS::SpiralLift::kLiftSpeed), supportsG3);
     }
-    if (m_sb->setting<bool>(MS::Startup::kPerimeterEnable)) {
+    if (include_startup && m_sb->setting<bool>(MS::Startup::kPerimeterEnable)) {
         if (m_sb->setting<bool>(MS::Startup::kPerimeterRampUpEnable)) {
             PathModifierGenerator::GenerateInitialStartupWithRampUp(
                 path, m_sb->setting<Distance>(MS::Startup::kPerimeterDistance),
@@ -1126,7 +1187,7 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                 m_sb->setting<double>(MS::Startup::kStartUpAreaModifier));
         }
     }
-    if (m_sb->setting<bool>(PS::Perimeter::kEnableFlyingStart)) {
+    if (include_startup && m_sb->setting<bool>(PS::Perimeter::kEnableFlyingStart)) {
         PathModifierGenerator::GenerateFlyingStart(path, m_sb->setting<Distance>(PS::Perimeter::kFlyingStartDistance),
                                                    m_sb->setting<Velocity>(PS::Perimeter::kFlyingStartSpeed));
     }
@@ -1305,13 +1366,18 @@ void Perimeter::applyConnectedInsetSettings(Path& path) {
     for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
         if (segment == nullptr) { continue; }
 
-        const bool midpoint_on_inset =
-            pointOnAnyClosedPolylineXY(segment->midpoint(), m_connected_inset_geometry, tolerance());
-        const bool end_on_inset = pointOnAnyClosedPolylineXY(segment->end(), m_connected_inset_geometry, tolerance());
-        if (midpoint_on_inset || end_on_inset) {
-            using_inset_settings                = true;
-            m_connected_inset_geometry_consumed = true;
+        bool midpoint_on_inset = false;
+        bool end_on_inset      = false;
+        for (int i = 0; i < m_connected_inset_geometry.size(); ++i) {
+            const bool midpoint_on_current =
+                pointOnClosedPolylineXY(segment->midpoint(), m_connected_inset_geometry[i], tolerance());
+            const bool end_on_current =
+                pointOnClosedPolylineXY(segment->end(), m_connected_inset_geometry[i], tolerance());
+            if (midpoint_on_current || end_on_current) { m_connected_inset_geometry_consumed[i] = true; }
+            midpoint_on_inset |= midpoint_on_current;
+            end_on_inset |= end_on_current;
         }
+        if (midpoint_on_inset || end_on_inset) { using_inset_settings = true; }
 
         if (!using_inset_settings) { continue; }
 

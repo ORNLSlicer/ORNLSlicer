@@ -70,6 +70,19 @@ ORNL::PolygonList squareGeometry() {
     return geometry;
 }
 
+ORNL::PolygonList separatedSquareGeometry() {
+    ORNL::PolygonList geometry;
+    ORNL::Polygon large_square;
+    large_square << ORNL::Point(-100.0, -100.0, 0.0) << ORNL::Point(100.0, -100.0, 0.0)
+                 << ORNL::Point(100.0, 100.0, 0.0) << ORNL::Point(-100.0, 100.0, 0.0);
+    ORNL::Polygon small_square;
+    small_square << ORNL::Point(300.0, 0.0, 0.0) << ORNL::Point(340.0, 0.0, 0.0) << ORNL::Point(340.0, 40.0, 0.0)
+                 << ORNL::Point(300.0, 40.0, 0.0);
+    geometry += large_square;
+    geometry += small_square;
+    return geometry;
+}
+
 bool verifyContinuousBranch(const QVector<ORNL::Path>& paths, const std::string& region_name,
                             ORNL::Distance max_branch_length, bool require_all_branches_angled = false) {
     constexpr double angled_dot_tolerance     = 0.15;
@@ -184,6 +197,63 @@ bool containsRegion(const QVector<ORNL::Path>& paths, ORNL::RegionType region) {
     return false;
 }
 
+bool containsPoint(const QVector<ORNL::Path>& paths, const ORNL::Point& point) {
+    for (const ORNL::Path& path : paths) {
+        for (int i = 0; i < path.size(); ++i) {
+            const QSharedPointer<ORNL::SegmentBase>& segment = path[i];
+            if (segment->start().distance(point) <= ORNL::Distance(1.0e-4) ||
+                segment->end().distance(point) <= ORNL::Distance(1.0e-4)) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
+bool verifySeparatedBranchGroups(const QVector<ORNL::Path>& paths, const std::string& region_name,
+                                 ORNL::Distance max_branch_length) {
+    bool passed = expect(paths.size() > 1, region_name + " should split unrelated loops into traveled path groups.");
+
+    for (const ORNL::Path& path : paths) {
+        int travel_count = 0;
+        for (int i = 0; i < path.size(); ++i) {
+            const QSharedPointer<ORNL::SegmentBase>& segment = path[i];
+            if (dynamic_cast<ORNL::TravelSegment*>(segment.data()) != nullptr) { ++travel_count; }
+            if (segment->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers) ==
+                ORNL::PathModifiers::kSpiralConnection) {
+                passed &= expect(segment->length() <= max_branch_length,
+                                 region_name + " should not extrude a long branch between unrelated loops.");
+            }
+        }
+        passed &= expect(travel_count == 1, region_name + " path groups should each begin with one travel.");
+    }
+
+    return passed;
+}
+
+bool verifyBranchConnectionsStayAtLayerZ(const QVector<ORNL::Path>& paths, const std::string& region_name) {
+    bool passed      = true;
+    int branch_count = 0;
+
+    for (const ORNL::Path& path : paths) {
+        for (int i = 0; i < path.size(); ++i) {
+            const QSharedPointer<ORNL::SegmentBase>& segment = path[i];
+            if (segment->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers) !=
+                ORNL::PathModifiers::kSpiralConnection) {
+                continue;
+            }
+
+            ++branch_count;
+            passed &= expect(std::abs(segment->start().z()) <= 1.0e-6 && std::abs(segment->end().z()) <= 1.0e-6,
+                             region_name + " branch connections should not extrude down from a lifted wipe.");
+        }
+    }
+
+    passed &= expect(branch_count > 0, region_name + " should contain at least one branch connection.");
+    return passed;
+}
+
 void configureConnectedInsets(const QSharedPointer<ORNL::SettingsBase>& settings) {
     settings->setSetting(ORNL::PS::Perimeter::kEnable, true);
     settings->setSetting(ORNL::PS::Perimeter::kCount, 2);
@@ -268,6 +338,46 @@ int main() {
     inset.optimize(0, inset_location, should_next_path_be_ccw);
     passed &= verifyContinuousBranch(inset.getPaths(), "Completed inset", ORNL::Distance(8.5));
 
+    QSharedPointer<ORNL::SettingsBase> lifted_branch_settings = defaultSettings();
+    lifted_branch_settings->setSetting(ORNL::PS::Inset::kCount, 5);
+    lifted_branch_settings->setSetting(ORNL::PS::Inset::kBeadWidth, ORNL::Distance(5.0));
+    lifted_branch_settings->setSetting(ORNL::PS::Inset::kEnableSpiralInset, true);
+    lifted_branch_settings->setSetting(ORNL::PS::Inset::kBranchAfterTipWipe, true);
+    lifted_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetEnable, true);
+    lifted_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDistance, ORNL::Distance(2.0));
+    lifted_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetLiftHeight, ORNL::Distance(3.0));
+    lifted_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDirection,
+                                       static_cast<int>(ORNL::TipWipeDirection::kForward));
+    lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kInsetEnable, true);
+    lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftRadius, ORNL::Distance(1.0));
+    lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftHeight, ORNL::Distance(1.0));
+    lifted_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftPoints, 8);
+
+    ORNL::Inset lifted_branch_inset(lifted_branch_settings, 0, {});
+    lifted_branch_inset.setGeometry(geometry);
+    lifted_branch_inset.compute(0);
+    ORNL::Point lifted_branch_location(-10.0, -10.0, 0.0);
+    lifted_branch_inset.optimize(0, lifted_branch_location, should_next_path_be_ccw);
+    passed &= verifyBranchConnectionsStayAtLayerZ(lifted_branch_inset.getPaths(), "Lifted inset");
+
+    QSharedPointer<ORNL::SettingsBase> separated_branch_settings = defaultSettings();
+    separated_branch_settings->setSetting(ORNL::PS::Inset::kCount, 2);
+    separated_branch_settings->setSetting(ORNL::PS::Inset::kBeadWidth, ORNL::Distance(5.0));
+    separated_branch_settings->setSetting(ORNL::PS::Inset::kEnableSpiralInset, true);
+    separated_branch_settings->setSetting(ORNL::PS::Inset::kBranchAfterTipWipe, true);
+    separated_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetEnable, true);
+    separated_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDistance, ORNL::Distance(2.0));
+    separated_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDirection,
+                                          static_cast<int>(ORNL::TipWipeDirection::kForward));
+
+    const ORNL::PolygonList separated_geometry = separatedSquareGeometry();
+    ORNL::Inset separated_branch_inset(separated_branch_settings, 0, {});
+    separated_branch_inset.setGeometry(separated_geometry);
+    separated_branch_inset.compute(0);
+    ORNL::Point separated_branch_location(-110.0, -110.0, 0.0);
+    separated_branch_inset.optimize(0, separated_branch_location, should_next_path_be_ccw);
+    passed &= verifySeparatedBranchGroups(separated_branch_inset.getPaths(), "Separated inset", ORNL::Distance(10.0));
+
     QSharedPointer<ORNL::SettingsBase> square_inset_settings = defaultSettings();
     square_inset_settings->setSetting(ORNL::PS::Inset::kCount, 100);
     square_inset_settings->setSetting(ORNL::PS::Inset::kBeadWidth, ORNL::Distance(4.5));
@@ -335,6 +445,70 @@ int main() {
                          "Expected connected paths to contain inset process settings.");
         passed &= expect(containsModifier(connected_perimeter->getPaths(), ORNL::PathModifiers::kForwardTipWipe),
                          "Expected connected paths to use the inset terminal tip wipe.");
+    }
+
+    for (const int perimeter_count : {1, 2}) {
+        QSharedPointer<ORNL::SettingsBase> lifted_connected_settings = defaultSettings();
+        configureConnectedInsets(lifted_connected_settings);
+        lifted_connected_settings->setSetting(ORNL::PS::Perimeter::kCount, perimeter_count);
+        lifted_connected_settings->setSetting(ORNL::PS::Perimeter::kBranchAfterTipWipe, true);
+        lifted_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterEnable, true);
+        lifted_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDistance, ORNL::Distance(2.0));
+        lifted_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterLiftHeight, ORNL::Distance(3.0));
+        lifted_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDirection,
+                                              static_cast<int>(ORNL::TipWipeDirection::kForward));
+        lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kPerimeterEnable, true);
+        lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftRadius, ORNL::Distance(1.0));
+        lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftHeight, ORNL::Distance(1.0));
+        lifted_connected_settings->setSetting(ORNL::MS::SpiralLift::kLiftPoints, 8);
+
+        ORNL::PolymerIsland lifted_connected_island(geometry, lifted_connected_settings, {});
+        lifted_connected_island.compute(0);
+        lifted_connected_island.reorderRegions();
+        ORNL::Point lifted_connected_location(-10.0, -10.0, 0.0);
+        QVector<QSharedPointer<ORNL::RegionBase>> lifted_connected_previous_regions;
+        lifted_connected_island.optimize(0, lifted_connected_location, lifted_connected_previous_regions);
+
+        QSharedPointer<ORNL::Perimeter> lifted_connected_perimeter =
+            lifted_connected_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+        QSharedPointer<ORNL::Inset> lifted_connected_inset =
+            lifted_connected_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+        const std::string case_name = "Lifted connected inset with " + std::to_string(perimeter_count) +
+                                      (perimeter_count == 1 ? " perimeter" : " perimeters");
+        passed &= expect(!lifted_connected_perimeter.isNull() && !lifted_connected_inset.isNull(),
+                         case_name + " should create both regions.");
+        if (!lifted_connected_perimeter.isNull() && !lifted_connected_inset.isNull()) {
+            passed &= expect(lifted_connected_perimeter->connectedInsetGeometryConsumed(),
+                             case_name + " should emit every connected inset contour.");
+            passed &= expect(lifted_connected_inset->getPaths().isEmpty(),
+                             case_name + " should avoid duplicate inset output.");
+            passed &= verifyBranchConnectionsStayAtLayerZ(lifted_connected_perimeter->getPaths(), case_name);
+        }
+    }
+
+    QSharedPointer<ORNL::SettingsBase> separated_connected_settings = defaultSettings();
+    configureConnectedInsets(separated_connected_settings);
+    separated_connected_settings->setSetting(ORNL::PS::Perimeter::kMinPathLength, ORNL::Distance(200.0));
+    ORNL::PolymerIsland separated_connected_island(separated_geometry, separated_connected_settings, {});
+    separated_connected_island.compute(0);
+    separated_connected_island.reorderRegions();
+    ORNL::Point separated_connected_location(-110.0, -110.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> separated_connected_previous_regions;
+    separated_connected_island.optimize(0, separated_connected_location, separated_connected_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> separated_connected_perimeter =
+        separated_connected_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> separated_connected_inset =
+        separated_connected_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    if (!separated_connected_perimeter.isNull() && !separated_connected_inset.isNull()) {
+        passed &= expect(separated_connected_perimeter->connectedInsetGeometryConsumed(),
+                         "Expected every separated connected-inset contour to be emitted.");
+        for (const ORNL::Polyline& line : separated_connected_inset->getComputedGeometry()) {
+            if (!line.isEmpty()) {
+                passed &= expect(containsPoint(separated_connected_perimeter->getPaths(), line.front()),
+                                 "Expected connected output to retain every inset contour.");
+            }
+        }
     }
 
     QSharedPointer<ORNL::SettingsBase> spiralize_settings = defaultSettings();

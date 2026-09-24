@@ -326,6 +326,7 @@ inline Point prepareConnector(const Polyline& current_loop, Polyline& next_loop,
 struct StitchLoop {
     Polyline loop;
     Distance width;
+    bool complete_before_connecting = false;
 };
 
 inline bool closedPolylineContainsAnyPoint(Polyline container, const Polyline& points) {
@@ -607,6 +608,33 @@ inline bool angleForwardBranchConnection(const Polyline& line, Polyline& next_lo
 }
 
 /*!
+ * \brief Returns whether a post-wipe branch can safely connect two adjacent closed loops.
+ *
+ * The branch must move forward from the current loop, remain local to the transition width, and join nested geometry.
+ */
+inline bool canConnectAfterForwardWipe(const Polyline& current_loop, const Polyline& next_loop, Distance stop_distance,
+                                       Distance forward_wipe_distance, bool complete_before_connecting = false) {
+    if (current_loop.size() < 3 || next_loop.size() < 3 || !detail::loopsAreNested(current_loop, next_loop)) {
+        return false;
+    }
+
+    double direction_x = current_loop.front().x() - current_loop.back().x();
+    double direction_y = current_loop.front().y() - current_loop.back().y();
+    if (!detail::normalize2D(direction_x, direction_y)) { return false; }
+
+    const Point transition = detail::transitionPoint(current_loop, stop_distance, complete_before_connecting);
+    const Point branch_start(transition.x() + (direction_x * forward_wipe_distance()),
+                             transition.y() + (direction_y * forward_wipe_distance()), transition.z());
+    const double branch_x      = next_loop.front().x() - branch_start.x();
+    const double branch_y      = next_loop.front().y() - branch_start.y();
+    const double branch_length = std::hypot(branch_x, branch_y);
+    const double forward_dot   = (direction_x * branch_x) + (direction_y * branch_y);
+    const double max_length    = std::max(stop_distance() * 2.0, 1.0e-6);
+
+    return forward_dot > 1.0e-6 && branch_length <= max_length + 1.0e-6;
+}
+
+/*!
  * \brief Links ordered closed loops into open spiral-style polyline groups.
  *
  * Adjacent loops are joined with an extruding connector. When the candidate connector would jump between unrelated or
@@ -620,11 +648,12 @@ inline bool angleForwardBranchConnection(const Polyline& line, Polyline& next_lo
  */
 inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops,
                                                   const QVector<Distance>& loop_widths, Distance fallback_width,
-                                                  bool complete_before_connecting = false) {
+                                                  const QVector<bool>& complete_before_connecting) {
     QVector<detail::StitchLoop> loops;
     loops.reserve(ordered_loops.size());
     for (int i = 0, end = ordered_loops.size(); i < end; ++i) {
-        loops.push_back({ordered_loops[i], i < loop_widths.size() ? loop_widths[i] : fallback_width});
+        loops.push_back({ordered_loops[i], i < loop_widths.size() ? loop_widths[i] : fallback_width,
+                         i < complete_before_connecting.size() ? complete_before_connecting[i] : false});
     }
 
     bool has_reference_orientation = false;
@@ -660,8 +689,8 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
             detail::StitchLoop prepared_next_loop = next_loop;
             const Distance stop_distance =
                 detail::transitionDistance(current_loop.width, next_loop.width, fallback_width);
-            const Point connector_start = detail::prepareConnector(current_loop.loop, prepared_next_loop.loop,
-                                                                   stop_distance, complete_before_connecting);
+            const Point connector_start = detail::prepareConnector(
+                current_loop.loop, prepared_next_loop.loop, stop_distance, current_loop.complete_before_connecting);
 
             if (detail::canConnectLoops(current_loop, prepared_next_loop, connector_start, stop_distance)) {
                 if (spiral.back() != connector_start) { spiral += connector_start; }
@@ -670,7 +699,7 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
             else {
                 const Point final_stop = detail::transitionPoint(
                     current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width),
-                    complete_before_connecting);
+                    current_loop.complete_before_connecting);
 
                 if (spiral.back() != final_stop) { spiral += final_stop; }
                 spiral_groups.push_back(spiral);
@@ -681,7 +710,7 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
         else {
             const Point final_stop = detail::transitionPoint(
                 current_loop.loop, detail::validWidthOrFallback(current_loop.width, fallback_width),
-                complete_before_connecting);
+                current_loop.complete_before_connecting);
 
             if (spiral.back() != final_stop) { spiral += final_stop; }
             spiral_groups.push_back(spiral);
@@ -690,6 +719,13 @@ inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& order
     }
 
     return spiral_groups;
+}
+
+inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops,
+                                                  const QVector<Distance>& loop_widths, Distance fallback_width,
+                                                  bool complete_before_connecting = false) {
+    QVector<bool> completion_flags(ordered_loops.size(), complete_before_connecting);
+    return linkClosedPolylineGroups(ordered_loops, loop_widths, fallback_width, completion_flags);
 }
 
 inline QVector<Polyline> linkClosedPolylineGroups(const QVector<Polyline>& ordered_loops, Distance final_stop_distance,
