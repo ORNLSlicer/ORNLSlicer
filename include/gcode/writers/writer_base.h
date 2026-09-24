@@ -58,6 +58,15 @@ class WriterBase {
     //! \brief Writes G-Code to be executed at the start of each path
     virtual QString writeBeforePath(RegionType type) = 0;
 
+    /**
+     * @brief Updates writer state when a continuous path crosses into a new region.
+     * @param type the new region type
+     * @return any G-Code required for the transition
+     */
+    virtual QString writeBeforePathRegionTransition(RegionType /*type*/) {
+        return QString();
+    }
+
     //! \brief Writes G-Code for travel lift between paths; only used for syntaxes that can't use defined slicing plane
     virtual QString writeTravelLift(bool lift) {
         return QString();
