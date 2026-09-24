@@ -435,11 +435,36 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
                                                      m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
         }
 
+        QVector<Path> branch_paths;
+        QVector<bool> emit_loop;
+        branch_paths.reserve(branch_loops.size());
+        emit_loop.reserve(branch_loops.size());
+        for (int i = 0, end = branch_loops.size(); i < end; ++i) {
+            const Polyline& loop = branch_loops[i];
+            Path newPath;
+            if (loop.size() >= 3) {
+                const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
+                const Point final_stop = SpiralPath::transitionStartPoint(loop, loop_width, complete_before_connecting);
+
+                Polyline branch_line;
+                branch_line += loop;
+                if (branch_line.back() != final_stop) { branch_line.push_back(final_stop); }
+
+                newPath = createPath(branch_line, false);
+                newPath.setCCW(ccw);
+            }
+
+            emit_loop.push_back(newPath.size() > 0 && newPath.calculateLength() >= min_path_length);
+            branch_paths.push_back(newPath);
+        }
+
         QVector<bool> connect_to_next(branch_loops.size(), false);
         for (int i = 0, end = branch_loops.size() - 1; i < end; ++i) {
             const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
-            connect_to_next[i]        = SpiralPath::canConnectAfterForwardWipe(
-                branch_loops[i], branch_loops[i + 1], loop_width, tip_wipe_distance, complete_before_connecting);
+            connect_to_next[i] =
+                emit_loop[i] && emit_loop[i + 1] &&
+                SpiralPath::canConnectAfterForwardWipe(branch_loops[i], branch_loops[i + 1], loop_width,
+                                                       tip_wipe_distance, complete_before_connecting);
         }
 
         auto flushBranchedPath = [&]() {
@@ -452,23 +477,8 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         };
 
         for (int i = 0, end = branch_loops.size(); i < end; ++i) {
-            const Polyline& loop = branch_loops[i];
-            if (loop.size() < 3) {
-                flushBranchedPath();
-                continue;
-            }
-
-            const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
-            const Point final_stop    = SpiralPath::transitionStartPoint(loop, loop_width, complete_before_connecting);
-
-            Polyline branch_line;
-            branch_line += loop;
-            if (branch_line.back() != final_stop) { branch_line.push_back(final_stop); }
-
-            Path newPath = createPath(branch_line, false);
-            newPath.setCCW(ccw);
-
-            if (newPath.calculateLength() < min_path_length) {
+            Path newPath = branch_paths[i];
+            if (!emit_loop[i]) {
                 flushBranchedPath();
                 continue;
             }
