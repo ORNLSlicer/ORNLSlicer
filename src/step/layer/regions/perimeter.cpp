@@ -367,6 +367,42 @@ void populateInsetSegmentSettings(QSharedPointer<SettingsBase> segment_sb,
     segment_sb->setSetting(SS::kAdapted, adapted);
 }
 
+RegionType firstPrintingRegion(const Path& path, RegionType fallback) {
+    for (const QSharedPointer<SegmentBase>& segment : path) {
+        if (segment->isPrintingSegment()) { return segment->getSb()->setting<RegionType>(SS::kRegionType); }
+    }
+
+    return fallback;
+}
+
+RegionType lastPrintingRegion(const Path& path, RegionType fallback) {
+    for (int i = path.size() - 1; i >= 0; --i) {
+        if (path[i]->isPrintingSegment()) { return path[i]->getSb()->setting<RegionType>(SS::kRegionType); }
+    }
+
+    return fallback;
+}
+
+void generateInsetStartup(Path& path, const QSharedPointer<SettingsBase>& sb) {
+    if (path.size() == 0 || !sb->setting<bool>(MS::Startup::kInsetEnable)) { return; }
+
+    if (sb->setting<bool>(MS::Startup::kInsetRampUpEnable)) {
+        PathModifierGenerator::GenerateInitialStartupWithRampUp(
+            path, sb->setting<Distance>(MS::Startup::kInsetDistance), sb->setting<Velocity>(MS::Startup::kInsetSpeed),
+            sb->setting<Velocity>(PS::Inset::kSpeed), sb->setting<AngularVelocity>(MS::Startup::kInsetExtruderSpeed),
+            sb->setting<AngularVelocity>(PS::Inset::kExtruderSpeed), sb->setting<int>(MS::Startup::kInsetSteps),
+            sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
+            sb->setting<double>(MS::Startup::kStartUpAreaModifier));
+    }
+    else {
+        PathModifierGenerator::GenerateInitialStartup(path, sb->setting<Distance>(MS::Startup::kInsetDistance),
+                                                      sb->setting<Velocity>(MS::Startup::kInsetSpeed),
+                                                      sb->setting<AngularVelocity>(MS::Startup::kInsetExtruderSpeed),
+                                                      sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
+                                                      sb->setting<double>(MS::Startup::kStartUpAreaModifier));
+    }
+}
+
 }  // namespace
 
 Perimeter::Perimeter(const QSharedPointer<SettingsBase>& sb, const int index,
@@ -377,9 +413,9 @@ QString Perimeter::writeGCode(QSharedPointer<WriterBase> writer) {
     QString gcode;
     gcode += writer->writeBeforeRegion(RegionType::kPerimeter);
     for (Path path : m_paths) {
-        gcode += writer->writeBeforePath(RegionType::kPerimeter);
+        gcode += writer->writeBeforePath(firstPrintingRegion(path, RegionType::kPerimeter));
         for (QSharedPointer<SegmentBase> segment : path.getSegments()) { gcode += segment->writeGCode(writer); }
-        gcode += writer->writeAfterPath(RegionType::kPerimeter);
+        gcode += writer->writeAfterPath(lastPrintingRegion(path, RegionType::kPerimeter));
     }
     gcode += writer->writeAfterRegion(RegionType::kPerimeter);
     return gcode;
@@ -683,8 +719,13 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     if (inset_path.size() == 0) { continue; }
 
                     applyConnectedInsetSettings(inset_path);
+                    PathModifierGenerator::GenerateSharpCornerExtension(inset_path, m_sb);
+                    if (m_sb->setting<bool>(ES::Ramping::kTrajectoryAngleEnabled)) {
+                        PathModifierGenerator::GenerateTrajectorySlowdown(inset_path, m_sb);
+                    }
                     calculateConnectedInsetEndModifiers(inset_path, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3),
                                                         true);
+                    if (!should_append_to_tip_path) { generateInsetStartup(inset_path, m_sb); }
 
                     if (should_append_to_tip_path) {
                         inset_path.front()->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kSpiralConnection);
@@ -1124,13 +1165,15 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
 
-    const bool ends_with_connected_inset =
-        path.size() > 0 && path.back()->getSb()->setting<RegionType>(SS::kRegionType) == RegionType::kInset;
+    const bool starts_with_connected_inset = firstPrintingRegion(path, RegionType::kPerimeter) == RegionType::kInset;
+    const bool ends_with_connected_inset   = lastPrintingRegion(path, RegionType::kPerimeter) == RegionType::kInset;
 
     if (ends_with_connected_inset) { calculateConnectedInsetEndModifiers(path, supportsG3, open_loop_tip_wipe); }
     else if (m_sb->setting<bool>(MS::Slowdown::kPerimeterEnable)) {
+        const Distance lift_distance =
+            continues_to_branch ? Distance(0) : m_sb->setting<Distance>(MS::Slowdown::kPerimeterLiftDistance);
         PathModifierGenerator::GenerateSlowdown(path, m_sb->setting<Distance>(MS::Slowdown::kPerimeterDistance),
-                                                m_sb->setting<Distance>(MS::Slowdown::kPerimeterLiftDistance),
+                                                lift_distance,
                                                 m_sb->setting<Distance>(MS::Slowdown::kPerimeterCutoffDistance),
                                                 m_sb->setting<Velocity>(MS::Slowdown::kPerimeterSpeed),
                                                 m_sb->setting<AngularVelocity>(MS::Slowdown::kPerimeterExtruderSpeed),
@@ -1184,7 +1227,8 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                                                   m_sb->setting<int>(MS::SpiralLift::kLiftPoints),
                                                   m_sb->setting<Velocity>(MS::SpiralLift::kLiftSpeed), supportsG3);
     }
-    if (include_startup && m_sb->setting<bool>(MS::Startup::kPerimeterEnable)) {
+    if (include_startup && starts_with_connected_inset) { generateInsetStartup(path, m_sb); }
+    else if (include_startup && m_sb->setting<bool>(MS::Startup::kPerimeterEnable)) {
         if (m_sb->setting<bool>(MS::Startup::kPerimeterRampUpEnable)) {
             PathModifierGenerator::GenerateInitialStartupWithRampUp(
                 path, m_sb->setting<Distance>(MS::Startup::kPerimeterDistance),
@@ -1204,7 +1248,7 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                 m_sb->setting<double>(MS::Startup::kStartUpAreaModifier));
         }
     }
-    if (include_startup && m_sb->setting<bool>(PS::Perimeter::kEnableFlyingStart)) {
+    if (include_startup && !starts_with_connected_inset && m_sb->setting<bool>(PS::Perimeter::kEnableFlyingStart)) {
         PathModifierGenerator::GenerateFlyingStart(path, m_sb->setting<Distance>(PS::Perimeter::kFlyingStartDistance),
                                                    m_sb->setting<Velocity>(PS::Perimeter::kFlyingStartSpeed));
     }

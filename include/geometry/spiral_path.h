@@ -111,7 +111,7 @@ inline void rotateToClosestPoint(Polyline& line, const Point& query_point) {
         else { line.insert(insertion_index, split_point); }
     }
 
-    for (int i = 0; i < rotation_index; ++i) { line.move(0, line.size() - 1); }
+    std::rotate(line.begin(), line.begin() + rotation_index, line.end());
 }
 
 inline void rotateToClosestExistingPoint(Polyline& line, const Point& query_point) {
@@ -128,7 +128,7 @@ inline void rotateToClosestExistingPoint(Polyline& line, const Point& query_poin
         }
     }
 
-    for (int i = 0; i < rotation_index; ++i) { line.move(0, line.size() - 1); }
+    std::rotate(line.begin(), line.begin() + rotation_index, line.end());
 }
 
 inline void rotateToClosestForwardExistingPoint(Polyline& line, const Point& query_point, const Point& direction_start,
@@ -169,7 +169,7 @@ inline void rotateToClosestForwardExistingPoint(Polyline& line, const Point& que
 
     if (!found_forward_point) { rotation_index = fallback_index; }
 
-    for (int i = 0; i < rotation_index; ++i) { line.move(0, line.size() - 1); }
+    std::rotate(line.begin(), line.begin() + rotation_index, line.end());
 }
 
 inline bool raySegmentIntersection(const Point& ray_start, double ray_direction_x, double ray_direction_y,
@@ -249,7 +249,7 @@ inline void rotateToSegmentPoint(Polyline& line, int segment_index, const Point&
     else if (point == line[next_index]) { rotation_index = next_index; }
     else { line.insert(next_index, point); }
 
-    for (int i = 0; i < rotation_index; ++i) { line.move(0, line.size() - 1); }
+    std::rotate(line.begin(), line.begin() + rotation_index, line.end());
 }
 
 inline bool rotateToFortyFiveDegreeConnector(const Polyline& current_loop, Polyline& next_loop,
@@ -475,7 +475,7 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
 
     for (int rotation_index = 1, end = line.size(); rotation_index < end; ++rotation_index) {
         Polyline candidate = line;
-        for (int i = 0; i < rotation_index; ++i) { candidate.move(0, candidate.size() - 1); }
+        std::rotate(candidate.begin(), candidate.begin() + rotation_index, candidate.end());
         considerCandidate(candidate);
     }
 
