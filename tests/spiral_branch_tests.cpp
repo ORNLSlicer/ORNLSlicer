@@ -52,6 +52,10 @@ class RegionTrackingWriter final : public ORNL::WriterBase {
         before_path_regions.push_back(type);
         return {};
     }
+    QString writeBeforePathRegionTransition(ORNL::RegionType type) override {
+        path_region_transitions.push_back(type);
+        return {};
+    }
     QString writeTravel(ORNL::Point, ORNL::Point, ORNL::TravelLiftType, QSharedPointer<ORNL::SettingsBase>) override {
         return {};
     }
@@ -83,6 +87,7 @@ class RegionTrackingWriter final : public ORNL::WriterBase {
     }
 
     QVector<ORNL::RegionType> before_path_regions;
+    QVector<ORNL::RegionType> path_region_transitions;
     QVector<ORNL::RegionType> after_path_regions;
     QVector<ORNL::RegionType> before_region_regions;
     QVector<ORNL::RegionType> after_region_regions;
@@ -275,6 +280,43 @@ bool verifyLoopsCompleteBeforeWipe(const QVector<ORNL::Path>& paths, const std::
     return passed;
 }
 
+bool verifyLoopRemainsOpenBeforeWipe(const QVector<ORNL::Path>& paths, const std::string& case_name,
+                                     ORNL::RegionType region) {
+    bool passed             = true;
+    bool found_forward_wipe = false;
+
+    for (const ORNL::Path& path : paths) {
+        ORNL::Point loop_start;
+        bool has_loop_start = false;
+
+        for (const QSharedPointer<ORNL::SegmentBase>& segment : path) {
+            if (dynamic_cast<ORNL::TravelSegment*>(segment.data()) != nullptr) { continue; }
+
+            const ORNL::PathModifiers modifiers =
+                segment->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers);
+            if (modifiers == ORNL::PathModifiers::kSpiralConnection) {
+                has_loop_start = false;
+                continue;
+            }
+            if (segment->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType) != region) { continue; }
+
+            if (!has_loop_start) {
+                loop_start     = segment->start();
+                has_loop_start = true;
+            }
+
+            if (modifiers == ORNL::PathModifiers::kForwardTipWipe) {
+                found_forward_wipe = true;
+                passed &= expect(segment->start().distance(loop_start) > ORNL::Distance(1.0e-4),
+                                 case_name + " should leave the loop open before its forward tip wipe.");
+            }
+        }
+    }
+
+    passed &= expect(found_forward_wipe, case_name + " should exercise an open loop with a forward tip wipe.");
+    return passed;
+}
+
 bool containsModifier(const QVector<ORNL::Path>& paths, ORNL::PathModifiers modifier) {
     for (const ORNL::Path& path : paths) {
         for (int i = 0; i < path.size(); ++i) {
@@ -368,6 +410,7 @@ bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL
 
     const QVector<ORNL::Path>& paths = perimeter.getPaths();
     QVector<ORNL::RegionType> expected_before_path_regions;
+    QVector<ORNL::RegionType> expected_path_region_transitions;
     QVector<ORNL::RegionType> expected_after_path_regions;
     QVector<ORNL::RegionType> expected_region_regions;
     ORNL::RegionType current_region = ORNL::RegionType::kPerimeter;
@@ -393,6 +436,7 @@ bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL
                 ++path_region_count;
             }
             else if (segment_region != path_region) {
+                expected_path_region_transitions.push_back(segment_region);
                 path_region = segment_region;
                 ++path_region_count;
             }
@@ -410,6 +454,8 @@ bool verifyPathHookRegions(ORNL::Perimeter& perimeter, const QSharedPointer<ORNL
 
     bool passed = expect(writer->before_path_regions == expected_before_path_regions,
                          case_name + " should open each geometric path exactly once.");
+    passed &= expect(writer->path_region_transitions == expected_path_region_transitions,
+                     case_name + " should update path-level writer state at each in-path region transition.");
     passed &= expect(writer->after_path_regions == expected_after_path_regions,
                      case_name + " should close each geometric path exactly once using its final region.");
     passed &= expect(writer->before_region_regions == expected_region_regions,
@@ -603,6 +649,41 @@ int main() {
     lifted_branch_inset.optimize(0, lifted_branch_location, should_next_path_be_ccw);
     passed &= verifyBranchConnectionsStayAtLayerZ(lifted_branch_inset.getPaths(), "Lifted inset");
 
+    QSharedPointer<ORNL::SettingsBase> filtered_branch_settings = defaultSettings();
+    filtered_branch_settings->setSetting(ORNL::PS::Inset::kCount, 5);
+    filtered_branch_settings->setSetting(ORNL::PS::Inset::kBeadWidth, ORNL::Distance(5.0));
+    filtered_branch_settings->setSetting(ORNL::PS::Inset::kEnableSpiralInset, true);
+    filtered_branch_settings->setSetting(ORNL::PS::Inset::kBranchAfterTipWipe, true);
+    filtered_branch_settings->setSetting(ORNL::PS::Inset::kCompletePathBeforeConnecting, false);
+    filtered_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetEnable, true);
+    filtered_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDistance, ORNL::Distance(2.0));
+    filtered_branch_settings->setSetting(ORNL::MS::TipWipe::kInsetDirection,
+                                         static_cast<int>(ORNL::TipWipeDirection::kForward));
+    filtered_branch_settings->setSetting(ORNL::MS::SpiralLift::kInsetEnable, true);
+    filtered_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftRadius, ORNL::Distance(1.0));
+    filtered_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftHeight, ORNL::Distance(1.0));
+    filtered_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftPoints, 8);
+    filtered_branch_settings->setSetting(ORNL::MS::SpiralLift::kLiftSpeed, ORNL::Velocity(1.0));
+
+    ORNL::Inset branch_filter_probe(filtered_branch_settings, 0, {});
+    branch_filter_probe.setGeometry(geometry);
+    branch_filter_probe.compute(0);
+    passed &= expect(branch_filter_probe.getComputedGeometry().size() >= 2,
+                     "Filtered branch regression should compute adjacent inset loops.");
+    if (branch_filter_probe.getComputedGeometry().size() >= 2) {
+        const ORNL::Polyline& last_loop    = branch_filter_probe.getComputedGeometry().last();
+        const ORNL::Distance closed_length = last_loop.length() + last_loop.back().distance(last_loop.front());
+        filtered_branch_settings->setSetting(ORNL::PS::Inset::kMinPathLength, closed_length - ORNL::Distance(2.5));
+
+        ORNL::Inset filtered_branch_inset(filtered_branch_settings, 0, {});
+        filtered_branch_inset.setGeometry(geometry);
+        filtered_branch_inset.compute(0);
+        ORNL::Point filtered_branch_location(-10.0, -10.0, 0.0);
+        filtered_branch_inset.optimize(0, filtered_branch_location, should_next_path_be_ccw);
+        passed &= expect(containsModifier(filtered_branch_inset.getPaths(), ORNL::PathModifiers::kSpiralLift),
+                         "A branch whose successor is filtered should retain terminal spiral-lift modifiers.");
+    }
+
     QSharedPointer<ORNL::SettingsBase> separated_branch_settings = defaultSettings();
     separated_branch_settings->setSetting(ORNL::PS::Inset::kCount, 2);
     separated_branch_settings->setSetting(ORNL::PS::Inset::kBeadWidth, ORNL::Distance(5.0));
@@ -767,6 +848,10 @@ int main() {
             passed &= expect(lifted_connected_inset->getPaths().isEmpty(),
                              case_name + " should avoid duplicate inset output.");
             passed &= verifyBranchConnectionsStayAtLayerZ(lifted_connected_perimeter->getPaths(), case_name);
+            if (perimeter_count == 1) {
+                passed &= verifyLoopRemainsOpenBeforeWipe(lifted_connected_perimeter->getPaths(), case_name,
+                                                          ORNL::RegionType::kPerimeter);
+            }
             passed &=
                 expect(containsModifierWithRegion(lifted_connected_perimeter->getPaths(),
                                                   ORNL::PathModifiers::kSpiralConnection, ORNL::RegionType::kPerimeter),
