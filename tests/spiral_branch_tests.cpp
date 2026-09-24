@@ -186,6 +186,21 @@ bool containsModifier(const QVector<ORNL::Path>& paths, ORNL::PathModifiers modi
     return false;
 }
 
+bool containsModifierWithRegion(const QVector<ORNL::Path>& paths, ORNL::PathModifiers modifier,
+                                ORNL::RegionType region) {
+    for (const ORNL::Path& path : paths) {
+        for (int i = 0; i < path.size(); ++i) {
+            const QSharedPointer<ORNL::SegmentBase>& segment = path[i];
+            if (segment->getSb()->setting<ORNL::PathModifiers>(ORNL::SS::kPathModifiers) == modifier &&
+                segment->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType) == region) {
+                return true;
+            }
+        }
+    }
+
+    return false;
+}
+
 bool containsRegion(const QVector<ORNL::Path>& paths, ORNL::RegionType region) {
     for (const ORNL::Path& path : paths) {
         for (int i = 0; i < path.size(); ++i) {
@@ -483,7 +498,46 @@ int main() {
             passed &= expect(lifted_connected_inset->getPaths().isEmpty(),
                              case_name + " should avoid duplicate inset output.");
             passed &= verifyBranchConnectionsStayAtLayerZ(lifted_connected_perimeter->getPaths(), case_name);
+            passed &=
+                expect(containsModifierWithRegion(lifted_connected_perimeter->getPaths(),
+                                                  ORNL::PathModifiers::kSpiralConnection, ORNL::RegionType::kPerimeter),
+                       case_name + " should retain perimeter settings on the perimeter-to-inset bridge.");
         }
+    }
+
+    QSharedPointer<ORNL::SettingsBase> unsafe_connected_settings = defaultSettings();
+    configureConnectedInsets(unsafe_connected_settings);
+    unsafe_connected_settings->setSetting(ORNL::PS::Perimeter::kCount, 1);
+    unsafe_connected_settings->setSetting(ORNL::PS::Perimeter::kBranchAfterTipWipe, true);
+    unsafe_connected_settings->setSetting(ORNL::PS::Inset::kCount, 1);
+    unsafe_connected_settings->setSetting(ORNL::PS::Inset::kMinPathLength, ORNL::Distance(150.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterEnable, true);
+    unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDistance, ORNL::Distance(2.0));
+    unsafe_connected_settings->setSetting(ORNL::MS::TipWipe::kPerimeterDirection,
+                                          static_cast<int>(ORNL::TipWipeDirection::kForward));
+
+    ORNL::PolymerIsland unsafe_connected_island(separated_geometry, unsafe_connected_settings, {});
+    unsafe_connected_island.compute(0);
+    unsafe_connected_island.reorderRegions();
+    ORNL::Point unsafe_connected_location(-110.0, -110.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> unsafe_connected_previous_regions;
+    unsafe_connected_island.optimize(0, unsafe_connected_location, unsafe_connected_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> unsafe_connected_perimeter =
+        unsafe_connected_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> unsafe_connected_inset =
+        unsafe_connected_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!unsafe_connected_perimeter.isNull() && !unsafe_connected_inset.isNull(),
+                     "Expected separated connected perimeter and inset regions.");
+    if (!unsafe_connected_perimeter.isNull() && !unsafe_connected_inset.isNull()) {
+        passed &= expect(unsafe_connected_inset->getComputedGeometry().size() == 1,
+                         "The safety regression should leave the final perimeter component without an inset.");
+        passed &= verifySeparatedBranchGroups(unsafe_connected_perimeter->getPaths(), "Separated connected inset",
+                                              ORNL::Distance(15.0));
+        passed &= expect(unsafe_connected_perimeter->connectedInsetGeometryConsumed(),
+                         "Separated connected insets should still be emitted after a safe travel.");
+        passed &= expect(unsafe_connected_inset->getPaths().isEmpty(),
+                         "Traveled connected insets should not be emitted a second time.");
     }
 
     QSharedPointer<ORNL::SettingsBase> separated_connected_settings = defaultSettings();
