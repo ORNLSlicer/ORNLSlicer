@@ -17,6 +17,7 @@
 #include "geometry/polygon_list.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
+#include "geometry/settings_polygon.h"
 #include "step/layer/island/polymer_island.h"
 #include "step/layer/regions/inset.h"
 #include "step/layer/regions/perimeter.h"
@@ -274,6 +275,28 @@ bool containsRegion(const QVector<ORNL::Path>& paths, ORNL::RegionType region) {
     }
 
     return false;
+}
+
+bool insetPrintingSegmentsUseWidth(const QVector<ORNL::Path>& paths, ORNL::Distance expected_width,
+                                   const std::string& case_name) {
+    bool passed              = true;
+    bool found_inset_segment = false;
+
+    for (const ORNL::Path& path : paths) {
+        for (const QSharedPointer<ORNL::SegmentBase>& segment : path) {
+            if (!segment->isPrintingSegment() ||
+                segment->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType) != ORNL::RegionType::kInset) {
+                continue;
+            }
+
+            found_inset_segment        = true;
+            const ORNL::Distance width = segment->getSb()->setting<ORNL::Distance>(ORNL::SS::kWidth);
+            passed &= expect(std::abs(width() - expected_width()) <= 1.0e-4,
+                             case_name + " should preserve the localized inset bead width.");
+        }
+    }
+
+    return expect(found_inset_segment, case_name + " should contain an inset printing segment.") && passed;
 }
 
 bool containsPoint(const QVector<ORNL::Path>& paths, const ORNL::Point& point) {
@@ -623,6 +646,40 @@ int main() {
         passed &= verifyPathHookRegions(*connected_perimeter, connected_settings, "Connected perimeter", true);
     }
 
+    QSharedPointer<ORNL::SettingsBase> localized_width_settings = defaultSettings();
+    configureConnectedInsets(localized_width_settings);
+
+    QSharedPointer<ORNL::SettingsBase> localized_width_override = QSharedPointer<ORNL::SettingsBase>::create();
+    const ORNL::Distance localized_inset_width(13.0);
+    localized_width_override->setSetting(ORNL::PS::Inset::kBeadWidth, localized_inset_width);
+
+    ORNL::Polygon localized_bounds;
+    localized_bounds << ORNL::Point(-200.0, -200.0, 0.0) << ORNL::Point(400.0, -200.0, 0.0)
+                     << ORNL::Point(400.0, 400.0, 0.0) << ORNL::Point(-200.0, 400.0, 0.0);
+    QVector<ORNL::Polygon> localized_geometry {localized_bounds};
+    ORNL::SettingsPolygon localized_width_polygon(localized_geometry, localized_width_override);
+
+    ORNL::PolymerIsland localized_width_island(geometry, localized_width_settings, {localized_width_polygon});
+    localized_width_island.compute(0);
+    localized_width_island.reorderRegions();
+    ORNL::Point localized_width_location(-10.0, -10.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> localized_width_previous_regions;
+    localized_width_island.optimize(0, localized_width_location, localized_width_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> localized_width_perimeter =
+        localized_width_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> localized_width_inset =
+        localized_width_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!localized_width_perimeter.isNull() && !localized_width_inset.isNull(),
+                     "Localized connected inset should create both regions.");
+    if (!localized_width_perimeter.isNull() && !localized_width_inset.isNull()) {
+        passed &= expect(localized_width_perimeter->connectedInsetGeometryConsumed(),
+                         "Localized connected inset geometry should be emitted by the perimeter.");
+        passed &= expect(localized_width_inset->getPaths().isEmpty(),
+                         "Localized connected insets should not be emitted twice.");
+        passed &= insetPrintingSegmentsUseWidth(localized_width_perimeter->getPaths(), localized_inset_width,
+                                                "Localized connected inset");
+    }
     for (const int perimeter_count : {1, 2}) {
         QSharedPointer<ORNL::SettingsBase> lifted_connected_settings = defaultSettings();
         configureConnectedInsets(lifted_connected_settings);

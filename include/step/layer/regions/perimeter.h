@@ -119,7 +119,9 @@ class Perimeter : public RegionBase {
     //! \brief Returns the inset bead width for a connected inset segment.
     //! \param start Segment start point.
     //! \param end Segment end point.
-    Distance connectedInsetWidthForSegment(const Point& start, const Point& end) const;
+    //! \param parent_sb Settings, including localized overrides, for the segment.
+    Distance connectedInsetWidthForSegment(const Point& start, const Point& end,
+                                           const QSharedPointer<SettingsBase>& parent_sb) const;
 
     //! \brief Holds the computed geometry before it is converted into paths
     QVector<Polyline> m_computed_geometry;

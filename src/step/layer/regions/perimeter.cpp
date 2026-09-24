@@ -1541,15 +1541,16 @@ void Perimeter::applyConnectedInsetSettings(Path& path) {
             }
         }
 
-        const Distance bead_width = connectedInsetWidthForSegment(segment->start(), segment->end());
+        const Distance bead_width = connectedInsetWidthForSegment(segment->start(), segment->end(), parent_sb);
         populateInsetSegmentSettings(segment->getSb(), parent_sb, bead_width,
                                      isInsetAdaptedWidth(bead_width, parent_sb));
     }
 }
 
-Distance Perimeter::connectedInsetWidthForSegment(const Point& start, const Point& end) const {
-    const Distance fallback_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
-    if (!m_sb->setting<bool>(PS::Inset::kAdaptive)) { return fallback_width; }
+Distance Perimeter::connectedInsetWidthForSegment(const Point& start, const Point& end,
+                                                  const QSharedPointer<SettingsBase>& parent_sb) const {
+    const Distance fallback_width = parent_sb->setting<Distance>(PS::Inset::kBeadWidth);
+    if (!parent_sb->setting<bool>(PS::Inset::kAdaptive)) { return fallback_width; }
 
     return widthForSegmentOnGeometry(start, end, m_connected_inset_geometry, m_connected_inset_widths, fallback_width);
 }
