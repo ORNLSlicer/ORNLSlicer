@@ -52,6 +52,9 @@ class Perimeter : public RegionBase {
     //! \param widths: bead widths associated with the inset paths
     void setConnectedInsetGeometry(const QVector<Polyline>& geometry, const QVector<Distance>& widths);
 
+    //! \brief Returns whether connected inset geometry was emitted during the latest optimization.
+    bool connectedInsetGeometryConsumed() const;
+
    private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
@@ -63,6 +66,12 @@ class Perimeter : public RegionBase {
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
     //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
     void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
+
+    //! \brief Applies end-of-path modifiers using inset settings.
+    //! \param path Connected inset path receiving the modifiers.
+    //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift.
+    //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
+    void calculateConnectedInsetEndModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
@@ -99,7 +108,7 @@ class Perimeter : public RegionBase {
 
     //! \brief Applies inset segment settings after the connected perimeter-to-inset bridge.
     //! \param path Path containing perimeter paths followed by connected inset paths.
-    void applyConnectedInsetSettings(Path& path) const;
+    void applyConnectedInsetSettings(Path& path);
 
     //! \brief Returns the inset bead width for a connected inset segment.
     //! \param start Segment start point.
@@ -117,6 +126,9 @@ class Perimeter : public RegionBase {
 
     //! \brief Holds the bead width associated with each connected inset contour.
     QVector<Distance> m_connected_inset_widths;
+
+    //! \brief Whether connected inset geometry was emitted during the latest optimization.
+    bool m_connected_inset_geometry_consumed = false;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;

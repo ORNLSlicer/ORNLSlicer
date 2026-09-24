@@ -391,6 +391,7 @@ void Perimeter::compute(uint layer_num) {
     m_computed_widths.clear();
     m_connected_inset_geometry.clear();
     m_connected_inset_widths.clear();
+    m_connected_inset_geometry_consumed = false;
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth                = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
@@ -569,7 +570,12 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
         const bool connect_to_spiral_insets =
             m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnable) &&
             m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) && !m_connected_inset_geometry.isEmpty();
-        const bool branch_after_tip_wipe            = m_sb->setting<bool>(PS::Perimeter::kBranchAfterTipWipe);
+        const bool forward_tip_wipe_enabled =
+            m_sb->setting<bool>(MS::TipWipe::kPerimeterEnable) &&
+            static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection)) ==
+                TipWipeDirection::kForward;
+        const bool branch_after_tip_wipe =
+            m_sb->setting<bool>(PS::Perimeter::kBranchAfterTipWipe) && forward_tip_wipe_enabled;
         const bool connect_to_insets_after_tip_wipe = connect_to_spiral_insets && branch_after_tip_wipe;
 
         if (m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter)) {
@@ -661,6 +667,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     if (inset_path.size() == 0) { continue; }
 
                     applyConnectedInsetSettings(inset_path);
+                    calculateConnectedInsetEndModifiers(inset_path, m_sb->setting<bool>(PRS::MachineSetup::kSupportG3),
+                                                        true);
 
                     if (append_to_tip_path) {
                         inset_path.front()->getSb()->setSetting(SS::kPathModifiers, PathModifiers::kSpiralConnection);
@@ -721,13 +729,8 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 Path branched_path;
                 branched_path.setCCW(ccw);
 
-                QVector<Polyline> branch_loops = ordered_loops;
-                Distance tip_wipe_distance;
-                if (m_sb->setting<bool>(MS::TipWipe::kPerimeterEnable) &&
-                    static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection)) ==
-                        TipWipeDirection::kForward) {
-                    tip_wipe_distance = m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance);
-                }
+                QVector<Polyline> branch_loops   = ordered_loops;
+                const Distance tip_wipe_distance = m_sb->setting<Distance>(MS::TipWipe::kPerimeterDistance);
 
                 for (int i = branch_loops.size() - 2; i >= 0; --i) {
                     if (branch_loops[i].size() < 3 || branch_loops[i + 1].isEmpty()) { continue; }
@@ -1023,8 +1026,13 @@ QVector<Polyline> Perimeter::getComputedGeometry() {
 }
 
 void Perimeter::setConnectedInsetGeometry(const QVector<Polyline>& geometry, const QVector<Distance>& widths) {
-    m_connected_inset_geometry = geometry;
-    m_connected_inset_widths   = widths;
+    m_connected_inset_geometry          = geometry;
+    m_connected_inset_widths            = widths;
+    m_connected_inset_geometry_consumed = false;
+}
+
+bool Perimeter::connectedInsetGeometryConsumed() const {
+    return m_connected_inset_geometry_consumed;
 }
 
 void Perimeter::calculateModifiers(Path& path, bool supportsG3) {
@@ -1038,7 +1046,11 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
         PathModifierGenerator::GenerateTrajectorySlowdown(path, m_sb);
     }
 
-    if (m_sb->setting<bool>(MS::Slowdown::kPerimeterEnable)) {
+    const bool ends_with_connected_inset =
+        path.size() > 0 && path.back()->getSb()->setting<RegionType>(SS::kRegionType) == RegionType::kInset;
+
+    if (ends_with_connected_inset) { calculateConnectedInsetEndModifiers(path, supportsG3, open_loop_tip_wipe); }
+    else if (m_sb->setting<bool>(MS::Slowdown::kPerimeterEnable)) {
         PathModifierGenerator::GenerateSlowdown(path, m_sb->setting<Distance>(MS::Slowdown::kPerimeterDistance),
                                                 m_sb->setting<Distance>(MS::Slowdown::kPerimeterLiftDistance),
                                                 m_sb->setting<Distance>(MS::Slowdown::kPerimeterCutoffDistance),
@@ -1047,7 +1059,7 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                                                 m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
     }
-    if (m_sb->setting<bool>(MS::TipWipe::kPerimeterEnable)) {
+    if (!ends_with_connected_inset && m_sb->setting<bool>(MS::TipWipe::kPerimeterEnable)) {
         const TipWipeDirection wipe_direction =
             static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kPerimeterDirection));
         if (wipe_direction == TipWipeDirection::kForward ||
@@ -1088,7 +1100,7 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
                                                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterLiftHeight),
                                                    m_sb->setting<Distance>(MS::TipWipe::kPerimeterCutoffDistance));
     }
-    if (m_sb->setting<bool>(MS::SpiralLift::kPerimeterEnable)) {
+    if (!ends_with_connected_inset && m_sb->setting<bool>(MS::SpiralLift::kPerimeterEnable)) {
         PathModifierGenerator::GenerateSpiralLift(path, m_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
                                                   m_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
                                                   m_sb->setting<int>(MS::SpiralLift::kLiftPoints),
@@ -1117,6 +1129,77 @@ void Perimeter::calculateModifiers(Path& path, bool supportsG3, bool open_loop_t
     if (m_sb->setting<bool>(PS::Perimeter::kEnableFlyingStart)) {
         PathModifierGenerator::GenerateFlyingStart(path, m_sb->setting<Distance>(PS::Perimeter::kFlyingStartDistance),
                                                    m_sb->setting<Velocity>(PS::Perimeter::kFlyingStartSpeed));
+    }
+}
+
+void Perimeter::calculateConnectedInsetEndModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe) {
+    if (path.size() == 0) { return; }
+
+    Distance inset_tail_length;
+    for (int i = path.size() - 1; i >= 0; --i) {
+        if (path[i]->getSb()->setting<RegionType>(SS::kRegionType) != RegionType::kInset) { break; }
+        inset_tail_length += path[i]->length();
+    }
+
+    if (m_sb->setting<bool>(MS::Slowdown::kInsetEnable)) {
+        const Distance slowdown_distance =
+            std::min(m_sb->setting<Distance>(MS::Slowdown::kInsetDistance), inset_tail_length);
+        PathModifierGenerator::GenerateSlowdown(path, slowdown_distance,
+                                                m_sb->setting<Distance>(MS::Slowdown::kInsetLiftDistance),
+                                                m_sb->setting<Distance>(MS::Slowdown::kInsetCutoffDistance),
+                                                m_sb->setting<Velocity>(MS::Slowdown::kInsetSpeed),
+                                                m_sb->setting<AngularVelocity>(MS::Slowdown::kInsetExtruderSpeed),
+                                                m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
+                                                m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
+    }
+
+    if (m_sb->setting<bool>(MS::TipWipe::kInsetEnable)) {
+        const TipWipeDirection wipe_direction =
+            static_cast<TipWipeDirection>(m_sb->setting<int>(MS::TipWipe::kInsetDirection));
+        if (wipe_direction == TipWipeDirection::kForward ||
+            (!open_loop_tip_wipe && wipe_direction == TipWipeDirection::kOptimal)) {
+            if (open_loop_tip_wipe && wipe_direction == TipWipeDirection::kForward) {
+                PathModifierGenerator::GenerateForwardTipWipeOpenLoop(
+                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInsetDistance),
+                    m_sb->setting<Velocity>(MS::TipWipe::kInsetSpeed),
+                    m_sb->setting<AngularVelocity>(MS::TipWipe::kInsetExtruderSpeed),
+                    m_sb->setting<Distance>(MS::TipWipe::kInsetLiftHeight),
+                    m_sb->setting<Distance>(MS::TipWipe::kInsetCutoffDistance));
+            }
+            else {
+                PathModifierGenerator::GenerateTipWipe(
+                    path, PathModifiers::kForwardTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInsetDistance),
+                    m_sb->setting<Velocity>(MS::TipWipe::kInsetSpeed), m_sb->setting<Angle>(MS::TipWipe::kInsetAngle),
+                    m_sb->setting<AngularVelocity>(MS::TipWipe::kInsetExtruderSpeed),
+                    m_sb->setting<Distance>(MS::TipWipe::kInsetLiftHeight),
+                    m_sb->setting<Distance>(MS::TipWipe::kInsetCutoffDistance));
+            }
+        }
+        else if (wipe_direction == TipWipeDirection::kAngled) {
+            PathModifierGenerator::GenerateTipWipe(
+                path, PathModifiers::kAngledTipWipe, m_sb->setting<Distance>(MS::TipWipe::kInsetDistance),
+                m_sb->setting<Velocity>(MS::TipWipe::kInsetSpeed), m_sb->setting<Angle>(MS::TipWipe::kInsetAngle),
+                m_sb->setting<AngularVelocity>(MS::TipWipe::kInsetExtruderSpeed),
+                m_sb->setting<Distance>(MS::TipWipe::kInsetLiftHeight),
+                m_sb->setting<Distance>(MS::TipWipe::kInsetCutoffDistance));
+        }
+        else {
+            const Distance reverse_wipe_distance =
+                std::min(m_sb->setting<Distance>(MS::TipWipe::kInsetDistance), inset_tail_length);
+            PathModifierGenerator::GenerateTipWipe(path, PathModifiers::kReverseTipWipe, reverse_wipe_distance,
+                                                   m_sb->setting<Velocity>(MS::TipWipe::kInsetSpeed),
+                                                   m_sb->setting<Angle>(MS::TipWipe::kInsetAngle),
+                                                   m_sb->setting<AngularVelocity>(MS::TipWipe::kInsetExtruderSpeed),
+                                                   m_sb->setting<Distance>(MS::TipWipe::kInsetLiftHeight),
+                                                   m_sb->setting<Distance>(MS::TipWipe::kInsetCutoffDistance));
+        }
+    }
+
+    if (m_sb->setting<bool>(MS::SpiralLift::kInsetEnable)) {
+        PathModifierGenerator::GenerateSpiralLift(path, m_sb->setting<Distance>(MS::SpiralLift::kLiftRadius),
+                                                  m_sb->setting<Distance>(MS::SpiralLift::kLiftHeight),
+                                                  m_sb->setting<int>(MS::SpiralLift::kLiftPoints),
+                                                  m_sb->setting<Velocity>(MS::SpiralLift::kLiftSpeed), supportsG3);
     }
 }
 
@@ -1212,7 +1295,7 @@ Distance Perimeter::beadWidthForSegment(const Point& start, const Point& end,
     return fallback_width;
 }
 
-void Perimeter::applyConnectedInsetSettings(Path& path) const {
+void Perimeter::applyConnectedInsetSettings(Path& path) {
     if (m_connected_inset_geometry.isEmpty()) { return; }
 
     const Distance fallback_width = m_sb->setting<Distance>(PS::Inset::kBeadWidth);
@@ -1225,7 +1308,10 @@ void Perimeter::applyConnectedInsetSettings(Path& path) const {
         const bool midpoint_on_inset =
             pointOnAnyClosedPolylineXY(segment->midpoint(), m_connected_inset_geometry, tolerance());
         const bool end_on_inset = pointOnAnyClosedPolylineXY(segment->end(), m_connected_inset_geometry, tolerance());
-        if (midpoint_on_inset || end_on_inset) { using_inset_settings = true; }
+        if (midpoint_on_inset || end_on_inset) {
+            using_inset_settings                = true;
+            m_connected_inset_geometry_consumed = true;
+        }
 
         if (!using_inset_settings) { continue; }
 
