@@ -743,8 +743,10 @@ void Inset::calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_w
 
     // add the modifiers
     if (m_sb->setting<bool>(MS::Slowdown::kInsetEnable)) {
+        const Distance lift_distance =
+            continues_to_branch ? Distance(0) : m_sb->setting<Distance>(MS::Slowdown::kInsetLiftDistance);
         PathModifierGenerator::GenerateSlowdown(path, m_sb->setting<Distance>(MS::Slowdown::kInsetDistance),
-                                                m_sb->setting<Distance>(MS::Slowdown::kInsetLiftDistance),
+                                                lift_distance,
                                                 m_sb->setting<Distance>(MS::Slowdown::kInsetCutoffDistance),
                                                 m_sb->setting<Velocity>(MS::Slowdown::kInsetSpeed),
                                                 m_sb->setting<AngularVelocity>(MS::Slowdown::kInsetExtruderSpeed),
