@@ -30,6 +30,7 @@
 #include "threading/gcode_adamantine_saver.h"
 #include "threading/gcode_amcm_saver.h"
 #include "threading/gcode_aml3d_saver.h"
+#include "threading/gcode_arc_specialties_saver.h"
 #include "threading/gcode_marlin_saver.h"
 #include "threading/gcode_meld_saver.h"
 #include "threading/gcode_sandia_saver.h"
@@ -334,8 +335,18 @@ void GcodeExport::exportGcode() {
             }
         }
 
-        if ((m_most_recent_meta == GcodeMetaList::MarlinMeta || m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
-            GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
+        if (m_most_recent_meta == GcodeMetaList::ArcSpecialtiesMeta &&
+            GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile)) {
+            GCodeArcSpecialtiesSaver* saver =
+                new GCodeArcSpecialtiesSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
+            connect(saver, &GCodeArcSpecialtiesSaver::finished, saver, &GCodeArcSpecialtiesSaver::deleteLater);
+            connect(saver, &GCodeArcSpecialtiesSaver::finished, this,
+                    [this, filepath, partName]() { showComplete(filepath, partName); });
+            saver->start();
+        }
+        else if ((m_most_recent_meta == GcodeMetaList::MarlinMeta ||
+                  m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
+                 GSM->getGlobal()->setting<bool>(ES::FileOutput::kSimulationOutput)) {
             GCodeSimulationOutput* saver =
                 new GCodeSimulationOutput(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
             connect(saver, &GCodeSimulationOutput::finished, saver, &GCodeSimulationOutput::deleteLater);

@@ -893,6 +893,121 @@ const QString Constants::ProfileSettings::Helical::kHelicalTravelToolFrameYRotat
 const QString Constants::ProfileSettings::Helical::kHelicalTravelToolFrameZRotation =
     "helical_travel_tool_frame_z_rotation";
 
+// Arc Specialties
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterPreflow = "arc_specialties_perimeter_preflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterTravelDelay =
+    "arc_specialties_perimeter_travel_delay";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterPostflow  = "arc_specialties_perimeter_postflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterPostpurge = "arc_specialties_perimeter_postpurge";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterStartProgram =
+    "arc_specialties_perimeter_start_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterStartWireFeedSpeed =
+    "arc_specialties_perimeter_start_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterStartVoltage =
+    "arc_specialties_perimeter_start_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterStartControl =
+    "arc_specialties_perimeter_start_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterStartTSpd = "arc_specialties_perimeter_start_tspd";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterStartTime = "arc_specialties_perimeter_start_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterWeldProgram =
+    "arc_specialties_perimeter_weld_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterWeldWireFeedSpeed =
+    "arc_specialties_perimeter_weld_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterWeldVoltage =
+    "arc_specialties_perimeter_weld_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterWeldControl =
+    "arc_specialties_perimeter_weld_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterCraterProgram =
+    "arc_specialties_perimeter_crater_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterCraterWireFeedSpeed =
+    "arc_specialties_perimeter_crater_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterCraterVoltage =
+    "arc_specialties_perimeter_crater_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterCraterControl =
+    "arc_specialties_perimeter_crater_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kPerimeterCraterTime =
+    "arc_specialties_perimeter_crater_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetPreflow      = "arc_specialties_inset_preflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetTravelDelay  = "arc_specialties_inset_travel_delay";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetPostflow     = "arc_specialties_inset_postflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetPostpurge    = "arc_specialties_inset_postpurge";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetStartProgram = "arc_specialties_inset_start_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetStartWireFeedSpeed =
+    "arc_specialties_inset_start_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetStartVoltage = "arc_specialties_inset_start_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetStartControl = "arc_specialties_inset_start_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetStartTSpd    = "arc_specialties_inset_start_tspd";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetStartTime    = "arc_specialties_inset_start_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetWeldProgram  = "arc_specialties_inset_weld_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetWeldWireFeedSpeed =
+    "arc_specialties_inset_weld_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetWeldVoltage   = "arc_specialties_inset_weld_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetWeldControl   = "arc_specialties_inset_weld_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetCraterProgram = "arc_specialties_inset_crater_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetCraterWireFeedSpeed =
+    "arc_specialties_inset_crater_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetCraterVoltage = "arc_specialties_inset_crater_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetCraterControl = "arc_specialties_inset_crater_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kInsetCraterTime    = "arc_specialties_inset_crater_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillPreflow      = "arc_specialties_infill_preflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillTravelDelay  = "arc_specialties_infill_travel_delay";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillPostflow     = "arc_specialties_infill_postflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillPostpurge    = "arc_specialties_infill_postpurge";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillStartProgram = "arc_specialties_infill_start_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillStartWireFeedSpeed =
+    "arc_specialties_infill_start_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillStartVoltage = "arc_specialties_infill_start_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillStartControl = "arc_specialties_infill_start_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillStartTSpd    = "arc_specialties_infill_start_tspd";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillStartTime    = "arc_specialties_infill_start_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillWeldProgram  = "arc_specialties_infill_weld_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillWeldWireFeedSpeed =
+    "arc_specialties_infill_weld_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillWeldVoltage = "arc_specialties_infill_weld_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillWeldControl = "arc_specialties_infill_weld_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillCraterProgram =
+    "arc_specialties_infill_crater_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillCraterWireFeedSpeed =
+    "arc_specialties_infill_crater_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillCraterVoltage =
+    "arc_specialties_infill_crater_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillCraterControl =
+    "arc_specialties_infill_crater_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kInfillCraterTime = "arc_specialties_infill_crater_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonPreflow  = "arc_specialties_skeleton_preflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonTravelDelay =
+    "arc_specialties_skeleton_travel_delay";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonPostflow  = "arc_specialties_skeleton_postflow";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonPostpurge = "arc_specialties_skeleton_postpurge";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonStartProgram =
+    "arc_specialties_skeleton_start_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonStartWireFeedSpeed =
+    "arc_specialties_skeleton_start_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonStartVoltage =
+    "arc_specialties_skeleton_start_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonStartControl =
+    "arc_specialties_skeleton_start_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonStartTSpd = "arc_specialties_skeleton_start_tspd";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonStartTime = "arc_specialties_skeleton_start_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonWeldProgram =
+    "arc_specialties_skeleton_weld_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonWeldWireFeedSpeed =
+    "arc_specialties_skeleton_weld_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonWeldVoltage =
+    "arc_specialties_skeleton_weld_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonWeldControl =
+    "arc_specialties_skeleton_weld_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonCraterProgram =
+    "arc_specialties_skeleton_crater_program";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonCraterWireFeedSpeed =
+    "arc_specialties_skeleton_crater_wire_feed_speed";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonCraterVoltage =
+    "arc_specialties_skeleton_crater_voltage";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonCraterControl =
+    "arc_specialties_skeleton_crater_control";
+const QString Constants::ProfileSettings::ArcSpecialties::kSkeletonCraterTime = "arc_specialties_skeleton_crater_time";
+const QString Constants::ProfileSettings::ArcSpecialties::kGenerateWeldScheduleFile =
+    "arc_specialties_generate_weld_schedule_file";
 //================================================================================
 // Experimental Settings
 //================================================================================

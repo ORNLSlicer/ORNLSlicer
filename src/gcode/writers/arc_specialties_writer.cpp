@@ -537,6 +537,7 @@ QString ArcSpecialtiesWriter::writeBeforeRegion(RegionType type, int pathSize) {
     QString rv;
     if (type == RegionType::kPerimeter) { rv += "G80 [1] ;Perimeter Schedule" % m_newline; }
     else if (type == RegionType::kInset) { rv += "G80 [2] ;Inset Schedule" % m_newline; }
+    else if (type == RegionType::kSkeleton) { rv += "G80 [3] ;Skeleton Schedule" % m_newline; }
     else if (type == RegionType::kInfill) { rv += "G80 [0] ;Infill Schedule" % m_newline; }
     if (isHelicalPathPattern()) {
         m_pending_region_schedule += rv;
@@ -863,8 +864,13 @@ QString ArcSpecialtiesWriter::g80WeldScheduleFile() const {
     return g80_schedule_file;
 }
 
+bool ArcSpecialtiesWriter::shouldGenerateWeldScheduleFile() const {
+    return m_sb != nullptr && m_sb->contains(PS::ArcSpecialties::kGenerateWeldScheduleFile) &&
+           m_sb->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile);
+}
+
 bool ArcSpecialtiesWriter::usesG80ScheduleSpeedVariable() const {
-    return !g80WeldScheduleFile().isEmpty();
+    return shouldGenerateWeldScheduleFile() || !g80WeldScheduleFile().isEmpty();
 }
 
 QString ArcSpecialtiesWriter::writeMotionFeedrate(Velocity speed) const {

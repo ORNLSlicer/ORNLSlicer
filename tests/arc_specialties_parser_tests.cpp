@@ -260,6 +260,32 @@ bool writesG80ScheduleSpeedVariableForLineAndArc() {
     return line.contains(" FV.S.SPEED ;HELICAL PERIMETER") && !line.contains("F600.0000") && arc == expected_arc;
 }
 
+bool writesG80ScheduleSpeedVariableForGeneratedScheduleFile() {
+    QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
+    settings->setSetting(ORNL::PRS::GCode::kArcSpecialtiesG80WeldScheduleFile, QString());
+    settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, true);
+
+    ORNL::ArcSpecialtiesWriter setup_writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+    const QString setup =
+        setup_writer.writeInitialSetup(0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm, 1);
+
+    ORNL::ArcSpecialtiesWriter line_writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+    const QString line_block = line_writer.writeLine(ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
+                                                     ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm),
+                                                     helicalSegmentSettings(ORNL::RegionType::kPerimeter));
+    const QString line       = lineContaining(line_block, ";HELICAL PERIMETER");
+
+    return setup.contains("#FILE NAME[ G80=\"\" ]\n") && line.contains(" FV.S.SPEED ;HELICAL PERIMETER") &&
+           !line.contains("F600.0000");
+}
+
+bool writesSkeletonG80ScheduleSelection() {
+    QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
+    ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+
+    return writer.writeBeforeRegion(ORNL::RegionType::kSkeleton, 0) == "G80 [3] ;Skeleton Schedule\n";
+}
+
 bool writesHelicalCpFromStartOffsetBaseline() {
     QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(true);
     settings->setSetting(ORNL::PRS::MachineSetup::kAxisA, 90.0 * ORNL::degree);
@@ -839,6 +865,11 @@ int main(int argc, char* argv[]) {
     passed &=
         ORNL::Testing::expect(writesG80ScheduleSpeedVariableForLineAndArc(),
                               "Arc Specialties writer did not emit the G80 schedule speed variable for print motion.");
+    passed &= ORNL::Testing::expect(
+        writesG80ScheduleSpeedVariableForGeneratedScheduleFile(),
+        "Arc Specialties writer did not use the G80 schedule speed variable for generated schedule files.");
+    passed &= ORNL::Testing::expect(writesSkeletonG80ScheduleSelection(),
+                                    "Arc Specialties writer did not emit the Skeleton G80 schedule selection.");
     passed &= ORNL::Testing::expect(writesHelicalCpFromStartOffsetBaseline(),
                                     "Arc Specialties writer did not preserve the helical start-offset CP baseline.");
     passed &= ORNL::Testing::expect(writesLayerScopedBlockNumbersWhenEnabled(),

@@ -185,8 +185,14 @@ class ArcSpecialtiesWriter : public WriterBase {
     QString g80WeldScheduleFile() const;
 
     /*!
+     * @brief Returns whether export will generate an Arc Specialties weld schedule companion file.
+     * @return True when generated weld schedule output is enabled.
+     */
+    bool shouldGenerateWeldScheduleFile() const;
+
+    /*!
      * @brief Returns whether print motion feedrates should reference the G80 schedule speed variable.
-     * @return True when a sanitized G80 weld schedule file is configured.
+     * @return True when a sanitized G80 weld schedule file is configured or generated.
      */
     bool usesG80ScheduleSpeedVariable() const;
 
