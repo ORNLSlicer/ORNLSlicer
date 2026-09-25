@@ -11,6 +11,10 @@
 
 #include "configs/settings_base.h"
 #include "gcode/gcode_meta.h"
+#include "gcode/writers/kraussmaffei_writer.h"
+#include "gcode/writers/mach4_writer.h"
+#include "gcode/writers/marlin_writer.h"
+#include "gcode/writers/reprap_writer.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
 #include "geometry/point.h"
@@ -114,6 +118,34 @@ QSharedPointer<ORNL::SettingsBase> defaultSettings() {
     QSharedPointer<ORNL::SettingsBase> settings = QSharedPointer<ORNL::SettingsBase>::create();
     settings->json(defaults);
     return settings;
+}
+
+bool verifyDynamicAccelerationTransitions() {
+    QSharedPointer<ORNL::SettingsBase> settings = defaultSettings();
+    if (settings.isNull()) { return expect(false, "Expected writer transition settings to load."); }
+
+    settings->setSetting(ORNL::PRS::Acceleration::kEnableDynamic, true);
+
+    ORNL::MarlinWriter marlin(ORNL::GcodeMetaList::MarlinMeta, settings);
+    ORNL::RepRapWriter reprap(ORNL::GcodeMetaList::RepRapMeta, settings);
+    ORNL::Mach4Writer mach4(ORNL::GcodeMetaList::MarlinMeta, settings);
+    ORNL::KraussMaffeiWriter krauss_maffei(ORNL::GcodeMetaList::KraussMaffeiMeta, settings);
+
+    bool passed = true;
+    passed &= expect(marlin.writeBeforePathRegionTransition(ORNL::RegionType::kInset).startsWith("M204 S"),
+                     "Marlin should update acceleration at a connected inset transition.");
+    passed &= expect(reprap.writeBeforePathRegionTransition(ORNL::RegionType::kInset).startsWith("M204 P"),
+                     "RepRap should update acceleration at a connected inset transition.");
+    passed &= expect(mach4.writeBeforePathRegionTransition(ORNL::RegionType::kInset).startsWith("M204 S"),
+                     "Mach4 should update acceleration at a connected inset transition.");
+    passed &= expect(krauss_maffei.writeBeforePathRegionTransition(ORNL::RegionType::kInset).startsWith("M204 S"),
+                     "KraussMaffei should update acceleration at a connected inset transition.");
+
+    settings->setSetting(ORNL::PRS::Acceleration::kEnableDynamic, false);
+    passed &= expect(marlin.writeBeforePathRegionTransition(ORNL::RegionType::kInset).isEmpty(),
+                     "Region transitions should not emit acceleration when dynamic acceleration is disabled.");
+
+    return passed;
 }
 
 ORNL::PolygonList circularGeometry() {
@@ -562,6 +594,8 @@ int main() {
     passed &= expect(!perimeter_settings.isNull(), "Expected the master settings resource to load.");
     if (perimeter_settings.isNull()) return EXIT_FAILURE;
 
+    passed &= verifyDynamicAccelerationTransitions();
+
     perimeter_settings->setSetting(ORNL::PS::Perimeter::kCount, 5);
     perimeter_settings->setSetting(ORNL::PS::Perimeter::kBeadWidth, ORNL::Distance(5.0));
     perimeter_settings->setSetting(ORNL::PS::Perimeter::kEnableSpiralPerimeter, true);
@@ -979,6 +1013,38 @@ int main() {
                          "Different perimeter and inset materials should remain separate regions.");
         passed &= expect(!multi_material_inset->getPaths().isEmpty(),
                          "Different-material insets should retain region-level transition handling.");
+    }
+
+    QSharedPointer<ORNL::SettingsBase> localized_material_settings = defaultSettings();
+    configureConnectedInsets(localized_material_settings);
+    localized_material_settings->setSetting(ORNL::MS::MultiMaterial::kEnable, true);
+    localized_material_settings->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
+    localized_material_settings->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 0);
+
+    QSharedPointer<ORNL::SettingsBase> localized_material_override = QSharedPointer<ORNL::SettingsBase>::create();
+    localized_material_override->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 1);
+    ORNL::SettingsPolygon localized_material_polygon(localized_geometry, localized_material_override);
+
+    ORNL::PolymerIsland localized_material_island(geometry, localized_material_settings, {localized_material_polygon});
+    localized_material_island.compute(0);
+    localized_material_island.reorderRegions();
+    ORNL::Point localized_material_location(-10.0, -10.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> localized_material_previous_regions;
+    localized_material_island.optimize(0, localized_material_location, localized_material_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> localized_material_perimeter =
+        localized_material_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> localized_material_inset =
+        localized_material_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!localized_material_perimeter.isNull() && !localized_material_inset.isNull(),
+                     "Localized multi-material regression should create perimeter and inset regions.");
+    if (!localized_material_perimeter.isNull() && !localized_material_inset.isNull()) {
+        passed &= expect(!localized_material_perimeter->connectedInsetGeometryConsumed(),
+                         "A localized inset material override should prevent a continuous connected path.");
+        passed &= expect(!containsRegion(localized_material_perimeter->getPaths(), ORNL::RegionType::kInset),
+                         "Perimeter paths should not consume locally different-material inset geometry.");
+        passed &= expect(!localized_material_inset->getPaths().isEmpty(),
+                         "Locally different-material insets should remain in their own region.");
     }
 
     QSharedPointer<ORNL::SettingsBase> intervening_region_settings = defaultSettings();
