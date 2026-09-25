@@ -461,10 +461,10 @@ void Inset::optimize(int layerNumber, Point& current_location, bool& shouldNextP
         QVector<bool> connect_to_next(branch_loops.size(), false);
         for (int i = 0, end = branch_loops.size() - 1; i < end; ++i) {
             const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
-            connect_to_next[i] =
-                emit_loop[i] && emit_loop[i + 1] &&
-                SpiralPath::canConnectAfterForwardWipe(branch_loops[i], branch_loops[i + 1], loop_width,
-                                                       tip_wipe_distance, complete_before_connecting);
+            connect_to_next[i] = emit_loop[i] && emit_loop[i + 1] &&
+                                 SpiralPath::canConnectAfterForwardWipe(
+                                     branch_loops[i], branch_loops[i + 1], loop_width, tip_wipe_distance,
+                                     complete_before_connecting, m_sb->setting<Distance>(PS::Inset::kMinSegmentLength));
         }
 
         auto flushBranchedPath = [&]() {

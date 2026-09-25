@@ -516,13 +516,16 @@ inline bool angleForwardBranchConnection(const Polyline& line, Polyline& next_lo
     constexpr double angled_dot_tolerance    = 0.1;
     constexpr double max_angled_length_ratio = 1.5;
 
-    double direction_x = line.front().x() - line.back().x();
-    double direction_y = line.front().y() - line.back().y();
-    if (!detail::normalize2D(direction_x, direction_y)) { return false; }
-
-    const Point transition = detail::transitionPoint(line, stop_distance, complete_before_connecting);
+    Point transition;
+    double direction_x = 0.0;
+    double direction_y = 0.0;
+    if (!detail::transitionDirection(line, stop_distance, complete_before_connecting, transition, direction_x,
+                                     direction_y)) {
+        return false;
+    }
     const Point branch_start(transition.x() + (direction_x * forward_wipe_distance()),
                              transition.y() + (direction_y * forward_wipe_distance()), transition.z());
+    const double min_segment_length_value = std::max(0.0, min_segment_length());
 
     auto branchQuality = [&](const Polyline& candidate, double& forward_dot, double& approach_dot,
                              double& branch_length) {
@@ -549,13 +552,12 @@ inline bool angleForwardBranchConnection(const Polyline& line, Polyline& next_lo
 
     const double existing_dot_error = std::max(std::abs(existing_forward_dot - target_forward_dot),
                                                std::abs(existing_approach_dot - target_forward_dot));
-    if (existing_dot_error <= angled_dot_tolerance) { return true; }
+    if (existing_length >= min_segment_length_value && existing_dot_error <= angled_dot_tolerance) { return true; }
 
     const double max_connector_length =
         std::min(std::max(stop_distance() * 2.0, 1.0e-6), existing_length * max_angled_length_ratio);
-    const double min_segment_length_value = std::max(0.0, min_segment_length());
-    const double normal_x                 = -direction_y;
-    const double normal_y                 = direction_x;
+    const double normal_x = -direction_y;
+    const double normal_y = direction_x;
     const std::array<std::array<double, 2>, 2> directions {{
         {{(direction_x + normal_x) * target_forward_dot, (direction_y + normal_y) * target_forward_dot}},
         {{(direction_x - normal_x) * target_forward_dot, (direction_y - normal_y) * target_forward_dot}},
@@ -578,7 +580,7 @@ inline bool angleForwardBranchConnection(const Polyline& line, Polyline& next_lo
         detail::rotateToSegmentPoint(candidate, segment_index, seam);
         double forward_dot = 0.0, approach_dot = 0.0, branch_length = 0.0;
         if (!branchQuality(candidate, forward_dot, approach_dot, branch_length) || forward_dot <= minimum_forward_dot ||
-            branch_length > max_connector_length + minimum_forward_dot) {
+            branch_length < min_segment_length_value || branch_length > max_connector_length + minimum_forward_dot) {
             return;
         }
 
@@ -732,7 +734,8 @@ inline bool prepareForwardBranchConnection(const Polyline& current_loop, Polylin
  * The branch must move forward from the current loop, remain local to the transition width, and join nested geometry.
  */
 inline bool canConnectAfterForwardWipe(const Polyline& current_loop, const Polyline& next_loop, Distance stop_distance,
-                                       Distance forward_wipe_distance, bool complete_before_connecting = false) {
+                                       Distance forward_wipe_distance, bool complete_before_connecting = false,
+                                       Distance min_segment_length = 0) {
     if (current_loop.size() < 3 || next_loop.size() < 3 || !detail::loopsAreNested(current_loop, next_loop)) {
         return false;
     }
@@ -751,8 +754,9 @@ inline bool canConnectAfterForwardWipe(const Polyline& current_loop, const Polyl
     const double branch_length = std::hypot(branch_x, branch_y);
     const double forward_dot   = (direction_x * branch_x) + (direction_y * branch_y);
     const double max_length    = std::max(stop_distance() * 2.0, 1.0e-6);
+    const double min_length    = std::max(min_segment_length(), 0.0);
 
-    return forward_dot > 1.0e-6 && branch_length <= max_length + 1.0e-6;
+    return forward_dot > 1.0e-6 && branch_length >= min_length && branch_length <= max_length + 1.0e-6;
 }
 
 /*!
