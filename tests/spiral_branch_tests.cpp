@@ -782,6 +782,12 @@ int main() {
 
     QSharedPointer<ORNL::SettingsBase> connected_settings = defaultSettings();
     configureConnectedInsets(connected_settings);
+    connected_settings->setSetting(ORNL::MS::Slowdown::kInsetEnable, true);
+    connected_settings->setSetting(ORNL::MS::Slowdown::kInsetDistance, ORNL::Distance(10.0));
+    connected_settings->setSetting(ORNL::MS::Slowdown::kInsetLiftDistance, ORNL::Distance(0.0));
+    connected_settings->setSetting(ORNL::MS::Slowdown::kInsetCutoffDistance, ORNL::Distance(10000.0));
+    connected_settings->setSetting(ORNL::MS::Slowdown::kInsetSpeed, ORNL::Velocity(1.0));
+    connected_settings->setSetting(ORNL::MS::Slowdown::kInsetExtruderSpeed, ORNL::AngularVelocity(1.0));
     ORNL::PolymerIsland connected_island(geometry, connected_settings, {});
     connected_island.compute(0);
     connected_island.reorderRegions();
@@ -804,6 +810,12 @@ int main() {
                          "Expected connected paths to contain inset process settings.");
         passed &= expect(containsModifier(connected_perimeter->getPaths(), ORNL::PathModifiers::kForwardTipWipe),
                          "Expected connected paths to use the inset terminal tip wipe.");
+        passed &= expect(containsModifierWithRegion(connected_perimeter->getPaths(), ORNL::PathModifiers::kCoasting,
+                                                    ORNL::RegionType::kInset),
+                         "Expected the connected inset cutoff to coast within the inset tail.");
+        passed &= expect(!containsModifierWithRegion(connected_perimeter->getPaths(), ORNL::PathModifiers::kCoasting,
+                                                     ORNL::RegionType::kPerimeter),
+                         "Expected the connected inset cutoff to leave preceding perimeter segments unchanged.");
         passed &= verifyPathHookRegions(*connected_perimeter, connected_settings, "Connected perimeter", true);
     }
 
