@@ -81,16 +81,22 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
         connected_inset_widths   = connected_inset->getComputedWidths();
     }
 
+    const bool adjacent_spiral_perimeter_and_inset =
+        !connected_perimeter.isNull() && !connected_inset.isNull() &&
+        connected_perimeter->getIndex() + 1 == connected_inset->getIndex();
     const bool connect_spiral_perimeter_to_inset =
         !connected_perimeter.isNull() && !connected_inset.isNull() && !connected_inset_geometry.isEmpty() &&
-        connected_perimeter->getIndex() < connected_inset->getIndex() &&
+        adjacent_spiral_perimeter_and_inset &&
         m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter) &&
         m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) &&
         (!m_sb->setting<bool>(MS::MultiMaterial::kEnable) ||
          m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum) == m_sb->setting<int>(MS::MultiMaterial::kInsetNum));
 
-    if (connect_spiral_perimeter_to_inset) {
-        connected_perimeter->setConnectedInsetGeometry(connected_inset_geometry, connected_inset_widths);
+    if (!connected_perimeter.isNull()) {
+        if (connect_spiral_perimeter_to_inset) {
+            connected_perimeter->setConnectedInsetGeometry(connected_inset_geometry, connected_inset_widths);
+        }
+        else { connected_perimeter->setConnectedInsetGeometry({}, {}); }
     }
 
     for (QSharedPointer<RegionBase> r : m_regions) {
