@@ -172,8 +172,8 @@ settings:
   - name: "spiral_inset_branch_after_tip_wipe"
     display: "Branch after forward tip wipe"
     type: "boolean"
-    tooltip: "If selected, standalone spiral insets will apply their forward tip wipe before branching to the next spiral path."
-    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"spiral_inset":true},{"AND":[{"spiral_perimeter_connect_to_insets":false},{"AND":[{"inset_wipe":true},{"inset_wipe_direction":1}]}]}]}]}]}
+    tooltip: "If selected, standalone spiral insets will apply their forward tip wipe before branching to the next spiral path. This also controls fallback inset output when a requested perimeter-to-inset connection is unavailable."
+    depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"spiral_inset":true},{"AND":[{"inset_wipe":true},{"inset_wipe_direction":1}]}]}]}]}
     options: []
     default: false
     minor: "Inset"

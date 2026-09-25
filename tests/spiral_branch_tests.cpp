@@ -1,4 +1,5 @@
 #include <QFile>
+#include <QList>
 #include <QSharedPointer>
 #include <algorithm>
 #include <cmath>
@@ -978,6 +979,69 @@ int main() {
                          "Different perimeter and inset materials should remain separate regions.");
         passed &= expect(!multi_material_inset->getPaths().isEmpty(),
                          "Different-material insets should retain region-level transition handling.");
+    }
+
+    QSharedPointer<ORNL::SettingsBase> intervening_region_settings = defaultSettings();
+    configureConnectedInsets(intervening_region_settings);
+    intervening_region_settings->setSetting(ORNL::PS::Skin::kEnable, true);
+    intervening_region_settings->setSetting(
+        ORNL::PS::Ordering::kRegionOrder,
+        QList<QString> {QStringLiteral("Perimeter"), QStringLiteral("Skin"), QStringLiteral("Inset"),
+                        QStringLiteral("Infill"), QStringLiteral("Skeleton")});
+    ORNL::PolymerIsland intervening_region_island(geometry, intervening_region_settings, {});
+    intervening_region_island.compute(0);
+    intervening_region_island.reorderRegions();
+    ORNL::Point intervening_region_location(-10.0, -10.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> intervening_region_previous_regions;
+    intervening_region_island.optimize(0, intervening_region_location, intervening_region_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> intervening_region_perimeter =
+        intervening_region_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> intervening_region_inset =
+        intervening_region_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!intervening_region_perimeter.isNull() && !intervening_region_inset.isNull(),
+                     "Intervening-region regression should create perimeter and inset regions.");
+    if (!intervening_region_perimeter.isNull() && !intervening_region_inset.isNull()) {
+        passed &= expect(!intervening_region_perimeter->connectedInsetGeometryConsumed(),
+                         "An intervening region should prevent perimeter-to-inset reordering.");
+        passed &= expect(!containsRegion(intervening_region_perimeter->getPaths(), ORNL::RegionType::kInset),
+                         "Perimeter paths should not pull insets ahead of an intervening region.");
+        passed &= expect(!intervening_region_inset->getPaths().isEmpty(),
+                         "Insets separated by another region should retain their configured order.");
+    }
+
+    QSharedPointer<ORNL::SettingsBase> reoptimized_settings = defaultSettings();
+    configureConnectedInsets(reoptimized_settings);
+    ORNL::PolymerIsland reoptimized_island(geometry, reoptimized_settings, {});
+    reoptimized_island.compute(0);
+    reoptimized_island.reorderRegions();
+    ORNL::Point reoptimized_location(-10.0, -10.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> reoptimized_previous_regions;
+    reoptimized_island.optimize(0, reoptimized_location, reoptimized_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> reoptimized_perimeter =
+        reoptimized_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> reoptimized_inset =
+        reoptimized_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!reoptimized_perimeter.isNull() && !reoptimized_inset.isNull(),
+                     "Re-optimization regression should create perimeter and inset regions.");
+    if (!reoptimized_perimeter.isNull() && !reoptimized_inset.isNull()) {
+        passed &= expect(reoptimized_perimeter->connectedInsetGeometryConsumed(),
+                         "The initial optimization should consume connected inset geometry.");
+
+        reoptimized_settings->setSetting(ORNL::MS::MultiMaterial::kEnable, true);
+        reoptimized_settings->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
+        reoptimized_settings->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 1);
+        reoptimized_location = ORNL::Point(-10.0, -10.0, 0.0);
+        reoptimized_previous_regions.clear();
+        reoptimized_island.optimize(0, reoptimized_location, reoptimized_previous_regions);
+
+        passed &= expect(!reoptimized_perimeter->connectedInsetGeometryConsumed(),
+                         "Re-optimization should clear stale connected geometry after materials diverge.");
+        passed &= expect(!containsRegion(reoptimized_perimeter->getPaths(), ORNL::RegionType::kInset),
+                         "Re-optimized perimeter paths should not retain stale inset segments.");
+        passed &= expect(!reoptimized_inset->getPaths().isEmpty(),
+                         "Re-optimized different-material insets should be emitted exactly by their own region.");
     }
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
