@@ -301,6 +301,40 @@ int main() {
         "Expected branch validation to use the emitted tail direction when the closing edge is shorter than the stop "
         "distance.");
 
+    ORNL::Polyline short_closing_edge_angle_loop;
+    short_closing_edge_angle_loop.push_back(ORNL::Point(0.0, 0.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(10.0, 0.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(10.0, 10.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(-10.0, 10.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(-10.0, 0.2, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(0.2, 0.2, 0.0));
+    ORNL::Polyline short_closing_edge_angle_inner;
+    short_closing_edge_angle_inner.push_back(ORNL::Point(1.2, 0.7, 0.0));
+    short_closing_edge_angle_inner.push_back(ORNL::Point(1.2, 1.7, 0.0));
+    short_closing_edge_angle_inner.push_back(ORNL::Point(2.0, 1.7, 0.0));
+    short_closing_edge_angle_inner.push_back(ORNL::Point(2.0, 0.7, 0.0));
+    passed &= ORNL::Testing::expect(
+        ORNL::SpiralPath::angleForwardBranchConnection(short_closing_edge_angle_loop, short_closing_edge_angle_inner,
+                                                       ORNL::Distance(1.0), ORNL::Distance(0.5)),
+        "Expected branch angling to use the emitted tail direction when the closing edge is shorter than the stop "
+        "distance.");
+
+    ORNL::Polyline short_angled_connector_inner;
+    short_angled_connector_inner.push_back(ORNL::Point(0.3, 0.2, 0.0));
+    short_angled_connector_inner.push_back(ORNL::Point(1.0, 0.2, 0.0));
+    short_angled_connector_inner.push_back(ORNL::Point(1.0, 1.0, 0.0));
+    short_angled_connector_inner.push_back(ORNL::Point(0.3, 1.0, 0.0));
+    passed &=
+        ORNL::Testing::expect(!ORNL::SpiralPath::angleForwardBranchConnection(
+                                  square(0.0, 0.0, 10.0, 10.0), short_angled_connector_inner, ORNL::Distance(1.0),
+                                  ORNL::Distance(0.5), false, ORNL::Distance(1.0)),
+                              "Expected an already-angled branch shorter than the cleanup threshold to be rejected.");
+    passed &= ORNL::Testing::expect(
+        !ORNL::SpiralPath::canConnectAfterForwardWipe(square(0.0, 0.0, 10.0, 10.0), short_angled_connector_inner,
+                                                      ORNL::Distance(1.0), ORNL::Distance(0.5), false,
+                                                      ORNL::Distance(1.0)),
+        "Expected final branch validation to reject a connector shorter than the cleanup threshold.");
+
     ORNL::Polyline short_connector_inner = square(1.0, 1.0, 9.0, 9.0);
     passed &= ORNL::Testing::expect(!ORNL::SpiralPath::prepareForwardBranchConnection(
                                         square(0.0, 0.0, 10.0, 10.0), short_connector_inner, ORNL::Point(5.0, 0.0, 0.0),

@@ -916,8 +916,9 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                     const Distance loop_width = i < widths.size() ? widths[i] : fallback_width;
                     connect_to_next[i] =
                         emit_loop[i] && emit_loop[i + 1] &&
-                        SpiralPath::canConnectAfterForwardWipe(branch_loops[i], branch_loops[i + 1], loop_width,
-                                                               tip_wipe_distance, complete_path_before_connecting);
+                        SpiralPath::canConnectAfterForwardWipe(
+                            branch_loops[i], branch_loops[i + 1], loop_width, tip_wipe_distance,
+                            complete_path_before_connecting, m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength));
                 }
 
                 auto flushBranchedPath = [&]() {
@@ -1363,10 +1364,11 @@ void Perimeter::calculateConnectedInsetEndModifiers(Path& path, bool supportsG3,
     if (m_sb->setting<bool>(MS::Slowdown::kInsetEnable)) {
         const Distance slowdown_distance =
             std::min(m_sb->setting<Distance>(MS::Slowdown::kInsetDistance), inset_tail_length);
+        const Distance cutoff_distance =
+            std::min(m_sb->setting<Distance>(MS::Slowdown::kInsetCutoffDistance), slowdown_distance);
         PathModifierGenerator::GenerateSlowdown(path, slowdown_distance,
                                                 m_sb->setting<Distance>(MS::Slowdown::kInsetLiftDistance),
-                                                m_sb->setting<Distance>(MS::Slowdown::kInsetCutoffDistance),
-                                                m_sb->setting<Velocity>(MS::Slowdown::kInsetSpeed),
+                                                cutoff_distance, m_sb->setting<Velocity>(MS::Slowdown::kInsetSpeed),
                                                 m_sb->setting<AngularVelocity>(MS::Slowdown::kInsetExtruderSpeed),
                                                 m_sb->setting<bool>(PS::SpecialModes::kEnableWidthHeight),
                                                 m_sb->setting<double>(MS::Slowdown::kSlowDownAreaModifier));
