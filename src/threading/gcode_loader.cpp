@@ -191,17 +191,18 @@ GCodeLoader::GCodeLoader(QString filename, bool alterFile)
     : m_filename(filename), m_adjust_file(alterFile), m_should_cancel(false) {
     m_sb = GSM->getGlobal();
 
-    m_prestart        = QStringMatcher(Constants::PathModifierStrings::kPrestart.toUpper());
-    m_initial_startup = QStringMatcher(Constants::PathModifierStrings::kInitialStartup.toUpper());
-    m_slowdown        = QStringMatcher(Constants::PathModifierStrings::kSlowDown.toUpper());
-    m_forward_tipwipe = QStringMatcher(Constants::PathModifierStrings::kForwardTipWipe.toUpper());
-    m_reverse_tipwipe = QStringMatcher(Constants::PathModifierStrings::kReverseTipWipe.toUpper());
-    m_angled_tipwipe  = QStringMatcher(Constants::PathModifierStrings::kAngledTipWipe.toUpper());
-    m_coasting        = QStringMatcher(Constants::PathModifierStrings::kCoasting.toUpper());
-    m_spirallift      = QStringMatcher(Constants::PathModifierStrings::kSpiralLift.toUpper());
-    m_rampingup       = QStringMatcher(Constants::PathModifierStrings::kRampingUp.toUpper());
-    m_rampingdown     = QStringMatcher(Constants::PathModifierStrings::kRampingDown.toUpper());
-    m_leadin          = QStringMatcher(Constants::PathModifierStrings::kLeadIn.toUpper());
+    m_prestart          = QStringMatcher(Constants::PathModifierStrings::kPrestart.toUpper());
+    m_initial_startup   = QStringMatcher(Constants::PathModifierStrings::kInitialStartup.toUpper());
+    m_slowdown          = QStringMatcher(Constants::PathModifierStrings::kSlowDown.toUpper());
+    m_forward_tipwipe   = QStringMatcher(Constants::PathModifierStrings::kForwardTipWipe.toUpper());
+    m_reverse_tipwipe   = QStringMatcher(Constants::PathModifierStrings::kReverseTipWipe.toUpper());
+    m_angled_tipwipe    = QStringMatcher(Constants::PathModifierStrings::kAngledTipWipe.toUpper());
+    m_coasting          = QStringMatcher(Constants::PathModifierStrings::kCoasting.toUpper());
+    m_spirallift        = QStringMatcher(Constants::PathModifierStrings::kSpiralLift.toUpper());
+    m_rampingup         = QStringMatcher(Constants::PathModifierStrings::kRampingUp.toUpper());
+    m_rampingdown       = QStringMatcher(Constants::PathModifierStrings::kRampingDown.toUpper());
+    m_leadin            = QStringMatcher(Constants::PathModifierStrings::kLeadIn.toUpper());
+    m_spiral_connection = QStringMatcher(Constants::PathModifierStrings::kSpiralConnection.toUpper());
 
     m_modifier_colors.push_back(
         PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kPrestart));
@@ -224,6 +225,8 @@ GCodeLoader::GCodeLoader(QString filename, bool alterFile)
     m_modifier_colors.push_back(
         PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kRampingDown));
     m_modifier_colors.push_back(PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kLeadIn));
+    m_modifier_colors.push_back(
+        PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSpiralConnection));
 
     m_perimeter    = QStringMatcher(Constants::RegionTypeStrings::kPerimeter.toUpper());
     m_radial       = QStringMatcher(Constants::RegionTypeStrings::kRadial.toUpper());
@@ -772,6 +775,9 @@ QColor GCodeLoader::determineFontColor(const QString& comment) {
     if (m_leadin.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kLeadIn);
     }
+    if (m_spiral_connection.indexIn(comment) != -1) {
+        return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kSpiralConnection);
+    }
     if (m_travel.indexIn(comment) != -1) {
         return PreferencesManager::getInstance()->getVisualizationColor(VisualizationColors::kTravel);
     }
@@ -853,7 +859,8 @@ bool GCodeLoader::containsColorPriorityModifier(const QString& comment) const {
            m_reverse_tipwipe.indexIn(comment) != -1 || m_angled_tipwipe.indexIn(comment) != -1 ||
            m_coasting.indexIn(comment) != -1 || m_spirallift.indexIn(comment) != -1 ||
            m_rampingup.indexIn(comment) != -1 || m_rampingdown.indexIn(comment) != -1 ||
-           m_leadin.indexIn(comment) != -1 || comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe);
+           m_leadin.indexIn(comment) != -1 || m_spiral_connection.indexIn(comment) != -1 ||
+           comment.contains(Constants::PathModifierStrings::kPerimeterTipWipe);
 }
 
 SegmentDisplayType GCodeLoader::determineSegmentDisplayType(const QString& comment) {

@@ -95,6 +95,8 @@ class ArcSpecialtiesWriter : public WriterBase {
     //! @brief Tracks the active path type without emitting path prologue commands.
     QString writeBeforePath(RegionType type) override;
 
+    QString writeBeforePathRegionTransition(RegionType type) override;
+
     /*!
      * @brief Writes a travel move with Arc Specialties coordinates and orientation fields.
      * @param start_location Start point for the travel.
