@@ -56,6 +56,27 @@ class Perimeter : public RegionBase {
     bool connectedInsetGeometryConsumed() const;
 
    private:
+    struct ConnectedInsetSegment {
+        Point start;
+        Point end;
+        double min_x       = 0.0;
+        double max_x       = 0.0;
+        double min_y       = 0.0;
+        double max_y       = 0.0;
+        int geometry_index = -1;
+    };
+
+    struct ConnectedInsetIndexNode {
+        double min_x = 0.0;
+        double max_x = 0.0;
+        double min_y = 0.0;
+        double max_y = 0.0;
+        int begin    = 0;
+        int end      = 0;
+        int left     = -1;
+        int right    = -1;
+    };
+
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
@@ -123,6 +144,20 @@ class Perimeter : public RegionBase {
     //! \param path Path containing perimeter paths followed by connected inset paths.
     void applyConnectedInsetSettings(Path& path);
 
+    //! \brief Rebuilds the spatial index used to match output points to connected inset segments.
+    void rebuildConnectedInsetIndex();
+
+    //! \brief Builds one node of the connected inset spatial index.
+    int buildConnectedInsetIndexNode(int begin, int end);
+
+    //! \brief Returns the first connected inset geometry containing a point and optionally marks every match consumed.
+    int connectedInsetGeometryIndex(const Point& point, double tolerance,
+                                    QVector<bool>* consumed_geometry = nullptr) const;
+
+    //! \brief Searches one node of the connected inset spatial index.
+    int connectedInsetGeometryIndex(int node_index, const Point& point, double tolerance,
+                                    QVector<bool>* consumed_geometry) const;
+
     //! \brief Returns the inset bead width for a connected inset segment.
     //! \param start Segment start point.
     //! \param end Segment end point.
@@ -144,6 +179,15 @@ class Perimeter : public RegionBase {
 
     //! \brief Tracks which connected inset contours were emitted during the latest optimization.
     QVector<bool> m_connected_inset_geometry_consumed;
+
+    //! \brief Flattened connected inset segments used by the spatial index.
+    QVector<ConnectedInsetSegment> m_connected_inset_segments;
+
+    //! \brief Segment indices partitioned by the connected inset spatial index.
+    QVector<int> m_connected_inset_segment_order;
+
+    //! \brief Bounding-volume hierarchy for connected inset point queries.
+    QVector<ConnectedInsetIndexNode> m_connected_inset_index;
 
     //! \brief Holds the layer number that we are currently on
     uint m_layer_num;
