@@ -285,5 +285,27 @@ int main() {
             "Expected constrained branch selection to fall back to a near-orthogonal forward branch.");
     }
 
+    ORNL::Polyline short_closing_edge_loop;
+    short_closing_edge_loop.push_back(ORNL::Point(0.0, 0.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(10.0, 0.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(10.0, 10.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(0.0, 10.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(-0.2, 0.2, 0.0));
+    ORNL::Polyline short_closing_edge_inner = square(1.0, 0.1, 9.0, 9.0);
+    passed &= ORNL::Testing::expect(
+        ORNL::SpiralPath::detail::loopsAreNested(short_closing_edge_loop, short_closing_edge_inner),
+        "Expected the short-closing-edge regression loops to be nested.");
+    passed &= ORNL::Testing::expect(
+        !ORNL::SpiralPath::canConnectAfterForwardWipe(short_closing_edge_loop, short_closing_edge_inner,
+                                                      ORNL::Distance(1.0), ORNL::Distance(0.5)),
+        "Expected branch validation to use the emitted tail direction when the closing edge is shorter than the stop "
+        "distance.");
+
+    ORNL::Polyline short_connector_inner = square(1.0, 1.0, 9.0, 9.0);
+    passed &= ORNL::Testing::expect(!ORNL::SpiralPath::prepareForwardBranchConnection(
+                                        square(0.0, 0.0, 10.0, 10.0), short_connector_inner, ORNL::Point(5.0, 0.0, 0.0),
+                                        ORNL::Point(4.0, 0.0, 0.0), ORNL::Distance(3.0), ORNL::Distance(2.0)),
+                                    "Expected a direct branch shorter than the cleanup threshold to be rejected.");
+
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

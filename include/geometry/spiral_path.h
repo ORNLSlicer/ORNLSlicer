@@ -301,6 +301,18 @@ inline Point transitionPoint(const Polyline& line, Distance distance_before_star
     return stopPointOnClosingSegment(line, distance_before_start);
 }
 
+inline bool transitionDirection(const Polyline& line, Distance distance_before_start, bool complete_before_connecting,
+                                Point& transition, double& direction_x, double& direction_y) {
+    if (line.size() < 2) { return false; }
+
+    transition = transitionPoint(line, distance_before_start, complete_before_connecting);
+    const Point& direction_start =
+        !complete_before_connecting && transition == line.back() ? line[line.size() - 2] : line.back();
+    direction_x = transition.x() - direction_start.x();
+    direction_y = transition.y() - direction_start.y();
+    return normalize2D(direction_x, direction_y);
+}
+
 inline Point prepareConnector(const Polyline& current_loop, Polyline& next_loop, Distance stop_distance,
                               bool complete_before_connecting) {
     const Point rough_connector_start = transitionPoint(current_loop, stop_distance, complete_before_connecting);
@@ -397,11 +409,13 @@ inline bool rotateToForwardBranchSeam(Polyline& line, const Point& next_start, D
     double angled_dot_error      = std::numeric_limits<double>::max();
 
     auto branchQuality = [&](const Polyline& candidate, double& forward_dot, double& branch_length) {
-        double direction_x = candidate.front().x() - candidate.back().x();
-        double direction_y = candidate.front().y() - candidate.back().y();
-        if (!detail::normalize2D(direction_x, direction_y)) { return false; }
-
-        const Point transition = detail::transitionPoint(candidate, stop_distance, complete_before_connecting);
+        Point transition;
+        double direction_x = 0.0;
+        double direction_y = 0.0;
+        if (!detail::transitionDirection(candidate, stop_distance, complete_before_connecting, transition, direction_x,
+                                         direction_y)) {
+            return false;
+        }
         const Point branch_start(transition.x() + (direction_x * forward_wipe_distance()),
                                  transition.y() + (direction_y * forward_wipe_distance()), transition.z());
         const double branch_x = next_start.x() - branch_start.x();
@@ -654,7 +668,10 @@ inline bool prepareForwardBranchConnection(const Polyline& current_loop, Polylin
         const double branch_x      = candidate.front().x() - branch_start.x();
         const double branch_y      = candidate.front().y() - branch_start.y();
         const double branch_length = std::hypot(branch_x, branch_y);
-        if (branch_length <= std::numeric_limits<double>::epsilon() || branch_length > max_length) { return; }
+        if (branch_length <= std::numeric_limits<double>::epsilon() || branch_length < min_segment_length_value ||
+            branch_length > max_length) {
+            return;
+        }
 
         double approach_x = candidate[1].x() - candidate.front().x();
         double approach_y = candidate[1].y() - candidate.front().y();
@@ -700,7 +717,10 @@ inline bool prepareForwardBranchConnection(const Polyline& current_loop, Polylin
     const double branch_y      = fallback.front().y() - branch_start.y();
     const double branch_length = std::hypot(branch_x, branch_y);
     const double forward_dot   = (direction_x * branch_x) + (direction_y * branch_y);
-    if (forward_dot <= minimum_forward_dot || branch_length > max_length + minimum_forward_dot) { return false; }
+    if (forward_dot <= minimum_forward_dot || branch_length < min_segment_length_value ||
+        branch_length > max_length + minimum_forward_dot) {
+        return false;
+    }
 
     next_loop = fallback;
     return true;
@@ -717,11 +737,13 @@ inline bool canConnectAfterForwardWipe(const Polyline& current_loop, const Polyl
         return false;
     }
 
-    double direction_x = current_loop.front().x() - current_loop.back().x();
-    double direction_y = current_loop.front().y() - current_loop.back().y();
-    if (!detail::normalize2D(direction_x, direction_y)) { return false; }
-
-    const Point transition = detail::transitionPoint(current_loop, stop_distance, complete_before_connecting);
+    Point transition;
+    double direction_x = 0.0;
+    double direction_y = 0.0;
+    if (!detail::transitionDirection(current_loop, stop_distance, complete_before_connecting, transition, direction_x,
+                                     direction_y)) {
+        return false;
+    }
     const Point branch_start(transition.x() + (direction_x * forward_wipe_distance()),
                              transition.y() + (direction_y * forward_wipe_distance()), transition.z());
     const double branch_x      = next_loop.front().x() - branch_start.x();
