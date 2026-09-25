@@ -4,6 +4,7 @@
 #include <cmath>
 #include <cstddef>
 #include <limits>
+#include <numeric>
 #include <optional>
 
 #include <qcontainerfwd.h>
@@ -315,14 +316,6 @@ bool pointOnClosedPolylineXY(const Point& point, const Polyline& line, double to
     return false;
 }
 
-bool pointOnAnyClosedPolylineXY(const Point& point, const QVector<Polyline>& lines, double tolerance) {
-    for (const Polyline& line : lines) {
-        if (pointOnClosedPolylineXY(point, line, tolerance)) { return true; }
-    }
-
-    return false;
-}
-
 Distance widthForSegmentOnGeometry(const Point& start, const Point& end, const QVector<Polyline>& geometry,
                                    const QVector<Distance>& widths, Distance fallback_width) {
     Point midpoint = (start + end) * 0.5;
@@ -467,6 +460,9 @@ void Perimeter::compute(uint layer_num) {
     m_connected_inset_geometry.clear();
     m_connected_inset_widths.clear();
     m_connected_inset_geometry_consumed.clear();
+    m_connected_inset_segments.clear();
+    m_connected_inset_segment_order.clear();
+    m_connected_inset_index.clear();
 
     setMaterialNumber(m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum));
     Distance beadWidth                = m_sb->setting<Distance>(PS::Perimeter::kBeadWidth);
@@ -819,11 +815,11 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
                 for (const Polyline& spiral_group : spiral_groups) {
                     if (spiral_group.size() < 3) { continue; }
 
+                    const double connected_inset_tolerance =
+                        std::max(m_sb->setting<Distance>(PS::Inset::kBeadWidth)() * 1.0e-3, 1.0e-6);
                     const bool contains_connected_inset =
                         std::any_of(spiral_group.begin(), spiral_group.end(), [&](const Point& point) {
-                            return pointOnAnyClosedPolylineXY(
-                                point, m_connected_inset_geometry,
-                                std::max(m_sb->setting<Distance>(PS::Inset::kBeadWidth)() * 1.0e-3, 1.0e-6));
+                            return connectedInsetGeometryIndex(point, connected_inset_tolerance) >= 0;
                         });
                     const Distance min_segment_length =
                         contains_connected_inset ? std::min(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength),
@@ -1243,6 +1239,123 @@ void Perimeter::setConnectedInsetGeometry(const QVector<Polyline>& geometry, con
     m_connected_inset_geometry = geometry;
     m_connected_inset_widths   = widths;
     m_connected_inset_geometry_consumed.fill(false, geometry.size());
+    rebuildConnectedInsetIndex();
+}
+
+void Perimeter::rebuildConnectedInsetIndex() {
+    m_connected_inset_segments.clear();
+    m_connected_inset_segment_order.clear();
+    m_connected_inset_index.clear();
+
+    for (int geometry_index = 0; geometry_index < m_connected_inset_geometry.size(); ++geometry_index) {
+        const Polyline& line = m_connected_inset_geometry[geometry_index];
+        if (line.size() < 2) { continue; }
+
+        for (int point_index = 0; point_index < line.size(); ++point_index) {
+            ConnectedInsetSegment segment;
+            segment.start          = line[point_index];
+            segment.end            = line[(point_index + 1) % line.size()];
+            segment.min_x          = std::min(segment.start.x(), segment.end.x());
+            segment.max_x          = std::max(segment.start.x(), segment.end.x());
+            segment.min_y          = std::min(segment.start.y(), segment.end.y());
+            segment.max_y          = std::max(segment.start.y(), segment.end.y());
+            segment.geometry_index = geometry_index;
+            m_connected_inset_segments.push_back(segment);
+        }
+    }
+
+    m_connected_inset_segment_order.resize(m_connected_inset_segments.size());
+    std::iota(m_connected_inset_segment_order.begin(), m_connected_inset_segment_order.end(), 0);
+    if (m_connected_inset_segments.isEmpty()) { return; }
+
+    m_connected_inset_index.reserve(m_connected_inset_segments.size() * 2);
+    buildConnectedInsetIndexNode(0, m_connected_inset_segment_order.size());
+}
+
+int Perimeter::buildConnectedInsetIndexNode(int begin, int end) {
+    if (begin >= end) { return -1; }
+
+    ConnectedInsetIndexNode node;
+    node.min_x = std::numeric_limits<double>::max();
+    node.max_x = std::numeric_limits<double>::lowest();
+    node.min_y = std::numeric_limits<double>::max();
+    node.max_y = std::numeric_limits<double>::lowest();
+    node.begin = begin;
+    node.end   = end;
+    for (int i = begin; i < end; ++i) {
+        const ConnectedInsetSegment& segment = m_connected_inset_segments[m_connected_inset_segment_order[i]];
+        node.min_x                           = std::min(node.min_x, segment.min_x);
+        node.max_x                           = std::max(node.max_x, segment.max_x);
+        node.min_y                           = std::min(node.min_y, segment.min_y);
+        node.max_y                           = std::max(node.max_y, segment.max_y);
+    }
+
+    const int node_index = m_connected_inset_index.size();
+    m_connected_inset_index.push_back(node);
+    constexpr int leaf_size = 8;
+    if (end - begin <= leaf_size) { return node_index; }
+
+    const bool split_x = (node.max_x - node.min_x) >= (node.max_y - node.min_y);
+    const int middle   = begin + ((end - begin) / 2);
+    std::nth_element(m_connected_inset_segment_order.begin() + begin, m_connected_inset_segment_order.begin() + middle,
+                     m_connected_inset_segment_order.begin() + end, [&](int lhs_index, int rhs_index) {
+                         const ConnectedInsetSegment& lhs = m_connected_inset_segments[lhs_index];
+                         const ConnectedInsetSegment& rhs = m_connected_inset_segments[rhs_index];
+                         const double lhs_center          = split_x ? lhs.min_x + lhs.max_x : lhs.min_y + lhs.max_y;
+                         const double rhs_center          = split_x ? rhs.min_x + rhs.max_x : rhs.min_y + rhs.max_y;
+                         return lhs_center < rhs_center;
+                     });
+
+    const int left                            = buildConnectedInsetIndexNode(begin, middle);
+    const int right                           = buildConnectedInsetIndexNode(middle, end);
+    m_connected_inset_index[node_index].left  = left;
+    m_connected_inset_index[node_index].right = right;
+    return node_index;
+}
+
+int Perimeter::connectedInsetGeometryIndex(const Point& point, double tolerance,
+                                           QVector<bool>* consumed_geometry) const {
+    if (m_connected_inset_index.isEmpty()) { return -1; }
+
+    return connectedInsetGeometryIndex(0, point, tolerance, consumed_geometry);
+}
+
+int Perimeter::connectedInsetGeometryIndex(int node_index, const Point& point, double tolerance,
+                                           QVector<bool>* consumed_geometry) const {
+    const ConnectedInsetIndexNode& node = m_connected_inset_index[node_index];
+    if (point.x() < node.min_x - tolerance || point.x() > node.max_x + tolerance ||
+        point.y() < node.min_y - tolerance || point.y() > node.max_y + tolerance) {
+        return -1;
+    }
+
+    if (node.left < 0 && node.right < 0) {
+        int first_geometry_index = -1;
+        for (int i = node.begin; i < node.end; ++i) {
+            const ConnectedInsetSegment& segment = m_connected_inset_segments[m_connected_inset_segment_order[i]];
+            if (point.x() < segment.min_x - tolerance || point.x() > segment.max_x + tolerance ||
+                point.y() < segment.min_y - tolerance || point.y() > segment.max_y + tolerance ||
+                distanceXYToSegment(point, segment.start, segment.end) > tolerance) {
+                continue;
+            }
+
+            if (first_geometry_index < 0 || segment.geometry_index < first_geometry_index) {
+                first_geometry_index = segment.geometry_index;
+            }
+            if (consumed_geometry != nullptr && segment.geometry_index >= 0 &&
+                segment.geometry_index < consumed_geometry->size()) {
+                (*consumed_geometry)[segment.geometry_index] = true;
+            }
+        }
+        return first_geometry_index;
+    }
+
+    const int left_geometry_index =
+        node.left >= 0 ? connectedInsetGeometryIndex(node.left, point, tolerance, consumed_geometry) : -1;
+    const int right_geometry_index =
+        node.right >= 0 ? connectedInsetGeometryIndex(node.right, point, tolerance, consumed_geometry) : -1;
+    if (left_geometry_index < 0) { return right_geometry_index; }
+    if (right_geometry_index < 0) { return left_geometry_index; }
+    return std::min(left_geometry_index, right_geometry_index);
 }
 
 bool Perimeter::connectedInsetGeometryConsumed() const {
@@ -1527,17 +1640,9 @@ void Perimeter::applyConnectedInsetSettings(Path& path) {
     for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
         if (segment == nullptr) { continue; }
 
-        bool midpoint_on_inset = false;
-        bool end_on_inset      = false;
-        for (int i = 0; i < m_connected_inset_geometry.size(); ++i) {
-            const bool midpoint_on_current =
-                pointOnClosedPolylineXY(segment->midpoint(), m_connected_inset_geometry[i], tolerance());
-            const bool end_on_current =
-                pointOnClosedPolylineXY(segment->end(), m_connected_inset_geometry[i], tolerance());
-            if (midpoint_on_current || end_on_current) { m_connected_inset_geometry_consumed[i] = true; }
-            midpoint_on_inset |= midpoint_on_current;
-            end_on_inset |= end_on_current;
-        }
+        const bool midpoint_on_inset =
+            connectedInsetGeometryIndex(segment->midpoint(), tolerance(), &m_connected_inset_geometry_consumed) >= 0;
+        connectedInsetGeometryIndex(segment->end(), tolerance(), &m_connected_inset_geometry_consumed);
         if (midpoint_on_inset) { using_inset_settings = true; }
 
         if (!using_inset_settings) { continue; }
@@ -1561,7 +1666,23 @@ Distance Perimeter::connectedInsetWidthForSegment(const Point& start, const Poin
     const Distance fallback_width = parent_sb->setting<Distance>(PS::Inset::kBeadWidth);
     if (!parent_sb->setting<bool>(PS::Inset::kAdaptive)) { return fallback_width; }
 
-    return widthForSegmentOnGeometry(start, end, m_connected_inset_geometry, m_connected_inset_widths, fallback_width);
+    const Point midpoint     = (start + end) * 0.5;
+    const double tolerance   = std::max(fallback_width() * 1.0e-3, 1.0e-6);
+    const int geometry_index = connectedInsetGeometryIndex(midpoint, tolerance);
+    if (geometry_index >= 0 && geometry_index < m_connected_inset_widths.size()) {
+        return m_connected_inset_widths[geometry_index];
+    }
+
+    if (!m_connected_inset_widths.isEmpty()) {
+        const Distance first_width = m_connected_inset_widths.first();
+        const bool uniform_width   = std::all_of(m_connected_inset_widths.begin(), m_connected_inset_widths.end(),
+                                                 [first_width, tolerance](const Distance& width) {
+                                                   return std::fabs(width() - first_width()) <= tolerance;
+                                                 });
+        if (uniform_width) { return first_width; }
+    }
+
+    return fallback_width;
 }
 
 bool Perimeter::isAdaptedWidth(const Distance& width, const QSharedPointer<SettingsBase>& parent_sb) {
