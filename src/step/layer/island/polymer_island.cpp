@@ -24,6 +24,28 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+bool connectedInsetMaterialsCompatible(const QSharedPointer<SettingsBase>& settings,
+                                       const QVector<SettingsPolygon>& settings_polygons) {
+    if (!settings->setting<bool>(MS::MultiMaterial::kEnable)) { return true; }
+
+    auto materials_match = [](const QSharedPointer<SettingsBase>& candidate) {
+        return candidate->setting<int>(MS::MultiMaterial::kPerimeterNum) ==
+               candidate->setting<int>(MS::MultiMaterial::kInsetNum);
+    };
+
+    if (!materials_match(settings)) { return false; }
+
+    for (const SettingsPolygon& polygon : settings_polygons) {
+        QSharedPointer<SettingsBase> localized_settings = QSharedPointer<SettingsBase>::create(*settings);
+        localized_settings->populate(polygon.getSettings());
+        if (!materials_match(localized_settings)) { return false; }
+    }
+
+    return true;
+}
+}  // namespace
+
 PolymerIsland::PolymerIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
                              const QVector<SettingsPolygon>& settings_polygons, const PolygonList& uncut_geometry)
     : IslandBase(geometry, sb, settings_polygons) {
@@ -87,8 +109,7 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
         !connected_perimeter.isNull() && !connected_inset.isNull() && !connected_inset_geometry.isEmpty() &&
         adjacent_spiral_perimeter_and_inset && m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter) &&
         m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) &&
-        (!m_sb->setting<bool>(MS::MultiMaterial::kEnable) ||
-         m_sb->setting<int>(MS::MultiMaterial::kPerimeterNum) == m_sb->setting<int>(MS::MultiMaterial::kInsetNum));
+        connectedInsetMaterialsCompatible(m_sb, m_settings_polygons);
 
     if (!connected_perimeter.isNull()) {
         if (connect_spiral_perimeter_to_inset) {

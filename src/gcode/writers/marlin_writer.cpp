@@ -223,6 +223,23 @@ QString MarlinWriter::writeBeforePath(RegionType type) {
     return rv;
 }
 
+QString MarlinWriter::writeBeforePathRegionTransition(RegionType type) {
+    if (!m_sb->setting<bool>(PRS::Acceleration::kEnableDynamic)) { return {}; }
+
+    Acceleration acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kDefault);
+    if (type == RegionType::kPerimeter) { acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kPerimeter); }
+    else if (type == RegionType::kInset) { acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kInset); }
+    else if (type == RegionType::kSkeleton) {
+        acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kSkeleton);
+    }
+    else if (type == RegionType::kSkin) { acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kSkin); }
+    else if (type == RegionType::kInfill) { acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kInfill); }
+    else if (type == RegionType::kSupport) { acceleration = m_sb->setting<Acceleration>(PRS::Acceleration::kSupport); }
+
+    return "M204 S" % QString::number(acceleration.to(m_meta.m_acceleration_unit)) %
+           commentSpaceLine("UPDATE ACCELERATION");
+}
+
 QString MarlinWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                   QSharedPointer<SettingsBase> params) {
     QString rv;
