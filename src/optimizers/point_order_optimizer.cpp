@@ -24,32 +24,10 @@ Distance planarDistance(const Point& lhs, const Point& rhs) {
     return Distance(std::hypot(static_cast<double>(lhs.x() - rhs.x()), static_cast<double>(lhs.y() - rhs.y())));
 }
 
-std::optional<Point> pointAtPlanarDistance(const Point& start, const Point& end, const Point& reference,
-                                           Distance distance) {
-    const double dx = static_cast<double>(end.x() - start.x());
-    const double dy = static_cast<double>(end.y() - start.y());
-    const double a  = (dx * dx) + (dy * dy);
-    if (a <= kDistanceTolerance) return std::nullopt;
-
-    const double fx           = static_cast<double>(start.x() - reference.x());
-    const double fy           = static_cast<double>(start.y() - reference.y());
-    const double b            = 2.0 * ((fx * dx) + (fy * dy));
-    const double c            = (fx * fx) + (fy * fy) - (distance() * distance());
-    const double discriminant = (b * b) - (4.0 * a * c);
-    if (discriminant < -kDistanceTolerance) return std::nullopt;
-
-    const double root    = std::sqrt(std::max(0.0, discriminant));
-    double candidates[2] = {(-b - root) / (2.0 * a), (-b + root) / (2.0 * a)};
-    std::sort(candidates, candidates + 2);
-
-    for (double t : candidates) {
-        if (t < -kDistanceTolerance || t > 1.0 + kDistanceTolerance) continue;
-
-        t = std::clamp(t, 0.0, 1.0);
-        return Point(start.x() + (dx * t), start.y() + (dy * t), start.z() + ((end.z() - start.z()) * t));
-    }
-
-    return std::nullopt;
+Point interpolateAlongSegment(const Point& start, const Point& end, double ratio) {
+    ratio = std::clamp(ratio, 0.0, 1.0);
+    return Point(start.x() + ((end.x() - start.x()) * ratio), start.y() + ((end.y() - start.y()) * ratio),
+                 start.z() + ((end.z() - start.z()) * ratio));
 }
 }  // namespace
 
@@ -255,27 +233,34 @@ PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::linkToConsecutive(
         segment_end_index     = (start_index + 1) % polyline.size();
     }
 
-    if (planarDistance(segment_start, reference) >= minDist) return nearest_selection;
-
     Distance farthest_distance = Distance(-1.0);
     int farthest_index         = 0;
+    Distance traversed_distance;
 
     for (int segment_count = 0; segment_count < polyline.size(); ++segment_count) {
-        const Point& segment_end    = polyline[segment_end_index];
-        const Distance end_distance = planarDistance(segment_end, reference);
+        const Point& segment_end               = polyline[segment_end_index];
+        const Distance end_distance            = planarDistance(segment_end, reference);
+        const Distance segment_length          = planarDistance(segment_start, segment_end);
+        const Distance distance_to_segment_end = traversed_distance + segment_length;
 
         if (end_distance > farthest_distance) {
             farthest_distance = end_distance;
             farthest_index    = segment_end_index;
         }
 
-        if (end_distance >= minDist) {
-            std::optional<Point> split_point = pointAtPlanarDistance(segment_start, segment_end, reference, minDist);
-            if (split_point.has_value() && *split_point != segment_start && *split_point != segment_end) {
+        if (distance_to_segment_end >= minDist) {
+            if (segment_length <= kDistanceTolerance) return selectionFromIndex(segment_end_index);
+
+            const double segment_ratio = ((minDist - traversed_distance) / segment_length)();
+            Point split_point          = interpolateAlongSegment(segment_start, segment_end, segment_ratio);
+
+            if (split_point == segment_start) { return nearest_selection; }
+
+            if (split_point != segment_end) {
                 PointOrderSelection selection;
                 selection.rotation_index     = segment_end_index;
                 selection.insert_split_point = true;
-                selection.split_point        = *split_point;
+                selection.split_point        = split_point;
                 selection.insertion_index    = segment_end_index;
                 return selection;
             }
@@ -283,8 +268,38 @@ PointOrderOptimizer::PointOrderSelection PointOrderOptimizer::linkToConsecutive(
             return selectionFromIndex(segment_end_index);
         }
 
-        segment_start     = segment_end;
-        segment_end_index = (segment_end_index + 1) % polyline.size();
+        traversed_distance = distance_to_segment_end;
+        segment_start      = segment_end;
+        segment_end_index  = (segment_end_index + 1) % polyline.size();
+    }
+
+    // When the previous seam projects into the middle of a segment, the loop above stops at that segment's start.
+    // Traverse the remaining partial segment so thresholds up to the full loop length can still be satisfied.
+    if (nearest_selection.insert_split_point) {
+        const Point& segment_end               = nearest_selection.split_point;
+        const Distance segment_length          = planarDistance(segment_start, segment_end);
+        const Distance distance_to_segment_end = traversed_distance + segment_length;
+
+        if (distance_to_segment_end >= minDist) {
+            if (segment_length <= kDistanceTolerance) return nearest_selection;
+
+            const double segment_ratio = ((minDist - traversed_distance) / segment_length)();
+            Point split_point          = interpolateAlongSegment(segment_start, segment_end, segment_ratio);
+
+            if (split_point == segment_start) {
+                const int start_index = (nearest_selection.insertion_index - 1 + polyline.size()) % polyline.size();
+                return selectionFromIndex(start_index);
+            }
+
+            if (split_point == segment_end) return nearest_selection;
+
+            PointOrderSelection selection;
+            selection.rotation_index     = nearest_selection.insertion_index;
+            selection.insert_split_point = true;
+            selection.split_point        = split_point;
+            selection.insertion_index    = nearest_selection.insertion_index;
+            return selection;
+        }
     }
 
     return selectionFromIndex(farthest_index);

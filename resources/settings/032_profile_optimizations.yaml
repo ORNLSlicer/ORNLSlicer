@@ -212,7 +212,7 @@ settings:
     display: "Point Order Optimization"
     type: "enumeration"
     tooltip: "Type of order optimizer to use on point selection after a path has been determined"
-    depends: {"slicing_mode":0}
+    depends: {"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":0}]}]}
     options:
       - "Next Closest"
       - "Next Farthest"
@@ -290,7 +290,7 @@ settings:
     display: "Consecutive Distance Threshold"
     type: "distance"
     tooltip: "Sets minimum distance to rotate consecutive point layer to layer"
-    depends: {"AND":[{"slicing_mode":0},{"point_order_optimization":3}]}
+    depends: {"AND":[{"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":0}]}]},{"point_order_optimization":3}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -302,7 +302,7 @@ settings:
     display: "Custom Point X Location"
     type: "location"
     tooltip: "X Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":0}]}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"
@@ -314,7 +314,7 @@ settings:
     display: "Custom Point Y Location"
     type: "location"
     tooltip: "Y Coordinate for Custom Point for Point Optimization Scheme"
-    depends: {"AND":[{"slicing_mode":0},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
+    depends: {"AND":[{"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":0}]}]},{"OR":[{"point_order_optimization":4},{"point_order_optimization":5}]}]}
     options: []
     default: 0
     minor: "Optimizations"

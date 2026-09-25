@@ -17,6 +17,7 @@
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
 #include "geometry/segment_base.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/point_order_optimizer.h"
@@ -26,6 +27,307 @@
 #include "utilities/mathutils.h"
 
 namespace ORNL {
+namespace {
+constexpr double kDistanceTolerance = 1.0e-6;
+constexpr double kTwoPi             = 6.28318530717958647692;
+
+Polyline pathStartPoints(const Path& path) {
+    Polyline line;
+    line.reserve(path.size());
+    for (const QSharedPointer<SegmentBase>& segment : path) {
+        if (!segment.isNull()) line.append(segment->start());
+    }
+
+    return line;
+}
+
+int normalizedIndex(int index, int size) {
+    if (size <= 0) return 0;
+
+    index %= size;
+    if (index < 0) index += size;
+    return index;
+}
+
+double planarDistance(const Point& lhs, const Point& rhs) {
+    return std::hypot(static_cast<double>(lhs.x() - rhs.x()), static_cast<double>(lhs.y() - rhs.y()));
+}
+
+double normalizedAngle(double angle) {
+    angle = std::fmod(angle, kTwoPi);
+    if (angle < 0.0) angle += kTwoPi;
+    return angle;
+}
+
+double arcRadius(const ArcSegment& arc) {
+    return planarDistance(arc.start(), arc.center());
+}
+
+Point pointOnArcAtRatio(const ArcSegment& arc, double ratio) {
+    ratio               = std::clamp(ratio, 0.0, 1.0);
+    const Point start   = arc.start();
+    const Point end     = arc.end();
+    const Point center  = arc.center();
+    const double radius = arcRadius(arc);
+    const double start_angle =
+        std::atan2(static_cast<double>(start.y() - center.y()), static_cast<double>(start.x() - center.x()));
+    const double direction = arc.counterclockwise() ? 1.0 : -1.0;
+    const double angle     = start_angle + (direction * arc.angle()() * ratio);
+
+    return Point(center.x() + (radius * std::cos(angle)), center.y() + (radius * std::sin(angle)),
+                 start.z() + ((end.z() - start.z()) * ratio));
+}
+
+Point pointOnSegmentAtRatio(const QSharedPointer<SegmentBase>& segment, double ratio) {
+    if (const ArcSegment* arc = dynamic_cast<const ArcSegment*>(segment.data())) {
+        return pointOnArcAtRatio(*arc, ratio);
+    }
+
+    ratio             = std::clamp(ratio, 0.0, 1.0);
+    const Point start = segment->start();
+    const Point end   = segment->end();
+    return Point(start.x() + ((end.x() - start.x()) * ratio), start.y() + ((end.y() - start.y()) * ratio),
+                 start.z() + ((end.z() - start.z()) * ratio));
+}
+
+double segmentPlanarLength(const QSharedPointer<SegmentBase>& segment) {
+    if (segment.isNull()) return 0.0;
+
+    if (const ArcSegment* arc = dynamic_cast<const ArcSegment*>(segment.data())) {
+        return arcRadius(*arc) * arc->angle()();
+    }
+
+    return planarDistance(segment->start(), segment->end());
+}
+
+struct SegmentProjection {
+    int segment_index = -1;
+    double ratio      = 0.0;
+    double distance   = std::numeric_limits<double>::max();
+};
+
+SegmentProjection projectOntoPath(const Path& path, const Point& reference) {
+    SegmentProjection nearest;
+    for (int i = 0; i < path.size(); ++i) {
+        const QSharedPointer<SegmentBase> segment = path[i];
+        if (segment.isNull()) continue;
+
+        double ratio = 0.0;
+        if (const ArcSegment* arc = dynamic_cast<const ArcSegment*>(segment.data())) {
+            const double radius = arcRadius(*arc);
+            if (radius > kDistanceTolerance) {
+                const Point center           = arc->center();
+                const double start_angle     = std::atan2(static_cast<double>(arc->start().y() - center.y()),
+                                                          static_cast<double>(arc->start().x() - center.x()));
+                const double reference_angle = std::atan2(static_cast<double>(reference.y() - center.y()),
+                                                          static_cast<double>(reference.x() - center.x()));
+                const double directed_delta  = arc->counterclockwise() ? normalizedAngle(reference_angle - start_angle)
+                                                                       : normalizedAngle(start_angle - reference_angle);
+                const double sweep           = arc->angle()();
+
+                if (sweep >= kTwoPi - kDistanceTolerance || directed_delta <= sweep + kDistanceTolerance) {
+                    ratio = std::clamp(directed_delta / sweep, 0.0, 1.0);
+                }
+                else {
+                    ratio =
+                        planarDistance(reference, arc->start()) <= planarDistance(reference, arc->end()) ? 0.0 : 1.0;
+                }
+            }
+        }
+        else {
+            const Point start        = segment->start();
+            const Point end          = segment->end();
+            const double dx          = static_cast<double>(end.x() - start.x());
+            const double dy          = static_cast<double>(end.y() - start.y());
+            const double denominator = (dx * dx) + (dy * dy);
+            if (denominator > kDistanceTolerance) {
+                const double point_dx = static_cast<double>(reference.x() - start.x());
+                const double point_dy = static_cast<double>(reference.y() - start.y());
+                ratio                 = std::clamp(((point_dx * dx) + (point_dy * dy)) / denominator, 0.0, 1.0);
+            }
+        }
+
+        const double distance = planarDistance(reference, pointOnSegmentAtRatio(segment, ratio));
+        if (distance < nearest.distance) nearest = SegmentProjection {i, ratio, distance};
+    }
+
+    return nearest;
+}
+
+PointOrderOptimizer::PointOrderSelection selectionAtSegmentRatio(const Path& path, int segment_index, double ratio) {
+    PointOrderOptimizer::PointOrderSelection selection;
+    const int next_index = (segment_index + 1) % path.size();
+    if (ratio <= kDistanceTolerance) { selection.rotation_index = segment_index; }
+    else if (ratio >= 1.0 - kDistanceTolerance) { selection.rotation_index = next_index; }
+    else {
+        selection.rotation_index     = next_index;
+        selection.insert_split_point = true;
+        selection.split_point        = pointOnSegmentAtRatio(path[segment_index], ratio);
+        selection.insertion_index    = next_index;
+    }
+
+    return selection;
+}
+
+PointOrderOptimizer::PointOrderSelection farthestPathPoint(const Path& path, const Point& reference) {
+    PointOrderOptimizer::PointOrderSelection selection;
+    double farthest_distance = -1.0;
+
+    auto consider = [&path, &reference, &selection, &farthest_distance](int segment_index, double ratio) {
+        const Point candidate = pointOnSegmentAtRatio(path[segment_index], ratio);
+        const double distance = planarDistance(reference, candidate);
+        if (distance > farthest_distance) {
+            farthest_distance = distance;
+            selection         = selectionAtSegmentRatio(path, segment_index, ratio);
+        }
+    };
+
+    for (int i = 0; i < path.size(); ++i) {
+        if (path[i].isNull()) continue;
+
+        consider(i, 0.0);
+        consider(i, 1.0);
+
+        const ArcSegment* arc = dynamic_cast<const ArcSegment*>(path[i].data());
+        if (arc == nullptr) continue;
+
+        const double radius = arcRadius(*arc);
+        const double sweep  = arc->angle()();
+        if (radius <= kDistanceTolerance || sweep <= kDistanceTolerance) continue;
+
+        const Point center        = arc->center();
+        const double reference_dx = static_cast<double>(reference.x() - center.x());
+        const double reference_dy = static_cast<double>(reference.y() - center.y());
+        if (std::hypot(reference_dx, reference_dy) <= kDistanceTolerance) continue;
+
+        const double start_angle    = std::atan2(static_cast<double>(arc->start().y() - center.y()),
+                                                 static_cast<double>(arc->start().x() - center.x()));
+        const double farthest_angle = std::atan2(reference_dy, reference_dx) + (kTwoPi / 2.0);
+        const double directed_delta = arc->counterclockwise() ? normalizedAngle(farthest_angle - start_angle)
+                                                              : normalizedAngle(start_angle - farthest_angle);
+        if (sweep >= kTwoPi - kDistanceTolerance || directed_delta <= sweep + kDistanceTolerance) {
+            consider(i, std::clamp(directed_delta / sweep, 0.0, 1.0));
+        }
+    }
+
+    return selection;
+}
+
+PointOrderOptimizer::PointOrderSelection consecutivePathSelection(const Path& path, const Point& reference,
+                                                                  Distance threshold) {
+    if (path.size() == 0) return PointOrderOptimizer::PointOrderSelection();
+
+    const SegmentProjection nearest = projectOntoPath(path, reference);
+    if (nearest.segment_index < 0) return PointOrderOptimizer::PointOrderSelection();
+
+    QVector<double> segment_lengths(path.size());
+    double total_length = 0.0;
+    for (int i = 0; i < path.size(); ++i) {
+        segment_lengths[i] = segmentPlanarLength(path[i]);
+        total_length += segment_lengths[i];
+    }
+
+    if (total_length <= kDistanceTolerance) return selectionAtSegmentRatio(path, nearest.segment_index, nearest.ratio);
+    if (threshold() > total_length + kDistanceTolerance) return farthestPathPoint(path, reference);
+
+    double start_offset = nearest.ratio * segment_lengths[nearest.segment_index];
+    for (int i = 0; i < nearest.segment_index; ++i) start_offset += segment_lengths[i];
+
+    double target_offset = std::fmod(start_offset + std::max(0.0, threshold()), total_length);
+    if (target_offset < 0.0) target_offset += total_length;
+
+    double segment_start_offset = 0.0;
+    for (int i = 0; i < path.size(); ++i) {
+        const double segment_length     = segment_lengths[i];
+        const double segment_end_offset = segment_start_offset + segment_length;
+        if (segment_length > kDistanceTolerance && target_offset <= segment_end_offset + kDistanceTolerance) {
+            const double ratio = (target_offset - segment_start_offset) / segment_length;
+            return selectionAtSegmentRatio(path, i, ratio);
+        }
+
+        segment_start_offset = segment_end_offset;
+    }
+
+    return selectionAtSegmentRatio(path, nearest.segment_index, nearest.ratio);
+}
+
+Angle arcSweepAngle(const Point& center, const Point& start, const Point& end, bool counterclockwise) {
+    const double start_angle = std::atan2(center.x() - start.x(), center.y() - start.y());
+    const double end_angle   = std::atan2(center.x() - end.x(), center.y() - end.y());
+    double sweep             = counterclockwise ? start_angle - end_angle : end_angle - start_angle;
+    if (sweep <= 0.0) sweep += kTwoPi;
+
+    return Angle(sweep);
+}
+
+void refreshArcSweep(const QSharedPointer<SegmentBase>& segment) {
+    ArcSegment* arc = dynamic_cast<ArcSegment*>(segment.data());
+    if (arc == nullptr) return;
+
+    arc->setAngle(arcSweepAngle(arc->center(), arc->start(), arc->end(), arc->counterclockwise()));
+}
+
+bool splitSegment(Path& path, int insertion_index, const Point& split_point) {
+    if (path.size() == 0) return false;
+
+    insertion_index                              = normalizedIndex(insertion_index, path.size());
+    const int segment_index                      = insertion_index == 0 ? path.size() - 1 : insertion_index - 1;
+    QSharedPointer<SegmentBase> original_segment = path[segment_index];
+    if (original_segment.isNull()) return false;
+
+    const ArcSegment* original_arc = dynamic_cast<ArcSegment*>(original_segment.data());
+    if (dynamic_cast<LineSegment*>(original_segment.data()) == nullptr && original_arc == nullptr) return false;
+
+    if (split_point == original_segment->start() || split_point == original_segment->end()) return false;
+
+    QSharedPointer<SegmentBase> first_segment  = original_segment->clone();
+    QSharedPointer<SegmentBase> second_segment = original_segment->clone();
+    if (!original_segment->getSb().isNull()) {
+        first_segment->setSb(QSharedPointer<SettingsBase>::create(*original_segment->getSb()));
+        second_segment->setSb(QSharedPointer<SettingsBase>::create(*original_segment->getSb()));
+    }
+
+    first_segment->setEnd(split_point);
+    second_segment->setStart(split_point);
+    refreshArcSweep(first_segment);
+    refreshArcSweep(second_segment);
+
+    path.removeAt(segment_index);
+    if (insertion_index == 0) {
+        path.append(first_segment);
+        path.prepend(second_segment);
+    }
+    else {
+        path.insert(segment_index, first_segment);
+        path.insert(insertion_index, second_segment);
+    }
+
+    return true;
+}
+
+void applyPointSelectionToPath(Path& path, const PointOrderOptimizer::PointOrderSelection& selection) {
+    if (path.size() == 0) return;
+
+    int rotation_index = normalizedIndex(selection.rotation_index, path.size());
+
+    if (selection.insert_split_point) {
+        int insertion_index                 = normalizedIndex(selection.insertion_index, path.size());
+        const int segment_index             = insertion_index == 0 ? path.size() - 1 : insertion_index - 1;
+        QSharedPointer<SegmentBase> segment = path[segment_index];
+
+        if (!segment.isNull() && selection.split_point == segment->start()) { rotation_index = segment_index; }
+        else if (!segment.isNull() && selection.split_point == segment->end()) { rotation_index = insertion_index; }
+        else if (splitSegment(path, insertion_index, selection.split_point)) {
+            rotation_index = insertion_index == 0 ? 0 : insertion_index;
+        }
+        else { rotation_index = insertion_index; }
+    }
+
+    rotation_index = normalizedIndex(rotation_index, path.size());
+    for (int i = 0; i < rotation_index; ++i) path.move(0, path.size() - 1);
+}
+}  // namespace
+
 PathOrderOptimizer::PathOrderOptimizer(Point& start, uint layer_number, const QSharedPointer<SettingsBase>& sb)
     : m_current_location(start),
       m_layer_number(layer_number),
@@ -33,6 +335,7 @@ PathOrderOptimizer::PathOrderOptimizer(Point& start, uint layer_number, const QS
       m_override_used(false),
       m_point_override_used(false) {
     m_layer_num = layer_number;
+    if (layer_number > 1) m_radial_consecutive_reference = start;
 }
 
 Point& PathOrderOptimizer::getCurrentLocation() {
@@ -299,7 +602,12 @@ Path PathOrderOptimizer::linkNextRadialPath() {
     new_path.setCCW(m_paths[index].getCCW());
 
     if (location.rotate_to_segment) {
-        addTravel(location.segment_index, new_path);
+        PointOrderOptimizer::PointOrderSelection point_selection;
+        point_selection.rotation_index     = location.segment_index;
+        point_selection.insert_split_point = location.insert_split_point;
+        point_selection.split_point        = location.split_point;
+        point_selection.insertion_index    = location.insertion_index;
+        addTravel(point_selection, new_path);
         m_current_location = new_path.back()->end();
         m_paths.remove(index);
         return new_path;
@@ -374,6 +682,8 @@ PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection(
     PathOrderOptimization path_order = cylindricalPathOrderOptimization();
     Point query_point                = radialPathQueryPoint(path_order);
     const bool find_farthest         = path_order == PathOrderOptimization::kNextFarthest;
+    const PointOrderOptimization point_order =
+        static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
 
     double selected_distance = 0.0;
     for (int i = 0, end = m_paths.size(); i < end; ++i) {
@@ -406,10 +716,47 @@ PathOrderOptimizer::RadialPathSelection PathOrderOptimizer::radialPathSelection(
         }
     }
 
-    if (selection.path_index < 0 || selection.rotate_to_segment) { return selection; }
+    if (selection.path_index < 0) { return selection; }
 
-    PointOrderOptimization point_order =
-        static_cast<PointOrderOptimization>(m_sb->setting<int>(PS::Optimizations::kPointOrder));
+    if (selection.rotate_to_segment) {
+        PointOrderOptimizer::PointOrderSelection point_selection;
+        if (point_order == PointOrderOptimization::kConsecutive) {
+            const Distance threshold = m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold);
+            if (m_radial_consecutive_reference.has_value() && threshold > 0) {
+                point_selection =
+                    consecutivePathSelection(m_paths[selection.path_index], *m_radial_consecutive_reference, threshold);
+            }
+            else {
+                const Polyline line = pathStartPoints(m_paths[selection.path_index]);
+                point_selection     = PointOrderOptimizer::linkToPoint(
+                    m_current_location, line, m_layer_num, point_order,
+                    m_sb->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
+                    m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold), threshold,
+                    m_sb->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
+                    m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius), false,
+                    m_radial_consecutive_reference);
+            }
+        }
+        else {
+            const Point point_query = radialPointQueryPoint(point_order);
+            const Polyline line     = pathStartPoints(m_paths[selection.path_index]);
+            point_selection         = PointOrderOptimizer::linkToPoint(
+                point_query, line, m_layer_num, point_order,
+                m_sb->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
+                m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
+                m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
+                m_sb->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
+                m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
+        }
+
+        selection.segment_index      = point_selection.rotation_index;
+        selection.insert_split_point = point_selection.insert_split_point;
+        selection.split_point        = point_selection.split_point;
+        selection.insertion_index    = point_selection.insertion_index;
+
+        return selection;
+    }
+
     Point point_query = radialPointQueryPoint(point_order);
     Polyline endpoints {m_paths[selection.path_index].front()->start(), m_paths[selection.path_index].back()->end()};
     const bool reverse = PointOrderOptimizer::findSkeletonPointOrder(
@@ -545,13 +892,22 @@ QPair<int, bool> PathOrderOptimizer::closestOpenPath(QVector<Path> paths) {
 }
 
 void PathOrderOptimizer::addTravel(int index, Path& path) {
+    PointOrderOptimizer::PointOrderSelection selection;
+    selection.rotation_index = index;
+    addTravel(selection, path);
+}
+
+void PathOrderOptimizer::addTravel(const PointOrderOptimizer::PointOrderSelection& selection, Path& path) {
+    if (path.size() == 0) return;
+
+    applyPointSelectionToPath(path, selection);
+
     QSharedPointer<TravelSegment> travel_segment =
-        QSharedPointer<TravelSegment>::create(m_current_location, path[index]->start());
+        QSharedPointer<TravelSegment>::create(m_current_location, path.front()->start());
     Velocity velocity = m_sb->setting<Velocity>(PS::Travel::kSpeed);
     travel_segment->getSb()->setSetting(SS::kSpeed, velocity);
 
-    m_current_location = path[index]->start();
-    for (int i = 0; i < index; ++i) { path.move(0, path.size() - 1); }
+    m_current_location = path.front()->start();
     path.prepend(travel_segment);
 }
 
@@ -599,16 +955,15 @@ Path PathOrderOptimizer::linkTo() {
     Polyline line;
     for (QSharedPointer<SegmentBase> seg : nextPath) line.append(seg->start());
 
-    int pointIndex =
+    auto pointSelection =
         PointOrderOptimizer::linkToPoint(queryPoint, line, m_layer_num, pointOrderOptimization,
                                          m_sb->setting<bool>(PS::Optimizations::kMinDistanceEnabled),
                                          m_sb->setting<Distance>(PS::Optimizations::kMinDistanceThreshold),
                                          m_sb->setting<Distance>(PS::Optimizations::kConsecutiveDistanceThreshold),
                                          m_sb->setting<bool>(PS::Optimizations::kLocalRandomnessEnable),
-                                         m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius))
-            .rotation_index;
+                                         m_sb->setting<Distance>(PS::Optimizations::kLocalRandomnessRadius));
 
-    addTravel(pointIndex, nextPath);
+    addTravel(pointSelection, nextPath);
 
     m_current_location = nextPath.back()->end();
     return nextPath;

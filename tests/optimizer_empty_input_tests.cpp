@@ -1,6 +1,7 @@
 #include <QList>
 #include <QSharedPointer>
 #include <QVector>
+#include <cmath>
 #include <cstdlib>
 
 #include "configs/settings_base.h"
@@ -8,6 +9,7 @@
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "optimizers/island_order_optimizer.h"
@@ -23,12 +25,29 @@
 
 namespace {
 
+bool closeTo(double lhs, double rhs) {
+    return std::abs(lhs - rhs) <= 1.0e-4;
+}
+
+bool pointClose(const ORNL::Point& lhs, const ORNL::Point& rhs) {
+    return closeTo(lhs.x(), rhs.x()) && closeTo(lhs.y(), rhs.y()) && closeTo(lhs.z(), rhs.z());
+}
+
 QSharedPointer<ORNL::LineSegment> lineSegment(const ORNL::Point& start, const ORNL::Point& end,
                                               ORNL::RegionType region_type = ORNL::RegionType::kPerimeter,
                                               bool region_start            = false) {
     QSharedPointer<ORNL::LineSegment> segment = QSharedPointer<ORNL::LineSegment>::create(start, end);
     segment->getSb()->setSetting(ORNL::SS::kRegionType, region_type);
     segment->getSb()->setSetting(ORNL::SS::kIsRegionStartSegment, region_start);
+    return segment;
+}
+
+QSharedPointer<ORNL::ArcSegment> arcSegment(const ORNL::Point& start, const ORNL::Point& end, const ORNL::Point& center,
+                                            bool counterclockwise) {
+    QSharedPointer<ORNL::ArcSegment> segment =
+        QSharedPointer<ORNL::ArcSegment>::create(start, end, center, counterclockwise);
+    segment->getSb()->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+    segment->getSb()->setSetting(ORNL::SS::kIsRegionStartSegment, false);
     return segment;
 }
 
@@ -246,14 +265,136 @@ int main() {
                               "Expected closed radial closest linking to preserve segment direction after rotation.");
 
     ORNL::Point closed_radial_farthest_start(0.0f, 0.0f, 0.0f);
-    ORNL::PathOrderOptimizer closed_radial_farthest_optimizer(
-        closed_radial_farthest_start, 0,
-        cylindricalSettings(ORNL::PathOrderOptimization::kNextFarthest, ORNL::PathOrderOptimization::kNextClosest));
+    QSharedPointer<ORNL::SettingsBase> closed_radial_farthest_settings =
+        cylindricalSettings(ORNL::PathOrderOptimization::kNextFarthest, ORNL::PathOrderOptimization::kNextClosest);
+    closed_radial_farthest_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                                static_cast<int>(ORNL::PointOrderOptimization::kNextFarthest));
+    ORNL::PathOrderOptimizer closed_radial_farthest_optimizer(closed_radial_farthest_start, 0,
+                                                              closed_radial_farthest_settings);
     closed_radial_farthest_optimizer.setPathsToEvaluate({closed_radial_path});
     ORNL::Path closed_radial_farthest_result = closed_radial_farthest_optimizer.linkNextRadialPath();
     passed &= ORNL::Testing::expect(closed_radial_farthest_result.size() > 1 &&
                                         closed_radial_farthest_result[1]->start() == ORNL::Point(10.0f, 10.0f, 0.0f),
                                     "Expected closed radial farthest linking to rotate to the farthest segment start.");
+
+    QSharedPointer<ORNL::SettingsBase> closed_radial_consecutive_settings =
+        cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest);
+    closed_radial_consecutive_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                                   static_cast<int>(ORNL::PointOrderOptimization::kConsecutive));
+    closed_radial_consecutive_settings->setSetting<ORNL::Distance>(
+        ORNL::PS::Optimizations::kConsecutiveDistanceThreshold, ORNL::Distance(5.0));
+    ORNL::Point closed_radial_consecutive_start(0.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer closed_radial_consecutive_optimizer(closed_radial_consecutive_start, 2,
+                                                                 closed_radial_consecutive_settings);
+    closed_radial_consecutive_optimizer.setPathsToEvaluate({closed_radial_path});
+    ORNL::Path closed_radial_consecutive_result = closed_radial_consecutive_optimizer.linkNextRadialPath();
+    passed &= expect(closed_radial_consecutive_result.size() == 6,
+                     "Expected closed radial consecutive linking to split the selected print segment.");
+    passed &= expect(closed_radial_consecutive_result[1]->start() == ORNL::Point(5.0f, 0.0f, 0.0f),
+                     "Expected closed radial consecutive linking to start at the threshold split point.");
+    passed &= expect(closed_radial_consecutive_result.back()->end() == ORNL::Point(5.0f, 0.0f, 0.0f),
+                     "Expected closed radial consecutive linking to end at the threshold split point.");
+    passed &=
+        expect(closed_radial_consecutive_result.size() > 1 &&
+                   closed_radial_consecutive_result[1]->getSb() != closed_radial_consecutive_result.back()->getSb(),
+               "Expected split path segments to own independent settings.");
+
+    ORNL::Point multi_path_consecutive_start(0.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer multi_path_consecutive_optimizer(multi_path_consecutive_start, 2,
+                                                              closed_radial_consecutive_settings);
+    multi_path_consecutive_optimizer.setPathsToEvaluate({closed_radial_path, closed_radial_path});
+    const ORNL::Path first_consecutive_path  = multi_path_consecutive_optimizer.linkNextRadialPath();
+    const ORNL::Path second_consecutive_path = multi_path_consecutive_optimizer.linkNextRadialPath();
+    passed &=
+        expect(first_consecutive_path.size() > 1 && first_consecutive_path[1]->start() == ORNL::Point(5.0f, 0.0f, 0.0f),
+               "Expected the first radial path to use the previous-layer seam reference.");
+    passed &= expect(
+        second_consecutive_path.size() > 1 && second_consecutive_path[1]->start() == ORNL::Point(5.0f, 0.0f, 0.0f),
+        "Expected every radial path in a layer to retain the same previous-layer seam reference.");
+
+    ORNL::Path closed_radial_arc_path;
+    const ORNL::Point arc_center(0.0f, 0.0f, 0.0f);
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(10.0f, 0.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f), arc_center, true));
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(0.0f, 10.0f, 0.0f), ORNL::Point(-10.0f, 0.0f, 0.0f), arc_center, true));
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(-10.0f, 0.0f, 0.0f), ORNL::Point(0.0f, -10.0f, 0.0f), arc_center, true));
+    closed_radial_arc_path.append(
+        arcSegment(ORNL::Point(0.0f, -10.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f), arc_center, true));
+
+    QSharedPointer<ORNL::SettingsBase> closed_radial_arc_settings =
+        cylindricalSettings(ORNL::PathOrderOptimization::kNextClosest, ORNL::PathOrderOptimization::kNextFarthest);
+    closed_radial_arc_settings->setSetting(ORNL::PS::Optimizations::kPointOrder,
+                                           static_cast<int>(ORNL::PointOrderOptimization::kConsecutive));
+    closed_radial_arc_settings->setSetting<ORNL::Distance>(ORNL::PS::Optimizations::kConsecutiveDistanceThreshold,
+                                                           ORNL::Distance(5.0));
+    ORNL::Point closed_radial_arc_start(10.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer closed_radial_arc_optimizer(closed_radial_arc_start, 2, closed_radial_arc_settings);
+    closed_radial_arc_optimizer.setPathsToEvaluate({closed_radial_arc_path});
+    ORNL::Path closed_radial_arc_result = closed_radial_arc_optimizer.linkNextRadialPath();
+
+    const double quarter_sweep  = std::acos(-1.0) / 2.0;
+    const double expected_angle = 5.0 / 10.0;
+    const ORNL::Point expected_arc_split(10.0 * std::cos(expected_angle), 10.0 * std::sin(expected_angle), 0.0);
+    const ORNL::ArcSegment* split_start_arc = closed_radial_arc_result.size() > 1
+                                                  ? dynamic_cast<ORNL::ArcSegment*>(closed_radial_arc_result[1].data())
+                                                  : nullptr;
+    const ORNL::ArcSegment* split_end_arc =
+        closed_radial_arc_result.size() > 0 ? dynamic_cast<ORNL::ArcSegment*>(closed_radial_arc_result.back().data())
+                                            : nullptr;
+
+    passed &= expect(closed_radial_arc_result.size() == 6,
+                     "Expected closed radial consecutive linking to split an arc print segment.");
+    passed &= expect(split_start_arc != nullptr && split_end_arc != nullptr,
+                     "Expected closed radial consecutive arc linking to preserve arc segment types.");
+    passed &= expect(
+        closed_radial_arc_result.size() > 1 && pointClose(closed_radial_arc_result[1]->start(), expected_arc_split),
+        "Expected closed radial consecutive arc linking to start on the selected arc.");
+    passed &= expect(
+        closed_radial_arc_result.size() > 0 && pointClose(closed_radial_arc_result.back()->end(), expected_arc_split),
+        "Expected closed radial consecutive arc linking to end on the selected arc.");
+    passed &= expect(split_start_arc != nullptr && split_end_arc != nullptr &&
+                         closeTo(split_start_arc->angle()() + split_end_arc->angle()(), quarter_sweep),
+                     "Expected closed radial consecutive arc linking to refresh split arc sweep angles.");
+
+    ORNL::Path full_circle_arc_path;
+    full_circle_arc_path.append(
+        arcSegment(ORNL::Point(10.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f), arc_center, true));
+    ORNL::Point full_circle_arc_start(10.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer full_circle_arc_optimizer(full_circle_arc_start, 2, closed_radial_arc_settings);
+    full_circle_arc_optimizer.setPathsToEvaluate({full_circle_arc_path});
+    const ORNL::Path full_circle_arc_result = full_circle_arc_optimizer.linkNextRadialPath();
+    const ORNL::Point expected_full_circle_split(10.0 * std::cos(expected_angle), 10.0 * std::sin(expected_angle), 0.0);
+    const ORNL::ArcSegment* full_circle_start_arc =
+        full_circle_arc_result.size() > 1 ? dynamic_cast<ORNL::ArcSegment*>(full_circle_arc_result[1].data()) : nullptr;
+    const ORNL::ArcSegment* full_circle_end_arc =
+        full_circle_arc_result.size() > 0 ? dynamic_cast<ORNL::ArcSegment*>(full_circle_arc_result.back().data())
+                                          : nullptr;
+    passed &= expect(full_circle_arc_result.size() == 3,
+                     "Expected a single full-circle arc to split at the consecutive threshold.");
+    passed &= expect(
+        full_circle_arc_result.size() > 1 && pointClose(full_circle_arc_result[1]->start(), expected_full_circle_split),
+        "Expected the default one-arc revolution to rotate by physical arc distance.");
+    passed &=
+        expect(full_circle_start_arc != nullptr && full_circle_end_arc != nullptr &&
+                   closeTo(full_circle_start_arc->angle()() + full_circle_end_arc->angle()(), 2.0 * std::acos(-1.0)),
+               "Expected a split full-circle arc to preserve one complete revolution.");
+
+    QSharedPointer<ORNL::SettingsBase> oversized_arc_threshold_settings =
+        QSharedPointer<ORNL::SettingsBase>::create(*closed_radial_arc_settings);
+    oversized_arc_threshold_settings->setSetting<ORNL::Distance>(ORNL::PS::Optimizations::kConsecutiveDistanceThreshold,
+                                                                 ORNL::Distance(100.0));
+    ORNL::Point oversized_arc_threshold_start(10.0f, 0.0f, 0.0f);
+    ORNL::PathOrderOptimizer oversized_arc_threshold_optimizer(oversized_arc_threshold_start, 2,
+                                                               oversized_arc_threshold_settings);
+    oversized_arc_threshold_optimizer.setPathsToEvaluate({full_circle_arc_path});
+    const ORNL::Path oversized_arc_threshold_result = oversized_arc_threshold_optimizer.linkNextRadialPath();
+    passed &= expect(oversized_arc_threshold_result.size() == 3,
+                     "Expected an oversized consecutive threshold to split a full-circle arc at its farthest point.");
+    passed &= expect(oversized_arc_threshold_result.size() > 1 &&
+                         pointClose(oversized_arc_threshold_result[1]->start(), ORNL::Point(-10.0f, 0.0f, 0.0f)),
+                     "Expected an oversized consecutive threshold to fall back to the opposite point on the arc.");
 
     ORNL::Path open_radial_path = pathFromPoints({ORNL::Point(0.0f, 0.0f, 0.0f), ORNL::Point(10.0f, 0.0f, 0.0f),
                                                   ORNL::Point(10.0f, 10.0f, 0.0f), ORNL::Point(0.0f, 10.0f, 0.0f)});
