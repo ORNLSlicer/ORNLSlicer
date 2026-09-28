@@ -123,10 +123,12 @@ The application can:
 - save complete projects and export controller files with optional companion
   and project files.
 
-![Figure 01 placeholder: Overview](user-guide-images/figure01.png)
-
 > **Diagram placeholder — Overview:** Add a representative image showing a
 > model in Part View beside its generated toolpath in G-Code View.
+
+| Part View (3-D Model) | G-Code View (Generated Toolpaths) |
+| :---: | :---: |
+| ![Model in Part View](user-guide-images/part_view_workspace.png) | ![Generated toolpaths in G-Code View](user-guide-images/gcode_view_workspace.png) |
 
 ### 1.2 How the software is organized
 
@@ -155,8 +157,6 @@ same slicing implementation.
 For implementation-level ownership and extension points, see the
 [architecture overview](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/ARCHITECTURE.md).
 
-![Figure 02 placeholder: Structure](user-guide-images/figure02.png)
-
 > **Diagram placeholder — Structure:** Add a component diagram showing GUI and
 > CLI entry points sharing session, settings, and slicers, with a toolpath
 > branch through writers/parsers and a direct Image-output branch.
@@ -178,8 +178,6 @@ A normal toolpath workflow moves through these stages:
 Image slicing branches after preprocessing: it creates numbered image slices
 and a part-ID map instead of ordinary machine G-code. Cylindrical slicing also
 uses specialized radial or helical paths rather than the planar region stack.
-
-![Figure 03 placeholder: Processing flow](user-guide-images/figure03.png)
 
 > **Diagram placeholder — Processing flow:** Add an import-to-export flowchart
 > with separate planar, cylindrical, and image branches.
@@ -203,8 +201,6 @@ Developers building from source should follow the
 [development environment guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/wiki/Getting-Started.md)
 instead of the release steps.
 
-![Figure 04 placeholder: Installation](user-guide-images/figure04.png)
-
 > **Diagram placeholder — Installation:** Add one Windows package-selection
 > screenshot and one Linux AppImage launch example.
 
@@ -225,8 +221,6 @@ Before loading a production part:
 
 Changing display units changes how values are shown. The selected controller
 syntax and template determine the units and conventions used in output.
-
-![Figure 05 placeholder: First launch](user-guide-images/figure05.png)
 
 > **Diagram placeholder — First launch:** Add an annotated Preferences window
 > and the Printer > Machine Setup settings panel.
@@ -257,8 +251,6 @@ syntax and template determine the units and conventions used in output.
 
 Always verify the generated file independently before running it on a machine.
 
-![Figure 06 placeholder: Quick start](user-guide-images/figure06.png)
-
 > **Diagram placeholder — Quick start:** Add a numbered, eight-panel workflow
 > from model load through export, combining adjacent inspection steps where
 > needed.
@@ -279,8 +271,6 @@ Always verify the generated file independently before running it on a machine.
 File extensions describe the accepted container or input route, not guaranteed
 compatibility with every producer. Validate complex CAD imports, third-party
 G-code, and controller-specific files after loading.
-
-![Figure 07 placeholder: File types](user-guide-images/figure07.png)
 
 > **Diagram placeholder — File types:** Add an input/output diagram grouping
 > model, project, settings, G-code, and image files around ORNLSlicer.
@@ -304,10 +294,7 @@ The main window has these primary areas:
 The Settings, G-Code Editor, and Layer Times panels share a dock area by
 default. Select their tabs to bring one to the front.
 
-![Figure 08 placeholder: Main window](user-guide-images/figure08.png)
-
-> **Diagram placeholder — Main window:** Add a current, numbered screenshot
-> identifying all six main-window areas.
+![Main window overview](user-guide-images/main_window_overview.png)
 
 ### 4.2 Main control toolbar
 
@@ -325,10 +312,7 @@ Once G-code is loaded, the toolbar also enables tools for segment information,
 orthographic 2-D preview, ghosted source models, and G-code export. A disabled
 tool normally means that the active view or loaded data does not support it.
 
-![Figure 09 placeholder: Main toolbar](user-guide-images/figure09.png)
-
-> **Diagram placeholder — Main toolbar:** Add separate annotated toolbar strips
-> for Part View and G-Code View, including enabled and disabled examples.
+![Main control toolbar](user-guide-images/main_toolbar.png)
 
 ### 4.3 Part View
 
@@ -351,11 +335,13 @@ and the wheel zooms. Arrow keys rotate the camera; modified arrow keys pan it.
 When a part is selected, left-drag moves it in XY and a right-drag rotates it
 with angle snapping. Use **View > Reset Camera** if the model is lost from view.
 
-![Figure 10 placeholder: Part View](user-guide-images/figure10.png)
+![Part View workspace](user-guide-images/part_view_workspace.png)
 
-> **Diagram placeholder — Part View:** Add a labeled screenshot with the
-> printer volume, object tree, transform toolbar, view controls, and three model
-> roles visible.
+The floating view-controls toolbar anchored in the workspace provides quick
+access to camera presets (Isometric, Front, Side, and Top projections) as well
+as the overhead orthographic projection toggle:
+
+![View controls toolbar](user-guide-images/view_controls_toolbar.png)
 
 ### 4.4 G-Code View
 
@@ -374,8 +360,6 @@ G-Code View renders generated or imported motion. It supports:
 The preview is a verification aid. Controller state, macros, work offsets, and
 commands that do not map to geometric motion may not be represented visually.
 
-![Figure 11 placeholder: G-Code View](user-guide-images/figure11.png)
-
 > **Diagram placeholder — G-Code View:** Add one screenshot showing colored
 > paths and another showing the selected segment synchronized with its text
 > line.
@@ -392,10 +376,7 @@ commands that do not map to geometric motion may not be represented visually.
 Selecting an object, layer marker, range, or settings region changes the scope
 shown by the Settings panel. Confirm the active scope before editing.
 
-![Figure 12 placeholder: Dock panels](user-guide-images/figure12.png)
-
-> **Diagram placeholder — Dock panels:** Add a four-part figure showing each
-> panel with its scope or key controls highlighted.
+![Dock panels sidebar](user-guide-images/dock_panels_sidebar.png)
 
 ### 4.6 Menus and shortcuts
 
@@ -416,10 +397,13 @@ The main menus are:
 See [Appendix C](#appendix-c-shortcut-reference) for the current application
 shortcuts.
 
-![Figure 13 placeholder: Menus](user-guide-images/figure13.png)
+![Main menu bar](user-guide-images/menu_bar_menus.png)
 
-> **Diagram placeholder — Menus:** Add a composite screenshot of File,
-> Settings, Project, and View menus; use captions for the remaining menus.
+Developer diagnostic utilities under the **Debug** menu, such as
+**Debug > Cross Section Debug View**, allow inspecting slice planes and
+individual cross-section polygons:
+
+![Cross section debug dialog](user-guide-images/cs_debug_dialog.png)
 
 ### 4.7 Customize the workspace
 
@@ -431,8 +415,6 @@ Settings panel.
 
 Workspace layout is separate from process settings. Moving a dock does not
 change a project or generated toolpath.
-
-![Figure 14 placeholder: Workspace layout](user-guide-images/figure14.png)
 
 > **Diagram placeholder — Workspace layout:** Add before-and-after screenshots
 > of the default dock layout and a customized two-column layout.
@@ -449,8 +431,6 @@ Use **File > Load Point Cloud** for `.matrix` or `.xyz` point data. Model import
 uses the **Imported Model Unit** preference, so set it before loading files that
 do not carry reliable unit metadata. Additional models may be shifted on load
 to avoid collisions, according to the notification preferences.
-
-![Figure 15 placeholder: Model import](user-guide-images/figure15.png)
 
 > **Diagram placeholder — Model import:** Add the model-role menu, supported
 > file dialog, and imported-model-unit preference in a three-panel figure.
@@ -469,8 +449,6 @@ Every scene object has a role:
 Right-click selected objects and choose **Switch to Build**, **Switch to
 Clipper**, or **Switch to Setting** to change the role. The same model can serve
 different purposes without being re-imported.
-
-![Figure 16 placeholder: Model roles](user-guide-images/figure16.png)
 
 > **Diagram placeholder — Model roles:** Add one build object intersected by a
 > clipping object and a settings object, followed by the resulting sliced
@@ -491,8 +469,6 @@ The shape menu can create geometry without an external CAD file:
 Enter the requested dimensions and a unique name. Generated build primitives
 can be transformed and sliced like imported models. The box settings region is
 created with the Settings role.
-
-![Figure 17 placeholder: Primitive geometry](user-guide-images/figure17.png)
 
 > **Diagram placeholder — Primitive geometry:** Add a labeled grid showing all
 > generated shape types and the box settings region.
@@ -526,7 +502,13 @@ back to the top level to remove the relationship.
 Copy and paste duplicate selected parts. Reload keeps the scene object but
 re-reads its source geometry; replace selects a different source file.
 
-![Figure 18 placeholder: Part organization](user-guide-images/figure18.png)
+![Part organization object tree](user-guide-images/part_control.png)
+
+Right-clicking any object in the Part View or object tree opens the part context
+menu to change model roles, lock geometry, duplicate instances, reset transforms,
+rename or reload source files, and toggle wireframe or transparency rendering:
+
+![Part context menu](user-guide-images/part_context_menu.png)
 
 > **Diagram placeholder — Part organization:** Add an object-tree example with
 > multiple selection, a parent/child group, role icons, and the context menu.
@@ -548,10 +530,7 @@ Confirm transformed geometry remains inside the printer volume. If a model
 loads at the wrong size, correct the import-unit preference and reload it where
 possible instead of relying on an unexplained scale factor.
 
-![Figure 19 placeholder: Transform tools](user-guide-images/figure19.png)
-
-> **Diagram placeholder — Transform tools:** Add a six-panel sequence showing
-> translation, rotation, scale, align, center, and drop-to-floor results.
+![Transform controls toolbar](user-guide-images/transform_controls.png)
 
 ### 5.6 Inspect model geometry
 
@@ -571,8 +550,6 @@ Use the Part View overlays before slicing:
 These overlays are visual aids and are not written as manufacturing paths.
 Use **File > Take Screenshot** to save the current Part View framebuffer as
 PNG, JPG, GIF, or TIF; PNG is used when no extension is entered.
-
-![Figure 20 placeholder: Model inspection](user-guide-images/figure20.png)
 
 > **Diagram placeholder — Model inspection:** Add one labeled screenshot per
 > overlay, using the same model and camera position for comparison.
@@ -597,8 +574,6 @@ Image slicing reads active global values.
 
 Confirm the active scope label in the Settings panel before making a change.
 
-![Figure 21 placeholder: Settings precedence](user-guide-images/figure21.png)
-
 > **Diagram placeholder — Settings precedence:** Add a stacked diagram from
 > defaults through global, part, layer/range, and spatial-region values, with
 > mode-specific exceptions called out.
@@ -621,10 +596,7 @@ For every setting's purpose, input type, fallback default, scope, dependency,
 and choices, see the generated
 [detailed settings reference](#appendix-e-detailed-settings-reference).
 
-![Figure 22 placeholder: Settings panels](user-guide-images/figure22.png)
-
-> **Diagram placeholder — Settings panels:** Add one screenshot of each major
-> settings panel with its category tabs labeled.
+![Settings sidebar panel](user-guide-images/settings_sidebar.png)
 
 ### 6.3 Edit and find settings
 
@@ -642,8 +614,6 @@ greyed out or hidden.
 
 Individual category tabs can be hidden. Restore them with
 **View > Hidden Settings**, or use **Show All Settings**.
-
-![Figure 23 placeholder: Setting dependencies](user-guide-images/figure23.png)
 
 > **Diagram placeholder — Setting dependencies:** Add a before-and-after image
 > showing settings enabled by changing Slicing Mode and the hidden-settings
@@ -666,7 +636,13 @@ A template is not a substitute for machine validation. Review dimensions,
 coordinates, syntax, speeds, and startup/shutdown commands whenever a template
 moves between systems.
 
-![Figure 24 placeholder: Templates](user-guide-images/figure24.png)
+![Template save dialog](user-guide-images/template_save_dialog.png)
+
+Use **Settings > G-Code to S2C** to reverse-extract configuration settings from
+a previously generated G-code toolpath file into an `.s2c` template, with an
+option to supply default values for any missing settings:
+
+![G-Code to S2C conversion dialog](user-guide-images/gcode_to_s2c_dialog.png)
 
 > **Diagram placeholder — Templates:** Add the template load dialog, save
 > dialog with panel selection, and additional-location chooser.
@@ -680,8 +656,6 @@ scope. Part settings travel with the part inside an `.s2p` project.
 Use part settings when separate build objects need different bead widths,
 speeds, infill, path options, or other locally supported values. Keep machine
 configuration global unless the UI explicitly permits a local override.
-
-![Figure 25 placeholder: Part settings](user-guide-images/figure25.png)
 
 > **Diagram placeholder — Part settings:** Add two adjacent parts using
 > different local infill or speed values, with the active part scope visible.
@@ -703,7 +677,7 @@ Reusable layer-bar templates use `.s2l`. Place site-provided templates in an
 installed or additional layer-bar settings location when the same process
 transition is used repeatedly.
 
-![Figure 26 placeholder: Layer settings](user-guide-images/figure26.png)
+![Layer settings bar](user-guide-images/layer_bar.png)
 
 > **Diagram placeholder — Layer settings:** Add a layer bar with one single
 > layer and one paired range, plus the corresponding 3-D range overlay.
@@ -723,8 +697,6 @@ with a build part by using parent/child relationships when appropriate.
 Spatial settings regions are a planar-slicing feature; do not assume that
 cylindrical or image modes apply them.
 
-![Figure 27 placeholder: Settings regions](user-guide-images/figure27.png)
-
 > **Diagram placeholder — Settings regions:** Add a transparent settings box
 > intersecting a part and a preview showing the changed path density or speed
 > inside the box.
@@ -743,8 +715,6 @@ Set **Profile > Slicing > Slicing Mode**:
 
 Changing the mode reveals its specific controls. Confirm all dependent values
 before slicing.
-
-![Figure 28 placeholder: Slicing modes](user-guide-images/figure28.png)
 
 > **Diagram placeholder — Slicing modes:** Add a decision tree and one sample
 > result for Planar, Cylindrical/Radial, Cylindrical/Helical, and Image.
@@ -767,8 +737,6 @@ enable it before import or reload the model after changing it. Use smoothing,
 spiralize, or oversize options only after confirming how they change the
 intended geometry.
 
-![Figure 29 placeholder: Planar slicing](user-guide-images/figure29.png)
-
 > **Diagram placeholder — Planar slicing:** Add a model cut into planes, one
 > polygon cross-section, and the resulting ordered regions for a single layer.
 
@@ -790,8 +758,6 @@ Each enabled region can have its own bead width, speed, extrusion value,
 minimum path length, start/end G-code, and supported path modifiers. The
 **Region Order** setting controls their requested order within an island.
 
-![Figure 30 placeholder: Path regions](user-guide-images/figure30.png)
-
 > **Diagram placeholder — Path regions:** Add one color-coded layer containing
 > perimeter, inset, skeleton, skin, infill, support, and scan examples with a
 > legend.
@@ -811,8 +777,6 @@ transitional dense layers below skin where enabled.
 Pattern availability and behavior depend on geometry and other settings.
 Inspect narrow features, small islands, overlaps, and short-path filtering in
 the preview.
-
-![Figure 31 placeholder: Fill patterns](user-guide-images/figure31.png)
 
 > **Diagram placeholder — Fill patterns:** Add a comparison grid for every
 > infill pattern and a cutaway showing skin plus gradual-infill layers.
@@ -837,8 +801,6 @@ G-Code View to compare the build paths with and without support. Generated
 planar support is distinct from support-role model files, which are currently
 consumed only by Image mode.
 
-![Figure 32 placeholder: Support](user-guide-images/figure32.png)
-
 > **Diagram placeholder — Support:** Add the overhang overlay and side-by-side
 > grid and organic support previews, labeling interface and base layers.
 
@@ -855,8 +817,6 @@ consumed only by Image mode.
 These structures change first-layer geometry and may change required bed area,
 material use, start position, and removal procedure. Confirm they remain inside
 the build volume.
-
-![Figure 33 placeholder: Adhesion](user-guide-images/figure33.png)
 
 > **Diagram placeholder — Adhesion:** Add one first-layer comparison showing
 > raft, brim, and skirt with dimensions labeled.
@@ -882,8 +842,6 @@ Their availability also depends on machine type and syntax. Inspect the G-code
 text as well as the geometric preview because some modifier effects are
 controller commands rather than visible paths.
 
-![Figure 34 placeholder: Travel and modifiers](user-guide-images/figure34.png)
-
 > **Diagram placeholder — Travel and modifiers:** Add an annotated path showing
 > prestart, print, slowdown, tip wipe, lift, travel, retract, and prime phases.
 
@@ -907,8 +865,6 @@ Optimization changes travel and seam placement. Compare travel distance,
 surface starts, thermal sequence, collision risk, and machine kinematics rather
 than assuming the shortest path is always the best process path.
 
-![Figure 35 placeholder: Optimization](user-guide-images/figure35.png)
-
 > **Diagram placeholder — Optimization:** Add the same multi-island layer
 > before and after path ordering, with custom optimization points and travels
 > visible.
@@ -925,8 +881,6 @@ Optional scan settings can add measurement motion to planar workflows:
 Scanner paths and auxiliary data depend on the selected syntax, hardware, and
 export options. Confirm the writer emits the expected machine commands and
 save auxiliary files when applicable.
-
-![Figure 36 placeholder: Scanning](user-guide-images/figure36.png)
 
 > **Diagram placeholder — Scanning:** Add one print/scan layer pair showing the
 > scanner footprint, offsets, scan direction, and generated auxiliary data.
@@ -956,8 +910,6 @@ the dedicated
 [Cylindrical Slicing guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/cylindrical-slicing.md)
 for settings, boundary policies, output fields, limitations, and checks.
 
-![Figure 37 placeholder: Cylindrical slicing](user-guide-images/figure37.png)
-
 > **Diagram placeholder — Cylindrical slicing:** Add axis/radius notation and
 > side-by-side radial and helical paths, including clipped boundary examples.
 
@@ -978,8 +930,6 @@ requested location; verify the generated directory before using the files.
 Check image dimensions, origin, resolution, layer numbering, and ID mapping in
 the downstream consumer.
 
-![Figure 38 placeholder: Image slicing](user-guide-images/figure38.png)
-
 > **Diagram placeholder — Image slicing:** Add a 3-D model, two labeled raster
 > layers, pixel-ID legend, and example `idFileLinks.dat` mapping.
 
@@ -995,7 +945,7 @@ when successful. A failed validation or load reports details in the status
 area. Correct the model, syntax, or settings and slice again. Each slice
 currently rebuilds the selected mode's path data.
 
-![Figure 39 placeholder: Slice progress](user-guide-images/figure39.png)
+![Slice progress dialog](user-guide-images/slice_dialog.png)
 
 > **Diagram placeholder — Slice progress:** Add the progress dialog with every
 > stage labeled and a successful transition to G-Code View.
@@ -1015,8 +965,6 @@ a common writer or parser while others have specialized behavior.
 
 Switching syntax is a machine-level change. Reload the correct template and
 review all dependent settings, commands, units, and output fields.
-
-![Figure 40 placeholder: Controller syntax](user-guide-images/figure40.png)
 
 > **Diagram placeholder — Controller syntax:** Add a flow from machine-neutral
 > paths through three example writers to differently formatted controller
@@ -1043,8 +991,6 @@ True Bead Widths can bypass that threshold when the toolbar toggle is enabled;
 Thin Lines disables true-width rendering. Large files may use a lightweight
 base with true-width detail only for a smaller visible range.
 
-![Figure 41 placeholder: Preview modes](user-guide-images/figure41.png)
-
 > **Diagram placeholder — Preview modes:** Add the same layer rendered as thin
 > lines, true bead widths, orthographic 2-D, and a ghosted 3-D view.
 
@@ -1062,7 +1008,7 @@ controller macros.
 Keep an external, reviewed copy of important manual edits. Reslicing replaces
 the current generated text.
 
-![Figure 42 placeholder: G-code editor](user-guide-images/figure42.png)
+![G-Code editor panel](user-guide-images/gcode_editor_panel.png)
 
 > **Diagram placeholder — G-code editor:** Add a search result, an edited line
 > with Refresh enabled, and the synchronized preview selection.
@@ -1078,10 +1024,7 @@ Estimates depend on configured speeds, acceleration assumptions, command
 interpretation, density, and controller behavior. Treat them as planning
 values, not guaranteed cycle times or material measurements.
 
-![Figure 43 placeholder: Timing](user-guide-images/figure43.png)
-
-> **Diagram placeholder — Timing:** Add the Layer Times plot/table and the
-> corresponding status summary for a multi-layer file.
+![Layer Times window](user-guide-images/layer_times_window.png)
 
 ### 8.5 Import G-code
 
@@ -1093,8 +1036,6 @@ not have deterministic export units or naming.
 
 Review parser warnings, path scale, coordinates, layer boundaries, travels,
 arcs, extrusion state, and timing before relying on an imported preview.
-
-![Figure 44 placeholder: G-code import](user-guide-images/figure44.png)
 
 > **Diagram placeholder — G-code import:** Add a recognized-header file and an
 > unrecognized-header warning, each with its resulting preview.
@@ -1116,11 +1057,7 @@ Sensor workflows may create numbered `.dat` files. Inspect every file in a
 bundle and preserve their relative naming when the controller workflow depends
 on it.
 
-![Figure 45 placeholder: Export](user-guide-images/figure45.png)
-
-> **Diagram placeholder — Export:** Add the export dialog and an expanded
-> output bundle showing G-code, project, sensor, and syntax-specific companion
-> files.
+![G-Code Export dialog](user-guide-images/gcode_export_dialog.png)
 
 ## 9. Projects and recovery
 
@@ -1136,8 +1073,6 @@ it after application, template, or machine changes. When loading an older
 project, ORNLSlicer may migrate settings or ask how to handle part positions.
 Review the scene and settings before slicing.
 
-![Figure 46 placeholder: Project archive](user-guide-images/figure46.png)
-
 > **Diagram placeholder — Project archive:** Add a cutaway of an `.s2p` ZIP
 > showing models, session data, global settings, local settings, and version
 > metadata.
@@ -1152,8 +1087,6 @@ retained; load a different template if the next setup needs different settings.
 Save reusable machine and process values as a template; save a complete
 arrangement, including geometry and local overrides, as a project.
 
-![Figure 47 placeholder: New project](user-guide-images/figure47.png)
-
 > **Diagram placeholder — New project:** Add the populated scene before the
 > action and the empty scene afterward, with unchanged active settings called
 > out.
@@ -1167,8 +1100,6 @@ autosaved state after closing or restarting the application.
 Autosave is a recovery aid, not a versioned backup. Save named projects at
 meaningful milestones and retain exported machine files through the site's
 normal revision and approval process.
-
-![Figure 48 placeholder: Recovery](user-guide-images/figure48.png)
 
 > **Diagram placeholder — Recovery:** Add a restore-last-session sequence from
 > application start to the recovered model, settings, and project title.
@@ -1282,10 +1213,7 @@ listed as 8-bit RGB values.
 | Tip Wipe Reverse | 179, 128, 255 | Travel | 233, 175, 198 |
 | Unknown | 0, 0, 0 |  |  |
 
-![Figure 49 placeholder: Preferences](user-guide-images/figure49.png)
-
-> **Diagram placeholder — Preferences:** Add the tab strip and a representative
-> control from every preference area.
+![Preferences dialog](user-guide-images/preferences_window.png)
 
 ### 10.2 Flowrate Calculator
 
@@ -1297,10 +1225,7 @@ The calculator is a process-planning aid. Transfer results to the appropriate
 settings deliberately and validate them with material characterization and
 machine trials.
 
-![Figure 50 placeholder: Flowrate Calculator](user-guide-images/figure50.png)
-
-> **Diagram placeholder — Flowrate Calculator:** Add a completed example with
-> input and calculated fields distinguished by color or callouts.
+![Flowrate Calculator](user-guide-images/flowrate_calculator.png)
 
 ### 10.3 Xtrude Calculator
 
@@ -1311,10 +1236,7 @@ material density and two-minute test mass.
 The calculator uses the preferred units. Confirm units before copying a result
 to a template or machine program.
 
-![Figure 51 placeholder: Xtrude Calculator](user-guide-images/figure51.png)
-
-> **Diagram placeholder — Xtrude Calculator:** Add one completed example for
-> each of the three calculation modes.
+![Xtrude Calculator](user-guide-images/xtrude_calculator.png)
 
 ## 11. Command-line workflow
 
@@ -1345,8 +1267,6 @@ supplied with model input but not with a project, because the project already
 contains global settings. For reproducible machine output, supply a `.s2c` or
 `.s2p`; model-only input uses the embedded master defaults, not the GUI's last
 active template.
-
-![Figure 52 placeholder: CLI structure](user-guide-images/figure52.png)
 
 > **Diagram placeholder — CLI structure:** Add a terminal-to-pipeline diagram
 > showing model/template and project alternatives converging on output.
@@ -1404,8 +1324,6 @@ PNG layers and `idFileLinks.dat` are written into the output location. Do not
 use a project-based Image run when exact CLI output routing is required in the
 current implementation.
 
-![Figure 53 placeholder: CLI examples](user-guide-images/figure53.png)
-
 > **Diagram placeholder — CLI examples:** Add terminal captures for a normal
 > G-code run and an Image-mode output directory.
 
@@ -1431,8 +1349,6 @@ table. Although `--help` currently advertises export-control options and
 `--slice_bounds`, the command-line controller does not apply them. Use the GUI
 export dialog when header text, project copies, auxiliary files, bundled
 output, or explicit slice bounds are required.
-
-![Figure 54 placeholder: CLI options](user-guide-images/figure54.png)
 
 > **Diagram placeholder — CLI options:** Add a command anatomy figure labeling
 > executable, primary input, template, placement, output, and advanced options.
@@ -1462,8 +1378,6 @@ Include the application version from **Help > About**, operating system,
 template or project details, exact steps, status/error text, and a minimal
 reproducer when possible. Do not attach proprietary geometry or machine files
 to a public issue without authorization.
-
-![Figure 55 placeholder: Troubleshooting](user-guide-images/figure55.png)
 
 > **Diagram placeholder — Troubleshooting:** Add a decision flow for load,
 > setup, slice, preview, and export failures, pointing to the Status panel and
@@ -1516,8 +1430,6 @@ every individual setting.
 | Experimental | File Output | Syntax-specific companion and simulation outputs |
 | Experimental | Cross-Sectioning | Gap and stitch tolerances |
 
-![Figure 56 placeholder: Settings map](user-guide-images/figure56.png)
-
 > **Diagram placeholder — Settings map:** Add a foldout-style map of the four
 > panels and their categories, suitable for both Markdown and PDF navigation.
 
@@ -1562,8 +1474,6 @@ This list indicates selectable output integrations, not identical feature
 support. Confirm units, suffix, comments, arcs, axes, startup/shutdown behavior,
 parser support, and companion outputs for the chosen machine.
 
-![Figure 57 placeholder: Syntaxes](user-guide-images/figure57.png)
-
 > **Diagram placeholder — Syntaxes:** Add a compatibility matrix grouping
 > syntaxes by controller/machine family, normal units, suffix, arc support, and
 > companion output. Populate it from verified writer/parser behavior.
@@ -1592,8 +1502,6 @@ parser support, and companion outputs for the chosen machine.
 Shortcuts are application-wide. When focus is in a text field, copy and paste
 operate on text; otherwise they operate on selected parts where supported.
 
-![Figure 58 placeholder: Shortcuts](user-guide-images/figure58.png)
-
 > **Diagram placeholder — Shortcuts:** Add a keyboard layout highlighting the
 > most common model, template, project, view, and slicing shortcuts.
 
@@ -1617,15 +1525,13 @@ operate on text; otherwise they operate on selected parts where supported.
 | Template | Reusable `.s2c` global or `.s2l` layer settings file. |
 | Travel | Non-print motion connecting printable or scan paths. |
 
-![Figure 59 placeholder: Glossary](user-guide-images/figure59.png)
-
 > **Diagram placeholder — Glossary:** Add a labeled single-layer toolpath that
 > identifies island, region, path, segment, bead, and travel terms.
-
 <!-- BEGIN GENERATED SETTINGS REFERENCE -->
+
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 544 scalar manufacturing settings exposed by the canonical catalog. The 5 grouped controls combine related scalar values, producing 537 visible setting rows across 37 categories.
+This generated appendix documents all 566 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 551 visible setting rows across 39 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1646,8 +1552,6 @@ Use the browser or PDF search for either a visible label or an internal key. Eve
 | Available when | The selections or toggles that enable the setting. |
 | Choices | Every selectable value for enumeration settings, in stored order. |
 
-![Figure 60 placeholder: Setting anatomy](user-guide-images/figure60.png)
-
 > **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,
 > tooltip, disabled state, local-override indicator, and corresponding reference entry.
 
@@ -1660,7 +1564,7 @@ The catalog is organized as follows:
 | [Printer](#e2-printer-settings) | [Auxiliary](#settings-printer-auxiliary) | 2 |
 | [Printer](#e2-printer-settings) | [Machine Speeds](#settings-printer-machine-speeds) | 7 |
 | [Printer](#e2-printer-settings) | [Acceleration](#settings-printer-acceleration) | 8 |
-| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 10 |
+| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 12 |
 | [Material](#e3-material-settings) | [Density](#settings-material-density) | 2 |
 | [Material](#e3-material-settings) | [Start-Up](#settings-material-start-up) | 32 |
 | [Material](#e3-material-settings) | [Slow Down](#settings-material-slow-down) | 32 |
@@ -1674,39 +1578,40 @@ The catalog is organized as follows:
 | [Material](#e3-material-settings) | [Cooling](#settings-material-cooling) | 10 |
 | [Material](#e3-material-settings) | [Platform Adhesion](#settings-material-platform-adhesion) | 14 |
 | [Material](#e3-material-settings) | [Multi-Material](#settings-material-multi-material) | 11 |
-| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 20 |
-| [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 6 |
+| [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 13 |
+| [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 9 |
 | [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 20 |
 | [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 13 |
+| [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 20 |
 | [Profile](#e4-profile-settings) | [Skeleton](#settings-profile-skeleton) | 23 |
 | [Profile](#e4-profile-settings) | [Skin](#settings-profile-skin) | 18 |
-| [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 20 |
 | [Profile](#e4-profile-settings) | [Support](#settings-profile-support) | 29 |
-| [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 9 |
+| [Profile](#e4-profile-settings) | [Radial](#settings-profile-radial) | 2 |
+| [Profile](#e4-profile-settings) | [Helical](#settings-profile-helical) | 21 |
+| [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 10 |
+| [Profile](#e4-profile-settings) | [Ordering](#settings-profile-ordering) | 3 |
+| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 34 |
 | [Profile](#e4-profile-settings) | [G-Code](#settings-profile-g-code) | 12 |
 | [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 16 |
-| [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 34 |
-| [Profile](#e4-profile-settings) | [Ordering](#settings-profile-ordering) | 3 |
 | [Profile](#e4-profile-settings) | [Laser Scanner](#settings-profile-laser-scanner) | 23 |
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
+| [Experimental](#e5-experimental-settings) | [Cross-Sectioning](#settings-experimental-cross-sectioning) | 2 |
 | [Experimental](#e5-experimental-settings) | [Auto Speed Ramping](#settings-experimental-auto-speed-ramping) | 8 |
 | [Experimental](#e5-experimental-settings) | [File Output](#settings-experimental-file-output) | 15 |
-| [Experimental](#e5-experimental-settings) | [Cross-Sectioning](#settings-experimental-cross-sectioning) | 2 |
 
 ### E.2 Printer settings
+
+![Printer Settings Panel](user-guide-images/printer_settings_panel.png)
 
 Printer settings describe the controller, coordinate system, build envelope, machine limits, and
 machine-level G-code. Treat them as machine configuration and verify them against the physical
 system.
 
-![Figure 61 placeholder: Printer settings](user-guide-images/figure61.png)
-
-> **Diagram placeholder — Printer settings:** Add an annotated Printer panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
-
 <a id="settings-printer-machine-setup"></a>
 
 #### Printer > Machine Setup
+
+![Printer > Machine Setup Settings](user-guide-images/settings/printer/machine_setup_options.png)
 
 Selects controller syntax, machine process, motion-command behavior, coordinates, tools, and
 rotary-axis values.
@@ -1965,9 +1870,12 @@ Rotates generated G-Code coordinates about the Z axis before output.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
 
+
 <a id="settings-printer-dimensions"></a>
 
 #### Printer > Dimensions
+
+![Printer > Dimensions Settings](user-guide-images/settings/printer/dimensions_options.png)
 
 Defines the build-volume shape, limits, offsets, auxiliary locations, and displayed floor grid.
 
@@ -2100,13 +2008,17 @@ Height of the Z axis where the nozzle touches the build surface (table at maximu
 
 ##### Use Variable for Z Position (`variable_for_z`)
 
-If selected, a variable, #200, is issued in place of the Z offset. Z motions are output as
+If selected, a specified variable is issued in place of the Z offset. Z motions are output as
 mathematical operations on the variable.
 
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `None`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Syntax is `Cincinnati`.
+- **Choices:**
+  - `None`
+  - `#200`
+  - `#201`
 
 <a id="setting-enable_w_axis"></a>
 
@@ -2290,9 +2202,12 @@ Offset distance for location of first Y grid line.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Grid Y is enabled.
 
+
 <a id="settings-printer-auxiliary"></a>
 
 #### Printer > Auxiliary
+
+![Printer > Auxiliary Settings](user-guide-images/settings/printer/auxiliary_options.png)
 
 Configures optional equipment that is separate from the primary deposition system.
 
@@ -2318,9 +2233,12 @@ Voltage sent to the tamper to control it's speed.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Tamper is enabled.
 
+
 <a id="settings-printer-machine-speeds"></a>
 
 #### Printer > Machine Speeds
+
+![Printer > Machine Speeds Settings](user-guide-images/settings/printer/machine_speeds_options.png)
 
 Sets physical motion and extrusion-rate limits used by writers, validation, and time estimation.
 
@@ -2402,9 +2320,12 @@ RPM of 100 and Gear Ratio of 7 would output 700RPM to the G-Code.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Machine Type is `Pellet`.
 
+
 <a id="settings-printer-acceleration"></a>
 
 #### Printer > Acceleration
+
+![Printer > Acceleration Settings](user-guide-images/settings/printer/acceleration_options.png)
 
 Sets default and region-specific acceleration values for syntaxes that emit dynamic acceleration
 commands.
@@ -2497,9 +2418,12 @@ Acceleration value for support.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Dynamic Acceleration is enabled.
 
+
 <a id="settings-printer-g-code"></a>
 
 #### Printer > G-Code
+
+![Printer > G-Code Settings](user-guide-images/settings/printer/g_code_options.png)
 
 Controls machine-level startup, material loading, waits, boundary demonstrations, settings output,
 and custom command blocks.
@@ -2584,6 +2508,28 @@ If selected, Arc Specialties G-Code adds an inline G81 optional stop routine to 
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Syntax is `Arc Specialties` and Supports G2/G3 is enabled).
 
+<a id="setting-arc_specialties_g80_weld_schedule_file"></a>
+
+##### Arc Specialties G80 Weld Schedule File (`arc_specialties_g80_weld_schedule_file`)
+
+File path used by Arc Specialties G-Code for G80 weld schedules.
+
+- **Input:** `file_path` — File path selected through a file browser or entered as text.
+- **Master default:** `empty`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Syntax is `Arc Specialties`.
+
+<a id="setting-arc_specialties_emit_block_numbers"></a>
+
+##### Arc Specialties Emit Block Numbers (`arc_specialties_emit_block_numbers`)
+
+If enabled, Arc Specialties G-Code lines are prefixed with controller block numbers.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Syntax is `Arc Specialties`.
+
 <a id="setting-start_code"></a>
 
 ##### Start Code (`start_code`)
@@ -2617,19 +2563,19 @@ Input G-Code to be executed after the end of the print.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
 
+
 ### E.3 Material settings
+
+![Material Settings Panel](user-guide-images/material_settings_panel.png)
 
 Material settings control process behavior tied to the feedstock and deposition system, including
 startup, extrusion, retraction, temperature, cooling, and first-layer adhesion.
 
-![Figure 62 placeholder: Material settings](user-guide-images/figure62.png)
-
-> **Diagram placeholder — Material settings:** Add an annotated Material panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
-
 <a id="settings-material-density"></a>
 
 #### Material > Density
+
+![Material > Density Settings](user-guide-images/settings/material/density_options.png)
 
 Chooses a known feedstock density or supplies a custom density for mass and flow calculations.
 
@@ -2668,9 +2614,12 @@ Sets the custom material density used for deposited-mass estimation when Printin
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Printing Material is `Other`.
 
+
 <a id="settings-material-start-up"></a>
 
 #### Material > Start-Up
+
+![Material > Start-Up Settings](user-guide-images/settings/material/start_up_options.png)
 
 Controls prestart and ramp-up motion at the beginning of printable region paths.
 
@@ -3091,9 +3040,12 @@ If selected, minimum layer time feedrate adjustments will not change start-up pa
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+
 <a id="settings-material-slow-down"></a>
 
 #### Material > Slow Down
+
+![Material > Slow Down Settings](user-guide-images/settings/material/slow_down_options.png)
 
 Controls reduced speed, extrusion, and lift behavior near the end of printable region paths.
 
@@ -3508,9 +3460,12 @@ If selected, minimum layer time feedrate adjustments will not change slow down p
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+
 <a id="settings-material-tip-wipe"></a>
 
 #### Material > Tip Wipe
+
+![Material > Tip Wipe Settings](user-guide-images/settings/material/tip_wipe_options.png)
 
 Controls wipe motion, direction, cutoff, lift, and voltage after selected printable regions.
 
@@ -4088,9 +4043,12 @@ If selected, minimum layer time feedrate adjustments will not change tip wipe pa
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+
 <a id="settings-material-spiral-lift"></a>
 
 #### Material > Spiral Lift
+
+![Material > Spiral Lift Settings](user-guide-images/settings/material/spiral_lift_options.png)
 
 Controls spiral motion used to lift away from a completed region or layer.
 
@@ -4214,9 +4172,12 @@ If selected, minimum layer time feedrate adjustments will not change spiral lift
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+
 <a id="settings-material-purge"></a>
 
 #### Material > Purge
+
+![Material > Purge Settings](user-guide-images/settings/material/purge_options.png)
 
 Controls purge timing, screw speed, dwell behavior, and optional purge/wipe motion.
 
@@ -4330,9 +4291,12 @@ Feedrate for extrusion used for the purge between layers.
 - **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and (Syntax is
   `Marlin` or Machine Type is `Filament`))).
 
+
 <a id="settings-material-extruder"></a>
 
 #### Material > Extruder
+
+![Material > Extruder Settings](user-guide-images/settings/material/extruder_options.png)
 
 Configures initial extrusion, priming, region delays, servo behavior, and spindle-command
 conventions.
@@ -4481,9 +4445,12 @@ using arc welder, but prevents feedrate scaling from working.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Syntax is `Cincinnati`).
 
+
 <a id="settings-material-filament"></a>
 
 #### Material > Filament
+
+![Material > Filament Settings](user-guide-images/settings/material/filament_options.png)
 
 Configures filament diameter, relative extrusion, position-reset behavior, and alternate extrusion
 axes.
@@ -4533,9 +4500,12 @@ If selected, uses B for filament distance output in the g-code rather than the s
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Machine Type is `Filament`.
 
+
 <a id="settings-material-retraction"></a>
 
 #### Material > Retraction
+
+![Material > Retraction Settings](user-guide-images/settings/material/retraction_options.png)
 
 Controls when filament retracts and primes around qualifying travel and layer changes.
 
@@ -4635,9 +4605,12 @@ Length of extra filament to extrude during priming after a retraction.
   mode-specific scope limitations still apply.
 - **Available when:** (Machine Type is `Filament` and Enable Retraction is enabled).
 
+
 <a id="settings-material-temperatures"></a>
 
 #### Material > Temperatures
+
+![Material > Temperatures Settings](user-guide-images/settings/material/temperatures_options.png)
 
 Sets bed, standby, and multi-zone extrusion temperature targets.
 
@@ -4796,9 +4769,12 @@ Temperature for extruder zone 5.
   mode-specific scope limitations still apply.
 - **Available when:** Five Zone Extruder is enabled.
 
+
 <a id="settings-material-cooling"></a>
 
 #### Material > Cooling
+
+![Material > Cooling Settings](user-guide-images/settings/material/cooling_options.png)
 
 Controls fan output and minimum-layer-time behavior, including pauses and extrusion/feed
 adjustments.
@@ -4928,9 +4904,12 @@ G-Code to be executed after the minimum layer time pause command, such as turnin
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `ADD DWELL TIME`)).
 
+
 <a id="settings-material-platform-adhesion"></a>
 
 #### Material > Platform Adhesion
+
+![Material > Platform Adhesion Settings](user-guide-images/settings/material/platform_adhesion_options.png)
 
 Adds and configures raft, brim, or skirt geometry around the first layers.
 
@@ -5088,9 +5067,12 @@ Bead width for skirt paths.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
+
 <a id="settings-material-multi-material"></a>
 
 #### Material > Multi-Material
+
+![Material > Multi-Material Settings](user-guide-images/settings/material/multi_material_options.png)
 
 Assigns materials to regions and controls material transitions and controller selection commands.
 
@@ -5236,19 +5218,19 @@ Uses the M222 code for material transitions rather than the standard M237.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Multi-material is enabled).
 
+
 ### E.4 Profile settings
+
+![Profile Settings Panel](user-guide-images/profile_settings_panel.png)
 
 Profile settings define how geometry becomes layers and ordered toolpaths. Many are local-capable so
 different parts, layers, ranges, or spatial regions can use different values in supported modes.
 
-![Figure 63 placeholder: Profile settings](user-guide-images/figure63.png)
-
-> **Diagram placeholder — Profile settings:** Add an annotated Profile panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
-
 <a id="settings-profile-slicing"></a>
 
 #### Profile > Slicing
+
+![Profile > Slicing Settings](user-guide-images/settings/profile/slicing_options.png)
 
 Selects planar, cylindrical, or image slicing and configures slice orientation and mode-specific
 geometry.
@@ -5361,112 +5343,6 @@ section. Helical creates rising spiral paths around the cylinder axis.
   - `Radial`
   - `Helical`
 
-<a id="setting-radial_path_boundary_policy"></a>
-
-##### Radial Path Boundary Policy (`radial_path_boundary_policy`)
-
-Controls radial paths that intersect the model boundary. Clip keeps only the portions inside the
-model. Keep outputs the original path if any portion is inside. Discard omits paths that are cut by
-the boundary.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Clip`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Radial`).
-- **Choices:**
-  - `Clip`
-  - `Keep`
-  - `Discard`
-
-<a id="setting-radial_path_start_angle"></a>
-
-##### Radial Path Start Angle (`radial_path_start_angle`)
-
-Sets the angular start position for generated radial paths around the cylinder axis. 0 degrees
-starts on +X and 90 degrees starts on +Y.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Radial`).
-
-<a id="setting-helical_path_boundary_policy"></a>
-
-##### Helical Path Boundary Policy (`helical_path_boundary_policy`)
-
-Controls helical paths that intersect the model boundary. Clip keeps every retained section inside
-the model. Clip Z keeps the continuous helix through the highest Z intersection.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Clip`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Choices:**
-  - `Clip`
-  - `Clip Z`
-
-<a id="setting-helical_path_z_clip_rounding"></a>
-
-##### Helical Z Clip Rounding (`helical_path_z_clip_rounding`)
-
-Controls how Clip Z rounds the helical path endpoint at the highest model intersection. Exact
-Intersection stops at the intersection. Complete Revolution continues to the next full revolution.
-Last Full Revolution stops at the previous full revolution.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Exact Intersection`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** ((Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`) and
-  Helical Path Boundary Policy is `Clip Z`).
-- **Choices:**
-  - `Exact Intersection`
-  - `Complete Revolution`
-  - `Last Full Revolution`
-
-<a id="setting-helical_path_handedness"></a>
-
-##### Helical Path Handedness (`helical_path_handedness`)
-
-Selects the handedness for generated helical paths. Right Handed uses a counter-clockwise XY sweep
-as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z rise.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Right Handed`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Choices:**
-  - `Right Handed`
-  - `Left Handed`
-
-<a id="setting-helical_path_start_angle"></a>
-
-##### Helical Path Start Angle (`helical_path_start_angle`)
-
-Sets the angular start position for generated helical paths around the cylinder axis. 0 degrees
-starts on +X and 90 degrees starts on +Y.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `5,156.62°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-
-<a id="setting-max_helical_path_length"></a>
-
-##### Max Helical Path Length (`max_helical_path_length`)
-
-Maximum length of each generated helical path segment. Set to 0 to leave helical paths unsplit.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-
 <a id="setting-arcs_per_revolution"></a>
 
 ##### Arcs per Revolution (`arcs_per_revolution`)
@@ -5494,9 +5370,12 @@ Defines the physical X and Y size of pixels in generated image slices.
   - **X:** `image_pixel_size_x` — `0 mm`
   - **Y:** `image_pixel_size_y` — `0 mm`
 
+
 <a id="settings-profile-layer"></a>
 
 #### Profile > Layer
+
+![Profile > Layer Settings](user-guide-images/settings/profile/layer_options.png)
 
 Defines layer thickness and baseline bead, nozzle, speed, and extrusion values.
 
@@ -5511,6 +5390,44 @@ Thickness of each layer.
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** Always available.
+
+<a id="setting-variable_layer_height"></a>
+
+##### Variable Layer Height (`variable_layer_height`)
+
+Automatically reduces layer height when the estimated surface error exceeds the configured target.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `JuggerBot3D`).
+
+<a id="setting-minimum_layer_height"></a>
+
+##### Minimum Layer Height (`minimum_layer_height`)
+
+Smallest layer height allowed when Variable Layer Height is enabled.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Syntax is `JuggerBot3D` and Variable Layer
+  Height is enabled)).
+
+<a id="setting-variable_layer_height_surface_error"></a>
+
+##### Target Surface Error (`variable_layer_height_surface_error`)
+
+Maximum estimated cusp height allowed before Variable Layer Height reduces the layer height.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0.5 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Syntax is `JuggerBot3D` and Variable Layer
+  Height is enabled)).
 
 <a id="setting-nozzle_diameter"></a>
 
@@ -5574,9 +5491,12 @@ raft, and support paths.
   mode-specific scope limitations still apply.
 - **Available when:** Slicing Mode is `Planar`.
 
+
 <a id="settings-profile-perimeter"></a>
 
 #### Profile > Perimeter
+
+![Profile > Perimeter Settings](user-guide-images/settings/profile/perimeter_options.png)
 
 Controls exterior contours, their process values, and perimeter-specific start and spiral behavior.
 
@@ -5707,7 +5627,8 @@ control.
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Machine Type
-  is `Filament` or Syntax is `KraussMaffei`))).
+  is `Filament` or (Syntax is `KraussMaffei` or (Syntax is `JuggerBot3D` and (Machine Type is
+  `Pellet` and Use Width and Height is enabled)))))).
 
 <a id="setting-perimeter_minimum_path_length"></a>
 
@@ -5836,9 +5757,12 @@ src=':/tooltips/profile/spiral_perimeter.png' width='260' height='146'&gt;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
+
 <a id="settings-profile-inset"></a>
 
 #### Profile > Inset
+
+![Profile > Inset Settings](user-guide-images/settings/profile/inset_options.png)
 
 Controls additional inward contours, including count, overlap, process values, and spiral behavior.
 
@@ -5952,7 +5876,8 @@ Extrusion multiplier to increase/decrease flowrate for inset paths for systems w
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Machine Type is
-  `Filament` or Syntax is `KraussMaffei`))).
+  `Filament` or (Syntax is `KraussMaffei` or (Syntax is `JuggerBot3D` and (Machine Type is `Pellet`
+  and Use Width and Height is enabled)))))).
 
 <a id="setting-inset_minimum_path_length"></a>
 
@@ -6002,596 +5927,12 @@ If selected, spiral insets will be generated.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
-<a id="settings-profile-skeleton"></a>
-
-#### Profile > Skeleton
-
-Controls centerline input, cleanup, adaptive bead width, process values, and skeleton prestart
-behavior.
-
-<a id="setting-skeleton"></a>
-
-##### Enable Skeletons (`skeleton`)
-
-If selected, skeletons will allow for an open loop path to fill a space that is too thin to use
-concentric paths.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Slicing Mode is `Planar`.
-
-<a id="setting-skeleton_input"></a>
-
-##### Input Geometry (`skeleton_input`)
-
-Specifies how the bounding geometry is provided to the Skeleton Voronoi Diagram generator. The
-geometry is fed into the generator as either segments or points. This input method influences how
-the skeleton paths are constructed.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `SEGMENT`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-- **Choices:**
-  - `SEGMENT`
-  - `POINT`
-
-<a id="setting-skeleton_input_cleaning_distance"></a>
-
-##### Input Cleaning Distance (`skeleton_input_cleaning_distance`)
-
-Specifies the distance threshold used to clean and simplify the input geometry before generating the
-skeleton. The cleaning process involves: Removing vertices that connect co-linear or nearly
-co-linear edges: If moving a vertex by no more than this distance would make the connected edges
-co-linear, the vertex is removed to simplify the geometry. Eliminating vertices that are too close
-to adjacent vertices: Vertices within this distance of an adjacent vertex are removed to prevent
-redundant points and overlaps. Removing vertices near semi-adjacent vertices along with their
-outlying vertices: If a vertex is within this distance of a semi-adjacent vertex, both the vertex
-and its connected outlying vertices are removed to simplify complex connections. By adjusting this
-cleaning distance, you can optimize the input geometry by merging or removing unnecessary vertices.
-This leads to improved accuracy and performance of the skeleton generation process, resulting in
-cleaner and more efficient skeleton paths.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_input_chamfering_angle"></a>
-
-##### Input Chamfering Angle (`skeleton_input_chamfering_angle`)
-
-Specifies the angle threshold used to chamfer (flatten) sharp corners in the input geometry during
-skeleton generation. Corners with internal angles less than this value will be automatically
-chamfered to smooth out acute angles. This chamfering process helps to simplify the geometry,
-improving the accuracy of the skeleton pruning process.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_output_cleaning_distance"></a>
-
-##### Output Cleaning Distance (`skeleton_output_cleaning_distance`)
-
-Sets the distance tolerance used to simplify the generated skeleton by removing nearly collinear,
-adjacent, or semi-adjacent redundant vertices.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_width"></a>
-
-##### Bead Width (`skeleton_width`)
-
-Bead width for skeleton paths.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_speed"></a>
-
-##### Speed (`skeleton_speed`)
-
-Speed of skeleton printing paths.
-
-- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
-- **Master default:** `0 mm/s`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_extruder_speed"></a>
-
-##### Extruder Speed (`skeleton_extruder_speed`)
-
-Extruder speed for skeletons.
-
-- **Input:** `rpm` — Rotational speed in revolutions per minute.
-- **Master default:** `0 rpm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Use Width and
-  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
-  `Thermoset`))))).
-
-<a id="setting-skeleton_extrusion_multiplier"></a>
-
-##### Extrusion Multiplier (`skeleton_extrusion_multiplier`)
-
-Extrusion multiplier to increase/decrease flowrate for skeleton paths for systems without RPM
-control.
-
-- **Input:** `unitless_float` — Decimal value without a physical unit.
-- **Master default:** `1`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Machine Type
-  is `Filament` or Syntax is `KraussMaffei`))).
-
-<a id="setting-skeleton_adapt"></a>
-
-##### Enable Adaptive Bead Widths (`skeleton_adapt`)
-
-If selected, skeleton bead widths will dynamically adjust to better fill their surrounding regions,
-minimizing both under- and over-filling. This adaptation is achieved by inversely adjusting the
-speed relative to the desired bead width using the formula: Adjusted Speed = (Reference Speed ×
-Reference Bead Width) / Desired Bead Width. When wider bead widths are needed to fill larger areas,
-the traversal speed decreases, allowing more material to be deposited. Conversely, in tighter spaces
-requiring narrower bead widths, the speed increases, depositing less material.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_adapt_step_size"></a>
-
-##### Adaptivity Step Size (`skeleton_adapt_step_size`)
-
-Specifies the distance used to divide skeleton segments into smaller subsegments for adaptive bead
-width adjustment. A smaller step size allows for finer adaptation to geometric variations.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0.001 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
-  Bead Widths is enabled)).
-
-<a id="setting-skeleton_adapt_min_width"></a>
-
-##### Minimum Adaptive Bead Width (`skeleton_adapt_min_width`)
-
-Specifies the minimum allowable bead width for adaptive skeletons. Skeletons with adapted bead
-widths less than this value will be removed.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
-  Bead Widths is enabled)).
-
-<a id="setting-skeleton_adapt_min_width_filter"></a>
-
-##### Minimum Adaptive Bead Width Filter (`skeleton_adapt_min_width_filter`)
-
-Specifies how to handle adaptive skeleton segments with bead widths below the minimum threshold.
-Clamp: Assigns the minimum bead width to segments with adapted widths below the threshold. Prune:
-Removes segments with adapted widths below the threshold.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `CLAMP`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
-  Bead Widths is enabled)).
-- **Choices:**
-  - `CLAMP`
-  - `PRUNE`
-
-<a id="setting-skeleton_adapt_max_width"></a>
-
-##### Maximum Adaptive Bead Width (`skeleton_adapt_max_width`)
-
-Specifies the maximum allowable bead width for adaptive skeletons. Skeletons with adapted bead
-widths greater than this value will be assigned this value as their bead width.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `10 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
-  Bead Widths is enabled)).
-
-<a id="setting-skeleton_adapt_max_width_filter"></a>
-
-##### Maximum Adaptive Bead Width Filter (`skeleton_adapt_max_width_filter`)
-
-Specifies how to handle adaptive skeleton segments with bead widths above the maximum threshold.
-Clamp: Assigns the maximum bead width to segments with adapted widths above the threshold. Prune:
-Removes segments with adapted widths above the threshold.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `CLAMP`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
-  Bead Widths is enabled)).
-- **Choices:**
-  - `CLAMP`
-  - `PRUNE`
-
-<a id="setting-skeleton_minimum_path_length"></a>
-
-##### Minimum Path Length (`skeleton_minimum_path_length`)
-
-Skeleton extrusion paths whose length is less than this value are removed.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_minimum_segment_length"></a>
-
-##### Minimum Skeleton Segment Length (`skeleton_minimum_segment_length`)
-
-Skeleton path segments shorter than this value are collapsed before extrusion paths are created.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_prestart"></a>
-
-##### Enable Skeleton Prestart (`skeleton_prestart`)
-
-If selected, a prestart motion is added to the front of the skeleton to give it more time to deposit
-material. This prestart is along the same vector as the first segment of the skeleton.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_prestart_distance"></a>
-
-##### Skeleton Prestart Distance (`skeleton_prestart_distance`)
-
-Length of the skeleton prestart move.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
-  Prestart is enabled)).
-
-<a id="setting-skeleton_prestart_speed"></a>
-
-##### Skeleton Prestart Speed (`skeleton_prestart_speed`)
-
-Speed of skeleton prestart paths.
-
-- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
-- **Master default:** `0 mm/s`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
-  Prestart is enabled)).
-
-<a id="setting-skeleton_prestart_extruder_speed"></a>
-
-##### Skeleton Prestart Extruder Speed (`skeleton_prestart_extruder_speed`)
-
-Extruder speed for skeleton prestart paths.
-
-- **Input:** `rpm` — Rotational speed in revolutions per minute.
-- **Master default:** `0 rpm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
-  Prestart is enabled)).
-
-<a id="setting-skeleton_prestart_area_modifier"></a>
-
-##### Skeleton Prestart Bead Area Modifier (`skeleton_prestart_area_modifier`)
-
-Percent multiplier for bead area of skeleton prestart paths.
-
-- **Input:** `percentage` — Percentage input with an allowed range of 0–500%.
-- **Master default:** `100%`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
-  Prestart is enabled)).
-
-<a id="setting-skeleton_skin_mcode"></a>
-
-##### Use Skin M-Code for Skeletons (`skeleton_skin_mcode`)
-
-If selected, the skin m-code override (M15) will be issued rather than the default inset m-code
-override (M13) on BAAM.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="settings-profile-skin"></a>
-
-#### Profile > Skin
-
-Controls solid top/bottom coverage, pattern orientation, overlap, process values, and gradual
-infill.
-
-<a id="setting-skin"></a>
-
-##### Enable Skin (`skin`)
-
-If selected, skins will be generated.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Slicing Mode is `Planar`.
-
-<a id="setting-skin_top_count"></a>
-
-##### Top Skin Count (`skin_top_count`)
-
-Number of skin layers at the top of a print.
-
-- **Input:** `number` — Integer value.
-- **Master default:** `0`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_bottom_count"></a>
-
-##### Bottom Skin Count (`skin_bottom_count`)
-
-Number of skin layers at the bottom of a print.
-
-- **Input:** `number` — Integer value.
-- **Master default:** `0`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_pattern"></a>
-
-##### Skin Pattern (`skin_pattern`)
-
-Selects the geometry used to fill solid top and bottom skin areas. Pattern angle and layer-to-layer
-rotation orient non-concentric patterns.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Lines`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-- **Choices:**
-  - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
-  - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
-    from it.
-  - `Concentric` — Successive closed offsets that follow the boundary of the filled area.
-  - `Triangles` — Three line families, rotated 60 degrees apart, that form an equilateral triangular
-    lattice.
-  - `Hexagons and Triangles` — Three 60-degree line families with an alternate offset that forms
-    mixed hexagonal and triangular cells.
-  - `Honeycomb` — Connected zig-zag rows that form hexagonal cells using bead width and line
-    spacing.
-
-<a id="setting-skin_angle"></a>
-
-##### Skin Fill Angle (`skin_angle`)
-
-Sets the angle for the skin infill.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_angle_rotation"></a>
-
-##### Skin Fill Angle Rotation (`skin_angle_rotation`)
-
-Sets the amount the skin fill rotates layer to layer.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_exterior_overlap"></a>
-
-##### Skin Exterior Overlap (`skin_exterior_overlap`)
-
-Width of the skin overlaps with the exterior.
-
-- **Input:** `location` — Signed position or offset in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_width"></a>
-
-##### Skin Bead Width (`skin_width`)
-
-Bead width for skin paths.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_speed"></a>
-
-##### Skin Speed (`skin_speed`)
-
-Speed for skin paths.
-
-- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
-- **Master default:** `0 mm/s`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_extruder_speed"></a>
-
-##### Skin Extruder Speed (`skin_extruder_speed`)
-
-Extruder speed for skin paths.
-
-- **Input:** `rpm` — Rotational speed in revolutions per minute.
-- **Master default:** `0 rpm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Use Width and
-  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
-  `Thermoset`))))).
-
-<a id="setting-skin_extrusion_multiplier"></a>
-
-##### Skin Extrusion Multiplier (`skin_extrusion_multiplier`)
-
-Extrusion multiplier to increase/decrease flowrate for skin paths for systems without RPM control.
-
-- **Input:** `unitless_float` — Decimal value without a physical unit.
-- **Master default:** `1`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Machine Type is
-  `Filament` or Syntax is `KraussMaffei`))).
-
-<a id="setting-skin_minimum_path_length"></a>
-
-##### Minimum Skin Path Length (`skin_minimum_path_length`)
-
-Skin extrusion paths less than this value are deleted.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_minimum_segment_length"></a>
-
-##### Minimum Skin Segment Length (`skin_minimum_segment_length`)
-
-Skin path segments shorter than this value are collapsed before extrusion paths are created.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_gradual_infill"></a>
-
-##### Enable Gradual Infill Steps (`skin_gradual_infill`)
-
-If selected, gradual infill steps will be generated.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_gradual_infill_steps"></a>
-
-##### Number of Gradual Infill Steps (`skin_gradual_infill_steps`)
-
-Number of gradual infill steps between top skin and infill.
-
-- **Input:** `number` — Integer value.
-- **Master default:** `0`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
-  Infill Steps is enabled)).
-
-<a id="setting-skin_gradual_infill_pattern"></a>
-
-##### Gradual Infill Pattern (`skin_gradual_infill_pattern`)
-
-Selects the fill geometry used in the transition steps between solid skin and sparse infill. Each
-step changes spacing while retaining this pattern.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Lines`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
-  Infill Steps is enabled)).
-- **Choices:**
-  - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
-  - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
-    from it.
-  - `Concentric` — Successive closed offsets that follow the boundary of the filled area.
-  - `Triangles` — Three line families, rotated 60 degrees apart, that form an equilateral triangular
-    lattice.
-  - `Hexagons and Triangles` — Three 60-degree line families with an alternate offset that forms
-    mixed hexagonal and triangular cells.
-  - `Honeycomb` — Connected zig-zag rows that form hexagonal cells using bead width and line
-    spacing.
-
-<a id="setting-skin_gradual_infill_angle"></a>
-
-##### Gradual Infill Angle (`skin_gradual_infill_angle`)
-
-Sets the angle for the gradual infill.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
-  Infill Steps is enabled)).
-
-<a id="setting-skin_gradual_infill_angle_rotation"></a>
-
-##### Gradual Infill Angle Rotation (`skin_gradual_infill_angle_rotation`)
-
-Sets the angle for the gradual infill rotation layer to layer.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
-  Infill Steps is enabled)).
 
 <a id="settings-profile-infill"></a>
 
 #### Profile > Infill
+
+![Profile > Infill Settings](user-guide-images/settings/profile/infill_options.png)
 
 Controls interior fill density, spacing, pattern, orientation, ordering, combining, and process
 values.
@@ -6798,7 +6139,8 @@ Extrusion multiplier to increase/decrease flowrate for infill paths for systems 
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Infill is enabled and (Machine Type is
-  `Filament` or Syntax is `KraussMaffei`))).
+  `Filament` or (Syntax is `KraussMaffei` or (Syntax is `JuggerBot3D` and (Machine Type is `Pellet`
+  and Use Width and Height is enabled)))))).
 
 <a id="setting-infill_minimum_path_length"></a>
 
@@ -6860,9 +6202,607 @@ Shift the first starting layer of infill when using combine infill every X layer
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
+
+<a id="settings-profile-skeleton"></a>
+
+#### Profile > Skeleton
+
+![Profile > Skeleton Settings](user-guide-images/settings/profile/skeleton_options.png)
+
+Controls centerline input, cleanup, adaptive bead width, process values, and skeleton prestart
+behavior.
+
+<a id="setting-skeleton"></a>
+
+##### Enable Skeletons (`skeleton`)
+
+If selected, skeletons will allow for an open loop path to fill a space that is too thin to use
+concentric paths.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Planar`.
+
+<a id="setting-skeleton_input"></a>
+
+##### Input Geometry (`skeleton_input`)
+
+Specifies how the bounding geometry is provided to the Skeleton Voronoi Diagram generator. The
+geometry is fed into the generator as either segments or points. This input method influences how
+the skeleton paths are constructed.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `SEGMENT`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+- **Choices:**
+  - `SEGMENT`
+  - `POINT`
+
+<a id="setting-skeleton_input_cleaning_distance"></a>
+
+##### Input Cleaning Distance (`skeleton_input_cleaning_distance`)
+
+Specifies the distance threshold used to clean and simplify the input geometry before generating the
+skeleton. The cleaning process involves: Removing vertices that connect co-linear or nearly
+co-linear edges: If moving a vertex by no more than this distance would make the connected edges
+co-linear, the vertex is removed to simplify the geometry. Eliminating vertices that are too close
+to adjacent vertices: Vertices within this distance of an adjacent vertex are removed to prevent
+redundant points and overlaps. Removing vertices near semi-adjacent vertices along with their
+outlying vertices: If a vertex is within this distance of a semi-adjacent vertex, both the vertex
+and its connected outlying vertices are removed to simplify complex connections. By adjusting this
+cleaning distance, you can optimize the input geometry by merging or removing unnecessary vertices.
+This leads to improved accuracy and performance of the skeleton generation process, resulting in
+cleaner and more efficient skeleton paths.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_input_chamfering_angle"></a>
+
+##### Input Chamfering Angle (`skeleton_input_chamfering_angle`)
+
+Specifies the angle threshold used to chamfer (flatten) sharp corners in the input geometry during
+skeleton generation. Corners with internal angles less than this value will be automatically
+chamfered to smooth out acute angles. This chamfering process helps to simplify the geometry,
+improving the accuracy of the skeleton pruning process.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_output_cleaning_distance"></a>
+
+##### Output Cleaning Distance (`skeleton_output_cleaning_distance`)
+
+Sets the distance tolerance used to simplify the generated skeleton by removing nearly collinear,
+adjacent, or semi-adjacent redundant vertices.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_width"></a>
+
+##### Bead Width (`skeleton_width`)
+
+Bead width for skeleton paths.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_speed"></a>
+
+##### Speed (`skeleton_speed`)
+
+Speed of skeleton printing paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_extruder_speed"></a>
+
+##### Extruder Speed (`skeleton_extruder_speed`)
+
+Extruder speed for skeletons.
+
+- **Input:** `rpm` — Rotational speed in revolutions per minute.
+- **Master default:** `0 rpm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
+
+<a id="setting-skeleton_extrusion_multiplier"></a>
+
+##### Extrusion Multiplier (`skeleton_extrusion_multiplier`)
+
+Extrusion multiplier to increase/decrease flowrate for skeleton paths for systems without RPM
+control.
+
+- **Input:** `unitless_float` — Decimal value without a physical unit.
+- **Master default:** `1`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and (Machine Type
+  is `Filament` or (Syntax is `KraussMaffei` or (Syntax is `JuggerBot3D` and (Machine Type is
+  `Pellet` and Use Width and Height is enabled)))))).
+
+<a id="setting-skeleton_adapt"></a>
+
+##### Enable Adaptive Bead Widths (`skeleton_adapt`)
+
+If selected, skeleton bead widths will dynamically adjust to better fill their surrounding regions,
+minimizing both under- and over-filling. This adaptation is achieved by inversely adjusting the
+speed relative to the desired bead width using the formula: Adjusted Speed = (Reference Speed ×
+Reference Bead Width) / Desired Bead Width. When wider bead widths are needed to fill larger areas,
+the traversal speed decreases, allowing more material to be deposited. Conversely, in tighter spaces
+requiring narrower bead widths, the speed increases, depositing less material.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_adapt_step_size"></a>
+
+##### Adaptivity Step Size (`skeleton_adapt_step_size`)
+
+Specifies the distance used to divide skeleton segments into smaller subsegments for adaptive bead
+width adjustment. A smaller step size allows for finer adaptation to geometric variations.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0.001 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
+
+<a id="setting-skeleton_adapt_min_width"></a>
+
+##### Minimum Adaptive Bead Width (`skeleton_adapt_min_width`)
+
+Specifies the minimum allowable bead width for adaptive skeletons. Skeletons with adapted bead
+widths less than this value will be removed.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
+
+<a id="setting-skeleton_adapt_min_width_filter"></a>
+
+##### Minimum Adaptive Bead Width Filter (`skeleton_adapt_min_width_filter`)
+
+Specifies how to handle adaptive skeleton segments with bead widths below the minimum threshold.
+Clamp: Assigns the minimum bead width to segments with adapted widths below the threshold. Prune:
+Removes segments with adapted widths below the threshold.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `CLAMP`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
+- **Choices:**
+  - `CLAMP`
+  - `PRUNE`
+
+<a id="setting-skeleton_adapt_max_width"></a>
+
+##### Maximum Adaptive Bead Width (`skeleton_adapt_max_width`)
+
+Specifies the maximum allowable bead width for adaptive skeletons. Skeletons with adapted bead
+widths greater than this value will be assigned this value as their bead width.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `10 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
+
+<a id="setting-skeleton_adapt_max_width_filter"></a>
+
+##### Maximum Adaptive Bead Width Filter (`skeleton_adapt_max_width_filter`)
+
+Specifies how to handle adaptive skeleton segments with bead widths above the maximum threshold.
+Clamp: Assigns the maximum bead width to segments with adapted widths above the threshold. Prune:
+Removes segments with adapted widths above the threshold.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `CLAMP`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Adaptive
+  Bead Widths is enabled)).
+- **Choices:**
+  - `CLAMP`
+  - `PRUNE`
+
+<a id="setting-skeleton_minimum_path_length"></a>
+
+##### Minimum Path Length (`skeleton_minimum_path_length`)
+
+Skeleton extrusion paths whose length is less than this value are removed.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_minimum_segment_length"></a>
+
+##### Minimum Skeleton Segment Length (`skeleton_minimum_segment_length`)
+
+Skeleton path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_prestart"></a>
+
+##### Enable Skeleton Prestart (`skeleton_prestart`)
+
+If selected, a prestart motion is added to the front of the skeleton to give it more time to deposit
+material. This prestart is along the same vector as the first segment of the skeleton.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_prestart_distance"></a>
+
+##### Skeleton Prestart Distance (`skeleton_prestart_distance`)
+
+Length of the skeleton prestart move.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
+
+<a id="setting-skeleton_prestart_speed"></a>
+
+##### Skeleton Prestart Speed (`skeleton_prestart_speed`)
+
+Speed of skeleton prestart paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
+
+<a id="setting-skeleton_prestart_extruder_speed"></a>
+
+##### Skeleton Prestart Extruder Speed (`skeleton_prestart_extruder_speed`)
+
+Extruder speed for skeleton prestart paths.
+
+- **Input:** `rpm` — Rotational speed in revolutions per minute.
+- **Master default:** `0 rpm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
+
+<a id="setting-skeleton_prestart_area_modifier"></a>
+
+##### Skeleton Prestart Bead Area Modifier (`skeleton_prestart_area_modifier`)
+
+Percent multiplier for bead area of skeleton prestart paths.
+
+- **Input:** `percentage` — Percentage input with an allowed range of 0–500%.
+- **Master default:** `100%`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skeletons is enabled and Enable Skeleton
+  Prestart is enabled)).
+
+<a id="setting-skeleton_skin_mcode"></a>
+
+##### Use Skin M-Code for Skeletons (`skeleton_skin_mcode`)
+
+If selected, the skin m-code override (M15) will be issued rather than the default inset m-code
+override (M13) on BAAM.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+
+<a id="settings-profile-skin"></a>
+
+#### Profile > Skin
+
+![Profile > Skin Settings](user-guide-images/settings/profile/skin_options.png)
+
+Controls solid top/bottom coverage, pattern orientation, overlap, process values, and gradual
+infill.
+
+<a id="setting-skin"></a>
+
+##### Enable Skin (`skin`)
+
+If selected, skins will be generated.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Planar`.
+
+<a id="setting-skin_top_count"></a>
+
+##### Top Skin Count (`skin_top_count`)
+
+Number of skin layers at the top of a print.
+
+- **Input:** `number` — Integer value.
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_bottom_count"></a>
+
+##### Bottom Skin Count (`skin_bottom_count`)
+
+Number of skin layers at the bottom of a print.
+
+- **Input:** `number` — Integer value.
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_pattern"></a>
+
+##### Skin Pattern (`skin_pattern`)
+
+Selects the geometry used to fill solid top and bottom skin areas. Pattern angle and layer-to-layer
+rotation orient non-concentric patterns.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Lines`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+- **Choices:**
+  - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
+  - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
+    from it.
+  - `Concentric` — Successive closed offsets that follow the boundary of the filled area.
+  - `Triangles` — Three line families, rotated 60 degrees apart, that form an equilateral triangular
+    lattice.
+  - `Hexagons and Triangles` — Three 60-degree line families with an alternate offset that forms
+    mixed hexagonal and triangular cells.
+  - `Honeycomb` — Connected zig-zag rows that form hexagonal cells using bead width and line
+    spacing.
+
+<a id="setting-skin_angle"></a>
+
+##### Skin Fill Angle (`skin_angle`)
+
+Sets the angle for the skin infill.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_angle_rotation"></a>
+
+##### Skin Fill Angle Rotation (`skin_angle_rotation`)
+
+Sets the amount the skin fill rotates layer to layer.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_exterior_overlap"></a>
+
+##### Skin Exterior Overlap (`skin_exterior_overlap`)
+
+Width of the skin overlaps with the exterior.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_width"></a>
+
+##### Skin Bead Width (`skin_width`)
+
+Bead width for skin paths.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_speed"></a>
+
+##### Skin Speed (`skin_speed`)
+
+Speed for skin paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_extruder_speed"></a>
+
+##### Skin Extruder Speed (`skin_extruder_speed`)
+
+Extruder speed for skin paths.
+
+- **Input:** `rpm` — Rotational speed in revolutions per minute.
+- **Master default:** `0 rpm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Use Width and
+  Height is disabled and (Machine Type is `Pellet` or (Machine Type is `Concrete` or Machine Type is
+  `Thermoset`))))).
+
+<a id="setting-skin_extrusion_multiplier"></a>
+
+##### Skin Extrusion Multiplier (`skin_extrusion_multiplier`)
+
+Extrusion multiplier to increase/decrease flowrate for skin paths for systems without RPM control.
+
+- **Input:** `unitless_float` — Decimal value without a physical unit.
+- **Master default:** `1`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and (Machine Type is
+  `Filament` or (Syntax is `KraussMaffei` or (Syntax is `JuggerBot3D` and (Machine Type is `Pellet`
+  and Use Width and Height is enabled)))))).
+
+<a id="setting-skin_minimum_path_length"></a>
+
+##### Minimum Skin Path Length (`skin_minimum_path_length`)
+
+Skin extrusion paths less than this value are deleted.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_minimum_segment_length"></a>
+
+##### Minimum Skin Segment Length (`skin_minimum_segment_length`)
+
+Skin path segments shorter than this value are collapsed before extrusion paths are created.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_gradual_infill"></a>
+
+##### Enable Gradual Infill Steps (`skin_gradual_infill`)
+
+If selected, gradual infill steps will be generated.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_gradual_infill_steps"></a>
+
+##### Number of Gradual Infill Steps (`skin_gradual_infill_steps`)
+
+Number of gradual infill steps between top skin and infill.
+
+- **Input:** `number` — Integer value.
+- **Master default:** `0`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
+
+<a id="setting-skin_gradual_infill_pattern"></a>
+
+##### Gradual Infill Pattern (`skin_gradual_infill_pattern`)
+
+Selects the fill geometry used in the transition steps between solid skin and sparse infill. Each
+step changes spacing while retaining this pattern.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Lines`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
+- **Choices:**
+  - `Lines` — One family of parallel hatch lines at the configured angle and spacing.
+  - `Grid` — Two perpendicular families of parallel lines at the configured angle and 90 degrees
+    from it.
+  - `Concentric` — Successive closed offsets that follow the boundary of the filled area.
+  - `Triangles` — Three line families, rotated 60 degrees apart, that form an equilateral triangular
+    lattice.
+  - `Hexagons and Triangles` — Three 60-degree line families with an alternate offset that forms
+    mixed hexagonal and triangular cells.
+  - `Honeycomb` — Connected zig-zag rows that form hexagonal cells using bead width and line
+    spacing.
+
+<a id="setting-skin_gradual_infill_angle"></a>
+
+##### Gradual Infill Angle (`skin_gradual_infill_angle`)
+
+Sets the angle for the gradual infill.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
+
+<a id="setting-skin_gradual_infill_angle_rotation"></a>
+
+##### Gradual Infill Angle Rotation (`skin_gradual_infill_angle_rotation`)
+
+Sets the angle for the gradual infill rotation layer to layer.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
+  Infill Steps is enabled)).
+
+
 <a id="settings-profile-support"></a>
 
 #### Profile > Support
+
+![Profile > Support Settings](user-guide-images/settings/profile/support_options.png)
 
 Controls generated grid or organic support, interfaces, bases, spacing, tapering, and connectivity.
 
@@ -7215,9 +7155,254 @@ Maximum branch convergence angle measured from vertical.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Support Structure
   is `Organic / Tree`)).
 
+
+<a id="settings-profile-radial"></a>
+
+#### Profile > Radial
+
+![Profile > Radial Settings](user-guide-images/settings/profile/radial_options.png)
+
+Configures boundary clipping policies and angular start positions for radial toolpaths in
+cylindrical slicing mode.
+
+<a id="setting-radial_path_boundary_policy"></a>
+
+##### Radial Path Boundary Policy (`radial_path_boundary_policy`)
+
+Controls radial paths that intersect the model boundary. Clip keeps only the portions inside the
+model. Keep outputs the original path if any portion is inside. Discard omits paths that are cut by
+the boundary.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Clip`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Radial`).
+- **Choices:**
+  - `Clip`
+  - `Keep`
+  - `Discard`
+
+<a id="setting-radial_path_start_angle"></a>
+
+##### Radial Path Start Angle (`radial_path_start_angle`)
+
+Sets the angular start position for generated radial paths around the cylinder axis. 0 degrees
+starts on +X and 90 degrees starts on +Y.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Radial`).
+
+
+<a id="settings-profile-helical"></a>
+
+#### Profile > Helical
+
+![Profile > Helical Settings](user-guide-images/settings/profile/helical_options.png)
+
+Controls handedness, tool angle offsets, z-clipping, revolutions, stepovers, and tool orientations
+for helical toolpaths in cylindrical slicing mode.
+
+<a id="setting-helical_path_handedness"></a>
+
+##### Helical Path Handedness (`helical_path_handedness`)
+
+Selects the handedness for generated helical paths. Right Handed uses a counter-clockwise XY sweep
+as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z rise.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Right Handed`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Right Handed`
+  - `Left Handed`
+
+<a id="setting-helical_tool_start_angle_offset"></a>
+
+##### Helical Tool Start Angle Offset (`helical_tool_start_angle_offset`)
+
+Signed Arc Specialties tool offset at the generated helical path start. 0 degrees leaves CP aligned
+with the +Y top-dead-center start; the emitted X/Y helix still starts at top dead center. XR and YR
+each receive half of the effective offset.
+
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `0°`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_path_z_clip_rounding"></a>
+
+##### Helical Z Clip Rounding (`helical_path_z_clip_rounding`)
+
+Controls how helical path z clipping rounds the endpoint at the highest model intersection. Exact
+Intersection stops at the intersection. Complete Revolution continues to the next full revolution.
+Last Full Revolution stops at the previous full revolution.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Exact Intersection`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Exact Intersection`
+  - `Complete Revolution`
+  - `Last Full Revolution`
+
+<a id="setting-helical_perimeter_revolutions"></a>
+
+##### Perimeter Revolutions (`helical_perimeter_revolutions`)
+
+Number of revolutions for perimeter region.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_inset_revolutions"></a>
+
+##### Inset Revolutions (`helical_inset_revolutions`)
+
+Number of revolutions for inset region.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_infill_revolutions_rounding"></a>
+
+##### Infill Revolutions Rounding Policy (`helical_infill_revolutions_rounding`)
+
+Rounding policy for the number of revolutions for helical infill region. This is used to ensure that
+the number of revolutions is an integer value.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Round`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Round`
+  - `Floor`
+  - `Ceil`
+
+<a id="setting-helical_perimeter_stepover"></a>
+
+##### Perimeter Stepover (`helical_perimeter_stepover`)
+
+Step over distance for perimeter region.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Perimeter Revolutions is `0`))).
+
+<a id="setting-helical_inset_stepover"></a>
+
+##### Inset Stepover (`helical_inset_stepover`)
+
+Step over distance for inset region.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Inset Revolutions is `0`))).
+
+<a id="setting-helical_infill_stepover"></a>
+
+##### Infill Stepover (`helical_infill_stepover`)
+
+Step over distance for infill region.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_perimeter_tool_frame_rotation"></a>
+<a id="setting-helical_perimeter_tool_frame_x_rotation"></a>
+<a id="setting-helical_perimeter_tool_frame_y_rotation"></a>
+<a id="setting-helical_perimeter_tool_frame_z_rotation"></a>
+
+##### Perimeter Tool Frame Rotation (`helical_perimeter_tool_frame_rotation`)
+
+Rotation of the tool frame for perimeter region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Perimeter Revolutions is `0`))).
+- **Components and master defaults:**
+  - **X:** `helical_perimeter_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_perimeter_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_perimeter_tool_frame_z_rotation` — `0°`
+
+<a id="setting-helical_inset_tool_frame_rotation"></a>
+<a id="setting-helical_inset_tool_frame_x_rotation"></a>
+<a id="setting-helical_inset_tool_frame_y_rotation"></a>
+<a id="setting-helical_inset_tool_frame_z_rotation"></a>
+
+##### Inset Tool Frame Rotation (`helical_inset_tool_frame_rotation`)
+
+Rotation of the tool frame for inset region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Inset Revolutions is `0`))).
+- **Components and master defaults:**
+  - **X:** `helical_inset_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_inset_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_inset_tool_frame_z_rotation` — `0°`
+
+<a id="setting-helical_infill_tool_frame_rotation"></a>
+<a id="setting-helical_infill_tool_frame_x_rotation"></a>
+<a id="setting-helical_infill_tool_frame_y_rotation"></a>
+<a id="setting-helical_infill_tool_frame_z_rotation"></a>
+
+##### Infill Tool Frame Rotation (`helical_infill_tool_frame_rotation`)
+
+Rotation of the tool frame for infill region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Components and master defaults:**
+  - **X:** `helical_infill_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_infill_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_infill_tool_frame_z_rotation` — `0°`
+
+<a id="setting-helical_travel_tool_frame_rotation"></a>
+<a id="setting-helical_travel_tool_frame_x_rotation"></a>
+<a id="setting-helical_travel_tool_frame_y_rotation"></a>
+<a id="setting-helical_travel_tool_frame_z_rotation"></a>
+
+##### Travel Tool Frame Rotation (`helical_travel_tool_frame_rotation`)
+
+Rotation of the tool frame for travel region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Components and master defaults:**
+  - **X:** `helical_travel_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_travel_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_travel_tool_frame_z_rotation` — `0°`
+
+
 <a id="settings-profile-travel"></a>
 
 #### Profile > Travel
+
+![Profile > Travel Settings](user-guide-images/settings/profile/travel_options.png)
 
 Controls non-print motion, minimum travel thresholds, lift behavior, pauses, and centroid moves.
 
@@ -7232,6 +7417,18 @@ Speed for travel moves.
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** Always available.
+
+<a id="setting-disable_travel_feedrate_scaling"></a>
+
+##### Disable Feedrate Scaling for Travel (`disable_travel_feedrate_scaling`)
+
+If selected, minimum layer time feedrate adjustments will not change travel move speeds.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
+  Max Layer Time Method is `MODIFY FEEDRATE`)).
 
 <a id="setting-minimum_infill_travel_length"></a>
 
@@ -7331,368 +7528,65 @@ Duration of the pause during travel motion.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Pause During Travel is enabled).
 
-<a id="settings-profile-g-code"></a>
 
-#### Profile > G-Code
+<a id="settings-profile-ordering"></a>
 
-Adds region-specific command blocks before and after generated paths.
+#### Profile > Ordering
 
-<a id="setting-perimeter_start_code"></a>
+![Profile > Ordering Settings](user-guide-images/settings/profile/ordering_options.png)
 
-##### Perimeter Start G-Code (`perimeter_start_code`)
+Sets region order and direction-reversal policies for perimeters and insets.
 
-Code to be executed at the start of perimeter paths.
+<a id="setting-region_order"></a>
 
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
+##### Region Order (`region_order`)
+
+Order that region paths will be connected.
+
+- **Input:** `numbered_list` — Ordered list whose entries can be rearranged.
+- **Master default:** `Perimeter`, `Inset`, `Skin`, `Infill`, `Skeleton`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+- **Available when:** Slicing Mode is `Planar`.
 
-<a id="setting-perimeter_end_code"></a>
+<a id="setting-perimeter_reverse_direction"></a>
 
-##### Perimeter End G-Code (`perimeter_end_code`)
+##### Reverse Perimeter Direction (`perimeter_reverse_direction`)
 
-Code to be executed at the end of perimeter paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
-
-<a id="setting-inset_start_code"></a>
-
-##### Inset Start G-Code (`inset_start_code`)
-
-Code to be executed at the start of inset paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
-
-<a id="setting-inset_end_code"></a>
-
-##### Inset End G-Code (`inset_end_code`)
-
-Code to be executed at the end of inset paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
-
-<a id="setting-skeleton_start_code"></a>
-
-##### Skeleton Start G-Code (`skeleton_start_code`)
-
-Code to be executed at the start of skeleton paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skeleton_end_code"></a>
-
-##### Skeleton End G-Code (`skeleton_end_code`)
-
-Code to be executed at the end of skeleton paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
-
-<a id="setting-skin_start_code"></a>
-
-##### Skin Start G-Code (`skin_start_code`)
-
-Code to be executed at the start of skin paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-skin_end_code"></a>
-
-##### Skin End G-Code (`skin_end_code`)
-
-Code to be executed at the end of skin paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
-
-<a id="setting-infill_start_code"></a>
-
-##### Infill Start G-Code (`infill_start_code`)
-
-Code to be executed at the start of infill paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
-
-<a id="setting-infill_end_code"></a>
-
-##### Infill End G-Code (`infill_end_code`)
-
-Code to be executed at the end of infill paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
-
-<a id="setting-support_start_code"></a>
-
-##### Support Start G-Code (`support_start_code`)
-
-Code to be executed at the start of support paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
-
-<a id="setting-support_end_code"></a>
-
-##### Support End G-Code (`support_end_code`)
-
-Code to be executed at the end of support paths.
-
-- **Input:** `multiline_text` — Multi-line G-code or text block.
-- **Master default:** `empty`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
-
-<a id="settings-profile-special-modes"></a>
-
-#### Profile > Special Modes
-
-Enables geometry repair and transformations such as smoothing, spiralize, and oversizing, plus
-bead-geometry output for a compatible HMI.
-
-<a id="setting-smoothing"></a>
-
-##### Enable Smoothing (`smoothing`)
-
-If selected, a smoothing process will be applied on all contours of the STL.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
-
-<a id="setting-smoothing_type"></a>
-
-##### Smoothing Type (`smoothing_type`)
-
-Selects the polyline simplification algorithm applied to sliced contours. The algorithms remove
-points differently, so compare geometry at the chosen tolerance before production use.
+Reverse the printing direction of the perimeters (CW vs CCW)
 
 - **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Douglas Peucker`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Smoothing is enabled.
+- **Master default:** `REVERSE_OFF`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 - **Choices:**
-  - `Douglas Peucker` — Recursively retains points with the greatest perpendicular deviation until
-    all remaining deviations are within the tolerance.
-  - `Radial Distance` — Keeps a point when it is farther than the tolerance from the last retained
-    point.
-  - `Perpendicular Distance` — Removes intermediate points whose perpendicular distance from a
-    neighboring segment is within the tolerance.
-  - `Reumann-Witkam` — Advances a tolerance-width corridor along the contour and retains a point
-    when the contour exits it.
+  - `REVERSE_OFF`
+  - `REVERSE_ALL_LAYERS`
+  - `REVERSE_ALTERNATING_LAYERS`
 
-<a id="setting-smoothing_tolerance"></a>
+<a id="setting-inset_reverse_direction"></a>
 
-##### Smoothing Tolerance (`smoothing_tolerance`)
+##### Reverse Inset Direction (`inset_reverse_direction`)
 
-Sets the distance threshold supplied to the selected contour-smoothing algorithm. Larger values
-generally remove more vertices and can deviate farther from the original cross-section.
+Reverse the printing direction of the insets (CW vs CCW)
 
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Enable Smoothing is enabled.
-
-<a id="setting-arc_fitting"></a>
-
-##### Enable Arc Fitting (`arc_fitting`)
-
-Fits eligible planar print moves to circular G2/G3 arcs when the selected machine and syntax support
-G2/G3.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `REVERSE_OFF`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Supports G2/G3 is enabled and (Slicing Mode is `Planar` and (Not (Syntax is
-  `MVP`) and Not (Syntax is `Adamantine`)))).
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+- **Choices:**
+  - `REVERSE_OFF`
+  - `REVERSE_ALL_LAYERS`
+  - `REVERSE_ALTERNATING_LAYERS`
 
-<a id="setting-arc_fitting_tolerance"></a>
-
-##### Arc Fitting Tolerance (`arc_fitting_tolerance`)
-
-Maximum radial deviation allowed when replacing a run of line segments with a circular arc.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0.05 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Enable Arc Fitting is enabled.
-
-<a id="setting-arc_fitting_minimum_segment_count"></a>
-
-##### Minimum Arc Fitting Segments (`arc_fitting_minimum_segment_count`)
-
-Minimum number of consecutive line segments required before arc fitting can replace them with one
-G2/G3 move.
-
-- **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
-- **Master default:** `3`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Enable Arc Fitting is enabled.
-
-<a id="setting-sharp_corner_extension"></a>
-
-##### Enable Sharp Corner Extension (`sharp_corner_extension`)
-
-If selected, sharp toolpath junctions are extended outward to compensate for corner rounding during
-printing.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Always available.
-
-<a id="setting-sharp_corner_extension_angle"></a>
-
-##### Sharp Corner Angle Threshold (`sharp_corner_extension_angle`)
-
-Maximum corner angle that can be sharpened.
-
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `90°`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Enable Sharp Corner Extension is enabled.
-
-<a id="setting-sharp_corner_extension_distance"></a>
-
-##### Sharp Corner Extension Length (`sharp_corner_extension_distance`)
-
-Distance to extend the corner merge point along the corner bisector.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Enable Sharp Corner Extension is enabled.
-
-<a id="setting-sharp_corner_close_points_threshold"></a>
-
-##### Sharp Corner Close Points Threshold (`sharp_corner_close_points_threshold`)
-
-Maximum length of a bead segment connecting two corner legs that can be removed before sharpening.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Enable Sharp Corner Extension is enabled.
-
-<a id="setting-sharp_corner_sharpening_leg_length"></a>
-
-##### Sharp Corner Sharpening Leg Length (`sharp_corner_sharpening_leg_length`)
-
-Distance along each original corner leg to replace with sharpened geometry. A value of 0 uses the
-extension length.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Enable Sharp Corner Extension is enabled.
-
-<a id="setting-enable_spiralize_mode"></a>
-
-##### Enable Spiralize Mode (`enable_spiralize_mode`)
-
-If selected, extruder will never lift and part will be made in one continuous path without infill.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** Slicing Mode is `Planar`.
-
-<a id="setting-enable_fix_model"></a>
-
-##### Enable Fix Model (`enable_fix_model`)
-
-If selected, manifold issues with the model will be repaired.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
-
-<a id="setting-oversize"></a>
-
-##### Oversize Part (`oversize`)
-
-If selected, the part can be oversized in the X and Y dimensions to allow for a machining tolerance.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Slicing Mode is `Planar`.
-
-<a id="setting-oversize_distance"></a>
-
-##### Oversize Distance (`oversize_distance`)
-
-Distance to oversize the part in the X and Y directions.
-
-- **Input:** `location` — Signed position or offset in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Planar` and Oversize Part is enabled).
-
-<a id="setting-enable_width_height"></a>
-
-##### Use Width and Height (`enable_width_height`)
-
-If selected, G-Code will not command feeds and speed and instead send desired bead geometry for the
-HMI to interpret.
-
-- **Input:** `boolean` — On/off checkbox.
-- **Master default:** `Disabled` (`false`)
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Planar` and Syntax is `JuggerBot3D`).
 
 <a id="settings-profile-optimizations"></a>
 
 #### Profile > Optimizations
+
+![Profile > Optimizations Settings](user-guide-images/settings/profile/optimizations_options.png)
 
 Controls ordering at layer, island, path, and point levels, including custom points and randomness.
 
@@ -8184,59 +8078,377 @@ printing to move the seam along with the slicing plane.
 - **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
   or Point Order Optimization is `Custom Farthest Location`)).
 
-<a id="settings-profile-ordering"></a>
 
-#### Profile > Ordering
+<a id="settings-profile-g-code"></a>
 
-Sets region order and direction-reversal policies for perimeters and insets.
+#### Profile > G-Code
 
-<a id="setting-region_order"></a>
+![Profile > G-Code Settings](user-guide-images/settings/profile/g_code_options.png)
 
-##### Region Order (`region_order`)
+Adds region-specific command blocks before and after generated paths.
 
-Order that region paths will be connected.
+<a id="setting-perimeter_start_code"></a>
 
-- **Input:** `numbered_list` — Ordered list whose entries can be rearranged.
-- **Master default:** `Perimeter`, `Inset`, `Skin`, `Infill`, `Skeleton`
+##### Perimeter Start G-Code (`perimeter_start_code`)
+
+Code to be executed at the start of perimeter paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+
+<a id="setting-perimeter_end_code"></a>
+
+##### Perimeter End G-Code (`perimeter_end_code`)
+
+Code to be executed at the end of perimeter paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+
+<a id="setting-inset_start_code"></a>
+
+##### Inset Start G-Code (`inset_start_code`)
+
+Code to be executed at the start of inset paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+
+<a id="setting-inset_end_code"></a>
+
+##### Inset End G-Code (`inset_end_code`)
+
+Code to be executed at the end of inset paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+
+<a id="setting-skeleton_start_code"></a>
+
+##### Skeleton Start G-Code (`skeleton_start_code`)
+
+Code to be executed at the start of skeleton paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skeleton_end_code"></a>
+
+##### Skeleton End G-Code (`skeleton_end_code`)
+
+Code to be executed at the end of skeleton paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
+
+<a id="setting-skin_start_code"></a>
+
+##### Skin Start G-Code (`skin_start_code`)
+
+Code to be executed at the start of skin paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-skin_end_code"></a>
+
+##### Skin End G-Code (`skin_end_code`)
+
+Code to be executed at the end of skin paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+
+<a id="setting-infill_start_code"></a>
+
+##### Infill Start G-Code (`infill_start_code`)
+
+Code to be executed at the start of infill paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
+
+<a id="setting-infill_end_code"></a>
+
+##### Infill End G-Code (`infill_end_code`)
+
+Code to be executed at the end of infill paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
+
+<a id="setting-support_start_code"></a>
+
+##### Support Start G-Code (`support_start_code`)
+
+Code to be executed at the start of support paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
+
+<a id="setting-support_end_code"></a>
+
+##### Support End G-Code (`support_end_code`)
+
+Code to be executed at the end of support paths.
+
+- **Input:** `multiline_text` — Multi-line G-code or text block.
+- **Master default:** `empty`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
+
+
+<a id="settings-profile-special-modes"></a>
+
+#### Profile > Special Modes
+
+![Profile > Special Modes Settings](user-guide-images/settings/profile/special_modes_options.png)
+
+Enables geometry repair and transformations such as smoothing, spiralize, and oversizing, plus
+bead-geometry output for a compatible HMI.
+
+<a id="setting-smoothing"></a>
+
+##### Enable Smoothing (`smoothing`)
+
+If selected, a smoothing process will be applied on all contours of the STL.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
+<a id="setting-smoothing_type"></a>
+
+##### Smoothing Type (`smoothing_type`)
+
+Selects the polyline simplification algorithm applied to sliced contours. The algorithms remove
+points differently, so compare geometry at the chosen tolerance before production use.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Douglas Peucker`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Enable Smoothing is enabled.
+- **Choices:**
+  - `Douglas Peucker` — Recursively retains points with the greatest perpendicular deviation until
+    all remaining deviations are within the tolerance.
+  - `Radial Distance` — Keeps a point when it is farther than the tolerance from the last retained
+    point.
+  - `Perpendicular Distance` — Removes intermediate points whose perpendicular distance from a
+    neighboring segment is within the tolerance.
+  - `Reumann-Witkam` — Advances a tolerance-width corridor along the contour and retains a point
+    when the contour exits it.
+
+<a id="setting-smoothing_tolerance"></a>
+
+##### Smoothing Tolerance (`smoothing_tolerance`)
+
+Sets the distance threshold supplied to the selected contour-smoothing algorithm. Larger values
+generally remove more vertices and can deviate farther from the original cross-section.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Enable Smoothing is enabled.
+
+<a id="setting-arc_fitting"></a>
+
+##### Enable Arc Fitting (`arc_fitting`)
+
+Fits eligible planar print moves to circular G2/G3 arcs when the selected machine and syntax support
+G2/G3.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Supports G2/G3 is enabled and (Slicing Mode is `Planar` and (Not (Syntax is
+  `MVP`) and Not (Syntax is `Adamantine`)))).
+
+<a id="setting-arc_fitting_tolerance"></a>
+
+##### Arc Fitting Tolerance (`arc_fitting_tolerance`)
+
+Maximum radial deviation allowed when replacing a run of line segments with a circular arc.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0.05 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Arc Fitting is enabled.
+
+<a id="setting-arc_fitting_minimum_segment_count"></a>
+
+##### Minimum Arc Fitting Segments (`arc_fitting_minimum_segment_count`)
+
+Minimum number of consecutive line segments required before arc fitting can replace them with one
+G2/G3 move.
+
+- **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
+- **Master default:** `3`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Arc Fitting is enabled.
+
+<a id="setting-sharp_corner_extension"></a>
+
+##### Enable Sharp Corner Extension (`sharp_corner_extension`)
+
+If selected, sharp toolpath junctions are extended outward to compensate for corner rounding during
+printing.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** Slicing Mode is `Planar`.
 
-<a id="setting-perimeter_reverse_direction"></a>
+<a id="setting-sharp_corner_extension_angle"></a>
 
-##### Reverse Perimeter Direction (`perimeter_reverse_direction`)
+##### Sharp Corner Angle Threshold (`sharp_corner_extension_angle`)
 
-Reverse the printing direction of the perimeters (CW vs CCW)
+Maximum corner angle that can be sharpened.
 
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `REVERSE_OFF`
+- **Input:** `angle` — Angle; displayed in the preferred angle unit.
+- **Master default:** `90°`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
-- **Choices:**
-  - `REVERSE_OFF`
-  - `REVERSE_ALL_LAYERS`
-  - `REVERSE_ALTERNATING_LAYERS`
+- **Available when:** Enable Sharp Corner Extension is enabled.
 
-<a id="setting-inset_reverse_direction"></a>
+<a id="setting-sharp_corner_extension_distance"></a>
 
-##### Reverse Inset Direction (`inset_reverse_direction`)
+##### Sharp Corner Extension Length (`sharp_corner_extension_distance`)
 
-Reverse the printing direction of the insets (CW vs CCW)
+Distance to extend the corner merge point along the corner bisector.
 
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `REVERSE_OFF`
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
-- **Choices:**
-  - `REVERSE_OFF`
-  - `REVERSE_ALL_LAYERS`
-  - `REVERSE_ALTERNATING_LAYERS`
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
+<a id="setting-sharp_corner_close_points_threshold"></a>
+
+##### Sharp Corner Close Points Threshold (`sharp_corner_close_points_threshold`)
+
+Maximum length of a bead segment connecting two corner legs that can be removed before sharpening.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
+<a id="setting-sharp_corner_sharpening_leg_length"></a>
+
+##### Sharp Corner Sharpening Leg Length (`sharp_corner_sharpening_leg_length`)
+
+Distance along each original corner leg to replace with sharpened geometry. A value of 0 uses the
+extension length.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Enable Sharp Corner Extension is enabled.
+
+<a id="setting-enable_spiralize_mode"></a>
+
+##### Enable Spiralize Mode (`enable_spiralize_mode`)
+
+If selected, extruder will never lift and part will be made in one continuous path without infill.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Planar`.
+
+<a id="setting-enable_fix_model"></a>
+
+##### Enable Fix Model (`enable_fix_model`)
+
+If selected, manifold issues with the model will be repaired.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
+<a id="setting-oversize"></a>
+
+##### Oversize Part (`oversize`)
+
+If selected, the part can be oversized in the X and Y dimensions to allow for a machining tolerance.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Slicing Mode is `Planar`.
+
+<a id="setting-oversize_distance"></a>
+
+##### Oversize Distance (`oversize_distance`)
+
+Distance to oversize the part in the X and Y directions.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Oversize Part is enabled).
+
+<a id="setting-enable_width_height"></a>
+
+##### Use Width and Height (`enable_width_height`)
+
+If selected, G-Code will not command feeds and speed and instead send desired bead geometry for the
+HMI to interpret.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and Syntax is `JuggerBot3D`).
+
 
 <a id="settings-profile-laser-scanner"></a>
 
 #### Profile > Laser Scanner
+
+![Profile > Laser Scanner Settings](user-guide-images/settings/profile/laser_scanner_options.png)
 
 Configures laser-scan paths, offsets, resolution, orientation, buffering, and height-map behavior.
 
@@ -8510,9 +8722,12 @@ Angle C (Z axis rotation - roll)
 - **Available when:** (Enable Laser Scanner is enabled and Custom Orientation Definition is
   enabled).
 
+
 <a id="settings-profile-thermal-scanner"></a>
 
 #### Profile > Thermal Scanner
+
+![Profile > Thermal Scanner Settings](user-guide-images/settings/profile/thermal_scanner_options.png)
 
 Configures thermal scan enablement, offsets, and temperature cutoff.
 
@@ -8561,19 +8776,52 @@ this value, so it has no effect.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Thermal Scanner is enabled.
 
+
 ### E.5 Experimental settings
+
+![Experimental Settings Panel](user-guide-images/experimental_settings_panel.png)
 
 Experimental settings expose specialized path and file-generation controls. Confirm writer and
 machine support before depending on them in a production workflow.
 
-![Figure 64 placeholder: Experimental settings](user-guide-images/figure64.png)
+<a id="settings-experimental-cross-sectioning"></a>
 
-> **Diagram placeholder — Experimental settings:** Add an annotated Experimental panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
+#### Experimental > Cross-Sectioning
+
+![Experimental > Cross-Sectioning Settings](user-guide-images/settings/experimental/cross_sectioning_options.png)
+
+Controls gap detection and stitching tolerances used while forming cross-sections.
+
+<a id="setting-cross_section_largest_gap"></a>
+
+##### Largest Gap Distance (`cross_section_largest_gap`)
+
+Sets the primary endpoint-gap tolerance used to connect adjacent cross-section segments. Endpoints
+closer than this distance are treated as neighbors and joined.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `2.54 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
+<a id="setting-max_stitch_distance"></a>
+
+##### Max Stitch Distance (`max_stitch_distance`)
+
+Sets the larger fallback stitching tolerance used when primary gap connection still leaves open
+cross-section polylines. Remaining endpoints closer than this distance are joined during healing.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `25.4 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
 
 <a id="settings-experimental-auto-speed-ramping"></a>
 
 #### Experimental > Auto Speed Ramping
+
+![Experimental > Auto Speed Ramping Settings](user-guide-images/settings/experimental/auto_speed_ramping_options.png)
 
 Adjusts speed and extrusion around path-angle changes using configurable ramp distances.
 
@@ -8687,9 +8935,12 @@ threshold.
 - **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
   enabled).
 
+
 <a id="settings-experimental-file-output"></a>
 
 #### Experimental > File Output
+
+![Experimental > File Output Settings](user-guide-images/settings/experimental/file_output_options.png)
 
 Enables syntax-specific companion, simulation, or auxiliary output files.
 
@@ -8872,37 +9123,9 @@ If enabled, AMCM data logging commands will be added to the g-code.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Syntax is `ORNL` or Syntax is `ORNL Metric`).
 
-<a id="settings-experimental-cross-sectioning"></a>
-
-#### Experimental > Cross-Sectioning
-
-Controls gap detection and stitching tolerances used while forming cross-sections.
-
-<a id="setting-cross_section_largest_gap"></a>
-
-##### Largest Gap Distance (`cross_section_largest_gap`)
-
-Sets the primary endpoint-gap tolerance used to connect adjacent cross-section segments. Endpoints
-closer than this distance are treated as neighbors and joined.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `2.54 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
-
-<a id="setting-max_stitch_distance"></a>
-
-##### Max Stitch Distance (`max_stitch_distance`)
-
-Sets the larger fallback stitching tolerance used when primary gap connection still leaves open
-cross-section polylines. Remaining endpoints closer than this distance are joined during healing.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `25.4 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** Always available.
 
 The reference above is generated from the same metadata that constructs the Settings UI.
 Template-specific values are intentionally not listed because they vary by machine, material, and
 site.
+
 <!-- END GENERATED SETTINGS REFERENCE -->

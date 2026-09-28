@@ -46,11 +46,10 @@ artifacts to reduce build-time metadata churn.
 The Lua filter colors diagram-placeholder callouts red in generated PDF/HTML
 outputs so unreplaced manual figures are easy to spot before release.
 
-The guide's replaceable figure placeholders live in
-`docs/user-guide-images/figureNN.png`, using zero-padded names such as
-`figure01.png` so the files stay sorted. Replace the image contents while
-keeping the same filename, then regenerate the guide; the Markdown fallback and
-PDF will pick up the updated figure automatically.
+Documentation screenshots live under `docs/user-guide-images/` using semantic
+names matching the GUI components (e.g. `main_window_overview.png`,
+`settings_sidebar.png`). Screenshots can be generated via the
+`ornlslicer_gui_capture` tool, and the user guide embeds them directly.
 
 ## Codebase Architecture
 
