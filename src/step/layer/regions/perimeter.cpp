@@ -817,15 +817,36 @@ void Perimeter::optimize(int layerNumber, Point& current_location, bool& shouldN
 
                     const double connected_inset_tolerance =
                         std::max(m_sb->setting<Distance>(PS::Inset::kBeadWidth)() * 1.0e-3, 1.0e-6);
-                    const bool contains_connected_inset =
-                        std::any_of(spiral_group.begin(), spiral_group.end(), [&](const Point& point) {
-                            return connectedInsetGeometryIndex(point, connected_inset_tolerance) >= 0;
-                        });
-                    const Distance min_segment_length =
-                        contains_connected_inset ? std::min(m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength),
-                                                            m_sb->setting<Distance>(PS::Inset::kMinSegmentLength))
-                                                 : m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength);
-                    Path newPath = createPath(spiral_group, min_segment_length, false);
+                    int connected_inset_start = -1;
+                    for (int i = 0, end = spiral_group.size(); i < end; ++i) {
+                        if (connectedInsetGeometryIndex(spiral_group[i], connected_inset_tolerance) >= 0) {
+                            connected_inset_start = i;
+                            break;
+                        }
+                    }
+                    const bool contains_connected_inset = connected_inset_start >= 0;
+
+                    Polyline cleaned_spiral_group;
+                    if (connected_inset_start > 0) {
+                        Polyline perimeter_portion = Polyline(spiral_group.mid(0, connected_inset_start));
+                        Polyline inset_portion     = Polyline(spiral_group.mid(connected_inset_start));
+                        perimeter_portion          = perimeter_portion.removeShortSegments(
+                            m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength), false);
+                        inset_portion = inset_portion.removeShortSegments(
+                            m_sb->setting<Distance>(PS::Inset::kMinSegmentLength), false);
+                        if (perimeter_portion.size() < 2 || inset_portion.size() < 2) { continue; }
+
+                        cleaned_spiral_group = perimeter_portion;
+                        cleaned_spiral_group += inset_portion;
+                    }
+                    else {
+                        const Distance min_segment_length =
+                            contains_connected_inset ? m_sb->setting<Distance>(PS::Inset::kMinSegmentLength)
+                                                     : m_sb->setting<Distance>(PS::Perimeter::kMinSegmentLength);
+                        cleaned_spiral_group = spiral_group.removeShortSegments(min_segment_length, false);
+                    }
+
+                    Path newPath = createPath(cleaned_spiral_group, Distance(0), false);
                     newPath.setCCW(ccw);
 
                     if (newPath.calculateLength() < min_path_length && !contains_connected_inset) { continue; }
