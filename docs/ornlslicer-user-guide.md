@@ -1695,18 +1695,19 @@ The catalog is organized as follows:
 
 ### E.2 Printer settings
 
+<img align="right" width="380" src="user-guide-images/printer_settings_panel.png" alt="Printer Settings Panel" />
+
 Printer settings describe the controller, coordinate system, build envelope, machine limits, and
 machine-level G-code. Treat them as machine configuration and verify them against the physical
 system.
 
-![Figure 61 placeholder: Printer settings](user-guide-images/figure61.png)
-
-> **Diagram placeholder — Printer settings:** Add an annotated Printer panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
+<br clear="right" />
 
 <a id="settings-printer-machine-setup"></a>
 
 #### Printer > Machine Setup
+
+<img align="right" width="380" src="user-guide-images/settings/printer/machine_setup_options.png" alt="Printer > Machine Setup Settings" />
 
 Selects controller syntax, machine process, motion-command behavior, coordinates, tools, and
 rotary-axis values.
@@ -1965,9 +1966,13 @@ Rotates generated G-Code coordinates about the Z axis before output.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
 
+<br clear="right" />
+
 <a id="settings-printer-dimensions"></a>
 
 #### Printer > Dimensions
+
+<img align="right" width="380" src="user-guide-images/settings/printer/dimensions_options.png" alt="Printer > Dimensions Settings" />
 
 Defines the build-volume shape, limits, offsets, auxiliary locations, and displayed floor grid.
 
@@ -2290,9 +2295,13 @@ Offset distance for location of first Y grid line.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Grid Y is enabled.
 
+<br clear="right" />
+
 <a id="settings-printer-auxiliary"></a>
 
 #### Printer > Auxiliary
+
+<img align="right" width="380" src="user-guide-images/settings/printer/auxiliary_options.png" alt="Printer > Auxiliary Settings" />
 
 Configures optional equipment that is separate from the primary deposition system.
 
@@ -2318,9 +2327,13 @@ Voltage sent to the tamper to control it's speed.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Tamper is enabled.
 
+<br clear="right" />
+
 <a id="settings-printer-machine-speeds"></a>
 
 #### Printer > Machine Speeds
+
+<img align="right" width="380" src="user-guide-images/settings/printer/machine_speeds_options.png" alt="Printer > Machine Speeds Settings" />
 
 Sets physical motion and extrusion-rate limits used by writers, validation, and time estimation.
 
@@ -2402,9 +2415,13 @@ RPM of 100 and Gear Ratio of 7 would output 700RPM to the G-Code.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Machine Type is `Pellet`.
 
+<br clear="right" />
+
 <a id="settings-printer-acceleration"></a>
 
 #### Printer > Acceleration
+
+<img align="right" width="380" src="user-guide-images/settings/printer/acceleration_options.png" alt="Printer > Acceleration Settings" />
 
 Sets default and region-specific acceleration values for syntaxes that emit dynamic acceleration
 commands.
@@ -2497,9 +2514,13 @@ Acceleration value for support.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Dynamic Acceleration is enabled.
 
+<br clear="right" />
+
 <a id="settings-printer-g-code"></a>
 
 #### Printer > G-Code
+
+<img align="right" width="380" src="user-guide-images/settings/printer/g_code_options.png" alt="Printer > G-Code Settings" />
 
 Controls machine-level startup, material loading, waits, boundary demonstrations, settings output,
 and custom command blocks.
@@ -2617,19 +2638,22 @@ Input G-Code to be executed after the end of the print.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
 
+<br clear="right" />
+
 ### E.3 Material settings
+
+<img align="right" width="380" src="user-guide-images/material_settings_panel.png" alt="Material Settings Panel" />
 
 Material settings control process behavior tied to the feedstock and deposition system, including
 startup, extrusion, retraction, temperature, cooling, and first-layer adhesion.
 
-![Figure 62 placeholder: Material settings](user-guide-images/figure62.png)
-
-> **Diagram placeholder — Material settings:** Add an annotated Material panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
+<br clear="right" />
 
 <a id="settings-material-density"></a>
 
 #### Material > Density
+
+<img align="right" width="380" src="user-guide-images/settings/material/density_options.png" alt="Material > Density Settings" />
 
 Chooses a known feedstock density or supplies a custom density for mass and flow calculations.
 
@@ -2668,9 +2692,13 @@ Sets the custom material density used for deposited-mass estimation when Printin
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Printing Material is `Other`.
 
+<br clear="right" />
+
 <a id="settings-material-start-up"></a>
 
 #### Material > Start-Up
+
+<img align="right" width="380" src="user-guide-images/settings/material/start_up_options.png" alt="Material > Start-Up Settings" />
 
 Controls prestart and ramp-up motion at the beginning of printable region paths.
 
@@ -3091,9 +3119,13 @@ If selected, minimum layer time feedrate adjustments will not change start-up pa
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+<br clear="right" />
+
 <a id="settings-material-slow-down"></a>
 
 #### Material > Slow Down
+
+<img align="right" width="380" src="user-guide-images/settings/material/slow_down_options.png" alt="Material > Slow Down Settings" />
 
 Controls reduced speed, extrusion, and lift behavior near the end of printable region paths.
 
@@ -3508,9 +3540,13 @@ If selected, minimum layer time feedrate adjustments will not change slow down p
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+<br clear="right" />
+
 <a id="settings-material-tip-wipe"></a>
 
 #### Material > Tip Wipe
+
+<img align="right" width="380" src="user-guide-images/settings/material/tip_wipe_options.png" alt="Material > Tip Wipe Settings" />
 
 Controls wipe motion, direction, cutoff, lift, and voltage after selected printable regions.
 
@@ -4088,9 +4124,13 @@ If selected, minimum layer time feedrate adjustments will not change tip wipe pa
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+<br clear="right" />
+
 <a id="settings-material-spiral-lift"></a>
 
 #### Material > Spiral Lift
+
+<img align="right" width="380" src="user-guide-images/settings/material/spiral_lift_options.png" alt="Material > Spiral Lift Settings" />
 
 Controls spiral motion used to lift away from a completed region or layer.
 
@@ -4214,9 +4254,13 @@ If selected, minimum layer time feedrate adjustments will not change spiral lift
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `MODIFY FEEDRATE`)).
 
+<br clear="right" />
+
 <a id="settings-material-purge"></a>
 
 #### Material > Purge
+
+<img align="right" width="380" src="user-guide-images/settings/material/purge_options.png" alt="Material > Purge Settings" />
 
 Controls purge timing, screw speed, dwell behavior, and optional purge/wipe motion.
 
@@ -4330,9 +4374,13 @@ Feedrate for extrusion used for the purge between layers.
 - **Available when:** (Slicing Mode is `Planar` and (Purge During Dwell is enabled and (Syntax is
   `Marlin` or Machine Type is `Filament`))).
 
+<br clear="right" />
+
 <a id="settings-material-extruder"></a>
 
 #### Material > Extruder
+
+<img align="right" width="380" src="user-guide-images/settings/material/extruder_options.png" alt="Material > Extruder Settings" />
 
 Configures initial extrusion, priming, region delays, servo behavior, and spindle-command
 conventions.
@@ -4481,9 +4529,13 @@ using arc welder, but prevents feedrate scaling from working.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Syntax is `Cincinnati`).
 
+<br clear="right" />
+
 <a id="settings-material-filament"></a>
 
 #### Material > Filament
+
+<img align="right" width="380" src="user-guide-images/settings/material/filament_options.png" alt="Material > Filament Settings" />
 
 Configures filament diameter, relative extrusion, position-reset behavior, and alternate extrusion
 axes.
@@ -4533,9 +4585,13 @@ If selected, uses B for filament distance output in the g-code rather than the s
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Machine Type is `Filament`.
 
+<br clear="right" />
+
 <a id="settings-material-retraction"></a>
 
 #### Material > Retraction
+
+<img align="right" width="380" src="user-guide-images/settings/material/retraction_options.png" alt="Material > Retraction Settings" />
 
 Controls when filament retracts and primes around qualifying travel and layer changes.
 
@@ -4635,9 +4691,13 @@ Length of extra filament to extrude during priming after a retraction.
   mode-specific scope limitations still apply.
 - **Available when:** (Machine Type is `Filament` and Enable Retraction is enabled).
 
+<br clear="right" />
+
 <a id="settings-material-temperatures"></a>
 
 #### Material > Temperatures
+
+<img align="right" width="380" src="user-guide-images/settings/material/temperatures_options.png" alt="Material > Temperatures Settings" />
 
 Sets bed, standby, and multi-zone extrusion temperature targets.
 
@@ -4796,9 +4856,13 @@ Temperature for extruder zone 5.
   mode-specific scope limitations still apply.
 - **Available when:** Five Zone Extruder is enabled.
 
+<br clear="right" />
+
 <a id="settings-material-cooling"></a>
 
 #### Material > Cooling
+
+<img align="right" width="380" src="user-guide-images/settings/material/cooling_options.png" alt="Material > Cooling Settings" />
 
 Controls fan output and minimum-layer-time behavior, including pauses and extrusion/feed
 adjustments.
@@ -4928,9 +4992,13 @@ G-Code to be executed after the minimum layer time pause command, such as turnin
 - **Available when:** (Slicing Mode is `Planar` and (Force Min / Max Layer Time is enabled and Min /
   Max Layer Time Method is `ADD DWELL TIME`)).
 
+<br clear="right" />
+
 <a id="settings-material-platform-adhesion"></a>
 
 #### Material > Platform Adhesion
+
+<img align="right" width="380" src="user-guide-images/settings/material/platform_adhesion_options.png" alt="Material > Platform Adhesion Settings" />
 
 Adds and configures raft, brim, or skirt geometry around the first layers.
 
@@ -5088,9 +5156,13 @@ Bead width for skirt paths.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Add Skirt is enabled).
 
+<br clear="right" />
+
 <a id="settings-material-multi-material"></a>
 
 #### Material > Multi-Material
+
+<img align="right" width="380" src="user-guide-images/settings/material/multi_material_options.png" alt="Material > Multi-Material Settings" />
 
 Assigns materials to regions and controls material transitions and controller selection commands.
 
@@ -5236,19 +5308,22 @@ Uses the M222 code for material transitions rather than the standard M237.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Multi-material is enabled).
 
+<br clear="right" />
+
 ### E.4 Profile settings
+
+<img align="right" width="380" src="user-guide-images/profile_settings_panel.png" alt="Profile Settings Panel" />
 
 Profile settings define how geometry becomes layers and ordered toolpaths. Many are local-capable so
 different parts, layers, ranges, or spatial regions can use different values in supported modes.
 
-![Figure 63 placeholder: Profile settings](user-guide-images/figure63.png)
-
-> **Diagram placeholder — Profile settings:** Add an annotated Profile panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
+<br clear="right" />
 
 <a id="settings-profile-slicing"></a>
 
 #### Profile > Slicing
+
+<img align="right" width="380" src="user-guide-images/settings/profile/slicing_options.png" alt="Profile > Slicing Settings" />
 
 Selects planar, cylindrical, or image slicing and configures slice orientation and mode-specific
 geometry.
@@ -5494,9 +5569,13 @@ Defines the physical X and Y size of pixels in generated image slices.
   - **X:** `image_pixel_size_x` — `0 mm`
   - **Y:** `image_pixel_size_y` — `0 mm`
 
+<br clear="right" />
+
 <a id="settings-profile-layer"></a>
 
 #### Profile > Layer
+
+<img align="right" width="380" src="user-guide-images/settings/profile/layer_options.png" alt="Profile > Layer Settings" />
 
 Defines layer thickness and baseline bead, nozzle, speed, and extrusion values.
 
@@ -5574,9 +5653,13 @@ raft, and support paths.
   mode-specific scope limitations still apply.
 - **Available when:** Slicing Mode is `Planar`.
 
+<br clear="right" />
+
 <a id="settings-profile-perimeter"></a>
 
 #### Profile > Perimeter
+
+<img align="right" width="380" src="user-guide-images/settings/profile/perimeter_options.png" alt="Profile > Perimeter Settings" />
 
 Controls exterior contours, their process values, and perimeter-specific start and spiral behavior.
 
@@ -5836,9 +5919,13 @@ src=':/tooltips/profile/spiral_perimeter.png' width='260' height='146'&gt;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-inset"></a>
 
 #### Profile > Inset
+
+<img align="right" width="380" src="user-guide-images/settings/profile/inset_options.png" alt="Profile > Inset Settings" />
 
 Controls additional inward contours, including count, overlap, process values, and spiral behavior.
 
@@ -6002,9 +6089,13 @@ If selected, spiral insets will be generated.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-skeleton"></a>
 
 #### Profile > Skeleton
+
+<img align="right" width="380" src="user-guide-images/settings/profile/skeleton_options.png" alt="Profile > Skeleton Settings" />
 
 Controls centerline input, cleanup, adaptive bead width, process values, and skeleton prestart
 behavior.
@@ -6337,9 +6428,13 @@ override (M13) on BAAM.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Enable Skeletons is enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-skin"></a>
 
 #### Profile > Skin
+
+<img align="right" width="380" src="user-guide-images/settings/profile/skin_options.png" alt="Profile > Skin Settings" />
 
 Controls solid top/bottom coverage, pattern orientation, overlap, process values, and gradual
 infill.
@@ -6589,9 +6684,13 @@ Sets the angle for the gradual infill rotation layer to layer.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Skin is enabled and Enable Gradual
   Infill Steps is enabled)).
 
+<br clear="right" />
+
 <a id="settings-profile-infill"></a>
 
 #### Profile > Infill
+
+<img align="right" width="380" src="user-guide-images/settings/profile/infill_options.png" alt="Profile > Infill Settings" />
 
 Controls interior fill density, spacing, pattern, orientation, ordering, combining, and process
 values.
@@ -6860,9 +6959,13 @@ Shift the first starting layer of infill when using combine infill every X layer
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-support"></a>
 
 #### Profile > Support
+
+<img align="right" width="380" src="user-guide-images/settings/profile/support_options.png" alt="Profile > Support Settings" />
 
 Controls generated grid or organic support, interfaces, bases, spacing, tapering, and connectivity.
 
@@ -7215,9 +7318,13 @@ Maximum branch convergence angle measured from vertical.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Support is enabled and Support Structure
   is `Organic / Tree`)).
 
+<br clear="right" />
+
 <a id="settings-profile-travel"></a>
 
 #### Profile > Travel
+
+<img align="right" width="380" src="user-guide-images/settings/profile/travel_options.png" alt="Profile > Travel Settings" />
 
 Controls non-print motion, minimum travel thresholds, lift behavior, pauses, and centroid moves.
 
@@ -7331,9 +7438,13 @@ Duration of the pause during travel motion.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Pause During Travel is enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-g-code"></a>
 
 #### Profile > G-Code
+
+<img align="right" width="380" src="user-guide-images/settings/profile/g_code_options.png" alt="Profile > G-Code Settings" />
 
 Adds region-specific command blocks before and after generated paths.
 
@@ -7481,9 +7592,13 @@ Code to be executed at the end of support paths.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Support is enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-special-modes"></a>
 
 #### Profile > Special Modes
+
+<img align="right" width="380" src="user-guide-images/settings/profile/special_modes_options.png" alt="Profile > Special Modes Settings" />
 
 Enables geometry repair and transformations such as smoothing, spiralize, and oversizing, plus
 bead-geometry output for a compatible HMI.
@@ -7690,9 +7805,13 @@ HMI to interpret.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Syntax is `JuggerBot3D`).
 
+<br clear="right" />
+
 <a id="settings-profile-optimizations"></a>
 
 #### Profile > Optimizations
+
+<img align="right" width="380" src="user-guide-images/settings/profile/optimizations_options.png" alt="Profile > Optimizations Settings" />
 
 Controls ordering at layer, island, path, and point levels, including custom points and randomness.
 
@@ -8184,9 +8303,13 @@ printing to move the seam along with the slicing plane.
 - **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
   or Point Order Optimization is `Custom Farthest Location`)).
 
+<br clear="right" />
+
 <a id="settings-profile-ordering"></a>
 
 #### Profile > Ordering
+
+<img align="right" width="380" src="user-guide-images/settings/profile/ordering_options.png" alt="Profile > Ordering Settings" />
 
 Sets region order and direction-reversal policies for perimeters and insets.
 
@@ -8234,9 +8357,13 @@ Reverse the printing direction of the insets (CW vs CCW)
   - `REVERSE_ALL_LAYERS`
   - `REVERSE_ALTERNATING_LAYERS`
 
+<br clear="right" />
+
 <a id="settings-profile-laser-scanner"></a>
 
 #### Profile > Laser Scanner
+
+<img align="right" width="380" src="user-guide-images/settings/profile/laser_scanner_options.png" alt="Profile > Laser Scanner Settings" />
 
 Configures laser-scan paths, offsets, resolution, orientation, buffering, and height-map behavior.
 
@@ -8510,9 +8637,13 @@ Angle C (Z axis rotation - roll)
 - **Available when:** (Enable Laser Scanner is enabled and Custom Orientation Definition is
   enabled).
 
+<br clear="right" />
+
 <a id="settings-profile-thermal-scanner"></a>
 
 #### Profile > Thermal Scanner
+
+<img align="right" width="380" src="user-guide-images/settings/profile/thermal_scanner_options.png" alt="Profile > Thermal Scanner Settings" />
 
 Configures thermal scan enablement, offsets, and temperature cutoff.
 
@@ -8561,19 +8692,22 @@ this value, so it has no effect.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Enable Thermal Scanner is enabled.
 
+<br clear="right" />
+
 ### E.5 Experimental settings
+
+<img align="right" width="380" src="user-guide-images/experimental_settings_panel.png" alt="Experimental Settings Panel" />
 
 Experimental settings expose specialized path and file-generation controls. Confirm writer and
 machine support before depending on them in a production workflow.
 
-![Figure 64 placeholder: Experimental settings](user-guide-images/figure64.png)
-
-> **Diagram placeholder — Experimental settings:** Add an annotated Experimental panel with its
-> category tabs, search field, and one enabled/disabled dependency example.
+<br clear="right" />
 
 <a id="settings-experimental-auto-speed-ramping"></a>
 
 #### Experimental > Auto Speed Ramping
+
+<img align="right" width="380" src="user-guide-images/settings/experimental/auto_speed_ramping_options.png" alt="Experimental > Auto Speed Ramping Settings" />
 
 Adjusts speed and extrusion around path-angle changes using configurable ramp distances.
 
@@ -8687,9 +8821,13 @@ threshold.
 - **Available when:** (Slicing Mode is `Planar` and Enable Trajectory Auto Speed Ramping is
   enabled).
 
+<br clear="right" />
+
 <a id="settings-experimental-file-output"></a>
 
 #### Experimental > File Output
+
+<img align="right" width="380" src="user-guide-images/settings/experimental/file_output_options.png" alt="Experimental > File Output Settings" />
 
 Enables syntax-specific companion, simulation, or auxiliary output files.
 
@@ -8872,9 +9010,13 @@ If enabled, AMCM data logging commands will be added to the g-code.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Syntax is `ORNL` or Syntax is `ORNL Metric`).
 
+<br clear="right" />
+
 <a id="settings-experimental-cross-sectioning"></a>
 
 #### Experimental > Cross-Sectioning
+
+<img align="right" width="380" src="user-guide-images/settings/experimental/cross_sectioning_options.png" alt="Experimental > Cross-Sectioning Settings" />
 
 Controls gap detection and stitching tolerances used while forming cross-sections.
 
@@ -8901,6 +9043,8 @@ cross-section polylines. Remaining endpoints closer than this distance are joine
 - **Master default:** `25.4 mm`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** Always available.
+
+<br clear="right" />
 
 The reference above is generated from the same metadata that constructs the Settings UI.
 Template-specific values are intentionally not listed because they vary by machine, material, and
