@@ -15,6 +15,7 @@
 #include "gcode/writers/mach4_writer.h"
 #include "gcode/writers/marlin_writer.h"
 #include "gcode/writers/reprap_writer.h"
+#include "gcode/writers/wolf_writer.h"
 #include "gcode/writers/writer_base.h"
 #include "geometry/path.h"
 #include "geometry/point.h"
@@ -146,6 +147,29 @@ bool verifyDynamicAccelerationTransitions() {
                      "Region transitions should not emit acceleration when dynamic acceleration is disabled.");
 
     return passed;
+}
+
+bool verifyWolfRegionTransition() {
+    QSharedPointer<ORNL::SettingsBase> settings = defaultSettings();
+    if (settings.isNull()) { return expect(false, "Expected Wolf transition settings to load."); }
+    settings->setSetting(ORNL::PS::SpecialModes::kEnableSpiralize, true);
+
+    QSharedPointer<ORNL::SettingsBase> segment_settings = QSharedPointer<ORNL::SettingsBase>::create();
+    segment_settings->setSetting(ORNL::SS::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
+    segment_settings->setSetting(ORNL::SS::kExtruderSpeed, 0);
+    segment_settings->setSetting(ORNL::SS::kMaterialNumber, 0);
+    segment_settings->setSetting(ORNL::SS::kRegionType, ORNL::RegionType::kPerimeter);
+    segment_settings->setSetting(ORNL::SS::kPathModifiers, ORNL::PathModifiers::kNone);
+
+    ORNL::WolfWriter wolf(ORNL::GcodeMetaList::WolfMeta, settings);
+    wolf.writeInitialSetup(ORNL::Distance(0), ORNL::Distance(0), ORNL::Distance(0), ORNL::Distance(0), 1);
+    wolf.writeBeforeLayer(0.0f, settings);
+    wolf.writeBeforePath(ORNL::RegionType::kPerimeter);
+    wolf.writeLine(ORNL::Point(0.0, 0.0, 0.0), ORNL::Point(1.0, 0.0, 0.0), segment_settings);
+
+    const QString transition = wolf.writeBeforePathRegionTransition(ORNL::RegionType::kInset);
+    return expect(transition.startsWith(QStringLiteral("M2T2D4F0")),
+                  "Wolf should select the inset controller path type at a connected-region transition.");
 }
 
 ORNL::PolygonList circularGeometry() {
@@ -566,6 +590,39 @@ bool verifyBranchConnectionsStayAtLayerZ(const QVector<ORNL::Path>& paths, const
     return passed;
 }
 
+bool verifyConnectedRegionBoundary(const QVector<ORNL::Path>& paths, ORNL::Distance max_connector_length,
+                                   const std::string& case_name) {
+    bool found_transition      = false;
+    bool found_short_connector = false;
+
+    for (const ORNL::Path& path : paths) {
+        ORNL::RegionType previous_region = ORNL::RegionType::kUnknown;
+        bool has_previous_region         = false;
+        bool path_has_short_perimeter    = false;
+
+        for (const QSharedPointer<ORNL::SegmentBase>& segment : path) {
+            if (!segment->isPrintingSegment()) { continue; }
+
+            const ORNL::RegionType region = segment->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType);
+            if (region == ORNL::RegionType::kPerimeter && segment->length() <= max_connector_length) {
+                path_has_short_perimeter = true;
+            }
+            if (has_previous_region && previous_region == ORNL::RegionType::kPerimeter &&
+                region == ORNL::RegionType::kInset) {
+                found_transition = true;
+                found_short_connector |= path_has_short_perimeter;
+            }
+
+            previous_region     = region;
+            has_previous_region = true;
+        }
+    }
+
+    bool passed = expect(found_transition, case_name + " should contain a perimeter-to-inset transition.");
+    passed &= expect(found_short_connector, case_name + " should preserve the short perimeter-to-inset connector.");
+    return passed;
+}
+
 void configureConnectedInsets(const QSharedPointer<ORNL::SettingsBase>& settings) {
     settings->setSetting(ORNL::PS::Perimeter::kEnable, true);
     settings->setSetting(ORNL::PS::Perimeter::kCount, 2);
@@ -595,6 +652,7 @@ int main() {
     if (perimeter_settings.isNull()) return EXIT_FAILURE;
 
     passed &= verifyDynamicAccelerationTransitions();
+    passed &= verifyWolfRegionTransition();
 
     perimeter_settings->setSetting(ORNL::PS::Perimeter::kCount, 5);
     perimeter_settings->setSetting(ORNL::PS::Perimeter::kBeadWidth, ORNL::Distance(5.0));
@@ -817,6 +875,26 @@ int main() {
                                                      ORNL::RegionType::kPerimeter),
                          "Expected the connected inset cutoff to leave preceding perimeter segments unchanged.");
         passed &= verifyPathHookRegions(*connected_perimeter, connected_settings, "Connected perimeter", true);
+    }
+
+    QSharedPointer<ORNL::SettingsBase> cleaned_boundary_settings = defaultSettings();
+    configureConnectedInsets(cleaned_boundary_settings);
+    cleaned_boundary_settings->setSetting(ORNL::PS::Perimeter::kMinSegmentLength, ORNL::Distance(20.0));
+    cleaned_boundary_settings->setSetting(ORNL::PS::Inset::kMinSegmentLength, ORNL::Distance(20.0));
+    ORNL::PolymerIsland cleaned_boundary_island(squareGeometry(), cleaned_boundary_settings, {});
+    cleaned_boundary_island.compute(0);
+    cleaned_boundary_island.reorderRegions();
+    ORNL::Point cleaned_boundary_location(-110.0, -110.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> cleaned_boundary_previous_regions;
+    cleaned_boundary_island.optimize(0, cleaned_boundary_location, cleaned_boundary_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> cleaned_boundary_perimeter =
+        cleaned_boundary_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    passed &=
+        expect(!cleaned_boundary_perimeter.isNull(), "Short-connector regression should create a perimeter region.");
+    if (!cleaned_boundary_perimeter.isNull()) {
+        passed &= verifyConnectedRegionBoundary(cleaned_boundary_perimeter->getPaths(), ORNL::Distance(10.0),
+                                                "Short-connector regression");
     }
 
     QSharedPointer<ORNL::SettingsBase> localized_width_settings = defaultSettings();
