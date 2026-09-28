@@ -1137,6 +1137,40 @@ int main() {
                          "Locally different-material insets should remain in their own region.");
     }
 
+    QSharedPointer<ORNL::SettingsBase> unrelated_material_settings = defaultSettings();
+    configureConnectedInsets(unrelated_material_settings);
+    unrelated_material_settings->setSetting(ORNL::MS::MultiMaterial::kEnable, true);
+    unrelated_material_settings->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
+    unrelated_material_settings->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 0);
+
+    ORNL::Polygon unrelated_material_bounds;
+    unrelated_material_bounds << ORNL::Point(1000.0, 1000.0, 0.0) << ORNL::Point(1200.0, 1000.0, 0.0)
+                              << ORNL::Point(1200.0, 1200.0, 0.0) << ORNL::Point(1000.0, 1200.0, 0.0);
+    QVector<ORNL::Polygon> unrelated_material_geometry {unrelated_material_bounds};
+    ORNL::SettingsPolygon unrelated_material_polygon(unrelated_material_geometry, localized_material_override);
+
+    ORNL::PolymerIsland unrelated_material_island(geometry, unrelated_material_settings, {unrelated_material_polygon});
+    unrelated_material_island.compute(0);
+    unrelated_material_island.reorderRegions();
+    ORNL::Point unrelated_material_location(-10.0, -10.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> unrelated_material_previous_regions;
+    unrelated_material_island.optimize(0, unrelated_material_location, unrelated_material_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> unrelated_material_perimeter =
+        unrelated_material_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> unrelated_material_inset =
+        unrelated_material_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!unrelated_material_perimeter.isNull() && !unrelated_material_inset.isNull(),
+                     "Unrelated multi-material regression should create perimeter and inset regions.");
+    if (!unrelated_material_perimeter.isNull() && !unrelated_material_inset.isNull()) {
+        passed &= expect(unrelated_material_perimeter->connectedInsetGeometryConsumed(),
+                         "A distant material override should not prevent a continuous connected path.");
+        passed &= expect(containsRegion(unrelated_material_perimeter->getPaths(), ORNL::RegionType::kInset),
+                         "Perimeter paths should consume insets unaffected by a distant material override.");
+        passed &= expect(unrelated_material_inset->getPaths().isEmpty(),
+                         "Insets unaffected by a distant material override should not be emitted twice.");
+    }
+
     QSharedPointer<ORNL::SettingsBase> intervening_region_settings = defaultSettings();
     configureConnectedInsets(intervening_region_settings);
     intervening_region_settings->setSetting(ORNL::PS::Skin::kEnable, true);
