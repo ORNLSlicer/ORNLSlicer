@@ -168,7 +168,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Inset"
     symbol: "kCompletePathBeforeConnecting"
-    local: true
+    local: false
   - name: "spiral_inset_branch_after_tip_wipe"
     display: "Branch after forward tip wipe"
     type: "boolean"
@@ -180,4 +180,4 @@ settings:
     major: "Profile"
     namespace: "Profile::Inset"
     symbol: "kBranchAfterTipWipe"
-    local: true
+    local: false

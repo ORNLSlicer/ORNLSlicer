@@ -255,7 +255,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kCompletePathBeforeConnecting"
-    local: true
+    local: false
   - name: "spiral_perimeter_branch_after_tip_wipe"
     display: "Branch after forward tip wipe"
     type: "boolean"
@@ -267,7 +267,7 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kBranchAfterTipWipe"
-    local: true
+    local: false
   - name: "spiral_perimeter_connect_to_insets"
     display: "Connect to spiral insets"
     type: "boolean"
@@ -279,4 +279,4 @@ settings:
     major: "Profile"
     namespace: "Profile::Perimeter"
     symbol: "kConnectToInsets"
-    local: true
+    local: false
