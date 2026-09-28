@@ -226,6 +226,16 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
 endif()
 
+add_executable(${PROJECT_NAME}_gui_capture tools/gui_capture.cpp)
+target_include_directories(
+    ${PROJECT_NAME}_gui_capture
+    PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/include
+        ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+        ${ORNLSLICER_INCLUDE_DIRS}
+)
+target_link_libraries(${PROJECT_NAME}_gui_capture PRIVATE ${PROJECT_NAME}_obj)
+
 option(ORNLSLICER_BUILD_TESTS "Build ORNLSlicer test executables" ${BUILD_TESTING})
 if(ORNLSLICER_BUILD_TESTS)
     enable_testing()

@@ -114,13 +114,6 @@ MAJOR_NUMBERS = {
     "Experimental": "E.5",
 }
 
-GENERATED_FIGURE_NUMBERS = {
-    "Setting anatomy": 60,
-    "Printer settings": 61,
-    "Material settings": 62,
-    "Profile settings": 63,
-    "Experimental settings": 64,
-}
 
 PATTERN_CHOICE_DESCRIPTIONS = {
     "Lines": "One family of parallel hatch lines at the configured angle and spacing.",
@@ -310,6 +303,10 @@ def slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
 
 
+def image_slug(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
+
+
 def code_span(value: Any) -> str:
     text = str(value).replace("\n", "\\n")
     delimiter = "``" if "`" in text else "`"
@@ -447,10 +444,6 @@ def add_choice(lines: list[str], option: str, description: str) -> None:
 
 def wrap_paragraph(value: str) -> list[str]:
     return textwrap.wrap(value, width=100, break_long_words=False, break_on_hyphens=False)
-
-
-def figure_placeholder(number: int, title: str) -> str:
-    return f"![Figure {number:02d} placeholder: {title}](user-guide-images/figure{number:02d}.png)"
 
 
 def load_catalog(source_dir: Path) -> tuple[
@@ -686,7 +679,7 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
         "| Available when | The selections or toggles that enable the setting. |",
         "| Choices | Every selectable value for enumeration settings, in stored order. |",
         "",
-        figure_placeholder(GENERATED_FIGURE_NUMBERS["Setting anatomy"], "Setting anatomy"),
+        "![Figure 60 placeholder: Setting anatomy](user-guide-images/figure60.png)",
         "",
         "> **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,",
         "> tooltip, disabled state, local-override indicator, and corresponding reference entry.",
@@ -706,12 +699,14 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
     for major in major_order:
         lines.append(f"### {MAJOR_NUMBERS[major]} {major} settings")
         lines.append("")
+        lines.append(
+            f'<img align="right" width="380" src="user-guide-images/{image_slug(major)}_settings_panel.png" '
+            f'alt="{major} Settings Panel" />'
+        )
+        lines.append("")
         lines.extend(wrap_paragraph(MAJOR_DESCRIPTIONS[major]))
         lines.append("")
-        lines.append(figure_placeholder(GENERATED_FIGURE_NUMBERS[f"{major} settings"], f"{major} settings"))
-        lines.append("")
-        lines.append(f"> **Diagram placeholder — {major} settings:** Add an annotated {major} panel with its")
-        lines.append("> category tabs, search field, and one enabled/disabled dependency example.")
+        lines.append('<br clear="right" />')
         lines.append("")
 
         for (category_major, minor), keys in categories.items():
@@ -720,6 +715,14 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
             lines.append(f'<a id="settings-{slug(major)}-{slug(minor)}"></a>')
             lines.append("")
             lines.append(f"#### {major} > {minor}")
+            lines.append("")
+            major_s = image_slug(major)
+            minor_s = image_slug(minor)
+            lines.append(
+                f'<img align="right" width="380" '
+                f'src="user-guide-images/settings/{major_s}/{minor_s}_options.png" '
+                f'alt="{major} > {minor} Settings" />'
+            )
             lines.append("")
             lines.extend(wrap_paragraph(CATEGORY_DESCRIPTIONS[(major, minor)]))
             lines.append("")
@@ -731,6 +734,8 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
                     continue
                 documented.add(key)
                 render_scalar(lines, key, settings[key], settings, component_labels)
+            lines.append('<br clear="right" />')
+            lines.append("")
 
     missing = set(settings) - documented
     extra = documented - set(settings)
