@@ -1236,7 +1236,8 @@ int main() {
     locally_disabled_material_settings->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
     locally_disabled_material_settings->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 0);
 
-    QSharedPointer<ORNL::SettingsBase> locally_disabled_material_override = QSharedPointer<ORNL::SettingsBase>::create();
+    QSharedPointer<ORNL::SettingsBase> locally_disabled_material_override =
+        QSharedPointer<ORNL::SettingsBase>::create();
     locally_disabled_material_override->setSetting(ORNL::MS::MultiMaterial::kEnable, false);
     locally_disabled_material_override->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
     locally_disabled_material_override->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 1);
