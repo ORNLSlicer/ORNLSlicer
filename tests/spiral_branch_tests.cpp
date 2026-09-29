@@ -1194,6 +1194,42 @@ int main() {
                          "Locally different-material insets should remain in their own region.");
     }
 
+    QSharedPointer<ORNL::SettingsBase> locally_enabled_material_settings = defaultSettings();
+    configureConnectedInsets(locally_enabled_material_settings);
+    locally_enabled_material_settings->setSetting(ORNL::MS::MultiMaterial::kEnable, false);
+    locally_enabled_material_settings->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
+    locally_enabled_material_settings->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 0);
+
+    QSharedPointer<ORNL::SettingsBase> locally_enabled_material_override = QSharedPointer<ORNL::SettingsBase>::create();
+    locally_enabled_material_override->setSetting(ORNL::MS::MultiMaterial::kEnable, true);
+    locally_enabled_material_override->setSetting(ORNL::MS::MultiMaterial::kPerimeterNum, 0);
+    locally_enabled_material_override->setSetting(ORNL::MS::MultiMaterial::kInsetNum, 1);
+    ORNL::SettingsPolygon locally_enabled_material_polygon(localized_geometry, locally_enabled_material_override);
+
+    ORNL::PolymerIsland locally_enabled_material_island(geometry, locally_enabled_material_settings,
+                                                        {locally_enabled_material_polygon});
+    locally_enabled_material_island.compute(0);
+    locally_enabled_material_island.reorderRegions();
+    ORNL::Point locally_enabled_material_location(-10.0, -10.0, 0.0);
+    QVector<QSharedPointer<ORNL::RegionBase>> locally_enabled_material_previous_regions;
+    locally_enabled_material_island.optimize(0, locally_enabled_material_location,
+                                             locally_enabled_material_previous_regions);
+
+    QSharedPointer<ORNL::Perimeter> locally_enabled_material_perimeter =
+        locally_enabled_material_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
+    QSharedPointer<ORNL::Inset> locally_enabled_material_inset =
+        locally_enabled_material_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!locally_enabled_material_perimeter.isNull() && !locally_enabled_material_inset.isNull(),
+                     "Locally enabled multi-material regression should create perimeter and inset regions.");
+    if (!locally_enabled_material_perimeter.isNull() && !locally_enabled_material_inset.isNull()) {
+        passed &= expect(!locally_enabled_material_perimeter->connectedInsetGeometryConsumed(),
+                         "Locally enabled multi-material mismatch should prevent a connected path.");
+        passed &= expect(!containsRegion(locally_enabled_material_perimeter->getPaths(), ORNL::RegionType::kInset),
+                         "Perimeter paths should not consume locally enabled different-material insets.");
+        passed &= expect(!locally_enabled_material_inset->getPaths().isEmpty(),
+                         "Locally enabled different-material insets should remain in their own region.");
+    }
+
     QSharedPointer<ORNL::SettingsBase> unrelated_material_settings = defaultSettings();
     configureConnectedInsets(unrelated_material_settings);
     unrelated_material_settings->setSetting(ORNL::MS::MultiMaterial::kEnable, true);

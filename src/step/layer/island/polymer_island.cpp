@@ -33,21 +33,20 @@ bool settingsPolygonAffectsIsland(const SettingsPolygon& settings_polygon, const
 bool connectedInsetMaterialsCompatible(const QSharedPointer<SettingsBase>& settings,
                                        const QVector<SettingsPolygon>& settings_polygons,
                                        const PolygonList& island_geometry) {
-    if (!settings->setting<bool>(MS::MultiMaterial::kEnable)) { return true; }
-
-    auto materials_match = [](const QSharedPointer<SettingsBase>& candidate) {
-        return candidate->setting<int>(MS::MultiMaterial::kPerimeterNum) ==
-               candidate->setting<int>(MS::MultiMaterial::kInsetNum);
+    auto materials_compatible = [](const QSharedPointer<SettingsBase>& candidate) {
+        return !candidate->setting<bool>(MS::MultiMaterial::kEnable) ||
+               candidate->setting<int>(MS::MultiMaterial::kPerimeterNum) ==
+                   candidate->setting<int>(MS::MultiMaterial::kInsetNum);
     };
 
-    if (!materials_match(settings)) { return false; }
+    if (!materials_compatible(settings)) { return false; }
 
     for (const SettingsPolygon& polygon : settings_polygons) {
         if (!settingsPolygonAffectsIsland(polygon, island_geometry)) { continue; }
 
         QSharedPointer<SettingsBase> localized_settings = QSharedPointer<SettingsBase>::create(*settings);
         localized_settings->populate(polygon.getSettings());
-        if (!materials_match(localized_settings)) { return false; }
+        if (!materials_compatible(localized_settings)) { return false; }
     }
 
     return true;
