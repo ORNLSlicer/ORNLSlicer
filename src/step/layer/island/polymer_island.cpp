@@ -33,8 +33,9 @@ bool settingsPolygonAffectsIsland(const SettingsPolygon& settings_polygon, const
 bool connectedInsetMaterialsCompatible(const QSharedPointer<SettingsBase>& settings,
                                        const QVector<SettingsPolygon>& settings_polygons,
                                        const PolygonList& island_geometry) {
-    auto materials_compatible = [](const QSharedPointer<SettingsBase>& candidate) {
-        return !candidate->setting<bool>(MS::MultiMaterial::kEnable) ||
+    const bool global_multi_material_enabled = settings->setting<bool>(MS::MultiMaterial::kEnable);
+    auto materials_compatible = [global_multi_material_enabled](const QSharedPointer<SettingsBase>& candidate) {
+        return (!global_multi_material_enabled && !candidate->setting<bool>(MS::MultiMaterial::kEnable)) ||
                candidate->setting<int>(MS::MultiMaterial::kPerimeterNum) ==
                    candidate->setting<int>(MS::MultiMaterial::kInsetNum);
     };
