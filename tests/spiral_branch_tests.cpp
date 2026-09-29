@@ -623,6 +623,58 @@ bool verifyConnectedRegionBoundary(const QVector<ORNL::Path>& paths, ORNL::Dista
     return passed;
 }
 
+double distanceXYToSegment(const ORNL::Point& point, const ORNL::Point& start, const ORNL::Point& end) {
+    const double dx     = end.x() - start.x();
+    const double dy     = end.y() - start.y();
+    const double len_sq = dx * dx + dy * dy;
+    if (len_sq <= 1.0e-12) { return std::hypot(point.x() - start.x(), point.y() - start.y()); }
+
+    const double projection =
+        std::clamp(((point.x() - start.x()) * dx + (point.y() - start.y()) * dy) / len_sq, 0.0, 1.0);
+    const double nearest_x = start.x() + projection * dx;
+    const double nearest_y = start.y() + projection * dy;
+    return std::hypot(point.x() - nearest_x, point.y() - nearest_y);
+}
+
+int geometryIndexForPoint(const ORNL::Point& point, const QVector<ORNL::Polyline>& geometry, double tolerance) {
+    for (int geometry_index = 0; geometry_index < geometry.size(); ++geometry_index) {
+        const ORNL::Polyline& line = geometry[geometry_index];
+        for (int point_index = 0; point_index < line.size(); ++point_index) {
+            if (distanceXYToSegment(point, line[point_index], line[(point_index + 1) % line.size()]) <= tolerance) {
+                return geometry_index;
+            }
+        }
+    }
+
+    return -1;
+}
+
+bool verifyInsetGeometrySegmentsUseInsetSettings(const QVector<ORNL::Path>& paths,
+                                                 const QVector<ORNL::Polyline>& inset_geometry,
+                                                 const std::string& case_name) {
+    constexpr double tolerance = 1.0e-4;
+    bool passed                = true;
+    bool found_inset_chord     = false;
+
+    for (const ORNL::Path& path : paths) {
+        for (const QSharedPointer<ORNL::SegmentBase>& segment : path) {
+            if (!segment->isPrintingSegment()) { continue; }
+
+            const int start_geometry = geometryIndexForPoint(segment->start(), inset_geometry, tolerance);
+            const int end_geometry   = geometryIndexForPoint(segment->end(), inset_geometry, tolerance);
+            if (start_geometry < 0 || start_geometry != end_geometry) { continue; }
+
+            found_inset_chord = true;
+            passed &=
+                expect(segment->getSb()->setting<ORNL::RegionType>(ORNL::SS::kRegionType) == ORNL::RegionType::kInset,
+                       case_name + " should classify a cleaned chord between points on an inset loop as inset.");
+        }
+    }
+
+    passed &= expect(found_inset_chord, case_name + " should exercise a cleaned chord on an inset loop.");
+    return passed;
+}
+
 void configureConnectedInsets(const QSharedPointer<ORNL::SettingsBase>& settings) {
     settings->setSetting(ORNL::PS::Perimeter::kEnable, true);
     settings->setSetting(ORNL::PS::Perimeter::kCount, 2);
@@ -890,11 +942,16 @@ int main() {
 
     QSharedPointer<ORNL::Perimeter> cleaned_boundary_perimeter =
         cleaned_boundary_island.getRegion(ORNL::RegionType::kPerimeter).dynamicCast<ORNL::Perimeter>();
-    passed &=
-        expect(!cleaned_boundary_perimeter.isNull(), "Short-connector regression should create a perimeter region.");
-    if (!cleaned_boundary_perimeter.isNull()) {
+    QSharedPointer<ORNL::Inset> cleaned_boundary_inset =
+        cleaned_boundary_island.getRegion(ORNL::RegionType::kInset).dynamicCast<ORNL::Inset>();
+    passed &= expect(!cleaned_boundary_perimeter.isNull() && !cleaned_boundary_inset.isNull(),
+                     "Short-connector regression should create perimeter and inset regions.");
+    if (!cleaned_boundary_perimeter.isNull() && !cleaned_boundary_inset.isNull()) {
         passed &= verifyConnectedRegionBoundary(cleaned_boundary_perimeter->getPaths(), ORNL::Distance(10.0),
                                                 "Short-connector regression");
+        passed &= verifyInsetGeometrySegmentsUseInsetSettings(cleaned_boundary_perimeter->getPaths(),
+                                                              cleaned_boundary_inset->getComputedGeometry(),
+                                                              "Short-connector regression");
     }
 
     QSharedPointer<ORNL::SettingsBase> localized_width_settings = defaultSettings();

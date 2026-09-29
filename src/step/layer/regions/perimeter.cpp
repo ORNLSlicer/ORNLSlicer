@@ -1661,10 +1661,13 @@ void Perimeter::applyConnectedInsetSettings(Path& path) {
     for (const QSharedPointer<SegmentBase>& segment : path.getSegments()) {
         if (segment == nullptr) { continue; }
 
-        const bool midpoint_on_inset =
-            connectedInsetGeometryIndex(segment->midpoint(), tolerance(), &m_connected_inset_geometry_consumed) >= 0;
-        connectedInsetGeometryIndex(segment->end(), tolerance(), &m_connected_inset_geometry_consumed);
-        if (midpoint_on_inset) { using_inset_settings = true; }
+        const int midpoint_geometry =
+            connectedInsetGeometryIndex(segment->midpoint(), tolerance(), &m_connected_inset_geometry_consumed);
+        const int start_geometry = connectedInsetGeometryIndex(segment->start(), tolerance());
+        const int end_geometry =
+            connectedInsetGeometryIndex(segment->end(), tolerance(), &m_connected_inset_geometry_consumed);
+        const bool endpoints_on_same_inset = start_geometry >= 0 && start_geometry == end_geometry;
+        if (midpoint_geometry >= 0 || endpoints_on_same_inset) { using_inset_settings = true; }
 
         if (!using_inset_settings) { continue; }
 
@@ -1687,9 +1690,15 @@ Distance Perimeter::connectedInsetWidthForSegment(const Point& start, const Poin
     const Distance fallback_width = parent_sb->setting<Distance>(PS::Inset::kBeadWidth);
     if (!parent_sb->setting<bool>(PS::Inset::kAdaptive)) { return fallback_width; }
 
-    const Point midpoint     = (start + end) * 0.5;
-    const double tolerance   = std::max(fallback_width() * 1.0e-3, 1.0e-6);
-    const int geometry_index = connectedInsetGeometryIndex(midpoint, tolerance);
+    const Point midpoint   = (start + end) * 0.5;
+    const double tolerance = std::max(fallback_width() * 1.0e-3, 1.0e-6);
+    int geometry_index     = connectedInsetGeometryIndex(midpoint, tolerance);
+    if (geometry_index < 0) {
+        const int start_geometry = connectedInsetGeometryIndex(start, tolerance);
+        const int end_geometry   = connectedInsetGeometryIndex(end, tolerance);
+        if (start_geometry >= 0 && start_geometry == end_geometry) { geometry_index = start_geometry; }
+    }
+
     if (geometry_index >= 0 && geometry_index < m_connected_inset_widths.size()) {
         return m_connected_inset_widths[geometry_index];
     }
