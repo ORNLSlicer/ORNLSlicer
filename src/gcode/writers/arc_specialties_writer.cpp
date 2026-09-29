@@ -551,6 +551,11 @@ QString ArcSpecialtiesWriter::writeBeforePath(RegionType type) {
     return QString();
 }
 
+QString ArcSpecialtiesWriter::writeBeforePathRegionTransition(RegionType type) {
+    m_region_type = type;
+    return QString();
+}
+
 QString ArcSpecialtiesWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                           QSharedPointer<SettingsBase> params) {
     QString rv;

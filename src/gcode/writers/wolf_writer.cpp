@@ -118,6 +118,33 @@ QString WolfWriter::writeBeforePath(RegionType type) {
     return rv;
 }
 
+QString WolfWriter::writeBeforePathRegionTransition(RegionType type) {
+    m_current_type = type;
+
+    if (type == RegionType::kPerimeter) {
+        m_wolf_path_type = 1;
+        return "M1T2D4F0" % commentLine("PERIMETER START");
+    }
+    if (type == RegionType::kInset) {
+        m_wolf_path_type = 2;
+        return "M2T2D4F0" % commentLine("INSET START");
+    }
+    if (type == RegionType::kSkeleton) {
+        m_wolf_path_type = 8;
+        return "M8T2D4F0" % commentLine("SKELETON START");
+    }
+    if (type == RegionType::kSkin) {
+        m_wolf_path_type = 5;
+        return "M5T2D4F0" % commentLine("SKIN START");
+    }
+    if (type == RegionType::kInfill) {
+        m_wolf_path_type = 5;
+        return "M5T2D4F0" % commentLine("INFILL START");
+    }
+
+    return QString();
+}
+
 QString WolfWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                 QSharedPointer<SettingsBase> params) {
     QString rv;

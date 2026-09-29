@@ -42,6 +42,8 @@ class CincinnatiWriter : public WriterBase {
     //! \brief Writes G-Code to be executed at the start of each path
     QString writeBeforePath(RegionType type) override;
 
+    QString writeBeforePathRegionTransition(RegionType type) override;
+
     //! \brief Writes G-Code for traveling between paths
     QString writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                         QSharedPointer<SettingsBase> params) override;
