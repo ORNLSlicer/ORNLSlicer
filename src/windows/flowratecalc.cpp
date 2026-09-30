@@ -40,7 +40,7 @@ void convertDistanceEntry(QLineEdit* entry, Distance old_unit, Distance new_unit
 
 // TODO:
 //  1. Provide unit choices for mass flow rate
-FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
+FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget(parent, Qt::Window) {
     m_parent               = parent;
     m_density_metric       = g / (cm * cm * cm);
     Density IS_unit_chosen = lbm / (inch * inch * inch);
