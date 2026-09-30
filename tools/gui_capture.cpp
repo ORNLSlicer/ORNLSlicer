@@ -39,19 +39,14 @@ namespace ORNL {
 namespace {
 
 const QStringList standardGuiElements = {
-    "main_window_overview",
-    "main_toolbar",
-    "part_view_workspace",
-    "dock_panels_sidebar",
-    "menu_bar_menus",
-    "transform_controls",
-    "settings_sidebar",
-    "layer_times_window",
-    "preferences_window",
-    "printer_settings_panel",
-    "material_settings_panel",
-    "profile_settings_panel",
-    "experimental_settings_panel",
+    "main_window_overview",   "main_toolbar",
+    "part_view_workspace",    "dock_panels_sidebar",
+    "menu_bar_menus",         "transform_controls",
+    "settings_sidebar",       "layer_times_window",
+    "preferences_window",     "gcode_export_dialog",
+    "flowrate_calculator",    "xtrude_calculator",
+    "printer_settings_panel", "material_settings_panel",
+    "profile_settings_panel", "experimental_settings_panel",
 };
 
 template <typename T>
@@ -71,7 +66,7 @@ void ensureSampleParts() {
 
 template <typename T>
 QWidget* showWidget(MainWindow* window, bool enable = false) {
-    auto* w = window->findChild<T*>();
+    QWidget* w = window->findChild<T*>();
     if (w) {
         if (enable) { w->setEnabled(true); }
         w->show();
