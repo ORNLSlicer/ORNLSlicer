@@ -24,7 +24,7 @@ Core capabilities include:
 
 - Start here: [Documentation Index](docs/README.md)
 - Architecture map: [ARCHITECTURE.md](ARCHITECTURE.md)
-- User guide: [ORNLSlicer User Guide](docs/ornlslicer-user-guide.pdf)
+- User guide: [ORNLSlicer User Guide](docs/ornlslicer-user-guide.md)
 - Developer onboarding: [Getting Started](docs/wiki/Getting-Started.md)
 - Contributor workflow: [Contributing](CONTRIBUTING.md)
 - Migrated wiki content: [Legacy Wiki Content](docs/wiki/Home.md)
