@@ -118,6 +118,7 @@
           pkgs.git
           pkgs.jq
           pkgs.ccache
+          pkgs.pre-commit
 
           pkgs.doxygen
           pkgs.graphviz
