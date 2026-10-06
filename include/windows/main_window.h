@@ -47,6 +47,7 @@
 #include "windows/gcode_export.h"
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
+#include "windows/settings_file_compare.h"
 #include "windows/xtrudecalc.h"
 
 namespace ORNL {
@@ -400,6 +401,7 @@ class MainWindow : public QMainWindow {
     GcodeExport* m_export_window;
     FlowrateCalcWindow* m_flowrate_calc_window;
     XtrudeCalcWindow* m_xtrude_calc_window;
+    SettingsFileCompareDialog* m_settings_file_compare_window;
     AboutWindow* m_about_window;
 
     //! \brief QActions

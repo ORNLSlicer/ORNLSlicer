@@ -77,6 +77,7 @@
 #include "windows/gcode_to_s2c.h"
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
+#include "windows/settings_file_compare.h"
 #include "windows/xtrudecalc.h"
 
 namespace ORNL {
@@ -328,11 +329,12 @@ void MainWindow::setupWindows() {
     this->setWindowIcon(icon);
 
     // Preferences Window
-    m_pref_window          = new PreferencesWindow(this);
-    m_flowrate_calc_window = new FlowrateCalcWindow(this);
-    m_xtrude_calc_window   = new XtrudeCalcWindow(this);
-    m_export_window        = new GcodeExport(this);
-    m_layertimebar         = new LayerTimesWindow(this);
+    m_pref_window                  = new PreferencesWindow(this);
+    m_flowrate_calc_window         = new FlowrateCalcWindow(this);
+    m_xtrude_calc_window           = new XtrudeCalcWindow(this);
+    m_settings_file_compare_window = new SettingsFileCompareDialog(this);
+    m_export_window                = new GcodeExport(this);
+    m_layertimebar                 = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
     m_about_window = new AboutWindow(this);
 }
@@ -557,13 +559,15 @@ void MainWindow::setupActions() {
     m_actions["reset_camera"] = {"Reset Camera", ":/icons/camera_reset_black.png", false, QKeySequence(), nullptr};
 
     // Menu Settings
-    m_actions["template_load"]  = {"Load from Template", ":/icons/settings_file_black.png", false,
-                                   QKeySequence(tr("Ctrl+t")), nullptr};
-    m_actions["template_save"]  = {"Save as Template", ":/icons/settings_save_black.png", false,
-                                   QKeySequence(tr("Ctrl+Shift+t")), nullptr};
-    m_actions["gcode_to_s2c"]   = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
-    m_actions["setting_folder"] = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
-                                   QKeySequence(), nullptr};
+    m_actions["template_load"] = {"Load from Template", ":/icons/settings_file_black.png", false,
+                                  QKeySequence(tr("Ctrl+t")), nullptr};
+    m_actions["template_save"] = {"Save as Template", ":/icons/settings_save_black.png", false,
+                                  QKeySequence(tr("Ctrl+Shift+t")), nullptr};
+    m_actions["gcode_to_s2c"]  = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
+    m_actions["settings_compare"] = {"Compare Settings Files", ":/icons/settings_file_black.png", false, QKeySequence(),
+                                     nullptr};
+    m_actions["setting_folder"]   = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
+                                     QKeySequence(), nullptr};
     m_actions["layer_bar_setting_folder"] = {"Additional Layer Bar Setting Location",
                                              ":/icons/settings_folder_black.png", false, QKeySequence(), nullptr};
     m_actions["pref"] = {"Application Preferences", ":/icons/settings_black.png", false, QKeySequence(tr("Ctrl+p")),
@@ -690,6 +694,7 @@ void MainWindow::setupActions() {
     m_menu_settings->addAction(m_actions["template_load"].action);
     m_menu_settings->addAction(m_actions["template_save"].action);
     m_menu_settings->addAction(m_actions["gcode_to_s2c"].action);
+    m_menu_settings->addAction(m_actions["settings_compare"].action);
     m_menu_settings->addSeparator();
     m_menu_settings->addAction(m_actions["setting_folder"].action);
     m_menu_settings->addAction(m_actions["layer_bar_setting_folder"].action);
@@ -878,6 +883,11 @@ void MainWindow::setupEvents() {
     connect(m_actions["template_load"].action, &QAction::triggered, this, &MainWindow::loadTemplate);
     connect(m_actions["template_save"].action, &QAction::triggered, this, &MainWindow::saveTemplate);
     connect(m_actions["gcode_to_s2c"].action, &QAction::triggered, this, &MainWindow::convertGcodeToS2C);
+    connect(m_actions["settings_compare"].action, &QAction::triggered, m_settings_file_compare_window, [this] {
+        m_settings_file_compare_window->showNormal();
+        m_settings_file_compare_window->raise();
+        m_settings_file_compare_window->activateWindow();
+    });
     connect(m_actions["setting_folder"].action, &QAction::triggered, this, &MainWindow::setSettingFolder);
     connect(m_actions["layer_bar_setting_folder"].action, &QAction::triggered, this,
             &MainWindow::setLayerBarSettingFolder);
