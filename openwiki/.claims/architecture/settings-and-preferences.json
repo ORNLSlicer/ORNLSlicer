@@ -1,0 +1,208 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:b4308baec63c75e01a91235bca1cd5246fe20b435c98d136ec14f6666f3e3877",
+    "claims":
+        [
+            {
+                "id": "claim_52bf3ced58ae45b49afdfb47bb98e6e1",
+                "statement":
+                    "The YAML files under resources/settings are the canonical setting metadata; the generated master.conf and setting_inputs.conf are derived artifacts embedded as Qt resources and loaded by SettingsManager.",
+                "evidence": [
+                    {
+                        "resource": "repo://resources/configs/configs.qrc#L1-L6",
+                        "version":
+                            "repo-lines-v1:sha256:d439d3a062819140834150c418177ed6417e44580bc9f05cc37afaba7b24f63e:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTY1YmRhZDRkOGI0NjVkNmNkOWFhYTk1MWU3OWI3MDkyZmUzNmM4ZDI0YWFhZmQzNjFjMzJmYTdiN2MzMzBhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGUwY2ZmZjc2MjVjZDQ2OGE0OWFhMDM3OGM4M2JmY2NhYTUxMTc3MjU1OWEwZjk5M2U4ZjM5MWU1OGMxZDcwMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjIsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOGM2Mjc3NTA5MTNiY2RjMTVmOWIwYTZjYWUzMjEzZWU4NGZmYTRmOTA1MjBhNTkzNGRiMDRjNTg5NjI1OWU2OSJ9"
+                    },
+                    {
+                        "resource": "repo://resources/settings/README.md#L1-L15",
+                        "version":
+                            "repo-lines-v1:sha256:71089c14274045b2509e33ff82102929f233644954ebd31e3c9b9534aefbdc8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkMjIwZTZlZThhZGEwYzg5MDU3NWQ5YmRjMTM4ZTVmMGYxOTI2NjlmYjQ3M2IyZmMxZjZlMWJiNmQwY2ZjZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZDlmYmFlM2IyM2VlYTU0Yjk4MDJhOTM4NjI2NmNmYzM3NTdiNjQ0MTA3Mjc4OTRmZDk2NzRjNTQzNTQ5YTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyYzMyZDZkMGY4YjE1NjNkMzYwM2EwZWU1MzdmMmUzNzA1NmExZDQzMDljNDkzY2FlZmYzZjU4ZjVjMzVlNDMifQ"
+                    },
+                    {
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L38-L70",
+                        "version":
+                            "repo-lines-v1:sha256:703582a00dcfb7cc7a9604f9759e01ccf92d7013b502b7c7cd2dcbbc7518325f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjBjYTc2YTFjN2JkNjA3NmEyMTg4MWFlOGY0MDI3MWJkY2YwNGYxMTBmM2Y0MzJiMTRiMGY0NDI2NjFkZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MjM2ZTk4ZmE5MWFhOGJjODdmNjU1OGVjNWIyMDUyY2U4ZWZiZDFhMGQ3ZjYzZjgyYzhiZjUyZjEwNDJiZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1M2Q4YTVkOWE5Mzk0ZGM2ZmFhMGJiYjdjMDA2YTM1ZmQyOWNlOGM4M2MwNjlkOTljMjExNjhlNDYyM2ZmZmUifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_a2a324c7ac1944ea8a7695822eae9945",
+                "statement":
+                    "The settings generator validates required fields, types, dependencies, enum defaults, duplicate names, and composite-input component consistency before emitting deterministic JSON.",
+                "evidence": [
+                    {
+                        "resource": "repo://scripts/generate_master_config.py#L235-L380",
+                        "version":
+                            "repo-lines-v1:sha256:07be3b8e373b600f8017d972119a9b16e9d95c4c5268fb269107e6df5fe46906:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJhMjkzOWQwZWIzYjE1YTEyODIwZmNjMjI5YWEzYjMxYzAzYTVmNTdkYTg2ZTVhNmZhNDUxOTg4MWRhZTExNGY3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJjMWMxNzg5NjYyNjUzMDM0M2YwOGFiZDVkNWJjYjJhMWM4NDdkMTdlZmM4MTAwMDc2OTFiYWMwZGNhOGExZWEyIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3ZjdkZTcwOGEwNjI0NTJlYTBjMmQ2ZTRmNGZiYjdkMmZjMzk1YmVlNzc5NWZiMmE3MTkyODA4NjMzMWUxMmYyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0NTI2ZWNlN2EwNTVhZWQ0NTc4OWFiMTc2NTIyYmVlZWY0Y2ZmYmI3NTljMDg1ZGMxZjkyM2UzMjAwMDczNGQ4In0"
+                    },
+                    {
+                        "resource": "repo://scripts/generate_master_config.py#L427-L487",
+                        "version":
+                            "repo-lines-v1:sha256:2c741baad0ed0b928a23c1f2afda74411d9f5684050b38319956790bf5a596b7:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0NWY1NDBkN2RlNmE0YjkzMDAwMzFmMzMwZDI0YWUyOTlhMWI0NTQ5ZjI4Y2MwNTgyNTBlMmE3Y2NkYjRmMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRkYTFjZWUwMmUwMTE3OWIwYjJlZWVlMWYxNjExZmYzMzU3ZjFjOWU0Y2VhODUzNmY3ZjYxNzY0NDZiM2Y2ZWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJjNjA5N2JhMmRhZGJkZDc3MTU4MmI3NGYxMjFhOWQxOTc0N2ZhNTM3MjBkNzQ1MDVhZmIwNjYwMWNmZGJjYjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4NzhlYjQyOTc4MDFjZTFlY2I0OGJmNmIxYzk3YTZmNDQ5ZTI4M2Y5ODQxYTUxZTJlMjNjMmQ0NjEyODY5NjEifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_570441f69dfa4d58a8276e637ea58934",
+                "statement":
+                    "CMake watches the settings YAML and generator, regenerates both configuration outputs, and makes the main object target depend on the generation target when automatic generation is enabled.",
+                "evidence": [
+                    {
+                        "resource": "repo://CMakeLists.txt#L478-L518",
+                        "version":
+                            "repo-lines-v1:sha256:0ef0cb62c366c4257c988322007d881b1f4f3111165a976cfa0c4d5e9ff4bba7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjMxMTc2ZGM0M2M2M2MzNTdjZTMzYjVmYjBiNTFhNzdmNThhOGI1Zjk1NzYzNzYyZDBkYWMyNTYzMDNlMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlY2JkY2IyZjk2NTllMmIwMDdlNThiNjUxZTQ0MzAzY2FjYjJkMmNlMWUwMGU1YTY4ZGZmM2Q5ZTc4ZGE3ZDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzZmIwYzAzOWYzMmE2YmFmMjZkZDU3YWQzMmZiZGVkYWQ0YWEzZjQyM2IzZDdjODBlNjcyMDA1YzJjMWJmMTkifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_5b2ec6a4b8364f379479d3bab9293734",
+                "statement":
+                    "SettingsManager initializes the active global base from master defaults and overlays selected sparse .s2c templates, with LFAM_03in as the missing-template fallback.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L197-L233",
+                        "version":
+                            "repo-lines-v1:sha256:eb961fc8fde8a7f71ccb4bd8aac74a2a4e29594b52f7263518d329a679629269:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjMGVlZDIxNDY4YWYxYzcwZDI1MTdlN2RlZWY0MDhiOGRiZWZkNTMxZTY1MDE2ZDhiNzY5OWQxMzU5MzI2MTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExYmQwODA0NDhlMzU4NGE5ODM2OWQ2YzE5M2JlYjUxM2VkNThkMWM4MTZkYmE4OWNkZmViMmQ5NmFjYmRmYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmZWE5MDQ3YzAzZTE5OGQzNWIyMGEzODUxNmE2NGZhNzhhMWUxYmFmYWZiZWE3YjIwOTViODM0Yzc0MjNhNjMifQ"
+                    },
+                    {
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L38-L70",
+                        "version":
+                            "repo-lines-v1:sha256:703582a00dcfb7cc7a9604f9759e01ccf92d7013b502b7c7cd2dcbbc7518325f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjBjYTc2YTFjN2JkNjA3NmEyMTg4MWFlOGY0MDI3MWJkY2YwNGYxMTBmM2Y0MzJiMTRiMGY0NDI2NjFkZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MjM2ZTk4ZmE5MWFhOGJjODdmNjU1OGVjNWIyMDUyY2U4ZWZiZDFhMGQ3ZjYzZjgyYzhiZjUyZjEwNDJiZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1M2Q4YTVkOWE5Mzk0ZGM2ZmFhMGJiYjdjMDA2YTM1ZmQyOWNlOGM4M2MwNjlkOTljMjExNjhlNDYyM2ZmZmUifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_a38a23ee4eec4aefab60e0ced00d54c7",
+                "statement":
+                    "Planar slicing composes effective settings in global, part, matching layer-range, and local-adjustment order before cross-sectioning.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/slicing/buffered_slicer.cpp#L248-L285",
+                        "version":
+                            "repo-lines-v1:sha256:e0d95283c53f398e66a16d31ddc69d0f1acd975afac9b0c62e4a92e8d6f28d27:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmNTJlZjFmMjE4MWZjOWE0YmMwOTI2NDU0YTY1YThjNDM1ZWM1MWMwODQ0ZWYzZjQ4NDk5OGE1MmM5Y2Q4NDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1Y2RlZjgwODVhZTc0YWI2MzZkNjQ1OWY1YzZkNWZiZmIwZGIyNjRmMWIwZDc1YmFjNTE5YzliM2Y2NzE3YWMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzNjRlNjIyNGNkYWE4YzlmMDNjZWZlZGY5YWMzOGE3Y2RkMzkyMDQzNmYyYTk1Mjk0MGYyNmY2ZTZkZTE1ZGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxNDBhZjAxOWU0MzI3MDc5MjVkNzVhMTE1NTljM2ZjYTBlMWI3OGU5YmIyMDZjYjEyNTgzOWMyODViZGE0OGYifQ"
+                    },
+                    {
+                        "resource": "repo://src/slicing/buffered_slicer.cpp#L43-L59",
+                        "version":
+                            "repo-lines-v1:sha256:2fb228c6c84866dbea719159adaec67b1bead03c24b1bddb3ce3d3d44ea23585:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxOWVkNTI5ZTk1OWFlMDg5NGUxZmY3NDUzZjJlYmE4N2E1NjhmZGM4NTZiMmI3ZjJjMDMwZTNmNjczNDA4NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2NWM4YzNiNDQ2MWNkOTMyNDdmYzRlMWI0MGIwZjEyMmUzMTc4YWM1MjIxYjU2YWI3NWRhYmEzMDBiMTZkMjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRlYTc2OTEwZGNmN2NiNjRiZTgxM2QwYWNiNWIyZjljMjc2MjdhNmU2MGRiZGQ4NGQ1ZGRhMTdjYjdmODZiZDkifQ"
+                    },
+                    {
+                        "resource": "repo://src/slicing/preprocessor.cpp#L29-L45",
+                        "version":
+                            "repo-lines-v1:sha256:cdb7057b3bf4ff14e4a7f3ac191a133fff82fb85cf602f8a118d06cf5c5c7b75:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMTczYzAxZDg4ZjNhN2ZjMWIzYzE4N2MzZjc0ZjJjNDA5MGYwNzkwMjVlNmEwZjMxZDAwMzg3OTA5ZTgzODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxZDk0ZTc1YzI3YTkzYzY5NGY3OWM3OTU5YzFiMTE5NWM2MjEyMTQxNTY5YjI2Mzk3NWY1ZjU2MzU4ODM2ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWRlYmQwYmI3Nzk5OTljYWY4OGNjNGE4NDU0MjIxMTMxYzdiMzY1MjgxYjNlYTdhNmZmYTA3ODkwOGM0NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzMDIzMjA0NzFiZjMxMWYyNjExMDVhOThiMTNiZGUxZWY5ZTM0ZGQzYzYxNTY4YjNhZTZiMDJiNWUyMWE2NzQifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_7382ed37f5034f57867a48408a981a96",
+                "statement":
+                    "Settings meshes are cross-sectioned into SettingsPolygon objects, and region generation can split paths at polygon boundaries and overlay polygon-local values into segment settings.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/slicing/buffered_slicer.cpp#L326-L344",
+                        "version":
+                            "repo-lines-v1:sha256:1d0847eb0e7ca89733d62296e4539e5ae6343853666caaddecb3cd47c13e9a8c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiNzM4ZDBhZGVhZmI3YTc5YzI0OGU2NjYzMGI5MTk2YTAyZDFjODA5ZDc1YmJjOWNlN2U2NWRlOWViMTA5MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyMGQ5MjQ5MTc0ODY1OGY0ZDM0NTM0ZTQyOTI3NzZhOTM5Mjk1ZTJlYTI5YmVhMzdkYjYxOTM0MWQ0OTZiODEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
+                    },
+                    {
+                        "resource": "repo://src/step/layer/regions/perimeter.cpp#L800-L847",
+                        "version":
+                            "repo-lines-v1:sha256:f3c26dd565489156ab987e8b8ea54fb0d1a1f216330dee02a93ae260e7e14d6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0NmJjZjdiNzY1YTE2YmFmYzIwYjcyMDMyM2JhYmRkNTI5ZmUzMDliMjUwNGY1MmEwMmY2YjNlZjA0OWFiNTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhN2M1NTBlYzAzYTI2ZjNlMDBlNDJiZDU5NmQxNmMxZTY4YjI0NzEyMDBiZDIxYWYwMmFhYzk5OGY4YzE0YzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2YTdiNDZhNTBhOGVmMmY3YzUyYjc0YTM0ZmQ4NGE2ZjQ0MDlkNjEyY2U2NjllMjVhNmE3MjUwYjgxNzhlNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlOTc5YTIyYWZiODEyZDdjZDkwMzQ2M2I3NWQ5YjE3MzBhMGI5ZDhlZTUxZTIzYWE1MDNjOTI5MzM2ZjE4ZmUifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_9e5f3fe57ce3431c89e2d9368e37241a",
+                "statement":
+                    "The settings UI chooses row widgets from generated type metadata, supports composite vector rows, and hides non-local rows while a local settings base is being edited.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/widgets/settings/setting_bar.cpp#L158-L220",
+                        "version":
+                            "repo-lines-v1:sha256:8cf81add03772e6ff60f43da811ac94a6892f528fd3c85149150541d38f77561:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJiNDk4ZWE2ZDFhMDNkMmIwNGQyZmVkMTYzM2Q3ODYwM2I3ODQ4MGU0MGZhOTdjNmRiZTRhMzUyMmRlMDRmOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyYWI2N2M0OGI4OWNmY2M5MDc2YjMyNDJlOTU1NjQ0OTVhMzU2NWY3YTk2Mzc3ZjUzOGY0OGZmN2JjY2YyNjMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkZWQ1N2NkZjYyOGU3YmNmYjdkNzY2MzJhOGQ3MTQ4NzM0YzA0MWJjNjUwMjBkZDg5NmJlZjE4OGE3YTIyMTQifQ"
+                    },
+                    {
+                        "resource": "repo://src/widgets/settings/setting_tab.cpp#L134-L186",
+                        "version":
+                            "repo-lines-v1:sha256:0bf8bdee1415838695c908527d20478bce4959bdb8ba4e3ab1afd64a5011e467:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyM2U4OWQ3Y2E0NWMxMzBmZDZmMmU1NTk3YzljN2JkOWQxYjZlMjI4NzNkZTdjNzY5YjQ5MDU3YTVjYWMyODMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3MDE2N2NiMzgxYzQ0Yzc3MzI4NmY2MzU1N2VhMzA3MmM2NGYxZmZkMzYyYzIxNjQ4NzI3MWRiYmRkMGUxY2EiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkNmI4YWE2NDRhMzQwNDJmMzJlMjNmODFiNmVhNWUzMjljZGU5OWUyMDRjOGMxYTUzOGQxYzRjOWNiMTYyZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU1YWY5YTdhMGQ3ZjY0MjczODU0NmNlYTk5ZjRmZDE5ODJlYTAxOWU3ZjQ0NzcxMjZiYTIzN2RiMjFhNTA3MDYifQ"
+                    },
+                    {
+                        "resource": "repo://src/widgets/settings/setting_tab.cpp#L67-L100",
+                        "version":
+                            "repo-lines-v1:sha256:a21f9696dd55cdacddce5a4831011c1b231124ac6e6e9f0bc4bf6351e161ee56:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiMmJiNWM3ZjQxNWJhMTdlNTk3MzI3YjM1NGNmY2I5MWU2YzNiZjQzMTg5NmRkNDU2ZWRiYjJhOGU1MWYyZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiNGQ5YTViODljNDAxOGIzNTA1YzYzOWZlNjRmODY3MjhjMDczMzNkNzQ0MTk2NzU0NzA3NWM1MzdjZjgwOGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyZmY4MzcwYjU5OTA1MDYyYmVkMjQ1MmFlYWRjYjk2MTQ4MGNhZDg5YjIxZDc1NGUzMTNkMjFhYjRmMjA0MTYifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_16fa41495fbe472c87142fcdbf011fc1",
+                "statement":
+                    "Older setting files can be rolled forward automatically or after a GUI or console prompt; accepting a file-based template migration rewrites the document, while declining currently does not stop the loader from inspecting its settings.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L243-L300",
+                        "version":
+                            "repo-lines-v1:sha256:0ab097f5f3e2484f4df94d2ebce143bdd128ffb08b76fda5bf1f3781c9a66af9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjNTM4NmFkZThhYTAzZTA1YzM5ODY5ZjFmYWQ1YmY0NzYxZWZkZjFiYzkyNTcxNmRkYWE1M2Q2NjdkMzBlNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZGM3NWQyOWQxZmY2NTJiYmI2MTEwNDFiMDM2ZmUzZmQ2NmJkODZlZGEwNDZlYjNkNTJiNzYzMjQ3YWNmMmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyNDI1NDYxOTRiOWU5MTY4Y2MzNzdmZmI0Njk2NDdhYTFjZTc3ZWUwMTJjZWU2Yzk1MjZlNzQwOTA4ODhkZjEifQ"
+                    },
+                    {
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L93-L139",
+                        "version":
+                            "repo-lines-v1:sha256:43eda5cb2b970967bb3801f94b0f6a2645c43535ed8ae3065283d07b04feccc0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYjNlODFlNmFiNDg3ZDY2YmZiOTRlNzMxNDI4YTZmYjBmNjhiNGQ0NGFmODgwZjY3ZDdiZGU1ZTEwNmMzY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYzU2ZjM5MGJiNDBhYTdlNTdjNzVlZmI0NjExODExZGE2Njc5ODFlOWI0ZjMyNjRlYTIzNTM2ZDUxZjRkNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMTE4Mjg4MDJkMjExM2QyMjQ3ZGI0NzhlZTJhMDc5ZjAwM2U3MDU5MTg2MWNiNDc2OWEyYWIwY2IyYTRmYzgifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_7bf0273aa8fd4cd19829a2d3105a6ecf",
+                "statement":
+                    "Focused migration tests cover historical helical key renames, variable-Z type conversion, and advancement of versions 10 through 12 to master version 13.",
+                "evidence": [
+                    {
+                        "resource": "repo://tests/settings_version_control_tests.cpp#L13-L64",
+                        "version":
+                            "repo-lines-v1:sha256:aa30e180d78e1950eef4d21bc10a74be60e877cdc10694b4368a527ce720cc61:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlNzI2ODM1YmYxZDk2Y2I3NjViYWFlYmY2ZjA0ZjBhZWM5OTIzZWFiMjQ4NTVhMzJiYjAwNWE5OGNkNWJlNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhYWMyNjBhMzhhYjYxNzkzNTNhMDc2ZjY0ZDM0ODRlNDY2ZDQ4YTlhNzliMGJlOTQ5NWVkNDZhY2I2MzIzMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_e715622a9f4d47b08ac396ef187e60f1",
+                "statement":
+                    "Preference import blocks intermediate signals while applying the complete file, then emits one aggregate unit-change notification whose observers see the final imported state.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/preferences_manager.cpp#L250-L333",
+                        "version":
+                            "repo-lines-v1:sha256:696ae4678f80e9e788f6b99153b98527b1cbdf4c0bcf545c896afd9b9a1b25a9:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5M2ZjOTc4OTQxNDA2MjMwOTZjYTlkYjcxNTQ0MjJkNDA0NGNkZGJmYzk1YWQ0MGRhYTc4NWY5YjkzNDJjZmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MjYzNmJmOWJkYzc1MjdiOTRmYjNlM2RmMWE5YTU2MjZmNDRiMjQ5ZmFiZmQwMDg1NzMwZDJhMmU5ZTZlOTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE3YjgyYTYzODhiYTFhNjU3OTBlMmEwMjI4NmM2NTQzYTE4YzdmZjRlZDg1YmQwODMzOTA5MGU1Mjc0ZTI1Y2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5ZGZmMDAzNWYyMTFhNDk2ZTQ5MDZhZjRhOGU2YzlhZGFkY2MzNTg3MTVhOWI4OGU2YmIyNjkzNjY2NWRlYjcifQ"
+                    },
+                    {
+                        "resource": "repo://tests/preferences_import_tests.cpp#L44-L73",
+                        "version":
+                            "repo-lines-v1:sha256:4579d66e85fb0d7663ee571f51e6ea1d3a880845236434c92df92f78dc7af22b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjNmUwNmYxNTcwNWFkNTVkM2Y3MjE2NzY4NGNiMGI4NzBjYjhlYjEyNGQzZDZlYzZjMGRiZjczYTZmMWMxNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjYWNmYmVmODg1NTQ4NWVkMzMwOGNlODI0Y2ZiZmZlNDZjMzM1OGFjM2ZmZjRlMTdjYTA0YTRkMmM4NjNiOWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjVlMjE0ZDZkMTQ4NGQ0M2U0ZDQ0MzFhMGFlNTY1NmFiNmI5NjJiMjIxNjIwZmU5ZDUyYzhhNjgwYmE5ZjFiMjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0M2RjOTQ0YWJiZWI5MzkzZWZjMTQwMGViZWE1OGE1ZDRiODVlYzRiZmEwNjBlZDVkMWQwMmQ4YTQ3YmMzMDYifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_0a6a1de2f33746e98fe81bcf048b753c",
+                "statement":
+                    "Preferences are application-local state with compiled fallbacks; missing fields keep their current values, a missing preferences file marks defaults dirty, and export clears the dirty flag.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/preferences_manager.cpp#L105-L146",
+                        "version":
+                            "repo-lines-v1:sha256:ff11942bc9d89ef6d4adf349e6e5b73c1d83bee21831ede2f3e232bd4448cd89:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2ZWYxZjYyNDJkNGFjMjIwYmViZTM1NWE5ZDdkNzNkN2M4NmEyNTNkMjg0MzcxOTc5NDgyODcxMTkwMzQzY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZkOGQzZjAxMjU3ZWY3MmNiNWFjNDI2Y2JiZDNlMjVlOGM2Zjg3NGYzNTVmYWQ4NDliNGY5YmM0NjdkYzJmM2MifQ"
+                    },
+                    {
+                        "resource": "repo://src/managers/preferences_manager.cpp#L226-L249",
+                        "version":
+                            "repo-lines-v1:sha256:37a869c48221da1d2185572f97658532de021c3db6c9c1e1247a8941d44dfc48:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiMmZlZWIxZDYwMjQ1Y2VhZGJkOTQ1ZTk4MWEzY2JjMDg5ZmI4MmViODc5MzY2Y2UyMmIyMThiNThlMThkOGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBkMjZjYzAxMjhkNzc1ODRjMjI1YThhNTllYmJlMDdjNDU5MjE1NTdlNmUyZWE5OTExOTM0Y2RkNjY0MTExMmYifQ"
+                    },
+                    {
+                        "resource": "repo://src/managers/preferences_manager.cpp#L335-L353",
+                        "version":
+                            "repo-lines-v1:sha256:215380d010aec0652ba31613d63506fb263f68bb4309104ad5844b0ce07d22ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1YTBhMWQxNDAzN2ZhMzg5Zjg5ZjI5NWEzODBkMmZhMmM0NTFjZmQwNmU2YTRlMTgwOWI0ZTlkYzJkZTE0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkNmQzMDMwZjllMTRhMjM4NWM3ZGIzMTdiMzFmZDc4NzEyOGVhOGFhODNhYjkyOWY2MzY2ZmEyMDZjNzQwZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxMjc0MTVjMDUxMGRhYzQzMGZiZDFlNTdhYWZjODkyYjRhZTk1MWM4ZmY5ODFmNmQ4MTU2YzE0YWE1ODNlMTQifQ"
+                    }
+                ]
+            }
+        ],
+    "verification": {
+        "by": "openwiki/0.7.0",
+        "at": "2026-10-06T20:25:27.555Z"
+    }
+}

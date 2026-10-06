@@ -1,0 +1,230 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:c5e6f3de169684521ad15c8771b95aeda7fd5588c4beef4e6a74653f30d82ef9",
+    "claims":
+        [
+            {
+                "id": "claim_7ebcb83672fc403e93ebb9bd819a91b5",
+                "statement":
+                    "SessionManager validates the slicing mode and syntax, chooses or reuses the mode-specific slicer, requests current part transforms, and dispatches work through startSlice.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/session_manager.cpp#L575-L605",
+                        "version":
+                            "repo-lines-v1:sha256:37e789455aece09d3c9129bf0c596a11581894af0f460f3f14d2566b303b044b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhMzc5YzUxYmE4YjQzYzZiYmJiNmVjOTRjNTY2YTI4NDU0OWI2MjM4YjNiNThkYWQ0ZGQyMjZhMzZhODAyMTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkNmI4YWE2NDRhMzQwNDJmMzJlMjNmODFiNmVhNWUzMjljZGU5OWUyMDRjOGMxYTUzOGQxYzRjOWNiMTYyZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4NzA1OTU5N2QwZWU2YzI3M2Q0MmQ3ZDk4Yzc1N2EyMzEyYmQ0OTllMWNiZjgyZjMxOTViYWRkNzNjMmI0NzAifQ"
+                    },
+                    {
+                        "resource": "repo://src/managers/session_manager.cpp#L654-L685",
+                        "version":
+                            "repo-lines-v1:sha256:0ca2d25f8ba4649bf830134517d3f95c89993cf045588946ccff21399f772069:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MmEyNDhkNDk3YWUwMjZjMTRkYWY2MGNiZWVjNGMwZjExZWI3ZjA3ZDZlMzJjZTc3ODAyMTY1YTZmODZlY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2NWU1OTBiOTk1Yjg2ZjQ4YjEyZjdiMTk5OTNiY2E2YWIwZWQ0MDgzN2RjNWRmMDdhYWRkODBkYjM3YmVmNjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhZjIzMDUwMjA0MmNlOWQzNDkyNmFlNjY1YjM4YjVhNTk3YzMxMGY4NmJlNjI5MDYzYzY0ZTk2ZGNiZTI3NzIifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_e87d45fd25904541849b0048ea445fd9",
+                "statement":
+                    "Cylindrical slicing is rejected before dispatch unless the active syntax supports it, while an unknown slicing mode falls back to planar and clears existing part steps.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/session_manager.cpp#L575-L583",
+                        "version":
+                            "repo-lines-v1:sha256:c913d335cf54ad190af859e7157e0cc17e81ca3621d3b66a4f0abda47ce30ed0:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EzNzljNTFiYThiNDNjNmJiYmI2ZWM5NGM1NjZhMjg0NTQ5YjYyMzhiM2I1OGRhZDRkZDIyNmEzNmE4MDIxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGQ2YjhhYTY0NGEzNDA0MmYzMmUyM2Y4MWI2ZWE1ZTMyOWNkZTk5ZTIwNGM4YzFhNTM4ZDFjNGM5Y2IxNjJmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzIxZmYzYzBmY2UzYzc0ODNlM2FkN2U0YmJkMTMyNzQ5Njg3MzBlYTZmNWE0ZTZhNjMxMTAxMmYxNWU5MWQzZiJ9"
+                    },
+                    {
+                        "resource": "repo://src/managers/session_manager.cpp#L654-L685",
+                        "version":
+                            "repo-lines-v1:sha256:0ca2d25f8ba4649bf830134517d3f95c89993cf045588946ccff21399f772069:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MmEyNDhkNDk3YWUwMjZjMTRkYWY2MGNiZWVjNGMwZjExZWI3ZjA3ZDZlMzJjZTc3ODAyMTY1YTZmODZlY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2NWU1OTBiOTk1Yjg2ZjQ4YjEyZjdiMTk5OTNiY2E2YWIwZWQ0MDgzN2RjNWRmMDdhYWRkODBkYjM3YmVmNjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhZjIzMDUwMjA0MmNlOWQzNDkyNmFlNjY1YjM4YjVhNTk3YzMxMGY4NmJlNjI5MDYzYzY0ZTk2ZGNiZTI3NzIifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_89779cd438dd45d0b261dcb56b4c7ab8",
+                "statement":
+                    "AbstractSlicingThread is a QObject moved to an owned internal QThread, while traditional step computation uses separate StepThread QObject workers that execute Step::compute.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/abs_slicing_thread.cpp#L179-L191",
+                        "version":
+                            "repo-lines-v1:sha256:296e35e138f017dc89bab4dbe9c1870eecef12338c2353c19dee478f140abb5d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxNmRiZjAzOWZlMGI1OTc4NDhlNDhkYjE5ZmNmYWI0MTgzZWNlMzIzZWJiMDdjZTNiOTY4OGE2YjJkOTYxY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxNDUzY2U4ZGEzYTA3OTk2ZTM3NmJmMzIwMTRmNzhjZGNiNGU2MTdjOWQxMjcxOTVjZDQ5MzMzYzgyZmFlNTkifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/step_thread.cpp#L12-L40",
+                        "version":
+                            "repo-lines-v1:sha256:95306f7a3dd09d6e37e1f8329714391f4af07eb4ee46742103cbaf8c88704b87:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNDFiMjBkOWExNjY3MTc3OTBiMWQ5ODU2NmM4ZDZmZjA5Mjc4OGI2NjAzNDQ3MzFhNzI2MWY1YmY1YWI3MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFlZjQ5MTYzYTU4NTRmZDgwZDAwMDczNWQ5ZDU4NTIzNDhkYzIwZDJlZmJhNjNhMGI4MzBhNDk4YzJiZTRmMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_ad56101f8733488c919c54736e631ecd",
+                "statement":
+                    "TraditionalAST preprocesses first, queues each distinct dirty non-clipping Step, runs up to the ideal thread count of workers, and enters postprocessing only after all queued and active workers finish.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/traditional_ast.cpp#L116-L175",
+                        "version":
+                            "repo-lines-v1:sha256:b2662f6559101f264fc3516b3c4f2d0a8faa22a6310de26acd2cfc62065c0d5b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MjcwMDlhY2U4ZTA2ZGVlZDQ4MTg5YTdiODBiY2IxYWZhMDRjMDQ3N2ZkM2IwZGVhMjAyNmQ5OTlkNjdlOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhOTVkZjQzMGM3NDJhMjc1MTZlMWU3YTYzZTFhZGM1ZDMxMzUyOTZkNDMxNGUwNjdkMmY4MTMwYzc3NWE3MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/traditional_ast.cpp#L24-L114",
+                        "version":
+                            "repo-lines-v1:sha256:85c1ccd52d28237916f2e5f4e142edafa45801c9f986d71d5c0dd21d94840764:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkYjZlMWM1Yzc2Nzk4OGZiNTdjYjMyN2RlN2JhNDc3MGU1Zjg1NzkyYWY2YjliNGRkYTcxYzQzOGM4NjJkYWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0YTk1OWZhY2I3ZjZmMDA3ZjZhYTQ4ZjkwMjJkMjJmZDNmYWVjYzI2MjljZjlkMjA0YTZmYWQ0ZDQ3YTI3YmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZmNmRmOWJkMjkxYTMzNTVlMThkOTlmMzg5NDU4YzZjNTNmYjlmNmM0YmYzYTc4OTI1YzcxYTkyODhkNTJkNzUifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_f1e053b664874afcb3c4834a3de5bce2",
+                "statement":
+                    "Traditional output generation writes setup, mode-specific layer content, shutdown, and an optional best-effort layer-time annotation pass before completion.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/abs_slicing_thread.cpp#L352-L453",
+                        "version":
+                            "repo-lines-v1:sha256:063321cd141c12403b70491fa7fef8e6f053598bc4c79937dd799405d6e7ffb4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4MWUwOWY0MjZhZTUwNTZmOTZjNTViM2RjMjhlNzlkMjBiZWQyZDM2MjQyNTVkZTQ2ZDRiNzkyZmU1MmI4MjdhIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5NzBlZDhhYmFiMDEyNjQ0ZWRkODVlZjBmMWFjYWEyNGJmY2UzMzZhNjkyMTgzYzkzZWZkNWYxMTE1ZmY2ZGM0IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MiwiZm9sbG93aW5nQ29udGV4dEhhc2giOiI4OWE3NTNlNDJlMjRlNWRhODk3MDgwNzdmZWRjNWJhNWQ5ZTZiN2ZhZGQxZjdhNjQ5YTNiZTNhMWIwMmZiMDQ2In0"
+                    },
+                    {
+                        "resource": "repo://src/threading/traditional_ast.cpp#L86-L107",
+                        "version":
+                            "repo-lines-v1:sha256:4ed9c346df437c29c439e2f92a978a3926d08993d816846473277b9d7a5225f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhNWJiNzI2NjhiOGNkMjY4MTVlNzI2Zjg0Y2U3MGQyNjIyZGFhODY0NmMyMjJlZjc1YzIyMmM1Y2JjZjJhNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NzM1ZjFmNjRlYzE5ZWMzM2ZmMjVlZTNiZDI3NGIxMzM0Mjc0MTYxNWJjODUzYmNiMmY4ZTU5MmQ4Y2EwOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlYjk2MjRhZTc3YTgxYjg1ZmI3ZjIxN2IxOGJiNDU3ZmRlNTE1ZDA3ZDI2MzczMTcyNDZjMDgyZDY3YmNmZmMifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_a48b791aa4144530a06ec59e33cbacd1",
+                "statement":
+                    "Planar preprocessing builds layers and islands from cross-sections, adds enabled support and layer additions, and assembles global layers before dirty-step computation.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/slicing/preprocessor.cpp#L17-L94",
+                        "version":
+                            "repo-lines-v1:sha256:bbaffa8b83780a982eb1cdb4cf8e3ae9096ee1094142b62652eadae5a4c398b2:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MThlYTQ3ZWZmMTgwNWViNzBiZjcxMjYxZWFjZDUyZTM2M2I0OTYzYzJmMWY5ODRmNDljMjAyYjhhMTk1MmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDFiZTc2MDExZjAwNTMyNmZjZDNmYTZkYzVhZTE4ZTRiM2EwMWQyZjVhOTZmMDMzZjM3MzliODI3NDFkZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1NGRkOTZjZGZjYjVkYWU3YjFlMGNhNWU0YTI4MzgyZjVmYTNlMWQxZjYyYmIzYmE5NDUyYTMwNDc0NjMxYmYifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/slicers/planar_slicer.cpp#L43-L189",
+                        "version":
+                            "repo-lines-v1:sha256:80a0ee16369c36a024e19120a59490cfdc97ee2aba5a9f5ed56ca05aa74481fa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmZDY0ZWZlNjA0Zjc5YzM2NTI5MGE2M2U3NzBlNGRjOWI3ZjU3ZDk5OGZmNjgzMGQ2YWVlYTM2NjZlNjFmM2RmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYzcyNWU4MzcxMTc2NWFiZWVjY2I3NzIxNjRmNDdkYjE2NzE5Mjc1YzIzODNiZDJiOTY5NzRiNDg2ZDE0MWZjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NmVhY2YyMDNiYjUwNGMyNmFiYzk0MzBiMTI0NjFlNzc5MDVjYWFmN2YyY2VkZmNkYjg3OWM3NTdlNGU1ODNlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0ZmJlY2NlYjAyNzUwMzYxMDA1YWI4OWExMDE2ODEzODZlZjdlMDRmZjcxYmI0YTk1MzY5MGM0MmU3NTNhZDJkIn0"
+                    }
+                ]
+            },
+            {
+                "id": "claim_97811e4017234caa98e7b17afa3c07fd",
+                "statement":
+                    "Planar postprocessing connects paths and calculates modifiers across ordered global layers before serializing those layers to G-code.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/slicers/planar_slicer.cpp#L870-L950",
+                        "version":
+                            "repo-lines-v1:sha256:136f14f2f3da5702184582cb32d485c1e2cc8d018eff57c7b2aab66597aaa46b:eyJzZWxlY3RlZExpbmVDb3VudCI6ODEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZTY3YzBlMjMyZjI2YmJiZDI1OWY2ZDBkYzdjNGI1MThmYmQ2MzkxYjkzODY3YTRhY2MwOGQ0YWY0MDAxY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_698ba81a52324f6e886646c5ac8dfb79",
+                "statement":
+                    "A true result from a Preprocessor callback stops only Preprocessor::processAll; planar preProcess returns void, so settings-part overlap does not itself abort the surrounding TraditionalAST lifecycle.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/slicing/preprocessor.cpp#L29-L45",
+                        "version":
+                            "repo-lines-v1:sha256:cdb7057b3bf4ff14e4a7f3ac191a133fff82fb85cf602f8a118d06cf5c5c7b75:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMTczYzAxZDg4ZjNhN2ZjMWIzYzE4N2MzZjc0ZjJjNDA5MGYwNzkwMjVlNmEwZjMxZDAwMzg3OTA5ZTgzODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxZDk0ZTc1YzI3YTkzYzY5NGY3OWM3OTU5YzFiMTE5NWM2MjEyMTQxNTY5YjI2Mzk3NWY1ZjU2MzU4ODM2ZDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWRlYmQwYmI3Nzk5OTljYWY4OGNjNGE4NDU0MjIxMTMxYzdiMzY1MjgxYjNlYTdhNmZmYTA3ODkwOGM0NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIzMDIzMjA0NzFiZjMxMWYyNjExMDVhOThiMTNiZGUxZWY5ZTM0ZGQzYzYxNTY4YjNhZTZiMDJiNWUyMWE2NzQifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/slicers/planar_slicer.cpp#L43-L57",
+                        "version":
+                            "repo-lines-v1:sha256:2e9f69dd8ceecd1f65e4cdfeb93edff9375f8e2062023c56f4305c8b208a01fc:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNjRlZmU2MDRmNzljMzY1MjkwYTYzZTc3MGU0ZGM5YjdmNTdkOTk4ZmY2ODMwZDZhZWVhMzY2NmU2MWYzZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5YzEzNTkwNjY1NjMyM2QxYzVlYTQxNjU0ZWU2NmFmYjU4NWFjZGNmYWVhY2ExMjFkNWUzMGJmMTkzZWVkZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2ZWFjZjIwM2JiNTA0YzI2YWJjOTQzMGIxMjQ2MWU3NzkwNWNhYWY3ZjJjZWRmY2RiODc5Yzc1N2U0ZTU4M2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNGQ0NWRmNDBjYmQ2NmFhM2YxOGRhOTFiZTlhMWVmNjY3YmI0YWIyMmZlOTg0N2VmODA2OGNkYzI3N2NkNzEifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_bf9fd40046be4314840edae8288b0785",
+                "statement":
+                    "Helical generation is a path-pattern branch inside CylindricalSlicer, whose direct lifecycle bypasses StepThread workers and generates radial or helical CylindricalLayer paths itself.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L418-L456",
+                        "version":
+                            "repo-lines-v1:sha256:28dec0c434f5357365f8fa4513793e859900b8b166cb2c7c3e6858b485d89f16:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkODA5NDRmNzM1MDA1YTliNWNkMzVmMzA2NTBiNWYwODdhZGM2NWQ4NjU1OGY3YjE5NzE3NzkwYWZlYzlmZjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4YTk4YmRkZDlhYjg1MmQ4ZWZkMDIyYWUwZjhlZTcyZTFiNmEyZGEyZTU4OGQ2ODA2Y2ExNGEwMjMwMTZlMzUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjYzdkMDkwYjc0OTY1NjAxNjJmN2Q5NmU5MmE4ZGI0ZjQyNWE4YzZhNGQ4YTI0NWU1OWRjMzViYTk4ODQ3MzMifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L459-L564",
+                        "version":
+                            "repo-lines-v1:sha256:a037ce69a5b6b5f663e8ec3edb824ac0498664e8d6f850a58aab4f09e181ace5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkNGY1ZGYzMzczN2E1NzcwOWM5MjQ0NmI4OTg5YjIwMGJmMTAyMjhhOGQyMjA5NjljMDhkOTU4ZWZkNGI1M2E0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwOWYxNzZiOTVlYTk0OGQ3ODJlZjUxOWNhZTczZWQyMmI1NDE0Mjc1N2UyZTkwNzljYjM5NzQ5YTYwNWIzNTFhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJmYzZmZDIzMjcwNWVlOWNiNGU5NjRiMDBjYjJjYzQ5YTgzMTFhZDExNDhmZjg0MWQyMWQxZDUwYWMzZWViNzI5In0"
+                    }
+                ]
+            },
+            {
+                "id": "claim_49e1d4ff0d2d482cb17d14b1f50c1486",
+                "statement":
+                    "Cylindrical slicing warns but still completes when it generates no printable paths; otherwise it calculates modifiers and writes cylindrical layers in order.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L566-L580",
+                        "version":
+                            "repo-lines-v1:sha256:9322f7d9c5b4982d529cf6275bf285a2f25ea3e9597df773e4d4375a6de8e7a4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4OWVjNTdlZDg0NmY3YzcxNjIwNjM5ZjM3NDUyZjBiYjNjMGEyZDQyOTUxMzZjYTMyZTc3YzEwN2YwMTJmNzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5MmQ1ZDczMGMzODVkZjAyNmY0YjBhYzIyOGJiZjA3ZDNhODc3MDlmY2EyYTQyMjc5MzM2ZmYzNTEwNjYzNzEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzN2ViODI4MDFlMWY3YmJlZDhjOTUwYmUxY2U0M2E5YzliZWM3YjdkZTQ2NzcyMzllNjMxYmJhODE3YzA4OWEifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L870-L901",
+                        "version":
+                            "repo-lines-v1:sha256:63f7b382c8a301cc9c59b0ddadb9fe5b5a0ae2da3ebca2b76d1080b001fa075f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkZGIxY2ZiNWE3YTlmNDlmYTk0YzFjMmI2ZmVlNGFkYTg1N2IzZWQyMmFlODJkNTZkMmU5NGEzMmQwZTgzNWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjljN2M1NTJlZWRjOWEwMmUxZTc4YWQyMTNlZWJkNjI3MmJjZDc1M2E5N2JiZjMzNThhOTlmNmJjMGMwZTliMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4ODgyYWFhOGJlYjFiZDg1YzY0Y2JmMjVjMmE0N2I5OWNlYTRiMmFiMDhkNDAzM2M5NDY1MTgzN2M2MTYwMjgifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_5185fce198944ebdb3a3590d99a87eee",
+                "statement":
+                    "ImageSlicer skips G-code and creates ordered-ID PNG slices plus idFileLinks.dat during parallel preprocessing, then follows TraditionalAST's zero-step completion path.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/slicers/image_slicer.cpp#L192-L234",
+                        "version":
+                            "repo-lines-v1:sha256:891e6b4b666ac2c7f1c276940dfb4d18093233f030aa2d8b686a3d9f9a87c001:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzNTY0NTFhMTFhYmRmMGJkMDViZGUyYjY3OGU1MWI1MGQ0MjBiZGZiYzI2ZTdkM2I0NTA3Njk3N2UzZjlkYzQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNjODczNWE2NTY5MTg1OTQ2MmQyNTg2YmJjMjliZjQ2MTE0YTNlZTY2ZTk5ZDA1OGMxOTVjMTU0MmUxYjEzNjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlNzcwNWE4ZDQ4OGMyY2JjMzZiYjFkMzRkNDg5NWEzZjkxMDUwNWNiY2QyYWZjMDY2NDJiMjM2MTQ4ODJmMGIifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/slicers/image_slicer.cpp#L307-L343",
+                        "version":
+                            "repo-lines-v1:sha256:2a5dc4a3cfad372e5303ae726fb428299791837ff8eef28ceca6485a0efc13ce:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NDhiMTZhNTIzODQ4ODE0MDQ3ZjE0ZGVjN2M5MzMyYjcyOTdiNmNlYzgwN2MxZjhmNTg4YmIyZTAwMmE1OGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/slicers/image_slicer.cpp#L59-L178",
+                        "version":
+                            "repo-lines-v1:sha256:3526f8aaddac7fbeee1fa976eee4e213c4b585b5373eeddf2ce025fb21d93a23:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJkMWNmNzk3ZWVmYzc5NDQ3NWQ4Nzg3ZWZlYTVmMGY2NDgzYjM2Zjk1MDg2M2ZiNzU0MzhlZTkxZjlhOGUwMTk5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4MWEwZTQ1MGQ5MjU3ZjFkMzJjOTk2MWRlMmMwMGQ2ZTNmNWVkYzk3ZWM3ODE0YTk4ODA5ZTE3Y2Y1MmJlYTExIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJhYTVmMGY5NjZkOTFiYzk4MTI4NjVlM2NmOWVkM2FhMWYxNTAxODI2ODg5NWI5YzFhNzJmMGZjNmYxZDk0M2E3IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkN2ZhY2VmYjAzNjA3Mzg4YzFlYTM0NjU5MDllNDVlNDc1NDAxMjhiNzM3N2I5MzM5ZTlmYWZkZjU0ZTE2YjA4In0"
+                    },
+                    {
+                        "resource": "repo://src/threading/traditional_ast.cpp#L86-L107",
+                        "version":
+                            "repo-lines-v1:sha256:4ed9c346df437c29c439e2f92a978a3926d08993d816846473277b9d7a5225f0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNhNWJiNzI2NjhiOGNkMjY4MTVlNzI2Zjg0Y2U3MGQyNjIyZGFhODY0NmMyMjJlZjc1YzIyMmM1Y2JjZjJhNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NzM1ZjFmNjRlYzE5ZWMzM2ZmMjVlZTNiZDI3NGIxMzM0Mjc0MTYxNWJjODUzYmNiMmY4ZTU5MmQ4Y2EwOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlYjk2MjRhZTc3YTgxYjg1ZmI3ZjIxN2IxOGJiNDU3ZmRlNTE1ZDA3ZDI2MzczMTcyNDZjMDgyZDY3YmNmZmMifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_6bf87d983cbf4263a69048cc5956ba01",
+                "statement":
+                    "Cancellation is cooperative: the flag is consumed at phase or worker-completion checks, closes the temporary output, and does not interrupt an already-running Step::compute callback.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/threading/abs_slicing_thread.cpp#L326-L338",
+                        "version":
+                            "repo-lines-v1:sha256:6e3f6bcc92627e4546540ffb43487436c55f6a2ed6a044eeb8d6689e78cbf585:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkNDAwYjNkMDk4NGQ0NmQ1M2E4MGQ3YmQ0Y2I0N2Q4Yjc3NjIxNzc0NGUyYzU2Y2FkNzljYTkyYzUxNjkyNWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ1NTgxN2Q2ZGEzMGUyZDY3Zjk1MGFkNTdmODZjMjAwZDBkNzhkNzIzNmYwYmZkYzUyOTgzYWMwMjgxMDVlMjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlNzE0ZDAzYzJjMzYzNWYxYmY2NDAwNmI5ZWY0YThlNWExNDBiODVjNzI1NDI0ZTQ1ZGIwNDMzMjg3OTRiMTAifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/step_thread.cpp#L25-L40",
+                        "version":
+                            "repo-lines-v1:sha256:a1ceb8164baad78778ed8b25418eaa7accc1a7b539e18cf89e0a2be7b1137380:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlNTVlZjY5YmEyMmE4NWJmYTFiOTgwZWIyZWY1NWJiNjMzODYzNjcwYzZhOGYwMTBiYzEyNjVjMjU0ZmFiZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjYWI4ZGIxY2IzNjBlNmQ2OTQ4MDFmZDYxZTM4MWQ4MWMyNTJhNWZjZmYxMTI0ODMxYzQyM2M2NDQyNWQ4MTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/traditional_ast.cpp#L116-L125",
+                        "version":
+                            "repo-lines-v1:sha256:e9c1c8f3d1ae848b3c45c83d2cc86d0688a96ab89062b23c999f04163ae3cf60:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MjcwMDlhY2U4ZTA2ZGVlZDQ4MTg5YTdiODBiY2IxYWZhMDRjMDQ3N2ZkM2IwZGVhMjAyNmQ5OTlkNjdlOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhOTVkZjQzMGM3NDJhMjc1MTZlMWU3YTYzZTFhZGM1ZDMxMzUyOTZkNDMxNGUwNjdkMmY4MTMwYzc3NWE3MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxMDg2ZDkwMTIyZjZkZDk0MzQzOTA2MTRlZmVkZGY4N2JlMTQwODRiMzY5MjA5MDMxNzE5MGIwMmIxODMzYzkifQ"
+                    },
+                    {
+                        "resource": "repo://src/threading/traditional_ast.cpp#L80-L106",
+                        "version":
+                            "repo-lines-v1:sha256:e1ba44fd28f50a6a32d3aa34c6d11767d159078948bddeb56c6a3ca07d325e03:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2MmNmN2ZlNTQ5NDkzNjhjMjFiODNhMzU5NDNiZjE1MjhhZWM3NzdiNGJlZGRkNmU1NTIzZTQxYWRlMDVmOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZTI3M2E5MjExZTY1Yzk3NDk0YTgzNWRhMjZjNWQyNmNjMTk0YzQ3MzgzODEyNDdiMDlkMDVlODkyMjk4YTciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxMWJjZTI2MGI2NmU0NWY5YTAyZTgyOWRiYmU0OWE3YmI3MzhkMjQ0OGVhZDRjMTU5MDJmMGNiZmUyZWZmMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1OTQ2MDcwY2M1YTdiZWEzOWFjMDgyMmE3YWQxZjUwNDIxNjAwZTc5Y2YxNjAyODk2OWY4MGVmYzA2ZjA4ZGMifQ"
+                    }
+                ]
+            }
+        ],
+    "verification": {
+        "by": "openwiki/0.7.0",
+        "at": "2026-10-06T20:25:27.555Z"
+    }
+}

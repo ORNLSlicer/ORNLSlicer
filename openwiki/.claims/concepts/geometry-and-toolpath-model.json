@@ -1,0 +1,257 @@
+    {
+        "schemaVersion": 1,
+        "pageVersion": "sha256:f1ebed61e8a7a920a3b2529ece1bbbf8910221f04bfb2b1cb690f0f80ba6599a",
+        "claims":
+            [
+                {
+                    "id": "claim_cf0f9e4c73944ad1bd5dee0c5fddd4ec",
+                    "statement":
+                        "A Part owns a root mesh, optional submeshes, local settings and ranges, and ordered StepPairs that can hold one printing layer and one scan layer.",
+                    "evidence": [
+                        {
+                            "resource": "repo://include/part/part.h#L142-L180",
+                            "version":
+                                "repo-lines-v1:sha256:5305ecb9f45fb2f2c16a2cd2e75cbb6538d5d8c66e20d18b435bf79686c1bdd0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4M2Y3NzQ2YTRjOTE0NGQ1NWM0NjllYzM1YzYyYjAxYTY1ODcwM2JlMGY5YzFmNTcxNmI0MjA2ODE0NTc0YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIzNTY0YjBmYTRkYzMyZWY2NTQ5MWE2ODk2ZWRhMGU1MTMyY2E5OWI0MTcwYTRiYTExMjIyYTU5MWJmYTEwY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVlNTQxNjA3MTk3YTc5YmFhZDMzYzAzNTg4ZjhiYTFjMDE1ZjNkNzA4ZTI5NGI5YjZkMDQ3ZGQ2MWVmNGEwMzcifQ"
+                        },
+                        {
+                            "resource": "repo://include/part/part.h#L205-L269",
+                            "version":
+                                "repo-lines-v1:sha256:171dca68adcc9ffb9106df3b772af98dfb53c51a668e3d5b40018f204258a580:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4M2Y3NzQ2YTRjOTE0NGQ1NWM0NjllYzM1YzYyYjAxYTY1ODcwM2JlMGY5YzFmNTcxNmI0MjA2ODE0NTc0YWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhjNTY5MzEzY2E0NjgxNTdhZDc2NDMxZmMyNTkwMWRlOGVkMTE3MDI5NWQwY2ZmZmMxMDEyZWJiMzEyZmQ2NDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNhMmQ4NWYxODNlMTAzNzI2NTM5OWIwZjQ4YTI0ODFlZjRjZTgzMDJkZDU3ODkwZTI5ZWFiNDIzMjkzZDk4NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2MTg4ODgyMzgxYTBjMjQzYzhiNmU4M2VmYzQxZjM1NTE5ZTg3MWM2M2ZjYjM2YmFjMzI1ZTdmZWZkYzVjYWIifQ"
+                        },
+                        {
+                            "resource": "repo://include/part/part.h#L23-L36",
+                            "version":
+                                "repo-lines-v1:sha256:ac674e5970adf8ca6bf57228372bc20c524bb6d060f984a8044d40cc4ead7250:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkzY2FiMjgyYjRjOTA1ZTNiZDU4M2ZiZWEzMmMyN2QxYWJjYjMzNzlmNTkxZjFhMDRmNmIyZWFlNzBhNDhjMGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZkZWE2MjU5NDNiZDE5ZjVlOGI4MGM2MTA0YmJkYzcxODE4MzEyZmJhZDJiNDdiN2ZhY2Q5ZWI1MDkzYmRmM2YifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_303d98b6bd4d494cbe061babd5637b3b",
+                    "statement":
+                        "Appending or prepending a Step creates a typed StepPair, while steps(kAll) flattens each pair with printing before scan; pair count is the primary layer index.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/part/part.cpp#L295-L364",
+                            "version":
+                                "repo-lines-v1:sha256:7415b253f5f03d6c5e9da7432ecbe317bcb83bef49d0e3dcafb816e17f47da3a:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRmZjRjNzQ1YjdiMTkxYjk4YTczOTY4NDQxZjQ0Zjc1Y2NjNTlkZjVjMDQ3OWVjOTMwZWRmYzI2YjFjNjUyYzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUwMDA0MmU4ZDZiYTc1MDdlMTNmNmQzYWEyMTcwMTZiZjMxYzE3YTczYjVhNzQ4YTY3N2Y0MjNiZmRlNTk5OGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiZGRhNTQwNTQyMDk4NTY1MmY3MGYyNmMwNWI0NzFlOWZjOGIwNTBlODk4MDlmZTVhMzY5ZjFhY2RlODAzMWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxNmE5Yjc3ZTg4MDcyZmExNjIzMjY4NDI2YzlhZTRiMDg3NzA4NzI3NjRjMmZhOWM2Mzc2Y2YyMzVjMjQxMjAifQ"
+                        },
+                        {
+                            "resource": "repo://src/part/part.cpp#L460-L493",
+                            "version":
+                                "repo-lines-v1:sha256:21d85faa75b51fd8d8d5452e1c55c61db13f640ed9930b40d8b3d66354974281:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhNjM1MjU2MTA5MzZkMjYxYmQxZDIxMjJmOTIyN2IwYWJiMDYwYzkyNDY1OTBiYjY1ODgwNzMwYTgwOTgwNjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlYmRiMzY1YmMwYjU3OWE3NzI2OGE2YTY3YjYwZTQwYzAwYWYxMDM3ODBlYzFlNzU2MjNhMTRlZGYzN2ZmYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhN2M5Mzk5NmU2MTUyYzE5MTNhMWEwNDU1NjNhNTU5ODJhZmIzYjEwODJhODc5NzM3OGFmMDlhZGM2YmFjM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBhMzdkMTE1MjA3ZTMwZjNkMzNkZTIzNzYyNTQzODNjNjIxOGFlZDRmNzg1ZGM2YjYwYjNiMTBiZTRlMDg2ODcifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_24cf4ee320e74926aa91b7fa318643c0",
+                    "statement":
+                        "GlobalLayer stores copied StepPair records keyed by Part UUID; those records retain shared pointers to the original Layer and ScanLayer objects.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/step/global_layer.cpp#L104-L108",
+                            "version":
+                                "repo-lines-v1:sha256:845d237b0786d804bd9bd30277858c43227155995702436bc0c79eec9976a2d7:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNDQwYzE4NWNlOWVlNmFmMTE3YjNiMDkwNzk3NDg4N2QyODAzZDM1ODZiNDMwNjIyMGU0Yzk1NDE1YzRjYjk0NyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlhYmEyOTJkYTkwZmU1ZTM2NjljOWExMDY4NTY4NzQ2ODZlMzE2OWNjMWI0ZDYzNzYyOWE2NDE1MGU3MWJkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMjU0M2U0N2I3YjY4MGZkNjE0YjUyMzg5YmMxYmZiYzIxMmUxMjhjMTE0MDY4ZWY2NzAwYWQzZjQyNDBiNTdiNyJ9"
+                        },
+                        {
+                            "resource": "repo://src/step/global_layer.cpp#L496-L509",
+                            "version":
+                                "repo-lines-v1:sha256:000f3dd619bfef84dcc06eb5047022b955bb2d96fe1af4ff44483eb9dbba87f9:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZWU2Yjk1NzNhNTE3ZTVkMjdlMGYxNzRjODc3ZTM5OGZjMDc4MjNjNzlmMDg4OTg5ZTc2NjAyMjhlOTQ5NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzNjkwYTM2MDAwNjFlODc3ZWE4Y2ZiNDZkOTlmMDljNGZlOTMzOTg1NWM0ZDczOTY3MjZkODY2YmI0ZGViOTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjNDMxOWY1YzhjZWMwYzUzY2FmOWMzZGZlNjI5M2RiYzU4MzhlMmVlYzY0NGEzOTQwYmMwOWNlY2FmZmZhODcifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_dad52d4d4001474a9f5e7719550c32c6",
+                    "statement":
+                        "MeshBase retains original, aligned, and current representations; setTransformation rebuilds current geometry from aligned data, updates concrete geometry and bounds, and saved transformation replay restores history without duplicate rotations.",
+                    "evidence": [
+                        {
+                            "resource": "repo://include/geometry/mesh/mesh_base.h#L222-L289",
+                            "version":
+                                "repo-lines-v1:sha256:bff72171419ec1c1394cd0127e73357caf7d0fe076716ffeb7732d75a9dcf127:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkYjM4YTc2NTY3YjdiYTJmYTYzOTBlMmZmODI0YTc1NDAyZGQwYzZjYWNmYzc0YzI0MGI4Nzk1NjkxNTI3ODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5Yjg4OGFkY2E4Nzk5OWIxNjFmNDBhZjZlZjA4M2E2NzFjNTJkMGM1ODU3NDMzZDA4ZmQ4ODJhYTJkOWI4NzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ4ZDAxZDVlZDJlYjYzNjhmODkyZWU0OGY3YjBlNWQ3ZTI2ZGQzMDBiN2RjODBkOTg2ODk1ZjhmM2ZjYzVkYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1NmNkMWM2N2E2YjEzMzAxMzI1ZmM4OGUxZmRjOWM2NGEyNDZmNGYyYmNjYjViMjgxYmFjOTQ4MjA1OTgxNjcifQ"
+                        },
+                        {
+                            "resource": "repo://src/geometry/mesh/mesh_base.cpp#L74-L129",
+                            "version":
+                                "repo-lines-v1:sha256:af806ad26fffd0e8b4aaf778f65dceca518583c0e3df21b6139fc12e21c554d3:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ0NzVlNTc2NjIxYWYxY2NmYmFjYjQ1MmYzZDYxMmQyYzQyYzkxZWRjMzRkYmJmMWJhNzAxYWM3MzNkOTg1YjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhjMWM4ZGJiNjBhMjAzMTM2YzZhZDJiNGM5NjBkZTExYjA0N2FmZDA2ODk1ZTNjMDZjMWVjMGRiYzY2NWQxZTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImY4MzU5ZTkzM2ExMWIzNjM1M2MyOTQ3NzZmMjAwMWY4ZjZiMzg3NjZjOTM3ZDczZDBhNjg0YTRkZTM4YjQ0MTMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_d2ca0aee86c44bb69925bdd6a18cdc61",
+                    "statement":
+                        "Part transforms propagate to root and submeshes and dirty that part's steps; moving a settings mesh dirties every session part.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/part/part.cpp#L255-L275",
+                            "version":
+                                "repo-lines-v1:sha256:837b21afefaa5348b8c529312e2488bace0827cb308ad7acd03b00ee2b1ad0e9:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NzUwODY5OGUwMTIyODEzMGIxMGFmMjUyMWY5MmUzZDI5ZjMwZThlODRkZDYzOTlhNzAxMjM0NGI4MmQ1YzUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkNmI4YWE2NDRhMzQwNDJmMzJlMjNmODFiNmVhNWUzMjljZGU5OWUyMDRjOGMxYTUzOGQxYzRjOWNiMTYyZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI3ZDhjMjBiZjM0MzQ3YzhhYTFiMzc2NTVjNDUzMmE2YTU0NGNiMjczYWY2ZDMyODhjMzViOTM4ZmIzMjliMjQifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_2d53b3a41513476a82b56605d862c16a",
+                    "statement":
+                        "Distance uses micron as its internal base; Point constructed from Distance values stores those internal numeric values, so raw Point coordinates are internal units.",
+                    "evidence": [
+                        {
+                            "resource": "repo://include/units/unit.h#L630-L653",
+                            "version":
+                                "repo-lines-v1:sha256:42a1aa5baf0f6c41453b9d59fc0b517de3a9b7095177b7837570e75e0ce1ddfe:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzMzdkYzNlNzA2YjMxZjI3Yzk0NmUxNTU1OTRhMDIwODI5MmYyNjlhOWRiZGM5OWY2ODllYzg0YTU0NmUzOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5NjIxZTFiODdhMDU2Mzg2N2RmYWJmYWQ3Y2QwNmJhMDQ5OWIwMzkxOWVmNWU0YWI2MzhlYjViZTdmM2Q0NmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzMzQzZDNjODg2NjRlODhjODMyM2U0OWY5ZjE5OGQxYTdmMDQyZDA3NDAxMTRmMThlNTM1YTg1NjcxYjRjODIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM2ZGFjZGI2YTJkMzAwOGM1YTI3NGNjOGI0OWVkYzYxMjlhMTdiNzIzNGZhMzY1MjAwYjRhODM4YzU2MjI1YTkifQ"
+                        },
+                        {
+                            "resource": "repo://src/geometry/point.cpp#L27-L49",
+                            "version":
+                                "repo-lines-v1:sha256:bba5a38879653785bc02fd9d3d04a4cb7264b2598c91e351848bcbeb98abcecd:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhZjEyNmY1YTE5MzA4MDI5NTY0NGYzNzA1YTNhZWZkMTg4M2U3MDU0NjYzM2Q5MDZhMGIzMzZjMTdhODUyZDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhMWEwMDFhMWNlYzRjNjBjNmNjNGE4NDk2MDg5Y2UzMzNiOWFjMmVmNjBhNTFkMmNlMTFlMTdmYjQ5OWJiY2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZhNjI1MTIwNGM2MGM5OWRiZTg0MzU5NjIxYzkzM2I5MjEwZWY3ODE3MWFmOWUzNDJmOTFlM2E0NDNlNjdhYTAifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_d5be23c45576453780a16e30d8e7db48",
+                    "statement":
+                        "Triangle cross-sectioning flattens intersection segments into a two-dimensional frame by shifting around a plane midpoint and rotating the slicing normal to positive Z, while recording the average normal.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/cross_section/cross_section.cpp#L148-L184",
+                            "version":
+                                "repo-lines-v1:sha256:0189f2510166072a85835d08a9f6fefb06be092c728c2ba74c7ba6d6f66e7f09:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5NWEyYTgzNmJjZWYyMjY5YTI4MWRkMzQ3MjdlN2Q0ZTI1YTlhMGU4MDc4ZTI5YjM5MTg1OTQ2MDZlNzNmN2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4NzE5OTM4ODM3ZDI3YWQ1MDYxMzViMGNkNDVlOTQ3NDRkZjczNGQ2M2IyMjU4MjM5NjQ0NmZhYTk4YWU1OTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRmZWIzNTBiMTY1MzE4ZGMxMTU4ZTNjM2I2MWI0Y2U2MDRjNTEyMmRkZWVlZWViOTUyZmE4YmY0ODQwMjkwMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRmZjhlYWU3OTNhOGQ2ZmFjM2Y4MmU4NmE4OGJkNmExNzc5YzJkNjJjYjNjYzk0M2MxOTliOWMzM2ZkZGI4YjcifQ"
+                        },
+                        {
+                            "resource": "repo://src/cross_section/cross_section.cpp#L42-L88",
+                            "version":
+                                "repo-lines-v1:sha256:d77390f43b4eb5f2abfd3fda21539a811aa64b5cbe93cbcc3f5173d1be842ca2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlmMDViMWI1YmRkNzAzNzBmZDYyNWM0NjgwOThlODQ5NzQwMjg1YzgyMTA4NjU3NjliNzVhMDM0MDZkZjA0Y2MiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJkYjE1NmVlY2Y2ZWQ3Y2ExYWY0NmVjNTRjOWZjMDU0MjlkODJhYjFjYjZiZDE0ZTI1NzlkZTIwMDJmMDMyZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNhNTliMmMyNGY2MTk2ZGJhOGQ5OTMyYzRiZDI5MGIzZWU5Mjc1YjYyNjA4NWU5YjU2MDI3NDdiMjIxNmNlN2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzOWExMjM3YTlmMTU5ZTBmN2U3OGNlNDRiNWE1ODEyMTQ3MDQ2MDY2NWE1YjlkOTIzY2Y3ZjMwYTFmODdhYTMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_7f37ca826f384e4eb34d838b05f6beba",
+                    "statement":
+                        "Layer unorient and reorient move paths between optimization and machine frames; WAAM uses the lower deposition surface by subtracting half the current layer height along the slicing normal, with tests covering horizontal, variable-height, and tilted layers.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/step/layer/layer.cpp#L410-L434",
+                            "version":
+                                "repo-lines-v1:sha256:af5e2208dfc6e22c25f4394cd333ee60595a47dbfc9f06f667fec9f6f7745db2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwNGM3ZGI4ZTRjMjYyMzIxNzRmMTY5NjUyNmRlNTM3ZGYyNzQ0MzYxYTFhYmI2YjUzNDgwNjdkODhjNGIyMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYxYjQyOWU1OGVkMTlmY2RkMmY0YmE3MGM1M2U0M2IzNTVkOGZhZGEyYTdiOTJhMjhiNWQ3ZGI3Y2FlNjg1NWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5NzBjMWZjMjBmY2Q4NzVhZTk1NTAzNjljNDliMDIxYThhOTE1ZjkzMmUyZDZjYWMwYThiZjAzNjA2YTM5MjgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ2YmRkY2E5MDMwNzYwODA4MTM1MDQ1YzQ1Y2QyODBjNTYxMTBjNDViZjE2NjgxNTg0NTgxMWUwNmIwMTJkYjAifQ"
+                        },
+                        {
+                            "resource": "repo://src/step/layer/layer.cpp#L486-L525",
+                            "version":
+                                "repo-lines-v1:sha256:5469f643a18c2c3f3ae3e2e0294724e66e83235e07231cc15661898c1b484dcb:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIxMTM1OGViZmEwMTc3YTIxODMxZjAxNTIwNWFlMjVmNTBlODMyOTZjNzliYjY0OGQzYzYwZjhmN2Q3YzNlMzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdkM2E2M2U3YmEyOTFlN2UyMTk2NjJiNDAwNzRlNmVlNjhiNzcxMjA1OWJmODMxNDczNDNhYTUyNTcwOTM4NzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc0ZDE1NzU4NjMwZWMxZjQ3YjAzZDA4MDI4OWE5ZDhiNGM5NjFiN2QxZjE5OGVlNThlNjAwZTk3ODdmZjFhY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkZTBhMzY4NWY4YjljZTQzZGRlMmEzODE0ZWEyMjRiZmEwMGViMzY0ZWRhZDU4ODRhZWE4OTcyNTM2MWI5OWMifQ"
+                        },
+                        {
+                            "resource": "repo://tests/waam_layer_z_tests.cpp#L90-L132",
+                            "version":
+                                "repo-lines-v1:sha256:59530d1665b5b493f283023d83c49031e36bd6a675bf6eb53ae3cd835ca86e91:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiMTliNTMzYjUyZDAyMDY4MjFhNjc2YjBmMGNhYjE2ZjRhYzNiNjFkYmU4ZjhkNWMxZmJjOTFkNDRjYmQyYmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0MzU5ZmE2NzFhMzdiOWM3MzBjNmVhMjcxZjczYzhjMjBkZTI5OWU0YzhkOThlNjJhOGU5YmI0MjdkMGYzODYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1YTljMGQ2NTI2MjZmMzlmNzI4YTkxNDU5YjFmN2YxZTQzMTFjM2M4NjdmYWVlODZhMWNhMWE2MWI5NTYwMGQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM3OWY3NzIyYjUwN2I1YjRkNzE1NWZjOGM2NjRmM2Q0MjRhZDhiZDUwMjkxYTVhZDU5ZmQ4MWI4Mzk4Y2RmOWQifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_d72526573afc4768be5bf69b3064611b",
+                    "statement":
+                        "Layer compute delegates to islands, and Island compute passes geometry sequentially through Region stages; Regions own Path values whose Paths own shared Segment objects.",
+                    "evidence": [
+                        {
+                            "resource": "repo://include/geometry/path.h#L18-L34",
+                            "version":
+                                "repo-lines-v1:sha256:55cff9114cc0c4be24cca324bfbefd61d0538204764a10139552096881a8cd45:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImViY2YxZWEyMWEyZDlmYzY4OGZkY2NkZTY2NzY0MzE1OGU0MmIwZWU3MTIyMjQ4ZmE0MTk5ODA4YzAyNzQ1M2YiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk0YjU2YTI0YWNjOWE5YjM5YTQ0MzEzN2E5N2IxZDRhNTMyMTlhYWM3Y2Y5Mjk3NDc5MGZjOWMzMzM1ZmVmYzgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmNDY4N2I5NjZlNTdiODk2M2IxYzIwMGJlZjg0YjRkOGUwNzBmMWI3NGJlZmFkODU1MmU4MTRmMzAxNTIwOTAifQ"
+                        },
+                        {
+                            "resource": "repo://src/step/layer/island/island_base.cpp#L171-L183",
+                            "version":
+                                "repo-lines-v1:sha256:6fd5ec1a2123274bd7952ca46310b8f11e4e45660041fd4df03b4a9132badcd2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzMTUyODU0YjdiMTEzY2YzNWY4Yzk0MDg5ZGE2M2M2YzZlY2U1ZDRlZTljYTIyMzVkMmY2MjA1YjI2MDYzZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlNDRlMjYxYzU3MTViZTY2YjQ1NTU0NjlkM2JiMTY0MzRjNDY1NTQwMzc4MzEzOTc5NzRlZjViZWVmZDhmYmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlMTYyNDZlZjQ1MTZlNmNjY2QxODQ3MzQ0MThkYTE5OWRjZTM1ODk5YmNkYTE3ZTNmNmJhZDg0NzM2ZjI5MDUifQ"
+                        },
+                        {
+                            "resource": "repo://src/step/layer/layer.cpp#L151-L158",
+                            "version":
+                                "repo-lines-v1:sha256:fe67b2012a0dcbeb6a1ebd58a369697e27597cb40e0376e04025772d48aed76b:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGFmZDZkNGY0NDJmZTBjMjEzMGU0OTI3ZjE1N2I2NTU2MDY2Y2U3ZGUwZGVlYjIzZDYzZDRjMzg4YzJiYWQxOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTQwNmQzMDFlNzVlNmY5NzkzNGZkOTZlZGNhZmE0YzZhMjBjOWI2ODY0OGRkNjllZDY2NWY4ZjMxMDllNGJhMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTc2YjlmN2MyMWZjYTJiMWIwMWQ2NzZmMDIzNTMzY2U3YTM5ODg0YWI5YmY5MTFlOTFhMzI2MjE5YWM1ZWJlYiJ9"
+                        },
+                        {
+                            "resource": "repo://src/step/layer/regions/region_base.cpp#L67-L120",
+                            "version":
+                                "repo-lines-v1:sha256:d838f920cf54af4ec967f99d1fff05eb3943722265ae56b46d2907cdd4dd3309:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUyMTA0ODFiM2Q0ZTU1YzYzOTUyYmE3YzA0ZTFjNjVjMzQ3OGMzZWY4ZjdmMmM1ZTc5NzBmYjZhN2I1ZDIyNTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiNmY0OWUxODMzNzYxZWUxY2U1OTQ5ZDg0ODZjNmNhNmQ2NWNjMTE1NThhY2EyNmM0ODFhYTUwMjM2OWJkNTIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_f60db09f35094f91a8fed3c2d24e5997",
+                    "statement":
+                        "SegmentBase considers a segment printable only when deposition is active, it is not a TravelSegment, and it lacks configured non-build modifiers.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/geometry/segment_base.cpp#L160-L169",
+                            "version":
+                                "repo-lines-v1:sha256:b9b74ace3775ca35b6fc796f61cdb208e637a251569da23ab7e4ac4a6870bd89:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1Y2U5ODhjN2Y5ZTc1Yzc2YTMwMTUwOTk4NGUxY2E0NTE1Nzk4N2Y2MTM2MzU5YjMwOWIyMWJhNGU4MjU0YTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MWI4ZDc2ODVjODdlZGYyOWNiNThkY2MwYmQ4YzIxNTViNTE3NDJjOTA4NWQ5YTg1ZDQwYzQ3ZjdjNTNkMjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcxYzVlZDk4MDY5MTMxNGFjOTU5NTkwMjJlZWUyNTkwYmU1MTkyMDI4Y2EzMDRkMmIwZTg3YjE1YmQ3NWI4MDMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
+                        },
+                        {
+                            "resource": "repo://src/geometry/segment_base.cpp#L21-L30",
+                            "version":
+                                "repo-lines-v1:sha256:c6440486670019ef63abaf7929272798c1bbab1541ef769bcb4f0fd86c4192f8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0ZjdiNmE5YzY3ZGMwMDY0ODA1OTFiZDI1ZjYzMjIzNmUyNTk1ZDYwM2NhYTJjMzFiN2U5OGJhZmE1NmUxMjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlMDVhMmNhZDY2MTAyOWYyNTE1Njg0N2NiNDgxZDliYjI5NjhkYmFmMjRkZWU2MzM4ZjIxMTRkYTZmNzA0NWQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDFiZTc2MDExZjAwNTMyNmZjZDNmYTZkYzVhZTE4ZTRiM2EwMWQyZjVhOTZmMDMzZjM3MzliODI3NDFkZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVhODA0NGJiZjgwYjMxYTkxYmE1MDVmNWVkY2JjNTE0ZWVjNmI1OWFjZjdhZjc5ODdkMzZjYjM4NTk5OWNlY2MifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_0f660037d9154e1785580ce7ee83eea8",
+                    "statement":
+                        "GlobalLayer may use common layer island-order settings only when methods and effective projected custom anchors agree; conflicts fall back to global settings.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/step/global_layer.cpp#L200-L208",
+                            "version":
+                                "repo-lines-v1:sha256:0ba0c1a2984c1ea81ae30d9faa9ff4d9d84a32be603d5443cac1843f38300202:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGU4ZmI5YzljYjdjOWM4Y2I1YTEzNTY3ZjU0ZTA3ZDFiNTM2MWJhMzVhYjg5YmFjODU2NDc0MTQ1ZWE3N2Y0ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZWMwYjA3MjMwNmFiMDM4MzlkZWVhYTJiZTU1ZjBmN2I5YWQ4NWQyYzkxOWM1OTI5MDkwNDlmYTcyMzJjZjYzOSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOTk5YmRlZmVlYWNhNjM0MGUwMjkwZGM4NmU4ODljODlkNWUxODlhYTViYTQ0YjU4NWIzYjcwNzM0ZjRhNjJkOCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmUzOTUyNjBlYzY4ZjUyNmVmMzQzODU1OGM4ZDk3NDA2MTA4MGYyMDYxOTVkMGZlZmNhODAxNjg5NmNhY2M4NyJ9"
+                        },
+                        {
+                            "resource": "repo://src/step/global_layer.cpp#L33-L100",
+                            "version":
+                                "repo-lines-v1:sha256:8d6dbf4a698056cb8c1da4137287ba5d6aedb9e40d2ae0b43c40a89d3be3ae69:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmMzFhNTgwZWI5NjcwZjY0Zjg4Y2YwN2Q3YjBjMDhlZmYyMWQxNTBiNmIyNWMwMmViYmVkMjZlYzBhYjNmZWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2NjNhZDg0OGVjODdhMWMyNGM1ZDYzYjVmZThkODliYWU3ODA2YWJjZGJkMDczNDk1NWUzOThmNDMzOWYyYzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJkYjQ5MGQ2M2Q1YzUwNDUzZGJiYmNkMGVjYjFkNGVjNDFmZGY5YjIzMDA2NGRmMjkyN2ZhNzY3OTNmMzBhOGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEifQ"
+                        },
+                        {
+                            "resource": "repo://tests/global_layer_tests.cpp#L88-L219",
+                            "version":
+                                "repo-lines-v1:sha256:e5a0439ff34db710c98599180cc328b38a495019f76ad95a8e8988619c00c08d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMyLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI5NWZiMmVjZGFjYjQzMGNjODEwNzk2Njk4NDI1YmRiODY5MWU1YjAwZGYyYTMzMjUwOTE3NGE4NjM2NDFiY2YwIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4NjIwOTQ5OTFjMjhiZTMyMDY4ODM1ZmExOTZhNGQ2YjMxMjQ1NWE0Y2Q5MzNiMzJkYjQ1OTVlOTg3ZDcxOWU2IiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIzOGI0OThhMjgxYzk4ZTkxZGVhMTY1ODEwNDU5ZmQzMDcyNjM0YzljYjcxNjZhMDg2MmFjYzhlOTQ5MTRlNTcwIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJkNDNkYzk0NGFiYmViOTM5M2VmYzE0MDBlYmVhNThhNWQ0Yjg1ZWM0YmZhMDYwZWQ1ZDFkMDJkOGE0N2JjMzA2In0"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_b71e4489fd77478783c65256ddc6cb9b",
+                    "statement":
+                        "Post-order modifiers can add lead-ins and lifts, fit arcs, and split transition segments; sharp-corner modifiers prefer segment-local settings, and tests verify continuity and local override behavior.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/geometry/path_modifier.cpp#L77-L116",
+                            "version":
+                                "repo-lines-v1:sha256:816387ec755537fbd9d2e4a6de55fd865590f64e1756f54ba1ec2001d3ce92f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5YjY4NTZhZmI2NjhiMzNiYWIwZTE3MjhhZWMxOWFhYzE5NzY3MjJjNzQzODRmZjZlYjE0M2M3MGJlZWJiNGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4Yjg4OWJiZjFjZjc4ZDhhODNkYTA2ZjM3YzQ5NGFkYmYyYTU3Y2E4OTk1MWUzMDAyNTMyMzE2MDhjZWQ2YWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1NDFjNDliOGMxNDkwNjdjNGU5ZTdhOWQyMmUyNTVkYTdlN2UwOWQ4NWRiYTYzNDVlZDA0ODAwYjk4OGNlY2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIxNTMxN2ZmN2JiOGQ5ODk4MDZjNWE3NmY3NDUwZjE5YjQ0Zjg4Nzg2MWE3Y2UyZDNjODg5NjdhMjgzNmY3ZmYifQ"
+                        },
+                        {
+                            "resource": "repo://src/step/global_layer.cpp#L130-L181",
+                            "version":
+                                "repo-lines-v1:sha256:3f4bf1215bc0753414460c0aa59de5f2ed99849a1ac0b62b5ff152de4a69c19e:eyJzZWxlY3RlZExpbmVDb3VudCI6NTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwMjlhMmJlZmNkM2U4OTVmZTU2OWYyNGU2NjBlMDNhYWJmMzdkNjM3YjkxMzA3ZjRhNjBkODNlM2VjNmI1MTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0NTE3ZTA4NjUwZDFhOGIyZDFiNWUwNDhjOGVhYTkzNTI0MWZhZTg3NGEyNTJlMDlkZDRlYTgwMzAwMjViZGYifQ"
+                        },
+                        {
+                            "resource": "repo://src/step/layer/regions/region_base.cpp#L205-L261",
+                            "version":
+                                "repo-lines-v1:sha256:85b88058c504f5a6257c9c9ff3972226824af36b45b69fc89e52cab6e81ebda3:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NzUyN2RkZTFkYThkMzhlYzU2ZWU0N2Q3NzFkZTIzN2RhZDE5MzM2Nzk2ZWFlMmFlYzU5N2FkNjM0M2JjMzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNlYjY5Nzk4ZDEyMmY5MmM5OGE3OGRjMmQ1YWUyZTY5NjVhYzViNjJmZDkyNmVhM2IzYWExZjg3ZmNiN2NlYjgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ0YmVhZjBlZDFhNDU1MjczMzVhYzJjM2U1YmZkYTkwNTg5NTRiZDMwOGZkYmQ2YjY3NzMzNTcxZWI5Mjg0YzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzNTc3ZTQ1ZjMyNGVhMGRjNGNlYTMyMTlkYjBmMGQ3ZTc0MjkxMTdlZDFiNjNkMjNlMjVmMzhmMzgwODg0OTIifQ"
+                        },
+                        {
+                            "resource": "repo://tests/path_modifier_tests.cpp#L30-L93",
+                            "version":
+                                "repo-lines-v1:sha256:af7420257bfe791c4718afc615df9e54c1f28f78613c97264d0946e7a557cb63:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNmZGUyNDM3NmE5MDllODhkZGE4OGM3MzEyYjMxMjk0MmNkZDMyNjU4NGE4NDJhYTkyZjEwNzgwNDBmZjBkYjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0M2RjOTQ0YWJiZWI5MzkzZWZjMTQwMGViZWE1OGE1ZDRiODVlYzRiZmEwNjBlZDVkMWQwMmQ4YTQ3YmMzMDYifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_aa48664794204b738bae18b41b0dee7d",
+                    "statement":
+                        "Optimizers filter empty or degenerate items but must consume zero-distance structurally valid items so iterative ordering loops continue to make progress.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/optimizer_empty_input_tests.cpp#L139-L196",
+                            "version":
+                                "repo-lines-v1:sha256:c0ad3731aa94670abb8919c14d9b23652d64e359a6aa8c8cc07e2b0c40089fb0:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhMDVjY2IwZTMwYTVkMzNhNzU2N2I2NDU0ODZjMmFmZTIxNWU1NDZlY2ExMTNmZWYzZDEyYmQxNDNhYjFiNDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFjZmEzYTViNDc2ZTRjNzQ4NTFhNDA5ZWNiNjhkM2FhZjgwNTIzY2IxZDA4NTY1ODdjOTQwZmRlNjIwOGNmZjcifQ"
+                        }
+                    ]
+                }
+            ],
+        "verification": {
+            "by": "openwiki/0.7.0",
+            "at": "2026-10-06T20:25:27.555Z"
+        }
+    }

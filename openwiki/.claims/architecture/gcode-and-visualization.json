@@ -1,0 +1,188 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:19ab4b21cfb97aa3a8b918f4597d5e740db000bc925b917c7a051cb7c2cea264",
+    "claims": [
+        {
+            "id": "claim_255f29787e6b48509e5624f336d9e33a",
+            "statement":
+                "GcodeMeta is the cross-stage dialect contract for syntax identity, comment delimiters, physical units, filename suffix, travel support, and layer delimiters.",
+            "evidence": [
+                {
+                    "resource": "repo://include/gcode/gcode_meta.h#L29-L56",
+                    "version":
+                        "repo-lines-v1:sha256:ab1a520f278e5e14294e5cab968d1f142efd95ec005c6fae813152096b26f404:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYzZjI5OTBlZDhjNjljYWUxNDVkMDNhMGI3YzlkMjFkZmI5M2M5ODM4MDJjYTJkMTY0ZDAwNGE2MzA3ZmMwNDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0OWRhYWU1ODNiMTFmMjcxZmVmNzQzZDhkZTEyZTAwYjQ3NGM2Y2U1ZjgyZGNhMWFlOTMwY2U2ZTAzODUxMGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUxNTZmNTY2ZTUyNmM5NzM0MzU0MTVhODc3YzNhOThjOTBmZjlmOWYwMjIwNjM0ZDhmNjg2OTlkMTI3MjI2ZTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNlZDdkNmJjNjk4YzIwMTMxODMzOGMxZmUzOTg0NTdiNDBhNWE4ZTQ5MDNlYTc4MTYyMmE2ZjVmNzJkMzY2YjUifQ"
+                },
+                {
+                    "resource": "repo://include/gcode/gcode_meta.h#L8-L27",
+                    "version":
+                        "repo-lines-v1:sha256:085c762295308159f5ddbd83e0b0f0bff4f9c5f1f30ed1429d85b9f101c5a5f6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMzY4ZGYxMTBiNWFlZTNhMTYyMWY1ZWI2YjNkYTEwYzhmZTg5MjNiYjIxNzgwMWE4NGMyYzcwNThiMmRlNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiNzVjYTNjYTJhZjllZjI0NzNmMGJiMGUwYjJkNjBlOWI0NzlhNGZlYWFiZjIwY2Y4NGQ4YzE2NWRmYTg0MDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3OWZjZTJkMTBlY2QzNWIyZmFkYTczZmQ5MDI5MjhkNDgyM2E0OTJkMGY2Y2QxZWQ4MTRiZmQ1YjRkY2NhNTUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_6d9a67a793b04475b20c85d7745c7c79",
+            "statement":
+                "GCodeLoader reads original and uppercase file lines, chooses a parser from the syntax header with a common Marlin fallback, then parses header, footer, and motion commands.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L287-L324",
+                    "version":
+                        "repo-lines-v1:sha256:f44b4eed97287c4e563d036fa7c83e9735d8e65446c62a98288a9ef0c13b6ad5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNDE5YTRhNGNjMTkzY2M3Y2FmNDUyM2Y4MjBiNzQ3MGZiZDZiY2Q0NjQxZGJmZGZlYjI2MTc2MGE5MjQ5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlNmU5YjI1ZDVhZTZkZGFmMWZmNDNlMDMyMzUxYjFhOWNkMzgzMWVjMjkyMTVhZWNkYWM0ZWEyYzczM2YyNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1MTg4NGY5MTMyYTM0NGZlMWNiMDI2ODljZjExYTBhYTk3ZjYxM2U3NmEwY2Q0MzI0YjNlYjY2YzAzZjBhMDgifQ"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L591-L739",
+                    "version":
+                        "repo-lines-v1:sha256:1ab4e5ac90b87c1bf07038c6a5124f3ec65a5cfbf3145a7bf85157430b0c4518:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyZDc2Yjc2ODIwMWY3YTk5NzMyZTI3NzAwMTY4MjE2NWI2ZmQ2NDBiMTkwNzI4Y2U0YjM5NDEzYzZmZTc1NDQ0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI0YzJiNzY3NTMwMjhiMjRmOTc5YWQ0YmE1ODUzZTA4Y2UzZmM0YzM1M2E5NWQ1OTZkZDRiNDk1OGQ4NmUwNjI2IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwMWQ5MTRlN2M4OWI1ZWU3MmJlYTNkY2U2YmI4OGI4ZDExMjlhYjBiZWQzOTNiNjc4ODdjMjdhMjc1MzJiYzBmIn0"
+                }
+            ]
+        },
+        {
+            "id": "claim_4cff864df4a949b4aa276b33e0d1d33c",
+            "statement":
+                "When file alteration is allowed, CommonParser enforces per-layer time policy through clamped feed-rate changes or inserted dwell time, records modifications, and GCodeLoader replaces the temporary file with the adjusted lines and calculated header.",
+            "evidence": [
+                {
+                    "resource": "repo://src/gcode/parsers/common_parser.cpp#L2196-L2231",
+                    "version":
+                        "repo-lines-v1:sha256:844c46386e8d0a11c5e33928fa70db8164439883af6ec803fb8ad7b1b1f7b065:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxNzhkZTEzM2E4NmUwNzE3MjM0YTdmMzVjNGI0ZTA2OGZlOWY5YzdkMDVhMGI5ZjFmYjQ2OTI3MDhlMDA4YjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlYmNlMGJmZWE0NDc4YmU2NWNiZjdlMGU0M2E5OTU4ZWE4NjAwNmU5NzE0N2U0MjdiZjFlZTNhNDQyZmFjOTMifQ"
+                },
+                {
+                    "resource": "repo://src/gcode/parsers/common_parser.cpp#L772-L840",
+                    "version":
+                        "repo-lines-v1:sha256:fa822143246ded6f4f41c987b82f80f1852e1dc89c15f49f3cb10c39602ea9e5:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVkZDUxMDAzMzYyZmMwMDliYzgwZDliOTEwZjFjNTMyOTNmNzVjMTY0YTkyNmJmMDA0ZjgwMDBhZGM5OTE2ZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0OGQ1NTNhZjQ4ZTYyMWRhODg1MDYzNTUyNjE0ZGIxNWU4Yzc1MTkxY2EyZWM3OGNkOTFmMWQ3NzYyNmIyZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYzNjE1NzgwNGM0NDhhYzBmZDg1M2ZjMzNhZDc1NGNmMmIyMDQ1ZmU3YTZjM2M1NjBlOTUwOGY5OTk1ZmE0ZmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFiZjc5ZTkxNWU2MGQyZDk0NGM1YWU4NzU4YTE4MGJmNGZiMjRkMjZhYWQyM2RkYzFmYjAxZWVjODZhNGFlMWUifQ"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L535-L573",
+                    "version":
+                        "repo-lines-v1:sha256:fcd255a272000f0e9dbf588e5c07dedcd5c55644c9ec4276ade4e6c35e411c04:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE3ODgyZjQzZmZiMjI0ZGViMTc2NzA1ZmQ5NTM4ZGE3YmI2MGNlMTJjNzMwYzFhN2MzOGE1NTQxYTczYzRiMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYTJhNzA3NGY2YjIxZWRlZDQ3YTY4ZGEwODIxNDRkZDcxM2NkNjBhZmQ4ZTFkMTVkYjdhOGRiYjhkNDhhNDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQzZDlkN2E1MmM3MjNhYWJjMDcwNWU3Mjk2ZTJjOTAwN2JlY2NkMjMyODE3MTMzZjg4M2Y0YWFiMmFiYmNhNzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljYWQxMzczOTAwYzBmZjY0MTAwNWE0ZGQwODNjMGRkZGYzMDljMzY3MTM2MzZiMDI1MGI4Y2VhNTE5ZWE1MzcifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_b0a2e7344a564857906a6839ca41ddee",
+            "statement":
+                "GCodeLoader produces a layered shared-pointer segment graph with region-derived color and dimensions, source line and layer linkage, motion metadata, offsets, and cancellation checks, then emits visualization and formatted text separately.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L427-L533",
+                    "version":
+                        "repo-lines-v1:sha256:3edb833bc0d0c3cb7742235f76af2f3b9310efbe85d3f07fc5b1cab7934d84ee:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0NjNhZjRjOTk4YTFkMGE0OTU5YjViM2Q4YjQ4NjU0ODljNjMyNmMxZjVjMDA0OWM5NjQzMDVlNTczNDM5MjNiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI3ODRlZDBiNzBiNjBmMTJkNGQyMWNmZTJhNzM0NTg1NjVlNzM3NTUxYzYzNjM4YmQ2YzBhOGY3ZTgwZjM2MWVmIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1ZmQ2ZjQ5ODRiMzdhNjk1OGUwYzNkYTUwMThkMTFkNDU4MTQ0MjdiYjhlMzBiODc2NjA1YTYyZmQzZDE5YWY5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlYjI0ZjQ0YjFiYjU5NWZkNmQwMWNiNzU2ZjU4YzI5YmRkNTUyMTEyMzM1NDMxM2E4Zjg3ODIxYWMyNDBlMTllIn0"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L859-L929",
+                    "version":
+                        "repo-lines-v1:sha256:49abb425b2368ba282313e6dd0706937abe9514713494fcc242214eaa811beb6:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNmNzViYTJhMjRkNWJlOWEyODM2NjE2OTk0YjUyZjA4NGQ2Mjk3YzVjOTJjMDdhMWE4MDQzNDkyODYwOTUxNjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NTgxMWYyNjNhM2Q3MWMzNjU0MDZiMmVkMmZjYWNmMmM2ZmY3Yjc0MmIzMjM2MzBkNjEyMzkyYjFjMjBhZWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ0Yzg5NzNjYjJmOWJjMGE5NzY1Y2M4ZjIzZTYxMzQ3Yjg3OTQzMjQzNGJlNWE5MmZkZjQ2Nzk5Yzc4MWIwNTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY5ZWIzMGZjYzNjNmRkMjhlNjJjZWJjOWJmNzcxODdiZGU5ZWQyMTAzNWQ5ZTk1MjY1NGZjZmQ4OGMxNTY0MzAifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_9a15634b0b464870981ee2e36f5e9d9e",
+            "statement":
+                "The GUI routes parsed visualization, text, timing, export metadata, and status to separate consumers, while generated slices are alterable and manually imported files are loaded read-only.",
+            "evidence": [
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L608-L611",
+                    "version":
+                        "repo-lines-v1:sha256:23f8cb1d473ba1e71c640cab8d26a3c1248cc007c429d4d5c4875238046a80f8:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZDFhNWY5ZDc4MTI5NTJhYmFjZGQzYTUzZjg2MjJiNTk1YWE0YTU1OWU5ZDhkYTNjZjc1NjEyMzA0YzlkOWI4ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZGZhYzRlNDM2MzBhYmY2OGMzYTRhNzU3M2ZkNGM0MzAwOGJhNzk4ZGQ3NmMzNzU5ZWVlZjUzZTZjZmY4ZDJlNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTFiZDA4MDQ0OGUzNTg0YTk4MzY5ZDZjMTkzYmViNTEzZWQ1OGQxYzgxNmRiYTg5Y2RmZWIyZDk2YWNiZGZjNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWUxMjUyMTljMjViMzBjNTJlYWI5NTA3MDFmZDg5MDYxODUyZDE2MGYxYjJiOWIzY2U3YWM0MDQyNmNiZDBiOCJ9"
+                },
+                {
+                    "resource": "repo://src/windows/main_window.cpp#L1426-L1478",
+                    "version":
+                        "repo-lines-v1:sha256:11754147f0dd99d9e3847a3c77a12b9ac369111af42d7f64c3e1adc0772e2b0f:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhYWIwMDJhNmViOWFiMmE0YmFlMDhmNmQ5YzEzZDU3MmU5ZjYyMjk1OThmODMzZmZlODlhN2E4NzllYTQxMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDY3YTk1ZWYxMDhlMDgyZWVkNGIzMWI3MjZmNTliNGQ4MzRkNmNmODEwNmRmNjY2MWE4MTZmODIwMTRiNGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0ZWIzOTU2NDdiZmQ3ZGEwNzNlZTllMDZmNjY4MDYwZDhmOTc3NjYxMjQ1ZTA2NTY5MzljOWMyZTQzNDRmN2YifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_5695be0f5e4543ff9e90cfba8470b709",
+            "statement":
+                "GCodeObject stores many parsed segments in shared OpenGL buffers, selects lightweight line rendering when true-width geometry exceeds the configured threshold, and retains metadata for layer/segment filtering and source-line selection.",
+            "evidence": [
+                {
+                    "resource": "repo://include/graphics/objects/gcode_object.h#L23-L51",
+                    "version":
+                        "repo-lines-v1:sha256:9f7c39e5fc4acf75021affc443796e07fbf49ffea36ffee0a5582506181bd740:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYzZDEwMzZlN2QzMDJjYjMzYWE5MTRkMzE4ZWZhZTA5MDc5OGMwY2IwZDg4MmE0Njg5MjQ1OWM0NGQwYjdlNWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRiZGJiNzBiNjVjODc0YjJmYTg3YjM2MGEzZWQxZDdmYTg4NjgwYWU2ZDIyYzM2ZjdlNjQ0MTA5NTE4MzFkM2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0NDRkNWQwNTJlODQ4Y2RkMzZmNzE2YzI2ZTI5ZTlmMzA3MTdhY2RjNjVkYjc3NjRmYTFkYTFkMzBhZjU4NzkifQ"
+                },
+                {
+                    "resource": "repo://include/graphics/objects/gcode_object.h#L53-L109",
+                    "version":
+                        "repo-lines-v1:sha256:aa5c39d9c6fc35a7c77507d7d5460e0c171107523b0fd98971aa6e62e5967691:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJkNzliN2NiNGI4ZWQ4MDU1ZWFjNGIzMDRkMWFjODM0MWJlMDA5ZTBhZTM4ODk2YWI5MGFjZGU1NWIyNWZiM2UiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBmOTE3OGJjMjYzNzAwYzE5NjAyZGM4ZjIxZTJhNDQzZDM4NWE2YjE4NTNkY2QyYTNlMjQwNzFmZDc3M2YzZTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYTQ1N2NjZGVkNGM3MWQ1NzNiMmZlYjU3ZTQ3NGNjNTBjZmM3YzFmMzk3OWFlMGEyMzMzMTFmNzM1NjYyZDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE0NWJhZTE5N2RhZTNmNGU1ODVkZjdmM2Y0YzhkMGU1NTI1MWYyYzM3YzU4YzJmMjM0M2RmNjFiZjc2YTE4MmQifQ"
+                },
+                {
+                    "resource": "repo://src/graphics/objects/gcode_object.cpp#L153-L205",
+                    "version":
+                        "repo-lines-v1:sha256:8d2a90a87ba469ad10d8766add73b1e28cd7761144bc6238cc2686569fe44e19:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiNWU1NDBjZTI3MmM5Mzk2MDhmNjExOTYyY2U3ZGMwYzdhYmM2MmI2NjhjNTI3ZTEyMzI1NzExNTEyMmE4NWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYWI4ODRjZTQ2Y2Q5YWI0OTliZmI0OGMzMjM5Nzc4MTYwODg4YmZiMDUxYjViNGFmOTdkNGUxMjRjOTczZmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI2MjM2YjBlOTNlMDg5ZjI0MTExYzQ2NzM3YzdjMDM3NDU2YjdmYTA1MDlmZmM5ZjFhMzk5Mzk0NDYyYjY2YWIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_27eadb0e27d646719abcf7761eca9db9",
+            "statement":
+                "GcodeExport holds temporary-file metadata and parsed visualization independently, disables as-printed export until segment data arrives, and can emit project, auxiliary, STL, ordinary G-code, or syntax-specific companion outputs.",
+            "evidence": [
+                {
+                    "resource": "repo://src/windows/gcode_export.cpp#L116-L157",
+                    "version":
+                        "repo-lines-v1:sha256:73eb7695aa0ae6cc3bdef9cdccbbf01c114195db3e8aab553cd8c165a2287801:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQzYjgzODQ5NzhmOWMyOWMwOGVjNDc4NTNkNzY5Y2I2YjFhYzdlZTkzNjIzZjlhMzAxMDE1ZGNkMWViMzViZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRjMzE1NTU2MDgwNjViMzk4MmMxOTM2NTk3N2ZjNDJjYzYwMjhlYTI1MWRhMDZhMTYzODIwY2U0MDYzODdjZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlkNGZkODgyNjc3NTQ3NGIxYjQ4MjIwZTdlNjcxODUyNTA5Nzg0ODYzYjg2MmUyMGYyOWQwZTkyOGRhZmFkMzkifQ"
+                },
+                {
+                    "resource": "repo://src/windows/gcode_export.cpp#L159-L217",
+                    "version":
+                        "repo-lines-v1:sha256:e10a9cb5084e9f9490c3108dd55a264dd61dbc86f4f05e686e502816f6f2082c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxZTIyZWM1ZGEzNGFhNWIxOTFjZjUwYjdlYmMzMGYyNmM4YzNiZjhkOTg1ZWVjZDFmOTQ1ZTcwMTg0ZDQ0YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4ZGMxMzUxYzJhNzVmOTkyY2Q0NjliNmRmYTkxMDRlOTc2MDVlNzIxYWM0MmJiNmY2MzBmOGI5YzA3NWI2ODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhN2QyYmJhODg5MDAwZjExOWVlMDAyMWE4YjgyOWM3MGViN2YwNmJiNGU4NDY1MDEyYjMxODM0NWM1ODM4MDgifQ"
+                },
+                {
+                    "resource": "repo://src/windows/gcode_export.cpp#L252-L417",
+                    "version":
+                        "repo-lines-v1:sha256:063edc624d2e2dc70a7cfe470ab6bc6b3755a75d567cd4fcbc0858217751a9c5:eyJzZWxlY3RlZExpbmVDb3VudCI6MTY2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIyNjA4MTIxNjljOGE0YTc0NGRiMjgwOTczOTE5MTk4NTc4YmYzZDE4ODIxMWUzY2M1NmNhYzMzZDliMWQyMjI0IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI3ZTk0ZjE0MGY4YzUzMTc3MjdiODllOTAyZGNkMjI1ODJkNjZkMGFjMzc0Y2Y1YjU1OWJkOThjNDEzMzQxZTU4IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIxODg4MTExYTk5MjI3OTVjYTUwMjMyNTU3MDMxMWQzN2I2NTQ5ZWZmMDY4NGZiMzEzMzVmMDAzYWIzYjkzNmUzIn0"
+                }
+            ]
+        },
+        {
+            "id": "claim_2ea6c3fb8493467caacf89ab10efb56a",
+            "statement":
+                "AsPrintedModelExporter converts parsed segments to true-width bead triangles or centerline tubes, can normalize to local origin, filters degenerate, travel, support, and non-depositing moves according to options, and writes binary or ASCII STL.",
+            "evidence": [
+                {
+                    "resource": "repo://include/gcode/as_printed_model_exporter.h#L13-L62",
+                    "version":
+                        "repo-lines-v1:sha256:166cfd747717bbdb4e9cbe9fe24ca35d0f165fdf57f565d49f37fba6e99c38ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhNjIwZGJhMzcxNTVlMWNhY2E2MTU0M2E5ZmRkNTllMmExYTYyMmE5MjZlM2Q1MWJjNzk1MTI0MGZlZTc4YTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFhMWQxYTYzMzkwMjI5Yzc5ODM0N2U4M2EwNDA1NDQxYzk0MDAwMzUyODRhZDE2OGMxYmY2Y2RmMWQ3MGEzNzAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjMzY0YmNiODgxMGU2ZGI1N2NjNTM4YjE5MzNmMmQ3ZjQ3ZTE0MTg3NzQ0NWRmY2ZhODEzOWRiYjdiN2Q2NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                },
+                {
+                    "resource": "repo://src/gcode/as_printed_model_exporter.cpp#L396-L474",
+                    "version":
+                        "repo-lines-v1:sha256:ebd6b1464a9bb6186054844621555e1e7623da4b94b58aff2d262b2624caa665:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NTYxMzA5MzU4MzdiMGZkOTZmZTcxOTQ2Y2E5ZDQxOGRiNjc2Y2I2MmZhNGE5MWI5YjlmY2Y2OTdlYzgwNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_431e6dd349a745d9aabbbf9b63b5fc2d",
+            "statement":
+                "G-code cancellation propagates to both loader and parser, parser-domain exceptions emit a loader error, while an unreadable file currently returns after a debug message without emitting that error signal.",
+            "evidence": [
+                {
+                    "resource": "repo://src/gcode/parsers/common_parser.cpp#L1080-L1086",
+                    "version":
+                        "repo-lines-v1:sha256:670713babaf339bfa1108612dc33733b9c962bc7bcc580c929808fdbe02f832b:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDBkZDJhMWMxZjhhMDJhYmZmODYxYTk3YzY3ZDc0NGE2N2VkNWE0MzAzNWQ2MWMxN2JlNjFjYWY0MWEzMDFhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmYyNmRmZmFhNDQzYmYwNzcwMDU2MzQ5YzZkZDNlODNjMzUzOTE3YjAzN2UzOWRmMDkxOTJiNGVjMzViZmYyNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNmY5YzYyNjcxZTdlNzA0MTkyZTVlOTM3N2ZjNjE5MWM2ZTZjYTgwMWY3MTdlYmZmNTRiNGEzYzQzYjUyNzFkNyJ9"
+                },
+                {
+                    "resource": "repo://src/gcode/parsers/common_parser.cpp#L859-L866",
+                    "version":
+                        "repo-lines-v1:sha256:413f28d9a6852c8ccdfcf735b7effce42a77d6ff11a6bef2c9d3cc1e8623a4fb:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGNmOWU4OWFjYWU3YmJjYzRhODIzYTUwYjBiZWU2ODQ3MjA3YTRjOWJiNGUzZmZlYTBhMmRiMDQyODg3MDllMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTIzMTA0NTY4OGNiYjVlMmQ4YmI5NjQ1Y2Q0NDBlNGZkYWZkNTAwYjAzYzBmZmRmYjEwZmU4NTEyYmIwNTI2NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDcxNGY0NWNjMzVlZGJkN2EwMzFjMzk4OTVmMmQ0NDk3MjAxYmJlMzRkY2NkODNiZmFiYWE5NDk5MTJlOGViYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzIwZTQ2ODRhMGM4NmQyNWJiMWMwNDg4ODczYWM4NDc4MmFiMzc5NjZmM2M5YmZiZWEzOWMyM2JlNDAzY2E2OSJ9"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L287-L305",
+                    "version":
+                        "repo-lines-v1:sha256:956fe5b1a33c86aac24fe57f3910196451a7ad307259722503e3b88afc5256bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNDE5YTRhNGNjMTkzY2M3Y2FmNDUyM2Y4MjBiNzQ3MGZiZDZiY2Q0NjQxZGJmZGZlYjI2MTc2MGE5MjQ5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlNmU5YjI1ZDVhZTZkZGFmMWZmNDNlMDMyMzUxYjFhOWNkMzgzMWVjMjkyMTVhZWNkYWM0ZWEyYzczM2YyNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjZTY5MTBjYThiOTA4NDE1ZTQ2NTA3YTczYzc3YmI0NDFhMzk1ZDNkM2MxNDAzNzU1YzYwNTk1ZTRlNmI5NTIifQ"
+                },
+                {
+                    "resource": "repo://src/threading/gcode_loader.cpp#L573-L584",
+                    "version":
+                        "repo-lines-v1:sha256:e7daf8095458731accc2f349b5700ac6828ff32fc29e191183ce9b5547f77469:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYTJhNzA3NGY2YjIxZWRlZDQ3YTY4ZGEwODIxNDRkZDcxM2NkNjBhZmQ4ZTFkMTVkYjdhOGRiYjhkNDhhNDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBiZmZkOGM1ZTQ5MmMxMzljMDc4ZTJkMjRiMjQ3YmIzYTgyODUzZGE3OWI0ZTdlN2JlOTU4OGM2MDlmZTA1Y2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2OTdhMWRlZTBlMWIyZDYxOTg3MWEwM2MyN2Y5MDJkZjNmMDYyNTYxNTU4YzhiZjM1NjhhNDFjZDNkZWE0ODgifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.7.0",
+        "at": "2026-10-06T20:25:27.555Z"
+    }
+}

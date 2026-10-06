@@ -1,0 +1,297 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:8dbd205bbe391073a1583741a336f4617298ea0f6b8cea9be9bf15536597998e",
+    "claims": [
+        {
+            "id": "claim_7b701fdfc5a04e9d9faf8b7827a268fc",
+            "statement":
+                "Cylindrical slicing generates CylindricalLayer paths directly during preprocessing, orders them during postprocessing, and leaves CylindricalLayer::compute() as a no-op instead of using the conventional StepThread compute queue.",
+            "evidence": [
+                {
+                    "resource": "repo://include/threading/slicers/cylindrical_slicer.h#L21-L47",
+                    "version":
+                        "repo-lines-v1:sha256:f518187f3f02bcc6ea7c339c4eea689a2e4e17e268866d33a028ead0fe8f8c1c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwYTMyNTFlNzQ2NTBjNzRjYzEwNTFkZmE5OTM0YTEyZGQ1ODM2Zjg3MDQ1ZGRhYzljMmRiY2E5YTE1NjdhNzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjMxOTUyYmY1MDhmNGQwYTBjMGM3ZWI3MzcyMDliZDYzMDE4M2I4NWVhZTc0OTlhODdlOTZkOGVlMDRiODNmMDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkMzk1ODA4NzdiN2MyMjc4MzBmOTFiZWM5NGRlMGRlNjYzNDhhNTc1MWY2MTgyMTMxNjk3ODAzYmNhMDA3NGEifQ"
+                },
+                {
+                    "resource": "repo://src/step/layer/cylindrical_layer.cpp#L190-L227",
+                    "version":
+                        "repo-lines-v1:sha256:445dc90f3d4344c6664661a7aacefc96b1121b69446fdcfe2af428a5f080597c:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRjYzcxOWEzYmY4YWI1NmEwY2VkMzNlZjJiNWVhNTNkNzk0MTU5YzJiNDNmOTk3OTllZmExZjgxNjIyOTE4MWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjEzNjkwYTM2MDAwNjFlODc3ZWE4Y2ZiNDZkOTlmMDljNGZlOTMzOTg1NWM0ZDczOTY3MjZkODY2YmI0ZGViOTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiNjIxYTQyN2M5ZGJjOWNmZTA2NzUyMWFmNjFhNTAxOGU1MWQ5ZjA3MjhhOWEyY2ViMzExYmFkODc5MWJkNzEifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L423-L457",
+                    "version":
+                        "repo-lines-v1:sha256:dc9ab86877aaa832c8cfbbbc55d26208ea86356cd6bdb18cafc7c51bd13de7e8:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NWI4YTVlNTE2ZjNkNjM5MzMwYWJlOTQ1YzcxZWFiYTgyM2I4Yzg5ZTIzNjk0OWJlNjY1ODdiZTE2MmI4MmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjMTdhNjM0ZjMwNjU3YmU2MTk2ZDYzNmRkNjQ4NjMwZDI5YzFlNjc5N2M5NjQ3ZTA5YmYwYjk5ODAxOTY0NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgxMTU0MmU2NTZkMGJmMDAxMDM1OGVkMDAyZjU1ZGM2ODgzYWRjOTNjOGRmYjgwZDU2M2VlN2Y5NmVkZjUzODIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_2df892ede5664445826b3d8456f02950",
+            "statement":
+                "The current application permits cylindrical slicing only for Arc Specialties, and CylindricalSlicer explicitly constructs ArcSpecialtiesWriter.",
+            "evidence": [
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L47-L49",
+                    "version":
+                        "repo-lines-v1:sha256:27e99a002a9eecf087184d8e794deb434cf75f20d8065f2352af700ac0c2a95d:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjZhMGUxZTVmNTlmNDJmMjk1ODA5ZGQ3Yjk2N2U2NGQ5NmQxMWZhY2E1MWM5NTI3MWNmN2Q2MDMyMjAyZGJmZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODdlMmIzMGNmYmY2MTEyZTE4MGQzMzE2MzY4ODk3ODFkOGYxYTEzNmI4NGZlNGU5YmI3NTljN2VlODA2NmIyYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWI0NzkzYTE0ZjVjOTAyOGEyYmY5NzkxNjhiNzNhOWJkN2ViN2Y2NzY1MzI5NzdlMTZiN2ZhNmU4OGM4YTAxZCJ9"
+                },
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L575-L583",
+                    "version":
+                        "repo-lines-v1:sha256:c913d335cf54ad190af859e7157e0cc17e81ca3621d3b66a4f0abda47ce30ed0:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiN2EzNzljNTFiYThiNDNjNmJiYmI2ZWM5NGM1NjZhMjg0NTQ5YjYyMzhiM2I1OGRhZDRkZDIyNmEzNmE4MDIxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMGQ2YjhhYTY0NGEzNDA0MmYzMmUyM2Y4MWI2ZWE1ZTMyOWNkZTk5ZTIwNGM4YzFhNTM4ZDFjNGM5Y2IxNjJmZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNzIxZmYzYzBmY2UzYzc0ODNlM2FkN2U0YmJkMTMyNzQ5Njg3MzBlYTZmNWE0ZTZhNjMxMTAxMmYxNWU5MWQzZiJ9"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L418-L421",
+                    "version":
+                        "repo-lines-v1:sha256:9d520c565cc3079e3012dd83100424e6a6a25dc17e59a09e6c661076ccaf6673:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWQ4MDk0NGY3MzUwMDVhOWI1Y2QzNWYzMDY1MGI1ZjA4N2FkYzY1ZDg2NTU4ZjdiMTk3MTc3OTBhZmVjOWZmNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlhYmEyOTJkYTkwZmU1ZTM2NjljOWExMDY4NTY4NzQ2ODZlMzE2OWNjMWI0ZDYzNzYyOWE2NDE1MGU3MWJkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNTY1YTQwM2Q4MTk4ZDVkNWEzYTlmNzM4MzhkZjhlYzY1NTBkMDA2MjZhY2Q1OTZiYzQ2NGM5NWQ1NGYwZThmYiJ9"
+                }
+            ]
+        },
+        {
+            "id": "claim_3871317f53204d50bbd9c22ef7605782",
+            "statement":
+                "Cylindrical preprocessing applies global adjustments, overlays each part's local settings, copies supported build meshes, and clips the copies with clipping meshes before path generation.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L459-L527",
+                    "version":
+                        "repo-lines-v1:sha256:34cbe8869b81209b9ae5dbf70d2e4fa3463815e6ec18e7fa978d952aeff5b036:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ0ZjVkZjMzNzM3YTU3NzA5YzkyNDQ2Yjg5ODliMjAwYmYxMDIyOGE4ZDIyMDk2OWMwOGQ5NThlZmQ0YjUzYTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA5ZjE3NmI5NWVhOTQ4ZDc4MmVmNTE5Y2FlNzNlZDIyYjU0MTQyNzU3ZTJlOTA3OWNiMzk3NDlhNjA1YjM1MWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5Mjg0NzBiZGM4ZTU4OTJlOThkNjIxODg3OTc1NWQ0MWNlZGUyMjk1YzhmZGEyZTNlYTAzMGNmODcwNWYzMjEifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L903-L915",
+                    "version":
+                        "repo-lines-v1:sha256:d3deb7bb4999fddee06b38640ceaf5bdfd9a111cd3375bd81e5bc0466ac0d318:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZTk5Y2VkNDk0ODMyNGZjMGJlMjg2NmJhMDRmODc1Y2Q4MmNhYTUzYWZkOThjYjczZmNkOTgzN2QzZTAyYjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE4ZTc4ZTJhYjkzZWZkYTExMzA5N2IxYTAyNGI4YTRmMGE4YTdiZmZlMWRmNzgyMWM3YzJjNDUxZjE4MzczYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2ODhiNWIzNjVhZjQ3ZTU3YTk2YmY4YWU0NmQ2YWI4YmE3YTdjNTU5MzRlNmZlNWQyNDMwZGY1MmExYTdjYzQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_02778a1b951e43688d2a7e0d191771ec",
+            "statement":
+                "The cylinder axis defaults to the root mesh centroid unless custom X/Y is selected, and a nonpositive cylinder height uses the mesh top while a positive height is capped at it.",
+            "evidence": [
+                {
+                    "resource": "repo://resources/settings/020_profile_slicing.yaml#L55-L142",
+                    "version":
+                        "repo-lines-v1:sha256:7a9f5afb157aaee090924f7c2a341176c5e37ae89aaa0cc4e59a1044d7a7e16e:eyJzZWxlY3RlZExpbmVDb3VudCI6ODgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhiODExMDk1NWM2NDZkMjAxZTkxZWEwYTUxNWI0ZDE0NWY0NWZlMTU4Y2Q2NzM3ZWU2NzgzYTdlYmY2YmI2NDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmYTcwZWNhZGU1ZTI4NTFmZWNlNTI1MTc3MjZiMzdkYTM5YjlmZWQxY2RhMmZjYjBhMjZlOTU0YWViMmY4ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM5Mjk4MDk2MWMwMzY5NDRmOTBhZWIxZWY2Y2VmOWZmMGVhYTFmNzY3ODBhYTEzYzQxNjUxZTkxZjVlMjVlNmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjExM2Q2ZmE3Y2FlM2VlYjZiNzhhMTk0MmI0MTNlNDNmYmZlZjc0ZDlmNjBjNDE5MTFiN2IwY2MzMWYzZWY0NzYifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L408-L415",
+                    "version":
+                        "repo-lines-v1:sha256:12dac22452bf885e65cb42ae5c438fc7651295868e6a33db6a717604d3f06978:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZmQxOTYzMjhiZTQyY2RjMzBiYzA4MmUzNjAyOTZlNmRiZGFhMjIwZDM2ODI5NmUzYWFkN2FjY2RiMmYxNjlkMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTkzYTZhNTgyZDE0YjA5ZDFmYzIyMTdhYzI5NTI3ZjY0Y2Y0NmNiMzMxNWMzZGVhNzUyOTI1MmI3NjFjZWQ3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTZiZjNkMjJmOWJiZmNlZDg0YjcyMmY3NzIwY2Q4ZTcyNTFiM2UwNTBiYTE4Y2NhNDQzMTk1YTRkZjViMzFkYiJ9"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L917-L944",
+                    "version":
+                        "repo-lines-v1:sha256:1fbcba9c99f0398c53a3d597c4b7fd380a66a73862edad15284b90e366b095d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzNWMyZTFhNTYwZWVlN2Y1MDE3M2FjZGYxZTVhMTVhYWE0ZDZhZTM1YWYwNGFjMDk4MjQ2YTYwYzhkNTRhOTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVlNDRlMjYxYzU3MTViZTY2YjQ1NTU0NjlkM2JiMTY0MzRjNDY1NTQwMzc4MzEzOTc5NzRlZjViZWVmZDhmYmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkMWYxMGUyYzU4MWZjYzMyN2NiYjQ2MWMyZTU4MTY4Yjc1MjlhMzVlN2ZkYTlmZmRiNTg3YzIwOTU3M2I0NjkifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_c31dc83fd629478f8a9d070db54381a1",
+            "statement":
+                "Radial generation caches horizontal cross-sections at bead-width spacing and generates shells from inner radius plus half a layer height at layer-height spacing.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L582-L643",
+                    "version":
+                        "repo-lines-v1:sha256:850e10054cbb133e1e342d271a31acdba821f20937c3175d035f839f54e4b7a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVmYWQ5MGNkNDM3ZDdjZDFiMzA2ZWZkODkyOTUzNGEyZjU3MTRkMDFhYTBkNjk3MjZkNmVhNWVkMzYwODkwZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1YmQwNGFmYjQwNDRiZDc3YWNiMTVjNjFiM2ZjOGQwODFjNWYyZTZkZDBkZTE0NDZlMTQ3ZDUxMzJmMDExODMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAzZjU5MTk2ZTc4MTA5NzIwYzlmNTNiNDViOGIxOWU1Y2EyNGVlYTRlOGYwYmE4NTQ5M2VjMjg0YzY4M2EyNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ0NmNmZTYxMDExNjdjNzhlNzAwODhlMDMzOWI5YmE5MTM2NGNhNTdkYjAyNzVhZjliODFlMTg0YzUwOTdmZDEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_82a66a2d74f045ecaa4e85ea5883f40c",
+            "statement":
+                "Radial candidates apply Clip, Keep, or Discard boundary behavior after intersecting sampled circles with each horizontal cross-section.",
+            "evidence": [
+                {
+                    "resource": "repo://resources/settings/028_profile_radial.yaml#L4-L30",
+                    "version":
+                        "repo-lines-v1:sha256:6298c85ff787c8232d0a35ce30d806feb1e4cc4e281e793f6cdb207cfa98e674:eyJzZWxlY3RlZExpbmVDb3VudCI6MjcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVlMDQ3MDBkYjQ0YTQ4NGQ2ZjFiNGRlM2Q3NmU2NDc1NzFiMGFmNmVjYTZhYTUyNzcxZDQzYmNjOWI4ZTAyMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2MDE4NjE0MTA0YjUxNDAzYzY3ZmUwMzU2NjM1MDljODRiOTg5ZDEwY2MwZmEzNjI2NDAyNjEzMmVkMDcwYTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUwYTQ0M2Q1M2JkZDVhMTYyNDk0ZmIyNThjMWEzODdiZmY4ZGNjYmMxZWFjYjBhZDgyNjY0YjE1M2MwYWNkZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L648-L663",
+                    "version":
+                        "repo-lines-v1:sha256:116742ac4aaede8b0ae3fdc8474db34279fdd2b944446f1a2c56f73417f323a7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkZWI4ZTBhOTIzMzFiODM5MTgxZWQ4ZGQ2MDA2NzQyNjIzYWI1NjM4MWNhYTJhODZhYzhlYWRhMjhjMzcwZDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2ZTk3ZGJlZGZjMzMwZTQ2NDcyNTJhYzY2OTYxNzFjOWVmMTRmMDVkMmE5NDNjOWYxMWY1ODc0MDM0ZTQ5ODUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjhkOWE5MzNmZjBlMTljZjJkMGVjYmIwNGZiOTc3YjY1MjUxYzQwNDRkMDU2YzI1MzlmZDFlYTg0ODM0ZTM2NGIifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L78-L106",
+                    "version":
+                        "repo-lines-v1:sha256:3c8db8c76b101706553f2d00ba8b2320ee52a9c0d1449d76d04f95839502546c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI0NjJiM2MxNWQyZTFhMjQyMDBmYzZkZDIwN2FiOGE0ODFkYjE5OGY5NTRhZDhhZDJmYjRjZmMzYmQ3ODQwZTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY0OGRlMDMyOWVmNWU5ZDM1YzRiNDYxZmViMTBhMjIzNTFhYzM1OWMyZGU4NGE3NjhmNTFjNTE1N2NkZjMyODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYxOWZlODA4MGI3ZmE0ZTExZDRmN2M0OGQ5MmViZmU5NGUzYThjMWFlMzg1NTIyNzI1MjRhMGQ1MzkxNzcwM2QifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_6bf11fbc7ece4aa99b40d350140ae1a9",
+            "statement":
+                "Radial circles are sampled with 64 to 720 points, use arc segments when counterclockwise arcs are supported, otherwise use line segments, and add travel only for a gap greater than 10 microns.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L946-L978",
+                    "version":
+                        "repo-lines-v1:sha256:24b8bd0ef4c3a88a0f25aff367b5e9f3e8937bbfd54342e3a4254bb7b019aa1d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyNjNjMDU2MWYxMmRkNjA1ZmRlYWEwNDE1NGE2ODlmMzdhYjdjMDBlNWIxODI4MDE1OGYwOWU1ZWQxZTk3OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk4ZTdmOWNhNTc3NzljNmFmNTZkNDU5M2RmYzllZjU4Y2MzOTMyYTc0NDMwOTEzYzU1ZGRmODBmNjJlYmFlZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhOTdhOGQ1YjM0NjkyZTU2NDllZjgzMGM2ZWQ2MjNhNjQxZWU4NGEzNzI3OGZhODQ0ODBlNWQ1YWFkMGI3NmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEzMThkZGQ0YzczY2UyODc4MjBhNWE3NTFjMzEzZmU2MWVhNTYyMzlkMTRiMzRlZjkzZjZlMjZmMDIxZDVhYjkifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L981-L1034",
+                    "version":
+                        "repo-lines-v1:sha256:aa96f19e7692cb033813dd4ddef5073ae0e44646aa525f3e3d497778b18bdd18:eyJzZWxlY3RlZExpbmVDb3VudCI6NTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NGY5YmUxZTljMjZhODM3NjQ4OThlNGMyMWRhOGFiZjgzNzIxNDBhZDA0OTM5YTAzNGE2MGZjNWM1ZjEwZGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdiNzI5MzZlNTI4MWEzYjU5NmIwZDI1NTM2Y2IxMWY3YzUzZDYyZGYwOTdhMDNhM2FjYjY2MmRmYmMzMDdmY2IiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZkMTkxYzkwOWY5MmM2NDU0M2VlYzE5ZjczOTBmYjEzODEwMzczZTVhZDlmYWRiODFhMGY0NzVmNjczM2FmMmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_daea16f0b8f44c9094144262249d8a2d",
+            "statement":
+                "A helical region profile orders bottom perimeter, bottom inset, infill, top inset, and top perimeter bands; zero stepover falls back to bead width, negative stepover is invalid, and infill revolution rounding controls the middle band.",
+            "evidence": [
+                {
+                    "resource": "repo://resources/settings/029_profile_helical.yaml#L45-L119",
+                    "version":
+                        "repo-lines-v1:sha256:d67df5e6804d542c24e966def2c6da798be470b0653e683e68075c27c375dd9d:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMTdkMzRlZDRkMDUxZWMzZjQ1ZjA1YWEwMWU0MjVmMzljNDQ5NjJkMzkzZThjOWEwNWFmYzFkMjcwNTE1OTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmYTcwZWNhZGU1ZTI4NTFmZWNlNTI1MTc3MjZiMzdkYTM5YjlmZWQxY2RhMmZjYjBhMjZlOTU0YWViMmY4ZDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwNGJiMzljMWE4Yjg2YjA3MTA4ZDk1M2M4N2U2ZWE1ZjEzMDQ2OGNmZDA5OWUyZTVmMDAxNWJhM2E1ZmNjMjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljZjhkYTY1Njk4NDBlZDM0ZjUzNjNhY2FhMWJlYjY3MTM0ODYxZWQxMGZjMjg0NDFlZGJhMWZlMmI5MzVhMTEifQ"
+                },
+                {
+                    "resource": "repo://src/slicing/helical_region_profile.cpp#L21-L69",
+                    "version":
+                        "repo-lines-v1:sha256:de4829d1dc650a305699387ee1076b32d8ec5bd598b00e44d4a47475bab1bfb8:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4ZTcwNWRjMzRiMjVmOTViZThlY2E0MDY5MTE5ODkzZTQ2MGExNzBlNjFjMTYzZWJmMzRhZjY3MGE5NzQ3NWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkMDUyYjg2OGQ0M2U3NjU3YjRkNDUyMzNlNzEwNjFkYzQ2YTI4NTA1MmE2MWNiMzIzM2U3N2MyNDA1NTQ4OTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhYWZjNDAyOTEzM2YyOTlmODhjN2U2YmYxMzliMmEyNTU2YTY2ZDkxNTFiMzg5ZjQzYzU1YmM5MzZiYjdkNTUifQ"
+                },
+                {
+                    "resource": "repo://src/slicing/helical_region_profile.cpp#L300-L361",
+                    "version":
+                        "repo-lines-v1:sha256:79feaeb3f16c757d0cc21dec30031c0c09b82b1b81fe0df99b0d65d12c16bb5b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZmVkN2MwMDQyOThjMzNhYTZhNWNiZWIyMTI5MzU1MTllYjcxY2IzZmQ3ZDg2ZDFhOWI3NmIwM2YxMGQwNDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlYmRiMzY1YmMwYjU3OWE3NzI2OGE2YTY3YjYwZTQwYzAwYWYxMDM3ODBlYzFlNzU2MjNhMTRlZGYzN2ZmYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZhMjZkNGFlYzczZjY4M2VkMjE1ZmY3NzYzOTk0MjY4M2NkZmM3MzZiNGI0YmQ2MTBjNGY3ODNkNGIzZjhiNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlMzg2OGMyZWUwMTc1NDAxZDUxM2ZhYzQzYzZhN2QxNjhjNGU0YzhhMTYzZjVmNmEyZjFiNzg1NDgzZTNiNmMifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_b04486a0d7c04b2f8868c02f3c04d781",
+            "statement":
+                "Helical geometry starts at the part base and inner radius plus half a layer height, rises counterclockwise for right-handed paths and clockwise for left-handed paths, and samples horizontal sections at half the minimum profile pitch with a 100-micron minimum.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L681-L780",
+                    "version":
+                        "repo-lines-v1:sha256:17d8836548d75cb126ad4edc54a616488189437a8fc18708c1f68ace1196dc8d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmYmIyMGE0OGYzNjVjNjljNGJkYzRiM2ZlMDUwNzUxNzFiMDllNDFhMzY2OWZiMGI1NDA0ZjM4MDMxOTE5NjFiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI4Njg5YjFhZDIxMTM1NzM0YzcyMDRhYmE1MGFkYTE4OGZmZjFhMWVkZThjMDQ5OTJmNGNjZDVlYzk3OWJiNTMzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI5YzdjNTUyZWVkYzlhMDJlMWU3OGFkMjEzZWViZDYyNzJiY2Q3NTNhOTdiYmYzMzU4YTk5ZjZiYzBjMGU5YjAyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiJjY2JkNmExZDNkYTMxNjUzOWUwYTRlMGE2N2U5YTY3MjI4MDU1NWQzZWYxZDZlNzg5MGVjODVhZDZhZGY3OWY1In0"
+                }
+            ]
+        },
+        {
+            "id": "claim_5f13e6fd473b4d5698d5d2c916604c65",
+            "statement":
+                "Helical clipping classifies samples against nearby horizontal cross-sections, refines boundary crossings with 12 bisection iterations, and retains from the first entry through the highest exit when endpoints are outside.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L276-L399",
+                    "version":
+                        "repo-lines-v1:sha256:e4bed72b7e60acc2946c8d08fdd0fa685832504c78464071a8e7473ec9389db1:eyJzZWxlY3RlZExpbmVDb3VudCI6MTI0LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2OWFhOThhZmY4ZmEzYTY2OTMxOTdiYzQ2OGIzYTQ1YTk3NTM3NTVjM2QyMTUwZGJmYWZhNDc4OGY0NDllYmUxIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJmZTJjMTg2OGY4Zjk5YmQ2Y2Y2ODRkNDJkMjlkY2YyNThkOTJkZGY5NmM0ZDJmM2IzNDVhMGRlYjI3ZTg1YjJlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzZjA1N2Y3YzQxOTgzY2U0YWRjYWFkOWE2YTZjNThjZWRmM2YzNTg5NDkwM2I2MWY1ODEzYzNiZGI0YTJhMGY0In0"
+                }
+            ]
+        },
+        {
+            "id": "claim_1f632ee0a26a41ec81f8ff421130a731",
+            "statement":
+                "Exact helical Z clipping retains the intersection, complete-revolution rounding rounds up, last-full-revolution rounding rounds down, and rounded profile reconstruction keeps shell pitches fixed while allowing only middle infill to absorb remaining height.",
+            "evidence": [
+                {
+                    "resource": "repo://src/slicing/helical_region_profile.cpp#L130-L225",
+                    "version":
+                        "repo-lines-v1:sha256:8b68ca3ee7854975091f756203932dfaf337cee3731b8ecae3610a5f83b9d3ed:eyJzZWxlY3RlZExpbmVDb3VudCI6OTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5YWU4YzY1NDJiOGI3ODZjNDlhYmJmNDc2ZjhkOTM1YWRhZjVkMjkwNmUwZjA5NmFmNTIxN2NmNjgwOGE5YzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlYmRiMzY1YmMwYjU3OWE3NzI2OGE2YTY3YjYwZTQwYzAwYWYxMDM3ODBlYzFlNzU2MjNhMTRlZGYzN2ZmYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiOWJkMDE0YzQ4MmMxM2E3YzkzNmQzNzg2M2E0ZmYxNzc2NWUxMGZhYzUyMjY4NTdhNGU3YWNkNzY4MWVkOTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzkxNGE2ZTMyOTAwMjZhYWJiZTk4YWQxMzEzNzMzYjA2OGJhNGEwN2E1NzAyMTcyNmE2NjliMzljNjc3MzkifQ"
+                },
+                {
+                    "resource": "repo://src/slicing/helical_region_profile.cpp#L364-L386",
+                    "version":
+                        "repo-lines-v1:sha256:f3cd24f4c844bcaa0a05e6b55565de36a4d470761fb6c4b31efd4c4766727ebb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1YjcyMTQwOTIxMzNkOTkzMTAyYWVlYTFhMmE5NDE2ZjY3ZWU0YTM4NjYwMmI3MjEwMWU2NjdhZGEzMGFkYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJhN2M5Mzk5NmU2MTUyYzE5MTNhMWEwNDU1NjNhNTU5ODJhZmIzYjEwODJhODc5NzM3OGFmMDlhZGM2YmFjM2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_55709199c6544cdfa8940dc918c2df61",
+            "statement":
+                "The current profile-driven cylindrical generator rebuilds clipping through HelicalRegionProfile; the standalone HelicalPathRounding utility remains a separately tested uniform-pitch clipping and rounding primitive.",
+            "evidence": [
+                {
+                    "resource": "repo://include/slicing/helical_path_rounding.h#L10-L26",
+                    "version":
+                        "repo-lines-v1:sha256:c6894935ce7ba9dcb6bc9e2c933d5401b77b940d413b18b662d93e0ec97f29b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMzY4ZGYxMTBiNWFlZTNhMTYyMWY1ZWI2YjNkYTEwYzhmZTg5MjNiYjIxNzgwMWE4NGMyYzcwNThiMmRlNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg5M2ZmMDc1YzBjNDNlMWVmMWZmZWJlMzI5NzUxMmNmYWVhNGVlZmYzZjY3M2RkZWJiMDVlMjA4MGUxZDUwYzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiNzVjYTNjYTJhZjllZjI0NzNmMGJiMGUwYjJkNjBlOWI0NzlhNGZlYWFiZjIwY2Y4NGQ4YzE2NWRmYTg0MDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                },
+                {
+                    "resource": "repo://src/slicing/helical_path_rounding.cpp#L59-L129",
+                    "version":
+                        "repo-lines-v1:sha256:0f8bacb11fa35dc71c4058ea62596b0738df24e46c30232948df4173919543a0:eyJzZWxlY3RlZExpbmVDb3VudCI6NzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwMGFhNjk3Yjg1Mzk5M2Y3NTJhMzk0ZGViMDVmY2EzZmZjMmFmNzUwYzI2MDdlZjA5ZWUzYmQ0ZDE5ZjQ1MDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L789-L867",
+                    "version":
+                        "repo-lines-v1:sha256:c964803c41206fb54b5ecc75a486a80fa5e62fbf336d2b09d4fca0f4731d6c61:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3NTYxY2IzYTdmNmY4ZGU4ZTc1NWQxNTkwOTgwZmQ3ZTAyN2U2OGU0OTJmMmUxNzE2ZDkyZDBiZWFjYTAxYjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjYzgzZmJmOTBkN2U4MjdkMmVjOTExMDAwMzZlNWI5Y2FkNjlmM2RiYmU5YTU2M2FlODU0MjhmMzMwNjdkMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE2M2MxODgyMjJlZDA3NWZhODcyNTY0NTQ4YWYxODY0YWNiZjlmYjZmODgxOTYwZmRlNDhlM2VhMTBhOGM5NzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY2NDRlZDI4ZGI5ZmZlODE5MDlkODBhNWRhNDM3YzQ0YWIwNWJkN2Q4MTVlZGMxMDA3MTY2NWJjYTUzODJiZjgifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_6d60cbe43df9468bb484d11039d54096",
+            "statement":
+                "Helical geometry always begins at 90 degrees, while the configured tool-orientation offset changes sign only for complete-revolution clipping with next-closest ordering when optimization starts from the generated end.",
+            "evidence": [
+                {
+                    "resource": "repo://src/slicing/helical_tool_start_angle.cpp#L3-L18",
+                    "version":
+                        "repo-lines-v1:sha256:4db0b719a6115d456b1b93a24944ed9e44081b0bc9bc365a8809ff085065f591:eyJzZWxlY3RlZExpbmVDb3VudCI6MTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwZTU5ZDU5NWRmZjdlNzNjYmZiOGQzZWMwYWQwNmFmZDY5NDc1NDM4ZGVmNDY3M2YxNWNmN2ZhYzcwMjIyZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgzNDYxNDllMWE4Zjc0ZTI3Njg0ODRlMTU0NWQyOTJmYjFmZjQ0YjVhY2I0MzIzY2IyN2I0ZmZlYTczMWVlNzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU4YTAxM2Y3YWMzOTAzZGM5MDE5MDllMDYxYWZhNWY2M2ZhMGQ3ZDcwMWE5YzgxYzQyYWY5MDMzMmVmY2RmMWUifQ"
+                },
+                {
+                    "resource": "repo://src/step/layer/cylindrical_layer.cpp#L54-L76",
+                    "version":
+                        "repo-lines-v1:sha256:6d83767832896a8f634826537fadf694ff71de9dfe47f2c656468fb474341e20:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlZDE0YzJhNDhjMTI2ZjRlMTY0OWY0YjZlMGM4YWU1ZWQwZjBkYjM1ZTI1N2Y5NTUyN2M4MDAyNDU0ODE2MjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhYTRiZjU3ZTAwMjJiOTg5ZDE2NjU1YWVmMDVmODlmNGRhZTliNTYyNjdiMmU3NzI1NDhkYjI2YmI1YTdhNDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyZjAxMTJlYjBhNGI3NGRiZWQyZTA2MmZlMGM1ZDM5YzU2NGMyOGMyZTBlMzdiMDhjOGJlZWM4Yjg1NTVkNDEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_d7d3febcd0a34de896cc3c30919c946c",
+            "statement":
+                "Cylindrical postprocessing supports next-closest or next-farthest path ordering, may reverse helical paths, restores segment and travel settings, and recomputes region-start flags after ordering.",
+            "evidence": [
+                {
+                    "resource": "repo://src/step/layer/cylindrical_layer.cpp#L194-L227",
+                    "version":
+                        "repo-lines-v1:sha256:74e0f8ac478627129c1e79d180e46a1cb8b4d983e2cb42331f56bcaff4df91e3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmM4MGE3ZTUzYmI3NjNlYTRlNGZiZDk2NTNhYTQ0ZTQ4MTU5YmY2NzNlMGNmMTdiZWQyNjA1NzgwODM0ZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUyZTQyOTM1Yzc4YTM0Zjg4NWRiMzE0ZTQzNDk4MGQ3ZmRkMDkxMjUyN2M5NDUwNzk2OTQ0NmFmYzU4NzBmN2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiNjIxYTQyN2M5ZGJjOWNmZTA2NzUyMWFmNjFhNTAxOGU1MWQ5ZjA3MjhhOWEyY2ViMzExYmFkODc5MWJkNzEifQ"
+                },
+                {
+                    "resource": "repo://src/step/layer/cylindrical_layer.cpp#L54-L113",
+                    "version":
+                        "repo-lines-v1:sha256:ec393299506ebfbce1b1a36378894352560aa0c95be899d9ea7cbbf67efd049d:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFlZDE0YzJhNDhjMTI2ZjRlMTY0OWY0YjZlMGM4YWU1ZWQwZjBkYjM1ZTI1N2Y5NTUyN2M4MDAyNDU0ODE2MjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg4MDIzMTU0NTQyNzVhMTViMjUyNWI4ZWRkNmEzYzlmZjE1N2ZjNGFjNzM3NzE4Yzk4ZmJmNTA0NTIxYzZhMjUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhYTRiZjU3ZTAwMjJiOTg5ZDE2NjU1YWVmMDVmODlmNGRhZTliNTYyNjdiMmU3NzI1NDhkYjI2YmI1YTdhNDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyOTgwN2EyZWUzZDVjNDNmMDg0NDhkMjUxOTk3MTY1MDEzNzNkZDZjNGMzMzU2MDI2OGRmMDc2ZmZmZDY4NDkifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_1958bc55180f48428ccdbee3a1bbb0c7",
+            "statement":
+                "Helical output emits one path as contiguous perimeter, inset, and infill region runs without inserting travel at internal region boundaries, while radial layers emit paths under the perimeter region.",
+            "evidence": [
+                {
+                    "resource": "repo://src/step/layer/cylindrical_layer.cpp#L116-L188",
+                    "version":
+                        "repo-lines-v1:sha256:50870f1998022acf2e3915ef655d9c3fc4d95a2676b8aa4db41b2975c9a09c23:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyZjhlNzBlMWRhN2IxYmMzMDQwMWFhN2Y4MzQxMmM3NzFmNzRmYjQ4ODY5YWY0MjA0NzE4ZTQzMjZiODQyYTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImMyMjE1ZDdiMTU5ODVhMDYxNTU5NDIxMTE5YmU5YzQ4ZjU4YzcwZWI1YmExNGNhNWQ3ZWVlMmMxZmE0OWNlNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU2ZGQ4NjBjYWQ5MWNhNDJkOGZjNGVmNTgxMjQyYzVkNmI3MThmNDJmMTFhNzY1NWVmYTVhMTMxMDE0MmVlMmUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_25b25f535f394e9db400ce37a6e6e94b",
+            "statement":
+                "Helical generation propagates the highest actual generated Z after clipping and rounding to the Arc Specialties writer before setup, preserving a safe startup height for emitted motion.",
+            "evidence": [
+                {
+                    "resource": "repo://src/gcode/writers/arc_specialties_writer.cpp#L700-L747",
+                    "version":
+                        "repo-lines-v1:sha256:525248e6e526e649bf87162d40e8f1d7cac37b404aa16311158445618d4ae7cd:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzNjMzYTU5NWY1OWNjZWYxNWY5OTM3ZTc3OTU0MTViZmI3YmE4OTEwZjJmMDI0NTYzZWY3ZWY2YzM0NWViYmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjkyN2FmMGFiNzJmYTQ5ZmRmZWQ3NjhhMzVkMmViY2NmMDRkYTk5ODdmMGQyOTc4ZWY5MTA0OGQ5N2Q3NGEzNjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1Mzc1MTAyNzcyZDZhZjIxN2MxODE5MzFjZmJlZTFmZTQ4OGU1MGE1YjhjYWQ4YTE0OGJjOTg5NzA2MzdiZjQifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L423-L451",
+                    "version":
+                        "repo-lines-v1:sha256:d75db5d4a56b67ae50bbf25fb4ce9778b6d93c85a52afcc99c02f103242426af:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NWI4YTVlNTE2ZjNkNjM5MzMwYWJlOTQ1YzcxZWFiYTgyM2I4Yzg5ZTIzNjk0OWJlNjY1ODdiZTE2MmI4MmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1ZGExNmM4NDAzMTllYmI4ZDA1ZDkzNDdmNGM0NGZjMmIxMDMwNTVhNjc2MTZhZTIwYTQzZTk1ZjE1MWRiNzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZjMTdhNjM0ZjMwNjU3YmU2MTk2ZDYzNmRkNjQ4NjMwZDI5YzFlNjc5N2M5NjQ3ZTA5YmYwYjk5ODAxOTY0NzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2NTBlNTVmZTMzMzc3MmFlMDE2ZWQ3NjQ3YzY1NTNjZmFkMDZhODVjMTEwNmFmODVlMzNhZmVmMzBiNDFmYzAifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/cylindrical_slicer.cpp#L842-L850",
+                    "version":
+                        "repo-lines-v1:sha256:3cdd674f8a0775ce0196b755a147a8359ebfac96d1048db5c5c23cdc4b2c9552:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTM2NTBjNDc1YzdmOGVlYThlM2E5ZjAyM2NjMTYzOGQ4Y2Y2YWJhNzY5NTNjMjdkMGE1NTUwMmM1M2MwMGYxNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMGM2NDc5Y2MyMzA0NDBmZDQxZTgyMjQyMTg2Nzk2OTg1NTlkMjg5M2JkNjdiNDM4MGFmYWI4MTFiMzhhNTVhYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjQ1OGM5N2Q3OTQ3MjEzZmJmNzU3ZDhhOWI0NzA4OTI5NTU2NTJjOWU4ODEzYzhlYjA0YmQ2ZTZkNTM0OWJhMyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZGE5Zjg2ZDI4ZTc4NGY5ZmQzMWZiNzJkMTVmNjBjYmNlYWFmZGQ2NjljYmQ1YjZkYTc4ODhhMDIzMzIxZWJiOSJ9"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.7.0",
+        "at": "2026-10-06T20:25:27.555Z"
+    }
+}

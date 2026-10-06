@@ -1,0 +1,333 @@
+    {
+        "schemaVersion": 1,
+        "pageVersion": "sha256:a8372d19979a7fd14296a105b68f1925499a63cf091c4faea79fb5b0aa2e9456",
+        "claims":
+            [
+                {
+                    "id": "claim_b4e11501125a46b49d0246b26fb3248d",
+                    "statement":
+                        "ORNLSlicer declares 21 focused standalone C++ test executables, each linked to the shared ornlslicer_obj production object library and registered under an unprefixed CTest name.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L139-L164",
+                            "version":
+                                "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L461",
+                            "version":
+                                "repo-lines-v1:sha256:8d41c76ec143be2d02b66546aaa50c50035982845c7ab3d36b608ad3ffd7c5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_66864345c4684234b0ff60038e669756",
+                    "statement":
+                        "The ORNLSLICER_BUILD_TESTS option defaults to CTest's BUILD_TESTING value and guards test target creation and CTest registration.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L17-L17",
+                            "version":
+                                "repo-lines-v1:sha256:8ca1352a9827b96e3a89a88e5b37bf008a0f3e8c88c083a7a06eb4409230e4d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOGNhMTM1MmE5ODI3Yjk2ZTNhODlhODhlNWIzN2JmMDA4YTBmM2U4Yzg4YzA4M2E3YTA2ZWI0NDA5MjMwZTRkMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOGNhMTM1MmE5ODI3Yjk2ZTNhODlhODhlNWIzN2JmMDA4YTBmM2U4Yzg4YzA4M2E3YTA2ZWI0NDA5MjMwZTRkMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMmNkZDhhZmIyNzFjMWM4MTVmYWFkMGJkNmM2Yjk5Yzg1MTZmY2IyYjEwYjU5MzQ4YTExZTM5M2JhOWFlZmZhOSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjkyZmM2ZmE5YzkyNTgzNmE0MDZiMGM2ZjRmYTZhYzY0NWIwZWRjZjU4YjlhMzZjMWE4MmJjZTY1NWI5ODdlMyJ9"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L241",
+                            "version":
+                                "repo-lines-v1:sha256:f894b240f47c7e82fa52d8c4824949f75f10432823e9db27c5b5ddc66bd8cbc4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZDY2MmExNTYxOTIyMTBmZDVkNjM5ODc4OGU2ZGIyOTBkNjUxYjM5OWQyZWU0NTQ0M2FjNGMzZTA5MTU1NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1ZDZkNjQxNGJiMDE3MDVlZTMzYjAwOGMxMmY3OTQ3ODcxYTc0YjUwZTM1NzU5MjZlODU0ZDM2NDU3OThmNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_f16373991ad24d4384207dcb9cc9ba86",
+                    "statement":
+                        "Focused tests use executable main functions and shared boolean expectation and numeric-tolerance helpers rather than an external test framework.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/mesh_repair_tests.cpp#L114-L132",
+                            "version":
+                                "repo-lines-v1:sha256:21e7faef9ceda77fb4676eedc2e15a8d768060772b12cc8ece9627d16baf2d36:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/test_utils.h#L9-L69",
+                            "version":
+                                "repo-lines-v1:sha256:e0288b5eb777cd93406e6e97809870f9c67236b97f7b3e2dc7f875fdcc862594:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVlMzY4ZGYxMTBiNWFlZTNhMTYyMWY1ZWI2YjNkYTEwYzhmZTg5MjNiYjIxNzgwMWE4NGMyYzcwNThiMmRlNDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM1NjliYWI0ZjJkMDE1NGQyODhiYmQ4ODdkZDIwY2Q3YjBmODZkMWIwOWVhNjYwOTc2ZGIxMDk1YjUxZDU3YmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjkzNjgwZDkwMjdkMTdiY2UyZDhjN2Y3MzI4N2QzZjY5ZGNkYTVhMDg2MGM1NmRhZjg5N2E5ZDUzMWQ1NGRjZjMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_a5459bbdcc78470eb907f86304a99815",
+                    "statement":
+                        "The generic development preset uses Clang and Ninja Multi-Config in build/generic-llvm-ninja, so CTest needs the selected configuration such as Debug.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/AGENTS.md#L39-L47",
+                            "version":
+                                "repo-lines-v1:sha256:a1b1d752622634e86985068139a9c96f21d3aeb4d219420ec8e2c116a4ad820a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZhMzU1MTliZWZjNzU4YzBmMDM5NjVkYzliMWQ0MDNjYTk3ZjRiZTRjYTVkMmVmMzE0MTYwYjE3YTUxMDQxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYyNzI1NDU4YjkxYTJjOWU3YmQyMzZhOTJjMGZmOGM5YTE0NGQ3Yzg2NWM5ODAxN2ViMjhlYWQyMzNkYjNhZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzNDE3ZTVjOTk2MWU1Y2ViZTExMzc3MDMzNWJjMmUwYjY3NWQ2NDM1NjAwODNlNjk2YWVjYzYwNmZlYWU3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTMzNDg0ODEyNzY1NWQzMjRmYjQ5N2E4ZDRkNWM0MTFiOTc1Y2IyYmNiNWIwNjU0N2ZkNWVhOTkzNjFlY2NmNSJ9"
+                        },
+                        {
+                            "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L14",
+                            "version":
+                                "repo-lines-v1:sha256:f263db53203800d45da183a6042fdbe1bacefedee475b717475934a070bdedb2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNjczYWJkNDU3YTk3ZWVhMTdhNjAwNjJlYjBmYWVhNmJkZjA5NDg2OGNjNmI4ZjhjMGViZGEyZjYxZWQ0MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4MGJiMWU3MTExNWVlZDJiNWZjZmU5N2ZmZmFmMzJjMmVlNTg4YTIxODAzYWIwMmJkM2JmZTk2YWVhNzhiN2UifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_83a770138d9b47ba9e6998b44c515972",
+                    "statement":
+                        "Focused geometry coverage includes mesh repair, fixed and adaptive layer generation, support-gap counts, optimizer ordering and anchors, global layer ordering, and planar, WAAM, and helical path behaviors.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/helical_region_profile_tests.cpp#L250-L280",
+                            "version":
+                                "repo-lines-v1:sha256:91631222659476ca57b27ee5d0eee54593f82da99fd246f61e39366041d0d45f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/mesh_repair_tests.cpp#L114-L132",
+                            "version":
+                                "repo-lines-v1:sha256:21e7faef9ceda77fb4676eedc2e15a8d768060772b12cc8ece9627d16baf2d36:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/optimizer_empty_input_tests.cpp#L139-L228",
+                            "version":
+                                "repo-lines-v1:sha256:b2fd38d29f6b4dbff9ddd59be12f3405eb3ef8599d22bfa2371020b70c6a331b:eyJzZWxlY3RlZExpbmVDb3VudCI6OTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5Nzg5MjAxMTAxOThlZGUyMDgwNGY5M2I2ODEyNjFmZjEwMzc0ODk1M2JiOWIzZmM5MGM2YWQyMmM5ZWM1M2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRjYzdmOWFiZmZmNTdkOGZjZTNmZDc2OTg1YzAxNjY1OWZjMDgzN2RhYjc4ZjYzZGQxMGI0YTYwNzUyZTM2Y2YifQ"
+                        },
+                        {
+                            "resource": "repo://tests/variable_layer_height_tests.cpp#L176-L239",
+                            "version":
+                                "repo-lines-v1:sha256:a117dc874cb0f7fa5ef21d6d6e2fe3f9b4747ec86c456c204462e73f407119f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyNTQ0ZDljODM4Y2Q0ZDYwMDFjMmRiMTc1NmVkZWRiODk3YTgyMjE5ZmVjZDJiMzg2YWQwZDY0N2YwM2YzYmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_2f59a45c3aaf4acbbf4fcd8f56c1b065",
+                    "statement":
+                        "Settings and session regressions cover G-code settings import, version migration, transactional preference import, preference persistence, and recent-project and project-loading behavior.",
+                    "evidence":
+                        [
+                            {
+                                "resource": "repo://tests/gcode_settings_importer_tests.cpp#L64-L242",
+                                "version": "repo-lines-v1:sha256:3dd5cabc2af93295cf4f3461cf9604d4052c744c4f96992c9be30c4e9f9bc06f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTc5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                            },
+                            {
+                                "resource": "repo://tests/preferences_import_tests.cpp#L20-L76",
+                                "version":
+                                    "repo-lines-v1:sha256:d550cfcea3d50fb17ebd93e297a490992586b9320503e1313f400fa028fb5659:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            },
+                            {
+                                "resource": "repo://tests/session_manager_tests.cpp#L74-L188",
+                                "version":
+                                    "repo-lines-v1:sha256:17b482e24c060d9ffca2d4f6920fa4755309efaa779a4917cace9c38f4c29f12:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                            },
+                            {
+                                "resource": "repo://tests/settings_version_control_tests.cpp#L13-L65",
+                                "version":
+                                    "repo-lines-v1:sha256:085840307700b6b27970174eecc36027c33325986958c9f563c69df8d5f65fc9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhYWMyNjBhMzhhYjYxNzkzNTNhMDc2ZjY0ZDM0ODRlNDY2ZDQ4YTlhNzliMGJlOTQ5NWVkNDZhY2I2MzIzMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            }
+                        ]
+                },
+                {
+                    "id": "claim_fba9d4ce7c444aeeb1a99975d2a856d4",
+                    "statement":
+                        "Parser, writer, and visualization regressions cover common parser inference, Arc Specialties syntax, JuggerBot extrusion behavior, and stable visualization color mappings.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/arc_specialties_parser_tests.cpp#L790-L875",
+                            "version":
+                                "repo-lines-v1:sha256:979f2c72fbc4ef6471419e9f138d25f063d97a582445deb82d3626c4e0cf1359:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTRmYTE4ZjdmOGM0NTMwMzczOTgxZjIzODg5ODE0ODQ4M2I0YzQ2OWJlYjA5YTkzNzU5YzhmZGY2YWMxMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1N2Y0YTExMTFmMDM2ZDA2MTMwM2YxMzBjZDk1NTE2NTgyYmU0NjZjMzAyOTc4NmE0MjMyNWM3ZGMwOTlmZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJkOTRmZGQ5OWQ5NTgxZDI5MjdmMWU4NTI4NjAwZTQ2NjJhYWRmNjljYjRmN2Y2NzFmNjdlMGM1ODk4YWIifQ"
+                        },
+                        {
+                            "resource": "repo://tests/common_parser_tests.cpp#L296-L316",
+                            "version":
+                                "repo-lines-v1:sha256:b99cd7b33015355bca263adbcd8bcb8c01ae058bb8793670a03b78711e880b33:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTRmYTE4ZjdmOGM0NTMwMzczOTgxZjIzODg5ODE0ODQ4M2I0YzQ2OWJlYjA5YTkzNzU5YzhmZGY2YWMxMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1N2Y0YTExMTFmMDM2ZDA2MTMwM2YxMzBjZDk1NTE2NTgyYmU0NjZjMzAyOTc4NmE0MjMyNWM3ZGMwOTlmZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/juggerbot_writer_tests.cpp#L81-L93",
+                            "version":
+                                "repo-lines-v1:sha256:ebf9001ed2e2eefea503547813dafda3d815bdc5b75085c0aa6baf993ff9c286:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/visualization_colors_tests.cpp#L93-L210",
+                            "version":
+                                "repo-lines-v1:sha256:f93a29b5357c4c6b70a303d7e8f8d1abf223b92fcd33adf8f58aa83ef6a95722:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJiYjg1MzQxZDJhMWM4OGM0OTcxMGFmYTljMmU3YmVhODk3YzM5NWU0ZGFkNmM2YTc5MDJhMDRmMTAyZGVkNTJiIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJkOWFiYTI5MmRhOTBmZTVlMzY2OWM5YTEwNjg1Njg3NDY4NmUzMTY5Y2MxYjRkNjM3NjI5YTY0MTUwZTcxYmRhIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_2fcca4a5e817455cbd9bdb099cd0424d",
+                    "statement":
+                        "As-printed export tests validate generated bead and centerline geometry, coordinate conventions, filtering, curved geometry, and binary and ASCII STL artifacts.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/as_printed_model_exporter_tests.cpp#L129-L341",
+                            "version":
+                                "repo-lines-v1:sha256:a55517215dfa16dd996664e9b9a678e6a117210310fd53d8e08ecc97af4dc564:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MiwiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwMmZiZDk0ZmRkOTlkOTU4MWQyOTI3ZjFlODUyODYwMGU0NjYyYWFkZjY5Y2I0ZjdmNjcxZjY3ZTBjNTg5OGFiIn0"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_9db9fc31692742b6b92b29a0295caa2b",
+                    "statement":
+                        "Adding a tests source file does not automatically register a test because every test executable and add_test entry is declared explicitly in CMake.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L461",
+                            "version":
+                                "repo-lines-v1:sha256:8d41c76ec143be2d02b66546aaa50c50035982845c7ab3d36b608ad3ffd7c5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_09c874a4418e48709cb7d23d145e75ff",
+                    "statement":
+                        "File-oriented focused tests use temporary directories for disposable fixtures, reducing dependence on persistent user preferences and output paths.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/as_printed_model_exporter_tests.cpp#L129-L157",
+                            "version":
+                                "repo-lines-v1:sha256:d9908d57667e42d5b71c1e848bb6aab3aaf6e9e3861bbf769473a74828709953:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTRmYTE4ZjdmOGM0NTMwMzczOTgxZjIzODg5ODE0ODQ4M2I0YzQ2OWJlYjA5YTkzNzU5YzhmZGY2YWMxMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMjVmNTgwNmI5NDllNTdhNmI4MDdhNTYwOTFhMzQwYTAzMjA2NjYzOGVmOGE3ZDU5Y2UzNTUwNGJkZTI3MDkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1N2Y0YTExMTFmMDM2ZDA2MTMwM2YxMzBjZDk1NTE2NTgyYmU0NjZjMzAyOTc4NmE0MjMyNWM3ZGMwOTlmZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwNmJhNjJlNzhhZmU4NzUwODcyMTMwMzU3ZTk3MjJhYzI1NjcyYzVkYmEwZGU2NGYzNGU4MDdhM2NhMTM5MzkifQ"
+                        },
+                        {
+                            "resource": "repo://tests/preferences_import_tests.cpp#L1-L42",
+                            "version":
+                                "repo-lines-v1:sha256:5b3749bd766b9679501890cf0201841924ee333aad294958b3278fafd6ea480b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2NmRkZTQ0YzQxYmIxMmM3OWQ5NzJlMjIyZGY3YWU0ZGUzY2Q4NjVjMWEzY2FkYzI0N2UzMzVjNzg5YjdkMzAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNjhhYWVmOGFjYTk0MjJmZGUzZWM3YmM4ZGQ3MDIxYmQ0NzNlMjI3ZGRmMGQ1ZGFjZmE0NTJjNzRjYmFhNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2YTViNzIzMmU3ODkyYzdiMTg4MmExNmVmOTBkMmVmMWVmYjFjOTkxNTM2M2Q0OTViZWViMzk1NGIwN2JlODQifQ"
+                        },
+                        {
+                            "resource": "repo://tests/session_manager_tests.cpp#L74-L113",
+                            "version":
+                                "repo-lines-v1:sha256:a97c625d1f017f7b0d115c10981451e11b5472676931a633621b5b9a7137f72a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTRmYTE4ZjdmOGM0NTMwMzczOTgxZjIzODg5ODE0ODQ4M2I0YzQ2OWJlYjA5YTkzNzU5YzhmZGY2YWMxMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAyODNmNWZjNGYzNzJhZjM3Y2VhNmIyYTFjODAyNDJkOTUyNmM5OTExYmU3NWM2MTJmNTgzMTEzYjVhMDE5ZDYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1N2Y0YTExMTFmMDM2ZDA2MTMwM2YxMzBjZDk1NTE2NTgyYmU0NjZjMzAyOTc4NmE0MjMyNWM3ZGMwOTlmZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEyOWE2ZmU3ODAzZDBlN2NmNzMyZTNhZDEyOTE4NjE5YjIwOTk5ZWI1NGI1NzQ3ZTY5ZjNjNTRlMWI2NWNjMjAifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_c3adebab20e543699bfd101ccf874ddd",
+                    "statement":
+                        "Qt-dependent focused tests use QCoreApplication rather than a widget application, so they validate core data flow rather than an interactive GUI or OpenGL rendering session.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/common_parser_tests.cpp#L1-L4",
+                            "version":
+                                "repo-lines-v1:sha256:1ba4cc2a55df25bb84e9e952f6965ebc3d75a14dd1955701392595f39a31e69f:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWJhMDJhMzEzZjlmMWUwZjc4MWI2YmUxYmNlYjQ0YjI1OWI3YjRlM2VlN2E0MjI4NTM2OGEwZjc4ZTBlNTdiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTM4NjY0NmY2ODJjNWI2Zjc0YWZmYzlkNWFhZTQzODA3MjIxNzJlYjQ3OGUwNWFlOGVhNzRmZmRlZmM2Yzk0YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QzMGZjNzljMzEzMzlkNTc3YjE1YjRlZTExYjMxZjg0YTlkMjdhOTVjNTk4Yjc1ZWIzZWMxMzkyODI1ZjcwYyJ9"
+                        },
+                        {
+                            "resource": "repo://tests/common_parser_tests.cpp#L296-L299",
+                            "version":
+                                "repo-lines-v1:sha256:4bd1bd660c4feabf9f234b7c131bbb6a3e129f60bb1dc3ccc27f8c9b660e3bba:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU5NGZhMThmN2Y4YzQ1MzAzNzM5ODFmMjM4ODk4MTQ4NDgzYjRjNDY5YmViMDlhOTM3NTljOGZkZjZhYzExNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzEyOWM1ZDRhY2VhZjg2YWIyMjE4ZDMxZmJhNGU5MDJlMzBmNjk5NDVhNjJmYTRhNGMwNDYwNWI2NTc1Y2ZiMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTU3ZjRhMTExMWYwMzZkMDYxMzAzZjEzMGNkOTU1MTY1ODJiZTQ2NmMzMDI5Nzg2YTQyMzI1YzdkYzA5OWZlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMDY3MDI3ZDQ5MzVkZDZlNDVmMjY0NTk2NDAyNGNiY2UzZjM3NjBjZmE0NDA2MTI1NmRhMGY2NzY5MWNlYzE3MiJ9"
+                        },
+                        {
+                            "resource": "repo://tests/session_manager_tests.cpp#L1-L4",
+                            "version":
+                                "repo-lines-v1:sha256:6223933beb1eb60cf68bbe8650b42a41d89ab9ab51c3cd1b4244aa65e31f6d21:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNWJhMDJhMzEzZjlmMWUwZjc4MWI2YmUxYmNlYjQ0YjI1OWI3YjRlM2VlN2E0MjI4NTM2OGEwZjc4ZTBlNTdiNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjk5ZDdjN2VhM2EzYzgzZjE2NzM5MWJmMWJmNDI1Zjk2YzE3NzFmOTg4MWE2NjFhZTYxMzkxYjY3ZjBhMzMyYSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTY3NmU4N2MxNjA0YjAxYTExYzU0ZDMyOWIzYjQ1NmZmNmY2OTE2MTMyNWJhMmViMWNhZWZhZjdmZTlhMzAwYiJ9"
+                        },
+                        {
+                            "resource": "repo://tests/session_manager_tests.cpp#L74-L78",
+                            "version":
+                                "repo-lines-v1:sha256:d47c8963f0cf8440860f861cb71f82cd5912f0b8c5c1964096389f16f6a404a7:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNjU5NGZhMThmN2Y4YzQ1MzAzNzM5ODFmMjM4ODk4MTQ4NDgzYjRjNDY5YmViMDlhOTM3NTljOGZkZjZhYzExNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTljNDIxNzlhYzAwYTkwNzY0Y2I3YTJhYTI1ZjY2YjZjNjE3MmNhMTYzOTNjZDRiODgxZmUwZWRkZmJhZTBlMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNTU3ZjRhMTExMWYwMzZkMDYxMzAzZjEzMGNkOTU1MTY1ODJiZTQ2NmMzMDI5Nzg2YTQyMzI1YzdkYzA5OWZlZCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNjkxMTE5YWExYWU4ZmFhZTRjMzAyOTdjMTZhMmI4MmI2MDI3N2VkYWQzMGQ5OWIyMThkNDlhMTA0MDdiNjQzMCJ9"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_a0b1bb2fd2c047619ee72faf96daca43",
+                    "statement":
+                        "The new_impact_project_regression test is registered only when a configured local .s2p project path exists and runs the built application through its project-input and output-location arguments.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L463-L475",
+                            "version":
+                                "repo-lines-v1:sha256:bd19590ffae6b4e3ec37a59b536de689f468debfdc62f2c9a5fae7471f4848f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjOTlkNDc4NmExZTFlOTQzMTczNWJiNGJkNGE1NDE3MGJmOTI5ZTllYzYxMmU2Zjk0NTM0ZDNiMDc0YTE5ZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZmEyZGYyNDU2M2Y4ODI1ODU2YmY3NmQ2MTc1ZGY5MGEzMzk1Nzc1NzM4MzI5YzlhM2FkZTA4Mjk4NmI1ODYifQ"
+                        },
+                        {
+                            "resource": "repo://tests/run_project_slice_regression.cmake#L1-L31",
+                            "version":
+                                "repo-lines-v1:sha256:d934e9aa557cce2189743fe8f05bd7a8144de069dc50a0092d62ead30dbb355f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgyY2QxMjhmZDVhOTRmYWJlM2Q5YWU5YzU4OGFjYTg1NGE4NTNlMmY3Zjk5YmZmYWVjYjJlMGIzMDIzYjRlNDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5NWQ5NDJmYjM3ZmFlYmJjZjViZjQ5YTVjNDVkZWM0OTVkMDVhOTE2ZWQwYmQwMGQxODAwZDYxYjllOGYzNzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_8b28029dc89d4448a70abc06777c24b3",
+                    "statement":
+                        "The optional whole-project regression accepts success only when slicing exits with status zero and creates a nonempty G-code file; it does not compare output with a golden file.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/run_project_slice_regression.cmake#L23-L50",
+                            "version":
+                                "repo-lines-v1:sha256:4c2a5f7d0ef7c3c431fad3ba5ca883f325d67d62fd87b96bce8c852975a2c128:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1YjY5YzUzZjQwMTZiN2I2OGM5OWJmNGVmMTE2NjdiYmQxM2JiMjU1MWE0MTY1ZjhjOGU1ZTA4ZWU5YjlkYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEwMGUxYmIxYjJmNTBhYzMwM2I5OWU1YjczYjU1ZWY0NGVlZWUzZTcxNWJhOWVjZWJlMmU5ZTRjOTJmYWM0YmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQxOTU1YmQyOGRlMmUyYjM4NWE1ZjIyYWVlYTlhYjRkYzI5NGUyZjFkMjc5YWY0MTM0NmNhYzYzZjkzYTlhZjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_66fb3a44572a4b27827ac93b66db2f20",
+                    "statement":
+                        "Current push CI runs Nix flake checks on Ubuntu and macOS, builds and smoke-tests the Linux AppImage with --help, and cross-builds Windows portable and installer artifacts.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L1-L19",
+                            "version":
+                                "repo-lines-v1:sha256:34fee4701ba3d7e827759b27b8020cd67cc00211dfdf6a4006912dece3ae14df:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MTVkMjQ2YTBiOTNiODBmOGNlMTUyM2QyMjRiZDlmZTRlMjg1MzdjZmJkNDg4MTY5ZTUxMjM4MDllNDM0ZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNTExNTY3OTJjNGU5ODNlODU2ODgwOTM3YTMwMWFmMDJjNjAzZjAzMzNjNjFiMzBjN2I0OWQ4MzlmNmI3MzgifQ"
+                        },
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L21-L61",
+                            "version":
+                                "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
+                        },
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L63-L107",
+                            "version":
+                                "repo-lines-v1:sha256:fb76154e493a6559920dabf0b0ca91f05b876c996dc38d905019cba439891a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_de178ea7bd584d88b04b493448a30e23",
+                    "statement":
+                        "The current CI workflow does not explicitly invoke CTest, and the Nix package derivation does not define a test check phase, so a green packaging run is not evidence that the focused CTest suite executed.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L42-L56",
+                            "version":
+                                "repo-lines-v1:sha256:8e42aa2ef503d7e5913ff376837142251a515621e41c83b42da04357ca348aaa:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjYTNiYTBhMDVkMmJkMDE5YzgzNTkwNDQyYmRiNzZlMWJlMjk5MWMzM2JjOGZjMjdkOTBjNjVlYmRhMDA1NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NzMyNzBjMDhlNDk5MGRhN2Q1MGRiMzFhZmMxMzRkOWViYWNhZTRhYjU0NjI1M2Y5NGZiNDQwZDNkNzEwODUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImYxNjczNzY4MzUzYzkyMzYxYzhkNmRhMGNmODgwMTdjODUzZGU2Zjg1YTJiMmE5NzllYzQwNDBmMTI4M2ViYWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkMWRiMDdkMjIyMGQ4N2ZjNjFkNjkyZTAwOWQ5ZDliZmQ0NjE2MWUzZDAwMmU4ZTZhMzMwMDE0YzY5NGE5M2IifQ"
+                        },
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L8-L19",
+                            "version":
+                                "repo-lines-v1:sha256:2ee3a7884c6eac303f7850bc0c436203d390f008eeec909726571bf6365ed5c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ1YzQ4OGIyMTFlNDZhZWE4YjMyNDU1OGYwZTRiMjViMWNkZTk1MjMyMDg4NDI1MTg0NTI2OWZmYjFkNzAwOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MTVkMjQ2YTBiOTNiODBmOGNlMTUyM2QyMjRiZDlmZTRlMjg1MzdjZmJkNDg4MTY5ZTUxMjM4MDllNDM0ZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA4ZGRjODhhYjVlM2IwMmIxMGJhYmM0MzAyM2Y3MWZmMDgzNGQzNzE5MTRkMTNlYTNlYTk3ZTMzMTY1OTBmNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNTExNTY3OTJjNGU5ODNlODU2ODgwOTM3YTMwMWFmMDJjNjAzZjAzMzNjNjFiMzBjN2I0OWQ4MzlmNmI3MzgifQ"
+                        },
+                        {
+                            "resource": "repo://nix/ornlslicer/default.nix#L12-L64",
+                            "version":
+                                "repo-lines-v1:sha256:8e88dc477a41d8fd9fd9a5176ac7e558c040d63c7ebfbf8261bb04bfedf3f918:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM1ODgzYmFhYmEwZjAxZjcxN2NlNTgxOTBkN2MwZjA0NmYxOWI4MDBhNDI2Mzg3OTE4MWQxNWI5MGRmNDNjZTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyYTJjYjI1YTEyMmI0NDIyMWE2MjM0ZWM2NjBhN2I1ZmI3ZjliZGU3YjNiOWUyYjNjNTU5YTBkOTZmYWM3MzkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdiOTZiZGJhN2Q5ODM4ZDU2YjMzMGRjODhhYzNhM2IzMjg3MDkyMDU5MjljN2I0NGQzYmZjODE2NjE2Yjg4NGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_266856007aab45c29bae3ec311b8e1cb",
+                    "statement":
+                        "The registered tests do not drive complete widget, native-dialog, screenshot, or OpenGL workflows, and parser and writer tests do not demonstrate physical controller acceptance.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L52-L56",
+                            "version":
+                                "repo-lines-v1:sha256:3e6f516fe036b14195943cabd44c0c468c7ea15df5ba21d4e58b3c2cc62833d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1ZTFhMGUwOGRjMDgxYWM1ODZhMzI5ZTc3MDNkOGI3OWI3MTUwYzNmMWY1MDMwZGNmNDJhMzdjOTNmZWU5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjk3MzI3MGMwOGU0OTkwZGE3ZDUwZGIzMWFmYzEzNGQ5ZWJhY2FlNGFiNTQ2MjUzZjk0ZmI0NDBkM2Q3MTA4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY5MDVjZTFlNWY4ZDFjMzZkZmU3ODJhYWY2OTNhZDQ3NDUzZTZkY2RkODJlMjE2ZmYzNTZiZTc3NzI5YjI0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QxZGIwN2QyMjIwZDg3ZmM2MWQ2OTJlMDA5ZDlkOWJmZDQ2MTYxZTNkMDAyZThlNmEzMzAwMTRjNjk0YTkzYiJ9"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L475",
+                            "version":
+                                "repo-lines-v1:sha256:332bca457648fdeb26cf9a30cac5315b5ac4325a2abbc135a1f3ce50f7738240:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQ3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhYzk5ZDQ3ODZhMWUxZTk0MzE3MzViYjRiZDRhNTQxNzBiZjkyOWU5ZWM2MTJlNmY5NDUzNGQzYjA3NGExOWZjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1OGZhMmRmMjQ1NjNmODgyNTg1NmJmNzZkNjE3NWRmOTBhMzM5NTc3NTczODMyOWM5YTNhZGUwODI5ODZiNTg2In0"
+                        },
+                        {
+                            "resource": "repo://docs/contributing/linux-appimage.md#L33-L72",
+                            "version":
+                                "repo-lines-v1:sha256:25e5abff2ecdf4ca8c40d460ec3bcd60b2a9fdf6bc4028c958d244886c4b65a2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY0YjJjZjgzMWY3YmNhZGE3NDlkYzAxNGE2Yzc1Y2IzN2NhZjllOWZkZDRkZTJlYjY4Nzg5NzJmM2RlZGIyODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0OWFjZjNkOWU3MjkwNGNiMzU3ZDBkMGUwYjdiZTVhMDFlMTMxYTc0OTgzYzc2ZDQ1Nzg5Yjg3YTgyYTU5YjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY5MTg2ZjI3N2ViZjU0ZTNiNjAyNmY5MTAxZTIyN2RlOGFhMjcxZDMwM2YyYmVkZjViNjA2ZDNkYTljOGM2OWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/arc_specialties_parser_tests.cpp#L790-L875",
+                            "version":
+                                "repo-lines-v1:sha256:979f2c72fbc4ef6471419e9f138d25f063d97a582445deb82d3626c4e0cf1359:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTRmYTE4ZjdmOGM0NTMwMzczOTgxZjIzODg5ODE0ODQ4M2I0YzQ2OWJlYjA5YTkzNzU5YzhmZGY2YWMxMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1N2Y0YTExMTFmMDM2ZDA2MTMwM2YxMzBjZDk1NTE2NTgyYmU0NjZjMzAyOTc4NmE0MjMyNWM3ZGMwOTlmZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJkOTRmZGQ5OWQ5NTgxZDI5MjdmMWU4NTI4NjAwZTQ2NjJhYWRmNjljYjRmN2Y2NzFmNjdlMGM1ODk4YWIifQ"
+                        }
+                    ]
+                }
+            ],
+        "verification": {
+            "by": "openwiki/0.7.0",
+            "at": "2026-10-06T20:25:27.555Z"
+        }
+    }
