@@ -15,7 +15,7 @@ We enforce a single C++ style using [clang-format](https://clang.llvm.org/docs/C
 
 Style rules live in the repository root `.clang-format` (Google-derived with project overrides: includes, spacing, braces, ordering).
 
-The repository root `.pre-commit-config.yaml` runs the matching `clang-format` hook. Install the `pre-commit` CLI with `pip install pre-commit`; pre-commit.ci pull request autofixes are enabled so PRs with formatting drift can receive an automatic formatting commit from pre-commit.ci.
+The repository root `.pre-commit-config.yaml` runs the matching `clang-format` hook. The project development shell provides the `pre-commit` CLI; enter it with `nix develop .#ornlslicerDev` before installing the hook. pre-commit.ci pull request autofixes are enabled so PRs with formatting drift can receive an automatic formatting commit from pre-commit.ci.
 
 Updating style:
 1. Edit `.clang-format` (optionally test variants using an online configurator).
@@ -61,6 +61,7 @@ Enable editor format-on-save to avoid manual runs.
 
 Install the local hook once per checkout:
 ```bash
+nix develop .#ornlslicerDev
 pre-commit install
 ```
 
