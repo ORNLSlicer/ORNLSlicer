@@ -1,0 +1,291 @@
+    {
+        "schemaVersion": 1,
+        "pageVersion": "sha256:883947a3e80c84ff6a8874fc49737912ca86b915ce78b94d7781d9d103194d06",
+        "claims":
+            [
+                {
+                    "id": "claim_c302e1e2a13245ad883f96d975ef39b2",
+                    "statement":
+                        "ORNLSlicer is a Qt/C++ additive-manufacturing slicer whose GUI and command-line shells share session, settings, geometry, slicing, writer, and G-code loading subsystems.",
+                    "evidence": [
+                        {
+                            "resource": "repo://ARCHITECTURE.md#L14-L39",
+                            "version":
+                                "repo-lines-v1:sha256:45d2cb700eac135b3ed3270edf70d3999334f2ac8f875f91c01477c5d5030d1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJmMDI1MWE1OWUyYWZmOTQ5Y2Y1MzBjYjhjNzJhM2Q1MGNjOTE3ZWVhMzNmMmU5ZTVlODIwZTk1MGE4ZDQ2ZjUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIzMDc0OTc4ODI4MzQ5MzljNzNlNWE0NGEzNjZiODBhYzQxYmJiODA0NmYxZjJiY2VkYTJjNjk5ZDYxODIxZDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjQ5MzQ4ZmIyMzk1ZmYxYmE2MzlkZjU1Njc2ODgyODEyMGMwMmZlOTYxMDg4NTNjMmU0Yjg5YmZmMDZjYzU2YTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAwNmEyYjJkZjFkZWY3Mzg5Y2RjMDNlMTYzMjBiNzg4OTk0NmMxYWZjN2NjZDQ0NWRmOWM5MTE4ZjQwZjM3MjUifQ"
+                        },
+                        {
+                            "resource": "repo://README.md#L1-L21",
+                            "version":
+                                "repo-lines-v1:sha256:7aa6af245ce8a38f14eb3d9c258162d10e8bfb25c2d23a377f9386f0f5fb0d41:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwNzI5ZjUzZTBkY2FiZTFkMTQ3ZDI1NDZkYjIxZTZjMjQxMmIxNjQyZGNlZDgwZDk5MzhmOTk1MTI1MDRlMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5NjZlYmRjMDE2ODgzNTQ1YWFjZTk4ZTVmZmUxOTZkZTIyNTZiYWRiYzBmODE0YTM1YTVhZjk4YzBjYTJhYzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5NDZiNTFiODZhN2U4OGQwNmQ5ZGNmMDgwODlhY2I2YWE4NDQ2MDUwOGUyODg5YjM1N2JmMDQ2NTg3YjExYzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_58b3513f936a42e89103041d516e63da",
+                    "statement":
+                        "Production declarations and implementations are generally paired under include and src, while resources/settings owns canonical setting metadata and templates owns installed printer and process templates.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/AGENTS.md#L11-L20",
+                            "version":
+                                "repo-lines-v1:sha256:b09de8d23b5cb4651301a19e46733c0a4601f920df8b16c9b454569abb88d874:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmMjc5ODdhMTY5N2JkYjE3MDgwM2IxYTIzNTljNjNjMGYyY2Y3NDMxNGJjZmZjZDA5NGQ2ZmY1ZTE3MTA0NjIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzZDExODFjYjQzZGMxNjIzMjk2NGVjMzU1OTdhN2M5ZTI4M2Y1ZTJmODVhZTMxNzExZDY0NGZiZmZjNzMyYjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNTBkM2I5ZWZiZjYyY2VlNzQ0MjkyNjBiY2E4NjhmY2JiZjg5NTBhN2E4YTg0NzIxNDhiZDZjYmEzNWM3NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0NzNmMjI0ZGJjNWVhZTk5MDg1Mjk0MWExZTYzNDJkMjQ0MzM2NjQxMTA2MDkxMTE2ZWMwNTMzN2MyM2ZjODgifQ"
+                        },
+                        {
+                            "resource": "repo://ARCHITECTURE.md#L41-L57",
+                            "version":
+                                "repo-lines-v1:sha256:7a0c01b41bc4a23ad43f81b8dae228ed1f651c28d494957090bf4e3ee49d0f85:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU0ZTVlZTdjNTk2MTc0MjM5ODE3MWUwMDZlNGUzODVmZjUxMWY1NTc4MmQxM2ExMjRhN2Q4YTUxOTg0MDllMjQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZTc5MzJjY2QwNzNhMzEyY2IxNGRhMzIzZDM4YTY0MTJhMTBiZDkyNDhiNmNiZTcxY2UwMWZmMzdjMWE1YmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEyZTJlM2E1ZDhlNThjMGJkNDYwM2QyYTI5M2U4YTEyYzU2YTYwODNhODRlZmZkMGY4NDE5MTdkZjY0OGVjZjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyZThhMzRlMWNhNTlmN2U2ZmZmNTljNWFmNWQzYzY5OTA4Nzk3MTRkZWJjZGIwY2M0ZTg2OTFlNTI0ZTE4MmYifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_90d3154638c84abb858115e08516d615",
+                    "statement":
+                        "The standard developer build uses the ornlslicerDev Nix shell and the generic-llvm-ninja preset, which selects Clang, Ninja Multi-Config, and build/generic-llvm-ninja.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/AGENTS.md#L39-L47",
+                            "version":
+                                "repo-lines-v1:sha256:a1b1d752622634e86985068139a9c96f21d3aeb4d219420ec8e2c116a4ad820a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZhMzU1MTliZWZjNzU4YzBmMDM5NjVkYzliMWQ0MDNjYTk3ZjRiZTRjYTVkMmVmMzE0MTYwYjE3YTUxMDQxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYyNzI1NDU4YjkxYTJjOWU3YmQyMzZhOTJjMGZmOGM5YTE0NGQ3Yzg2NWM5ODAxN2ViMjhlYWQyMzNkYjNhZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzNDE3ZTVjOTk2MWU1Y2ViZTExMzc3MDMzNWJjMmUwYjY3NWQ2NDM1NjAwODNlNjk2YWVjYzYwNmZlYWU3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTMzNDg0ODEyNzY1NWQzMjRmYjQ5N2E4ZDRkNWM0MTFiOTc1Y2IyYmNiNWIwNjU0N2ZkNWVhOTkzNjFlY2NmNSJ9"
+                        },
+                        {
+                            "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L14",
+                            "version":
+                                "repo-lines-v1:sha256:f263db53203800d45da183a6042fdbe1bacefedee475b717475934a070bdedb2:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFlNjczYWJkNDU3YTk3ZWVhMTdhNjAwNjJlYjBmYWVhNmJkZjA5NDg2OGNjNmI4ZjhjMGViZGEyZjYxZWQ0MmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg4MGJiMWU3MTExNWVlZDJiNWZjZmU5N2ZmZmFmMzJjMmVlNTg4YTIxODAzYWIwMmJkM2JmZTk2YWVhNzhiN2UifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_56e5b691e19f430991353e30d838214f",
+                    "statement":
+                        "The ornlslicer_obj target compiles the shared production source and resource set and is linked by the application and focused test executables.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L139-L164",
+                            "version":
+                                "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L241",
+                            "version":
+                                "repo-lines-v1:sha256:f894b240f47c7e82fa52d8c4824949f75f10432823e9db27c5b5ddc66bd8cbc4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZDY2MmExNTYxOTIyMTBmZDVkNjM5ODc4OGU2ZGIyOTBkNjUxYjM5OWQyZWU0NTQ0M2FjNGMzZTA5MTU1NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1ZDZkNjQxNGJiMDE3MDVlZTMzYjAwOGMxMmY3OTQ3ODcxYTc0YjUwZTM1NzU5MjZlODU0ZDM2NDU3OThmNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_57d7ebb5c70941cbb0c6a10379bb6e86",
+                    "statement":
+                        "Running the entrypoint with no arguments selects QApplication and MainWindow, while any argument selects QCoreApplication, command-line conversion, and MainControl.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/main.cpp#L69-L121",
+                            "version":
+                                "repo-lines-v1:sha256:ea602a78989294318b9bc43953ca8e2b614f780e442cac383cc89b1793cb4f3f:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMmQzMjcyNjNiZmE1NWE5MDE3NGYwODRlNjE0M2QyYWFmZGVlZjRlNmFhMzVmZTc3YmVjYTM3ZDE1NDU5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyZjM3NDY2ZGY1NDkyYjc4MzJiZjllOGI0OGFjOWVlZTIwMWM3OTM2ZjNkNDI3ZDE4NGFhYjc5ZjU2Y2Q4ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_04e4a3db4b814612a5e6e1675b7261fe",
+                    "statement":
+                        "Normal CLI slicing accepts exactly one primary input form from model files, a model directory, or an .s2p project and requires an output location.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/console/command_line_processor.cpp#L114-L203",
+                            "version":
+                                "repo-lines-v1:sha256:786da3a78fe1cc37d5789f3f4e8b1118b5842acb4a29e3692837c0413efb202c:eyJzZWxlY3RlZExpbmVDb3VudCI6OTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjYwYzNkZTUxNjE5MjUzYjYxMmEyMDk1ZDMxYjkyMmRhODNlZTQ4NmVmYzhiZjYwMTI4ZmI0OGUwZGFiYmUxMmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBmYTQ4OTZiZjBiM2VkZTRlMzZkNDA1Yjg0ZmFmMWU0NzIyMWU2OGQ3MDBkMzVkNjk5MzI2OTMwMWQzNjFjNGYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRhN2FjY2ViYTVjMGFlZTQ2OGFmZTE3MmNiODlkM2VhZWE1MzE5N2VkYzMyZTQ3N2ZjNDNjZGRkMTQ1MDQ3YzcifQ"
+                        },
+                        {
+                            "resource": "repo://src/console/command_line_processor.cpp#L43-L112",
+                            "version":
+                                "repo-lines-v1:sha256:27703f66ea35d0791132ebbaf34fb169badfae4f2e25f4cf8260488c3d04e3ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2OWZiMGQyNjFmNGUyYzk2MDNkM2FiYjU5YmQ2YTI3YjI3YWM4OGY4NWFjMzY4NzkwMzc0ODM5MTRiYWNlODQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNkN2JkMmU2ZTZiMWQ3ZDc3YmYwMjc2MGNkZjZkMDNjY2FiZWVkMWE0MzJlNjEyM2M1YTU5MDkxMzBkN2YwYjMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNjRiMGZmZmRhMzJkMWM1ZWY2MzljNTc3ODgxNTViYmJhOGZjYmNiMjk5MThlZDc5NDJkM2RmOTE5NTYxOTEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_795549b965ad4d9c97e52240f1020e54",
+                    "statement":
+                        "MainControl applies console state, loads models or a project through SessionManager, triggers slicing after parts load, parses non-image output through GCodeLoader, and publishes the final G-code file.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/console/main_control.cpp#L123-L155",
+                            "version":
+                                "repo-lines-v1:sha256:60425c9c8c2b438f6bfe9fa93ec963616f6647fa8c6eb3baac9ea72524ddfba5:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4NWRiOGNiNDVhMDI1ZWE4NGVjM2M2YzJhNjlhYmE2MzQzNDRmYTdlMmY5NWJlMDM0MjE0NThjMzYzOGZiNGIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM2YzFkZGQ1YWNmN2NmN2MyNGNhZDQxMDRiZDY1NDk5ZjA4MDZjYjI2NGRkOGEwOTU0ZGNjZGEyZmYwMmE4NmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNkNDJhMDk1NTZlMTI5ZjUwYjc2NGUyNDRhZTQ5MTVmZGZlMDhkZTdkOGUwNGYxZTU5MmQ0MTk5M2ZjM2M5ZmIifQ"
+                        },
+                        {
+                            "resource": "repo://src/console/main_control.cpp#L26-L120",
+                            "version":
+                                "repo-lines-v1:sha256:b02b62f77bd773a99c5ed0573ac1ab10e69e62d054eea5350fc177ca29fc7efa:eyJzZWxlY3RlZExpbmVDb3VudCI6OTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE0MDVkZmJjOTg2MTIyMjI5MTc5OWI4YzczOGFkMTEzZjZiMWYyNzU2MmQ5Y2YyODRjY2NlMTFkM2U0YzNiMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxNGQ1YWY4ZDhlYTRmNTlhOTQ5NTBjYTc3YTgzMWNlNWQ3M2QzY2ZlMDY1OWM4MzI3MzdlZjEzMjY4NTdkZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhNWYwZjk2NmQ5MWJjOTgxMjg2NWUzY2Y5ZWQzYWExZjE1MDE4MjY4ODk1YjljMWE3MmYwZmM2ZjFkOTQzYTciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE2NmMxYTkxNWJhZDNlMDYxYmZjOTA3OTYxNDcxNjRmZmM3MDE3YjVhMzdmMmY1ZmJlMTdlMDAwYmU3YWFmYTMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_e9d2ed631a694a13a0e561afec2baeb4",
+                    "statement":
+                        "SessionManager dispatches active work to PlanarSlicer, ImageSlicer, or CylindricalSlicer and requires Arc Specialties syntax for cylindrical slicing.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/managers/session_manager.cpp#L575-L605",
+                            "version":
+                                "repo-lines-v1:sha256:37e789455aece09d3c9129bf0c596a11581894af0f460f3f14d2566b303b044b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhMzc5YzUxYmE4YjQzYzZiYmJiNmVjOTRjNTY2YTI4NDU0OWI2MjM4YjNiNThkYWQ0ZGQyMjZhMzZhODAyMTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBkNmI4YWE2NDRhMzQwNDJmMzJlMjNmODFiNmVhNWUzMjljZGU5OWUyMDRjOGMxYTUzOGQxYzRjOWNiMTYyZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4NzA1OTU5N2QwZWU2YzI3M2Q0MmQ3ZDk4Yzc1N2EyMzEyYmQ0OTllMWNiZjgyZjMxOTViYWRkNzNjMmI0NzAifQ"
+                        },
+                        {
+                            "resource": "repo://src/managers/session_manager.cpp#L654-L685",
+                            "version":
+                                "repo-lines-v1:sha256:0ca2d25f8ba4649bf830134517d3f95c89993cf045588946ccff21399f772069:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3MmEyNDhkNDk3YWUwMjZjMTRkYWY2MGNiZWVjNGMwZjExZWI3ZjA3ZDZlMzJjZTc3ODAyMTY1YTZmODZlY2YiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2NWU1OTBiOTk1Yjg2ZjQ4YjEyZjdiMTk5OTNiY2E2YWIwZWQ0MDgzN2RjNWRmMDdhYWRkODBkYjM3YmVmNjkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVhZjIzMDUwMjA0MmNlOWQzNDkyNmFlNjY1YjM4YjVhNTk3YzMxMGY4NmJlNjI5MDYzYzY0ZTk2ZGNiZTI3NzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_917408a72d474f938f8f57a507846cde",
+                    "statement":
+                        "Toolpath modes select a concrete writer from the active syntax, and GCodeLoader selects a parser from G-code header identity before producing parsed motion and timing data.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/threading/abs_slicing_thread.cpp#L210-L320",
+                            "version":
+                                "repo-lines-v1:sha256:716145f8fe4bacc166b676aee3a651f28c22e648cf8f4e67393459d449c35160:eyJzZWxlY3RlZExpbmVDb3VudCI6MTExLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI0ZWM0OWRkMjdkYmI3Y2JhMDQ1NzYzYzI3NTk4MGVlOWFjNjYyZWQxMzQyZWU4NzhiYTIwYzBmMjk1NWRiMjAyIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyOWI0ZDQ1NzUwZTRhNzM2ZDljMDBmODk2MmE4NGUxZGFkODRmMmVlMmI0YTc4Mjk2YWEzNWJlY2E3N2EzZWQxIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI2MzRlZWY2MzFmNDU3YzNkNjQ4NWVjNjk1MDMxMWNhMjlkNzM3ZDQ4ODMxNDBjMTFiYzA4ZTYwZWE2ZjZkMzVmIn0"
+                        },
+                        {
+                            "resource": "repo://src/threading/gcode_loader.cpp#L287-L328",
+                            "version":
+                                "repo-lines-v1:sha256:5d9f85a22296d11dcc0a76b4fe7899f580e108caed4ed10e0f00eae3bf55d346:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIwNDE5YTRhNGNjMTkzY2M3Y2FmNDUyM2Y4MjBiNzQ3MGZiZDZiY2Q0NjQxZGJmZGZlYjI2MTc2MGE5MjQ5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRkZWEyMjA2Y2RiZmZmYTA0YzMyOWJmNjQxOTQ5NTI0NGMzZjY3YmZmNWEyZTU0NjU3M2NmNTgzNDQyOTk0OWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhlNmU5YjI1ZDVhZTZkZGFmMWZmNDNlMDMyMzUxYjFhOWNkMzgzMWVjMjkyMTVhZWNkYWM0ZWEyYzczM2YyNmEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwMDNjOTUyNTkzZWU3YzZhZTI4MDgzZmI2YjllODkyODMzNDEyOTc3OWQ1NzI4OGM2MWIwMWZiMjFiMDhlY2QifQ"
+                        },
+                        {
+                            "resource": "repo://src/threading/gcode_loader.cpp#L590-L680",
+                            "version":
+                                "repo-lines-v1:sha256:14bf8afe5e74d82384e237387f3e09e29a915211251cebdbacde334267169381:eyJzZWxlY3RlZExpbmVDb3VudCI6OTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFhYjZhYWJlNTBhNGY2NDk2NGUzOWRlMjBiYjY3M2I1ZjQ3MmRmZTk1MWZlNzUzNTJmMmVmY2I0NjE4NDM4ZTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MjJjNDJjZDE5YzZkMDNkODA4YzQ1MjcyMDU1MjgyNWI3ZWExYzViNDkxYjIxODUxMWNhYzc0MTVjZjlkOWIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4OTBkMjc0YjE1NGEwMDMyNWM5ZDRhYTU2YzA2OGExOGQ1MzNmODU4ODNjOGQ1YjM4ZDU4MWQ3ZWNiMmNiYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA3YWE1NDdjODFkZDNjMDQ4YmU5MzFmZTM2OTFhOTA0M2VjNDM5OTA5YTNkNGNkYmJkZjk0ZjExOGJlM2NiODUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_abeff60f99a443f1a7889d04159a7066",
+                    "statement":
+                        "SessionLoader persists .s2p projects as zip archives containing active model data, transforms, global settings, part-local settings and ranges, and a version marker, while SessionManager performs settings-version preflight before asynchronous load.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/managers/session_manager.cpp#L708-L740",
+                            "version":
+                                "repo-lines-v1:sha256:eb600cd35b0e82a2a260cb8d352df76e416ca77ceace5d374be9b6cdf2a05c69:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiMGQxOTVhMDc5MGEwOWM2Yzc5NjdmMWU3NWNjY2JmZmU3MmQzNTE1YTUwN2VkY2QwM2IxM2YzMjE4ZWMxZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTkxODhjZWEyN2U1MGU2YmVmYTAxZTZjYjc2NTgzM2NlZWI2MjEwZDY2MTg3NjFmMzI0NGNlZWU1NTY5YTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2Y2Y5MzkzYTkxZTM4Y2YwMGNhOGM1MzQyOTFhOWJiODc5ZWMxZmVkNTFlMDVlNGMyOGRjY2VlYjYxOTU3NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0MzJiYjdhNjc4MDEwNzVhMWFjODVmMjJjNTM4MTBmOTlmOTI4MGJhNmEyMmMzNzZkMGQ3ZDcwNjlkZjM0NTQifQ"
+                        },
+                        {
+                            "resource": "repo://src/threading/session_loader.cpp#L131-L216",
+                            "version":
+                                "repo-lines-v1:sha256:51a138e9e2163e024eea69705981e89617e13a1de5c34ae53a4c9e5f00d145c7:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3YmM3MzViN2M0ZmU4ZDUxODFkNDdkOGRkMjk1ZmY4OWUyZTc0NjAyOTE5ZTBiMDIzM2VkYzBiODhjZTI1OGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdjZjI4ZmZkYzYwNGRjNGQ3MWE3Y2Q4ODVkODc2YmVlODk5Y2YwZTE2YjQ0NjQ3MDU5NjBlYzhkZWRmZjk0ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3ZTg1ZjhlZjU5ZDJlYTUyNDhiZTY5YmMwZWMyMDIzMzc4MWVkYTI4NDBiMjBhZWZhMjljNzRlOWU3OGFmOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxN2JkYzAzNTEyYTBjN2VjMDM2MGQzYWE1ODljNWJlODhlZjk5MmM4YTg1ZGM4YzYxM2E5MjI5MzY5N2MyNDgifQ"
+                        },
+                        {
+                            "resource": "repo://src/threading/session_loader.cpp#L37-L128",
+                            "version":
+                                "repo-lines-v1:sha256:c4aa3193ed6f29e44be4688d36d9c5f0e70b3455419268ee2b15fa225f942f24:eyJzZWxlY3RlZExpbmVDb3VudCI6OTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NGI3MDdiNTlmNGE4NGZkYTczMjVmZmY3N2Q1Y2FjYTI2MjkzMTUyODIzYzc1MjVkMTI5MDIwZmIyNWE2MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRjNDNjNGY5NzRmNzRkYmFkOWExNzkwMjc5MmVmMzIzZGRiZDdhZmIwNWIzODUwOTQyZTU5ODY0ZTc0NzNiOTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmYjM4Mzk4OWYwNTUwYTZkMzE5OGM2YjNhY2VmYjkyMTZkM2IyNjQwMmE2NTkxNmI0ZGRmNjlkZjZiMGI0Y2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA1ZjlhZDE2OWRjNjA2OGVkMDliZGUzNDEyNWM1MTE3OTE4ZDE5MGVkMzZjNWRhMDNlMjRlMDNiNjI1YTE3M2QifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_e4d2c409cc894a1d92191560f9ea7a78",
+                    "statement":
+                        "Step is the computation and output boundary for settings, plane orientation, geometry, islands, modifiers, and WriterBase output, while SegmentBase is the polymorphic movement and display-metadata unit.",
+                    "evidence": [
+                        {
+                            "resource": "repo://include/geometry/segment_base.h#L21-L35",
+                            "version":
+                                "repo-lines-v1:sha256:a50526b02e7c72c6fe5fdd9c2549bb611bbd47ab60cd1933aacd55fea3b25c58:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM5NGI2MTFkZjRkNDk2YzU2YmIzNzBiZWIxNDJlZDE2ZWFiNDA1ZjQ5MzM3NjViZDIzNzNlNTQxYWM5ODlhYzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5NjNkYTlkYjc2ZjcyZTRiNDMzM2NjNzc2MTMwM2I0MTFjMDVlMTg1Mjk1NTBkZmNiYTlkYTA2MTc1NTIzY2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5ZmMzMzY0N2U5MTVjMDk1ODZhMDBmNWE5MmNhOWQ0OTQzOTgxNThhNWFiNjIzOTU4NzFhZWZlYWZkMzg2NjQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3MzhhMzJmMjI5YTJlYTIxZmU3OGFlMWFkODk4ODFiOGZmZmI5NWU2OTNlOWE0MWYzY2ZlZDc1NzAzMGI3MjMifQ"
+                        },
+                        {
+                            "resource": "repo://include/geometry/segment_base.h#L52-L110",
+                            "version":
+                                "repo-lines-v1:sha256:696f1e66d18a5f01055bf7990e11a6337881627833ba7273b300d4dabb557672:eyJzZWxlY3RlZExpbmVDb3VudCI6NTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkzNzA3ZTk2MDYyZjBjNDNiYjIzMzlmZjhjYzQ1Mzc3MDYxM2FmZGNlNGFhODY0ZDMwZWUxYWE0Y2NjMGZmMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjk2MTEyNDllZDBjYjE0YWI4YWNiZjZkYzhiNGRkZDExZjJhZWU1YzVlZjhkZjE5YTJmZGY2MDIxNDNkMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwYzVjNmVhMThmMTkxMDI3MDMxMTQxMWZmYTRmNWMyMzYzOTA5NjcxNDc3MzNjNDAzODQyMGQyY2I2NTlmNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA5YmNlODkzMDk3YjAzN2JjYmI0ZTI2NTQwZDc2NjJmZTNhOWFlZDg2NjNkNjM4YjU5MzFjNGExMzExYWM0ZDgifQ"
+                        },
+                        {
+                            "resource": "repo://include/step/step.h#L18-L49",
+                            "version":
+                                "repo-lines-v1:sha256:0011f69eec6abc8451efede22b22019344b9c64bf0c3bf084311d5d4c6ef4cc1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDFiZTc2MDExZjAwNTMyNmZjZDNmYTZkYzVhZTE4ZTRiM2EwMWQyZjVhOTZmMDMzZjM3MzliODI3NDFkZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5NDU3NzcxZGQ1NzBjZmEyY2M3MTBjMDk1N2VmOThhNDYxZTZmNzA1M2M1YzQyYjgyOWNmNWY1ZWRmODEyNGQifQ"
+                        },
+                        {
+                            "resource": "repo://include/step/step.h#L75-L121",
+                            "version":
+                                "repo-lines-v1:sha256:49b5b2dc466a11ea664bc2e23ed716c682060fe99c8efd7c2c3574d692f5e4ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0ODMxYmRmYzQzYzBhNzc0NTA0NTI3NGI1N2Q4MTIyYTk1Nzg4MWMxZjY1MjE1MzU1OGM4ZWNhNGY3MzU0NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwYTJiMzczMGQ3OWI1NjA0OWU4ODdkNTM2NmMxMmY3MDlhZGE1YThmNjFiNzQyODU1NzNiMjRhOTBmYjU4MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2MTY4ZjdhMTI1Zjg0Mjk3NDczZjUwZTVkNTA1ZjRiODU2NTg0ZmVmMDMzODhhZjlkYTUyMzgxYTAwZjU4OTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyMDkyOTY1M2E3MzYyNGM3YzFiMmJhMTE1ZDlhNTExMzI5YmUzMzRkZDI5YWNhZGUwNzk0MTE5YjU3NTRmOWUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_56f823a00acc46c38065488abba8bcee",
+                    "statement":
+                        "resources/settings YAML files are canonical, their sorted path and in-file order control generated catalog and UI order, and the generator must update both master.conf and setting_inputs.conf.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/AGENTS.md#L30-L34",
+                            "version":
+                                "repo-lines-v1:sha256:902be5c32472c08e720308562c5071d7d972259f8058d8a055430adca646ec74:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTZmY2Y3OWIwM2EyM2IzZTc0MGNhZmRhNjg1ZmQxN2MyMGMyNDhkZjliZDJiNTU5ODhmOGFmZTFiZWRlYTFiYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM5MThlMTQwMzc3YTNiYTUwY2IxYzBhYzUwZWM0M2U0MWYyNDY1MGFmNDlkY2UwMGQ2YWJkNzcxOWY2ZGJkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDE3NzM5NGVhNDBhZWNlYTQ3NWMwNzA1OWM0NjI0MzMyNzA3MmE4YmI5M2ZiNjFmYzc5ODQwNTZkMWZlNDI4ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODU0ZmQ1YjM2YmQ5MmUyZGE3ZGZjN2NmMzk3MmI0NjlkNWZjM2FjNTJiNjgxMjE3YmNmNjE0ODI2ZDgyYTUwMCJ9"
+                        },
+                        {
+                            "resource": "repo://resources/settings/README.md#L1-L15",
+                            "version":
+                                "repo-lines-v1:sha256:71089c14274045b2509e33ff82102929f233644954ebd31e3c9b9534aefbdc8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkMjIwZTZlZThhZGEwYzg5MDU3NWQ5YmRjMTM4ZTVmMGYxOTI2NjlmYjQ3M2IyZmMxZjZlMWJiNmQwY2ZjZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZDlmYmFlM2IyM2VlYTU0Yjk4MDJhOTM4NjI2NmNmYzM3NTdiNjQ0MTA3Mjc4OTRmZDk2NzRjNTQzNTQ5YTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyYzMyZDZkMGY4YjE1NjNkMzYwM2EwZWU1MzdmMmUzNzA1NmExZDQzMDljNDkzY2FlZmYzZjU4ZjVjMzVlNDMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_a86487204d33492eb063ad35a64516f1",
+                    "statement":
+                        "master.conf and setting_inputs.conf are embedded Qt resources parsed by SettingsManager into the master catalog, composite input metadata, and default-valued active global settings; the CLI also reads embedded master.conf.",
+                    "evidence": [
+                        {
+                            "resource": "repo://resources/configs/configs.qrc#L1-L8",
+                            "version":
+                                "repo-lines-v1:sha256:ceb1da5edbfa13a5e0a962526ec71dcd3b5b376a4e10f3dacc31ade4293c0885:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYTY1YmRhZDRkOGI0NjVkNmNkOWFhYTk1MWU3OWI3MDkyZmUzNmM4ZDI0YWFhZmQzNjFjMzJmYTdiN2MzMzBhZSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTUzYjliMWU2NDAzODRlODEzYzk2MzVkZjQzMjA5Y2JmOThkOGU1ZTBlNDg1NDdjZmUxZDU4MWY3YWNjZjdiMCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+                        },
+                        {
+                            "resource": "repo://src/console/command_line_processor.cpp#L34-L41",
+                            "version":
+                                "repo-lines-v1:sha256:85b4113be8be5afedd9954f2207079d6308263d73edd406fcb8764a13d756078:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY4YjZmNjAzYWJiZTNiYWUyMTllYTcwNmY4Y2EyYzFhM2RmZWMxMGY0YTQ2YzE5MTdmNDg2ZDk0M2MyMTlmOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlhYmEyOTJkYTkwZmU1ZTM2NjljOWExMDY4NTY4NzQ2ODZlMzE2OWNjMWI0ZDYzNzYyOWE2NDE1MGU3MWJkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzVkYzU1MGI0NjJiOGU0ZDY2MDViNDM0NDFjMjczMWJhMTZhOTRmZGQxMDk1ZTBhNzNhMjI4OWFkNDQ0OGEzNCJ9"
+                        },
+                        {
+                            "resource": "repo://src/managers/settings/settings_manager.cpp#L38-L68",
+                            "version":
+                                "repo-lines-v1:sha256:c6db6c32814ea92f762fad5e6f3b6409930592016b76373bb38f27f77d0e91d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjBjYTc2YTFjN2JkNjA3NmEyMTg4MWFlOGY0MDI3MWJkY2YwNGYxMTBmM2Y0MzJiMTRiMGY0NDI2NjFkZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwNDMzNjUwZjE4ODc3M2VjNDI1MzQ1MDRlZGMxYzJiMmEzN2EzMTljZWI0NjQwMTdjZGJhMWQ0ZmU3YmM1M2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1YjQ4MmRkY2Y4YjAwOGUzODUzNGIyZTdiNDE4NjI3ZWM5ZjY1NDJiY2ZkYzUxYmViMDFiNDJiZTc2NGE1MzMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_24b8ca0af7bc4f74b1f86fcdfa70577c",
+                    "statement":
+                        "The build declares 21 prefixed focused test executable targets with unprefixed CTest names, plus a whole-project slicing regression that is registered only when its configured local fixture exists.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L461",
+                            "version":
+                                "repo-lines-v1:sha256:8d41c76ec143be2d02b66546aaa50c50035982845c7ab3d36b608ad3ffd7c5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L463-L475",
+                            "version":
+                                "repo-lines-v1:sha256:bd19590ffae6b4e3ec37a59b536de689f468debfdc62f2c9a5fae7471f4848f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjOTlkNDc4NmExZTFlOTQzMTczNWJiNGJkNGE1NDE3MGJmOTI5ZTllYzYxMmU2Zjk0NTM0ZDNiMDc0YTE5ZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZmEyZGYyNDU2M2Y4ODI1ODU2YmY3NmQ2MTc1ZGY5MGEzMzk1Nzc1NzM4MzI5YzlhM2FkZTA4Mjk4NmI1ODYifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_e75c285fd3ef46cd885691a356d92655",
+                    "statement":
+                        "Production source, header, and resource additions or deletions require CMake reconfiguration because those inputs are globbed, and GUI, OpenGL, native-dialog, and controller behavior requires evidence beyond the current command-line packaging smoke check.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/AGENTS.md#L22-L29",
+                            "version":
+                                "repo-lines-v1:sha256:5ea1ce00b7dff4bc39d9067eef7dad90ed007e14dbaaeb37513b5b444762c537:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWE0YzRmNWE1NWU3MzhhY2Q3MGRjMWIzMWM1MWVkY2MyZjEyMWNlYmUyNmYyZjgzYmQ5NjM1NTFiMWMzNjQ0ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTVkMjc1ZjAxOTExZGNlMmFiZGRkMmE1MWRhYjY3MzA0MGQ3ZmQ5MThlNzRkN2ExNWY3YjExYmJkNWQxZWQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODMwNGJkMzM3YjViMmNjMTdlYTQ3M2FjZmY0MjEzM2ViZDE3MjUzNDcxOGEwMDUwMjAyN2EyMjQ3ODVkZTFjMSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWM4MWIyNTcyNDQ1MGNjYzBkOWZiMDU1NTZhM2ZlYmI3NTk0OTIwM2M4NWM5NTEwOWE5Zjc4ODdiZmExNjcxZSJ9"
+                        },
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L52-L56",
+                            "version":
+                                "repo-lines-v1:sha256:3e6f516fe036b14195943cabd44c0c468c7ea15df5ba21d4e58b3c2cc62833d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1ZTFhMGUwOGRjMDgxYWM1ODZhMzI5ZTc3MDNkOGI3OWI3MTUwYzNmMWY1MDMwZGNmNDJhMzdjOTNmZWU5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjk3MzI3MGMwOGU0OTkwZGE3ZDUwZGIzMWFmYzEzNGQ5ZWJhY2FlNGFiNTQ2MjUzZjk0ZmI0NDBkM2Q3MTA4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY5MDVjZTFlNWY4ZDFjMzZkZmU3ODJhYWY2OTNhZDQ3NDUzZTZkY2RkODJlMjE2ZmYzNTZiZTc3NzI5YjI0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QxZGIwN2QyMjIwZDg3ZmM2MWQ2OTJlMDA5ZDlkOWJmZDQ2MTYxZTNkMDAyZThlNmEzMzAwMTRjNjk0YTkzYiJ9"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L139-L157",
+                            "version":
+                                "repo-lines-v1:sha256:c5c3d02dd16a1f3308b438e195fdc795d4d024cf3c8f16c61baa0151f201d86d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjZGMzNjkxYmU2MjRkNzhlMWI4NmI3ZjU1MzcyYThiYjJlYzNjZmM2NmJiM2EyNTI3YTU3NWYzYzNhOWJkOTIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZTkxODk2Mjk5MzBkYjlhNTExOTdlYjcxZjYxNzljYWZiYTE1ZmE5YTU1NWM5ZjA0MTllNWMzMDliNWU5ZGUifQ"
+                        }
+                    ]
+                }
+            ],
+        "verification": {
+            "by": "openwiki/0.7.0",
+            "at": "2026-10-06T20:25:27.555Z"
+        }
+    }

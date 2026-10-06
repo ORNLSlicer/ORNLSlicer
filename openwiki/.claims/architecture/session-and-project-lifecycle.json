@@ -1,0 +1,202 @@
+{
+    "schemaVersion": 1,
+    "pageVersion": "sha256:1d84bf057208ee44a0ae434534c64a940686dee0e75fa909f34d8d026fbd5047",
+    "claims": [
+        {
+            "id": "claim_edc50ee293714b48b35c108987caa488",
+            "statement":
+                "SessionManager is the singleton owner of named shared Part objects, malloc-owned raw model buffers, the current project path, recent-history state, and the active slicing object; it frees retained buffers at destruction.",
+            "evidence": [
+                {
+                    "resource": "repo://include/managers/session_manager.h#L299-L345",
+                    "version":
+                        "repo-lines-v1:sha256:f61ed5eb7bc380117c4b427218ad1a6af3d40e8395f6d23e78e03cc65fda45d9:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2YjExZTVkZjAwZGJjMjY0YmIxZjEyMGIwYmFlOWY4NzJlZjlhNjI5ZjJkODA5YzMxNmQzOGVkMmMwMjg3YmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMyMmI0NTE2ODJiYjdhNGMyNmFhNjkyNTk0ZWM5OGZkZDA3OTI2M2ZlOGRlZmFmYzRiOWM5Yzg5MjhjYzBjMGMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEwN2RkMWQ0YjNjODc2ZGY2NGNmNzI5MmM3YzNjMTVlNTdkYjUyYjNmMzc0MTQyMDhhYzUzZGQ0NDgyNzMyZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyMmVjNzEyOTk1NGFhZTQ1ZmNhNTUwMzRkNTFmMTI4MjY4ZWU3NTg4YzYwZDhmZDk2OTQ5ODUxYjQwOTU0ZTIifQ"
+                },
+                {
+                    "resource": "repo://include/managers/session_manager.h#L37-L67",
+                    "version":
+                        "repo-lines-v1:sha256:389befcaebf97d85ee0f72082a917d9ba6340d44294686ec5452d4128e2a2f02:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImY4NjRhNzRmZGQ2ZDhkNmIxNWY5NDZmOTE1NDgxMGIwYTg0ZTFjMzhmYTQwOWFlN2U3YTZmYTY1ZjQ0ZDZmNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVmMzAwOTRlMjFhZDY4NTY4ZjViZDUxZThkMzI1Y2QyMDc4M2M3OGEwOGU0MWFjNWQyMzFjMDM2YmZjNzUxMWQifQ"
+                },
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L102-L134",
+                    "version":
+                        "repo-lines-v1:sha256:40a22fb3ec8eb9cd7588794abcaa498e236d898ce6c0543c6d11d80b188a37d1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjMDRiYmNkNzFjNjg1MzhmM2JkNWU2NWFjZmE1OTFjNmNiNGI1YzZiYWI0M2FmNmE0YWRmODMwNmYzM2RkMDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijc3YjgwNTlmZDU4MjhiODBmYjNiMWI5Y2MwMmM4ODVhZjhiMjIyMzAzZWYzMTVlYjQ1ZDFiZDc3YzAxZjA5YWEifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_fc663e6c7c134f0d8db853af9003cb55",
+            "statement":
+                "GUI model loads use MeshLoader asynchronously, while synchronous callers use the static LoadMeshes path; both add live parts and retain only one raw source buffer for a duplicated filename.",
+            "evidence": [
+                {
+                    "resource": "repo://include/threading/mesh_loader.h#L28-L68",
+                    "version":
+                        "repo-lines-v1:sha256:9e65a7ede59b2bb495e0da94ddc515062090185336ea97b72817ab2dc531b11f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3ZDM4ZGMwYTZlOGQ4OTNjZWM0ZDljZmVjYjQ5MjUxMmUxMWRkMzZmOTg2MDU0ZjI4YjZhOGMwOTU1MzgzMGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE1ZjRhOTgxYmNhMDg0MmRmZTlmZmMyNjAzY2RlNTFmMDhkZWQ2MTFjZGY0ODAxNzFlNmFjZDJiNWJhMTQ2NWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRkZGRlZWQ0NjMzNTdjYTY0YmE4Yjk5ZGEzZDFhZGQ2OWVhMjE0ZWJhMzIxYWQxYzRjYWNlN2QwOTVlNzYxNjkifQ"
+                },
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L216-L250",
+                    "version":
+                        "repo-lines-v1:sha256:14a83506ccf1df6cafdcdd41d4f7149a94348a33c54d0ce0a82bc38f47bab47b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MGRhZDgzNGVjZjA3MWJhZGYzYmJhMDYwMDM1ZTVlMjc3MjRiOTViNTlkMGIyMGY1NjMwNzBhMTZlZTIyOWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRiNGZkODQ4NjM0NTg0YzhhNTdmYjZhZjE4NjczMjI2YjJhMjU2OGM2NzA5ODNjNzZjOGQyNTMxMWY4NjYwNjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUxNTY3YmMwNGNjYWVhODJiZmIzZTM4MDgxYTc2NWMyYWE4NGVlNDhhOWQ1ZTgwZDA5MDI3OWE0ZjYxYzk2YmYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_e2831cb743d2499fa3157a42ffb0ee9d",
+            "statement":
+                "Mesh import dispatches STEP/STP through OpenCASCADE and common polygonal formats through Assimp, optionally repairs a valid polyhedron, falls back to OpenMesh for open or invalid topology, then applies unit and implicit transforms.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/mesh_loader.cpp#L230-L298",
+                    "version":
+                        "repo-lines-v1:sha256:c15af799a11ad24e6d768c00312dfe73a07aa5edd41c02184fb63525819b83d3:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg0NmRjMmE5OTIwNTRmMGExNTFkOTg4OTI3YzFiODRiZTE3YjkwYmQ2OGYwZWYwODIyY2ViZmY2YjdlNTQ4MmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg0YjQzOWNiOGE3NDY0YjUyM2ZmNTRkNzAyYzk1NTFjYWVlYWE3ODIyZjk3ZGNmYWRjNzM4NGU0ZTM3ODMxZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNjYTk4ZTNjZGNkOWQ2ZTUxZDJkN2FmM2JlNmJmZDBlMzM1ZjU4ZTY5Y2ZhMTYzMGFmNTU0ZGQ5ZTYyOWUzOTAifQ"
+                },
+                {
+                    "resource": "repo://src/threading/mesh_loader.cpp#L300-L372",
+                    "version":
+                        "repo-lines-v1:sha256:f13a714e005df25c61a8714f93cdbde25e9a596659724ecc767bb056ca25e2bb:eyJzZWxlY3RlZExpbmVDb3VudCI6NzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkNjE1MDA2MWQyNTAwOTgzZDIwOWY1MTQ1YWI2ODU2YmY0NWE0NGI2NjI4YjUyYzhkZGI5ZDRjZDlhYmE2OWIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE1MjRkOTZlMjgxZmE1Nzg4M2MzMTQ3MWQ3ZDQyMTk2NmYxNmU4NDJkNmNiYTc5Zjk2NGQ5Y2JkYmRmYjMyYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjAxODNjNjMxOGZjNWJjZGMxYTRiZTdmMGM3M2VkZGE2ZGM2M2FiZTc5YTk2ODBlODA5OGM0YTc3ZGY5NTgyMzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVkMGJiMzhhNzJjZjkzODNiMDQzZmUyNGMyNWE3YzdmYWFkODc5MWI5YmFmMDZiN2FkOWMxYzFkM2QzYjRjYWQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_b299fd38a65049c78882b477e79d6b9c",
+            "statement":
+                "An .s2p save embeds active referenced model bytes, session transform/type metadata, global settings, per-part settings and ranges, and a producer version marker in a ZIP archive.",
+            "evidence": [
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L441-L458",
+                    "version":
+                        "repo-lines-v1:sha256:679b46d34b954f02486b27c195a4cbd0679cbddb0ed2aa06d87b434e708e802a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA4YmZjM2M0MDVlNDIxZTQ2OWRiNTk5Y2YzMTliZjViYWEyOTAyNDVmMGMxMjYxODlkYWYzNWJhZGY3YTMzYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNDI3NTc1MGU0MzIxZDdkNGFhMjdmMjQ2OWJiY2QwOGVjMmFjNTQ5NDg3NTg5MmU0MTlhM2Q0ODNhZTk5ZmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzMmIwMTRhMjJkNjAxMmM2MmQyNjc2YzQ4MzM3ODNhNTRlYTkxOTBmOGRlMmUyNWZjMTIxOWY5NmMxMGEzM2YifQ"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L37-L85",
+                    "version":
+                        "repo-lines-v1:sha256:108b2f4b96ce62050902be83a710bdbf2be10f498e9226412b9b31d4d7d64564:eyJzZWxlY3RlZExpbmVDb3VudCI6NDksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU1NGI3MDdiNTlmNGE4NGZkYTczMjVmZmY3N2Q1Y2FjYTI2MjkzMTUyODIzYzc1MjVkMTI5MDIwZmIyNWE2MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmYjM4Mzk4OWYwNTUwYTZkMzE5OGM2YjNhY2VmYjkyMTZkM2IyNjQwMmE2NTkxNmI0ZGRmNjlkZjZiMGI0Y2MiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg2YWMxNjBmZTQ4NjBkNWE5YTNiNTEwMjg5MDFmNDE4YjYxNDhjZGJjMDEzOTY1NmRhNzFhYmRkYTBlYzM2MDAifQ"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L87-L129",
+                    "version":
+                        "repo-lines-v1:sha256:ba7b72099121f4d5eebcc296e9d126ed43c9239cd15140a97a2adb6ab8dc73a4:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcxN2IyMGZlODBjNWYyZWE4NWQ1ZmQ3ODkyNGY1ZWU4ZWUxMWYyMTMzZDAzMTU1Y2Y4YTVlZTAyN2JmOGM2YTQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OWJkZWZlZWFjYTYzNDBlMDI5MGRjODZlODg5Yzg5ZDVlMTg5YWE1YmE0NGI1ODViM2I3MDczNGY0YTYyZDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE1NTg5MjMxYTZmZTIwMjkyZjA4ZWE0NTUyYTJlMGFkYmEyNDZhZjc2MDhkYzdjOTkxODMyOGU2NjIwY2Y4NTYifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_0e526d27718a469fa209e9bdd5ea124a",
+            "statement":
+                "Project loading version-checks archived global settings before starting the worker; GUI-approved migration may rewrite the archive, while headless auto-migration loads updated settings in memory without modifying the project.",
+            "evidence": [
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L708-L740",
+                    "version":
+                        "repo-lines-v1:sha256:eb600cd35b0e82a2a260cb8d352df76e416ca77ceace5d374be9b6cdf2a05c69:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiMGQxOTVhMDc5MGEwOWM2Yzc5NjdmMWU3NWNjY2JmZmU3MmQzNTE1YTUwN2VkY2QwM2IxM2YzMjE4ZWMxZTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTkxODhjZWEyN2U1MGU2YmVmYTAxZTZjYjc2NTgzM2NlZWI2MjEwZDY2MTg3NjFmMzI0NGNlZWU1NTY5YTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk2Y2Y5MzkzYTkxZTM4Y2YwMGNhOGM1MzQyOTFhOWJiODc5ZWMxZmVkNTFlMDVlNGMyOGRjY2VlYjYxOTU3NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjM0MzJiYjdhNjc4MDEwNzVhMWFjODVmMjJjNTM4MTBmOTlmOTI4MGJhNmEyMmMzNzZkMGQ3ZDcwNjlkZjM0NTQifQ"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L131-L159",
+                    "version":
+                        "repo-lines-v1:sha256:ccda7d9021e3face7be8a00d321455e460437ce491f942ca66ac3d941490a8ab:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg3YmM3MzViN2M0ZmU4ZDUxODFkNDdkOGRkMjk1ZmY4OWUyZTc0NjAyOTE5ZTBiMDIzM2VkYzBiODhjZTI1OGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY3ZTg1ZjhlZjU5ZDJlYTUyNDhiZTY5YmMwZWMyMDIzMzc4MWVkYTI4NDBiMjBhZWZhMjljNzRlOWU3OGFmOWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YjNmYjMzNDczOWFiYWIxYWQ0MTFjYmY2NTIzMTNmZmU5MjZkNTE3Yjc1NDg2NTE3MmFmZDI4MzVkNDBlZmQifQ"
+                },
+                {
+                    "resource": "repo://tests/session_manager_tests.cpp#L147-L185",
+                    "version":
+                        "repo-lines-v1:sha256:860e30b447ed2ef7dc606cc691aaa1caea03155886a9dcf7b0f94ea4eb1e797b:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk2YWJkMTFiZGIxMGI0MTc1Nzk5YjM2OGU3Y2Y2YzAzNTc3YWU4Zjc0NWIxMzM3N2RiNWZiNjNlYWQ4YzMyYTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNjhhYWVmOGFjYTk0MjJmZGUzZWM3YmM4ZGQ3MDIxYmQ0NzNlMjI3ZGRmMGQ1ZGFjZmE0NTJjNzRjYmFhNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJjMjJmNGFhMjNhOWNmNTgwOTVjOTkwYmIxYWRlNmE2ZTBiYzM1ODY3ZWQ1MTFlNjQyNGM0NWI0ZTkzZjI5YzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIyOGFhMDZiNzZjZjNlYWYzNTFmNTU1NDBmYmQzODM3YTRkZWEzZWNmMDM4ZGZhMzUxMjU1ZTNiZTlmNDVhMDQifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_da614a195bf945e6915a6dc038918236",
+            "statement":
+                "SessionLoader directly reads and mutates SessionManager and SettingsManager state from its QThread while saving and loading, including raw model maps, parts, global settings, and local ranges.",
+            "evidence": [
+                {
+                    "resource": "repo://include/threading/session_loader.h#L13-L36",
+                    "version":
+                        "repo-lines-v1:sha256:54e4977f04d12eb31c0e236fd5f37591ef1581ad8172bdc4bd4ff7a3abfded28:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhYmZiYTI4YjYyZTM2M2YwYjE4ZjYwNTczN2JiODFjZTM4YjcwNmM0ZjM2NjQxYTc1OTFlZTVkODVlZGFkMzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRiNDI0YmMzYTYzZTNkMzY1OTlkZGJiNThlZDJkMGYzYjY2YWM3YTU3M2EwZWYwMjk5YzUwZTcxNGFmZDhjMzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5NTc5NTRlOGI4OTgxYjY4MDBiMTJiN2E5OWVjNjZiNGVmZDViZDg5MmM3NzU2Y2IyYWNjNWVhNGVjYTIwOTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjFlODc0NzhmZDYxZjA2MzBhYTA3NzY5YzA3MzYzOWNhNTNmZTZmMmM2NDIzOWY2NTkzMTI4NGQ5ZmJjMjlkMTgifQ"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L161-L217",
+                    "version":
+                        "repo-lines-v1:sha256:c4c290c06346993d7382c4455a675ce9a40639015de112f812ccf56fea6c1925:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk1ZjdjYmM2MGU5NDE5NmIxN2EyZjI5ZDU0NzQ2YTI5YjA3NjEwMDM0OGJjNGMzZWZmZDBjNDg2ZWYzYTIyNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjI3OGMyZTVhM2E3OWRjYmUwMWY4NWZkZGI0MjBkODAxMTU0MzlkMGEyYzAxNDEwOGQ4NjU2MjNiOTYwN2YyM2QiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjZjZjBlMmYyMGZmMmIzMTJhNTIzMTc0ODgyYzQ2YjllN2I3OTY3MWYxOTA4YjM5YTJjNGMyYzE4OTBmMDk2ZjYifQ"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L53-L109",
+                    "version":
+                        "repo-lines-v1:sha256:e0f775d608564893a5a61d451b79bfd37a4c5a341116f360a6348ec81be9132f:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEzODE2MTgxOWFjODMyNGE0NWQxNjc3OWU0MmYxMmY2YzNiNWE3MzkxYjdlODc5MGFmNTkzNzQwODRlNmRmZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM4MjllMjZlYzkxNzNjMDE5MjY0ZTUzMzU2ZWIzMGJhOGY1NWJiM2E1NzhlYTM4Y2NiYTk1YTc5N2IzM2E4NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI1YzQ4NzhhMDQ4MTM2OWU4MDZhOWZiZDU3ZGU5OTgwNzQ4YzM1NDFiYmQzY2JkNGZlMTViNjgyYzZkNTZmYmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyMGFkMmRhZGQxN2RhZWU0ZDg1MzRjZWMzYTQ0MzY3ZDFiMzgzYzBhNWY1YzUxM2I1ZWJiOWRjOTExYzZlOGUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_2854bdf1acae4afdb818fba64ce67d79",
+            "statement":
+                "Application history is separate from projects and persists selected templates, recent locations, HTTP configuration, and recent file lists only when its dirty flag is set; recent lists are sanitized, deduplicated, and capped.",
+            "evidence": [
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L136-L209",
+                    "version":
+                        "repo-lines-v1:sha256:fe34243240316c8938a44928036d98c1a3064d2335ccbd50319d34f0a7819b01:eyJzZWxlY3RlZExpbmVDb3VudCI6NzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIxZmFmNmY3MjVkZTJmNGUzNzhkODk5MDQwYjQ1OTMwYmY2OGZiNDFjNjUyOTVhODZkOTdkMmJiMGFhYmUxNzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU4YzFiOTA5NTliYjJkOWU1OWJkMjg3MGRiZTA5OGIzYzBkNzdiODYwYmU3YTA3YzU2YThlNTY1Y2MyODhiYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRjM2Q3N2MwMDUyNTQzNjVmMTg1NmM3OTZhYzU5MjRlOTc3YTI5MGNmOTYwZDJjN2I0NmRjMzFkNTU4MTMwYzUifQ"
+                },
+                {
+                    "resource": "repo://src/managers/session_manager.cpp#L816-L843",
+                    "version":
+                        "repo-lines-v1:sha256:f535ea6ed2e99077f00adb4e3b137f06eeceb28f40403dd8a57aa10569aa8da4:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1OGM5ZDhmOTBlMzk2MGM2NmIxOThiY2EwMTdiZDVhNjg5N2YxYmViOTJhOWJjNjNiZDlmMzdkODgyNTExNDUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2YWNhYzAzODZhNDZhODU1YmE4NThhODU5YmI3YTk4MjZmZDRkMjhiZmUxODFlYmU3OGZiMGVmOGYzZjY4MzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA3ODBmZmYwMTRmMDAyMzQwMzViZTE3OTQyZjIyMmMxM2Y3ZGM0NTc0NTY4MzBhODc5Nzk3ZGM5MDcwZGUwZDIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIzZGRkNWY5MTViODFhYTJmMWU3NzExZmU3MmM3Y2ViNDhlOTIwYzUwOGFjOTgzNDgxZDQwY2JkMjM0NTliOTkifQ"
+                },
+                {
+                    "resource": "repo://tests/session_manager_tests.cpp#L83-L145",
+                    "version":
+                        "repo-lines-v1:sha256:e37c398b14c0c6ebd357f67227b544c4998f61e2f5335ad9dc5cca7f0fc34100:eyJzZWxlY3RlZExpbmVDb3VudCI6NjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NDJkZjFiOWMxZjM3Njk3ZWNlZmI5YzE4ZDI3MGNhNzI0ZmRhMDk2OTAyZDU4Y2JmNTA0MmU4YTRlZTA5ZTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdmNjhhYWVmOGFjYTk0MjJmZGUzZWM3YmM4ZGQ3MDIxYmQ0NzNlMjI3ZGRmMGQ1ZGFjZmE0NTJjNzRjYmFhNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk1MTU3N2Q2ZTVjNzc0ZmU1Y2Q5MTE2YWU2Mjg1N2QwYTMyNTdjNGRmMWY1ZjI4NDEyNzgxZTBiNzI5N2NjODMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ1NDI4ODJhYjQwNDYxM2VhYzA3YjY2YjIzOWIyNjhkNmI4OWQ4M2Y4MzZkM2QyYjE5MTZjZDYwOGVjNmQzNDUifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_fd5862ccd68849c792d92c083451247f",
+            "statement": "The GUI tracks unsaved project changes with a dirty gate plus a serialized snapshot of part metadata, global settings, and local settings/ranges, and rechecks the live snapshot before prompting to save, discard, or cancel.",
+            "evidence": [
+                {
+                    "resource": "repo://src/windows/main_window.cpp#L1617-L1650",
+                    "version":
+                        "repo-lines-v1:sha256:d66e078dc354f567b12ad907587f10a7c7e578efee04a004bd19797410754c2d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE4MGQxYWZlNzllN2EwZDY3MTk5YThiNTdhZjkzMjkzNjExYjNjZjU2ZDlkMDA0ZWM5YjdjNDJlNWUxYjdlZjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ3N2VkNzYwMWExMWE1YWY2OWIyNjE3OGQ0YjhhMjhmYzQwMTdiODUzYzBlZmE2ZmE5YTY2OGJmYjkwNDI4NzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3Mzk0MmQ2OGY2NzA4YmIyOGQzYWEwNDFlMWQxNDgyNmIwMTBiZTY3ZDRiZjJiZDA2MWI3YzhiMzRmMWQ1ODgifQ"
+                },
+                {
+                    "resource": "repo://src/windows/main_window.cpp#L1652-L1675",
+                    "version":
+                        "repo-lines-v1:sha256:98730a79b067e0107d812f7fd3fca01ddefa5bc5eff3729d82a70c1aef70e918:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk5NDAzMTY3N2Q2MTA1ZTIyYWJmNmYyN2M1NGM5MTllNTBhMWM2YTZmMmUzNDNiMzNjZjAyYWZhNTI1NDM4OGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhiOTBhMmNkZTE2YzQzYjY2Zjg5YTY5NTFmZmI2OGFjNjk0MDgzNDNlNDExMzBhMWU2OGEzZDI1MDg2OWU3MWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk2NDFjNGYwYWI3YmZhMGZjZjUxY2JkZmYyZDczMDk5M2MxYTkyMDA3YmIzYzI2MGExYzljYzM5MWEzMjY5NmMifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_b372bff906ed44debdfe3e992246ff17",
+            "statement":
+                "Session worker completion is not equivalent to persistence success: archive failures can return without a success signal, and ordinary GUI save marks the project snapshot saved immediately after launching the asynchronous worker.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L121-L129",
+                    "version":
+                        "repo-lines-v1:sha256:05fd24545e21ad69964bb2e5bc7d99562c233fe5dc1628ce83f0fbb4a0783268:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTQ0MjgwYjUwMmY2Y2RlMjBmNTAzN2FlZWRmZDMzYTY0NGZkNTQ4MzU5MDcyZDc5NjJlOWExYTBkZDcwYTIwZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjhkZjRkMmUxNmIzZGQ2N2M0ODQ4MjJkMjFjN2M4MGZiZTNiODkxNzQ5ZWIwYjFlMGU0ZDQwZTJiMWM0NDMyMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTU1ODkyMzFhNmZlMjAyOTJmMDhlYTQ1NTJhMmUwYWRiYTI0NmFmNzYwOGRjN2M5OTE4MzI4ZTY2MjBjZjg1NiJ9"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L144-L164",
+                    "version":
+                        "repo-lines-v1:sha256:7c198e80c4e357e31f70321c97d3f6cbf591707bbccb0c1c4b29e8bfc92046f2:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc4ZGYxOWJmOTBlMjJmYzQ2MzhmYmQ4NGM1Y2RmMjY0MWVlNGUwN2E4OWQ3ODRhNDc3OWNkZTAzYjJhMDc4YjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk4NWJiMjA5NWQ2ZjE5ZmMxN2FhM2Q2Y2QzMmEzMmE3ZmU1OTVjYTE3ZWEwZDU1ODlhZTU3MWFjMTdiZmEyZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJmYTQ0ZjNiOGQwODM2YjQ1ZTE0YzFlZGFmMzg2NDY3YWM5NjBhY2Y2ZTBkOWY5YjVjZjE3OWM5ZmUzZTBkYjgifQ"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L37-L39",
+                    "version":
+                        "repo-lines-v1:sha256:9afc8df00aebb9d1a9cc3bf3911112c41e4be782a423922533b693f420230369:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZTU0YjcwN2I1OWY0YTg0ZmRhNzMyNWZmZjc3ZDVjYWNhMjYyOTMxNTI4MjNjNzUyNWQxMjkwMjBmYjI1YTYwMCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYTUyZTZkOTBkOThjYmRlY2U5NzRiMjlmYjhhNTBiMTAzMjI1Y2M1Mzk1ZDZmNDhmZTFhNjIwZjYwZTgyZGYyMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOWZiMzgzOTg5ZjA1NTBhNmQzMTk4YzZiM2FjZWZiOTIxNmQzYjI2NDAyYTY1OTE2YjRkZGY2OWRmNmIwYjRjYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYWNjNTY4MTNhYmNkOTM4NjNlM2FkZjhlMDMzNWYzMTFiNDdjOGJiNTA4MGIxN2JjYjFlMTY0ZTY5MmVhMzBhNCJ9"
+                },
+                {
+                    "resource": "repo://src/threading/session_loader.cpp#L76-L83",
+                    "version":
+                        "repo-lines-v1:sha256:8a57227ffabb97055b0abed956f1efa7fb556da4aa63747bf7ec3a123db47108:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDc4Mzc4MTcxMTk1YzExZDEwNmMyM2U5ZGUyY2FhNjhlYTAyZDFmYzUxNGFhYzcyYWVmNGViMjNlMjIyMGZjNCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNTUyMmM0MmNkMTljNmQwM2Q4MDhjNDUyNzIwNTUyODI1YjdlYTFjNWI0OTFiMjE4NTExY2FjNzQxNWNmOWQ5YiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTM3NmE2NDRmYjIxZDA0NjU5ZWIwNTIyMTY4NWIxOTRkMmYxN2M3YTNmNjBhZmVjMmIwZjBmMzViMGJkMDZiYiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTk5YmRlZmVlYWNhNjM0MGUwMjkwZGM4NmU4ODljODlkNWUxODlhYTViYTQ0YjU4NWIzYjcwNzM0ZjRhNjJkOCJ9"
+                },
+                {
+                    "resource": "repo://src/windows/main_window.cpp#L1586-L1606",
+                    "version":
+                        "repo-lines-v1:sha256:2dc47b9ffdda200d44cc519b3dcb5524dd33de926014a8ec41de5c915aa9c804:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxYjZmZDMzYzgzNGEzNzkyYzg1OGNhNjU2MDUxZDAwZjA0YzRhZjM1MGMxYjEyMmMwMjRjZDQ3Njc3ZTQyMTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjMzIwZGRhNmMyYjZlZTI5MTYxODk0MGEwM2NhNDBmMGFiNjRlNzY0ZWVhNjdhOTJkYzQ3NjY5MTI5YzcxYWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwNzk3Y2NiNGY2Y2Q5YTU2YzZmMzViZGNkM2Q4ZWU5ODE3Yjk5MGMzNjk2MTkxNGQ0NDQwY2I2ZmMzODNlOTYifQ"
+                }
+            ]
+        }
+    ],
+    "verification": {
+        "by": "openwiki/0.7.0",
+        "at": "2026-10-06T20:25:27.555Z"
+    }
+}

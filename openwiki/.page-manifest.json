@@ -1,0 +1,89 @@
+{
+    "schemaVersion": 1,
+    "pages": {
+        "/openwiki/architecture/application-runtime.md": {
+            "pageVersion": "sha256:91e304615222a267562804b014303b772d224f11dd06e36db754a5f903c0b0b0",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/architecture/gcode-and-visualization.md": {
+            "pageVersion": "sha256:19ab4b21cfb97aa3a8b918f4597d5e740db000bc925b917c7a051cb7c2cea264",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/architecture/session-and-project-lifecycle.md": {
+            "pageVersion": "sha256:1d84bf057208ee44a0ae434534c64a940686dee0e75fa909f34d8d026fbd5047",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/architecture/settings-and-preferences.md": {
+            "pageVersion": "sha256:b4308baec63c75e01a91235bca1cd5246fe20b435c98d136ec14f6666f3e3877",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/architecture/slicing-pipeline.md": {
+            "pageVersion": "sha256:c5e6f3de169684521ad15c8771b95aeda7fd5588c4beef4e6a74653f30d82ef9",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/concepts/geometry-and-toolpath-model.md": {
+            "pageVersion": "sha256:f1ebed61e8a7a920a3b2529ece1bbbf8910221f04bfb2b1cb690f0f80ba6599a",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/integrations/machine-syntaxes.md": {
+            "pageVersion": "sha256:cf8503ed4954e617939e442a74f6d1a053589a4cc924a388df9f28be14b8127b",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/operations/build-and-packaging.md": {
+            "pageVersion": "sha256:5a0b1aee8c814325a4329b9850b5d450e936776b43aaa9d3c46463cae2226ad4",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/quickstart.md": {
+            "pageVersion": "sha256:883947a3e80c84ff6a8874fc49737912ca86b915ce78b94d7781d9d103194d06",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/slicing/cylindrical-and-helical.md": {
+            "pageVersion": "sha256:8dbd205bbe391073a1583741a336f4617298ea0f6b8cea9be9bf15536597998e",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/slicing/planar-path-generation.md": {
+            "pageVersion": "sha256:2ce5deffa45612924fdecac2c9dc591804b998faf75ed79a3e023ef86ad9a418",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        },
+        "/openwiki/testing/strategy.md": {
+            "pageVersion": "sha256:a8372d19979a7fd14296a105b68f1925499a63cf091c4faea79fb5b0aa2e9456",
+            "completedBy": "codex",
+            "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125",
+            "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
+            "sourceFingerprint": "sha256:18988baf22a54d3a762e258020309ef59703ad8a5edfe5b047db23954bc2b9a7"
+        }
+    }
+}
