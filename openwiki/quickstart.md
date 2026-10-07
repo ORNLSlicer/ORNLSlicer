@@ -5,14 +5,12 @@ description: A task-oriented maintainer route from runtime entrypoints and canon
 tags: [quickstart, maintainers, architecture, validation]
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-06T20:25:27.555Z
+    at: 2026-10-07T13:32:37.149Z
 sources:
   - id: openwiki-source-ced6747f13d7a40f942b17d8
     resource: repo://.codex/AGENTS.md
   - id: openwiki-source-164e2da859b5277df81c7d94
     resource: repo://.github/workflows/ci.yml
-  - id: openwiki-source-362e06c30ccfdafd87339cb0
-    resource: repo://ARCHITECTURE.md
   - id: openwiki-source-a60928f26402a7ffadc427b3
     resource: repo://cmake/presets/generic-llvm-ninja.json
   - id: openwiki-source-d44494ef3e497fea81240ef8
@@ -43,12 +41,12 @@ sources:
     resource: repo://src/threading/gcode_loader.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
-generated: { by: "codex", at: "2026-10-06T20:25:27.555Z" }
+generated: { by: "codex", at: "2026-10-07T13:32:37.149Z" }
 ---
 
 # ORNLSlicer OpenWiki Quickstart
 
-ORNLSlicer is a Qt/C++ slicing and toolpath-planning application for additive-manufacturing workflows. Its maintainable path is deliberately shared: the GUI and command line converge on the same session, settings, geometry, slicing, writer, and G-code loading subsystems. [source](repo://README.md#L1-L21) [source](repo://ARCHITECTURE.md#L14-L39)
+ORNLSlicer is a Qt/C++ slicing and toolpath-planning application for additive-manufacturing workflows. Its maintainable path is deliberately shared: the GUI and command line converge on the same session, settings, geometry, slicing, writer, and G-code loading subsystems. [source](repo://README.md#L1-L21) [source](repo://src/main.cpp#L69-L121) [source](repo://src/console/main_control.cpp#L26-L40) [source](repo://src/console/main_control.cpp#L60-L120) [source](repo://src/managers/session_manager.cpp#L575-L605) [source](repo://src/threading/abs_slicing_thread.cpp#L210-L320) [source](repo://src/threading/gcode_loader.cpp#L287-L320)
 
 Use this page to choose the owning subsystem, the first production source to inspect, and the smallest relevant validation. Follow the linked page when a change crosses an ownership, threading, data-model, or file-format boundary.
 
@@ -61,7 +59,7 @@ git status --short --branch
 rg -n 'NamedType|setting_key|signalName|command_text' include src resources tests
 ```
 
-Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://ARCHITECTURE.md#L41-L57) [source](repo://.codex/AGENTS.md#L3-L20)
+Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://.codex/AGENTS.md#L11-L20) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L478-L515) [source](repo://CMakeLists.txt#L552-L564)
 
 Establish the ordinary development baseline inside the repository's Nix shell:
 
