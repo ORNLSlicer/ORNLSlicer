@@ -8,6 +8,7 @@
 #include <QInputDialog>
 #include <QLabel>
 #include <QMessageBox>
+#include <QSet>
 #include <QStringBuilder>
 #include <algorithm>
 
@@ -346,9 +347,11 @@ void GcodeExport::exportGcode() {
                 return;
             }
 
+            QSet<QString> exportedLayerFileNames;
             for (const GcodeLayer& layer : layers) {
-                const QString layerFileName = filepath % '/' % partName % "_layer_" % QString::number(layer.number) %
-                                              m_most_recent_meta.m_file_suffix;
+                const QString layerBaseName =
+                    partName % "_layer_" % QString::number(layer.number) % m_most_recent_meta.m_file_suffix;
+                const QString layerFileName = filepath % '/' % layerBaseName;
                 if (QFile::exists(layerFileName)) QFile::remove(layerFileName);
 
                 QFile outputFile(layerFileName);
@@ -360,6 +363,23 @@ void GcodeExport::exportGcode() {
                 QTextStream out(&outputFile);
                 out << layer.text;
                 outputFile.close();
+                exportedLayerFileNames.insert(layerBaseName);
+            }
+
+            QDir outputDirectory(filepath);
+            const QStringList existingFileNames = outputDirectory.entryList(QDir::Files | QDir::NoDotAndDotDot);
+            for (const QString& existingFileName : existingFileNames) {
+                if (exportedLayerFileNames.contains(existingFileName) ||
+                    !isGcodeLayerFileName(existingFileName, partName, m_most_recent_meta.m_file_suffix)) {
+                    continue;
+                }
+
+                if (!outputDirectory.remove(existingFileName)) {
+                    QMessageBox::warning(
+                        this, "Layer Export",
+                        "Could not remove obsolete layer file: " % outputDirectory.filePath(existingFileName));
+                    return;
+                }
             }
 
             showComplete(filepath, partName % " layers");
