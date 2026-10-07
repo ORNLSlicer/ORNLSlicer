@@ -35,5 +35,16 @@ int main(int argc, char* argv[]) {
     const QVector<ORNL::GcodeLayer> no_layers = ORNL::splitGcodeIntoLayers("; machine header\nG1 X1\n", ";");
     expect(no_layers.isEmpty(), "Expected G-code without layer markers to produce no layers.");
 
+    expect(ORNL::isGcodeLayerFileName("part_layer_12.gcode", "part", ".gcode"),
+           "Expected a generated layer file name to be recognized.");
+    expect(ORNL::isGcodeLayerFileName("part[1]_layer_12.gcode", "part[1]", ".gcode"),
+           "Expected special characters in the part name to be matched literally.");
+    expect(!ORNL::isGcodeLayerFileName("part_layer_12.gcode.bak", "part", ".gcode"),
+           "Expected files with a different suffix not to be recognized.");
+    expect(!ORNL::isGcodeLayerFileName("part_layer_notes.gcode", "part", ".gcode"),
+           "Expected non-numeric layer names not to be recognized.");
+    expect(!ORNL::isGcodeLayerFileName("part_layer_012.gcode", "part", ".gcode"),
+           "Expected names not produced by the exporter not to be recognized.");
+
     return passed ? 0 : 1;
 }
