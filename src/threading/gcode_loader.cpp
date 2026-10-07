@@ -387,17 +387,17 @@ void GCodeLoader::run() {
                 has_adjusted_feedrates ? m_parser->getAdjustedTravelTime() : m_parser->getTravelTime();
             double massValue = (total_mass / PreferencesManager::getInstance()->getMassUnit())();
             keyInfo = keyInfo % "Printing Distance: " % QString::number(printingDistanceValue) % " " %
-                    PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
-					"Travel Distance: " % QString::number(travelDistanceValue) % " " %
-                    PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
-					"Total Distance: " % QString::number(distanceValue) % " " %
-                    PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
-					"Volume: " % QString::number(volumeValue) % " " %
-                    PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" %
-					"Approximate Weight (" % toString(m_material) % "): " % QString::number(massValue) % " " %
-                    PreferencesManager::getInstance()->getMassUnit().toString() % "\n" %
-                    "Travel Time Estimate: " % MathUtils::formattedTimeSpan(travel_time_estimate()) % "\n" %
-                    "Total Time Estimate: " % MathUtils::formattedTimeSpan(total_time()) % "\n";
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Travel Distance: " %
+                      QString::number(travelDistanceValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Total Distance: " %
+                      QString::number(distanceValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Volume: " %
+                      QString::number(volumeValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" % "Approximate Weight (" %
+                      toString(m_material) % "): " % QString::number(massValue) % " " %
+                      PreferencesManager::getInstance()->getMassUnit().toString() % "\n" % "Travel Time Estimate: " %
+                      MathUtils::formattedTimeSpan(travel_time_estimate()) % "\n" % "Total Time Estimate: " %
+                      MathUtils::formattedTimeSpan(total_time()) % "\n";
 
             if (m_adjust_file && total_adjusted_time > 0 && m_sb->setting<int>(MS::Cooling::kForceMinLayerTime)) {
                 keyInfo =
