@@ -52,6 +52,9 @@ class PartControl : public QWidget {
     //! \param status if the part is outside the volume
     void setOutsideStatus(const QString& name, bool status);
 
+    //! \brief Expands all items in the part tree
+    void expandAll();
+
    public slots:
     //! \brief Refresh modifier targets and slicing-mode diagnostics.
     void refreshModifierScopes();
