@@ -51,18 +51,18 @@
             "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125"
         },
         "/openwiki/operations/build-and-packaging.md": {
+            "gitHead": "6db5c658469fc45a02276f2c6f213d6b6df05c99",
+            "sourceFingerprint": "sha256:e6d9d216e4060192f77b34dbb1d069f481b15d671ac3e9145c9558696508d321",
             "pageVersion": "sha256:b50f203a0c756ddbff3a165109fe46a0fa722329e9b4c941bdc53d39ed3ce034",
             "completedBy": "codex",
-            "completedRunId": "900c7989-fec6-4633-b831-9c2ad11a5330",
-            "gitHead": "6db5c658469fc45a02276f2c6f213d6b6df05c99",
-            "sourceFingerprint": "sha256:e6d9d216e4060192f77b34dbb1d069f481b15d671ac3e9145c9558696508d321"
+            "completedRunId": "900c7989-fec6-4633-b831-9c2ad11a5330"
         },
         "/openwiki/quickstart.md": {
-            "pageVersion": "sha256:2276a78c22676de1002ff0e33aafe77e2969c4ec92145f29a38bf2c3be6be105",
+            "pageVersion": "sha256:c8c5094db60535646c15cf4e96785329831ef088b5e5b2b776a04accd5a580cd",
             "completedBy": "codex",
-            "completedRunId": "900c7989-fec6-4633-b831-9c2ad11a5330",
-            "gitHead": "6db5c658469fc45a02276f2c6f213d6b6df05c99",
-            "sourceFingerprint": "sha256:e6d9d216e4060192f77b34dbb1d069f481b15d671ac3e9145c9558696508d321"
+            "completedRunId": "53766cbc-b4f8-4086-99be-d9592664ed37",
+            "gitHead": "2ff683b65d3eca9743c4c39db02172a394b6319b",
+            "sourceFingerprint": "sha256:387f108389f438330f56c46d399d15f1f5ada21e0ca95361e0784a698e0b7bed"
         },
         "/openwiki/slicing/cylindrical-and-helical.md": {
             "gitHead": "c4f42b6c437a44d2051e290f178ef853f6ad7668",
@@ -79,11 +79,11 @@
             "completedRunId": "e7b002a4-bde7-4ff9-80a6-7ccbedde9125"
         },
         "/openwiki/testing/strategy.md": {
-            "pageVersion": "sha256:27c2a4af1446419d89bb1d13c07d5756ccca8cb627069ef11216a3b725ceb595",
+            "pageVersion": "sha256:2ed835877f904812bd4e9f0912906a1f3acf991327a8a20a3182efab32274320",
             "completedBy": "codex",
-            "completedRunId": "900c7989-fec6-4633-b831-9c2ad11a5330",
-            "gitHead": "6db5c658469fc45a02276f2c6f213d6b6df05c99",
-            "sourceFingerprint": "sha256:e6d9d216e4060192f77b34dbb1d069f481b15d671ac3e9145c9558696508d321"
+            "completedRunId": "53766cbc-b4f8-4086-99be-d9592664ed37",
+            "gitHead": "2ff683b65d3eca9743c4c39db02172a394b6319b",
+            "sourceFingerprint": "sha256:387f108389f438330f56c46d399d15f1f5ada21e0ca95361e0784a698e0b7bed"
         }
     }
 }

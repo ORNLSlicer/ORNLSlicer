@@ -46,10 +46,10 @@ sources:
     resource: repo://tests/variable_layer_height_tests.cpp
   - id: openwiki-source-7a4801d8dab8724a03e566bd
     resource: repo://tests/visualization_colors_tests.cpp
-generated: { by: "codex", at: "2026-10-07T19:54:21.935Z" }
+generated: { by: "codex", at: "2026-10-07T20:13:35.892Z" }
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-07T19:54:21.935Z
+    at: 2026-10-07T20:13:35.892Z
 ---
 
 # Test Strategy and Validation Map
@@ -92,7 +92,7 @@ nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure
 ```
 
-The preset uses Clang with the Ninja Multi-Config generator and writes to `build/generic-llvm-ninja`, so `-C Debug` selects the executable configuration for CTest. Do not substitute the unrelated top-level `build/` path. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://AGENTS.md#L56-L64)
+The preset uses Clang with the Ninja Multi-Config generator and writes to `build/generic-llvm-ninja`, so `-C Debug` selects the executable configuration for CTest. Do not substitute the unrelated top-level `build/` path. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://AGENTS.md#L60-L71)
 
 For a narrow change, build one prefixed executable target and filter by its unprefixed CTest name:
 
@@ -105,7 +105,7 @@ nix develop .#ornlslicerDev -L --command \
   -R '^arc_specialties_parser_tests$' --output-on-failure
 ```
 
-Use `ctest --test-dir build/generic-llvm-ninja -C Debug -N` to inspect the tests registered by the current configuration. Reconfigure after adding or deleting source, header, resource, or test-target declarations; source and resource discovery is glob-based even though test targets themselves are explicit. [source](repo://CMakeLists.txt#L139-L157) [source](repo://AGENTS.md#L44-L46)
+Use `ctest --test-dir build/generic-llvm-ninja -C Debug -N` to inspect the tests registered by the current configuration. Reconfigure after adding or deleting source, header, resource, or test-target declarations; source and resource discovery is glob-based even though test targets themselves are explicit. [source](repo://CMakeLists.txt#L139-L157) [source](repo://AGENTS.md#L49-L51)
 
 ## Coverage map
 
