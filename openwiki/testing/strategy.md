@@ -3,14 +3,11 @@ type: guide
 title: Test Strategy and Validation Map
 description: CTest topology, focused regression coverage, end-to-end slicing checks, commands, fixtures, and the current CI and GUI validation boundary.
 tags: [testing, ctest, regression, validation, ci]
-verified:
-  - by: openwiki/0.7.0
-    at: 2026-10-06T20:25:27.555Z
 sources:
-  - id: openwiki-source-ced6747f13d7a40f942b17d8
-    resource: repo://.codex/AGENTS.md
   - id: openwiki-source-164e2da859b5277df81c7d94
     resource: repo://.github/workflows/ci.yml
+  - id: openwiki-source-8037e2358a2c4f9b2c722a11
+    resource: repo://AGENTS.md
   - id: openwiki-source-a60928f26402a7ffadc427b3
     resource: repo://cmake/presets/generic-llvm-ninja.json
   - id: openwiki-source-d44494ef3e497fea81240ef8
@@ -49,7 +46,10 @@ sources:
     resource: repo://tests/variable_layer_height_tests.cpp
   - id: openwiki-source-7a4801d8dab8724a03e566bd
     resource: repo://tests/visualization_colors_tests.cpp
-generated: { by: "codex", at: "2026-10-06T20:25:27.555Z" }
+generated: { by: "codex", at: "2026-10-07T19:54:21.935Z" }
+verified:
+  - by: openwiki/0.7.0
+    at: 2026-10-07T19:54:21.935Z
 ---
 
 # Test Strategy and Validation Map
@@ -92,7 +92,7 @@ nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure
 ```
 
-The preset uses Clang with the Ninja Multi-Config generator and writes to `build/generic-llvm-ninja`, so `-C Debug` selects the executable configuration for CTest. Do not substitute the unrelated top-level `build/` path. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://.codex/AGENTS.md#L39-L47)
+The preset uses Clang with the Ninja Multi-Config generator and writes to `build/generic-llvm-ninja`, so `-C Debug` selects the executable configuration for CTest. Do not substitute the unrelated top-level `build/` path. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://AGENTS.md#L56-L64)
 
 For a narrow change, build one prefixed executable target and filter by its unprefixed CTest name:
 
@@ -105,7 +105,7 @@ nix develop .#ornlslicerDev -L --command \
   -R '^arc_specialties_parser_tests$' --output-on-failure
 ```
 
-Use `ctest --test-dir build/generic-llvm-ninja -C Debug -N` to inspect the tests registered by the current configuration. Reconfigure after adding or deleting source, header, resource, or test-target declarations; source and resource discovery is glob-based even though test targets themselves are explicit. [source](repo://CMakeLists.txt#L139-L157) [source](repo://.codex/AGENTS.md#L22-L29)
+Use `ctest --test-dir build/generic-llvm-ninja -C Debug -N` to inspect the tests registered by the current configuration. Reconfigure after adding or deleting source, header, resource, or test-target declarations; source and resource discovery is glob-based even though test targets themselves are explicit. [source](repo://CMakeLists.txt#L139-L157) [source](repo://AGENTS.md#L44-L46)
 
 ## Coverage map
 
@@ -168,7 +168,7 @@ The push workflow has three complementary signals:
 
 - Ubuntu and macOS run `nix flake check --all-systems`;
 - Ubuntu builds and bundles the Linux AppImage and runs only its `--help` command as a smoke test;
-- Ubuntu cross-builds the Windows portable tree and installer and uploads both artifacts. [source](repo://.github/workflows/ci.yml#L1-L19) [source](repo://.github/workflows/ci.yml#L21-L61) [source](repo://.github/workflows/ci.yml#L63-L107)
+- Ubuntu cross-builds the Windows portable tree and installer and uploads both artifacts. [source](repo://.github/workflows/ci.yml#L1-L19) [source](repo://.github/workflows/ci.yml#L21-L61) [source](repo://.github/workflows/ci.yml#L63-L108)
 
 The workflow does not explicitly invoke `ctest`, and the Nix package derivation defines neither a check phase nor a CTest command. A green packaging workflow therefore demonstrates the declared Nix/build/package steps, but it should not be reported as a run of the 21 focused tests. [source](repo://.github/workflows/ci.yml#L8-L19) [source](repo://.github/workflows/ci.yml#L42-L56) [source](repo://nix/ornlslicer/default.nix#L12-L64)
 

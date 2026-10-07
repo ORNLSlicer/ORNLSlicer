@@ -5,7 +5,7 @@ description: Reproducible local and CI build paths, generated settings and build
 tags: [build, cmake, nix, ci, packaging, diagnostics]
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-06T20:25:27.555Z
+    at: 2026-10-07T19:54:21.935Z
 sources:
   - id: openwiki-source-164e2da859b5277df81c7d94
     resource: repo://.github/workflows/ci.yml
@@ -33,7 +33,7 @@ sources:
     resource: repo://src/main.cpp
   - id: openwiki-source-3a34e9951a829d6407a1f125
     resource: repo://src/utilities/runtime_diagnostics.cpp
-generated: { by: "codex", at: "2026-10-06T20:25:27.555Z" }
+generated: { by: "codex", at: "2026-10-07T19:54:21.935Z" }
 ---
 
 # Build, Generated Assets, CI, and Packaging
@@ -127,7 +127,7 @@ CI builds the Linux derivation, bundles it, then smoke-tests `--help` as a non-r
 
 ## Windows portable tree and installer
 
-CI builds `windows.ornl.ornlslicer` on an Ubuntu runner, names a portable directory and installer from the derivation metadata and workflow run, and invokes `makensis` from the developer shell with the portable tree and version as definitions. Both the portable tree and installer executable are uploaded. [source](repo://.github/workflows/ci.yml#L63-L107)
+CI builds `windows.ornl.ornlslicer` on an Ubuntu runner, names a portable directory and installer from the derivation metadata and workflow run, and invokes `makensis` from a dedicated NSIS-only Nix shell with the portable tree and version as definitions. Both the portable tree and installer executable are uploaded. [source](repo://.github/workflows/ci.yml#L63-L108)
 
 The NSIS package installs for all users under 64-bit Program Files and requests administrator rights. It copies the full CMake/Nix install tree, records uninstall metadata and release links, creates application and uninstall Start Menu shortcuts, and removes the install and shortcut directories on uninstall. [source](repo://scripts/installer.nsi#L22-L47) [source](repo://scripts/installer.nsi#L49-L97)
 
