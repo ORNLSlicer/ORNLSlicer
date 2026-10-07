@@ -1,6 +1,6 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:27c2a4af1446419d89bb1d13c07d5756ccca8cb627069ef11216a3b725ceb595",
+        "pageVersion": "sha256:2ed835877f904812bd4e9f0912906a1f3acf991327a8a20a3182efab32274320",
         "claims":
             [
                 {
@@ -60,9 +60,9 @@
                         "The generic development preset uses Clang and Ninja Multi-Config in build/generic-llvm-ninja, so CTest needs the selected configuration such as Debug.",
                     "evidence": [
                         {
-                            "resource": "repo://AGENTS.md#L56-L64",
+                            "resource": "repo://AGENTS.md#L60-L71",
                             "version":
-                                "repo-lines-v1:sha256:e907757be39bea50d6946d8fba6e1b61e5557f19644db70858ad40d413e06ad9:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiNjhlMzg3NmI3NGIyOWNjOGRiMTBiNjdjODA0NzhiZmQxNWQxNzllOWVjNTQxMGJhMTNkZjIxMjhmNjlkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYyNzI1NDU4YjkxYTJjOWU3YmQyMzZhOTJjMGZmOGM5YTE0NGQ3Yzg2NWM5ODAxN2ViMjhlYWQyMzNkYjNhZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzNDE3ZTVjOTk2MWU1Y2ViZTExMzc3MDMzNWJjMmUwYjY3NWQ2NDM1NjAwODNlNjk2YWVjYzYwNmZlYWU3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTlhOWY0NDg4ZTUzZDk2MDFjZGIzMTJlYjljOTYyMjM0ZmYwZDYzMTM1Y2VmZjQyYzUyYmExOWJlMWQ2NzE0MiJ9"
+                                "repo-lines-v1:sha256:cf863704cda7d90cf556511d3c52f229110c1325c2eaa5d72f0ff9712df2f059:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzYjE0YWVhNmE5NmY0ZTUyYmY4MDE4NTVhZjYxMjYyMjJlMDRhZmRhNzE0OGJmNDc3OTc5NzdkOTVhYWJmYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2MjcyNTQ1OGI5MWEyYzllN2JkMjM2YTkyYzBmZjhjOWExNDRkN2M4NjVjOTgwMTdlYjI4ZWFkMjMzZGIzYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmMzQxN2U1Yzk5NjFlNWNlYmUxMTM3NzAzMzViYzJlMGI2NzVkNjQzNTYwMDgzZTY5NmFlY2M2MDZmZWFlNzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5YTlmNDQ4OGU1M2Q5NjAxY2RiMzEyZWI5Yzk2MjIzNGZmMGQ2MzEzNWNlZmY0MmM1MmJhMTliZTFkNjcxNDIifQ"
                         },
                         {
                             "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L14",
@@ -102,28 +102,27 @@
                     "id": "claim_2f59a45c3aaf4acbbf4fcd8f56c1b065",
                     "statement":
                         "Settings and session regressions cover G-code settings import, version migration, transactional preference import, preference persistence, and recent-project and project-loading behavior.",
-                    "evidence":
-                        [
-                            {
-                                "resource": "repo://tests/gcode_settings_importer_tests.cpp#L64-L242",
-                                "version": "repo-lines-v1:sha256:3dd5cabc2af93295cf4f3461cf9604d4052c744c4f96992c9be30c4e9f9bc06f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTc5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
-                            },
-                            {
-                                "resource": "repo://tests/preferences_import_tests.cpp#L20-L76",
-                                "version":
-                                    "repo-lines-v1:sha256:d550cfcea3d50fb17ebd93e297a490992586b9320503e1313f400fa028fb5659:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                            },
-                            {
-                                "resource": "repo://tests/session_manager_tests.cpp#L74-L188",
-                                "version":
-                                    "repo-lines-v1:sha256:17b482e24c060d9ffca2d4f6920fa4755309efaa779a4917cace9c38f4c29f12:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
-                            },
-                            {
-                                "resource": "repo://tests/settings_version_control_tests.cpp#L13-L65",
-                                "version":
-                                    "repo-lines-v1:sha256:085840307700b6b27970174eecc36027c33325986958c9f563c69df8d5f65fc9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhYWMyNjBhMzhhYjYxNzkzNTNhMDc2ZjY0ZDM0ODRlNDY2ZDQ4YTlhNzliMGJlOTQ5NWVkNDZhY2I2MzIzMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                            }
-                        ]
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/gcode_settings_importer_tests.cpp#L64-L242",
+                            "version": "repo-lines-v1:sha256:3dd5cabc2af93295cf4f3461cf9604d4052c744c4f96992c9be30c4e9f9bc06f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTc5LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                        },
+                        {
+                            "resource": "repo://tests/preferences_import_tests.cpp#L20-L76",
+                            "version":
+                                "repo-lines-v1:sha256:d550cfcea3d50fb17ebd93e297a490992586b9320503e1313f400fa028fb5659:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiODUzNDFkMmExYzg4YzQ5NzEwYWZhOWMyZTdiZWE4OTdjMzk1ZTRkYWQ2YzZhNzkwMmEwNGYxMDJkZWQ1MmIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://tests/session_manager_tests.cpp#L74-L188",
+                            "version":
+                                "repo-lines-v1:sha256:17b482e24c060d9ffca2d4f6920fa4755309efaa779a4917cace9c38f4c29f12:eyJzZWxlY3RlZExpbmVDb3VudCI6MTE1LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI2NTk0ZmExOGY3ZjhjNDUzMDM3Mzk4MWYyMzg4OTgxNDg0ODNiNGM0NjliZWIwOWE5Mzc1OWM4ZmRmNmFjMTE1IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NTdmNGExMTExZjAzNmQwNjEzMDNmMTMwY2Q5NTUxNjU4MmJlNDY2YzMwMjk3ODZhNDIzMjVjN2RjMDk5ZmVkIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                        },
+                        {
+                            "resource": "repo://tests/settings_version_control_tests.cpp#L13-L65",
+                            "version":
+                                "repo-lines-v1:sha256:085840307700b6b27970174eecc36027c33325986958c9f563c69df8d5f65fc9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhYWMyNjBhMzhhYjYxNzkzNTNhMDc2ZjY0ZDM0ODRlNDY2ZDQ4YTlhNzliMGJlOTQ5NWVkNDZhY2I2MzIzMGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
                 },
                 {
                     "id": "claim_fba9d4ce7c444aeeb1a99975d2a856d4",
@@ -328,6 +327,6 @@
             ],
         "verification": {
             "by": "openwiki/0.7.0",
-            "at": "2026-10-07T19:54:21.935Z"
+            "at": "2026-10-07T20:13:35.892Z"
         }
     }

@@ -1,6 +1,6 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:2276a78c22676de1002ff0e33aafe77e2969c4ec92145f29a38bf2c3be6be105",
+        "pageVersion": "sha256:c8c5094db60535646c15cf4e96785329831ef088b5e5b2b776a04accd5a580cd",
         "claims":
             [
                 {
@@ -51,9 +51,9 @@
                         "Production declarations and implementations are generally paired under include and src, while resources/settings owns canonical setting metadata and templates owns installed printer and process templates.",
                     "evidence": [
                         {
-                            "resource": "repo://AGENTS.md#L35-L37",
+                            "resource": "repo://AGENTS.md#L35-L40",
                             "version":
-                                "repo-lines-v1:sha256:d5a1a4ef06683c4dde2415e6afead946cc22ca934f96da5e2d534002dae146f7:eyJzZWxlY3RlZExpbmVDb3VudCI6MywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiOWU0OTAwZmU0YzcwZGVlZjMzYjJmZTM2OTk1OTMxZGQzNWU4NjNkMDlhOTJkZmYwOThiNmZhMzBlMGQwNDE1YSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiM2Y4OTVhNWEyZjhiNDEyMGM0NzAwNjgxM2U0ZTZjNjNkOTZjNmZiZWRmYzRlNjI0Yzk0NmFhZjcwNjE2OTM2OCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMzgxOWUxYmE0MzUwZjJmMmMwZmNmOGY3Mjk4MzliYTM5YjZlMTgyNjBmNzc3NWViYzAwZWFkOTY5MzAyNDVjNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMTMwZjNmZmViNDBjMjZjNDlkNGJiYzY5NjBmMmQwMGRmZWRhOTdmMjNhMzU2YjA0OWJiYjA5ZjdkYTM1OTkxNSJ9"
+                                "repo-lines-v1:sha256:bcef2c2db756f517cf1dc9b29e2a426f472b7b91d69d74e6599a1b9b5640c501:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGMzMzJkODg4YjhhNWU4NTg5MjhiZDVkMDgzMDRiMjE0YWJmZDQ1NWZmZTUwN2Q1ZGQwY2FkYjk2OTI1ZWNhNSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGFkZGZlMzc5MDQ2NTRkZTQ0OTk5ZDhlNzEwMDYyYjY1ZjYyYTRkOGZjZWM2ZWYwMjZkZjI1M2RlN2U2OGU5NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjEzMmU3NTdhYTQ0MTVhZjg2ODcwMmI1ZDk5MmY0NDY5NTYwYjA3NjNhMjQzZGVmMmMxOThjYjhjMTI4MTQxNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzgxOWUxYmE0MzUwZjJmMmMwZmNmOGY3Mjk4MzliYTM5YjZlMTgyNjBmNzc3NWViYzAwZWFkOTY5MzAyNDVjNyJ9"
                         },
                         {
                             "resource": "repo://CMakeLists.txt#L139-L164",
@@ -83,9 +83,9 @@
                         "The standard developer build uses the ornlslicerDev Nix shell and the generic-llvm-ninja preset, which selects Clang, Ninja Multi-Config, and build/generic-llvm-ninja.",
                     "evidence": [
                         {
-                            "resource": "repo://AGENTS.md#L56-L64",
+                            "resource": "repo://AGENTS.md#L60-L71",
                             "version":
-                                "repo-lines-v1:sha256:e907757be39bea50d6946d8fba6e1b61e5557f19644db70858ad40d413e06ad9:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiNjhlMzg3NmI3NGIyOWNjOGRiMTBiNjdjODA0NzhiZmQxNWQxNzllOWVjNTQxMGJhMTNkZjIxMjhmNjlkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYyNzI1NDU4YjkxYTJjOWU3YmQyMzZhOTJjMGZmOGM5YTE0NGQ3Yzg2NWM5ODAxN2ViMjhlYWQyMzNkYjNhZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzNDE3ZTVjOTk2MWU1Y2ViZTExMzc3MDMzNWJjMmUwYjY3NWQ2NDM1NjAwODNlNjk2YWVjYzYwNmZlYWU3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTlhOWY0NDg4ZTUzZDk2MDFjZGIzMTJlYjljOTYyMjM0ZmYwZDYzMTM1Y2VmZjQyYzUyYmExOWJlMWQ2NzE0MiJ9"
+                                "repo-lines-v1:sha256:cf863704cda7d90cf556511d3c52f229110c1325c2eaa5d72f0ff9712df2f059:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAzYjE0YWVhNmE5NmY0ZTUyYmY4MDE4NTVhZjYxMjYyMjJlMDRhZmRhNzE0OGJmNDc3OTc5NzdkOTVhYWJmYTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI2MjcyNTQ1OGI5MWEyYzllN2JkMjM2YTkyYzBmZjhjOWExNDRkN2M4NjVjOTgwMTdlYjI4ZWFkMjMzZGIzYWYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmMzQxN2U1Yzk5NjFlNWNlYmUxMTM3NzAzMzViYzJlMGI2NzVkNjQzNTYwMDgzZTY5NmFlY2M2MDZmZWFlNzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5YTlmNDQ4OGU1M2Q5NjAxY2RiMzEyZWI5Yzk2MjIzNGZmMGQ2MzEzNWNlZmY0MmM1MmJhMTliZTFkNjcxNDIifQ"
                         },
                         {
                             "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L14",
@@ -240,7 +240,8 @@
                         },
                         {
                             "resource": "repo://include/step/step.h#L75-L121",
-                            "version": "repo-lines-v1:sha256:49b5b2dc466a11ea664bc2e23ed716c682060fe99c8efd7c2c3574d692f5e4ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0ODMxYmRmYzQzYzBhNzc0NTA0NTI3NGI1N2Q4MTIyYTk1Nzg4MWMxZjY1MjE1MzU1OGM4ZWNhNGY3MzU0NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwYTJiMzczMGQ3OWI1NjA0OWU4ODdkNTM2NmMxMmY3MDlhZGE1YThmNjFiNzQyODU1NzNiMjRhOTBmYjU4MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2MTY4ZjdhMTI1Zjg0Mjk3NDczZjUwZTVkNTA1ZjRiODU2NTg0ZmVmMDMzODhhZjlkYTUyMzgxYTAwZjU4OTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyMDkyOTY1M2E3MzYyNGM3YzFiMmJhMTE1ZDlhNTExMzI5YmUzMzRkZDI5YWNhZGUwNzk0MTE5YjU3NTRmOWUifQ"
+                            "version":
+                                "repo-lines-v1:sha256:49b5b2dc466a11ea664bc2e23ed716c682060fe99c8efd7c2c3574d692f5e4ac:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM0ODMxYmRmYzQzYzBhNzc0NTA0NTI3NGI1N2Q4MTIyYTk1Nzg4MWMxZjY1MjE1MzU1OGM4ZWNhNGY3MzU0NzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQwYTJiMzczMGQ3OWI1NjA0OWU4ODdkNTM2NmMxMmY3MDlhZGE1YThmNjFiNzQyODU1NzNiMjRhOTBmYjU4MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ2MTY4ZjdhMTI1Zjg0Mjk3NDczZjUwZTVkNTA1ZjRiODU2NTg0ZmVmMDMzODhhZjlkYTUyMzgxYTAwZjU4OTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyMDkyOTY1M2E3MzYyNGM3YzFiMmJhMTE1ZDlhNTExMzI5YmUzMzRkZDI5YWNhZGUwNzk0MTE5YjU3NTRmOWUifQ"
                         }
                     ]
                 },
@@ -250,9 +251,9 @@
                         "resources/settings YAML files are canonical, their sorted path and in-file order control generated catalog and UI order, and the generator must update both master.conf and setting_inputs.conf.",
                     "evidence": [
                         {
-                            "resource": "repo://AGENTS.md#L47-L51",
+                            "resource": "repo://AGENTS.md#L52-L55",
                             "version":
-                                "repo-lines-v1:sha256:902be5c32472c08e720308562c5071d7d972259f8058d8a055430adca646ec74:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTZmY2Y3OWIwM2EyM2IzZTc0MGNhZmRhNjg1ZmQxN2MyMGMyNDhkZjliZDJiNTU5ODhmOGFmZTFiZWRlYTFiYiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNGM5MThlMTQwMzc3YTNiYTUwY2IxYzBhYzUwZWM0M2U0MWYyNDY1MGFmNDlkY2UwMGQ2YWJkNzcxOWY2ZGJkNSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNDE3NzM5NGVhNDBhZWNlYTQ3NWMwNzA1OWM0NjI0MzMyNzA3MmE4YmI5M2ZiNjFmYzc5ODQwNTZkMWZlNDI4ZiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODU0ZmQ1YjM2YmQ5MmUyZGE3ZGZjN2NmMzk3MmI0NjlkNWZjM2FjNTJiNjgxMjE3YmNmNjE0ODI2ZDgyYTUwMCJ9"
+                                "repo-lines-v1:sha256:b5a20a7b09f669d63c64dce4bf85f744183de2d1c7dabe05f89b514f4081920b:eyJzZWxlY3RlZExpbmVDb3VudCI6NCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYzk4NjkyYjkzODAyNzlkNGY2YjlhNDI4YTBkZWE3YzA3ZTkwYjBlMWFjZmY0Njg4MTJjMzJmMjFjZjJmYmZlOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFlYjZiMGQwMmIzNGUyMmI5NjE5ZTg4OTA2NzI0MDc0ZWVlNjQ0YWVjNDQyMzZlZTg0NjFmNGRhNGEyODU4MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiM2NlNzhmNTY3YzdmZGM3ZTFjZmU0MmJjNzIxYTQxYjMwNmI3NGRiNzY5NDViODM5ZWZkMzQ3ODRhMzk0YWY4NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiODU0ZmQ1YjM2YmQ5MmUyZGE3ZGZjN2NmMzk3MmI0NjlkNWZjM2FjNTJiNjgxMjE3YmNmNjE0ODI2ZDgyYTUwMCJ9"
                         },
                         {
                             "resource": "repo://resources/settings/README.md#L1-L15",
@@ -311,9 +312,9 @@
                                 "repo-lines-v1:sha256:3e6f516fe036b14195943cabd44c0c468c7ea15df5ba21d4e58b3c2cc62833d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1ZTFhMGUwOGRjMDgxYWM1ODZhMzI5ZTc3MDNkOGI3OWI3MTUwYzNmMWY1MDMwZGNmNDJhMzdjOTNmZWU5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjk3MzI3MGMwOGU0OTkwZGE3ZDUwZGIzMWFmYzEzNGQ5ZWJhY2FlNGFiNTQ2MjUzZjk0ZmI0NDBkM2Q3MTA4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY5MDVjZTFlNWY4ZDFjMzZkZmU3ODJhYWY2OTNhZDQ3NDUzZTZkY2RkODJlMjE2ZmYzNTZiZTc3NzI5YjI0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QxZGIwN2QyMjIwZDg3ZmM2MWQ2OTJlMDA5ZDlkOWJmZDQ2MTYxZTNkMDAyZThlNmEzMzAwMTRjNjk0YTkzYiJ9"
                         },
                         {
-                            "resource": "repo://AGENTS.md#L41-L46",
+                            "resource": "repo://AGENTS.md#L46-L51",
                             "version":
-                                "repo-lines-v1:sha256:82cc77f5daf1bddfbccbad68146d1f30ce14246a638bb64e9ab4bae94ae935f7:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNThjMjVmMTNlMTNkMTg2NmZhY2NmNWQyMzNhM2U5OGE4ODgwYzdjMTgzZGY4NzFjZTYyMjljNDY1ODhlMzA4NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiOTVkMjc1ZjAxOTExZGNlMmFiZGRkMmE1MWRhYjY3MzA0MGQ3ZmQ5MThlNzRkN2ExNWY3YjExYmJkNWQxZWQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTMwZjNmZmViNDBjMjZjNDlkNGJiYzY5NjBmMmQwMGRmZWRhOTdmMjNhMzU2YjA0OWJiYjA5ZjdkYTM1OTkxNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZWM4MWIyNTcyNDQ1MGNjYzBkOWZiMDU1NTZhM2ZlYmI3NTk0OTIwM2M4NWM5NTEwOWE5Zjc4ODdiZmExNjcxZSJ9"
+                                "repo-lines-v1:sha256:b8d30a3a1813f5ae0700acc5969b9bed1f3ca617b95a28e9c44d457c9be0cdbe:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNThjMjVmMTNlMTNkMTg2NmZhY2NmNWQyMzNhM2U5OGE4ODgwYzdjMTgzZGY4NzFjZTYyMjljNDY1ODhlMzA4NCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDMwMTlmNjYyYjc1YjM4NTllZDMwZDg2Y2I1MDc1YTdlNGExMWU5YTE3YTM0YTIzOTQwYWRmZWRhOTU1NzdmMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNmU3Nzc0YzYxZjI4YmMzODE2YzAwOGQwNjQxMDZjYTNkNjdiZWQ3MWNhYzNhNDVhNjFhMmZlNWQ4NWYzMDcyNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNWJhMmRlMzc4OTFkOTkxODkyZGMxYWI2N2NlZmQ5Mzc5YWU3NjQ5YzllMGM1NGQ0YjkzMzUzYTE2YmFlODFmYyJ9"
                         },
                         {
                             "resource": "repo://CMakeLists.txt#L139-L157",
@@ -325,6 +326,6 @@
             ],
         "verification": {
             "by": "openwiki/0.7.0",
-            "at": "2026-10-07T19:54:21.935Z"
+            "at": "2026-10-07T20:13:35.892Z"
         }
     }

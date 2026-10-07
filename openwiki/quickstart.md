@@ -38,10 +38,10 @@ sources:
     resource: repo://src/threading/gcode_loader.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
-generated: { by: "codex", at: "2026-10-07T19:54:21.935Z" }
+generated: { by: "codex", at: "2026-10-07T20:13:35.892Z" }
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-07T19:54:21.935Z
+    at: 2026-10-07T20:13:35.892Z
 ---
 
 # ORNLSlicer OpenWiki Quickstart
@@ -59,7 +59,7 @@ git status --short --branch
 rg -n 'NamedType|setting_key|signalName|command_text' include src resources tests
 ```
 
-Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://AGENTS.md#L35-L37) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L478-L515) [source](repo://CMakeLists.txt#L552-L564)
+Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://AGENTS.md#L35-L40) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L478-L515) [source](repo://CMakeLists.txt#L552-L564)
 
 Establish the ordinary development baseline inside the repository's Nix shell:
 
@@ -135,7 +135,7 @@ The geometry route is also the output route: `Step` owns settings, slicing-plane
 
 ## Settings are a source-to-generated contract
 
-Edit `resources/settings/*.yaml`; do not treat the generated JSON files as the authoring surface. Sorted YAML path order and in-file setting order determine generated catalog and UI order. Generate and validate both artifacts together: [source](repo://resources/settings/README.md#L1-L15)
+Edit `resources/settings/*.yaml`; do not treat the generated JSON files as the authoring surface. Sorted YAML path order and in-file setting order determine generated catalog and UI order. Generate and validate both artifacts together: [source](repo://resources/settings/README.md#L1-L15) [source](repo://AGENTS.md#L52-L55)
 
 ```bash
 python3 scripts/generate_master_config.py \
@@ -182,7 +182,7 @@ Use these additional checks according to the changed contract:
 - C++: format changed files with the repository `.clang-format` and compile the affected target;
 - source/header/resource additions or deletions: rerun CMake configure because production inputs are globbed;
 - documentation only: run `git diff --check -- <touched-files>`;
-- GUI, native-dialog, OpenGL, or controller-facing behavior: add interactive or external integration evidence because current CTest and packaging smoke checks do not cover those outcomes. [source](repo://AGENTS.md#L41-L64) [source](repo://CMakeLists.txt#L139-L157) [source](repo://.github/workflows/ci.yml#L52-L56)
+- GUI, native-dialog, OpenGL, or controller-facing behavior: add interactive or external integration evidence because current CTest and packaging smoke checks do not cover those outcomes. [source](repo://AGENTS.md#L46-L51) [source](repo://CMakeLists.txt#L139-L157) [source](repo://.github/workflows/ci.yml#L52-L56)
 
 The exact test-to-risk map, the optional whole-project regression, and the distinction between local CTest and CI packaging evidence are in [Test Strategy and Validation Map](testing/strategy.md).
 
