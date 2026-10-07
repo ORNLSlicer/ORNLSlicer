@@ -1,6 +1,6 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:a8372d19979a7fd14296a105b68f1925499a63cf091c4faea79fb5b0aa2e9456",
+        "pageVersion": "sha256:27c2a4af1446419d89bb1d13c07d5756ccca8cb627069ef11216a3b725ceb595",
         "claims":
             [
                 {
@@ -60,9 +60,9 @@
                         "The generic development preset uses Clang and Ninja Multi-Config in build/generic-llvm-ninja, so CTest needs the selected configuration such as Debug.",
                     "evidence": [
                         {
-                            "resource": "repo://.codex/AGENTS.md#L39-L47",
+                            "resource": "repo://AGENTS.md#L56-L64",
                             "version":
-                                "repo-lines-v1:sha256:a1b1d752622634e86985068139a9c96f21d3aeb4d219420ec8e2c116a4ad820a:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMzZhMzU1MTliZWZjNzU4YzBmMDM5NjVkYzliMWQ0MDNjYTk3ZjRiZTRjYTVkMmVmMzE0MTYwYjE3YTUxMDQxOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYyNzI1NDU4YjkxYTJjOWU3YmQyMzZhOTJjMGZmOGM5YTE0NGQ3Yzg2NWM5ODAxN2ViMjhlYWQyMzNkYjNhZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzNDE3ZTVjOTk2MWU1Y2ViZTExMzc3MDMzNWJjMmUwYjY3NWQ2NDM1NjAwODNlNjk2YWVjYzYwNmZlYWU3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTMzNDg0ODEyNzY1NWQzMjRmYjQ5N2E4ZDRkNWM0MTFiOTc1Y2IyYmNiNWIwNjU0N2ZkNWVhOTkzNjFlY2NmNSJ9"
+                                "repo-lines-v1:sha256:e907757be39bea50d6946d8fba6e1b61e5557f19644db70858ad40d413e06ad9:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiNjhlMzg3NmI3NGIyOWNjOGRiMTBiNjdjODA0NzhiZmQxNWQxNzllOWVjNTQxMGJhMTNkZjIxMjhmNjlkNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYjYyNzI1NDU4YjkxYTJjOWU3YmQyMzZhOTJjMGZmOGM5YTE0NGQ3Yzg2NWM5ODAxN2ViMjhlYWQyMzNkYjNhZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYmYzNDE3ZTVjOTk2MWU1Y2ViZTExMzc3MDMzNWJjMmUwYjY3NWQ2NDM1NjAwODNlNjk2YWVjYzYwNmZlYWU3NCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTlhOWY0NDg4ZTUzZDk2MDFjZGIzMTJlYjljOTYyMjM0ZmYwZDYzMTM1Y2VmZjQyYzUyYmExOWJlMWQ2NzE0MiJ9"
                         },
                         {
                             "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L14",
@@ -270,9 +270,9 @@
                                 "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
                         },
                         {
-                            "resource": "repo://.github/workflows/ci.yml#L63-L107",
+                            "resource": "repo://.github/workflows/ci.yml#L63-L108",
                             "version":
-                                "repo-lines-v1:sha256:fb76154e493a6559920dabf0b0ca91f05b876c996dc38d905019cba439891a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                                "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                         }
                     ]
                 },
@@ -328,6 +328,6 @@
             ],
         "verification": {
             "by": "openwiki/0.7.0",
-            "at": "2026-10-06T20:25:27.555Z"
+            "at": "2026-10-07T19:54:21.935Z"
         }
     }

@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:5a0b1aee8c814325a4329b9850b5d450e936776b43aaa9d3c46463cae2226ad4",
+    "pageVersion": "sha256:b50f203a0c756ddbff3a165109fe46a0fa722329e9b4c941bdc53d39ed3ce034",
     "claims":
         [
             {
@@ -229,12 +229,12 @@
             {
                 "id": "claim_9e8d25872a7f44d19684aed3fbbd625b",
                 "statement":
-                    "Windows CI cross-builds a portable Nix tree, generates an NSIS installer, and uploads both; the installer copies the tree under Program Files, writes uninstall metadata, and creates Start Menu shortcuts.",
+                    "Windows CI cross-builds a portable Nix tree, obtains makensis from a dedicated NSIS-only Nix shell, generates an installer, and uploads both outputs; the installer copies the tree under Program Files, writes uninstall metadata, and creates Start Menu shortcuts.",
                 "evidence": [
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L63-L107",
+                        "resource": "repo://.github/workflows/ci.yml#L63-L108",
                         "version":
-                            "repo-lines-v1:sha256:fb76154e493a6559920dabf0b0ca91f05b876c996dc38d905019cba439891a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                     },
                     {
                         "resource": "repo://scripts/installer.nsi#L22-L97",
@@ -259,15 +259,15 @@
                             "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
                     },
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L63-L107",
+                        "resource": "repo://.github/workflows/ci.yml#L63-L108",
                         "version":
-                            "repo-lines-v1:sha256:fb76154e493a6559920dabf0b0ca91f05b876c996dc38d905019cba439891a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                     }
                 ]
             }
         ],
     "verification": {
         "by": "openwiki/0.7.0",
-        "at": "2026-10-06T20:25:27.555Z"
+        "at": "2026-10-07T19:54:21.935Z"
     }
 }

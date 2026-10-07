@@ -3,14 +3,11 @@ type: guide
 title: ORNLSlicer OpenWiki Quickstart
 description: A task-oriented maintainer route from runtime entrypoints and canonical settings through slicing, machine output, focused tests, and packaging.
 tags: [quickstart, maintainers, architecture, validation]
-verified:
-  - by: openwiki/0.7.0
-    at: 2026-10-07T13:32:37.149Z
 sources:
-  - id: openwiki-source-ced6747f13d7a40f942b17d8
-    resource: repo://.codex/AGENTS.md
   - id: openwiki-source-164e2da859b5277df81c7d94
     resource: repo://.github/workflows/ci.yml
+  - id: openwiki-source-8037e2358a2c4f9b2c722a11
+    resource: repo://AGENTS.md
   - id: openwiki-source-a60928f26402a7ffadc427b3
     resource: repo://cmake/presets/generic-llvm-ninja.json
   - id: openwiki-source-d44494ef3e497fea81240ef8
@@ -41,7 +38,10 @@ sources:
     resource: repo://src/threading/gcode_loader.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
-generated: { by: "codex", at: "2026-10-07T13:32:37.149Z" }
+generated: { by: "codex", at: "2026-10-07T19:54:21.935Z" }
+verified:
+  - by: openwiki/0.7.0
+    at: 2026-10-07T19:54:21.935Z
 ---
 
 # ORNLSlicer OpenWiki Quickstart
@@ -59,7 +59,7 @@ git status --short --branch
 rg -n 'NamedType|setting_key|signalName|command_text' include src resources tests
 ```
 
-Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://.codex/AGENTS.md#L11-L20) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L478-L515) [source](repo://CMakeLists.txt#L552-L564)
+Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://AGENTS.md#L35-L37) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L478-L515) [source](repo://CMakeLists.txt#L552-L564)
 
 Establish the ordinary development baseline inside the repository's Nix shell:
 
@@ -69,7 +69,7 @@ nix develop .#ornlslicerDev -L --command \
   cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer
 ```
 
-The checked-in preset uses Clang, Ninja Multi-Config, and `build/generic-llvm-ninja`. For a compile-only iteration across shared production sources, replace the final target with `ornlslicer_obj`; that object library is linked by both the application and focused test executables. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://CMakeLists.txt#L139-L164) [source](repo://.codex/AGENTS.md#L39-L47)
+The checked-in preset uses Clang, Ninja Multi-Config, and `build/generic-llvm-ninja`. For a compile-only iteration across shared production sources, replace the final target with `ornlslicer_obj`; that object library is linked by both the application and focused test executables. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://CMakeLists.txt#L139-L164) [source](repo://AGENTS.md#L56-L64)
 
 ## The entry rule: arguments select the shell
 
@@ -182,7 +182,7 @@ Use these additional checks according to the changed contract:
 - C++: format changed files with the repository `.clang-format` and compile the affected target;
 - source/header/resource additions or deletions: rerun CMake configure because production inputs are globbed;
 - documentation only: run `git diff --check -- <touched-files>`;
-- GUI, native-dialog, OpenGL, or controller-facing behavior: add interactive or external integration evidence because current CTest and packaging smoke checks do not cover those outcomes. [source](repo://.codex/AGENTS.md#L22-L58) [source](repo://CMakeLists.txt#L139-L157) [source](repo://.github/workflows/ci.yml#L52-L56)
+- GUI, native-dialog, OpenGL, or controller-facing behavior: add interactive or external integration evidence because current CTest and packaging smoke checks do not cover those outcomes. [source](repo://AGENTS.md#L41-L64) [source](repo://CMakeLists.txt#L139-L157) [source](repo://.github/workflows/ci.yml#L52-L56)
 
 The exact test-to-risk map, the optional whole-project regression, and the distinction between local CTest and CI packaging evidence are in [Test Strategy and Validation Map](testing/strategy.md).
 
