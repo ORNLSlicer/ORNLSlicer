@@ -89,8 +89,9 @@ jobs:
         run: nix build -L .#${{ env.ci_derivation }} --accept-flake-config -o ${{ env.out_link }}
       - name: Generate Installer
         run: >
-          nix develop --accept-flake-config --command
-          makensis
+          nix shell --accept-flake-config
+          .#legacyPackages.x86_64-linux.nixpkgs.nsis
+          --command makensis
           -DOUTFILE=../${{ env.install_artifact }}
           -DEXE_SOURCES=${{ env.out_link }}
           -DVERSION=${{ env.version }}
