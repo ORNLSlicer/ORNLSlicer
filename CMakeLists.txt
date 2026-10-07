@@ -427,6 +427,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_as_printed_model_exporter_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME as_printed_model_exporter_tests COMMAND ${PROJECT_NAME}_as_printed_model_exporter_tests)
 
+    add_executable(${PROJECT_NAME}_gcode_layer_export_tests tests/gcode_layer_export_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_gcode_layer_export_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_gcode_layer_export_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME gcode_layer_export_tests COMMAND ${PROJECT_NAME}_gcode_layer_export_tests)
+
     add_executable(${PROJECT_NAME}_session_manager_tests tests/session_manager_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_session_manager_tests

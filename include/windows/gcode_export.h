@@ -77,6 +77,8 @@ class GcodeExport : public QWidget {
     QCheckBox* m_as_printed_centerline_checkbox;
     QCheckBox* m_project_file_checkbox;
     QCheckBox* m_bundle_files_checkbox;
+    //! \brief Whether each G-Code layer is saved to its own file.
+    QCheckBox* m_individual_layers_checkbox;
 
     //! \brief Most recently used meta
     GcodeMeta m_most_recent_meta;
