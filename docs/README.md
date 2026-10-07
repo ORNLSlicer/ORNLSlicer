@@ -13,13 +13,12 @@ This directory is the canonical documentation source for ORNLSlicer.
 - [Contributing Guide](../CONTRIBUTING.md)
 - [Legacy Wiki Content](wiki/Home.md)
 
-## Architecture
+## Codebase Architecture
 
-- [Architecture Overview](../ARCHITECTURE.md)
-- [Application Runtime](architecture/application-runtime.md)
-- [Slicing Pipeline](architecture/slicing-pipeline.md)
-- [Settings System](architecture/settings-system.md)
-- [G-code and Visualization](architecture/gcode-and-visualization.md)
+For source-grounded guidance on ORNLSlicer's architecture, runtime flows,
+ownership boundaries, extension points, and validation paths, start with the
+[OpenWiki quickstart](../openwiki/quickstart.md). Source code and tests remain
+authoritative.
 
 ## Contributor Docs
 
