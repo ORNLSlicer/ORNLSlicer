@@ -24,6 +24,7 @@
 #include <qwidget.h>
 
 #include "gcode/as_printed_model_exporter.h"
+#include "gcode/gcode_layer_export.h"
 #include "gcode/gcode_meta.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
@@ -89,8 +90,9 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     m_as_printed_model_checkbox->setEnabled(false);
     m_as_printed_centerline_checkbox = new QCheckBox("Use Centerline Geometry for As-Printed STL");
     m_as_printed_centerline_checkbox->setEnabled(false);
-    m_project_file_checkbox = new QCheckBox("Save Project file");
-    m_bundle_files_checkbox = new QCheckBox("Create subdirectory to bundle files");
+    m_project_file_checkbox      = new QCheckBox("Save Project file");
+    m_bundle_files_checkbox      = new QCheckBox("Create subdirectory to bundle files");
+    m_individual_layers_checkbox = new QCheckBox("Save each layer as an individual G-Code file");
     connect(m_as_printed_model_checkbox, &QCheckBox::toggled, [this](bool) { updateAsPrintedModelOptionState(); });
 
     optionsGrid->addWidget(m_gcode_file_checkbox);
@@ -99,6 +101,7 @@ GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
     optionsGrid->addWidget(m_as_printed_centerline_checkbox);
     optionsGrid->addWidget(m_project_file_checkbox);
     optionsGrid->addWidget(m_bundle_files_checkbox);
+    optionsGrid->addWidget(m_individual_layers_checkbox);
     optionsBox->setLayout(optionsGrid);
 
     m_layout->addWidget(optionsBox);
@@ -145,6 +148,7 @@ void GcodeExport::closeEvent(QCloseEvent* event) {
     updateAsPrintedModelOptionState();
     m_project_file_checkbox->setChecked(false);
     m_bundle_files_checkbox->setChecked(false);
+    m_individual_layers_checkbox->setChecked(false);
 }
 
 void GcodeExport::updateAsPrintedModelOptionState() {
@@ -198,7 +202,7 @@ void GcodeExport::exportGcode() {
             gcodeFileName = filepath % '/' % partName % "_scan_path" % m_most_recent_meta.m_file_suffix;
         }
         else { gcodeFileName = filepath % '/' % partName % m_most_recent_meta.m_file_suffix; }
-        if (QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
+        if (!m_individual_layers_checkbox->isChecked() && QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
 
         QString projectFileName = filepath % '/' % partName % ".s2p";
 
@@ -332,6 +336,34 @@ void GcodeExport::exportGcode() {
             else if (!AsPrintedModelExporter::writeStl(asPrintedFileName, m_gcode, &error, as_printed_options)) {
                 QMessageBox::warning(this, "As-Printed Model", "Could not save the as-printed STL model: " % error);
             }
+        }
+
+        if (m_individual_layers_checkbox->isChecked()) {
+            const QVector<GcodeLayer> layers =
+                splitGcodeIntoLayers(text, m_most_recent_meta.m_comment_starting_delimiter);
+            if (layers.isEmpty()) {
+                QMessageBox::warning(this, "Layer Export", "Could not find any G-code layer markers to export.");
+                return;
+            }
+
+            for (const GcodeLayer& layer : layers) {
+                const QString layerFileName = filepath % '/' % partName % "_layer_" % QString::number(layer.number) %
+                                              m_most_recent_meta.m_file_suffix;
+                if (QFile::exists(layerFileName)) QFile::remove(layerFileName);
+
+                QFile outputFile(layerFileName);
+                if (!outputFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+                    QMessageBox::warning(this, "Layer Export", "Could not write layer file: " % layerFileName);
+                    return;
+                }
+
+                QTextStream out(&outputFile);
+                out << layer.text;
+                outputFile.close();
+            }
+
+            showComplete(filepath, partName % " layers");
+            return;
         }
 
         if ((m_most_recent_meta == GcodeMetaList::MarlinMeta || m_most_recent_meta == GcodeMetaList::CincinnatiMeta) &&
