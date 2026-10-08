@@ -7830,7 +7830,8 @@ layer-to-layer progression, or a user-defined reference point.
 - **Master default:** `Next Closest`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Slicing Mode is `Planar`.
+- **Available when:** (Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)).
 - **Choices:**
   - `Next Closest` — Starts at the path point nearest the current tool position.
   - `Next Farthest` — Starts at the path point farthest from the current tool position.
@@ -7915,7 +7916,8 @@ Sets minimum distance to rotate consecutive point layer to layer.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Point Order Optimization is `Consecutive`).
+- **Available when:** ((Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)) and Point Order Optimization is `Consecutive`).
 
 <a id="setting-custom_point_order_x_location"></a>
 
@@ -7927,8 +7929,9 @@ X Coordinate for Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
-  or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** ((Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)) and (Point Order Optimization is `Custom Location` or Point Order
+  Optimization is `Custom Farthest Location`)).
 
 <a id="setting-custom_point_order_y_location"></a>
 
@@ -7940,8 +7943,9 @@ Y Coordinate for Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
-  or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** ((Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)) and (Point Order Optimization is `Custom Location` or Point Order
+  Optimization is `Custom Farthest Location`)).
 
 <a id="setting-custom_point_order_z_location"></a>
 
