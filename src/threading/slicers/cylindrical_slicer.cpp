@@ -699,6 +699,19 @@ bool CylindricalSlicer::generateHelicalLayers(const QSharedPointer<Part>& part,
 
     const Distance first_radius = initial_radius + (layer_height / 2.0);
     const Distance start_z      = base_z;
+    const Distance configured_tool_arc_length_offset =
+        part_sb->setting<Distance>(PS::Helical::kHelicalToolStartArcLengthOffset);
+    if (!HelicalToolStartAngle::angleOffsetForRadius(configured_tool_arc_length_offset, first_radius).has_value()) {
+        const QString message =
+            "Error: Helical Tool Start Arc Length Offset cannot be converted because the first generated helical "
+            "path radius is zero or invalid.";
+        qWarning() << message;
+        emit statusMessage(message);
+        emit_pre_process_progress(part_index, 0.0);
+        emit_compute_progress(part_index, 0.0);
+        return false;
+    }
+
     if (start_z >= top_z) {
         emit_pre_process_progress(part_index, 0.0);
         emit_compute_progress(part_index, 0.0);
@@ -789,6 +802,19 @@ bool CylindricalSlicer::generateHelicalLayers(const QSharedPointer<Part>& part,
     for (Distance radius = first_radius; radius <= max_radius; radius += layer_height) {
         QSharedPointer<SettingsBase> layer_settings = QSharedPointer<SettingsBase>::create(*part_sb);
         layer_settings->makeLocalAdjustments(helical_layer_number);
+        const Distance tool_arc_length_offset =
+            layer_settings->setting<Distance>(PS::Helical::kHelicalToolStartArcLengthOffset);
+        const std::optional<Angle> tool_angle_offset =
+            HelicalToolStartAngle::angleOffsetForRadius(tool_arc_length_offset, radius);
+        if (!tool_angle_offset.has_value()) {
+            const QString message =
+                "Error: Helical Tool Start Arc Length Offset cannot be converted for a zero or invalid generated "
+                "helical path radius.";
+            qWarning() << message;
+            emit statusMessage(message);
+            return false;
+        }
+        layer_settings->setSetting(SS::kHelicalToolStartAngleOffset, tool_angle_offset.value());
 
         QSharedPointer<CylindricalLayer> helical_layer = QSharedPointer<CylindricalLayer>::create(
             helical_layer_number + 1, layer_settings, CylindricalPathPattern::kHelical);

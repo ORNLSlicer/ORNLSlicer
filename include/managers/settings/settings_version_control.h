@@ -89,5 +89,10 @@ class SettingsVersionControl {
     //! \param version: current version in settings file
     //! \param settings: settings to alter
     static void pre_13_0To13_0(double& version, fifojson& settings);
+
+    //! \brief Rolls the helical tool offset from an angle to an arc length for version 14.0
+    //! \param version: current version in settings file
+    //! \param settings: settings to alter
+    static void pre_14_0To14_0(double& version, fifojson& settings);
 };
 }  // namespace ORNL

@@ -28,7 +28,7 @@ The writer emits `G00` for rapid travel, `G01` for feed moves, and `G02`/`G03` f
 | Field | Meaning |
 | --- | --- |
 | `X`, `Y`, `Z` | Endpoint coordinates relative to the active work offset after the configured G-code frame rotation is applied. |
-| `XR`, `YR`, `ZR` | Tool-frame orientation angles. The writer emits the configured tool frame; helical output adds half of the effective `Helical Tool Start Angle Offset` to both `XR` and `YR`. |
+| `XR`, `YR`, `ZR` | Tool-frame orientation angles. The writer emits the configured tool frame; helical output adds half of the radius-derived angle for `Helical Tool Start Arc Length Offset` to both `XR` and `YR`. |
 | `AP` | Positioner tilt from `Printer > Machine Setup > Axis A`. |
 | `CP` | Positioner rotation. Planar output uses `Axis C`; cylindrical output computes it from the endpoint angle around the cylinder axis plus `Axis C`. |
 | `I`, `J` | G2/G3 arc center parameters. The values are absolute center coordinates in G161 mode and relative start-to-center offsets in G162 mode. |
@@ -46,7 +46,11 @@ For planar slicing, `CP` is the configured `Axis C` value normalized to `[0, 360
 
 For radial cylindrical slicing, the writer rotates the endpoint and cylinder center into the configured G-code frame, computes the endpoint angle around that transformed center, adds `Axis C`, and normalizes the result to `[0, 360)`.
 
-For helical cylindrical paths, `CP` is `Axis C + Helical Tool Start Angle Offset + angular sweep from the transformed helical start point`. The emitted helical X/Y coordinates still start at top dead center; the offset moves the CP/tool-frame baseline, not the programmed endpoint phase. The same effective offset adds `offset * 0.5` to `XR` and `YR` for the helical world approach, travel, travel-lower, and print moves. `Right Handed` helices advance with counter-clockwise G03 arcs, and `Left Handed` helices advance with clockwise G02 arcs. Helical `CP` is intentionally signed and unwrapped, so a left-handed helix with `Helical Tool Start Angle Offset=-12 deg`, no additional frame rotation, `Axis C=0`, and 12-degree arc segments reports `CP=-12` and `XR/YR` shifted by `-6 deg` at the start/travel lower point, then `CP=0`, `12`, `24`, and so on.
+For helical cylindrical paths, the writer converts `Helical Tool Start Arc Length Offset` to an angle with `angle = arc length / actual generated path radius`. `CP` is then `Axis C + radius-derived offset angle + angular sweep from the transformed helical start point`. The emitted helical X/Y coordinates still start at top dead center; the offset moves the CP/tool-frame baseline, not the programmed endpoint phase. The same effective angle adds `angle * 0.5` to `XR` and `YR` for the helical world approach, travel, travel-lower, and print moves.
+
+The configured distance keeps the physical torch offset constant while its angular representation decreases as radius increases. For example, `-20.944 mm` produces approximately `-12 deg` at a `100 mm` path radius and `-6 deg` at a `200 mm` path radius. A positive distance produces a positive CP baseline contribution for both `Right Handed` counter-clockwise G03 and `Left Handed` clockwise G02 helices. When `Complete Revolution` clipping and `Next Closest` ordering reverse a retained path, the effective angle sign is reversed with the actual print direction. Helical `CP` remains signed and unwrapped.
+
+A zero arc-length request produces a zero angle even if the radius is zero. A nonzero arc-length request at a zero or invalid radius cannot be represented; cylindrical slicing reports the error and does not generate that helical path.
 
 ## Arc Center Modes
 

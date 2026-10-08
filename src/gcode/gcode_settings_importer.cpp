@@ -154,19 +154,23 @@ bool parseFooterSettings(QIODevice& contents, QHash<QString, QString>& raw_value
     return in_footer;
 }
 
-void migrateLegacyRawSettingKeys(QHash<QString, QString>& raw_values) {
+QString migrateLegacyRawSettingKeys(QHash<QString, QString>& raw_values) {
     fifojson raw_settings = fifojson::object();
     for (auto raw = raw_values.constBegin(); raw != raw_values.constEnd(); ++raw) {
         raw_settings[raw.key().toStdString()] = raw.value().toStdString();
     }
 
-    SettingsVersionControl::migrateLegacySettingKeys(raw_settings);
+    try {
+        SettingsVersionControl::migrateLegacySettingKeys(raw_settings);
+    } catch (const std::exception& e) { return QString::fromUtf8(e.what()); }
 
     raw_values.clear();
     for (const auto& item : raw_settings.items()) {
         if (item.value().is_string())
             raw_values[QString::fromStdString(item.key())] = QString::fromStdString(item.value().get<std::string>());
     }
+
+    return QString();
 }
 
 bool parseRawValue(const QString& key, const fifojson& master_entry, const QString& raw_value, fifojson& parsed_value,
@@ -580,7 +584,11 @@ GcodeSettingsImporter::ImportResult GcodeSettingsImporter::importFile(
         result.errors.append("The Settings Footer did not contain any setting values.");
         return result;
     }
-    migrateLegacyRawSettingKeys(raw_values);
+    const QString migration_error = migrateLegacyRawSettingKeys(raw_values);
+    if (!migration_error.isEmpty()) {
+        result.errors.append(migration_error);
+        return result;
+    }
 
     const fifojson master = GSM->getMaster()->json();
     fifojson settings     = fifojson::object();
