@@ -1,8 +1,8 @@
 #pragma once
 
+#include <QAction>
 #include <QTabBar>
 #include <QToolBar>
-#include <QToolButton>
 
 #include <qobject.h>
 #include <qsize.h>
@@ -115,12 +115,13 @@ class MainToolbar : public QToolBar {
     //! \return a constructed tab bar
     QTabBar* buildTabs();
 
-    //! \brief builds and returns a icon-only button
+    //! \brief builds and returns an icon-only toolbar action
+    //! \param text the text shown when the action is in the overflow menu
     //! \param icon_loc the path to the icon
     //! \param tooltip the tooltip of the icon
-    //! \param toggle if this button acts as a toggle
-    //! \return a constructed button
-    QToolButton* buildIconButton(const QString& icon_loc, const QString& tooltip, bool toggle);
+    //! \param toggle if this action acts as a toggle
+    //! \return a constructed action
+    QAction* buildIconAction(const QString& text, const QString& icon_loc, const QString& tooltip, bool toggle);
 
     //! \brief builds and returns the add menu
     //! \return a built add menu
@@ -151,19 +152,19 @@ class MainToolbar : public QToolBar {
     //! \brief a tab bar that allows switching views
     QTabBar* m_tabs;
 
-    //! \brief toolbar buttons
-    QToolButton* m_add_btn;
-    QToolButton* m_shape_btn;
-    QToolButton* m_slicing_planes_btn;
-    QToolButton* m_layer_settings_range_btn;
-    QToolButton* m_seam_btn;
-    QToolButton* m_overhang_button;
-    QToolButton* m_billboarding_button;
-    QToolButton* m_segment_info_button;
-    QToolButton* m_2d_gcode_btn;
-    QToolButton* m_show_ghosts_btn;
-    QToolButton* m_export_gcode_btn;
-    QToolButton* m_slice_btn;
+    //! \brief toolbar actions
+    QAction* m_add_action;
+    QAction* m_shape_action;
+    QAction* m_slicing_planes_action;
+    QAction* m_layer_settings_range_action;
+    QAction* m_seam_action;
+    QAction* m_overhang_action;
+    QAction* m_billboarding_action;
+    QAction* m_segment_info_action;
+    QAction* m_2d_gcode_action;
+    QAction* m_show_ghosts_action;
+    QAction* m_export_gcode_action;
+    QAction* m_slice_action;
 
     //! \brief if selected part has layer-specific settings available for visualization
     bool m_layer_settings_range_available = false;

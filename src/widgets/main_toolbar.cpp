@@ -7,6 +7,7 @@
 #include <QLayout>
 #include <QMenu>
 #include <QSignalBlocker>
+#include <QToolButton>
 #include <algorithm>
 
 #include <qaction.h>
@@ -80,94 +81,104 @@ void MainToolbar::setupSubWidgets() {
     this->addSeparator();
 
     // Load buttons
-    m_add_btn = buildIconButton(":/icons/file_black.png", "Load new model from file", false);
-    m_add_btn->setPopupMode(QToolButton::InstantPopup);
-    m_add_btn->setObjectName("menuButton");
-    m_add_btn->setMenu(buildAddMenu());
-    this->addWidget(m_add_btn);
+    m_add_action = buildIconAction("Load Model", ":/icons/file_black.png", "Load new model from file", false);
+    m_add_action->setMenu(buildAddMenu());
+    this->addAction(m_add_action);
+    if (auto* add_button = qobject_cast<QToolButton*>(this->widgetForAction(m_add_action))) {
+        add_button->setPopupMode(QToolButton::InstantPopup);
+        add_button->setObjectName("menuButton");
+    }
 
     // Shape add buttons
-    m_shape_btn = buildIconButton(":/icons/shape_black.png", "Generates a new shape of a given type", false);
-    m_shape_btn->setPopupMode(QToolButton::InstantPopup);
-    m_shape_btn->setObjectName("menuButton");
-    m_shape_btn->setMenu(buildShapeMenu());
-    this->addWidget(m_shape_btn);
+    m_shape_action =
+        buildIconAction("Create Shape", ":/icons/shape_black.png", "Generates a new shape of a given type", false);
+    m_shape_action->setMenu(buildShapeMenu());
+    this->addAction(m_shape_action);
+    if (auto* shape_button = qobject_cast<QToolButton*>(this->widgetForAction(m_shape_action))) {
+        shape_button->setPopupMode(QToolButton::InstantPopup);
+        shape_button->setObjectName("menuButton");
+    }
     this->addSeparator();
 
     // Slicing Geometry Button
-    m_slicing_planes_btn = buildIconButton(":/icons/slicing_plane.png", "Show slicing geometry for each part", true);
-    this->addWidget(m_slicing_planes_btn);
-    connect(m_slicing_planes_btn, &QToolButton::toggled, this,
+    m_slicing_planes_action = buildIconAction("Show Slicing Geometry", ":/icons/slicing_plane.png",
+                                              "Show slicing geometry for each part", true);
+    this->addAction(m_slicing_planes_action);
+    connect(m_slicing_planes_action, &QAction::toggled, this,
             [this](bool checked) { emit showSlicingPlanes(checked); });
 
     // Layer Settings Range Button
-    m_layer_settings_range_btn =
-        buildIconButton(":/icons/layers_black.png", "Show selected layer settings height", true);
-    m_layer_settings_range_btn->setEnabled(false);
-    m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
-    this->addWidget(m_layer_settings_range_btn);
-    connect(m_layer_settings_range_btn, &QToolButton::toggled, this,
+    m_layer_settings_range_action = buildIconAction("Show Layer Settings Range", ":/icons/layers_black.png",
+                                                    "Show selected layer settings height", true);
+    m_layer_settings_range_action->setEnabled(false);
+    m_layer_settings_range_action->setToolTip("No layer-specific settings to show");
+    this->addAction(m_layer_settings_range_action);
+    connect(m_layer_settings_range_action, &QAction::toggled, this,
             [this](bool checked) { emit showLayerSettingsRange(checked); });
 
     // Seam buttons
-    m_seam_btn = buildIconButton(":/icons/map_markers_black.png", "Show optimization points", true);
-    this->addWidget(m_seam_btn);
-    connect(m_seam_btn, &QToolButton::toggled, this, [this](bool checked) {
+    m_seam_action =
+        buildIconAction("Show Optimization Points", ":/icons/map_markers_black.png", "Show optimization points", true);
+    this->addAction(m_seam_action);
+    connect(m_seam_action, &QAction::toggled, this, [this](bool checked) {
         m_optimization_points_user_toggled = true;
         emit showSeams(checked);
     });
     handleModifiedSetting("");
 
     // Overhang Button
-    m_overhang_button = buildIconButton(":/icons/support_overhang.png", "Show support overhangs", true);
-    this->addWidget(m_overhang_button);
-    connect(m_overhang_button, &QToolButton::toggled, this, [this](bool checked) { emit showOverhang(checked); });
+    m_overhang_action =
+        buildIconAction("Show Support Overhangs", ":/icons/support_overhang.png", "Show support overhangs", true);
+    this->addAction(m_overhang_action);
+    connect(m_overhang_action, &QAction::toggled, this, [this](bool checked) { emit showOverhang(checked); });
 
     // Billboarding Button
-    m_billboarding_button = buildIconButton(":/icons/name_black.png", "Show part names in view", true);
-    this->addWidget(m_billboarding_button);
-    connect(m_billboarding_button, &QToolButton::toggled, this, [this](bool checked) { emit showLabels(checked); });
+    m_billboarding_action =
+        buildIconAction("Show Part Names", ":/icons/name_black.png", "Show part names in view", true);
+    this->addAction(m_billboarding_action);
+    connect(m_billboarding_action, &QAction::toggled, this, [this](bool checked) { emit showLabels(checked); });
     this->addSeparator();
 
     // Bead Inspection Tool / Segment Info Button
-    m_segment_info_button = buildIconButton(":/icons/info.png", "Show g-code Bead / Segment Info", true);
-    m_segment_info_button->setChecked(PreferencesManager::getInstance()->getGCodeInfoVisibleByDefaultPreference());
-    this->addWidget(m_segment_info_button);
-    m_segment_info_button->setEnabled(false);
-    connect(m_segment_info_button, &QToolButton::toggled, this,
-            [this](bool checked) { emit showSegmentInfo(checked); });
+    m_segment_info_action =
+        buildIconAction("Show Segment Info", ":/icons/info.png", "Show g-code Bead / Segment Info", true);
+    m_segment_info_action->setChecked(PreferencesManager::getInstance()->getGCodeInfoVisibleByDefaultPreference());
+    this->addAction(m_segment_info_action);
+    m_segment_info_action->setEnabled(false);
+    connect(m_segment_info_action, &QAction::toggled, this, [this](bool checked) { emit showSegmentInfo(checked); });
 
     // 2D Gcode Button
-    m_2d_gcode_btn = buildIconButton(":/icons/2d_black.png", "Shows g-code preview in orthographic 2D", true);
-    this->addWidget(m_2d_gcode_btn);
-    m_2d_gcode_btn->setEnabled(false);
-    connect(m_2d_gcode_btn, &QToolButton::toggled, this, [this](bool checked) { emit setOrthoGcode(checked); });
+    m_2d_gcode_action =
+        buildIconAction("Use 2D G-code View", ":/icons/2d_black.png", "Shows g-code preview in orthographic 2D", true);
+    this->addAction(m_2d_gcode_action);
+    m_2d_gcode_action->setEnabled(false);
+    connect(m_2d_gcode_action, &QAction::toggled, this, [this](bool checked) { emit setOrthoGcode(checked); });
 
     // Show model ghosts
-    m_show_ghosts_btn = buildIconButton(":/icons/model_ghosts_black.png", "Shows model previews in g-code view", true);
-    this->addWidget(m_show_ghosts_btn);
-    m_show_ghosts_btn->setEnabled(false);
-    connect(m_show_ghosts_btn, &QToolButton::toggled, this, [this](bool checked) { emit showGhosts(checked); });
+    m_show_ghosts_action = buildIconAction("Show Model Ghosts", ":/icons/model_ghosts_black.png",
+                                           "Shows model previews in g-code view", true);
+    this->addAction(m_show_ghosts_action);
+    m_show_ghosts_action->setEnabled(false);
+    connect(m_show_ghosts_action, &QAction::toggled, this, [this](bool checked) { emit showGhosts(checked); });
 
     // Export Gcode Button
-    m_export_gcode_btn = new QToolButton(this);
-    m_export_gcode_btn->setIcon(QIcon(":/icons/export_black.png"));
-    m_export_gcode_btn->setToolTip("Export g-code File");
-    this->addWidget(m_export_gcode_btn);
-    m_export_gcode_btn->setEnabled(false);
-    connect(m_export_gcode_btn, &QToolButton::clicked, this, [this]() { emit exportGCode(); });
+    m_export_gcode_action = buildIconAction("Export G-code", ":/icons/export_black.png", "Export g-code File", false);
+    this->addAction(m_export_gcode_action);
+    m_export_gcode_action->setEnabled(false);
+    connect(m_export_gcode_action, &QAction::triggered, this, [this]() { emit exportGCode(); });
     this->addSeparator();
 
     // Slice Button
-    m_slice_btn = new QToolButton(this);
-    m_slice_btn->setToolButtonStyle(Qt::ToolButtonTextOnly);
-    m_slice_btn->setText("SLICE");
-    m_slice_btn->setToolTip("Slice loaded parts");
-    m_slice_btn->setObjectName("sliceButton");
-    m_slice_btn->setEnabled(false);
-    m_slice_btn->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
-    connect(m_slice_btn, &QToolButton::clicked, this, [this]() { emit slice(); });
-    this->addWidget(m_slice_btn);
+    m_slice_action = new QAction("SLICE", this);
+    m_slice_action->setToolTip("Slice loaded parts");
+    m_slice_action->setEnabled(false);
+    connect(m_slice_action, &QAction::triggered, this, [this]() { emit slice(); });
+    this->addAction(m_slice_action);
+    if (auto* slice_button = qobject_cast<QToolButton*>(this->widgetForAction(m_slice_action))) {
+        slice_button->setToolButtonStyle(Qt::ToolButtonTextOnly);
+        slice_button->setObjectName("sliceButton");
+        slice_button->setSizePolicy(QSizePolicy::MinimumExpanding, QSizePolicy::Preferred);
+    }
 }
 
 QTabBar* MainToolbar::buildTabs() {
@@ -188,13 +199,12 @@ QTabBar* MainToolbar::buildTabs() {
     return tabs;
 }
 
-QToolButton* MainToolbar::buildIconButton(const QString& icon_loc, const QString& tooltip, bool toggle) {
-    auto* button = new QToolButton(this);
-    button->setIcon(QIcon(icon_loc));
-    button->setToolTip(tooltip);
-    button->setCheckable(toggle);
-    button->setSizePolicy(QSizePolicy::Minimum, QSizePolicy::Preferred);
-    return button;
+QAction* MainToolbar::buildIconAction(const QString& text, const QString& icon_loc, const QString& tooltip,
+                                      bool toggle) {
+    auto* action = new QAction(QIcon(icon_loc), text, this);
+    action->setToolTip(tooltip);
+    action->setCheckable(toggle);
+    return action;
 }
 
 QMenu* MainToolbar::buildAddMenu() {
@@ -392,29 +402,29 @@ QMenu* MainToolbar::buildShapeMenu() {
 
 void MainToolbar::enableCorrectOptions() {
     if (m_tabs->currentIndex()) {
-        m_add_btn->setEnabled(false);
-        m_shape_btn->setEnabled(false);
-        m_slicing_planes_btn->setEnabled(false);
-        m_layer_settings_range_btn->setEnabled(false);
-        m_overhang_button->setEnabled(false);
-        m_billboarding_button->setEnabled(false);
-        m_seam_btn->setEnabled(false);
-        m_segment_info_button->setEnabled(true);
-        m_2d_gcode_btn->setEnabled(true);
-        m_show_ghosts_btn->setEnabled(true);
-        m_export_gcode_btn->setEnabled(true);
+        m_add_action->setEnabled(false);
+        m_shape_action->setEnabled(false);
+        m_slicing_planes_action->setEnabled(false);
+        m_layer_settings_range_action->setEnabled(false);
+        m_overhang_action->setEnabled(false);
+        m_billboarding_action->setEnabled(false);
+        m_seam_action->setEnabled(false);
+        m_segment_info_action->setEnabled(true);
+        m_2d_gcode_action->setEnabled(true);
+        m_show_ghosts_action->setEnabled(true);
+        m_export_gcode_action->setEnabled(true);
     }
     else {
-        m_add_btn->setEnabled(true);
-        m_shape_btn->setEnabled(true);
-        m_slicing_planes_btn->setEnabled(true);
-        m_layer_settings_range_btn->setEnabled(m_layer_settings_range_available);
-        m_overhang_button->setEnabled(true);
-        m_billboarding_button->setEnabled(true);
-        m_segment_info_button->setEnabled(false);
-        m_2d_gcode_btn->setEnabled(false);
-        m_show_ghosts_btn->setEnabled(false);
-        m_export_gcode_btn->setEnabled(false);
+        m_add_action->setEnabled(true);
+        m_shape_action->setEnabled(true);
+        m_slicing_planes_action->setEnabled(true);
+        m_layer_settings_range_action->setEnabled(m_layer_settings_range_available);
+        m_overhang_action->setEnabled(true);
+        m_billboarding_action->setEnabled(true);
+        m_segment_info_action->setEnabled(false);
+        m_2d_gcode_action->setEnabled(false);
+        m_show_ghosts_action->setEnabled(false);
+        m_export_gcode_action->setEnabled(false);
         handleModifiedSetting("");  // Checks and sets seam button
     }
 }
@@ -484,32 +494,32 @@ void MainToolbar::resize(QSize new_size) {
 }
 
 void MainToolbar::setSliceAbility(bool status) {
-    m_slice_btn->setEnabled(status);
+    m_slice_action->setEnabled(status);
 }
 
 void MainToolbar::setExportAbility(bool status) {
-    m_export_gcode_btn->setEnabled(status);
+    m_export_gcode_action->setEnabled(status);
 }
 
 void MainToolbar::setLayerSettingsRangeAbility(bool status) {
     m_layer_settings_range_available = status;
 
     if (!status) {
-        m_layer_settings_range_btn->setToolTip("No layer-specific settings to show");
-        m_layer_settings_range_btn->setChecked(false);
+        m_layer_settings_range_action->setToolTip("No layer-specific settings to show");
+        m_layer_settings_range_action->setChecked(false);
     }
-    else { m_layer_settings_range_btn->setToolTip("Show selected layer settings height"); }
+    else { m_layer_settings_range_action->setToolTip("Show selected layer settings height"); }
 
     enableCorrectOptions();
 }
 
 void MainToolbar::setOrthoGcodeChecked(bool status) {
-    const QSignalBlocker blocker(m_2d_gcode_btn);
-    m_2d_gcode_btn->setChecked(status);
+    const QSignalBlocker blocker(m_2d_gcode_action);
+    m_2d_gcode_action->setChecked(status);
 }
 
 void MainToolbar::syncOptimizationPointVisibility() {
-    emit showSeams(m_seam_btn->isEnabled() && m_seam_btn->isChecked());
+    emit showSeams(m_seam_action->isEnabled() && m_seam_action->isChecked());
 }
 
 void MainToolbar::handleModifiedSetting(const QString& setting_key) {
@@ -521,22 +531,22 @@ void MainToolbar::handleModifiedSetting(const QString& setting_key) {
     // Disable button.
     if (islandOrder != IslandOrderOptimization::kCustomPoint && !usesCustomPathOrderLocation(GSM->getGlobal()) &&
         !usesCustomPointLocation(pointOrder)) {
-        m_seam_btn->setDisabled(true);
-        m_seam_btn->setToolTip("Custom optimization points are not set");
-        if (m_seam_btn->isChecked()) {
-            const QSignalBlocker blocker(m_seam_btn);
-            m_seam_btn->setChecked(false);
+        m_seam_action->setDisabled(true);
+        m_seam_action->setToolTip("Custom optimization points are not set");
+        if (m_seam_action->isChecked()) {
+            const QSignalBlocker blocker(m_seam_action);
+            m_seam_action->setChecked(false);
             emit showSeams(false);
         }
     }
     else {
-        m_seam_btn->setDisabled(false);
-        m_seam_btn->setToolTip("Show optimization points");
+        m_seam_action->setDisabled(false);
+        m_seam_action->setToolTip("Show optimization points");
         if (!m_optimization_points_user_toggled &&
             PreferencesManager::getInstance()->getOptimizationPointsVisibleByDefaultPreference() &&
-            !m_seam_btn->isChecked()) {
-            const QSignalBlocker blocker(m_seam_btn);
-            m_seam_btn->setChecked(true);
+            !m_seam_action->isChecked()) {
+            const QSignalBlocker blocker(m_seam_action);
+            m_seam_action->setChecked(true);
             emit showSeams(true);
         }
     }
