@@ -20,8 +20,11 @@ namespace ORNL {
 WolfWriter::WolfWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb) : WriterBase(meta, sb) {}
 
 QString WolfWriter::writeSettingsHeader(GcodeSyntax syntax) {
-    QString text = "";
-    text += WriterBase::writeSettingsHeader(syntax);
+    QString text = WriterBase::writeSettingsHeader(syntax);
+    if (syntax == GcodeSyntax::kWolf) {
+        text.replace("Minimum Table Value:", "minimum Table Value:");
+        text.replace("Forced Minimum / Maximum Layer Time:", "Forced minimum / maximum Layer Time:");
+    }
 
     text += m_newline;
     return text;

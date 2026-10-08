@@ -1,6 +1,9 @@
 #include <QCoreApplication>
+#include <QFile>
 #include <QSharedPointer>
 #include <QStringList>
+#include <QTemporaryFile>
+#include <QTextStream>
 #include <QVector3D>
 #include <QVector>
 #include <cstdlib>
@@ -17,6 +20,7 @@
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
 #include "test_utils.h"
+#include "threading/gcode_loader.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -214,6 +218,41 @@ bool wolfNormalizesNegativeZero() {
 
     return lines.size() == 2 && lines[1].contains(" Z0.0000") && !lines[1].contains(" Z-0.0000");
 }
+
+bool wolfSettingsHeaderLabelsAvoidCapitalM() {
+    QSharedPointer<ORNL::SettingsBase> settings = wolfSettings();
+    settings->setSetting(ORNL::PRS::Dimensions::kEnableW, true);
+    settings->setSetting(ORNL::PRS::Dimensions::kWMin, 2.0 * ORNL::in);
+    settings->setSetting(ORNL::MS::Cooling::kForceMinLayerTime, true);
+    settings->setSetting(ORNL::MS::Cooling::kMinLayerTime, 10.0 * ORNL::s);
+    settings->setSetting(ORNL::MS::Cooling::kMaxLayerTime, 20.0 * ORNL::s);
+
+    ORNL::WolfWriter writer(ORNL::GcodeMetaList::WolfMeta, settings);
+    const QString settings_header = writer.writeSettingsHeader(ORNL::GcodeSyntax::kWolf);
+
+    return settings_header.contains("minimum Table Value: 2in") &&
+           settings_header.contains("Forced minimum / maximum Layer Time: 10 20 seconds");
+}
+
+bool wolfExportHeaderLabelsAvoidCapitalM() {
+    QTemporaryFile gcode_file;
+    if (!gcode_file.open()) return false;
+
+    QTextStream stream(&gcode_file);
+    stream << ";G-Code Syntax: Wolf\nG0 X0 Y0 Z0\n";
+    stream.flush();
+    gcode_file.close();
+
+    ORNL::GCodeLoader loader(gcode_file.fileName(), true);
+    loader.run();
+
+    QFile exported_gcode(gcode_file.fileName());
+    if (!exported_gcode.open(QIODevice::ReadOnly | QIODevice::Text)) return false;
+    const QString exported_header = QTextStream(&exported_gcode).readAll();
+
+    return exported_header.contains(";minimum Layer Time:") && exported_header.contains(";maximum Layer Time:") &&
+           !exported_header.contains(";Minimum Layer Time:") && !exported_header.contains(";Maximum Layer Time:");
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -234,6 +273,12 @@ int main(int argc, char* argv[]) {
                                     "Wolf lifted a first travel shorter than the configured minimum lift distance.");
     passed &= ORNL::Testing::expect(wolfFirstTravelHonorsNoLift(), "Wolf lifted a first travel marked as no-lift.");
     passed &= ORNL::Testing::expect(wolfNormalizesNegativeZero(), "Wolf emitted a negative-zero Z coordinate.");
+    passed &=
+        ORNL::Testing::expect(wolfSettingsHeaderLabelsAvoidCapitalM(),
+                              "Wolf settings-header field labels contained parser-incompatible capital M characters.");
+    passed &= ORNL::Testing::expect(
+        wolfExportHeaderLabelsAvoidCapitalM(),
+        "Wolf exported statistics-header labels contained parser-incompatible capital M characters.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
