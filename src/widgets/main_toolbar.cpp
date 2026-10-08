@@ -183,12 +183,12 @@ void MainToolbar::setupSubWidgets() {
 
 QTabBar* MainToolbar::buildTabs() {
     auto* tabs = new QTabBar(this);
-    tabs->setMinimumWidth(220);
     tabs->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Preferred);
     // tabs->setExpanding(true);
 
     tabs->addTab("Part View");
     tabs->addTab("G-Code View");
+    tabs->setMinimumWidth(tabs->sizeHint().width());
 
     connect(tabs, &QTabBar::currentChanged, this, [this](int index) {
         enableCorrectOptions();
