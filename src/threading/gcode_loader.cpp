@@ -532,23 +532,27 @@ void GCodeLoader::run() {
             // send text and font colors for display, and line numbers for easy editor navigation
             emit gcodeLoadedText(text, fontColors, m_parser->getLayerStartLines());
 
-            QString openingDelim          = m_selected_meta.m_comment_starting_delimiter;
-            QString closingDelim          = m_selected_meta.m_comment_ending_delimiter;
+            QString openingDelim                = m_selected_meta.m_comment_starting_delimiter;
+            QString closingDelim                = m_selected_meta.m_comment_ending_delimiter;
+            const bool isWolfSyntax             = m_selected_meta.m_syntax_id == GcodeSyntax::kWolf;
+            const QString minimumLayerTimeLabel = isWolfSyntax ? "minimum Layer Time" : "Minimum Layer Time";
+            const QString maximumLayerTimeLabel = isWolfSyntax ? "maximum Layer Time" : "Maximum Layer Time";
             QString additionalHeaderBlock = openingDelim % "Sliced on: " %
                                             QDateTime::currentDateTime().toString("MM/dd/yyyy") % closingDelim % "\n" %
                                             openingDelim % "Expected Weight: " % weightInfo % closingDelim % "\n";
             if (m_adjust_file && total_adjusted_time > 0 && m_sb->setting<int>(MS::Cooling::kForceMinLayerTime)) {
-                additionalHeaderBlock +=
-                    openingDelim % "Expected Build Time: " % MathUtils::formattedTimeSpan(total_adjusted_time()) %
-                    closingDelim % "\n" % openingDelim % "Minimum Layer Time: " %
-                    MathUtils::formattedTimeSpan(adjusted_min_time()) % closingDelim % "\n" % openingDelim %
-                    "Maximum Layer Time: " % MathUtils::formattedTimeSpan(adjusted_max_time()) % closingDelim % "\n";
+                additionalHeaderBlock += openingDelim % "Expected Build Time: " %
+                                         MathUtils::formattedTimeSpan(total_adjusted_time()) % closingDelim % "\n" %
+                                         openingDelim % minimumLayerTimeLabel % ": " %
+                                         MathUtils::formattedTimeSpan(adjusted_min_time()) % closingDelim % "\n" %
+                                         openingDelim % maximumLayerTimeLabel % ": " %
+                                         MathUtils::formattedTimeSpan(adjusted_max_time()) % closingDelim % "\n";
             }
             else {
                 additionalHeaderBlock +=
                     openingDelim % "Expected Build Time: " % MathUtils::formattedTimeSpan(total_time()) % closingDelim %
-                    "\n" % openingDelim % "Minimum Layer Time: " % MathUtils::formattedTimeSpan(min_time()) %
-                    closingDelim % "\n" % openingDelim % "Maximum Layer Time: " %
+                    "\n" % openingDelim % minimumLayerTimeLabel % ": " % MathUtils::formattedTimeSpan(min_time()) %
+                    closingDelim % "\n" % openingDelim % maximumLayerTimeLabel % ": " %
                     MathUtils::formattedTimeSpan(max_time()) % closingDelim % "\n";
             }
             additionalHeaderBlock += openingDelim % "XYZ Translation Data: " % QString::number(m_origin.x()) % ", " %
