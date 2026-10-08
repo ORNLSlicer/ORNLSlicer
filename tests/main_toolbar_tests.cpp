@@ -9,6 +9,7 @@
 #include <cstdlib>
 
 #include "test_utils.h"
+#include "utilities/constants.h"
 #include "widgets/main_toolbar.h"
 
 int main(int argc, char* argv[]) {
@@ -19,6 +20,30 @@ int main(int argc, char* argv[]) {
     Q_INIT_RESOURCE(icons);
     Q_INIT_RESOURCE(styles);
 
+    QWidget startup_parent;
+    startup_parent.resize(ORNL::Constants::UI::MainWindow::kViewWidgetSize);
+
+    ORNL::MainToolbar startup_toolbar(&startup_parent);
+    startup_toolbar.resize(startup_parent.size());
+    startup_parent.show();
+    app.processEvents();
+
+    bool passed = true;
+
+    for (QAction* action : startup_toolbar.actions()) {
+        if (action->isSeparator()) continue;
+
+        QWidget* action_widget = startup_toolbar.widgetForAction(action);
+        passed &= ORNL::Testing::expect(action_widget != nullptr && action_widget->isVisible(),
+                                        QString("The %1 toolbar item should be visible at the startup view width.")
+                                            .arg(action->text())
+                                            .toStdString());
+    }
+
+    QToolButton* startup_extension_button = startup_toolbar.findChild<QToolButton*>("qt_toolbar_ext_button");
+    passed &= ORNL::Testing::expect(startup_extension_button != nullptr && !startup_extension_button->isVisible(),
+                                    "The startup view width should display every toolbar command without overflow.");
+
     QWidget parent;
     parent.resize(360, 200);
 
@@ -26,8 +51,6 @@ int main(int argc, char* argv[]) {
     toolbar.resize(parent.size());
     parent.show();
     app.processEvents();
-
-    bool passed = true;
 
     const QList<QAction*> actions = toolbar.actions();
     int widget_action_count       = 0;
