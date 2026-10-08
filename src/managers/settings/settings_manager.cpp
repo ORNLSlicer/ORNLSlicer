@@ -28,6 +28,40 @@
 #include "utilities/qt_json_conversion.h"
 
 namespace ORNL {
+namespace {
+bool isSettingsTemplateDocument(const fifojson& document, const fifojson& master) {
+    if (!document.is_object()) return false;
+
+    const auto header       = document.find(Constants::SettingFileStrings::kHeader);
+    const auto settings     = document.find(Constants::SettingFileStrings::kSettings);
+    const bool has_header   = header != document.end();
+    const bool has_settings = settings != document.end();
+
+    if (has_header || has_settings) {
+        if (!has_header || !has_settings || !header->is_object()) return false;
+
+        const auto version = header->find(Constants::SettingFileStrings::kVersion);
+        if (version == header->end() || !version->is_number()) return false;
+
+        const double file_version = version->get<double>();
+        if (file_version < 1.0) return false;
+        if (file_version < 2.0) return settings->is_object();
+        if (!settings->is_array()) return false;
+
+        for (const auto& group : *settings) {
+            if (!group.is_object()) return false;
+        }
+        return true;
+    }
+
+    // Unversioned, pre-1.0 templates are flat objects containing known setting keys.
+    for (const auto& item : document.items()) {
+        if (master.contains(item.key())) return true;
+    }
+    return false;
+}
+}  // namespace
+
 QSharedPointer<SettingsManager> SettingsManager::m_singleton = QSharedPointer<SettingsManager>();
 
 QSharedPointer<SettingsManager> SettingsManager::getInstance() {
@@ -108,8 +142,26 @@ bool SettingsManager::loadGlobalJson(QString path) {
     // Load the data and parse it.
     QString settings_data = conf_file.readAll();
     conf_file.close();
-    fifojson j = json::parse(settings_data.toStdString());
-    int result = checkVersion(fileInfo.completeBaseName(), j, true);
+    fifojson j;
+    try {
+        j = json::parse(settings_data.toStdString());
+    } catch (const json::exception& error) {
+        qWarning().noquote() << "Skipping unreadable settings file" << path << ":" << error.what();
+        return false;
+    }
+
+    if (!isSettingsTemplateDocument(j, m_master->json())) {
+        qWarning().noquote() << "Skipping non-template settings file" << path;
+        return false;
+    }
+
+    int result;
+    try {
+        result = checkVersion(fileInfo.completeBaseName(), j, true);
+    } catch (const json::exception& error) {
+        qWarning().noquote() << "Skipping incompatible settings file" << path << ":" << error.what();
+        return false;
+    }
     if (result == 1) {
         conf_file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text);
         conf_file.write(j.dump(4).c_str());
@@ -364,6 +416,11 @@ fifojson SettingsManager::removeSuffixes(fifojson& j) {
 }
 
 bool SettingsManager::loadGlobalJson(const fifojson& j) {
+    if (!isSettingsTemplateDocument(j, m_master->json())) {
+        qWarning() << "Cannot load global settings JSON with an unsupported document shape.";
+        return false;
+    }
+
     // tabs must already exist by virtue of the settings manager having loaded already
     QStringList tabs {Constants::Settings::SettingTab::kPrinter, Constants::Settings::SettingTab::kMaterial,
                       Constants::Settings::SettingTab::kProfile, Constants::Settings::SettingTab::kExperimental};
