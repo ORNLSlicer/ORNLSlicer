@@ -5,10 +5,14 @@ description: Reproducible local and CI build paths, generated settings and build
 tags: [build, cmake, nix, ci, packaging, diagnostics]
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-07T19:54:21.935Z
+    at: 2026-10-08T16:54:14.331Z
 sources:
+  - id: openwiki-source-a836451b0e5d245b3d5c916a
+    resource: repo://.codex/environments/environment.toml
   - id: openwiki-source-164e2da859b5277df81c7d94
     resource: repo://.github/workflows/ci.yml
+  - id: openwiki-source-6d4b4e707b8d60b6ccfa3425
+    resource: repo://.github/workflows/openwiki-update.yml
   - id: openwiki-source-d02327111261f96a065fb8de
     resource: repo://cmake/build_info.cmake
   - id: openwiki-source-5d790bd7059cfd1497fadcf0
@@ -33,7 +37,7 @@ sources:
     resource: repo://src/main.cpp
   - id: openwiki-source-3a34e9951a829d6407a1f125
     resource: repo://src/utilities/runtime_diagnostics.cpp
-generated: { by: "codex", at: "2026-10-07T19:54:21.935Z" }
+generated: { by: "codex", at: "2026-10-08T16:54:14.331Z" }
 ---
 
 # Build, Generated Assets, CI, and Packaging
@@ -74,6 +78,12 @@ nix develop .#ornlslicerDev -L --command \
 The preset fixes `clang`, `clang++`, `Ninja Multi-Config`, and `build/generic-llvm-ninja`; its Debug and Release build presets select the corresponding configuration. A `generic-llvm-ninja-fast` variant enables CMake unity builds in a separate build directory for faster clean builds. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L55)
 
 For a narrow compile check, build `ornlslicer_obj`. The GUI executable is only `src/main.cpp` plus that object library, and every focused unit executable also links the same object library, so this target catches compilation failures across the shared production sources without linking the application or tests. [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L214-L241)
+
+## Managed Codex worktrees
+
+Codex worktrees have a generated repository-local environment definition rather than a second dependency stack. Its Linux setup requires Git, Git LFS, and Nix; verifies that it is running at this repository's physical worktree root; checks the flake and CMake preset files; materializes LFS assets; and configures `build/generic-llvm-ninja` through `ornlslicerDev` with flake configuration accepted and lock-file writes disabled. Setup is considered complete only when the expected `CMakeCache.txt` exists. Treat `.codex/environments/environment.toml` as generated configuration, not as a hand-maintained substitute for `flake.nix` or the checked-in presets. [source](repo://.codex/environments/environment.toml#L1-L58)
+
+The matching cleanup intentionally performs no shared-store deletion. The build directory is ignored and worktree-local, while the Nix store, Git LFS object store, and ccache can serve other ORNLSlicer worktrees and are preserved when this checkout is removed. [source](repo://.codex/environments/environment.toml#L60-L72)
 
 ## CMake topology and dependencies
 
@@ -127,12 +137,18 @@ CI builds the Linux derivation, bundles it, then smoke-tests `--help` as a non-r
 
 ## Windows portable tree and installer
 
-CI builds `windows.ornl.ornlslicer` on an Ubuntu runner, names a portable directory and installer from the derivation metadata and workflow run, and invokes `makensis` from a dedicated NSIS-only Nix shell with the portable tree and version as definitions. Both the portable tree and installer executable are uploaded. [source](repo://.github/workflows/ci.yml#L63-L108)
+CI builds `windows.ornl.ornlslicer` on an Ubuntu runner and names a portable directory and installer from the derivation metadata and workflow run. Installer generation runs `makensis` through `nix shell --accept-flake-config .#legacyPackages.x86_64-linux.nixpkgs.nsis`, so this packaging step obtains only the native NSIS tool instead of entering the broader development shell. The portable tree, output path, and version are passed as NSIS definitions, and both the portable tree and installer executable are uploaded. [source](repo://.github/workflows/ci.yml#L63-L108)
 
 The NSIS package installs for all users under 64-bit Program Files and requests administrator rights. It copies the full CMake/Nix install tree, records uninstall metadata and release links, creates application and uninstall Start Menu shortcuts, and removes the install and shortcut directories on uninstall. [source](repo://scripts/installer.nsi#L22-L47) [source](repo://scripts/installer.nsi#L49-L97)
 
 ## CI boundary
 
 Every push cancels an older in-progress run for the same workflow/ref. The check matrix runs `nix flake check --all-systems` on Ubuntu and macOS. Separate jobs build and package Linux and Windows artifacts with Git LFS content present; only the Linux AppImage receives a command-line smoke test in this workflow. Treat successful packaging as evidence for those declared checks, not as proof that every CTest executable or interactive GUI workflow ran. [source](repo://.github/workflows/ci.yml#L1-L19) [source](repo://.github/workflows/ci.yml#L21-L61) [source](repo://.github/workflows/ci.yml#L63-L107)
+
+## Automated OpenWiki maintenance
+
+The OpenWiki workflow is a separate documentation-maintenance lane. It can be dispatched manually and is scheduled for 08:00 UTC each day. The job checks out full history so OpenWiki can diff against its last documented commit, installs Node.js 22 plus OpenWiki 0.7.0 and optional Mermaid validation dependencies, and runs `openwiki code --update --print`. Provider and connector credentials come from repository secrets; the workflow file contains only their secret references and model/provider configuration. [source](repo://.github/workflows/openwiki-update.yml#L1-L48)
+
+OpenWiki execution is allowed to finish with a recorded failure so the workflow can remove transient `.run.json` state and open or update the `openwiki/update` pull request. That pull request includes generated wiki content, the OpenWiki-managed `AGENTS.md` setup block, the workflow itself, and `CLAUDE.md` only when present. A failed generation deliberately preserves pages completed before the failure in the PR, after which the final step returns a failing workflow status. This lane refreshes documentation evidence; it does not compile ORNLSlicer, run CTest, or replace the Nix CI signals above. [source](repo://.github/workflows/openwiki-update.yml#L33-L88)
 
 Related reading: [Quickstart](../quickstart.md), [Settings and Preferences](../architecture/settings-and-preferences.md), and [Testing Strategy](../testing/strategy.md).

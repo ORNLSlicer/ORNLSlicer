@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:b50f203a0c756ddbff3a165109fe46a0fa722329e9b4c941bdc53d39ed3ce034",
+    "pageVersion": "sha256:49de13ca03bc72f60c6910058a1b3fa109e1da6ba70ac66d0a7727cdef1d50cd",
     "claims":
         [
             {
@@ -229,7 +229,7 @@
             {
                 "id": "claim_9e8d25872a7f44d19684aed3fbbd625b",
                 "statement":
-                    "Windows CI cross-builds a portable Nix tree, obtains makensis from a dedicated NSIS-only Nix shell, generates an installer, and uploads both outputs; the installer copies the tree under Program Files, writes uninstall metadata, and creates Start Menu shortcuts.",
+                    "Windows CI cross-builds a portable Nix tree, runs makensis from the explicit legacyPackages.x86_64-linux.nixpkgs.nsis shell, generates an installer, and uploads both outputs; the installer copies the tree under Program Files, writes uninstall metadata, and creates Start Menu shortcuts.",
                 "evidence": [
                     {
                         "resource": "repo://.github/workflows/ci.yml#L63-L108",
@@ -264,10 +264,58 @@
                             "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                     }
                 ]
+            },
+            {
+                "id": "claim_7c0c71d7286c40f19bd75ed4f05c9ed5",
+                "statement":
+                    "The generated Codex Linux worktree setup requires Git, Git LFS, and Nix; validates the repository root and preset inputs; pulls LFS assets; configures generic-llvm-ninja through ornlslicerDev without writing the flake lock; and requires the expected CMake cache.",
+                "evidence": [
+                    {
+                        "resource": "repo://.codex/environments/environment.toml#L1-L58",
+                        "version":
+                            "repo-lines-v1:sha256:f4a5f125d3252f293a6945f239025b9df69a6c90a66c204f68249188929e45b7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NjM5OTIwZDI3MjkzZWUwZTM2NDk3ODlhYWJhZjFhZDdkNGQ5ODQzOGM4MWY1ZDYyNDc3MzRkZmVhZTYwMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiY2Y3NzgzNTdjOTZhOWE3NjI0ZWMwNmQzOGIyNzYzZDE5NTFhZjI5MGY5ZmZhMTk2Zjg0ZmM5ZmRlNTUxNmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1ODg1MTBiMjJmYThlZTdiNGM4OTkyZGE0OWRmYmNlZDE2NDViOTQzMTliNmJhY2E5ODkyZDg3YWIyOWZlOGQifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_4fa9f83b4f5945c596201dd640385f40",
+                "statement":
+                    "Codex worktree cleanup leaves worktree-local build removal to the worktree lifecycle and deliberately preserves the shared Nix, Git LFS, and ccache stores.",
+                "evidence": [
+                    {
+                        "resource": "repo://.codex/environments/environment.toml#L60-L72",
+                        "version":
+                            "repo-lines-v1:sha256:32193bf017dac04524be5cab5d4780859489de6e8c9f904c6d0e6803838eb649:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlMzNjOGM2MDY3MGNkZTZjOWI3YWZhNGFmZGEzOGU2YjJlMzNlZGRlODQ0NGI3MjNhYTRiODE5MjY0ZjcyMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YjE0ZTE1MzAxOTAwZjkyYTE3MzNmNTViOTc2MTcyMGY5Y2VlOWZiZmNmM2I1Mjg3MjM2ZTQwZjExMjk5NDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5ZGVjMDk5YjNkYTAzZmNmMzlkZGE4YzJhODE3YTFiYTgxNGVmNThlZDBmYWU0OTgxZTBlYTU0MmM3NmZhZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_58c9c2dfa693478a897e56e5780ed054",
+                "statement":
+                    "OpenWiki maintenance can be dispatched manually or runs daily at 08:00 UTC, checks out full history, installs its pinned Node and OpenWiki toolchain, and receives provider and connector credentials through repository secrets.",
+                "evidence": [
+                    {
+                        "resource": "repo://.github/workflows/openwiki-update.yml#L1-L48",
+                        "version":
+                            "repo-lines-v1:sha256:146c43df2d97e16daee4510ecb693bcf7f10f02a78e8b5a4b913a66aa842f9f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2MDI3ODdhZjZkY2MwODM0ZGUxMjFjYmIxY2I5NWY5NDU5YjcyMWVhYjAzNDlmMTA1MDFiOTk2YzFjNzdmZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZjhiODAyNzQxYWZjN2ZiMzg0MGZlY2RjNDNkN2Y4ZTQwMjNiYmZjYjViN2VjNjVlZTA4ODc5OGQ4NTE3MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZTc5NGRkZjMyYTNlMmRhYWFkODgyNjMxM2MyNGY0ZTRjZGE2ZjYxYWJmNDE3ZTQ4OWJlMzlkNWI5OGE1NTkifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_4280ac91103144ea9b05db69cc619bee",
+                "statement":
+                    "The OpenWiki workflow removes transient run state and creates or updates an openwiki/update pull request even after a generation failure so completed pages are preserved, then propagates the OpenWiki failure as a failing workflow result.",
+                "evidence": [
+                    {
+                        "resource": "repo://.github/workflows/openwiki-update.yml#L33-L88",
+                        "version":
+                            "repo-lines-v1:sha256:e769c8bdf6e587a84484d66f23b53a8af60bce08471c4b4d4ec84a5f34538594:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwZThmOWZhNDBlN2JkMDQ5OWQxYzBkODNmZDc1OGFhODViMzA4NDJkYmQ2MWYwZWE2YjdhZTEwZWZlYzc2ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1YjMzNmJiNDA5NmY2MTAxMmNjZDBkMThkZjYxMTgzMzJlNzVjZTk4ODhkNmVjYjlmYjZkMjlmYTJjNjdhYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    }
+                ]
             }
         ],
     "verification": {
         "by": "openwiki/0.7.0",
-        "at": "2026-10-07T19:54:21.935Z"
+        "at": "2026-10-08T16:54:14.331Z"
     }
 }
