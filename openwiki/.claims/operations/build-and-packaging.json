@@ -1,321 +1,338 @@
-{
-    "schemaVersion": 1,
-    "pageVersion": "sha256:49de13ca03bc72f60c6910058a1b3fa109e1da6ba70ac66d0a7727cdef1d50cd",
-    "claims":
-        [
-            {
-                "id": "claim_f3d3790dee804600b45ca193efee48ef",
-                "statement":
-                    "ORNLSlicer uses CMake for compilation, generated headers and settings, tests, install rules, and platform targets, while Nix provides dependency environments, native and cross packages, and AppImage bundling.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L1-L36",
-                        "version":
-                            "repo-lines-v1:sha256:640d06bb6b4bba274da986831e6a385429148b97e1dbb9f125c2ac5e939972c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OGUzOGRmYTJkZjEzODc1ODVlNmQzOWUxNjZmYmY5NzQzYmU0OWVlYTUyY2EyZmJhYTY3NzA3YjFiYjhkNTEifQ"
-                    },
-                    {
-                        "resource": "repo://flake.nix#L1-L43",
-                        "version":
-                            "repo-lines-v1:sha256:e0756b1f8355a47d3d43715a36668301cc72792e1048e2061ee71671a372964a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiYzhjYTFjNWFlMzA0NjcxYThmZWU0ZjU5MjJiZjQ4NTUzYTczYjNlYjc1YjgyNmY1MTYwZTFiOTgyZjBlNTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyYTU3MmNlNjViMWI1NTA4NGI2MjU0Y2EzNmU5NmNkMzZmMWQ2ODhkY2E2M2MxMzczZWUyOTRiNTEzNzVjY2QifQ"
-                    },
-                    {
-                        "resource": "repo://flake.nix#L52-L108",
-                        "version":
-                            "repo-lines-v1:sha256:46c1298d84f8049d5161f7cb2ec3e4aec388e66ad287e2ebde8fd9920b7159ba:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhMDhlM2UwMzRmZGIyMzYwNzBjMDM2NzEyZjJiOWNkNmNmNGMwODFmMzViMGE1YzM3MjgxZWI5ZTRmNjMzYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhODUwZGQyMjE0NmM3ZjE3NDI1N2VkNDhhZjkzZTUxYTk3NzQxMjU1MGE2N2Y0ODIzZjVlNzdlODgyYTVjOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDA1ZDllZjJhN2NjZWM0NDJkMjYzODU3OTc3NWQ5YzY2YTZmMDY5MWZlNDM4MzlmMGFmZjZiNDcyNzA2YzUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_092cb5cd0ddd4e63bc337bbaf62cb108",
-                "statement":
-                    "The ornlslicerDev shell inherits package dependencies and adds development tools including ccache, pre-commit, documentation tools, debugger and clang tools, Python utilities, and Linux-only NSIS and analysis tools.",
-                "evidence": [
-                    {
-                        "resource": "repo://flake.nix#L110-L146",
-                        "version":
-                            "repo-lines-v1:sha256:3cff293ced25d79a98c6df6d1ec349f98d5c4b625dbdf99211e82f8a1bbabb1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNWQ0MGU2NjFkMWQ1M2EzNTEyYzYyZTMyYWYwODZlZjY1ZTc3ZjgyYjY4YWRlOTgzZGNmZDVlNmQ1NGRjMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMzNkYzczMWU3ZDA3YjFmMGMwNWNmZWJkN2UxOTIyMDIzZTYwNzdiYzBhZTdiYTMwMTQ4ZjUwODMzYTI1YTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhMzdlY2VjZWQzZmI2ZjBiNTliMWRiZjllNGUwMmUxY2EyZmFhZjEzM2YxMzkyZGQ0OTJkMzcyYTI1YzQ1NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3M2Y3YWExNDAyYjk4NzU5MzA1MWQ3ODQ3ZDkyMzdiMzIxOGYyOGUwYTZlMzM2NmJlNjNlM2NkZmJiMzMxZjkifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_4d1024a11c36417da96c45b3eb3333e9",
-                "statement":
-                    "The generic CMake preset uses Clang and Ninja Multi-Config in build/generic-llvm-ninja with Debug and Release build presets, while the fast variant enables a unity build in a separate directory.",
-                "evidence": [
-                    {
-                        "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L55",
-                        "version":
-                            "repo-lines-v1:sha256:f22b6a539ed06a117d811310ba6741aa47f9644b9d380d72acd0495088101766:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_c10030cc54eb4de38658cf64512b1f09",
-                "statement":
-                    "Production sources, headers, and Qt resources are recursively discovered and compiled into ornlslicer_obj; the GUI application, Windows console target, and focused tests reuse that object library.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L139-L164",
-                        "version":
-                            "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
-                    },
-                    {
-                        "resource": "repo://CMakeLists.txt#L214-L241",
-                        "version":
-                            "repo-lines-v1:sha256:9d64f19acc4c717dc1852d4915eb0035382d20e63623572fadeae7b35fb1f958:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiOTM3ZGEyN2JiYWYyYzIxZjYyOTJlODBkZWY5N2U4NzU0ODFiZmJlNmE1YTU2MTE4ZWNhM2FlMjc3ZjEwNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MjY3YmY3ZDgyMDdlZWE4YzkzMWE1MDU1MTVlOWVlNWFjNzY3ODQ5NWQzY2FlYjlkODViMWViMTEzOWJmODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_7232739cd145457790d8d3c0ba46dda8",
-                "statement":
-                    "ORNLSlicer requires CMake 3.25, C++23, Qt and its declared geometry/data dependencies, requires CGAL Eigen support, and treats OpenMP as an optional optimization.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L1-L26",
-                        "version":
-                            "repo-lines-v1:sha256:299c2980e0a595295e9b2c06e33d732bd8519f60d05ef4736ce5777a4f5f7461:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlYjI1MWJmYjMyOWJiYmMxNjkzYzNmMjI2YTc5YWU0MWIyNDMzZGIyMTAyZWYzMjU0YzQ2YmFjZmM4NTFmMzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZDNhNWQzNDFkMzRiMGI5ZTYxNzhmYzZhODQ2MDllMjljMTQzM2VmNDIwNWMxZGZmYmY2Njc0ZjA0YjEwYWEifQ"
-                    },
-                    {
-                        "resource": "repo://CMakeLists.txt#L56-L113",
-                        "version":
-                            "repo-lines-v1:sha256:c3c185a088eb52d6de4985b9f36d34ade0151284592aeb7566d651ed6cc97871:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OGQzMmIwNDk4OGZiOWMwMWU2YzM1ZWMyMDFhMTVkYTFkY2JjYjZjOTYwYmY1NmEyOThhNmM4NjBkZTc0YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4NjExMTkyZWIwM2RlOWZiNmQ2OGE2YWVlNGY1NjkzODc4YTVlY2RiMjExMzdlNmMwMWE3YjRhNTM1MjY3OWMifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_cbd86ae563584348a968714e43d22767",
-                "statement":
-                    "CTest targets are explicitly declared when ORNLSLICER_BUILD_TESTS is enabled, and the new-impact project regression is present only when its configured local fixture exists.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L229-L241",
-                        "version":
-                            "repo-lines-v1:sha256:f894b240f47c7e82fa52d8c4824949f75f10432823e9db27c5b5ddc66bd8cbc4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZDY2MmExNTYxOTIyMTBmZDVkNjM5ODc4OGU2ZGIyOTBkNjUxYjM5OWQyZWU0NTQ0M2FjNGMzZTA5MTU1NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1ZDZkNjQxNGJiMDE3MDVlZTMzYjAwOGMxMmY3OTQ3ODcxYTc0YjUwZTM1NzU5MjZlODU0ZDM2NDU3OThmNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
-                    },
-                    {
-                        "resource": "repo://CMakeLists.txt#L463-L476",
-                        "version":
-                            "repo-lines-v1:sha256:055aeb3d7e78c039edaeee213c33645a28c0f775e66199059c3e3307acbc054e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwZGRlMGQxMDYzMmY3ZDRhODcxZWYxM2JlZTUxODJlZTg1NDJjY2I3YzFjMTQ5ZTZmZTRhZGQwMDM2MjViMTcifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_b63ff5b8c2b0435aad4d1620c053ccbb",
-                "statement":
-                    "Compiler caching is enabled by default and prefers sccache over ccache, falling back to uncached builds if neither is found; PCH is enabled by default and unity builds are optional.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L166-L212",
-                        "version":
-                            "repo-lines-v1:sha256:5ffc18488e874039492d6b411cd1d0eaa9116b189d85aa72c47a5da2c064a84f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZjMxMmYwM2U3NDk0NTIwYzZiYmEwMThmODBjYjdkOTI5YzViZmE5ZDc3YTRhN2RkMDhiOTBiM2M5NGM2MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1MmZiYjkzZTU5YzY3YTViN2YxMWViZmFjMGY5MTEwYjkzNmQwNWU1NjVmOTVjY2EyZTg0YmFjYWU2YmVkMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyMjc3N2U3MTQ2ZTg2MjU1OTE3ZWQ3OTQwOTMyMGM4NjYzOGM2YTcxMDQ4MTg3OGViNTFiNDA4OWU0ZjM1YTgifQ"
-                    },
-                    {
-                        "resource": "repo://CMakeLists.txt#L38-L54",
-                        "version":
-                            "repo-lines-v1:sha256:ad9082a1fcd4f88f5c0f6e5266cad9ab9cc06b1e0bd2bc19994fda3b3a0f5072:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYmYzYmM4MjQ4ZTM2ZDg3NDU3Y2Q2NWExNjNjYjM0ZDRkNjc5MzQ1YmE2MGZhZmZmMWQyMGMzODc3YjRkMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmNmY1ZjE2ZjgwMTcwN2RhNjg3ZGE3Mjg5YzZkZThiZTYzYWU4YTBhYmIxZjg3N2E3ZDZmMzNjMWUwZjE4NDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmIxNWQwY2NjODcyZjcwNzY4ODI1NGE4ZTliOWY2ODNjNmNmNDc5NDdkMTEyNWQwNmEzODRmNWVmMTQzMzIifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_21886a136acc406d9e5a8d1ca2934047",
-                "statement":
-                    "Canonical settings YAML is generated into master.conf and setting_inputs.conf, and CMake makes the object target depend on that generation; Nix packaging disables automatic generation and therefore consumes checked-in outputs.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L478-L523",
-                        "version":
-                            "repo-lines-v1:sha256:a15ae00bcde4781abc16a80f5f551bd609a35d13d8d68c4236e5660e320d2287:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjMxMTc2ZGM0M2M2M2MzNTdjZTMzYjVmYjBiNTFhNzdmNThhOGI1Zjk1NzYzNzYyZDBkYWMyNTYzMDNlMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNzhjN2YxNmYyMThjZTA0YTZlNTQ1YTExMTEwYmUxYTYyMmFhNTEyOWQzOTExYzg3MTE2YWMxMzZiM2M0OWQifQ"
-                    },
-                    {
-                        "resource": "repo://nix/ornlslicer/default.nix#L39-L49",
-                        "version":
-                            "repo-lines-v1:sha256:32378c33a1b7d0dfb07330bb157249800d199cf81da9ccef4e5fd862d8f6c889:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3ZWNhZjgzYzM2MzVmMWM2MzllYWJlOWZjN2NkMjY2YzM2Y2M1NDFlMDY5M2M5ODk1Y2UyZjg5ZTJlZTFjNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MDE5MGEzMDU4ZDliMWU3NmIzYzU1MzdlNzI3YjViYzM2ZGIwNTU0Yjg3MWU1MGRiYjhkYzk1Yjg2OTgyNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4ODhmYjYwNTYyODRhODBlMDcwNzc0ZTk3Y2I2NDA2OGFkODAzMjBlMmRjNGNiNDllMzQzMGU3NGRhYTliNmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhNWRkZmEwNjNiYTU5MjViZDI5N2JlN2UzNjFiOTI2MjNlYWY5NWQ2NmEzZjE3MWQwNGY5NThlOGZiZjY0OWYifQ"
-                    },
-                    {
-                        "resource": "repo://resources/settings/README.md#L1-L15",
-                        "version":
-                            "repo-lines-v1:sha256:71089c14274045b2509e33ff82102929f233644954ebd31e3c9b9534aefbdc8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkMjIwZTZlZThhZGEwYzg5MDU3NWQ5YmRjMTM4ZTVmMGYxOTI2NjlmYjQ3M2IyZmMxZjZlMWJiNmQwY2ZjZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZDlmYmFlM2IyM2VlYTU0Yjk4MDJhOTM4NjI2NmNmYzM3NTdiNjQ0MTA3Mjc4OTRmZDk2NzRjNTQzNTQ5YTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyYzMyZDZkMGY4YjE1NjNkMzYwM2EwZWU1MzdmMmUzNzA1NmExZDQzMDljNDkzY2FlZmYzZjU4ZjVjMzVlNDMifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_eeeec6f510044d56814f494dd285bf3d",
-                "statement":
-                    "Configure-time build metadata combines version.json, Git revision plus dirty state, configuration kind, and an overridable package type into a generated header.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L28-L36",
-                        "version":
-                            "repo-lines-v1:sha256:1b19fe50162849b416d188f67c432cb241c90e518c1ce4d51582b6bd31529bb9:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQ3MTY2ZWFkMzJlN2EyODVkZWRlYjdhMmJjMzQ4YTA2NzkxN2VjZDUxNjlmNDc4Yjc2OGI1ZjBjOWFiOTM0MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAzMWJmMWQxMGM0NTEzMTI1ZGMzNzM4NGRlMmUxNTZmNDRlYWRmYjRmNTVlNTQ5MjEzNGZkMjIzNWZiYjliYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzg4ZTM4ZGZhMmRmMTM4NzU4NWU2ZDM5ZTE2NmZiZjk3NDNiZTQ5ZWVhNTJjYTJmYmFhNjc3MDdiMWJiOGQ1MSJ9"
-                    },
-                    {
-                        "resource": "repo://cmake/build_info.cmake#L1-L25",
-                        "version":
-                            "repo-lines-v1:sha256:e4ab0d97ef95281c5da6c8ce663595b2990bb63fc9f2d28ed379296a5066a5d8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxYzVjZDc1ZGIzMTY2MDFlYjllOWU5NzYwOGE1NjVlYWRhMDM4OWMxYWFlZThhMWFiMzhlOTk3ZDk5MzQ3YzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    },
-                    {
-                        "resource": "repo://cmake/git.cmake#L3-L37",
-                        "version": "repo-lines-v1:sha256:9ac402daf775482493376cc2372556f159b7c9bd389b32ca0d226d4ac631e6b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZjYxODRlNTcwNjM2NGQyMjcxZDU1ZGU1OTE4MWNiZWUxYTY2N2UyMTU5NDk1ODY5NjAwNjM5NjZmNDE4ZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjMzIyNDZhNmQ1MWE4ZDViYzJkNTNiMzc1MWQ3ZGU3ODBiZDNjMGQxNmMzZGQ3Yzg1ZGU5YTVjMzNmZGU3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    },
-                    {
-                        "resource": "repo://cmake/version.cmake#L3-L45",
-                        "version":
-                            "repo-lines-v1:sha256:079d8eb5ab3aaa62fc3899b99dec90db6534e922e07e961d2bfba183b41ef806:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNzRjNGQzNjM2NWU5NDNhOGE5NjY1OGFkZjQ5MzY1ODAzNWRiNTM2ZjMyYzA0YWM3NDRlZTU0MWMyNDYxMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjMzIyNDZhNmQ1MWE4ZDViYzJkNTNiMzc1MWQ3ZGU3ODBiZDNjMGQxNmMzZGQ3Yzg1ZGU5YTVjMzNmZGU3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_71df8844d20a48b9a0013feb997d52ba",
-                "statement":
-                    "GUI and successful CLI startup log version, Git revision, configuration, package type, and both runtime and compile-time Qt versions from the configured build metadata.",
-                "evidence": [
-                    {
-                        "resource": "repo://src/main.cpp#L69-L106",
-                        "version":
-                            "repo-lines-v1:sha256:0073287af4a7b659bd61a18c7922e45fda3f58b83dad39d68923930ca84488d1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMmQzMjcyNjNiZmE1NWE5MDE3NGYwODRlNjE0M2QyYWFmZGVlZjRlNmFhMzVmZTc3YmVjYTM3ZDE1NDU5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZmFmZmU1Y2M2ZDE1YmUyMmNiZDU4ODg0ZjZhNmQxZWYyZGU5YTkxMzM1Y2JmYTMxOTdjNWJmMGMyZDk2ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyZjM3NDY2ZGY1NDkyYjc4MzJiZjllOGI0OGFjOWVlZTIwMWM3OTM2ZjNkNDI3ZDE4NGFhYjc5ZjU2Y2Q4ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkOTc4MWNmYmFiNTVjZDViOTBkMDlhYjYzMGJmYjE0ZTA1N2MwYmQ4OGRiMzhlOGI4OWVkYmQ0YTkxYWQ2YTQifQ"
-                    },
-                    {
-                        "resource": "repo://src/utilities/runtime_diagnostics.cpp#L9-L27",
-                        "version":
-                            "repo-lines-v1:sha256:932a8a2e535dd91d8b6b152156e7a62cbb987635b6be821548fb44b598500ff8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1Mjc4NWVlZjU3ZjU2NDIzZWU2NzdiYTRlMmE5OTM0Zjc4MzdjZDAxMThhN2VkNDM3OTBlZWYxNGZkOGFmNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxMGE1YjFiZTdmMGUzZmNhM2IwODVmYzRmYmRiYTMwNDgzOGFjNjc0N2Q4YTQxNDFhOTA2ZWYwODZmOGNhMzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNmIwOTc0YTc2MTUyNzY3YTNjNmY1MDMzOTlmYzA1M2QxMWNmYTg0OTQ3NmZlZDg4ZWExNGM1MjhiNWQ1NjMifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_1412b675422447a1b1af5400d9875473",
-                "statement":
-                    "The Nix package supports native builds and a MinGW Windows package set, supplies platform-specific Qt wrapping or deployment hooks, and installs the app, Windows runtime files, user guide, and templates through CMake.",
-                "evidence": [
-                    {
-                        "resource": "repo://CMakeLists.txt#L554-L564",
-                        "version":
-                            "repo-lines-v1:sha256:c31abaa813d525b4fd66ee4c775311d2c8631378695fb95719c6a5cb15de503d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExOGViNGI1ZGVhZDYwMGUyZDkwMzU5NDAwMTYxMjY0YWUwOGZiMDcwNWNhZmE2YTc2YWYwNjUyZDdkOGFkMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDhiYWE2MDkwNGJkYjNjZDMyOTVhMWI3ODQ1NGNlMWFjZDk3M2Y5YzY0MjJiNjc0MThkODQyODIyZjA1YjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1NTNlMTAzOGM2ZDI4MTkwNDYyYzUxNGYyNDQ5ZDU0NWNlMzBkMzMxZmJhYWUyMTA0Y2YyNzBiZmM0ZjllNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    },
-                    {
-                        "resource": "repo://flake.nix#L52-L83",
-                        "version":
-                            "repo-lines-v1:sha256:211927ecc421ae0ab59a153db27fa2e7971f3926edaf88b99c56e80e77d5d897:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhMDhlM2UwMzRmZGIyMzYwNzBjMDM2NzEyZjJiOWNkNmNmNGMwODFmMzViMGE1YzM3MjgxZWI5ZTRmNjMzYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhODUwZGQyMjE0NmM3ZjE3NDI1N2VkNDhhZjkzZTUxYTk3NzQxMjU1MGE2N2Y0ODIzZjVlNzdlODgyYTVjOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5YjYzYzkxNmNjODgxN2YzOGY2ZDFjYWZiZGQzYzZhZDgyYzQyMTVmMmY2MGUxMDg3MDU4MmMyNDdmZjVjZTYifQ"
-                    },
-                    {
-                        "resource": "repo://nix/ornlslicer/default.nix#L1-L55",
-                        "version":
-                            "repo-lines-v1:sha256:f6f3dbf361954760ebab3d55d7ef649a554b5e74f602da9ccdd6d652c49c8c89:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MDE5MGEzMDU4ZDliMWU3NmIzYzU1MzdlNzI3YjViYzM2ZGIwNTU0Yjg3MWU1MGRiYjhkYzk1Yjg2OTgyNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhZWM3OWE0MTFmZjljMGRjNDIxNTg5OWNjZDc5ZTEwY2RhODBhM2ZlMDc5MDVmZDhkMzA3NTViNGJjNDczNjUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_af1936a5a2e04cdda10e39b8c2ef2094",
-                "statement":
-                    "The x86-64 Linux AppImage runs the packaged Nix closure through a pinned static PRoot launcher that binds its bundled store at /nix, and CI smoke-tests its --help path as non-root.",
-                "evidence": [
-                    {
-                        "resource": "repo://.github/workflows/ci.yml#L21-L61",
-                        "version":
-                            "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
-                    },
-                    {
-                        "resource": "repo://flake.nix#L85-L108",
-                        "version":
-                            "repo-lines-v1:sha256:c3e3259d559a32db3c1212891630adb9e64dd858cd5a798d7b8697f9e72833ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmOTQ0ZTc3YzIyMDhjOGRkZDNkYmI3OTFmZTM3ZGY2YmYxMWFiODQxNDhiNTBhYjJhN2JkMDY2ZTM1Y2FiZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyNTYwZjczYzM1Yjg0MTQ2YjhhZTRiNGFhNzA4ZGEyYmY3M2VhYTc3MTAxZmRlNmQ5ZDNlMTNkMzNhNzU0MmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDA1ZDllZjJhN2NjZWM0NDJkMjYzODU3OTc3NWQ5YzY2YTZmMDY5MWZlNDM4MzlmMGFmZjZiNDcyNzA2YzUifQ"
-                    },
-                    {
-                        "resource": "repo://nix/appimage/default.nix#L7-L35",
-                        "version":
-                            "repo-lines-v1:sha256:cc769450d93210eea349c0a4afa6a5dc08dccde16c8c5920f61add56152baa61:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1ZGIzZTRiMTlmNzVkYmQwNTM4MTEzZmJlMDE3ZTBmNjE2YTQxYTM0YWQzNDkwMzQyOGNiNjJkOTQ3NzhiOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MzdkNzY4OTI3ZmNhZGFiMGMwNDZhMzFkMjk2ZGM4MGEyNmQxNjMxMzNhNDY1Y2QzYzE1ZmQzNWU5YjM1Y2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNGNmNTExN2M3OWFmMDI5OThhMDcwMWViYWEzYTI1YmYxYWU4MjA1NjAxZmY4NzM3ZTAxM2NhNjBmMzdhM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_9e8d25872a7f44d19684aed3fbbd625b",
-                "statement":
-                    "Windows CI cross-builds a portable Nix tree, runs makensis from the explicit legacyPackages.x86_64-linux.nixpkgs.nsis shell, generates an installer, and uploads both outputs; the installer copies the tree under Program Files, writes uninstall metadata, and creates Start Menu shortcuts.",
-                "evidence": [
-                    {
-                        "resource": "repo://.github/workflows/ci.yml#L63-L108",
-                        "version":
-                            "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    },
-                    {
-                        "resource": "repo://scripts/installer.nsi#L22-L97",
-                        "version":
-                            "repo-lines-v1:sha256:dcb653e47adf0038a604d8cd43d3ee9b706e16436aecce8ccc709e72976a3702:eyJzZWxlY3RlZExpbmVDb3VudCI6NzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NzA2MGQ5ODRkMzc2ZTZmOWJlZmU1ZGFkYWEzZWEzY2QyMjc2MmJjOTIxYWMwMGI2MWRlY2ViMjhkMGI4ZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzOWEzOTZiNmVlOWFlZmQwZjM1ZjkxZTJiNDRhN2I5MTU3OTdmYWUwMzYxZDlhMWNkZWE0MmI3M2I4Y2QyN2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5NWM0ZDk5Njc1NGJlNzVhMjlhOGY2ZTkyYzBhN2NmYzJmODE5NWM4MmQ1YjBlZWY3YWM4YzM0NGZiNDhjYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_24d2e73fdde84af79dd38d0ba7d3b799",
-                "statement":
-                    "CI runs nix flake check --all-systems on Ubuntu and macOS and separately packages Linux and Windows artifacts, but the workflow only declares a command-line smoke test for the Linux AppImage.",
-                "evidence": [
-                    {
-                        "resource": "repo://.github/workflows/ci.yml#L1-L19",
-                        "version":
-                            "repo-lines-v1:sha256:34fee4701ba3d7e827759b27b8020cd67cc00211dfdf6a4006912dece3ae14df:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MTVkMjQ2YTBiOTNiODBmOGNlMTUyM2QyMjRiZDlmZTRlMjg1MzdjZmJkNDg4MTY5ZTUxMjM4MDllNDM0ZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNTExNTY3OTJjNGU5ODNlODU2ODgwOTM3YTMwMWFmMDJjNjAzZjAzMzNjNjFiMzBjN2I0OWQ4MzlmNmI3MzgifQ"
-                    },
-                    {
-                        "resource": "repo://.github/workflows/ci.yml#L21-L61",
-                        "version":
-                            "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
-                    },
-                    {
-                        "resource": "repo://.github/workflows/ci.yml#L63-L108",
-                        "version":
-                            "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_7c0c71d7286c40f19bd75ed4f05c9ed5",
-                "statement":
-                    "The generated Codex Linux worktree setup requires Git, Git LFS, and Nix; validates the repository root and preset inputs; pulls LFS assets; configures generic-llvm-ninja through ornlslicerDev without writing the flake lock; and requires the expected CMake cache.",
-                "evidence": [
-                    {
-                        "resource": "repo://.codex/environments/environment.toml#L1-L58",
-                        "version":
-                            "repo-lines-v1:sha256:f4a5f125d3252f293a6945f239025b9df69a6c90a66c204f68249188929e45b7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NjM5OTIwZDI3MjkzZWUwZTM2NDk3ODlhYWJhZjFhZDdkNGQ5ODQzOGM4MWY1ZDYyNDc3MzRkZmVhZTYwMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiY2Y3NzgzNTdjOTZhOWE3NjI0ZWMwNmQzOGIyNzYzZDE5NTFhZjI5MGY5ZmZhMTk2Zjg0ZmM5ZmRlNTUxNmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1ODg1MTBiMjJmYThlZTdiNGM4OTkyZGE0OWRmYmNlZDE2NDViOTQzMTliNmJhY2E5ODkyZDg3YWIyOWZlOGQifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_4fa9f83b4f5945c596201dd640385f40",
-                "statement":
-                    "Codex worktree cleanup leaves worktree-local build removal to the worktree lifecycle and deliberately preserves the shared Nix, Git LFS, and ccache stores.",
-                "evidence": [
-                    {
-                        "resource": "repo://.codex/environments/environment.toml#L60-L72",
-                        "version":
-                            "repo-lines-v1:sha256:32193bf017dac04524be5cab5d4780859489de6e8c9f904c6d0e6803838eb649:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlMzNjOGM2MDY3MGNkZTZjOWI3YWZhNGFmZGEzOGU2YjJlMzNlZGRlODQ0NGI3MjNhYTRiODE5MjY0ZjcyMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YjE0ZTE1MzAxOTAwZjkyYTE3MzNmNTViOTc2MTcyMGY5Y2VlOWZiZmNmM2I1Mjg3MjM2ZTQwZjExMjk5NDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5ZGVjMDk5YjNkYTAzZmNmMzlkZGE4YzJhODE3YTFiYTgxNGVmNThlZDBmYWU0OTgxZTBlYTU0MmM3NmZhZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_58c9c2dfa693478a897e56e5780ed054",
-                "statement":
-                    "OpenWiki maintenance can be dispatched manually or runs daily at 08:00 UTC, checks out full history, installs its pinned Node and OpenWiki toolchain, and receives provider and connector credentials through repository secrets.",
-                "evidence": [
-                    {
-                        "resource": "repo://.github/workflows/openwiki-update.yml#L1-L48",
-                        "version":
-                            "repo-lines-v1:sha256:146c43df2d97e16daee4510ecb693bcf7f10f02a78e8b5a4b913a66aa842f9f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2MDI3ODdhZjZkY2MwODM0ZGUxMjFjYmIxY2I5NWY5NDU5YjcyMWVhYjAzNDlmMTA1MDFiOTk2YzFjNzdmZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZjhiODAyNzQxYWZjN2ZiMzg0MGZlY2RjNDNkN2Y4ZTQwMjNiYmZjYjViN2VjNjVlZTA4ODc5OGQ4NTE3MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZTc5NGRkZjMyYTNlMmRhYWFkODgyNjMxM2MyNGY0ZTRjZGE2ZjYxYWJmNDE3ZTQ4OWJlMzlkNWI5OGE1NTkifQ"
-                    }
-                ]
-            },
-            {
-                "id": "claim_4280ac91103144ea9b05db69cc619bee",
-                "statement":
-                    "The OpenWiki workflow removes transient run state and creates or updates an openwiki/update pull request even after a generation failure so completed pages are preserved, then propagates the OpenWiki failure as a failing workflow result.",
-                "evidence": [
-                    {
-                        "resource": "repo://.github/workflows/openwiki-update.yml#L33-L88",
-                        "version":
-                            "repo-lines-v1:sha256:e769c8bdf6e587a84484d66f23b53a8af60bce08471c4b4d4ec84a5f34538594:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwZThmOWZhNDBlN2JkMDQ5OWQxYzBkODNmZDc1OGFhODViMzA4NDJkYmQ2MWYwZWE2YjdhZTEwZWZlYzc2ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1YjMzNmJiNDA5NmY2MTAxMmNjZDBkMThkZjYxMTgzMzJlNzVjZTk4ODhkNmVjYjlmYjZkMjlmYTJjNjdhYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
-                    }
-                ]
-            }
-        ],
-    "verification": {
-        "by": "openwiki/0.7.0",
-        "at": "2026-10-08T16:54:14.331Z"
+    {
+        "schemaVersion": 1,
+        "pageVersion": "sha256:86c04ea0f8f6c50d8635de88bc8b9a52268def17d4f6f361950550d7b69759d6",
+        "claims":
+            [
+                {
+                    "id": "claim_f3d3790dee804600b45ca193efee48ef",
+                    "statement":
+                        "ORNLSlicer uses CMake for compilation, generated headers and settings, tests, install rules, and platform targets, while Nix provides dependency environments, native and cross packages, and AppImage bundling.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L1-L36",
+                            "version":
+                                "repo-lines-v1:sha256:640d06bb6b4bba274da986831e6a385429148b97e1dbb9f125c2ac5e939972c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OGUzOGRmYTJkZjEzODc1ODVlNmQzOWUxNjZmYmY5NzQzYmU0OWVlYTUyY2EyZmJhYTY3NzA3YjFiYjhkNTEifQ"
+                        },
+                        {
+                            "resource": "repo://flake.nix#L1-L43",
+                            "version":
+                                "repo-lines-v1:sha256:e0756b1f8355a47d3d43715a36668301cc72792e1048e2061ee71671a372964a:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJiYzhjYTFjNWFlMzA0NjcxYThmZWU0ZjU5MjJiZjQ4NTUzYTczYjNlYjc1YjgyNmY1MTYwZTFiOTgyZjBlNTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyYTU3MmNlNjViMWI1NTA4NGI2MjU0Y2EzNmU5NmNkMzZmMWQ2ODhkY2E2M2MxMzczZWUyOTRiNTEzNzVjY2QifQ"
+                        },
+                        {
+                            "resource": "repo://flake.nix#L52-L108",
+                            "version":
+                                "repo-lines-v1:sha256:46c1298d84f8049d5161f7cb2ec3e4aec388e66ad287e2ebde8fd9920b7159ba:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhMDhlM2UwMzRmZGIyMzYwNzBjMDM2NzEyZjJiOWNkNmNmNGMwODFmMzViMGE1YzM3MjgxZWI5ZTRmNjMzYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhODUwZGQyMjE0NmM3ZjE3NDI1N2VkNDhhZjkzZTUxYTk3NzQxMjU1MGE2N2Y0ODIzZjVlNzdlODgyYTVjOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDA1ZDllZjJhN2NjZWM0NDJkMjYzODU3OTc3NWQ5YzY2YTZmMDY5MWZlNDM4MzlmMGFmZjZiNDcyNzA2YzUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_092cb5cd0ddd4e63bc337bbaf62cb108",
+                    "statement":
+                        "The ornlslicerDev shell inherits package dependencies and adds development tools including ccache, pre-commit, documentation tools, debugger and clang tools, Python utilities, and Linux-only NSIS and analysis tools.",
+                    "evidence": [
+                        {
+                            "resource": "repo://flake.nix#L110-L146",
+                            "version":
+                                "repo-lines-v1:sha256:3cff293ced25d79a98c6df6d1ec349f98d5c4b625dbdf99211e82f8a1bbabb1f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjNWQ0MGU2NjFkMWQ1M2EzNTEyYzYyZTMyYWYwODZlZjY1ZTc3ZjgyYjY4YWRlOTgzZGNmZDVlNmQ1NGRjMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMzNkYzczMWU3ZDA3YjFmMGMwNWNmZWJkN2UxOTIyMDIzZTYwNzdiYzBhZTdiYTMwMTQ4ZjUwODMzYTI1YTkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBhMzdlY2VjZWQzZmI2ZjBiNTliMWRiZjllNGUwMmUxY2EyZmFhZjEzM2YxMzkyZGQ0OTJkMzcyYTI1YzQ1NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg3M2Y3YWExNDAyYjk4NzU5MzA1MWQ3ODQ3ZDkyMzdiMzIxOGYyOGUwYTZlMzM2NmJlNjNlM2NkZmJiMzMxZjkifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_4d1024a11c36417da96c45b3eb3333e9",
+                    "statement":
+                        "The generic CMake preset uses Clang and Ninja Multi-Config in build/generic-llvm-ninja with Debug and Release build presets, while the fast variant enables a unity build in a separate directory.",
+                    "evidence": [
+                        {
+                            "resource": "repo://cmake/presets/generic-llvm-ninja.json#L1-L55",
+                            "version":
+                                "repo-lines-v1:sha256:f22b6a539ed06a117d811310ba6741aa47f9644b9d380d72acd0495088101766:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkZDI0NDU4MmI2ZmIwM2QyM2I4NDE1YWJlY2QzNDZiMGM5ZjQ2NmI2Zjc1MmIwNjgxODljZTdlOWEyZGMzNTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_c10030cc54eb4de38658cf64512b1f09",
+                    "statement":
+                        "Production sources, headers, and Qt resources are recursively discovered and compiled into ornlslicer_obj; the GUI application, Windows console target, and focused tests reuse that object library.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L139-L164",
+                            "version":
+                                "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L214-L241",
+                            "version":
+                                "repo-lines-v1:sha256:9d64f19acc4c717dc1852d4915eb0035382d20e63623572fadeae7b35fb1f958:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiOTM3ZGEyN2JiYWYyYzIxZjYyOTJlODBkZWY5N2U4NzU0ODFiZmJlNmE1YTU2MTE4ZWNhM2FlMjc3ZjEwNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MjY3YmY3ZDgyMDdlZWE4YzkzMWE1MDU1MTVlOWVlNWFjNzY3ODQ5NWQzY2FlYjlkODViMWViMTEzOWJmODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_7232739cd145457790d8d3c0ba46dda8",
+                    "statement":
+                        "ORNLSlicer requires CMake 3.25, C++23, Qt and its declared geometry/data dependencies, requires CGAL Eigen support, and treats OpenMP as an optional optimization.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L1-L26",
+                            "version":
+                                "repo-lines-v1:sha256:299c2980e0a595295e9b2c06e33d732bd8519f60d05ef4736ce5777a4f5f7461:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlYjI1MWJmYjMyOWJiYmMxNjkzYzNmMjI2YTc5YWU0MWIyNDMzZGIyMTAyZWYzMjU0YzQ2YmFjZmM4NTFmMzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZDNhNWQzNDFkMzRiMGI5ZTYxNzhmYzZhODQ2MDllMjljMTQzM2VmNDIwNWMxZGZmYmY2Njc0ZjA0YjEwYWEifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L56-L113",
+                            "version":
+                                "repo-lines-v1:sha256:c3c185a088eb52d6de4985b9f36d34ade0151284592aeb7566d651ed6cc97871:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OGQzMmIwNDk4OGZiOWMwMWU2YzM1ZWMyMDFhMTVkYTFkY2JjYjZjOTYwYmY1NmEyOThhNmM4NjBkZTc0YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4NjExMTkyZWIwM2RlOWZiNmQ2OGE2YWVlNGY1NjkzODc4YTVlY2RiMjExMzdlNmMwMWE3YjRhNTM1MjY3OWMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_cbd86ae563584348a968714e43d22767",
+                    "statement":
+                        "CTest targets are explicitly declared when ORNLSLICER_BUILD_TESTS is enabled, and the new-impact project regression is present only when its configured local fixture exists.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L229-L241",
+                            "version":
+                                "repo-lines-v1:sha256:f894b240f47c7e82fa52d8c4824949f75f10432823e9db27c5b5ddc66bd8cbc4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZDY2MmExNTYxOTIyMTBmZDVkNjM5ODc4OGU2ZGIyOTBkNjUxYjM5OWQyZWU0NTQ0M2FjNGMzZTA5MTU1NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1ZDZkNjQxNGJiMDE3MDVlZTMzYjAwOGMxMmY3OTQ3ODcxYTc0YjUwZTM1NzU5MjZlODU0ZDM2NDU3OThmNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L496-L509",
+                            "version":
+                                "repo-lines-v1:sha256:055aeb3d7e78c039edaeee213c33645a28c0f775e66199059c3e3307acbc054e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwZGRlMGQxMDYzMmY3ZDRhODcxZWYxM2JlZTUxODJlZTg1NDJjY2I3YzFjMTQ5ZTZmZTRhZGQwMDM2MjViMTcifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_b63ff5b8c2b0435aad4d1620c053ccbb",
+                    "statement":
+                        "Compiler caching is enabled by default and prefers sccache over ccache, falling back to uncached builds if neither is found; PCH is enabled by default and unity builds are optional.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L166-L212",
+                            "version":
+                                "repo-lines-v1:sha256:5ffc18488e874039492d6b411cd1d0eaa9116b189d85aa72c47a5da2c064a84f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZjMxMmYwM2U3NDk0NTIwYzZiYmEwMThmODBjYjdkOTI5YzViZmE5ZDc3YTRhN2RkMDhiOTBiM2M5NGM2MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1MmZiYjkzZTU5YzY3YTViN2YxMWViZmFjMGY5MTEwYjkzNmQwNWU1NjVmOTVjY2EyZTg0YmFjYWU2YmVkMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyMjc3N2U3MTQ2ZTg2MjU1OTE3ZWQ3OTQwOTMyMGM4NjYzOGM2YTcxMDQ4MTg3OGViNTFiNDA4OWU0ZjM1YTgifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L38-L54",
+                            "version":
+                                "repo-lines-v1:sha256:ad9082a1fcd4f88f5c0f6e5266cad9ab9cc06b1e0bd2bc19994fda3b3a0f5072:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYmYzYmM4MjQ4ZTM2ZDg3NDU3Y2Q2NWExNjNjYjM0ZDRkNjc5MzQ1YmE2MGZhZmZmMWQyMGMzODc3YjRkMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmNmY1ZjE2ZjgwMTcwN2RhNjg3ZGE3Mjg5YzZkZThiZTYzYWU4YTBhYmIxZjg3N2E3ZDZmMzNjMWUwZjE4NDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmIxNWQwY2NjODcyZjcwNzY4ODI1NGE4ZTliOWY2ODNjNmNmNDc5NDdkMTEyNWQwNmEzODRmNWVmMTQzMzIifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_21886a136acc406d9e5a8d1ca2934047",
+                    "statement":
+                        "Canonical settings YAML is generated into master.conf and setting_inputs.conf, and CMake makes the object target depend on that generation; Nix packaging disables automatic generation and therefore consumes checked-in outputs.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L511-L556",
+                            "version":
+                                "repo-lines-v1:sha256:a15ae00bcde4781abc16a80f5f551bd609a35d13d8d68c4236e5660e320d2287:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjMxMTc2ZGM0M2M2M2MzNTdjZTMzYjVmYjBiNTFhNzdmNThhOGI1Zjk1NzYzNzYyZDBkYWMyNTYzMDNlMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNzhjN2YxNmYyMThjZTA0YTZlNTQ1YTExMTEwYmUxYTYyMmFhNTEyOWQzOTExYzg3MTE2YWMxMzZiM2M0OWQifQ"
+                        },
+                        {
+                            "resource": "repo://nix/ornlslicer/default.nix#L39-L49",
+                            "version":
+                                "repo-lines-v1:sha256:32378c33a1b7d0dfb07330bb157249800d199cf81da9ccef4e5fd862d8f6c889:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3ZWNhZjgzYzM2MzVmMWM2MzllYWJlOWZjN2NkMjY2YzM2Y2M1NDFlMDY5M2M5ODk1Y2UyZjg5ZTJlZTFjNmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MDE5MGEzMDU4ZDliMWU3NmIzYzU1MzdlNzI3YjViYzM2ZGIwNTU0Yjg3MWU1MGRiYjhkYzk1Yjg2OTgyNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM4ODhmYjYwNTYyODRhODBlMDcwNzc0ZTk3Y2I2NDA2OGFkODAzMjBlMmRjNGNiNDllMzQzMGU3NGRhYTliNmUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJhNWRkZmEwNjNiYTU5MjViZDI5N2JlN2UzNjFiOTI2MjNlYWY5NWQ2NmEzZjE3MWQwNGY5NThlOGZiZjY0OWYifQ"
+                        },
+                        {
+                            "resource": "repo://resources/settings/README.md#L1-L15",
+                            "version":
+                                "repo-lines-v1:sha256:71089c14274045b2509e33ff82102929f233644954ebd31e3c9b9534aefbdc8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkMjIwZTZlZThhZGEwYzg5MDU3NWQ5YmRjMTM4ZTVmMGYxOTI2NjlmYjQ3M2IyZmMxZjZlMWJiNmQwY2ZjZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZDlmYmFlM2IyM2VlYTU0Yjk4MDJhOTM4NjI2NmNmYzM3NTdiNjQ0MTA3Mjc4OTRmZDk2NzRjNTQzNTQ5YTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyYzMyZDZkMGY4YjE1NjNkMzYwM2EwZWU1MzdmMmUzNzA1NmExZDQzMDljNDkzY2FlZmYzZjU4ZjVjMzVlNDMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_eeeec6f510044d56814f494dd285bf3d",
+                    "statement":
+                        "Configure-time build metadata combines version.json, Git revision plus dirty state, configuration kind, and an overridable package type into a generated header.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L28-L36",
+                            "version":
+                                "repo-lines-v1:sha256:1b19fe50162849b416d188f67c432cb241c90e518c1ce4d51582b6bd31529bb9:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQ3MTY2ZWFkMzJlN2EyODVkZWRlYjdhMmJjMzQ4YTA2NzkxN2VjZDUxNjlmNDc4Yjc2OGI1ZjBjOWFiOTM0MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAzMWJmMWQxMGM0NTEzMTI1ZGMzNzM4NGRlMmUxNTZmNDRlYWRmYjRmNTVlNTQ5MjEzNGZkMjIzNWZiYjliYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzg4ZTM4ZGZhMmRmMTM4NzU4NWU2ZDM5ZTE2NmZiZjk3NDNiZTQ5ZWVhNTJjYTJmYmFhNjc3MDdiMWJiOGQ1MSJ9"
+                        },
+                        {
+                            "resource": "repo://cmake/build_info.cmake#L1-L25",
+                            "version":
+                                "repo-lines-v1:sha256:e4ab0d97ef95281c5da6c8ce663595b2990bb63fc9f2d28ed379296a5066a5d8:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYxYzVjZDc1ZGIzMTY2MDFlYjllOWU5NzYwOGE1NjVlYWRhMDM4OWMxYWFlZThhMWFiMzhlOTk3ZDk5MzQ3YzciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://cmake/git.cmake#L3-L37",
+                            "version":
+                                "repo-lines-v1:sha256:9ac402daf775482493376cc2372556f159b7c9bd389b32ca0d226d4ac631e6b3:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2ZjYxODRlNTcwNjM2NGQyMjcxZDU1ZGU1OTE4MWNiZWUxYTY2N2UyMTU5NDk1ODY5NjAwNjM5NjZmNDE4ZGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjMzIyNDZhNmQ1MWE4ZDViYzJkNTNiMzc1MWQ3ZGU3ODBiZDNjMGQxNmMzZGQ3Yzg1ZGU5YTVjMzNmZGU3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://cmake/version.cmake#L3-L45",
+                            "version":
+                                "repo-lines-v1:sha256:079d8eb5ab3aaa62fc3899b99dec90db6534e922e07e961d2bfba183b41ef806:eyJzZWxlY3RlZExpbmVDb3VudCI6NDMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwNzRjNGQzNjM2NWU5NDNhOGE5NjY1OGFkZjQ5MzY1ODAzNWRiNTM2ZjMyYzA0YWM3NDRlZTU0MWMyNDYxMjEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjBjMzIyNDZhNmQ1MWE4ZDViYzJkNTNiMzc1MWQ3ZGU3ODBiZDNjMGQxNmMzZGQ3Yzg1ZGU5YTVjMzNmZGU3MGUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_71df8844d20a48b9a0013feb997d52ba",
+                    "statement":
+                        "GUI and successful CLI startup log version, Git revision, configuration, package type, and both runtime and compile-time Qt versions from the configured build metadata.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/main.cpp#L69-L106",
+                            "version":
+                                "repo-lines-v1:sha256:0073287af4a7b659bd61a18c7922e45fda3f58b83dad39d68923930ca84488d1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMmQzMjcyNjNiZmE1NWE5MDE3NGYwODRlNjE0M2QyYWFmZGVlZjRlNmFhMzVmZTc3YmVjYTM3ZDE1NDU5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZmFmZmU1Y2M2ZDE1YmUyMmNiZDU4ODg0ZjZhNmQxZWYyZGU5YTkxMzM1Y2JmYTMxOTdjNWJmMGMyZDk2ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyZjM3NDY2ZGY1NDkyYjc4MzJiZjllOGI0OGFjOWVlZTIwMWM3OTM2ZjNkNDI3ZDE4NGFhYjc5ZjU2Y2Q4ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkOTc4MWNmYmFiNTVjZDViOTBkMDlhYjYzMGJmYjE0ZTA1N2MwYmQ4OGRiMzhlOGI4OWVkYmQ0YTkxYWQ2YTQifQ"
+                        },
+                        {
+                            "resource": "repo://src/utilities/runtime_diagnostics.cpp#L9-L27",
+                            "version":
+                                "repo-lines-v1:sha256:932a8a2e535dd91d8b6b152156e7a62cbb987635b6be821548fb44b598500ff8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1Mjc4NWVlZjU3ZjU2NDIzZWU2NzdiYTRlMmE5OTM0Zjc4MzdjZDAxMThhN2VkNDM3OTBlZWYxNGZkOGFmNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIxMGE1YjFiZTdmMGUzZmNhM2IwODVmYzRmYmRiYTMwNDgzOGFjNjc0N2Q4YTQxNDFhOTA2ZWYwODZmOGNhMzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNmIwOTc0YTc2MTUyNzY3YTNjNmY1MDMzOTlmYzA1M2QxMWNmYTg0OTQ3NmZlZDg4ZWExNGM1MjhiNWQ1NjMifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_1412b675422447a1b1af5400d9875473",
+                    "statement":
+                        "The Nix package supports native builds and a MinGW Windows package set, supplies platform-specific Qt wrapping or deployment hooks, and installs the app, Windows runtime files, user guide, and templates through CMake.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L587-L597",
+                            "version":
+                                "repo-lines-v1:sha256:c31abaa813d525b4fd66ee4c775311d2c8631378695fb95719c6a5cb15de503d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExOGViNGI1ZGVhZDYwMGUyZDkwMzU5NDAwMTYxMjY0YWUwOGZiMDcwNWNhZmE2YTc2YWYwNjUyZDdkOGFkMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDhiYWE2MDkwNGJkYjNjZDMyOTVhMWI3ODQ1NGNlMWFjZDk3M2Y5YzY0MjJiNjc0MThkODQyODIyZjA1YjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1NTNlMTAzOGM2ZDI4MTkwNDYyYzUxNGYyNDQ5ZDU0NWNlMzBkMzMxZmJhYWUyMTA0Y2YyNzBiZmM0ZjllNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://flake.nix#L52-L83",
+                            "version":
+                                "repo-lines-v1:sha256:211927ecc421ae0ab59a153db27fa2e7971f3926edaf88b99c56e80e77d5d897:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRhMDhlM2UwMzRmZGIyMzYwNzBjMDM2NzEyZjJiOWNkNmNmNGMwODFmMzViMGE1YzM3MjgxZWI5ZTRmNjMzYzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhhODUwZGQyMjE0NmM3ZjE3NDI1N2VkNDhhZjkzZTUxYTk3NzQxMjU1MGE2N2Y0ODIzZjVlNzdlODgyYTVjOTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM5YjYzYzkxNmNjODgxN2YzOGY2ZDFjYWZiZGQzYzZhZDgyYzQyMTVmMmY2MGUxMDg3MDU4MmMyNDdmZjVjZTYifQ"
+                        },
+                        {
+                            "resource": "repo://nix/ornlslicer/default.nix#L1-L55",
+                            "version":
+                                "repo-lines-v1:sha256:f6f3dbf361954760ebab3d55d7ef649a554b5e74f602da9ccdd6d652c49c8c89:eyJzZWxlY3RlZExpbmVDb3VudCI6NTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZmIwOGZkYTFhY2I5NTdiNjExNmJkMzc4MTFhMWZlNDFhMDE2MTFjMDYzMWVkYmY3ODZkNjg4OWEyN2E1NWMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0MDE5MGEzMDU4ZDliMWU3NmIzYzU1MzdlNzI3YjViYzM2ZGIwNTU0Yjg3MWU1MGRiYjhkYzk1Yjg2OTgyNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJhZWM3OWE0MTFmZjljMGRjNDIxNTg5OWNjZDc5ZTEwY2RhODBhM2ZlMDc5MDVmZDhkMzA3NTViNGJjNDczNjUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_af1936a5a2e04cdda10e39b8c2ef2094",
+                    "statement": "The x86-64 Linux AppImage runs the packaged Nix closure through a pinned static PRoot launcher that binds its bundled store at /nix, and CI smoke-tests its --help path as non-root.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L21-L61",
+                            "version":
+                                "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
+                        },
+                        {
+                            "resource": "repo://flake.nix#L85-L108",
+                            "version":
+                                "repo-lines-v1:sha256:c3e3259d559a32db3c1212891630adb9e64dd858cd5a798d7b8697f9e72833ae:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmOTQ0ZTc3YzIyMDhjOGRkZDNkYmI3OTFmZTM3ZGY2YmYxMWFiODQxNDhiNTBhYjJhN2JkMDY2ZTM1Y2FiZWQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImIyNTYwZjczYzM1Yjg0MTQ2YjhhZTRiNGFhNzA4ZGEyYmY3M2VhYTc3MTAxZmRlNmQ5ZDNlMTNkMzNhNzU0MmYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhZDA1ZDllZjJhN2NjZWM0NDJkMjYzODU3OTc3NWQ5YzY2YTZmMDY5MWZlNDM4MzlmMGFmZjZiNDcyNzA2YzUifQ"
+                        },
+                        {
+                            "resource": "repo://nix/appimage/default.nix#L7-L35",
+                            "version":
+                                "repo-lines-v1:sha256:cc769450d93210eea349c0a4afa6a5dc08dccde16c8c5920f61add56152baa61:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1ZGIzZTRiMTlmNzVkYmQwNTM4MTEzZmJlMDE3ZTBmNjE2YTQxYTM0YWQzNDkwMzQyOGNiNjJkOTQ3NzhiOTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI3MzdkNzY4OTI3ZmNhZGFiMGMwNDZhMzFkMjk2ZGM4MGEyNmQxNjMxMzNhNDY1Y2QzYzE1ZmQzNWU5YjM1Y2QiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRlNGNmNTExN2M3OWFmMDI5OThhMDcwMWViYWEzYTI1YmYxYWU4MjA1NjAxZmY4NzM3ZTAxM2NhNjBmMzdhM2EiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_9e8d25872a7f44d19684aed3fbbd625b",
+                    "statement":
+                        "Windows CI cross-builds a portable Nix tree, runs makensis from the explicit legacyPackages.x86_64-linux.nixpkgs.nsis shell, generates an installer, and uploads both outputs; the installer copies the tree under Program Files, writes uninstall metadata, and creates Start Menu shortcuts.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L63-L108",
+                            "version":
+                                "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        },
+                        {
+                            "resource": "repo://scripts/installer.nsi#L22-L97",
+                            "version":
+                                "repo-lines-v1:sha256:dcb653e47adf0038a604d8cd43d3ee9b706e16436aecce8ccc709e72976a3702:eyJzZWxlY3RlZExpbmVDb3VudCI6NzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI5NzA2MGQ5ODRkMzc2ZTZmOWJlZmU1ZGFkYWEzZWEzY2QyMjc2MmJjOTIxYWMwMGI2MWRlY2ViMjhkMGI4ZTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUzOWEzOTZiNmVlOWFlZmQwZjM1ZjkxZTJiNDRhN2I5MTU3OTdmYWUwMzYxZDlhMWNkZWE0MmI3M2I4Y2QyN2MiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5NWM0ZDk5Njc1NGJlNzVhMjlhOGY2ZTkyYzBhN2NmYzJmODE5NWM4MmQ1YjBlZWY3YWM4YzM0NGZiNDhjYTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_24d2e73fdde84af79dd38d0ba7d3b799",
+                    "statement":
+                        "CI runs nix flake check --all-systems on Ubuntu and macOS and separately packages Linux and Windows artifacts, but the workflow only declares a command-line smoke test for the Linux AppImage.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L1-L19",
+                            "version":
+                                "repo-lines-v1:sha256:34fee4701ba3d7e827759b27b8020cd67cc00211dfdf6a4006912dece3ae14df:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5MTVkMjQ2YTBiOTNiODBmOGNlMTUyM2QyMjRiZDlmZTRlMjg1MzdjZmJkNDg4MTY5ZTUxMjM4MDllNDM0ZTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyNTExNTY3OTJjNGU5ODNlODU2ODgwOTM3YTMwMWFmMDJjNjAzZjAzMzNjNjFiMzBjN2I0OWQ4MzlmNmI3MzgifQ"
+                        },
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L21-L61",
+                            "version":
+                                "repo-lines-v1:sha256:f03ff53b8d06db22f6518b4148c70dd9629e5e28d24768328a960f7a50cf4656:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ2MDJlMmM3NzdiOWMwMWZlMWRlN2EzOTIzMThkY2FiMGNhNWRjYTMzNzIxNTIyNjk2YjUxN2FlMTcwMmY0MjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI4NmVlMDExYTc1YWIyMGVhNjQ4YWJlMjIyOWM4YjIxODZmYmJlNDFiZjZlNDY2NjYzZGRjZWJiNDUwZjIzNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiNmU2MzIxNTlmMTdlNzQ1YTUxMDVmYTBiMTg4YzI5NTYwNDRkOTQ1NzBjZTNhY2JhMWIzMjA5NWUwNTg2YzkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdlZTEzNGViODhhODljZWM2YmZkOWZjNmE5N2QyMDBiYjllZDlkODBmNDAxNGMzYTU4MDM3MTE0NGVkMzMwZmQifQ"
+                        },
+                        {
+                            "resource": "repo://.github/workflows/ci.yml#L63-L108",
+                            "version":
+                                "repo-lines-v1:sha256:c94076dc103694e4589bc4c9e385b67891e83b77eca0a4d4913f3e932a433a16:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_7c0c71d7286c40f19bd75ed4f05c9ed5",
+                    "statement":
+                        "The generated Codex Linux worktree setup requires Git, Git LFS, and Nix; validates the repository root and preset inputs; pulls LFS assets; configures generic-llvm-ninja through ornlslicerDev without writing the flake lock; and requires the expected CMake cache.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/environments/environment.toml#L1-L58",
+                            "version":
+                                "repo-lines-v1:sha256:f4a5f125d3252f293a6945f239025b9df69a6c90a66c204f68249188929e45b7:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1NjM5OTIwZDI3MjkzZWUwZTM2NDk3ODlhYWJhZjFhZDdkNGQ5ODQzOGM4MWY1ZDYyNDc3MzRkZmVhZTYwMDEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiY2Y3NzgzNTdjOTZhOWE3NjI0ZWMwNmQzOGIyNzYzZDE5NTFhZjI5MGY5ZmZhMTk2Zjg0ZmM5ZmRlNTUxNmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1ODg1MTBiMjJmYThlZTdiNGM4OTkyZGE0OWRmYmNlZDE2NDViOTQzMTliNmJhY2E5ODkyZDg3YWIyOWZlOGQifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_4fa9f83b4f5945c596201dd640385f40",
+                    "statement":
+                        "Codex worktree cleanup leaves worktree-local build removal to the worktree lifecycle and deliberately preserves the shared Nix, Git LFS, and ccache stores.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.codex/environments/environment.toml#L60-L72",
+                            "version":
+                                "repo-lines-v1:sha256:32193bf017dac04524be5cab5d4780859489de6e8c9f904c6d0e6803838eb649:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlMzNjOGM2MDY3MGNkZTZjOWI3YWZhNGFmZGEzOGU2YjJlMzNlZGRlODQ0NGI3MjNhYTRiODE5MjY0ZjcyMjAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ3YjE0ZTE1MzAxOTAwZjkyYTE3MzNmNTViOTc2MTcyMGY5Y2VlOWZiZmNmM2I1Mjg3MjM2ZTQwZjExMjk5NDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU5ZGVjMDk5YjNkYTAzZmNmMzlkZGE4YzJhODE3YTFiYTgxNGVmNThlZDBmYWU0OTgxZTBlYTU0MmM3NmZhZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_58c9c2dfa693478a897e56e5780ed054",
+                    "statement":
+                        "OpenWiki maintenance can be dispatched manually or runs daily at 08:00 UTC, checks out full history, installs its pinned Node and OpenWiki toolchain, and receives provider and connector credentials through repository secrets.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/openwiki-update.yml#L1-L48",
+                            "version":
+                                "repo-lines-v1:sha256:146c43df2d97e16daee4510ecb693bcf7f10f02a78e8b5a4b913a66aa842f9f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2MDI3ODdhZjZkY2MwODM0ZGUxMjFjYmIxY2I5NWY5NDU5YjcyMWVhYjAzNDlmMTA1MDFiOTk2YzFjNzdmZmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZjhiODAyNzQxYWZjN2ZiMzg0MGZlY2RjNDNkN2Y4ZTQwMjNiYmZjYjViN2VjNjVlZTA4ODc5OGQ4NTE3MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0ZTc5NGRkZjMyYTNlMmRhYWFkODgyNjMxM2MyNGY0ZTRjZGE2ZjYxYWJmNDE3ZTQ4OWJlMzlkNWI5OGE1NTkifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_4280ac91103144ea9b05db69cc619bee",
+                    "statement":
+                        "The OpenWiki workflow removes transient run state and creates or updates an openwiki/update pull request even after a generation failure so completed pages are preserved, then propagates the OpenWiki failure as a failing workflow result.",
+                    "evidence": [
+                        {
+                            "resource": "repo://.github/workflows/openwiki-update.yml#L33-L88",
+                            "version":
+                                "repo-lines-v1:sha256:e769c8bdf6e587a84484d66f23b53a8af60bce08471c4b4d4ec84a5f34538594:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwZThmOWZhNDBlN2JkMDQ5OWQxYzBkODNmZDc1OGFhODViMzA4NDJkYmQ2MWYwZWE2YjdhZTEwZWZlYzc2ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1YjMzNmJiNDA5NmY2MTAxMmNjZDBkMThkZjYxMTgzMzJlNzVjZTk4ODhkNmVjYjlmYjZkMjlmYTJjNjdhYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_cb0e34a47b81429babf79c11fce26ee9",
+                    "statement":
+                        "CMake registers settings_file_comparator_tests, settings_manager_tests, and main_toolbar_tests as focused executables linked to ornlslicer_obj and exposes them to CTest under those names.",
+                    "evidence": [
+                        {
+                            "resource": "repo://CMakeLists.txt#L309-L340",
+                            "version":
+                                "repo-lines-v1:sha256:3ebdf0d307acdae0076ad4d621312a30fe81da49e4657320932fb61fd8fd3510:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxNGQwM2M3ZDc5OWU0ODQwZGJlNGI2YzQ4MjZlZTZlZTg5MjYxYjhkOWNhZjllMDFiZmU3ZTE3ZTJjYTRhMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyMGJmMjhkNDEzZTBkMTI2NDU0NjFiNzljMGRiNDc0ODBkNjE4YTczMmZiYWQzMDIyMmZhMzQ2YTMzNWU3ZmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5MjY5MmExOTg5NThlNzRhZGJkODA1ZGI4ZDg0OTkwMWMxZmYzZjI4OWE4ZDA1YTFmYjM4YjZkZGI2Yjg1NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5MGQ4ODk5NzEyMmRiZjA0OWI5NjQ3NzA1ZTJkZTRmNmFhN2U1YzFjN2NhMDEyNWM3N2JhYzU0ZDNiZDlhNjgifQ"
+                        },
+                        {
+                            "resource": "repo://CMakeLists.txt#L452-L461",
+                            "version":
+                                "repo-lines-v1:sha256:3dda81ca81b9b4c2203cefd871f6c00a536a1c6c91bb431d0d4d67ed2f4d0839:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MzA3NTU5ZTI0NDU4MGY2ZDUxOGNkMWZiM2ExNzY0MWE0Mzc4ZGQyYmZmMTE2NGEyMDJlZjU3MTkyMWNjODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliMWE5ZmE2MWIxMGY5MWMxMmI5ODY3ODY0Y2MzNGU2MjU5YmU5MjZiMDFiNjZjODFhZjdjZmI5ODVhNGU3ZTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4NzdkZGI1NDNlYzM4Njg4NTQyMWNlZGZhZjE5MjkwMThlZGEyZjdjYzhkMzQ1Yjc5OGQ0OTI1ZjFjMTNlZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyMTY4Yzg2YzA4YmY0M2QyY2MyNDg3YzM0ZWQwOWJiNmRlODE3NjFkN2MyZjc3OGRmNzg5NzJiMDIxMTY1ZmQifQ"
+                        }
+                    ]
+                }
+            ],
+        "verification": {
+            "by": "openwiki/0.7.0",
+            "at": "2026-10-08T21:29:05.545Z"
+        }
     }
-}

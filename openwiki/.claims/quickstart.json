@@ -1,6 +1,6 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:c8c5094db60535646c15cf4e96785329831ef088b5e5b2b776a04accd5a580cd",
+        "pageVersion": "sha256:c44fcc676dc2a6872643a06ea7a09ad1aea146b9c1c4ab88e5f78d353201f913",
         "claims":
             [
                 {
@@ -61,12 +61,12 @@
                                 "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
                         },
                         {
-                            "resource": "repo://CMakeLists.txt#L478-L515",
+                            "resource": "repo://CMakeLists.txt#L511-L548",
                             "version":
                                 "repo-lines-v1:sha256:d3ecaacffccf1dc47920d853dc19eb3f343a3e6ca56aca2fa06781d752ec428a:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjMxMTc2ZGM0M2M2M2MzNTdjZTMzYjVmYjBiNTFhNzdmNThhOGI1Zjk1NzYzNzYyZDBkYWMyNTYzMDNlMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU1MDMyZTk2NGQwOTMyMzUxZTVkMTg1MjY5MjgxYjE3MWEzYTA5YjA4YjI4NmU2NjFlYTQ3MDMyM2M4MmViNGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4MTJhYjllNjI0NDI1NDQ2N2RkOTBkMjRiNWE2OTFiMzI4NTUyODI1OTAyOTdiNzI1NmY4NDViMDEzMzZhNmYifQ"
                         },
                         {
-                            "resource": "repo://CMakeLists.txt#L552-L564",
+                            "resource": "repo://CMakeLists.txt#L585-L597",
                             "version":
                                 "repo-lines-v1:sha256:b4091fb4a30c619e247741f839255df3d979bafc5c0fce927fe0f10c5c6e1ee4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA0NjM0NGI4YWI4OGNlNzE3NGU1NzA1YTM0NWQyM2VhYTdlMzFiOTQ4OTRlZWE0MTE2ODBhZjY1YWM4OGExYTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDhiYWE2MDkwNGJkYjNjZDMyOTVhMWI3ODQ1NGNlMWFjZDk3M2Y5YzY0MjJiNjc0MThkODQyODIyZjA1YjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc5NzRlOGIzZjAzNTRkZDViOWI4NzFiNzJkZDMzYzhjNjVkZDQwN2I2NDY5NWMzN2M4ODcxYjI3ZTlkYTRlMjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                         },
@@ -278,7 +278,7 @@
                                 "repo-lines-v1:sha256:85b4113be8be5afedd9954f2207079d6308263d73edd406fcb8764a13d756078:eyJzZWxlY3RlZExpbmVDb3VudCI6OCwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWY4YjZmNjAzYWJiZTNiYWUyMTllYTcwNmY4Y2EyYzFhM2RmZWMxMGY0YTQ2YzE5MTdmNDg2ZDk0M2MyMTlmOSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDEyY2EzNDVjY2Y3NWJmOWMwODA2YmNlNjk1YmU4ZGU4MDhiNzk5ODQyNTFhN2E1NGQyMDJjZjYxMDFkZDQ1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZDlhYmEyOTJkYTkwZmU1ZTM2NjljOWExMDY4NTY4NzQ2ODZlMzE2OWNjMWI0ZDYzNzYyOWE2NDE1MGU3MWJkYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzVkYzU1MGI0NjJiOGU0ZDY2MDViNDM0NDFjMjczMWJhMTZhOTRmZGQxMDk1ZTBhNzNhMjI4OWFkNDQ0OGEzNCJ9"
                         },
                         {
-                            "resource": "repo://src/managers/settings/settings_manager.cpp#L38-L68",
+                            "resource": "repo://src/managers/settings/settings_manager.cpp#L72-L102",
                             "version":
                                 "repo-lines-v1:sha256:c6db6c32814ea92f762fad5e6f3b6409930592016b76373bb38f27f77d0e91d0:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjBjYTc2YTFjN2JkNjA3NmEyMTg4MWFlOGY0MDI3MWJkY2YwNGYxMTBmM2Y0MzJiMTRiMGY0NDI2NjFkZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAwNDMzNjUwZjE4ODc3M2VjNDI1MzQ1MDRlZGMxYzJiMmEzN2EzMTljZWI0NjQwMTdjZGJhMWQ0ZmU3YmM1M2UiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM1YjQ4MmRkY2Y4YjAwOGUzODUzNGIyZTdiNDE4NjI3ZWM5ZjY1NDJiY2ZkYzUxYmViMDFiNDJiZTc2NGE1MzMifQ"
                         }
@@ -287,15 +287,15 @@
                 {
                     "id": "claim_24b8ca0af7bc4f74b1f86fcdfa70577c",
                     "statement":
-                        "The build declares 21 prefixed focused test executable targets with unprefixed CTest names, plus a whole-project slicing regression that is registered only when its configured local fixture exists.",
+                        "The build declares 24 prefixed focused test executable targets with unprefixed CTest names, plus a whole-project slicing regression that is registered only when its configured local fixture exists.",
                     "evidence": [
                         {
-                            "resource": "repo://CMakeLists.txt#L229-L461",
+                            "resource": "repo://CMakeLists.txt#L229-L494",
                             "version":
-                                "repo-lines-v1:sha256:8d41c76ec143be2d02b66546aaa50c50035982845c7ab3d36b608ad3ffd7c5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
+                                "repo-lines-v1:sha256:7ff950f8f17c4b90f7de896fdf2b01a7a620a2dbcba28b6d337e458b77160279:eyJzZWxlY3RlZExpbmVDb3VudCI6MjY2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
                         },
                         {
-                            "resource": "repo://CMakeLists.txt#L463-L475",
+                            "resource": "repo://CMakeLists.txt#L496-L508",
                             "version":
                                 "repo-lines-v1:sha256:bd19590ffae6b4e3ec37a59b536de689f468debfdc62f2c9a5fae7471f4848f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjOTlkNDc4NmExZTFlOTQzMTczNWJiNGJkNGE1NDE3MGJmOTI5ZTllYzYxMmU2Zjk0NTM0ZDNiMDc0YTE5ZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZmEyZGYyNDU2M2Y4ODI1ODU2YmY3NmQ2MTc1ZGY5MGEzMzk1Nzc1NzM4MzI5YzlhM2FkZTA4Mjk4NmI1ODYifQ"
                         }
@@ -326,6 +326,6 @@
             ],
         "verification": {
             "by": "openwiki/0.7.0",
-            "at": "2026-10-07T20:13:35.892Z"
+            "at": "2026-10-08T21:29:05.545Z"
         }
     }

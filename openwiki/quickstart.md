@@ -38,10 +38,10 @@ sources:
     resource: repo://src/threading/gcode_loader.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
-generated: { by: "codex", at: "2026-10-07T20:13:35.892Z" }
+generated: { by: "codex", at: "2026-10-08T21:29:05.545Z" }
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-07T20:13:35.892Z
+    at: 2026-10-08T21:29:05.545Z
 ---
 
 # ORNLSlicer OpenWiki Quickstart
@@ -119,7 +119,7 @@ Toolpath modes select a concrete writer from the active machine syntax. Generate
 | --- | --- | --- |
 | Change startup, CLI option handling, progress, or shutdown | `src/main.cpp`, `src/console/command_line_processor.cpp`, then `src/console/main_control.cpp` or `src/windows/main_window.cpp` | [Application Runtime](architecture/application-runtime.md) |
 | Change model import, session ownership, recent files, or `.s2p` save/load | `include/managers/session_manager.h`, `src/managers/session_manager.cpp`, and the relevant loader under `src/threading/` | [Session and Project Lifecycle](architecture/session-and-project-lifecycle.md) |
-| Add or alter a setting, composite input, template, preference, or migration | `resources/settings/*.yaml`, then settings/preferences managers and migration code | [Settings and Preferences](architecture/settings-and-preferences.md) |
+| Add or alter a setting, composite input, template, preference, migration, or settings-file comparison | `resources/settings/*.yaml` for metadata; otherwise the settings/preferences managers or comparison dialog/comparator | [Settings and Preferences](architecture/settings-and-preferences.md) |
 | Change mesh, coordinate, unit, `Step`, island, path, or segment semantics | the matching declaration under `include/geometry`, `include/part`, or `include/step`, then its `src/` implementation | [Geometry and Toolpath Model](concepts/geometry-and-toolpath-model.md) |
 | Change slicer dispatch, phase order, progress, cancellation, or common output | `src/managers/session_manager.cpp` and `src/threading/abs_slicing_thread.cpp` | [Slicing Pipeline](architecture/slicing-pipeline.md) |
 | Change planar cross-sections, layer settings, regions, ordering, or modifiers | `src/threading/slicers/planar_slicer.cpp`, `src/threading/step_thread.cpp`, then `src/step/layer/regions`, `src/optimizers`, or `src/modifiers` | [Planar Path Generation](slicing/planar-path-generation.md) |
@@ -174,7 +174,7 @@ nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure
 ```
 
-Focused binaries use the `ornlslicer_` build-target prefix while CTest names omit it. The test block declares 21 focused executables and one project-slice regression that appears only when its configured local `.s2p` fixture exists. [source](repo://CMakeLists.txt#L229-L461) [source](repo://CMakeLists.txt#L463-L475)
+Focused binaries use the `ornlslicer_` build-target prefix while CTest names omit it. The test block declares 24 focused executables and one project-slice regression that appears only when its configured local `.s2p` fixture exists. For the recent settings comparison, template-shape filter, and toolbar-overflow contracts, build `ornlslicer_settings_file_comparator_tests`, `ornlslicer_settings_manager_tests`, and `ornlslicer_main_toolbar_tests`, then filter CTest with their three unprefixed names. [source](repo://CMakeLists.txt#L229-L494) [source](repo://CMakeLists.txt#L496-L508)
 
 Use these additional checks according to the changed contract:
 

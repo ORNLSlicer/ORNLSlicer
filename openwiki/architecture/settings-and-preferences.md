@@ -3,9 +3,6 @@ type: architecture
 title: Settings, Templates, and Preferences
 description: Source-of-truth, generation, migration, precedence, local override, UI, and application-preference contracts for ORNLSlicer configuration.
 tags: [settings, templates, preferences, migration, ui]
-verified:
-  - by: openwiki/0.7.0
-    at: 2026-10-06T20:25:27.555Z
 sources:
   - id: openwiki-source-d44494ef3e497fea81240ef8
     resource: repo://CMakeLists.txt
@@ -15,6 +12,8 @@ sources:
     resource: repo://resources/settings/README.md
   - id: openwiki-source-f3d5520098265089809f783c
     resource: repo://scripts/generate_master_config.py
+  - id: openwiki-source-947071c6d2a2129ec7e8974b
+    resource: repo://src/configs/settings_file_comparator.cpp
   - id: openwiki-source-6fcc7143f4182d92a74a222f
     resource: repo://src/managers/preferences_manager.cpp
   - id: openwiki-source-ee47d8a7bebb804c33b330b4
@@ -29,11 +28,20 @@ sources:
     resource: repo://src/widgets/settings/setting_bar.cpp
   - id: openwiki-source-ab8500cd8bf29ac0c5dcbd85
     resource: repo://src/widgets/settings/setting_tab.cpp
+  - id: openwiki-source-c8c3856269528aaa315ddcb3
+    resource: repo://src/windows/settings_file_compare.cpp
   - id: openwiki-source-6949df8bebfa2cc2eb946f04
     resource: repo://tests/preferences_import_tests.cpp
+  - id: openwiki-source-1576e6dcddd93d0d5e516783
+    resource: repo://tests/settings_file_comparator_tests.cpp
+  - id: openwiki-source-f389ebdba110ec8ceaa3a0e0
+    resource: repo://tests/settings_manager_tests.cpp
   - id: openwiki-source-1fd14546369693e17741b750
     resource: repo://tests/settings_version_control_tests.cpp
-generated: { by: "codex", at: "2026-10-06T20:25:27.555Z" }
+generated: { by: "codex", at: "2026-10-08T21:29:05.545Z" }
+verified:
+  - by: openwiki/0.7.0
+    at: 2026-10-08T21:29:05.545Z
 ---
 
 # Settings, Templates, and Preferences
@@ -89,7 +97,7 @@ When automatic generation is enabled, CMake watches the YAML tree and generator 
 
 ## Templates and the active global base
 
-`.s2c` files are sparse global templates. Loading one checks its schema version, ignores keys absent from the current master catalog, and stores each known value under the template filename and the setting's `major` category. The active configuration is assembled by calling `constructActiveGlobal` for selected category/template pairs; each call overlays that template's JSON on the already default-populated global base. If a requested template is absent, the manager attempts `LFAM_03in` for that category and updates recent-template history. [source](repo://src/managers/settings/settings_manager.cpp#L93-L152) [source](repo://src/managers/settings/settings_manager.cpp#L197-L233)
+`.s2c` files are sparse global templates. Loading one first rejects unreadable JSON and documents that do not match the settings-template shape, then checks its schema version, ignores keys absent from the current master catalog, and stores each known value under the template filename and the setting's `major` category. The active configuration is assembled by calling `constructActiveGlobal` for selected category/template pairs; each call overlays that template's JSON on the already default-populated global base. If a requested template is absent, the manager attempts `LFAM_03in` for that category and updates recent-template history. [source](repo://src/managers/settings/settings_manager.cpp#L127-L191) [source](repo://src/managers/settings/settings_manager.cpp#L249-L262)
 
 This means template composition is overwrite-based and call-order-sensitive when two selected files contain the same key. Normal template organization avoids overlap by assigning settings to their master `major` category, but `SettingsBase::populate` itself simply replaces matching keys in iteration order. [source](repo://src/configs/settings_base.cpp#L17-L27)
 
@@ -132,6 +140,12 @@ Saved setting files carry a master version. If an older file is loaded, `Setting
 Migrations are sequential transformations in `SettingsVersionControl`. Focused tests verify concrete compatibility behavior, including renaming two historical helical start-angle keys while retaining their values, converting the former boolean variable-Z setting into its enumeration value, and advancing all three fixtures to master version 13. [source](repo://tests/settings_version_control_tests.cpp#L13-L64)
 
 Serialization should go through the version formatter. `globalJson()` and `saveTemplate()` both attach the current versioned header rather than writing the in-memory settings array directly. [source](repo://src/managers/settings/settings_manager.cpp#L463-L466) [source](repo://src/managers/settings/settings_manager.cpp#L473-L515)
+
+## Comparing settings files
+
+The Settings menu can open a comparison dialog for two `.s2c` files. The comparator requires each document to be a JSON object containing a `settings` array of objects; unreadable files, invalid JSON, and malformed settings arrays produce errors rather than partial results. It compares corresponding settings-array entries by index, reports keys unique to either file, and reports changed keys. Object key order does not affect recursive comparison, while array order remains significant. Numeric values use an absolute/relative floating-point tolerance when either operand is floating point; integers and enums remain exact comparisons. [source](repo://src/configs/settings_file_comparator.cpp#L16-L95) [source](repo://src/configs/settings_file_comparator.cpp#L119-L160)
+
+The dialog keeps file fields read-only and enables comparison only after both paths have been selected. Successful results separate changed values from values present in only one file, include the settings-array index, resolve known keys to master-catalog display names, and label columns with the selected filenames. [source](repo://src/windows/settings_file_compare.cpp#L55-L116) [source](repo://src/windows/settings_file_compare.cpp#L160-L267) Focused tests cover unique and changed values across multiple settings-array entries, insignificant versus material numeric differences, malformed document shapes, and file/JSON errors. [source](repo://tests/settings_file_comparator_tests.cpp#L15-L124)
 
 ## Preference import and persistence
 

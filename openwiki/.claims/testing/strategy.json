@@ -1,12 +1,12 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:2ed835877f904812bd4e9f0912906a1f3acf991327a8a20a3182efab32274320",
+        "pageVersion": "sha256:984d9cd9474a1a6bef805da356ac543230c0d2a325661f00b96a98cf4d536392",
         "claims":
             [
                 {
                     "id": "claim_b4e11501125a46b49d0246b26fb3248d",
                     "statement":
-                        "ORNLSlicer declares 21 focused standalone C++ test executables, each linked to the shared ornlslicer_obj production object library and registered under an unprefixed CTest name.",
+                        "ORNLSlicer declares 24 focused standalone C++ test executables, each linked to the shared ornlslicer_obj production object library and registered under an unprefixed CTest name.",
                     "evidence": [
                         {
                             "resource": "repo://CMakeLists.txt#L139-L164",
@@ -14,9 +14,9 @@
                                 "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
                         },
                         {
-                            "resource": "repo://CMakeLists.txt#L229-L461",
+                            "resource": "repo://CMakeLists.txt#L229-L494",
                             "version":
-                                "repo-lines-v1:sha256:8d41c76ec143be2d02b66546aaa50c50035982845c7ab3d36b608ad3ffd7c5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
+                                "repo-lines-v1:sha256:7ff950f8f17c4b90f7de896fdf2b01a7a620a2dbcba28b6d337e458b77160279:eyJzZWxlY3RlZExpbmVDb3VudCI6MjY2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
                         }
                     ]
                 },
@@ -169,9 +169,9 @@
                         "Adding a tests source file does not automatically register a test because every test executable and add_test entry is declared explicitly in CMake.",
                     "evidence": [
                         {
-                            "resource": "repo://CMakeLists.txt#L229-L461",
+                            "resource": "repo://CMakeLists.txt#L229-L494",
                             "version":
-                                "repo-lines-v1:sha256:8d41c76ec143be2d02b66546aaa50c50035982845c7ab3d36b608ad3ffd7c5fb:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMzLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
+                                "repo-lines-v1:sha256:7ff950f8f17c4b90f7de896fdf2b01a7a620a2dbcba28b6d337e458b77160279:eyJzZWxlY3RlZExpbmVDb3VudCI6MjY2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIyYWNmMTA1NjYwYzFlMGU3ODQ4ZGE5NTY3MWU0YTkwZjBhNDJhMGU3MDU0NmJiMzI2ZjQ4ZDA4MDUyMzk4ZWRkIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIzYTM0MjI0ZWMxYzJjMTA0M2ViOTg0MTU4YTY1YmEwNTg2MGU3NDEwMjRmYzZkZTcwOTZkYzRmNTBjZmQyYmIyIn0"
                         }
                     ]
                 },
@@ -230,7 +230,7 @@
                         "The new_impact_project_regression test is registered only when a configured local .s2p project path exists and runs the built application through its project-input and output-location arguments.",
                     "evidence": [
                         {
-                            "resource": "repo://CMakeLists.txt#L463-L475",
+                            "resource": "repo://CMakeLists.txt#L496-L508",
                             "version":
                                 "repo-lines-v1:sha256:bd19590ffae6b4e3ec37a59b536de689f468debfdc62f2c9a5fae7471f4848f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjOTlkNDc4NmExZTFlOTQzMTczNWJiNGJkNGE1NDE3MGJmOTI5ZTllYzYxMmU2Zjk0NTM0ZDNiMDc0YTE5ZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZmEyZGYyNDU2M2Y4ODI1ODU2YmY3NmQ2MTc1ZGY5MGEzMzk1Nzc1NzM4MzI5YzlhM2FkZTA4Mjk4NmI1ODYifQ"
                         },
@@ -308,9 +308,9 @@
                                 "repo-lines-v1:sha256:3e6f516fe036b14195943cabd44c0c468c7ea15df5ba21d4e58b3c2cc62833d8:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODE1ZTFhMGUwOGRjMDgxYWM1ODZhMzI5ZTc3MDNkOGI3OWI3MTUwYzNmMWY1MDMwZGNmNDJhMzdjOTNmZWU5MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMjk3MzI3MGMwOGU0OTkwZGE3ZDUwZGIzMWFmYzEzNGQ5ZWJhY2FlNGFiNTQ2MjUzZjk0ZmI0NDBkM2Q3MTA4NSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiODY5MDVjZTFlNWY4ZDFjMzZkZmU3ODJhYWY2OTNhZDQ3NDUzZTZkY2RkODJlMjE2ZmYzNTZiZTc3NzI5YjI0YyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiN2QxZGIwN2QyMjIwZDg3ZmM2MWQ2OTJlMDA5ZDlkOWJmZDQ2MTYxZTNkMDAyZThlNmEzMzAwMTRjNjk0YTkzYiJ9"
                         },
                         {
-                            "resource": "repo://CMakeLists.txt#L229-L475",
+                            "resource": "repo://CMakeLists.txt#L229-L508",
                             "version":
-                                "repo-lines-v1:sha256:332bca457648fdeb26cf9a30cac5315b5ac4325a2abbc135a1f3ce50f7738240:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQ3LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhYzk5ZDQ3ODZhMWUxZTk0MzE3MzViYjRiZDRhNTQxNzBiZjkyOWU5ZWM2MTJlNmY5NDUzNGQzYjA3NGExOWZjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1OGZhMmRmMjQ1NjNmODgyNTg1NmJmNzZkNjE3NWRmOTBhMzM5NTc3NTczODMyOWM5YTNhZGUwODI5ODZiNTg2In0"
+                                "repo-lines-v1:sha256:0771d5156623bb963c2f617d09a2fb51c001536ce7eeef2a0d5dbe6b1f859888:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIxMmQ2NjJhMTU2MTkyMjEwZmQ1ZDYzOTg3ODhlNmRiMjkwZDY1MWIzOTlkMmVlNDU0NDNhYzRjM2UwOTE1NTU5IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiJhYzk5ZDQ3ODZhMWUxZTk0MzE3MzViYjRiZDRhNTQxNzBiZjkyOWU5ZWM2MTJlNmY5NDUzNGQzYjA3NGExOWZjIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIwNWQ2ZDY0MTRiYjAxNzA1ZWUzM2IwMDhjMTJmNzk0Nzg3MWE3NGI1MGUzNTc1OTI2ZTg1NGQzNjQ1Nzk4ZjQ5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI1OGZhMmRmMjQ1NjNmODgyNTg1NmJmNzZkNjE3NWRmOTBhMzM5NTc3NTczODMyOWM5YTNhZGUwODI5ODZiNTg2In0"
                         },
                         {
                             "resource": "repo://docs/contributing/linux-appimage.md#L33-L72",
@@ -323,10 +323,32 @@
                                 "repo-lines-v1:sha256:979f2c72fbc4ef6471419e9f138d25f063d97a582445deb82d3626c4e0cf1359:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OTRmYTE4ZjdmOGM0NTMwMzczOTgxZjIzODg5ODE0ODQ4M2I0YzQ2OWJlYjA5YTkzNzU5YzhmZGY2YWMxMTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU1N2Y0YTExMTFmMDM2ZDA2MTMwM2YxMzBjZDk1NTE2NTgyYmU0NjZjMzAyOTc4NmE0MjMyNWM3ZGMwOTlmZWQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJkOTRmZGQ5OWQ5NTgxZDI5MjdmMWU4NTI4NjAwZTQ2NjJhYWRmNjljYjRmN2Y2NzFmNjdlMGM1ODk4YWIifQ"
                         }
                     ]
+                },
+                {
+                    "id": "claim_a8150df8f6a942ab8b6559d425fd57da",
+                    "statement":
+                        "The added focused lanes cover comparator validation and result semantics, rejection of project-local/session JSON by the global-template loader without rewriting it, and offscreen toolbar visibility plus constrained-width overflow behavior.",
+                    "evidence": [
+                        {
+                            "resource": "repo://tests/main_toolbar_tests.cpp#L15-L78",
+                            "version":
+                                "repo-lines-v1:sha256:60b16ba8eec5091576859febf1c43e5859c83d8d533d9340ebf1c9071a31688e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlYjBkNGMyYzk0YzU3MWI4YjdjODQ1NTIzNDdmZTQzNzRkNmEyMDU5ZWNmMTk1OWFjNjFlZDQ2ZjgyNjMxZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI2ZTZmZGViODFiNWU3MzBkNDUxZTBkNmVmNGM5ZjJjMDE3ZjI0NzhmMGU1NDUzZGI1YjA0NGNlZGYzZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZTM3MzUxMTIyYmY5MWU5NDgzODk3OWYyMzk2MWZkODYzN2M1NWYwMTRmMDhjYWZlOWE1OGY4ZmU4Y2VlZWMifQ"
+                        },
+                        {
+                            "resource": "repo://tests/settings_file_comparator_tests.cpp#L15-L124",
+                            "version":
+                                "repo-lines-v1:sha256:ce3b1c0e722ef13a4d87d9aa7af9e175ca5d97741fa95ea760eb48a0df01532f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzMTZlZDdkM2VhY2VhYjFmMjA5MzRkYzYyYjU5MzlmYmU3ZDBmZjlkNWY4NTUzMDcyNzEyMGNmNWY1YzdlZWRkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI0YTI4YzA3MDNkZWNlMjc4ZGRjNGUwYjRiY2VkZWYyYjEzMzVjMzRjNWJhYjkzNmQ4MTc4MGU2ZmExMTZiYWNmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                        },
+                        {
+                            "resource": "repo://tests/settings_manager_tests.cpp#L26-L94",
+                            "version":
+                                "repo-lines-v1:sha256:4a8d3b74685a626fafbd71176167426cf5ccd1be3829723582ef1803c17b3c6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlODY3MDM3NjYwZjVjMTRiOTg1YTY2NDY2ZTQ1MTVhM2VjMzIzYzk2MzI1ZWY4NWM2NzZiOWRiMzJkNGIzZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYmFmMTExZjY2M2QxZmNlY2M5MmIwMDZiNGUyNzE5MWUxOTMyNDJjNTBlNDQxNDE5YjhmNmVlNGM3ZDg4M2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJkOTRmZGQ5OWQ5NTgxZDI5MjdmMWU4NTI4NjAwZTQ2NjJhYWRmNjljYjRmN2Y2NzFmNjdlMGM1ODk4YWIifQ"
+                        }
+                    ]
                 }
             ],
         "verification": {
             "by": "openwiki/0.7.0",
-            "at": "2026-10-07T20:13:35.892Z"
+            "at": "2026-10-08T21:29:05.545Z"
         }
     }

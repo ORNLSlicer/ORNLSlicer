@@ -28,6 +28,8 @@ sources:
     resource: repo://tests/helical_region_profile_tests.cpp
   - id: openwiki-source-6a59e8ac36ba9aa084b8dcdf
     resource: repo://tests/juggerbot_writer_tests.cpp
+  - id: openwiki-source-eca38ea4c3df70e00aa49450
+    resource: repo://tests/main_toolbar_tests.cpp
   - id: openwiki-source-2141391cb9833c33ff1c3855
     resource: repo://tests/mesh_repair_tests.cpp
   - id: openwiki-source-3308169b66ac9fd6252e5bb8
@@ -38,6 +40,10 @@ sources:
     resource: repo://tests/run_project_slice_regression.cmake
   - id: openwiki-source-af6398eb7d1bc9a42afbe5af
     resource: repo://tests/session_manager_tests.cpp
+  - id: openwiki-source-1576e6dcddd93d0d5e516783
+    resource: repo://tests/settings_file_comparator_tests.cpp
+  - id: openwiki-source-f389ebdba110ec8ceaa3a0e0
+    resource: repo://tests/settings_manager_tests.cpp
   - id: openwiki-source-1fd14546369693e17741b750
     resource: repo://tests/settings_version_control_tests.cpp
   - id: openwiki-source-488b08952aaa6db435f7b20d
@@ -46,10 +52,10 @@ sources:
     resource: repo://tests/variable_layer_height_tests.cpp
   - id: openwiki-source-7a4801d8dab8724a03e566bd
     resource: repo://tests/visualization_colors_tests.cpp
-generated: { by: "codex", at: "2026-10-07T20:13:35.892Z" }
+generated: { by: "codex", at: "2026-10-08T21:29:05.545Z" }
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-07T20:13:35.892Z
+    at: 2026-10-08T21:29:05.545Z
 ---
 
 # Test Strategy and Validation Map
@@ -61,7 +67,7 @@ ORNLSlicer uses small standalone C++ executables for focused regression coverage
                   all shared production sources
                        /             \
                       /               \
-             ornlslicer app       21 test executables
+             ornlslicer app       24 test executables
                                        |
                                       CTest
                                        |
@@ -109,7 +115,7 @@ Use `ctest --test-dir build/generic-llvm-ninja -C Debug -N` to inspect the tests
 
 ## Coverage map
 
-The 21 always-declared focused tests divide into four practical risk groups. The table summarizes the behavior protected by each CTest name, not merely the class named by the file.
+The 24 always-declared focused tests divide into four practical risk groups. The table summarizes the behavior protected by each CTest name, not merely the class named by the file.
 
 | Area | CTest name | Principal regression surface |
 | --- | --- | --- |
@@ -125,9 +131,12 @@ The 21 always-declared focused tests divide into four practical risk groups. The
 | Helical and path geometry | `spiral_path_tests` | Spiral grouping for adjacent, disjoint, nested, separated-stack, and mid-edge-start paths. [source](repo://tests/spiral_path_tests.cpp#L32-L104) |
 | Helical and path geometry | `helical_clip_rounding_tests` | Exact, last-full, and complete revolution clipping; sub-revolution omission; handed endpoints; offsets; and fixed seams. [source](repo://tests/helical_clip_rounding_tests.cpp#L185-L212) |
 | Settings compatibility | `gcode_settings_importer_tests` | Comment-style normalization, importer fixtures, legacy keys and version migration, unknown keys, and cancellation of missing-setting prompts. [source](repo://tests/gcode_settings_importer_tests.cpp#L64-L242) |
+| Settings compatibility | `settings_file_comparator_tests` | JSON/settings-array validation; changed and one-sided values across settings sets; recursive ordering behavior; floating-point tolerance; and unreadable or malformed files. [source](repo://tests/settings_file_comparator_tests.cpp#L15-L124) |
 | Settings compatibility | `settings_version_control_tests` | Forward migration of v10/v11 helical angle keys and the v12 variable-Z boolean into the current v13 representation. [source](repo://tests/settings_version_control_tests.cpp#L13-L65) |
+| Settings compatibility | `settings_manager_tests` | Rejection of project-local and project-session JSON as global templates without rewriting either source file. [source](repo://tests/settings_manager_tests.cpp#L26-L94) |
 | Settings compatibility | `preferences_import_tests` | Transactional preference import, one aggregate unit-change signal, and observers seeing the complete final state. [source](repo://tests/preferences_import_tests.cpp#L20-L76) |
 | Settings compatibility | `preferences_manager_tests` | Persistence and defaulting of manager-owned preferences, including STEP-to-STL linear deflection. [source](repo://tests/preferences_manager_tests.cpp#L14-L52) |
+| Application UI | `main_toolbar_tests` | Full startup-width visibility plus constrained-width overflow, including availability of the Slice action from Qt's overflow menu. [source](repo://tests/main_toolbar_tests.cpp#L15-L78) |
 | Session lifecycle | `session_manager_tests` | Recent-project ordering, caps and clearing, project types, asynchronous CLI-style load, and archived settings migration. [source](repo://tests/session_manager_tests.cpp#L74-L188) |
 | Parsing and visualization | `common_parser_tests` | Travel timing and scaling plus modifier-only layer and tip-wipe height inference. [source](repo://tests/common_parser_tests.cpp#L296-L316) |
 | Parsing and visualization | `arc_specialties_parser_tests` | Arc Specialties parsing and writing, including optional stops, G80 scheduling, CP visualization, rejection cases, handedness, frames, comments, startup, rounding, and arc density. [source](repo://tests/arc_specialties_parser_tests.cpp#L790-L875) |
@@ -172,7 +181,7 @@ The push workflow has three complementary signals:
 
 The workflow does not explicitly invoke `ctest`, and the Nix package derivation defines neither a check phase nor a CTest command. A green packaging workflow therefore demonstrates the declared Nix/build/package steps, but it should not be reported as a run of the 21 focused tests. [source](repo://.github/workflows/ci.yml#L8-L19) [source](repo://.github/workflows/ci.yml#L42-L56) [source](repo://nix/ornlslicer/default.nix#L12-L64)
 
-No current CTest target drives the complete widget UI, native file dialogs, drag-and-drop, rendered toolpaths, screenshots, or OpenGL behavior. The AppImage smoke check starts only the command-line help path. Validate those risks interactively on a machine with a display and suitable graphics support; for AppImage release work, follow the dedicated launch, dialog, preferences, alternate-settings, and output-ownership checklist. [source](repo://CMakeLists.txt#L229-L475) [source](repo://.github/workflows/ci.yml#L52-L56) [source](repo://docs/contributing/linux-appimage.md#L33-L72)
+No current CTest target drives a complete widget workflow, native file dialogs, drag-and-drop, rendered toolpaths, screenshots, or OpenGL behavior. `main_toolbar_tests` does create an offscreen `QApplication` to exercise toolbar layout and overflow, but it does not cover the native or rendered boundaries. The AppImage smoke check starts only the command-line help path. Validate those risks interactively on a machine with a display and suitable graphics support; for AppImage release work, follow the dedicated launch, dialog, preferences, alternate-settings, and output-ownership checklist. [source](repo://CMakeLists.txt#L229-L509) [source](repo://tests/main_toolbar_tests.cpp#L15-L78) [source](repo://.github/workflows/ci.yml#L52-L56) [source](repo://docs/contributing/linux-appimage.md#L33-L72)
 
 Likewise, parser and writer tests validate syntax transformations in process, not acceptance by a physical controller. The optional project regression proves only that one supplied project reaches a nonempty G-code artifact. Treat controller compatibility, representative-project output review, and machine motion as separate integration evidence. [source](repo://tests/arc_specialties_parser_tests.cpp#L790-L875) [source](repo://tests/juggerbot_writer_tests.cpp#L81-L93) [source](repo://tests/run_project_slice_regression.cmake#L23-L50)
 

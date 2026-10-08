@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:b4308baec63c75e01a91235bca1cd5246fe20b435c98d136ec14f6666f3e3877",
+    "pageVersion": "sha256:c0cedf4532b01a7ccf04096a6202456af99672d0dbfb8ba6d7528290d83c54af",
     "claims":
         [
             {
@@ -19,7 +19,7 @@
                             "repo-lines-v1:sha256:71089c14274045b2509e33ff82102929f233644954ebd31e3c9b9534aefbdc8a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkMjIwZTZlZThhZGEwYzg5MDU3NWQ5YmRjMTM4ZTVmMGYxOTI2NjlmYjQ3M2IyZmMxZjZlMWJiNmQwY2ZjZGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc3ZDlmYmFlM2IyM2VlYTU0Yjk4MDJhOTM4NjI2NmNmYzM3NTdiNjQ0MTA3Mjc4OTRmZDk2NzRjNTQzNTQ5YTQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyYzMyZDZkMGY4YjE1NjNkMzYwM2EwZWU1MzdmMmUzNzA1NmExZDQzMDljNDkzY2FlZmYzZjU4ZjVjMzVlNDMifQ"
                     },
                     {
-                        "resource": "repo://src/managers/settings/settings_manager.cpp#L38-L70",
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L72-L104",
                         "version":
                             "repo-lines-v1:sha256:703582a00dcfb7cc7a9604f9759e01ccf92d7013b502b7c7cd2dcbbc7518325f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjBjYTc2YTFjN2JkNjA3NmEyMTg4MWFlOGY0MDI3MWJkY2YwNGYxMTBmM2Y0MzJiMTRiMGY0NDI2NjFkZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MjM2ZTk4ZmE5MWFhOGJjODdmNjU1OGVjNWIyMDUyY2U4ZWZiZDFhMGQ3ZjYzZjgyYzhiZjUyZjEwNDJiZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1M2Q4YTVkOWE5Mzk0ZGM2ZmFhMGJiYjdjMDA2YTM1ZmQyOWNlOGM4M2MwNjlkOTljMjExNjhlNDYyM2ZmZmUifQ"
                     }
@@ -48,7 +48,7 @@
                     "CMake watches the settings YAML and generator, regenerates both configuration outputs, and makes the main object target depend on the generation target when automatic generation is enabled.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L478-L518",
+                        "resource": "repo://CMakeLists.txt#L511-L551",
                         "version":
                             "repo-lines-v1:sha256:0ef0cb62c366c4257c988322007d881b1f4f3111165a976cfa0c4d5e9ff4bba7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjMxMTc2ZGM0M2M2M2MzNTdjZTMzYjVmYjBiNTFhNzdmNThhOGI1Zjk1NzYzNzYyZDBkYWMyNTYzMDNlMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlY2JkY2IyZjk2NTllMmIwMDdlNThiNjUxZTQ0MzAzY2FjYjJkMmNlMWUwMGU1YTY4ZGZmM2Q5ZTc4ZGE3ZDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImYzZmIwYzAzOWYzMmE2YmFmMjZkZDU3YWQzMmZiZGVkYWQ0YWEzZjQyM2IzZDdjODBlNjcyMDA1YzJjMWJmMTkifQ"
                     }
@@ -60,12 +60,12 @@
                     "SettingsManager initializes the active global base from master defaults and overlays selected sparse .s2c templates, with LFAM_03in as the missing-template fallback.",
                 "evidence": [
                     {
-                        "resource": "repo://src/managers/settings/settings_manager.cpp#L197-L233",
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L249-L285",
                         "version":
                             "repo-lines-v1:sha256:eb961fc8fde8a7f71ccb4bd8aac74a2a4e29594b52f7263518d329a679629269:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNjMGVlZDIxNDY4YWYxYzcwZDI1MTdlN2RlZWY0MDhiOGRiZWZkNTMxZTY1MDE2ZDhiNzY5OWQxMzU5MzI2MTgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExYmQwODA0NDhlMzU4NGE5ODM2OWQ2YzE5M2JlYjUxM2VkNThkMWM4MTZkYmE4OWNkZmViMmQ5NmFjYmRmYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjBmZWE5MDQ3YzAzZTE5OGQzNWIyMGEzODUxNmE2NGZhNzhhMWUxYmFmYWZiZWE3YjIwOTViODM0Yzc0MjNhNjMifQ"
                     },
                     {
-                        "resource": "repo://src/managers/settings/settings_manager.cpp#L38-L70",
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L72-L104",
                         "version":
                             "repo-lines-v1:sha256:703582a00dcfb7cc7a9604f9759e01ccf92d7013b502b7c7cd2dcbbc7518325f:eyJzZWxlY3RlZExpbmVDb3VudCI6MzMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1ZjBjYTc2YTFjN2JkNjA3NmEyMTg4MWFlOGY0MDI3MWJkY2YwNGYxMTBmM2Y0MzJiMTRiMGY0NDI2NjFkZDQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk0MjM2ZTk4ZmE5MWFhOGJjODdmNjU1OGVjNWIyMDUyY2U4ZWZiZDFhMGQ3ZjYzZjgyYzhiZjUyZjEwNDJiZjIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1M2Q4YTVkOWE5Mzk0ZGM2ZmFhMGJiYjdjMDA2YTM1ZmQyOWNlOGM4M2MwNjlkOTljMjExNjhlNDYyM2ZmZmUifQ"
                     }
@@ -138,14 +138,14 @@
                     "Older setting files can be rolled forward automatically or after a GUI or console prompt; accepting a file-based template migration rewrites the document, while declining currently does not stop the loader from inspecting its settings.",
                 "evidence": [
                     {
-                        "resource": "repo://src/managers/settings/settings_manager.cpp#L243-L300",
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L295-L352",
                         "version":
                             "repo-lines-v1:sha256:0ab097f5f3e2484f4df94d2ebce143bdd128ffb08b76fda5bf1f3781c9a66af9:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVjNTM4NmFkZThhYTAzZTA1YzM5ODY5ZjFmYWQ1YmY0NzYxZWZkZjFiYzkyNTcxNmRkYWE1M2Q2NjdkMzBlNjgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVhZGM3NWQyOWQxZmY2NTJiYmI2MTEwNDFiMDM2ZmUzZmQ2NmJkODZlZGEwNDZlYjNkNTJiNzYzMjQ3YWNmMmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYyNDI1NDYxOTRiOWU5MTY4Y2MzNzdmZmI0Njk2NDdhYTFjZTc3ZWUwMTJjZWU2Yzk1MjZlNzQwOTA4ODhkZjEifQ"
                     },
                     {
-                        "resource": "repo://src/managers/settings/settings_manager.cpp#L93-L139",
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L127-L191",
                         "version":
-                            "repo-lines-v1:sha256:43eda5cb2b970967bb3801f94b0f6a2645c43535ed8ae3065283d07b04feccc0:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYjNlODFlNmFiNDg3ZDY2YmZiOTRlNzMxNDI4YTZmYjBmNjhiNGQ0NGFmODgwZjY3ZDdiZGU1ZTEwNmMzY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYzU2ZjM5MGJiNDBhYTdlNTdjNzVlZmI0NjExODExZGE2Njc5ODFlOWI0ZjMyNjRlYTIzNTM2ZDUxZjRkNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMTE4Mjg4MDJkMjExM2QyMjQ3ZGI0NzhlZTJhMDc5ZjAwM2U3MDU5MTg2MWNiNDc2OWEyYWIwY2IyYTRmYzgifQ"
+                            "repo-lines-v1:sha256:1da32334298a1d6fcdec7a77e68b586f3ca2963da859c7a0a4f40ab0eadd9462:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYjNlODFlNmFiNDg3ZDY2YmZiOTRlNzMxNDI4YTZmYjBmNjhiNGQ0NGFmODgwZjY3ZDdiZGU1ZTEwNmMzY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYzU2ZjM5MGJiNDBhYTdlNTdjNzVlZmI0NjExODExZGE2Njc5ODFlOWI0ZjMyNjRlYTIzNTM2ZDUxZjRkNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMTE4Mjg4MDJkMjExM2QyMjQ3ZGI0NzhlZTJhMDc5ZjAwM2U3MDU5MTg2MWNiNDc2OWEyYWIwY2IyYTRmYzgifQ"
                     }
                 ]
             },
@@ -199,10 +199,66 @@
                             "repo-lines-v1:sha256:215380d010aec0652ba31613d63506fb263f68bb4309104ad5844b0ce07d22ca:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1YTBhMWQxNDAzN2ZhMzg5Zjg5ZjI5NWEzODBkMmZhMmM0NTFjZmQwNmU2YTRlMTgwOWI0ZTlkYzJkZTE0NzYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjZkNmQzMDMwZjllMTRhMjM4NWM3ZGIzMTdiMzFmZDc4NzEyOGVhOGFhODNhYjkyOWY2MzY2ZmEyMDZjNzQwZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxMjc0MTVjMDUxMGRhYzQzMGZiZDFlNTdhYWZjODkyYjRhZTk1MWM4ZmY5ODFmNmQ4MTU2YzE0YWE1ODNlMTQifQ"
                     }
                 ]
+            },
+            {
+                "id": "claim_1b899dbd510846e4a0cec6a737ec8e3b",
+                "statement":
+                    "SettingsManager rejects unreadable JSON and documents that do not have the settings-template shape before version migration or template population, preventing project sidecars from being loaded as global templates.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/managers/settings/settings_manager.cpp#L127-L191",
+                        "version":
+                            "repo-lines-v1:sha256:1da32334298a1d6fcdec7a77e68b586f3ca2963da859c7a0a4f40ab0eadd9462:eyJzZWxlY3RlZExpbmVDb3VudCI6NjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEyYjNlODFlNmFiNDg3ZDY2YmZiOTRlNzMxNDI4YTZmYjBmNjhiNGQ0NGFmODgwZjY3ZDdiZGU1ZTEwNmMzY2QiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRmYWM0ZTQzNjMwYWJmNjhjM2E0YTc1NzNmZDRjNDMwMDhiYTc5OGRkNzZjMzc1OWVlZWY1M2U2Y2ZmOGQyZTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFiYzU2ZjM5MGJiNDBhYTdlNTdjNzVlZmI0NjExODExZGE2Njc5ODFlOWI0ZjMyNjRlYTIzNTM2ZDUxZjRkNWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNjMTE4Mjg4MDJkMjExM2QyMjQ3ZGI0NzhlZTJhMDc5ZjAwM2U3MDU5MTg2MWNiNDc2OWEyYWIwY2IyYTRmYzgifQ"
+                    },
+                    {
+                        "resource": "repo://tests/settings_manager_tests.cpp#L26-L94",
+                        "version":
+                            "repo-lines-v1:sha256:4a8d3b74685a626fafbd71176167426cf5ccd1be3829723582ef1803c17b3c6b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlODY3MDM3NjYwZjVjMTRiOTg1YTY2NDY2ZTQ1MTVhM2VjMzIzYzk2MzI1ZWY4NWM2NzZiOWRiMzJkNGIzZmQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlhYmFmMTExZjY2M2QxZmNlY2M5MmIwMDZiNGUyNzE5MWUxOTMyNDJjNTBlNDQxNDE5YjhmNmVlNGM3ZDg4M2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAyZmJkOTRmZGQ5OWQ5NTgxZDI5MjdmMWU4NTI4NjAwZTQ2NjJhYWRmNjljYjRmN2Y2NzFmNjdlMGM1ODk4YWIifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_6128676217a84f12a12796435bf043e0",
+                "statement":
+                    "The settings-file comparator validates both settings documents, compares corresponding settings-array entries by index, reports changed and one-sided keys, performs recursive object comparison independent of object key order, and applies a floating-point tolerance while retaining exact non-float comparison.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/configs/settings_file_comparator.cpp#L119-L160",
+                        "version":
+                            "repo-lines-v1:sha256:9c997f26943e0780070286c4c77b2a821d36e6ea55545ff73a4ae72105196fc7:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3NzM2MmQ4YTQ2ZTk2ZjE5YmE2MjU2YzI4NzA4ZmQ2MGRjZGFmMDAxMWE5OWQ0MDliNDUwZGI0NWZiNTNjMDgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImRlYmRiMzY1YmMwYjU3OWE3NzI2OGE2YTY3YjYwZTQwYzAwYWYxMDM3ODBlYzFlNzU2MjNhMTRlZGYzN2ZmYWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4NDgyMmQyMjk2YTY2MTM0NWQ5MjBiMzMzMmJlMjk1NWZjMzk0MmFkMjhlODU0OWU1MzA3OTlkZTFiYTU2YjUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNmMWM2YWM3NTUyNzU4NWRkNDAwYTJlOTVjYWI2MWY5OTUwZGY5NjUwYmFjNTA0YWVmMzIzZTUxNDBlYzFlZTMifQ"
+                    },
+                    {
+                        "resource": "repo://src/configs/settings_file_comparator.cpp#L16-L95",
+                        "version":
+                            "repo-lines-v1:sha256:4f64016f6aba17df0692407ee4192644c9d18f515afb7bb0caf05770c1f73bb8:eyJzZWxlY3RlZExpbmVDb3VudCI6ODAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM1OGI1OTdhNWU0YTAyZWEwNzE1YWU1NjRjYTAwZTkwZmYxNjA1ZTI5MGZiMjliMGJiZmViMTY3M2E5ZjkzMWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExNzdmMjllNGFkODFjNzAyOGE1M2NjMjk4ZmViMGFiZjFmOTAxMDdhOWIwMGI2YmIwNDg4NDY4YWY3NWVhNjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijk5OTBlYTU0MjMwODQxNGY0YTAxYWQwODA5OTk1MmU0MjU2ZjJhMTQ5NGI2MjIwZDgzNjMwMjBlNDAyMTkxYmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEifQ"
+                    },
+                    {
+                        "resource": "repo://tests/settings_file_comparator_tests.cpp#L15-L124",
+                        "version":
+                            "repo-lines-v1:sha256:ce3b1c0e722ef13a4d87d9aa7af9e175ca5d97741fa95ea760eb48a0df01532f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEwLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIzMTZlZDdkM2VhY2VhYjFmMjA5MzRkYzYyYjU5MzlmYmU3ZDBmZjlkNWY4NTUzMDcyNzEyMGNmNWY1YzdlZWRkIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI0YTI4YzA3MDNkZWNlMjc4ZGRjNGUwYjRiY2VkZWYyYjEzMzVjMzRjNWJhYjkzNmQ4MTc4MGU2ZmExMTZiYWNmIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MCwiZm9sbG93aW5nQ29udGV4dEhhc2giOiJlM2IwYzQ0Mjk4ZmMxYzE0OWFmYmY0Yzg5OTZmYjkyNDI3YWU0MWU0NjQ5YjkzNGNhNDk1OTkxYjc4NTJiODU1In0"
+                    }
+                ]
+            },
+            {
+                "id": "claim_9bbfc0535eb845c792fc079c5171f153",
+                "statement":
+                    "The settings comparison dialog requires two selected files, then presents changed values and one-sided values in separate sortable tables with settings-set indexes and master-catalog display names.",
+                "evidence": [
+                    {
+                        "resource": "repo://src/windows/settings_file_compare.cpp#L160-L267",
+                        "version":
+                            "repo-lines-v1:sha256:f72c53df361837b459a438eb477501d2ba75a8dd335602a4f1bdb08d5d773fc8:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiIwZjgwYTkyNTFmMGY2OWI3NDc5Y2U5Zjg2OGI5ODQ2OWE0NTQyYmQ4ZGQ4ODcwMjUzMDI2MGU5YjdjY2EyMDY3IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiJkODRlOWU3ZGJlNTdmNmJjMGM3MWMzZjUyMTg1ZmExZTUxYWYwOWUwMGNlOTc3MzY0YzY1NTA3ODQ0NGYxMTQyIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MiwiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwZDE1N2M0MjFlMWZhY2RkNjkyOGMzMzI3NWZjMzJlOWQ3MjFlZWNlNjk0YWM1ZjdmMGRhYWUyMTA3ZjFlMWNiIn0"
+                    },
+                    {
+                        "resource": "repo://src/windows/settings_file_compare.cpp#L55-L147",
+                        "version":
+                            "repo-lines-v1:sha256:bee1ab6b0458a3e64a34a1f7f0c27c0e9136b4ecb73ac9a68df1e16fbf206c5f:eyJzZWxlY3RlZExpbmVDb3VudCI6OTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc1MGQwNWI0ZDA2OGViMDMwMTAyNTFiNjRiNTNmNWJjMzUyMDRmNzE2Y2RiN2FlMjg2ZmJlOGEzNmM4MTViNDciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQ5YWJhMjkyZGE5MGZlNWUzNjY5YzlhMTA2ODU2ODc0Njg2ZTMxNjljYzFiNGQ2Mzc2MjlhNjQxNTBlNzFiZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjlmNmI4OWRjMDQ1MTY4M2JlODc1OTgzZGYxNDNmZTY5YmZlOWMwOTk3YjE0YjUyM2UwNzRhZDYwYjk1Nzk5MjIifQ"
+                    }
+                ]
             }
         ],
     "verification": {
         "by": "openwiki/0.7.0",
-        "at": "2026-10-06T20:25:27.555Z"
+        "at": "2026-10-08T21:29:05.545Z"
     }
 }

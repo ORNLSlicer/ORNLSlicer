@@ -1,6 +1,6 @@
     {
         "schemaVersion": 1,
-        "pageVersion": "sha256:91e304615222a267562804b014303b772d224f11dd06e36db754a5f903c0b0b0",
+        "pageVersion": "sha256:997e89f292ee282fc36721f778750e49e637f24f9421856bf33acbcde95af40d",
         "claims":
             [
                 {
@@ -21,7 +21,7 @@
                         "GUI startup imports preferences, discovers base and user template locations, constructs active global settings, loads the layer-bar template, and only then builds and wires the UI.",
                     "evidence": [
                         {
-                            "resource": "repo://src/windows/main_window.cpp#L195-L228",
+                            "resource": "repo://src/windows/main_window.cpp#L196-L229",
                             "version":
                                 "repo-lines-v1:sha256:f3d41686427d81d39fca75125f8a06656f91cb848009715558c42d6fbebdf243:eyJzZWxlY3RlZExpbmVDb3VudCI6MzQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjdhMzYzODEyYjMzY2UzMjFkODNjODMxYmU2MTVlMDJmYTJmNmFlYzVhOGNjYTY5NDM3NjExMzNkZWQ0MjgxYmMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5YzVlMzBhNWU4Mjc0ZDhmNGNiZGY2NjdhMGQyNmExNDU2ZmE4YmI4ZTIzNzk0MzYxZDZkYzZmZTdmZDViNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNhNzQ4NTZiOWQ1MGFjYTFjMWM5NWU3ZWM4MzhlOWNiZGMxMWNkMjU4OTZkOGFmMWNhZjQ5ZDk1ZjQzYTZkYmIifQ"
                         }
@@ -50,12 +50,12 @@
                         "GUI slice completion starts a GCodeLoader whose independent signals feed visualization, text, timing, export metadata, status, and cancellation consumers.",
                     "evidence": [
                         {
-                            "resource": "repo://src/windows/main_window.cpp#L1359-L1382",
+                            "resource": "repo://src/windows/main_window.cpp#L1369-L1392",
                             "version":
                                 "repo-lines-v1:sha256:9d75877d8d5b4ddadb62955e9a70d14ea3c59e337fa8e493483194184419d19f:eyJzZWxlY3RlZExpbmVDb3VudCI6MjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE4OTE1YzFiODNmYWY3Nzg3ZTJiZjliM2VmNWFiMTI5YjdiZjg0YjZlOWRmMTNkMWVmZWVkNjcxYTEzOWIzODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJmNTA5ZjIyODM4ZTEwNWQ4NWU0YmRmYTA1ZWRmNDFiNTNkY2U4ZWZlNmQ2OWMxYjEwOTdmM2U0OGY4YzA1MDUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMzOTMzZWJjZTljYjkxZjEwNDkzMTU2ZGE5MmQ0NWU5NzMzM2M3ZTA0NjIxODliNjQ4NWVmM2EwNmQxZDhkNWIifQ"
                         },
                         {
-                            "resource": "repo://src/windows/main_window.cpp#L1440-L1478",
+                            "resource": "repo://src/windows/main_window.cpp#L1450-L1488",
                             "version": "repo-lines-v1:sha256:bb3615353a32328becb4622f2c66d91fa0fd620512b34cfec92fdda96e672611:eyJzZWxlY3RlZExpbmVDb3VudCI6MzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM5OGMxZDY5MmE0ZjM4OWJjZTUyZTdiNDk0ODc0YmQ4NzNjNmM2OTEzZGVhZDdlYzljMjhjNzdjMzA1YjlkYzIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM0ZDY3YTk1ZWYxMDhlMDgyZWVkNGIzMWI3MjZmNTliNGQ4MzRkNmNmODEwNmRmNjY2MWE4MTZmODIwMTRiNGYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk0ZWIzOTU2NDdiZmQ3ZGEwNzNlZTllMDZmNjY4MDYwZDhmOTc3NjYxMjQ1ZTA2NTY5MzljOWMyZTQzNDRmN2YifQ"
                         }
                     ]
@@ -122,20 +122,59 @@
                         "GUI shutdown confirms project close, records window preferences, exports dirty preferences, and waits for a last-session project save when parts are loaded.",
                     "evidence": [
                         {
-                            "resource": "repo://src/windows/main_window.cpp#L230-L257",
+                            "resource": "repo://src/windows/main_window.cpp#L231-L258",
                             "version":
                                 "repo-lines-v1:sha256:05164e3a35d32f38910ca1235160defe26dda768f561f1abadcef6a29504c3ec:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVmY2M4ZmE2NmIzNmFjYjcyYmRmZThlZTI1Zjk1ZjMyOWY4MjYxMjFlODdlOTAwYmZiZmMwYzUxYTIwZmQxMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyY2I3M2I5YzQ3ZmM2MTg3ZmM5NDM3ZWZhYmFkYTYxMTJkYzMwMTZjMzM2MGVkMzRkNWVjZmIxNmJkN2ZhNjkiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjYjc3NzM1MTAxNDFiODc0MzI2ZDE3MDViNDYwNjI2ZjIyNDlhZmI0ZjcyYWVkMWJmYjZkMWQyMTJmYjc4MTYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjljZGE2YzIwYjRlZjM2ZmMwMDJjYjZjNDlhMTE3Yjg4OWYxZmQ1NTllZGU1YWM3NzMxNDI2MzQyN2IzOWY1YzcifQ"
                         },
                         {
-                            "resource": "repo://src/windows/main_window.cpp#L294-L304",
+                            "resource": "repo://src/windows/main_window.cpp#L295-L305",
                             "version":
                                 "repo-lines-v1:sha256:4a2aeb0fa1180fdf9542515386f133d9ec89f62eca33a522c44e7ffe6ce9a2bf:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1YmU2OWMyNTdiYzU4ZDM0Yjk3ZDg1MDAyYzljOGU4N2NhNGZlNzMzNzJhMWE5MzUyYjQxZmQzMjNkODRkMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjExYmQwODA0NDhlMzU4NGE5ODM2OWQ2YzE5M2JlYjUxM2VkNThkMWM4MTZkYmE4OWNkZmViMmQ5NmFjYmRmYzciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjI5Y2NlZTNhNzNiMDU5ZGU2M2ZiMDczYTdlN2NiMzNmMWMzOTQzMzFhMzc0MjYwMzUzYzUyYWQ2M2EyMWRkNWEifQ"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_f535cd61013a482ca157c22aea3c2a5c",
+                    "statement":
+                        "MainWindow owns the settings-file comparison dialog, exposes it through the Settings action, and reuses the child dialog by showing, raising, and activating it when invoked.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/windows/main_window.cpp#L330-L338",
+                            "version":
+                                "repo-lines-v1:sha256:8a8529c40707efc52ade5cd254b2599a4558e96ccca6831043fb7076b45c5764:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDFiYTQ3MTljODBiNmZlOTExYjA5MWE3YzA1MTI0YjY0ZWVlY2U5NjRlMDljMDU4ZWY4Zjk4MDVkYWNhNTQ2YiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZDcxNWMzNTlmMWFlOGRkZjc0MTdkNzhhNTMzMDZjODE3N2YzMGQ2Yjk4OTkyMmQ0YmZmYTNmNjRjMGQzOWRlYyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjAyNjYzZTZmZGVlOTBmZjgyMDdkM2Q0ZTkwOTE3Y2VjN2Y1N2FjNjEyY2Y5Nzg5MWJmMGEwZWY1NWViYjFlMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGFmMWIzODI0M2ExMDRlYWRlYTBmODk3OTkzYjM2YjJlNDgxZmY0MWYxY2FhODU1NzZmNjM4MDY0MmYwZTUzZSJ9"
+                        },
+                        {
+                            "resource": "repo://src/windows/main_window.cpp#L564-L568",
+                            "version":
+                                "repo-lines-v1:sha256:83af36a1a729e9489f73f8fa56bcfe988b9f41df7205adc66bd000926130d609:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMDA0OGYzMWI1ZTY5NDA0N2ZjZDAwYTMyYjkyZTM2YmM4OGU3YmRhOTAxMzBiN2MxYzJhZWYzMjg2MmFjMDkwNiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiODRiNjQxODM4MGJjZDRjODNjMWYwOTMxZjYxOTVkOGRhODAxNjg3MmI4YTE2Mzk1ODRlZWVkZmIyZDgwZDM4NyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMTAyMjkzYTk2Yzg2MDdjNjU0N2U1YjRhOGU5ODNkYzViYmZlMWYwODc1MWEzOTIwY2MwYjQyNzJhM2E5YjdiMCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiOTdmODU0MWQ2ODQxYjg1YWM2ZWY4MWNkNjA0YzkxMWJhZDZmMjAzYjEwZDk5OGUzMTdiMzQ2MTFkNjliZmZlOCJ9"
+                        },
+                        {
+                            "resource": "repo://src/windows/main_window.cpp#L883-L891",
+                            "version":
+                                "repo-lines-v1:sha256:2db2507c5a5dfd8f2fc80061f8158f82db5714e292ac8c8c8fe1d588735ca19d:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZjg4MTU1Y2Q4ZDZiNWZjMzRlOWFhYzE0YWY4MzViOGVkNGNmNDk2ZTE0NzIxNjA1YjhlMWVkNzg0NDE1YThiOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2I1MzNjMmFmOTcyNmQ3ZjkwNTFhZThlMjIwZDk4ZWU1OWRlYTgzOGIyNTE0YzcwNGNiZTBjYTg1ODFmN2Y1ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZjU4ZGJiMjRjN2EzY2Y0NTVkNmNjZWI1M2FmMTVhZTRmMjUxYmVlYWJjYzE3NGViOWFjYzI2YWRmZTc5NDlkNyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGZjODY4OTI2ZTFiNWJkMWUwYTQ3N2JlNWVmNjI5MDkwMTNkMWUyZDcxOWQ0NzEyOGU1NDg3MjIzZTdiOTViMSJ9"
+                        }
+                    ]
+                },
+                {
+                    "id": "claim_f9918dcc8ae14f72bdfeab1af65c03ba",
+                    "statement":
+                        "MainToolbar uses QActions for its commands so Qt can place hidden commands in the toolbar overflow menu; the focused offscreen test verifies complete startup visibility and constrained-width overflow of the Slice action.",
+                    "evidence": [
+                        {
+                            "resource": "repo://src/widgets/main_toolbar.cpp#L77-L182",
+                            "version":
+                                "repo-lines-v1:sha256:a5eef00112a3e5ad21de232005255bb2ef36bf608e9cffbb751a45e2fd8195d4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTA2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI4YjE3ZmI3YWQzMzg2NmI5MTVmMmE1MmE3MzI5Y2Q4MjA5OWYzYjY0YTk0N2Y0MGZmYTgxNTViYmIwYjRhMjI4IiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI2ZDQ3MTZlNTNiYjhiYzM3YTNiMzRjZTQ2MzhlNzI1MDllM2Q5N2FhNDQxMDhlNWU5YzgyODQ3MGMzZDBjMGU5IiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIyYjk0MDJmOTI2YjUyOThkMjQ3NGViZGFkMjdlMTgwNGE0YjcxMWZkNjExYzY3NTI4NDE4ZDEyYTcwOThiYmZhIn0"
+                        },
+                        {
+                            "resource": "repo://tests/main_toolbar_tests.cpp#L15-L78",
+                            "version":
+                                "repo-lines-v1:sha256:60b16ba8eec5091576859febf1c43e5859c83d8d533d9340ebf1c9071a31688e:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkyZGQ0MTA2YWQxM2QzOWIzNmVjYmEzZGVmNTY3YzgyOWQ2M2QyNmU3ODhlMzE4NDM4N2RkODU5NTc5OTUxOTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJlYjBkNGMyYzk0YzU3MWI4YjdjODQ1NTIzNDdmZTQzNzRkNmEyMDU5ZWNmMTk1OWFjNjFlZDQ2ZjgyNjMxZGIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNjNWI2ZTZmZGViODFiNWU3MzBkNDUxZTBkNmVmNGM5ZjJjMDE3ZjI0NzhmMGU1NDUzZGI1YjA0NGNlZGYzZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZTM3MzUxMTIyYmY5MWU5NDgzODk3OWYyMzk2MWZkODYzN2M1NWYwMTRmMDhjYWZlOWE1OGY4ZmU4Y2VlZWMifQ"
                         }
                     ]
                 }
             ],
         "verification": {
             "by": "openwiki/0.7.0",
-            "at": "2026-10-06T20:25:27.555Z"
+            "at": "2026-10-08T21:29:05.545Z"
         }
     }

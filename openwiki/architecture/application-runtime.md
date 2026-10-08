@@ -5,7 +5,7 @@ description: Runtime map for ORNLSlicer's GUI and command-line shells, shared ma
 tags: [runtime, qt, gui, cli, threading]
 verified:
   - by: openwiki/0.7.0
-    at: 2026-10-06T20:25:27.555Z
+    at: 2026-10-08T21:29:05.545Z
 sources:
   - id: openwiki-source-3eee793d88e31c2c26304c07
     resource: repo://include/threading/abs_slicing_thread.h
@@ -23,9 +23,13 @@ sources:
     resource: repo://src/threading/abs_slicing_thread.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
+  - id: openwiki-source-c8bd61f0cfef6efd243b1e22
+    resource: repo://src/widgets/main_toolbar.cpp
   - id: openwiki-source-403d1cb683b233c4f42460d0
     resource: repo://src/windows/main_window.cpp
-generated: { by: "codex", at: "2026-10-06T20:25:27.555Z" }
+  - id: openwiki-source-eca38ea4c3df70e00aa49450
+    resource: repo://tests/main_toolbar_tests.cpp
+generated: { by: "codex", at: "2026-10-08T21:29:05.545Z" }
 ---
 
 # Application Runtime and Coordination
@@ -79,6 +83,12 @@ The window is the UI router, not the data owner. Its event graph connects sessio
 6. While the G-code worker is active, the slice dialog's cancel action is reconnected from the slicer to the loader.
 
 An invalid cylindrical configuration is rejected before work starts: current source permits cylindrical slicing only with the Arc Specialties syntax. The manager emits a user-visible status and returns `false`, allowing the GUI to discard the slice dialog.
+
+## Runtime UI extensions
+
+`MainWindow` owns auxiliary dialogs as children, including the settings-file comparison dialog. It constructs that dialog during window setup, exposes **Compare Settings Files** in the Settings menu, and brings the existing dialog to the foreground when the action is triggered. The comparison dialog therefore remains a UI-owned helper; it does not introduce a second settings-state owner.
+
+The main toolbar is likewise a child of the main container and emits intent through signals that `MainWindow` connects to the active view and session consumers. Its command controls are `QAction`s (with only the view tabs represented by a widget action), allowing Qt to move trailing commands into its built-in overflow menu when width is constrained. At the normal startup view width the controls remain visible; the focused offscreen Qt test covers both that baseline and the constrained-overflow behavior.
 
 ## Command-line state machine
 

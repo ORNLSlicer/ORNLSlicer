@@ -3,9 +3,6 @@ type: operations
 title: Build, Generated Assets, CI, and Packaging
 description: Reproducible local and CI build paths, generated settings and build metadata, compiler-cache behavior, and Linux and Windows distribution assembly.
 tags: [build, cmake, nix, ci, packaging, diagnostics]
-verified:
-  - by: openwiki/0.7.0
-    at: 2026-10-08T16:54:14.331Z
 sources:
   - id: openwiki-source-a836451b0e5d245b3d5c916a
     resource: repo://.codex/environments/environment.toml
@@ -37,7 +34,10 @@ sources:
     resource: repo://src/main.cpp
   - id: openwiki-source-3a34e9951a829d6407a1f125
     resource: repo://src/utilities/runtime_diagnostics.cpp
-generated: { by: "codex", at: "2026-10-08T16:54:14.331Z" }
+generated: { by: "codex", at: "2026-10-08T21:29:05.545Z" }
+verified:
+  - by: openwiki/0.7.0
+    at: 2026-10-08T21:29:05.545Z
 ---
 
 # Build, Generated Assets, CI, and Packaging
@@ -92,6 +92,19 @@ The project requires CMake 3.25 and C++23, enables Qt automoc and autorcc, and e
 CMake recursively discovers implementation files, public headers, and Qt resource collections with `CONFIGURE_DEPENDS`, removes `src/main.cpp` from the common set, and compiles everything else into `ornlslicer_obj`. The normal application links that object library; Windows additionally builds `ornlslicer_cli` from the same entry point without the GUI subsystem link flag. [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L214-L227)
 
 Tests are opt-in through `ORNLSLICER_BUILD_TESTS`, whose default follows CTest's `BUILD_TESTING`. Each test is an explicit executable linked to `ornlslicer_obj` and registered with `add_test()`. A local project-slice regression is registered only when its configured `.s2p` fixture exists, so its absence is an intentional reduction in the configured test set. [source](repo://CMakeLists.txt#L229-L241) [source](repo://CMakeLists.txt#L463-L476)
+
+The focused settings and toolbar lanes are named `settings_file_comparator_tests`, `settings_manager_tests`, and `main_toolbar_tests`. Build the specific executables before invoking CTest, especially after changing shared production sources:
+
+```bash
+nix develop .#ornlslicerDev -L --command \
+  cmake --build build/generic-llvm-ninja --config Debug --target \
+  ornlslicer_settings_file_comparator_tests ornlslicer_settings_manager_tests ornlslicer_main_toolbar_tests
+nix develop .#ornlslicerDev -L --command \
+  ctest --test-dir build/generic-llvm-ninja -C Debug \
+  -R '^(settings_file_comparator_tests|settings_manager_tests|main_toolbar_tests)$' --output-on-failure
+```
+
+All three executables link `ornlslicer_obj`, so the build also compiles the shared implementation they exercise. [source](repo://CMakeLists.txt#L309-L340) [source](repo://CMakeLists.txt#L452-L461)
 
 ## Compiler caches and accelerated builds
 
