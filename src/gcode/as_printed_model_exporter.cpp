@@ -13,10 +13,10 @@
 #include <limits>
 #include <vector>
 
+#include "gcode/gcode_segment_filter.h"
 #include "geometry/segments/arc.h"
 #include "geometry/segments/bezier.h"
 #include "geometry/segments/line.h"
-#include "gcode/gcode_segment_filter.h"
 #include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -403,8 +403,6 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
     std::vector<float> colors;
     const float output_scale = viewToOutputScale(options.output_unit);
     const bool blend_corners = options.blend_corners && options.geometry_mode == GeometryMode::kTrueBeadWidths;
-    const QSet<const SegmentBase*> external_segments =
-        options.external_only ? GCodeSegmentFilter::externalSegments(gcode) : QSet<const SegmentBase*>();
 
     for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         QVector<QSharedPointer<SegmentBase>> connected_segments;
@@ -415,8 +413,7 @@ std::vector<AsPrintedModelExporter::Triangle> AsPrintedModelExporter::generateTr
         };
 
         for (const QSharedPointer<SegmentBase>& segment : layer) {
-            if (!shouldExportSegment(segment, options) ||
-                (options.external_only && !external_segments.contains(segment.data()))) {
+            if (!shouldExportSegment(segment, options)) {
                 if (blend_corners) { flushConnectedSegments(); }
                 continue;
             }
@@ -475,7 +472,7 @@ bool AsPrintedModelExporter::shouldExportSegment(const QSharedPointer<SegmentBas
     if (!options.include_travel && static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
     if (!options.include_support && static_cast<bool>(type & SegmentDisplayType::kSupport)) { return false; }
     if (!segment->depositionActive() && !static_cast<bool>(type & SegmentDisplayType::kTravel)) { return false; }
-    if (options.external_only && !GCodeSegmentFilter::isExternalBeadComment(segment->m_segment_info_meta.type)) { return false; }
+    if (options.external_only && static_cast<bool>(type & SegmentDisplayType::kInternal)) { return false; }
 
     return true;
 }
