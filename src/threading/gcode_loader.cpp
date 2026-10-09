@@ -371,13 +371,7 @@ void GCodeLoader::run() {
             // forward to build_log_export
             emit forwardInfoToBuildExportWindow(m_filename, m_selected_meta);
 
-            QString keyInfo = "GCode file: " % m_filename % "\n" % "Total Time Estimate: " %
-                              MathUtils::formattedTimeSpan(total_time()) % "\n";
-
-            if (m_adjust_file && total_adjusted_time > 0 && m_sb->setting<int>(MS::Cooling::kForceMinLayerTime)) {
-                keyInfo =
-                    keyInfo % "Total Adjusted Time: " % MathUtils::formattedTimeSpan(total_adjusted_time()) % "\n";
-            }
+            QString keyInfo = "GCode file: " % m_filename % "\n";
 
             double volumeValue = total_volume() / pow<3>(PreferencesManager::getInstance()->getDistanceUnit())();
             double distanceValue =
@@ -392,17 +386,23 @@ void GCodeLoader::run() {
             const Time travel_time_estimate =
                 has_adjusted_feedrates ? m_parser->getAdjustedTravelTime() : m_parser->getTravelTime();
             double massValue = (total_mass / PreferencesManager::getInstance()->getMassUnit())();
-            keyInfo = keyInfo % "Volume: " % QString::number(volumeValue) % " " %
-                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" % "Printing Distance: " %
-                      QString::number(printingDistanceValue) % " " %
+            keyInfo = keyInfo % "Printing Distance: " % QString::number(printingDistanceValue) % " " %
                       PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Travel Distance: " %
                       QString::number(travelDistanceValue) % " " %
-                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" %
-                      "Total Travel Time Estimate: " % MathUtils::formattedTimeSpan(travel_time_estimate()) % "\n" %
-                      "Total Distance: " % QString::number(distanceValue) % " " %
-                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Approximate Weight (" %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Total Distance: " %
+                      QString::number(distanceValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "\n" % "Volume: " %
+                      QString::number(volumeValue) % " " %
+                      PreferencesManager::getInstance()->getDistanceUnit().toString() % "³\n" % "Approximate Weight (" %
                       toString(m_material) % "): " % QString::number(massValue) % " " %
-                      PreferencesManager::getInstance()->getMassUnit().toString() % "\n";
+                      PreferencesManager::getInstance()->getMassUnit().toString() % "\n" % "Travel Time Estimate: " %
+                      MathUtils::formattedTimeSpan(travel_time_estimate()) % "\n" % "Total Time Estimate: " %
+                      MathUtils::formattedTimeSpan(total_time()) % "\n";
+
+            if (m_adjust_file && total_adjusted_time > 0 && m_sb->setting<int>(MS::Cooling::kForceMinLayerTime)) {
+                keyInfo =
+                    keyInfo % "Total Adjusted Time: " % MathUtils::formattedTimeSpan(total_adjusted_time()) % "\n";
+            }
 
             QTime qt(0, 0);
             qt      = qt.addMSecs(CSM->getSliceTimeElapsed());
