@@ -9,6 +9,26 @@
 
 namespace {
 
+bool expectPoint(const ORNL::Point& point, double x, double y, const std::string& message) {
+    return ORNL::Testing::expect(ORNL::Testing::near2DPoint(point, x, y), message);
+}
+
+bool expectForwardFortyFiveConnector(const ORNL::Polyline& loop, const ORNL::Point& connector_start,
+                                     const ORNL::Point& connector_end, const std::string& message) {
+    const double tangent_x           = loop.front().x() - loop.back().x();
+    const double tangent_y           = loop.front().y() - loop.back().y();
+    const double connector_x         = connector_end.x() - connector_start.x();
+    const double connector_y         = connector_end.y() - connector_start.y();
+    const double tangent_length_sq   = (tangent_x * tangent_x) + (tangent_y * tangent_y);
+    const double connector_length_sq = (connector_x * connector_x) + (connector_y * connector_y);
+
+    if (tangent_length_sq <= 0.0 || connector_length_sq <= 0.0) { return ORNL::Testing::expect(false, message); }
+
+    const double normalized_dot =
+        ((tangent_x * connector_x) + (tangent_y * connector_y)) / std::sqrt(tangent_length_sq * connector_length_sq);
+    return ORNL::Testing::expect(ORNL::Testing::near(normalized_dot, std::sqrt(0.5)), message);
+}
+
 ORNL::Polyline square(double min_x, double min_y, double max_x, double max_y) {
     ORNL::Polyline line;
     line.push_back(ORNL::Point(min_x, min_y, 0.0f));
@@ -27,6 +47,49 @@ ORNL::Polyline rectangleStartingOnLeftEdge(double min_x, double min_y, double ma
     line.push_back(ORNL::Point(min_x, max_y, 0.0f));
     return line;
 }
+
+ORNL::Polyline smoothClosingOuterLoop() {
+    ORNL::Polyline line;
+    line.push_back(ORNL::Point(0.0, 0.0, 0.0f));
+    line.push_back(ORNL::Point(100.0, 0.0, 0.0f));
+    line.push_back(ORNL::Point(100.0, 100.0, 0.0f));
+    line.push_back(ORNL::Point(-70.0, 80.0, 0.0f));
+    line.push_back(ORNL::Point(-10.0, 10.0, 0.0f));
+    return line;
+}
+
+ORNL::Polyline smoothClosingInnerLoop() {
+    ORNL::Polyline line;
+    line.push_back(ORNL::Point(-5.0, 5.0, 0.0f));
+    line.push_back(ORNL::Point(10.0, 20.0, 0.0f));
+    line.push_back(ORNL::Point(85.0, 25.0, 0.0f));
+    line.push_back(ORNL::Point(85.0, 85.0, 0.0f));
+    line.push_back(ORNL::Point(-35.0, 55.0, 0.0f));
+    line.push_back(ORNL::Point(-15.0, 16.0, 0.0f));
+    return line;
+}
+
+ORNL::Polyline forwardPreferenceOuterLoop() {
+    ORNL::Polyline line;
+    line.push_back(ORNL::Point(0.0, 0.0, 0.0f));
+    line.push_back(ORNL::Point(100.0, 0.0, 0.0f));
+    line.push_back(ORNL::Point(100.0, 100.0, 0.0f));
+    line.push_back(ORNL::Point(-100.0, 100.0, 0.0f));
+    line.push_back(ORNL::Point(-100.0, 0.0, 0.0f));
+    line.push_back(ORNL::Point(-10.0, 0.0, 0.0f));
+    return line;
+}
+
+ORNL::Polyline forwardPreferenceInnerLoop() {
+    ORNL::Polyline line;
+    line.push_back(ORNL::Point(-2.0, 2.0, 0.0f));
+    line.push_back(ORNL::Point(5.0, 5.0, 0.0f));
+    line.push_back(ORNL::Point(80.0, 10.0, 0.0f));
+    line.push_back(ORNL::Point(80.0, 80.0, 0.0f));
+    line.push_back(ORNL::Point(-80.0, 80.0, 0.0f));
+    line.push_back(ORNL::Point(-10.0, 10.0, 0.0f));
+    return line;
+}
 }  // namespace
 
 int main() {
@@ -41,6 +104,95 @@ int main() {
 
     passed &= ORNL::Testing::expect(adjacent_groups.size() == 1,
                                     "Expected adjacent nested loops to remain in one spiral group.");
+
+    QVector<ORNL::Polyline> complete_adjacent_groups =
+        ORNL::SpiralPath::linkClosedPolylineGroups(adjacent_loops, bead_width, true);
+
+    passed &= ORNL::Testing::expect(complete_adjacent_groups.size() == 1,
+                                    "Expected complete-before-connecting nested loops to remain in one spiral group.");
+    if (complete_adjacent_groups.size() == 1) {
+        const ORNL::Polyline& complete_group = complete_adjacent_groups.front();
+        passed &= ORNL::Testing::expect(
+            complete_group.size() >= 6,
+            "Expected complete-before-connecting spiral group to include both loops and connector.");
+        if (complete_group.size() >= 6) {
+            passed &= expectPoint(complete_group[4], 0.0, 0.0,
+                                  "Expected first loop to close before connecting to the next loop.");
+            passed &= expectPoint(complete_group[5], 1.0, 1.0,
+                                  "Expected completed loop to connect to the next loop at its nearest corner.");
+            passed &=
+                ORNL::Testing::expect(ORNL::Testing::near(std::abs(complete_group[5].x() - complete_group[4].x()),
+                                                          std::abs(complete_group[5].y() - complete_group[4].y())),
+                                      "Expected completed-loop connector to move at a 45-degree angle.");
+        }
+        passed &= expectPoint(complete_group.back(), 1.0, 1.0,
+                              "Expected final loop to close when complete-before-connecting is enabled.");
+    }
+
+    QVector<ORNL::Polyline> mixed_completion_loops = adjacent_loops;
+    mixed_completion_loops.push_back(square(2.0, 2.0, 8.0, 8.0));
+    const QVector<ORNL::Distance> mixed_completion_widths(mixed_completion_loops.size(), bead_width);
+    const QVector<bool> mixed_completion_flags {false, true, true};
+    const QVector<ORNL::Polyline> mixed_completion_groups = ORNL::SpiralPath::linkClosedPolylineGroups(
+        mixed_completion_loops, mixed_completion_widths, bead_width, mixed_completion_flags);
+
+    passed &= ORNL::Testing::expect(mixed_completion_groups.size() == 1,
+                                    "Expected mixed completion policies to retain one adjacent spiral group.");
+    if (mixed_completion_groups.size() == 1) {
+        const ORNL::Polyline& mixed_group = mixed_completion_groups.front();
+        int middle_start_count            = 0;
+        for (const ORNL::Point& point : mixed_group) {
+            if (ORNL::Testing::near(point.x(), 1.0) && ORNL::Testing::near(point.y(), 1.0)) { ++middle_start_count; }
+        }
+        passed &=
+            ORNL::Testing::expect(middle_start_count == 2,
+                                  "Expected the inset loop's completion policy to close it before the next connector.");
+    }
+
+    QVector<ORNL::Polyline> smooth_completed_loops;
+    smooth_completed_loops.push_back(smoothClosingOuterLoop());
+    smooth_completed_loops.push_back(smoothClosingInnerLoop());
+    QVector<ORNL::Polyline> smooth_completed_groups =
+        ORNL::SpiralPath::linkClosedPolylineGroups(smooth_completed_loops, ORNL::Distance(5.0), true);
+
+    passed &=
+        ORNL::Testing::expect(smooth_completed_groups.size() == 1,
+                              "Expected completed smooth-closing loops to connect to the nearest next loop point.");
+    if (smooth_completed_groups.size() == 1) {
+        const ORNL::Polyline& complete_group = smooth_completed_groups.front();
+        passed &= ORNL::Testing::expect(complete_group.size() >= 7,
+                                        "Expected completed smooth-closing loop to include a printed connector.");
+        if (complete_group.size() >= 7) {
+            passed &=
+                expectPoint(complete_group[5], 0.0, 0.0, "Expected smooth-closing loop to complete before connecting.");
+            passed &= expectPoint(complete_group[6], -5.0, 5.0,
+                                  "Expected smooth-closing loop to fall back to the nearest connectable point.");
+        }
+    }
+
+    QVector<ORNL::Polyline> forward_preference_loops;
+    forward_preference_loops.push_back(forwardPreferenceOuterLoop());
+    forward_preference_loops.push_back(forwardPreferenceInnerLoop());
+    QVector<ORNL::Polyline> forward_preference_groups =
+        ORNL::SpiralPath::linkClosedPolylineGroups(forward_preference_loops, ORNL::Distance(5.0), true);
+
+    passed &=
+        ORNL::Testing::expect(forward_preference_groups.size() == 1,
+                              "Expected completed loops with forward and backward diagonals to remain connected.");
+    if (forward_preference_groups.size() == 1) {
+        const ORNL::Polyline& complete_group = forward_preference_groups.front();
+        passed &= ORNL::Testing::expect(complete_group.size() >= 8,
+                                        "Expected forward-preference loop to include a printed connector.");
+        if (complete_group.size() >= 8) {
+            passed &= expectPoint(complete_group[6], 0.0, 0.0,
+                                  "Expected forward-preference loop to complete before connecting.");
+            passed &= expectPoint(complete_group[7], 5.0, 5.0,
+                                  "Expected forward-preference loop to skip the shorter backward diagonal.");
+            passed &= expectForwardFortyFiveConnector(
+                forward_preference_loops.front(), complete_group[6], complete_group[7],
+                "Expected completed-loop connector to move forward at a 45-degree angle.");
+        }
+    }
 
     QVector<ORNL::Polyline> disjoint_loops;
     disjoint_loops.push_back(square(0.0, 0.0, 10.0, 10.0));
@@ -57,6 +209,16 @@ int main() {
         passed &= ORNL::Testing::expect(
             disjoint_groups.front().back().distance(disjoint_groups.back().front()) > bead_width * 2.0,
             "Expected rejected connector to exceed the spiral adjacency threshold.");
+    }
+
+    QVector<ORNL::Polyline> complete_disjoint_groups =
+        ORNL::SpiralPath::linkClosedPolylineGroups(disjoint_loops, bead_width, true);
+
+    passed &= ORNL::Testing::expect(complete_disjoint_groups.size() == 2,
+                                    "Expected complete-before-connecting disjoint loops to remain split.");
+    if (complete_disjoint_groups.size() == 2) {
+        passed &= expectPoint(complete_disjoint_groups.front().back(), 0.0, 0.0,
+                              "Expected rejected complete-before-connecting group to close before travel.");
     }
 
     QVector<ORNL::Polyline> nested_gap_loops;
@@ -99,6 +261,85 @@ int main() {
 
     passed &= ORNL::Testing::expect(edge_start_groups.size() == 1,
                                     "Expected an inset stack with a mid-edge outer start point to stay spiralized.");
+
+    ORNL::Polyline constrained_branch_loop = square(0.0, 0.0, 10.0, 10.0);
+    const ORNL::Point constrained_branch_target(1.0, -0.001, 0.0);
+    const bool found_constrained_branch = ORNL::SpiralPath::rotateToForwardBranchSeam(
+        constrained_branch_loop, constrained_branch_target, ORNL::Distance(0.0), ORNL::Distance(0.0), true,
+        ORNL::Distance(2.0));
+    passed &= ORNL::Testing::expect(
+        found_constrained_branch,
+        "Expected an orthogonal forward branch when no local angled seam satisfies the constraints.");
+    passed &= expectPoint(constrained_branch_loop.front(), 0.0, 0.0,
+                          "Expected constrained branch selection to retain the nearest orthogonal seam.");
+    if (found_constrained_branch) {
+        const double tangent_x      = constrained_branch_loop.front().x() - constrained_branch_loop.back().x();
+        const double tangent_y      = constrained_branch_loop.front().y() - constrained_branch_loop.back().y();
+        const double connector_x    = constrained_branch_target.x() - constrained_branch_loop.front().x();
+        const double connector_y    = constrained_branch_target.y() - constrained_branch_loop.front().y();
+        const double normalized_dot = ((tangent_x * connector_x) + (tangent_y * connector_y)) /
+                                      std::sqrt(((tangent_x * tangent_x) + (tangent_y * tangent_y)) *
+                                                ((connector_x * connector_x) + (connector_y * connector_y)));
+        passed &= ORNL::Testing::expect(
+            normalized_dot > 0.0 && normalized_dot < 0.01,
+            "Expected constrained branch selection to fall back to a near-orthogonal forward branch.");
+    }
+
+    ORNL::Polyline short_closing_edge_loop;
+    short_closing_edge_loop.push_back(ORNL::Point(0.0, 0.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(10.0, 0.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(10.0, 10.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(0.0, 10.0, 0.0));
+    short_closing_edge_loop.push_back(ORNL::Point(-0.2, 0.2, 0.0));
+    ORNL::Polyline short_closing_edge_inner = square(1.0, 0.1, 9.0, 9.0);
+    passed &= ORNL::Testing::expect(
+        ORNL::SpiralPath::detail::loopsAreNested(short_closing_edge_loop, short_closing_edge_inner),
+        "Expected the short-closing-edge regression loops to be nested.");
+    passed &= ORNL::Testing::expect(
+        !ORNL::SpiralPath::canConnectAfterForwardWipe(short_closing_edge_loop, short_closing_edge_inner,
+                                                      ORNL::Distance(1.0), ORNL::Distance(0.5)),
+        "Expected branch validation to use the emitted tail direction when the closing edge is shorter than the stop "
+        "distance.");
+
+    ORNL::Polyline short_closing_edge_angle_loop;
+    short_closing_edge_angle_loop.push_back(ORNL::Point(0.0, 0.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(10.0, 0.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(10.0, 10.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(-10.0, 10.0, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(-10.0, 0.2, 0.0));
+    short_closing_edge_angle_loop.push_back(ORNL::Point(0.2, 0.2, 0.0));
+    ORNL::Polyline short_closing_edge_angle_inner;
+    short_closing_edge_angle_inner.push_back(ORNL::Point(1.2, 0.7, 0.0));
+    short_closing_edge_angle_inner.push_back(ORNL::Point(1.2, 1.7, 0.0));
+    short_closing_edge_angle_inner.push_back(ORNL::Point(2.0, 1.7, 0.0));
+    short_closing_edge_angle_inner.push_back(ORNL::Point(2.0, 0.7, 0.0));
+    passed &= ORNL::Testing::expect(
+        ORNL::SpiralPath::angleForwardBranchConnection(short_closing_edge_angle_loop, short_closing_edge_angle_inner,
+                                                       ORNL::Distance(1.0), ORNL::Distance(0.5)),
+        "Expected branch angling to use the emitted tail direction when the closing edge is shorter than the stop "
+        "distance.");
+
+    ORNL::Polyline short_angled_connector_inner;
+    short_angled_connector_inner.push_back(ORNL::Point(0.3, 0.2, 0.0));
+    short_angled_connector_inner.push_back(ORNL::Point(1.0, 0.2, 0.0));
+    short_angled_connector_inner.push_back(ORNL::Point(1.0, 1.0, 0.0));
+    short_angled_connector_inner.push_back(ORNL::Point(0.3, 1.0, 0.0));
+    passed &=
+        ORNL::Testing::expect(!ORNL::SpiralPath::angleForwardBranchConnection(
+                                  square(0.0, 0.0, 10.0, 10.0), short_angled_connector_inner, ORNL::Distance(1.0),
+                                  ORNL::Distance(0.5), false, ORNL::Distance(1.0)),
+                              "Expected an already-angled branch shorter than the cleanup threshold to be rejected.");
+    passed &= ORNL::Testing::expect(
+        !ORNL::SpiralPath::canConnectAfterForwardWipe(square(0.0, 0.0, 10.0, 10.0), short_angled_connector_inner,
+                                                      ORNL::Distance(1.0), ORNL::Distance(0.5), false,
+                                                      ORNL::Distance(1.0)),
+        "Expected final branch validation to reject a connector shorter than the cleanup threshold.");
+
+    ORNL::Polyline short_connector_inner = square(1.0, 1.0, 9.0, 9.0);
+    passed &= ORNL::Testing::expect(!ORNL::SpiralPath::prepareForwardBranchConnection(
+                                        square(0.0, 0.0, 10.0, 10.0), short_connector_inner, ORNL::Point(5.0, 0.0, 0.0),
+                                        ORNL::Point(4.0, 0.0, 0.0), ORNL::Distance(3.0), ORNL::Distance(2.0)),
+                                    "Expected a direct branch shorter than the cleanup threshold to be rejected.");
 
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

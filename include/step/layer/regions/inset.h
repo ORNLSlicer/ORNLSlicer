@@ -44,6 +44,10 @@ class Inset : public RegionBase {
     //! \return the computed geometry
     QVector<Polyline> getComputedGeometry();
 
+    //! \brief gets the bead widths associated with computed geometry
+    //! \return the computed bead widths
+    QVector<Distance> getComputedWidths();
+
    private:
     //! \brief Creates modifiers
     //! \param path Current path to add modifiers to
@@ -54,15 +58,27 @@ class Inset : public RegionBase {
     //! \param path Current path to add modifiers to
     //! \param supportsG3 Whether or not G2/G3 is supported for spiral lift
     //! \param open_loop_tip_wipe Whether forward tip wipe should be emitted from the open path end.
-    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe);
+    //! \param continues_to_branch Whether the modified path immediately branches to another printing path.
+    //! \param include_startup Whether startup modifiers should be generated for this path.
+    void calculateModifiers(Path& path, bool supportsG3, bool open_loop_tip_wipe, bool continues_to_branch = false,
+                            bool include_startup = true);
+
+    /**
+     * @brief Creates either an open or closed path from a polyline.
+     * @param[in] line Polyline representing the path.
+     * @param[in] closed Whether to connect the final point back to the first point.
+     * @return Polyline converted to a path.
+     */
+    Path createPath(Polyline line, bool closed);
 
     /**
      * @brief Create a path with localized settings applied to segments based on settings regions.
      * @param[in] line Polyline representing the path.
+     * @param[in] closed Whether to connect the final point back to the first point.
      * @return Path with localized settings applied.
      * @warning Handles cases of overlapping settings regions by applying the first region found.
      */
-    Path createPathWithLocalizedSettings(const Polyline& line);
+    Path createPathWithLocalizedSettings(const Polyline& line, bool closed);
 
     /**
      * @brief Populates the segment settings with the passed settings base.

@@ -41,6 +41,9 @@ class RepRapWriter : public WriterBase {
     //! \brief Writes G-Code to be executed at the start of each path
     QString writeBeforePath(RegionType type) override;
 
+    //! \brief Updates acceleration when a continuous path changes regions
+    QString writeBeforePathRegionTransition(RegionType type) override;
+
     //! \brief write layer change comment, also turns fan on consideration based on layer number
     //! \param layer_number the number layer this is
     //! \return gcode

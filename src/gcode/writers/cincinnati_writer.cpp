@@ -298,6 +298,29 @@ QString CincinnatiWriter::writeBeforePath(RegionType type) {
     return rv;
 }
 
+QString CincinnatiWriter::writeBeforePathRegionTransition(RegionType type) {
+    m_region_type = type;
+    if (m_spiral_layer && !m_first_print) { return QString(); }
+
+    if (type == RegionType::kPerimeter) {
+        return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kPerimeter));
+    }
+    if (type == RegionType::kInset) {
+        return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kInset));
+    }
+    if (type == RegionType::kSkeleton) {
+        return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kSkeleton));
+    }
+    if (type == RegionType::kSkin) { return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kSkin)); }
+    if (type == RegionType::kInfill) {
+        return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kInfill));
+    }
+    if (type == RegionType::kSupport) {
+        return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kSupport));
+    }
+    return writeAcceleration(m_sb->setting<Acceleration>(PRS::Acceleration::kDefault));
+}
+
 QString CincinnatiWriter::writeTravel(Point start_location, Point target_location, TravelLiftType lType,
                                       QSharedPointer<SettingsBase> params) {
     QString rv;
