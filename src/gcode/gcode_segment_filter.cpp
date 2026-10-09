@@ -1,13 +1,15 @@
 #include "gcode/gcode_segment_filter.h"
 
-#include <algorithm>
-#include <cmath>
-#include <cstddef>
-#include <limits>
-#include <vector>
-
 #include <QSet>
 #include <QVector3D>
+#include <algorithm>
+#include <atomic>
+#include <cmath>
+#include <cstddef>
+#include <cstdint>
+#include <functional>
+#include <map>
+#include <vector>
 
 #include "configs/settings_base.h"
 #include "geometry/polygon_list.h"
@@ -19,38 +21,36 @@
 
 namespace ORNL::GCodeSegmentFilter {
 namespace {
-constexpr double kVectorEpsilon = 1.0e-6;
-constexpr double kVectorEpsilonSquared = kVectorEpsilon * kVectorEpsilon;
-constexpr double kAreaTolerance = 1.0;
+constexpr double kVectorEpsilon               = 1.0e-6;
+constexpr double kVectorEpsilonSquared        = kVectorEpsilon * kVectorEpsilon;
+constexpr double kAreaTolerance               = 1.0;
 constexpr double kUncoveredAreaRatioTolerance = 0.01;
-constexpr int kCurveSegments = 32;
-constexpr double kArcSegmentAngle = (2.0 * 3.14159265358979323846) / 48.0;
-constexpr PathModifiers kNonBuildModifiers = PathModifiers::kCoasting | PathModifiers::kForwardTipWipe |
-                                             PathModifiers::kPerimeterTipWipe | PathModifiers::kReverseTipWipe |
-                                             PathModifiers::kAngledTipWipe | PathModifiers::kSpiralLift;
+constexpr int kCurveSegments                  = 32;
+constexpr double kArcSegmentAngle             = (2.0 * M_PI) / 48.0;
+constexpr PathModifiers kNonBuildModifiers    = PathModifiers::kCoasting | PathModifiers::kForwardTipWipe |
+                                                PathModifiers::kPerimeterTipWipe | PathModifiers::kReverseTipWipe |
+                                                PathModifiers::kAngledTipWipe | PathModifiers::kSpiralLift;
 
 struct SegmentFootprint {
     QSharedPointer<SegmentBase> segment;
     PolygonList footprint;
     Distance bead_width;
-    bool side_exposure_candidate = false;
+    bool in_closed_loop = false;
 };
 
 struct LayerFootprints {
     QVector<SegmentFootprint> segments;
-    PolygonList coverage;
+    PolygonList closed_coverage;
+    PolygonList wall_enclosed;
 };
 
-struct ClosedPathGroup {
-    int first = 0;
-    int past_last = 0;
-    Polygon polygon;
-    double area = 0.0;
-};
+bool hasFlag(SegmentDisplayType type, SegmentDisplayType flag) {
+    return static_cast<bool>(type & flag);
+}
 
-bool hasFlag(SegmentDisplayType type, SegmentDisplayType flag) { return static_cast<bool>(type & flag); }
-
-bool hasAny(PathModifiers type, PathModifiers flags) { return (type & flags) != PathModifiers::kNone; }
+bool hasAny(PathModifiers type, PathModifiers flags) {
+    return (type & flags) != PathModifiers::kNone;
+}
 
 bool commentContainsNonBuildModifier(const QString& comment) {
     return comment.contains(Constants::PathModifierStrings::kForwardTipWipe, Qt::CaseInsensitive) ||
@@ -62,84 +62,105 @@ bool commentContainsNonBuildModifier(const QString& comment) {
 }
 
 bool hasNonBuildModifier(const QSharedPointer<SegmentBase>& segment) {
-    if (segment.isNull()) {
-        return false;
-    }
+    if (segment.isNull()) { return false; }
 
     const QSharedPointer<SettingsBase> settings = segment->getSb();
     if (!settings.isNull()) {
         const auto modifiers = static_cast<PathModifiers>(settings->setting<uint>(SS::kPathModifiers));
-        if (hasAny(modifiers, kNonBuildModifiers)) {
-            return true;
-        }
+        if (hasAny(modifiers, kNonBuildModifiers)) { return true; }
     }
 
     return commentContainsNonBuildModifier(segment->m_segment_info_meta.type);
 }
 
-bool isDegenerateLine(const QSharedPointer<SegmentBase>& segment) {
-    if (dynamic_cast<LineSegment*>(segment.data()) == nullptr) {
-        return false;
-    }
-
-    return (segment->end().toQVector3D() - segment->start().toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
-}
-
 bool isPrintableBead(const QSharedPointer<SegmentBase>& segment) {
-    if (segment.isNull() || isDegenerateLine(segment)) {
-        return false;
-    }
-    if (hasNonBuildModifier(segment)) {
-        return false;
-    }
+    if (segment.isNull() || isDegenerateLine(segment)) { return false; }
+    if (hasNonBuildModifier(segment)) { return false; }
 
     const SegmentDisplayType type = segment->displayType();
-    if (hasFlag(type, SegmentDisplayType::kTravel) || hasFlag(type, SegmentDisplayType::kSupport)) {
-        return false;
-    }
-    if (!segment->depositionActive()) {
-        return false;
-    }
-    if (segment->displayWidth() <= kVectorEpsilon) {
-        return false;
-    }
+    if (hasFlag(type, SegmentDisplayType::kTravel) || hasFlag(type, SegmentDisplayType::kSupport)) { return false; }
+    if (!segment->depositionActive()) { return false; }
+    if (segment->displayWidth() <= kVectorEpsilon) { return false; }
 
     return true;
 }
 
-QVector3D toObjectSpace(const Point& point) { return point.toQVector3D() * Constants::OpenGL::kViewToObject; }
+bool hasRegionType(const QSharedPointer<SegmentBase>& segment, RegionType region_type, const QString& region_name) {
+    if (segment.isNull()) { return false; }
 
-Point pointFromObjectVector(const QVector3D& point) { return Point(point.x(), point.y(), point.z()); }
-
-bool pointsConnected(const Point& a, const Point& b) {
-    return (a.toQVector3D() - b.toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
-}
-
-std::vector<QVector3D> linePoints(const SegmentBase& segment) {
-    return {toObjectSpace(segment.start()), toObjectSpace(segment.end())};
-}
-
-std::vector<QVector3D> arcPoints(const ArcSegment& arc) {
-    const QVector3D start = toObjectSpace(arc.start());
-    const QVector3D center = toObjectSpace(arc.center());
-    const QVector3D end = toObjectSpace(arc.end());
-    const double radius = std::hypot(start.x() - center.x(), start.y() - center.y());
-    const double sweep = arc.angle()();
-
-    if (!std::isfinite(radius) || !std::isfinite(sweep) || radius <= kVectorEpsilon || sweep <= kVectorEpsilon) {
-        return linePoints(arc);
+    const QSharedPointer<SettingsBase> settings = segment->getSb();
+    if (!settings.isNull() && settings->contains(SS::kRegionType) &&
+        settings->setting<RegionType>(SS::kRegionType) == region_type) {
+        return true;
     }
 
-    const int segment_count = std::max(1, static_cast<int>(std::ceil(sweep / kArcSegmentAngle)));
-    const double start_angle = std::atan2(start.y() - center.y(), start.x() - center.x());
+    return segment->m_segment_info_meta.type.contains(region_name, Qt::CaseInsensitive);
+}
+
+bool isInfillOrSkinSegment(const QSharedPointer<SegmentBase>& segment) {
+    return hasRegionType(segment, RegionType::kInfill, Constants::RegionTypeStrings::kInfill) ||
+           hasRegionType(segment, RegionType::kSkin, Constants::RegionTypeStrings::kSkin);
+}
+
+bool isSkeletonSegment(const QSharedPointer<SegmentBase>& segment) {
+    return hasRegionType(segment, RegionType::kSkeleton, Constants::RegionTypeStrings::kSkeleton);
+}
+
+bool isInteriorFillSegment(const QSharedPointer<SegmentBase>& segment) {
+    return isInfillOrSkinSegment(segment) || isSkeletonSegment(segment);
+}
+
+void markClosedLoopSegments(QVector<SegmentFootprint>& segments) {
+    int group_start = 0;
+    for (int i = 1; i <= segments.size(); ++i) {
+        if (i == segments.size() || !pointsConnected(segments[i - 1].segment->end(), segments[i].segment->start())) {
+            const int count = i - group_start;
+            bool has_curve  = false;
+            for (int j = group_start; j < i; ++j) {
+                if (dynamic_cast<ArcSegment*>(segments[j].segment.data()) != nullptr ||
+                    dynamic_cast<BezierSegment*>(segments[j].segment.data()) != nullptr) {
+                    has_curve = true;
+                    break;
+                }
+            }
+            if ((count >= 3 || (count >= 1 && has_curve)) &&
+                pointsConnected(segments[i - 1].segment->end(), segments[group_start].segment->start())) {
+                for (int j = group_start; j < i; ++j) { segments[j].in_closed_loop = true; }
+            }
+            group_start = i;
+        }
+    }
+}
+
+QVector3D scaledPoint(const Point& point, double scale) {
+    return point.toQVector3D() * static_cast<float>(scale);
+}
+
+std::vector<QVector3D> linePoints(const SegmentBase& segment, double scale) {
+    return {scaledPoint(segment.start(), scale), scaledPoint(segment.end(), scale)};
+}
+
+std::vector<QVector3D> arcPoints(const ArcSegment& arc, double scale) {
+    const QVector3D start  = scaledPoint(arc.start(), scale);
+    const QVector3D center = scaledPoint(arc.center(), scale);
+    const QVector3D end    = scaledPoint(arc.end(), scale);
+    const double radius    = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const double sweep     = arc.angle()();
+
+    if (!std::isfinite(radius) || !std::isfinite(sweep) || radius <= kVectorEpsilon || sweep <= kVectorEpsilon) {
+        return linePoints(arc, scale);
+    }
+
+    const int segment_count   = std::max(1, static_cast<int>(std::ceil(sweep / kArcSegmentAngle)));
+    const double start_angle  = std::atan2(start.y() - center.y(), start.x() - center.x());
     const double signed_sweep = arc.counterclockwise() ? sweep : -sweep;
-    const double z_delta = end.z() - start.z();
+    const double z_delta      = end.z() - start.z();
 
     std::vector<QVector3D> points;
     points.reserve(static_cast<std::size_t>(segment_count) + 1);
     points.push_back(start);
     for (int i = 1; i < segment_count; ++i) {
-        const double t = static_cast<double>(i) / static_cast<double>(segment_count);
+        const double t     = static_cast<double>(i) / static_cast<double>(segment_count);
         const double angle = start_angle + (signed_sweep * t);
         points.push_back(QVector3D(center.x() + (radius * std::cos(angle)), center.y() + (radius * std::sin(angle)),
                                    start.z() + (z_delta * t)));
@@ -149,214 +170,243 @@ std::vector<QVector3D> arcPoints(const ArcSegment& arc) {
     return points;
 }
 
-std::vector<QVector3D> bezierPoints(BezierSegment& curve) {
+std::vector<QVector3D> bezierPoints(BezierSegment& curve, double scale) {
     std::vector<QVector3D> points;
     points.reserve(static_cast<std::size_t>(kCurveSegments) + 1);
     for (int i = 0; i <= kCurveSegments; ++i) {
         const double t = static_cast<double>(i) / static_cast<double>(kCurveSegments);
-        points.push_back(toObjectSpace(curve.getPointAlong(t)));
+        points.push_back(scaledPoint(curve.getPointAlong(t), scale));
     }
 
     return points;
 }
 
-std::vector<QVector3D> segmentPoints(const QSharedPointer<SegmentBase>& segment) {
-    if (auto* arc = dynamic_cast<ArcSegment*>(segment.data())) {
-        return arcPoints(*arc);
-    }
-    if (auto* bezier = dynamic_cast<BezierSegment*>(segment.data())) {
-        return bezierPoints(*bezier);
-    }
-
-    return linePoints(*segment);
-}
-
 PolygonList footprintForSegment(const QSharedPointer<SegmentBase>& segment) {
     PolygonList footprint;
     const Distance bead_width(segment->displayWidth() * Constants::OpenGL::kViewToObject);
-    const std::vector<QVector3D> points = segmentPoints(segment);
+    const std::vector<QVector3D> points = segmentCenterlinePoints(segment, Constants::OpenGL::kViewToObject);
     for (std::size_t i = 0; i + 1 < points.size(); ++i) {
-        if ((points[i + 1] - points[i]).lengthSquared() <= kVectorEpsilonSquared) {
-            continue;
-        }
+        if ((points[i + 1] - points[i]).lengthSquared() <= kVectorEpsilonSquared) { continue; }
 
-        footprint += Polyline({pointFromObjectVector(points[i]), pointFromObjectVector(points[i + 1])})
-                         .makeReal(bead_width);
+        footprint += Polyline({Point(points[i]), Point(points[i + 1])}).makeReal(bead_width);
     }
 
     return footprint;
 }
 
-double netArea(PolygonList polygons) { return std::abs(polygons.netArea()()); }
+double netArea(PolygonList polygons) {
+    return std::abs(polygons.netArea()());
+}
 
-bool hasArea(PolygonList polygons) { return netArea(polygons) > kAreaTolerance; }
+bool hasArea(const PolygonList& polygons) {
+    return netArea(polygons) > kAreaTolerance;
+}
+
+PolygonList closeCoverage(const PolygonList& coverage, Distance max_bead_width) {
+    if (coverage.isEmpty() || max_bead_width <= 0) { return coverage; }
+    const Distance closure = max_bead_width * 0.75;
+    return coverage.offset(closure).offset(-closure);
+}
 
 bool hasUncoveredArea(const PolygonList& footprint, const PolygonList& coverage) {
     const double footprint_area = netArea(footprint);
-    if (footprint_area <= kAreaTolerance) {
-        return false;
-    }
-    if (coverage.isEmpty()) {
-        return true;
-    }
+    if (footprint_area <= kAreaTolerance) { return false; }
+    if (coverage.isEmpty()) { return true; }
 
     const double uncovered_area = netArea(footprint - coverage);
     return uncovered_area > std::max(kAreaTolerance, footprint_area * kUncoveredAreaRatioTolerance);
 }
 
-bool hasSideExposure(const SegmentFootprint& segment, const PolygonList& layer_coverage) {
-    if (!segment.side_exposure_candidate || layer_coverage.isEmpty()) {
-        return false;
+bool hasSideExposure(const SegmentFootprint& segment, const PolygonList& layer_interior,
+                     const PolygonList& wall_enclosed) {
+    if (isInfillOrSkinSegment(segment.segment)) {
+        if (!wall_enclosed.isEmpty() && !hasUncoveredArea(segment.footprint, wall_enclosed)) { return false; }
+        if (!segment.in_closed_loop && layer_interior.isEmpty()) { return false; }
     }
 
-    const PolygonList layer_interior = layer_coverage.offset(-(segment.bead_width / 2.0));
     return hasUncoveredArea(segment.footprint, layer_interior);
 }
 
-Polygon centerlinePolygonForGroup(const QVector<SegmentFootprint>& segments, int first, int past_last) {
-    Polyline centerline;
-    for (int i = first; i < past_last; ++i) {
-        const std::vector<QVector3D> points = segmentPoints(segments[i].segment);
-        for (const QVector3D& point : points) {
-            const Point centerline_point = pointFromObjectVector(point);
-            if (centerline.isEmpty() || !pointsConnected(centerline.back(), centerline_point)) {
-                centerline.push_back(centerline_point);
-            }
-        }
-    }
+QVector<LayerFootprints> buildLayerFootprints(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
+                                              const std::function<bool()>& should_cancel) {
+    QVector<LayerFootprints> layers(gcode.size());
+    std::atomic<bool> cancelled(false);
 
-    if (centerline.size() < 3) {
-        return {};
-    }
-    if (!pointsConnected(centerline.back(), centerline.front())) {
-        centerline.push_back(centerline.front());
-    }
-
-    return centerline.close();
-}
-
-bool groupContainsGroup(const ClosedPathGroup& container, const ClosedPathGroup& candidate) {
-    if (container.area <= candidate.area + kAreaTolerance || candidate.polygon.isEmpty()) {
-        return false;
-    }
-
-    return container.polygon.inside(candidate.polygon.first(), false);
-}
-
-void tagClosedPathSegments(LayerFootprints& layer) {
-    QVector<ClosedPathGroup> closed_groups;
-
-    const auto markGroup = [&layer](int first, int past_last) {
-        for (int i = first; i < past_last; ++i) {
-            layer.segments[i].side_exposure_candidate = true;
-        }
-    };
-
-    const auto addClosedGroup = [&layer, &closed_groups](int first, int past_last) {
-        if (first >= past_last) {
-            return;
+#if defined(_OPENMP)
+    #pragma omp parallel for schedule(dynamic)
+#endif
+    for (int layer_index = 0; layer_index < gcode.size(); ++layer_index) {
+        if (cancelled.load(std::memory_order_relaxed)) { continue; }
+        if (should_cancel && should_cancel()) {
+            cancelled.store(true, std::memory_order_relaxed);
+            continue;
         }
 
-        const bool closed =
-            pointsConnected(layer.segments[past_last - 1].segment->end(), layer.segments[first].segment->start());
-        if (!closed) {
-            return;
-        }
+        const QVector<QSharedPointer<SegmentBase>>& layer_segments = gcode[layer_index];
+        LayerFootprints& layer                                     = layers[layer_index];
+        PolygonList wall_coverage;
+        PolygonList infill_coverage;
+        Distance max_bead_width = 0;
 
-        ClosedPathGroup group;
-        group.first = first;
-        group.past_last = past_last;
-        group.polygon = centerlinePolygonForGroup(layer.segments, first, past_last);
-        group.area = std::abs(group.polygon.area()());
-        if (group.area > kAreaTolerance) {
-            closed_groups.push_back(group);
-        }
-    };
-
-    int group_start = 0;
-    for (int i = 1; i <= layer.segments.size(); ++i) {
-        if (i == layer.segments.size() ||
-            !pointsConnected(layer.segments[i - 1].segment->end(), layer.segments[i].segment->start())) {
-            addClosedGroup(group_start, i);
-            group_start = i;
-        }
-    }
-
-    for (const ClosedPathGroup& group : closed_groups) {
-        const bool contained_by_another_group =
-            std::any_of(closed_groups.cbegin(), closed_groups.cend(), [&group](const ClosedPathGroup& other_group) {
-                return &other_group != &group && groupContainsGroup(other_group, group);
-            });
-        if (!contained_by_another_group) {
-            markGroup(group.first, group.past_last);
-        }
-    }
-}
-
-QVector<LayerFootprints> buildLayerFootprints(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
-    QVector<LayerFootprints> layers;
-    layers.reserve(gcode.size());
-
-    for (const QVector<QSharedPointer<SegmentBase>>& layer_segments : gcode) {
-        LayerFootprints layer;
         for (const QSharedPointer<SegmentBase>& segment : layer_segments) {
-            if (!isPrintableBead(segment)) {
-                continue;
-            }
+            if (!isPrintableBead(segment)) { continue; }
 
             SegmentFootprint segment_footprint;
-            segment_footprint.segment = segment;
+            segment_footprint.segment    = segment;
             segment_footprint.bead_width = Distance(segment->displayWidth() * Constants::OpenGL::kViewToObject);
-            segment_footprint.footprint = footprintForSegment(segment);
-            if (!hasArea(segment_footprint.footprint)) {
-                continue;
-            }
+            segment_footprint.footprint  = footprintForSegment(segment);
+            if (!hasArea(segment_footprint.footprint)) { continue; }
 
-            layer.coverage += segment_footprint.footprint;
+            max_bead_width = std::max(max_bead_width, segment_footprint.bead_width);
+            if (isInteriorFillSegment(segment)) { infill_coverage += segment_footprint.footprint; }
+            else { wall_coverage += segment_footprint.footprint; }
             layer.segments.push_back(segment_footprint);
         }
 
-        tagClosedPathSegments(layer);
-        layers.push_back(layer);
+        markClosedLoopSegments(layer.segments);
+
+        PolygonList coverage             = wall_coverage + infill_coverage;
+        const PolygonList closed_walls   = closeCoverage(wall_coverage, max_bead_width);
+        layer.wall_enclosed              = closed_walls;
+        const QVector<PolygonList> parts = closed_walls.splitIntoParts();
+        for (const PolygonList& part : parts) {
+            for (int h = 1; h < part.size(); ++h) {
+                Polygon positive_hole = part[h];
+                if (!positive_hole.orientation()) { std::reverse(positive_hole.begin(), positive_hole.end()); }
+                PolygonList direct_hole;
+                direct_hole += positive_hole;
+                for (const PolygonList& other_part : parts) {
+                    if (&other_part != &part && !other_part.isEmpty() && !other_part[0].isEmpty() &&
+                        positive_hole.inside(other_part[0].first())) {
+                        direct_hole -= other_part[0];
+                    }
+                }
+                if (hasArea(infill_coverage & direct_hole)) {
+                    coverage += direct_hole;
+                    layer.wall_enclosed += direct_hole;
+                }
+            }
+        }
+
+        layer.closed_coverage = closeCoverage(coverage, max_bead_width);
     }
+
+    if (cancelled.load(std::memory_order_relaxed)) { return {}; }
 
     return layers;
 }
-} // namespace
+}  // namespace
 
-bool isNonBuildModifierSegment(const QSharedPointer<SegmentBase>& segment) { return hasNonBuildModifier(segment); }
+bool pointsConnected(const Point& a, const Point& b) {
+    return (a.toQVector3D() - b.toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
+}
 
-QSet<const SegmentBase*> externalSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
-    QSet<const SegmentBase*> external_segments;
-    const QVector<LayerFootprints> layers = buildLayerFootprints(gcode);
+bool isDegenerateLine(const QSharedPointer<SegmentBase>& segment) {
+    if (dynamic_cast<LineSegment*>(segment.data()) == nullptr) { return false; }
 
+    return (segment->end().toQVector3D() - segment->start().toQVector3D()).lengthSquared() <= kVectorEpsilonSquared;
+}
+
+std::vector<QVector3D> segmentCenterlinePoints(const QSharedPointer<SegmentBase>& segment, double scale) {
+    if (segment.isNull()) { return {}; }
+    if (auto* arc = dynamic_cast<ArcSegment*>(segment.data())) { return arcPoints(*arc, scale); }
+    if (auto* bezier = dynamic_cast<BezierSegment*>(segment.data())) { return bezierPoints(*bezier, scale); }
+
+    return linePoints(*segment, scale);
+}
+
+bool isNonBuildModifierSegment(const QSharedPointer<SegmentBase>& segment) {
+    return hasNonBuildModifier(segment);
+}
+
+QSet<const SegmentBase*> externalSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
+                                          const std::function<bool()>& should_cancel) {
+    const QVector<LayerFootprints> layers = buildLayerFootprints(gcode, should_cancel);
+    if ((should_cancel && should_cancel()) || (layers.isEmpty() && !gcode.isEmpty())) { return {}; }
+
+    QVector<int> prev_printable_layer(layers.size(), -1);
+    QVector<int> next_printable_layer(layers.size(), -1);
+    int last_printable = -1;
+    for (int i = 0; i < layers.size(); ++i) {
+        prev_printable_layer[i] = last_printable;
+        if (!layers[i].closed_coverage.isEmpty()) { last_printable = i; }
+    }
+    int next_printable = -1;
+    for (int i = layers.size() - 1; i >= 0; --i) {
+        next_printable_layer[i] = next_printable;
+        if (!layers[i].closed_coverage.isEmpty()) { next_printable = i; }
+    }
+
+    QVector<QVector<const SegmentBase*>> layer_external(layers.size());
+    std::atomic<bool> cancelled(false);
+
+#if defined(_OPENMP)
+    #pragma omp parallel for schedule(dynamic)
+#endif
     for (int layer_index = 0; layer_index < layers.size(); ++layer_index) {
+        if (cancelled.load(std::memory_order_relaxed)) { continue; }
+        if (should_cancel && should_cancel()) {
+            cancelled.store(true, std::memory_order_relaxed);
+            continue;
+        }
+
         const PolygonList empty_coverage;
-        const PolygonList& lower_coverage = layer_index > 0 ? layers[layer_index - 1].coverage : empty_coverage;
-        const PolygonList& upper_coverage =
-            layer_index + 1 < layers.size() ? layers[layer_index + 1].coverage : empty_coverage;
+        const int prev_index              = prev_printable_layer[layer_index];
+        const int next_index              = next_printable_layer[layer_index];
+        const PolygonList& lower_coverage = prev_index >= 0 ? layers[prev_index].closed_coverage : empty_coverage;
+        const PolygonList& upper_coverage = next_index >= 0 ? layers[next_index].closed_coverage : empty_coverage;
+
+        using WidthKey = int64_t;
+        std::map<WidthKey, PolygonList> cached_interiors;
 
         for (const SegmentFootprint& segment : layers[layer_index].segments) {
-            if (hasSideExposure(segment, layers[layer_index].coverage) ||
-                hasUncoveredArea(segment.footprint, lower_coverage) ||
+            bool side_exposed = false;
+            if (!layers[layer_index].closed_coverage.isEmpty()) {
+                const auto width_key = static_cast<WidthKey>(std::llround(segment.bead_width()));
+                auto it              = cached_interiors.find(width_key);
+                if (it == cached_interiors.end()) {
+                    it =
+                        cached_interiors
+                            .emplace(width_key, layers[layer_index].closed_coverage.offset(-(segment.bead_width / 2.0)))
+                            .first;
+                }
+                side_exposed = hasSideExposure(segment, it->second, layers[layer_index].wall_enclosed);
+            }
+
+            if (side_exposed || hasUncoveredArea(segment.footprint, lower_coverage) ||
                 hasUncoveredArea(segment.footprint, upper_coverage)) {
-                external_segments.insert(segment.segment.data());
+                layer_external[layer_index].push_back(segment.segment.data());
             }
         }
+    }
+
+    if (cancelled.load(std::memory_order_relaxed)) { return {}; }
+
+    QSet<const SegmentBase*> external_segments;
+    for (const QVector<const SegmentBase*>& layer_segments : layer_external) {
+        for (const SegmentBase* segment_ptr : layer_segments) { external_segments.insert(segment_ptr); }
     }
 
     return external_segments;
 }
 
-void tagInternalSegments(QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
-    const QSet<const SegmentBase*> external_segments = externalSegments(gcode);
-    for (QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
+void tagInternalSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
+                         const std::function<bool()>& should_cancel) {
+    if (gcode.isEmpty() || (should_cancel && should_cancel())) { return; }
+
+    const QSet<const SegmentBase*> external_segments = externalSegments(gcode, should_cancel);
+    if (should_cancel && should_cancel()) { return; }
+
+    for (const QVector<QSharedPointer<SegmentBase>>& layer : gcode) {
         for (const QSharedPointer<SegmentBase>& segment : layer) {
+            if (segment.isNull()) { continue; }
+            SegmentDisplayType type = segment->displayType() & ~SegmentDisplayType::kInternal;
             if (isNonBuildModifierSegment(segment) ||
                 (isPrintableBead(segment) && !external_segments.contains(segment.data()))) {
-                segment->setDisplayType(segment->displayType() | SegmentDisplayType::kInternal);
+                type |= SegmentDisplayType::kInternal;
             }
+            segment->setDisplayType(type);
         }
     }
 }
-} // namespace ORNL::GCodeSegmentFilter
+}  // namespace ORNL::GCodeSegmentFilter
