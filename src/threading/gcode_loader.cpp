@@ -33,9 +33,9 @@
 #include "configs/settings_range.h"
 #include "exceptions/exceptions.h"
 #include "gcode/arc_specialties_axis_inference.h"
-#include "gcode/gcode_segment_filter.h"
 #include "gcode/gcode_command.h"
 #include "gcode/gcode_meta.h"
+#include "gcode/gcode_segment_filter.h"
 #include "gcode/parsers/adamantine_parser.h"
 #include "gcode/parsers/aerobasic_parser.h"
 #include "gcode/parsers/arc_specialties_parser.h"
@@ -505,7 +505,8 @@ void GCodeLoader::run() {
                 if (m_should_cancel) { return; }
             }
 
-            GCodeSegmentFilter::tagInternalSegments(layers);
+            GCodeSegmentFilter::tagInternalSegments(layers, [this]() { return m_should_cancel; });
+            if (m_should_cancel) { return; }
 
             // emit vector for visualization
             emit gcodeLoadedVisualization(layers);

@@ -436,9 +436,8 @@ void GcodeBar::setupEvents() {
         PreferencesManager::getInstance()->setHideSupportPreference(m_hide_support->isChecked());
     });
 
-    connect(m_hide_internal, &QCheckBox::clicked, [this] {
-        emit forwardVisibilityChange(SegmentDisplayType::kInternal, m_hide_internal->isChecked());
-    });
+    connect(m_hide_internal, &QCheckBox::clicked,
+            [this] { emit forwardVisibilityChange(SegmentDisplayType::kInternal, m_hide_internal->isChecked()); });
 
     connect(m_true_width, &QCheckBox::clicked, [this] {
         emit forwardSegmentWidthChange(m_true_width->isChecked());
@@ -519,6 +518,7 @@ void GcodeBar::updateSegmentPlayButton() {
     else {
         if (m_hide_travel->isChecked()) m_hide_travel->click();
         if (m_hide_support->isChecked()) m_hide_support->click();
+        if (m_hide_internal->isChecked()) m_hide_internal->click();
 
         // Delay between drawing segments in milliseconds
         int draw_time = PreferencesManager::getInstance()->getSegmentLag();

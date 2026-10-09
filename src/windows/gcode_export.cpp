@@ -351,16 +351,12 @@ void GcodeExport::exportGcode() {
             if (use_centerline_geometry) {
                 as_printed_options.geometry_mode = AsPrintedModelExporter::GeometryMode::kCenterlines;
             }
-            const bool use_external_only = m_as_printed_external_only_checkbox->isChecked();
+            const bool use_external_only     = m_as_printed_external_only_checkbox->isChecked();
             as_printed_options.external_only = use_external_only;
 
             QString suffix = "_as_printed";
-            if (use_external_only) {
-                suffix += "_external";
-            }
-            if (use_centerline_geometry) {
-                suffix += "_centerline";
-            }
+            if (use_external_only) { suffix += "_external"; }
+            if (use_centerline_geometry) { suffix += "_centerline"; }
             suffix += ".stl";
             const QString asPrintedFileName = filepath % '/' % partName % suffix;
             if (!m_has_gcode_visualization) {
