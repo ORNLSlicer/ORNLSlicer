@@ -34,43 +34,44 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 30
     permissions:
-      contents: write
-      pull-requests: read
+      contents: read
     defaults:
       run:
         shell: bash
     env:
       BASE_BRANCH: develop
-      # Use a real automation credential so rebased pushes trigger push-based CI.
-      GH_TOKEN: ${{ secrets.AUTO_REBASE_TOKEN }}
     steps:
-      - name: Verify auto-rebase token
-        env:
-          AUTO_REBASE_TOKEN: ${{ secrets.AUTO_REBASE_TOKEN }}
-        run: |
-          set -euo pipefail
-
-          if [[ -z "$AUTO_REBASE_TOKEN" ]]; then
-            echo "::error title=Missing AUTO_REBASE_TOKEN::Configure a PAT or GitHub App token in the AUTO_REBASE_TOKEN secret. Rebased pushes made with github.token do not trigger this repository's push-based CI."
-            exit 1
-          fi
+      - name: Create auto-rebase App token
+        id: app-token
+        uses: actions/create-github-app-token@v3
+        with:
+          client-id: ${{ vars.AUTO_REBASE_APP_CLIENT_ID }}
+          private-key: ${{ secrets.AUTO_REBASE_APP_PRIVATE_KEY }}
 
       - name: Checkout develop
         uses: actions/checkout@v5
         with:
           ref: ${{ env.BASE_BRANCH }}
           fetch-depth: 0
-          token: ${{ env.GH_TOKEN }}
+          token: ${{ steps.app-token.outputs.token }}
+          persist-credentials: true
 
-      - name: Configure Git author
+      - name: Configure Git identity
+        env:
+          APP_SLUG: ${{ steps.app-token.outputs.app-slug }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
         run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          set -euo pipefail
+
+          bot_id="$(gh api "/users/${APP_SLUG}[bot]" --jq '.id')"
+          git config user.name "${APP_SLUG}[bot]"
+          git config user.email "${bot_id}+${APP_SLUG}[bot]@users.noreply.github.com"
 
       - name: Collect PR branches
         id: targets
         env:
           EVENT_NAME: ${{ github.event_name }}
+          GH_TOKEN: ${{ steps.app-token.outputs.token }}
           PR_DRAFT: ${{ github.event.pull_request.draft || false }}
           PR_HEAD_REPOSITORY: ${{ github.event.pull_request.head.repo.full_name }}
           PR_HEAD_REF: ${{ github.event.pull_request.head.ref }}
@@ -85,7 +86,7 @@ jobs:
           TARGETS_FILE="/tmp/auto-rebase-targets.txt"
           : > "$TARGETS_FILE"
 
-          if [[ "$EVENT_NAME" == "pull_request" ]]; then
+          if [[ "$EVENT_NAME" == "pull_request_target" ]]; then
             if [[ "$PR_DRAFT" == "true" ]]; then
               echo "Skipping draft pull request branch $PR_HEAD_REF."
             elif [[ "$PR_HEAD_REPOSITORY" == "$REPOSITORY" ]]; then
