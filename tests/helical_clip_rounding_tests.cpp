@@ -2,6 +2,7 @@
 #include <algorithm>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 
 #include "geometry/point.h"
 #include "geometry/polyline.h"
@@ -138,6 +139,30 @@ bool whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution() {
            nearDistance(end.z(), 8.0 * ORNL::mm);
 }
 
+bool arcLengthOffsetUsesActualPathRadius() {
+    const ORNL::Distance arc_length_offset = -20.0 * ORNL::mm;
+    const std::optional<ORNL::Angle> inner_offset =
+        ORNL::HelicalToolStartAngle::angleOffsetForRadius(arc_length_offset, 100.0 * ORNL::mm);
+    const std::optional<ORNL::Angle> outer_offset =
+        ORNL::HelicalToolStartAngle::angleOffsetForRadius(arc_length_offset, 200.0 * ORNL::mm);
+
+    return inner_offset.has_value() && outer_offset.has_value() &&
+           ORNL::Testing::near(inner_offset->to(ORNL::radian), -0.2, kTolerance) &&
+           ORNL::Testing::near(outer_offset->to(ORNL::radian), -0.1, kTolerance);
+}
+
+bool arcLengthOffsetRejectsOnlyUnrepresentableRequests() {
+    const std::optional<ORNL::Angle> zero_at_zero =
+        ORNL::HelicalToolStartAngle::angleOffsetForRadius(0.0 * ORNL::mm, 0.0 * ORNL::mm);
+    const std::optional<ORNL::Angle> nonzero_at_zero =
+        ORNL::HelicalToolStartAngle::angleOffsetForRadius(1.0 * ORNL::mm, 0.0 * ORNL::mm);
+    const std::optional<ORNL::Angle> nonfinite_offset = ORNL::HelicalToolStartAngle::angleOffsetForRadius(
+        ORNL::Distance(std::numeric_limits<double>::quiet_NaN()), 10.0 * ORNL::mm);
+
+    return zero_at_zero.has_value() && ORNL::Testing::near(zero_at_zero->to(ORNL::radian), 0.0, kTolerance) &&
+           !nonzero_at_zero.has_value() && !nonfinite_offset.has_value();
+}
+
 bool directionAwareOffsetFollowsCompleteClosestOrderedDirection() {
     const ORNL::Angle configured_offset = -12.0 * ORNL::degree;
 
@@ -199,6 +224,11 @@ int main() {
     passed &= ORNL::Testing::expect(
         whollyInsideLastFullRoundsGeneratedTopToPreviousRevolution(),
         "Expected last-full rounding to round a wholly inside helix top to the previous full revolution.");
+    passed &= ORNL::Testing::expect(arcLengthOffsetUsesActualPathRadius(),
+                                    "Expected arc-length offset conversion to use each actual path radius.");
+    passed &= ORNL::Testing::expect(
+        arcLengthOffsetRejectsOnlyUnrepresentableRequests(),
+        "Expected zero arc length to remain valid and nonzero invalid-radius conversions to fail.");
     passed &= ORNL::Testing::expect(
         directionAwareOffsetFollowsCompleteClosestOrderedDirection(),
         "Expected direction-aware helical offset to flip for reversed Complete Revolution/Next Closest "

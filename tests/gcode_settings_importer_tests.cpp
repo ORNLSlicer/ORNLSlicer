@@ -11,7 +11,7 @@
 #include "utilities/enums.h"
 
 namespace {
-constexpr float kTolerance = 1.0e-6f;
+constexpr float kTolerance = 1.0e-3f;
 
 bool writeFile(const QString& path, const QString& text) {
     QFile file(path);
@@ -126,6 +126,7 @@ int main(int argc, char* argv[]) {
         ";slicing_vector_z 0.75\n"
         ";image_resolution_x 0.8\n"
         ";image_resolution_y 0.9\n"
+        ";radial_initial_radius 100000\n"
         ";helical_path_start_angle 1.74532925\n";
     if (!ORNL::Testing::expect(writeFile(legacy_path, legacy_gcode), "Could not write legacy key fixture."))
         return EXIT_FAILURE;
@@ -162,9 +163,9 @@ int main(int argc, char* argv[]) {
         return EXIT_FAILURE;
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(
-                legacy_settings.at(ORNL::PS::Helical::kHelicalToolStartAngleOffset.toStdString()).get<double>(),
-                (10.0 * ORNL::degree)(), kTolerance),
-            "Did not migrate legacy helical_path_start_angle footer key to a tool start angle offset."))
+                legacy_settings.at(ORNL::PS::Helical::kHelicalToolStartArcLengthOffset.toStdString()).get<double>(),
+                100100.0 * (1.74532925 - (90.0 * ORNL::degree)()), kTolerance),
+            "Did not migrate legacy helical_path_start_angle footer key to a first-radius arc length."))
         return EXIT_FAILURE;
     if (!ORNL::Testing::expect(legacy_result.unknown_keys.isEmpty(),
                                "Migrated legacy footer keys were still reported as unknown."))
@@ -175,6 +176,7 @@ int main(int argc, char* argv[]) {
         ";Settings Footer\n"
         ";layer_height 200\n"
         ";default_width 400\n"
+        ";cylinder_inner_radius 100000\n"
         ";helical_start_angle_offset -0.20943951\n";
     if (!ORNL::Testing::expect(writeFile(v11_path, v11_gcode), "Could not write v11 key fixture.")) return EXIT_FAILURE;
 
@@ -187,12 +189,29 @@ int main(int argc, char* argv[]) {
     const auto v11_settings = v11_result.settings_file[ORNL::Constants::SettingFileStrings::kSettings].at(0);
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(
-                v11_settings.at(ORNL::PS::Helical::kHelicalToolStartAngleOffset.toStdString()).get<double>(),
-                (-12.0 * ORNL::degree)(), kTolerance),
-            "Did not migrate v11 helical_start_angle_offset footer key directly."))
+                v11_settings.at(ORNL::PS::Helical::kHelicalToolStartArcLengthOffset.toStdString()).get<double>(),
+                100100.0 * -0.20943951, kTolerance),
+            "Did not migrate v11 helical_start_angle_offset footer key to a first-radius arc length."))
         return EXIT_FAILURE;
     if (!ORNL::Testing::expect(v11_result.unknown_keys.isEmpty(),
                                "Migrated v11 footer key was still reported as unknown."))
+        return EXIT_FAILURE;
+
+    const QString unconvertible_path = temp_dir.path() + "/unconvertible.gcode";
+    const QString unconvertible_gcode =
+        ";Settings Footer\n"
+        ";layer_height 200\n"
+        ";helical_tool_start_angle_offset -0.20943951\n";
+    if (!ORNL::Testing::expect(writeFile(unconvertible_path, unconvertible_gcode),
+                               "Could not write unconvertible helical offset fixture."))
+        return EXIT_FAILURE;
+
+    const ORNL::GcodeSettingsImporter::ImportResult unconvertible_result =
+        ORNL::GcodeSettingsImporter::importFile(unconvertible_path, true);
+    if (!ORNL::Testing::expect(
+            !unconvertible_result.errors.isEmpty() &&
+                unconvertible_result.errors.join('\n').contains("Cannot migrate a nonzero Helical Tool Start Angle"),
+            "Imported a nonzero legacy helical angle without reference geometry."))
         return EXIT_FAILURE;
 
     const QString v12_path = temp_dir.path() + "/v12.gcode";

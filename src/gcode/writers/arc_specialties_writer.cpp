@@ -292,9 +292,12 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                             formatDistance(m_sb->setting<Distance>(PS::Layer::kLayerHeight), m_meta.m_distance_unit));
         const Distance bead_width = m_sb->setting<Distance>(PS::Layer::kBeadWidth);
         if (helical_mode) {
+            text += commentLine("Helical Tool Start Arc Length Offset: " %
+                                formatDistance(m_sb->setting<Distance>(PS::Helical::kHelicalToolStartArcLengthOffset),
+                                               m_meta.m_distance_unit));
             text += commentLine(
-                "Helical Tool Start Angle Offset: " %
-                formatAngle(m_sb->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset), m_meta.m_angle_unit));
+                "Helical Tool Offset Conversion: signed angle = arc length / actual generated path radius; CP "
+                "receives the full angle and XR/YR each receive half");
             text += commentLine("Helical Region Pitch Fallback: " % formatDistance(bead_width, m_meta.m_distance_unit) %
                                 " when a region stepover is 0");
             text += commentLine("Helical Perimeter Revolutions: " %
@@ -974,9 +977,9 @@ ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationF
 
     const bool helical_motion = isHelicalPathPattern(params);
     const double helical_tool_start_angle_tool_frame_offset =
-        helical_motion ? settingAngleOrDefault(PS::Helical::kHelicalToolStartAngleOffset, 0.0) *
-                             kHelicalToolStartAngleToolFrameScale
-                       : 0.0;
+        helical_motion
+            ? settingAngleOrDefault(SS::kHelicalToolStartAngleOffset, 0.0) * kHelicalToolStartAngleToolFrameScale
+            : 0.0;
 
     auto helicalToolFrameRotation = [&settingAngleOrDefault, helical_tool_start_angle_tool_frame_offset](
                                         const QString& x_key, const QString& y_key, const QString& z_key) {
@@ -1117,7 +1120,7 @@ double ArcSpecialtiesWriter::cpAxisForPoint(const Point& destination, const QSha
         const double start_angle = helicalStartAngle(params);
         const double sweep_degrees =
             handedness == HelicalPathHandedness::kLeftHanded ? start_angle - cp_degrees : cp_degrees - start_angle;
-        cp_degrees = params->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset).to(degree) + sweep_degrees +
+        cp_degrees = params->setting<Angle>(SS::kHelicalToolStartAngleOffset).to(degree) + sweep_degrees +
                      m_sb->setting<Angle>(PRS::MachineSetup::kAxisC).to(degree);
         return cp_degrees;
     }

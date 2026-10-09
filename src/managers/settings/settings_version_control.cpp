@@ -5,7 +5,9 @@
 #include <array>
 #include <cmath>
 #include <cstdlib>
+#include <limits>
 #include <list>
+#include <stdexcept>
 #include <string>
 #include <utility>
 
@@ -15,39 +17,40 @@
 #include "utilities/qt_json_conversion.h"
 
 namespace {
-constexpr int kCincinnatiSyntax               = 1;
-constexpr int kMarlinSyntax                   = 10;
-constexpr int kThermwoodSyntax                = 16;
-constexpr int kRemovedGcodeSyntax             = 28;
-constexpr int kRemovedRadialSyntax            = 31;
-constexpr int kArcSpecialtiesSyntax           = 31;
-constexpr int kLegacyArcSpecialtiesSyntax     = 32;
-constexpr int kPlanarSlicingMode              = 0;
-constexpr int kV4ImageSlicingMode             = 1;
-constexpr int kLegacyRadialSlicingMode        = 2;
-constexpr int kLegacyHelicalSlicingMode       = 3;
-constexpr int kV8CylindricalSlicingMode       = 2;
-constexpr int kV9CylindricalSlicingMode       = 1;
-constexpr int kV9ImageSlicingMode             = 2;
-constexpr int kRadialPathType                 = 0;
-constexpr int kHelicalPathType                = 1;
-constexpr int kV3LegacySlicingMode2           = 2;
-constexpr int kV3ImageSlicingMode             = 3;
-constexpr int kAllPerimeterBoundaries         = 0;
-const QString kLegacySlicingMode              = "slicer_type";
-const QString kLegacySlicePlaneNormalX        = "slicing_vector_x";
-const QString kLegacySlicePlaneNormalY        = "slicing_vector_y";
-const QString kLegacySlicePlaneNormalZ        = "slicing_vector_z";
-const QString kLegacyCylinderAxisSource       = "radial_axis_mode";
-const QString kLegacyCylinderAxisX            = "radial_axis_x";
-const QString kLegacyCylinderAxisY            = "radial_axis_y";
-const QString kLegacyCylinderInnerRadius      = "radial_initial_radius";
-const QString kLegacyCylindricalPathPattern   = "cylindrical_path_type";
-const QString kLegacyRadialPathBoundaryPolicy = "radial_boundary_handling";
-const QString kLegacyHelicalPathStartAngle    = "helical_path_start_angle";
-const QString kLegacyHelicalStartAngleOffset  = "helical_start_angle_offset";
-const QString kLegacyImagePixelSizeX          = "image_resolution_x";
-const QString kLegacyImagePixelSizeY          = "image_resolution_y";
+constexpr int kCincinnatiSyntax                  = 1;
+constexpr int kMarlinSyntax                      = 10;
+constexpr int kThermwoodSyntax                   = 16;
+constexpr int kRemovedGcodeSyntax                = 28;
+constexpr int kRemovedRadialSyntax               = 31;
+constexpr int kArcSpecialtiesSyntax              = 31;
+constexpr int kLegacyArcSpecialtiesSyntax        = 32;
+constexpr int kPlanarSlicingMode                 = 0;
+constexpr int kV4ImageSlicingMode                = 1;
+constexpr int kLegacyRadialSlicingMode           = 2;
+constexpr int kLegacyHelicalSlicingMode          = 3;
+constexpr int kV8CylindricalSlicingMode          = 2;
+constexpr int kV9CylindricalSlicingMode          = 1;
+constexpr int kV9ImageSlicingMode                = 2;
+constexpr int kRadialPathType                    = 0;
+constexpr int kHelicalPathType                   = 1;
+constexpr int kV3LegacySlicingMode2              = 2;
+constexpr int kV3ImageSlicingMode                = 3;
+constexpr int kAllPerimeterBoundaries            = 0;
+const QString kLegacySlicingMode                 = "slicer_type";
+const QString kLegacySlicePlaneNormalX           = "slicing_vector_x";
+const QString kLegacySlicePlaneNormalY           = "slicing_vector_y";
+const QString kLegacySlicePlaneNormalZ           = "slicing_vector_z";
+const QString kLegacyCylinderAxisSource          = "radial_axis_mode";
+const QString kLegacyCylinderAxisX               = "radial_axis_x";
+const QString kLegacyCylinderAxisY               = "radial_axis_y";
+const QString kLegacyCylinderInnerRadius         = "radial_initial_radius";
+const QString kLegacyCylindricalPathPattern      = "cylindrical_path_type";
+const QString kLegacyRadialPathBoundaryPolicy    = "radial_boundary_handling";
+const QString kLegacyHelicalPathStartAngle       = "helical_path_start_angle";
+const QString kLegacyHelicalStartAngleOffset     = "helical_start_angle_offset";
+const QString kLegacyHelicalToolStartAngleOffset = "helical_tool_start_angle_offset";
+const QString kLegacyImagePixelSizeX             = "image_resolution_x";
+const QString kLegacyImagePixelSizeY             = "image_resolution_y";
 
 constexpr std::array<int, 35> kSyntaxV2ToV3 = {
     0,                  // Beam
@@ -263,17 +266,15 @@ fifojson legacyHelicalPathStartAngleToolOffsetValue(const fifojson& legacy_start
 }
 
 void renameHelicalStartAngleOffsetToToolOffset(fifojson& settings_group) {
-    renameSettingKey(settings_group, kLegacyHelicalStartAngleOffset,
-                     ORNL::Constants::ProfileSettings::Helical::kHelicalToolStartAngleOffset);
+    renameSettingKey(settings_group, kLegacyHelicalStartAngleOffset, kLegacyHelicalToolStartAngleOffset);
 }
 
 void renameHelicalPathStartAngleToToolOffset(fifojson& settings_group) {
     if (!settings_group.is_object()) return;
 
     const std::string old_key_string = kLegacyHelicalPathStartAngle.toStdString();
-    const std::string new_key_string =
-        ORNL::Constants::ProfileSettings::Helical::kHelicalToolStartAngleOffset.toStdString();
-    auto old_setting = settings_group.find(old_key_string);
+    const std::string new_key_string = kLegacyHelicalToolStartAngleOffset.toStdString();
+    auto old_setting                 = settings_group.find(old_key_string);
     if (old_setting == settings_group.end()) return;
 
     const bool should_insert_new_key = settings_group.find(new_key_string) == settings_group.end();
@@ -325,6 +326,61 @@ void migrateSlicingSettingKeys(fifojson& settings_group) {
 void migrateHelicalToolStartAngleOffset(fifojson& settings_group) {
     renameHelicalStartAngleOffsetToToolOffset(settings_group);
     renameHelicalPathStartAngleToToolOffset(settings_group);
+}
+
+void migrateHelicalToolStartAngleOffsetToArcLength(fifojson& settings_group) {
+    if (!settings_group.is_object()) return;
+
+    const std::string old_key = kLegacyHelicalToolStartAngleOffset.toStdString();
+    const std::string new_key =
+        ORNL::Constants::ProfileSettings::Helical::kHelicalToolStartArcLengthOffset.toStdString();
+    auto old_setting = settings_group.find(old_key);
+    if (old_setting == settings_group.end()) return;
+
+    if (settings_group.contains(new_key)) {
+        settings_group.erase(old_setting);
+        return;
+    }
+
+    double angle_offset = 0.0;
+    if (!numberFromSettingValue(old_setting.value(), angle_offset) || !std::isfinite(angle_offset)) {
+        throw std::invalid_argument("Helical Tool Start Angle Offset is not a finite numeric value.");
+    }
+
+    double arc_length_offset = 0.0;
+    if (std::abs(angle_offset) > std::numeric_limits<double>::epsilon()) {
+        const std::string inner_radius_key =
+            ORNL::Constants::ProfileSettings::Slicing::kCylinderInnerRadius.toStdString();
+        const std::string layer_height_key = ORNL::Constants::ProfileSettings::Layer::kLayerHeight.toStdString();
+        const auto inner_radius_setting    = settings_group.find(inner_radius_key);
+        const auto layer_height_setting    = settings_group.find(layer_height_key);
+        double inner_radius                = 0.0;
+        double layer_height                = 0.0;
+
+        if (inner_radius_setting == settings_group.end() || layer_height_setting == settings_group.end() ||
+            !numberFromSettingValue(inner_radius_setting.value(), inner_radius) ||
+            !numberFromSettingValue(layer_height_setting.value(), layer_height) || !std::isfinite(inner_radius) ||
+            !std::isfinite(layer_height) || inner_radius < 0.0 || layer_height <= 0.0) {
+            throw std::invalid_argument(
+                "Cannot migrate a nonzero Helical Tool Start Angle Offset without a valid Cylinder Inner Radius "
+                "and Layer Height.");
+        }
+
+        const double first_generated_radius = inner_radius + (layer_height / 2.0);
+        if (!std::isfinite(first_generated_radius) ||
+            first_generated_radius <= std::numeric_limits<double>::epsilon()) {
+            throw std::invalid_argument(
+                "Cannot migrate a nonzero Helical Tool Start Angle Offset because the first generated helical "
+                "path radius is zero or invalid.");
+        }
+
+        arc_length_offset = angle_offset * first_generated_radius;
+    }
+
+    const bool preserve_string = old_setting->is_string();
+    settings_group.erase(old_setting);
+    settings_group[new_key] = preserve_string ? fifojson(QString::number(arc_length_offset, 'g', 15).toStdString())
+                                              : fifojson(arc_length_offset);
 }
 
 bool boolFromSettingValue(const fifojson& value, bool& result) {
@@ -379,6 +435,7 @@ void SettingsVersionControl::rollSettingsForward(double& version, fifojson& sett
     if (version < 11) pre_11_0To11_0(version, settings);
     if (version < 12) pre_12_0To12_0(version, settings);
     if (version < 13) pre_13_0To13_0(version, settings);
+    if (version < 14) pre_14_0To14_0(version, settings);
 }
 
 void SettingsVersionControl::formatSettings(double version, fifojson& settings) {
@@ -397,6 +454,7 @@ void SettingsVersionControl::formatSettings(double version, fifojson& settings) 
 void SettingsVersionControl::migrateLegacySettingKeys(fifojson& settings_group) {
     migrateSlicingSettingKeys(settings_group);
     migrateHelicalToolStartAngleOffset(settings_group);
+    migrateHelicalToolStartAngleOffsetToArcLength(settings_group);
     migrateBooleanToInt(settings_group, Constants::PrinterSettings::Dimensions::kUseVariableForZ);
 }
 
@@ -637,6 +695,24 @@ void SettingsVersionControl::pre_13_0To13_0(double& version, fifojson& settings)
     }
 
     version  = 13.0;
+    settings = new_format;
+}
+
+void SettingsVersionControl::pre_14_0To14_0(double& version, fifojson& settings) {
+    QString dt          = QDateTime::currentDateTime().toString();
+    fifojson new_format = settings;
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kLastModified] = dt.toStdString();
+    new_format[Constants::SettingFileStrings::kHeader][Constants::SettingFileStrings::kVersion]      = 14.0;
+
+    auto settings_array = new_format.find(Constants::SettingFileStrings::kSettings);
+    if (settings_array != new_format.end() && settings_array.value().is_array()) {
+        for (auto& settings_group : settings_array.value()) {
+            migrateHelicalToolStartAngleOffset(settings_group);
+            migrateHelicalToolStartAngleOffsetToArcLength(settings_group);
+        }
+    }
+
+    version  = 14.0;
     settings = new_format;
 }
 }  // namespace ORNL

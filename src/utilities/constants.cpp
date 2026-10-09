@@ -858,8 +858,9 @@ const QString Constants::ProfileSettings::Radial::kRadialPathBoundaryPolicy = "r
 const QString Constants::ProfileSettings::Radial::kRadialPathStartAngle     = "radial_path_start_angle";
 
 // Helical
-const QString Constants::ProfileSettings::Helical::kHelicalPathHandedness       = "helical_path_handedness";
-const QString Constants::ProfileSettings::Helical::kHelicalToolStartAngleOffset = "helical_tool_start_angle_offset";
+const QString Constants::ProfileSettings::Helical::kHelicalPathHandedness = "helical_path_handedness";
+const QString Constants::ProfileSettings::Helical::kHelicalToolStartArcLengthOffset =
+    "helical_tool_start_arc_length_offset";
 const QString Constants::ProfileSettings::Helical::kHelicalPathZClipRounding    = "helical_path_z_clip_rounding";
 const QString Constants::ProfileSettings::Helical::kHelicalPerimeterRevolutions = "helical_perimeter_revolutions";
 const QString Constants::ProfileSettings::Helical::kHelicalInsetRevolutions     = "helical_inset_revolutions";
@@ -998,19 +999,20 @@ const QString Constants::Settings::SettingTab::kExperimental = "Experimental";
 //================================================================================
 // Segment Settings(G-Code Output)
 //================================================================================
-const QString Constants::SegmentSettings::kHeight               = "height";
-const QString Constants::SegmentSettings::kWidth                = "width";
-const QString Constants::SegmentSettings::kSpeed                = "speed";
-const QString Constants::SegmentSettings::kAccel                = "accel";
-const QString Constants::SegmentSettings::kExtruderSpeed        = "extruder_speed";
-const QString Constants::SegmentSettings::kWaitTime             = "wait_time";
-const QString Constants::SegmentSettings::kRegionType           = "region_type";
-const QString Constants::SegmentSettings::kPathModifiers        = "path_modifiers";
-const QString Constants::SegmentSettings::kMaterialNumber       = "material_number";
-const QString Constants::SegmentSettings::kRecipe               = "recipe_index";
-const QString Constants::SegmentSettings::kESP                  = "esp";
-const QString Constants::SegmentSettings::kIsRegionStartSegment = "is_region_start_segment";
-const QString Constants::SegmentSettings::kAdapted              = "adapted";
+const QString Constants::SegmentSettings::kHeight                      = "height";
+const QString Constants::SegmentSettings::kWidth                       = "width";
+const QString Constants::SegmentSettings::kSpeed                       = "speed";
+const QString Constants::SegmentSettings::kAccel                       = "accel";
+const QString Constants::SegmentSettings::kExtruderSpeed               = "extruder_speed";
+const QString Constants::SegmentSettings::kWaitTime                    = "wait_time";
+const QString Constants::SegmentSettings::kRegionType                  = "region_type";
+const QString Constants::SegmentSettings::kPathModifiers               = "path_modifiers";
+const QString Constants::SegmentSettings::kMaterialNumber              = "material_number";
+const QString Constants::SegmentSettings::kRecipe                      = "recipe_index";
+const QString Constants::SegmentSettings::kESP                         = "esp";
+const QString Constants::SegmentSettings::kIsRegionStartSegment        = "is_region_start_segment";
+const QString Constants::SegmentSettings::kAdapted                     = "adapted";
+const QString Constants::SegmentSettings::kHelicalToolStartAngleOffset = "effective_helical_tool_start_angle_offset";
 
 //================================================================================
 // Limits

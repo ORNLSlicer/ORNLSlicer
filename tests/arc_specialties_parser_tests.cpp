@@ -17,6 +17,7 @@
 #include "geometry/point.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
+#include "slicing/helical_tool_start_angle.h"
 #include "step/layer/cylindrical_layer.h"
 #include "test_utils.h"
 #include "units/unit.h"
@@ -183,7 +184,7 @@ bool writesCompactCylindricalPrintComments() {
                          static_cast<int>(ORNL::CylindricalPathPattern::kHelical));
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::SS::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
     ORNL::ArcSpecialtiesWriter helical_writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString helical_line = helical_writer.writeLine(
         ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm), ORNL::Point(0.0 * ORNL::mm, 1.0 * ORNL::mm), segment_settings);
@@ -202,7 +203,7 @@ QSharedPointer<ORNL::SettingsBase> helicalWriterSettings(bool support_arcs) {
                          static_cast<int>(ORNL::PathOrderOptimization::kNextClosest));
     settings->setSetting(ORNL::PS::Helical::kHelicalPathZClipRounding,
                          static_cast<int>(ORNL::HelicalPathZClipRounding::kExactIntersection));
-    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartArcLengthOffset, 0.0 * ORNL::mm);
     settings->setSetting(ORNL::PRS::MachineSetup::kSupportG3, support_arcs);
     settings->setSetting(ORNL::PRS::MachineSetup::kG2G3CenterPointInterpretation, 1);
     settings->setSetting(ORNL::PRS::MachineSetup::kAxisA, 0.0 * ORNL::degree);
@@ -217,7 +218,7 @@ QSharedPointer<ORNL::SettingsBase> helicalSegmentSettings(std::optional<ORNL::Re
     segment_settings->setSetting(QStringLiteral("radial_center_y"), 0.0 * ORNL::mm);
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::SS::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
     if (region_type.has_value()) { segment_settings->setSetting(ORNL::SS::kRegionType, region_type.value()); }
     return segment_settings;
 }
@@ -274,10 +275,11 @@ bool writesHelicalCpFromStartOffsetBaseline() {
     segment_settings->populate(settings);
     segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                                  static_cast<int>(ORNL::HelicalPathHandedness::kLeftHanded));
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
-
     const ORNL::Distance radius = 100.0 * ORNL::mm;
-    auto point_at_angle         = [radius](double angle_degrees, ORNL::Distance z) {
+    const ORNL::Distance arc_length_offset(radius() * (-12.0 * ORNL::degree)());
+    segment_settings->setSetting(ORNL::SS::kHelicalToolStartAngleOffset,
+                                 ORNL::HelicalToolStartAngle::angleOffsetForRadius(arc_length_offset, radius).value());
+    auto point_at_angle = [radius](double angle_degrees, ORNL::Distance z) {
         const double angle_radians = angle_degrees * M_PI / 180.0;
         return ORNL::Point(radius * std::cos(angle_radians), radius * std::sin(angle_radians), z);
     };
@@ -305,6 +307,34 @@ bool writesHelicalCpFromStartOffsetBaseline() {
            travel_lower_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") &&
            travel_lower_line.contains("CP=-12.0000") && arc_line.contains("X=20.7912 Y=97.8148") &&
            arc_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") && arc_line.contains("CP=0.0000");
+}
+
+bool keepsHelicalToolArcLengthConstantAcrossRadiiAndHandedness() {
+    QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
+    const ORNL::Distance arc_length_offset      = 20.0 * ORNL::mm;
+
+    auto write_at_radius = [&settings, arc_length_offset](ORNL::Distance radius,
+                                                          ORNL::HelicalPathHandedness handedness) {
+        QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
+        segment_settings->populate(settings);
+        segment_settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness, static_cast<int>(handedness));
+        segment_settings->setSetting(
+            ORNL::SS::kHelicalToolStartAngleOffset,
+            ORNL::HelicalToolStartAngle::angleOffsetForRadius(arc_length_offset, radius).value());
+
+        ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+        const ORNL::Point start(0.0 * ORNL::mm, radius, 0.0 * ORNL::mm);
+        const ORNL::Point end(0.0 * ORNL::mm, radius, 1.0 * ORNL::mm);
+        return lineContaining(writer.writeLine(start, end, segment_settings), ";HELICAL PERIMETER");
+    };
+
+    const QString right_100 = write_at_radius(100.0 * ORNL::mm, ORNL::HelicalPathHandedness::kRightHanded);
+    const QString left_100  = write_at_radius(100.0 * ORNL::mm, ORNL::HelicalPathHandedness::kLeftHanded);
+    const QString right_200 = write_at_radius(200.0 * ORNL::mm, ORNL::HelicalPathHandedness::kRightHanded);
+
+    return right_100.contains("XR=185.7296 YR=5.7296") && right_100.contains("CP=11.4592") &&
+           left_100.contains("XR=185.7296 YR=5.7296") && left_100.contains("CP=11.4592") &&
+           right_200.contains("XR=182.8648 YR=2.8648") && right_200.contains("CP=5.7296");
 }
 
 bool writesLayerScopedBlockNumbersWhenEnabled() {
@@ -374,7 +404,7 @@ bool writesHelicalOptStopModeFromPostOrderingRotationDirection() {
                          static_cast<int>(ORNL::PathOrderOptimization::kNextClosest));
     settings->setSetting(ORNL::PS::Helical::kHelicalPathZClipRounding,
                          static_cast<int>(ORNL::HelicalPathZClipRounding::kCompleteRevolution));
-    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
+    settings->setSetting(ORNL::SS::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
     settings->setSetting(ORNL::PS::Travel::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
     settings->setSetting(ORNL::PRS::MachineSpeed::kMaxXYSpeed, 600.0 * ORNL::mm / ORNL::minute);
     settings->setSetting(ORNL::PRS::MachineSpeed::kZSpeed, 600.0 * ORNL::mm / ORNL::minute);
@@ -561,7 +591,7 @@ bool writesHelicalRegionToolFrameRotations() {
     const ORNL::Point end(0.0 * ORNL::mm, 1.0 * ORNL::mm, 1.0 * ORNL::mm);
     auto segmentSettings = [](std::optional<ORNL::RegionType> region_type) {
         QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(region_type);
-        segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 8.0 * ORNL::degree);
+        segment_settings->setSetting(ORNL::SS::kHelicalToolStartAngleOffset, 8.0 * ORNL::degree);
         return segment_settings;
     };
     const QString block = writer.writeLine(start, end, segmentSettings(ORNL::RegionType::kPerimeter)) %
@@ -599,7 +629,7 @@ bool writesHelicalTravelToolFrameRotation() {
 
     QSharedPointer<ORNL::SettingsBase> segment_settings = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
     segment_settings->populate(settings);
-    segment_settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
+    segment_settings->setSetting(ORNL::SS::kHelicalToolStartAngleOffset, -12.0 * ORNL::degree);
 
     ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString travel_block = writer.writeTravel(ORNL::Point(1.0 * ORNL::mm, 0.0 * ORNL::mm, 0.0 * ORNL::mm),
@@ -616,7 +646,7 @@ bool writesHelicalTravelToolFrameRotation() {
 bool writesHelicalToolFrameHeader() {
     QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
     setHelicalToolFrameSettings(settings);
-    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 8.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartArcLengthOffset, 8.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kBeadWidth, 4.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Slicing::kCylinderInnerRadius, 5.0 * ORNL::mm);
@@ -637,11 +667,13 @@ bool writesHelicalToolFrameHeader() {
     ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
     const QString header = writer.writeSettingsHeader(ORNL::GcodeSyntax::kArcSpecialties);
 
-    return header.contains(";Helical Perimeter Tool Frame Rotation: XR=15.0000deg YR=16.0000deg ZR=13.0000deg") &&
-           header.contains(";Helical Inset Tool Frame Rotation: XR=25.0000deg YR=26.0000deg ZR=23.0000deg") &&
-           header.contains(";Helical Infill Tool Frame Rotation: XR=35.0000deg YR=36.0000deg ZR=33.0000deg") &&
-           header.contains(";Helical Travel Tool Frame Rotation: XR=45.0000deg YR=46.0000deg ZR=43.0000deg") &&
-           header.contains(";Initial World Approach Tool Frame Rotation: XR=184.0000deg YR=4.0000deg ZR=-90.0000deg");
+    return header.contains(";Helical Perimeter Tool Frame Rotation: XR=11.0000deg YR=12.0000deg ZR=13.0000deg") &&
+           header.contains(";Helical Inset Tool Frame Rotation: XR=21.0000deg YR=22.0000deg ZR=23.0000deg") &&
+           header.contains(";Helical Infill Tool Frame Rotation: XR=31.0000deg YR=32.0000deg ZR=33.0000deg") &&
+           header.contains(";Helical Travel Tool Frame Rotation: XR=41.0000deg YR=42.0000deg ZR=43.0000deg") &&
+           header.contains(";Initial World Approach Tool Frame Rotation: XR=180.0000deg YR=0.0000deg ZR=-90.0000deg") &&
+           header.contains(";Helical Tool Start Arc Length Offset: 8.0000mm") &&
+           header.contains(";Helical Tool Offset Conversion: signed angle = arc length / actual generated path radius");
 }
 
 QString lineContaining(const QString& block, const QString& marker) {
@@ -739,7 +771,7 @@ bool writesHelicalZClipRoundingHeader() {
                          static_cast<int>(ORNL::HelicalPathZClipRounding::kCompleteRevolution));
     settings->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
                          static_cast<int>(ORNL::HelicalPathHandedness::kRightHanded));
-    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartAngleOffset, 0.0 * ORNL::degree);
+    settings->setSetting(ORNL::PS::Helical::kHelicalToolStartArcLengthOffset, 0.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kLayerHeight, 1.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Layer::kBeadWidth, 4.0 * ORNL::mm);
     settings->setSetting(ORNL::PS::Travel::kLiftHeight, 0.0 * ORNL::mm);
@@ -841,6 +873,9 @@ int main(int argc, char* argv[]) {
                               "Arc Specialties writer did not emit the G80 schedule speed variable for print motion.");
     passed &= ORNL::Testing::expect(writesHelicalCpFromStartOffsetBaseline(),
                                     "Arc Specialties writer did not preserve the helical start-offset CP baseline.");
+    passed &= ORNL::Testing::expect(
+        keepsHelicalToolArcLengthConstantAcrossRadiiAndHandedness(),
+        "Arc Specialties writer did not convert one helical tool arc length across radii and handedness.");
     passed &= ORNL::Testing::expect(writesLayerScopedBlockNumbersWhenEnabled(),
                                     "Arc Specialties writer did not emit layer-scoped block numbers.");
     passed &= ORNL::Testing::expect(writesHelicalOptStopModeFromPostOrderingRotationDirection(),

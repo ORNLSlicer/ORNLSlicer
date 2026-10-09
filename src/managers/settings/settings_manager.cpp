@@ -6,6 +6,7 @@
 #include <QMessageBox>
 #include <QRegularExpression>
 #include <QStandardPaths>
+#include <exception>
 #include <iostream>
 #include <string>
 
@@ -310,11 +311,28 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, Set
             version = header[Constants::SettingFileStrings::kVersion];
     }
 
+    auto rollForward = [&filename, &settings_data, &version, update_mode]() {
+        const fifojson original_settings = settings_data;
+        const double original_version    = version;
+        try {
+            SettingsVersionControl::rollSettingsForward(version, settings_data);
+            return true;
+        } catch (const std::exception& e) {
+            settings_data         = original_settings;
+            version               = original_version;
+            const QString message = filename % " could not be updated: " % QString::fromUtf8(e.what());
+            qWarning() << message;
+            if (update_mode == SettingsVersionUpdateMode::kGuiPrompt) {
+                QMessageBox::critical(nullptr, QCoreApplication::applicationName(), message);
+            }
+            return false;
+        }
+    };
+
     if (version < m_current_master_version) {
         if (update_mode == SettingsVersionUpdateMode::kAutoUpdate) {
             qInfo() << filename + " is outdated. Loading it with the newest compatible version.";
-            SettingsVersionControl::rollSettingsForward(version, settings_data);
-            return 1;
+            return rollForward() ? 1 : -1;
         }
         else if (update_mode == SettingsVersionUpdateMode::kGuiPrompt) {
             int ret = m_yes_to_all_update;
@@ -328,10 +346,7 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, Set
 
             if (ret == QMessageBox::YesToAll) m_yes_to_all_update = true;
 
-            if (ret == QMessageBox::Yes || m_yes_to_all_update) {
-                SettingsVersionControl::rollSettingsForward(version, settings_data);
-                return 1;
-            }
+            if (ret == QMessageBox::Yes || m_yes_to_all_update) { return rollForward() ? 1 : -1; }
             else
                 return -1;
         }
@@ -341,10 +356,7 @@ int SettingsManager::checkVersion(QString filename, fifojson& settings_data, Set
                            "update this template to the newest compatible version? (Y/N)";
             std::string response;
             std::cin >> response;
-            if (QString::fromStdString(response).toUpper() == "Y") {
-                SettingsVersionControl::rollSettingsForward(version, settings_data);
-                return 1;
-            }
+            if (QString::fromStdString(response).toUpper() == "Y") { return rollForward() ? 1 : -1; }
             else
                 return -1;
         }

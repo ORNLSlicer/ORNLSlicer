@@ -58,20 +58,20 @@ PathOrderOptimization resolvedCylindricalPathOrder(const QSharedPointer<Settings
                                                                                 : PathOrderOptimization::kNextClosest;
 }
 
-//! @brief Applies the helical tool offset sign that matches the ordered print direction.
+//! @brief Applies the radius-derived helical tool angle sign that matches the ordered print direction.
 void applyHelicalToolOffsetForOrderedDirection(Path& path, const QSharedPointer<SettingsBase>& layer_settings,
                                                bool starts_from_generated_end) {
     const HelicalPathZClipRounding z_clip_rounding =
         static_cast<HelicalPathZClipRounding>(layer_settings->setting<int>(PS::Helical::kHelicalPathZClipRounding));
     const PathOrderOptimization path_order = resolvedCylindricalPathOrder(layer_settings);
-    const Angle configured_offset          = layer_settings->setting<Angle>(PS::Helical::kHelicalToolStartAngleOffset);
-    const Angle effective_offset = HelicalToolStartAngle::effectiveOffset(configured_offset, starts_from_generated_end,
-                                                                          z_clip_rounding, path_order);
+    const Angle radius_angle_offset        = layer_settings->setting<Angle>(SS::kHelicalToolStartAngleOffset);
+    const Angle effective_offset           = HelicalToolStartAngle::effectiveOffset(
+        radius_angle_offset, starts_from_generated_end, z_clip_rounding, path_order);
 
-    layer_settings->setSetting(PS::Helical::kHelicalToolStartAngleOffset, effective_offset);
+    layer_settings->setSetting(SS::kHelicalToolStartAngleOffset, effective_offset);
     for (const QSharedPointer<SegmentBase>& segment : path) {
         if (segment != nullptr && segment->getSb() != nullptr) {
-            segment->getSb()->setSetting(PS::Helical::kHelicalToolStartAngleOffset, effective_offset);
+            segment->getSb()->setSetting(SS::kHelicalToolStartAngleOffset, effective_offset);
         }
     }
 }
