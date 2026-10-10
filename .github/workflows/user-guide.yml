@@ -1,0 +1,163 @@
+---
+name: User Guide
+
+on:
+  push:
+    paths:
+      - ".github/workflows/user-guide.yml"
+      - "docs/**"
+      - "resources/configs/master.conf"
+      - "resources/configs/setting_inputs.conf"
+      - "resources/settings/**"
+      - "scripts/generate_master_config.py"
+      - "scripts/generate_settings_reference.py"
+  pull_request:
+    paths:
+      - ".github/workflows/user-guide.yml"
+      - "docs/**"
+      - "resources/configs/master.conf"
+      - "resources/configs/setting_inputs.conf"
+      - "resources/settings/**"
+      - "scripts/generate_master_config.py"
+      - "scripts/generate_settings_reference.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FORCE_SOURCE_DATE: "1"
+  SOURCE_DATE_EPOCH: "1735689600"
+  TZ: UTC
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  generate:
+    if: github.event_name != 'push' || github.ref == 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      - name: Install documentation toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            lmodern \
+            pandoc \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-latex-recommended
+
+      - name: Regenerate settings catalog and user guide
+        run: |
+          python3 scripts/generate_master_config.py \
+            resources/settings \
+            resources/configs/master.conf \
+            resources/configs/setting_inputs.conf
+          python3 -B scripts/generate_settings_reference.py
+          pandoc --from=gfm docs/ornlslicer-user-guide.md \
+            --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
+            --include-in-header=docs/pandoc/user-guide-header.tex \
+            --metadata title-meta="ORNLSlicer User Guide" \
+            --output=docs/ornlslicer-user-guide.pdf
+
+      - name: Upload generated PDF
+        uses: actions/upload-artifact@v6
+        with:
+          name: ornlslicer-user-guide
+          path: docs/ornlslicer-user-guide.pdf
+
+      - name: Verify generated guide is committed
+        run: |
+          # The PDF is uploaded as an artifact; TeX can still produce byte-level
+          # churn even with stable timestamps, so gate on deterministic sources.
+          git diff --exit-code -- \
+            docs/ornlslicer-user-guide.md \
+            resources/configs/master.conf \
+            resources/configs/setting_inputs.conf
+
+  regenerate-branch:
+    if: github.event_name == 'push' && github.ref != 'refs/heads/develop'
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 2
+          lfs: true
+
+      - name: Install documentation toolchain
+        run: |
+          sudo apt-get update
+          sudo apt-get install --no-install-recommends -y \
+            lmodern \
+            pandoc \
+            texlive-fonts-recommended \
+            texlive-latex-base \
+            texlive-latex-extra \
+            texlive-latex-recommended
+
+      - name: Regenerate settings catalog and user guide
+        run: |
+          python3 scripts/generate_master_config.py \
+            resources/settings \
+            resources/configs/master.conf \
+            resources/configs/setting_inputs.conf
+          python3 -B scripts/generate_settings_reference.py
+          pandoc --from=gfm docs/ornlslicer-user-guide.md \
+            --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
+            --include-in-header=docs/pandoc/user-guide-header.tex \
+            --metadata title-meta="ORNLSlicer User Guide" \
+            --output=docs/ornlslicer-user-guide.pdf
+
+      - name: Upload generated PDF
+        uses: actions/upload-artifact@v6
+        with:
+          name: ornlslicer-user-guide
+          path: docs/ornlslicer-user-guide.pdf
+
+      - name: Commit regenerated guide
+        run: |
+          guide_inputs_changed=false
+          if git rev-parse HEAD^ >/dev/null 2>&1 && \
+            git diff --name-only HEAD^ HEAD -- \
+              docs/ornlslicer-user-guide.md \
+              resources/configs/master.conf \
+              resources/configs/setting_inputs.conf \
+              resources/settings \
+              scripts/generate_master_config.py \
+              scripts/generate_settings_reference.py | grep -q .; then
+            guide_inputs_changed=true
+          fi
+
+          generated_sources_changed=false
+          if ! git diff --quiet -- \
+            docs/ornlslicer-user-guide.md \
+            resources/configs/master.conf \
+            resources/configs/setting_inputs.conf; then
+            generated_sources_changed=true
+          fi
+
+          if [ "$guide_inputs_changed" != true ] && [ "$generated_sources_changed" != true ]; then
+            echo "User guide is already current."
+            exit 0
+          fi
+
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add \
+            docs/ornlslicer-user-guide.md \
+            resources/configs/master.conf \
+            resources/configs/setting_inputs.conf
+          git add docs/ornlslicer-user-guide.pdf
+          git commit -m "docs: regenerate user guide"
+          git push

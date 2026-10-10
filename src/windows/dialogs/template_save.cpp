@@ -298,7 +298,7 @@ void TemplateSaveDialog::setupTable() {
             QTableWidgetItem* cur = new QTableWidgetItem(val);
 
             // Add the major category to our list if required.
-            if (Q_UNLIKELY(!m_maj.contains(maj->text()))) m_maj.insert(maj->text());
+            if (Q_UNLIKELY(!m_maj.contains(maj->text()))) m_maj.append(maj->text());
 
             // Adds checkboxes to display name.
             dis->setCheckState(Qt::Unchecked);

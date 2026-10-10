@@ -6,7 +6,7 @@ The canonical documentation entry point is the [Documentation Index](../README.m
 
 ## Users
 
-- [ORNLSlicer User Guide](../ornlslicer-user-guide.pdf)
+- [ORNLSlicer User Guide](../ornlslicer-user-guide.md)
 - [Relevant Papers](Relevant-Papers.md)
 - [Citation and Copyright Information](Citation-and-Copyright-Information.md)
 - [License and Library Licenses](License-and-Library-Licenses.md)

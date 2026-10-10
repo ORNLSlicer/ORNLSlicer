@@ -16,7 +16,7 @@ settings:
   - name: "inset_count"
     display: "Number of Insets"
     type: "positive_int"
-    tooltip: "Number of insets"
+    tooltip: "Sets the number of inward contour paths generated after the perimeter. The editor accepts 1 or more; the built-in catalog fallback is 0, so set an explicit value before enabling insets."
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
     options: []
     default: 0

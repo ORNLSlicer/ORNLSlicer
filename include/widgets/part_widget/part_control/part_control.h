@@ -52,6 +52,9 @@ class PartControl : public QWidget {
     //! \param status if the part is outside the volume
     void setOutsideStatus(const QString& name, bool status);
 
+    //! \brief Expands all items in the part tree
+    void expandAll();
+
    private slots:
     //! \brief Model updates.
     void modelAdditionUpdate(QSharedPointer<PartMetaItem> pm);
