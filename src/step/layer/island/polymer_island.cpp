@@ -9,6 +9,7 @@
 #include "geometry/path.h"
 #include "geometry/point.h"
 #include "geometry/polygon_list.h"
+#include "geometry/polyline.h"
 #include "geometry/settings_polygon.h"
 #include "managers/settings/settings_manager.h"
 #include "step/layer/island/island_base.h"
@@ -23,6 +24,36 @@
 #include "utilities/enums.h"
 
 namespace ORNL {
+namespace {
+bool settingsPolygonAffectsIsland(const SettingsPolygon& settings_polygon, const PolygonList& island_geometry) {
+    PolygonList settings_geometry = settings_polygon;
+    return !(settings_geometry & island_geometry).isEmpty();
+}
+
+bool connectedInsetMaterialsCompatible(const QSharedPointer<SettingsBase>& settings,
+                                       const QVector<SettingsPolygon>& settings_polygons,
+                                       const PolygonList& island_geometry) {
+    const bool global_multi_material_enabled = settings->setting<bool>(MS::MultiMaterial::kEnable);
+    auto materials_compatible = [global_multi_material_enabled](const QSharedPointer<SettingsBase>& candidate) {
+        return (!global_multi_material_enabled && !candidate->setting<bool>(MS::MultiMaterial::kEnable)) ||
+               candidate->setting<int>(MS::MultiMaterial::kPerimeterNum) ==
+                   candidate->setting<int>(MS::MultiMaterial::kInsetNum);
+    };
+
+    if (!materials_compatible(settings)) { return false; }
+
+    for (const SettingsPolygon& polygon : settings_polygons) {
+        if (!settingsPolygonAffectsIsland(polygon, island_geometry)) { continue; }
+
+        QSharedPointer<SettingsBase> localized_settings = QSharedPointer<SettingsBase>::create(*settings);
+        localized_settings->populate(polygon.getSettings());
+        if (!materials_compatible(localized_settings)) { return false; }
+    }
+
+    return true;
+}
+}  // namespace
+
 PolymerIsland::PolymerIsland(const PolygonList& geometry, const QSharedPointer<SettingsBase>& sb,
                              const QVector<SettingsPolygon>& settings_polygons, const PolygonList& uncut_geometry)
     : IslandBase(geometry, sb, settings_polygons) {
@@ -70,7 +101,38 @@ void PolymerIsland::optimize(int layerNumber, Point& currentLocation,
 
     bool wasLastSpiral = false;
 
+    QSharedPointer<Perimeter> connected_perimeter = getRegion(RegionType::kPerimeter).dynamicCast<Perimeter>();
+    QSharedPointer<Inset> connected_inset         = getRegion(RegionType::kInset).dynamicCast<Inset>();
+    QVector<Polyline> connected_inset_geometry;
+    QVector<Distance> connected_inset_widths;
+
+    if (!connected_perimeter.isNull() && !connected_inset.isNull()) {
+        connected_inset_geometry = connected_inset->getComputedGeometry();
+        connected_inset_widths   = connected_inset->getComputedWidths();
+    }
+
+    const bool adjacent_spiral_perimeter_and_inset = !connected_perimeter.isNull() && !connected_inset.isNull() &&
+                                                     connected_perimeter->getIndex() + 1 == connected_inset->getIndex();
+    const bool connect_spiral_perimeter_to_inset =
+        !connected_perimeter.isNull() && !connected_inset.isNull() && !connected_inset_geometry.isEmpty() &&
+        adjacent_spiral_perimeter_and_inset && m_sb->setting<bool>(PS::Perimeter::kEnableSpiralPerimeter) &&
+        m_sb->setting<bool>(PS::Perimeter::kConnectToInsets) && m_sb->setting<bool>(PS::Inset::kEnableSpiralInset) &&
+        connectedInsetMaterialsCompatible(m_sb, m_settings_polygons, m_geometry);
+
+    if (!connected_perimeter.isNull()) {
+        if (connect_spiral_perimeter_to_inset) {
+            connected_perimeter->setConnectedInsetGeometry(connected_inset_geometry, connected_inset_widths);
+        }
+        else { connected_perimeter->setConnectedInsetGeometry({}, {}); }
+    }
+
     for (QSharedPointer<RegionBase> r : m_regions) {
+        if (connect_spiral_perimeter_to_inset && r.data() == connected_inset.data() &&
+            connected_perimeter->connectedInsetGeometryConsumed()) {
+            connected_inset->getPaths().clear();
+            continue;
+        }
+
         if (previousRegions.size() > 0)
             wasLastSpiral = previousRegions.last()->getSb()->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 
