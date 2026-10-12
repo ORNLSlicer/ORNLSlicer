@@ -54,7 +54,7 @@ settings:
   - name: "skeleton_output_cleaning_distance"
     display: "Output Cleaning Distance"
     type: "distance"
-    tooltip: "Specifies the distance threshold used to clean and simplify the the generated skeleton. The cleaning process involves: Removing vertices that connect co-linear or nearly co-linear edges: If moving a vertex by no more than this distance would make the connected edges co-linear, the vertex is removed to simplify the skeleton. Eliminating vertices that are too close to adjacent vertices: Vertices within this distance of an adjacent vertex are removed to prevent redundant points and overlaps. Removing vertices near semi-adjacent vertices along with their outlying vertices: If a vertex is within this distance of a semi-adjacent vertex, both the vertex and its connected outlying vertices are removed to simplify complex connections. By adjusting this cleaning distance, you can simplify the skeleton by merging or removing unnecessary vertices."
+    tooltip: "Sets the distance tolerance used to simplify the generated skeleton by removing nearly collinear, adjacent, or semi-adjacent redundant vertices."
     depends: {"AND":[{"slicing_mode":0},{"skeleton":true}]}
     options: []
     default: 0

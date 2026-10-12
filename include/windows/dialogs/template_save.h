@@ -95,7 +95,7 @@ class TemplateSaveDialog : public QDialog {
     QMap<QString, QString> m_keys_dis;
 
     //! \brief Major categories.
-    QSet<QString> m_maj;
+    QStringList m_maj;
 
     //! \brief Copy of boolean values for all settings to easily determine
     //! if they should be added or not

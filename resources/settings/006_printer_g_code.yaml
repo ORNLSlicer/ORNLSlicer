@@ -4,7 +4,7 @@ settings:
   - name: "enable_default_startup_code"
     display: "Use Default Startup G-Code"
     type: "boolean"
-    tooltip: "If selected, default G-Code will be added to the header of the print. See the user's manual for what is included for each syntax."
+    tooltip: "Adds the selected syntax's built-in startup commands to the print header. The exact commands are writer-specific; inspect and verify the exported header."
     depends: {}
     options: []
     default: false

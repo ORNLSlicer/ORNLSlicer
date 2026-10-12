@@ -662,7 +662,7 @@ void GCodeView::showSeams(bool show) {
 }
 
 void GCodeView::updateOptimizationSettings(QSharedPointer<SettingsBase> sb) {
-    m_printer->updateFromSettings(sb);
+    if (!m_printer.isNull()) { m_printer->updateFromSettings(sb); }
 
     this->update();
 }

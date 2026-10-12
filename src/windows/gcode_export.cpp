@@ -56,7 +56,7 @@ bool hasVisualizationSegments(const QVector<QVector<QSharedPointer<SegmentBase>>
 }
 }  // namespace
 
-GcodeExport::GcodeExport(QWidget* parent) : m_has_gcode_visualization(false) {
+GcodeExport::GcodeExport(QWidget* parent) : QWidget(parent, Qt::Window), m_has_gcode_visualization(false) {
     setWindowTitle(QApplication::applicationDisplayName() + ": G-Code/Project Export");
 
     QIcon icon;

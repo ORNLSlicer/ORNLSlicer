@@ -16,7 +16,7 @@
 #include <qwidget.h>
 
 namespace ORNL {
-AboutWindow::AboutWindow(QWidget* parent) : QWidget() {
+AboutWindow::AboutWindow(QWidget* parent) : QWidget(parent, Qt::Window) {
     // make it behave the same as "About Qt" window: The window is modal to the application and blocks input to all
     // windows
     setWindowModality(Qt::ApplicationModal);

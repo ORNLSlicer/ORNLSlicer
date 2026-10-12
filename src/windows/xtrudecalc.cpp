@@ -22,7 +22,7 @@
 
 namespace ORNL {
 
-XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
+XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget(parent, Qt::Window) {
     m_parent = parent;
 
     // Combines units based on user's set preferences

@@ -216,6 +216,10 @@ void PartControl::setOutsideStatus(const QString& name, bool status) {
     }
 }
 
+void PartControl::expandAll() {
+    m_tree_widget->expandAll();
+}
+
 void PartControl::setupSubWidgets() {
     m_tree_widget = new PartControlTreeWidget(this);
     m_tree_widget->resize(Constants::UI::PartControl::kSize);
