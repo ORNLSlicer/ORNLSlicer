@@ -10,21 +10,32 @@
 #include <QOpenGLWidget>
 #include <QPair>
 #include <QPlainTextEdit>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QStyleFactory>
 #include <QTabBar>
 #include <QTabWidget>
 #include <QTextEdit>
+#include <QTimer>
+#include <QToolButton>
 #include <QVector>
 #include <algorithm>
+#include <functional>
 #include <iostream>
 
 #include "geometry/mesh/mesh_factory.h"
+#include "graphics/base_view.h"
+#include "graphics/objects/part_object.h"
+#include "graphics/view/gcode_view.h"
+#include "graphics/view/part_view.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
+#include "managers/settings/settings_manager.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
+#include "widgets/cmd_widget.h"
 #include "widgets/gcode_widget.h"
+#include "widgets/gcodebar.h"
 #include "widgets/layerbar.h"
 #include "widgets/main_toolbar.h"
 #include "widgets/part_widget/part_control/part_control.h"
@@ -58,7 +69,11 @@ QString toSlug(const QString& name) {
 }
 
 QImage captureWidget(QWidget* widget) {
-    if (auto* glWidget = qobject_cast<QOpenGLWidget*>(widget)) { return glWidget->grabFramebuffer(); }
+    if (auto* glWidget = qobject_cast<QOpenGLWidget*>(widget)) {
+        QImage img = glWidget->grabFramebuffer();
+        glWidget->makeCurrent();
+        return img;
+    }
     return widget->grab().toImage();
 }
 
@@ -97,19 +112,62 @@ void ensureSampleParts(MainWindow* window) {
     }
 }
 
-void sliceSampleParts(MainWindow* window) {
-    auto* textEdit = window->findChild<QDockWidget*>("m_gcodedock")->findChild<QPlainTextEdit*>();
-    QEventLoop loop;
-    QObject::connect(textEdit, &QPlainTextEdit::textChanged, &loop, &QEventLoop::quit);
-    emit window->findChild<MainToolbar*>()->slice();
-    loop.exec();
+void setupCaptureCameras(MainWindow* window) {
+    const QVector2D captureAngle(-30.0f, -55.0f);
+    const QVector2D captureTranslate(-0.25f, -0.15f);
+    constexpr float captureZoomDelta = 1200.0f;
+    for (auto* view : window->findChildren<BaseView*>()) {
+        view->resetCamera();
+        view->camera()->rotateAbsolute(captureAngle);
+        view->camera()->zoom(captureZoomDelta);
+        view->translateCameraByScreenDelta(captureTranslate);
+    }
+}
 
-    auto* cmd    = window->findChild<QDockWidget*>("m_cmddock")->findChild<QTextEdit*>();
+void setGCodeLayerRange(MainWindow* window, int low, int high) {
+    auto* gcodeBar  = window->findChild<GcodeBar*>();
+    auto* gcodeView = window->findChild<GCodeWidget*>()->view();
+    if (gcodeBar) {
+        int maxL = gcodeBar->maxLayer();
+        low      = std::clamp(low, 0, maxL);
+        high     = std::clamp(high, low, maxL);
+        gcodeBar->setLowerLayer(low);
+        gcodeBar->setUpperLayer(high);
+    }
+    if (gcodeView) {
+        gcodeView->setLowLayer(low);
+        gcodeView->setHighLayer(high);
+    }
+}
+
+void sliceAndWait(MainWindow* window) {
+    auto* textEdit = window->findChild<GcodeBar*>()->findChild<QPlainTextEdit*>();
+    QEventLoop loop;
+    QObject::connect(textEdit, &QPlainTextEdit::textChanged, &loop, [textEdit, &loop]() {
+        if (!textEdit->toPlainText().isEmpty()) { QTimer::singleShot(150, &loop, &QEventLoop::quit); }
+    });
+    emit window->findChild<MainToolbar*>()->slice();
+    for (auto* dlg : window->findChildren<SliceDialog*>()) {
+        QObject::disconnect(dlg, &SliceDialog::cancelSlice, nullptr, nullptr);
+        for (auto* btn : dlg->findChildren<QPushButton*>()) { btn->setEnabled(false); }
+        dlg->hide();
+    }
+    loop.exec();
+    if (auto* gcodeBar = window->findChild<GcodeBar*>()) { setGCodeLayerRange(window, 0, gcodeBar->maxLayer()); }
+    QApplication::sendPostedEvents();
+}
+
+void sliceSampleParts(MainWindow* window) {
+    sliceAndWait(window);
+
+    auto* cmd    = window->findChild<CmdWidget*>()->findChild<QTextEdit*>();
     QString text = cmd->toPlainText().replace(QDir::homePath(), "/home/user");
     text.replace(QRegularExpression("Total Slice Time.*"),
                  "Total Slice Time (excluding gcode writing/parsing): 00:00:02.000");
     cmd->setPlainText(text);
     window->findChild<LayerBar*>()->addRange(10, 40);
+
+    setupCaptureCameras(window);
     window->findChild<MainToolbar*>()->setView(0);
 }
 
@@ -158,6 +216,322 @@ QWidget* prepareGcodeToS2CDialog(MainWindow* w) {
     return dlg;
 }
 
+void capturePreviewModes(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* gcodeView = window->findChild<GCodeWidget*>()->view();
+
+    // Default 3-D true bead widths
+    gcodeView->useOrthographic(false);
+    gcodeView->updateSegmentWidths(true);
+    gcodeView->showGhosts(false);
+    QApplication::sendPostedEvents();
+    capture("preview_true_bead_width", gcodeView);
+
+    // Thin lines
+    gcodeView->updateSegmentWidths(false);
+    QApplication::sendPostedEvents();
+    capture("preview_thin_lines", gcodeView);
+
+    // Restore true widths
+    gcodeView->updateSegmentWidths(true);
+
+    // Ghosted source model
+    gcodeView->showGhosts(true);
+    QApplication::sendPostedEvents();
+    capture("preview_ghosted_model", gcodeView);
+    gcodeView->showGhosts(false);
+
+    // Orthographic 2-D
+    gcodeView->resetCamera();
+    gcodeView->useOrthographic(true);
+    QApplication::sendPostedEvents();
+    capture("preview_orthographic_2d", gcodeView);
+    gcodeView->useOrthographic(false);
+}
+
+void captureInspectionOverlays(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* partWidget  = window->findChild<PartWidget*>();
+    auto* partView    = partWidget->view();
+    auto* mainToolbar = window->findChild<MainToolbar*>();
+
+    partView->makeCurrent();
+
+    // Slicing Planes + Part Names
+    mainToolbar->showSlicingPlanes(true);
+    QApplication::sendPostedEvents();
+    capture("overlay_slicing_planes", partView);
+    mainToolbar->showSlicingPlanes(false);
+
+    mainToolbar->showLabels(true);
+    QApplication::sendPostedEvents();
+    capture("overlay_part_labels", partView);
+    mainToolbar->showLabels(false);
+
+    auto meta     = partWidget->getPartMeta();
+    auto baseItem = meta->lookupByPointer(CSM->parts().value("Base_Bracket"));
+    if (baseItem && baseItem->graphicsPart()) {
+        baseItem->graphicsPart()->rotateAbsolute(QQuaternion::fromEulerAngles(45.0f, 0.0f, 0.0f));
+    }
+    mainToolbar->showOverhang(true);
+    QApplication::sendPostedEvents();
+    capture("overlay_overhangs", partView);
+    mainToolbar->showOverhang(false);
+    if (baseItem && baseItem->graphicsPart()) { baseItem->graphicsPart()->rotateAbsolute(QQuaternion()); }
+    QApplication::sendPostedEvents();
+}
+
+void captureModelRolesDemo(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* partView   = partWidget->view();
+    auto* gcodeView  = window->findChild<GCodeWidget*>()->view();
+    auto* gcodeBar   = window->findChild<GcodeBar*>();
+
+    partWidget->clear();
+    CSM->clearParts();
+
+    auto base = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(1200.0 * mm, 800.0 * mm, 250.0 * mm));
+    CSM->addPart(base, "Build_Base", MeshType::kBuild);
+
+    auto clip = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(180.0 * mm, 300.0 * mm));
+    clip->setType(MeshType::kClipping);
+    CSM->addPart(clip, "Clipper_Cylinder", MeshType::kClipping);
+
+    auto settingsMesh =
+        QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(500.0 * mm, 500.0 * mm, 300.0 * mm));
+    settingsMesh->setType(MeshType::kSettings);
+    CSM->addPart(settingsMesh, "Settings_Region", MeshType::kSettings);
+
+    auto meta     = partWidget->getPartMeta();
+    auto baseItem = meta->lookupByPointer(CSM->parts().value("Build_Base"));
+    auto clipItem = meta->lookupByPointer(CSM->parts().value("Clipper_Cylinder"));
+    auto setItem  = meta->lookupByPointer(CSM->parts().value("Settings_Region"));
+
+    clipItem->setMeshType(MeshType::kClipping);
+    setItem->setMeshType(MeshType::kSettings);
+
+    clipItem->setTranslation(baseItem->translation() +
+                             QVector3D(300.0 * mm(), 250.0 * mm(), 0.0f) * Constants::OpenGL::kObjectToView);
+    setItem->setTranslation(baseItem->translation() +
+                            QVector3D(750.0 * mm(), 350.0 * mm(), 0.0f) * Constants::OpenGL::kObjectToView);
+
+    auto setSb = CSM->parts().value("Settings_Region")->getSb();
+    setSb->setSetting(PS::Infill::kEnable, true);
+    setSb->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kGrid));
+    setSb->setSetting(PS::Infill::kManualLineSpacing, true);
+    setSb->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(25.0 * mm)()));
+
+    GSM->getGlobal()->setSetting(PS::Skin::kEnable, false);
+    GSM->getGlobal()->setSetting(PS::Infill::kEnable, true);
+    GSM->getGlobal()->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kLines));
+    GSM->getGlobal()->setSetting(PS::Infill::kManualLineSpacing, true);
+    GSM->getGlobal()->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(60.0 * mm)()));
+
+    QApplication::sendPostedEvents();
+    capture("model_roles_setup", partView);
+
+    sliceAndWait(window);
+    if (gcodeBar) { setGCodeLayerRange(window, 0, gcodeBar->maxLayer() / 2); }
+    QApplication::sendPostedEvents();
+    capture("model_roles_sliced", gcodeView);
+}
+
+void capturePrimitiveShapesGrid(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* partView   = partWidget->view();
+
+    partWidget->clear();
+    CSM->clearParts();
+
+    auto box = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(250.0 * mm, 250.0 * mm, 200.0 * mm));
+    CSM->addPart(box, "Rectangular_Prism", MeshType::kBuild);
+
+    auto hex = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(150.0 * mm, 200.0 * mm));
+    CSM->addPart(hex, "Hexagonal_Prism", MeshType::kBuild);
+
+    auto openBox =
+        QSharedPointer<OpenMesh>::create(MeshFactory::CreateOpenTopBoxMesh(250.0 * mm, 250.0 * mm, 200.0 * mm));
+    CSM->addPart(openBox, "Open_Top_Box", MeshType::kBuild);
+
+    auto pyr = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateTriaglePyramidMesh(280.0 * mm));
+    CSM->addPart(pyr, "Triangular_Pyramid", MeshType::kBuild);
+
+    auto cyl = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(140.0 * mm, 200.0 * mm));
+    CSM->addPart(cyl, "Cylinder", MeshType::kBuild);
+
+    auto cone = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(150.0 * mm, 220.0 * mm));
+    CSM->addPart(cone, "Cone", MeshType::kBuild);
+
+    auto sbox = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(220.0 * mm, 220.0 * mm, 200.0 * mm));
+    sbox->setType(MeshType::kSettings);
+    CSM->addPart(sbox, "Settings_Box", MeshType::kSettings);
+
+    auto meta        = partWidget->getPartMeta();
+    auto baseItem    = meta->lookupByPointer(CSM->parts().value("Rectangular_Prism"));
+    QVector3D origin = baseItem->translation();
+
+    auto place = [&](const QString& name, float dx_mm, float dy_mm, MeshType mt = MeshType::kBuild) {
+        auto item = meta->lookupByPointer(CSM->parts().value(name));
+        if (item) {
+            item->setMeshType(mt);
+            item->setTranslation(origin +
+                                 QVector3D(dx_mm * mm(), dy_mm * mm(), 0.0f) * Constants::OpenGL::kObjectToView);
+        }
+    };
+
+    place("Rectangular_Prism", 0.0f, 0.0f);
+    place("Hexagonal_Prism", 400.0f, 0.0f);
+    place("Open_Top_Box", 800.0f, 0.0f);
+    place("Triangular_Pyramid", 0.0f, 400.0f);
+    place("Cylinder", 400.0f, 400.0f);
+    place("Cone", 800.0f, 400.0f);
+    place("Settings_Box", 1200.0f, 200.0f, MeshType::kSettings);
+
+    partView->showLabels(true);
+    QApplication::sendPostedEvents();
+    capture("primitive_geometry_grid", partView);
+    partView->showLabels(false);
+}
+
+void captureInfillPatterns(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* gcodeView  = window->findChild<GCodeWidget*>()->view();
+    auto* gcodeBar   = window->findChild<GcodeBar*>();
+
+    partWidget->clear();
+    CSM->clearParts();
+
+    auto box = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(1200.0 * mm, 800.0 * mm, 150.0 * mm));
+    CSM->addPart(box, "Infill_Sample", MeshType::kBuild);
+
+    auto globalSb = GSM->getGlobal();
+    globalSb->setSetting(PS::Perimeter::kEnable, true);
+    globalSb->setSetting(PS::Perimeter::kCount, 1);
+    globalSb->setSetting(PS::Inset::kEnable, false);
+    globalSb->setSetting(PS::Skin::kEnable, false);
+    globalSb->setSetting(PS::Infill::kEnable, true);
+    globalSb->setSetting(PS::Infill::kManualLineSpacing, true);
+    globalSb->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(75.0 * mm)()));
+
+    const QVector<QPair<InfillPatterns, QString>> patterns = {
+        {InfillPatterns::kLines, "infill_pattern_lines"},
+        {InfillPatterns::kGrid, "infill_pattern_grid"},
+        {InfillPatterns::kConcentric, "infill_pattern_concentric"},
+        {InfillPatterns::kTriangles, "infill_pattern_triangles"},
+        {InfillPatterns::kHexagonsAndTriangles, "infill_pattern_hexagons_and_triangles"},
+        {InfillPatterns::kHoneycomb, "infill_pattern_honeycomb"},
+    };
+
+    for (const auto& pair : patterns) {
+        globalSb->setSetting(PS::Infill::kPattern, static_cast<int>(pair.first));
+        sliceAndWait(window);
+        if (gcodeBar) {
+            int targetLayer = std::max(0, gcodeBar->maxLayer() / 2);
+            setGCodeLayerRange(window, targetLayer, targetLayer);
+        }
+        QApplication::sendPostedEvents();
+        capture(pair.second, gcodeView);
+    }
+    globalSb->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kLines));
+}
+
+void captureSupportDemo(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* partView   = partWidget->view();
+    auto* gcodeView  = window->findChild<GCodeWidget*>()->view();
+    auto* gcodeBar   = window->findChild<GcodeBar*>();
+
+    partWidget->clear();
+    CSM->clearParts();
+
+    auto pillar = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(300.0 * mm, 500.0 * mm, 300.0 * mm));
+    CSM->addPart(pillar, "Support_Pillar", MeshType::kBuild);
+
+    auto overhang = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(800.0 * mm, 500.0 * mm, 120.0 * mm));
+    CSM->addPart(overhang, "Overhang_Cap", MeshType::kBuild);
+
+    auto meta         = partWidget->getPartMeta();
+    auto pillarItem   = meta->lookupByPointer(CSM->parts().value("Support_Pillar"));
+    auto overhangItem = meta->lookupByPointer(CSM->parts().value("Overhang_Cap"));
+
+    if (pillarItem && overhangItem) {
+        overhangItem->setTranslation(pillarItem->translation() +
+                                     QVector3D(0.0f, 0.0f, 300.0 * mm()) * Constants::OpenGL::kObjectToView);
+    }
+
+    auto globalSb = GSM->getGlobal();
+    globalSb->setSetting(PS::Support::kEnable, true);
+    globalSb->setSetting(PS::Support::kThresholdAngle, static_cast<double>(Angle(40.0 * deg)()));
+    globalSb->setSetting(PS::Support::kLineSpacing, static_cast<double>(Distance(50.0 * mm)()));
+
+    partView->makeCurrent();
+    partView->showOverhang(true);
+    QApplication::sendPostedEvents();
+    capture("support_overhang_preview", partView);
+    partView->makeCurrent();
+    partView->showOverhang(false);
+
+    sliceAndWait(window);
+    if (gcodeBar) { setGCodeLayerRange(window, 0, gcodeBar->maxLayer()); }
+    QApplication::sendPostedEvents();
+    capture("support_sliced_preview", gcodeView);
+
+    globalSb->setSetting(PS::Support::kEnable, false);
+}
+
+void captureAdhesionModes(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* gcodeView  = window->findChild<GCodeWidget*>()->view();
+    auto* gcodeBar   = window->findChild<GcodeBar*>();
+
+    partWidget->clear();
+    CSM->clearParts();
+
+    auto box = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(600.0 * mm, 500.0 * mm, 200.0 * mm));
+    CSM->addPart(box, "Adhesion_Part", MeshType::kBuild);
+
+    auto globalSb = GSM->getGlobal();
+    globalSb->setSetting(PS::Skin::kEnable, false);
+    globalSb->setSetting(PS::Infill::kEnable, true);
+    globalSb->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kLines));
+    globalSb->setSetting(PS::Infill::kManualLineSpacing, true);
+    globalSb->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(50.0 * mm)()));
+
+    // 1. Raft
+    globalSb->setSetting(MS::PlatformAdhesion::kRaftEnable, true);
+    globalSb->setSetting(MS::PlatformAdhesion::kRaftLayers, 2);
+    globalSb->setSetting(MS::PlatformAdhesion::kRaftOffset, static_cast<double>(Distance(120.0 * mm)()));
+    globalSb->setSetting(MS::PlatformAdhesion::kBrimEnable, false);
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtEnable, false);
+    sliceAndWait(window);
+    if (gcodeBar) { setGCodeLayerRange(window, 0, std::min(12, gcodeBar->maxLayer())); }
+    QApplication::sendPostedEvents();
+    capture("adhesion_raft", gcodeView);
+
+    // 2. Brim
+    globalSb->setSetting(MS::PlatformAdhesion::kRaftEnable, false);
+    globalSb->setSetting(MS::PlatformAdhesion::kBrimEnable, true);
+    globalSb->setSetting(MS::PlatformAdhesion::kBrimWidth, static_cast<double>(Distance(120.0 * mm)()));
+    globalSb->setSetting(MS::PlatformAdhesion::kBrimLayers, 2);
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtEnable, false);
+    sliceAndWait(window);
+    if (gcodeBar) { setGCodeLayerRange(window, 0, std::min(10, gcodeBar->maxLayer())); }
+    QApplication::sendPostedEvents();
+    capture("adhesion_brim", gcodeView);
+
+    // 3. Skirt
+    globalSb->setSetting(MS::PlatformAdhesion::kRaftEnable, false);
+    globalSb->setSetting(MS::PlatformAdhesion::kBrimEnable, false);
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtEnable, true);
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtLayers, 2);
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtLoops, 3);
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtDistanceFromObject, static_cast<double>(Distance(80.0 * mm)()));
+    sliceAndWait(window);
+    if (gcodeBar) { setGCodeLayerRange(window, 0, std::min(10, gcodeBar->maxLayer())); }
+    QApplication::sendPostedEvents();
+    capture("adhesion_skirt", gcodeView);
+
+    globalSb->setSetting(MS::PlatformAdhesion::kSkirtEnable, false);
+}
+
 QVector<QPair<QString, QString>> captureAllGuiElements(MainWindow* window, const QString& outputDirectory) {
     QVector<QPair<QString, QString>> saved_files;
     const QDir outDir(outputDirectory);
@@ -173,9 +547,10 @@ QVector<QPair<QString, QString>> captureAllGuiElements(MainWindow* window, const
     capture("main_window_overview", window);
     capture("part_view_workspace", static_cast<QWidget*>(window->findChild<PartWidget*>()->view()));
     capture("gcode_view_workspace", static_cast<QWidget*>(window->findChild<GCodeWidget*>()->view()));
-    capture("dock_panels_sidebar", window->findChild<QDockWidget*>("m_settingdock"));
-    capture("gcode_editor_panel", window->findChild<QDockWidget*>("m_gcodedock"));
     auto* settingBar = selectSettingsTab(window, 0);
+    auto* gcodeBar   = window->findChild<GcodeBar*>();
+    capture("dock_panels_sidebar", settingBar->parentWidget());
+    capture("gcode_editor_panel", gcodeBar->parentWidget());
     capture("settings_sidebar", settingBar);
     capture("printer_settings_panel", settingBar);
     capture("material_settings_panel", selectSettingsTab(window, 1));
@@ -195,6 +570,35 @@ QVector<QPair<QString, QString>> captureAllGuiElements(MainWindow* window, const
     capture("xtrude_calculator", window->findChild<XtrudeCalcWindow*>());
     capture("part_context_menu", new RightClickMenu(window));
     capture("cs_debug_dialog", new CsDebugDialog(window));
+
+    auto* mainToolbar = window->findChild<MainToolbar*>();
+    for (auto* btn : mainToolbar->findChildren<QToolButton*>()) {
+        if (btn->toolTip().contains("Load new model") && btn->menu()) {
+            btn->menu()->adjustSize();
+            capture("model_import_menu", btn->menu());
+        }
+        if (btn->toolTip().contains("Generates a new shape") && btn->menu()) {
+            btn->menu()->adjustSize();
+            capture("primitive_geometry_menu", btn->menu());
+        }
+    }
+
+    auto* settingDock = qobject_cast<QDockWidget*>(settingBar->parentWidget());
+    if (settingDock) {
+        window->addDockWidget(Qt::LeftDockWidgetArea, settingDock);
+        QApplication::sendPostedEvents();
+        capture("workspace_custom_layout", window);
+        window->addDockWidget(Qt::RightDockWidgetArea, settingDock);
+        QApplication::sendPostedEvents();
+    }
+
+    captureInspectionOverlays(window, capture);
+    captureModelRolesDemo(window, capture);
+    capturePrimitiveShapesGrid(window, capture);
+    captureInfillPatterns(window, capture);
+    captureSupportDemo(window, capture);
+    captureAdhesionModes(window, capture);
+    capturePreviewModes(window, capture);
 
     return saved_files;
 }

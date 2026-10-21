@@ -416,8 +416,7 @@ Settings panel.
 Workspace layout is separate from process settings. Moving a dock does not
 change a project or generated toolpath.
 
-> **Diagram placeholder — Workspace layout:** Add before-and-after screenshots
-> of the default dock layout and a customized two-column layout.
+![Customized workspace layout with docks repositioned](user-guide-images/workspace_custom_layout.png)
 
 ## 5. Models and the build scene
 
@@ -432,8 +431,7 @@ uses the **Imported Model Unit** preference, so set it before loading files that
 do not carry reliable unit metadata. Additional models may be shifted on load
 to avoid collisions, according to the notification preferences.
 
-> **Diagram placeholder — Model import:** Add the model-role menu, supported
-> file dialog, and imported-model-unit preference in a three-panel figure.
+![Model import menu options](user-guide-images/model_import_menu.png)
 
 ### 5.2 Model roles
 
@@ -454,6 +452,10 @@ different purposes without being re-imported.
 > clipping object and a settings object, followed by the resulting sliced
 > geometry.
 
+| Build, Clipping, and Settings Roles in Part View | Resulting Sliced Toolpath (Void & Dense Override) |
+| :---: | :---: |
+| ![Model roles setup](user-guide-images/model_roles_setup.png) | ![Model roles sliced result](user-guide-images/model_roles_sliced.png) |
+
 ### 5.3 Create primitive geometry
 
 The shape menu can create geometry without an external CAD file:
@@ -470,8 +472,9 @@ Enter the requested dimensions and a unique name. Generated build primitives
 can be transformed and sliced like imported models. The box settings region is
 created with the Settings role.
 
-> **Diagram placeholder — Primitive geometry:** Add a labeled grid showing all
-> generated shape types and the box settings region.
+| Shape Creation Menu | Generated Primitive Geometry in Part View |
+| :---: | :---: |
+| ![Primitive geometry creation menu](user-guide-images/primitive_geometry_menu.png) | ![Generated primitive geometry grid](user-guide-images/primitive_geometry_grid.png) |
 
 ### 5.4 Select and organize parts
 
@@ -551,8 +554,9 @@ These overlays are visual aids and are not written as manufacturing paths.
 Use **File > Take Screenshot** to save the current Part View framebuffer as
 PNG, JPG, GIF, or TIF; PNG is used when no extension is entered.
 
-> **Diagram placeholder — Model inspection:** Add one labeled screenshot per
-> overlay, using the same model and camera position for comparison.
+| Slicing Planes Overlay | Part Name Labels Overlay | Support Overhangs Overlay |
+| :---: | :---: | :---: |
+| ![Slicing planes overlay](user-guide-images/overlay_slicing_planes.png) | ![Part labels overlay](user-guide-images/overlay_part_labels.png) | ![Support overhangs overlay](user-guide-images/overlay_overhangs.png) |
 
 ## 6. Settings and templates
 
@@ -781,6 +785,14 @@ the preview.
 > **Diagram placeholder — Fill patterns:** Add a comparison grid for every
 > infill pattern and a cutaway showing skin plus gradual-infill layers.
 
+| Lines | Grid | Concentric |
+| :---: | :---: | :---: |
+| ![Lines infill](user-guide-images/infill_pattern_lines.png) | ![Grid infill](user-guide-images/infill_pattern_grid.png) | ![Concentric infill](user-guide-images/infill_pattern_concentric.png) |
+
+| Triangles | Hexagons and Triangles | Honeycomb |
+| :---: | :---: | :---: |
+| ![Triangles infill](user-guide-images/infill_pattern_triangles.png) | ![Hexagons and Triangles infill](user-guide-images/infill_pattern_hexagons_and_triangles.png) | ![Honeycomb infill](user-guide-images/infill_pattern_honeycomb.png) |
+
 ### 7.5 Support structures
 
 Enable **Profile > Support > Enable Support** to generate support under
@@ -804,6 +816,10 @@ consumed only by Image mode.
 > **Diagram placeholder — Support:** Add the overhang overlay and side-by-side
 > grid and organic support previews, labeling interface and base layers.
 
+| Overhang Inspection Overlay | Generated Support Structure in G-Code View |
+| :---: | :---: |
+| ![Support overhang preview](user-guide-images/support_overhang_preview.png) | ![Sliced support structure](user-guide-images/support_sliced_preview.png) |
+
 ### 7.6 Platform adhesion
 
 **Material > Platform Adhesion** can add:
@@ -820,6 +836,10 @@ the build volume.
 
 > **Diagram placeholder — Adhesion:** Add one first-layer comparison showing
 > raft, brim, and skirt with dimensions labeled.
+
+| Raft Adhesion | Brim Adhesion | Skirt Adhesion |
+| :---: | :---: | :---: |
+| ![Raft adhesion](user-guide-images/adhesion_raft.png) | ![Brim adhesion](user-guide-images/adhesion_brim.png) | ![Skirt adhesion](user-guide-images/adhesion_skirt.png) |
 
 ### 7.7 Travel and path modifiers
 
@@ -993,6 +1013,10 @@ base with true-width detail only for a smaller visible range.
 
 > **Diagram placeholder — Preview modes:** Add the same layer rendered as thin
 > lines, true bead widths, orthographic 2-D, and a ghosted 3-D view.
+
+| True Bead Widths (3-D) | Thin Lines (3-D) | Orthographic (2-D Top-Down) | Ghosted Source Model Overlay |
+| :---: | :---: | :---: | :---: |
+| ![True bead width preview](user-guide-images/preview_true_bead_width.png) | ![Thin lines preview](user-guide-images/preview_thin_lines.png) | ![Orthographic 2D preview](user-guide-images/preview_orthographic_2d.png) | ![Ghosted source model preview](user-guide-images/preview_ghosted_model.png) |
 
 ### 8.3 G-code editor
 

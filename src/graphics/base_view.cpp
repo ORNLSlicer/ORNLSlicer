@@ -193,21 +193,7 @@ void BaseView::keyPressEvent(QKeyEvent* e) {
 
     const QVector2D direction = -arrowDirection(e->key());
 
-    if (hasCameraPanModifier(e->modifiers())) {
-        QMatrix4x4 view = m_camera->viewMatrix();
-        QVector3D right = QVector3D(view(0, 0), view(0, 1), view(0, 2));
-        QVector3D up    = QVector3D(view(1, 0), view(1, 1), view(1, 2));
-
-        right.setZ(0);
-        up.setZ(0);
-        right.normalize();
-        up.normalize();
-
-        const float translation_speed = 20.0f * (m_camera->getZoom() / m_camera->getDefaultZoom());
-        const QVector3D camera_trans =
-            translation_speed * kKeyboardPanNdcStep * ((direction.x() * right) + (direction.y() * up));
-        this->translateCamera(camera_trans, false);
-    }
+    if (hasCameraPanModifier(e->modifiers())) { this->translateCameraByScreenDelta(direction * kKeyboardPanNdcStep); }
     else {
         const float rotation_step = kKeyboardRotateDegrees / Constants::OpenGL::kTrackball;
         this->rotateCamera(direction * rotation_step);
@@ -393,6 +379,11 @@ void BaseView::translateCamera(QVector3D v, bool absolute) {
         m_camera->pan(v);
         m_focus->translateAbsolute(m_camera->getPan());
     }
+}
+
+void BaseView::translateCameraByScreenDelta(const QVector2D screen_delta) {
+    this->translateCamera(m_camera->panFromScreenDelta(screen_delta), false);
+    this->update();
 }
 
 void BaseView::rotateCamera(QVector2D screen_delta) {

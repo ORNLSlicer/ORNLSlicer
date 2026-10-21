@@ -85,16 +85,29 @@ GCodeView::GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoCo
 }
 
 void GCodeView::zoomIn() {
+    if (m_state.ortho) {
+        handleWheelForward(QPointF(), 10.0f);
+        return;
+    }
     this->BaseView::zoomIn();
     updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::zoomOut() {
+    if (m_state.ortho) {
+        handleWheelBackward(QPointF(), 10.0f);
+        return;
+    }
     this->BaseView::zoomOut();
     updateSegmentInfoViewMatrix();
 }
 
 void GCodeView::resetZoom() {
+    if (m_state.ortho) {
+        m_state.zoom_factor = 1.0f;
+        this->resizeGL(this->width(), this->height());
+        return;
+    }
     this->BaseView::resetZoom();
     updateSegmentInfoViewMatrix();
 }
@@ -525,15 +538,7 @@ void GCodeView::handleWheelBackward(QPointF mouse_ndc_pos, float delta) {
 }
 
 void GCodeView::translateCamera(QVector3D v, bool absolute) {
-    if (absolute) {
-        m_camera->panAbsolute(v);
-        m_focus->translateAbsolute(m_camera->getPan());
-    }
-    else {
-        m_camera->pan(v);
-        m_focus->translateAbsolute(m_camera->getPan());
-    }
-
+    this->BaseView::translateCamera(v, absolute);
     updateSegmentInfoViewMatrix();
 }
 
