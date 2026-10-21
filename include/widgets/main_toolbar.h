@@ -138,14 +138,6 @@ class MainToolbar : public QToolBar {
     //! \return the new name
     QString promptForName();
 
-    //! \brief opens a dialog that asks for a number to be filled
-    //! \param label the label for the dialog
-    //! \param unit_text the text to display for the unit
-    //! \param unit_conversion the conversion value to apply
-    //! \param ok flag that is set if the user cancels
-    //! \return the size converted
-    double promptForSize(const QString& label, const QString& unit_text, const double unit_conversion, bool& ok);
-
     //! \brief the parent widget
     QWidget* m_parent;
 

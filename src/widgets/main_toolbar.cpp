@@ -3,7 +3,6 @@
 #include <QComboBox>
 #include <QFile>
 #include <QGraphicsDropShadowEffect>
-#include <QInputDialog>
 #include <QLayout>
 #include <QMenu>
 #include <QSignalBlocker>
@@ -267,17 +266,20 @@ QMenu* MainToolbar::buildShapeMenu() {
     shape_menu->addAction(settings_box_action);
 
     auto* rect_prism_action = new QAction("Create Rectangular Prism", this);
-    connect(rect_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+    connect(rect_prism_action, &QAction::triggered, this, [this]() {
         bool len_ok, width_ok, height_ok;
 
-        double length = promptForSize("Enter length", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), len_ok);
+        double length =
+            DialogUtils::promptForDouble(this, "Enter length", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), len_ok);
         if (!len_ok) { return; }
-        double width = promptForSize("Enter width", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                     PreferencesManager::getInstance()->getDistanceUnit()(), width_ok);
+        double width =
+            DialogUtils::promptForDouble(this, "Enter width", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), width_ok);
         if (!width_ok) { return; }
-        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
+        double height =
+            DialogUtils::promptForDouble(this, "Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
         if (!height_ok) { return; }
 
         auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(length, width, height));
@@ -291,15 +293,16 @@ QMenu* MainToolbar::buildShapeMenu() {
     shape_menu->addAction(rect_prism_action);
 
     auto* hex_prism_action = new QAction("Create Hexagonal Prism", this);
-    connect(hex_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+    connect(hex_prism_action, &QAction::triggered, this, [this]() {
         bool side_length_ok, height_ok;
 
-        double side_length =
-            promptForSize("Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
-                          PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
+        double side_length = DialogUtils::promptForDouble(
+            this, "Enter side length", PreferencesManager::getInstance()->getDistanceUnitText(),
+            PreferencesManager::getInstance()->getDistanceUnit()(), side_length_ok);
         if (!side_length_ok) { return; }
-        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
+        double height =
+            DialogUtils::promptForDouble(this, "Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
         if (!height_ok) { return; }
 
         auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateHexagonalPrismMesh(side_length, height));
@@ -313,17 +316,20 @@ QMenu* MainToolbar::buildShapeMenu() {
     shape_menu->addAction(hex_prism_action);
 
     auto* open_rect_prism_action = new QAction("Create Open Top Rectangular Prism", this);
-    connect(open_rect_prism_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+    connect(open_rect_prism_action, &QAction::triggered, this, [this]() {
         bool len_ok, width_ok, height_ok;
 
-        double length = promptForSize("Enter length", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), len_ok);
+        double length =
+            DialogUtils::promptForDouble(this, "Enter length", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), len_ok);
         if (!len_ok) { return; }
-        double width = promptForSize("Enter width", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                     PreferencesManager::getInstance()->getDistanceUnit()(), width_ok);
+        double width =
+            DialogUtils::promptForDouble(this, "Enter width", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), width_ok);
         if (!width_ok) { return; }
-        double height = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
+        double height =
+            DialogUtils::promptForDouble(this, "Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), height_ok);
         if (!height_ok) { return; }
 
         auto new_mesh = QSharedPointer<OpenMesh>::create(MeshFactory::CreateOpenTopBoxMesh(length, width, height));
@@ -337,62 +343,67 @@ QMenu* MainToolbar::buildShapeMenu() {
     shape_menu->addAction(open_rect_prism_action);
 
     auto* triangle_pryamid_action = new QAction("Create Triangular Pyramid", this);
-    connect(triangle_pryamid_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+    connect(triangle_pryamid_action, &QAction::triggered, this, [this]() {
         bool ok;
-        double length = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                      PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        double length =
+            DialogUtils::promptForDouble(this, "Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        if (!ok) { return; }
 
-        if (ok) {
-            auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateTriaglePyramidMesh(length));
-            QString name  = promptForName();
-            if (name != "") {
-                new_mesh->setName(name);
-                auto new_part = QSharedPointer<Part>::create(new_mesh);
-                CSM->addPart(new_mesh);
-            }
+        auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateTriaglePyramidMesh(length));
+        QString name  = promptForName();
+        if (name != "") {
+            new_mesh->setName(name);
+            auto new_part = QSharedPointer<Part>::create(new_mesh);
+            CSM->addPart(new_mesh);
         }
     });
     shape_menu->addAction(triangle_pryamid_action);
 
     auto* cylinder_action = new QAction("Create Cylinder", this);
-    connect(cylinder_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+    connect(cylinder_action, &QAction::triggered, this, [this]() {
         bool ok;
-        double radius  = promptForSize("Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
-        double height  = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
-        int resolution = int(promptForSize("Enter resolution", "segments", 1.0, ok));
+        double radius =
+            DialogUtils::promptForDouble(this, "Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        if (!ok) { return; }
+        double height =
+            DialogUtils::promptForDouble(this, "Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        if (!ok) { return; }
+        int resolution = DialogUtils::promptForInt(this, "Enter resolution", "segments", ok, 3);
+        if (!ok) { return; }
 
-        if (ok) {
-            auto new_mesh =
-                QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(radius, height, resolution));
-            QString name = promptForName();
-            if (name != "") {
-                new_mesh->setName(name);
-                auto new_part = QSharedPointer<Part>::create(new_mesh);
-                CSM->addPart(new_mesh);
-            }
+        auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(radius, height, resolution));
+        QString name  = promptForName();
+        if (name != "") {
+            new_mesh->setName(name);
+            auto new_part = QSharedPointer<Part>::create(new_mesh);
+            CSM->addPart(new_mesh);
         }
     });
     shape_menu->addAction(cylinder_action);
 
     auto* cone_action = new QAction("Create Cone", this);
-    connect(cone_action, &QAction::triggered, this, [this, PM = PreferencesManager::getInstance()]() {
+    connect(cone_action, &QAction::triggered, this, [this]() {
         bool ok;
-        double radius  = promptForSize("Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
-        double height  = promptForSize("Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
-                                       PreferencesManager::getInstance()->getDistanceUnit()(), ok);
-        int resolution = int(promptForSize("Enter resolution", "segments", 1.0, ok));
+        double radius =
+            DialogUtils::promptForDouble(this, "Enter radius", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        if (!ok) { return; }
+        double height =
+            DialogUtils::promptForDouble(this, "Enter height", PreferencesManager::getInstance()->getDistanceUnitText(),
+                                         PreferencesManager::getInstance()->getDistanceUnit()(), ok);
+        if (!ok) { return; }
+        int resolution = DialogUtils::promptForInt(this, "Enter resolution", "segments", ok, 3);
+        if (!ok) { return; }
 
-        if (ok) {
-            auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(radius, height, resolution));
-            QString name  = promptForName();
-            if (name != "") {
-                new_mesh->setName(name);
-                auto new_part = QSharedPointer<Part>::create(new_mesh);
-                CSM->addPart(new_mesh);
-            }
+        auto new_mesh = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateConeMesh(radius, height, resolution));
+        QString name  = promptForName();
+        if (name != "") {
+            new_mesh->setName(name);
+            auto new_part = QSharedPointer<Part>::create(new_mesh);
+            CSM->addPart(new_mesh);
         }
     });
     shape_menu->addAction(cone_action);
@@ -431,30 +442,6 @@ void MainToolbar::enableCorrectOptions() {
 
 QString MainToolbar::promptForName() {
     return DialogUtils::promptForName(this, "New Mesh Name");
-}
-
-double MainToolbar::promptForSize(const QString& label_text, const QString& unit_text, const double unit_conversion,
-                                  bool& ok) {
-    QString str_value;
-    QString label = label_text + "(" + unit_text + "):";
-    double value  = 0.0;
-    ok            = true;
-
-    while (str_value.isEmpty()) {
-        str_value = QInputDialog::getText(this, tr("Input"), label, QLineEdit::Normal, "", &ok);
-
-        if (!ok) break;
-
-        bool conv_ok = false;
-        value        = str_value.toDouble(&conv_ok);
-
-        if (!conv_ok) {
-            label     = "Error with number. " + label_text + "(" + unit_text + "):";
-            str_value = "";
-        }
-    }
-
-    return value * unit_conversion;
 }
 
 void MainToolbar::setView(int index) {
