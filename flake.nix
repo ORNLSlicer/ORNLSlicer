@@ -59,6 +59,7 @@
             ./src
             ./templates
             ./tests
+            ./tools
             ./version.json
           ];
         };
