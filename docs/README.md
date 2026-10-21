@@ -31,6 +31,19 @@ The setup guide includes build, test, editor, and troubleshooting instructions.
 - [Versioning and Releases](contributing/versioning.md)
 - [Maintaining the Changelog](contributing/changelog.md)
 
+Add the below pandoc documentation into a seperate contributing md file
+
+The Markdown user guide is the canonical manual source. Regenerate the
+same-stem `ornlslicer-user-guide.pdf` from it for a release rather than editing
+the PDF directly. From the repository root, with Pandoc and a LaTeX engine
+installed, run:
+
+```bash
+pandoc --from=gfm docs/ornlslicer-user-guide.md \
+  --metadata title-meta="ORNLSlicer User Guide" \
+  --output=docs/ornlslicer-user-guide.pdf
+```
+
 For source-grounded architecture, runtime flows, ownership boundaries, extension
 points, and validation paths, start with the [OpenWiki quickstart](../openwiki/quickstart.md).
 Source code and tests remain authoritative; generated OpenWiki pages are maintained
