@@ -63,6 +63,11 @@ class CameraManager {
     //! \param pos the position of pan
     void panAbsolute(QVector3D pos);
 
+    //! \brief Computes the world-space pan vector for a normalized screen-space input delta
+    //! \param delta Horizontal and vertical screen-space delta
+    //! \return World-space pan vector
+    QVector3D panFromScreenDelta(const QVector2D delta) const;
+
     //! \brief gets the current pan
     //! \return the pan
     QVector3D getPan();

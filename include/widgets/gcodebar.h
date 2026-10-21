@@ -74,6 +74,20 @@ class GcodeBar : public QWidget {
     //! \brief new_value: value to set max to
     void setMaxLayer(int max_value);
 
+    //! \brief Sets the upper layer
+    //! \param new_value: value to set upper layer to
+    void setUpperLayer(int new_value);
+
+    //! \brief Sets the lower layer
+    //! \param new_value: value to set lower layer to
+    void setLowerLayer(int new_value);
+
+    //! \brief Gets the maximum layer value
+    int maxLayer() const;
+
+    //! \brief Gets the upper layer value
+    int upperLayer() const;
+
     //! \brief Sets segment maxes
     //! \brief new_value: value to set max to
     void setMaxSegment(int max_value);
