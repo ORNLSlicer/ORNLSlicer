@@ -1,5 +1,7 @@
 #pragma once
 
+#include <utility>
+
 #include <CGAL/AABB_face_graph_triangle_primitive.h>
 #include <CGAL/AABB_traits.h>
 #include <CGAL/AABB_tree.h>
@@ -74,12 +76,12 @@ typedef CGAL::AABB_traits<Kernel, Polyhedron_AABB_Primitive> Polyhedron_AABB_Tra
 typedef CGAL::AABB_tree<Polyhedron_AABB_Traits> Polyhedron_AABB_Tree;
 
 //! \brief Mapping between Polyhedron segments to primitives
-typedef boost::optional<Polyhedron_AABB_Tree::Intersection_and_primitive_id<Segment_3>::Type>
-    Polyhedron_Segment_intersection;
+typedef decltype(std::declval<Polyhedron_AABB_Tree>().any_intersection(
+    std::declval<Segment_3>())) Polyhedron_Segment_intersection;
 
 //! \brief Mapping between Polyhedron plane to primitives
-typedef boost::optional<Polyhedron_AABB_Tree::Intersection_and_primitive_id<Plane_3>::Type>
-    Polyhedron_Plane_intersection;
+typedef decltype(std::declval<Polyhedron_AABB_Tree>().any_intersection(
+    std::declval<Plane_3>())) Polyhedron_Plane_intersection;
 
 //! \brief Primitive of Polyhedron AABB
 typedef CGAL::AABB_face_graph_triangle_primitive<SurfaceMesh> SurfaceMesh_AABB_Primitive;
@@ -91,12 +93,12 @@ typedef CGAL::AABB_traits<Kernel, SurfaceMesh_AABB_Primitive> SurfaceMesh_AABB_T
 typedef CGAL::AABB_tree<SurfaceMesh_AABB_Traits> SurfaceMesh_AABB_Tree;
 
 //! \brief Mapping between Polyhedron segments to primitives
-typedef boost::optional<SurfaceMesh_AABB_Tree::Intersection_and_primitive_id<Segment_3>::Type>
-    SurfaceMesh_Segment_intersection;
+typedef decltype(std::declval<SurfaceMesh_AABB_Tree>().any_intersection(
+    std::declval<Segment_3>())) SurfaceMesh_Segment_intersection;
 
 //! \brief Mapping between Polyhedron plane to primitives
-typedef boost::optional<SurfaceMesh_AABB_Tree::Intersection_and_primitive_id<Plane_3>::Type>
-    SurfaceMesh_Plane_intersection;
+typedef decltype(std::declval<SurfaceMesh_AABB_Tree>().any_intersection(
+    std::declval<Plane_3>())) SurfaceMesh_Plane_intersection;
 
 //! \brief a namespace for inexact cartesian sapce. This used to be the default kernal in ORNLSlicer, however is now
 //! used when a package does not support the exact kernal above
