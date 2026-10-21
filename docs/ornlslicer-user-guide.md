@@ -1555,7 +1555,7 @@ operate on text; otherwise they operate on selected parts where supported.
 
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 566 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 551 visible setting rows across 39 categories.
+This generated appendix documents all 571 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 556 visible setting rows across 39 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1604,8 +1604,8 @@ The catalog is organized as follows:
 | [Material](#e3-material-settings) | [Multi-Material](#settings-material-multi-material) | 11 |
 | [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 13 |
 | [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 9 |
-| [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 20 |
-| [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 13 |
+| [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 23 |
+| [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 15 |
 | [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 20 |
 | [Profile](#e4-profile-settings) | [Skeleton](#settings-profile-skeleton) | 23 |
 | [Profile](#e4-profile-settings) | [Skin](#settings-profile-skin) | 18 |
@@ -5768,18 +5768,58 @@ Speed for the flying start motion.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Enable
   Perimeter Flying Start is enabled)).
 
-<a id="setting-spiral_perimeter"></a>
+<a id="setting-connect_perimeters"></a>
 
-##### Enable Spiral Perimeter (`spiral_perimeter`)
+##### Connect Perimeters (`connect_perimeters`)
 
-If selected, spiral perimeters will be generated.&lt;br&gt;&lt;br&gt;&lt;img
-src=':/tooltips/profile/spiral_perimeter.png' width='260' height='146'&gt;
+If selected, adjacent perimeter loops will be joined with extrusion
+connections.&lt;br&gt;&lt;br&gt;&lt;img src=':/tooltips/profile/connected_perimeters.png'
+width='260' height='146'&gt;
 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+
+<a id="setting-perimeter_complete_loop_before_connecting"></a>
+
+##### Complete loop before connecting (`perimeter_complete_loop_before_connecting`)
+
+If selected, connected perimeters will complete the current loop before connecting to the next loop.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and Connect
+  Perimeters is enabled)).
+
+<a id="setting-perimeter_connect_after_tip_wipe"></a>
+
+##### Connect after forward tip wipe (`perimeter_connect_after_tip_wipe`)
+
+If selected, connected perimeters will apply their forward tip wipe before connecting to the next
+loop.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Connect
+  Perimeters is enabled and (Enable Perimeter Tip Wipe is enabled and Perimeter Wipe Direction is
+  `WIPE_FORWARD`)))).
+
+<a id="setting-perimeter_connect_to_insets"></a>
+
+##### Connect to insets (`perimeter_connect_to_insets`)
+
+If selected, perimeter loops will connect directly to inset loops. Connect after forward tip wipe in
+the Perimeter settings controls when connections occur for the entire chain.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Enable Inset
+  is enabled and (Connect Perimeters is enabled and Connect Insets is enabled)))).
 
 
 <a id="settings-profile-inset"></a>
@@ -5939,17 +5979,43 @@ Width of the inset overlaps with exterior.
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
 
-<a id="setting-spiral_inset"></a>
+<a id="setting-connect_insets"></a>
 
-##### Enable Spiral Inset (`spiral_inset`)
+##### Connect Insets (`connect_insets`)
 
-If selected, spiral insets will be generated.
+If selected, adjacent inset loops will be joined with extrusion connections.
 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+
+<a id="setting-inset_complete_loop_before_connecting"></a>
+
+##### Complete loop before connecting (`inset_complete_loop_before_connecting`)
+
+If selected, connected insets will complete the current loop before connecting to the next loop.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and Connect Insets is
+  enabled)).
+
+<a id="setting-inset_connect_after_tip_wipe"></a>
+
+##### Connect after forward tip wipe (`inset_connect_after_tip_wipe`)
+
+If selected, standalone connected insets will apply their forward tip wipe before connecting to the
+next loop. This also controls fallback inset output when a requested perimeter-to-inset connection
+is unavailable.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Connect Insets is
+  enabled and (Enable Inset Tip Wipe is enabled and Inset Wipe Direction is `WIPE_FORWARD`)))).
 
 
 <a id="settings-profile-infill"></a>
@@ -7246,16 +7312,16 @@ as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z 
   - `Right Handed`
   - `Left Handed`
 
-<a id="setting-helical_tool_start_angle_offset"></a>
+<a id="setting-helical_tool_start_arc_length_offset"></a>
 
-##### Helical Tool Start Angle Offset (`helical_tool_start_angle_offset`)
+##### Helical Tool Start Arc Length Offset (`helical_tool_start_arc_length_offset`)
 
-Signed Arc Specialties tool offset at the generated helical path start. 0 degrees leaves CP aligned
-with the +Y top-dead-center start; the emitted X/Y helix still starts at top dead center. XR and YR
-each receive half of the effective offset.
+Signed physical Arc Specialties tool offset along each generated helical path radius. The writer
+converts this distance to an angle using the actual path radius; CP receives the full signed angle
+and XR/YR each receive half.
 
-- **Input:** `angle` — Angle; displayed in the preferred angle unit.
-- **Master default:** `0°`
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
