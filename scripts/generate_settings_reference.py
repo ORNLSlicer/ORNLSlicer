@@ -503,19 +503,21 @@ def validate_documentation_metadata(settings: OrderedDict[str, OrderedDict[str, 
                                     inputs: OrderedDict[str, OrderedDict[str, Any]]) -> None:
     """Reject metadata defects that would produce misleading or malformed documentation."""
 
-    normalized_displays: dict[str, str] = {}
+    normalized_displays: dict[tuple[str, str], dict[str, str]] = {}
     for key, setting in settings.items():
         for field in ("display", "tooltip", "major", "minor"):
             value = setting[field]
             if not isinstance(value, str) or not value.strip():
                 raise ValueError(f"{key}: {field} must be non-empty text")
 
+        category = (setting["major"], setting["minor"])
+        category_displays = normalized_displays.setdefault(category, {})
         display = re.sub(r"[^a-z0-9]+", " ", setting["display"].casefold()).strip()
-        if display in normalized_displays:
+        if display in category_displays:
             raise ValueError(
-                f"duplicate display names: {normalized_displays[display]} and {key} ({setting['display']})"
+                f"duplicate display names in {category}: {category_displays[display]} and {key} ({setting['display']})"
             )
-        normalized_displays[display] = key
+        category_displays[display] = key
 
         tooltip = setting["tooltip"]
         if "\\n" in tooltip:
