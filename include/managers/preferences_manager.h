@@ -142,6 +142,9 @@ class PreferencesManager : public QObject {
     //! \brief Returns how dependency-disabled settings are displayed.
     DisabledSettingVisibility getDisabledSettingVisibilityPreference();
 
+    //! \brief Returns whether selecting a settings file prompts to apply it across categories.
+    bool getPromptSettingsForAllCategoriesPreference();
+
     //! \brief Return the user preference for warning about unsaved projects when closing
     bool getWarnUnsavedProjectOnClosePreference();
 
@@ -392,6 +395,9 @@ class PreferencesManager : public QObject {
     //! \param visibility selected visibility as an integer
     void setDisabledSettingVisibilityPreference(int visibility);
 
+    //! \brief Sets whether selecting a settings file prompts to apply it across categories.
+    void setPromptSettingsForAllCategoriesPreference(bool prompt);
+
     //! \brief Sets the preference for warning about unsaved projects when closing
     void setWarnUnsavedProjectOnClosePreference(bool warn);
 
@@ -475,6 +481,7 @@ class PreferencesManager : public QObject {
     GCodePreviewMode m_gcode_preview_mode_preference;
     int m_gcode_preview_vertex_threshold_preference;
     DisabledSettingVisibility m_disabled_setting_visibility_preference;
+    bool m_prompt_settings_for_all_categories_preference;
     bool m_warn_unsaved_project_on_close_preference;
 
     //! \brief Preferences for window size and position

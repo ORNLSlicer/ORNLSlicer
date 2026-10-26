@@ -9,6 +9,7 @@ Release versions follow the project's
 
 ### Added
 
+- Added an optional prompt under Preferences > Settings to apply a selected settings file to all categories it contains; the preference is disabled by default.
 - Added cube and stacked-layer icons beside global settings to distinguish part and layer overrides, showing both when both apply.
 - Added a Starting Layer Number setting under Printer > G-Code for continuation builds, with consistent layer, bead, block, and individual-layer export numbering ([#347](https://github.com/ORNLSlicer/ORNLSlicer/issues/347)).
 

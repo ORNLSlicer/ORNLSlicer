@@ -184,3 +184,5 @@ When the user corrects your approach, append a one-line rule here before ending 
 
 - Verify hook file-type filters before claiming generated JSON is excluded; keep formatter changes after confirming parsed JSON matches the staged data, then re-stage and rerun pre-commit.
 - Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
+- When using QComboBox::textActivated, preserve manual edits when the active item is reselected unless the user accepts applying it across categories.
+- Use integer, enum, or boolean settings in dropdown test fixtures; physical-value widgets can clamp or round raw values during construction.
