@@ -194,3 +194,5 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Build every selected test executable explicitly; CTest JSON can omit commands for unbuilt executables.
 - Keep the ARC companion requirement paired with its cached program through slicing, loading, and export; never re-read the generation checkbox to export an existing slice.
 - Use focused widgets for offscreen Qt tests; a full MainWindow creates 3D views that require initialized OpenGL contexts and printer objects, including during import and teardown.
+- When using QComboBox::textActivated, preserve manual edits when the active item is reselected unless the user accepts applying it across categories.
+- Use integer, enum, or boolean settings in dropdown test fixtures; physical-value widgets can clamp or round raw values during construction.
