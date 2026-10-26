@@ -111,6 +111,7 @@ class PreferencesWindow : public QMainWindow {
     QCheckBox* m_gcode_info_visible_by_default_checkbox;
     QCheckBox* m_optimization_points_visible_by_default_checkbox;
     QCheckBox* m_warn_unsaved_project_on_close_checkbox;
+    QCheckBox* m_prompt_settings_for_all_categories_checkbox;
 
     //! \brief Visualization color controls shown in the preferences window.
     QList<VisualizationColorPicker*> m_visualization_color_pickers;
