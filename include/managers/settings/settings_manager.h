@@ -3,6 +3,7 @@
 #include <QDir>
 #include <QMap>
 #include <QObject>
+#include <QPair>
 #include <QSharedPointer>
 #include <QVector>
 
@@ -196,6 +197,8 @@ class SettingsManager : public QObject {
     QSharedPointer<SettingsBase> m_global;
 
     QMap<QString, QMap<QString, QSharedPointer<SettingsBase>>> m_allGlobals;
+    //! \brief Applied templates retained independently of the reloadable file cache.
+    QMap<QString, QPair<QString, QSharedPointer<SettingsBase>>> m_active_globals;
     QVector<QString> globalNames;
 
     //! \brief Ranges. Ranges are keyed off of the cantor pair of the layers.

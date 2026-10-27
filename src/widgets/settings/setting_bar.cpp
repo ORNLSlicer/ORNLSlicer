@@ -347,8 +347,7 @@ void SettingBar::updateSettings(QString text) {
         if (categories.size() == 1 && mostRecentSetting.value(categories.front()) == text) return;
 
         for (const QString& category : categories) {
-            if (all_globals.value(category).contains(mostRecentSetting.value(category)))
-                GSM->removeCurrentSettings(category, mostRecentSetting.value(category));
+            GSM->removeCurrentSettings(category, mostRecentSetting.value(category));
             GSM->constructActiveGlobal(category, text);
             mostRecentSetting[category] = text;
             CSM->setMostRecentSettingHistory(category, text);
