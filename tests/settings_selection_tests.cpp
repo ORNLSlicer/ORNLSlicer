@@ -65,7 +65,8 @@ int main(int argc, char* argv[]) {
         return manager->loadGlobalJson(path);
     };
     if (!ORNL::Testing::expect(load_fixture("old", {0, 1, 2, 3}, 1) && load_fixture("new", {0, 1, 2, 3}, 2) &&
-                                   load_fixture("partial", {0, 2}, 3) && load_fixture("single", {1}, 4),
+                                   load_fixture("partial", {0, 2}, 3) && load_fixture("single", {1}, 4) &&
+                                   load_fixture("reload", {0, 1, 2, 3}, 2),
                                "Could not load settings fixtures."))
         return EXIT_FAILURE;
 
@@ -89,14 +90,18 @@ int main(int argc, char* argv[]) {
         combo->setCurrentText(name);
         QMetaObject::invokeMethod(combo, "textActivated", Qt::DirectConnection, Q_ARG(QString, name));
     };
-    int prompts = 0;
-    auto answer = QMessageBox::No;
+    int prompts                = 0;
+    auto answer                = QMessageBox::No;
+    bool expect_partial_prompt = false;
     QTimer responder;
     QObject::connect(&responder, &QTimer::timeout, [&] {
         if (auto* prompt = qobject_cast<QMessageBox*>(QApplication::activeModalWidget())) {
             ++prompts;
             expect(prompt->text().contains("Printer") && prompt->text().contains("Profile"),
                    "The prompt must identify the categories being changed.");
+            if (expect_partial_prompt)
+                expect(!prompt->text().contains("Material") && !prompt->text().contains("Experimental"),
+                       "The prompt must exclude categories removed when reloading the file.");
             if (argc > 1)
                 expect(prompt->grab().save(QString(argv[1]) + QString("/prompt-%1.png").arg(prompts)),
                        "Could not save prompt.");
@@ -174,5 +179,31 @@ int main(int argc, char* argv[]) {
     expect(prompts == 4 && manager->getGlobal()->setting<int>(keys[3]) == 1 &&
                manager->getGlobal()->setting<int>(keys[0]) == 3,
            "Disabling the preference must immediately restore category-only selection.");
+
+    const auto previous_settings = manager->getGlobal()->json();
+    const auto previous_history  = ORNL::CSM->getMostRecentSettingHistory();
+    expect(load_fixture("reload", {0, 2}, 6), "Could not reload a full settings file with only two categories.");
+    bar.reloadDisplayedList();
+    expect(manager->getGlobal()->json() == previous_settings &&
+               ORNL::CSM->getMostRecentSettingHistory() == previous_history,
+           "Reloading a file must preserve active settings and selection history until it is selected.");
+    checkbox->click();
+    expect_partial_prompt = true;
+    select_category(0);
+    const int previous_changes = changes;
+    select_file("reload");
+    expect(prompts == 5 && changes == previous_changes + 1,
+           "Applying a reloaded file must prompt once and emit one settings change notification.");
+    for (int index = 0; index < categories.size(); ++index) {
+        const bool included = index == 0 || index == 2;
+        expect(manager->getGlobal()->setting<int>(keys[index]) ==
+                   (included ? 6 : previous_settings[0][keys[index].toStdString()].get<int>()),
+               "Applying a reloaded file must preserve values in categories removed from the file.");
+        const QString expected_file = included ? "reload" : previous_history.value(categories[index]);
+        select_category(index);
+        expect(combo->currentText() == expected_file &&
+                   ORNL::CSM->getMostRecentSettingHistory().value(categories[index]) == expected_file,
+               "Applying a reloaded file must preserve selections and history in removed categories.");
+    }
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
