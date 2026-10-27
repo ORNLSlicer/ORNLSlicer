@@ -14,7 +14,6 @@
 #include <qlistview.h>
 #include <qnamespace.h>
 #include <qobject.h>
-#include <qoverload.h>
 #include <qsharedpointer.h>
 #include <qsizepolicy.h>
 #include <qtabwidget.h>
@@ -329,18 +328,39 @@ void SettingBar::updateSettingBasePopupHeight() {
 // change selected settings base
 void SettingBar::updateSettings(QString text) {
     if (text != "") {
-        GSM->removeCurrentSettings(paneMapping[m_tab_widget->currentIndex()],
-                                   mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]]);
-        GSM->constructActiveGlobal(paneMapping[m_tab_widget->currentIndex()], text);
+        QStringList categories {paneMapping[m_tab_widget->currentIndex()]};
+        const auto all_globals = GSM->getAllGlobals();
+        if (PreferencesManager::getInstance()->getPromptSettingsForAllCategoriesPreference()) {
+            QStringList available_categories;
+            for (auto it = all_globals.cbegin(); it != all_globals.cend(); ++it)
+                if (it.value().contains(text)) available_categories.append(it.key());
+
+            if (available_categories.size() > 1 &&
+                QMessageBox::question(this, "Apply Settings File",
+                                      QString("Apply \"%1\" to all categories in this file (%2)?\n\n"
+                                              "Choose No to update only %3.")
+                                          .arg(text, available_categories.join(", "), categories.front()),
+                                      QMessageBox::Yes | QMessageBox::No, QMessageBox::No) == QMessageBox::Yes)
+                categories = available_categories;
+        }
+
+        if (categories.size() == 1 && mostRecentSetting.value(categories.front()) == text) return;
+
+        for (const QString& category : categories) {
+            GSM->removeCurrentSettings(category, mostRecentSetting.value(category));
+            GSM->constructActiveGlobal(category, text);
+            mostRecentSetting[category] = text;
+            CSM->setMostRecentSettingHistory(category, text);
+        }
         {
             DynamicDependencyRefreshBlocker blocker(m_suppress_dynamic_dependency_refresh);
-            for (SettingTab* tab : m_panes[paneMapping[m_tab_widget->currentIndex()]]->getTabs()) {
-                tab->setSettingBase(GSM->getGlobal());
-                tab->reload();
+            for (const QString& category : categories) {
+                for (SettingTab* tab : m_panes[category]->getTabs()) {
+                    tab->setSettingBase(GSM->getGlobal());
+                    tab->reload();
+                }
             }
         }
-        mostRecentSetting[paneMapping[m_tab_widget->currentIndex()]] = text;
-        CSM->setMostRecentSettingHistory(paneMapping[m_tab_widget->currentIndex()], text);
         enableDependRows();
         emit settingsBaseChanged(text);
         emitSelectedVisualizationSettings();
@@ -671,8 +691,7 @@ void SettingBar::setupEvents() {
     connect(CSM.get(), &SessionManager::partsCleared, this, &SettingBar::refreshOverrideIndicators);
     connect(m_filter_bar, &QLineEdit::textChanged, this, &SettingBar::filter);
     connect(m_tab_widget, &QTabWidget::currentChanged, this, &SettingBar::updateDisplayedLists);
-    connect(m_combo_box, QOverload<const QString&>::of(&QComboBox::currentTextChanged), this,
-            &SettingBar::updateSettings);
+    connect(m_combo_box, &QComboBox::textActivated, this, &SettingBar::updateSettings);
     connect(PreferencesManager::getInstance().get(), &PreferencesManager::anyUnitChanged, this,
             &SettingBar::reloadRowsForUnitChange);
     connect(PreferencesManager::getInstance().get(), &PreferencesManager::disabledSettingVisibilityChanged, this,
