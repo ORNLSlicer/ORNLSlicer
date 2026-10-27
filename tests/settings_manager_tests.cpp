@@ -164,5 +164,77 @@ int main(int argc, char* argv[]) {
     passed &= ORNL::Testing::expect(manager->getGlobal()->json() == active_settings,
                                     "Loading files must preserve active settings until a selection is applied.");
 
+    const auto load_settings = [&](const QString& name, const fifojson& settings) {
+        document["settings"] = fifojson::array({settings});
+        return write_fixture(name, QByteArray::fromStdString(document.dump())) &&
+               manager->loadGlobalJson(temp_dir.filePath(name + ".s2c"));
+    };
+    const int default_tool_number     = manager->getMaster()->json().at("tool_number").at("default").get<int>();
+    const int default_tool_coordinate = manager->getMaster()->json().at("tool_coordinate").at("default").get<int>();
+    const QString saved_path          = temp_dir.filePath("saved.s2c");
+
+    if (!ORNL::Testing::expect(load_settings("reapplied", full_settings),
+                               "Could not load the template before reapplying it."))
+        return EXIT_FAILURE;
+    manager->constructActiveGlobal("Printer", "reapplied");
+    if (!ORNL::Testing::expect(load_settings("reapplied", {{"tool_number", 3}}),
+                               "Could not reload the template before reapplying it."))
+        return EXIT_FAILURE;
+    manager->constructActiveGlobal("Printer", "reapplied");
+    manager->removeCurrentSettings("Printer", "reapplied");
+    passed &= ORNL::Testing::expect(
+        manager->getGlobal()->setting<int>("tool_coordinate") == default_tool_coordinate,
+        "Reapplying the same file after reloading must retain its previously applied reset keys.");
+
+    manager->constructActiveGlobal("Printer", "unrelated");
+    manager->getGlobal()->setSetting("tool_coordinate", 7);
+    manager->saveTemplate({"tool_number"}, saved_path, "");
+    if (!ORNL::Testing::expect(manager->loadGlobalJson(saved_path), "Could not load the saved template."))
+        return EXIT_FAILURE;
+    manager->removeCurrentSettings("Printer", "saved");
+    passed &= ORNL::Testing::expect(manager->getGlobal()->setting<int>("tool_number") == default_tool_number &&
+                                        manager->getGlobal()->setting<int>("tool_coordinate") == 7,
+                                    "Selecting a saved template must not reset keys from a different active file.");
+
+    manager->constructActiveGlobal("Printer", "saved");
+    manager->getGlobal()->setSetting("tool_coordinate", 6);
+    manager->saveTemplate({"tool_number", "tool_coordinate"}, saved_path, "");
+    if (!ORNL::Testing::expect(manager->loadGlobalJson(saved_path), "Could not reload the overwritten template."))
+        return EXIT_FAILURE;
+    manager->removeCurrentSettings("Printer", "saved");
+    passed &= ORNL::Testing::expect(
+        manager->getGlobal()->setting<int>("tool_coordinate") == default_tool_coordinate,
+        "Leaving an overwritten template must reset manually added keys saved under the same name.");
+
+    manager->constructActiveGlobal("Printer", "unrelated");
+    if (!ORNL::Testing::expect(load_settings("unrelated", {{"tool_number", 3}}),
+                               "Could not replace the active template before session loading."))
+        return EXIT_FAILURE;
+    document["settings"] = fifojson::array({{{"tool_number", 4}, {"tool_coordinate", 7}}});
+    if (!ORNL::Testing::expect(manager->loadGlobalJson(document), "Could not load replacement session settings."))
+        return EXIT_FAILURE;
+    const QString unrelated_path = temp_dir.filePath("unrelated.s2c");
+    manager->saveTemplate({"tool_number"}, unrelated_path, "");
+    if (!ORNL::Testing::expect(manager->loadGlobalJson(unrelated_path), "Could not save the session's template."))
+        return EXIT_FAILURE;
+    manager->removeCurrentSettings("Printer", "unrelated");
+    passed &=
+        ORNL::Testing::expect(manager->getGlobal()->setting<int>("tool_coordinate") == 7,
+                              "Replacing session settings must discard the previously applied template's reset keys.");
+
+    if (!ORNL::Testing::expect(load_settings("unrelated", full_settings),
+                               "Could not restore the template before clearing global settings."))
+        return EXIT_FAILURE;
+    manager->constructActiveGlobal("Printer", "unrelated");
+    if (!ORNL::Testing::expect(load_settings("unrelated", {{"tool_number", 3}}),
+                               "Could not replace the active template before clearing global settings."))
+        return EXIT_FAILURE;
+    manager->clearGlobal();
+    manager->getGlobal()->setSetting("tool_coordinate", 7);
+    manager->removeCurrentSettings("Printer", "unrelated");
+    passed &=
+        ORNL::Testing::expect(manager->getGlobal()->setting<int>("tool_coordinate") == 7,
+                              "Clearing global settings must discard the previously applied template's reset keys.");
+
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

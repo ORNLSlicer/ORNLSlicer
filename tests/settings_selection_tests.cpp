@@ -52,8 +52,8 @@ int main(int argc, char* argv[]) {
     const auto version = fifojson::parse(versions.readAll().toStdString()).at("master_version");
     const QStringList categories {"Printer", "Material", "Profile", "Experimental"};
     const QStringList keys {"tool_number", "printing_material", "perimeter_count", "tormach_mode"};
-    const auto load_fixture = [&](const QString& name, const QList<int>& indices, int value) {
-        fifojson settings = fifojson::object();
+    const auto load_fixture = [&](const QString& name, const QList<int>& indices, int value,
+                                  fifojson settings = fifojson::object()) {
         for (int index : indices) settings[keys[index].toStdString()] = value;
         if (name == "old") settings["individual_layer_output"] = true;
         fifojson document  = {{"header", {{"version", version}}}, {"settings", fifojson::array({settings})}};
@@ -205,5 +205,39 @@ int main(int argc, char* argv[]) {
                    ORNL::CSM->getMostRecentSettingHistory().value(categories[index]) == expected_file,
                "Applying a reloaded file must preserve selections and history in removed categories.");
     }
+    checkbox->click();
+    expect(load_fixture("active_reload", {0, 1, 2, 3}, 2, {{"tool_coordinate", 2}, {"individual_layer_output", true}}),
+           "Could not load the active-template reload fixture.");
+    for (int index = 0; index < categories.size(); ++index) {
+        select_category(index);
+        bar.reloadDisplayedList();
+        select_file("active_reload");
+    }
+    const auto active_before_reload  = manager->getGlobal()->json();
+    const auto history_before_reload = ORNL::CSM->getMostRecentSettingHistory();
+    const int changes_before_reload  = changes;
+    expect(load_fixture("active_reload", {0, 2}, 3) && load_fixture("active_reload", {0, 2}, 4),
+           "Could not reload the active template without its old keys and categories.");
+    bar.reloadDisplayedList();
+    expect(manager->getGlobal()->json() == active_before_reload &&
+               ORNL::CSM->getMostRecentSettingHistory() == history_before_reload && changes == changes_before_reload,
+           "Repeated active-template reloads must preserve active values and history until selection.");
+
+    select_category(0);
+    select_file("partial");
+    expect(manager->getGlobal()->setting<int>("tool_coordinate") == 0,
+           "Switching files must reset keys removed from the active template by a reload.");
+    expect(manager->getGlobal()->setting<bool>("individual_layer_output"),
+           "Switching Printer must preserve old active keys in Experimental.");
+    select_category(3);
+    select_file("new");
+    expect(!manager->getGlobal()->setting<bool>("individual_layer_output"),
+           "Switching files must reset old active keys even when their category disappeared from the cache.");
+
+    manager->getGlobal()->setSetting("tool_coordinate", 7);
+    select_category(0);
+    select_file("new");
+    expect(manager->getGlobal()->setting<int>("tool_coordinate") == 7,
+           "Later selections must preserve manual edits to keys absent from the newly active template.");
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
