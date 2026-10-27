@@ -138,8 +138,6 @@ bool SettingsManager::loadGlobalJson(QString path) {
     // Get file details to later use name as key into map
     QFileInfo fileInfo(conf_file);
 
-    // TODO: if same name, clear settings for name, load master defaults, then populate
-
     // Load the data and parse it.
     QString settings_data = conf_file.readAll();
     conf_file.close();
@@ -171,6 +169,9 @@ bool SettingsManager::loadGlobalJson(QString path) {
     else if (result == -1) {
         // break;
     }
+
+    // Replace the file's cached settings so removed keys and categories do not survive a reload.
+    for (auto& globals : m_allGlobals) globals.remove(fileInfo.completeBaseName());
 
     // if key found in master
     for (auto& array : j[Constants::SettingFileStrings::kSettings].items()) {
