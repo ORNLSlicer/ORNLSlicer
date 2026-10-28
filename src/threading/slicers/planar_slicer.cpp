@@ -48,9 +48,12 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
             // Alter settings
             global_settings->makeGlobalAdjustments();
 
-            // Check for overlaps of settings parts and prevent them
-            if (SlicingUtilities::doPartsOverlap(parts.settings_parts, Plane(Point(1, 1, 1), QVector3D(0, 0, 1)))) {
-                return true;  // Cancel Slicing
+            // Check for overlaps among settings regions that apply to the same build part.
+            for (const auto& part : parts.build_parts) {
+                const auto settings_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kSettings, part);
+                if (SlicingUtilities::doPartsOverlap(settings_parts, Plane(Point(1, 1, 1), QVector3D(0, 0, 1)))) {
+                    return true;  // Cancel Slicing
+                }
             }
 
             return false;  // No error, so continune slicing
@@ -65,13 +68,14 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         return false;
     });
 
-    pp.addMeshProcessing([this](QSharedPointer<MeshBase> mesh, QSharedPointer<SettingsBase> part_sb) {
-        // Clip meshes
-        auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
-        SlicingUtilities::ClipMesh(mesh, clipping_meshes);
+    pp.addMeshProcessing(
+        [this](QSharedPointer<MeshBase> mesh, QSharedPointer<SettingsBase> part_sb, QSharedPointer<Part> part) {
+            // Clip meshes
+            auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping, part);
+            SlicingUtilities::ClipMesh(mesh, clipping_meshes);
 
-        return false;  // No error, so continune slicing
-    });
+            return false;  // No error, so continune slicing
+        });
 
     pp.addStepBuilder(
         [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
