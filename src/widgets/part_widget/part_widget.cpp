@@ -43,13 +43,8 @@ QSet<QSharedPointer<Part>> PartWidget::parts() {
     for (auto& item : m_model->items()) {
         QSharedPointer<Part> p = item->part();
 
-        QVector3D gop_translation = item->translation();
-        QQuaternion gop_rotation  = item->rotation();
-        QVector3D gop_scale       = item->scale();
-
-        gop_translation *= Constants::OpenGL::kViewToObject;
-
-        QMatrix4x4 object_transformation = MathUtils::composeTransformMatrix(gop_translation, gop_rotation, gop_scale);
+        QMatrix4x4 object_transformation = item->transformation();
+        for (int axis = 0; axis < 3; ++axis) object_transformation(axis, 3) *= Constants::OpenGL::kViewToObject;
 
         p->setTransformation(object_transformation);
         p->rootMesh()->setType(item->meshType());
@@ -254,13 +249,8 @@ void PartWidget::updatePartTransformations() {
     for (auto& item : m_model->items()) {
         QSharedPointer<Part> p = item->part();
 
-        QVector3D gop_translation = item->translation();
-        QQuaternion gop_rotation  = item->rotation();
-        QVector3D gop_scale       = item->scale();
-
-        gop_translation *= Constants::OpenGL::kViewToObject;
-
-        QMatrix4x4 object_transformation = MathUtils::composeTransformMatrix(gop_translation, gop_rotation, gop_scale);
+        QMatrix4x4 object_transformation = item->transformation();
+        for (int axis = 0; axis < 3; ++axis) object_transformation(axis, 3) *= Constants::OpenGL::kViewToObject;
 
         p->setTransformation(object_transformation);
         p->rootMesh()->setType(item->meshType());
