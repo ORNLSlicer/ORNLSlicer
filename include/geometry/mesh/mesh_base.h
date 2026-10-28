@@ -88,6 +88,16 @@ class MeshBase {
     //! \return the transformations of this mesh
     QVector<QMatrix4x4> transformations();
 
+    //! \brief Gets the transformation from centered source vertices to aligned mesh vertices.
+    QMatrix4x4 alignmentTransformation() const;
+
+    //! \brief Restores aligned geometry and its current transform without replaying live rotations.
+    void restoreTransformation(const QMatrix4x4& aligned, const QMatrix4x4& current,
+                               const QVector<QMatrix4x4>& history);
+
+    //! \brief Gets the source dimensions before alignment or live transformations.
+    Distance3D sourceDimensions() const;
+
     //! \brief Scale mesh to fit within a given volume.
     //! \param bounds: the dimensions to scale to
     void scale(Distance3D bounds);
@@ -269,6 +279,9 @@ class MeshBase {
 
     //! \brief Transformation matrix which defines Translation, Rotation, and Scale.
     QMatrix4x4 m_transformation;
+
+    //! \brief Cumulative transformation baked into the aligned vertices.
+    QMatrix4x4 m_alignment_transformation;
 
     //! \brief List of Transformation matrix which defines Translation, Rotation, and Scale.
     QVector<QMatrix4x4> m_all_transformations;

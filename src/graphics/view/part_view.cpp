@@ -4,6 +4,7 @@
 
 #include <QMessageBox>
 #include <QPainter>
+#include <QSignalBlocker>
 #include <QStack>
 #include <QToolTip>
 #include <algorithm>
@@ -228,8 +229,10 @@ void PartView::centerPart(QString name) {
     if (!gop.isNull()) {
         this->centerPart(gop);
 
+        auto pm = m_model->lookupByGraphic(gop);
+        this->synchronizePartTransformations(pm);
         this->blockModel();
-        m_model->lookupByGraphic(gop)->setTranslation(gop->translation());
+        pm->setTransformation(gop->transformation());
         this->permitModel();
 
         this->postTransformCheck();
@@ -366,10 +369,11 @@ void PartView::centerSelectedParts() {
         QVector3D translation = gop->translation() + offset;
 
         gop->translateAbsolute(translation);
-        updateSlicingGeometryPreview(gop);
 
+        auto pm = m_model->lookupByGraphic(gop);
+        this->synchronizePartTransformations(pm);
         this->blockModel();
-        m_model->lookupByGraphic(gop)->setTranslation(translation);
+        pm->setTransformation(gop->transformation());
         this->permitModel();
     }
 
@@ -380,10 +384,11 @@ void PartView::centerSelectedParts() {
 void PartView::dropSelectedParts() {
     for (auto& gop : m_selected_objects) {
         dropPart(gop);
-        updateSlicingGeometryPreview(gop);
 
+        auto pm = m_model->lookupByGraphic(gop);
+        this->synchronizePartTransformations(pm);
         this->blockModel();
-        m_model->lookupByGraphic(gop)->setTranslation(gop->translation() - m_printer->minimum());
+        pm->setTransformation(gop->transformation());
         this->permitModel();
     }
 
@@ -961,7 +966,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
     if (gop.isNull()) {
         gop = QSharedPointer<PartObject>::create(this, pm->part());
 
-        if (pm->transformation().isIdentity()) {
+        if (pm->transformation().isIdentity() && pm->part()->parent().isNull() && pm->part()->children().isEmpty()) {
             this->centerPart(gop);
             this->dropPart(gop);
 
@@ -992,7 +997,7 @@ void PartView::modelAdditionUpdate(QSharedPointer<PartMetaItem> pm) {
     updateLayerSettingsRangePlane();
 
     this->blockModel();
-    m_model->lookupByGraphic(gop)->setTranslation(gop->translation());
+    pm->setTransformation(gop->transformation());
     this->permitModel();
 
     this->postTransformCheck();
@@ -1083,6 +1088,8 @@ void PartView::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
 }
 
 void PartView::modelTranformUpdate(QSharedPointer<PartMetaItem> pm) {
+    if (m_state.model_transform_blocked) return;
+
     QSharedPointer<PartObject> gop = pm->graphicsPart();
 
     gop->setTransformation(pm->transformation());
@@ -1090,18 +1097,13 @@ void PartView::modelTranformUpdate(QSharedPointer<PartMetaItem> pm) {
     if (PreferencesManager::getInstance()->getAlwaysDropParts() &&
         !MathUtils::glEquals(gop->minimum().z(), m_printer->minimum().z())) {
         // Is this a z translation or not?
-        if (MathUtils::glEquals(gop->translation().z() - pm->translation().z(), 0.0f)) {
-            dropPart(gop);
-            this->blockModel();
-            m_model->lookupByGraphic(gop)->setTranslation(gop->translation());
-            this->permitModel();
-        }
+        if (MathUtils::glEquals(gop->translation().z() - pm->translation().z(), 0.0f)) { dropPart(gop); }
     }
 
+    this->synchronizePartTransformations(pm);
     this->postTransformCheck();
 
     updateLayerSettingsRangePlane();
-    updateSlicingGeometryPreview(gop);
 
     this->update();
 }
@@ -1660,17 +1662,26 @@ bool PartView::layerSettingsRangeGeometry(QSharedPointer<PartObject> gop, int lo
     return true;
 }
 
+void PartView::synchronizePartTransformations(QSharedPointer<PartMetaItem> pm) {
+    const QSignalBlocker blocker(pm.get());
+    pm->setTransformation(pm->graphicsPart()->transformation());
+    updateSlicingGeometryPreview(pm->graphicsPart());
+
+    for (auto child : pm->children()) { this->synchronizePartTransformations(child); }
+}
+
 void PartView::blockModel() {
+    // Keep the transform connection ordered before undo recording when callbacks resume.
+    m_state.model_transform_blocked = true;
     QObject::disconnect(m_model.get(), &PartMetaModel::itemAddedUpdate, this, &PartView::modelAdditionUpdate);
     QObject::disconnect(m_model.get(), &PartMetaModel::selectionUpdate, this, &PartView::modelSelectionUpdate);
     QObject::disconnect(m_model.get(), &PartMetaModel::parentingUpdate, this, &PartView::modelParentingUpdate);
-    QObject::disconnect(m_model.get(), &PartMetaModel::transformUpdate, this, &PartView::modelTranformUpdate);
 }
 
 void PartView::permitModel() {
+    m_state.model_transform_blocked = false;
     QObject::connect(m_model.get(), &PartMetaModel::itemAddedUpdate, this, &PartView::modelAdditionUpdate);
     QObject::connect(m_model.get(), &PartMetaModel::selectionUpdate, this, &PartView::modelSelectionUpdate);
     QObject::connect(m_model.get(), &PartMetaModel::parentingUpdate, this, &PartView::modelParentingUpdate);
-    QObject::connect(m_model.get(), &PartMetaModel::transformUpdate, this, &PartView::modelTranformUpdate);
 }
 }  // Namespace ORNL

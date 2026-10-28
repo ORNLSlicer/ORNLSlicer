@@ -16,6 +16,7 @@
 #include "graphics/objects/part_object.h"
 #include "managers/session_manager.h"
 #include "part/part.h"
+#include "utilities/constants.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
 
@@ -134,6 +135,8 @@ QSharedPointer<PartMetaItem> PartMetaModel::lookupByPointer(QSharedPointer<Part>
 }
 
 QSharedPointer<PartMetaItem> PartMetaModel::newItem(QSharedPointer<Part> p) {
+    if (m_pointer_lookup.contains(p)) return m_pointer_lookup[p];
+
     auto pm = QSharedPointer<PartMetaItem>::create(p);
     this->addItem(pm);
 
@@ -159,16 +162,15 @@ void PartMetaModel::addItem(QSharedPointer<PartMetaItem> pm) {
         for (auto& c : curr_part->children()) { queue.push(c); }
 
         QSharedPointer<PartMetaItem> cpm = QSharedPointer<PartMetaItem>::create(curr_part);
+        m_pointer_lookup[curr_part]      = cpm;
+        cpm->setModel(this->sharedFromThis());
         QObject::connect(cpm.get(), &PartMetaItem::modified, this, &PartMetaModel::itemUpdated);
         emit itemAddedUpdate(cpm);
 
         item_lookup[curr_part->parent()]->blockSignals(true);
         item_lookup[curr_part->parent()]->adoptChild(cpm);
         item_lookup[curr_part->parent()]->blockSignals(false);
-        item_lookup[curr_part]      = cpm;
-        m_pointer_lookup[curr_part] = cpm;
-
-        cpm->setModel(this->sharedFromThis());
+        item_lookup[curr_part] = cpm;
     }
 }
 
@@ -230,7 +232,14 @@ void PartMetaModel::copySelection() {
 
         // Copy part.
         QSharedPointer<Part> p = QSharedPointer<Part>::create(pm->part());
-        p->setTransformation(QMatrix4x4());
+        QMatrix4x4 transform;
+        if (!pm->children().isEmpty() || result.contains(pm->parent())) {
+            transform = pm->transformation();
+            for (int axis = 0; axis < 3; ++axis) transform(axis, 3) *= Constants::OpenGL::kViewToObject;
+        }
+        p->setTransformation(transform);
+        p->setMeshType(pm->meshType());
+        p->rootMesh()->setType(pm->meshType());
         p->setName(p->name() + "_copy");
 
         QString org_name = p->name();
@@ -242,11 +251,17 @@ void PartMetaModel::copySelection() {
             count++;
         }
         setPartInstanceName(p, p->name());
+        namelist.append(p->name());
 
         result[pm] = p;
 
         // If this item has a parent, link it up.
         if (result.contains(pm->parent())) { result[pm->parent()]->adoptChild(p); }
+    }
+
+    for (auto& p : result.values()) {
+        CSM->addPart(p, false);
+        setPartInstanceName(p, p->name());
     }
 
     // Add to model.
