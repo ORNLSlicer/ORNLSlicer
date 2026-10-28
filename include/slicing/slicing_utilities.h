@@ -63,17 +63,21 @@ class SlicingUtilities {
      * \brief identifies meshes from a list of parts with a certain type
      * \param parts: a list of part who's root mesh might by a certain type
      * \param mt: the type to search for
+     * \param target_part: optional modifier target; includes global modifiers and this part's direct children
      * \return a list of meshes that are the type
      */
-    static QVector<QSharedPointer<MeshBase>> GetMeshesByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt);
+    static QVector<QSharedPointer<MeshBase>> GetMeshesByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt,
+                                                             QSharedPointer<Part> target_part = nullptr);
 
     /*!
      * \brief identifies meshes from a list of parts with a certain type
      * \param parts: a list of part who's root mesh might by a certain type
      * \param mt: the type to search for
+     * \param target_part: optional modifier target; includes global modifiers and this part's direct children
      * \return a list of parts that are have the same type as mt
      */
-    static QVector<QSharedPointer<Part>> GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt);
+    static QVector<QSharedPointer<Part>> GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt,
+                                                        QSharedPointer<Part> target_part = nullptr);
 
     /*!
      * \brief clips a mesh with a list of clippers

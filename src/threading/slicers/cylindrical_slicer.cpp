@@ -459,8 +459,6 @@ void CylindricalSlicer::preProcess(nlohmann::json opt_data) {
         static_cast<CylindricalPathPattern>(global_sb->setting<int>(PS::Slicing::kCylindricalPathPattern));
 
     QVector<QSharedPointer<Part>> build_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kBuild);
-    QVector<QSharedPointer<MeshBase>> clipping_meshes =
-        SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping);
     QVector<QPair<QString, HelicalPathZClipRounding>> effective_z_clip_rounding;
     QVector<QPair<QString, HelicalPathHandedness>> effective_handedness;
 
@@ -488,6 +486,7 @@ void CylindricalSlicer::preProcess(nlohmann::json opt_data) {
     int parts_processed = 0;
     emitPreProcessProgress(parts_processed, 0.0);
     for (const QSharedPointer<Part>& part : build_parts) {
+        auto clipping_meshes = SlicingUtilities::GetMeshesByType(CSM->parts(), MeshType::kClipping, part);
         QSharedPointer<SettingsBase> part_sb = QSharedPointer<SettingsBase>::create(*global_sb);
         part_sb->populate(part->getSb());
         part->clearSteps();

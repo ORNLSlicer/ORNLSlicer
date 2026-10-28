@@ -158,18 +158,20 @@ Point SlicingUtilities::GetCylindricalArcCenter(const Point& start, const Point&
 }
 
 QVector<QSharedPointer<MeshBase>> SlicingUtilities::GetMeshesByType(QMap<QString, QSharedPointer<Part>> parts,
-                                                                    MeshType mt) {
+                                                                    MeshType mt, QSharedPointer<Part> target_part) {
     QVector<QSharedPointer<MeshBase>> meshes;
-    for (QSharedPointer<Part> part : parts) {
-        if (part->rootMesh()->type() == mt) meshes.push_back(part->rootMesh());
-    }
+    for (QSharedPointer<Part> part : GetPartsByType(parts, mt, target_part)) { meshes.push_back(part->rootMesh()); }
     return meshes;
 }
 
-QVector<QSharedPointer<Part>> SlicingUtilities::GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt) {
+QVector<QSharedPointer<Part>> SlicingUtilities::GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt,
+                                                               QSharedPointer<Part> target_part) {
     QVector<QSharedPointer<Part>> found_parts;
     for (QSharedPointer<Part> part : parts) {
-        if (part->rootMesh()->type() == mt) found_parts.push_back(part);
+        if (part->rootMesh()->type() == mt &&
+            (target_part.isNull() || part->parent().isNull() || part->parent() == target_part)) {
+            found_parts.push_back(part);
+        }
     }
     return found_parts;
 }
