@@ -12,6 +12,7 @@ Release versions follow the project's
 - Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Added an optional prompt under Preferences > Settings to apply a selected settings file to all categories it contains; the preference is disabled by default.
 - Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets.
+- Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
 - Added cube and stacked-layer icons beside global settings to distinguish part and layer overrides, showing both when both apply.
 - Added a Starting Layer Number setting under Printer > G-Code for continuation builds, with consistent layer, bead, block, and individual-layer export numbering ([#347](https://github.com/ORNLSlicer/ORNLSlicer/issues/347)).
 
@@ -22,6 +23,8 @@ Release versions follow the project's
 - Changed UI theme choices to Light Mode and Dark Mode, with consistent palettes for standalone Qt dialogs and calculators and readable status, help, and selection colors. Existing System (default) preferences now select Light Mode; saved Dark Mode preferences are preserved.
 - Changed child clipping and settings meshes to affect only their immediate parent when it is a build object; enabled unparented modifiers remain global.
 - Changed default parent deletion to remove its hierarchy; Delete Object(s), Keep Children preserves descendants and leaves modifiers whose target changes inactive.
+- Changed child clipping and settings meshes to affect only their immediate parent when it is a build object; enabled unparented modifiers remain global ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Changed default parent deletion to remove its hierarchy; Delete Object(s), Keep Children preserves descendants and leaves modifiers whose target changes inactive ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
 - Changed individual-layer export to a disabled-by-default setting under Experimental > File Output. Enable Individual Layer Export before slicing to prepare separate layer files; reopened G-code must be re-sliced to export individual layers.
 
 ### Fixed
@@ -33,6 +36,8 @@ Release versions follow the project's
 - Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
 - Fixed parent/child links, transforms, mesh roles, and layer overrides being lost or desynchronized during project save/load, duplication, instance changes, reload/replacement, reset, and undo.
 - Fixed settings-region conflicts being missed on elevated or rotated slices and allowing stale results to be exported; conflicts now identify both meshes, their target, and the slice.
+- Fixed parent/child links, transforms, mesh roles, and layer overrides being lost or desynchronized during project save/load, duplication, instance changes, reload/replacement, reset, and undo ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
+- Fixed settings-region conflicts being missed on elevated or rotated slices and allowing stale results to be exported; conflicts now identify both meshes, their target, and the slice ([#373](https://github.com/ORNLSlicer/ORNLSlicer/pull/373)).
 - Fixed generated G-code containing embedded standalone layer programs and export-only markers, including when individual-layer export is enabled.
 - Fixed incomplete Git LFS checkouts silently building with missing GUI icons, setting arrows, and Slice toolbar access by rejecting unresolved bundled resources with recovery instructions ([#351](https://github.com/ORNLSlicer/ORNLSlicer/issues/351)).
 - Fixed regular CI not running for pull requests from fork branches, including Linux and Windows builds and Linux and macOS flake checks.
