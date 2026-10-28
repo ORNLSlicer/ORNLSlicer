@@ -78,8 +78,11 @@ class Preprocessor {
     //! \brief A function that can be used to process a single mesh and its parent part's settings
     //! \param QSharedPointer<Mesh> mesh
     //! \param QSharedPointer<SettingsBase> part_sb
+    //! \param QSharedPointer<Part> part: owning part, including when processing a submesh
     //! \return a boolean flag to signal a halt in slicing
-    typedef std::function<bool(QSharedPointer<MeshBase> mesh, QSharedPointer<SettingsBase> part_sb)> MeshProcessing;
+    typedef std::function<bool(QSharedPointer<MeshBase> mesh, QSharedPointer<SettingsBase> part_sb,
+                               QSharedPointer<Part> part)>
+        MeshProcessing;
 
     //! \typedef StepBuilder
     //! \brief A function that can be used to build step(s) from cross-sections
