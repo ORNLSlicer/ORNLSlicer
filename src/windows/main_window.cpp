@@ -1161,8 +1161,8 @@ void MainWindow::applyPartTransformSnapshot(QSharedPointer<PartMetaItem> item, c
     m_applying_undo_redo = true;
     item->setTransformation(snapshot.transformation);
     item->setScaleUnitIndex(snapshot.scale_unit_index);
-    m_part_transform_snapshots[item] = snapshot;
-    m_applying_undo_redo             = false;
+    initializePartTransform(item);
+    m_applying_undo_redo = false;
 }
 
 QVector<MainWindow::SettingValueSnapshot> MainWindow::settingValueSnapshots(
@@ -1258,7 +1258,10 @@ void MainWindow::recordSettingChange(QString key) {
 }
 
 void MainWindow::initializePartTransform(QSharedPointer<PartMetaItem> item) {
-    if (!item.isNull()) { m_part_transform_snapshots[item] = partTransformSnapshot(item); }
+    if (item.isNull()) return;
+
+    m_part_transform_snapshots[item] = partTransformSnapshot(item);
+    for (const auto& child : item->children()) { initializePartTransform(child); }
 }
 
 void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) {
@@ -1270,15 +1273,15 @@ void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
 
     const PartTransformSnapshot current = partTransformSnapshot(item);
     if (!m_part_transform_snapshots.contains(item)) {
-        m_part_transform_snapshots[item] = current;
+        initializePartTransform(item);
         return;
     }
 
     const PartTransformSnapshot before = m_part_transform_snapshots[item];
+    initializePartTransform(item);
     if (partTransformSnapshotsEqual(before, current)) { return; }
 
     m_undo_stack->push(new PartTransformUndoCommand(this, item, before, current));
-    m_part_transform_snapshots[item] = current;
 }
 
 void MainWindow::handleModifiedSetting(const QString key) {

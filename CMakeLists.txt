@@ -509,6 +509,29 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_session_manager_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME session_manager_tests COMMAND ${PROJECT_NAME}_session_manager_tests)
 
+    add_executable(${PROJECT_NAME}_part_hierarchy_copy_tests tests/part_hierarchy_copy_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_part_hierarchy_copy_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_part_hierarchy_copy_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME part_hierarchy_copy_tests COMMAND ${PROJECT_NAME}_part_hierarchy_copy_tests)
+
+    add_executable(${PROJECT_NAME}_part_hierarchy_transform_tests tests/part_hierarchy_transform_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_part_hierarchy_transform_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_part_hierarchy_transform_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME part_hierarchy_transform_tests COMMAND ${PROJECT_NAME}_part_hierarchy_transform_tests)
+    set_tests_properties(part_hierarchy_transform_tests PROPERTIES SKIP_RETURN_CODE 77)
+
     add_executable(${PROJECT_NAME}_preferences_manager_tests tests/preferences_manager_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_preferences_manager_tests

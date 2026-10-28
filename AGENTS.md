@@ -184,3 +184,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 
 - Verify hook file-type filters before claiming generated JSON is excluded; keep formatter changes after confirming parsed JSON matches the staged data, then re-stage and rerun pre-commit.
 - Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
+- On this 15 GiB WSL instance, build with `-j 1` and configure `CMAKE_AUTOGEN_PARALLEL=1`; `-j 32` exhausted memory and disrupted WSL.

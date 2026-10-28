@@ -129,8 +129,10 @@ bool PartMetaItem::solidWireframeMode() {
 }
 
 void PartMetaItem::setTranslation(QVector3D t) {
-    m_translation    = t;
-    m_transformation = MathUtils::composeTransformMatrix(m_translation, m_rotation, m_scale);
+    m_translation          = t;
+    m_transformation(0, 3) = t.x();
+    m_transformation(1, 3) = t.y();
+    m_transformation(2, 3) = t.z();
 
     emit modified(PartMetaUpdateType::kTransformUpdate);
 }
@@ -231,6 +233,13 @@ void PartMetaItem::orphanChild(QSharedPointer<PartMetaItem> c) {
 
 void PartMetaItem::setParent(QSharedPointer<PartMetaItem> p) {
     m_parent = p;
+
+    auto part_parent = m_part->parent();
+    auto new_parent  = p.isNull() ? nullptr : p->part();
+    if (part_parent != new_parent) {
+        if (!part_parent.isNull()) part_parent->orphanChild(m_part);
+        if (!new_parent.isNull()) new_parent->adoptChild(m_part);
+    }
 
     emit modified(PartMetaUpdateType::kParentingUpdate);
 }

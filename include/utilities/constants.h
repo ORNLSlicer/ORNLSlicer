@@ -1004,6 +1004,9 @@ class Constants {
            public:
             static const std::string kParts;
             static const std::string kName;
+            static const std::string kParent;
+            static const std::string kAlignedTransform;
+            static const std::string kSourceDims;
             static const std::string kTransform;
             static const std::string kTransforms;
             static const std::string kMeshType;

@@ -981,6 +981,9 @@ const std::string Constants::Settings::Input::kVector3    = "vector3";
 // Session
 const std::string Constants::Settings::Session::kParts               = "parts";
 const std::string Constants::Settings::Session::kName                = "name";
+const std::string Constants::Settings::Session::kParent              = "parent";
+const std::string Constants::Settings::Session::kAlignedTransform    = "aligned_transform";
+const std::string Constants::Settings::Session::kSourceDims          = "source_dim";
 const std::string Constants::Settings::Session::kTransform           = "transform";
 const std::string Constants::Settings::Session::kTransforms          = "transforms";
 const std::string Constants::Settings::Session::kMeshType            = "mesh_type";
