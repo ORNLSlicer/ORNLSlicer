@@ -46,13 +46,25 @@ Part::Part(const QSharedPointer<Part>& p) {
         else { m_sub_meshes.push_back(QSharedPointer<OpenMesh>::create(*dynamic_cast<OpenMesh*>(sub.get()))); }
     }
 
-    m_name      = p->m_name;
-    m_file_name = p->m_file_name;
+    m_name             = p->m_name;
+    m_file_name        = p->m_file_name;
+    m_mesh_type        = p->m_mesh_type;
+    m_modifier_enabled = p->m_modifier_enabled;
 
     m_sb = QSharedPointer<SettingsBase>::create(*p->getSb());
 
-    m_template_applied      = false;
-    m_current_part_template = "";
+    QMap<QSharedPointer<SettingsBase>, QSharedPointer<SettingsBase>> copied_settings;
+    for (auto it = p->m_ranges.cbegin(); it != p->m_ranges.cend(); ++it) {
+        auto range           = it.value();
+        auto source_settings = range->getSb();
+        if (!copied_settings.contains(source_settings))
+            copied_settings[source_settings] = QSharedPointer<SettingsBase>::create(*source_settings);
+        m_ranges[it.key()] = QSharedPointer<SettingsRange>::create(range->low(), range->high(), range->groupName(),
+                                                                   copied_settings[source_settings]);
+    }
+    m_range_from_template   = p->m_range_from_template;
+    m_template_applied      = p->m_template_applied;
+    m_current_part_template = p->m_current_part_template;
 
     m_uuid = QUuid::createUuid();
 }
@@ -275,12 +287,18 @@ void Part::setTransformation(const QMatrix4x4& mtrx) {
 }
 
 void Part::adoptChild(QSharedPointer<Part> p) {
+    if (p.isNull() || p.get() == this || m_children.contains(p)) return;
+    for (auto ancestor = this->sharedFromThis(); !ancestor.isNull(); ancestor = ancestor->parent()) {
+        if (ancestor == p) return;
+    }
+    if (!p->m_parent.isNull()) p->m_parent->orphanChild(p);
     m_children.append(p);
     p->m_parent = this->sharedFromThis();
 }
 
 void Part::orphanChild(QSharedPointer<Part> p) {
-    m_children.removeOne(p);
+    if (p.isNull() || p->m_parent.get() != this) return;
+    m_children.removeAll(p);
     p->m_parent.reset();
 }
 
@@ -290,6 +308,14 @@ QList<QSharedPointer<Part>> Part::children() {
 
 QSharedPointer<Part> Part::parent() {
     return m_parent;
+}
+
+bool Part::modifierEnabled() const {
+    return m_modifier_enabled;
+}
+
+void Part::setModifierEnabled(bool enabled) {
+    m_modifier_enabled = enabled;
 }
 
 void Part::prependStep(QSharedPointer<Step> step) {

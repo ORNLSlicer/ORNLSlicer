@@ -44,6 +44,9 @@ class RightClickMenu : public QMenu {
     //! \brief shows object information for the selected part
     void showInfoDialog();
 
+    //! \brief Rebuilds the available parent choices for the current selection.
+    void updateParentActions();
+
     //! \brief actions to display
     QAction* m_info_action;
     QAction* m_switch_to_build_action;
@@ -56,11 +59,16 @@ class RightClickMenu : public QMenu {
     QAction* m_replace_part_action;
     QAction* m_reload_part_action;
     QAction* m_delete_part_action;
+    QAction* m_delete_keep_children_action;
+    QAction* m_detach_action;
+    QAction* m_enable_modifier_action;
+    QAction* m_disable_modifier_action;
     QAction* m_wireframe_action;
     QAction* m_solidwireframe_action;
 
     //! \brief Menu to hold transparency
     QMenu* m_transparency_menu;
+    QMenu* m_parent_menu;
 
     //! \brief Slider to transparency (must connect directly to widget not Action)
     QSlider* m_transparency_slider;

@@ -1017,6 +1017,7 @@ void PartView::modelReloadUpdate(QSharedPointer<PartMetaItem> pm) {
 
     gop = pm->graphicsPart();
     pm->setTransformation(tfm);
+    modelParentingUpdate(pm);
     updateSlicingGeometryPreview(gop);
 
     m_selected_objects.insert(gop);
@@ -1041,7 +1042,7 @@ void PartView::modelRemovalUpdate(QSharedPointer<PartMetaItem> pm) {
     m_state.part_rot_start.remove(gop);
     m_state.part_trans_start.remove(gop);
 
-    m_printer->orphanChild(gop);
+    if (auto parent = gop->parent(); !parent.isNull()) parent->orphanChild(gop);
 
     if (m_state.highlighted_part == gop) m_state.highlighted_part = nullptr;
 

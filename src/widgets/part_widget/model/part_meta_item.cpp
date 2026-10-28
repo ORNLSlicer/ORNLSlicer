@@ -72,7 +72,7 @@ void PartMetaItem::reloadInModel() {
 }
 
 void PartMetaItem::removeFromModel() {
-    m_model->removeItem(this->sharedFromThis());
+    m_model->deleteItems({this->sharedFromThis()}, true);
 }
 
 void PartMetaItem::setSelected(bool toggle) {
@@ -214,10 +214,7 @@ void PartMetaItem::setOriginalTransformation(QMatrix4x4 m) {
 }
 
 void PartMetaItem::adoptChild(QSharedPointer<PartMetaItem> c) {
-    m_children.append(c);
-    c->setParent(this->sharedFromThis());
-
-    emit modified(PartMetaUpdateType::kParentingUpdate);
+    if (!c.isNull()) c->setParent(this->sharedFromThis());
 }
 
 QList<QSharedPointer<PartMetaItem>> PartMetaItem::children() {
@@ -225,14 +222,18 @@ QList<QSharedPointer<PartMetaItem>> PartMetaItem::children() {
 }
 
 void PartMetaItem::orphanChild(QSharedPointer<PartMetaItem> c) {
-    m_children.removeOne(c);
-    c->setParent(nullptr);
-
-    emit modified(PartMetaUpdateType::kParentingUpdate);
+    if (!c.isNull() && c->parent().get() == this) c->setParent(nullptr);
 }
 
 void PartMetaItem::setParent(QSharedPointer<PartMetaItem> p) {
+    if (m_parent == p) return;
+    for (auto ancestor = p; !ancestor.isNull(); ancestor = ancestor->parent()) {
+        if (ancestor.get() == this) return;
+    }
+    auto old_parent = m_parent;
+    if (!old_parent.isNull()) old_parent->m_children.removeAll(this->sharedFromThis());
     m_parent = p;
+    if (!p.isNull() && !p->m_children.contains(this->sharedFromThis())) p->m_children.append(this->sharedFromThis());
 
     auto part_parent = m_part->parent();
     auto new_parent  = p.isNull() ? nullptr : p->part();
@@ -242,6 +243,12 @@ void PartMetaItem::setParent(QSharedPointer<PartMetaItem> p) {
     }
 
     emit modified(PartMetaUpdateType::kParentingUpdate);
+    if (!old_parent.isNull()) emit old_parent->modified(PartMetaUpdateType::kParentingUpdate);
+    if (!p.isNull()) emit p->modified(PartMetaUpdateType::kParentingUpdate);
+}
+
+QSharedPointer<PartMetaModel> PartMetaItem::model() {
+    return m_model;
 }
 
 QSharedPointer<PartMetaItem> PartMetaItem::parent() {

@@ -112,7 +112,7 @@ void PartWidget::reload() {
 }
 
 void PartWidget::remove() {
-    for (auto& pm : m_model->selectedItems()) { m_model->removeItem(pm); }
+    m_model->deleteItems(m_model->selectedItems(), true);
 }
 
 void PartWidget::remove(QSharedPointer<Part> part) {
@@ -140,6 +140,7 @@ void PartWidget::resetCamera() {
 }
 
 void PartWidget::handleModifiedSetting(const QString& setting_key) {
+    if (setting_key == PS::Slicing::kSlicingMode) m_part_control->refreshModifierScopes();
     static const auto printer_settings = QSet<QString> {PRS::Dimensions::kXMin,
                                                         PRS::Dimensions::kXMax,
                                                         PRS::Dimensions::kYMin,
