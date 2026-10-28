@@ -160,6 +160,7 @@ endsolid hierarchy
     parent->adoptChild(child);
     parent->adoptChild(sibling);
     child->adoptChild(grandchild);
+    child->setModifierEnabled(false);
     session->renamePart(parent, "Z_renamed");
 
     QMap<QString, QVector<ORNL::MeshVertex>> original_vertices;
@@ -170,6 +171,11 @@ endsolid hierarchy
                                    parts["A_grandchild"]["parent"] == "B_child" &&
                                    !parts["D_standalone"].contains("parent"),
                                "Saved parts should identify their parents by current name and omit root parents."))
+        return false;
+    if (!ORNL::Testing::expect(
+            !parts["B_child"][ORNL::Constants::Settings::Session::kModifierEnabled].get<bool>() &&
+                parts["A_grandchild"][ORNL::Constants::Settings::Session::kModifierEnabled].get<bool>(),
+            "Project metadata must preserve disabled and enabled modifier states."))
         return false;
 
     ORNL::SessionLoader saver(project_path, true);
@@ -205,11 +211,13 @@ endsolid hierarchy
                 return false;
         }
     }
-    if (!ORNL::Testing::expect(notified_parts == QStringList({"D_standalone", "Z_renamed"}) &&
-                                   model->items().size() == 5 &&
-                                   model->lookupByPointer(session->getPart("A_grandchild"))->parent()->part() ==
-                                       session->getPart("B_child"),
-                               "Project loading should notify complete root hierarchies exactly once."))
+    if (!ORNL::Testing::expect(
+            notified_parts == QStringList({"D_standalone", "Z_renamed"}) && model->items().size() == 5 &&
+                !session->getPart("B_child")->modifierEnabled() &&
+                session->getPart("A_grandchild")->modifierEnabled() &&
+                model->lookupByPointer(session->getPart("A_grandchild"))->parent()->part() ==
+                    session->getPart("B_child"),
+            "Project loading must restore modifier activation and notify complete root hierarchies once."))
         return false;
 
     fifojson legacy = original;
@@ -217,19 +225,22 @@ endsolid hierarchy
         part.erase("parent");
         part.erase("aligned_transform");
         part.erase("source_dim");
+        part.erase(ORNL::Constants::Settings::Session::kModifierEnabled);
     }
     session->clearParts();
     session->loadPartsJson(legacy);
     for (auto part : session->parts()) {
-        if (!ORNL::Testing::expect(part->parent().isNull() && part->children().isEmpty(),
-                                   "Projects without parent fields should continue to load as independent objects."))
+        if (!ORNL::Testing::expect(
+                part->parent().isNull() && part->children().isEmpty() && part->modifierEnabled(),
+                "Legacy projects should load independent objects with modifiers enabled by default."))
             return false;
     }
 
     session->loadPartsJson(original);
     if (!ORNL::Testing::expect(session->getPart("B_child_1")->parent() == session->getPart("Z_renamed_1") &&
-                                   session->getPart("A_grandchild_1")->parent() == session->getPart("B_child_1"),
-                               "Imported hierarchy references should resolve to imported parts after name collisions."))
+                                   session->getPart("A_grandchild_1")->parent() == session->getPart("B_child_1") &&
+                                   !session->getPart("B_child_1")->modifierEnabled(),
+                               "Imported hierarchy references and activation must survive part name collisions."))
         return false;
 
     fifojson malformed                                                              = original;

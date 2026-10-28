@@ -124,15 +124,5 @@ class SlicingUtilities {
      * \param last_height: height of last layer
      */
     static void ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height);
-
-    /*!
-     * \brief determines if two parts overlap
-     * \pre this assumes the parts exist for the entire build volume and therefore only checks at a single cross-section
-     *      this saves same, but is only really useful for settings parts
-     * \param parts: the parts to check
-     * \param slicing_plane: the plane used to slice the parts
-     * \return if the parts overlap
-     */
-    static bool doPartsOverlap(QVector<QSharedPointer<Part>> parts, Plane slicing_plane);
 };
 }  // namespace ORNL

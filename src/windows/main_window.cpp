@@ -537,7 +537,8 @@ void MainWindow::setupActions() {
     m_actions["copy"]   = {"Copy", ":/icons/copy_black.png", false, QKeySequence(tr("Ctrl+c")), nullptr};
     m_actions["paste"]  = {"Paste", ":/icons/paste_black.png", false, QKeySequence(tr("Ctrl+v")), nullptr};
     m_actions["reload"] = {"Reload", ":/icons/file_refresh_black.png", false, QKeySequence(tr("Ctrl+r")), nullptr};
-    m_actions["delete"] = {"Delete", ":/icons/delete_black.png", false, QKeySequence(tr("Ctrl+Delete")), nullptr};
+    m_actions["delete"] = {"Delete Hierarchy", ":/icons/delete_black.png", false, QKeySequence(tr("Ctrl+Delete")),
+                           nullptr};
 
     // Menu Zoom
     m_actions["zoom_in"]  = {"Zoom In", ":/icons/magnify_plus_black.png", false, QKeySequence(tr("Ctrl+=")), nullptr};
@@ -1036,6 +1037,11 @@ void MainWindow::setupEvents() {
             [this](QSharedPointer<PartMetaItem>) { this->markProjectModified(); });
 
     QSharedPointer<PartMetaModel> part_meta = m_part_widget->getPartMeta();
+    part_meta->setUndoStack(m_undo_stack);
+    connect(part_meta.get(), &PartMetaModel::hierarchyChanged, this, [this, part_meta]() {
+        for (const auto& item : part_meta->items()) initializePartTransform(item);
+        markProjectModified();
+    });
     connect(part_meta.get(), &PartMetaModel::itemAddedUpdate, this, &MainWindow::initializePartTransform);
     connect(part_meta.get(), &PartMetaModel::itemRemovedUpdate, this, &MainWindow::removePartTransform);
     connect(part_meta.get(), &PartMetaModel::transformUpdate, this, &MainWindow::recordPartTransform);
@@ -1269,7 +1275,7 @@ void MainWindow::removePartTransform(QSharedPointer<PartMetaItem> item) {
 }
 
 void MainWindow::recordPartTransform(QSharedPointer<PartMetaItem> item) {
-    if (m_applying_undo_redo || item.isNull()) { return; }
+    if (m_applying_undo_redo || item.isNull() || m_part_widget->getPartMeta()->hierarchyChangeInProgress()) { return; }
 
     const PartTransformSnapshot current = partTransformSnapshot(item);
     if (!m_part_transform_snapshots.contains(item)) {

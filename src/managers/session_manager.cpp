@@ -446,6 +446,7 @@ fifojson SessionManager::partsJson() const {
 
         part_json[Constants::Settings::Session::kFile]             = curr_part->rootMesh()->path().split("/").back();
         part_json[Constants::Settings::Session::kMeshType]         = static_cast<int>(curr_part->rootMesh()->type());
+        part_json[Constants::Settings::Session::kModifierEnabled]  = curr_part->modifierEnabled();
         part_json[Constants::Settings::Session::kGenType]          = static_cast<int>(curr_part->rootMesh()->genType());
         part_json[Constants::Settings::Session::kOrgDims]["x"]     = curr_part->rootMesh()->originalDimensions().x;
         part_json[Constants::Settings::Session::kOrgDims]["y"]     = curr_part->rootMesh()->originalDimensions().y;
@@ -508,6 +509,7 @@ bool SessionManager::loadPartsJson(fifojson j) {
             mesh->setType(mesh_type);
             mesh->setName(name);
             auto part = QSharedPointer<Part>::create(mesh, QString(), mesh_type);
+            part->setModifierEnabled(it.value().value(Constants::Settings::Session::kModifierEnabled, true));
             addPart(part, false);
             if (!loaded_parts.contains(name)) loaded_parts[name] = part;
             loaded_objects.append(part);

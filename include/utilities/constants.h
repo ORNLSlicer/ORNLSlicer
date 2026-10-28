@@ -1005,6 +1005,7 @@ class Constants {
             static const std::string kParts;
             static const std::string kName;
             static const std::string kParent;
+            static const std::string kModifierEnabled;
             static const std::string kAlignedTransform;
             static const std::string kSourceDims;
             static const std::string kTransform;
