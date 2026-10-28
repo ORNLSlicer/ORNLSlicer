@@ -28,6 +28,7 @@
 #include "utilities/dialog_utils.h"
 #include "utilities/enums.h"
 #include "widgets/part_widget/model/part_meta_item.h"
+#include "widgets/part_widget/model/part_meta_model.h"
 
 namespace ORNL {
 namespace {
@@ -124,6 +125,7 @@ QString dimensionsText(double x_microns, double y_microns, double z_microns) {
 }  // namespace
 
 RightClickMenu::RightClickMenu(QWidget* parent) : QMenu(("Context menu"), parent) {
+    setToolTipsVisible(true);
     this->setupActions();
     this->setupEvents();
 }
@@ -139,7 +141,16 @@ void RightClickMenu::setupActions() {
     m_rename_part_action          = new QAction("Rename Part", this);
     m_replace_part_action         = new QAction("Replace Part Model", this);
     m_reload_part_action          = new QAction("Reload Part Model(s)", this);
-    m_delete_part_action          = new QAction("Delete Part(s)", this);
+    m_delete_part_action          = new QAction("Delete Hierarchy", this);
+    m_delete_keep_children_action = new QAction("Delete Object(s), Keep Children", this);
+    m_detach_action               = new QAction("Detach from Parent", this);
+    m_enable_modifier_action      = new QAction("Enable Modifier(s)", this);
+    m_disable_modifier_action     = new QAction("Disable Modifier(s)", this);
+    m_delete_keep_children_action->setToolTip(
+        "Keep children in place; modifiers whose target changes become inactive.");
+    m_detach_action->setToolTip(
+        "Keep the current position. Detached clipping/settings meshes apply to all build objects.");
+    m_enable_modifier_action->setToolTip("Enable modifiers for their parent, or all build objects when unparented.");
 
     m_info_action->setIcon(QIcon(":/icons/info.png"));
     m_switch_to_build_action->setIcon(QIcon(":/icons/print_head.png"));
@@ -159,6 +170,12 @@ void RightClickMenu::setupActions() {
     this->addAction(m_switch_to_clipper_action);
     this->addAction(m_switch_to_setting_action);
     this->addSeparator();
+    m_parent_menu = this->addMenu("Assign Parent");
+    m_parent_menu->setToolTipsVisible(true);
+    this->addAction(m_detach_action);
+    this->addAction(m_enable_modifier_action);
+    this->addAction(m_disable_modifier_action);
+    this->addSeparator();
     this->addAction(m_lock_part_action);
     this->addAction(m_set_instances_action);
     this->addAction(m_reset_transformation_action);
@@ -166,6 +183,7 @@ void RightClickMenu::setupActions() {
     this->addAction(m_replace_part_action);
     this->addAction(m_reload_part_action);
     this->addAction(m_delete_part_action);
+    this->addAction(m_delete_keep_children_action);
     this->addSeparator();
 
     m_transparency_menu = new QMenu("Transparency", this);
@@ -268,9 +286,23 @@ void RightClickMenu::setupEvents() {
     });
 
     connect(m_delete_part_action, &QAction::triggered, this, [this]() {
-        for (auto item : m_selected_items) { item->removeFromModel(); }
-
+        if (!m_selected_items.isEmpty()) m_selected_items.first()->model()->deleteItems(m_selected_items, true);
         m_selected_items.clear();
+    });
+
+    connect(m_delete_keep_children_action, &QAction::triggered, this, [this]() {
+        if (!m_selected_items.isEmpty()) m_selected_items.first()->model()->deleteItems(m_selected_items, false);
+        m_selected_items.clear();
+    });
+    connect(m_detach_action, &QAction::triggered, this, [this]() {
+        if (!m_selected_items.isEmpty()) m_selected_items.first()->model()->reparentItems(m_selected_items, nullptr);
+    });
+    connect(m_enable_modifier_action, &QAction::triggered, this, [this]() {
+        if (!m_selected_items.isEmpty()) m_selected_items.first()->model()->setModifiersEnabled(m_selected_items, true);
+    });
+    connect(m_disable_modifier_action, &QAction::triggered, this, [this]() {
+        if (!m_selected_items.isEmpty())
+            m_selected_items.first()->model()->setModifiersEnabled(m_selected_items, false);
     });
 
     connect(m_transparency_slider, &QSlider::valueChanged, this, [this](int value) {
@@ -332,6 +364,7 @@ void RightClickMenu::showInfoDialog() {
 void RightClickMenu::show(const QPointF& pos, QList<QSharedPointer<PartMetaItem>> items) {
     m_selected_items = items;
     this->disableActions();
+    this->updateParentActions();
 
     // Must be updated each time a right click occurs in case you switch from one object to another
     // suppress signals since nothing has actually changed
@@ -344,7 +377,52 @@ void RightClickMenu::show(const QPointF& pos, QList<QSharedPointer<PartMetaItem>
     this->exec(pos.toPoint());
 }
 
+void RightClickMenu::updateParentActions() {
+    m_parent_menu->clear();
+    if (m_selected_items.isEmpty()) {
+        m_parent_menu->setEnabled(false);
+        return;
+    }
+
+    auto candidates = m_selected_items.first()->model()->items();
+    std::sort(candidates.begin(), candidates.end(), [](const auto& left, const auto& right) {
+        return left->part()->name().localeAwareCompare(right->part()->name()) < 0;
+    });
+    for (const auto& candidate : candidates) {
+        bool valid = true;
+        for (auto ancestor = candidate; !ancestor.isNull(); ancestor = ancestor->parent()) {
+            if (m_selected_items.contains(ancestor)) {
+                valid = false;
+                break;
+            }
+        }
+        if (!valid) continue;
+
+        auto* action = m_parent_menu->addAction(candidate->part()->name());
+        connect(action, &QAction::triggered, this, [this, candidate]() {
+            if (!m_selected_items.isEmpty())
+                m_selected_items.first()->model()->reparentItems(m_selected_items, candidate);
+        });
+    }
+    m_parent_menu->setEnabled(!m_parent_menu->actions().isEmpty());
+}
+
 void RightClickMenu::disableActions() {
+    bool can_detach  = false;
+    bool can_enable  = false;
+    bool can_disable = false;
+    for (const auto& item : m_selected_items) {
+        can_detach |= !item->parent().isNull();
+        if (item->meshType() == MeshType::kClipping || item->meshType() == MeshType::kSettings) {
+            can_enable |= !item->part()->modifierEnabled();
+            can_disable |= item->part()->modifierEnabled();
+        }
+    }
+    m_detach_action->setEnabled(can_detach);
+    m_enable_modifier_action->setEnabled(can_enable);
+    m_disable_modifier_action->setEnabled(can_disable);
+    m_delete_keep_children_action->setEnabled(!m_selected_items.isEmpty());
+
     if (!m_selected_items.empty()) {
         bool enable_all   = false;
         MeshType all_type = m_selected_items.at(0)->meshType();

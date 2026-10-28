@@ -12,13 +12,10 @@
 #include <qvectornd.h>
 
 #include "configs/settings_base.h"
-#include "cross_section/cross_section.h"
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/plane.h"
 #include "geometry/point.h"
-#include "geometry/polygon.h"
-#include "geometry/polygon_list.h"
 #include "geometry/polyline.h"
 #include "part/part.h"
 #include "units/unit.h"
@@ -169,7 +166,8 @@ QVector<QSharedPointer<Part>> SlicingUtilities::GetPartsByType(QMap<QString, QSh
     QVector<QSharedPointer<Part>> found_parts;
     for (QSharedPointer<Part> part : parts) {
         if (part->rootMesh()->type() == mt &&
-            (target_part.isNull() || part->parent().isNull() || part->parent() == target_part)) {
+            (target_part.isNull() ||
+             (part->modifierEnabled() && (part->parent().isNull() || part->parent() == target_part)))) {
             found_parts.push_back(part);
         }
     }
@@ -225,34 +223,4 @@ void SlicingUtilities::ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane&
     slicing_plane.shiftAlongNormal((layer_height() / 2.) + (last_height() / 2.));
 }
 
-bool SlicingUtilities::doPartsOverlap(QVector<QSharedPointer<Part>> parts, Plane slicing_plane) {
-    // Cross-section parts
-    QVector<Polygon> polygons;
-    for (auto part : parts) {
-        Point tmp_point;
-        QVector3D tmp_vec;
-
-        PolygonList geometry =
-            CrossSection::doCrossSection(part->rootMesh(), slicing_plane, tmp_point, tmp_vec, part->getSb());
-
-        // Since settings meshes are always rectangular prisms there is only a single island
-        if (!geometry.isEmpty()) { polygons.push_back(geometry.first()); }
-    }
-
-    // Polygon in Polygon test
-    bool overlap = false;
-    for (int i = 0, end = polygons.size(); i < end; ++i) {
-        for (int j = i + 1; j < end; ++j) {
-            Polygon first  = polygons[i];
-            Polygon second = polygons[j];
-
-            if (first.overlaps(second)) {
-                overlap = true;
-                break;
-            }
-        }
-    }
-
-    return overlap;
-}
 }  // namespace ORNL

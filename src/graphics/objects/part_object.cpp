@@ -624,6 +624,7 @@ void PartObject::orphanChildCallback(QSharedPointer<GraphicsObject> child) {
 
     m_part_children.remove(goc);
 
+    goc->orphanChild(goc->m_arrow_object);
     goc->m_arrow_object.reset();
 }
 

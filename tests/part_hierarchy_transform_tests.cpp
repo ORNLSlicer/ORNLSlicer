@@ -2,7 +2,9 @@
 #include <QDir>
 #include <QElapsedTimer>
 #include <QEventLoop>
+#include <QFile>
 #include <QImage>
+#include <QStandardPaths>
 #include <QSurfaceFormat>
 #include <QTabWidget>
 #include <QTemporaryDir>
@@ -14,6 +16,7 @@
 
 #include "geometry/mesh/closed_mesh.h"
 #include "geometry/mesh/mesh_factory.h"
+#include "graphics/objects/arrow_object.h"
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
@@ -51,6 +54,7 @@ int main(int argc, char* argv[]) {
         qputenv("QT_QPA_PLATFORM", qEnvironmentVariableIsEmpty("DISPLAY") ? "offscreen" : "xcb");
     }
     QApplication app(argc, argv);
+    QStandardPaths::setTestModeEnabled(true);
     if (QApplication::platformName() == "offscreen" || QApplication::platformName() == "minimal") {
         std::cerr << "A window-system OpenGL context is required for the part hierarchy GUI regression.\n";
         return 77;
@@ -119,6 +123,9 @@ int main(int argc, char* argv[]) {
     expect(grandchild->parent() == child && child->children().contains(grandchild),
            "Nested mixed-role GUI adoption must update the saved hierarchy.");
     const auto checkSynchronized = [&](const QString& stage) {
+        expect(child_meta->graphicsPart()->parent() == parent_meta->graphicsPart() &&
+                   grandchild_meta->graphicsPart()->parent() == child_meta->graphicsPart(),
+               stage + ": graphics must retain the complete hierarchy.");
         for (const auto& item : {parent_meta, child_meta, grandchild_meta}) {
             expect(sameTransform(item->transformation(), item->graphicsPart()->transformation()),
                    stage + ": metadata must match the visible transform for " + item->part()->name());
@@ -162,6 +169,100 @@ int main(int argc, char* argv[]) {
     view->dropSelectedParts();
     checkSynchronized("drop group");
     screenshot("after-center-and-drop");
+
+    QFile source(temp_dir.filePath("hierarchy-source.stl"));
+    const QByteArray stl_source = R"(solid hierarchy
+facet normal 0 0 -1
+outer loop
+vertex 0 0 0
+vertex 0 2 0
+vertex 1 0 0
+endloop
+endfacet
+facet normal 0 -1 0
+outer loop
+vertex 0 0 0
+vertex 1 0 0
+vertex 0 0 3
+endloop
+endfacet
+facet normal -1 0 0
+outer loop
+vertex 0 0 0
+vertex 0 0 3
+vertex 0 2 0
+endloop
+endfacet
+facet normal 1 1 1
+outer loop
+vertex 1 0 0
+vertex 0 2 0
+vertex 0 0 3
+endloop
+endfacet
+endsolid hierarchy
+)";
+    expect(source.open(QIODevice::WriteOnly) && source.write(stl_source) == stl_source.size(),
+           "Could not write the reload/replace hierarchy fixture.");
+    source.close();
+    for (const auto& item : {parent_meta, child_meta}) {
+        for (bool replace : {false, true}) {
+            const QString stage = (replace ? "replace " : "reload ") + item->part()->name();
+            auto old_graphics   = item->graphicsPart();
+            auto old_parent     = old_graphics->parent();
+            auto descendant_graphics =
+                item == parent_meta ? child_meta->graphicsPart() : grandchild_meta->graphicsPart();
+            auto old_arrow             = descendant_graphics->arrow();
+            const auto pose            = item->transformation();
+            const auto child_pose      = child_meta->transformation();
+            const auto grandchild_pose = grandchild_meta->transformation();
+            bool reloaded              = false;
+            const auto connection =
+                QObject::connect(ORNL::CSM.get(), &ORNL::SessionManager::partReloaded, &widget,
+                                 [&](QSharedPointer<ORNL::PartMetaItem> changed) { reloaded |= changed == item; });
+            if (replace)
+                ORNL::CSM->replacePart(item, source.fileName());
+            else {
+                item->part()->setSourceFile(source.fileName());
+                ORNL::CSM->reloadPart(item);
+            }
+            timer.restart();
+            while (!reloaded && timer.elapsed() < 5000) {
+                app.processEvents(QEventLoop::AllEvents, 50);
+                QThread::msleep(10);
+            }
+            QObject::disconnect(connection);
+            expect(reloaded && item->graphicsPart() != old_graphics, stage + ": source mesh must be reloaded.");
+            expect(!old_parent->children().contains(old_graphics) && old_graphics->parent().isNull(),
+                   stage + ": discarded graphics must be removed from their actual parent.");
+            expect(!descendant_graphics->children().contains(old_arrow) && old_arrow->parent().isNull(),
+                   stage + ": discarded parenting arrows must not remain in the rendered hierarchy.");
+            expect(sameTransform(item->transformation(), pose) &&
+                       sameTransform(child_meta->transformation(), child_pose) &&
+                       sameTransform(grandchild_meta->transformation(), grandchild_pose),
+                   stage + ": all world poses must survive mesh replacement.");
+            checkSynchronized(stage);
+            const QVector3D offset(0.1f, 0.1f, 0.0f);
+            item->setTranslation(item->translation() + offset);
+            expect(
+                (grandchild_meta->translation() - grandchild_pose.column(3).toVector3D() - offset).length() < 0.0001f,
+                stage + ": subsequent movement must propagate to descendants.");
+            checkSynchronized(stage + " movement");
+        }
+        auto old_graphics          = item->graphicsPart();
+        auto old_parent            = old_graphics->parent();
+        const auto pose            = item->transformation();
+        const auto grandchild_pose = grandchild_meta->transformation();
+        item->resetTransformation();
+        expect(item->graphicsPart() != old_graphics && !old_parent->children().contains(old_graphics),
+               "Reset must remove the replaced graphics node from its actual parent.");
+        expect(sameTransform(grandchild_meta->transformation(),
+                             item->transformation() * pose.inverted() * grandchild_pose),
+               "Reset must preserve descendant poses relative to the reset object.");
+        checkSynchronized("reset " + item->part()->name());
+    }
+    parent_meta->setSelected(true);
+    screenshot("after-reload-replace-and-reset");
 
     widget.copy();
     widget.paste();

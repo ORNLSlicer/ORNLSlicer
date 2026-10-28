@@ -1,7 +1,10 @@
 #include <QCoreApplication>
+#include <QEventLoop>
+#include <QFileInfo>
 #include <QSet>
 #include <QStandardPaths>
 #include <QTemporaryDir>
+#include <QTimer>
 #include <cmath>
 #include <cstdlib>
 #include <string>
@@ -74,6 +77,54 @@ QSet<int> settingsMarkers(QSharedPointer<ORNL::Part> part) {
     return markers;
 }
 
+struct SliceResult {
+    bool completed = false;
+    QString error;
+};
+
+SliceResult runSlice(TestPlanarSlicer& slicer) {
+    SliceResult result;
+    QEventLoop loop;
+    QTimer timeout;
+    timeout.setSingleShot(true);
+    QObject::connect(&slicer, &ORNL::AbstractSlicingThread::sliceComplete, &loop, [&] {
+        result.completed = true;
+        loop.quit();
+    });
+    QObject::connect(&slicer, &ORNL::AbstractSlicingThread::sliceFailed, &loop, [&](const QString& message) {
+        result.error = message;
+        loop.quit();
+    });
+    QObject::connect(&timeout, &QTimer::timeout, &loop, [&] {
+        result.error = "Timed out waiting for slicing.";
+        loop.quit();
+    });
+    timeout.start(15000);
+    QMetaObject::invokeMethod(&slicer, [&slicer] { slicer.doSlice(); }, Qt::QueuedConnection);
+    loop.exec();
+    return result;
+}
+
+QSharedPointer<ORNL::ClosedMesh> twoIslands() {
+    QVector<ORNL::MeshVertex> vertices;
+    QVector<ORNL::MeshFace> faces;
+    for (float x : {0.0f, 6000.0f}) {
+        auto island             = box(3000, 10000, 10000, QVector3D(x, 0, 0));
+        const int vertex_offset = vertices.size();
+        const int face_offset   = faces.size();
+        for (auto vertex : island->vertices()) {
+            for (int& face : vertex.connected_faces) { face += face_offset; }
+            vertices.push_back(vertex);
+        }
+        for (auto face : island->faces()) {
+            for (int& index : face.vertex_index) { index += vertex_offset; }
+            for (int& index : face.connected_face_index) { index += face_offset; }
+            faces.push_back(face);
+        }
+    }
+    return QSharedPointer<ORNL::ClosedMesh>::create(vertices, faces);
+}
+
 bool clippingScope(const QString& output) {
     auto a = addPart("A", ORNL::MeshType::kBuild);
     auto b = addPart("B", ORNL::MeshType::kBuild);
@@ -85,6 +136,12 @@ bool clippingScope(const QString& output) {
     sliceScene(output);
     bool passed = checkArea(a, 50, "parent-local clipper");
     passed &= checkArea(b, 100, "parent-local clipper");
+
+    clipper->setModifierEnabled(false);
+    sliceScene(output);
+    passed &= checkArea(a, 100, "disabled clipper");
+    passed &= checkArea(b, 100, "disabled clipper");
+    clipper->setModifierEnabled(true);
 
     a->appendSubMesh(box(16000, 10000, 10000, QVector3D(0, 20000, 0)));
     sliceScene(output);
@@ -131,6 +188,13 @@ bool settingsScope(const QString& output) {
         settingsMarkers(a) == QSet<int>({1000, 3000}) && settingsMarkers(b) == QSet<int>({2000, 3000}),
         "Overlapping settings for separate parents must produce only their own and global polygons.");
 
+    local_a->setModifierEnabled(false);
+    sliceScene(output);
+    passed &=
+        ORNL::Testing::expect(settingsMarkers(a) == QSet<int>({3000}) && settingsMarkers(b) == QSet<int>({2000, 3000}),
+                              "Disabled settings modifiers must not apply to any build object.");
+    local_a->setModifierEnabled(true);
+
     b->orphanChild(local_b);
     ORNL::CSM->removePart(local_b);
     a->orphanChild(local_a);
@@ -162,6 +226,85 @@ bool settingsScope(const QString& output) {
     clearScene();
     return passed;
 }
+
+bool conflictValidation(const QString& output) {
+    auto parent = addPart("conflict-parent", ORNL::MeshType::kBuild);
+    addPart("aaa-above-build", ORNL::MeshType::kSettings, box(4000, 10000, 4000, QVector3D(0, 0, 20000)));
+    addPart("aab-outside-build", ORNL::MeshType::kSettings, box(4000, 10000, 10000, QVector3D(20000, 0, 0)));
+    auto first  = addPart("elevated-A", ORNL::MeshType::kSettings, box(4000, 10000, 4000, QVector3D(0, 0, 4000)));
+    auto second = addPart("elevated-B", ORNL::MeshType::kSettings, box(4000, 10000, 4000, QVector3D(6000, 0, 4000)));
+    parent->adoptChild(first);
+    parent->adoptChild(second);
+    TestPlanarSlicer slicer(output);
+    auto result = runSlice(slicer);
+    bool passed = ORNL::Testing::expect(result.completed && result.error.isEmpty() && QFileInfo(output).size() > 0,
+                                        "A valid slice must finish and generate G-code before the conflict test.");
+
+    QMatrix4x4 transform;
+    transform.translate(1000, 0, 4000);
+    second->setTransformation(transform);
+    slicer.setGcodeOutput(output);
+    result = runSlice(slicer);
+    passed &= ORNL::Testing::expect(
+        !result.completed && result.error.contains(first->name()) && result.error.contains(second->name()) &&
+            result.error.contains(parent->name()) && parent->countStepPairs() == 0 && QFileInfo(output).size() == 0 &&
+            slicer.layerPrograms().isEmpty(),
+        "Elevated settings conflicts must name both regions and their parent, discard old layers, and stop export.");
+
+    // Restore a valid scene to ensure failure does not poison the next slicing job.
+    transform.setToIdentity();
+    transform.translate(6000, 0, 4000);
+    second->setTransformation(transform);
+    slicer.setGcodeOutput(output);
+    result = runSlice(slicer);
+    passed &= ORNL::Testing::expect(result.completed && result.error.isEmpty(),
+                                    "Slicing must recover after conflicting settings regions are corrected.");
+    clearScene();
+
+    auto checkConflict = [&](const char* stage, QSharedPointer<ORNL::ClosedMesh> region_mesh,
+                             QSharedPointer<ORNL::ClosedMesh> other_mesh, bool expected_conflict) {
+        auto build = addPart("geometry-parent", ORNL::MeshType::kBuild);
+        auto a     = addPart("geometry-A", ORNL::MeshType::kSettings, region_mesh);
+        auto b     = addPart("geometry-B", ORNL::MeshType::kSettings, other_mesh);
+        build->adoptChild(a);
+        build->adoptChild(b);
+        QString error;
+        TestPlanarSlicer geometry_slicer(output);
+        QObject::connect(
+            &geometry_slicer, &ORNL::AbstractSlicingThread::sliceFailed, &geometry_slicer,
+            [&](const QString& message) { error = message; }, Qt::DirectConnection);
+        geometry_slicer.preProcess();
+        passed &= ORNL::Testing::expect(
+            (!error.isEmpty()) == expected_conflict && (build->countStepPairs() == 0) == expected_conflict, stage);
+        clearScene();
+    };
+
+    auto tilted = box(4000, 4000, 4000);
+    transform.setToIdentity();
+    transform.translate(4000, 2000, 4000);
+    transform.rotate(35, 0, 1, 0);
+    tilted->setTransformation(transform);
+    checkConflict("Tilted elevated settings regions must be validated on actual layers.", tilted,
+                  box(4000, 4000, 4000, QVector3D(4000, 2000, 4000)), true);
+
+    for (float x : {0.0f, 6000.0f}) {
+        checkConflict("Every settings cross-section island must participate in conflict validation.", twoIslands(),
+                      box(3000, 10000, 10000, QVector3D(x, 0, 0)), true);
+    }
+
+    auto settings = ORNL::GSM->getGlobal();
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalX, 0.5);
+    checkConflict("Settings overlap must be checked on tilted slicing planes.", box(4000), box(4000), true);
+    settings->setSetting(ORNL::PS::Slicing::kSlicePlaneNormalX, 0.0);
+
+    checkConflict("Settings regions sharing only a boundary must not cancel slicing.", box(4000),
+                  box(4000, 10000, 10000, QVector3D(4000, 0, 0)), false);
+
+    checkConflict("Settings overlap outside the target geometry must not cancel slicing.",
+                  box(4000, 10000, 10000, QVector3D(20000, 0, 0)), box(4000, 10000, 10000, QVector3D(20000, 0, 0)),
+                  false);
+    return passed;
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
@@ -191,5 +334,6 @@ int main(int argc, char* argv[]) {
     const QString output = temporary.filePath("scope.gcode");
     bool passed          = clippingScope(output);
     passed &= settingsScope(output);
+    passed &= conflictValidation(output);
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }

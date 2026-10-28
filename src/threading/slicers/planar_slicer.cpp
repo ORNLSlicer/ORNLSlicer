@@ -42,19 +42,12 @@ PlanarSlicer::PlanarSlicer(QString gcodeLocation) : TraditionalAST(gcodeLocation
 
 void PlanarSlicer::preProcess(nlohmann::json opt_data) {
     Preprocessor pp(false, true);
+    QString settings_conflict;
 
     pp.addInitialProcessing(
         [this](const Preprocessor::Parts& parts, const QSharedPointer<SettingsBase>& global_settings) {
             // Alter settings
             global_settings->makeGlobalAdjustments();
-
-            // Check for overlaps among settings regions that apply to the same build part.
-            for (const auto& part : parts.build_parts) {
-                const auto settings_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kSettings, part);
-                if (SlicingUtilities::doPartsOverlap(settings_parts, Plane(Point(1, 1, 1), QVector3D(0, 0, 1)))) {
-                    return true;  // Cancel Slicing
-                }
-            }
 
             return false;  // No error, so continune slicing
         });
@@ -78,7 +71,25 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         });
 
     pp.addStepBuilder(
-        [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
+        [&, this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta, Preprocessor::ActivePartMeta& meta) {
+            // Check the actual sliced regions, including all islands and transformed slicing planes.
+            auto& regions = next_layer_meta->settings_polygons;
+            for (int i = 0; i < regions.size(); ++i) {
+                for (int j = i + 1; j < regions.size(); ++j) {
+                    auto overlap = regions[i] & regions[j];
+                    overlap &= next_layer_meta->geometry;
+                    if (!overlap.isEmpty()) {
+                        const auto settings_parts =
+                            SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kSettings, meta.part);
+                        settings_conflict =
+                            QString("Settings meshes \"%1\" and \"%2\" overlap in build object \"%3\" at slice %4.")
+                                .arg(settings_parts[i]->name(), settings_parts[j]->name(), meta.part->name())
+                                .arg(next_layer_meta->number + 1);
+                        return true;
+                    }
+                }
+            }
+
             auto addNewLayer = [this](QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta,
                                       Preprocessor::ActivePartMeta& meta, QSharedPointer<Layer>& new_layer) {
                 // Save settings
@@ -191,6 +202,10 @@ void PlanarSlicer::preProcess(nlohmann::json opt_data) {
         });
 
     pp.processAll();
+    if (!settings_conflict.isEmpty()) {
+        m_global_layers.clear();
+        failPreProcess(settings_conflict);
+    }
 }
 
 void PlanarSlicer::processSkin(QSharedPointer<Part> part, int part_start, int last_layer_count) {

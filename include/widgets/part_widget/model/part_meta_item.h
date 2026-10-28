@@ -148,6 +148,8 @@ class PartMetaItem : public QObject, public QEnableSharedFromThis<PartMetaItem> 
     //! \brief Sets the number of visible instances for this item.
     void setInstanceCount(int count);
 
+    QSharedPointer<PartMetaModel> model();
+
    signals:
     //! \brief Signal that this item was modified.
     void modified(PartMetaUpdateType type);
