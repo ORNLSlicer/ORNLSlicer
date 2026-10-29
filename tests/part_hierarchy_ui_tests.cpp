@@ -97,6 +97,12 @@ int main(int argc, char* argv[]) {
     expect(triggerAction(menu, clipper, "Assign Parent", "Parent A"), "Assign Parent must offer a valid build parent.");
     expect(clipper->parent() == parent && row(clipper)->parent() == row(parent) && row(clipper)->text(1) == "Parent A",
            "Assign Parent must update both the hierarchy and the visible scope.");
+    parent->setMeshType(ORNL::MeshType::kClipping);
+    expect(row(clipper)->text(1) == "Inactive" && row(clipper)->toolTip(1).contains("not a build mesh"),
+           "Changing a build parent to a modifier must immediately mark its child inactive.");
+    parent->setMeshType(ORNL::MeshType::kBuild);
+    expect(row(clipper)->text(1) == "Parent A",
+           "Changing the parent back to build must immediately restore its child's target label.");
     undo.undo();
     expect(
         clipper->parent().isNull() && row(clipper)->parent() == nullptr && row(clipper)->text(1) == "All build objects",
@@ -119,6 +125,12 @@ int main(int argc, char* argv[]) {
            "Parent choices must support existing grouping roles.");
     expect(row(settings)->text(1) == "Inactive" && row(settings)->toolTip(1).contains("not a build mesh"),
            "A modifier below another modifier must identify its ineffective target.");
+    clipper->setMeshType(ORNL::MeshType::kBuild);
+    expect(row(settings)->text(1) == "Clipper",
+           "Converting a modifier parent to build must immediately activate its child's target label.");
+    clipper->setMeshType(ORNL::MeshType::kClipping);
+    expect(row(settings)->text(1) == "Inactive" && row(settings)->toolTip(1).contains("not a build mesh"),
+           "Converting the parent back to a modifier must immediately mark its child inactive.");
     expect(triggerAction(menu, settings, "Assign Parent", "Renamed parent"),
            "Settings must be assignable to a build parent.");
     global->setSetting(ORNL::PS::Slicing::kSlicingMode, static_cast<int>(ORNL::SlicingMode::kCylindrical));

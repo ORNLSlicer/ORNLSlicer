@@ -197,6 +197,54 @@ bool keepChildrenScope() {
     return passed;
 }
 
+bool deletedModifierClipboard() {
+    bool passed = true;
+    for (auto type : {ORNL::MeshType::kClipping, ORNL::MeshType::kSettings}) {
+        for (bool delete_parent : {false, true}) {
+            Scene scene;
+            auto parent   = scene.add("parent");
+            auto modifier = scene.add("modifier", type);
+            auto other    = scene.add("other");
+            parent->adoptChild(modifier);
+            modifier->setSelected(true);
+            scene.model->setSelectionCopied();
+            scene.model->deleteItems({delete_parent ? parent : modifier}, true);
+            passed &= ORNL::Testing::expect(!modifier->part()->modifierEnabled(),
+                                            "Deleting a local modifier must deactivate its detached clipboard source.");
+            scene.undo.undo();
+            passed &= ORNL::Testing::expect(linked(modifier, parent) && modifier->part()->modifierEnabled(),
+                                            "Undo must restore a deleted modifier's original scope and activation.");
+            scene.undo.redo();
+            scene.model->copySelection();
+            auto copy = scene.find("modifier");
+            passed &= ORNL::Testing::expect(
+                copy && copy != modifier && copy->parent().isNull() && !copy->part()->modifierEnabled() &&
+                    !ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->parts(), type, other->part())
+                         .contains(copy->part()),
+                "Pasting a deleted local modifier must not affect unrelated build objects.");
+            if (!copy) return false;
+            scene.model->setModifiersEnabled({copy}, true);
+            passed &= ORNL::Testing::expect(
+                ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->parts(), type, other->part()).contains(copy->part()),
+                "Explicitly enabling a pasted modifier must allow global scope.");
+        }
+
+        Scene scene;
+        auto modifier = scene.add("global", type);
+        auto other    = scene.add("other");
+        modifier->setSelected(true);
+        scene.model->setSelectionCopied();
+        scene.model->deleteItems({modifier}, true);
+        scene.model->copySelection();
+        auto copy = scene.find("global");
+        passed &= ORNL::Testing::expect(
+            copy && copy != modifier && copy->parent().isNull() && copy->part()->modifierEnabled() &&
+                ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->parts(), type, other->part()).contains(copy->part()),
+            "Pasting a deleted global modifier must retain its enabled global scope.");
+    }
+    return passed;
+}
+
 bool duplicateHierarchies() {
     Scene scene;
     auto root     = scene.add("assembly");
@@ -285,6 +333,7 @@ int main(int argc, char* argv[]) {
     bool passed = reparentUndo();
     passed &= deletionUndo();
     passed &= keepChildrenScope();
+    passed &= deletedModifierClipboard();
     passed &= duplicateHierarchies();
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;
 }
