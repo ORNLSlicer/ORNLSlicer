@@ -97,7 +97,7 @@ void PartControlTreeItem::updateToolTip() {
         tooltip.append("\nApplies to: " + target);
         QString warning;
         if (!m_part->modifierEnabled()) { warning = "Disabled. Assign a parent or enable this modifier to use it."; }
-        else if (!parent.isNull() && parent->rootMesh()->type() != MeshType::kBuild) {
+        else if (!parent.isNull() && parent->getMeshType() != MeshType::kBuild) {
             warning = "The immediate parent is not a build mesh.";
         }
         else {

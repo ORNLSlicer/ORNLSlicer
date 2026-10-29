@@ -348,6 +348,10 @@ void PartMetaModel::deleteItems(QList<QSharedPointer<PartMetaItem>> items, bool 
     auto after  = before;
     for (auto& state : after) {
         if (removed.contains(state.item)) {
+            // The clipboard may still hold a local modifier after deletion detaches it.
+            if (!state.parent.isNull() &&
+                (state.item->meshType() == MeshType::kClipping || state.item->meshType() == MeshType::kSettings))
+                state.enabled = false;
             state.present = false;
             state.parent  = nullptr;
         }
