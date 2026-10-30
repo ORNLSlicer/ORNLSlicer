@@ -148,21 +148,31 @@ After restoring assets, configure and rebuild to regenerate the Qt resources.
 
 ## Configure, build, and run
 
-From the repository root, enter the development shell and configure this
-checkout before the first build:
+From the repository root, run configuration, build, and launch inside the Nix
+environment with one command:
 
 ```bash
-nix develop .#ornlslicerDev -L --accept-flake-config
-cmake --preset generic-llvm-ninja
-cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 8
-./build/generic-llvm-ninja/Debug/ornlslicer
+nix develop .#ornlslicerDev -L --accept-flake-config --command bash -c '
+  cmake --preset generic-llvm-ninja &&
+  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 8 &&
+  ./build/generic-llvm-ninja/Debug/ornlslicer
+'
 ```
 
-Keep running build and test commands inside this shell. The initial shell
-entry can take time while Nix downloads or builds dependencies. Adjust `8` to
-fit your machine's CPU and memory. Replace `Debug` with `Release` for an
-optimized build; both configurations share the same build tree. Reconfigure
-after CMake/dependency changes and after restoring missing LFS resources.
+If Nix cannot enter the environment, none of the CMake or launch commands run.
+The `&&` operators also stop the sequence if configuration or compilation fails.
+A certificate error must be resolved before trying CMake; installing a host copy
+of Ninja does not repair the missing Nix environment.
+
+For interactive development and the test commands below, open a shell with
+`nix develop .#ornlslicerDev -L --accept-flake-config` and wait for it to succeed
+before running build tools. The one-command workflow above returns to your
+original shell after the application exits.
+
+The initial shell entry can take time while Nix downloads or builds dependencies.
+Adjust `8` to fit your machine's CPU and memory. Replace `Debug` with `Release`
+for an optimized build; both configurations share the same build tree.
+Reconfigure after CMake/dependency changes and after restoring missing LFS resources.
 
 ## Run tests and formatting
 
@@ -292,6 +302,23 @@ For an IT-confirmed inspection proxy, configure a combined CA bundle:
    nix store ping --store daemon
    nix develop .#ornlslicerDev -L --accept-flake-config
    ```
+
+If `nix develop` still reports certificate errors for `cache.nixos.org` or
+GitHub after these steps, check the failing terminal's effective CA setting:
+
+```bash
+printenv NIX_SSL_CERT_FILE
+nix config show ssl-cert-file
+```
+
+After the recovery above, both should identify
+`/etc/nix/ca-bundle-with-organisation.crt`. An unset environment variable or a
+stock bundle path indicates that the client setup was not applied in this
+terminal. If the effective setting is a different path, check for an overriding
+`ssl-cert-file` in your user Nix configuration or `NIX_CONFIG`. If the combined
+bundle is selected but validation still fails, have IT confirm that it contains
+the CA chain used for both failing hosts. Changing cache trust or skipping the
+optional channel update does not repair HTTPS certificate validation.
 
 Keep TLS verification enabled. Rebuild the combined bundle when the approved
 organisation certificates or Nix's public CA bundle change. If IT does not
