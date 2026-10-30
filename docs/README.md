@@ -1,55 +1,57 @@
 # ORNLSlicer Documentation
 
 This directory is the canonical documentation source for ORNLSlicer.
+`Slicer-2` is now `ORNLSlicer`, with `2.0.0` as the renamed product baseline.
 
-`Slicer-2` is now `ORNLSlicer`, and the renamed product line starts at version `2.0.0`.
-
-## Start Here
+## Using ORNLSlicer
 
 - [ORNLSlicer User Guide](ornlslicer-user-guide.pdf)
-- [Changelog](../CHANGELOG.md)
-- [Getting Started](wiki/Getting-Started.md)
 - [Cylindrical Slicing](slicing/cylindrical-slicing.md)
 - [Arc Specialties G-code](gcode/arc-specialties.md)
-- [Contributing Guide](../CONTRIBUTING.md)
-- [Legacy Wiki Content](wiki/Home.md)
+- [Changelog](../CHANGELOG.md)
 
-## Codebase Architecture
+## Development and contribution
 
-For source-grounded guidance on ORNLSlicer's architecture, runtime flows,
-ownership boundaries, extension points, and validation paths, start with the
-[OpenWiki quickstart](../openwiki/quickstart.md). Source code and tests remain
-authoritative.
+Start with [Developer Setup](contributing/development-setup.md) for Linux,
+Windows (WSL2), and macOS, then follow the [Contributing Guide](../CONTRIBUTING.md).
+The setup guide includes build, test, editor, and troubleshooting instructions.
 
-## Contributor Docs
-
+- [ORNL-Managed WSL2 Installation (Historical)](contributing/ornl-wsl2.md)
+- [Creating and Updating Settings](contributing/settings.md)
+- [Adding Images to Settings Tooltips](contributing/settings-tooltips.md)
 - [Conventional Branch Naming](contributing/conventional-branch.md)
 - [Conventional Commits](contributing/conventional-commits.md)
 - [Pull Requests](contributing/pull-requests.md)
 - [Issue Submissions](contributing/issue-submissions.md)
 - [Style Guide](contributing/style-guide.md)
 - [Formatting](contributing/formatting.md)
-- [Documentation](contributing/documentation.md)
+- [API Documentation](contributing/documentation.md)
 - [Linux AppImage Packaging](contributing/linux-appimage.md)
 - [Cachix Workflow](contributing/cachix.md)
 - [Versioning and Releases](contributing/versioning.md)
 - [Maintaining the Changelog](contributing/changelog.md)
 
-## Migrated Wiki Content
+For source-grounded architecture, runtime flows, ownership boundaries, extension
+points, and validation paths, start with the [OpenWiki quickstart](../openwiki/quickstart.md).
+Source code and tests remain authoritative; generated OpenWiki pages are maintained
+separately from these guides.
 
-- [Legacy Wiki Home](wiki/Home.md)
-- [ORNL WSL2 Installation](wiki/ORNL-WSL2-Installation.md)
-- [Troubleshooting](wiki/Troubleshooting.md)
-- [Generating the Master Settings File](wiki/Generating-the-Master-Settings-File.md)
-- [Adding a New User Setting](wiki/Adding-a-New-User-Setting.md)
-- [Adding Images to Settings Tooltips](wiki/Adding-Images-to-Settings-Tooltips.md)
-- [Relevant Papers](wiki/Relevant-Papers.md)
-- [License and Library Licenses](wiki/License-and-Library-Licenses.md)
-- [Citation and Copyright Information](wiki/Citation-and-Copyright-Information.md)
-- [SLUG Archive](wiki/SLUG.md)
+## Reference and archive
 
-## Compatibility Notes
+- [Relevant Papers](reference/papers.md)
+- [Citation and Copyright Information](reference/citation.md)
+- [License and Library Licenses](reference/licenses.md)
+- [Slicer User Group (SLUG) Presentations](archive/slug/README.md)
 
-The rename intentionally keeps several legacy technical identifiers in place for compatibility:
+## Maintaining these docs
 
-- `.s2p` and `.s2c` file extensions
+Place contributor procedures in `contributing/`, slicing guides in `slicing/`,
+G-code dialect documentation in `gcode/`, research/legal reference material in
+`reference/`, and historical presentations in `archive/`. Link new guides from
+this index, use relative links for repository files, and update callers when
+renaming a page. Keep each procedure in one canonical guide and link to it
+instead of duplicating its commands.
+
+## Compatibility notes
+
+The rename retains `.s2p` and `.s2c` file extensions for compatibility.

@@ -297,9 +297,9 @@ replaces the locally configured token.
 
 ### Nix ignores the substituter as untrusted
 
-The repository's Nix installation instructions configure the developer as a
-trusted Nix user. On an existing multi-user Nix installation, configure the
-cache using:
+If your multi-user Nix installation does not trust the repository's cache
+settings, install the CLI using the [Cachix installation guide](https://docs.cachix.org/installation)
+if `cachix` is not already on `PATH`, then configure the cache:
 
 ```bash
 cachix use ornl-slicer
