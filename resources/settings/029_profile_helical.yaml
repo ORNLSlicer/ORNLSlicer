@@ -18,7 +18,7 @@ settings:
   - name: "helical_tool_start_arc_length_offset"
     display: "Helical Tool Start Arc Length Offset"
     type: "location"
-    tooltip: "Signed physical Arc Specialties tool offset along each generated helical path radius. The writer converts this distance to an angle using the actual path radius; CP receives the full signed angle and XR/YR each receive half."
+    tooltip: "Signed physical Arc Specialties tool offset along each generated helical path radius. The writer converts this distance to an angle using the actual path radius; CP receives the full signed angle, and the configured torch frame is rotated about work-frame Y by the opposite angle to preserve surface-normal alignment."
     depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
     options: []
     default: 0

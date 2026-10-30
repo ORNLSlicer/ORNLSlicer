@@ -8,6 +8,7 @@
 #include <cmath>
 #include <limits>
 
+#include <Eigen/Geometry>
 #include <qcontainerfwd.h>
 #include <qsharedpointer.h>
 #include <qvectornd.h>
@@ -49,9 +50,6 @@ constexpr double kToolFrameZR = -135.0;
 
 //! @brief Tool-frame ZR used for rapid travel moves.
 constexpr double kRapidTravelToolFrameZR = -90.0;
-
-//! @brief Arc Specialties helical tool-frame XR/YR compensation per degree of tool start-angle offset.
-constexpr double kHelicalToolStartAngleToolFrameScale = 0.5;
 
 //! @brief First-pass clearance above the highest point of the build parts for the startup world approach.
 static const Distance kStartupWorldApproachZBuffer = 100.0 * mm;
@@ -297,7 +295,7 @@ QString ArcSpecialtiesWriter::writeSettingsHeader(GcodeSyntax) {
                                                m_meta.m_distance_unit));
             text += commentLine(
                 "Helical Tool Offset Conversion: signed angle = arc length / actual generated path radius; CP "
-                "receives the full angle and XR/YR each receive half");
+                "receives the full angle and the torch frame rotates about work-frame Y by the opposite angle");
             text += commentLine("Helical Region Pitch Fallback: " % formatDistance(bead_width, m_meta.m_distance_unit) %
                                 " when a region stepover is 0");
             text += commentLine("Helical Perimeter Revolutions: " %
@@ -975,29 +973,49 @@ QString ArcSpecialtiesWriter::writeCoordinates(const Point& destination, const Q
 ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationForMotion(
     const QString& comment, const QSharedPointer<SettingsBase>& params) const {
     auto settingAngleOrDefault = [this, &params](const QString& key, double fallback) {
-        if (params != nullptr && params->contains(key)) { return params->setting<Angle>(key).to(m_meta.m_angle_unit); }
-        if (m_sb != nullptr && m_sb->contains(key)) { return m_sb->setting<Angle>(key).to(m_meta.m_angle_unit); }
+        // Keep full precision until output formatting; Unit::to() rounds to six significant digits.
+        if (params != nullptr && params->contains(key)) {
+            return params->setting<Angle>(key)() / m_meta.m_angle_unit();
+        }
+        if (m_sb != nullptr && m_sb->contains(key)) { return m_sb->setting<Angle>(key)() / m_meta.m_angle_unit(); }
 
         return fallback;
     };
 
     const bool helical_motion = isHelicalPathPattern(params);
-    const double helical_tool_start_angle_tool_frame_offset =
-        helical_motion
-            ? settingAngleOrDefault(SS::kHelicalToolStartAngleOffset, 0.0) * kHelicalToolStartAngleToolFrameScale
-            : 0.0;
+    const double offset_radians =
+        helical_motion ? settingAngleOrDefault(SS::kHelicalToolStartAngleOffset, 0.0) * m_meta.m_angle_unit() : 0.0;
 
-    auto helicalToolFrameRotation = [&settingAngleOrDefault, helical_tool_start_angle_tool_frame_offset](
+    auto correctToolFrameRotation = [this, offset_radians](ToolFrameRotation frame) {
+        if (offset_radians == 0.0) { return frame; }
+
+        // Compensate the positioner offset about work-frame Y, then recover ZYX Euler angles.
+        // This matches the untilted layer 9/10 poses and tool frame supplied in issue #372.
+        const Eigen::Matrix3d rotation =
+            (Eigen::AngleAxisd(-offset_radians, Eigen::Vector3d::UnitY()) *
+             Eigen::AngleAxisd(frame.zr * m_meta.m_angle_unit(), Eigen::Vector3d::UnitZ()) *
+             Eigen::AngleAxisd(frame.yr * m_meta.m_angle_unit(), Eigen::Vector3d::UnitY()) *
+             Eigen::AngleAxisd(frame.xr * m_meta.m_angle_unit(), Eigen::Vector3d::UnitX()))
+                .toRotationMatrix();
+        const double cos_pitch = std::hypot(rotation(0, 0), rotation(1, 0));
+        const double yr        = std::atan2(-rotation(2, 0), cos_pitch);
+        // At pitch +/-90 degrees, roll and yaw are coupled; choose yaw zero for an equivalent frame.
+        const bool singular = cos_pitch < 1.0e-12;
+        const double xr =
+            singular ? std::atan2(-rotation(1, 2), rotation(1, 1)) : std::atan2(rotation(2, 1), rotation(2, 2));
+        const double zr = singular ? 0.0 : std::atan2(rotation(1, 0), rotation(0, 0));
+        return ToolFrameRotation {xr / m_meta.m_angle_unit(), yr / m_meta.m_angle_unit(), zr / m_meta.m_angle_unit()};
+    };
+
+    auto helicalToolFrameRotation = [&settingAngleOrDefault, &correctToolFrameRotation](
                                         const QString& x_key, const QString& y_key, const QString& z_key) {
-        return ToolFrameRotation {
-            settingAngleOrDefault(x_key, kToolFrameXR) + helical_tool_start_angle_tool_frame_offset,
-            settingAngleOrDefault(y_key, kToolFrameYR) + helical_tool_start_angle_tool_frame_offset,
-            settingAngleOrDefault(z_key, kToolFrameZR)};
+        return correctToolFrameRotation({settingAngleOrDefault(x_key, kToolFrameXR),
+                                         settingAngleOrDefault(y_key, kToolFrameYR),
+                                         settingAngleOrDefault(z_key, kToolFrameZR)});
     };
 
     if (comment == kWorldApproachTravelComment) {
-        return ToolFrameRotation {kToolFrameXR + helical_tool_start_angle_tool_frame_offset,
-                                  kToolFrameYR + helical_tool_start_angle_tool_frame_offset, kRapidTravelToolFrameZR};
+        return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kRapidTravelToolFrameZR};
     }
 
     if (!helical_motion) { return ToolFrameRotation {kToolFrameXR, kToolFrameYR, kToolFrameZR}; }
@@ -1043,8 +1061,7 @@ ArcSpecialtiesWriter::ToolFrameRotation ArcSpecialtiesWriter::toolFrameRotationF
         }
     }
 
-    return ToolFrameRotation {kToolFrameXR + helical_tool_start_angle_tool_frame_offset,
-                              kToolFrameYR + helical_tool_start_angle_tool_frame_offset, kToolFrameZR};
+    return correctToolFrameRotation({kToolFrameXR, kToolFrameYR, kToolFrameZR});
 }
 
 Point ArcSpecialtiesWriter::firstTravelPointAboveTravelLowerDestination(const Point& travel_destination,
