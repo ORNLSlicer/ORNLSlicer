@@ -90,6 +90,9 @@ application. Treat the native build as less validated than Linux and include
 platform-specific failure. The AppImage and Windows installer workflows require
 Linux.
 
+For certificate errors during Nix installation on a managed network, see
+[macOS certificate troubleshooting](#macos-nix-downloads-fail-with-a-certificate-error).
+
 ## Install Nix
 
 If Nix is already installed, check `nix --version` and continue to the flake
@@ -216,6 +219,84 @@ The repository `.envrc` uses `use flake`. See the
 for your shell. Explicit `nix develop` works without direnv.
 
 ## Troubleshooting
+
+### macOS Nix downloads fail with a certificate error
+
+An error such as `SSL certificate OpenSSL verify result: self-signed certificate
+in certificate chain (19)` means Nix could not validate the HTTPS certificate
+chain. On a managed network, a common cause is a TLS inspection proxy whose CA
+certificate is trusted by macOS but missing from Nix's separate certificate
+bundle. Confirm the expected certificate with your IT team before adding it.
+
+If the error occurs at `nix-channel --update nixpkgs` during installation, let
+the installer finish and check for any later failures. The
+[Nix 2.35.4 installer](https://github.com/NixOS/nix/blob/2.35.4/scripts/install-multi-user.sh#L972-L995)
+records a failed channel update as a reminder and continues with daemon setup.
+If that was the only failure, open a new terminal and check the installation:
+
+```bash
+nix --version
+sudo launchctl print system/org.nixos.nix-daemon
+```
+
+For an IT-confirmed inspection proxy, configure a combined CA bundle:
+
+1. Obtain the approved CA certificate chain in PEM format from IT, or export
+   the specific IT-approved CA certificates from Keychain Access. The commands
+   below assume you saved that chain as `~/Downloads/organisation-ca.pem`.
+   Use the approved CA chain, not the website's leaf certificate.
+
+2. Combine those certificates with Nix's public CA bundle, keeping the original
+   bundle intact. The `&&` prevents installing a partial bundle if reading either
+   input fails:
+
+   ```bash
+   nix_ca_bundle=$(mktemp)
+   cat /nix/var/nix/profiles/default/etc/ssl/certs/ca-bundle.crt \
+       "$HOME/Downloads/organisation-ca.pem" > "$nix_ca_bundle" &&
+   sudo install -m 0644 "$nix_ca_bundle" /etc/nix/ca-bundle-with-organisation.crt &&
+   rm "$nix_ca_bundle"
+   ```
+
+3. Edit the existing daemon configuration with `sudoedit /etc/nix/nix.conf`.
+   Add or replace this setting, preserving the other settings:
+
+   ```ini
+   ssl-cert-file = /etc/nix/ca-bundle-with-organisation.crt
+   ```
+
+4. Set the same bundle for terminal commands, then restart the daemon to load
+   its updated configuration:
+
+   ```bash
+   export NIX_SSL_CERT_FILE=/etc/nix/ca-bundle-with-organisation.crt
+   sudo launchctl kickstart -k system/org.nixos.nix-daemon
+   ```
+
+   After installation, add the `export` line to `~/.zshrc` (or the startup file
+   for your shell) so new terminals use it too. Configure both client and daemon
+   downloads as described in the [Nix certificate configuration guidance](https://nix.dev/manual/nix/2.35/installation/env-variables.html#nix_ssl_cert_file).
+
+5. If you want to retry the installer's root-owned channel update, run it with
+   root's home and the combined bundle explicitly set:
+
+   ```bash
+   sudo env HOME=/var/root NIX_SSL_CERT_FILE=/etc/nix/ca-bundle-with-organisation.crt \
+       /nix/var/nix/profiles/default/bin/nix-channel --update nixpkgs
+   ```
+
+   This channel is optional for ORNLSlicer's flake-based workflow. From the
+   repository root, verify daemon access and retry the actual development shell:
+
+   ```bash
+   nix store ping --store daemon
+   nix develop .#ornlslicerDev -L --accept-flake-config
+   ```
+
+Keep TLS verification enabled. Rebuild the combined bundle when the approved
+organisation certificates or Nix's public CA bundle change. If IT does not
+confirm a proxy/custom CA, have them investigate the certificate chain rather
+than trusting an unknown certificate.
 
 ### Missing tools or build files
 
