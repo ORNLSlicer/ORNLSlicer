@@ -1,4 +1,6 @@
 #include <QCoreApplication>
+#include <QMatrix4x4>
+#include <QRegularExpression>
 #include <QSharedPointer>
 #include <QStringList>
 #include <QVector3D>
@@ -6,6 +8,7 @@
 #include <cstdlib>
 #include <exception>
 #include <iostream>
+#include <limits>
 #include <optional>
 
 #include "configs/settings_base.h"
@@ -300,13 +303,13 @@ bool writesHelicalCpFromStartOffsetBaseline() {
     const QString travel_lower_line   = lineContaining(block, ";TRAVEL LOWER");
     const QString arc_line            = lineContaining(block, ";HELICAL PERIMETER");
 
-    return world_approach_line.contains("XR=174.0000 YR=-6.0000 ZR=-90.0000") &&
+    return world_approach_line.contains("XR=180.0000 YR=0.0000 ZR=-90.0000") &&
            world_approach_line.contains("CP=-12.0000") && travel_line.contains("X=0.0000 Y=100.0000") &&
-           travel_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") && travel_line.contains("CP=-12.0000") &&
+           travel_line.contains("XR=171.4524 YR=-8.4540 ZR=-134.3671") && travel_line.contains("CP=-12.0000") &&
            travel_lower_line.contains("X=0.0000 Y=100.0000") &&
-           travel_lower_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") &&
+           travel_lower_line.contains("XR=171.4524 YR=-8.4540 ZR=-134.3671") &&
            travel_lower_line.contains("CP=-12.0000") && arc_line.contains("X=20.7912 Y=97.8148") &&
-           arc_line.contains("XR=174.0000 YR=-6.0000 ZR=-135.0000") && arc_line.contains("CP=0.0000");
+           arc_line.contains("XR=171.4524 YR=-8.4540 ZR=-134.3671") && arc_line.contains("CP=0.0000");
 }
 
 bool keepsHelicalToolArcLengthConstantAcrossRadiiAndHandedness() {
@@ -332,9 +335,9 @@ bool keepsHelicalToolArcLengthConstantAcrossRadiiAndHandedness() {
     const QString left_100  = write_at_radius(100.0 * ORNL::mm, ORNL::HelicalPathHandedness::kLeftHanded);
     const QString right_200 = write_at_radius(200.0 * ORNL::mm, ORNL::HelicalPathHandedness::kRightHanded);
 
-    return right_100.contains("XR=185.7296 YR=5.7296") && right_100.contains("CP=11.4592") &&
-           left_100.contains("XR=185.7296 YR=5.7296") && left_100.contains("CP=11.4592") &&
-           right_200.contains("XR=182.8648 YR=2.8648") && right_200.contains("CP=5.7296");
+    return right_100.contains("XR=-171.8429 YR=8.0756 ZR=-134.4232") && right_100.contains("CP=11.4592") &&
+           left_100.contains("XR=-171.8429 YR=8.0756 ZR=-134.4232") && left_100.contains("CP=11.4592") &&
+           right_200.contains("XR=-175.9418 YR=4.0480 ZR=-134.8565") && right_200.contains("CP=5.7296");
 }
 
 bool writesLayerScopedBlockNumbersWhenEnabled() {
@@ -461,8 +464,9 @@ bool writesHelicalOptStopModeFromPostOrderingRotationDirection() {
            positive_print > positive_schedule && negative_layer_marker >= 0 &&
            negative_opt_stop > negative_layer_marker && negative_schedule > negative_opt_stop &&
            negative_print > negative_schedule && !positive_layer.contains("V.E.OptStopMode = 2") &&
-           !negative_layer.contains("V.E.OptStopMode = 1") && positive_print_line.contains("XR=174.0000 YR=-6.0000") &&
-           negative_print_line.contains("XR=186.0000 YR=6.0000");
+           !negative_layer.contains("V.E.OptStopMode = 1") &&
+           positive_print_line.contains("XR=171.4524 YR=-8.4540 ZR=-134.3671") &&
+           negative_print_line.contains("XR=-171.4524 YR=8.4540 ZR=-134.3671");
 }
 
 void setHelicalToolFrameSettings(const QSharedPointer<ORNL::SettingsBase>& settings) {
@@ -611,10 +615,10 @@ bool writesHelicalRegionToolFrameRotations() {
         }
     }
 
-    return perimeter_line.contains("XR=15.0000 YR=16.0000 ZR=13.0000") &&
-           inset_line.contains("XR=25.0000 YR=26.0000 ZR=23.0000") &&
-           infill_line.contains("XR=35.0000 YR=36.0000 ZR=33.0000") &&
-           fallback_line.contains("XR=184.0000 YR=4.0000 ZR=-135.0000");
+    return perimeter_line.contains("XR=9.2011 YR=4.2004 ZR=12.7459") &&
+           inset_line.contains("XR=17.7785 YR=14.6065 ZR=21.9860") &&
+           infill_line.contains("XR=26.1946 YR=25.1999 ZR=30.6946") &&
+           fallback_line.contains("XR=-174.3247 YR=5.6476 ZR=-134.7198");
 }
 
 bool writesHelicalTravelToolFrameRotation() {
@@ -639,8 +643,101 @@ bool writesHelicalTravelToolFrameRotation() {
     const QString world_approach_line = lineContaining(travel_block, ";WORLD APPROACH TRAVEL");
     const QString first_travel_line   = lineContaining(travel_block, ";TRAVEL");
 
-    return world_approach_line.contains("XR=174.0000 YR=-6.0000 ZR=-90.0000") &&
-           first_travel_line.contains("XR=35.0000 YR=36.0000 ZR=43.0000");
+    return world_approach_line.contains("XR=180.0000 YR=0.0000 ZR=-90.0000") &&
+           first_travel_line.contains("XR=53.7793 YR=50.1307 ZR=52.2443");
+}
+
+double motionField(const QString& line, const QString& field) {
+    const auto match = QRegularExpression("(?:^|\\s)" + field + "=([-+0-9.]+)").match(line);
+    return match.hasMatch() ? match.captured(1).toDouble() : std::numeric_limits<double>::quiet_NaN();
+}
+
+bool matchesDonutReferenceToolFrames() {
+    // Ordinary (untilted) moves from issue #372's layer 9/10 modified NC files.
+    // Layer 10 reverses the generated path, so its effective arc-length offset is positive.
+    struct Reference {
+        double radius_mm, offset_mm, zr, xr_output, yr_output, zr_output, cp_output;
+    };
+    const Reference references[] = {{148.764, -25.4, -180.0, 180.0, -9.7827, -180.0, 2.2173},
+                                    {152.064, 25.4, -135.0, -173.2011, 6.7514, -134.5985, -2.4296}};
+    for (const Reference& reference : references) {
+        auto settings = helicalWriterSettings(true);
+        settings->setSetting(ORNL::PS::Helical::kHelicalPerimeterToolFrameZRotation, reference.zr * ORNL::degree);
+        settings->setSetting(ORNL::PRS::MachineSetup::kAxisA, 90.0 * ORNL::degree);
+        auto params = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
+        params->setSetting(ORNL::PS::Helical::kHelicalPathHandedness,
+                           static_cast<int>(ORNL::HelicalPathHandedness::kLeftHanded));
+        params->setSetting(ORNL::SS::kHelicalToolStartAngleOffset,
+                           ORNL::HelicalToolStartAngle::angleOffsetForRadius(reference.offset_mm * ORNL::mm,
+                                                                             reference.radius_mm * ORNL::mm)
+                               .value());
+        const double sweep          = reference.offset_mm < 0.0 ? -12.0 : 12.0;
+        const double angle          = (90.0 + sweep) * M_PI / 180.0;
+        const ORNL::Distance radius = reference.radius_mm * ORNL::mm;
+        const ORNL::Point start(0.0 * ORNL::mm, radius, 0.0 * ORNL::mm);
+        const ORNL::Point end(radius * std::cos(angle), radius * std::sin(angle), 1.0 * ORNL::mm);
+        ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+        const QString line = lineContaining(
+            writer.writeArc(start, end, ORNL::Point(), std::abs(sweep) * ORNL::degree, sweep > 0.0, params),
+            ";HELICAL PERIMETER");
+        // Hand-calculated reference angles are approximate; allow one unit in the last output decimal.
+        if (!ORNL::Testing::near(motionField(line, "XR"), reference.xr_output, 0.00011) ||
+            !ORNL::Testing::near(motionField(line, "YR"), reference.yr_output, 0.00011) ||
+            !ORNL::Testing::near(motionField(line, "ZR"), reference.zr_output, 0.00011) ||
+            !ORNL::Testing::near(motionField(line, "CP"), reference.cp_output, 0.00011) ||
+            !ORNL::Testing::near(motionField(line, "AP"), 90.0)) {
+            std::cerr << line.toStdString() << '\n';
+            return false;
+        }
+    }
+    return true;
+}
+
+bool preservesHelicalToolFrameAfterUndoingPositionerOffset() {
+    struct Frame {
+        double xr, yr, zr;
+    };
+    const Frame frames[] = {
+        {180.0, 0.0, -135.0}, {180.0, 0.0, -180.0}, {11.0, 12.0, 13.0}, {45.0, 30.0, 0.0}, {0.0, 0.0, 0.0}};
+    for (const Frame& frame : frames) {
+        for (double offset : {-90.0, -60.0, -12.0, 0.0, 8.0, 90.0}) {
+            auto settings = helicalWriterSettings(false);
+            setHelicalToolFrameSettings(settings);
+            auto params = helicalSegmentSettings(ORNL::RegionType::kPerimeter);
+            params->setSetting(ORNL::PS::Helical::kHelicalPerimeterToolFrameXRotation, frame.xr * ORNL::degree);
+            params->setSetting(ORNL::PS::Helical::kHelicalPerimeterToolFrameYRotation, frame.yr * ORNL::degree);
+            params->setSetting(ORNL::PS::Helical::kHelicalPerimeterToolFrameZRotation, frame.zr * ORNL::degree);
+            // Exact radians exercise pitch singularities despite the approximate degree unit constant.
+            params->setSetting(ORNL::SS::kHelicalToolStartAngleOffset, ORNL::Angle(offset * M_PI / 180.0));
+            ORNL::ArcSpecialtiesWriter writer(ORNL::GcodeMetaList::ArcSpecialtiesMeta, settings);
+            const QString line = lineContaining(
+                writer.writeLine(ORNL::Point(0.0, 1000.0, 0.0), ORNL::Point(0.0, 1000.0, 1000.0), params),
+                ";HELICAL PERIMETER");
+            QMatrix4x4 configured;
+            configured.rotate(frame.zr, 0.0f, 0.0f, 1.0f);
+            configured.rotate(frame.yr, 0.0f, 1.0f, 0.0f);
+            configured.rotate(frame.xr, 1.0f, 0.0f, 0.0f);
+            QMatrix4x4 restored;
+            restored.rotate(offset, 0.0f, 1.0f, 0.0f);
+            restored.rotate(motionField(line, "ZR"), 0.0f, 0.0f, 1.0f);
+            restored.rotate(motionField(line, "YR"), 0.0f, 1.0f, 0.0f);
+            restored.rotate(motionField(line, "XR"), 1.0f, 0.0f, 0.0f);
+            // Check the entire frame, including the torch's Z axis, after undoing the CP offset.
+            for (int row = 0; row < 3; ++row) {
+                for (int col = 0; col < 3; ++col) {
+                    if (!ORNL::Testing::near(restored(row, col), configured(row, col), 2.0e-6)) {
+                        std::cerr << "Frame offset " << offset << ": " << line.toStdString() << '\n';
+                        return false;
+                    }
+                }
+            }
+            if (offset == 0.0 && (motionField(line, "XR") != frame.xr || motionField(line, "YR") != frame.yr ||
+                                  motionField(line, "ZR") != frame.zr)) {
+                return false;
+            }
+        }
+    }
+    return true;
 }
 
 bool writesHelicalToolFrameHeader() {
@@ -673,7 +770,10 @@ bool writesHelicalToolFrameHeader() {
            header.contains(";Helical Travel Tool Frame Rotation: XR=41.0000deg YR=42.0000deg ZR=43.0000deg") &&
            header.contains(";Initial World Approach Tool Frame Rotation: XR=180.0000deg YR=0.0000deg ZR=-90.0000deg") &&
            header.contains(";Helical Tool Start Arc Length Offset: 8.0000mm") &&
-           header.contains(";Helical Tool Offset Conversion: signed angle = arc length / actual generated path radius");
+           header.contains(
+               ";Helical Tool Offset Conversion: signed angle = arc length / actual generated path radius") &&
+           header.contains("the torch frame rotates about work-frame Y by the opposite angle") &&
+           !header.contains("XR/YR each receive half");
 }
 
 QString lineContaining(const QString& block, const QString& marker) {
@@ -894,6 +994,10 @@ int main(int argc, char* argv[]) {
                                     "Arc Specialties writer did not emit helical region tool-frame rotations.");
     passed &= ORNL::Testing::expect(writesHelicalTravelToolFrameRotation(),
                                     "Arc Specialties writer did not emit the helical travel tool-frame rotation.");
+    passed &= ORNL::Testing::expect(matchesDonutReferenceToolFrames(),
+                                    "Arc Specialties torch correction does not match the Donut layer 9/10 references.");
+    passed &= ORNL::Testing::expect(preservesHelicalToolFrameAfterUndoingPositionerOffset(),
+                                    "Arc Specialties torch frame changed after undoing the positioner offset.");
     passed &=
         ORNL::Testing::expect(writesHelicalToolFrameHeader(),
                               "Arc Specialties writer did not report helical tool-frame rotations in the header.");

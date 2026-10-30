@@ -28,14 +28,14 @@ The writer emits `G00` for rapid travel, `G01` for feed moves, and `G02`/`G03` f
 | Field | Meaning |
 | --- | --- |
 | `X`, `Y`, `Z` | Endpoint coordinates relative to the active work offset after the configured G-code frame rotation is applied. |
-| `XR`, `YR`, `ZR` | Tool-frame orientation angles. The writer emits the configured tool frame; helical output adds half of the radius-derived angle for `Helical Tool Start Arc Length Offset` to both `XR` and `YR`. |
+| `XR`, `YR`, `ZR` | Tool-frame orientation angles. Helical work-object output rotates the configured tool frame about work-frame Y by the negative radius-derived angle for `Helical Tool Start Arc Length Offset`. |
 | `AP` | Positioner tilt from `Printer > Machine Setup > Axis A`. |
 | `CP` | Positioner rotation. Planar output uses `Axis C`; cylindrical output computes it from the endpoint angle around the cylinder axis plus `Axis C`. |
 | `I`, `J` | G2/G3 arc center parameters. The values are absolute center coordinates in G161 mode and relative start-to-center offsets in G162 mode. |
 | `F` | Feedrate in millimeters per minute. It is emitted on `G01`, `G02`, and `G03`; rapid `G00` moves do not include `F`. |
 
-The initial TRAFO-off world approach uses `ZR=-90.0000`. Work-object moves, including the first travel after kinematics
-are enabled, use `ZR=-135.0000`. For the Arc Specialties partner frame, set `Printer > Machine Setup > G-Code Frame
+The initial TRAFO-off world approach uses the fixed frame `XR=180.0000 YR=0.0000 ZR=-90.0000`. Work-object moves, including the first travel after kinematics
+are enabled, default to `XR=180.0000 YR=0.0000 ZR=-135.0000` before helical offset correction. For the Arc Specialties partner frame, set `Printer > Machine Setup > G-Code Frame
 Rotation Z` to `-90 deg`.
 
 ## AP And CP
@@ -46,9 +46,18 @@ For planar slicing, `CP` is the configured `Axis C` value normalized to `[0, 360
 
 For radial cylindrical slicing, the writer rotates the endpoint and cylinder center into the configured G-code frame, computes the endpoint angle around that transformed center, adds `Axis C`, and normalizes the result to `[0, 360)`.
 
-For helical cylindrical paths, the writer converts `Helical Tool Start Arc Length Offset` to an angle with `angle = arc length / actual generated path radius`. `CP` is then `Axis C + radius-derived offset angle + angular sweep from the transformed helical start point`. The emitted helical X/Y coordinates still start at top dead center; the offset moves the CP/tool-frame baseline, not the programmed endpoint phase. The same effective angle adds `angle * 0.5` to `XR` and `YR` for the helical world approach, travel, travel-lower, and print moves.
+For helical cylindrical paths, the writer converts `Helical Tool Start Arc Length Offset` to an angle with `angle = arc length / actual generated path radius`. `CP` is then `Axis C + radius-derived offset angle + angular sweep from the transformed helical start point`. The emitted helical X/Y coordinates still start at top dead center; the offset moves the CP/tool-frame baseline, not the programmed endpoint phase. For helical work-object travel, travel-lower, and print moves, the configured frame is composed as `R = Ry(-angle) * Rz(ZR) * Ry(YR) * Rx(XR)`, then converted back to ZYX Euler angles for output. This rotates the complete tool frame to preserve the torch normal after the positioner offset. The TRAFO-off world approach keeps its fixed world orientation. A zero offset preserves the configured Euler values exactly.
 
 The configured distance keeps the physical torch offset constant while its angular representation decreases as radius increases. For example, `-20.944 mm` produces approximately `-12 deg` at a `100 mm` path radius and `-6 deg` at a `200 mm` path radius. A positive distance produces a positive CP baseline contribution for both `Right Handed` counter-clockwise G03 and `Left Handed` clockwise G02 helices. When `Complete Revolution` clipping and `Next Closest` ordering reverse a retained path, the effective angle sign is reversed with the actual print direction. Helical `CP` remains signed and unwrapped.
+
+The ordinary (untilted) moves in [issue #372’s reference archive](https://github.com/ORNLSlicer/ORNLSlicer/issues/372) provide two checks:
+
+| Reference | Effective offset | Configured XR/YR/ZR | Corrected XR/YR/ZR (degrees) |
+| --- | --- | --- | --- |
+| Layer 9, radius 148.764 mm | -25.4 mm / radius = -9.7827 deg | 180 / 0 / -180 | 180 / -9.7827 / -180 |
+| Layer 10, radius 152.064 mm, reversed path | +25.4 mm / radius = +9.5704 deg | 180 / 0 / -135 | -173.2011 / 6.7515 / -134.5985 |
+
+The reference NC angles were calculated by hand and are approximate; the table shows the calculated writer output rounded to four decimals. Regression tests check these examples within 0.00011 degrees and independently verify that undoing the positioner offset restores the configured tool frame. The reference files retain the old startup world approach and also include last-spiral tilt, which is tracked separately in #377. The checks above use their ordinary work-object moves.
 
 A zero arc-length request produces a zero angle even if the radius is zero. A nonzero arc-length request at a zero or invalid radius cannot be represented; cylindrical slicing reports the error and does not generate that helical path.
 

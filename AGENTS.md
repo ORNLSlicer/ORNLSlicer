@@ -184,3 +184,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 
 - Verify hook file-type filters before claiming generated JSON is excluded; keep formatter changes after confirming parsed JSON matches the staged data, then re-stage and rerun pre-commit.
 - Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
+- Treat the hand-calculated NC angles supplied with #372 as approximate reference checks; verify the tool-frame geometry independently and do not assume discrepancies are truncation.

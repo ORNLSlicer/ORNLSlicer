@@ -25,11 +25,11 @@ namespace ORNL {
  * setting. Planar paths use Axis C as a fixed CP positioner value, while cylindrical radial paths compute CP from each
  * transformed endpoint's angle around the transformed radial slicing center plus Axis C. Helical paths report CP as the
  * signed radius-derived start-angle offset plus angular sweep from the transformed helical start point and Axis C.
- * The user-facing arc-length offset is converted using each generated path's actual radius. Helical tool-frame XR/YR
- * output also adds one half of the effective start-angle offset for the current radius pass.
- * The initial TRAFO-off world approach uses ZR=-90; work-object motion uses ZR=-135. When Supports G2/G3 is enabled,
- * print arcs are emitted as G02/G03 with I/J center parameters; cylindrical radial and helical arcs are divided
- * according to Arcs per Revolution.
+ * The user-facing arc-length offset is converted using each generated path's actual radius. Helical work-object tool
+ * frames are rotated about work-frame Y by the negative effective start-angle offset to preserve the torch normal. The
+ * initial TRAFO-off world approach uses ZR=-90; work-object motion defaults to ZR=-135 before correction. When Supports
+ * G2/G3 is enabled, print arcs are emitted as G02/G03 with I/J center parameters; cylindrical radial and helical arcs
+ * are divided according to Arcs per Revolution.
  */
 class ArcSpecialtiesWriter : public WriterBase {
    public:
