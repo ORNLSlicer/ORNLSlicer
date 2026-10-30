@@ -297,16 +297,41 @@ replaces the locally configured token.
 
 ### Nix ignores the substituter as untrusted
 
-If your multi-user Nix installation does not trust the repository's cache
-settings, install the CLI using the [Cachix installation guide](https://docs.cachix.org/installation)
-if `cachix` is not already on `PATH`, then configure the cache:
+`--accept-flake-config` accepts the repository's requested settings, but does
+not grant an unprivileged user permission to change the daemon's cache trust.
+These warnings are separate from TLS certificate errors: an ignored cache can
+fall back to other sources, while a certificate error can block downloads.
+Resolve [macOS certificate errors](development-setup.md#macos-nix-downloads-fail-with-a-certificate-error)
+before troubleshooting cache access.
 
-```bash
-cachix use ornl-slicer
+An administrator can allow the project cache when requested by the flake. Edit
+the existing `/etc/nix/nix.conf` with `sudoedit`, preserving other settings and
+merging with any existing entries for these keys:
+
+```ini
+extra-trusted-substituters = https://ornl-slicer.cachix.org
+extra-trusted-public-keys = ornl-slicer.cachix.org-1:VIvBeaBy4B47CzxtF7VxZWsK0wXJt4Dm7VNuAb65Nzg=
 ```
 
-Follow the command's instructions if system-level Nix configuration requires
-administrator access. Do not disable signature verification.
+On macOS, reload the daemon configuration with:
+
+```bash
+sudo launchctl kickstart -k system/org.nixos.nix-daemon
+```
+
+On systemd Linux, use `sudo systemctl restart nix-daemon.service`. Retry
+`nix develop .#ornlslicerDev -L --accept-flake-config` after the restart. The
+`trusted-public-keys` client warning may still appear because the flake also
+requests that restricted setting; with the key configured in the daemon, it
+already trusts the project signatures. See the
+[Nix cache trust settings](https://nix.dev/manual/nix/2.35/command-ref/conf-file.html#conf-trusted-substituters).
+This setup permits the specific cache without adding the developer to
+`trusted-users`. Keep signature verification enabled.
+
+Alternatively, if you already have the Cachix CLI, `cachix use ornl-slicer`
+can configure cache access; follow its instructions for system-level changes.
+See the [Cachix installation guide](https://docs.cachix.org/installation) if the
+CLI is not installed.
 
 ### `watch-exec` uploads nothing
 
