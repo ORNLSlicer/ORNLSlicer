@@ -1,7 +1,5 @@
 #include "graphics/objects/part_object.h"
 
-#include <GL/gl.h>
-
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -9,6 +7,7 @@
 #include <tuple>
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 #include <qhashfunctions.h>
 #include <qmatrix4x4.h>

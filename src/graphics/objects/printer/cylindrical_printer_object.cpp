@@ -1,10 +1,9 @@
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 
-#include <GL/gl.h>
-
 #include <cstdlib>
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qlist.h>
 #include <qmath.h>
 #include <qsharedpointer.h>

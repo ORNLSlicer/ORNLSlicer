@@ -1,9 +1,8 @@
 #include "graphics/objects/grid_object.h"
 
-#include <GL/gl.h>
-
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 #include <qmatrix4x4.h>
 #include <qvectornd.h>

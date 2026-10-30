@@ -1,7 +1,5 @@
 #include "graphics/graphics_object.h"
 
-#include <GL/gl.h>
-
 #include <QOpenGLShaderProgram>
 #include <QStack>
 #include <algorithm>
@@ -10,6 +8,7 @@
 #include <tuple>
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qimage.h>

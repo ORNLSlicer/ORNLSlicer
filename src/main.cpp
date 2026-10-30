@@ -1,6 +1,7 @@
 #include <QApplication>
 #include <QCommandLineParser>
 #include <QStyleFactory>
+#include <QSurfaceFormat>
 
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
@@ -36,6 +37,18 @@
 
 int main(int argc, char* argv[]) {
     QCoreApplication::setAttribute(Qt::AA_UseDesktopOpenGL);
+
+    // The views request a 3.3 Core profile. Make that the application-wide default so Qt's global
+    // share context (used to composite QOpenGLWidget framebuffers) has a matching profile. macOS
+    // cannot share objects between Core and Legacy contexts; without this the viewport stays black.
+    QSurfaceFormat default_format;
+    default_format.setRenderableType(QSurfaceFormat::OpenGL);
+    default_format.setProfile(QSurfaceFormat::CoreProfile);
+    default_format.setVersion(3, 3);
+    default_format.setSamples(4);
+    default_format.setDepthBufferSize(24);
+    QSurfaceFormat::setDefaultFormat(default_format);
+    QCoreApplication::setAttribute(Qt::AA_ShareOpenGLContexts);
 
     // Register the meta type so we can use queued signals/slots.
     qRegisterMetaType<QSharedPointer<ORNL::Part>>("QSharedPointer<Part>");

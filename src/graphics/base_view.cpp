@@ -1,13 +1,12 @@
 
 #include "graphics/base_view.h"
 
-#include <GL/gl.h>
-
 #include <QFileDialog>
 #include <QKeyEvent>
 #include <QMouseEvent>
 #include <QPainter>
 
+#include <QtGui/qopengl.h>
 #include <qmatrix4x4.h>
 #include <qnamespace.h>
 #include <qopenglshaderprogram.h>

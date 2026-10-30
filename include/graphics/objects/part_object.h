@@ -1,9 +1,8 @@
 #pragma once
 
-#include <GL/gl.h>
-
 #include <QColor>
 
+#include <QtGui/qopengl.h>
 #include <qhashfunctions.h>
 #include <qset.h>
 #include <qsharedpointer.h>

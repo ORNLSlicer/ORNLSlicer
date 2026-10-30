@@ -1,9 +1,8 @@
 #include "widgets/part_widget/model/part_meta_item.h"
 
-#include <GL/gl.h>
-
 #include <tuple>
 
+#include <QtGui/qopengl.h>
 #include <qlist.h>
 #include <qobject.h>
 #include <qquaternion.h>

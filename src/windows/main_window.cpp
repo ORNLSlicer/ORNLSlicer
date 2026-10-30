@@ -204,7 +204,8 @@ void MainWindow::continueStartup() {
     QString app_path = qApp->applicationDirPath();
 
     QStringList template_paths = {app_path + "/templates/", app_path + "/../../../templates/",
-                                  app_path + "/../share/ornlslicer/templates/"};
+                                  app_path + "/../share/ornlslicer/templates/",
+                                  app_path + "/../Resources/templates/"};  // macOS .app bundle
 
     QString templates;
 

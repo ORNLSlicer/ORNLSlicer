@@ -1,7 +1,5 @@
 #include "graphics/objects/gcode_object.h"
 
-#include <GL/gl.h>
-
 #include <QOpenGLShaderProgram>
 #include <algorithm>
 #include <cmath>
@@ -10,6 +8,7 @@
 #include <utility>
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qlist.h>

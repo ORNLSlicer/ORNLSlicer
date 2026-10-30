@@ -1,7 +1,6 @@
 #include "graphics/objects/sphere/seam_object.h"
 
-#include <GL/gl.h>
-
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 
 #include "graphics/graphics_object.h"

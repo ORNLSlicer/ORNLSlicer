@@ -1,11 +1,10 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 
-#include <GL/gl.h>
-
 #include <cmath>
 #include <cstdlib>
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qlist.h>
 #include <qmath.h>
 #include <qsharedpointer.h>

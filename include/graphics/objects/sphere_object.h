@@ -1,7 +1,6 @@
 #pragma once
 
-#include <GL/gl.h>
-
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 #include <qtypes.h>
 

@@ -1,9 +1,8 @@
 #pragma once
 
-#include <GL/gl.h>
-
 #include <QObject>
 
+#include <QtGui/qopengl.h>
 #include <qlist.h>
 #include <qsharedpointer.h>
 #include <qtmetamacros.h>

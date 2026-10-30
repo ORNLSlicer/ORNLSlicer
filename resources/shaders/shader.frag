@@ -1,4 +1,4 @@
-#version 440
+#version 410 core
 
 in vec4 vColor;
 in vec3 vWorldPosition;

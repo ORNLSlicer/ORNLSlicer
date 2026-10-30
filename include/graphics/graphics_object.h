@@ -1,7 +1,5 @@
 #pragma once
 
-#include <GL/gl.h>
-
 #include <QMatrix4x4>
 #include <QOpenGLBuffer>
 #include <QOpenGLTexture>
@@ -10,6 +8,7 @@
 #include <QQueue>
 #include <vector>
 
+#include <QtGui/qopengl.h>
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qimage.h>
