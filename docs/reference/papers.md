@@ -43,3 +43,4 @@ individual papers relevant to your work; for the software itself, use the
 - [In-Situ Thermal Imaging for Single Layer Build Time Alteration in Large-Scale Polymer Additive Manufacturing](https://www.osti.gov/servlets/purl/1545566)
 - [Melt Pool Monitoring for Control and Data Analytics in Large-Scale Metal Additive Manufacturing](https://repositories.lib.utexas.edu/handle/2152/90450)
 - [Real-Time Defect Correction in Large-Scale Polymer Additive Manufacturing via Thermal Imaging and Laser Profilometer](https://www.osti.gov/servlets/purl/1649435)
+- [Rapid Deformation Prediction in Polymer Extrusion-Based Large-Scale Additive Manufacturing Using Integrated Physics-Based and Data-Driven Modeling](https://doi-org.ornl.idm.oclc.org/10.1016/j.mfglet.2026.08.010)
