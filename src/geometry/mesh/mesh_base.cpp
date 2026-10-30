@@ -49,6 +49,7 @@ MeshBase::MeshBase(const QSharedPointer<MeshBase> mesh) {
     m_faces                                  = mesh->m_faces;
     m_faces_original = m_faces_aligned = mesh->m_faces_aligned;
     m_transformation                   = mesh->m_transformation;
+    m_alignment_transformation         = mesh->m_alignment_transformation;
     m_dimensions                       = mesh->m_dimensions;
     m_original_dimensions              = mesh->m_original_dimensions;
     m_min                              = mesh->m_min;
@@ -129,9 +130,10 @@ void MeshBase::setTransformations(const QVector<QMatrix4x4> matrixes) {
 }
 
 void MeshBase::alignAxis(const QMatrix4x4& matrix) {
-    m_transformation   = matrix;
-    m_vertices_aligned = m_vertices;
-    m_faces_aligned    = m_faces;
+    m_alignment_transformation = m_transformation * m_alignment_transformation;
+    m_transformation           = matrix;
+    m_vertices_aligned         = m_vertices;
+    m_faces_aligned            = m_faces;
 
     convert();
     updateDims();
@@ -140,6 +142,7 @@ void MeshBase::alignAxis(const QMatrix4x4& matrix) {
 
 void MeshBase::resetAlignedAxis(const QMatrix4x4& matrix) {
     m_all_transformations.clear();
+    m_alignment_transformation.setToIdentity();
 
     m_transformation   = matrix;
     m_vertices_aligned = m_vertices = m_vertices_original;
@@ -162,6 +165,40 @@ QVector<QMatrix4x4> MeshBase::transformations() {
         transformations.append(m_transformation);
 
     return transformations;
+}
+
+QMatrix4x4 MeshBase::alignmentTransformation() const {
+    QVector3D source_center;
+    for (const MeshVertex& vertex : m_vertices_original) { source_center += vertex.location; }
+    source_center /= float(m_vertices_original.size());
+    QMatrix4x4 aligned = m_alignment_transformation;
+    aligned.translate(source_center);
+    return aligned;
+}
+
+void MeshBase::restoreTransformation(const QMatrix4x4& aligned, const QMatrix4x4& current,
+                                     const QVector<QMatrix4x4>& history) {
+    m_vertices_aligned = m_vertices = m_vertices_original;
+    m_faces_aligned = m_faces = m_faces_original;
+    convert();
+    center();
+    m_alignment_transformation.setToIdentity();
+    this->setTransformation(aligned);
+    this->alignAxis(current);
+    this->setTransformation(current);
+    m_all_transformations = history;
+}
+
+Distance3D MeshBase::sourceDimensions() const {
+    QVector3D minimum = m_vertices_original.first().location;
+    QVector3D maximum = minimum;
+    for (const MeshVertex& vertex : m_vertices_original) {
+        for (int axis = 0; axis < 3; ++axis) {
+            minimum[axis] = std::min(minimum[axis], vertex.location[axis]);
+            maximum[axis] = std::max(maximum[axis], vertex.location[axis]);
+        }
+    }
+    return Distance3D(maximum.x() - minimum.x(), maximum.y() - minimum.y(), maximum.z() - minimum.z());
 }
 
 void MeshBase::scale(Distance3D bounds) {

@@ -290,7 +290,7 @@ class SessionManager : public QObject {
     //! \brief Signal that a session file has been saved successfully.
     void sessionSaved(QString path);
 
-    //! \brief Signal for total number of parts expected to load from project
+    //! \brief Number of root partAdded notifications expected when loading a project.
     void totalPartsInProject(int total);
 
    private:

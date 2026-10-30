@@ -43,13 +43,8 @@ QSet<QSharedPointer<Part>> PartWidget::parts() {
     for (auto& item : m_model->items()) {
         QSharedPointer<Part> p = item->part();
 
-        QVector3D gop_translation = item->translation();
-        QQuaternion gop_rotation  = item->rotation();
-        QVector3D gop_scale       = item->scale();
-
-        gop_translation *= Constants::OpenGL::kViewToObject;
-
-        QMatrix4x4 object_transformation = MathUtils::composeTransformMatrix(gop_translation, gop_rotation, gop_scale);
+        QMatrix4x4 object_transformation = item->transformation();
+        for (int axis = 0; axis < 3; ++axis) object_transformation(axis, 3) *= Constants::OpenGL::kViewToObject;
 
         p->setTransformation(object_transformation);
         p->rootMesh()->setType(item->meshType());
@@ -117,7 +112,7 @@ void PartWidget::reload() {
 }
 
 void PartWidget::remove() {
-    for (auto& pm : m_model->selectedItems()) { m_model->removeItem(pm); }
+    m_model->deleteItems(m_model->selectedItems(), true);
 }
 
 void PartWidget::remove(QSharedPointer<Part> part) {
@@ -145,6 +140,7 @@ void PartWidget::resetCamera() {
 }
 
 void PartWidget::handleModifiedSetting(const QString& setting_key) {
+    if (setting_key == PS::Slicing::kSlicingMode) m_part_control->refreshModifierScopes();
     static const auto printer_settings = QSet<QString> {PRS::Dimensions::kXMin,
                                                         PRS::Dimensions::kXMax,
                                                         PRS::Dimensions::kYMin,
@@ -254,13 +250,8 @@ void PartWidget::updatePartTransformations() {
     for (auto& item : m_model->items()) {
         QSharedPointer<Part> p = item->part();
 
-        QVector3D gop_translation = item->translation();
-        QQuaternion gop_rotation  = item->rotation();
-        QVector3D gop_scale       = item->scale();
-
-        gop_translation *= Constants::OpenGL::kViewToObject;
-
-        QMatrix4x4 object_transformation = MathUtils::composeTransformMatrix(gop_translation, gop_rotation, gop_scale);
+        QMatrix4x4 object_transformation = item->transformation();
+        for (int axis = 0; axis < 3; ++axis) object_transformation(axis, 3) *= Constants::OpenGL::kViewToObject;
 
         p->setTransformation(object_transformation);
         p->rootMesh()->setType(item->meshType());

@@ -46,6 +46,7 @@ void Preprocessor::processAll() {
         }
         part_meta.steps_processed = part->countStepPairs();
         part_meta.part_start      = SlicingUtilities::GetPartStart(part, part_meta.steps_processed);
+        const auto settings_parts = SlicingUtilities::GetPartsByType(CSM->parts(), MeshType::kSettings, part);
 
         for (const QSharedPointer<MeshBase>& original_mesh : part->meshes()) {
             QSharedPointer<MeshBase> mesh;
@@ -55,13 +56,13 @@ void Preprocessor::processAll() {
             else { mesh = QSharedPointer<OpenMesh>::create(OpenMesh(*dynamic_cast<OpenMesh*>(original_mesh.get()))); }
 
             if (m_mesh_processing != nullptr) {
-                if (m_mesh_processing(mesh, part_sb)) { return; }  // halt slicing
+                if (m_mesh_processing(mesh, part_sb, part)) { return; }  // halt slicing
             }
 
             part_meta.steps_processed = part->countStepPairs();
             part_meta.part_start      = SlicingUtilities::GetPartStart(part, part_meta.steps_processed);
 
-            BufferedSlicer slicer(mesh, part_sb, m_parts.settings_parts, part->getSettingsRanges(), 0, 0,
+            BufferedSlicer slicer(mesh, part_sb, settings_parts, part->getSettingsRanges(), 0, 0,
                                   m_use_cgal_cross_section, m_include_build_plate_gap);
             QSharedPointer<BufferedSlicer::SliceMeta> next_layer_meta = nullptr;
             int last_step_count                                       = 0;

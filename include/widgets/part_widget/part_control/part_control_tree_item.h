@@ -30,6 +30,9 @@ class PartControlTreeItem : public QTreeWidgetItem {
     //! \brief Changes icon based on mesh type.
     void updateMeshType(MeshType type);
 
+    //! \brief Refresh the modifier target and availability diagnostics.
+    void updateModifierScope();
+
     //! \brief adds a container for warning badges to the item in the tree
     //! \param tree the tree to add to
     //! \param item_index the index of the item in this tree

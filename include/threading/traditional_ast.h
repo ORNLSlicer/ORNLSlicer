@@ -34,7 +34,13 @@ class TraditionalAST : public AbstractSlicingThread {
     //!        If more objects are on the queue, then this will run the thread
     void cleanThread() override;
 
+   protected:
+    //! \brief Discards partial results and reports a preprocessing failure before computation or export.
+    void failPreProcess(const QString& message);
+
    private:
+    bool m_preprocess_failed = false;
+
     //! \brief Queue of steps to be processed.
     QQueue<QSharedPointer<Step>> m_step_queue;
 

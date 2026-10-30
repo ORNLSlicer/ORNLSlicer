@@ -63,17 +63,21 @@ class SlicingUtilities {
      * \brief identifies meshes from a list of parts with a certain type
      * \param parts: a list of part who's root mesh might by a certain type
      * \param mt: the type to search for
+     * \param target_part: optional modifier target; includes global modifiers and this part's direct children
      * \return a list of meshes that are the type
      */
-    static QVector<QSharedPointer<MeshBase>> GetMeshesByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt);
+    static QVector<QSharedPointer<MeshBase>> GetMeshesByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt,
+                                                             QSharedPointer<Part> target_part = nullptr);
 
     /*!
      * \brief identifies meshes from a list of parts with a certain type
      * \param parts: a list of part who's root mesh might by a certain type
      * \param mt: the type to search for
+     * \param target_part: optional modifier target; includes global modifiers and this part's direct children
      * \return a list of parts that are have the same type as mt
      */
-    static QVector<QSharedPointer<Part>> GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt);
+    static QVector<QSharedPointer<Part>> GetPartsByType(QMap<QString, QSharedPointer<Part>> parts, MeshType mt,
+                                                        QSharedPointer<Part> target_part = nullptr);
 
     /*!
      * \brief clips a mesh with a list of clippers
@@ -120,15 +124,5 @@ class SlicingUtilities {
      * \param last_height: height of last layer
      */
     static void ShiftSlicingPlane(QSharedPointer<SettingsBase> sb, Plane& slicing_plane, Distance last_height);
-
-    /*!
-     * \brief determines if two parts overlap
-     * \pre this assumes the parts exist for the entire build volume and therefore only checks at a single cross-section
-     *      this saves same, but is only really useful for settings parts
-     * \param parts: the parts to check
-     * \param slicing_plane: the plane used to slice the parts
-     * \return if the parts overlap
-     */
-    static bool doPartsOverlap(QVector<QSharedPointer<Part>> parts, Plane slicing_plane);
 };
 }  // namespace ORNL

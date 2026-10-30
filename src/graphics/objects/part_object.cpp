@@ -315,15 +315,10 @@ PartObject::PartObject(BaseView* view, QSharedPointer<Part> p, ushort render_mod
 
     // Object translation happens last since it will callback (see translationCallback()) this object and everything
     // needs to be setup first.
-    QVector3D trans;
-    QQuaternion rot;
-    QVector3D scale;
+    QMatrix4x4 transformation = mesh->transformation();
+    for (int axis = 0; axis < 3; ++axis) transformation(axis, 3) *= Constants::OpenGL::kObjectToView;
 
-    std::tie(trans, rot, scale) = MathUtils::decomposeTransformMatrix(mesh->transformation());
-
-    trans *= Constants::OpenGL::kObjectToView;
-
-    this->setTransformation(MathUtils::composeTransformMatrix(trans, rot, scale), true);
+    this->setTransformation(transformation, true);
 }
 
 void PartObject::draw() {
@@ -629,6 +624,7 @@ void PartObject::orphanChildCallback(QSharedPointer<GraphicsObject> child) {
 
     m_part_children.remove(goc);
 
+    goc->orphanChild(goc->m_arrow_object);
     goc->m_arrow_object.reset();
 }
 

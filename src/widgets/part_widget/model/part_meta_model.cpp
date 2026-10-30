@@ -2,6 +2,7 @@
 
 #include <QStack>
 #include <QStringList>
+#include <QUndoCommand>
 #include <algorithm>
 #include <limits>
 
@@ -16,6 +17,7 @@
 #include "graphics/objects/part_object.h"
 #include "managers/session_manager.h"
 #include "part/part.h"
+#include "utilities/constants.h"
 #include "widgets/part_widget/model/part_meta_item.h"
 #include "widgets/part_widget/part_control/part_control_tree_item.h"
 
@@ -92,14 +94,39 @@ void setPartInstanceName(QSharedPointer<Part> part, const QString& name) {
     if (!part->rootMesh().isNull()) part->rootMesh()->setName(name);
 }
 
-QSharedPointer<Part> copyPartInstance(QSharedPointer<Part> source, const QString& name) {
-    QSharedPointer<Part> copy = QSharedPointer<Part>::create(source);
-    copy->setTransformation(QMatrix4x4());
-    setPartInstanceName(copy, name);
-
-    return copy;
-}
 }  // namespace
+
+class HierarchyUndoCommand : public QUndoCommand {
+   public:
+    HierarchyUndoCommand(QSharedPointer<PartMetaModel> model, const QString& text,
+                         const QList<PartMetaModel::HierarchyState>& before,
+                         const QList<PartMetaModel::HierarchyState>& after)
+        : QUndoCommand(text), m_model(model), m_before(before), m_after(after) {
+        for (const auto& item : model->items()) m_selection[item] = item->isSelected();
+    }
+
+    void undo() override {
+        apply(m_before);
+    }
+    void redo() override {
+        apply(m_after);
+    }
+
+   private:
+    void apply(const QList<PartMetaModel::HierarchyState>& states) {
+        if (auto model = m_model.toStrongRef()) {
+            model->applyHierarchyState(states);
+            for (const auto& item : model->items()) item->setSelected(m_selection.value(item));
+            model->m_changing_hierarchy = false;
+            emit model->hierarchyChanged();
+        }
+    }
+
+    QWeakPointer<PartMetaModel> m_model;
+    QMap<QSharedPointer<PartMetaItem>, bool> m_selection;
+    QList<PartMetaModel::HierarchyState> m_before;
+    QList<PartMetaModel::HierarchyState> m_after;
+};
 
 PartMetaModel::PartMetaModel() {
     // NOP
@@ -134,6 +161,8 @@ QSharedPointer<PartMetaItem> PartMetaModel::lookupByPointer(QSharedPointer<Part>
 }
 
 QSharedPointer<PartMetaItem> PartMetaModel::newItem(QSharedPointer<Part> p) {
+    if (m_pointer_lookup.contains(p)) return m_pointer_lookup[p];
+
     auto pm = QSharedPointer<PartMetaItem>::create(p);
     this->addItem(pm);
 
@@ -159,16 +188,15 @@ void PartMetaModel::addItem(QSharedPointer<PartMetaItem> pm) {
         for (auto& c : curr_part->children()) { queue.push(c); }
 
         QSharedPointer<PartMetaItem> cpm = QSharedPointer<PartMetaItem>::create(curr_part);
+        m_pointer_lookup[curr_part]      = cpm;
+        cpm->setModel(this->sharedFromThis());
         QObject::connect(cpm.get(), &PartMetaItem::modified, this, &PartMetaModel::itemUpdated);
         emit itemAddedUpdate(cpm);
 
         item_lookup[curr_part->parent()]->blockSignals(true);
         item_lookup[curr_part->parent()]->adoptChild(cpm);
         item_lookup[curr_part->parent()]->blockSignals(false);
-        item_lookup[curr_part]      = cpm;
-        m_pointer_lookup[curr_part] = cpm;
-
-        cpm->setModel(this->sharedFromThis());
+        item_lookup[curr_part] = cpm;
     }
 }
 
@@ -185,29 +213,168 @@ void PartMetaModel::reloadItem(QSharedPointer<PartMetaItem> pm) {
 }
 
 void PartMetaModel::removeItem(QSharedPointer<PartMetaItem> pm) {
-    if (pm.isNull()) return;
+    if (pm.isNull() || !m_pointer_lookup.contains(pm->part())) return;
 
     m_pointer_lookup.remove(pm->part());
 
     // Children of this item need to find new parents. This item's parent can adopt.
     auto pm_par = pm->parent();
     if (pm_par.isNull()) {
-        for (auto pm_child : pm->children()) { pm->orphanChild(pm_child); }
+        for (auto pm_child : pm->children()) {
+            if (pm_child->meshType() == MeshType::kClipping || pm_child->meshType() == MeshType::kSettings)
+                pm_child->part()->setModifierEnabled(false);
+            pm->orphanChild(pm_child);
+        }
     }
     else {
         pm_par->orphanChild(pm);
 
         for (auto pm_child : pm->children()) {
+            if (pm_child->meshType() == MeshType::kClipping || pm_child->meshType() == MeshType::kSettings)
+                pm_child->part()->setModifierEnabled(false);
             pm->orphanChild(pm_child);
             pm_par->adoptChild(pm_child);
         }
     }
 
+    QObject::disconnect(pm.get(), &PartMetaItem::modified, this, &PartMetaModel::itemUpdated);
+    // Keep source data available so undo can restore a file-backed object and save it again.
+    CSM->removePart(pm->part()->name());
     emit itemRemovedUpdate(pm);
 }
 
 void PartMetaModel::clearItems() {
+    if (m_undo_stack) m_undo_stack->clear();
     for (auto& pm : m_pointer_lookup.values()) { this->removeItem(pm); }
+}
+
+void PartMetaModel::setUndoStack(QUndoStack* stack) {
+    m_undo_stack = stack;
+}
+
+bool PartMetaModel::hierarchyChangeInProgress() const {
+    return m_changing_hierarchy;
+}
+
+QList<PartMetaModel::HierarchyState> PartMetaModel::hierarchyState(const QList<QSharedPointer<PartMetaItem>>& items) {
+    QList<HierarchyState> states;
+    for (const auto& item : items) states.append({item, item->parent(), item->part()->modifierEnabled()});
+    return states;
+}
+
+void PartMetaModel::applyHierarchyState(const QList<HierarchyState>& states) {
+    m_changing_hierarchy = true;
+    for (const auto& state : states) {
+        state.item->part()->setModifierEnabled(state.enabled);
+        state.item->setParent(nullptr);
+    }
+    for (const auto& state : states) {
+        if (!state.present) removeItem(state.item);
+    }
+    for (const auto& state : states) {
+        if (state.present && !m_pointer_lookup.contains(state.item->part())) {
+            CSM->addPart(state.item->part(), false);
+            setPartInstanceName(state.item->part(), state.item->part()->name());
+            addItem(state.item);
+        }
+    }
+    for (const auto& state : states) {
+        if (state.present) {
+            state.item->setParent(state.parent);
+            emit visualUpdate(state.item);
+        }
+    }
+}
+
+void PartMetaModel::changeHierarchy(const QString& text, const QList<HierarchyState>& before,
+                                    const QList<HierarchyState>& after) {
+    if (m_undo_stack)
+        m_undo_stack->push(new HierarchyUndoCommand(sharedFromThis(), text, before, after));
+    else {
+        HierarchyUndoCommand command(sharedFromThis(), text, before, after);
+        command.redo();
+    }
+}
+
+bool PartMetaModel::reparentItems(QList<QSharedPointer<PartMetaItem>> items, QSharedPointer<PartMetaItem> parent) {
+    if (!parent.isNull() && !m_pointer_lookup.contains(parent->part())) return false;
+    QList<QSharedPointer<PartMetaItem>> changed;
+    for (const auto& item : items) {
+        if (item.isNull() || !m_pointer_lookup.contains(item->part())) return false;
+        for (auto ancestor = parent; !ancestor.isNull(); ancestor = ancestor->parent()) {
+            if (ancestor == item) return false;
+        }
+        bool ancestor_selected = false;
+        for (auto ancestor = item->parent(); !ancestor.isNull(); ancestor = ancestor->parent()) {
+            if (items.contains(ancestor)) ancestor_selected = true;
+        }
+        if (ancestor_selected) continue;
+        if ((item->parent() != parent || !item->part()->modifierEnabled()) && !changed.contains(item))
+            changed.append(item);
+    }
+    if (changed.isEmpty()) return true;
+    auto before = hierarchyState(changed);
+    auto after  = before;
+    for (auto& state : after) {
+        state.parent  = parent;
+        state.enabled = true;
+    }
+    changeHierarchy(parent.isNull() ? "Detach objects" : "Assign parent", before, after);
+    return true;
+}
+
+void PartMetaModel::deleteItems(QList<QSharedPointer<PartMetaItem>> items, bool delete_children) {
+    QList<QSharedPointer<PartMetaItem>> removed;
+    for (const auto& item : items) {
+        if (!item.isNull() && m_pointer_lookup.contains(item->part()) && !removed.contains(item)) removed.append(item);
+    }
+    if (removed.isEmpty()) return;
+    if (delete_children) {
+        for (int i = 0; i < removed.size(); ++i) {
+            for (const auto& child : removed[i]->children()) {
+                if (!removed.contains(child)) removed.append(child);
+            }
+        }
+    }
+    auto affected = removed;
+    for (const auto& item : removed) {
+        for (const auto& child : item->children()) {
+            if (!affected.contains(child)) affected.append(child);
+        }
+    }
+    auto before = hierarchyState(affected);
+    auto after  = before;
+    for (auto& state : after) {
+        if (removed.contains(state.item)) {
+            // The clipboard may still hold a local modifier after deletion detaches it.
+            if (!state.parent.isNull() &&
+                (state.item->meshType() == MeshType::kClipping || state.item->meshType() == MeshType::kSettings))
+                state.enabled = false;
+            state.present = false;
+            state.parent  = nullptr;
+        }
+        else {
+            while (removed.contains(state.parent)) state.parent = state.parent->parent();
+            if (state.item->meshType() == MeshType::kClipping || state.item->meshType() == MeshType::kSettings)
+                state.enabled = false;
+        }
+    }
+    changeHierarchy(delete_children ? "Delete hierarchy" : "Delete objects, keep children", before, after);
+}
+
+void PartMetaModel::setModifiersEnabled(QList<QSharedPointer<PartMetaItem>> items, bool enabled) {
+    QList<QSharedPointer<PartMetaItem>> changed;
+    for (const auto& item : items) {
+        if (!item.isNull() && m_pointer_lookup.contains(item->part()) &&
+            (item->meshType() == MeshType::kClipping || item->meshType() == MeshType::kSettings) &&
+            item->part()->modifierEnabled() != enabled && !changed.contains(item))
+            changed.append(item);
+    }
+    if (changed.isEmpty()) return;
+    auto before = hierarchyState(changed);
+    auto after  = before;
+    for (auto& state : after) state.enabled = enabled;
+    changeHierarchy(enabled ? "Enable modifiers" : "Disable modifiers", before, after);
 }
 
 void PartMetaModel::setSelectionCopied() {
@@ -215,8 +382,18 @@ void PartMetaModel::setSelectionCopied() {
 }
 
 void PartMetaModel::copySelection() {
+    for (const auto& item : m_copied_list) {
+        bool ancestor_copied = false;
+        for (auto parent = item->parent(); !parent.isNull(); parent = parent->parent()) {
+            if (m_copied_list.contains(parent)) ancestor_copied = true;
+        }
+        if (!ancestor_copied) duplicateItem(item);
+    }
+}
+
+QSharedPointer<PartMetaItem> PartMetaModel::duplicateItem(QSharedPointer<PartMetaItem> item) {
     QStack<QSharedPointer<PartMetaItem>> queue;
-    for (auto& pm : m_copied_list) { queue.push(pm); }
+    queue.push(item);
 
     QStringList namelist;
     for (auto& p : m_pointer_lookup.keys()) { namelist.append(p->name()); }
@@ -230,18 +407,16 @@ void PartMetaModel::copySelection() {
 
         // Copy part.
         QSharedPointer<Part> p = QSharedPointer<Part>::create(pm->part());
-        p->setTransformation(QMatrix4x4());
-        p->setName(p->name() + "_copy");
-
-        QString org_name = p->name();
-        uint count       = 1;
-
-        // Find a new name.
-        while (namelist.contains(p->name())) {
-            p->setName(org_name + "_" + QString::number(count));
-            count++;
+        QMatrix4x4 transform;
+        if (!item->parent().isNull() || !item->children().isEmpty()) {
+            transform = pm->transformation();
+            for (int axis = 0; axis < 3; ++axis) transform(axis, 3) *= Constants::OpenGL::kViewToObject;
         }
-        setPartInstanceName(p, p->name());
+        p->setTransformation(transform);
+        p->setMeshType(pm->meshType());
+        p->rootMesh()->setType(pm->meshType());
+        setPartInstanceName(p, uniqueInstanceName(instanceBaseName(p->name()), namelist));
+        namelist.append(p->name());
 
         result[pm] = p;
 
@@ -249,11 +424,16 @@ void PartMetaModel::copySelection() {
         if (result.contains(pm->parent())) { result[pm->parent()]->adoptChild(p); }
     }
 
-    // Add to model.
     for (auto& p : result.values()) {
-        if (!p->parent().isNull()) continue;
-        this->newItem(p);
+        CSM->addPart(p, false);
+        setPartInstanceName(p, p->name());
     }
+
+    if (!item->parent().isNull()) item->parent()->part()->adoptChild(result[item]);
+    auto copy = this->newItem(result[item]);
+    // Copying a child alone keeps it under the same parent, including local modifiers.
+    copy->setParent(item->parent());
+    return copy;
 }
 
 int PartMetaModel::instanceCount(QSharedPointer<PartMetaItem> pm) {
@@ -264,7 +444,6 @@ void PartMetaModel::setInstanceCount(QSharedPointer<PartMetaItem> pm, int count)
     if (pm.isNull() || count < 1) return;
 
     QList<QSharedPointer<PartMetaItem>> instances = this->instanceItems(pm);
-    const QString base_name                       = instanceBaseName(pm->part()->name());
 
     while (instances.size() > count) {
         int remove_index = -1;
@@ -278,23 +457,12 @@ void PartMetaModel::setInstanceCount(QSharedPointer<PartMetaItem> pm, int count)
         if (remove_index < 0) break;
 
         QSharedPointer<PartMetaItem> item = instances.takeAt(remove_index);
-        this->removeItem(item);
+        this->deleteItems({item}, true);
     }
 
     if (instances.size() >= count) return;
 
-    QStringList namelist;
-    for (auto& p : m_pointer_lookup.keys()) { namelist.append(p->name()); }
-
-    while (instances.size() < count) {
-        const QString name        = uniqueInstanceName(base_name, namelist);
-        QSharedPointer<Part> copy = copyPartInstance(pm->part(), name);
-
-        CSM->addPart(copy, false);
-        setPartInstanceName(copy, copy->name());
-        namelist.append(copy->name());
-        instances.append(this->newItem(copy));
-    }
+    while (instances.size() < count) { instances.append(duplicateItem(pm)); }
 }
 
 QList<QSharedPointer<PartMetaItem>> PartMetaModel::instanceItems(QSharedPointer<PartMetaItem> pm) {
@@ -303,7 +471,7 @@ QList<QSharedPointer<PartMetaItem>> PartMetaModel::instanceItems(QSharedPointer<
 
     const QString base_name = instanceBaseName(pm->part()->name());
     for (auto& item : m_pointer_lookup.values()) {
-        if (isInstanceName(item->part()->name(), base_name)) instances.append(item);
+        if (item->parent() == pm->parent() && isInstanceName(item->part()->name(), base_name)) instances.append(item);
     }
 
     std::sort(instances.begin(), instances.end(),
