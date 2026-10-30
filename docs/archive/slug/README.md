@@ -23,17 +23,17 @@ SLUG is a yearly seminar held to discuss path planning and developments with sli
 ## SLUG 2023
 
 ### Intro
-* [PDF](SLUG-2023/SLUG-2023-Intro.pdf)
+* [PDF](2023/SLUG-2023-Intro.pdf)
 * [Video](https://youtu.be/vkjOuM_GwnI)
 
 ### Sparse Grids for Hybrid
-* [PDF](SLUG-2023/SLUG-2023-Sparse-Grids.pdf)
+* [PDF](2023/SLUG-2023-Sparse-Grids.pdf)
 * [Video](https://youtu.be/SjvLr4cmxWU)
 
 ### Slicing the Slicer
-* [PDF](SLUG-2023/SLUG-2023-Slicing-the-Slicer.pdf)
+* [PDF](2023/SLUG-2023-Slicing-the-Slicer.pdf)
 * [Video](https://youtu.be/BXYt05IrUV0)
 
 ### Advanced Pathing and SAMARAI
-* [PDF](SLUG-2023/SLUG-2023-Advanced-Pathing-and-SAMARAI.pdf)
+* [PDF](2023/SLUG-2023-Advanced-Pathing-and-SAMARAI.pdf)
 * [Video](https://youtu.be/qTAOhqzvqSo)
