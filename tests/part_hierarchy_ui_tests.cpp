@@ -193,6 +193,53 @@ int main(int argc, char* argv[]) {
                "Undoing deletion of a selected hierarchy must restore its parent selection.");
     }
 
+    auto sibling = addPart(model, "Build sibling");
+    other->adoptChild(sibling);
+    other->adoptChild(settings);
+    settings->part()->setModifierEnabled(false);
+    control.refreshModifierScopes();
+    undo.clear();
+    tree->clearSelection();
+    row(clipper)->setSelected(true);
+    row(sibling)->setSelected(true);
+    const auto selected = [&](const auto& item) { return item->isSelected() && row(item)->isSelected(); };
+    expect(selected(clipper) && selected(sibling), "The activation fixture must select both sibling mesh roles.");
+    tree->expandAll();
+    app.processEvents();
+    if (argc > 1)
+        expect(control.grab().save(QString(argv[1]) + "/modifier-selection-before.png"),
+               "Could not capture the selected siblings before activation changes.");
+    for (bool enabled : {false, true}) {
+        model->setModifiersEnabled(model->selectedItems(), enabled);
+        expect(selected(clipper) && selected(sibling) && clipper->part()->modifierEnabled() == enabled &&
+                   sibling->part()->modifierEnabled(),
+               "Changing modifier activation must preserve the selected build sibling.");
+        if (!enabled && argc > 1)
+            expect(control.grab().save(QString(argv[1]) + "/modifier-selection-after.png"),
+                   "Could not capture the selected siblings after activation changes.");
+        undo.undo();
+        expect(selected(clipper) && selected(sibling) && clipper->part()->modifierEnabled() != enabled,
+               "Undoing modifier activation must preserve both selected siblings.");
+        undo.redo();
+        expect(selected(clipper) && selected(sibling) && clipper->part()->modifierEnabled() == enabled,
+               "Redoing modifier activation must preserve both selected siblings.");
+    }
+    tree->clearSelection();
+    row(clipper)->setSelected(true);
+    row(settings)->setSelected(true);
+    model->setModifiersEnabled(model->selectedItems(), false);
+    expect(selected(clipper) && selected(settings) && !clipper->part()->modifierEnabled() &&
+               !settings->part()->modifierEnabled(),
+           "Disabling modifiers must retain the selection of an already-disabled sibling.");
+    undo.undo();
+    expect(selected(clipper) && selected(settings) && clipper->part()->modifierEnabled() &&
+               !settings->part()->modifierEnabled(),
+           "Undo must restore activation without losing unchanged selected modifiers.");
+    undo.redo();
+    expect(selected(clipper) && selected(settings) && !clipper->part()->modifierEnabled() &&
+               !settings->part()->modifierEnabled(),
+           "Redo must retain the selection of unchanged modifiers.");
+
     model->clearItems();
     ORNL::CSM->clearParts();
     return passed ? EXIT_SUCCESS : EXIT_FAILURE;

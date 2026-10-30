@@ -187,3 +187,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - On this 15 GiB WSL instance, build with `-j 1` and configure `CMAKE_AUTOGEN_PARALLEL=1`; `-j 32` exhausted memory and disrupted WSL.
 - In new SessionManager tests, use `QStandardPaths::setTestModeEnabled(true)`; temporary `XDG_DATA_HOME` directories disappear before singleton history is saved.
 - Snapshot selection before hierarchy edits and restore it after rebuilding parent links; Qt can clear selection while rows move.
+- For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.

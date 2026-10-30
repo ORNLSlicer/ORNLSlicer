@@ -188,14 +188,26 @@ endsolid hierarchy
 
     auto model = QSharedPointer<ORNL::PartMetaModel>::create();
     QStringList notified_parts;
-    auto connection = QObject::connect(session.get(), &ORNL::SessionManager::partAdded,
-                                       [&model, &notified_parts](QSharedPointer<ORNL::Part> part) {
+    int announced_parts     = -1;
+    bool total_before_parts = false;
+    const auto record_total = [&](int total) {
+        announced_parts    = total;
+        total_before_parts = notified_parts.isEmpty();
+    };
+    auto total_connection = QObject::connect(session.get(), &ORNL::SessionManager::totalPartsInProject, record_total);
+    auto connection       = QObject::connect(session.get(), &ORNL::SessionManager::partAdded,
+                                             [&model, &notified_parts](QSharedPointer<ORNL::Part> part) {
                                            notified_parts.append(part->name());
                                            model->newItem(part);
-                                       });
+                                             });
     ORNL::SessionLoader loader(project_path, false);
     loader.run();
     QObject::disconnect(connection);
+    QObject::disconnect(total_connection);
+
+    if (!ORNL::Testing::expect(total_before_parts && announced_parts == 2 && announced_parts == notified_parts.size(),
+                               "Project loading must announce the root notification count before adding parts."))
+        return false;
 
     if (!ORNL::Testing::expect(session->count() == 5,
                                "Saving and reloading a project should preserve all hierarchy members."))
@@ -228,7 +240,18 @@ endsolid hierarchy
         part.erase(ORNL::Constants::Settings::Session::kModifierEnabled);
     }
     session->clearParts();
+    notified_parts.clear();
+    announced_parts    = -1;
+    total_before_parts = false;
+    total_connection   = QObject::connect(session.get(), &ORNL::SessionManager::totalPartsInProject, record_total);
+    connection = QObject::connect(session.get(), &ORNL::SessionManager::partAdded,
+                                  [&](QSharedPointer<ORNL::Part> part) { notified_parts.append(part->name()); });
     session->loadPartsJson(legacy);
+    QObject::disconnect(connection);
+    QObject::disconnect(total_connection);
+    if (!ORNL::Testing::expect(total_before_parts && announced_parts == 5 && announced_parts == notified_parts.size(),
+                               "Legacy projects must announce and notify every independent object."))
+        return false;
     for (auto part : session->parts()) {
         if (!ORNL::Testing::expect(
                 part->parent().isNull() && part->children().isEmpty() && part->modifierEnabled(),

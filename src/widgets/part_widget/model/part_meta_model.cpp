@@ -102,7 +102,7 @@ class HierarchyUndoCommand : public QUndoCommand {
                          const QList<PartMetaModel::HierarchyState>& before,
                          const QList<PartMetaModel::HierarchyState>& after)
         : QUndoCommand(text), m_model(model), m_before(before), m_after(after) {
-        for (const auto& state : before) m_selection[state.item] = state.item->isSelected();
+        for (const auto& item : model->items()) m_selection[item] = item->isSelected();
     }
 
     void undo() override {
@@ -116,9 +116,7 @@ class HierarchyUndoCommand : public QUndoCommand {
     void apply(const QList<PartMetaModel::HierarchyState>& states) {
         if (auto model = m_model.toStrongRef()) {
             model->applyHierarchyState(states);
-            for (const auto& state : states) {
-                if (state.present) state.item->setSelected(m_selection.value(state.item));
-            }
+            for (const auto& item : model->items()) item->setSelected(m_selection.value(item));
             model->m_changing_hierarchy = false;
             emit model->hierarchyChanged();
         }

@@ -469,11 +469,6 @@ fifojson SessionManager::partsJson() const {
 }
 
 bool SessionManager::loadPartsJson(fifojson j) {
-    int totalParts = 0;
-    for (auto it : j[Constants::Settings::Session::kParts].items()) { ++totalParts; }
-
-    emit totalPartsInProject(totalParts);
-
     QMap<QString, QSharedPointer<Part>> loaded_parts;
     QList<QSharedPointer<Part>> loaded_objects;
     for (auto it : j[Constants::Settings::Session::kParts].items()) {
@@ -576,9 +571,12 @@ bool SessionManager::loadPartsJson(fifojson j) {
         parent->adoptChild(part);
     }
 
+    QList<QSharedPointer<Part>> root_parts;
     for (auto part : loaded_objects) {
-        if (part->parent().isNull()) emit partAdded(part);
+        if (part->parent().isNull()) root_parts.append(part);
     }
+    emit totalPartsInProject(root_parts.size());
+    for (auto part : root_parts) emit partAdded(part);
 
     return true;
 }
