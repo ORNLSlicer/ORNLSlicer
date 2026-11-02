@@ -98,9 +98,9 @@ settings:
   - name: "perimeter_speed"
     display: "Perimeter Speed"
     type: "speed"
-    tooltip: "Speed for perimeter paths"
-    depends: {"AND":[{"slicing_mode":0},{"perimeter":true}]}
-    visible_if: {"slicing_mode":0}
+    tooltip: "Speed for perimeter paths. Helical slicing requires a positive value for this region when it is enabled."
+    depends: {"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}
+    visible_if: {"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}
     options: []
     default: 0
     minor: "Perimeter"

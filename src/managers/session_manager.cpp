@@ -591,6 +591,36 @@ bool SessionManager::doSlice() {
         return false;
     }
 
+    if (type == SlicingMode::kCylindrical &&
+        GSM->getGlobal()->setting<CylindricalPathPattern>(PS::Slicing::kCylindricalPathPattern) ==
+            CylindricalPathPattern::kHelical) {
+        QList<QSharedPointer<SettingsBase>> settings_to_check {GSM->getGlobal()};
+        for (const auto& part : m_parts) {
+            if (part->getMeshType() != MeshType::kBuild) continue;
+            auto settings = QSharedPointer<SettingsBase>::create(*GSM->getGlobal());
+            settings->populate(part->getSb());
+            settings_to_check.append(settings);
+        }
+        for (const auto& settings : settings_to_check) {
+            const QList<QPair<QString, bool>> speeds {
+                {PS::Perimeter::kSpeed, settings->setting<int>(PS::Helical::kHelicalPerimeterRevolutions) > 0},
+                {PS::Inset::kSpeed, settings->setting<int>(PS::Helical::kHelicalInsetRevolutions) > 0},
+                {PS::Infill::kSpeed, true}};
+            for (const auto& [key, enabled] : speeds) {
+                if (!enabled || settings->setting<Velocity>(key) > 0) continue;
+                const QString display = QString::fromStdString(GSM->getMaster()
+                                                                   ->json()
+                                                                   .at(key.toStdString())
+                                                                   .at(Constants::Settings::Master::kDisplay)
+                                                                   .get<std::string>());
+                const QString message = display + " must be greater than zero for Helical slicing.";
+                Diagnostics::logLine(message);
+                emit forwardStatusUpdate(message);
+                return false;
+            }
+        }
+    }
+
     // check current syntax for file suffix that needs to be output
     tempGcodeFile = defaultGcodeFile + GcodeMetaList::SyntaxToMetaHash[(int)syntax].m_file_suffix;
 
