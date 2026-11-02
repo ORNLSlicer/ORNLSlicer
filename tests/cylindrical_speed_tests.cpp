@@ -7,6 +7,7 @@
 #include <array>
 #include <cstdlib>
 #include <functional>
+#include <utility>
 
 #include "configs/settings_base.h"
 #include "gcode/writers/arc_specialties_writer.h"
@@ -41,6 +42,8 @@ int main(int argc, char* argv[]) {
     settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, false);
     settings->setSetting(ORNL::PRS::GCode::kArcSpecialtiesG80WeldScheduleFile, QString());
     settings->setSetting(ORNL::PRS::MachineSetup::kSupportG3, true);
+    settings->setSetting(ORNL::PS::Helical::kHelicalPerimeterRevolutions, 1);
+    settings->setSetting(ORNL::PS::Helical::kHelicalInsetRevolutions, 1);
     const std::array<ORNL::RegionType, 3> regions = {ORNL::RegionType::kPerimeter, ORNL::RegionType::kInset,
                                                      ORNL::RegionType::kInfill};
     const std::array<int, 3> schedules            = {1, 2, 0};
@@ -84,6 +87,40 @@ int main(int argc, char* argv[]) {
                 const QString arc = writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
                 expect(arc.contains("G03") && arc.contains(feedrate), label + ": arc feedrate mismatch.");
             }
+        }
+    }
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 1);
+    settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, 1);
+    for (bool planar_enabled : {false, true}) {
+        for (const QString& key : {"perimeter", "inset", "infill", "skeleton"})
+            settings->setSetting(key, planar_enabled);
+        for (const auto& [perimeter, inset] : std::array<std::pair<int, int>, 4> {{{1, 0}, {0, 1}, {0, 0}, {2, 3}}}) {
+            settings->setSetting(ORNL::PS::Helical::kHelicalPerimeterRevolutions, perimeter);
+            settings->setSetting(ORNL::PS::Helical::kHelicalInsetRevolutions, inset);
+            const QString basename = QString("enabled%1").arg(++case_number);
+            ORNL::GCodeArcSpecialtiesSaver saver(temp.path() + QDir::separator(), temp.path(),
+                                                 temp.filePath(basename + ".nc"), "#FILE NAME[ G80=\"old.nc\" ]\n",
+                                                 ORNL::GcodeMetaList::ArcSpecialtiesMeta);
+            saver.run();
+            QFile schedule(temp.filePath(basename + "_sch.nc"));
+            expect(schedule.open(QIODevice::ReadOnly), "Filtered Helical schedule must exist.");
+            const QString text    = QString::fromUtf8(schedule.readAll());
+            const QString context = QString("Helical perimeter=%1 inset=%2 Planar toggles=%3")
+                                        .arg(perimeter)
+                                        .arg(inset)
+                                        .arg(planar_enabled);
+            expect(!text.contains("skeleton", Qt::CaseInsensitive) && !text.contains("$CASE 3\n"),
+                   context + ": Skeleton must never be exported.");
+            expect(text.contains("(Schedule 1 Start, perimeter)") == (perimeter > 0) &&
+                       text.contains("$CASE 1\n") == (perimeter > 0),
+                   context + ": Perimeter must follow its revolution count and retain schedule 1.");
+            expect(
+                text.contains("(Schedule 2 Start, inset)") == (inset > 0) && text.contains("$CASE 2\n") == (inset > 0),
+                context + ": Inset must follow its revolution count and retain schedule 2.");
+            expect(text.contains("$DEFAULT\n") && text.contains("(Schedule 0 / Default Schedule Start, infill)"),
+                   context + ": Infill must retain the startup default schedule.");
+            expect(text.count("V.E.Sch.Weld.Program = ") == 1 + (perimeter > 0) + (inset > 0),
+                   context + ": Only active regions may export weld parameters.");
         }
     }
     settings->setSetting(ORNL::PRS::MachineSetup::kSyntax, ORNL::GcodeSyntax::kArcSpecialties);

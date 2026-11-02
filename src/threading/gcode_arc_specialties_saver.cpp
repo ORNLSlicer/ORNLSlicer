@@ -309,7 +309,18 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
     out << "$SWITCH V.L.P1" << '\n';
     out << '\n';
 
+    const auto settings = GSM->getGlobal();
+    const bool helical =
+        static_cast<SlicingMode>(settings->setting<int>(PS::Slicing::kSlicingMode)) == SlicingMode::kCylindrical &&
+        settings->setting<CylindricalPathPattern>(PS::Slicing::kCylindricalPathPattern) ==
+            CylindricalPathPattern::kHelical;
     for (const ScheduleRegion& region : schedule_regions) {
+        if (helical && (region.region_type == RegionType::kSkeleton ||
+                        (region.region_type == RegionType::kPerimeter &&
+                         settings->setting<int>(PS::Helical::kHelicalPerimeterRevolutions) <= 0) ||
+                        (region.region_type == RegionType::kInset &&
+                         settings->setting<int>(PS::Helical::kHelicalInsetRevolutions) <= 0)))
+            continue;
         writeScheduleBlock(out, region, m_selected_meta);
         out << '\n';
     }
