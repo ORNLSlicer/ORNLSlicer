@@ -35,9 +35,14 @@ int main(int argc, char* argv[]) {
     QMap<QString, ORNL::SettingTab*> tabs;
     for (auto* pane : bar.getPanes())
         for (auto* tab : pane->getTabs()) tabs.insert(tab->getName(), tab);
-    auto& master               = ORNL::GSM->getMaster()->json();
-    const QStringList sections = {"Perimeter", "Inset", "Infill", "Travel"};
-    const auto row             = [&](const QString& key) {
+    auto& master                      = ORNL::GSM->getMaster()->json();
+    const QStringList sections        = {"Perimeter", "Inset", "Infill", "Travel"};
+    const QStringList regional_speeds = {"perimeter_speed", "inset_speed", "infill_speed"};
+    expect(tabs.value("Helical")->getIndex() == tabs.value("Layer")->getIndex() + 1,
+           "Helical must be directly after Layer.");
+    expect(tabs.value("Perimeter")->getIndex() == tabs.value("Helical")->getIndex() + 1,
+           "Helical must precede the regional sections.");
+    const auto row = [&](const QString& key) {
         return tabs.value(QString::fromStdString(master.at(key.toStdString()).at("minor").get<std::string>()))
             ->getRow(key);
     };
@@ -73,7 +78,7 @@ int main(int argc, char* argv[]) {
             if (regional_helical) {
                 if (!helical) expect(!row(key)->isShown(), key + " must hide outside Helical.");
             }
-            else if (sections.contains(section) && !planar &&
+            else if (sections.contains(section) && !planar && !regional_speeds.contains(key) &&
                      (section != "Travel" ||
                       entry.value().at("depends").dump().find("slicing_mode") != std::string::npos)) {
                 expect(!row(key)->isShown(), key + " must hide outside Planar.");
@@ -86,6 +91,18 @@ int main(int argc, char* argv[]) {
         for (const QString& key :
              {"travel_speed", "min_travel_length", "minimum_travel_for_lift", "travel_lift_height"})
             expect(row(key)->isShown(), key + " must remain available in both modes.");
+        for (const auto& key : regional_speeds) {
+            const QString region = key.section('_', 0, 0);
+            const bool enabled   = planar ? global->setting<bool>(region)
+                                          : helical && (region == "infill" ||
+                                                        global->setting<int>("helical_" + region + "_revolutions") > 0);
+            const bool visible =
+                (planar || helical) && (enabled || preferences->getDisabledSettingVisibilityPreference() ==
+                                                       ORNL::DisabledSettingVisibility::kGrey);
+            expect(row(key)->isShown() == visible, key + " must follow active mode and disabled-setting preferences.");
+            expect(dynamic_cast<QWidget*>(row(key).get())->isEnabled() == enabled,
+                   key + " must follow the active region's enablement.");
+        }
     };
     const auto snapshot = [&](const QString& state) {
         if (argc < 2) return;
@@ -109,6 +126,14 @@ int main(int argc, char* argv[]) {
     snapshot("planar");
     set("slicing_mode", 1);
     check(false, true);
+    if (argc > 1) {
+        bar.closeAll();
+        bar.resize(850, 1000);
+        bar.show();
+        app.processEvents();
+        expect(bar.grab().save(QDir(QString::fromLocal8Bit(argv[1])).filePath("helical-section-order.png")),
+               "Could not save section order screenshot.");
+    }
     snapshot("helical-zero");
     expect(row("helical_perimeter_revolutions")->isShown(), "Zero perimeter count must remain editable.");
     expect(row("helical_inset_revolutions")->isShown(), "Zero inset count must remain editable.");
@@ -116,16 +141,31 @@ int main(int argc, char* argv[]) {
     preferences->setDisabledSettingVisibilityPreference(ORNL::DisabledSettingVisibility::kHide);
     check(false, true);
     expect(!row("helical_perimeter_stepover")->isShown(), "Hide preference hides zero-count Helical controls.");
+    expect(!row("perimeter_speed")->isShown() && !row("inset_speed")->isShown(),
+           "Hide preference hides speeds for zero-revolution shell regions.");
     expect(!row("helical_inset_tool_frame_x_rotation")->isShown(), "Hide preference applies to grouped rotation.");
     dynamic_cast<QSpinBox*>(row("helical_perimeter_revolutions").get())->setValue(1);
     dynamic_cast<QSpinBox*>(row("helical_inset_revolutions").get())->setValue(1);
     expect(row("helical_perimeter_stepover")->isShown(), "Positive perimeter count reveals stepover.");
     expect(row("helical_inset_tool_frame_x_rotation")->isShown(), "Positive inset count reveals grouped rotation.");
+    expect(row("perimeter_speed")->isShown() && row("inset_speed")->isShown(),
+           "Positive shell counts reveal their shared speeds.");
+    for (const auto& key : regional_speeds) {
+        global->setSetting(key, 0.0);
+        bar.restoreSettingValue(key);
+        auto* widget = dynamic_cast<QWidget*>(row(key).get());
+        expect(widget != nullptr && widget->toolTip().contains("greater than zero for Helical"),
+               key + " must warn when zero in an active Helical region.");
+        global->setSetting(key, 1000.0);
+        bar.restoreSettingValue(key);
+        expect(!widget->toolTip().contains("greater than zero for Helical"), key + " must clear its warning.");
+    }
     snapshot("helical-positive");
     preferences->setDisabledSettingVisibilityPreference(ORNL::DisabledSettingVisibility::kGrey);
     auto* filter = bar.findChild<QLineEdit*>();
     filter->setText("Perimeter");
-    expect(!row("perimeter_speed")->isShown(), "Filtering must not reveal inactive Planar controls.");
+    expect(!row("perimeter_count")->isShown(), "Filtering must not reveal inactive Planar controls.");
+    expect(row("perimeter_speed")->isShown(), "Filtering must preserve shared regional speeds.");
     expect(row("helical_perimeter_revolutions")->isShown(), "Filtering must preserve active Helical controls.");
     filter->clear();
     check(false, true);

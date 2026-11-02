@@ -9,6 +9,7 @@
 #include <QVector>
 
 #include "managers/settings/settings_manager.h"
+#include "slicing/region_speed.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
@@ -27,7 +28,7 @@ struct ScheduleRegion {
     int schedule_number;
     QString label;
     bool default_schedule;
-    QString speed_setting_key;
+    RegionType region_type;
     QVector<ScheduleField> fields;
 };
 
@@ -80,7 +81,8 @@ void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, GcodeMet
     for (const ScheduleField& field : region.fields) { writeScheduleField(out, field, meta); }
 
     out << "$IF EXIST[V.S.SPEED]" << '\n';
-    out << "   V.S.SPEED = " << formatScheduleValue(region.speed_setting_key, ScheduleValueType::kSpeed, meta)
+    out << "   V.S.SPEED = "
+        << formatDecimal(regionPrintSpeed(*GSM->getGlobal(), region.region_type).to(meta.m_velocity_unit))
         << "            ;Set speed value if it exists" << '\n';
     out << "$ENDIF" << '\n';
     out << "$BREAK" << '\n';
@@ -125,7 +127,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
         {1,
          Constants::RegionTypeStrings::kPerimeter.toLower(),
          false,
-         PS::Perimeter::kSpeed,
+         RegionType::kPerimeter,
          {{"V.E.Sch.Preflow", PS::ArcSpecialties::kPerimeterPreflow, ScheduleValueType::kTime,
            ";Preflow Time in Seconds"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kPerimeterTravelDelay, ScheduleValueType::kTime,
@@ -167,7 +169,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
         {2,
          Constants::RegionTypeStrings::kInset.toLower(),
          false,
-         PS::Inset::kSpeed,
+         RegionType::kInset,
          {{"V.E.Sch.Preflow", PS::ArcSpecialties::kInsetPreflow, ScheduleValueType::kTime, ";Preflow Time in Seconds"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kInsetTravelDelay, ScheduleValueType::kTime,
            ";Travel Start Delay in Seconds"},
@@ -208,7 +210,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
         {3,
          Constants::RegionTypeStrings::kSkeleton.toLower(),
          false,
-         PS::Skeleton::kSpeed,
+         RegionType::kSkeleton,
          {{"V.E.Sch.Preflow", PS::ArcSpecialties::kSkeletonPreflow, ScheduleValueType::kTime,
            ";Preflow Time in Seconds"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kSkeletonTravelDelay, ScheduleValueType::kTime,
@@ -250,7 +252,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
         {0,
          Constants::RegionTypeStrings::kInfill.toLower(),
          true,
-         PS::Infill::kSpeed,
+         RegionType::kInfill,
          {{"V.E.Sch.Preflow", PS::ArcSpecialties::kInfillPreflow, ScheduleValueType::kTime, ";Preflow Time in Seconds"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kInfillTravelDelay, ScheduleValueType::kTime,
            ";Travel Start Delay in Seconds"},

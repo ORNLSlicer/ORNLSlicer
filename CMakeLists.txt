@@ -498,6 +498,17 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_regional_settings_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME regional_settings_tests COMMAND ${PROJECT_NAME}_regional_settings_tests)
 
+    add_executable(${PROJECT_NAME}_cylindrical_speed_tests tests/cylindrical_speed_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_cylindrical_speed_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_cylindrical_speed_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME cylindrical_speed_tests COMMAND ${PROJECT_NAME}_cylindrical_speed_tests)
+
     add_executable(${PROJECT_NAME}_layer_numbering_tests tests/layer_numbering_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_layer_numbering_tests

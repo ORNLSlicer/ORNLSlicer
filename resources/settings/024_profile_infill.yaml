@@ -167,9 +167,9 @@ settings:
   - name: "infill_speed"
     display: "Infill Speed"
     type: "speed"
-    tooltip: "Speed for the infill paths"
-    depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
-    visible_if: {"slicing_mode":0}
+    tooltip: "Speed for infill paths. Helical slicing requires a positive value for this region when it is enabled."
+    depends: {"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}
+    visible_if: {"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}
     options: []
     default: 0
     minor: "Infill"
