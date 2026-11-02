@@ -6,6 +6,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, infill will be generated"
     depends: {"slicing_mode":0}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Infill"
@@ -18,6 +19,7 @@ settings:
     type: "percentage100"
     tooltip: "Percent of area to be covered by infill"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_manual_spacing":false}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -30,6 +32,7 @@ settings:
     type: "boolean"
     tooltip: "Override infill density and manually define distance between beads on infill"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Infill"
@@ -42,6 +45,7 @@ settings:
     type: "distance"
     tooltip: "Distance between beads on sparse infill"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_manual_spacing":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -54,6 +58,7 @@ settings:
     type: "enumeration"
     tooltip: "Pattern for the infill"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options:
       - "Lines"
       - "Grid"
@@ -73,6 +78,7 @@ settings:
     type: "boolean"
     tooltip: "If enabled and the Infill Pattern is Lines, travel-separated infill segments are selected using Path Order Optimization and oriented using Point Order Optimization. If disabled, they retain the existing monotonic ordering."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"infill_pattern":0}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Infill"
@@ -85,6 +91,7 @@ settings:
     type: "boolean"
     tooltip: "If enabled, infill linking segments whose bead core would exceed the configured infill overlap are replaced by travel moves."
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Infill"
@@ -97,6 +104,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, infill pattern is generated based on the printer area rather than the object. This means the infill pattern is specific to where the object is within the printer."
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Infill"
@@ -109,6 +117,7 @@ settings:
     type: "angle"
     tooltip: "Sets the angle for the infill"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -121,6 +130,7 @@ settings:
     type: "angle"
     tooltip: "Determines how much the infill angle rotates on every layer, default 90 degree"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 1.570796327
     minor: "Infill"
@@ -133,6 +143,7 @@ settings:
     type: "location"
     tooltip: "Width of the infill overlaps with exterior"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -145,6 +156,7 @@ settings:
     type: "distance"
     tooltip: "Width of the bead for the infill print moves"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -157,6 +169,7 @@ settings:
     type: "speed"
     tooltip: "Speed for the infill paths"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -169,6 +182,7 @@ settings:
     type: "rpm"
     tooltip: "Extruder speed for the infill"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -181,6 +195,7 @@ settings:
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for infill paths for systems without RPM control"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"infill":true},{"OR":[{"machine_type":1},{"OR":[{"syntax":26},{"AND":[{"syntax":11},{"AND":[{"machine_type":0},{"enable_width_height":true}]}]}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 1
     minor: "Infill"
@@ -193,6 +208,7 @@ settings:
     type: "distance"
     tooltip: "Infill extrusion paths less than this value are deleted"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -205,6 +221,7 @@ settings:
     type: "distance"
     tooltip: "Infill path segments shorter than this value are collapsed before extrusion paths are created"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -217,6 +234,7 @@ settings:
     type: "distance"
     tooltip: "Infill extrusion paths greater than this are split"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -229,6 +247,7 @@ settings:
     type: "number"
     tooltip: "Prints perimeter for X amount of layers then goes back and prints all of the infill for those layers as one thicker layer, saves time"
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -241,6 +260,7 @@ settings:
     type: "number"
     tooltip: "Shift the first starting layer of infill when using combine infill every X layers. A shift value of 1 paired with a combine value of 4 would mean infill on layers 5, 9, 13 and so on."
     depends: {"AND":[{"slicing_mode":0},{"infill":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Infill"
@@ -248,3 +268,87 @@ settings:
     namespace: "Profile::Infill"
     symbol: "kShiftCombineInfillStartLayer"
     local: false
+  - name: "helical_infill_revolutions_rounding"
+    display: "Infill Revolutions Rounding Policy"
+    type: "enumeration"
+    tooltip: "Rounding policy for the number of revolutions for helical infill region. This is used to ensure that the number of revolutions is an integer value."
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options:
+      - "Round"
+      - "Floor"
+      - "Ceil"
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInfillRevolutionsRounding"
+    local: false
+  - name: "helical_infill_stepover"
+    display: "Infill Stepover"
+    type: "distance"
+    tooltip: "Step over distance for infill region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInfillStepover"
+    local: false
+  - name: "helical_infill_tool_frame_x_rotation"
+    display: "Infill Tool Frame - X Rotation"
+    type: "angle"
+    tooltip: "X rotation of the tool frame for infill region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInfillToolFrameXRotation"
+    local: false
+  - name: "helical_infill_tool_frame_y_rotation"
+    display: "Infill Tool Frame - Y Rotation"
+    type: "angle"
+    tooltip: "Y rotation of the tool frame for infill region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInfillToolFrameYRotation"
+    local: false
+  - name: "helical_infill_tool_frame_z_rotation"
+    display: "Infill Tool Frame - Z Rotation"
+    type: "angle"
+    tooltip: "Z rotation of the tool frame for infill region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Infill"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInfillToolFrameZRotation"
+    local: false
+inputs:
+  - name: "helical_infill_tool_frame_rotation"
+    display: "Infill Tool Frame Rotation"
+    widget: "vector3"
+    tooltip: "Rotation of the tool frame for infill region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    minor: "Infill"
+    major: "Profile"
+    components:
+      - setting: "helical_infill_tool_frame_x_rotation"
+        label: "X"
+      - setting: "helical_infill_tool_frame_y_rotation"
+        label: "Y"
+      - setting: "helical_infill_tool_frame_z_rotation"
+        label: "Z"

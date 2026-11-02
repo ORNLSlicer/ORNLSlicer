@@ -21,3 +21,7 @@ procedure.
 Grouped UI controls live in an optional top-level `inputs:` section. Use those entries to group existing scalar settings
 into composite rows such as `vector2` and `vector3` without making one component setting carry the display name and
 tooltip for the whole group.
+
+Settings and grouped inputs may define `visible_if` using the same expression syntax as `depends`. A false
+`visible_if` always hides the row, including when disabled settings are normally greyed out. Use it to select
+the controls for the active slicing mode; keep region enablement and revolution-count checks in `depends`.

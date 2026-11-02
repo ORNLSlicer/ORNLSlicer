@@ -29,7 +29,7 @@ REQUIRED_FIELDS = (
     "local",
 )
 
-OPTIONAL_FIELDS = ("name",)
+OPTIONAL_FIELDS = ("name", "visible_if")
 
 INPUT_REQUIRED_FIELDS = (
     "display",
@@ -41,7 +41,7 @@ INPUT_REQUIRED_FIELDS = (
     "components",
 )
 
-INPUT_OPTIONAL_FIELDS = ("name",)
+INPUT_OPTIONAL_FIELDS = ("name", "visible_if")
 
 INPUT_COMPONENT_FIELDS = ("setting", "label")
 
@@ -306,6 +306,7 @@ def validate_setting(setting: OrderedDict[str, Any], setting_names: set[str]) ->
             raise ValueError(f"{name}: non_negative_int default must be zero or greater")
 
     validate_dependency(setting["depends"], setting_names, name)
+    validate_dependency(setting.get("visible_if"), setting_names, f"{name}: visible_if")
 
 
 def validate_input(setting_input: OrderedDict[str, Any], settings_by_name: OrderedDict[str, OrderedDict[str, Any]],
@@ -336,6 +337,7 @@ def validate_input(setting_input: OrderedDict[str, Any], settings_by_name: Order
         raise ValueError(f"{name}: {widget} inputs must define exactly {expected_count} components")
 
     validate_dependency(setting_input["depends"], set(settings_by_name), name)
+    validate_dependency(setting_input.get("visible_if"), set(settings_by_name), f"{name}: visible_if")
 
     component_settings: list[str] = []
     for component in components:
@@ -389,6 +391,8 @@ def normalize_for_master(setting: OrderedDict[str, Any]) -> OrderedDict[str, Any
         elif field == "options":
             value = ", ".join(value)
         entry[field] = value
+    if "visible_if" in setting:
+        entry["visible_if"] = setting["visible_if"]
     return entry
 
 
@@ -404,6 +408,9 @@ def normalize_input_for_config(setting_input: OrderedDict[str, Any],
         if field == "depends" and dependency_is_empty(value):
             value = ""
         entry[field] = value
+
+    if "visible_if" in setting_input:
+        entry["visible_if"] = setting_input["visible_if"]
 
     component_settings = [component["setting"] for component in setting_input["components"]]
     entry["local"] = settings_by_name[component_settings[0]]["local"]
@@ -468,8 +475,8 @@ def write_master(master: OrderedDict[str, OrderedDict[str, Any]], destination: P
         last_key = next(reversed(master))
         for key, value in master.items():
             output.write(f'  "{key}": {{\n')
-            last_field = REQUIRED_FIELDS[-1]
-            for field in REQUIRED_FIELDS:
+            last_field = next(reversed(value))
+            for field in value:
                 field_value = json.dumps(value[field], separators=(",", ":"), ensure_ascii=True)
                 field_value = field_value.replace("\\/", "/")
                 suffix = "," if field != last_field else ""

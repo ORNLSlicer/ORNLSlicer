@@ -97,21 +97,24 @@ int main(int argc, char* argv[]) {
     for (const auto& region : regions) set(region, false);
     check({false, false, true, false}, "Helical infill ignores Planar toggle");
     // Exercise live spin-box notifications rather than refreshing all dependencies.
-    for (auto* pane : bar.getPanes()) {
-        for (auto* tab : pane->getTabs()) {
-            if (tab->getName() != "Helical") continue;
-            auto* perimeter = dynamic_cast<QSpinBox*>(tab->getRow("helical_perimeter_revolutions").get());
-            auto* inset     = dynamic_cast<QSpinBox*>(tab->getRow("helical_inset_revolutions").get());
-            perimeter->setValue(1);
-            check({true, false, true, false}, "Helical perimeter revolutions");
-            inset->setValue(2);
-            check({true, true, true, false}, "Helical inset revolutions");
-            snapshot("helical-positive");
-            perimeter->setValue(0);
-            check({false, true, true, false}, "Helical perimeter reset to zero");
-            inset->setValue(0);
-        }
-    }
+    const auto spinBox = [&](const QString& key) -> QSpinBox* {
+        for (auto* pane : bar.getPanes())
+            for (auto* tab : pane->getTabs())
+                if (auto* spin = dynamic_cast<QSpinBox*>(tab->getRow(key).get())) return spin;
+        return nullptr;
+    };
+    auto* perimeter = spinBox("helical_perimeter_revolutions");
+    auto* inset     = spinBox("helical_inset_revolutions");
+    expect(perimeter != nullptr && inset != nullptr, "Helical revolution controls must exist.");
+    if (perimeter == nullptr || inset == nullptr) return EXIT_FAILURE;
+    perimeter->setValue(1);
+    check({true, false, true, false}, "Helical perimeter revolutions");
+    inset->setValue(2);
+    check({true, true, true, false}, "Helical inset revolutions");
+    snapshot("helical-positive");
+    perimeter->setValue(0);
+    check({false, true, true, false}, "Helical perimeter reset to zero");
+    inset->setValue(0);
 
     set("cylindrical_path_pattern", 0);
     check({true, false, false, false}, "Radial perimeter ignores Planar toggle");

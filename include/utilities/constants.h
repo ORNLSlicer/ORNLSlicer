@@ -1059,6 +1059,7 @@ class Constants {
             static const std::string kMajor;
             static const std::string kOptions;
             static const std::string kDepends;
+            static const std::string kVisibleIf;
             static const std::string kDefault;
             static const std::string kDependencyGroup;
             static const std::string kLocal;
@@ -1070,6 +1071,7 @@ class Constants {
             static const std::string kWidget;
             static const std::string kToolTip;
             static const std::string kDepends;
+            static const std::string kVisibleIf;
             static const std::string kMinor;
             static const std::string kMajor;
             static const std::string kLocal;
