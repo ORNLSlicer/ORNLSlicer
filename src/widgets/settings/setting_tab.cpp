@@ -60,6 +60,8 @@ fifojson makeInputRowJson(const fifojson& setting_json, const fifojson& input) {
     row_json[Constants::Settings::Master::kMinor]   = input.at(Constants::Settings::Input::kMinor);
     row_json[Constants::Settings::Master::kMajor]   = input.at(Constants::Settings::Input::kMajor);
     row_json[Constants::Settings::Master::kLocal]   = input.at(Constants::Settings::Input::kLocal);
+    if (input.contains(Constants::Settings::Input::kVisibleIf))
+        row_json[Constants::Settings::Master::kVisibleIf] = input.at(Constants::Settings::Input::kVisibleIf);
     return row_json;
 }
 }  // namespace

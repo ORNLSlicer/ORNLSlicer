@@ -33,6 +33,7 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
       m_row_visible(true),
       m_row_enabled(true),
       m_dependency_enabled(true),
+      m_visibility_enabled(true),
       m_json(json) {
     m_theme_path          = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
@@ -86,6 +87,8 @@ void SettingRowBase::clearDependencyLogic() {
     m_rows_to_notify.clear();
     m_dependency_logic.dependentRow.reset();
     m_dependency_logic.children.clear();
+    m_visibility_logic.dependentRow.reset();
+    m_visibility_logic.children.clear();
 }
 
 QString SettingRowBase::getLabelText() {
@@ -153,6 +156,10 @@ fifojson SettingRowBase::getDependencies() {
     return m_json[Constants::Settings::Master::kDepends];
 }
 
+fifojson SettingRowBase::getVisibilityDependencies() {
+    return m_json.value(Constants::Settings::Master::kVisibleIf, fifojson::object());
+}
+
 void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) {
     if (!m_rows_to_notify.contains(row)) { m_rows_to_notify.push_back(row); }
 }
@@ -170,6 +177,7 @@ QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() {
 }
 
 void SettingRowBase::checkDependencies() {
+    m_visibility_enabled = checkLogic(m_visibility_logic);
     setDependencyEnabled(checkLogic(m_dependency_logic));
     checkDynamicDependencies();
 }
@@ -191,7 +199,7 @@ bool SettingRowBase::isShown() const {
 bool SettingRowBase::rowWidgetsVisible() const {
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
-    return m_row_visible && (m_dependency_enabled || show_disabled);
+    return m_row_visible && m_visibility_enabled && (m_dependency_enabled || show_disabled);
 }
 
 bool SettingRowBase::rowWidgetsEnabled() const {
@@ -253,6 +261,10 @@ void SettingRowBase::setDependencyEnabled(bool enabled) {
 
 void SettingRowBase::setDependencyLogic(DependencyNode root) {
     m_dependency_logic = root;
+}
+
+void SettingRowBase::setVisibilityLogic(DependencyNode root) {
+    m_visibility_logic = root;
 }
 
 void SettingRowBase::setSettingsBase(QSharedPointer<SettingsBase> sb) {

@@ -688,13 +688,16 @@ void SettingBar::enableDependRows() {
     for (SettingPane* curr_pane : m_panes) {
         for (SettingTab* curr_tab : curr_pane->getTabs()) {
             for (QSharedPointer<SettingRowBase> row : curr_tab->getRows()) {
+                fifojson visible_if = row->getVisibilityDependencies();
+                DependencyNode visibility_root;
+                if (!visible_if.empty()) visibility_root = createNodes(master_json, row, visible_if);
+                row->setVisibilityLogic(visibility_root);
                 fifojson depends = row->getDependencies();
                 if (depends != "") {
                     DependencyNode root = createNodes(master_json, row, depends);
                     row->setDependencyLogic(root);
-                    row->checkDependencies();
                 }
-                else { row->checkDynamicDependencies(); }
+                row->checkDependencies();
             }
         }
     }
