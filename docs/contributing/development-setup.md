@@ -20,6 +20,7 @@ On Ubuntu 24.04, install the tools needed to fetch the repository and Nix:
 ```bash
 sudo apt update
 sudo apt install git git-lfs curl ca-certificates
+sudo apt install cmake build-essential
 ```
 
 On other distributions, install the equivalent packages using the system
@@ -109,8 +110,8 @@ installer inside Ubuntu; if systemd is unavailable, follow the installer's
 platform guidance before continuing.
 
 Enable the `nix-command` and `flakes` experimental features in your user Nix
-configuration (`~/.config/nix/nix.conf` by default). Create the directory/file
-if needed and add this line, merging with any existing feature list:
+configuration (`~/.config/nix/nix.conf` by default). Create the directories (.config and nix) and conf file
+if needed, and add this line, merging with any existing feature list:
 
 ```ini
 experimental-features = nix-command flakes
