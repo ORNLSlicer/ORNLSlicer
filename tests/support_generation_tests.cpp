@@ -4,6 +4,7 @@
 
 #include "configs/settings_base.h"
 #include "geometry/plane.h"
+#include "geometry/settings_polygon.h"
 #include "part/part.h"
 #include "step/global_layer.h"
 #include "step/layer/island/island_base.h"
@@ -93,22 +94,92 @@ bool slopedInterfaceHasPaths(PlanarSlicer& slicer) {
     return passed;
 }
 
-bool keepsRestorationOnItsModelIsland(PlanarSlicer& slicer) {
+bool keepsRestorationOnItsContactComponent(PlanarSlicer& slicer, bool connected) {
     const auto part            = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
     PolygonList lower_geometry = rectangle(20);
     lower_geometry |= rectangle(48) - rectangle(30);
     const PolygonList neighboring_island = rectangle(48) - rectangle(28);
     PolygonList upper_geometry           = rectangle(26);
     upper_geometry |= neighboring_island;
+    if (connected) {
+        Polygon connection;
+        connection << Point(0, 0) << Point(48 * mm(), 0) << Point(48 * mm(), 10 * mm()) << Point(0, 10 * mm());
+        PolygonList joiner;
+        joiner += connection;
+        lower_geometry |= joiner;
+        upper_geometry |= joiner;
+    }
     part->step(0, StepType::kLayer)->setGeometry(lower_geometry, QVector3D(0, 0, 1));
     part->step(1, StepType::kLayer)->setGeometry(upper_geometry, QVector3D(0, 0, 1));
 
     slicer.processSupport(part, 2, 0);
     PolygonList geometry = supports(part, 0);
-    bool passed          = Testing::expect(geometry.inside(Point(21 * mm(), 50 * mm()), true),
-                                           "The steep island must retain its restored support footprint.");
+    bool passed          = Testing::expect(upper_geometry.splitIntoParts(true).size() == (connected ? 1 : 2),
+                                           "The model arms must have the requested connectivity.");
+    passed &= Testing::expect(geometry.inside(Point(21 * mm(), 50 * mm()), true),
+                              "The steep ledge must retain its restored support footprint.");
     passed &= Testing::expect((geometry & neighboring_island).isEmpty(),
-                              "Restoring an overhang must not create support beneath a nearby self-supporting island.");
+                              "Restoring an overhang must not create support beneath a nearby self-supporting ledge.");
+    return passed;
+}
+
+bool organicInterfaceHasPaths(PlanarSlicer& slicer) {
+    const auto settings = supportSettings(4 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kStructure, 1);
+    settings->setSetting(PS::Support::kOrganicBranchDiameter, 3 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchSpacing, 40 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchAngle, 25 * deg);
+    const auto part = makePart({20, 20, 20, 20, 20, 20, 20, 26}, settings);
+    slicer.processSupport(part, 8, 0);
+
+    const PolygonList expected_interface = rectangle(26) - rectangle(24);
+    bool passed                          = true;
+    Point current;
+    QVector<QSharedPointer<RegionBase>> previous;
+    for (int i = 0; i < 8; ++i) {
+        PolygonList geometry        = supports(part, i);
+        const PolygonList forbidden = part->step(i, StepType::kLayer)->getGeometry().offset(4 * mm);
+        passed &= Testing::expect((geometry & forbidden).isEmpty(), "Organic support must preserve the XY clearance.");
+        if (i < 4 || i > 6) continue;
+
+        PolygonList interface_geometry;
+        bool has_paths = false;
+        for (const auto& island : part->step(i, StepType::kLayer)->getIslands(IslandType::kSupport)) {
+            if (!island->getSb()->setting<bool>(PS::Support::kInterfaceRegion)) continue;
+            interface_geometry |= island->getGeometry();
+            island->compute(i + 1);
+            island->optimize(i + 1, current, previous);
+            for (const auto& region : island->getRegions()) has_paths |= !region->getPaths().isEmpty();
+        }
+        passed &= Testing::expect((expected_interface - interface_geometry).isEmpty(),
+                                  "Organic supports must retain every dense interface after connectivity validation.");
+        passed &= Testing::expect(has_paths, "Organic support interfaces must produce printable paths.");
+    }
+    return passed;
+}
+
+bool organicBlockerKeepsBranches(PlanarSlicer& slicer) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kStructure, 1);
+    settings->setSetting(PS::Support::kOrganicBranchDiameter, 3 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchSpacing, 40 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchAngle, 25 * deg);
+    settings->setSetting(PS::Support::kInterfaceLayers, 0);
+    const auto part       = makePart({20, 20, 20, 20, 20, 20, 20, 26}, settings);
+    auto blocker_settings = QSharedPointer<SettingsBase>::create();
+    blocker_settings->setSetting(PS::Support::kEnable, false);
+    QVector<SettingsPolygon> blockers {SettingsPolygon(rectangle(26) - rectangle(23), blocker_settings)};
+    part->step(6, StepType::kLayer).dynamicCast<Layer>()->setSettingsPolygons(blockers);
+
+    slicer.processSupport(part, 8, 0);
+    PolygonList geometry = supports(part, 3);
+    bool passed =
+        Testing::expect(geometry.inside(Point(21.5 * mm(), 50 * mm()), true),
+                        "Restored organic contacts must retain branches when their classified tips are blocked.");
+    passed &= Testing::expect(!geometry.inside(Point(21.5 * mm(), 10 * mm()), true),
+                              "Blocking the classified tips must not turn organic branches into grid columns.");
+    PolygonList top_geometry = supports(part, 6);
+    passed &= Testing::expect((top_geometry & blockers.first()).isEmpty(), "Organic contacts must respect blockers.");
     return passed;
 }
 
@@ -140,7 +211,10 @@ int main(int argc, char* argv[]) {
     ORNL::PlanarSlicer slicer(directory.filePath("support.nc"));
     bool passed = projectsBelowClearance(slicer);
     passed &= slopedInterfaceHasPaths(slicer);
-    passed &= keepsRestorationOnItsModelIsland(slicer);
+    passed &= keepsRestorationOnItsContactComponent(slicer, false);
+    passed &= keepsRestorationOnItsContactComponent(slicer, true);
+    passed &= organicInterfaceHasPaths(slicer);
+    passed &= organicBlockerKeepsBranches(slicer);
     passed &= respectsAngleAndLandings(slicer);
     if (!passed) return 1;
     std::cout << "Support generation tests passed\n";
