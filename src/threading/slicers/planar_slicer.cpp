@@ -427,19 +427,18 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             return !(model & band).isEmpty();
         };
 
+        // Anchors must lie beyond opposing edges, within the span's transverse
+        // bounds. Bands that include corners can count the same attached wall
+        // twice and mistake a single-sided cantilever for a bridge.
         if (Distance(width) <= maximum_length) {
-            const PolygonList left =
-                makeRectangle(minimum.x() - anchor, minimum.y() - anchor, minimum.x() + anchor, maximum.y() + anchor);
-            const PolygonList right =
-                makeRectangle(maximum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
+            const PolygonList left  = makeRectangle(minimum.x() - anchor, minimum.y(), minimum.x(), maximum.y());
+            const PolygonList right = makeRectangle(maximum.x(), minimum.y(), maximum.x() + anchor, maximum.y());
             if (intersectsModel(left) && intersectsModel(right)) return true;
         }
 
         if (Distance(height) <= maximum_length) {
-            const PolygonList bottom =
-                makeRectangle(minimum.x() - anchor, minimum.y() - anchor, maximum.x() + anchor, minimum.y() + anchor);
-            const PolygonList top =
-                makeRectangle(minimum.x() - anchor, maximum.y() - anchor, maximum.x() + anchor, maximum.y() + anchor);
+            const PolygonList bottom = makeRectangle(minimum.x(), minimum.y() - anchor, maximum.x(), minimum.y());
+            const PolygonList top    = makeRectangle(minimum.x(), maximum.y(), maximum.x(), maximum.y() + anchor);
             if (intersectsModel(bottom) && intersectsModel(top)) return true;
         }
         return false;
