@@ -20,9 +20,9 @@
 namespace {
 using namespace ORNL;
 
-PolygonList rectangle(double right) {
+PolygonList rectangle(double right, double height = 100) {
     Polygon polygon;
-    polygon << Point(0, 0) << Point(right * mm(), 0) << Point(right * mm(), 100 * mm()) << Point(0, 100 * mm());
+    polygon << Point(0, 0) << Point(right * mm(), 0) << Point(right * mm(), height * mm()) << Point(0, height * mm());
     PolygonList geometry;
     geometry += polygon;
     return geometry;
@@ -183,6 +183,43 @@ bool organicBlockerKeepsBranches(PlanarSlicer& slicer) {
     return passed;
 }
 
+bool bridgeSuppressionRequiresOpposingAnchors(PlanarSlicer& slicer, bool along_y) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kBridgeMaxLength, 12 * mm);
+    auto bar    = [along_y](double edge) { return along_y ? rectangle(10, edge) : rectangle(edge, 10); };
+    bool passed = true;
+    // A single-sided cantilever, a bridge within the limit, and a bridge
+    // beyond the limit must retain their classification after restoration.
+    for (int gap : {0, 10, 14}) {
+        const auto part   = makePart({20, 26}, settings);
+        PolygonList lower = bar(20);
+        PolygonList upper = bar(26);
+        if (gap > 0) {
+            lower |= bar(40 + gap) - bar(20 + gap);
+            upper = bar(40 + gap);
+        }
+        part->step(0, StepType::kLayer)->setGeometry(lower, QVector3D(0, 0, 1));
+        part->step(1, StepType::kLayer)->setGeometry(upper, QVector3D(0, 0, 1));
+
+        settings->setSetting(PS::Support::kBridgeSuppression, false);
+        slicer.processSupport(part, 2, 0);
+        PolygonList expected = supports(part, 0);
+        passed &=
+            Testing::expect(!expected.isEmpty(), "The overhang must generate support without bridge suppression.");
+
+        settings->setSetting(PS::Support::kBridgeSuppression, true);
+        slicer.processSupport(part, 2, 0);
+        PolygonList actual = supports(part, 0);
+        if (gap == 10)
+            passed &=
+                Testing::expect(actual.isEmpty(), "Opposing anchors within the bridge limit must suppress support.");
+        else
+            passed &= Testing::expect((expected - actual).isEmpty() && (actual - expected).isEmpty(),
+                                      "Cantilevers and spans beyond the bridge limit must retain all support.");
+    }
+    return passed;
+}
+
 bool respectsAngleAndLandings(PlanarSlicer& slicer) {
     const auto settings = supportSettings(0 * mm, 1 * mm);
     auto part           = makePart({20, 22, 24, 26}, settings);
@@ -215,6 +252,8 @@ int main(int argc, char* argv[]) {
     passed &= keepsRestorationOnItsContactComponent(slicer, true);
     passed &= organicInterfaceHasPaths(slicer);
     passed &= organicBlockerKeepsBranches(slicer);
+    passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, false);
+    passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, true);
     passed &= respectsAngleAndLandings(slicer);
     if (!passed) return 1;
     std::cout << "Support generation tests passed\n";
