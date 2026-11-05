@@ -484,17 +484,20 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         if (!supported_from_below.isEmpty() && self_supporting_offset > 0)
             supported_from_below = supported_from_below.offset(self_supporting_offset);
 
-        PolygonList overhang = model_geometry[upper_index] - supported_from_below;
+        PolygonList overhang        = model_geometry[upper_index] - supported_from_below;
+        PolygonList organic_contact = overhang;
         if (!overhang.isEmpty() && self_supporting_offset > 0) {
             // The angle offset classifies overhangs, but leaves only the tips
-            // of sloped contacts. Restore each footprint within its own model
-            // island so nearby self-supporting islands do not acquire support.
+            // of sloped contacts. Restore each footprint within its own
+            // unsupported component so nearby self-supporting ledges do not
+            // acquire support, even when they share a model island.
+            const PolygonList unsupported = model_geometry[upper_index] - model_geometry[upper_index - 1];
             PolygonList restored_overhang;
-            for (const PolygonList& island : model_geometry[upper_index].splitIntoParts(true)) {
-                PolygonList contact = overhang & island;
+            for (const PolygonList& component : unsupported.splitIntoParts(true)) {
+                PolygonList contact = overhang & component;
                 if (contact.isEmpty()) continue;
                 contact = contact.offset(self_supporting_offset);
-                contact &= island - model_geometry[upper_index - 1];
+                contact &= component;
                 restored_overhang |= contact;
             }
             overhang = restored_overhang;
@@ -554,7 +557,15 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             Angle branch_angle = upper_layer->getSb()->setting<Angle>(PS::Support::kOrganicBranchAngle);
             if (branch_angle <= 0) branch_angle = 25.0 * deg;
 
-            for (PolygonList contact_area : overhang.splitIntoParts(true)) {
+            // Restoring interfaces must not move branch seeds toward model
+            // clearance. If blockers remove every seed of a restored component,
+            // place its branches within the surviving footprint instead.
+            organic_contact |= forced_contact;
+            organic_contact &= overhang;
+            for (const PolygonList& component : overhang.splitIntoParts(true)) {
+                if ((organic_contact & component).isEmpty()) organic_contact |= component;
+            }
+            for (PolygonList contact_area : organic_contact.splitIntoParts(true)) {
                 Point root = contact_area.boundingRectCenter();
                 if (!contact_area.inside(root, true)) root = contact_area.first().first();
 
