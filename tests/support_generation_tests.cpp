@@ -93,6 +93,25 @@ bool slopedInterfaceHasPaths(PlanarSlicer& slicer) {
     return passed;
 }
 
+bool keepsRestorationOnItsModelIsland(PlanarSlicer& slicer) {
+    const auto part            = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
+    PolygonList lower_geometry = rectangle(20);
+    lower_geometry |= rectangle(48) - rectangle(30);
+    const PolygonList neighboring_island = rectangle(48) - rectangle(28);
+    PolygonList upper_geometry           = rectangle(26);
+    upper_geometry |= neighboring_island;
+    part->step(0, StepType::kLayer)->setGeometry(lower_geometry, QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(upper_geometry, QVector3D(0, 0, 1));
+
+    slicer.processSupport(part, 2, 0);
+    PolygonList geometry = supports(part, 0);
+    bool passed          = Testing::expect(geometry.inside(Point(21 * mm(), 50 * mm()), true),
+                                           "The steep island must retain its restored support footprint.");
+    passed &= Testing::expect((geometry & neighboring_island).isEmpty(),
+                              "Restoring an overhang must not create support beneath a nearby self-supporting island.");
+    return passed;
+}
+
 bool respectsAngleAndLandings(PlanarSlicer& slicer) {
     const auto settings = supportSettings(0 * mm, 1 * mm);
     auto part           = makePart({20, 22, 24, 26}, settings);
@@ -121,6 +140,7 @@ int main(int argc, char* argv[]) {
     ORNL::PlanarSlicer slicer(directory.filePath("support.nc"));
     bool passed = projectsBelowClearance(slicer);
     passed &= slopedInterfaceHasPaths(slicer);
+    passed &= keepsRestorationOnItsModelIsland(slicer);
     passed &= respectsAngleAndLandings(slicer);
     if (!passed) return 1;
     std::cout << "Support generation tests passed\n";

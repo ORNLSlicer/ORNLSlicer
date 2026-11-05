@@ -487,10 +487,17 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         PolygonList overhang = model_geometry[upper_index] - supported_from_below;
         if (!overhang.isEmpty() && self_supporting_offset > 0) {
             // The angle offset classifies overhangs, but leaves only the tips
-            // of sloped contacts. Restore their footprint so adjacent contacts
-            // form a printable interface instead of disconnected thin strips.
-            overhang = overhang.offset(self_supporting_offset);
-            overhang &= model_geometry[upper_index] - model_geometry[upper_index - 1];
+            // of sloped contacts. Restore each footprint within its own model
+            // island so nearby self-supporting islands do not acquire support.
+            PolygonList restored_overhang;
+            for (const PolygonList& island : model_geometry[upper_index].splitIntoParts(true)) {
+                PolygonList contact = overhang & island;
+                if (contact.isEmpty()) continue;
+                contact = contact.offset(self_supporting_offset);
+                contact &= island - model_geometry[upper_index - 1];
+                restored_overhang |= contact;
+            }
+            overhang = restored_overhang;
         }
         const Area minimum_area = upper_layer->getSb()->setting<Area>(PS::Support::kMinArea);
         overhang                = removeSmallAreas(overhang, minimum_area);

@@ -187,3 +187,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Treat the hand-calculated NC angles supplied with #372 as approximate reference checks; verify the tool-frame geometry independently and do not assume discrepancies are truncation.
 - Provide every citation format available in the OSTI DOECode record and copy each verbatim; preserve its registered title, historical URL, date, sponsor, and DOI when reorganizing docs.
 - Preload archive entries before creating `.s2p` variants with Python; passing the source archive's `ZipInfo` objects to `writestr()` mutates their offsets.
+- Restore support contact footprints within their own upper model island, and test nearby self-supporting islands.
