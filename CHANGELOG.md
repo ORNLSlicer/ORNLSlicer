@@ -33,6 +33,7 @@ Release versions follow the project's
 - Fixed inconsistent light/dark theme heading fonts; regional form headings now use the same font family and size as their controls, with bold reserved for headings ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed dark-mode group-box frames and the continuous background behind regional weld schedule forms so sections remain visually separated ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed changing themes before a 3D view is initialized by deferring OpenGL background updates until rendering.
+- Fixed missing supports beneath arches and sloped overhangs while preserving the configured XY clearance and generating continuous support interfaces.
 - Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
 - Fixed parent/child links, transforms, mesh roles, and layer overrides being lost or desynchronized during project save/load, duplication, instance changes, reload/replacement, reset, and undo.
 - Fixed settings-region conflicts being missed on elevated or rotated slices and allowing stale results to be exported; conflicts now identify both meshes, their target, and the slice.

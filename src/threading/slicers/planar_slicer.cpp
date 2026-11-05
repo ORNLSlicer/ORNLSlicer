@@ -503,7 +503,14 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         if (!supported_from_below.isEmpty() && self_supporting_offset > 0)
             supported_from_below = supported_from_below.offset(self_supporting_offset);
 
-        PolygonList overhang    = model_geometry[upper_index] - supported_from_below;
+        PolygonList overhang = model_geometry[upper_index] - supported_from_below;
+        if (!overhang.isEmpty() && self_supporting_offset > 0) {
+            // The angle offset classifies overhangs, but leaves only the tips
+            // of sloped contacts. Restore their footprint so adjacent contacts
+            // form a printable interface instead of disconnected thin strips.
+            overhang = overhang.offset(self_supporting_offset);
+            overhang &= model_geometry[upper_index] - model_geometry[upper_index - 1];
+        }
         const Area minimum_area = upper_layer->getSb()->setting<Area>(PS::Support::kMinArea);
         overhang                = removeSmallAreas(overhang, minimum_area);
 
@@ -593,13 +600,10 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
             continue;
         }
 
-        const Distance xy_distance =
-            max(Distance(0), layers[layer_index]->getSb()->setting<Distance>(PS::Support::kXYDistance));
-        if (!model_geometry[layer_index].isEmpty()) {
-            PolygonList clearance = model_geometry[layer_index];
-            if (xy_distance > 0) clearance = clearance.offset(xy_distance);
-            support_geometry[layer_index] -= clearance;
-        }
+        // Stop projection on the model itself. XY clearance is applied to
+        // each layer below, after projection; clipping it here would erase
+        // demand that can fit farther beneath a sloped surface.
+        support_geometry[layer_index] -= model_geometry[layer_index];
     }
 
     // Organic mode replaces the column envelope with round branches that
