@@ -200,4 +200,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Snapshot selection before hierarchy edits and restore it after rebuilding parent links; Qt can clear selection while rows move.
 - For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.
 - Preload archive entries before creating `.s2p` variants with Python; passing the source archive's `ZipInfo` objects to `writestr()` mutates their offsets.
-- Restore support contact footprints within their own upper model island, and test nearby self-supporting islands.
+- Restore support footprints within their own unsupported contact component; preserve angle-classified organic branch seeds and test nearby self-supporting ledges in connected islands.
