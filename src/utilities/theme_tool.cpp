@@ -27,6 +27,21 @@ Theme::Theme(int themeNum) {
 void Theme::chooseTheme(int themeNum) {
     // Dark mode
     if (themeNum == 1) {
+        m_palette = QPalette(QColor("#3a4143"));
+        m_palette.setColor(QPalette::Base, QColor("#2b3234"));
+        m_palette.setColor(QPalette::AlternateBase, QColor("#353b3d"));
+        m_palette.setColor(QPalette::Button, QColor("#5e696c"));
+        m_palette.setColor(QPalette::Highlight, QColor("#84c446"));
+        m_palette.setColor(QPalette::HighlightedText, QColor("#2b3234"));
+        m_palette.setColor(QPalette::ToolTipBase, QColor("#2b3234"));
+        m_palette.setColor(QPalette::ToolTipText, QColor("#f0f0f0"));
+        m_palette.setColor(QPalette::BrightText, QColor("#ff9090"));
+        m_palette.setColor(QPalette::Link, QColor("#80bfff"));
+        m_palette.setColor(QPalette::LinkVisited, QColor("#c6a0f6"));
+        for (auto role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText}) {
+            m_palette.setColor(role, QColor("#f0f0f0"));
+            m_palette.setColor(QPalette::Disabled, role, QColor("#787878"));
+        }
         this->setPath(":/styles/qdarkstyle/");
         this->setBgColor(0.169, 0.196, 0.203);
         this->setDotColor(132, 196, 70);
@@ -40,8 +55,13 @@ void Theme::chooseTheme(int themeNum) {
         this->setGcodeTextboxLineColors(QList<int> {43, 50, 52}, QList<int> {68, 86, 23});
     }
 
-    // Default mode
+    // Light mode
     else {
+        m_palette = QPalette(QColor(240, 240, 240));
+        m_palette.setColor(QPalette::Highlight, QColor("#005a9c"));
+        m_palette.setColor(QPalette::HighlightedText, Qt::white);
+        m_palette.setColor(QPalette::BrightText, QColor("#b00020"));
+        m_palette.setColor(QPalette::Link, QColor("#005a9c"));
         this->setPath(":/styles/qbasestyle/");
         this->setBgColor(1, 1, 1);
         this->setDotColor(Qt::darkGreen);
@@ -54,6 +74,9 @@ void Theme::chooseTheme(int themeNum) {
         this->setLayerbarMinorColor(Qt::darkGray);
         this->setGcodeTextboxLineColors(Qt::white, Qt::yellow);
     }
+#if QT_VERSION >= QT_VERSION_CHECK(6, 6, 0)
+    m_palette.setColor(QPalette::Accent, m_palette.color(QPalette::Highlight));
+#endif
 }
 
 // -----------------------------------------------------------------------------
@@ -66,6 +89,10 @@ void Theme::setPath(QString path) {
 
 QString Theme::getFolderPath() {
     return m_folder_path;
+}
+
+QPalette Theme::getPalette() {
+    return m_palette;
 }
 
 // -----------------------------------------------------------------------------

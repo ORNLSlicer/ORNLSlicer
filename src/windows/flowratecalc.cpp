@@ -3,6 +3,7 @@
 #include <math.h>
 
 #include <QApplication>
+#include <QPalette>
 #include <QSignalBlocker>
 
 #include <qcombobox.h>
@@ -125,7 +126,7 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
 
     m_status_label = new QLabel("Please fill out all input fields");
     m_status_label->setWordWrap(true);
-    m_status_label->setStyleSheet("QLabel { color : red; }");
+    m_status_label->setForegroundRole(QPalette::BrightText);
     m_layout->addWidget(m_status_label, 7, 0, 2, 2);
 
     this->setLayout(m_layout);
