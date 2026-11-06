@@ -379,16 +379,26 @@ void GcodeExport::exportGcode() {
                     layer.text.replace("#TEMPFILENAME#", partName + "-");
                 }
             }
-            GCodeLayerSaver* saver =
-                new GCodeLayerSaver(filepath, partName, std::move(layers), m_most_recent_meta.m_file_suffix);
-            connect(saver, &GCodeLayerSaver::finished, saver, &GCodeLayerSaver::deleteLater);
-            connect(saver, &GCodeLayerSaver::completed, this, [this, filepath, partName](const QString& error) {
+            const auto completed = [this, filepath, partName](const QString& error) {
                 if (!error.isEmpty()) {
                     QMessageBox::warning(this, "Layer Export", error);
                     return;
                 }
                 showComplete(filepath, partName % " layers");
-            });
+            };
+            QThread* saver;
+            if (generate_arc_schedule) {
+                auto* arc_saver = new GCodeArcSpecialtiesSaver(gcodeFileName, {}, std::move(layers));
+                connect(arc_saver, &GCodeArcSpecialtiesSaver::completed, this, completed);
+                saver = arc_saver;
+            }
+            else {
+                auto* layer_saver =
+                    new GCodeLayerSaver(filepath, partName, std::move(layers), m_most_recent_meta.m_file_suffix);
+                connect(layer_saver, &GCodeLayerSaver::completed, this, completed);
+                saver = layer_saver;
+            }
+            connect(saver, &QThread::finished, saver, &QThread::deleteLater);
             saver->start();
             return;
         }
