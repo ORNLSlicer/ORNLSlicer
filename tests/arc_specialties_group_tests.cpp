@@ -111,6 +111,26 @@ int main(int argc, char* argv[]) {
         snapshot(name + "-perimeter", 650);
         for (const auto& section : sections)
             framed(qobject_cast<QGroupBox*>(group("Perimeter/" + section)), name + " " + section);
+        auto* region          = group("Perimeter");
+        auto* content         = arc->findChild<QWidget*>("setting_group_content_Perimeter");
+        const QRect gas       = group("Perimeter/Gas Timing")->geometry();
+        const QImage rendered = bar.grab().toImage();
+        const auto color_at   = [&](QWidget* widget, const QPoint& point) {
+            return rendered.pixelColor(widget->mapTo(&bar, point) * bar.devicePixelRatioF());
+        };
+        const QColor panel = color_at(region, QPoint(1, 1));
+        for (int i = 1; i < sections.size(); ++i) {
+            const QRect previous = group("Perimeter/" + sections[i - 1])->geometry();
+            const QRect next     = group("Perimeter/" + sections[i])->geometry();
+            expect(next.top() > previous.bottom() + 1, "Phase forms must have space between them.");
+            expect(color_at(content, QPoint(content->width() / 2, (previous.bottom() + next.top()) / 2)) == panel,
+                   name + ": phase gaps must show the surrounding panel rather than a continuous backdrop.");
+        }
+        expect(color_at(content, QPoint(content->width() / 2, gas.top() + 2)) == panel,
+               name + ": the space above phase frames must show the surrounding panel.");
+        if (dark)
+            expect(color_at(content, QPoint(gas.left() + 6, gas.center().y())) != panel,
+                   name + ": individual phase cards must retain their background fill.");
         standard_group.show();
         app.processEvents();
         framed(&standard_group, name + " ordinary group");
