@@ -13,6 +13,7 @@ for the full terms and conditions.
 | `clipper` | Boost Software License |
 | `eigen` | MPL2 |
 | `json` | MIT |
+| Bundled Noto Sans fonts | [SIL Open Font License 1.1](../../resources/fonts/OFL.txt) |
 | `psimpl` | Mozilla Public License 1.1 |
 | `PRoot` | GPL-2.0-or-later |
 | `qtxlsxwriter` | MIT |

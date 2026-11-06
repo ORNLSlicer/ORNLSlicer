@@ -5,9 +5,9 @@ QToolButton#sliceButton {
     color: #2b3234;
     border-radius: 4px;
     padding:3px;
-    font-weight:bold;
+    font-weight:600;
     font-size: 11pt;
-    font-family: "arial black";
+    font-family: "Noto Sans";
     min-width: 60px;
     min-height: 20px;
     margin:4px;

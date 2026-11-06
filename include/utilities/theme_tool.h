@@ -14,6 +14,9 @@ namespace ORNL {
  */
 class Theme {
    public:
+    //! @brief Loads the bundled GUI fonts and sets the application default after QApplication/resource setup.
+    static bool initializeFonts();
+
     //! @brief Constructor
     //! @param themeNum Number corresponding to the desired theme (should be taken from ThemeName enumerator)
     Theme(int themeNum);

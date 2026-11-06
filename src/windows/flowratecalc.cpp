@@ -54,7 +54,7 @@ FlowrateCalcWindow::FlowrateCalcWindow(QWidget* parent) : QWidget() {
 
     m_layout            = new QGridLayout();
     QLabel* lblFlowrate = new QLabel("Flowrate Measurement");
-    QFont titleFont("Arial", 10, QFont::Bold);
+    QFont titleFont("Noto Sans", 10, QFont::DemiBold);
     lblFlowrate->setFont(titleFont);
     m_layout->addWidget(lblFlowrate, 0, 0, 1, 2);
 
