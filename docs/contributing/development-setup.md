@@ -155,7 +155,7 @@ environment with one command:
 ```bash
 nix develop .#ornlslicerDev -L --accept-flake-config --command bash -c '
   cmake --preset generic-llvm-ninja &&
-  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 8 &&
+  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 32 &&
   ./build/generic-llvm-ninja/Debug/ornlslicer
 '
 ```

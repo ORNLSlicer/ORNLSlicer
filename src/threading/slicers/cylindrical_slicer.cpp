@@ -34,6 +34,7 @@
 #include "slicing/helical_path_rounding.h"
 #include "slicing/helical_region_profile.h"
 #include "slicing/helical_tool_start_angle.h"
+#include "slicing/region_speed.h"
 #include "slicing/slicing_utilities.h"
 #include "step/layer/cylindrical_layer.h"
 #include "threading/traditional_ast.h"
@@ -995,7 +996,7 @@ QSharedPointer<SettingsBase> CylindricalSlicer::createSegmentSettings(
     QSharedPointer<SettingsBase> segment_settings = QSharedPointer<SettingsBase>::create(*layer_settings);
     segment_settings->setSetting(SS::kWidth, layer_settings->setting<Distance>(PS::Layer::kBeadWidth));
     segment_settings->setSetting(SS::kHeight, layer_settings->setting<Distance>(PS::Layer::kLayerHeight));
-    segment_settings->setSetting(SS::kSpeed, layer_settings->setting<Velocity>(PS::Layer::kSpeed));
+    segment_settings->setSetting(SS::kSpeed, regionPrintSpeed(*layer_settings, region_type));
     segment_settings->setSetting(SS::kRegionType, region_type);
     segment_settings->setSetting(SS::kPathModifiers, PathModifiers::kNone);
     segment_settings->setSetting(SS::kMaterialNumber, 0);

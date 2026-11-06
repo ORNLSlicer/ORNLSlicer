@@ -9,15 +9,20 @@ Release versions follow the project's
 
 ### Added
 
+- Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Added cube and stacked-layer icons beside global settings to distinguish part and layer overrides, showing both when both apply.
 - Added a Starting Layer Number setting under Printer > G-Code for continuation builds, with consistent layer, bead, block, and individual-layer export numbering ([#347](https://github.com/ORNLSlicer/ORNLSlicer/issues/347)).
 
 ### Changed
 
+- Changed generated Arc Specialties weld schedule velocities to always use in/min, including wire feed, startup travel override, and regional travel speeds ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Changed the GUI to bundled Noto Sans with 9 pt regular controls and semibold regional form headings, and arranged weld schedule gas timing settings one per row ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Changed individual-layer export to a disabled-by-default setting under Experimental > File Output. Enable Individual Layer Export before slicing to prepare separate layer files; reopened G-code must be re-sliced to export individual layers.
 
 ### Fixed
 
+- Fixed inconsistent light/dark theme heading fonts; regional form headings now use the same font family and size as their controls, with bold reserved for headings ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Fixed dark-mode group-box frames and the continuous background behind regional weld schedule forms so sections remain visually separated ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
 - Fixed generated G-code containing embedded standalone layer programs and export-only markers, including when individual-layer export is enabled.
 - Fixed incomplete Git LFS checkouts silently building with missing GUI icons, setting arrows, and Slice toolbar access by rejecting unresolved bundled resources with recovery instructions ([#351](https://github.com/ORNLSlicer/ORNLSlicer/issues/351)).

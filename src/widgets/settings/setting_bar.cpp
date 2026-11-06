@@ -127,7 +127,7 @@ void SettingBar::filter(QString str) {
             bool minor_hidden = true;
             for (QSharedPointer<SettingRowBase> cur_row : cur_tab->getRows()) {
                 // Check if the current row's label matches.
-                if (cur_row->getLabelText().contains(str, Qt::CaseInsensitive)) {
+                if (cur_row->getSearchText().contains(str, Qt::CaseInsensitive)) {
                     cur_row->show();
                     if (cur_row->isShown()) {
                         minor_hidden = false;
@@ -138,6 +138,7 @@ void SettingBar::filter(QString str) {
                     cur_row->hide();
             }
 
+            cur_tab->refreshGroupVisibility(true);
             // If none of the rows are shown, hide the tab.
             if (minor_hidden)
                 cur_tab->hide();
@@ -688,13 +689,16 @@ void SettingBar::enableDependRows() {
     for (SettingPane* curr_pane : m_panes) {
         for (SettingTab* curr_tab : curr_pane->getTabs()) {
             for (QSharedPointer<SettingRowBase> row : curr_tab->getRows()) {
+                fifojson visible_if = row->getVisibilityDependencies();
+                DependencyNode visibility_root;
+                if (!visible_if.empty()) visibility_root = createNodes(master_json, row, visible_if);
+                row->setVisibilityLogic(visibility_root);
                 fifojson depends = row->getDependencies();
                 if (depends != "") {
                     DependencyNode root = createNodes(master_json, row, depends);
                     row->setDependencyLogic(root);
-                    row->checkDependencies();
                 }
-                else { row->checkDynamicDependencies(); }
+                row->checkDependencies();
             }
         }
     }
@@ -714,6 +718,7 @@ void SettingBar::refreshDependencyVisibility() {
         bool pane_has_visible_tab      = false;
 
         for (SettingTab* cur_tab : cur_pane->getTabs()) {
+            cur_tab->refreshGroupVisibility();
             if (hidden_settings.contains(cur_tab->getName())) { continue; }
 
             if (cur_tab->hasShownRows()) {

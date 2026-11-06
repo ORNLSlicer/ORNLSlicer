@@ -6,6 +6,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, insets will be generated"
     depends: {"slicing_mode":0}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Inset"
@@ -18,6 +19,7 @@ settings:
     type: "positive_int"
     tooltip: "Number of insets"
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -30,6 +32,7 @@ settings:
     type: "distance"
     tooltip: "Bead width for inset paths"
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -42,6 +45,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, inset bead widths are adjusted within the configured limits to better fill narrow regions whose remaining contour space is not an exact multiple of the nominal bead width."
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Inset"
@@ -54,6 +58,7 @@ settings:
     type: "distance"
     tooltip: "Minimum bead width allowed when adaptive inset bead widths are enabled."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_adapt":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -66,6 +71,7 @@ settings:
     type: "distance"
     tooltip: "Maximum bead width allowed when adaptive inset bead widths are enabled."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"inset_adapt":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 10000
     minor: "Inset"
@@ -76,8 +82,9 @@ settings:
   - name: "inset_speed"
     display: "Inset Speed"
     type: "speed"
-    tooltip: "Speed for inset paths"
-    depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    tooltip: "Speed for inset paths. Helical slicing requires a positive value for this region when it is enabled."
+    depends: {"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]},{"NOT":[{"helical_inset_revolutions":0}]}]}]}
+    visible_if: {"OR":[{"slicing_mode":0},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}
     options: []
     default: 0
     minor: "Inset"
@@ -90,6 +97,7 @@ settings:
     type: "rpm"
     tooltip: "Extruder speed for inset paths"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"enable_width_height":false},{"OR":[{"machine_type":0},{"OR":[{"machine_type":4},{"machine_type":5}]}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -102,6 +110,7 @@ settings:
     type: "unitless_float"
     tooltip: "Extrusion multiplier to increase/decrease flowrate for inset paths for systems without RPM control"
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"OR":[{"machine_type":1},{"OR":[{"syntax":26},{"AND":[{"syntax":11},{"AND":[{"machine_type":0},{"enable_width_height":true}]}]}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 1
     minor: "Inset"
@@ -114,6 +123,7 @@ settings:
     type: "distance"
     tooltip: "Inset extrusion paths less than this value are deleted"
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -126,6 +136,7 @@ settings:
     type: "distance"
     tooltip: "Inset path segments shorter than this value are collapsed before extrusion paths are created"
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -138,6 +149,7 @@ settings:
     type: "distance"
     tooltip: "Width of the inset overlaps with exterior"
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Inset"
@@ -150,6 +162,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, adjacent inset loops will be joined with extrusion connections."
     depends: {"AND":[{"slicing_mode":0},{"inset":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Inset"
@@ -162,6 +175,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, connected insets will complete the current loop before connecting to the next loop."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"connect_insets":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Inset"
@@ -174,6 +188,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, standalone connected insets will apply their forward tip wipe before connecting to the next loop. This also controls fallback inset output when a requested perimeter-to-inset connection is unavailable."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"inset":true},{"AND":[{"connect_insets":true},{"AND":[{"inset_wipe":true},{"inset_wipe_direction":1}]}]}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Inset"
@@ -181,3 +196,84 @@ settings:
     namespace: "Profile::Inset"
     symbol: "kConnectAfterTipWipe"
     local: false
+  - name: "helical_inset_revolutions"
+    display: "Inset Revolutions"
+    type: "non_negative_int"
+    tooltip: "Number of revolutions for inset region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInsetRevolutions"
+    local: false
+  - name: "helical_inset_stepover"
+    display: "Inset Stepover"
+    type: "distance"
+    tooltip: "Step over distance for inset region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInsetStepover"
+    local: false
+  - name: "helical_inset_tool_frame_x_rotation"
+    display: "Inset Tool Frame - X Rotation"
+    type: "angle"
+    tooltip: "X rotation of the tool frame for inset region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInsetToolFrameXRotation"
+    local: false
+  - name: "helical_inset_tool_frame_y_rotation"
+    display: "Inset Tool Frame - Y Rotation"
+    type: "angle"
+    tooltip: "Y rotation of the tool frame for inset region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInsetToolFrameYRotation"
+    local: false
+  - name: "helical_inset_tool_frame_z_rotation"
+    display: "Inset Tool Frame - Z Rotation"
+    type: "angle"
+    tooltip: "Z rotation of the tool frame for inset region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Inset"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalInsetToolFrameZRotation"
+    local: false
+inputs:
+  - name: "helical_inset_tool_frame_rotation"
+    display: "Inset Tool Frame Rotation"
+    widget: "vector3"
+    tooltip: "Rotation of the tool frame for inset region"
+    depends: {"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    minor: "Inset"
+    major: "Profile"
+    components:
+      - setting: "helical_inset_tool_frame_x_rotation"
+        label: "X"
+      - setting: "helical_inset_tool_frame_y_rotation"
+        label: "Y"
+      - setting: "helical_inset_tool_frame_z_rotation"
+        label: "Z"

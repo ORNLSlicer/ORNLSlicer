@@ -11,7 +11,7 @@ This slicer currently requires the `Arc Specialties` G-code syntax, but this pag
 3. Set `Cylindrical Path Pattern` to `Radial` or `Helical`.
 4. Set radial spacing with `Layer Height`.
 5. For `Radial`, set vertical bead spacing with `Default Bead Width`.
-6. For `Helical`, set helical region revolutions and stepovers in `Profile > Helical`. A region stepover of `0` uses `Default Bead Width` as that region's pitch.
+6. For `Helical`, set region revolutions, stepovers, and positive speeds in `Profile > Perimeter`, `Profile > Inset`, and `Profile > Infill`. A region stepover of `0` uses `Default Bead Width` as that region's pitch.
 7. Set `Cylinder Axis Source` if the cylinder axis should use a custom XY coordinate instead of the part centroid.
 8. Set `Cylinder Inner Radius` if the first cylinder or helix should begin away from the axis.
 9. Set `Cylinder Height` to limit generated cylindrical paths above the part base. Leave it at `0` to use the part height.
@@ -78,9 +78,9 @@ Version 14 settings migration converts the former angular offset to an arc lengt
 | `Helical Tool Start Arc Length Offset` | Profile > Helical | For `Helical`, signed physical Arc Specialties offset along the actual path radius. CP receives the full derived angle and the torch frame is corrected by the opposite rotation about work-frame Y. A reversed `Complete Revolution`/`Next Closest` path negates the derived angle. |
 | `Helical Z Clip Rounding` | Profile > Helical | For `Helical`, controls whether the z-clipped path ends at the model intersection, the next complete revolution, or the previous complete revolution. |
 | `Helical Path Handedness` | Profile > Helical | For `Helical`, selects `Right Handed` counter-clockwise rise or `Left Handed` clockwise rise. |
-| `Perimeter Revolutions` / `Inset Revolutions` | Profile > Helical | Reserve matching shell revolutions at the beginning and end of each helical profile. |
-| `Perimeter Stepover` / `Inset Stepover` / `Infill Stepover` | Profile > Helical | Set vertical pitch per revolution for helical regions. `0` falls back to `Default Bead Width`. |
-| `Infill Revolutions Rounding Policy` | Profile > Helical | Rounds derived infill revolutions with `Round`, `Floor`, or `Ceil`. |
+| `Perimeter Revolutions` / `Inset Revolutions` | Profile > Perimeter / Inset | Reserve matching shell revolutions at the beginning and end of each helical profile. |
+| `Perimeter Stepover` / `Inset Stepover` / `Infill Stepover` | Profile > Perimeter / Inset / Infill | Set vertical pitch per revolution for helical regions. `0` falls back to `Default Bead Width`. |
+| `Infill Revolutions Rounding Policy` | Profile > Infill | Rounds derived infill revolutions with `Round`, `Floor`, or `Ceil`. |
 | `Arcs per Revolution` | Profile > Slicing | Sets how many G2/G3 moves represent one complete revolution when `Supports G2/G3` is enabled. |
 
 Only relevant settings are shown for the selected path pattern. `Radial` shows its radial-only controls in `Profile > Radial`, including `Radial Path Boundary Policy` with `Clip`, `Keep`, and `Discard`, plus `Radial Path Start Angle`. `Helical` shows its helical-only controls in `Profile > Helical`, including `Helical Tool Start Arc Length Offset`, `Helical Path Handedness`, and `Helical Z Clip Rounding`.
@@ -98,7 +98,7 @@ When `Slicing Mode` is `Cylindrical` and `Cylindrical Path Pattern` is `Radial`,
 
 ## Helical Profile Settings
 
-When `Slicing Mode` is `Cylindrical` and `Cylindrical Path Pattern` is `Helical`, ORNLSlicer shows a dedicated `Profile > Helical` group for helical path controls and helical-region inputs:
+When `Slicing Mode` is `Cylindrical` and `Cylindrical Path Pattern` is `Helical`, `Profile > Helical` appears directly after Layer and before the regional sections. General path controls stay in Helical; region revolutions, stepovers, speeds, and tool-frame rotations appear in Perimeter, Inset, and Infill. Travel tool-frame rotation appears in Travel alongside its shared motion controls.
 
 | Setting | Effect |
 | --- | --- |
@@ -111,6 +111,8 @@ When `Slicing Mode` is `Cylindrical` and `Cylindrical Path Pattern` is `Helical`
 | `Inset Stepover` | Pitch used by inset revolutions. This is shown only when inset revolutions are nonzero. |
 | `Infill Stepover` | Pitch used by helical infill region planning. |
 | `Infill Revolutions Rounding Policy` | Rounds derived infill revolutions with `Round`, `Floor`, or `Ceil`. |
+
+Helical paths use the same `Perimeter Speed`, `Inset Speed`, and `Infill Speed` values as Planar paths. Perimeter and Inset speeds become available when their revolution counts are positive; Infill Speed is always available in Helical mode. Each enabled region requires a positive speed before slicing. Numeric print feedrates and generated ARC weld schedules use those regional speeds. Radial paths and their generated schedules use `Default Speed`.
 
 ## Boundary Handling
 

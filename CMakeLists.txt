@@ -239,6 +239,9 @@ endif()
 option(ORNLSLICER_BUILD_TESTS "Build ORNLSlicer test executables" ${BUILD_TESTING})
 if(ORNLSLICER_BUILD_TESTS)
     enable_testing()
+    find_package(Python REQUIRED COMPONENTS Interpreter)
+    add_test(NAME settings_metadata_tests
+        COMMAND ${Python_EXECUTABLE} ${CMAKE_CURRENT_SOURCE_DIR}/tests/settings_metadata_tests.py)
     add_test(NAME resource_validation_tests
         COMMAND ${CMAKE_COMMAND}
             "-DVALIDATOR=${CMAKE_CURRENT_SOURCE_DIR}/cmake/validate_resources.cmake"
@@ -476,6 +479,50 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_setting_override_indicator_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME setting_override_indicator_tests COMMAND ${PROJECT_NAME}_setting_override_indicator_tests)
 
+    add_executable(${PROJECT_NAME}_arc_specialties_settings_tests tests/arc_specialties_settings_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_arc_specialties_settings_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_arc_specialties_settings_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME arc_specialties_settings_tests COMMAND ${PROJECT_NAME}_arc_specialties_settings_tests)
+
+    add_executable(${PROJECT_NAME}_arc_specialties_group_tests tests/arc_specialties_group_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_arc_specialties_group_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_arc_specialties_group_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME arc_specialties_group_tests COMMAND ${PROJECT_NAME}_arc_specialties_group_tests)
+
+    add_executable(${PROJECT_NAME}_regional_settings_tests tests/regional_settings_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_regional_settings_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_regional_settings_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME regional_settings_tests COMMAND ${PROJECT_NAME}_regional_settings_tests)
+
+    add_executable(${PROJECT_NAME}_cylindrical_speed_tests tests/cylindrical_speed_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_cylindrical_speed_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_cylindrical_speed_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME cylindrical_speed_tests COMMAND ${PROJECT_NAME}_cylindrical_speed_tests)
+
     add_executable(${PROJECT_NAME}_layer_numbering_tests tests/layer_numbering_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_layer_numbering_tests
@@ -687,4 +734,6 @@ if(WIN32)
 endif()
 
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.pdf DESTINATION ${CMAKE_INSTALL_DOCDIR})
+install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/fonts/OFL.txt
+    DESTINATION ${CMAKE_INSTALL_DOCDIR}/licenses RENAME NotoSans-OFL.txt)
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})

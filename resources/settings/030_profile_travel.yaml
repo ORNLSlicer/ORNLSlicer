@@ -18,6 +18,7 @@ settings:
     type: "boolean"
     tooltip: "If selected, minimum layer time feedrate adjustments will not change travel move speeds."
     depends: {"AND":[{"slicing_mode":0},{"AND":[{"force_minimum_layer_time":true},{"minimum_layer_time_method":1}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Travel"
@@ -30,6 +31,7 @@ settings:
     type: "distance"
     tooltip: "Travel moves less than this value in infill, skin, and support fill are replaced with extrusion moves"
     depends: {"AND":[{"slicing_mode":0},{"OR":[{"OR":[{"infill":true},{"skin":true}]},{"support":true}]}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 25400
     minor: "Travel"
@@ -78,6 +80,7 @@ settings:
     type: "distance"
     tooltip: "Distance to lift the tool at the end of the print along the slicing plane normal before shutdown."
     depends: {"slicing_mode":0}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Travel"
@@ -90,6 +93,7 @@ settings:
     type: "boolean"
     tooltip: "Allows for a pause command to be issued after the travel lift but before the travel XY motion. The centroid move can be added and issued before the pause."
     depends: {"slicing_mode":0}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Travel"
@@ -102,6 +106,7 @@ settings:
     type: "boolean"
     tooltip: "Moves to the XY centroid of the object before the travel pause."
     depends: {"AND":[{"slicing_mode":0},{"enable_travel_pause":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: false
     minor: "Travel"
@@ -114,6 +119,7 @@ settings:
     type: "time"
     tooltip: "Duration of the pause during travel motion."
     depends: {"AND":[{"slicing_mode":0},{"enable_travel_pause":true}]}
+    visible_if: {"slicing_mode":0}
     options: []
     default: 0
     minor: "Travel"
@@ -121,3 +127,58 @@ settings:
     namespace: "Profile::Travel"
     symbol: "kTravelPauseDuration"
     local: true
+  - name: "helical_travel_tool_frame_x_rotation"
+    display: "Travel Tool Frame - X Rotation"
+    type: "angle"
+    tooltip: "X rotation of the tool frame for travel region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalTravelToolFrameXRotation"
+    local: false
+  - name: "helical_travel_tool_frame_y_rotation"
+    display: "Travel Tool Frame - Y Rotation"
+    type: "angle"
+    tooltip: "Y rotation of the tool frame for travel region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalTravelToolFrameYRotation"
+    local: false
+  - name: "helical_travel_tool_frame_z_rotation"
+    display: "Travel Tool Frame - Z Rotation"
+    type: "angle"
+    tooltip: "Z rotation of the tool frame for travel region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    options: []
+    default: 0
+    minor: "Travel"
+    major: "Profile"
+    namespace: "Profile::Helical"
+    symbol: "kHelicalTravelToolFrameZRotation"
+    local: false
+inputs:
+  - name: "helical_travel_tool_frame_rotation"
+    display: "Travel Tool Frame Rotation"
+    widget: "vector3"
+    tooltip: "Rotation of the tool frame for travel region"
+    depends: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    visible_if: {"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}
+    minor: "Travel"
+    major: "Profile"
+    components:
+      - setting: "helical_travel_tool_frame_x_rotation"
+        label: "X"
+      - setting: "helical_travel_tool_frame_y_rotation"
+        label: "Y"
+      - setting: "helical_travel_tool_frame_z_rotation"
+        label: "Z"

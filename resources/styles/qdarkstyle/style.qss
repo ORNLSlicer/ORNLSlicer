@@ -43,6 +43,21 @@ issue number.
 
 
 
+/* Font Control ------------------------------------------------------------ */
+
+QCheckBox, QComboBox, QGroupBox, QSpinBox, QDoubleSpinBox,
+QFrame, QLineEdit, QTabBar, QTextEdit,
+QToolBar, QToolButton, QPushButton, QRadioButton,
+QDockWidget, QTabWidget, QLabel, QAbstractScrollArea {
+    font-weight: 400;
+    font-size: 9pt;
+    font-family: "Noto Sans";
+}
+
+QToolButton[settingGroupToggle="true"] {
+    font-weight: 600;
+}
+
 /* QWidget ---------------------------------------------------------------- */
 
 QWidget { 
@@ -215,7 +230,8 @@ QCheckBox::indicator:indeterminate:pressed {
 /* QGroupBox -------------------------------------------------------------- */
 
 QGroupBox {
-    font-weight: bold;
+    font-weight: 600;
+    border: 1px solid #4d5557;
     border-radius: 4px;
     padding: 4px;
     margin-top: 16px;
@@ -699,7 +715,7 @@ QToolBar {
     background-color: #3a4143;
     border-bottom: 1px solid #2b3234;
 /*    padding: 2px; */
-    font-weight: bold;
+    font-weight: 600;
 }
 
 QToolBar * {
@@ -1113,7 +1129,7 @@ QComboBox::item:alternate {
 }
 
 QComboBox::item:checked {
-    font-weight: bold;
+    font-weight: 600;
 }
 
 QComboBox::item:selected {
@@ -1305,7 +1321,7 @@ QTabBar {
     margin: 0px;
     padding: 2px;
     border: 0;
-    font:9pt "Segoe UI";
+    font:9pt "Noto Sans";
     }
 
 /* QTabBar::tab - general - all positions ------------------------------------- */

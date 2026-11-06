@@ -62,6 +62,9 @@ class SettingRowBase {
     //! \return row label text
     QString getLabelText();
 
+    //! \brief Returns the full setting name and group titles used by search.
+    QString getSearchText() const;
+
     //! \brief Styles row label
     //! \param isConsistent: whether or not settings are consistent
     void styleLabel(bool isConsistent);
@@ -82,6 +85,9 @@ class SettingRowBase {
     //! \return master json information containing dependency information
     fifojson getDependencies();
 
+    //! \brief Returns conditions that hide this row independently of disabled-setting preferences.
+    fifojson getVisibilityDependencies();
+
     //! \brief Check dependencies and enable/disable as appropriate
     void checkDependencies();
 
@@ -100,6 +106,9 @@ class SettingRowBase {
     //! \brief Sets dependency logic for this row
     //! \param root: DependencyNode object that contains all dependency information
     void setDependencyLogic(DependencyNode root);
+
+    //! \brief Sets the conditions that control whether this row is applicable.
+    void setVisibilityLogic(DependencyNode root);
 
     //! \brief Adds rows to dependency list
     //! \param row: row to add to depenendcy list
@@ -347,11 +356,17 @@ class SettingRowBase {
     //! \brief Whether this row is currently enabled by dependency logic.
     bool m_dependency_enabled;
 
+    //! \brief Whether this row is applicable under its visibility conditions.
+    bool m_visibility_enabled;
+
     //! \brief Master json that this row was constructed from
     fifojson m_json;
 
     //! \brief Nodes that hold the other settings this row is dependent on for enable/disable
     DependencyNode m_dependency_logic;
+
+    //! \brief Nodes that control visibility independently of dependency enablement.
+    DependencyNode m_visibility_logic;
 
     //! \brief Holds pointers to dependents to notify when current value changes
     QList<QSharedPointer<SettingRowBase>> m_rows_to_notify;

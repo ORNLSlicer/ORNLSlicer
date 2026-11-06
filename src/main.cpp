@@ -32,6 +32,7 @@
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "utilities/runtime_diagnostics.h"
+#include "utilities/theme_tool.h"
 #include "windows/main_window.h"
 
 int main(int argc, char* argv[]) {
@@ -110,6 +111,11 @@ int main(int argc, char* argv[]) {
         Q_INIT_RESOURCE(styles);
         Q_INIT_RESOURCE(configs);
         Q_INIT_RESOURCE(docs);
+
+        if (!ORNL::Theme::initializeFonts()) {
+            qCritical("Could not load the bundled Noto Sans fonts.");
+            return 1;
+        }
 
         // Get the instance of the main window and show it.
         ORNL::MainWindow* w = ORNL::MainWindow::getInstance();

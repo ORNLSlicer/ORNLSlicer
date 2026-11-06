@@ -1,5 +1,8 @@
 #include "utilities/theme_tool.h"
 
+#include <QApplication>
+#include <QFontDatabase>
+
 #include <qcolor.h>
 #include <qcontainerfwd.h>
 #include <qhashfunctions.h>
@@ -7,6 +10,14 @@
 #include <qnamespace.h>
 
 namespace ORNL {
+bool Theme::initializeFonts() {
+    for (const auto& file : {":/fonts/NotoSans-Regular.ttf", ":/fonts/NotoSans-SemiBold.ttf"}) {
+        if (QFontDatabase::addApplicationFont(file) == -1) return false;
+    }
+    QApplication::setFont(QFont("Noto Sans", 9));
+    return true;
+}
+
 Theme::Theme(int themeNum) {
     m_dotColors << Qt::darkGreen << Qt::darkYellow << QColor(255, 172, 28) << Qt::darkBlue << Qt::white;
     m_bgColor << 1.0 << 1.0 << 1.0 << 1.0;

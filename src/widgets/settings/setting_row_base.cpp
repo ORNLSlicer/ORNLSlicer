@@ -33,6 +33,7 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
       m_row_visible(true),
       m_row_enabled(true),
       m_dependency_enabled(true),
+      m_visibility_enabled(true),
       m_json(json) {
     m_theme_path          = PreferencesManager::getInstance()->getTheme().getFolderPath();
     m_local_override_keys = {m_key};
@@ -43,6 +44,10 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
     m_key_label->setCursor(Qt::WhatsThisCursor);
     m_key_label->setMinimumHeight(25);
     m_key_label->setIndent(25);
+    if (json.contains(Constants::Settings::Master::kGroup)) {
+        m_key_label->setText(json.at(Constants::Settings::Master::kGroup).at(Constants::Settings::Group::kLabel));
+        m_key_label->setIndent(0);
+    }
     this->styleLabelFromFile(m_theme_path + "setting_rows_normal.qss");
     layout->addWidget(m_key_label.get(), index, 0);
 
@@ -86,10 +91,23 @@ void SettingRowBase::clearDependencyLogic() {
     m_rows_to_notify.clear();
     m_dependency_logic.dependentRow.reset();
     m_dependency_logic.children.clear();
+    m_visibility_logic.dependentRow.reset();
+    m_visibility_logic.children.clear();
 }
 
 QString SettingRowBase::getLabelText() {
     return m_key_label->text();
+}
+
+QString SettingRowBase::getSearchText() const {
+    QString text = QString::fromStdString(m_json.at(Constants::Settings::Master::kDisplay).get<std::string>());
+    if (m_json.contains(Constants::Settings::Master::kGroup)) {
+        const auto& group = m_json.at(Constants::Settings::Master::kGroup);
+        for (const auto& field : {Constants::Settings::Group::kRegion, Constants::Settings::Group::kSection,
+                                  Constants::Settings::Group::kLabel})
+            text += " " + QString::fromStdString(group.at(field).get<std::string>());
+    }
+    return text;
 }
 
 // This is to style inheritents of setting_row_base (i.e., all the different types of settings)
@@ -153,6 +171,10 @@ fifojson SettingRowBase::getDependencies() {
     return m_json[Constants::Settings::Master::kDepends];
 }
 
+fifojson SettingRowBase::getVisibilityDependencies() {
+    return m_json.value(Constants::Settings::Master::kVisibleIf, fifojson::object());
+}
+
 void SettingRowBase::addRowToNotify(QSharedPointer<SettingRowBase> row) {
     if (!m_rows_to_notify.contains(row)) { m_rows_to_notify.push_back(row); }
 }
@@ -170,6 +192,7 @@ QList<QSharedPointer<SettingsBase>> SettingRowBase::getBases() {
 }
 
 void SettingRowBase::checkDependencies() {
+    m_visibility_enabled = checkLogic(m_visibility_logic);
     setDependencyEnabled(checkLogic(m_dependency_logic));
     checkDynamicDependencies();
 }
@@ -191,7 +214,7 @@ bool SettingRowBase::isShown() const {
 bool SettingRowBase::rowWidgetsVisible() const {
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
-    return m_row_visible && (m_dependency_enabled || show_disabled);
+    return m_row_visible && m_visibility_enabled && (m_dependency_enabled || show_disabled);
 }
 
 bool SettingRowBase::rowWidgetsEnabled() const {
@@ -253,6 +276,10 @@ void SettingRowBase::setDependencyEnabled(bool enabled) {
 
 void SettingRowBase::setDependencyLogic(DependencyNode root) {
     m_dependency_logic = root;
+}
+
+void SettingRowBase::setVisibilityLogic(DependencyNode root) {
+    m_visibility_logic = root;
 }
 
 void SettingRowBase::setSettingsBase(QSharedPointer<SettingsBase> sb) {

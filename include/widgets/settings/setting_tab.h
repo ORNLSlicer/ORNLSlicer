@@ -4,6 +4,7 @@
 #include <QGridLayout>
 #include <QWidget>
 #include <functional>
+#include <utility>
 
 #include <qboxlayout.h>
 #include <qhash.h>
@@ -74,6 +75,9 @@ class SettingTab : public QWidget {
     //! \brief Returns whether any row in this tab is currently visible.
     bool hasShownRows() const;
 
+    //! \brief Hides empty groups and temporarily expands matches during search.
+    void refreshGroupVisibility(bool searching = false);
+
    public slots:
     //! \brief Expand the current tab.
     void expandTab();
@@ -139,6 +143,22 @@ class SettingTab : public QWidget {
     void setupInsert();
     //! \brief 4. Setup the events for the various widgets.
     void setupEvents();
+
+    //! \brief Returns a group-local layout and row index for a scalar setting.
+    std::pair<QGridLayout*, int> groupedRowLayout(const QString& key, const fifojson& group);
+
+    struct SettingGroup {
+        QWidget* frame;
+        QWidget* content;
+        QToolButton* toggle = nullptr;
+        QGridLayout* layout;
+        QStringList keys;
+        int size       = 0;
+        bool collapsed = true;
+    };
+    QHash<QString, SettingGroup> m_groups;
+    QHash<QString, QWidget*> m_group_cells;
+    bool m_group_searching = false;
 
     // Widgets
     SettingHeader* m_header;
