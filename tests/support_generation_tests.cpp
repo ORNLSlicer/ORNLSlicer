@@ -1,0 +1,353 @@
+#include <QCoreApplication>
+#include <QTemporaryDir>
+#include <iostream>
+
+#include "configs/settings_base.h"
+#include "geometry/plane.h"
+#include "geometry/settings_polygon.h"
+#include "part/part.h"
+#include "step/global_layer.h"
+#include "step/layer/island/island_base.h"
+#include "step/layer/layer.h"
+#include "test_utils.h"
+#include "threading/traditional_ast.h"
+#define private public
+#include "threading/slicers/planar_slicer.h"
+#undef private
+#include "units/unit.h"
+#include "utilities/constants.h"
+
+namespace {
+using namespace ORNL;
+
+PolygonList rectangle(double right, double height = 100) {
+    Polygon polygon;
+    polygon << Point(0, 0) << Point(right * mm(), 0) << Point(right * mm(), height * mm()) << Point(0, height * mm());
+    PolygonList geometry;
+    geometry += polygon;
+    return geometry;
+}
+
+QSharedPointer<SettingsBase> supportSettings(Distance clearance, Distance bead_width) {
+    auto settings = QSharedPointer<SettingsBase>::create();
+    settings->setSetting(PS::Support::kEnable, true);
+    settings->setSetting(PS::Support::kThresholdAngle, 40 * deg);
+    settings->setSetting(PS::Support::kXYDistance, clearance);
+    settings->setSetting(PS::Support::kInterfaceLayers, 3);
+    settings->setSetting(PS::Support::kValidation, true);
+    settings->setSetting(PS::Support::kValidationMinOverlap, 5.0);
+    settings->setSetting(PS::Layer::kLayerHeight, 4 * mm);
+    settings->setSetting(PS::Layer::kBeadWidth, bead_width);
+    return settings;
+}
+
+QSharedPointer<Part> makePart(const QVector<double>& edges, const QSharedPointer<SettingsBase>& settings) {
+    auto part = QSharedPointer<Part>::create();
+    for (int i = 0; i < edges.size(); ++i) {
+        auto layer = QSharedPointer<Layer>::create(i + 1, settings);
+        layer->setGeometry(rectangle(edges[i]), QVector3D(0, 0, 1));
+        const Point center(0, 0, (i + 0.5) * 4 * mm());
+        layer->setOrientation(Plane(center, QVector3D(0, 0, 1)), center);
+        part->appendStep(layer);
+    }
+    return part;
+}
+
+PolygonList supports(const QSharedPointer<Part>& part, int index) {
+    PolygonList geometry;
+    for (const auto& island : part->step(index, StepType::kLayer)->getIslands(IslandType::kSupport))
+        geometry |= island->getGeometry();
+    return geometry;
+}
+
+bool projectsBelowClearance(PlanarSlicer& slicer) {
+    const auto settings = supportSettings(25.4 * mm, 1 * mm);
+    const auto part     = makePart({20, 26, 32, 38, 44, 50, 56, 62}, settings);
+    slicer.processSupport(part, 8, 0);
+    bool passed = Testing::expect(supports(part, 0).inside(Point(54 * mm(), 50 * mm()), true),
+                                  "Overhang demand must survive clearance clipping to reach lower layers.");
+    for (int i = 0; i < 8; ++i) {
+        PolygonList geometry        = supports(part, i);
+        const PolygonList forbidden = part->step(i, StepType::kLayer)->getGeometry().offset(25.4 * mm);
+        passed &= Testing::expect((geometry & forbidden).isEmpty(), "Support must preserve the XY clearance.");
+    }
+    return passed;
+}
+
+bool slopedInterfaceHasPaths(PlanarSlicer& slicer) {
+    const auto part = makePart({20, 26, 32, 38, 44, 50, 56}, supportSettings(0 * mm, 4 * mm));
+    slicer.processSupport(part, 7, 0);
+    PolygonList interface_geometry;
+    bool has_paths = false;
+    Point current;
+    QVector<QSharedPointer<RegionBase>> previous;
+    for (const auto& island : part->step(3, StepType::kLayer)->getIslands(IslandType::kSupport)) {
+        if (!island->getSb()->setting<bool>(PS::Support::kInterfaceRegion)) continue;
+        interface_geometry |= island->getGeometry();
+        island->compute(4);
+        island->optimize(4, current, previous);
+        for (const auto& region : island->getRegions()) has_paths |= !region->getPaths().isEmpty();
+    }
+    bool passed = Testing::expect(interface_geometry.splitIntoParts(true).size() == 1,
+                                  "Adjacent sloped contacts must form a continuous dense interface.");
+    passed &= Testing::expect(has_paths, "Sloped support interfaces must produce printable paths.");
+    return passed;
+}
+
+bool keepsRestorationOnItsContactComponent(PlanarSlicer& slicer, bool connected) {
+    const auto part            = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
+    PolygonList lower_geometry = rectangle(20);
+    lower_geometry |= rectangle(48) - rectangle(30);
+    const PolygonList neighboring_island = rectangle(48) - rectangle(28);
+    PolygonList upper_geometry           = rectangle(26);
+    upper_geometry |= neighboring_island;
+    if (connected) {
+        Polygon connection;
+        connection << Point(0, 0) << Point(48 * mm(), 0) << Point(48 * mm(), 10 * mm()) << Point(0, 10 * mm());
+        PolygonList joiner;
+        joiner += connection;
+        lower_geometry |= joiner;
+        upper_geometry |= joiner;
+    }
+    part->step(0, StepType::kLayer)->setGeometry(lower_geometry, QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(upper_geometry, QVector3D(0, 0, 1));
+
+    slicer.processSupport(part, 2, 0);
+    PolygonList geometry = supports(part, 0);
+    bool passed          = Testing::expect(upper_geometry.splitIntoParts(true).size() == (connected ? 1 : 2),
+                                           "The model arms must have the requested connectivity.");
+    passed &= Testing::expect(geometry.inside(Point(21 * mm(), 50 * mm()), true),
+                              "The steep ledge must retain its restored support footprint.");
+    passed &= Testing::expect((geometry & neighboring_island).isEmpty(),
+                              "Restoring an overhang must not create support beneath a nearby self-supporting ledge.");
+    return passed;
+}
+
+bool restorationCannotCrossGaps(PlanarSlicer& slicer, Angle rotation, bool enclosed = false) {
+    const auto part = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
+    auto rotated    = [rotation](PolygonList geometry) {
+        PolygonList result;
+        for (const Polygon& polygon : geometry) result += polygon.rotateAround(Point(0, 0), rotation);
+        return result;
+    };
+    PolygonList lower = rectangle(20);
+    lower |= rectangle(48) - rectangle(30);
+    PolygonList upper = rectangle(26);
+    upper |= rectangle(48) - rectangle(28);
+    // Only the upper layer joins the arms: their unsupported footprints form
+    // one component, with a narrow empty gap along the rest of their length.
+    upper |= rectangle(48, 10);
+    if (enclosed) upper |= rectangle(48) - rectangle(48, 90);
+    // Stay beyond restoration reach of either joiner: support near their
+    // corners can legitimately extend onto the shallow arm.
+    PolygonList shallow_sample = rectangle(30, 80) - rectangle(28, 80);
+    shallow_sample -= rectangle(30, 20);
+    PolygonList steep_sample = rectangle(22, 60) - rectangle(20.5, 60);
+    steep_sample -= rectangle(22, 40);
+    part->step(0, StepType::kLayer)->setGeometry(rotated(lower), QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(rotated(upper), QVector3D(0, 0, 1));
+
+    slicer.processSupport(part, 2, 0);
+    PolygonList geometry = supports(part, 0);
+    PolygonList leakage  = geometry & rotated(shallow_sample);
+    bool passed          = Testing::expect(
+        leakage.isEmpty(),
+        "Restoration must not cross empty gaps onto a self-supporting arm (rotation=" + std::to_string(rotation()) +
+            ", enclosed=" + std::to_string(enclosed) + ", area=" + std::to_string(leakage.netArea()()) + ").");
+    passed &= Testing::expect((rotated(steep_sample) - geometry).isEmpty(),
+                              "Gap-safe restoration must retain the steep contact footprint.");
+    return passed;
+}
+
+bool taperedContactRetainsItsFootprint(PlanarSlicer& slicer, Angle rotation) {
+    const auto part = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
+    Polygon upper;
+    upper << Point(0, 0) << Point(26 * mm(), 0) << Point(26 * mm(), 50 * mm()) << Point(22 * mm(), 100 * mm())
+          << Point(0, 100 * mm());
+    Polygon lower  = rectangle(20).first();
+    Polygon sample = (rectangle(22, 30) - rectangle(20.5, 30) - rectangle(22, 20)).first();
+    PolygonList lower_geometry;
+    lower_geometry += lower.rotateAround(Point(0, 0), rotation);
+    PolygonList upper_geometry;
+    upper_geometry += upper.rotateAround(Point(0, 0), rotation);
+    part->step(0, StepType::kLayer)->setGeometry(lower_geometry, QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(upper_geometry, QVector3D(0, 0, 1));
+    slicer.processSupport(part, 2, 0);
+    PolygonList expected;
+    expected += sample.rotateAround(Point(0, 0), rotation);
+    return Testing::expect((expected - supports(part, 0)).isEmpty(),
+                           "Convex partitioning must retain the steep footprint of a tapered contact.");
+}
+
+bool organicInterfaceHasPaths(PlanarSlicer& slicer) {
+    const auto settings = supportSettings(4 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kStructure, 1);
+    settings->setSetting(PS::Support::kOrganicBranchDiameter, 3 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchSpacing, 40 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchAngle, 25 * deg);
+    const auto part = makePart({20, 20, 20, 20, 20, 20, 20, 26}, settings);
+    slicer.processSupport(part, 8, 0);
+
+    const PolygonList expected_interface = rectangle(26) - rectangle(24);
+    bool passed                          = true;
+    Point current;
+    QVector<QSharedPointer<RegionBase>> previous;
+    for (int i = 0; i < 8; ++i) {
+        PolygonList geometry        = supports(part, i);
+        const PolygonList forbidden = part->step(i, StepType::kLayer)->getGeometry().offset(4 * mm);
+        passed &= Testing::expect((geometry & forbidden).isEmpty(), "Organic support must preserve the XY clearance.");
+        if (i < 4 || i > 6) continue;
+
+        PolygonList interface_geometry;
+        bool has_paths = false;
+        for (const auto& island : part->step(i, StepType::kLayer)->getIslands(IslandType::kSupport)) {
+            if (!island->getSb()->setting<bool>(PS::Support::kInterfaceRegion)) continue;
+            interface_geometry |= island->getGeometry();
+            island->compute(i + 1);
+            island->optimize(i + 1, current, previous);
+            for (const auto& region : island->getRegions()) has_paths |= !region->getPaths().isEmpty();
+        }
+        passed &= Testing::expect((expected_interface - interface_geometry).isEmpty(),
+                                  "Organic supports must retain every dense interface after connectivity validation.");
+        passed &= Testing::expect(has_paths, "Organic support interfaces must produce printable paths.");
+    }
+    return passed;
+}
+
+bool organicBlockerKeepsBranches(PlanarSlicer& slicer) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kStructure, 1);
+    settings->setSetting(PS::Support::kOrganicBranchDiameter, 3 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchSpacing, 40 * mm);
+    settings->setSetting(PS::Support::kOrganicBranchAngle, 25 * deg);
+    settings->setSetting(PS::Support::kInterfaceLayers, 0);
+    const auto part       = makePart({20, 20, 20, 20, 20, 20, 20, 26}, settings);
+    auto blocker_settings = QSharedPointer<SettingsBase>::create();
+    blocker_settings->setSetting(PS::Support::kEnable, false);
+    QVector<SettingsPolygon> blockers {SettingsPolygon(rectangle(26) - rectangle(23), blocker_settings)};
+    part->step(6, StepType::kLayer).dynamicCast<Layer>()->setSettingsPolygons(blockers);
+
+    slicer.processSupport(part, 8, 0);
+    PolygonList geometry = supports(part, 3);
+    bool passed =
+        Testing::expect(geometry.inside(Point(21.5 * mm(), 50 * mm()), true),
+                        "Restored organic contacts must retain branches when their classified tips are blocked.");
+    passed &= Testing::expect(!geometry.inside(Point(21.5 * mm(), 10 * mm()), true),
+                              "Blocking the classified tips must not turn organic branches into grid columns.");
+    PolygonList top_geometry = supports(part, 6);
+    passed &= Testing::expect((top_geometry & blockers.first()).isEmpty(), "Organic contacts must respect blockers.");
+    return passed;
+}
+
+bool bridgeSuppressionRequiresOpposingAnchors(PlanarSlicer& slicer, bool along_y) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kBridgeMaxLength, 12 * mm);
+    auto bar    = [along_y](double edge) { return along_y ? rectangle(10, edge) : rectangle(edge, 10); };
+    bool passed = true;
+    // A single-sided cantilever, a bridge within the limit, and a bridge
+    // beyond the limit must retain their classification after restoration.
+    for (int gap : {0, 10, 14}) {
+        const auto part   = makePart({20, 26}, settings);
+        PolygonList lower = bar(20);
+        PolygonList upper = bar(26);
+        if (gap > 0) {
+            lower |= bar(40 + gap) - bar(20 + gap);
+            upper = bar(40 + gap);
+        }
+        part->step(0, StepType::kLayer)->setGeometry(lower, QVector3D(0, 0, 1));
+        part->step(1, StepType::kLayer)->setGeometry(upper, QVector3D(0, 0, 1));
+
+        settings->setSetting(PS::Support::kBridgeSuppression, false);
+        slicer.processSupport(part, 2, 0);
+        PolygonList expected = supports(part, 0);
+        passed &=
+            Testing::expect(!expected.isEmpty(), "The overhang must generate support without bridge suppression.");
+
+        settings->setSetting(PS::Support::kBridgeSuppression, true);
+        slicer.processSupport(part, 2, 0);
+        PolygonList actual = supports(part, 0);
+        if (gap == 10)
+            passed &=
+                Testing::expect(actual.isEmpty(), "Opposing anchors within the bridge limit must suppress support.");
+        else
+            passed &= Testing::expect((expected - actual).isEmpty() && (actual - expected).isEmpty(),
+                                      "Cantilevers and spans beyond the bridge limit must retain all support.");
+    }
+    return passed;
+}
+
+bool bridgeSuppressionKeepsAttachedCantilevers(PlanarSlicer& slicer, bool along_y) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kBridgeMaxLength, 12 * mm);
+    const auto part = makePart({20, 26}, settings);
+    auto box        = [along_y](double width, double height) {
+        return along_y ? rectangle(height, width) : rectangle(width, height);
+    };
+    PolygonList lower = box(20, 100);
+    lower |= box(50, 10) - box(30, 10);
+    PolygonList upper = box(26, 100);
+    upper |= box(50, 10);
+    part->step(0, StepType::kLayer)->setGeometry(lower, QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(upper, QVector3D(0, 0, 1));
+
+    slicer.processSupport(part, 2, 0);
+    PolygonList expected = supports(part, 0);
+    settings->setSetting(PS::Support::kBridgeSuppression, true);
+    slicer.processSupport(part, 2, 0);
+    PolygonList actual = supports(part, 0);
+    bool passed        = Testing::expect(!expected.isEmpty(), "The attached cantilever must require support.");
+    passed &= Testing::expect((expected - actual).isEmpty(),
+                              "Anchors under a short bridge must not suppress its attached cantilever.");
+    return passed;
+}
+
+bool respectsAngleAndLandings(PlanarSlicer& slicer) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    auto part           = makePart({20, 22, 24, 26}, settings);
+    slicer.processSupport(part, 4, 0);
+    bool passed = true;
+    for (int i = 0; i < 4; ++i)
+        passed &= Testing::expect(supports(part, i).isEmpty(), "Self-supporting slopes must not generate supports.");
+
+    part = makePart({100, 20, 20, 20, 80}, settings);
+    slicer.processSupport(part, 5, 0);
+    passed &= Testing::expect(supports(part, 0).isEmpty(), "Support projection must stop on the model.");
+    passed &= Testing::expect(!supports(part, 1).isEmpty(), "Everywhere support may land on the model.");
+
+    settings->setSetting(PS::Support::kPlacement, 1);
+    slicer.processSupport(part, 5, 0);
+    for (int i = 0; i < 5; ++i)
+        passed &= Testing::expect(supports(part, i).isEmpty(), "Build Plate Only must reject model-founded support.");
+    return passed;
+}
+}  // namespace
+
+int main(int argc, char* argv[]) {
+    QCoreApplication app(argc, argv);
+    QTemporaryDir directory;
+    if (!ORNL::Testing::expect(directory.isValid(), "Failed to create support test directory.")) return 1;
+    ORNL::PlanarSlicer slicer(directory.filePath("support.nc"));
+    bool passed = projectsBelowClearance(slicer);
+    passed &= slopedInterfaceHasPaths(slicer);
+    passed &= keepsRestorationOnItsContactComponent(slicer, false);
+    passed &= keepsRestorationOnItsContactComponent(slicer, true);
+    passed &= restorationCannotCrossGaps(slicer, 0 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 45 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 90 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 137 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 0 * deg, true);
+    passed &= restorationCannotCrossGaps(slicer, 137 * deg, true);
+    passed &= taperedContactRetainsItsFootprint(slicer, 0 * deg);
+    passed &= taperedContactRetainsItsFootprint(slicer, 45 * deg);
+    passed &= taperedContactRetainsItsFootprint(slicer, 137 * deg);
+    passed &= organicInterfaceHasPaths(slicer);
+    passed &= organicBlockerKeepsBranches(slicer);
+    passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, false);
+    passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, true);
+    passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, false);
+    passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, true);
+    passed &= respectsAngleAndLandings(slicer);
+    if (!passed) return 1;
+    std::cout << "Support generation tests passed\n";
+    return 0;
+}

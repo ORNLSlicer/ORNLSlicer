@@ -18,6 +18,7 @@ Release versions follow the project's
 
 ### Fixed
 
+- Fixed missing supports beneath arches and sloped overhangs while preserving the configured XY clearance and generating continuous support interfaces.
 - Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
 - Fixed generated G-code containing embedded standalone layer programs and export-only markers, including when individual-layer export is enabled.
 - Fixed incomplete Git LFS checkouts silently building with missing GUI icons, setting arrows, and Slice toolbar access by rejecting unresolved bundled resources with recovery instructions ([#351](https://github.com/ORNLSlicer/ORNLSlicer/issues/351)).
