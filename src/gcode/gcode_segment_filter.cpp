@@ -16,6 +16,7 @@
 #include "geometry/segments/arc.h"
 #include "geometry/segments/bezier.h"
 #include "geometry/segments/line.h"
+#include "managers/settings/settings_manager.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
 
@@ -40,6 +41,7 @@ struct SegmentFootprint {
 
 struct LayerFootprints {
     QVector<SegmentFootprint> segments;
+    QVector<const SegmentBase*> unrepresented_segments;
     PolygonList closed_coverage;
     PolygonList wall_enclosed;
 };
@@ -73,12 +75,21 @@ bool hasNonBuildModifier(const QSharedPointer<SegmentBase>& segment) {
     return commentContainsNonBuildModifier(segment->m_segment_info_meta.type);
 }
 
+bool hasRegionType(const QSharedPointer<SegmentBase>& segment, RegionType region_type, const QString& region_name);
+
+bool isSupportSegment(const QSharedPointer<SegmentBase>& segment) {
+    if (segment.isNull()) { return false; }
+    return hasFlag(segment->displayType(), SegmentDisplayType::kSupport) ||
+           hasRegionType(segment, RegionType::kSupport, Constants::RegionTypeStrings::kSupport) ||
+           hasRegionType(segment, RegionType::kSupportRoof, Constants::RegionTypeStrings::kSupportRoof);
+}
+
 bool isPrintableBead(const QSharedPointer<SegmentBase>& segment) {
     if (segment.isNull() || isDegenerateLine(segment)) { return false; }
     if (hasNonBuildModifier(segment)) { return false; }
 
     const SegmentDisplayType type = segment->displayType();
-    if (hasFlag(type, SegmentDisplayType::kTravel) || hasFlag(type, SegmentDisplayType::kSupport)) { return false; }
+    if (hasFlag(type, SegmentDisplayType::kTravel) || isSupportSegment(segment)) { return false; }
     if (!segment->depositionActive()) { return false; }
     if (segment->displayWidth() <= kVectorEpsilon) { return false; }
 
@@ -181,14 +192,69 @@ std::vector<QVector3D> bezierPoints(BezierSegment& curve, double scale) {
     return points;
 }
 
-PolygonList footprintForSegment(const QSharedPointer<SegmentBase>& segment) {
+enum class ProjectionPlane { kXY, kYZ, kXZ };
+
+ProjectionPlane detectProjectionPlane(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode) {
+    double sum_dx = 0.0;
+    double sum_dy = 0.0;
+    double sum_dz = 0.0;
+    for (const auto& layer : gcode) {
+        for (const auto& segment : layer) {
+            if (segment.isNull()) { continue; }
+            sum_dx += std::abs(segment->end().x() - segment->start().x());
+            sum_dy += std::abs(segment->end().y() - segment->start().y());
+            sum_dz += std::abs(segment->end().z() - segment->start().z());
+        }
+    }
+
+    const double max_sum = std::max({sum_dx, sum_dy, sum_dz});
+    if (max_sum > kVectorEpsilon) {
+        if (sum_dx / max_sum < 0.05 && (sum_dy > kVectorEpsilon || sum_dz > kVectorEpsilon)) {
+            return ProjectionPlane::kYZ;
+        }
+        if (sum_dy / max_sum < 0.05 && (sum_dx > kVectorEpsilon || sum_dz > kVectorEpsilon)) {
+            return ProjectionPlane::kXZ;
+        }
+        if (sum_dz / max_sum < 0.05 && (sum_dx > kVectorEpsilon || sum_dy > kVectorEpsilon)) {
+            return ProjectionPlane::kXY;
+        }
+    }
+
+    if (GSM != nullptr && GSM->getGlobal() != nullptr &&
+        GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalX) &&
+        GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalY) &&
+        GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalZ)) {
+        const float nx = std::abs(GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX));
+        const float ny = std::abs(GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalY));
+        const float nz = std::abs(GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalZ));
+        if (nx > ny && nx > nz) { return ProjectionPlane::kYZ; }
+        if (ny > nx && ny > nz) { return ProjectionPlane::kXZ; }
+        if (nz > nx && nz > ny) { return ProjectionPlane::kXY; }
+    }
+
+    return ProjectionPlane::kXY;
+}
+
+Point projectPoint(const QVector3D& p, ProjectionPlane plane) {
+    switch (plane) {
+        case ProjectionPlane::kYZ:
+            return Point(p.y(), p.z(), 0.0);
+        case ProjectionPlane::kXZ:
+            return Point(p.x(), p.z(), 0.0);
+        case ProjectionPlane::kXY:
+        default:
+            return Point(p.x(), p.y(), 0.0);
+    }
+}
+
+PolygonList footprintForSegment(const QSharedPointer<SegmentBase>& segment, ProjectionPlane plane) {
     PolygonList footprint;
     const Distance bead_width(segment->displayWidth() * Constants::OpenGL::kViewToObject);
     const std::vector<QVector3D> points = segmentCenterlinePoints(segment, Constants::OpenGL::kViewToObject);
     for (std::size_t i = 0; i + 1 < points.size(); ++i) {
         if ((points[i + 1] - points[i]).lengthSquared() <= kVectorEpsilonSquared) { continue; }
 
-        footprint += Polyline({Point(points[i]), Point(points[i + 1])}).makeReal(bead_width);
+        footprint += Polyline({projectPoint(points[i], plane), projectPoint(points[i + 1], plane)}).makeReal(bead_width);
     }
 
     return footprint;
@@ -228,6 +294,7 @@ bool hasSideExposure(const SegmentFootprint& segment, const PolygonList& layer_i
 }
 
 QVector<LayerFootprints> buildLayerFootprints(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
+                                              ProjectionPlane plane,
                                               const std::function<bool()>& should_cancel) {
     QVector<LayerFootprints> layers(gcode.size());
     std::atomic<bool> cancelled(false);
@@ -254,8 +321,11 @@ QVector<LayerFootprints> buildLayerFootprints(const QVector<QVector<QSharedPoint
             SegmentFootprint segment_footprint;
             segment_footprint.segment    = segment;
             segment_footprint.bead_width = Distance(segment->displayWidth() * Constants::OpenGL::kViewToObject);
-            segment_footprint.footprint  = footprintForSegment(segment);
-            if (!hasArea(segment_footprint.footprint)) { continue; }
+            segment_footprint.footprint  = footprintForSegment(segment, plane);
+            if (!hasArea(segment_footprint.footprint)) {
+                layer.unrepresented_segments.push_back(segment.data());
+                continue;
+            }
 
             max_bead_width = std::max(max_bead_width, segment_footprint.bead_width);
             if (isInteriorFillSegment(segment)) { infill_coverage += segment_footprint.footprint; }
@@ -321,7 +391,8 @@ bool isNonBuildModifierSegment(const QSharedPointer<SegmentBase>& segment) {
 
 QSet<const SegmentBase*> externalSegments(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
                                           const std::function<bool()>& should_cancel) {
-    const QVector<LayerFootprints> layers = buildLayerFootprints(gcode, should_cancel);
+    const ProjectionPlane plane           = detectProjectionPlane(gcode);
+    const QVector<LayerFootprints> layers = buildLayerFootprints(gcode, plane, should_cancel);
     if ((should_cancel && should_cancel()) || (layers.isEmpty() && !gcode.isEmpty())) { return {}; }
 
     QVector<int> prev_printable_layer(layers.size(), -1);
@@ -358,6 +429,10 @@ QSet<const SegmentBase*> externalSegments(const QVector<QVector<QSharedPointer<S
 
         using WidthKey = int64_t;
         std::map<WidthKey, PolygonList> cached_interiors;
+
+        for (const SegmentBase* unrepresented : layers[layer_index].unrepresented_segments) {
+            layer_external[layer_index].push_back(unrepresented);
+        }
 
         for (const SegmentFootprint& segment : layers[layer_index].segments) {
             bool side_exposed = false;
