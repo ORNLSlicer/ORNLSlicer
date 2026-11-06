@@ -1073,9 +1073,15 @@ const std::string Constants::Settings::Master::kMajor           = "major";
 const std::string Constants::Settings::Master::kOptions         = "options";
 const std::string Constants::Settings::Master::kDepends         = "depends";
 const std::string Constants::Settings::Master::kVisibleIf       = "visible_if";
+const std::string Constants::Settings::Master::kGroup           = "group";
 const std::string Constants::Settings::Master::kDefault         = "default";
 const std::string Constants::Settings::Master::kDependencyGroup = "dependency_group";
 const std::string Constants::Settings::Master::kLocal           = "local";
+
+const std::string Constants::Settings::Group::kRegion  = "region";
+const std::string Constants::Settings::Group::kSection = "section";
+const std::string Constants::Settings::Group::kLabel   = "label";
+const std::string Constants::Settings::Group::kColumns = "columns";
 
 // Input
 const std::string Constants::Settings::Input::kName       = "name";

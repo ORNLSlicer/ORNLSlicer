@@ -29,7 +29,7 @@ REQUIRED_FIELDS = (
     "local",
 )
 
-OPTIONAL_FIELDS = ("name", "visible_if")
+OPTIONAL_FIELDS = ("name", "visible_if", "group")
 
 INPUT_REQUIRED_FIELDS = (
     "display",
@@ -308,6 +308,17 @@ def validate_setting(setting: OrderedDict[str, Any], setting_names: set[str]) ->
     validate_dependency(setting["depends"], setting_names, name)
     validate_dependency(setting.get("visible_if"), setting_names, f"{name}: visible_if")
 
+    if "group" in setting:
+        group = setting["group"]
+        if not isinstance(group, dict) or set(group) - {"region", "section", "label", "columns"}:
+            raise ValueError(f"{name}: group must be an object with region, section, label, and optional columns")
+        for field in ("region", "section", "label"):
+            if not isinstance(group.get(field), str) or not group[field].strip():
+                raise ValueError(f"{name}: group {field} must be a non-empty string")
+        columns = group.get("columns", 1)
+        if type(columns) is not int or columns not in (1, 2):
+            raise ValueError(f"{name}: group columns must be 1 or 2")
+
 
 def validate_input(setting_input: OrderedDict[str, Any], settings_by_name: OrderedDict[str, OrderedDict[str, Any]],
                    used_components: set[str]) -> None:
@@ -393,6 +404,8 @@ def normalize_for_master(setting: OrderedDict[str, Any]) -> OrderedDict[str, Any
         entry[field] = value
     if "visible_if" in setting:
         entry["visible_if"] = setting["visible_if"]
+    if "group" in setting:
+        entry["group"] = setting["group"]
     return entry
 
 

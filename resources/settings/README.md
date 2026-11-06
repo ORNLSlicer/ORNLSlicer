@@ -25,3 +25,15 @@ tooltip for the whole group.
 Settings and grouped inputs may define `visible_if` using the same expression syntax as `depends`. A false
 `visible_if` always hides the row, including when disabled settings are normally greyed out. Use it to select
 the controls for the active slicing mode; keep region enablement and revolution-count checks in `depends`.
+
+Scalar settings may define a `group` object to arrange existing editors into regional forms:
+
+```yaml
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Preflow","columns":2}
+```
+
+`region`, `section`, and `label` are nonempty strings. Regions are collapsible; sections are titled forms inside them.
+`columns` is optional and defaults to 1; use 2 for a two-column grid of setting rows. Keep it consistent within a section.
+Groups and rows retain their YAML order. The shorter `label` is shown in the group, while the full setting `display`
+and group titles remain searchable. Empty groups hide after dependency/search filtering; search temporarily opens
+matching regions and restores their collapse state when cleared. Grouping does not change stored setting keys or values.

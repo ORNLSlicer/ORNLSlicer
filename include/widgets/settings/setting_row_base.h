@@ -62,6 +62,9 @@ class SettingRowBase {
     //! \return row label text
     QString getLabelText();
 
+    //! \brief Returns the full setting name and group titles used by search.
+    QString getSearchText() const;
+
     //! \brief Styles row label
     //! \param isConsistent: whether or not settings are consistent
     void styleLabel(bool isConsistent);
