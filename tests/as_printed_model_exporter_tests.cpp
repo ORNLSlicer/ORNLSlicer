@@ -161,8 +161,8 @@ QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedSquare(const QString& comme
             makeTaggedLineSegment(top_left, bottom_left, comment, first_line_number + 3)};
 }
 
-QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedSquareYZ(const QString& comment, uint first_line_number,
-                                                              float x, float min_yz, float max_yz) {
+QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedSquareYZ(const QString& comment, uint first_line_number, float x,
+                                                              float min_yz, float max_yz) {
     const ORNL::Point bottom_left  = pointFromMm(x, min_yz, min_yz);
     const ORNL::Point bottom_right = pointFromMm(x, max_yz, min_yz);
     const ORNL::Point top_right    = pointFromMm(x, max_yz, max_yz);
@@ -802,17 +802,16 @@ int main(int argc, char* argv[]) {
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> vertical_segments;
     auto vertical_segment = makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(0.0f, 0.0f, 10.0f), 1);
     vertical_segments.push_back({vertical_segment});
-    const auto vertical_triangles =
-        ORNL::AsPrintedModelExporter::generateTriangles(vertical_segments, without_blends);
+    const auto vertical_triangles = ORNL::AsPrintedModelExporter::generateTriangles(vertical_segments, without_blends);
     const auto vertical_external_triangles =
         ORNL::AsPrintedModelExporter::generateTriangles(vertical_segments, external_only_options);
     passed &= ORNL::Testing::expect(
         !vertical_triangles.empty() && vertical_external_triangles.size() == vertical_triangles.size(),
         "Expected vertical printable segment outside XY plane to be exported with external_only.");
     ORNL::GCodeSegmentFilter::tagInternalSegments(vertical_segments);
-    passed &= ORNL::Testing::expect(
-        !static_cast<bool>(vertical_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
-        "Expected vertical printable segment outside XY plane not to be tagged internal.");
+    passed &=
+        ORNL::Testing::expect(!static_cast<bool>(vertical_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                              "Expected vertical printable segment outside XY plane not to be tagged internal.");
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> yz_concentric_segments;
     QVector<QSharedPointer<ORNL::SegmentBase>> yz_middle_insets;
@@ -820,9 +819,11 @@ int main(int argc, char* argv[]) {
     for (int layer_index = 0; layer_index < 3; ++layer_index) {
         const float x        = static_cast<float>(layer_index * 2);
         const uint base_line = static_cast<uint>(900 + (layer_index * 12));
-        auto outer_perm   = makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line, x, 0.0f, 40.0f);
-        auto middle_inset = makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kInset, base_line + 4, x, 2.0f, 38.0f);
-        auto inner_hole   = makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 8, x, 4.0f, 36.0f);
+        auto outer_perm = makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line, x, 0.0f, 40.0f);
+        auto middle_inset =
+            makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kInset, base_line + 4, x, 2.0f, 38.0f);
+        auto inner_hole =
+            makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 8, x, 4.0f, 36.0f);
         if (layer_index == 1) {
             yz_middle_insets     = middle_inset;
             yz_middle_perimeters = outer_perm + inner_hole;
@@ -835,14 +836,13 @@ int main(int argc, char* argv[]) {
     }
     ORNL::GCodeSegmentFilter::tagInternalSegments(yz_concentric_segments);
     for (const auto& segment : yz_middle_perimeters) {
-        passed &= ORNL::Testing::expect(
-            !static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
-            "Expected YZ middle-layer outer and hole perimeters to remain external.");
+        passed &=
+            ORNL::Testing::expect(!static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                                  "Expected YZ middle-layer outer and hole perimeters to remain external.");
     }
     for (const auto& segment : yz_middle_insets) {
-        passed &= ORNL::Testing::expect(
-            static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
-            "Expected YZ covered middle-layer insets to be hidden as internal.");
+        passed &= ORNL::Testing::expect(static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                                        "Expected YZ covered middle-layer insets to be hidden as internal.");
     }
 
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> full_circle_arc_segments;

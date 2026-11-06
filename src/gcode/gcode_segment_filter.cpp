@@ -220,8 +220,7 @@ ProjectionPlane detectProjectionPlane(const QVector<QVector<QSharedPointer<Segme
         }
     }
 
-    if (GSM != nullptr && GSM->getGlobal() != nullptr &&
-        GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalX) &&
+    if (GSM != nullptr && GSM->getGlobal() != nullptr && GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalX) &&
         GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalY) &&
         GSM->getGlobal()->contains(PS::Slicing::kSlicePlaneNormalZ)) {
         const float nx = std::abs(GSM->getGlobal()->setting<float>(PS::Slicing::kSlicePlaneNormalX));
@@ -254,7 +253,8 @@ PolygonList footprintForSegment(const QSharedPointer<SegmentBase>& segment, Proj
     for (std::size_t i = 0; i + 1 < points.size(); ++i) {
         if ((points[i + 1] - points[i]).lengthSquared() <= kVectorEpsilonSquared) { continue; }
 
-        footprint += Polyline({projectPoint(points[i], plane), projectPoint(points[i + 1], plane)}).makeReal(bead_width);
+        footprint +=
+            Polyline({projectPoint(points[i], plane), projectPoint(points[i + 1], plane)}).makeReal(bead_width);
     }
 
     return footprint;
@@ -294,8 +294,7 @@ bool hasSideExposure(const SegmentFootprint& segment, const PolygonList& layer_i
 }
 
 QVector<LayerFootprints> buildLayerFootprints(const QVector<QVector<QSharedPointer<SegmentBase>>>& gcode,
-                                              ProjectionPlane plane,
-                                              const std::function<bool()>& should_cancel) {
+                                              ProjectionPlane plane, const std::function<bool()>& should_cancel) {
     QVector<LayerFootprints> layers(gcode.size());
     std::atomic<bool> cancelled(false);
 
