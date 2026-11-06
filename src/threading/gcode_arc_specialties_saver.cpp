@@ -8,6 +8,7 @@
 #include <QTextStream>
 #include <QVector>
 
+#include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "slicing/region_speed.h"
 #include "units/unit.h"
@@ -41,29 +42,32 @@ QString formatDecimal(double value) {
     return text;
 }
 
-QString formatScheduleValue(const QString& setting_key, ScheduleValueType value_type, GcodeMeta meta) {
+QString formatScheduleValue(const QString& setting_key, ScheduleValueType value_type, Velocity velocity_unit,
+                            Time time_unit, Voltage voltage_unit) {
     switch (value_type) {
         case ScheduleValueType::kInteger:
             return QString::number(GSM->getGlobal()->setting<int>(setting_key));
         case ScheduleValueType::kSpeed: {
             const Velocity value = GSM->getGlobal()->setting<Velocity>(setting_key);
-            return formatDecimal(value.to(inch / minute));
+            return formatDecimal(value.to(velocity_unit));
         }
         case ScheduleValueType::kTime: {
             const Time value = GSM->getGlobal()->setting<Time>(setting_key);
-            return formatDecimal(value.to(meta.m_time_unit));
+            return formatDecimal(value.to(time_unit));
         }
         case ScheduleValueType::kVoltage: {
             const Voltage value = GSM->getGlobal()->setting<Voltage>(setting_key);
-            return formatDecimal(value.to(V));
+            return formatDecimal(value.to(voltage_unit));
         }
     }
 
     return {};
 }
 
-void writeScheduleField(QTextStream& out, const ScheduleField& field, GcodeMeta meta) {
-    out << field.assignment << " = " << formatScheduleValue(field.setting_key, field.value_type, meta);
+void writeScheduleField(QTextStream& out, const ScheduleField& field, Velocity velocity_unit, Time time_unit,
+                        Voltage voltage_unit) {
+    out << field.assignment << " = "
+        << formatScheduleValue(field.setting_key, field.value_type, velocity_unit, time_unit, voltage_unit);
     if (!field.comment.isEmpty()) {
         out << "      " << field.comment;
         switch (field.value_type) {
@@ -71,20 +75,21 @@ void writeScheduleField(QTextStream& out, const ScheduleField& field, GcodeMeta 
                 out << " (unitless)";
                 break;
             case ScheduleValueType::kSpeed:
-                out << " (in/min)";
+                out << " (" << velocity_unit.toString() << ')';
                 break;
             case ScheduleValueType::kTime:
-                out << " (" << meta.m_time_unit.toString() << ')';
+                out << " (" << time_unit.toString() << ')';
                 break;
             case ScheduleValueType::kVoltage:
-                out << " (V)";
+                out << " (" << voltage_unit.toString() << ')';
                 break;
         }
     }
     out << '\n';
 }
 
-void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, GcodeMeta meta) {
+void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, Velocity velocity_unit, Time time_unit,
+                        Voltage voltage_unit) {
     if (region.default_schedule) {
         out << "$DEFAULT" << '\n';
         out << "(Schedule " << region.schedule_number << " / Default Schedule Start, " << region.label << ")" << '\n';
@@ -94,20 +99,27 @@ void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, GcodeMet
         out << "$CASE " << region.schedule_number << '\n';
     }
 
-    for (const ScheduleField& field : region.fields) { writeScheduleField(out, field, meta); }
+    for (const ScheduleField& field : region.fields) {
+        writeScheduleField(out, field, velocity_unit, time_unit, voltage_unit);
+    }
 
     out << "$IF EXIST[V.S.SPEED]" << '\n';
-    out << "   V.S.SPEED = " << formatDecimal(regionPrintSpeed(*GSM->getGlobal(), region.region_type).to(inch / minute))
-        << "            ;Set speed value if it exists (in/min)" << '\n';
+    out << "   V.S.SPEED = " << formatDecimal(regionPrintSpeed(*GSM->getGlobal(), region.region_type).to(velocity_unit))
+        << "            ;Set speed value if it exists (" << velocity_unit.toString() << ')' << '\n';
     out << "$ENDIF" << '\n';
     out << "$BREAK" << '\n';
     out << "(Schedule " << region.schedule_number << " End)" << '\n';
 }
 }  // namespace
 
-GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString tempLocation, QString path, QString filename, QString text,
-                                                   GcodeMeta meta)
-    : m_temp_location(tempLocation), m_path(path), m_filename(filename), m_text(text), m_selected_meta(meta) {
+GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString tempLocation, QString path, QString filename, QString text)
+    : m_temp_location(tempLocation),
+      m_path(path),
+      m_filename(filename),
+      m_text(text),
+      m_velocity_unit(PreferencesManager::getInstance()->getVelocityUnit()),
+      m_time_unit(PreferencesManager::getInstance()->getTimeUnit()),
+      m_voltage_unit(PreferencesManager::getInstance()->getVoltageUnit()) {
     // NOP
 }
 
@@ -334,7 +346,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
                         (region.region_type == RegionType::kInset &&
                          settings->setting<int>(PS::Helical::kHelicalInsetRevolutions) <= 0)))
             continue;
-        writeScheduleBlock(out, region, m_selected_meta);
+        writeScheduleBlock(out, region, m_velocity_unit, m_time_unit, m_voltage_unit);
         out << '\n';
     }
 

@@ -13,6 +13,7 @@
 #include "gcode/writers/arc_specialties_writer.h"
 #include "geometry/mesh/mesh_base.h"
 #include "geometry/path.h"
+#include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "test_utils.h"
@@ -89,70 +90,113 @@ int main(int argc, char* argv[]) {
                                                      ORNL::RegionType::kInfill, ORNL::RegionType::kSkeleton};
     const std::array<int, 4> schedules            = {1, 2, 0, 3};
     ORNL::CylindricalSlicer slicer(temp.filePath("unused.nc"));
-    int case_number = 0;
-    for (bool imperial : {false, true}) {
-        auto meta            = ORNL::GcodeMetaList::ArcSpecialtiesMeta;
-        meta.m_velocity_unit = imperial ? ORNL::inch / ORNL::minute : ORNL::mm / ORNL::minute;
-        for (int mode : {0, 1, 2, 3}) {
-            settings->setSetting(ORNL::PS::Layer::kSpeed, (mode == 3 ? 0.0 : 44.0) * ORNL::mm / ORNL::s);
-            settings->setSetting(ORNL::PS::Slicing::kSlicingMode, mode == 0 ? 0 : 1);
-            settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, mode == 2 ? 1 : 0);
-            const QString output = temp.filePath(QString("case%1.nc").arg(++case_number));
-            ORNL::GCodeArcSpecialtiesSaver saver(temp.path() + QDir::separator(), temp.path(), output,
-                                                 "#FILE NAME[ G80=\"old.nc\" ]\n", meta);
-            saver.run();
-            QFile schedule(temp.filePath(QString("case%1_sch.nc").arg(case_number)));
-            expect(schedule.open(QIODevice::ReadOnly), "Generated schedule must exist.");
-            const QString text = QString::fromUtf8(schedule.readAll());
-            for (const auto& parameter : parameters) {
-                auto matches = QRegularExpression("^V\\.E\\.Sch\\." + QRegularExpression::escape(parameter.assignment) +
-                                                      " = ([0-9.]+) +;([^\\n]*)$",
-                                                  QRegularExpression::MultilineOption)
-                                   .globalMatch(text);
-                int count    = 0;
-                bool correct = true;
-                while (matches.hasNext()) {
-                    const auto match = matches.next();
-                    ++count;
-                    correct &= ORNL::Testing::near(match.captured(1).toDouble(), parameter.value, 0.0001) &&
-                               match.captured(2).endsWith("(" + parameter.unit + ")");
+    int case_number        = 0;
+    const auto preferences = ORNL::PreferencesManager::getInstance();
+    for (int unit_case : {0, 1, 2}) {
+        const ORNL::Velocity velocity_unit = unit_case == 0   ? ORNL::mm / ORNL::s
+                                             : unit_case == 1 ? ORNL::inch / ORNL::minute
+                                                              : ORNL::mm / ORNL::minute;
+        const ORNL::Time time_unit         = unit_case == 0 ? ORNL::s : unit_case == 1 ? ORNL::ms : ORNL::minute;
+        const ORNL::Voltage voltage_unit   = unit_case == 0 ? ORNL::V : unit_case == 1 ? ORNL::mV : ORNL::uV;
+        preferences->setVelocityUnit(velocity_unit);
+        preferences->setTimeUnit(time_unit);
+        preferences->setVoltageUnit(voltage_unit);
+        for (bool imperial : {false, true}) {
+            auto meta            = ORNL::GcodeMetaList::ArcSpecialtiesMeta;
+            meta.m_velocity_unit = imperial ? ORNL::inch / ORNL::minute : ORNL::mm / ORNL::minute;
+            for (int mode : {0, 1, 2, 3}) {
+                settings->setSetting(ORNL::PS::Layer::kSpeed, (mode == 3 ? 0.0 : 44.0) * ORNL::mm / ORNL::s);
+                settings->setSetting(ORNL::PS::Slicing::kSlicingMode, mode == 0 ? 0 : 1);
+                settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, mode == 2 ? 1 : 0);
+                const QString output = temp.filePath(QString("case%1.nc").arg(++case_number));
+                ORNL::GCodeArcSpecialtiesSaver saver(temp.path() + QDir::separator(), temp.path(), output,
+                                                     "#FILE NAME[ G80=\"old.nc\" ]\n");
+                saver.run();
+                QFile schedule(temp.filePath(QString("case%1_sch.nc").arg(case_number)));
+                expect(schedule.open(QIODevice::ReadOnly), "Generated schedule must exist.");
+                const QString text = QString::fromUtf8(schedule.readAll());
+                for (const auto& parameter : parameters) {
+                    double expected_value = parameter.value;
+                    QString unit_text     = parameter.unit;
+                    if (parameter.unit == "in/min") {
+                        expected_value = ORNL::Velocity(parameter.value * ORNL::inch / ORNL::minute).to(velocity_unit);
+                        unit_text      = preferences->getVelocityUnitText();
+                    }
+                    else if (parameter.unit == "sec") {
+                        expected_value = ORNL::Time(parameter.value * ORNL::s).to(time_unit);
+                        unit_text      = preferences->getTimeUnitText();
+                    }
+                    else if (parameter.unit == "V") {
+                        expected_value = ORNL::Voltage(parameter.value * ORNL::V).to(voltage_unit);
+                        unit_text      = preferences->getVoltageUnitText();
+                    }
+                    auto matches =
+                        QRegularExpression("^V\\.E\\.Sch\\." + QRegularExpression::escape(parameter.assignment) +
+                                               " = ([0-9.]+) +;([^\\n]*)$",
+                                           QRegularExpression::MultilineOption)
+                            .globalMatch(text);
+                    int count    = 0;
+                    bool correct = true;
+                    while (matches.hasNext()) {
+                        const auto match = matches.next();
+                        ++count;
+                        correct &= ORNL::Testing::near(match.captured(1).toDouble(), expected_value, 0.0001) &&
+                                   match.captured(2).endsWith("(" + unit_text + ")");
+                    }
+                    expect(count == (mode == 2 ? 3 : 4) && correct,
+                           QString("mode %1 units %2: %3 must use %4 and label its comment.")
+                               .arg(mode)
+                               .arg(imperial)
+                               .arg(parameter.assignment, unit_text));
                 }
-                expect(count == (mode == 2 ? 3 : 4) && correct,
-                       QString("mode %1 units %2: %3 must use %4 and label its comment.")
-                           .arg(mode)
-                           .arg(imperial)
-                           .arg(parameter.assignment, parameter.unit));
-            }
-            for (size_t i = 0; i < regions.size(); ++i) {
-                if (mode == 2 && regions[i] == ORNL::RegionType::kSkeleton) continue;
-                const ORNL::Velocity expected = (mode == 1   ? 44.0
-                                                 : mode == 3 ? 10.0
-                                                             : 11.0 * (i + 1)) *
-                                                ORNL::mm / ORNL::s;
-                const QString label           = QString("mode %1 region %2 units %3").arg(mode).arg(i).arg(imperial);
-                const int start               = text.indexOf(QString("(Schedule %1 ").arg(schedules[i]));
-                const int end                 = text.indexOf(QString("(Schedule %1 End)").arg(schedules[i]), start);
-                const auto speed =
-                    QRegularExpression("V\\.S\\.SPEED = ([0-9.]+) +;([^\\n]*)").match(text.mid(start, end - start));
-                expect(start >= 0 && end > start && speed.hasMatch() &&
-                           ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(ORNL::inch / ORNL::minute),
-                                               0.0001) &&
-                           speed.captured(2).endsWith("(in/min)"),
-                       label + ": schedule speed must match the active slicing mode in in/min and label its comment.");
-                if (mode == 0 || regions[i] == ORNL::RegionType::kSkeleton) continue;
-                auto params = slicer.createSegmentSettings(settings, ORNL::Point(), false, regions[i]);
-                expect(ORNL::Testing::near(params->setting<ORNL::Velocity>(ORNL::SS::kSpeed)(), expected()),
-                       label + ": generated segment must carry its region speed.");
-                ORNL::ArcSpecialtiesWriter writer(meta, settings);
-                const ORNL::Point from(10.0 * ORNL::mm, 0, 0);
-                const ORNL::Point to(0, 10.0 * ORNL::mm, 1.0 * ORNL::mm);
-                const QString feedrate = "F" + QString::number(expected.to(meta.m_velocity_unit), 'f', 4);
-                expect(writer.writeLine(from, to, params).contains(feedrate), label + ": line feedrate mismatch.");
-                const QString arc = writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
-                expect(arc.contains("G03") && arc.contains(feedrate), label + ": arc feedrate mismatch.");
+                for (size_t i = 0; i < regions.size(); ++i) {
+                    if (mode == 2 && regions[i] == ORNL::RegionType::kSkeleton) continue;
+                    const ORNL::Velocity expected = (mode == 1   ? 44.0
+                                                     : mode == 3 ? 10.0
+                                                                 : 11.0 * (i + 1)) *
+                                                    ORNL::mm / ORNL::s;
+                    const QString label = QString("mode %1 region %2 units %3").arg(mode).arg(i).arg(imperial);
+                    const int start     = text.indexOf(QString("(Schedule %1 ").arg(schedules[i]));
+                    const int end       = text.indexOf(QString("(Schedule %1 End)").arg(schedules[i]), start);
+                    const auto speed =
+                        QRegularExpression("V\\.S\\.SPEED = ([0-9.]+) +;([^\\n]*)").match(text.mid(start, end - start));
+                    expect(start >= 0 && end > start && speed.hasMatch() &&
+                               ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(velocity_unit), 0.0001) &&
+                               speed.captured(2).endsWith("(" + preferences->getVelocityUnitText() + ")"),
+                           label + ": schedule speed and comment must use the settings UI units.");
+                    if (mode == 0 || regions[i] == ORNL::RegionType::kSkeleton) continue;
+                    auto params = slicer.createSegmentSettings(settings, ORNL::Point(), false, regions[i]);
+                    expect(ORNL::Testing::near(params->setting<ORNL::Velocity>(ORNL::SS::kSpeed)(), expected()),
+                           label + ": generated segment must carry its region speed.");
+                    ORNL::ArcSpecialtiesWriter writer(meta, settings);
+                    const ORNL::Point from(10.0 * ORNL::mm, 0, 0);
+                    const ORNL::Point to(0, 10.0 * ORNL::mm, 1.0 * ORNL::mm);
+                    const QString feedrate = "F" + QString::number(expected.to(meta.m_velocity_unit), 'f', 4);
+                    expect(writer.writeLine(from, to, params).contains(feedrate), label + ": line feedrate mismatch.");
+                    const QString arc = writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
+                    expect(arc.contains("G03") && arc.contains(feedrate), label + ": arc feedrate mismatch.");
+                }
             }
         }
     }
+    preferences->setVelocityUnit(ORNL::mm / ORNL::s);
+    preferences->setTimeUnit(ORNL::s);
+    preferences->setVoltageUnit(ORNL::V);
+    settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 0);
+    ORNL::GCodeArcSpecialtiesSaver snapshot_saver(temp.path() + QDir::separator(), temp.path(),
+                                                  temp.filePath("snapshot.nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
+    preferences->setVelocityUnit(ORNL::inch / ORNL::minute);
+    preferences->setTimeUnit(ORNL::ms);
+    preferences->setVoltageUnit(ORNL::mV);
+    snapshot_saver.run();
+    QFile snapshot_schedule(temp.filePath("snapshot_sch.nc"));
+    expect(snapshot_schedule.open(QIODevice::ReadOnly), "Schedule with captured UI units must exist.");
+    const QString snapshot = QString::fromUtf8(snapshot_schedule.readAll());
+    expect(snapshot.contains("V.E.Sch.Preflow = 1.25      ;Preflow Time (sec)") &&
+               snapshot.contains("V.E.Sch.Weld.WFS = 13.0175      ;Wire Feed Speed in Main Weld (mm/sec)") &&
+               snapshot.contains("V.E.Sch.Weld.Volts = 23.5      ;Trim or Volts in Main Weld (V)") &&
+               snapshot.contains("V.S.SPEED = 11            ;Set speed value if it exists (mm/sec)"),
+           "Schedule values and labels must retain the UI units captured before the export thread starts.");
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 1);
     settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, 1);
     for (bool planar_enabled : {false, true}) {
@@ -163,8 +207,7 @@ int main(int argc, char* argv[]) {
             settings->setSetting(ORNL::PS::Helical::kHelicalInsetRevolutions, inset);
             const QString basename = QString("enabled%1").arg(++case_number);
             ORNL::GCodeArcSpecialtiesSaver saver(temp.path() + QDir::separator(), temp.path(),
-                                                 temp.filePath(basename + ".nc"), "#FILE NAME[ G80=\"old.nc\" ]\n",
-                                                 ORNL::GcodeMetaList::ArcSpecialtiesMeta);
+                                                 temp.filePath(basename + ".nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
             saver.run();
             QFile schedule(temp.filePath(basename + "_sch.nc"));
             expect(schedule.open(QIODevice::ReadOnly), "Filtered Helical schedule must exist.");

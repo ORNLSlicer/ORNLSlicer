@@ -390,8 +390,7 @@ void GcodeExport::exportGcode() {
 
         if (m_most_recent_meta == GcodeMetaList::ArcSpecialtiesMeta &&
             GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile)) {
-            GCodeArcSpecialtiesSaver* saver =
-                new GCodeArcSpecialtiesSaver(m_location, filepath, gcodeFileName, text, m_most_recent_meta);
+            GCodeArcSpecialtiesSaver* saver = new GCodeArcSpecialtiesSaver(m_location, filepath, gcodeFileName, text);
             connect(saver, &GCodeArcSpecialtiesSaver::finished, saver, &GCodeArcSpecialtiesSaver::deleteLater);
             connect(saver, &GCodeArcSpecialtiesSaver::finished, this,
                     [this, filepath, partName]() { showComplete(filepath, partName); });
