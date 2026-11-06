@@ -35,8 +35,7 @@ class GCodeArcSpecialtiesSaver : public QThread {
     //! \brief Temporary file location, output path, output filename, and text to output
     QString m_temp_location, m_path, m_filename, m_text;
 
-    //! \brief Settings UI units captured before the export thread starts.
-    Velocity m_velocity_unit;
+    //! \brief Time and voltage UI units captured before the export thread starts.
     Time m_time_unit;
     Voltage m_voltage_unit;
 };  // class GCodeArcSpecialtiesSaver

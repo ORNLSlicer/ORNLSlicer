@@ -117,7 +117,6 @@ GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString tempLocation, QString
       m_path(path),
       m_filename(filename),
       m_text(text),
-      m_velocity_unit(PreferencesManager::getInstance()->getVelocityUnit()),
       m_time_unit(PreferencesManager::getInstance()->getTimeUnit()),
       m_voltage_unit(PreferencesManager::getInstance()->getVoltageUnit()) {
     // NOP
@@ -346,7 +345,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
                         (region.region_type == RegionType::kInset &&
                          settings->setting<int>(PS::Helical::kHelicalInsetRevolutions) <= 0)))
             continue;
-        writeScheduleBlock(out, region, m_velocity_unit, m_time_unit, m_voltage_unit);
+        writeScheduleBlock(out, region, inch / minute, m_time_unit, m_voltage_unit);
         out << '\n';
     }
 
