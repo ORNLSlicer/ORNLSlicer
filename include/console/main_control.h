@@ -28,7 +28,7 @@ class MainControl : public QObject {
     void preProcess();
 
     //! \brief Thread has complete. Signal for main to exit message handler.
-    void finished();
+    void finished(int exit_code = 0);
 
    public slots:
 

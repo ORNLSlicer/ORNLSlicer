@@ -86,7 +86,9 @@ int main(int argc, char* argv[]) {
         if (setupResult) {
             ORNL::Diagnostics::logRuntimeSummary(QStringLiteral("cli"));
             ORNL::MainControl* control = new ORNL::MainControl(options);
-            QObject::connect(control, &ORNL::MainControl::finished, &ca, &QCoreApplication::quit, Qt::QueuedConnection);
+            QObject::connect(
+                control, &ORNL::MainControl::finished, &ca, [&ca](int exit_code) { ca.exit(exit_code); },
+                Qt::QueuedConnection);
 
             control->run();
             int ret = ca.exec();
