@@ -14,7 +14,9 @@
 #include <cstdlib>
 #include <limits>
 
+#include "configs/settings_base.h"
 #include "gcode/as_printed_model_exporter.h"
+#include "gcode/gcode_segment_filter.h"
 #include "geometry/point.h"
 #include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
@@ -38,6 +40,13 @@ struct Bounds {
 
 ORNL::Point pointFromMm(float x, float y, float z = 0.0f) {
     return ORNL::Point(x * ORNL::mm(), y * ORNL::mm(), z * ORNL::mm());
+}
+
+QVector<ORNL::Point> makeHexagon(float apothem) {
+    const float tan_30 = static_cast<float>(ORNL::tan(30.0f * ORNL::deg));
+    return {pointFromMm(-2.0f * apothem * tan_30, 0.0f), pointFromMm(-apothem * tan_30, -apothem),
+            pointFromMm(apothem * tan_30, -apothem),     pointFromMm(2.0f * apothem * tan_30, 0.0f),
+            pointFromMm(apothem * tan_30, apothem),      pointFromMm(-apothem * tan_30, apothem)};
 }
 
 Bounds boundsFor(const std::vector<ORNL::AsPrintedModelExporter::Triangle>& triangles) {
@@ -67,6 +76,18 @@ QSharedPointer<ORNL::SegmentBase> makeLineSegment(ORNL::SegmentDisplayType type,
 QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const ORNL::Point& end,
                                                  const ORNL::Point& center, uint line_number,
                                                  bool deposition_active = true);
+QSharedPointer<ORNL::SegmentBase> makeTaggedLineSegment(const QString& comment, uint line_number,
+                                                        float y_offset = 0.0f);
+QSharedPointer<ORNL::SegmentBase> makeTaggedLineSegment(const ORNL::Point& start, const ORNL::Point& end,
+                                                        const QString& comment, uint line_number);
+QSharedPointer<ORNL::SegmentBase> makeTaggedSegment(const ORNL::Point& start, const ORNL::Point& end,
+                                                    const QString& comment, uint line_number);
+QVector<QSharedPointer<ORNL::SegmentBase>> makeSquareLoop(float min_x, float min_y, float max_x, float max_y,
+                                                          const QString& comment, uint first_line_number);
+QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedSquare(const QString& comment, uint first_line_number,
+                                                            float min_xy = 0.0f, float max_xy = kLength);
+QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedLoop(const QVector<ORNL::Point>& points, const QString& comment,
+                                                          uint first_line_number);
 
 QSharedPointer<ORNL::SegmentBase> makeLineSegment(const ORNL::Point& start, const ORNL::Point& end, uint line_number,
                                                   ORNL::SegmentDisplayType type = ORNL::SegmentDisplayType::kLine,
@@ -93,6 +114,76 @@ QSharedPointer<ORNL::SegmentBase> makeArcSegment(const ORNL::Point& start, const
                             ORNL::SegmentDisplayType::kLine, QColor(255, 255, 255), line_number, 0);
     segment->setDepositionActive(deposition_active);
     return segment;
+}
+
+QSharedPointer<ORNL::SegmentBase> makeTaggedLineSegment(const QString& comment, uint line_number, float y_offset) {
+    QSharedPointer<ORNL::SegmentBase> segment = makeLineSegment(ORNL::SegmentDisplayType::kLine, line_number, y_offset);
+    segment->m_segment_info_meta.type         = comment;
+    return segment;
+}
+
+QSharedPointer<ORNL::SegmentBase> makeTaggedLineSegment(const ORNL::Point& start, const ORNL::Point& end,
+                                                        const QString& comment, uint line_number) {
+    QSharedPointer<ORNL::SegmentBase> segment =
+        makeLineSegment(start, end, line_number, ORNL::SegmentDisplayType::kLine);
+    segment->m_segment_info_meta.type = comment;
+    return segment;
+}
+
+QSharedPointer<ORNL::SegmentBase> makeTaggedSegment(const ORNL::Point& start, const ORNL::Point& end,
+                                                    const QString& comment, uint line_number) {
+    return makeTaggedLineSegment(start, end, comment, line_number);
+}
+
+QVector<QSharedPointer<ORNL::SegmentBase>> makeSquareLoop(float min_x, float min_y, float max_x, float max_y,
+                                                          const QString& comment, uint first_line_number) {
+    const ORNL::Point bottom_left  = pointFromMm(min_x, min_y);
+    const ORNL::Point bottom_right = pointFromMm(max_x, min_y);
+    const ORNL::Point top_right    = pointFromMm(max_x, max_y);
+    const ORNL::Point top_left     = pointFromMm(min_x, max_y);
+
+    return {makeTaggedLineSegment(bottom_left, bottom_right, comment, first_line_number),
+            makeTaggedLineSegment(bottom_right, top_right, comment, first_line_number + 1),
+            makeTaggedLineSegment(top_right, top_left, comment, first_line_number + 2),
+            makeTaggedLineSegment(top_left, bottom_left, comment, first_line_number + 3)};
+}
+
+QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedSquare(const QString& comment, uint first_line_number,
+                                                            float min_xy, float max_xy) {
+    const ORNL::Point bottom_left  = pointFromMm(min_xy, min_xy);
+    const ORNL::Point bottom_right = pointFromMm(max_xy, min_xy);
+    const ORNL::Point top_right    = pointFromMm(max_xy, max_xy);
+    const ORNL::Point top_left     = pointFromMm(min_xy, max_xy);
+
+    return {makeTaggedLineSegment(bottom_left, bottom_right, comment, first_line_number),
+            makeTaggedLineSegment(bottom_right, top_right, comment, first_line_number + 1),
+            makeTaggedLineSegment(top_right, top_left, comment, first_line_number + 2),
+            makeTaggedLineSegment(top_left, bottom_left, comment, first_line_number + 3)};
+}
+
+QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedSquareYZ(const QString& comment, uint first_line_number, float x,
+                                                              float min_yz, float max_yz) {
+    const ORNL::Point bottom_left  = pointFromMm(x, min_yz, min_yz);
+    const ORNL::Point bottom_right = pointFromMm(x, max_yz, min_yz);
+    const ORNL::Point top_right    = pointFromMm(x, max_yz, max_yz);
+    const ORNL::Point top_left     = pointFromMm(x, min_yz, max_yz);
+
+    return {makeTaggedLineSegment(bottom_left, bottom_right, comment, first_line_number),
+            makeTaggedLineSegment(bottom_right, top_right, comment, first_line_number + 1),
+            makeTaggedLineSegment(top_right, top_left, comment, first_line_number + 2),
+            makeTaggedLineSegment(top_left, bottom_left, comment, first_line_number + 3)};
+}
+
+QVector<QSharedPointer<ORNL::SegmentBase>> makeTaggedLoop(const QVector<ORNL::Point>& points, const QString& comment,
+                                                          uint first_line_number) {
+    QVector<QSharedPointer<ORNL::SegmentBase>> loop;
+    loop.reserve(points.size());
+    for (int i = 0; i < points.size(); ++i) {
+        loop.push_back(
+            makeTaggedLineSegment(points[i], points[(i + 1) % points.size()], comment, first_line_number + i));
+    }
+
+    return loop;
 }
 
 int countFacets(const QString& text) {
@@ -150,6 +241,464 @@ int main(int argc, char* argv[]) {
     const auto all_triangles    = ORNL::AsPrintedModelExporter::generateTriangles(mixed_segments, include_all);
     passed &= ORNL::Testing::expect(all_triangles.size() == printable_triangles.size() * 3,
                                     "Expected optional support and travel output to include all three segments.");
+
+    ORNL::AsPrintedModelExporter::Options without_blends;
+    without_blends.blend_corners = false;
+    ORNL::AsPrintedModelExporter::Options external_only_options;
+    external_only_options.blend_corners = false;
+    external_only_options.external_only = true;
+    const auto printable_triangles_without_blends =
+        ORNL::AsPrintedModelExporter::generateTriangles(printable_only, without_blends);
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> stacked_open_segments;
+    stacked_open_segments.push_back({makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kInfill, 4)});
+    stacked_open_segments.push_back({makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kInfill, 5)});
+    stacked_open_segments.push_back({makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kInfill, 6)});
+    ORNL::GCodeSegmentFilter::tagInternalSegments(stacked_open_segments);
+    const auto stacked_open_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(stacked_open_segments, external_only_options);
+    passed &=
+        ORNL::Testing::expect(stacked_open_external_triangles.size() == printable_triangles_without_blends.size() * 2,
+                              "Expected external-only STL output to skip covered middle open beads.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> stacked_infill_boundary_segments;
+    stacked_infill_boundary_segments.push_back(
+        makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInfill, 350, 0.0f, 10.0f));
+    stacked_infill_boundary_segments.push_back(
+        makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInfill, 354, 0.0f, 10.0f));
+    stacked_infill_boundary_segments.push_back(
+        makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInfill, 358, 0.0f, 10.0f));
+    const auto infill_boundary_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(stacked_infill_boundary_segments, without_blends);
+    ORNL::GCodeSegmentFilter::tagInternalSegments(stacked_infill_boundary_segments);
+    const auto external_infill_boundary_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(stacked_infill_boundary_segments, external_only_options);
+    passed &= ORNL::Testing::expect(
+        external_infill_boundary_triangles.size() == infill_boundary_triangles.size(),
+        "Expected external-only STL output to keep boundary infill on layers with zero perimeters.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> stacked_inset_boundary_segments;
+    stacked_inset_boundary_segments.push_back(makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, 7));
+    stacked_inset_boundary_segments.push_back(makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, 11));
+    stacked_inset_boundary_segments.push_back(makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, 15));
+    const auto inset_boundary_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(stacked_inset_boundary_segments, without_blends);
+    ORNL::GCodeSegmentFilter::tagInternalSegments(stacked_inset_boundary_segments);
+    const auto external_inset_boundary_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(stacked_inset_boundary_segments, external_only_options);
+    passed &= ORNL::Testing::expect(external_inset_boundary_triangles.size() == inset_boundary_triangles.size(),
+                                    "Expected external-only STL output to keep outermost closed inset boundaries.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> nested_inset_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> nested_middle_inset;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, 19 + (layer_index * 9), 0.0f, 20.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inset =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, 23 + (layer_index * 9), 2.0f, 18.0f);
+        const ORNL::Point infill_start = (layer_index % 2 == 0) ? pointFromMm(4.0f, 10.0f) : pointFromMm(10.0f, 4.0f);
+        const ORNL::Point infill_end   = (layer_index % 2 == 0) ? pointFromMm(16.0f, 10.0f) : pointFromMm(10.0f, 16.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> infill = {makeTaggedLineSegment(
+            infill_start, infill_end, ORNL::Constants::RegionTypeStrings::kInfill, 27 + (layer_index * 9))};
+        if (layer_index == 1) { nested_middle_inset = inset; }
+
+        layer += inset;
+        layer += infill;
+        nested_inset_segments.push_back(layer);
+    }
+    ORNL::GCodeSegmentFilter::tagInternalSegments(nested_inset_segments);
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : nested_middle_inset) {
+        passed &=
+            ORNL::Testing::expect(static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                                  "Expected covered nested middle-layer insets to be hidden with internal beads.");
+    }
+    const auto nested_inset_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(nested_inset_segments, external_only_options);
+    passed &=
+        ORNL::Testing::expect(nested_inset_external_triangles.size() == printable_triangles_without_blends.size() * 22,
+                              "Expected external-only STL output to hide covered nested middle-layer insets.");
+
+    const QVector<ORNL::Point> hex_perimeter   = makeHexagon(40.0f);
+    const QVector<ORNL::Point> hex_outer_inset = makeHexagon(40.0f - kWidth);
+    const QVector<ORNL::Point> hex_inner_inset = makeHexagon(40.0f - (2.0f * kWidth));
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> hex_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> hex_middle_insets;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer =
+            makeTaggedLoop(hex_perimeter, ORNL::Constants::RegionTypeStrings::kPerimeter, 43 + (layer_index * 18));
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_inset =
+            makeTaggedLoop(hex_outer_inset, ORNL::Constants::RegionTypeStrings::kInset, 49 + (layer_index * 18));
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_inset =
+            makeTaggedLoop(hex_inner_inset, ORNL::Constants::RegionTypeStrings::kInset, 55 + (layer_index * 18));
+        if (layer_index == 1) { hex_middle_insets = outer_inset; }
+
+        layer += outer_inset;
+        layer += inner_inset;
+        hex_segments.push_back(layer);
+    }
+
+    ORNL::GCodeSegmentFilter::tagInternalSegments(hex_segments);
+    for (int i = 0; i < 6; ++i) {
+        passed &= ORNL::Testing::expect(
+            !static_cast<bool>(hex_segments[1][i]->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected middle-layer hexagon perimeter to remain external.");
+    }
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : hex_middle_insets) {
+        passed &=
+            ORNL::Testing::expect(static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                                  "Expected covered middle-layer hexagon insets to be hidden with internal beads.");
+    }
+    for (int i = 12; i < 18; ++i) {
+        passed &= ORNL::Testing::expect(
+            !static_cast<bool>(hex_segments[1][i]->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected middle-layer hexagon inner exposed inset to remain external.");
+    }
+    const auto hex_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(hex_segments, external_only_options);
+    passed &= ORNL::Testing::expect(hex_external_triangles.size() == printable_triangles_without_blends.size() * 48,
+                                    "Expected external-only STL output for hexagon to keep perimeters and inner "
+                                    "exposed insets, and hide covered insets.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> through_hole_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> through_hole_middle_insets;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, 60 + (layer_index * 12), 0.0f, 20.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_inset =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, 64 + (layer_index * 12), 2.0f, 18.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> hole_perimeter =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, 68 + (layer_index * 12), 4.0f, 16.0f);
+        if (layer_index == 1) { through_hole_middle_insets = outer_inset; }
+
+        layer += outer_inset;
+        layer += hole_perimeter;
+        through_hole_segments.push_back(layer);
+    }
+
+    ORNL::GCodeSegmentFilter::tagInternalSegments(through_hole_segments);
+    for (int i = 0; i < 4; ++i) {
+        passed &= ORNL::Testing::expect(
+            !static_cast<bool>(through_hole_segments[1][i]->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected middle-layer through-hole outer perimeter to remain external.");
+    }
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : through_hole_middle_insets) {
+        passed &= ORNL::Testing::expect(
+            static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected covered middle-layer inset around through-hole to be hidden with internal beads.");
+    }
+    for (int i = 8; i < 12; ++i) {
+        passed &= ORNL::Testing::expect(
+            !static_cast<bool>(through_hole_segments[1][i]->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected middle-layer inner hole perimeter to remain external.");
+    }
+    const auto through_hole_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(through_hole_segments, external_only_options);
+    passed &= ORNL::Testing::expect(
+        through_hole_external_triangles.size() == printable_triangles_without_blends.size() * 32,
+        "Expected external-only STL output for through-hole part to keep outer and hole perimeters and hide covered "
+        "insets.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> concentric_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> concentric_middle_insets;
+    QVector<QSharedPointer<ORNL::SegmentBase>> concentric_middle_perimeters;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line = 100 + (layer_index * 24);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_perimeter =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line, 0.0f, 40.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_inset =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, base_line + 4, 2.0f, 38.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_hole =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 8, 4.0f, 36.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_perimeter =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 12, 12.0f, 28.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_inset =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kInset, base_line + 16, 14.0f, 26.0f);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_hole =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 20, 16.0f, 24.0f);
+        if (layer_index == 1) {
+            concentric_middle_insets     = outer_inset + inner_inset;
+            concentric_middle_perimeters = outer_perimeter + outer_hole + inner_perimeter + inner_hole;
+        }
+
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer;
+        layer += outer_perimeter;
+        layer += outer_inset;
+        layer += outer_hole;
+        layer += inner_perimeter;
+        layer += inner_inset;
+        layer += inner_hole;
+        concentric_segments.push_back(layer);
+    }
+
+    ORNL::GCodeSegmentFilter::tagInternalSegments(concentric_segments);
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : concentric_middle_perimeters) {
+        passed &= ORNL::Testing::expect(
+            !static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected middle-layer external and internal object perimeter walls to remain external.");
+    }
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : concentric_middle_insets) {
+        passed &= ORNL::Testing::expect(
+            static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected covered middle-layer insets in concentric objects to be hidden with internal beads.");
+    }
+    const auto concentric_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(concentric_segments, external_only_options);
+    passed &= ORNL::Testing::expect(
+        concentric_external_triangles.size() == printable_triangles_without_blends.size() * 64,
+        "Expected external-only STL output for concentric objects to keep outer-facing and inner-facing perimeters "
+        "and hide covered insets.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> hex_with_rect_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> hex_with_rect_middle_insets;
+    QVector<QSharedPointer<ORNL::SegmentBase>> hex_inner_insets_middle;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line = 200 + (layer_index * 30);
+        QVector<QSharedPointer<ORNL::SegmentBase>> hex_perm =
+            makeTaggedLoop(hex_perimeter, ORNL::Constants::RegionTypeStrings::kPerimeter, base_line);
+        QVector<QSharedPointer<ORNL::SegmentBase>> hex_out_inset =
+            makeTaggedLoop(hex_outer_inset, ORNL::Constants::RegionTypeStrings::kInset, base_line + 6);
+        QVector<QSharedPointer<ORNL::SegmentBase>> hex_in_inset =
+            makeTaggedLoop(hex_inner_inset, ORNL::Constants::RegionTypeStrings::kInset, base_line + 12);
+
+        const QVector<ORNL::Point> rect_perm_pts  = {pointFromMm(-16.0f, -12.0f), pointFromMm(16.0f, -12.0f),
+                                                     pointFromMm(16.0f, 12.0f), pointFromMm(-16.0f, 12.0f)};
+        const QVector<ORNL::Point> rect_inset_pts = {pointFromMm(-14.0f, -10.0f), pointFromMm(14.0f, -10.0f),
+                                                     pointFromMm(14.0f, 10.0f), pointFromMm(-14.0f, 10.0f)};
+        const QVector<ORNL::Point> rect_hole_pts  = {pointFromMm(-12.0f, -8.0f), pointFromMm(12.0f, -8.0f),
+                                                     pointFromMm(12.0f, 8.0f), pointFromMm(-12.0f, 8.0f)};
+
+        QVector<QSharedPointer<ORNL::SegmentBase>> rect_perm =
+            makeTaggedLoop(rect_perm_pts, ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 18);
+        QVector<QSharedPointer<ORNL::SegmentBase>> rect_inset =
+            makeTaggedLoop(rect_inset_pts, ORNL::Constants::RegionTypeStrings::kInset, base_line + 22);
+        QVector<QSharedPointer<ORNL::SegmentBase>> rect_hole =
+            makeTaggedLoop(rect_hole_pts, ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 26);
+
+        if (layer_index == 1) {
+            hex_with_rect_middle_insets = hex_out_inset + rect_inset;
+            hex_inner_insets_middle     = hex_in_inset;
+        }
+
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer;
+        layer += hex_perm;
+        layer += hex_out_inset;
+        layer += hex_in_inset;
+        layer += rect_perm;
+        layer += rect_inset;
+        layer += rect_hole;
+        hex_with_rect_segments.push_back(layer);
+    }
+
+    ORNL::GCodeSegmentFilter::tagInternalSegments(hex_with_rect_segments);
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : hex_inner_insets_middle) {
+        passed &= ORNL::Testing::expect(
+            !static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected hexagonal inner pointing wall on the same layer as nested rectangle to remain external.");
+    }
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : hex_with_rect_middle_insets) {
+        passed &= ORNL::Testing::expect(
+            static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected covered middle-layer insets in hexagon with nested rectangle to be hidden with internal beads.");
+    }
+    const auto hex_with_rect_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(hex_with_rect_segments, external_only_options);
+    passed &= ORNL::Testing::expect(
+        hex_with_rect_external_triangles.size() == printable_triangles_without_blends.size() * 80,
+        "Expected external-only STL output for hexagon with nested rectangle to keep hexagon inner exposed wall "
+        "and rectangle walls, and hide covered insets.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> skin_filled_segments;
+    QSharedPointer<ORNL::SegmentBase> bottom_skin_segment;
+    QSharedPointer<ORNL::SegmentBase> middle_skin_segment;
+    QSharedPointer<ORNL::SegmentBase> top_skin_segment;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line = static_cast<uint>(300 + layer_index * 16);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_wall =
+            makeSquareLoop(0.0f, 0.0f, 12.0f, 12.0f, ORNL::Constants::RegionTypeStrings::kPerimeter, base_line);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_inset =
+            makeSquareLoop(2.0f, 2.0f, 10.0f, 10.0f, ORNL::Constants::RegionTypeStrings::kInset, base_line + 4);
+        QSharedPointer<ORNL::SegmentBase> skin_line = makeTaggedSegment(
+            pointFromMm(4.0f, 6.0f), pointFromMm(8.0f, 6.0f), ORNL::Constants::RegionTypeStrings::kSkin, base_line + 8);
+        if (layer_index == 0) { bottom_skin_segment = skin_line; }
+        else if (layer_index == 1) { middle_skin_segment = skin_line; }
+        else { top_skin_segment = skin_line; }
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer = outer_wall;
+        layer += inner_inset;
+        layer.push_back(skin_line);
+        skin_filled_segments.push_back(layer);
+    }
+    const auto untagged_skin_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(skin_filled_segments, external_only_options);
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(middle_skin_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected external-only STL generation on untagged segments not to mutate SegmentDisplayType::kInternal.");
+    ORNL::GCodeSegmentFilter::tagInternalSegments(skin_filled_segments);
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(bottom_skin_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected bottom-layer skin segment to remain external.");
+    passed &= ORNL::Testing::expect(
+        static_cast<bool>(middle_skin_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected buried middle-layer skin segment inside walls to be hidden as internal.");
+    passed &=
+        ORNL::Testing::expect(!static_cast<bool>(top_skin_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                              "Expected top-layer skin segment to remain external.");
+    passed &= ORNL::Testing::expect(
+        untagged_skin_external_triangles.size() ==
+            ORNL::AsPrintedModelExporter::generateTriangles(skin_filled_segments, external_only_options).size(),
+        "Expected external-only STL generation on untagged segments to match pre-tagged segments.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> skeleton_segments;
+    QSharedPointer<ORNL::SegmentBase> middle_external_skeleton_fin;
+    QSharedPointer<ORNL::SegmentBase> middle_internal_skeleton_bead;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line = static_cast<uint>(400 + layer_index * 16);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_wall =
+            makeSquareLoop(0.0f, 0.0f, 12.0f, 12.0f, ORNL::Constants::RegionTypeStrings::kPerimeter, base_line);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_inset =
+            makeSquareLoop(2.0f, 2.0f, 10.0f, 10.0f, ORNL::Constants::RegionTypeStrings::kInset, base_line + 4);
+        QSharedPointer<ORNL::SegmentBase> internal_skeleton =
+            makeTaggedSegment(pointFromMm(4.0f, 6.0f), pointFromMm(8.0f, 6.0f),
+                              ORNL::Constants::RegionTypeStrings::kSkeleton, base_line + 8);
+        QSharedPointer<ORNL::SegmentBase> external_skeleton_fin =
+            makeTaggedSegment(pointFromMm(20.0f, 2.0f), pointFromMm(20.0f, 10.0f),
+                              ORNL::Constants::RegionTypeStrings::kSkeleton, base_line + 9);
+        if (layer_index == 1) {
+            middle_internal_skeleton_bead = internal_skeleton;
+            middle_external_skeleton_fin  = external_skeleton_fin;
+        }
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer = outer_wall;
+        layer += inner_inset;
+        layer.push_back(internal_skeleton);
+        layer.push_back(external_skeleton_fin);
+        skeleton_segments.push_back(layer);
+    }
+    ORNL::GCodeSegmentFilter::tagInternalSegments(skeleton_segments);
+    passed &= ORNL::Testing::expect(
+        static_cast<bool>(middle_internal_skeleton_bead->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected middle-layer skeleton bead enclosed by walls to be hidden as internal.");
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(middle_external_skeleton_fin->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected middle-layer external thin-wall skeleton fin to remain external.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> seam_gap_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> middle_seam_gap_insets;
+    QSharedPointer<ORNL::SegmentBase> middle_seam_gap_infill;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line                                         = static_cast<uint>(500 + layer_index * 16);
+        QVector<QSharedPointer<ORNL::SegmentBase>> gapped_outer_wall = {
+            makeTaggedSegment(pointFromMm(0.0f, 0.0f), pointFromMm(12.0f, 0.0f),
+                              ORNL::Constants::RegionTypeStrings::kPerimeter, base_line),
+            makeTaggedSegment(pointFromMm(12.0f, 0.0f), pointFromMm(12.0f, 12.0f),
+                              ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 1),
+            makeTaggedSegment(pointFromMm(12.0f, 12.0f), pointFromMm(0.0f, 12.0f),
+                              ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 2),
+            makeTaggedSegment(pointFromMm(0.0f, 12.0f), pointFromMm(0.0f, 0.5f),
+                              ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 3),
+            makeTaggedSegment(
+                pointFromMm(0.0f, 0.5f), pointFromMm(0.0f, 0.0f),
+                ORNL::Constants::RegionTypeStrings::kPerimeter + " " + ORNL::Constants::PathModifierStrings::kCoasting,
+                base_line + 4),
+        };
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_inset =
+            makeSquareLoop(2.0f, 2.0f, 10.0f, 10.0f, ORNL::Constants::RegionTypeStrings::kInset, base_line + 5);
+        QSharedPointer<ORNL::SegmentBase> infill_line =
+            makeTaggedSegment(pointFromMm(4.0f, 6.0f), pointFromMm(8.0f, 6.0f),
+                              ORNL::Constants::RegionTypeStrings::kInfill, base_line + 9);
+        if (layer_index == 1) {
+            middle_seam_gap_insets = inner_inset;
+            middle_seam_gap_infill = infill_line;
+        }
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer = gapped_outer_wall;
+        layer += inner_inset;
+        layer.push_back(infill_line);
+        seam_gap_segments.push_back(layer);
+    }
+    ORNL::GCodeSegmentFilter::tagInternalSegments(seam_gap_segments);
+    for (const QSharedPointer<ORNL::SegmentBase>& segment : middle_seam_gap_insets) {
+        passed &= ORNL::Testing::expect(
+            static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+            "Expected middle-layer inset inside perimeter with coasting seam gap to be hidden as internal.");
+    }
+    passed &= ORNL::Testing::expect(
+        static_cast<bool>(middle_seam_gap_infill->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected middle-layer infill inside perimeter with coasting seam gap to be hidden as internal.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> interleaved_nonbuild_segments;
+    QSharedPointer<ORNL::SegmentBase> interleaved_middle_infill;
+    for (int build_layer = 0; build_layer < 3; ++build_layer) {
+        const uint base_line = static_cast<uint>(600 + build_layer * 20);
+        QVector<QSharedPointer<ORNL::SegmentBase>> outer_wall =
+            makeSquareLoop(0.0f, 0.0f, 12.0f, 12.0f, ORNL::Constants::RegionTypeStrings::kPerimeter, base_line);
+        QVector<QSharedPointer<ORNL::SegmentBase>> inner_inset =
+            makeSquareLoop(2.0f, 2.0f, 10.0f, 10.0f, ORNL::Constants::RegionTypeStrings::kInset, base_line + 4);
+        QSharedPointer<ORNL::SegmentBase> infill_line =
+            makeTaggedSegment(pointFromMm(4.0f, 6.0f), pointFromMm(8.0f, 6.0f),
+                              ORNL::Constants::RegionTypeStrings::kInfill, base_line + 8);
+        if (build_layer == 1) { interleaved_middle_infill = infill_line; }
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer = outer_wall;
+        layer += inner_inset;
+        layer.push_back(infill_line);
+        interleaved_nonbuild_segments.push_back(layer);
+        if (build_layer == 1) {
+            interleaved_nonbuild_segments.push_back(
+                {makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kSupport, base_line + 12)});
+        }
+    }
+    ORNL::GCodeSegmentFilter::tagInternalSegments(interleaved_nonbuild_segments);
+    passed &= ORNL::Testing::expect(
+        static_cast<bool>(interleaved_middle_infill->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected interleaved non-build layer not to expose adjacent build layer's internal infill.");
+
+    interleaved_nonbuild_segments.pop_back();
+    interleaved_nonbuild_segments.pop_back();
+    ORNL::GCodeSegmentFilter::tagInternalSegments(interleaved_nonbuild_segments);
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(interleaved_middle_infill->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected re-running tagInternalSegments to clear stale SegmentDisplayType::kInternal flags.");
+
+    // A wall segment that begins inside a covered region and extends into an exposed exterior boundary
+    // should remain external to avoid cutting off the bead and exposing the interior cavity.
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> partially_exposed_segments;
+    QSharedPointer<ORNL::SegmentBase> partially_exposed_middle_segment;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line = static_cast<uint>(700 + layer_index * 10);
+        // Build a 20x20 outer box
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer =
+            makeTaggedSquare(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line, 0.0f, 20.0f);
+        // Add a segment that extends from inside (x=10, y=10) out past the wall (x=25, y=10)
+        auto extension_segment = makeTaggedLineSegment(pointFromMm(10.0f, 10.0f), pointFromMm(25.0f, 10.0f),
+                                                       ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 5);
+        if (layer_index == 1) { partially_exposed_middle_segment = extension_segment; }
+        layer.push_back(extension_segment);
+        partially_exposed_segments.push_back(layer);
+    }
+    ORNL::GCodeSegmentFilter::tagInternalSegments(partially_exposed_segments);
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(partially_exposed_middle_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected bead extending from an enclosed interior to an exposed boundary to remain external.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> modifier_segments;
+    QSharedPointer<ORNL::SegmentBase> parsed_tip_wipe = makeTaggedLineSegment(
+        ORNL::Constants::RegionTypeStrings::kPerimeter + " " + ORNL::Constants::PathModifierStrings::kForwardTipWipe,
+        19);
+    QSharedPointer<ORNL::SegmentBase> settings_tip_wipe =
+        makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kInset, 20, 20.0f);
+    settings_tip_wipe->getSb()->setSetting(ORNL::SS::kPathModifiers, ORNL::PathModifiers::kAngledTipWipe);
+    modifier_segments.push_back({makeTaggedLineSegment(ORNL::Constants::RegionTypeStrings::kPerimeter, 21, 40.0f),
+                                 parsed_tip_wipe, settings_tip_wipe});
+    const auto modifier_filtered_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(modifier_segments, without_blends);
+    passed &= ORNL::Testing::expect(modifier_filtered_triangles.size() == printable_triangles_without_blends.size(),
+                                    "Expected non-build path modifiers to be skipped by STL export.");
+
+    ORNL::GCodeSegmentFilter::tagInternalSegments(modifier_segments);
+    passed &=
+        ORNL::Testing::expect(static_cast<bool>(parsed_tip_wipe->displayType() & ORNL::SegmentDisplayType::kInternal),
+                              "Expected parsed tip-wipe segments to be hidden with internal beads.");
+    passed &=
+        ORNL::Testing::expect(static_cast<bool>(settings_tip_wipe->displayType() & ORNL::SegmentDisplayType::kInternal),
+                              "Expected settings-tagged tip-wipe segments to be hidden with internal beads.");
 
     const Bounds printable_bounds = boundsFor(printable_triangles);
     passed &= ORNL::Testing::expect(ORNL::Testing::near3DPoint(printable_bounds.min, 0.0f, 0.0f, 0.0f, kTolerance),
@@ -250,6 +799,52 @@ int main(int argc, char* argv[]) {
         ORNL::Testing::near(filtered_bounds.max.x() - filtered_bounds.min.x(), kLength, kTolerance),
         "Expected skipped segments not to expand the exported bounds.");
 
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> vertical_segments;
+    auto vertical_segment = makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(0.0f, 0.0f, 10.0f), 1);
+    vertical_segments.push_back({vertical_segment});
+    const auto vertical_triangles = ORNL::AsPrintedModelExporter::generateTriangles(vertical_segments, without_blends);
+    const auto vertical_external_triangles =
+        ORNL::AsPrintedModelExporter::generateTriangles(vertical_segments, external_only_options);
+    passed &= ORNL::Testing::expect(
+        !vertical_triangles.empty() && vertical_external_triangles.size() == vertical_triangles.size(),
+        "Expected vertical printable segment outside XY plane to be exported with external_only.");
+    ORNL::GCodeSegmentFilter::tagInternalSegments(vertical_segments);
+    passed &=
+        ORNL::Testing::expect(!static_cast<bool>(vertical_segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                              "Expected vertical printable segment outside XY plane not to be tagged internal.");
+
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> yz_concentric_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> yz_middle_insets;
+    QVector<QSharedPointer<ORNL::SegmentBase>> yz_middle_perimeters;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const float x        = static_cast<float>(layer_index * 2);
+        const uint base_line = static_cast<uint>(900 + (layer_index * 12));
+        auto outer_perm = makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line, x, 0.0f, 40.0f);
+        auto middle_inset =
+            makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kInset, base_line + 4, x, 2.0f, 38.0f);
+        auto inner_hole =
+            makeTaggedSquareYZ(ORNL::Constants::RegionTypeStrings::kPerimeter, base_line + 8, x, 4.0f, 36.0f);
+        if (layer_index == 1) {
+            yz_middle_insets     = middle_inset;
+            yz_middle_perimeters = outer_perm + inner_hole;
+        }
+        QVector<QSharedPointer<ORNL::SegmentBase>> layer;
+        layer += outer_perm;
+        layer += middle_inset;
+        layer += inner_hole;
+        yz_concentric_segments.push_back(layer);
+    }
+    ORNL::GCodeSegmentFilter::tagInternalSegments(yz_concentric_segments);
+    for (const auto& segment : yz_middle_perimeters) {
+        passed &=
+            ORNL::Testing::expect(!static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                                  "Expected YZ middle-layer outer and hole perimeters to remain external.");
+    }
+    for (const auto& segment : yz_middle_insets) {
+        passed &= ORNL::Testing::expect(static_cast<bool>(segment->displayType() & ORNL::SegmentDisplayType::kInternal),
+                                        "Expected YZ covered middle-layer insets to be hidden as internal.");
+    }
+
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> full_circle_arc_segments;
     const ORNL::Point arc_start = pointFromMm(10.0f, 0.0f);
     full_circle_arc_segments.push_back({makeArcSegment(arc_start, arc_start, pointFromMm(0.0f, 0.0f), 1)});
@@ -266,12 +861,42 @@ int main(int argc, char* argv[]) {
         ORNL::Testing::expect(!centerline_full_circle_arc_triangles.empty(),
                               "Expected same-endpoint full-circle arcs to be exported as centerline STL triangles.");
 
+    QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> concentric_arc_segments;
+    QVector<QSharedPointer<ORNL::SegmentBase>> middle_arc_insets;
+    for (int layer_index = 0; layer_index < 3; ++layer_index) {
+        const uint base_line = 300 + (layer_index * 3);
+        const auto outer_arc =
+            makeArcSegment(pointFromMm(20.0f, 0.0f), pointFromMm(20.0f, 0.0f), pointFromMm(0.0f, 0.0f), base_line);
+        outer_arc->m_segment_info_meta.type = ORNL::Constants::RegionTypeStrings::kPerimeter;
+
+        const auto inset_arc = makeArcSegment(pointFromMm(20.0f - kWidth, 0.0f), pointFromMm(20.0f - kWidth, 0.0f),
+                                              pointFromMm(0.0f, 0.0f), base_line + 1);
+        inset_arc->m_segment_info_meta.type = ORNL::Constants::RegionTypeStrings::kInset;
+
+        const auto inner_arc =
+            makeArcSegment(pointFromMm(20.0f - (2.0f * kWidth), 0.0f), pointFromMm(20.0f - (2.0f * kWidth), 0.0f),
+                           pointFromMm(0.0f, 0.0f), base_line + 2);
+        inner_arc->m_segment_info_meta.type = ORNL::Constants::RegionTypeStrings::kInset;
+
+        if (layer_index == 1) { middle_arc_insets = {inset_arc}; }
+        concentric_arc_segments.push_back({outer_arc, inset_arc, inner_arc});
+    }
+
+    ORNL::GCodeSegmentFilter::tagInternalSegments(concentric_arc_segments);
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(concentric_arc_segments[1][0]->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected middle-layer outer circular arc perimeter to remain external.");
+    passed &= ORNL::Testing::expect(
+        static_cast<bool>(middle_arc_insets[0]->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected covered middle-layer circular arc inset to be tagged as internal.");
+    passed &= ORNL::Testing::expect(
+        !static_cast<bool>(concentric_arc_segments[1][2]->displayType() & ORNL::SegmentDisplayType::kInternal),
+        "Expected middle-layer innermost circular arc to remain external.");
+
     QVector<QVector<QSharedPointer<ORNL::SegmentBase>>> corner_segments;
     corner_segments.push_back({makeLineSegment(pointFromMm(0.0f, 0.0f, 0.0f), pointFromMm(10.0f, 0.0f, 0.0f), 1),
                                makeLineSegment(pointFromMm(10.0f, 0.0f, 0.0f), pointFromMm(10.0f, 10.0f, 0.0f), 2)});
 
-    ORNL::AsPrintedModelExporter::Options without_blends;
-    without_blends.blend_corners = false;
     const auto corner_triangles_without_blends =
         ORNL::AsPrintedModelExporter::generateTriangles(corner_segments, without_blends);
     const auto corner_triangles_with_blends = ORNL::AsPrintedModelExporter::generateTriangles(corner_segments);
