@@ -3,6 +3,7 @@
 
 #include <QtCore/QDir>
 #include <QtCore/QSharedPointer>
+#include <boost/polygon/polygon.hpp>
 #include <nlohmann/json_fwd.hpp>
 #include <qcontainerfwd.h>
 #include <qdebug.h>
@@ -441,24 +442,22 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         const double height = maximum.y() - minimum.y();
         const double anchor = qMax(anchor_width(), 1.0);
 
-        auto intersectsModel = [&model_below](PolygonList band) {
-            PolygonList model = model_below;
-            return !(model & band).isEmpty();
-        };
+        auto anchoredAcrossSpan = [&model_below](PolygonList band) { return (band - model_below).isEmpty(); };
 
         // Anchors must lie beyond opposing edges, within the span's transverse
         // bounds. Bands that include corners can count the same attached wall
-        // twice and mistake a single-sided cantilever for a bridge.
+        // twice and mistake a single-sided cantilever for a bridge. Require
+        // coverage across the whole span so an attached cantilever is retained.
         if (Distance(width) <= maximum_length) {
             const PolygonList left  = makeRectangle(minimum.x() - anchor, minimum.y(), minimum.x(), maximum.y());
             const PolygonList right = makeRectangle(maximum.x(), minimum.y(), maximum.x() + anchor, maximum.y());
-            if (intersectsModel(left) && intersectsModel(right)) return true;
+            if (anchoredAcrossSpan(left) && anchoredAcrossSpan(right)) return true;
         }
 
         if (Distance(height) <= maximum_length) {
             const PolygonList bottom = makeRectangle(minimum.x(), minimum.y() - anchor, maximum.x(), minimum.y());
             const PolygonList top    = makeRectangle(minimum.x(), maximum.y(), maximum.x(), maximum.y() + anchor);
-            if (intersectsModel(bottom) && intersectsModel(top)) return true;
+            if (anchoredAcrossSpan(bottom) && anchoredAcrossSpan(top)) return true;
         }
         return false;
     };
@@ -506,19 +505,42 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         PolygonList organic_contact = overhang;
         if (!overhang.isEmpty() && self_supporting_offset > 0) {
             // The angle offset classifies overhangs, but leaves only the tips
-            // of sloped contacts. Restore each footprint within its own
-            // unsupported component so nearby self-supporting ledges do not
-            // acquire support, even when they share a model island.
+            // of sloped contacts. Grow within convex cells so every restored
+            // point has a direct path to its classified contact without crossing
+            // empty space, even when the arms of a contact join elsewhere.
+            namespace BP                  = boost::polygon;
             const PolygonList unsupported = model_geometry[upper_index] - model_geometry[upper_index - 1];
             PolygonList restored_overhang;
             for (const PolygonList& component : unsupported.splitIntoParts(true)) {
-                PolygonList contact = overhang & component;
-                if (contact.isEmpty()) continue;
-                contact = contact.offset(self_supporting_offset);
-                contact &= component;
-                restored_overhang |= contact;
+                PolygonList classified_contact = overhang & component;
+                if (classified_contact.isEmpty()) continue;
+                BP::polygon_set_data<ClipperLib2::cInt> footprint;
+                for (int ring = 0; ring < component.size(); ++ring) {
+                    std::vector<BP::point_data<ClipperLib2::cInt>> points;
+                    for (const Point& point : component[ring]) {
+                        const auto integer_point = point.toIntPoint();
+                        points.emplace_back(integer_point.X, integer_point.Y);
+                    }
+                    footprint.insert(BP::polygon_data<ClipperLib2::cInt>(points.begin(), points.end()), ring > 0);
+                }
+                // Both directions reduce artificial barriers introduced by
+                // partitioning, while each individual fill remains convex.
+                for (auto direction : {BP::HORIZONTAL, BP::VERTICAL}) {
+                    std::vector<BP::polygon_data<ClipperLib2::cInt>> cells;
+                    footprint.get_trapezoids(cells, direction);
+                    for (const auto& cell : cells) {
+                        Polygon polygon;
+                        for (const auto& point : cell) polygon += Point(BP::x(point), BP::y(point));
+                        PolygonList contact = classified_contact & polygon;
+                        if (contact.isEmpty()) continue;
+                        contact = contact.offset(self_supporting_offset);
+                        contact &= polygon;
+                        contact &= component;
+                        restored_overhang |= contact;
+                    }
+                }
             }
-            overhang = restored_overhang;
+            overhang |= restored_overhang;
         }
         const Area minimum_area = upper_layer->getSb()->setting<Area>(PS::Support::kMinArea);
         overhang                = removeSmallAreas(overhang, minimum_area);
