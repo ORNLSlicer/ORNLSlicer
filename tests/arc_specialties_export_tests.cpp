@@ -4,6 +4,8 @@
 #include <QStandardPaths>
 #include <QTemporaryDir>
 
+#include "console/main_control.h"
+#include "managers/settings/settings_manager.h"
 #include "test_utils.h"
 #include "threading/gcode_arc_specialties_saver.h"
 
@@ -83,5 +85,48 @@ int main(int argc, char* argv[]) {
     expect(QDir(directory.path()).mkdir("blocked_layers_layer_12.nc"), "Could not block layer output destination.");
     ORNL::GCodeArcSpecialtiesSaver blocked_layers(directory.filePath("blocked_layers.nc"), {}, layers);
     expect(!blocked_layers.save().isEmpty(), "Layer write failures must propagate through the ARC saver.");
+
+    const QString input_path = directory.filePath("sliced.nc");
+    QFile input(input_path);
+    expect(input.open(QIODevice::WriteOnly), "Could not create CLI input program.");
+    input.write("#FILE NAME[ G80=\"\" ]\nG01 X=1 FV.S.SPEED\n");
+    input.close();
+    auto options = QSharedPointer<ORNL::SettingsBase>::create();
+    options->setSetting(ORNL::Constants::ConsoleOptionStrings::kOutputLocation, directory.filePath("cli.nc"));
+    ORNL::GSM->getGlobal()->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, true);
+    ORNL::MainControl control(options);
+    int cli_completions = 0;
+    int exit_code       = -1;
+    QObject::connect(&control, &ORNL::MainControl::finished, [&](int code) {
+        exit_code = code;
+        ++cli_completions;
+    });
+    using ORNL::GcodeMeta;
+    expect(
+        QMetaObject::invokeMethod(&control, "updateOutputInformation", Qt::DirectConnection, Q_ARG(QString, input_path),
+                                  Q_ARG(GcodeMeta, ORNL::GcodeMetaList::ArcSpecialtiesMeta)),
+        "Could not supply CLI export input.");
+    expect(QMetaObject::invokeMethod(&control, "gcodeParseComplete", Qt::DirectConnection),
+           "Could not invoke CLI export.");
+    expect(cli_completions == 1 && exit_code == 0, "CLI export must report success after both files are complete.");
+    expect(readFile(directory.filePath("cli.nc")) == "#FILE NAME[ G80=\"cli_sch.nc\" ]\nG01 X=1 FV.S.SPEED\n" &&
+               readFile(directory.filePath("cli_sch.nc")).contains("$ENDSWITCH"),
+           "CLI output must reference its generated companion.");
+    expect(QFile::remove(directory.filePath("cli_sch.nc")) && QDir(directory.path()).mkdir("cli_sch.nc"),
+           "Could not block CLI companion output.");
+    const QString previous_cli = readFile(directory.filePath("cli.nc"));
+    expect(QMetaObject::invokeMethod(&control, "gcodeParseComplete", Qt::DirectConnection),
+           "Could not invoke failing CLI export.");
+    expect(cli_completions == 2 && exit_code != 0 && readFile(directory.filePath("cli.nc")) == previous_cli,
+           "CLI companion failure must return a failing exit status and preserve existing output.");
+
+    ORNL::GSM->getGlobal()->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, false);
+    options->setSetting(ORNL::Constants::ConsoleOptionStrings::kOutputLocation, directory.filePath("manual.nc"));
+    expect(QMetaObject::invokeMethod(&control, "gcodeParseComplete", Qt::DirectConnection),
+           "Could not invoke ordinary CLI export.");
+    expect(cli_completions == 3 && exit_code == 0 &&
+               readFile(directory.filePath("manual.nc")) == readFile(input_path) &&
+               !QFile::exists(directory.filePath("manual_sch.nc")),
+           "Disabling generation must retain the ordinary CLI copy path.");
     return passed ? 0 : 1;
 }

@@ -15,6 +15,7 @@
 #include "managers/preferences_manager.h"
 #include "managers/session_manager.h"
 #include "managers/settings/settings_manager.h"
+#include "threading/gcode_arc_specialties_saver.h"
 #include "threading/gcode_loader.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
@@ -134,8 +135,10 @@ void MainControl::gcodeParseComplete() {
     QString partName = info.baseName();
     QString filepath = info.absolutePath();
 
-    QString gcodeFileName = filepath % '/' % partName % m_selected_meta.m_file_suffix;
-    if (QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
+    QString gcodeFileName            = filepath % '/' % partName % m_selected_meta.m_file_suffix;
+    const bool generate_arc_schedule = m_selected_meta == GcodeMetaList::ArcSpecialtiesMeta &&
+                                       GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile);
+    if (!generate_arc_schedule && QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
 
     QString projectFileName = filepath % '/' % partName % ".s2p";
 
@@ -145,6 +148,19 @@ void MainControl::gcodeParseComplete() {
         QTextStream in(&inputFile);
         text = in.readAll();
         inputFile.close();
+    }
+    else if (generate_arc_schedule) {
+        std::cerr << "Could not read G-Code file: " << m_temp_location.toStdString() << std::endl;
+        emit finished(1);
+        return;
+    }
+
+    if (generate_arc_schedule) {
+        GCodeArcSpecialtiesSaver saver(gcodeFileName, text);
+        const QString error = saver.save();
+        if (!error.isEmpty()) { std::cerr << error.toStdString() << std::endl; }
+        emit finished(error.isEmpty() ? 0 : 1);
+        return;
     }
 
     QFile tempFile(m_temp_location % "temp");
