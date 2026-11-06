@@ -186,3 +186,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
 - Treat the hand-calculated NC angles supplied with #372 as approximate reference checks; verify the tool-frame geometry independently and do not assume discrepancies are truncation.
 - Provide every citation format available in the OSTI DOECode record and copy each verbatim; preserve its registered title, historical URL, date, sponsor, and DOI when reorganizing docs.
+- For GUI screenshots and regressions, match the application's Qt style and root stylesheet and exercise light and dark themes; setting the theme preference alone does not apply it.

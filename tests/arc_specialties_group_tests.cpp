@@ -2,13 +2,16 @@
 #include <QDir>
 #include <QDoubleSpinBox>
 #include <QEventLoop>
+#include <QFile>
 #include <QGroupBox>
 #include <QScrollArea>
 #include <QScrollBar>
 #include <QSpinBox>
 #include <QStandardPaths>
+#include <QStyleFactory>
 #include <QTimer>
 #include <QToolButton>
+#include <QVBoxLayout>
 #include <cstdlib>
 
 #include "managers/preferences_manager.h"
@@ -19,6 +22,7 @@
 int main(int argc, char* argv[]) {
     qputenv("QT_QPA_PLATFORM", "offscreen");
     QApplication app(argc, argv);
+    QApplication::setStyle(QStyleFactory::create("fusion"));
     QStandardPaths::setTestModeEnabled(true);
     Q_INIT_RESOURCE(configs);
     Q_INIT_RESOURCE(icons);
@@ -80,6 +84,52 @@ int main(int argc, char* argv[]) {
         }
     }
     if (!groups_exist) return EXIT_FAILURE;
+    QGroupBox standard_group("Export Options");
+    auto* standard_layout = new QVBoxLayout(&standard_group);
+    auto* standard_input  = new QLineEdit("Example value", &standard_group);
+    standard_layout->addWidget(standard_input);
+    standard_group.resize(360, 120);
+    const auto framed = [&](QGroupBox* box, const QString& context) {
+        const QImage image = box->grab().toImage();
+        expect(image.pixelColor(0, image.height() / 2) != image.pixelColor(6, image.height() / 2),
+               context + ": group frames must remain distinguishable from their contents.");
+    };
+    const auto theme = [&](ORNL::ThemeName mode) {
+        preferences->setTheme(mode);
+        QFile sheet(preferences->getTheme().getFolderPath() + "style.qss");
+        expect(sheet.open(QIODevice::ReadOnly), "The application theme stylesheet must load.");
+        const QString style = QString::fromUtf8(sheet.readAll());
+        bar.setStyleSheet(style);
+        bar.setupStyle();
+        standard_group.setStyleSheet(style);
+    };
+    for (int state : {0, 1, 2}) {
+        const bool dark    = state != 1;
+        const QString name = state == 0 ? "dark" : state == 1 ? "light" : "dark-restored";
+        theme(dark ? ORNL::ThemeName::kDarkMode : ORNL::ThemeName::kLightMode);
+        filter->setText("Perimeter");
+        snapshot(name + "-perimeter", 650);
+        for (const auto& section : sections)
+            framed(qobject_cast<QGroupBox*>(group("Perimeter/" + section)), name + " " + section);
+        standard_group.show();
+        app.processEvents();
+        framed(&standard_group, name + " ordinary group");
+        standard_group.setCheckable(true);
+        standard_group.setChecked(false);
+        expect(!standard_input->isEnabled(), "Checkable group behavior must remain intact.");
+        framed(&standard_group, name + " unchecked group");
+        standard_group.setCheckable(false);
+        standard_group.setEnabled(false);
+        framed(&standard_group, name + " disabled group");
+        standard_group.setEnabled(true);
+        if (argc > 1)
+            expect(standard_group.grab().save(QDir(QString::fromLocal8Bit(argv[1])).filePath(name + "-ordinary.png")),
+                   "Could not save the ordinary themed group screenshot.");
+        standard_group.hide();
+    }
+    theme(ORNL::ThemeName::kLightMode);
+    filter->clear();
+    snapshot("themed-regions-collapsed", 650);
     auto* scroll = pane_tabs->currentWidget()->findChild<QScrollArea*>();
     expect(scroll->horizontalScrollBar()->maximum() == 0 && scroll->verticalScrollBar()->maximum() == 0,
            "Collapsed groups must fit the sidebar without stale scrollbars after layouts settle.");
