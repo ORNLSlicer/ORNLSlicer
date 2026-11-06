@@ -34,3 +34,30 @@ function BlockQuote(block)
 
   return nil
 end
+
+local function extract_html_anchor_id(text)
+  return text:match('^%s*<a%s+id="([^"]+)"%s*>%s*</a>%s*$')
+    or text:match('^%s*<a%s+name="([^"]+)"%s*>%s*</a>%s*$')
+    or text:match('^%s*<a%s+id="([^"]+)"%s*>%s*$')
+    or text:match('^%s*<a%s+name="([^"]+)"%s*>%s*$')
+end
+
+function RawBlock(el)
+  if (FORMAT:match("latex") or FORMAT:match("beamer")) and el.format:match("html") then
+    local id = extract_html_anchor_id(el.text)
+    if id then
+      return pandoc.RawBlock("latex", "\\hypertarget{" .. id .. "}{}")
+    end
+  end
+  return nil
+end
+
+function RawInline(el)
+  if (FORMAT:match("latex") or FORMAT:match("beamer")) and el.format:match("html") then
+    local id = extract_html_anchor_id(el.text)
+    if id then
+      return pandoc.RawInline("latex", "\\hypertarget{" .. id .. "}{}")
+    end
+  end
+  return nil
+end

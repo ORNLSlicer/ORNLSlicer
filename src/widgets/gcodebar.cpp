@@ -241,10 +241,6 @@ int GcodeBar::maxLayer() const {
     return m_layer_upper->maximum();
 }
 
-int GcodeBar::upperLayer() const {
-    return m_layer_upper->value();
-}
-
 void GcodeBar::setMaxSegment(int max_value) {
     // If layer has no geometry, max_value will be negative one
     // Make max_value zero to show no geometry exists

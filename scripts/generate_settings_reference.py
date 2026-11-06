@@ -323,6 +323,15 @@ SETTING_NOTES = {
 }
 
 
+TOOLTIP_TAG_RE = re.compile(r"<(?:br\s*/?|img\s+src=':/tooltips/[^']+'\s+width='\d+'\s+height='\d+'\s*/?)>", re.IGNORECASE)
+HTML_TAG_RE = re.compile(r"</?[a-zA-Z][^>]*>")
+
+
+def strip_tooltip_markup(value: Any) -> str:
+    """Remove Qt rich-text line breaks and tooltip resource image tags."""
+    return TOOLTIP_TAG_RE.sub(" ", str(value))
+
+
 def markdown_text(value: Any) -> str:
     """Return one safe, normalized Markdown paragraph fragment."""
     text = " ".join(str(value).split())
@@ -331,6 +340,7 @@ def markdown_text(value: Any) -> str:
 
 def sentence(value: Any) -> str:
     text = markdown_text(value)
+    text = markdown_text(strip_tooltip_markup(value))
     if text and text[-1] not in ".?!:;)":
         text += "."
     return text
@@ -524,6 +534,8 @@ def validate_documentation_metadata(settings: OrderedDict[str, OrderedDict[str, 
             raise ValueError(f"{key}: tooltip contains a literal escaped newline")
         if "\u00a0" in tooltip:
             raise ValueError(f"{key}: tooltip contains a non-breaking space")
+        if HTML_TAG_RE.search(strip_tooltip_markup(tooltip)):
+            raise ValueError(f"{key}: tooltip contains unsupported HTML markup")
 
         options = setting_options(setting)
         if len(options) != len(set(options)):
@@ -539,6 +551,8 @@ def validate_documentation_metadata(settings: OrderedDict[str, OrderedDict[str, 
         tooltip = setting_input["tooltip"]
         if "\\n" in tooltip or "\u00a0" in tooltip:
             raise ValueError(f"{input_name}: composite tooltip contains unsupported whitespace")
+        if HTML_TAG_RE.search(strip_tooltip_markup(tooltip)):
+            raise ValueError(f"{input_name}: composite tooltip contains unsupported HTML markup")
         validate_documentation_dependency(setting_input["depends"], settings, input_name)
 
     for key, descriptions in CHOICE_DESCRIPTIONS.items():

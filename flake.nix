@@ -53,7 +53,9 @@
             ./CHANGELOG.md
             ./CMakeLists.txt
             ./cmake
+            ./docs/ornlslicer-user-guide.md
             ./docs/ornlslicer-user-guide.pdf
+            ./docs/user-guide-images
             ./include
             ./resources
             ./src

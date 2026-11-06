@@ -123,9 +123,6 @@ The application can:
 - save complete projects and export controller files with optional companion
   and project files.
 
-> **Diagram placeholder — Overview:** Add a representative image showing a
-> model in Part View beside its generated toolpath in G-Code View.
-
 | Part View (3-D Model) | G-Code View (Generated Toolpaths) |
 | :---: | :---: |
 | ![Model in Part View](user-guide-images/part_view_workspace.png) | ![Generated toolpaths in G-Code View](user-guide-images/gcode_view_workspace.png) |
@@ -448,10 +445,6 @@ Right-click selected objects and choose **Switch to Build**, **Switch to
 Clipper**, or **Switch to Setting** to change the role. The same model can serve
 different purposes without being re-imported.
 
-> **Diagram placeholder — Model roles:** Add one build object intersected by a
-> clipping object and a settings object, followed by the resulting sliced
-> geometry.
-
 | Build, Clipping, and Settings Roles in Part View | Resulting Sliced Toolpath (Void & Dense Override) |
 | :---: | :---: |
 | ![Model roles setup](user-guide-images/model_roles_setup.png) | ![Model roles sliced result](user-guide-images/model_roles_sliced.png) |
@@ -512,9 +505,6 @@ menu to change model roles, lock geometry, duplicate instances, reset transforms
 rename or reload source files, and toggle wireframe or transparency rendering:
 
 ![Part context menu](user-guide-images/part_context_menu.png)
-
-> **Diagram placeholder — Part organization:** Add an object-tree example with
-> multiple selection, a parent/child group, role icons, and the context menu.
 
 ### 5.5 Transform and align parts
 
@@ -648,9 +638,6 @@ option to supply default values for any missing settings:
 
 ![G-Code to S2C conversion dialog](user-guide-images/gcode_to_s2c_dialog.png)
 
-> **Diagram placeholder — Templates:** Add the template load dialog, save
-> dialog with panel selection, and additional-location chooser.
-
 ### 6.5 Part settings
 
 Select one build part and edit a setting marked as local to override the global
@@ -682,9 +669,6 @@ installed or additional layer-bar settings location when the same process
 transition is used repeatedly.
 
 ![Layer settings bar](user-guide-images/layer_bar.png)
-
-> **Diagram placeholder — Layer settings:** Add a layer bar with one single
-> layer and one paired range, plus the corresponding 3-D range overlay.
 
 ### 6.7 Spatial settings regions
 
@@ -782,9 +766,6 @@ Pattern availability and behavior depend on geometry and other settings.
 Inspect narrow features, small islands, overlaps, and short-path filtering in
 the preview.
 
-> **Diagram placeholder — Fill patterns:** Add a comparison grid for every
-> infill pattern and a cutaway showing skin plus gradual-infill layers.
-
 | Lines | Grid | Concentric |
 | :---: | :---: | :---: |
 | ![Lines infill](user-guide-images/infill_pattern_lines.png) | ![Grid infill](user-guide-images/infill_pattern_grid.png) | ![Concentric infill](user-guide-images/infill_pattern_concentric.png) |
@@ -813,9 +794,6 @@ G-Code View to compare the build paths with and without support. Generated
 planar support is distinct from support-role model files, which are currently
 consumed only by Image mode.
 
-> **Diagram placeholder — Support:** Add the overhang overlay and side-by-side
-> grid and organic support previews, labeling interface and base layers.
-
 | Overhang Inspection Overlay | Generated Support Structure in G-Code View |
 | :---: | :---: |
 | ![Support overhang preview](user-guide-images/support_overhang_preview.png) | ![Sliced support structure](user-guide-images/support_sliced_preview.png) |
@@ -833,9 +811,6 @@ consumed only by Image mode.
 These structures change first-layer geometry and may change required bed area,
 material use, start position, and removal procedure. Confirm they remain inside
 the build volume.
-
-> **Diagram placeholder — Adhesion:** Add one first-layer comparison showing
-> raft, brim, and skirt with dimensions labeled.
 
 | Raft Adhesion | Brim Adhesion | Skirt Adhesion |
 | :---: | :---: | :---: |
@@ -967,9 +942,6 @@ currently rebuilds the selected mode's path data.
 
 ![Slice progress dialog](user-guide-images/slice_dialog.png)
 
-> **Diagram placeholder — Slice progress:** Add the progress dialog with every
-> stage labeled and a successful transition to G-Code View.
-
 ## 8. G-code generation and inspection
 
 ### 8.1 Controller syntax
@@ -1011,9 +983,6 @@ True Bead Widths can bypass that threshold when the toolbar toggle is enabled;
 Thin Lines disables true-width rendering. Large files may use a lightweight
 base with true-width detail only for a smaller visible range.
 
-> **Diagram placeholder — Preview modes:** Add the same layer rendered as thin
-> lines, true bead widths, orthographic 2-D, and a ghosted 3-D view.
-
 | True Bead Widths (3-D) | Thin Lines (3-D) | Orthographic (2-D Top-Down) | Ghosted Source Model Overlay |
 | :---: | :---: | :---: | :---: |
 | ![True bead width preview](user-guide-images/preview_true_bead_width.png) | ![Thin lines preview](user-guide-images/preview_thin_lines.png) | ![Orthographic 2D preview](user-guide-images/preview_orthographic_2d.png) | ![Ghosted source model preview](user-guide-images/preview_ghosted_model.png) |
@@ -1033,9 +1002,6 @@ Keep an external, reviewed copy of important manual edits. Reslicing replaces
 the current generated text.
 
 ![G-Code editor panel](user-guide-images/gcode_editor_panel.png)
-
-> **Diagram placeholder — G-code editor:** Add a search result, an edited line
-> with Refresh enabled, and the synchronized preview selection.
 
 ### 8.4 Layer times and statistics
 
@@ -5772,9 +5738,7 @@ Speed for the flying start motion.
 
 ##### Connect Perimeters (`connect_perimeters`)
 
-If selected, adjacent perimeter loops will be joined with extrusion
-connections.&lt;br&gt;&lt;br&gt;&lt;img src=':/tooltips/profile/connected_perimeters.png'
-width='260' height='146'&gt;
+If selected, adjacent perimeter loops will be joined with extrusion connections.
 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)

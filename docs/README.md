@@ -54,6 +54,7 @@ editing the PDF directly. With Pandoc and a LaTeX engine installed, run:
 ```bash
 FORCE_SOURCE_DATE=1 SOURCE_DATE_EPOCH=1735689600 TZ=UTC \
 pandoc --from=gfm docs/ornlslicer-user-guide.md \
+  --resource-path=docs \
   --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
   --include-in-header=docs/pandoc/user-guide-header.tex \
   --metadata title-meta="ORNLSlicer User Guide" \

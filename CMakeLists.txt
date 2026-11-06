@@ -236,7 +236,7 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
 endif()
 
-add_executable(${PROJECT_NAME}_gui_capture tools/gui_capture.cpp)
+add_executable(${PROJECT_NAME}_gui_capture EXCLUDE_FROM_ALL tools/gui_capture.cpp)
 target_include_directories(
     ${PROJECT_NAME}_gui_capture
     PRIVATE
