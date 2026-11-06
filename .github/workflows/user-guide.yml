@@ -64,6 +64,7 @@ jobs:
             resources/configs/setting_inputs.conf
           python3 -B scripts/generate_settings_reference.py
           pandoc --from=gfm docs/ornlslicer-user-guide.md \
+            --resource-path=docs \
             --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
             --include-in-header=docs/pandoc/user-guide-header.tex \
             --metadata title-meta="ORNLSlicer User Guide" \
@@ -114,6 +115,7 @@ jobs:
             resources/configs/setting_inputs.conf
           python3 -B scripts/generate_settings_reference.py
           pandoc --from=gfm docs/ornlslicer-user-guide.md \
+            --resource-path=docs \
             --lua-filter=docs/pandoc/red-diagram-placeholders.lua \
             --include-in-header=docs/pandoc/user-guide-header.tex \
             --metadata title-meta="ORNLSlicer User Guide" \
@@ -130,7 +132,10 @@ jobs:
           guide_inputs_changed=false
           if git rev-parse HEAD^ >/dev/null 2>&1 && \
             git diff --name-only HEAD^ HEAD -- \
+              .github/workflows/user-guide.yml \
               docs/ornlslicer-user-guide.md \
+              docs/pandoc \
+              docs/user-guide-images \
               resources/configs/master.conf \
               resources/configs/setting_inputs.conf \
               resources/settings \
