@@ -288,6 +288,65 @@ int main(int argc, char* argv[]) {
     expect(
         ORNL::Testing::near(global->setting<ORNL::Voltage>("arc_specialties_perimeter_start_voltage").to(ORNL::V), 17),
         "Grouped voltage edits must use UI units.");
+
+    const auto speed_input = [&](const QString& key) -> QDoubleSpinBox* {
+        for (auto* pane : bar.getPanes())
+            for (auto* tab : pane->getTabs())
+                if (auto* input = dynamic_cast<QDoubleSpinBox*>(tab->getRow(key).get())) return input;
+        return nullptr;
+    };
+    const auto set_speed = [&](const QString& key, ORNL::Velocity value) {
+        global->setSetting(key, value);
+        bar.restoreSettingValue(key);
+    };
+    const auto previous_min_speed = global->setting<ORNL::Velocity>("min_xy_speed");
+    const auto previous_max_speed = global->setting<ORNL::Velocity>("max_xy_speed");
+    set_speed("min_xy_speed", 5.0 * ORNL::mm / ORNL::s);
+    set_speed("max_xy_speed", 10.0 * ORNL::mm / ORNL::s);
+    for (bool imperial : {false, true}) {
+        const ORNL::Velocity unit = imperial ? ORNL::inch / ORNL::minute : ORNL::mm / ORNL::s;
+        preferences->setVelocityUnit(unit);
+        for (double value : {1.0, 20.0}) {
+            const ORNL::Velocity velocity = value * ORNL::mm / ORNL::s;
+            const QString limit           = value < 5 ? "Minimum XY Speed" : "Maximum XY Speed";
+            for (const auto& region : regions) {
+                for (const QString& phase : {"start", "weld", "crater"}) {
+                    const QString key = "arc_specialties_" + region.toLower() + "_" + phase + "_wire_feed_speed";
+                    auto* input       = speed_input(key);
+                    expect(input != nullptr, key + " must have a speed control.");
+                    if (input == nullptr) return EXIT_FAILURE;
+                    input->setValue(velocity.to(unit));
+                    expect(input->toolTip().isEmpty(), key + " must not use XY motion limits.");
+                    expect(
+                        ORNL::Testing::near(global->setting<ORNL::Velocity>(key).to(ORNL::mm / ORNL::s), value, 0.01),
+                        key + " must retain its physical speed when changing UI units.");
+                }
+                const QString key = "arc_specialties_" + region.toLower() + "_start_tspd";
+                set_speed(key, velocity);
+                expect(speed_input(key) != nullptr && speed_input(key)->toolTip().contains(limit),
+                       key + " must retain XY motion limit warnings.");
+            }
+            set_speed("perimeter_speed", velocity);
+            expect(
+                speed_input("perimeter_speed") != nullptr && speed_input("perimeter_speed")->toolTip().contains(limit),
+                "Regional motion speeds must retain XY motion limit warnings.");
+        }
+    }
+    preferences->setVelocityUnit(ORNL::mm / ORNL::s);
+    set_speed("arc_specialties_perimeter_start_tspd", 7.0 * ORNL::mm / ORNL::s);
+    for (const auto mode : {ORNL::ThemeName::kDarkMode, ORNL::ThemeName::kLightMode}) {
+        theme(mode);
+        filter->setText("Perimeter");
+        snapshot(mode == ORNL::ThemeName::kDarkMode ? "dark-wire-feed-xy-limit" : "light-wire-feed-xy-limit", 650);
+    }
+    filter->clear();
+    set_speed("min_xy_speed", 30.0 * ORNL::mm / ORNL::s);
+    for (const QString& key : {"min_xy_speed", "max_xy_speed"})
+        expect(speed_input(key) != nullptr && speed_input(key)->toolTip().contains("is greater than Maximum XY Speed"),
+               key + " must retain invalid XY range warnings.");
+    set_speed("min_xy_speed", previous_min_speed);
+    set_speed("max_xy_speed", previous_max_speed);
+
     const auto set = [&](const QString& key, int value) {
         global->setSetting(key, value);
         bar.restoreSettingValue(key);
