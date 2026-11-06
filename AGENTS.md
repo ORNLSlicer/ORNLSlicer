@@ -189,3 +189,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - For GUI screenshots and regressions, match the application's Qt style and root stylesheet and exercise light and dark themes; setting the theme preference alone does not apply it.
 - Verify that grouped-form gaps match the surrounding panel background and that individual sections retain their own fill.
 - Check resolved font family, size, and weight for headings and fields across theme switches.
+- Keep weld schedule Gas Timing settings one per row in every regional form.

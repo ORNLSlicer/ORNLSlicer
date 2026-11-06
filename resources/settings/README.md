@@ -29,7 +29,7 @@ the controls for the active slicing mode; keep region enablement and revolution-
 Scalar settings may define a `group` object to arrange existing editors into regional forms:
 
 ```yaml
-    group: {"region":"Perimeter","section":"Gas Timing","label":"Preflow","columns":2}
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Preflow"}
 ```
 
 `region`, `section`, and `label` are nonempty strings. Regions are collapsible; sections are titled forms inside them.

@@ -64,4 +64,9 @@
         <file>qdarkstyle/rc/radio_unchecked.png</file>
         <file>qbasestyle/gcode_info_control.qss</file>
     </qresource>
+    <qresource prefix="/fonts">
+        <file alias="NotoSans-Regular.ttf">../fonts/NotoSans-Regular.ttf</file>
+        <file alias="NotoSans-SemiBold.ttf">../fonts/NotoSans-SemiBold.ttf</file>
+        <file alias="OFL.txt">../fonts/OFL.txt</file>
+    </qresource>
 </RCC>

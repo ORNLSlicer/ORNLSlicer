@@ -58,6 +58,9 @@ class SettingGroupTests(unittest.TestCase):
             self.assertEqual([entry["section"] for entry in regional].count("Startup"), 6)
             self.assertEqual([entry["section"] for entry in regional].count("Main Weld"), 4)
             self.assertEqual([entry["section"] for entry in regional].count("Crater Fill"), 5)
+            for entry in regional:
+                if entry["section"] == "Gas Timing":
+                    self.assertEqual(entry.get("columns", 1), 1)
 
 
 if __name__ == "__main__":

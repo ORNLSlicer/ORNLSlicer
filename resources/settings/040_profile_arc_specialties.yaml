@@ -15,7 +15,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_preflow"
     display: "Perimeter Preflow"
-    group: {"region":"Perimeter","section":"Gas Timing","label":"Preflow","columns":2}
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Preflow"}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -28,7 +28,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_travel_delay"
     display: "Perimeter Travel Delay"
-    group: {"region":"Perimeter","section":"Gas Timing","label":"Travel Delay","columns":2}
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Travel Delay"}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -41,7 +41,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_postflow"
     display: "Perimeter Postflow"
-    group: {"region":"Perimeter","section":"Gas Timing","label":"Postflow","columns":2}
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Postflow"}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -54,7 +54,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_postpurge"
     display: "Perimeter Postpurge"
-    group: {"region":"Perimeter","section":"Gas Timing","label":"Postpurge","columns":2}
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Postpurge"}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -262,7 +262,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_preflow"
     display: "Inset Preflow"
-    group: {"region":"Inset","section":"Gas Timing","label":"Preflow","columns":2}
+    group: {"region":"Inset","section":"Gas Timing","label":"Preflow"}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -275,7 +275,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_travel_delay"
     display: "Inset Travel Delay"
-    group: {"region":"Inset","section":"Gas Timing","label":"Travel Delay","columns":2}
+    group: {"region":"Inset","section":"Gas Timing","label":"Travel Delay"}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -288,7 +288,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_postflow"
     display: "Inset Postflow"
-    group: {"region":"Inset","section":"Gas Timing","label":"Postflow","columns":2}
+    group: {"region":"Inset","section":"Gas Timing","label":"Postflow"}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -301,7 +301,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_postpurge"
     display: "Inset Postpurge"
-    group: {"region":"Inset","section":"Gas Timing","label":"Postpurge","columns":2}
+    group: {"region":"Inset","section":"Gas Timing","label":"Postpurge"}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -509,7 +509,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_preflow"
     display: "Infill Preflow"
-    group: {"region":"Infill","section":"Gas Timing","label":"Preflow","columns":2}
+    group: {"region":"Infill","section":"Gas Timing","label":"Preflow"}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -522,7 +522,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_travel_delay"
     display: "Infill Travel Delay"
-    group: {"region":"Infill","section":"Gas Timing","label":"Travel Delay","columns":2}
+    group: {"region":"Infill","section":"Gas Timing","label":"Travel Delay"}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -535,7 +535,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_postflow"
     display: "Infill Postflow"
-    group: {"region":"Infill","section":"Gas Timing","label":"Postflow","columns":2}
+    group: {"region":"Infill","section":"Gas Timing","label":"Postflow"}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -548,7 +548,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_postpurge"
     display: "Infill Postpurge"
-    group: {"region":"Infill","section":"Gas Timing","label":"Postpurge","columns":2}
+    group: {"region":"Infill","section":"Gas Timing","label":"Postpurge"}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -756,7 +756,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_preflow"
     display: "Skeleton Preflow"
-    group: {"region":"Skeleton","section":"Gas Timing","label":"Preflow","columns":2}
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Preflow"}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -769,7 +769,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_travel_delay"
     display: "Skeleton Travel Delay"
-    group: {"region":"Skeleton","section":"Gas Timing","label":"Travel Delay","columns":2}
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Travel Delay"}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -782,7 +782,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_postflow"
     display: "Skeleton Postflow"
-    group: {"region":"Skeleton","section":"Gas Timing","label":"Postflow","columns":2}
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Postflow"}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -795,7 +795,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_postpurge"
     display: "Skeleton Postpurge"
-    group: {"region":"Skeleton","section":"Gas Timing","label":"Postpurge","columns":2}
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Postpurge"}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}

@@ -3,6 +3,7 @@
 #include <QDoubleSpinBox>
 #include <QEventLoop>
 #include <QFile>
+#include <QFontDatabase>
 #include <QFontInfo>
 #include <QGroupBox>
 #include <QScrollArea>
@@ -18,6 +19,7 @@
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "test_utils.h"
+#include "utilities/theme_tool.h"
 #include "widgets/settings/setting_bar.h"
 
 int main(int argc, char* argv[]) {
@@ -32,6 +34,13 @@ int main(int argc, char* argv[]) {
     const auto expect = [&](bool condition, const QString& message) {
         passed &= ORNL::Testing::expect(condition, message.toStdString());
     };
+    expect(ORNL::Theme::initializeFonts(), "Both bundled Noto Sans faces must load.");
+    expect(QFontInfo(app.font()).family() == "Noto Sans" && ORNL::Testing::near(app.font().pointSizeF(), 9),
+           "The application default must use Noto Sans at 9 pt.");
+    expect(QFontDatabase::styles("Noto Sans").contains("SemiBold"), "The bundled Semibold face must be available.");
+    QFile font_license(":/fonts/OFL.txt");
+    expect(font_license.open(QIODevice::ReadOnly) && font_license.readAll().contains("SIL OPEN FONT LICENSE"),
+           "The font license must be available in installed builds.");
     const QStringList regions  = {"Perimeter", "Inset", "Infill", "Skeleton"};
     const QStringList sections = {"Gas Timing", "Startup", "Main Weld", "Crater Fill"};
     auto global                = ORNL::GSM->getGlobal();
@@ -109,25 +118,32 @@ int main(int argc, char* argv[]) {
         const QString name = state == 0 ? "dark" : state == 1 ? "light" : "dark-restored";
         theme(dark ? ORNL::ThemeName::kDarkMode : ORNL::ThemeName::kLightMode);
         filter->setText("Perimeter");
+        snapshot(name + "-perimeter-narrow", 500);
+        auto* narrow_scroll = pane_tabs->currentWidget()->findChild<QScrollArea*>();
+        expect(bar.width() == 500 && narrow_scroll->horizontalScrollBar()->maximum() == 0,
+               name + ": regional forms must fit a narrow panel without horizontal scrolling.");
         snapshot(name + "-perimeter", 650);
         auto* heading    = arc->findChild<QToolButton*>("setting_group_toggle_Perimeter");
         auto* phase      = qobject_cast<QGroupBox*>(group("Perimeter/Startup"));
         auto* editor     = dynamic_cast<QDoubleSpinBox*>(arc->getRow("arc_specialties_perimeter_start_voltage").get());
         auto* label      = phase->findChild<QLabel*>();
         auto* generation = dynamic_cast<QWidget*>(arc->getRow("arc_specialties_generate_weld_schedule_file").get());
-        const QFont reference("Segoe UI", 8);
+        const QFont reference("Noto Sans", 9);
         const QFontInfo reference_info(reference);
         for (QWidget* widget : {static_cast<QWidget*>(heading), static_cast<QWidget*>(phase),
                                 static_cast<QWidget*>(editor), static_cast<QWidget*>(label), generation}) {
             const QFontInfo info(widget->font());
-            expect(info.family() == reference_info.family() &&
-                       ORNL::Testing::near(info.pointSizeF(), reference_info.pointSizeF()),
-                   name + ": headings and controls must share the standard UI font family and size.");
+            expect(info.family() == "Noto Sans" && ORNL::Testing::near(info.pointSizeF(), reference_info.pointSizeF()),
+                   name + ": headings and controls must use Noto Sans at the standard UI size.");
         }
-        expect(QFontInfo(heading->font()).bold() && QFontInfo(phase->font()).bold(),
-               name + ": region and phase headings must stay bold.");
-        expect(!QFontInfo(editor->font()).bold() && !QFontInfo(label->font()).bold() &&
-                   !QFontInfo(generation->font()).bold(),
+        expect(QFontInfo(heading->font()).weight() == QFont::DemiBold &&
+                   QFontInfo(phase->font()).weight() == QFont::DemiBold &&
+                   QFontInfo(heading->font()).styleName() == "SemiBold" &&
+                   QFontInfo(phase->font()).styleName() == "SemiBold",
+               name + ": region and phase headings must use Semibold.");
+        expect(QFontInfo(editor->font()).weight() == QFont::Normal &&
+                   QFontInfo(label->font()).weight() == QFont::Normal &&
+                   QFontInfo(generation->font()).weight() == QFont::Normal,
                name + ": field values and labels must use regular weight.");
         for (const auto& section : sections)
             framed(qobject_cast<QGroupBox*>(group("Perimeter/" + section)), name + " " + section);
@@ -197,9 +213,18 @@ int main(int argc, char* argv[]) {
         }
         expect(count == 19, region + " must retain 19 independent settings.");
         auto* gas = qobject_cast<QGridLayout*>(group(region + "/Gas Timing")->layout());
-        expect(gas != nullptr && gas->itemAtPosition(0, 0) && gas->itemAtPosition(0, 1) && gas->itemAtPosition(1, 0) &&
-                   gas->itemAtPosition(1, 1),
-               region + " gas timing must use a two-by-two grid.");
+        expect(gas != nullptr, region + " gas timing must have a form layout.");
+        const QStringList timing_keys = {"preflow", "travel_delay", "postflow", "postpurge"};
+        for (int i = 0; gas != nullptr && i < timing_keys.size(); ++i) {
+            auto* input =
+                dynamic_cast<QWidget*>(arc->getRow("arc_specialties_" + region.toLower() + "_" + timing_keys[i]).get());
+            const int index = gas->indexOf(input);
+            expect(index >= 0, region + " gas timing must place each setting directly in its form.");
+            if (index < 0) continue;
+            int row, column, row_span, column_span;
+            gas->getItemPosition(index, &row, &column, &row_span, &column_span);
+            expect(row == i && row_span == 1, region + " gas timing must have one setting per row.");
+        }
     }
     const QString speed_key = "arc_specialties_perimeter_start_wire_feed_speed";
     auto speed_row          = arc->getRow(speed_key);

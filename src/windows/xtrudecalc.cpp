@@ -51,7 +51,7 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
     // Printing Parameter Section
     m_layout                = new QGridLayout();
     QLabel* lbl_PrintParams = new QLabel("Printing Parameters");
-    QFont titleFont("Arial", 10, QFont::Bold);
+    QFont titleFont("Noto Sans", 10, QFont::DemiBold);
     lbl_PrintParams->setFont(titleFont);
     m_layout->addWidget(lbl_PrintParams, 0, 0, 1, 2);
 
