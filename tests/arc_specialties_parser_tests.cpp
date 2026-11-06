@@ -266,6 +266,7 @@ bool writesG80ScheduleSpeedVariableForLineAndArc() {
 
 bool writesG80ScheduleSpeedVariableForGeneratedScheduleFile() {
     QSharedPointer<ORNL::SettingsBase> settings = helicalWriterSettings(false);
+    settings->setSetting(ORNL::PS::Perimeter::kSpeed, 600.0 * ORNL::mm / ORNL::minute);
     settings->setSetting(ORNL::PRS::GCode::kArcSpecialtiesG80WeldScheduleFile, QString());
     settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, true);
 

@@ -175,6 +175,83 @@ int main(int argc, char* argv[]) {
             }
         }
     }
+    const std::array<QString, 4> region_speed_keys = {ORNL::PS::Perimeter::kSpeed, ORNL::PS::Inset::kSpeed,
+                                                      ORNL::PS::Infill::kSpeed, ORNL::PS::Skeleton::kSpeed};
+    for (int mode : {0, 1, 2}) {
+        auto global_settings = QSharedPointer<ORNL::SettingsBase>::create(*settings);
+        global_settings->setSetting(ORNL::PS::Layer::kSpeed, 44.0 * ORNL::mm / ORNL::s);
+        global_settings->setSetting(ORNL::PS::Slicing::kSlicingMode, mode == 0 ? 0 : 1);
+        global_settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, mode == 2 ? 1 : 0);
+        for (bool imperial : {false, true}) {
+            auto meta            = ORNL::GcodeMetaList::ArcSpecialtiesMeta;
+            meta.m_velocity_unit = imperial ? ORNL::inch / ORNL::minute : ORNL::mm / ORNL::minute;
+            for (bool generated : {false, true}) {
+                global_settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, generated);
+                global_settings->setSetting(ORNL::PRS::GCode::kArcSpecialtiesG80WeldScheduleFile,
+                                            generated ? QString() : QString("manual.nc"));
+                for (bool support_arcs : {false, true}) {
+                    global_settings->setSetting(ORNL::PRS::MachineSetup::kSupportG3, support_arcs);
+                    ORNL::ArcSpecialtiesWriter writer(meta, global_settings);
+                    auto layer_settings = QSharedPointer<ORNL::SettingsBase>::create(*global_settings);
+                    layer_settings->setSetting(ORNL::PS::Perimeter::kSpeed, 5.5 * ORNL::mm / ORNL::s);
+                    writer.writeBeforeLayer(0, layer_settings);
+                    writer.writeBeforePath(ORNL::RegionType::kPerimeter);
+                    const ORNL::Point from(10.0 * ORNL::mm, 0, 0);
+                    const ORNL::Point to(0, 10.0 * ORNL::mm, 1.0 * ORNL::mm);
+                    for (size_t i = 0; i < regions.size(); ++i) {
+                        writer.writeBeforeRegion(regions[i], 1);
+                        const ORNL::Velocity global_speed = (mode == 1 ? 44.0 : 11.0 * (i + 1)) * ORNL::mm / ORNL::s;
+                        for (int source : {0, 1, 2, 0}) {
+                            auto effective_settings = QSharedPointer<ORNL::SettingsBase>::create(*global_settings);
+                            effective_settings->setSetting(mode == 1 ? ORNL::PS::Layer::kSpeed : region_speed_keys[i],
+                                                           source == 1 ? global_speed / 2.0 : global_speed);
+                            auto params =
+                                slicer.createSegmentSettings(effective_settings, ORNL::Point(), false, regions[i]);
+                            if (source == 2) params->setSetting(ORNL::SS::kSpeed, global_speed * 2.0);
+                            const ORNL::Velocity effective_speed = params->setting<ORNL::Velocity>(ORNL::SS::kSpeed);
+                            const bool use_schedule_speed        = !generated || source == 0;
+                            const QString feedrate =
+                                use_schedule_speed
+                                    ? "FV.S.SPEED"
+                                    : "F" + QString::number(effective_speed.to(meta.m_velocity_unit), 'f', 4);
+                            const QString context =
+                                QString("mode %1 region %2 imperial=%3 generated=%4 arcs=%5 source=%6")
+                                    .arg(mode)
+                                    .arg(i)
+                                    .arg(imperial)
+                                    .arg(generated)
+                                    .arg(support_arcs)
+                                    .arg(source);
+                            const QString line = writer.writeLine(from, to, params);
+                            const QString arc =
+                                writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
+                            expect(
+                                line.contains(" " + feedrate) && arc.contains(" " + feedrate) &&
+                                    arc.contains(support_arcs ? "G03 " : "G01 ") &&
+                                    (use_schedule_speed ||
+                                     (!line.contains("FV.S.SPEED") && !arc.contains("FV.S.SPEED"))),
+                                context + ": effective speed must survive line, arc, and arc-to-line fallback output.");
+                        }
+                    }
+                    for (int unknown_case : {0, 1, 2}) {
+                        const auto region = unknown_case == 2 ? ORNL::RegionType::kSkin : ORNL::RegionType::kUnknown;
+                        auto params       = slicer.createSegmentSettings(global_settings, ORNL::Point(), false, region);
+                        if (unknown_case == 0) params->remove(ORNL::SS::kRegionType);
+                        const QString feedrate =
+                            generated
+                                ? "F" + QString::number(
+                                            ORNL::Velocity(44.0 * ORNL::mm / ORNL::s).to(meta.m_velocity_unit), 'f', 4)
+                                : "FV.S.SPEED";
+                        const QString line = writer.writeLine(from, to, params);
+                        const QString arc = writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
+                        expect(line.contains(" " + feedrate) && arc.contains(" " + feedrate),
+                               "Regions without generated schedules must use numeric speeds; manual schedules retain "
+                               "FV.S.SPEED.");
+                    }
+                }
+            }
+        }
+    }
     preferences->setVelocityUnit(ORNL::mm / ORNL::s);
     preferences->setTimeUnit(ORNL::s);
     preferences->setVoltageUnit(ORNL::V);
