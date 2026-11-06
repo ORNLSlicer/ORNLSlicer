@@ -5,6 +5,7 @@
 #include <qobject.h>
 #include <qtmetamacros.h>
 
+#include "gcode/gcode_layer_export.h"
 #include "units/unit.h"
 
 namespace ORNL {
@@ -18,7 +19,7 @@ class GCodeArcSpecialtiesSaver : public QThread {
     //! \brief Constructor
     //! \param filename: filename to output
     //! \param text: current gcode
-    GCodeArcSpecialtiesSaver(QString filename, QString text);
+    GCodeArcSpecialtiesSaver(QString filename, QString text, QVector<GcodeLayer> layers = {});
 
     //! \brief Saves both files synchronously, returning an error or an empty string on success.
     QString save();
@@ -34,10 +35,13 @@ class GCodeArcSpecialtiesSaver : public QThread {
     QString writeWeldScheduleFile(const QString& file_path);
 
     //! \brief Replaces the G80 schedule file reference in the main G-Code text.
-    void updateScheduleReference(const QString& schedule_file_name);
+    static void updateScheduleReference(QString& text, const QString& schedule_file_name);
 
     //! \brief Output filename and text to output
     QString m_filename, m_text;
+
+    //! \brief Standalone layers sharing the generated companion, when exporting individual layers.
+    QVector<GcodeLayer> m_layers;
 
     //! \brief Time and voltage UI units captured before the export thread starts.
     Time m_time_unit;

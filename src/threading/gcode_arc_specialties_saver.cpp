@@ -11,6 +11,7 @@
 #include "managers/preferences_manager.h"
 #include "managers/settings/settings_manager.h"
 #include "slicing/region_speed.h"
+#include "threading/gcode_layer_saver.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
@@ -112,9 +113,10 @@ void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, Velocity
 }
 }  // namespace
 
-GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString filename, QString text)
+GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString filename, QString text, QVector<GcodeLayer> layers)
     : m_filename(filename),
       m_text(text),
+      m_layers(std::move(layers)),
       m_time_unit(PreferencesManager::getInstance()->getTimeUnit()),
       m_voltage_unit(PreferencesManager::getInstance()->getVoltageUnit()) {
     // NOP
@@ -132,7 +134,17 @@ QString GCodeArcSpecialtiesSaver::save() {
     const QString error = writeWeldScheduleFile(schedule_file_path);
     if (!error.isEmpty()) return error;
 
-    updateScheduleReference(schedule_file_name);
+    if (!m_layers.isEmpty()) {
+        for (auto& layer : m_layers) { updateScheduleReference(layer.text, schedule_file_name); }
+        GCodeLayerSaver saver(file_info.absolutePath(), file_info.completeBaseName(), m_layers,
+                              "." % file_info.suffix());
+        QString layer_error;
+        connect(&saver, &GCodeLayerSaver::completed, [&layer_error](const QString& error) { layer_error = error; });
+        saver.run();
+        return layer_error;
+    }
+
+    updateScheduleReference(m_text, schedule_file_name);
 
     QSaveFile file(m_filename);
     if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
@@ -148,11 +160,11 @@ QString GCodeArcSpecialtiesSaver::save() {
     return {};
 }
 
-void GCodeArcSpecialtiesSaver::updateScheduleReference(const QString& schedule_file_name) {
+void GCodeArcSpecialtiesSaver::updateScheduleReference(QString& text, const QString& schedule_file_name) {
     const QRegularExpression g80_file_line("^#FILE NAME\\[ G80=\"[^\"]*\" \\]$", QRegularExpression::MultilineOption);
     const QString replacement = "#FILE NAME[ G80=\"" % schedule_file_name % "\" ]";
 
-    if (m_text.contains(g80_file_line)) { m_text.replace(g80_file_line, replacement); }
+    if (text.contains(g80_file_line)) { text.replace(g80_file_line, replacement); }
 }
 
 QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
