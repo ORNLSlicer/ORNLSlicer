@@ -166,12 +166,10 @@ std::pair<QGridLayout*, int> SettingTab::groupedRowLayout(const QString& key, co
         layout->setContentsMargins(8, 4, 0, 4);
         group.toggle = new QToolButton(group.frame);
         group.toggle->setObjectName("setting_group_toggle_" + region);
+        group.toggle->setProperty("settingGroupToggle", true);
         group.toggle->setText(region);
         group.toggle->setToolButtonStyle(Qt::ToolButtonTextBesideIcon);
         group.toggle->setAutoRaise(true);
-        auto font = group.toggle->font();
-        font.setBold(true);
-        group.toggle->setFont(font);
         group.content = new QFrame(group.frame);
         group.content->setObjectName("setting_group_content_" + region);
         group.layout = new QGridLayout(group.content);

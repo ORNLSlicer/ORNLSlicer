@@ -3,6 +3,7 @@
 #include <QDoubleSpinBox>
 #include <QEventLoop>
 #include <QFile>
+#include <QFontInfo>
 #include <QGroupBox>
 #include <QScrollArea>
 #include <QScrollBar>
@@ -109,6 +110,25 @@ int main(int argc, char* argv[]) {
         theme(dark ? ORNL::ThemeName::kDarkMode : ORNL::ThemeName::kLightMode);
         filter->setText("Perimeter");
         snapshot(name + "-perimeter", 650);
+        auto* heading    = arc->findChild<QToolButton*>("setting_group_toggle_Perimeter");
+        auto* phase      = qobject_cast<QGroupBox*>(group("Perimeter/Startup"));
+        auto* editor     = dynamic_cast<QDoubleSpinBox*>(arc->getRow("arc_specialties_perimeter_start_voltage").get());
+        auto* label      = phase->findChild<QLabel*>();
+        auto* generation = dynamic_cast<QWidget*>(arc->getRow("arc_specialties_generate_weld_schedule_file").get());
+        const QFont reference("Segoe UI", 8);
+        const QFontInfo reference_info(reference);
+        for (QWidget* widget : {static_cast<QWidget*>(heading), static_cast<QWidget*>(phase),
+                                static_cast<QWidget*>(editor), static_cast<QWidget*>(label), generation}) {
+            const QFontInfo info(widget->font());
+            expect(info.family() == reference_info.family() &&
+                       ORNL::Testing::near(info.pointSizeF(), reference_info.pointSizeF()),
+                   name + ": headings and controls must share the standard UI font family and size.");
+        }
+        expect(QFontInfo(heading->font()).bold() && QFontInfo(phase->font()).bold(),
+               name + ": region and phase headings must stay bold.");
+        expect(!QFontInfo(editor->font()).bold() && !QFontInfo(label->font()).bold() &&
+                   !QFontInfo(generation->font()).bold(),
+               name + ": field values and labels must use regular weight.");
         for (const auto& section : sections)
             framed(qobject_cast<QGroupBox*>(group("Perimeter/" + section)), name + " " + section);
         auto* region          = group("Perimeter");
