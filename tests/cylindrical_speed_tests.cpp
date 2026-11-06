@@ -118,11 +118,7 @@ int main(int argc, char* argv[]) {
                 for (const auto& parameter : parameters) {
                     double expected_value = parameter.value;
                     QString unit_text     = parameter.unit;
-                    if (parameter.unit == "in/min") {
-                        expected_value = ORNL::Velocity(parameter.value * ORNL::inch / ORNL::minute).to(velocity_unit);
-                        unit_text      = preferences->getVelocityUnitText();
-                    }
-                    else if (parameter.unit == "sec") {
+                    if (parameter.unit == "sec") {
                         expected_value = ORNL::Time(parameter.value * ORNL::s).to(time_unit);
                         unit_text      = preferences->getTimeUnitText();
                     }
@@ -161,9 +157,10 @@ int main(int argc, char* argv[]) {
                     const auto speed =
                         QRegularExpression("V\\.S\\.SPEED = ([0-9.]+) +;([^\\n]*)").match(text.mid(start, end - start));
                     expect(start >= 0 && end > start && speed.hasMatch() &&
-                               ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(velocity_unit), 0.0001) &&
-                               speed.captured(2).endsWith("(" + preferences->getVelocityUnitText() + ")"),
-                           label + ": schedule speed and comment must use the settings UI units.");
+                               ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(ORNL::inch / ORNL::minute),
+                                                   0.0001) &&
+                               speed.captured(2).endsWith("(in/min)"),
+                           label + ": schedule speed and comment must always use in/min.");
                     if (mode == 0 || regions[i] == ORNL::RegionType::kSkeleton) continue;
                     auto params = slicer.createSegmentSettings(settings, ORNL::Point(), false, regions[i]);
                     expect(ORNL::Testing::near(params->setting<ORNL::Velocity>(ORNL::SS::kSpeed)(), expected()),
@@ -185,7 +182,7 @@ int main(int argc, char* argv[]) {
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 0);
     ORNL::GCodeArcSpecialtiesSaver snapshot_saver(temp.path() + QDir::separator(), temp.path(),
                                                   temp.filePath("snapshot.nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
-    preferences->setVelocityUnit(ORNL::inch / ORNL::minute);
+    preferences->setVelocityUnit(ORNL::mm / ORNL::minute);
     preferences->setTimeUnit(ORNL::ms);
     preferences->setVoltageUnit(ORNL::mV);
     snapshot_saver.run();
@@ -193,10 +190,10 @@ int main(int argc, char* argv[]) {
     expect(snapshot_schedule.open(QIODevice::ReadOnly), "Schedule with captured UI units must exist.");
     const QString snapshot = QString::fromUtf8(snapshot_schedule.readAll());
     expect(snapshot.contains("V.E.Sch.Preflow = 1.25      ;Preflow Time (sec)") &&
-               snapshot.contains("V.E.Sch.Weld.WFS = 13.0175      ;Wire Feed Speed in Main Weld (mm/sec)") &&
+               snapshot.contains("V.E.Sch.Weld.WFS = 30.75      ;Wire Feed Speed in Main Weld (in/min)") &&
                snapshot.contains("V.E.Sch.Weld.Volts = 23.5      ;Trim or Volts in Main Weld (V)") &&
-               snapshot.contains("V.S.SPEED = 11            ;Set speed value if it exists (mm/sec)"),
-           "Schedule values and labels must retain the UI units captured before the export thread starts.");
+               snapshot.contains("V.S.SPEED = 25.9843            ;Set speed value if it exists (in/min)"),
+           "Schedule velocities must use in/min while time and voltage retain their captured UI units.");
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 1);
     settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, 1);
     for (bool planar_enabled : {false, true}) {
