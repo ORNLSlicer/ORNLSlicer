@@ -246,7 +246,7 @@ inline QString toString(ThemeName theme) {
     switch (theme) {
         case ThemeName::kLightMode:
         default:
-            return Constants::UI::Themes::kSystemMode;
+            return Constants::UI::Themes::kLightMode;
         case ThemeName::kDarkMode:
             return Constants::UI::Themes::kDarkMode;
     }

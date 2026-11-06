@@ -1130,10 +1130,10 @@ const int Constants::UI::PartControl::kLeftOffset   = 10;
 const int Constants::UI::PartControl::kBottomOffset = 10;
 
 // Themes
-const QString Constants::UI::Themes::kSystemMode = "System (default)";
-const QString Constants::UI::Themes::kDarkMode   = "Dark Mode";
+const QString Constants::UI::Themes::kLightMode = "Light Mode";
+const QString Constants::UI::Themes::kDarkMode  = "Dark Mode";
 
-const QStringList Constants::UI::Themes::kThemes = {Constants::UI::Themes::kSystemMode,
+const QStringList Constants::UI::Themes::kThemes = {Constants::UI::Themes::kLightMode,
                                                     Constants::UI::Themes::kDarkMode};
 
 //================================================================================
