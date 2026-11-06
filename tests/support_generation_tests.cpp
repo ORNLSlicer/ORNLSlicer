@@ -123,6 +123,62 @@ bool keepsRestorationOnItsContactComponent(PlanarSlicer& slicer, bool connected)
     return passed;
 }
 
+bool restorationCannotCrossGaps(PlanarSlicer& slicer, Angle rotation, bool enclosed = false) {
+    const auto part = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
+    auto rotated    = [rotation](PolygonList geometry) {
+        PolygonList result;
+        for (const Polygon& polygon : geometry) result += polygon.rotateAround(Point(0, 0), rotation);
+        return result;
+    };
+    PolygonList lower = rectangle(20);
+    lower |= rectangle(48) - rectangle(30);
+    PolygonList upper = rectangle(26);
+    upper |= rectangle(48) - rectangle(28);
+    // Only the upper layer joins the arms: their unsupported footprints form
+    // one component, with a narrow empty gap along the rest of their length.
+    upper |= rectangle(48, 10);
+    if (enclosed) upper |= rectangle(48) - rectangle(48, 90);
+    // Stay beyond restoration reach of either joiner: support near their
+    // corners can legitimately extend onto the shallow arm.
+    PolygonList shallow_sample = rectangle(30, 80) - rectangle(28, 80);
+    shallow_sample -= rectangle(30, 20);
+    PolygonList steep_sample = rectangle(22, 60) - rectangle(20.5, 60);
+    steep_sample -= rectangle(22, 40);
+    part->step(0, StepType::kLayer)->setGeometry(rotated(lower), QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(rotated(upper), QVector3D(0, 0, 1));
+
+    slicer.processSupport(part, 2, 0);
+    PolygonList geometry = supports(part, 0);
+    PolygonList leakage  = geometry & rotated(shallow_sample);
+    bool passed          = Testing::expect(
+        leakage.isEmpty(),
+        "Restoration must not cross empty gaps onto a self-supporting arm (rotation=" + std::to_string(rotation()) +
+            ", enclosed=" + std::to_string(enclosed) + ", area=" + std::to_string(leakage.netArea()()) + ").");
+    passed &= Testing::expect((rotated(steep_sample) - geometry).isEmpty(),
+                              "Gap-safe restoration must retain the steep contact footprint.");
+    return passed;
+}
+
+bool taperedContactRetainsItsFootprint(PlanarSlicer& slicer, Angle rotation) {
+    const auto part = makePart({20, 26}, supportSettings(0 * mm, 1 * mm));
+    Polygon upper;
+    upper << Point(0, 0) << Point(26 * mm(), 0) << Point(26 * mm(), 50 * mm()) << Point(22 * mm(), 100 * mm())
+          << Point(0, 100 * mm());
+    Polygon lower  = rectangle(20).first();
+    Polygon sample = (rectangle(22, 30) - rectangle(20.5, 30) - rectangle(22, 20)).first();
+    PolygonList lower_geometry;
+    lower_geometry += lower.rotateAround(Point(0, 0), rotation);
+    PolygonList upper_geometry;
+    upper_geometry += upper.rotateAround(Point(0, 0), rotation);
+    part->step(0, StepType::kLayer)->setGeometry(lower_geometry, QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(upper_geometry, QVector3D(0, 0, 1));
+    slicer.processSupport(part, 2, 0);
+    PolygonList expected;
+    expected += sample.rotateAround(Point(0, 0), rotation);
+    return Testing::expect((expected - supports(part, 0)).isEmpty(),
+                           "Convex partitioning must retain the steep footprint of a tapered contact.");
+}
+
 bool organicInterfaceHasPaths(PlanarSlicer& slicer) {
     const auto settings = supportSettings(4 * mm, 1 * mm);
     settings->setSetting(PS::Support::kStructure, 1);
@@ -220,6 +276,31 @@ bool bridgeSuppressionRequiresOpposingAnchors(PlanarSlicer& slicer, bool along_y
     return passed;
 }
 
+bool bridgeSuppressionKeepsAttachedCantilevers(PlanarSlicer& slicer, bool along_y) {
+    const auto settings = supportSettings(0 * mm, 1 * mm);
+    settings->setSetting(PS::Support::kBridgeMaxLength, 12 * mm);
+    const auto part = makePart({20, 26}, settings);
+    auto box        = [along_y](double width, double height) {
+        return along_y ? rectangle(height, width) : rectangle(width, height);
+    };
+    PolygonList lower = box(20, 100);
+    lower |= box(50, 10) - box(30, 10);
+    PolygonList upper = box(26, 100);
+    upper |= box(50, 10);
+    part->step(0, StepType::kLayer)->setGeometry(lower, QVector3D(0, 0, 1));
+    part->step(1, StepType::kLayer)->setGeometry(upper, QVector3D(0, 0, 1));
+
+    slicer.processSupport(part, 2, 0);
+    PolygonList expected = supports(part, 0);
+    settings->setSetting(PS::Support::kBridgeSuppression, true);
+    slicer.processSupport(part, 2, 0);
+    PolygonList actual = supports(part, 0);
+    bool passed        = Testing::expect(!expected.isEmpty(), "The attached cantilever must require support.");
+    passed &= Testing::expect((expected - actual).isEmpty(),
+                              "Anchors under a short bridge must not suppress its attached cantilever.");
+    return passed;
+}
+
 bool respectsAngleAndLandings(PlanarSlicer& slicer) {
     const auto settings = supportSettings(0 * mm, 1 * mm);
     auto part           = makePart({20, 22, 24, 26}, settings);
@@ -250,10 +331,21 @@ int main(int argc, char* argv[]) {
     passed &= slopedInterfaceHasPaths(slicer);
     passed &= keepsRestorationOnItsContactComponent(slicer, false);
     passed &= keepsRestorationOnItsContactComponent(slicer, true);
+    passed &= restorationCannotCrossGaps(slicer, 0 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 45 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 90 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 137 * deg);
+    passed &= restorationCannotCrossGaps(slicer, 0 * deg, true);
+    passed &= restorationCannotCrossGaps(slicer, 137 * deg, true);
+    passed &= taperedContactRetainsItsFootprint(slicer, 0 * deg);
+    passed &= taperedContactRetainsItsFootprint(slicer, 45 * deg);
+    passed &= taperedContactRetainsItsFootprint(slicer, 137 * deg);
     passed &= organicInterfaceHasPaths(slicer);
     passed &= organicBlockerKeepsBranches(slicer);
     passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, false);
     passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, true);
+    passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, false);
+    passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, true);
     passed &= respectsAngleAndLandings(slicer);
     if (!passed) return 1;
     std::cout << "Support generation tests passed\n";
