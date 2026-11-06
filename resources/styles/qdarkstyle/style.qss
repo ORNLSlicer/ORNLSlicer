@@ -216,6 +216,7 @@ QCheckBox::indicator:indeterminate:pressed {
 
 QGroupBox {
     font-weight: bold;
+    border: 1px solid #4d5557;
     border-radius: 4px;
     padding: 4px;
     margin-top: 16px;
