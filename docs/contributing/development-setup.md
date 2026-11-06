@@ -15,12 +15,11 @@ is configured in the repository.
 
 ### Linux (default)
 
-On Ubuntu 24.04, install the tools needed to fetch the repository and Nix:
+On Ubuntu 24.04, install Git, Git LFS, direnv, and the tools needed to install Nix:
 
 ```bash
 sudo apt update
-sudo apt install git git-lfs curl ca-certificates
-sudo apt install cmake build-essential
+sudo apt install git git-lfs direnv curl ca-certificates xz-utils
 ```
 
 On other distributions, install the equivalent packages using the system
@@ -79,10 +78,16 @@ Install Apple's Command Line Tools if they are not already present:
 xcode-select --install
 ```
 
-Install Git LFS using the [Git LFS installation instructions](https://git-lfs.com/)
-(or `brew install git-lfs` if you already use Homebrew). Git and curl are
-available with the platform tools. Continue with the shared Nix installation
-and build steps in a native terminal for your Mac's architecture.
+Install [Homebrew](https://brew.sh/) if needed and follow its post-installation
+instructions to add `brew` to your `PATH`. Then install Git LFS and direnv:
+
+```bash
+brew install git-lfs direnv
+```
+
+Git and curl are available with Apple's Command Line Tools. Continue with the
+shared Nix installation and build steps in a native terminal for your Mac's
+architecture.
 
 The flake exposes development shells for Apple Silicon and Intel macOS.
 Current CI runs flake checks on macOS, but does not compile or launch the macOS
@@ -110,8 +115,14 @@ installer inside Ubuntu; if systemd is unavailable, follow the installer's
 platform guidance before continuing.
 
 Enable the `nix-command` and `flakes` experimental features in your user Nix
-configuration (`~/.config/nix/nix.conf` by default). Create the directories (.config and nix) and conf file
-if needed, and add this line, merging with any existing feature list:
+configuration (`~/.config/nix/nix.conf` by default). First create the directory:
+
+```bash
+mkdir -p ~/.config/nix
+```
+
+Open or create `~/.config/nix/nix.conf` in a text editor and add this line,
+merging with any existing feature list:
 
 ```ini
 experimental-features = nix-command flakes
@@ -123,6 +134,26 @@ cache and signing key in `flake.nix`; `--accept-flake-config` accepts those
 settings. If an existing multi-user installation rejects the cache as
 untrusted, follow [Cachix troubleshooting](cachix.md#nix-ignores-the-substituter-as-untrusted).
 Cache write access is optional and is not needed to develop.
+
+## Set up direnv
+
+direnv can load the Nix development environment automatically when you enter the
+checkout. Add the hook for your shell **once**:
+
+- **Bash** (the Ubuntu default): add this line at the end of `~/.bashrc`:
+
+  ```bash
+  eval "$(direnv hook bash)"
+  ```
+
+- **Zsh** (the macOS default): add this line at the end of `~/.zshrc`:
+
+  ```zsh
+  eval "$(direnv hook zsh)"
+  ```
+
+Open a new terminal after saving the file. For other shells, see the
+[direnv shell hooks](https://direnv.net/docs/hook.html).
 
 ## Clone and restore assets
 
@@ -149,31 +180,42 @@ After restoring assets, configure and rebuild to regenerate the Qt resources.
 
 ## Configure, build, and run
 
-From the repository root, run configuration, build, and launch inside the Nix
-environment with one command:
+From the repository root, enter the development shell:
 
 ```bash
-nix develop .#ornlslicerDev -L --accept-flake-config --command bash -c '
-  cmake --preset generic-llvm-ninja &&
-  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 8 &&
-  ./build/generic-llvm-ninja/Debug/ornlslicer
-'
+nix develop .#ornlslicerDev -L --accept-flake-config
 ```
 
-If Nix cannot enter the environment, none of the CMake or launch commands run.
-The `&&` operators also stop the sequence if configuration or compilation fails.
-A certificate error must be resolved before trying CMake; installing a host copy
-of Ninja does not repair the missing Nix environment.
+Wait for Nix to finish and return a shell prompt. The first run can take time
+while it downloads or builds dependencies. If it fails, resolve the error before
+running CMake; see [Troubleshooting](#troubleshooting).
 
-For interactive development and the test commands below, open a shell with
-`nix develop .#ornlslicerDev -L --accept-flake-config` and wait for it to succeed
-before running build tools. The one-command workflow above returns to your
-original shell after the application exits.
+Inside that shell, configure this checkout, then build the application. Run each
+command only after the previous one succeeds:
 
-The initial shell entry can take time while Nix downloads or builds dependencies.
-Adjust `8` to fit your machine's CPU and memory. Replace `Debug` with `Release`
-for an optimized build; both configurations share the same build tree.
+```bash
+cmake --preset generic-llvm-ninja
+cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 32
+```
+
+After the build succeeds, launch the application:
+
+```bash
+./build/generic-llvm-ninja/Debug/ornlslicer
+```
+
+Keep using this shell for the tests and formatting commands below. Replace
+`Debug` with `Release` for an optimized build, including in the executable path;
+both configurations share the same build tree.
 Reconfigure after CMake/dependency changes and after restoring missing LFS resources.
+
+For automatic loading in future terminals, type `exit` to leave the Nix shell,
+then run `direnv allow` from the repository root. Wait for it to finish before
+running build tools. The repository's `.envrc` uses `use flake`, which loads the
+same development environment. Repeat `direnv allow` for each new trusted
+checkout or worktree. The optional
+[nix-direnv integration](https://github.com/nix-community/nix-direnv#installation)
+caches the environment to speed up loading.
 
 ## Run tests and formatting
 
@@ -181,14 +223,14 @@ Build **all** targets before running the full CTest suite; building only
 `ornlslicer` does not build the test executables:
 
 ```bash
-cmake --build build/generic-llvm-ninja --config Debug -j 8
+cmake --build build/generic-llvm-ninja --config Debug -j 32
 ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure
 ```
 
 For focused iteration, build and run just the relevant test, for example:
 
 ```bash
-cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer_settings_manager_tests -j 8
+cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer_settings_manager_tests -j 32
 ctest --test-dir build/generic-llvm-ninja -C Debug -R '^settings_manager_tests$' --output-on-failure
 ```
 
@@ -222,12 +264,6 @@ which lldb-dap
 
 Set that path in the extension's **Lldb-dap: Executable Path** setting. The
 repository launch configuration uses the CMake launch target.
-
-For automatic environment loading, install `direnv` with `nix-direnv` integration,
-add the appropriate shell hook, and run `direnv allow` in this trusted checkout.
-The repository `.envrc` uses `use flake`. See the
-[nix-direnv setup instructions](https://github.com/nix-community/nix-direnv#installation)
-for your shell. Explicit `nix develop` works without direnv.
 
 ## Troubleshooting
 
