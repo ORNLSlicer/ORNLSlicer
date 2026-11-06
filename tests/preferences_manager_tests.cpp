@@ -18,6 +18,21 @@ int main(int argc, char* argv[]) {
 
     QSharedPointer<ORNL::PreferencesManager> preferences = ORNL::PreferencesManager::getInstance();
 
+    const QString theme_path = temp_dir.path() + "/theme.preferences";
+    for (int value : {0, 1}) {
+        const QString theme_name = value == 0 ? "Light Mode" : "Dark Mode";
+        preferences->setTheme(theme_name);
+        if (!ORNL::Testing::expect(preferences->getThemeText() == theme_name && preferences->json()["theme"] == value,
+                                   "Light and dark theme selections should preserve the existing saved values."))
+            return EXIT_FAILURE;
+        preferences->exportPreferences(theme_path);
+        preferences->setTheme(value == 0 ? "Dark Mode" : "Light Mode");
+        preferences->importPreferences(theme_path);
+        if (!ORNL::Testing::expect(preferences->getThemeText() == theme_name && preferences->json()["theme"] == value,
+                                   "Both themes should round-trip through preferences files."))
+            return EXIT_FAILURE;
+    }
+
     preferences->setStepStlLinearDeflection(0.025);
     if (!ORNL::Testing::expect(
             ORNL::Testing::near(preferences->getStepStlLinearDeflection().to(ORNL::mm), 0.025, kTolerance),

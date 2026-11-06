@@ -288,6 +288,7 @@ bool MainWindow::setStyleFromFile() {
         return false;
     }
 
+    QApplication::setPalette(PreferencesManager::getInstance()->getTheme().getPalette());
     this->setStyleSheet(m_style_file->readAll());
     m_style_file->close();
     return true;

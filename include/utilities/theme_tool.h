@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QColor>
+#include <QPalette>
 #include <QWidget>
 
 #include <qcontainerfwd.h>
@@ -178,11 +179,15 @@ class Theme {
     //! @return QString holding the folder path for the current theme
     QString getFolderPath();
 
+    //! @brief Returns the application palette for controls and standalone dialogs.
+    QPalette getPalette();
+
    private:
     //! Folder path
     QString m_folder_path;
 
     //! Colors
+    QPalette m_palette;
     QVector<double> m_bgColor;
     QVector<QColor> m_dotColors;
     QColor m_dotColor_paired;

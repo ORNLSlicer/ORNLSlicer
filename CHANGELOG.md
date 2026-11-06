@@ -14,10 +14,12 @@ Release versions follow the project's
 
 ### Changed
 
+- Changed UI theme choices to Light Mode and Dark Mode, with consistent palettes for standalone Qt dialogs and calculators and readable status, help, and selection colors. Existing System (default) preferences now select Light Mode; saved Dark Mode preferences are preserved.
 - Changed individual-layer export to a disabled-by-default setting under Experimental > File Output. Enable Individual Layer Export before slicing to prepare separate layer files; reopened G-code must be re-sliced to export individual layers.
 
 ### Fixed
 
+- Fixed changing themes before a 3D view is initialized by deferring OpenGL background updates until rendering.
 - Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
 - Fixed generated G-code containing embedded standalone layer programs and export-only markers, including when individual-layer export is enabled.
 - Fixed incomplete Git LFS checkouts silently building with missing GUI icons, setting arrows, and Slice toolbar access by rejecting unresolved bundled resources with recovery instructions ([#351](https://github.com/ORNLSlicer/ORNLSlicer/issues/351)).
