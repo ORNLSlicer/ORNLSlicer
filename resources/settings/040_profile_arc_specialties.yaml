@@ -1,8 +1,21 @@
 # Canonical settings metadata for ORNLSlicer.
 # Edit this file instead of resources/configs/master.conf.
 settings:
+  - name: "arc_specialties_generate_weld_schedule_file"
+    display: "Generate Weld Schedule File"
+    type: "boolean"
+    tooltip: "If selected, G-Code export creates an Arc Specialties weld schedule companion file beside the main file."
+    depends: {"syntax":31}
+    options: []
+    default: false
+    minor: "Arc Specialties"
+    major: "Profile"
+    namespace: "Profile::ArcSpecialties"
+    symbol: "kGenerateWeldScheduleFile"
+    local: false
   - name: "arc_specialties_perimeter_preflow"
     display: "Perimeter Preflow"
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Preflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -15,6 +28,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_travel_delay"
     display: "Perimeter Travel Delay"
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Travel Delay","columns":2}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -27,6 +41,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_postflow"
     display: "Perimeter Postflow"
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Postflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -39,6 +54,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_postpurge"
     display: "Perimeter Postpurge"
+    group: {"region":"Perimeter","section":"Gas Timing","label":"Postpurge","columns":2}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -51,6 +67,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_start_program"
     display: "Perimeter Start Program"
+    group: {"region":"Perimeter","section":"Startup","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start program value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -63,6 +80,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_start_wire_feed_speed"
     display: "Perimeter Start Wire Feed Speed"
+    group: {"region":"Perimeter","section":"Startup","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties start wire feed speed value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -75,6 +93,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_start_voltage"
     display: "Perimeter Start Voltage"
+    group: {"region":"Perimeter","section":"Startup","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties start voltage value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -87,6 +106,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_start_control"
     display: "Perimeter Start Control"
+    group: {"region":"Perimeter","section":"Startup","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start control value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -99,6 +119,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_start_tspd"
     display: "Perimeter Start TSpd"
+    group: {"region":"Perimeter","section":"Startup","label":"Travel Override"}
     type: "speed"
     tooltip: "Arc Specialties start TSpd value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -111,6 +132,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_start_time"
     display: "Perimeter Start Time"
+    group: {"region":"Perimeter","section":"Startup","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties start time value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -123,6 +145,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_weld_program"
     display: "Perimeter Weld Program"
+    group: {"region":"Perimeter","section":"Main Weld","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld program value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -135,6 +158,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_weld_wire_feed_speed"
     display: "Perimeter Weld Wire Feed Speed"
+    group: {"region":"Perimeter","section":"Main Weld","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties weld wire feed speed value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -147,6 +171,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_weld_voltage"
     display: "Perimeter Weld Voltage"
+    group: {"region":"Perimeter","section":"Main Weld","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties weld voltage value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -159,6 +184,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_weld_control"
     display: "Perimeter Weld Control"
+    group: {"region":"Perimeter","section":"Main Weld","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld control value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -171,6 +197,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_crater_program"
     display: "Perimeter Crater Program"
+    group: {"region":"Perimeter","section":"Crater Fill","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater program value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -183,6 +210,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_crater_wire_feed_speed"
     display: "Perimeter Crater Wire Feed Speed"
+    group: {"region":"Perimeter","section":"Crater Fill","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties crater wire feed speed value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -195,6 +223,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_crater_voltage"
     display: "Perimeter Crater Voltage"
+    group: {"region":"Perimeter","section":"Crater Fill","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties crater voltage value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -207,6 +236,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_crater_control"
     display: "Perimeter Crater Control"
+    group: {"region":"Perimeter","section":"Crater Fill","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater control value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -219,6 +249,7 @@ settings:
     local: false
   - name: "arc_specialties_perimeter_crater_time"
     display: "Perimeter Crater Time"
+    group: {"region":"Perimeter","section":"Crater Fill","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties crater time value written to the generated weld schedule file for perimeter paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"perimeter":true}]},{"AND":[{"slicing_mode":1},{"OR":[{"cylindrical_path_pattern":0},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_perimeter_revolutions":0}]}]}]}]}]}]}
@@ -231,6 +262,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_preflow"
     display: "Inset Preflow"
+    group: {"region":"Inset","section":"Gas Timing","label":"Preflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -243,6 +275,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_travel_delay"
     display: "Inset Travel Delay"
+    group: {"region":"Inset","section":"Gas Timing","label":"Travel Delay","columns":2}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -255,6 +288,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_postflow"
     display: "Inset Postflow"
+    group: {"region":"Inset","section":"Gas Timing","label":"Postflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -267,6 +301,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_postpurge"
     display: "Inset Postpurge"
+    group: {"region":"Inset","section":"Gas Timing","label":"Postpurge","columns":2}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -279,6 +314,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_start_program"
     display: "Inset Start Program"
+    group: {"region":"Inset","section":"Startup","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start program value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -291,6 +327,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_start_wire_feed_speed"
     display: "Inset Start Wire Feed Speed"
+    group: {"region":"Inset","section":"Startup","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties start wire feed speed value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -303,6 +340,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_start_voltage"
     display: "Inset Start Voltage"
+    group: {"region":"Inset","section":"Startup","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties start voltage value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -315,6 +353,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_start_control"
     display: "Inset Start Control"
+    group: {"region":"Inset","section":"Startup","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start control value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -327,6 +366,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_start_tspd"
     display: "Inset Start TSpd"
+    group: {"region":"Inset","section":"Startup","label":"Travel Override"}
     type: "speed"
     tooltip: "Arc Specialties start TSpd value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -339,6 +379,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_start_time"
     display: "Inset Start Time"
+    group: {"region":"Inset","section":"Startup","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties start time value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -351,6 +392,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_weld_program"
     display: "Inset Weld Program"
+    group: {"region":"Inset","section":"Main Weld","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld program value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -363,6 +405,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_weld_wire_feed_speed"
     display: "Inset Weld Wire Feed Speed"
+    group: {"region":"Inset","section":"Main Weld","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties weld wire feed speed value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -375,6 +418,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_weld_voltage"
     display: "Inset Weld Voltage"
+    group: {"region":"Inset","section":"Main Weld","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties weld voltage value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -387,6 +431,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_weld_control"
     display: "Inset Weld Control"
+    group: {"region":"Inset","section":"Main Weld","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld control value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -399,6 +444,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_crater_program"
     display: "Inset Crater Program"
+    group: {"region":"Inset","section":"Crater Fill","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater program value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -411,6 +457,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_crater_wire_feed_speed"
     display: "Inset Crater Wire Feed Speed"
+    group: {"region":"Inset","section":"Crater Fill","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties crater wire feed speed value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -423,6 +470,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_crater_voltage"
     display: "Inset Crater Voltage"
+    group: {"region":"Inset","section":"Crater Fill","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties crater voltage value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -435,6 +483,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_crater_control"
     display: "Inset Crater Control"
+    group: {"region":"Inset","section":"Crater Fill","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater control value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -447,6 +496,7 @@ settings:
     local: false
   - name: "arc_specialties_inset_crater_time"
     display: "Inset Crater Time"
+    group: {"region":"Inset","section":"Crater Fill","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties crater time value written to the generated weld schedule file for inset paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"inset":true}]},{"AND":[{"slicing_mode":1},{"AND":[{"cylindrical_path_pattern":1},{"NOT":[{"helical_inset_revolutions":0}]}]}]}]}]}
@@ -459,6 +509,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_preflow"
     display: "Infill Preflow"
+    group: {"region":"Infill","section":"Gas Timing","label":"Preflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -471,6 +522,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_travel_delay"
     display: "Infill Travel Delay"
+    group: {"region":"Infill","section":"Gas Timing","label":"Travel Delay","columns":2}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -483,6 +535,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_postflow"
     display: "Infill Postflow"
+    group: {"region":"Infill","section":"Gas Timing","label":"Postflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -495,6 +548,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_postpurge"
     display: "Infill Postpurge"
+    group: {"region":"Infill","section":"Gas Timing","label":"Postpurge","columns":2}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -507,6 +561,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_start_program"
     display: "Infill Start Program"
+    group: {"region":"Infill","section":"Startup","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start program value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -519,6 +574,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_start_wire_feed_speed"
     display: "Infill Start Wire Feed Speed"
+    group: {"region":"Infill","section":"Startup","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties start wire feed speed value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -531,6 +587,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_start_voltage"
     display: "Infill Start Voltage"
+    group: {"region":"Infill","section":"Startup","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties start voltage value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -543,6 +600,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_start_control"
     display: "Infill Start Control"
+    group: {"region":"Infill","section":"Startup","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start control value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -555,6 +613,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_start_tspd"
     display: "Infill Start TSpd"
+    group: {"region":"Infill","section":"Startup","label":"Travel Override"}
     type: "speed"
     tooltip: "Arc Specialties start TSpd value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -567,6 +626,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_start_time"
     display: "Infill Start Time"
+    group: {"region":"Infill","section":"Startup","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties start time value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -579,6 +639,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_weld_program"
     display: "Infill Weld Program"
+    group: {"region":"Infill","section":"Main Weld","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld program value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -591,6 +652,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_weld_wire_feed_speed"
     display: "Infill Weld Wire Feed Speed"
+    group: {"region":"Infill","section":"Main Weld","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties weld wire feed speed value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -603,6 +665,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_weld_voltage"
     display: "Infill Weld Voltage"
+    group: {"region":"Infill","section":"Main Weld","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties weld voltage value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -615,6 +678,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_weld_control"
     display: "Infill Weld Control"
+    group: {"region":"Infill","section":"Main Weld","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld control value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -627,6 +691,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_crater_program"
     display: "Infill Crater Program"
+    group: {"region":"Infill","section":"Crater Fill","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater program value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -639,6 +704,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_crater_wire_feed_speed"
     display: "Infill Crater Wire Feed Speed"
+    group: {"region":"Infill","section":"Crater Fill","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties crater wire feed speed value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -651,6 +717,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_crater_voltage"
     display: "Infill Crater Voltage"
+    group: {"region":"Infill","section":"Crater Fill","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties crater voltage value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -663,6 +730,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_crater_control"
     display: "Infill Crater Control"
+    group: {"region":"Infill","section":"Crater Fill","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater control value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -675,6 +743,7 @@ settings:
     local: false
   - name: "arc_specialties_infill_crater_time"
     display: "Infill Crater Time"
+    group: {"region":"Infill","section":"Crater Fill","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties crater time value written to the generated weld schedule file for infill paths."
     depends: {"AND":[{"syntax":31},{"OR":[{"AND":[{"slicing_mode":0},{"infill":true}]},{"AND":[{"slicing_mode":1},{"cylindrical_path_pattern":1}]}]}]}
@@ -687,6 +756,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_preflow"
     display: "Skeleton Preflow"
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Preflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties preflow value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -699,6 +769,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_travel_delay"
     display: "Skeleton Travel Delay"
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Travel Delay","columns":2}
     type: "time"
     tooltip: "Arc Specialties travel delay value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -711,6 +782,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_postflow"
     display: "Skeleton Postflow"
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Postflow","columns":2}
     type: "time"
     tooltip: "Arc Specialties postflow value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -723,6 +795,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_postpurge"
     display: "Skeleton Postpurge"
+    group: {"region":"Skeleton","section":"Gas Timing","label":"Postpurge","columns":2}
     type: "time"
     tooltip: "Arc Specialties postpurge value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -735,6 +808,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_start_program"
     display: "Skeleton Start Program"
+    group: {"region":"Skeleton","section":"Startup","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start program value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -747,6 +821,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_start_wire_feed_speed"
     display: "Skeleton Start Wire Feed Speed"
+    group: {"region":"Skeleton","section":"Startup","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties start wire feed speed value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -759,6 +834,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_start_voltage"
     display: "Skeleton Start Voltage"
+    group: {"region":"Skeleton","section":"Startup","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties start voltage value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -771,6 +847,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_start_control"
     display: "Skeleton Start Control"
+    group: {"region":"Skeleton","section":"Startup","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties start control value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -783,6 +860,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_start_tspd"
     display: "Skeleton Start TSpd"
+    group: {"region":"Skeleton","section":"Startup","label":"Travel Override"}
     type: "speed"
     tooltip: "Arc Specialties start TSpd value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -795,6 +873,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_start_time"
     display: "Skeleton Start Time"
+    group: {"region":"Skeleton","section":"Startup","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties start time value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -807,6 +886,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_weld_program"
     display: "Skeleton Weld Program"
+    group: {"region":"Skeleton","section":"Main Weld","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld program value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -819,6 +899,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_weld_wire_feed_speed"
     display: "Skeleton Weld Wire Feed Speed"
+    group: {"region":"Skeleton","section":"Main Weld","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties weld wire feed speed value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -831,6 +912,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_weld_voltage"
     display: "Skeleton Weld Voltage"
+    group: {"region":"Skeleton","section":"Main Weld","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties weld voltage value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -843,6 +925,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_weld_control"
     display: "Skeleton Weld Control"
+    group: {"region":"Skeleton","section":"Main Weld","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties weld control value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -855,6 +938,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_crater_program"
     display: "Skeleton Crater Program"
+    group: {"region":"Skeleton","section":"Crater Fill","label":"Program"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater program value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -867,6 +951,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_crater_wire_feed_speed"
     display: "Skeleton Crater Wire Feed Speed"
+    group: {"region":"Skeleton","section":"Crater Fill","label":"Wire Feed Speed"}
     type: "speed"
     tooltip: "Arc Specialties crater wire feed speed value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -879,6 +964,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_crater_voltage"
     display: "Skeleton Crater Voltage"
+    group: {"region":"Skeleton","section":"Crater Fill","label":"Voltage"}
     type: "voltage"
     tooltip: "Arc Specialties crater voltage value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -891,6 +977,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_crater_control"
     display: "Skeleton Crater Control"
+    group: {"region":"Skeleton","section":"Crater Fill","label":"Arc Control"}
     type: "non_negative_int"
     tooltip: "Arc Specialties crater control value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -903,6 +990,7 @@ settings:
     local: false
   - name: "arc_specialties_skeleton_crater_time"
     display: "Skeleton Crater Time"
+    group: {"region":"Skeleton","section":"Crater Fill","label":"Time"}
     type: "time"
     tooltip: "Arc Specialties crater time value written to the generated weld schedule file for skeleton paths."
     depends: {"AND":[{"syntax":31},{"AND":[{"slicing_mode":0},{"skeleton":true}]}]}
@@ -912,16 +1000,4 @@ settings:
     major: "Profile"
     namespace: "Profile::ArcSpecialties"
     symbol: "kSkeletonCraterTime"
-    local: false
-  - name: "arc_specialties_generate_weld_schedule_file"
-    display: "Generate Weld Schedule File"
-    type: "boolean"
-    tooltip: "If selected, G-Code export creates an Arc Specialties weld schedule companion file beside the main file."
-    depends: {"syntax":31}
-    options: []
-    default: false
-    minor: "Arc Specialties"
-    major: "Profile"
-    namespace: "Profile::ArcSpecialties"
-    symbol: "kGenerateWeldScheduleFile"
     local: false

@@ -44,6 +44,10 @@ SettingRowBase::SettingRowBase(QWidget* parent, QSharedPointer<SettingsBase> sb,
     m_key_label->setCursor(Qt::WhatsThisCursor);
     m_key_label->setMinimumHeight(25);
     m_key_label->setIndent(25);
+    if (json.contains(Constants::Settings::Master::kGroup)) {
+        m_key_label->setText(json.at(Constants::Settings::Master::kGroup).at(Constants::Settings::Group::kLabel));
+        m_key_label->setIndent(0);
+    }
     this->styleLabelFromFile(m_theme_path + "setting_rows_normal.qss");
     layout->addWidget(m_key_label.get(), index, 0);
 
@@ -93,6 +97,17 @@ void SettingRowBase::clearDependencyLogic() {
 
 QString SettingRowBase::getLabelText() {
     return m_key_label->text();
+}
+
+QString SettingRowBase::getSearchText() const {
+    QString text = QString::fromStdString(m_json.at(Constants::Settings::Master::kDisplay).get<std::string>());
+    if (m_json.contains(Constants::Settings::Master::kGroup)) {
+        const auto& group = m_json.at(Constants::Settings::Master::kGroup);
+        for (const auto& field : {Constants::Settings::Group::kRegion, Constants::Settings::Group::kSection,
+                                  Constants::Settings::Group::kLabel})
+            text += " " + QString::fromStdString(group.at(field).get<std::string>());
+    }
+    return text;
 }
 
 // This is to style inheritents of setting_row_base (i.e., all the different types of settings)

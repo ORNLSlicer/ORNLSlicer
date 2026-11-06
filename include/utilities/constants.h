@@ -1060,9 +1060,17 @@ class Constants {
             static const std::string kOptions;
             static const std::string kDepends;
             static const std::string kVisibleIf;
+            static const std::string kGroup;
             static const std::string kDefault;
             static const std::string kDependencyGroup;
             static const std::string kLocal;
+        };
+        class Group {
+           public:
+            static const std::string kRegion;
+            static const std::string kSection;
+            static const std::string kLabel;
+            static const std::string kColumns;
         };
         class Input {
            public:

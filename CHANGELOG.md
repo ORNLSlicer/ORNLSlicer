@@ -9,6 +9,7 @@ Release versions follow the project's
 
 ### Added
 
+- Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Added cube and stacked-layer icons beside global settings to distinguish part and layer overrides, showing both when both apply.
 - Added a Starting Layer Number setting under Printer > G-Code for continuation builds, with consistent layer, bead, block, and individual-layer export numbering ([#347](https://github.com/ORNLSlicer/ORNLSlicer/issues/347)).
 
