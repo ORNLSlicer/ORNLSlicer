@@ -39,14 +39,55 @@ int main(int argc, char* argv[]) {
     settings->setSetting(ORNL::PS::Perimeter::kSpeed, 11.0 * ORNL::mm / ORNL::s);
     settings->setSetting(ORNL::PS::Inset::kSpeed, 22.0 * ORNL::mm / ORNL::s);
     settings->setSetting(ORNL::PS::Infill::kSpeed, 33.0 * ORNL::mm / ORNL::s);
+    settings->setSetting(ORNL::PS::Skeleton::kSpeed, 44.0 * ORNL::mm / ORNL::s);
     settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, false);
     settings->setSetting(ORNL::PRS::GCode::kArcSpecialtiesG80WeldScheduleFile, QString());
     settings->setSetting(ORNL::PRS::MachineSetup::kSupportG3, true);
     settings->setSetting(ORNL::PS::Helical::kHelicalPerimeterRevolutions, 1);
     settings->setSetting(ORNL::PS::Helical::kHelicalInsetRevolutions, 1);
-    const std::array<ORNL::RegionType, 3> regions = {ORNL::RegionType::kPerimeter, ORNL::RegionType::kInset,
-                                                     ORNL::RegionType::kInfill};
-    const std::array<int, 3> schedules            = {1, 2, 0};
+    struct ScheduleParameter {
+        QString suffix;
+        QString assignment;
+        double value;
+        QString unit;
+    };
+    const std::array<ScheduleParameter, 19> parameters {{
+        {"preflow", "Preflow", 1.25, "sec"},
+        {"travel_delay", "TravelDelay", 2.5, "sec"},
+        {"postflow", "Postflow", 3.75, "sec"},
+        {"postpurge", "PostPurge", 4.5, "sec"},
+        {"start_program", "Start1.Program", 1, "unitless"},
+        {"start_wire_feed_speed", "Start1.WFS", 10.25, "in/min"},
+        {"start_voltage", "Start1.Volts", 18.5, "V"},
+        {"start_control", "Start1.Control", 2, "unitless"},
+        {"start_tspd", "Start1.TSpd", 20.5, "in/min"},
+        {"start_time", "Start1.Time", 5.25, "sec"},
+        {"weld_program", "Weld.Program", 3, "unitless"},
+        {"weld_wire_feed_speed", "Weld.WFS", 30.75, "in/min"},
+        {"weld_voltage", "Weld.Volts", 23.5, "V"},
+        {"weld_control", "Weld.Control", 4, "unitless"},
+        {"crater_program", "Crater.Program", 5, "unitless"},
+        {"crater_wire_feed_speed", "Crater.WFS", 40.125, "in/min"},
+        {"crater_voltage", "Crater.Volts", 16.5, "V"},
+        {"crater_control", "Crater.Control", 6, "unitless"},
+        {"crater_time", "Crater.Time", 6.5, "sec"},
+    }};
+    for (const QString& region : {"perimeter", "inset", "infill", "skeleton"}) {
+        for (const auto& parameter : parameters) {
+            const QString key = "arc_specialties_" + region + "_" + parameter.suffix;
+            if (parameter.unit == "in/min")
+                settings->setSetting(key, parameter.value * ORNL::inch / ORNL::minute);
+            else if (parameter.unit == "sec")
+                settings->setSetting(key, parameter.value * ORNL::s);
+            else if (parameter.unit == "V")
+                settings->setSetting(key, parameter.value * ORNL::V);
+            else
+                settings->setSetting(key, static_cast<int>(parameter.value));
+        }
+    }
+    const std::array<ORNL::RegionType, 4> regions = {ORNL::RegionType::kPerimeter, ORNL::RegionType::kInset,
+                                                     ORNL::RegionType::kInfill, ORNL::RegionType::kSkeleton};
+    const std::array<int, 4> schedules            = {1, 2, 0, 3};
     ORNL::CylindricalSlicer slicer(temp.filePath("unused.nc"));
     int case_number = 0;
     for (bool imperial : {false, true}) {
@@ -63,7 +104,27 @@ int main(int argc, char* argv[]) {
             QFile schedule(temp.filePath(QString("case%1_sch.nc").arg(case_number)));
             expect(schedule.open(QIODevice::ReadOnly), "Generated schedule must exist.");
             const QString text = QString::fromUtf8(schedule.readAll());
+            for (const auto& parameter : parameters) {
+                auto matches = QRegularExpression("^V\\.E\\.Sch\\." + QRegularExpression::escape(parameter.assignment) +
+                                                      " = ([0-9.]+) +;([^\\n]*)$",
+                                                  QRegularExpression::MultilineOption)
+                                   .globalMatch(text);
+                int count    = 0;
+                bool correct = true;
+                while (matches.hasNext()) {
+                    const auto match = matches.next();
+                    ++count;
+                    correct &= ORNL::Testing::near(match.captured(1).toDouble(), parameter.value, 0.0001) &&
+                               match.captured(2).endsWith("(" + parameter.unit + ")");
+                }
+                expect(count == (mode == 2 ? 3 : 4) && correct,
+                       QString("mode %1 units %2: %3 must use %4 and label its comment.")
+                           .arg(mode)
+                           .arg(imperial)
+                           .arg(parameter.assignment, parameter.unit));
+            }
             for (size_t i = 0; i < regions.size(); ++i) {
+                if (mode == 2 && regions[i] == ORNL::RegionType::kSkeleton) continue;
                 const ORNL::Velocity expected = (mode == 1   ? 44.0
                                                  : mode == 3 ? 10.0
                                                              : 11.0 * (i + 1)) *
@@ -71,11 +132,14 @@ int main(int argc, char* argv[]) {
                 const QString label           = QString("mode %1 region %2 units %3").arg(mode).arg(i).arg(imperial);
                 const int start               = text.indexOf(QString("(Schedule %1 ").arg(schedules[i]));
                 const int end                 = text.indexOf(QString("(Schedule %1 End)").arg(schedules[i]), start);
-                const auto speed = QRegularExpression("V\\.S\\.SPEED = ([0-9.]+)").match(text.mid(start, end - start));
+                const auto speed =
+                    QRegularExpression("V\\.S\\.SPEED = ([0-9.]+) +;([^\\n]*)").match(text.mid(start, end - start));
                 expect(start >= 0 && end > start && speed.hasMatch() &&
-                           ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(meta.m_velocity_unit), 0.0001),
-                       label + ": schedule speed must match the active slicing mode.");
-                if (mode == 0) continue;
+                           ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(ORNL::inch / ORNL::minute),
+                                               0.0001) &&
+                           speed.captured(2).endsWith("(in/min)"),
+                       label + ": schedule speed must match the active slicing mode in in/min and label its comment.");
+                if (mode == 0 || regions[i] == ORNL::RegionType::kSkeleton) continue;
                 auto params = slicer.createSegmentSettings(settings, ORNL::Point(), false, regions[i]);
                 expect(ORNL::Testing::near(params->setting<ORNL::Velocity>(ORNL::SS::kSpeed)(), expected()),
                        label + ": generated segment must carry its region speed.");
