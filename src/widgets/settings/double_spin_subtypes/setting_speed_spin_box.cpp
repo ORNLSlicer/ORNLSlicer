@@ -33,6 +33,7 @@ bool isXYSpeedLimitKey(const QString& key) {
 
 bool isPrinterXYMotionSpeed(const QString& key, const fifojson& json) {
     if (isXYSpeedLimitKey(key)) return false;
+    if (key.startsWith("arc_specialties_") && key.endsWith("_wire_feed_speed")) return false;
 
     const QString major = masterString(json, Constants::Settings::Master::kMajor);
     const QString minor = masterString(json, Constants::Settings::Master::kMinor);
