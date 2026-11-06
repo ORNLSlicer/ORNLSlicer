@@ -785,6 +785,12 @@ void GCodeView::resetCamera() {
     // Reset rotation and zoom
     m_camera->reset();
 
+    if (m_state.ortho) {
+        m_state.zoom_factor = 1.0f;
+        m_camera->rotateAbsolute(QVector2D(0, 0));
+        this->resizeGL(this->width(), this->height());
+    }
+
     this->translateCamera(
         QVector3D(m_printer->printerCenter().x(), m_printer->printerCenter().y(), m_printer->minimum().z()), true);
 
