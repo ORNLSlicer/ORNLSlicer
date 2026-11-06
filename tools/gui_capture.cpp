@@ -22,6 +22,7 @@
 #include <algorithm>
 #include <functional>
 #include <iostream>
+#include <optional>
 
 #include "geometry/mesh/mesh_factory.h"
 #include "graphics/base_view.h"
@@ -125,15 +126,18 @@ void ensureSampleParts(MainWindow* window) {
     }
 }
 
-void setupCaptureCameras(MainWindow* window) {
-    const QVector2D captureAngle(-30.0f, -55.0f);
-    const QVector2D captureTranslate(-0.25f, -0.15f);
-    constexpr float captureZoomDelta = 1200.0f;
+void setupCaptureCameras(MainWindow* window, const QVector2D& angle = QVector2D(-35.0f, -42.0f),
+                         float zoomDelta = 1400.0f, std::optional<QVector3D> panTarget = std::nullopt) {
     for (auto* view : window->findChildren<BaseView*>()) {
         view->resetCamera();
-        view->camera()->rotateAbsolute(captureAngle);
-        view->camera()->zoom(captureZoomDelta);
-        view->translateCameraByScreenDelta(captureTranslate);
+        view->camera()->rotateAbsolute(angle);
+        if (panTarget.has_value()) { view->camera()->panAbsolute(*panTarget); }
+        else {
+            QVector3D center = view->camera()->getPan();
+            center += QVector3D(550.0f * mm(), 380.0f * mm(), 125.0f * mm()) * Constants::OpenGL::kObjectToView;
+            view->camera()->panAbsolute(center);
+        }
+        view->camera()->zoom(zoomDelta);
     }
 }
 
@@ -259,8 +263,8 @@ void capturePreviewModes(MainWindow* window, const std::function<void(const QStr
 
     // Orthographic 2-D
     gcodeView->useOrthographic(true);
-    for (int i = 0; i < 6; ++i) { gcodeView->zoomIn(); }
-    gcodeView->translateCameraByScreenDelta(QVector2D(-0.25f, -0.10f));
+    for (int i = 0; i < 4; ++i) { gcodeView->zoomIn(); }
+    gcodeView->translateCameraByScreenDelta(QVector2D(-0.28f, -0.19f));
     QApplication::sendPostedEvents();
     capture("preview_orthographic_2d", gcodeView);
     gcodeView->useOrthographic(false);
@@ -321,6 +325,9 @@ void captureModelRolesDemo(MainWindow* window, const std::function<void(const QS
     clipItem->setTranslation(offsetFrom(baseItem, 300.0f, 250.0f));
     setItem->setTranslation(offsetFrom(baseItem, 750.0f, 350.0f));
 
+    const QVector3D groupCenter = offsetFrom(baseItem, 650.0f, 400.0f, 125.0f);
+    setupCaptureCameras(window, QVector2D(-35.0f, -42.0f), 1400.0f, groupCenter);
+
     auto setSb = CSM->parts().value("Settings_Region")->getSb();
     setSb->setSetting(PS::Infill::kEnable, true);
     setSb->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kGrid));
@@ -364,6 +371,9 @@ void capturePrimitiveShapesGrid(MainWindow* window, const std::function<void(con
     place(QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(220.0 * mm, 220.0 * mm, 200.0 * mm)),
           "Settings_Box", 1200.0f, 200.0f, MeshType::kSettings);
 
+    const QVector3D gridCenter = offsetFrom(baseItem, 550.0f, 180.0f, 80.0f);
+    setupCaptureCameras(window, QVector2D(-30.0f, -45.0f), 1400.0f, gridCenter);
+
     partView->showLabels(true);
     QApplication::sendPostedEvents();
     capture("primitive_geometry_grid", partView);
@@ -372,9 +382,13 @@ void capturePrimitiveShapesGrid(MainWindow* window, const std::function<void(con
 
 void captureInfillPatterns(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
     clearScene(window);
-    addScenePart(window,
-                 QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(1200.0 * mm, 800.0 * mm, 150.0 * mm)),
-                 "Infill_Sample");
+    auto infillItem = addScenePart(
+        window, QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(1200.0 * mm, 800.0 * mm, 150.0 * mm)),
+        "Infill_Sample");
+
+    const QVector3D infillCenter = infillItem->translation() + QVector3D(600.0f * mm(), 400.0f * mm(), 40.0f * mm()) *
+                                                                   Constants::OpenGL::kObjectToView;
+    setupCaptureCameras(window, QVector2D(-25.0f, -60.0f), 1400.0f, infillCenter);
 
     auto globalSb = GSM->getGlobal();
     globalSb->setSetting(PS::Perimeter::kEnable, true);
@@ -415,19 +429,21 @@ void captureSupportDemo(MainWindow* window, const std::function<void(const QStri
         "Overhang_Cap");
     overhangItem->setTranslation(offsetFrom(pillarItem, 0.0f, 0.0f, 300.0f));
 
+    const QVector3D supportCenter = pillarItem->translation() + QVector3D(400.0f * mm(), 250.0f * mm(), 200.0f * mm()) *
+                                                                    Constants::OpenGL::kObjectToView;
+    setupCaptureCameras(window, QVector2D(-40.0f, -50.0f), 1350.0f, supportCenter);
+
     auto globalSb = GSM->getGlobal();
     globalSb->setSetting(PS::Support::kEnable, true);
     globalSb->setSetting(PS::Support::kThresholdAngle, static_cast<double>(Angle(40.0 * deg)()));
     globalSb->setSetting(PS::Support::kLineSpacing, static_cast<double>(Distance(50.0 * mm)()));
 
-    overhangItem->graphicsPart()->rotateAbsolute(QQuaternion::fromEulerAngles(45.0f, 0.0f, 0.0f));
     partView->makeCurrent();
     partView->showOverhang(true);
     QApplication::sendPostedEvents();
     capture("support_overhang_preview", partView);
     partView->makeCurrent();
     partView->showOverhang(false);
-    overhangItem->graphicsPart()->rotateAbsolute(QQuaternion());
     QApplication::sendPostedEvents();
 
     sliceAndCaptureGCode(window, capture, "support_sliced_preview");
@@ -435,9 +451,14 @@ void captureSupportDemo(MainWindow* window, const std::function<void(const QStri
 
 void captureAdhesionModes(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
     clearScene(window);
-    addScenePart(window,
-                 QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(600.0 * mm, 500.0 * mm, 200.0 * mm)),
-                 "Adhesion_Part");
+    auto adhesionItem = addScenePart(
+        window, QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(600.0 * mm, 500.0 * mm, 200.0 * mm)),
+        "Adhesion_Part");
+
+    const QVector3D adhesionCenter =
+        adhesionItem->translation() +
+        QVector3D(300.0f * mm(), 250.0f * mm(), 30.0f * mm()) * Constants::OpenGL::kObjectToView;
+    setupCaptureCameras(window, QVector2D(-32.0f, -48.0f), 1650.0f, adhesionCenter);
 
     auto globalSb = GSM->getGlobal();
     globalSb->setSetting(PS::Skin::kEnable, false);
@@ -475,6 +496,114 @@ void captureAdhesionModes(MainWindow* window, const std::function<void(const QSt
     captureAdhesion("adhesion_skirt", 10);
 }
 
+void capturePartSettingsDemo(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    clearScene(window);
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* partView   = partWidget->view();
+
+    auto boxA  = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(450.0 * mm, 450.0 * mm, 150.0 * mm));
+    auto itemA = addScenePart(window, boxA, "Part_A");
+    auto boxB  = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(450.0 * mm, 450.0 * mm, 150.0 * mm));
+    auto itemB = addScenePart(window, boxB, "Part_B");
+    itemB->setTranslation(offsetFrom(itemA, 550.0f, 0.0f));
+
+    const QVector3D groupCenter = offsetFrom(itemA, 500.0f, 225.0f, 75.0f);
+    setupCaptureCameras(window, QVector2D(-35.0f, -42.0f), 1500.0f, groupCenter);
+
+    auto partSbA = CSM->parts().value("Part_A")->getSb();
+    partSbA->setSetting(PS::Infill::kEnable, true);
+    partSbA->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kGrid));
+    partSbA->setSetting(PS::Infill::kManualLineSpacing, true);
+    partSbA->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(25.0 * mm)()));
+
+    auto partSbB = CSM->parts().value("Part_B")->getSb();
+    partSbB->setSetting(PS::Infill::kEnable, true);
+    partSbB->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kLines));
+    partSbB->setSetting(PS::Infill::kManualLineSpacing, true);
+    partSbB->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(60.0 * mm)()));
+
+    itemA->setSelected(true);
+    itemB->setSelected(false);
+    QApplication::sendPostedEvents();
+    capture("part_settings_setup", partView);
+
+    sliceAndCaptureGCode(window, capture, "part_settings_sliced", [](int maxL) {
+        int mid = std::max(0, maxL / 2);
+        return QPair<int, int> {mid, mid};
+    });
+}
+
+void captureSettingsRegionDemo(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    clearScene(window);
+    auto* partWidget = window->findChild<PartWidget*>();
+    auto* partView   = partWidget->view();
+
+    auto base     = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(900.0 * mm, 500.0 * mm, 150.0 * mm));
+    auto baseItem = addScenePart(window, base, "Main_Part", MeshType::kBuild);
+    auto box      = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateBoxMesh(450.0 * mm, 500.0 * mm, 200.0 * mm));
+    auto boxItem  = addScenePart(window, box, "Dense_Region", MeshType::kSettings);
+    boxItem->setTranslation(offsetFrom(baseItem, 400.0f, 0.0f));
+
+    const QVector3D regionCenter = offsetFrom(baseItem, 500.0f, 250.0f, 90.0f);
+    setupCaptureCameras(window, QVector2D(-35.0f, -42.0f), 1500.0f, regionCenter);
+
+    auto setSb = CSM->parts().value("Dense_Region")->getSb();
+    setSb->setSetting(PS::Infill::kEnable, true);
+    setSb->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kGrid));
+    setSb->setSetting(PS::Infill::kManualLineSpacing, true);
+    setSb->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(25.0 * mm)()));
+
+    auto globalSb = GSM->getGlobal();
+    globalSb->setSetting(PS::Skin::kEnable, false);
+    globalSb->setSetting(PS::Infill::kEnable, true);
+    globalSb->setSetting(PS::Infill::kPattern, static_cast<int>(InfillPatterns::kLines));
+    globalSb->setSetting(PS::Infill::kManualLineSpacing, true);
+    globalSb->setSetting(PS::Infill::kLineSpacing, static_cast<double>(Distance(65.0 * mm)()));
+
+    QApplication::sendPostedEvents();
+    capture("settings_region_setup", partView);
+
+    sliceAndCaptureGCode(window, capture, "settings_region_sliced", [](int maxL) {
+        int mid = std::max(0, maxL / 2);
+        return QPair<int, int> {mid, mid};
+    });
+}
+
+void captureOptimizationDemo(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
+    clearScene(window);
+
+    auto cylA  = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(120.0 * mm, 100.0 * mm));
+    auto itemA = addScenePart(window, cylA, "Island_1");
+    auto cylB  = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(120.0 * mm, 100.0 * mm));
+    auto itemB = addScenePart(window, cylB, "Island_2");
+    itemB->setTranslation(offsetFrom(itemA, 500.0f, 0.0f));
+    auto cylC  = QSharedPointer<ClosedMesh>::create(MeshFactory::CreateCylinderMesh(120.0 * mm, 100.0 * mm));
+    auto itemC = addScenePart(window, cylC, "Island_3");
+    itemC->setTranslation(offsetFrom(itemA, 250.0f, 400.0f));
+
+    const QVector3D groupCenter = offsetFrom(itemA, 310.0f, 200.0f, 50.0f);
+    setupCaptureCameras(window, QVector2D(-30.0f, -52.0f), 2000.0f, groupCenter);
+
+    auto globalSb = GSM->getGlobal();
+    globalSb->setSetting(PS::Perimeter::kEnable, true);
+    globalSb->setSetting(PS::Perimeter::kCount, 2);
+    globalSb->setSetting(PS::Skin::kEnable, false);
+    globalSb->setSetting(PS::Infill::kEnable, false);
+
+    auto* gcodeBar = window->findChild<GcodeBar*>();
+    for (auto* cb : gcodeBar->findChildren<QCheckBox*>()) {
+        if (cb->text().contains("Hide Travel")) {
+            cb->setChecked(false);
+            break;
+        }
+    }
+
+    sliceAndCaptureGCode(window, capture, "optimization_island_ordering", [](int maxL) {
+        int mid = std::max(0, maxL / 2);
+        return QPair<int, int> {mid, mid};
+    });
+}
+
 void captureAllSceneDemos(MainWindow* window, const std::function<void(const QString&, QWidget*)>& capture) {
     const fifojson savedGlobalJson = GSM->getGlobal()->json();
     auto restoreGlobals            = [&]() { GSM->getGlobal()->json(savedGlobalJson); };
@@ -490,6 +619,12 @@ void captureAllSceneDemos(MainWindow* window, const std::function<void(const QSt
     captureSupportDemo(window, capture);
     restoreGlobals();
     captureAdhesionModes(window, capture);
+    restoreGlobals();
+    capturePartSettingsDemo(window, capture);
+    restoreGlobals();
+    captureSettingsRegionDemo(window, capture);
+    restoreGlobals();
+    captureOptimizationDemo(window, capture);
     restoreGlobals();
 }
 
@@ -552,6 +687,59 @@ QVector<QPair<QString, QString>> captureAllGuiElements(MainWindow* window, const
         capture("workspace_custom_layout", window);
         window->addDockWidget(Qt::RightDockWidgetArea, settingDock);
         QApplication::sendPostedEvents();
+
+        clearScene(window);
+        capture("part_view_empty_workspace", static_cast<QWidget*>(window->findChild<PartWidget*>()->view()));
+        ensureSampleParts(window);
+
+        auto* profileBar  = selectSettingsTab(window, 2);
+        auto* tabWidget   = profileBar->findChild<QTabWidget*>();
+        auto* profilePane = static_cast<SettingPane*>(tabWidget->widget(2));
+        for (SettingTab* tab : profilePane->getTabs()) {
+            if (toSlug(tab->getName()) == "layer") {
+                tab->show();
+                tab->expandTab();
+                QApplication::sendPostedEvents();
+                capture("setting_row_anatomy", tab);
+            }
+            if (toSlug(tab->getName()) == "slicing") {
+                tab->show();
+                tab->expandTab();
+                GSM->getGlobal()->setSetting(PS::Slicing::kSlicingMode, static_cast<int>(SlicingMode::kPlanar));
+                for (auto& row : tab->getRows()) {
+                    row->reloadValue();
+                    row->checkDependencies();
+                }
+                QApplication::sendPostedEvents();
+                capture("setting_dependencies_planar", tab);
+
+                GSM->getGlobal()->setSetting(PS::Slicing::kSlicingMode, static_cast<int>(SlicingMode::kCylindrical));
+                for (auto& row : tab->getRows()) {
+                    row->reloadValue();
+                    row->checkDependencies();
+                }
+                QApplication::sendPostedEvents();
+                capture("setting_dependencies_cylindrical", tab);
+
+                GSM->getGlobal()->setSetting(PS::Slicing::kSlicingMode, static_cast<int>(SlicingMode::kPlanar));
+                for (auto& row : tab->getRows()) {
+                    row->reloadValue();
+                    row->checkDependencies();
+                }
+                QApplication::sendPostedEvents();
+            }
+        }
+
+        for (QAction* act : window->menuBar()->actions()) {
+            if (toSlug(act->text()) == "view" && act->menu()) {
+                for (QAction* viewAct : act->menu()->actions()) {
+                    if (viewAct->menu() && toSlug(viewAct->text()) == "hidden_settings") {
+                        viewAct->menu()->adjustSize();
+                        capture("hidden_settings_menu", viewAct->menu());
+                    }
+                }
+            }
+        }
     }
 
     if (includeDemos) { captureAllSceneDemos(window, capture); }
