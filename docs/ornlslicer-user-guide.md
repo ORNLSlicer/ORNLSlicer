@@ -1521,7 +1521,7 @@ operate on text; otherwise they operate on selected parts where supported.
 
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 571 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 556 visible setting rows across 39 categories.
+This generated appendix documents all 573 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 558 visible setting rows across 39 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1554,7 +1554,7 @@ The catalog is organized as follows:
 | [Printer](#e2-printer-settings) | [Auxiliary](#settings-printer-auxiliary) | 2 |
 | [Printer](#e2-printer-settings) | [Machine Speeds](#settings-printer-machine-speeds) | 7 |
 | [Printer](#e2-printer-settings) | [Acceleration](#settings-printer-acceleration) | 8 |
-| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 12 |
+| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 13 |
 | [Material](#e3-material-settings) | [Density](#settings-material-density) | 2 |
 | [Material](#e3-material-settings) | [Start-Up](#settings-material-start-up) | 32 |
 | [Material](#e3-material-settings) | [Slow Down](#settings-material-slow-down) | 32 |
@@ -1587,7 +1587,7 @@ The catalog is organized as follows:
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
 | [Experimental](#e5-experimental-settings) | [Cross-Sectioning](#settings-experimental-cross-sectioning) | 2 |
 | [Experimental](#e5-experimental-settings) | [Auto Speed Ramping](#settings-experimental-auto-speed-ramping) | 8 |
-| [Experimental](#e5-experimental-settings) | [File Output](#settings-experimental-file-output) | 15 |
+| [Experimental](#e5-experimental-settings) | [File Output](#settings-experimental-file-output) | 16 |
 
 ### E.2 Printer settings
 
@@ -2417,6 +2417,19 @@ Acceleration value for support.
 
 Controls machine-level startup, material loading, waits, boundary demonstrations, settings output,
 and custom command blocks.
+
+<a id="setting-starting_layer_number"></a>
+
+##### Starting Layer Number (`starting_layer_number`)
+
+Number assigned to the first generated G-Code layer. Must be a whole number from 1 to 2147483647;
+the final layer must also fit in this range. Changes layer labels and references without changing
+slicing or first-layer behavior.
+
+- **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
+- **Master default:** `1`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
 
 <a id="setting-enable_default_startup_code"></a>
 
@@ -7281,8 +7294,9 @@ as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z 
 ##### Helical Tool Start Arc Length Offset (`helical_tool_start_arc_length_offset`)
 
 Signed physical Arc Specialties tool offset along each generated helical path radius. The writer
-converts this distance to an angle using the actual path radius; CP receives the full signed angle
-and XR/YR each receive half.
+converts this distance to an angle using the actual path radius; CP receives the full signed angle,
+and the configured torch frame is rotated about work-frame Y by the opposite angle to preserve
+surface-normal alignment.
 
 - **Input:** `location` — Signed position or offset in the preferred distance unit.
 - **Master default:** `0 mm`
@@ -9001,6 +9015,18 @@ threshold.
 ![Experimental > File Output Settings](user-guide-images/settings/experimental/file_output_options.png)
 
 Enables syntax-specific companion, simulation, or auxiliary output files.
+
+<a id="setting-individual_layer_output"></a>
+
+##### Enable Individual Layer Export (`individual_layer_output`)
+
+Enable before slicing to prepare standalone layer programs for saving each layer as a separate
+G-Code file during export.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Not (Syntax is `Adamantine`).
 
 <a id="setting-additional_meld_output"></a>
 
