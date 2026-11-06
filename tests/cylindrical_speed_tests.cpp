@@ -109,8 +109,7 @@ int main(int argc, char* argv[]) {
                 settings->setSetting(ORNL::PS::Slicing::kSlicingMode, mode == 0 ? 0 : 1);
                 settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, mode == 2 ? 1 : 0);
                 const QString output = temp.filePath(QString("case%1.nc").arg(++case_number));
-                ORNL::GCodeArcSpecialtiesSaver saver(temp.path() + QDir::separator(), temp.path(), output,
-                                                     "#FILE NAME[ G80=\"old.nc\" ]\n");
+                ORNL::GCodeArcSpecialtiesSaver saver(output, "#FILE NAME[ G80=\"old.nc\" ]\n");
                 saver.run();
                 QFile schedule(temp.filePath(QString("case%1_sch.nc").arg(case_number)));
                 expect(schedule.open(QIODevice::ReadOnly), "Generated schedule must exist.");
@@ -180,8 +179,7 @@ int main(int argc, char* argv[]) {
     preferences->setTimeUnit(ORNL::s);
     preferences->setVoltageUnit(ORNL::V);
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 0);
-    ORNL::GCodeArcSpecialtiesSaver snapshot_saver(temp.path() + QDir::separator(), temp.path(),
-                                                  temp.filePath("snapshot.nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
+    ORNL::GCodeArcSpecialtiesSaver snapshot_saver(temp.filePath("snapshot.nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
     preferences->setVelocityUnit(ORNL::mm / ORNL::minute);
     preferences->setTimeUnit(ORNL::ms);
     preferences->setVoltageUnit(ORNL::mV);
@@ -203,8 +201,7 @@ int main(int argc, char* argv[]) {
             settings->setSetting(ORNL::PS::Helical::kHelicalPerimeterRevolutions, perimeter);
             settings->setSetting(ORNL::PS::Helical::kHelicalInsetRevolutions, inset);
             const QString basename = QString("enabled%1").arg(++case_number);
-            ORNL::GCodeArcSpecialtiesSaver saver(temp.path() + QDir::separator(), temp.path(),
-                                                 temp.filePath(basename + ".nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
+            ORNL::GCodeArcSpecialtiesSaver saver(temp.filePath(basename + ".nc"), "#FILE NAME[ G80=\"old.nc\" ]\n");
             saver.run();
             QFile schedule(temp.filePath(basename + "_sch.nc"));
             expect(schedule.open(QIODevice::ReadOnly), "Filtered Helical schedule must exist.");

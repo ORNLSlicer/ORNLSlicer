@@ -213,7 +213,12 @@ void GcodeExport::exportGcode() {
             gcodeFileName = filepath % '/' % partName % "_scan_path" % m_most_recent_meta.m_file_suffix;
         }
         else { gcodeFileName = filepath % '/' % partName % m_most_recent_meta.m_file_suffix; }
-        if (m_layer_programs.isEmpty() && QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
+        const bool generate_arc_schedule =
+            m_most_recent_meta == GcodeMetaList::ArcSpecialtiesMeta &&
+            GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile);
+        if (m_layer_programs.isEmpty() && !generate_arc_schedule && QFile::exists(gcodeFileName)) {
+            QFile::remove(gcodeFileName);
+        }
 
         QString projectFileName = filepath % '/' % partName % ".s2p";
 
@@ -388,12 +393,17 @@ void GcodeExport::exportGcode() {
             return;
         }
 
-        if (m_most_recent_meta == GcodeMetaList::ArcSpecialtiesMeta &&
-            GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile)) {
-            GCodeArcSpecialtiesSaver* saver = new GCodeArcSpecialtiesSaver(m_location, filepath, gcodeFileName, text);
+        if (generate_arc_schedule) {
+            GCodeArcSpecialtiesSaver* saver = new GCodeArcSpecialtiesSaver(gcodeFileName, text);
             connect(saver, &GCodeArcSpecialtiesSaver::finished, saver, &GCodeArcSpecialtiesSaver::deleteLater);
-            connect(saver, &GCodeArcSpecialtiesSaver::finished, this,
-                    [this, filepath, partName]() { showComplete(filepath, partName); });
+            connect(saver, &GCodeArcSpecialtiesSaver::completed, this,
+                    [this, filepath, partName](const QString& error) {
+                        if (!error.isEmpty()) {
+                            QMessageBox::warning(this, "File Export", error);
+                            return;
+                        }
+                        showComplete(filepath, partName);
+                    });
             saver->start();
         }
         else if ((m_most_recent_meta == GcodeMetaList::MarlinMeta ||

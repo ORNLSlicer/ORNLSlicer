@@ -1,9 +1,9 @@
 #include "threading/gcode_arc_specialties_saver.h"
 
 #include <QDir>
-#include <QFile>
 #include <QFileInfo>
 #include <QRegularExpression>
+#include <QSaveFile>
 #include <QStringBuilder>
 #include <QTextStream>
 #include <QVector>
@@ -112,10 +112,8 @@ void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, Velocity
 }
 }  // namespace
 
-GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString tempLocation, QString path, QString filename, QString text)
-    : m_temp_location(tempLocation),
-      m_path(path),
-      m_filename(filename),
+GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString filename, QString text)
+    : m_filename(filename),
       m_text(text),
       m_time_unit(PreferencesManager::getInstance()->getTimeUnit()),
       m_voltage_unit(PreferencesManager::getInstance()->getVoltageUnit()) {
@@ -123,22 +121,31 @@ GCodeArcSpecialtiesSaver::GCodeArcSpecialtiesSaver(QString tempLocation, QString
 }
 
 void GCodeArcSpecialtiesSaver::run() {
+    emit completed(save());
+}
+
+QString GCodeArcSpecialtiesSaver::save() {
     QFileInfo file_info(m_filename);
     const QString schedule_file_name = file_info.completeBaseName() % "_sch.nc";
     const QString schedule_file_path = file_info.absolutePath() % QDir::separator() % schedule_file_name;
 
+    const QString error = writeWeldScheduleFile(schedule_file_path);
+    if (!error.isEmpty()) return error;
+
     updateScheduleReference(schedule_file_name);
 
-    QFile temp_file(m_temp_location % "temp");
-    if (temp_file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
-        QTextStream out(&temp_file);
-        out << m_text;
-        temp_file.close();
-
-        QFile::rename(temp_file.fileName(), m_filename);
+    QSaveFile file(m_filename);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return "Could not open G-Code file: " % m_filename % "\n" % file.errorString();
+    }
+    QTextStream out(&file);
+    out << m_text;
+    out.flush();
+    if (out.status() != QTextStream::Ok || !file.commit()) {
+        return "Could not write G-Code file: " % m_filename % "\n" % file.errorString();
     }
 
-    writeWeldScheduleFile(schedule_file_path);
+    return {};
 }
 
 void GCodeArcSpecialtiesSaver::updateScheduleReference(const QString& schedule_file_name) {
@@ -148,7 +155,7 @@ void GCodeArcSpecialtiesSaver::updateScheduleReference(const QString& schedule_f
     if (m_text.contains(g80_file_line)) { m_text.replace(g80_file_line, replacement); }
 }
 
-void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
+QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
     const QVector<ScheduleRegion> schedule_regions {
         {1,
          Constants::RegionTypeStrings::kPerimeter.toLower(),
@@ -316,8 +323,10 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
            ";Crater Fill Time"}}},
     };
 
-    QFile file(file_path);
-    if (!file.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) { return; }
+    QSaveFile file(file_path);
+    if (!file.open(QIODevice::WriteOnly | QIODevice::Text)) {
+        return "Could not open weld schedule file: " % file_path % "\n" % file.errorString();
+    }
 
     QTextStream out(&file);
     out << "(DO NOT EDIT THIS HEADER SECTION)" << '\n';
@@ -352,5 +361,10 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
     out << "$ENDSWITCH" << '\n';
     out << "  " << '\n';
     out << "M29 (End Subroutine)" << '\n';
+    out.flush();
+    if (out.status() != QTextStream::Ok || !file.commit()) {
+        return "Could not write weld schedule file: " % file_path % "\n" % file.errorString();
+    }
+    return {};
 }
 }  // namespace ORNL
