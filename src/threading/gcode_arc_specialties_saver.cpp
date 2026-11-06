@@ -47,7 +47,7 @@ QString formatScheduleValue(const QString& setting_key, ScheduleValueType value_
             return QString::number(GSM->getGlobal()->setting<int>(setting_key));
         case ScheduleValueType::kSpeed: {
             const Velocity value = GSM->getGlobal()->setting<Velocity>(setting_key);
-            return formatDecimal(value.to(meta.m_velocity_unit));
+            return formatDecimal(value.to(inch / minute));
         }
         case ScheduleValueType::kTime: {
             const Time value = GSM->getGlobal()->setting<Time>(setting_key);
@@ -64,7 +64,23 @@ QString formatScheduleValue(const QString& setting_key, ScheduleValueType value_
 
 void writeScheduleField(QTextStream& out, const ScheduleField& field, GcodeMeta meta) {
     out << field.assignment << " = " << formatScheduleValue(field.setting_key, field.value_type, meta);
-    if (!field.comment.isEmpty()) { out << "      " << field.comment; }
+    if (!field.comment.isEmpty()) {
+        out << "      " << field.comment;
+        switch (field.value_type) {
+            case ScheduleValueType::kInteger:
+                out << " (unitless)";
+                break;
+            case ScheduleValueType::kSpeed:
+                out << " (in/min)";
+                break;
+            case ScheduleValueType::kTime:
+                out << " (" << meta.m_time_unit.toString() << ')';
+                break;
+            case ScheduleValueType::kVoltage:
+                out << " (V)";
+                break;
+        }
+    }
     out << '\n';
 }
 
@@ -81,9 +97,8 @@ void writeScheduleBlock(QTextStream& out, const ScheduleRegion& region, GcodeMet
     for (const ScheduleField& field : region.fields) { writeScheduleField(out, field, meta); }
 
     out << "$IF EXIST[V.S.SPEED]" << '\n';
-    out << "   V.S.SPEED = "
-        << formatDecimal(regionPrintSpeed(*GSM->getGlobal(), region.region_type).to(meta.m_velocity_unit))
-        << "            ;Set speed value if it exists" << '\n';
+    out << "   V.S.SPEED = " << formatDecimal(regionPrintSpeed(*GSM->getGlobal(), region.region_type).to(inch / minute))
+        << "            ;Set speed value if it exists (in/min)" << '\n';
     out << "$ENDIF" << '\n';
     out << "$BREAK" << '\n';
     out << "(Schedule " << region.schedule_number << " End)" << '\n';
@@ -128,10 +143,9 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
          Constants::RegionTypeStrings::kPerimeter.toLower(),
          false,
          RegionType::kPerimeter,
-         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kPerimeterPreflow, ScheduleValueType::kTime,
-           ";Preflow Time in Seconds"},
+         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kPerimeterPreflow, ScheduleValueType::kTime, ";Preflow Time"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kPerimeterTravelDelay, ScheduleValueType::kTime,
-           ";Travel Start Delay in Seconds"},
+           ";Travel Start Delay"},
           {"V.E.Sch.Postflow", PS::ArcSpecialties::kPerimeterPostflow, ScheduleValueType::kTime,
            ";Stationary Postflow Time"},
           {"V.E.Sch.PostPurge", PS::ArcSpecialties::kPerimeterPostpurge, ScheduleValueType::kTime,
@@ -165,14 +179,14 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
           {"V.E.Sch.Crater.Control", PS::ArcSpecialties::kPerimeterCraterControl, ScheduleValueType::kInteger,
            ";Arc Control in Crater Fill"},
           {"V.E.Sch.Crater.Time", PS::ArcSpecialties::kPerimeterCraterTime, ScheduleValueType::kTime,
-           ";Crater Fill Time in Seconds"}}},
+           ";Crater Fill Time"}}},
         {2,
          Constants::RegionTypeStrings::kInset.toLower(),
          false,
          RegionType::kInset,
-         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kInsetPreflow, ScheduleValueType::kTime, ";Preflow Time in Seconds"},
+         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kInsetPreflow, ScheduleValueType::kTime, ";Preflow Time"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kInsetTravelDelay, ScheduleValueType::kTime,
-           ";Travel Start Delay in Seconds"},
+           ";Travel Start Delay"},
           {"V.E.Sch.Postflow", PS::ArcSpecialties::kInsetPostflow, ScheduleValueType::kTime,
            ";Stationary Postflow Time"},
           {"V.E.Sch.PostPurge", PS::ArcSpecialties::kInsetPostpurge, ScheduleValueType::kTime,
@@ -206,15 +220,14 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
           {"V.E.Sch.Crater.Control", PS::ArcSpecialties::kInsetCraterControl, ScheduleValueType::kInteger,
            ";Arc Control in Crater Fill"},
           {"V.E.Sch.Crater.Time", PS::ArcSpecialties::kInsetCraterTime, ScheduleValueType::kTime,
-           ";Crater Fill Time in Seconds"}}},
+           ";Crater Fill Time"}}},
         {3,
          Constants::RegionTypeStrings::kSkeleton.toLower(),
          false,
          RegionType::kSkeleton,
-         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kSkeletonPreflow, ScheduleValueType::kTime,
-           ";Preflow Time in Seconds"},
+         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kSkeletonPreflow, ScheduleValueType::kTime, ";Preflow Time"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kSkeletonTravelDelay, ScheduleValueType::kTime,
-           ";Travel Start Delay in Seconds"},
+           ";Travel Start Delay"},
           {"V.E.Sch.Postflow", PS::ArcSpecialties::kSkeletonPostflow, ScheduleValueType::kTime,
            ";Stationary Postflow Time"},
           {"V.E.Sch.PostPurge", PS::ArcSpecialties::kSkeletonPostpurge, ScheduleValueType::kTime,
@@ -248,14 +261,14 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
           {"V.E.Sch.Crater.Control", PS::ArcSpecialties::kSkeletonCraterControl, ScheduleValueType::kInteger,
            ";Arc Control in Crater Fill"},
           {"V.E.Sch.Crater.Time", PS::ArcSpecialties::kSkeletonCraterTime, ScheduleValueType::kTime,
-           ";Crater Fill Time in Seconds"}}},
+           ";Crater Fill Time"}}},
         {0,
          Constants::RegionTypeStrings::kInfill.toLower(),
          true,
          RegionType::kInfill,
-         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kInfillPreflow, ScheduleValueType::kTime, ";Preflow Time in Seconds"},
+         {{"V.E.Sch.Preflow", PS::ArcSpecialties::kInfillPreflow, ScheduleValueType::kTime, ";Preflow Time"},
           {"V.E.Sch.TravelDelay", PS::ArcSpecialties::kInfillTravelDelay, ScheduleValueType::kTime,
-           ";Travel Start Delay in Seconds"},
+           ";Travel Start Delay"},
           {"V.E.Sch.Postflow", PS::ArcSpecialties::kInfillPostflow, ScheduleValueType::kTime,
            ";Stationary Postflow Time"},
           {"V.E.Sch.PostPurge", PS::ArcSpecialties::kInfillPostpurge, ScheduleValueType::kTime,
@@ -289,7 +302,7 @@ void GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path) {
           {"V.E.Sch.Crater.Control", PS::ArcSpecialties::kInfillCraterControl, ScheduleValueType::kInteger,
            ";Arc Control in Crater Fill"},
           {"V.E.Sch.Crater.Time", PS::ArcSpecialties::kInfillCraterTime, ScheduleValueType::kTime,
-           ";Crater Fill Time in Seconds"}}},
+           ";Crater Fill Time"}}},
     };
 
     QFile file(file_path);
