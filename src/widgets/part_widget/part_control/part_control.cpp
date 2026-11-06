@@ -79,6 +79,10 @@ void PartControl::modelRemovalUpdate(QSharedPointer<PartMetaItem> pm) {
     else
         m_tree_widget->addTopLevelItems(child_list);
 
+    for (QTreeWidgetItem* child : child_list) {
+        static_cast<PartControlTreeItem*>(child)->addContainer(m_tree_widget, 0);
+    }
+
     delete tree_item;
 }
 
@@ -115,6 +119,7 @@ void PartControl::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
         if (!tlp.empty()) {
             m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(tree_item));
             tlp.at(0)->addChild(tree_item);
+            tree_item->addContainer(m_tree_widget, 0);
         }
     }
 
@@ -124,8 +129,10 @@ void PartControl::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
             m_tree_widget->findItems(child->part()->name(), Qt::MatchExactly | Qt::MatchRecursive);
 
         if (!tlc.empty()) {
-            m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(tlc.at(0)));
-            tree_item->addChild(tlc.at(0));
+            auto* child_item = static_cast<PartControlTreeItem*>(tlc.at(0));
+            m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(child_item));
+            tree_item->addChild(child_item);
+            child_item->addContainer(m_tree_widget, 0);
         }
     }
 }
@@ -214,6 +221,10 @@ void PartControl::setOutsideStatus(const QString& name, bool status) {
         auto tree_item = dynamic_cast<PartControlTreeItem*>(result);
         if (tree_item != nullptr) { tree_item->setOutsideVolume(status); }
     }
+}
+
+void PartControl::expandAll() {
+    m_tree_widget->expandAll();
 }
 
 void PartControl::setupSubWidgets() {
