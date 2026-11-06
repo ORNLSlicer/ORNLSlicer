@@ -1,6 +1,7 @@
 #include "windows/xtrudecalc.h"
 
 #include <QApplication>
+#include <QPalette>
 
 #include <qcombobox.h>
 #include <qcontainerfwd.h>
@@ -165,13 +166,13 @@ XtrudeCalcWindow::XtrudeCalcWindow(QWidget* parent) : QWidget() {
         "(You can also use the FPR (i.e. feed per tooth with 1 tooth or simply feed per "
         "rev) as your feed in Option 3)");
     lbl_Option4->setWordWrap(true);
-    lbl_Option4->setStyleSheet("QLabel { color : blue; }");
+    lbl_Option4->setForegroundRole(QPalette::Link);
     m_layout->addWidget(lbl_Option4, 10, 3, 2, 2);
 
     // Status Message
     m_status_label = new QLabel("Please fill out all Printing Parameters before filling out any options");
     m_status_label->setWordWrap(true);
-    m_status_label->setStyleSheet("QLabel { color : red; }");
+    m_status_label->setForegroundRole(QPalette::BrightText);
     m_layout->addWidget(m_status_label, 10, 0, 2, 2);
 
     // General Usage Instructions
