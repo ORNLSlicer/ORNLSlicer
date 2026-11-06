@@ -201,10 +201,11 @@ class ArcSpecialtiesWriter : public WriterBase {
 
     /*!
      * @brief Formats the Arc Specialties motion feedrate field.
-     * @param speed Numeric feedrate used when schedule speed output is inactive.
+     * @param speed Effective motion speed, including segment overrides.
+     * @param params Segment settings identifying the print region.
      * @return Either a numeric F field or the G80 schedule speed variable field.
      */
-    QString writeMotionFeedrate(Velocity speed) const;
+    QString writeMotionFeedrate(Velocity speed, const QSharedPointer<SettingsBase>& params) const;
 
     /*!
      * @brief Writes a single Arc Specialties motion command.

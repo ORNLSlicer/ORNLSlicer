@@ -18,6 +18,7 @@
 #include "gcode/writers/writer_base.h"
 #include "geometry/point.h"
 #include "managers/settings/settings_manager.h"
+#include "slicing/region_speed.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 #include "utilities/enums.h"
@@ -749,7 +750,7 @@ QString ArcSpecialtiesWriter::writeArc(const Point& start_point, const Point& en
     const QString print_comment = printMoveComment(params);
     rv += writeNumberedBlock(QString(ccw ? "G03" : "G02") %
                              writeCoordinates(end_point, params, toolFrameRotationForMotion(print_comment, params)) %
-                             writeArcCenterParameters(start_point, center_point) % writeMotionFeedrate(speed) %
+                             writeArcCenterParameters(start_point, center_point) % writeMotionFeedrate(speed, params) %
                              inline_optional_stop % commentSpaceLine(print_comment));
     return rv;
 }
@@ -880,8 +881,23 @@ bool ArcSpecialtiesWriter::usesG80ScheduleSpeedVariable() const {
     return shouldGenerateWeldScheduleFile() || !g80WeldScheduleFile().isEmpty();
 }
 
-QString ArcSpecialtiesWriter::writeMotionFeedrate(Velocity speed) const {
-    if (usesG80ScheduleSpeedVariable()) { return m_f % kG80ScheduleSpeedVariable; }
+QString ArcSpecialtiesWriter::writeMotionFeedrate(Velocity speed, const QSharedPointer<SettingsBase>& params) const {
+    bool use_schedule_speed = usesG80ScheduleSpeedVariable();
+    if (use_schedule_speed && shouldGenerateWeldScheduleFile()) {
+        const RegionType region = params->setting<RegionType>(SS::kRegionType);
+        switch (region) {
+            case RegionType::kPerimeter:
+            case RegionType::kInset:
+            case RegionType::kInfill:
+            case RegionType::kSkeleton:
+                use_schedule_speed = speed() == regionPrintSpeed(*m_sb, region)();
+                break;
+            default:
+                use_schedule_speed = false;
+                break;
+        }
+    }
+    if (use_schedule_speed) { return m_f % kG80ScheduleSpeedVariable; }
 
     return m_f % QString::number(speed.to(m_meta.m_velocity_unit), 'f', 4);
 }
@@ -902,7 +918,7 @@ QString ArcSpecialtiesWriter::writeMotion(const QString& command, const Point& d
     }
     else {
         return writeNumberedBlock(command % writeCoordinates(destination, params, tool_frame_rotation, cp_reference) %
-                                  writeMotionFeedrate(speed) % commentSpaceLine(comment));
+                                  writeMotionFeedrate(speed, params) % commentSpaceLine(comment));
     }
 }
 
