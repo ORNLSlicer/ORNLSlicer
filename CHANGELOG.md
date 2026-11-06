@@ -19,6 +19,7 @@ Release versions follow the project's
 
 ### Fixed
 
+- Fixed inconsistent light/dark theme heading fonts; regional form headings now use the same font family and size as their controls, with bold reserved for headings ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed dark-mode group-box frames and the continuous background behind regional weld schedule forms so sections remain visually separated ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed ESAM (Arc Specialties) helical torch orientation after arc-length offsets so the torch remains normal to the surface ([#372](https://github.com/ORNLSlicer/ORNLSlicer/issues/372)).
 - Fixed generated G-code containing embedded standalone layer programs and export-only markers, including when individual-layer export is enabled.

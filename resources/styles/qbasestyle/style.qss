@@ -1,6 +1,6 @@
 /* Font Control ------------------------------------------------------------ */
 
-QCheckbox, QComboBox, QGroupBox, QSpinBox, QDoubleSpinBox,
+QCheckBox, QComboBox, QGroupBox, QSpinBox, QDoubleSpinBox,
 QFrame, QGroupBox, QLineEdit, QTabBar, QTextEdit, 
 QToolBar, QToolButton, QPushButton, QRadioButton, 
 QDockWidget, QTabBar, QTabWidget, 
@@ -8,6 +8,10 @@ QLabel, QAbstractScrollArea {
     font-weight:400;
     font-size: 8pt;
     font-family: "Segoe UI";
+}
+
+QGroupBox, QToolButton[settingGroupToggle="true"] {
+    font-weight: bold;
 }
 
 /* QSlider ----------------------------------------------------------------- */

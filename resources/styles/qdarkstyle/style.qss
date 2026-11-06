@@ -43,6 +43,21 @@ issue number.
 
 
 
+/* Font Control ------------------------------------------------------------ */
+
+QCheckBox, QComboBox, QGroupBox, QSpinBox, QDoubleSpinBox,
+QFrame, QLineEdit, QTabBar, QTextEdit,
+QToolBar, QToolButton, QPushButton, QRadioButton,
+QDockWidget, QTabWidget, QLabel, QAbstractScrollArea {
+    font-weight: 400;
+    font-size: 8pt;
+    font-family: "Segoe UI";
+}
+
+QToolButton[settingGroupToggle="true"] {
+    font-weight: bold;
+}
+
 /* QWidget ---------------------------------------------------------------- */
 
 QWidget { 
