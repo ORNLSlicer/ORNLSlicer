@@ -5,7 +5,7 @@
 #include <qobject.h>
 #include <qtmetamacros.h>
 
-#include "gcode/gcode_meta.h"
+#include "units/unit.h"
 
 namespace ORNL {
 /*!
@@ -20,8 +20,7 @@ class GCodeArcSpecialtiesSaver : public QThread {
     //! \param path: path to output
     //! \param filename: filename to output
     //! \param text: current gcode
-    //! \param meta: meta used to generate gcode
-    GCodeArcSpecialtiesSaver(QString tempLocation, QString path, QString filename, QString text, GcodeMeta meta);
+    GCodeArcSpecialtiesSaver(QString tempLocation, QString path, QString filename, QString text);
 
     //! \brief Function that is run when start is called on this thread.
     void run() override;
@@ -36,7 +35,9 @@ class GCodeArcSpecialtiesSaver : public QThread {
     //! \brief Temporary file location, output path, output filename, and text to output
     QString m_temp_location, m_path, m_filename, m_text;
 
-    //! \brief Meta info determined from file
-    GcodeMeta m_selected_meta;
+    //! \brief Settings UI units captured before the export thread starts.
+    Velocity m_velocity_unit;
+    Time m_time_unit;
+    Voltage m_voltage_unit;
 };  // class GCodeArcSpecialtiesSaver
 }  // namespace ORNL
