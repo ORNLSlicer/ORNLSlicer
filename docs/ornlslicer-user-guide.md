@@ -219,8 +219,9 @@ Before loading a production part:
 Changing display units changes how values are shown. The selected controller
 syntax and template determine the units and conventions used in output.
 
-> **Diagram placeholder — First launch:** Add an annotated Preferences window
-> and the Printer > Machine Setup settings panel.
+| Application Preferences Dialog | Printer > Machine Setup Settings Panel |
+| :---: | :---: |
+| ![Preferences dialog](user-guide-images/preferences_window.png) | ![Printer Machine Setup](user-guide-images/settings/printer/machine_setup_options.png) |
 
 ## 3. Quick-start workflow
 
@@ -357,9 +358,9 @@ G-Code View renders generated or imported motion. It supports:
 The preview is a verification aid. Controller state, macros, work offsets, and
 commands that do not map to geometric motion may not be represented visually.
 
-> **Diagram placeholder — G-Code View:** Add one screenshot showing colored
-> paths and another showing the selected segment synchronized with its text
-> line.
+| Generated Toolpaths in G-Code View | G-Code Editor and Inspection Panel |
+| :---: | :---: |
+| ![G-Code View workspace](user-guide-images/gcode_view_workspace.png) | ![G-Code editor panel](user-guide-images/gcode_editor_panel.png) |
 
 ### 4.5 Settings, editor, timing, and status panels
 
@@ -609,9 +610,13 @@ greyed out or hidden.
 Individual category tabs can be hidden. Restore them with
 **View > Hidden Settings**, or use **Show All Settings**.
 
-> **Diagram placeholder — Setting dependencies:** Add a before-and-after image
-> showing settings enabled by changing Slicing Mode and the hidden-settings
-> recovery menu.
+| Planar Mode Active (Slice Plane Controls Visible) | Cylindrical Mode Active (Axis & Pattern Controls Visible) |
+| :---: | :---: |
+| ![Planar slicing dependencies](user-guide-images/setting_dependencies_planar.png) | ![Cylindrical slicing dependencies](user-guide-images/setting_dependencies_cylindrical.png) |
+
+Hidden categories can be restored through the View menu:
+
+![Hidden settings recovery menu](user-guide-images/hidden_settings_menu.png)
 
 ### 6.4 Load and save templates
 
@@ -648,8 +653,9 @@ Use part settings when separate build objects need different bead widths,
 speeds, infill, path options, or other locally supported values. Keep machine
 configuration global unless the UI explicitly permits a local override.
 
-> **Diagram placeholder — Part settings:** Add two adjacent parts using
-> different local infill or speed values, with the active part scope visible.
+| Two Adjacent Parts in Part View | Resulting Sliced Toolpath (Dense Grid vs. Sparse Lines) |
+| :---: | :---: |
+| ![Part settings setup](user-guide-images/part_settings_setup.png) | ![Part settings sliced result](user-guide-images/part_settings_sliced.png) |
 
 ### 6.6 Layer and layer-range settings
 
@@ -685,9 +691,9 @@ with a build part by using parent/child relationships when appropriate.
 Spatial settings regions are a planar-slicing feature; do not assume that
 cylindrical or image modes apply them.
 
-> **Diagram placeholder — Settings regions:** Add a transparent settings box
-> intersecting a part and a preview showing the changed path density or speed
-> inside the box.
+| Settings Box Modifier Intersecting Part | Localized Infill Override Inside Region |
+| :---: | :---: |
+| ![Settings region setup](user-guide-images/settings_region_setup.png) | ![Settings region sliced result](user-guide-images/settings_region_sliced.png) |
 
 ## 7. Slicing and toolpath features
 
@@ -860,9 +866,7 @@ Optimization changes travel and seam placement. Compare travel distance,
 surface starts, thermal sequence, collision risk, and machine kinematics rather
 than assuming the shortest path is always the best process path.
 
-> **Diagram placeholder — Optimization:** Add the same multi-island layer
-> before and after path ordering, with custom optimization points and travels
-> visible.
+![Multi-island layer toolpath with travel moves visible](user-guide-images/optimization_island_ordering.png)
 
 ### 7.9 Laser and thermal scanning
 
@@ -1077,9 +1081,9 @@ retained; load a different template if the next setup needs different settings.
 Save reusable machine and process values as a template; save a complete
 arrangement, including geometry and local overrides, as a project.
 
-> **Diagram placeholder — New project:** Add the populated scene before the
-> action and the empty scene afterward, with unchanged active settings called
-> out.
+| Populated Build Scene Before Project Reset | Cleared Scene After Project > New Project |
+| :---: | :---: |
+| ![Populated workspace before reset](user-guide-images/part_view_workspace.png) | ![Empty workspace after new project](user-guide-images/part_view_empty_workspace.png) |
 
 ### 9.3 Restore the last session
 
@@ -1542,8 +1546,7 @@ Use the browser or PDF search for either a visible label or an internal key. Eve
 | Available when | The selections or toggles that enable the setting. |
 | Choices | Every selectable value for enumeration settings, in stored order. |
 
-> **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,
-> tooltip, disabled state, local-override indicator, and corresponding reference entry.
+![Setting category panel displaying row labels, numerical inputs with units, reset buttons, and local override toggles](user-guide-images/setting_row_anatomy.png)
 
 The catalog is organized as follows:
 
