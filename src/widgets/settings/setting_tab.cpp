@@ -172,7 +172,7 @@ std::pair<QGridLayout*, int> SettingTab::groupedRowLayout(const QString& key, co
         auto font = group.toggle->font();
         font.setBold(true);
         group.toggle->setFont(font);
-        group.content = new QWidget(group.frame);
+        group.content = new QFrame(group.frame);
         group.content->setObjectName("setting_group_content_" + region);
         group.layout = new QGridLayout(group.content);
         group.layout->setContentsMargins(0, 0, 0, 0);
