@@ -1546,7 +1546,8 @@ Use the browser or PDF search for either a visible label or an internal key. Eve
 | Available when | The selections or toggles that enable the setting. |
 | Choices | Every selectable value for enumeration settings, in stored order. |
 
-![Setting category panel displaying row labels, numerical inputs with units, reset buttons, and local override toggles](user-guide-images/setting_row_anatomy.png)
+> **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,
+> tooltip, disabled state, local-override indicator, and corresponding reference entry.
 
 The catalog is organized as follows:
 
