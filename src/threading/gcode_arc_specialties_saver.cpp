@@ -17,7 +17,7 @@
 
 namespace ORNL {
 namespace {
-enum class ScheduleValueType { kInteger, kSpeed, kTime, kVoltage };
+enum class ScheduleValueType { kInteger, kSpeed, kWireFeedSpeed, kTime, kVoltage };
 
 struct ScheduleField {
     QString assignment;
@@ -48,9 +48,11 @@ QString formatScheduleValue(const QString& setting_key, ScheduleValueType value_
     switch (value_type) {
         case ScheduleValueType::kInteger:
             return QString::number(GSM->getGlobal()->setting<int>(setting_key));
+        case ScheduleValueType::kWireFeedSpeed:
         case ScheduleValueType::kSpeed: {
             const Velocity value = GSM->getGlobal()->setting<Velocity>(setting_key);
-            return formatDecimal(value.to(velocity_unit));
+            return formatDecimal(
+                value.to(value_type == ScheduleValueType::kWireFeedSpeed ? inch / minute : velocity_unit));
         }
         case ScheduleValueType::kTime: {
             const Time value = GSM->getGlobal()->setting<Time>(setting_key);
@@ -74,6 +76,9 @@ void writeScheduleField(QTextStream& out, const ScheduleField& field, Velocity v
         switch (field.value_type) {
             case ScheduleValueType::kInteger:
                 out << " (unitless)";
+                break;
+            case ScheduleValueType::kWireFeedSpeed:
+                out << " (in/min)";
                 break;
             case ScheduleValueType::kSpeed:
                 out << " (" << velocity_unit.toString() << ')';
@@ -182,7 +187,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Postflow Time after moving away (can reduce preflow delay)"},
           {"V.E.Sch.Start1.Program", PS::ArcSpecialties::kPerimeterStartProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Startup. = 0 to disable"},
-          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kPerimeterStartWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kPerimeterStartWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Startup"},
           {"V.E.Sch.Start1.Volts", PS::ArcSpecialties::kPerimeterStartVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Startup"},
@@ -194,7 +199,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Time to use start parameters"},
           {"V.E.Sch.Weld.Program", PS::ArcSpecialties::kPerimeterWeldProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Main Weld"},
-          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kPerimeterWeldWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kPerimeterWeldWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Main Weld"},
           {"V.E.Sch.Weld.Volts", PS::ArcSpecialties::kPerimeterWeldVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Main Weld"},
@@ -202,7 +207,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Arc Control in Main Weld"},
           {"V.E.Sch.Crater.Program", PS::ArcSpecialties::kPerimeterCraterProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Crater Fill"},
-          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kPerimeterCraterWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kPerimeterCraterWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Crater Fill"},
           {"V.E.Sch.Crater.Volts", PS::ArcSpecialties::kPerimeterCraterVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Crater Fill"},
@@ -223,7 +228,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Postflow Time after moving away (can reduce preflow delay)"},
           {"V.E.Sch.Start1.Program", PS::ArcSpecialties::kInsetStartProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Startup. = 0 to disable"},
-          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kInsetStartWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kInsetStartWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Startup"},
           {"V.E.Sch.Start1.Volts", PS::ArcSpecialties::kInsetStartVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Startup"},
@@ -235,7 +240,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Time to use start parameters"},
           {"V.E.Sch.Weld.Program", PS::ArcSpecialties::kInsetWeldProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Main Weld"},
-          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kInsetWeldWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kInsetWeldWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Main Weld"},
           {"V.E.Sch.Weld.Volts", PS::ArcSpecialties::kInsetWeldVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Main Weld"},
@@ -243,7 +248,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Arc Control in Main Weld"},
           {"V.E.Sch.Crater.Program", PS::ArcSpecialties::kInsetCraterProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Crater Fill"},
-          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kInsetCraterWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kInsetCraterWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Crater Fill"},
           {"V.E.Sch.Crater.Volts", PS::ArcSpecialties::kInsetCraterVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Crater Fill"},
@@ -264,7 +269,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Postflow Time after moving away (can reduce preflow delay)"},
           {"V.E.Sch.Start1.Program", PS::ArcSpecialties::kSkeletonStartProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Startup. = 0 to disable"},
-          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kSkeletonStartWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kSkeletonStartWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Startup"},
           {"V.E.Sch.Start1.Volts", PS::ArcSpecialties::kSkeletonStartVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Startup"},
@@ -276,7 +281,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Time to use start parameters"},
           {"V.E.Sch.Weld.Program", PS::ArcSpecialties::kSkeletonWeldProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Main Weld"},
-          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kSkeletonWeldWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kSkeletonWeldWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Main Weld"},
           {"V.E.Sch.Weld.Volts", PS::ArcSpecialties::kSkeletonWeldVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Main Weld"},
@@ -284,7 +289,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Arc Control in Main Weld"},
           {"V.E.Sch.Crater.Program", PS::ArcSpecialties::kSkeletonCraterProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Crater Fill"},
-          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kSkeletonCraterWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kSkeletonCraterWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Crater Fill"},
           {"V.E.Sch.Crater.Volts", PS::ArcSpecialties::kSkeletonCraterVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Crater Fill"},
@@ -305,7 +310,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Postflow Time after moving away (can reduce preflow delay)"},
           {"V.E.Sch.Start1.Program", PS::ArcSpecialties::kInfillStartProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Startup. = 0 to disable"},
-          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kInfillStartWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Start1.WFS", PS::ArcSpecialties::kInfillStartWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Startup"},
           {"V.E.Sch.Start1.Volts", PS::ArcSpecialties::kInfillStartVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Startup"},
@@ -317,7 +322,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Time to use start parameters"},
           {"V.E.Sch.Weld.Program", PS::ArcSpecialties::kInfillWeldProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Main Weld"},
-          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kInfillWeldWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Weld.WFS", PS::ArcSpecialties::kInfillWeldWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Main Weld"},
           {"V.E.Sch.Weld.Volts", PS::ArcSpecialties::kInfillWeldVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Main Weld"},
@@ -325,7 +330,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
            ";Arc Control in Main Weld"},
           {"V.E.Sch.Crater.Program", PS::ArcSpecialties::kInfillCraterProgram, ScheduleValueType::kInteger,
            ";Program/Mode in Crater Fill"},
-          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kInfillCraterWireFeedSpeed, ScheduleValueType::kSpeed,
+          {"V.E.Sch.Crater.WFS", PS::ArcSpecialties::kInfillCraterWireFeedSpeed, ScheduleValueType::kWireFeedSpeed,
            ";Wire Feed Speed in Crater Fill"},
           {"V.E.Sch.Crater.Volts", PS::ArcSpecialties::kInfillCraterVoltage, ScheduleValueType::kVoltage,
            ";Trim or Volts in Crater Fill"},
@@ -366,7 +371,7 @@ QString GCodeArcSpecialtiesSaver::writeWeldScheduleFile(const QString& file_path
                         (region.region_type == RegionType::kInset &&
                          settings->setting<int>(PS::Helical::kHelicalInsetRevolutions) <= 0)))
             continue;
-        writeScheduleBlock(out, region, inch / minute, m_time_unit, m_voltage_unit);
+        writeScheduleBlock(out, region, mm / minute, m_time_unit, m_voltage_unit);
         out << '\n';
     }
 

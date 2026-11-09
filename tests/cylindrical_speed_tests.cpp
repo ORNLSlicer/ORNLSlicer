@@ -61,7 +61,7 @@ int main(int argc, char* argv[]) {
         {"start_wire_feed_speed", "Start1.WFS", 10.25, "in/min"},
         {"start_voltage", "Start1.Volts", 18.5, "V"},
         {"start_control", "Start1.Control", 2, "unitless"},
-        {"start_tspd", "Start1.TSpd", 20.5, "in/min"},
+        {"start_tspd", "Start1.TSpd", 520.7, "mm/min"},
         {"start_time", "Start1.Time", 5.25, "sec"},
         {"weld_program", "Weld.Program", 3, "unitless"},
         {"weld_wire_feed_speed", "Weld.WFS", 30.75, "in/min"},
@@ -78,6 +78,8 @@ int main(int argc, char* argv[]) {
             const QString key = "arc_specialties_" + region + "_" + parameter.suffix;
             if (parameter.unit == "in/min")
                 settings->setSetting(key, parameter.value * ORNL::inch / ORNL::minute);
+            else if (parameter.unit == "mm/min")
+                settings->setSetting(key, parameter.value * ORNL::mm / ORNL::minute);
             else if (parameter.unit == "sec")
                 settings->setSetting(key, parameter.value * ORNL::s);
             else if (parameter.unit == "V")
@@ -156,10 +158,10 @@ int main(int argc, char* argv[]) {
                     const auto speed =
                         QRegularExpression("V\\.S\\.SPEED = ([0-9.]+) +;([^\\n]*)").match(text.mid(start, end - start));
                     expect(start >= 0 && end > start && speed.hasMatch() &&
-                               ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(ORNL::inch / ORNL::minute),
+                               ORNL::Testing::near(speed.captured(1).toDouble(), expected.to(ORNL::mm / ORNL::minute),
                                                    0.0001) &&
-                               speed.captured(2).endsWith("(in/min)"),
-                           label + ": schedule speed and comment must always use in/min.");
+                               speed.captured(2).endsWith("(mm/min)"),
+                           label + ": schedule travel speed and comment must always use mm/min.");
                     if (mode == 0 || regions[i] == ORNL::RegionType::kSkeleton) continue;
                     auto params = slicer.createSegmentSettings(settings, ORNL::Point(), false, regions[i]);
                     expect(ORNL::Testing::near(params->setting<ORNL::Velocity>(ORNL::SS::kSpeed)(), expected()),
@@ -168,9 +170,31 @@ int main(int argc, char* argv[]) {
                     const ORNL::Point from(10.0 * ORNL::mm, 0, 0);
                     const ORNL::Point to(0, 10.0 * ORNL::mm, 1.0 * ORNL::mm);
                     const QString feedrate = "F" + QString::number(expected.to(meta.m_velocity_unit), 'f', 4);
-                    expect(writer.writeLine(from, to, params).contains(feedrate), label + ": line feedrate mismatch.");
+                    const QString line     = writer.writeLine(from, to, params);
+                    expect(line.contains(feedrate), label + ": line feedrate mismatch.");
                     const QString arc = writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
                     expect(arc.contains("G03") && arc.contains(feedrate), label + ": arc feedrate mismatch.");
+                    if (!imperial) {
+                        settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, true);
+                        ORNL::ArcSpecialtiesWriter scheduled_writer(meta, settings);
+                        const QString scheduled_line = scheduled_writer.writeLine(from, to, params);
+                        const QString scheduled_arc =
+                            scheduled_writer.writeArc(from, to, ORNL::Point(), 90.0 * ORNL::degree, true, params);
+                        settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, false);
+                        const QRegularExpression numeric_feedrate("\\bF([0-9.]+)");
+                        for (const auto& [numeric, scheduled] :
+                             {std::pair {line, scheduled_line}, std::pair {arc, scheduled_arc}}) {
+                            QString resolved = scheduled;
+                            resolved.replace("FV.S.SPEED", "F" + speed.captured(1));
+                            const auto numeric_value  = numeric_feedrate.match(numeric);
+                            const auto resolved_value = numeric_feedrate.match(resolved);
+                            expect(scheduled.contains("FV.S.SPEED") && numeric_value.hasMatch() &&
+                                       resolved_value.hasMatch() &&
+                                       ORNL::Testing::near(numeric_value.captured(1).toDouble(),
+                                                           resolved_value.captured(1).toDouble(), 0.0001),
+                                   label + ": companion-resolved metric feedrate must equal numeric motion feedrate.");
+                        }
+                    }
                 }
             }
         }
@@ -264,11 +288,14 @@ int main(int argc, char* argv[]) {
     QFile snapshot_schedule(temp.filePath("snapshot_sch.nc"));
     expect(snapshot_schedule.open(QIODevice::ReadOnly), "Schedule with captured UI units must exist.");
     const QString snapshot = QString::fromUtf8(snapshot_schedule.readAll());
-    expect(snapshot.contains("V.E.Sch.Preflow = 1.25      ;Preflow Time (sec)") &&
-               snapshot.contains("V.E.Sch.Weld.WFS = 30.75      ;Wire Feed Speed in Main Weld (in/min)") &&
-               snapshot.contains("V.E.Sch.Weld.Volts = 23.5      ;Trim or Volts in Main Weld (V)") &&
-               snapshot.contains("V.S.SPEED = 25.9843            ;Set speed value if it exists (in/min)"),
-           "Schedule velocities must use in/min while time and voltage retain their captured UI units.");
+    expect(
+        snapshot.contains("V.E.Sch.Preflow = 1.25      ;Preflow Time (sec)") &&
+            snapshot.contains("V.E.Sch.Weld.WFS = 30.75      ;Wire Feed Speed in Main Weld (in/min)") &&
+            snapshot.contains("V.E.Sch.Weld.Volts = 23.5      ;Trim or Volts in Main Weld (V)") &&
+            snapshot.contains(
+                "V.E.Sch.Start1.TSpd = 520.7      ;Travel speed override during startup (currently unused) (mm/min)") &&
+            snapshot.contains("V.S.SPEED = 660            ;Set speed value if it exists (mm/min)"),
+        "Wire feed must use in/min and travel mm/min while time and voltage retain their captured UI units.");
     settings->setSetting(ORNL::PS::Slicing::kSlicingMode, 1);
     settings->setSetting(ORNL::PS::Slicing::kCylindricalPathPattern, 1);
     for (bool planar_enabled : {false, true}) {

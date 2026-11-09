@@ -15,7 +15,7 @@ Release versions follow the project's
 
 ### Changed
 
-- Changed generated Arc Specialties weld schedule velocities to always use in/min, including wire feed, startup travel override, and regional travel speeds ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
+- Changed generated Arc Specialties weld schedules to use in/min for wire-feed speeds and mm/min for startup travel override and regional travel speeds, matching metric motion feedrates ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Changed the GUI to bundled Noto Sans with 9 pt regular controls and semibold regional form headings, and arranged weld schedule gas timing settings one per row ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Changed individual-layer export to a disabled-by-default setting under Experimental > File Output. Enable Individual Layer Export before slicing to prepare separate layer files; reopened G-code must be re-sliced to export individual layers.
 
