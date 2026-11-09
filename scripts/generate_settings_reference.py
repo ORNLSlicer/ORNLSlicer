@@ -69,6 +69,8 @@ CATEGORY_DESCRIPTIONS = {
     ("Profile", "Skin"): "Controls solid top/bottom coverage, pattern orientation, overlap, process values, and gradual infill.",
     ("Profile", "Infill"): "Controls interior fill density, spacing, pattern, orientation, ordering, combining, and process values.",
     ("Profile", "Support"): "Controls generated grid or organic support, interfaces, bases, spacing, tapering, and connectivity.",
+    ("Profile", "Radial"): "Configures boundary clipping policies and angular start positions for radial toolpaths in cylindrical slicing mode.",
+    ("Profile", "Helical"): "Controls handedness, tool angle offsets, z-clipping, revolutions, stepovers, and tool orientations for helical toolpaths in cylindrical slicing mode.",
     ("Profile", "Travel"): "Controls non-print motion, minimum travel thresholds, lift behavior, pauses, and centroid moves.",
     ("Profile", "G-Code"): "Adds region-specific command blocks before and after generated paths.",
     ("Profile", "Special Modes"): "Enables geometry repair and transformations such as smoothing, spiralize, and oversizing, plus bead-geometry output for a compatible HMI.",
@@ -90,8 +92,10 @@ TYPE_DESCRIPTIONS = {
     "density": "Density; displayed in the preferred density unit.",
     "distance": "Nonnegative physical distance in the preferred distance unit.",
     "enumeration": "Choice from the listed values.",
+    "file_path": "File path selected through a file browser or entered as text.",
     "location": "Signed position or offset in the preferred distance unit.",
     "multiline_text": "Multi-line G-code or text block.",
+    "non_negative_int": "Nonnegative integer value (0 or greater).",
     "number": "Integer value.",
     "numbered_list": "Ordered list whose entries can be rearranged.",
     "percentage": "Percentage input with an allowed range of 0–500%.",
@@ -107,6 +111,39 @@ TYPE_DESCRIPTIONS = {
     "voltage": "Electrical potential; displayed in the preferred voltage unit.",
 }
 
+INTEGER_SETTING_TYPES = {
+    "non_negative_int",
+    "number",
+    "positive_int",
+}
+
+FLOAT_SETTING_TYPES = {
+    "accel",
+    "angle",
+    "ang_vel",
+    "area",
+    "density",
+    "distance",
+    "location",
+    "percentage",
+    "percentage100",
+    "power",
+    "rpm",
+    "speed",
+    "temperature",
+    "time",
+    "unitless_float",
+    "voltage",
+}
+
+NUMERIC_SETTING_TYPES = INTEGER_SETTING_TYPES | FLOAT_SETTING_TYPES
+
+STRING_SETTING_TYPES = {
+    "file_path",
+    "multiline_text",
+    "string",
+}
+
 MAJOR_NUMBERS = {
     "Printer": "E.2",
     "Material": "E.3",
@@ -114,13 +151,6 @@ MAJOR_NUMBERS = {
     "Experimental": "E.5",
 }
 
-GENERATED_FIGURE_NUMBERS = {
-    "Setting anatomy": 60,
-    "Printer settings": 61,
-    "Material settings": 62,
-    "Profile settings": 63,
-    "Experimental settings": 64,
-}
 
 PATTERN_CHOICE_DESCRIPTIONS = {
     "Lines": "One family of parallel hatch lines at the configured angle and spacing.",
@@ -310,6 +340,10 @@ def slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.casefold()).strip("-")
 
 
+def image_slug(value: str) -> str:
+    return re.sub(r"[^a-z0-9]+", "_", value.casefold()).strip("_")
+
+
 def code_span(value: Any) -> str:
     text = str(value).replace("\n", "\\n")
     delimiter = "``" if "`" in text else "`"
@@ -346,7 +380,7 @@ def format_default(setting: OrderedDict[str, Any]) -> str:
         return f"{code_span('Enabled' if value else 'Disabled')} ({code_span(str(value).lower())})"
     if setting_type == "numbered_list":
         return ", ".join(code_span(item) for item in value) if value else code_span("empty list")
-    if setting_type in {"string", "multiline_text"}:
+    if setting_type in {"string", "multiline_text", "file_path"}:
         return code_span(json.dumps(value, ensure_ascii=False)) if value else code_span("empty")
 
     numeric = float(value)
@@ -449,10 +483,6 @@ def wrap_paragraph(value: str) -> list[str]:
     return textwrap.wrap(value, width=100, break_long_words=False, break_on_hyphens=False)
 
 
-def figure_placeholder(number: int, title: str) -> str:
-    return f"![Figure {number:02d} placeholder: {title}](user-guide-images/figure{number:02d}.png)"
-
-
 def load_catalog(source_dir: Path) -> tuple[
     OrderedDict[str, OrderedDict[str, Any]], OrderedDict[str, OrderedDict[str, Any]]
 ]:
@@ -544,7 +574,23 @@ def validate_documentation_dependency(depends: Any, settings: OrderedDict[str, O
         if not isinstance(value, int) or not 0 <= value < len(options):
             raise ValueError(f"{current_name}: dependency index for {key} is outside its choices")
         return
-    raise ValueError(f"{current_name}: dependency parent {key} must be Boolean or enumeration")
+    if parent["type"] in INTEGER_SETTING_TYPES:
+        if not isinstance(value, int) or isinstance(value, bool):
+            raise ValueError(f"{current_name}: integer dependency on {key} must be an integer")
+        if parent["type"] == "non_negative_int" and value < 0:
+            raise ValueError(f"{current_name}: non_negative_int dependency on {key} must be >= 0")
+        if parent["type"] == "positive_int" and value < 1:
+            raise ValueError(f"{current_name}: positive_int dependency on {key} must be >= 1")
+        return
+    if parent["type"] in FLOAT_SETTING_TYPES:
+        if not isinstance(value, (int, float)) or isinstance(value, bool):
+            raise ValueError(f"{current_name}: numeric dependency on {key} must be a number")
+        return
+    if parent["type"] in STRING_SETTING_TYPES:
+        if not isinstance(value, str):
+            raise ValueError(f"{current_name}: string dependency on {key} must be a string")
+        return
+    raise ValueError(f"{current_name}: dependency parent {key} must be Boolean, enumeration, or numeric")
 
 
 def composite_maps(inputs: OrderedDict[str, OrderedDict[str, Any]]) -> tuple[
@@ -686,8 +732,6 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
         "| Available when | The selections or toggles that enable the setting. |",
         "| Choices | Every selectable value for enumeration settings, in stored order. |",
         "",
-        figure_placeholder(GENERATED_FIGURE_NUMBERS["Setting anatomy"], "Setting anatomy"),
-        "",
         "> **Diagram placeholder — Setting anatomy:** Add one annotated setting row showing its label, input, unit,",
         "> tooltip, disabled state, local-override indicator, and corresponding reference entry.",
         "",
@@ -706,12 +750,11 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
     for major in major_order:
         lines.append(f"### {MAJOR_NUMBERS[major]} {major} settings")
         lines.append("")
+        lines.append(
+            f"![{major} Settings Panel](user-guide-images/{image_slug(major)}_settings_panel.png)"
+        )
+        lines.append("")
         lines.extend(wrap_paragraph(MAJOR_DESCRIPTIONS[major]))
-        lines.append("")
-        lines.append(figure_placeholder(GENERATED_FIGURE_NUMBERS[f"{major} settings"], f"{major} settings"))
-        lines.append("")
-        lines.append(f"> **Diagram placeholder — {major} settings:** Add an annotated {major} panel with its")
-        lines.append("> category tabs, search field, and one enabled/disabled dependency example.")
         lines.append("")
 
         for (category_major, minor), keys in categories.items():
@@ -720,6 +763,12 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
             lines.append(f'<a id="settings-{slug(major)}-{slug(minor)}"></a>')
             lines.append("")
             lines.append(f"#### {major} > {minor}")
+            lines.append("")
+            major_s = image_slug(major)
+            minor_s = image_slug(minor)
+            lines.append(
+                f"![{major} > {minor} Settings](user-guide-images/settings/{major_s}/{minor_s}_options.png)"
+            )
             lines.append("")
             lines.extend(wrap_paragraph(CATEGORY_DESCRIPTIONS[(major, minor)]))
             lines.append("")
@@ -731,6 +780,7 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
                     continue
                 documented.add(key)
                 render_scalar(lines, key, settings[key], settings, component_labels)
+            lines.append("")
 
     missing = set(settings) - documented
     extra = documented - set(settings)
@@ -752,7 +802,7 @@ def replace_section(manual: str, reference: str) -> str:
         raise ValueError("manual must contain exactly one generated settings reference marker pair")
     before, remainder = manual.split(BEGIN_MARKER, 1)
     _, after = remainder.split(END_MARKER, 1)
-    return f"{before}{BEGIN_MARKER}\n{reference}{END_MARKER}{after}"
+    return f"{before}{BEGIN_MARKER}\n\n{reference.strip()}\n\n{END_MARKER}{after}"
 
 
 def main() -> None:
