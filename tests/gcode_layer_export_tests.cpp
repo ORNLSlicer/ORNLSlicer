@@ -1,11 +1,17 @@
 #include <QApplication>
+#include <QDialogButtonBox>
 #include <QDir>
+#include <QEventLoop>
 #include <QFile>
+#include <QFileDialog>
 #include <QLabel>
+#include <QMessageBox>
+#include <QPushButton>
 #include <QRegularExpression>
 #include <QStandardPaths>
 #include <QTemporaryDir>
 #include <QTextStream>
+#include <QTimer>
 #include <iostream>
 
 #include "configs/settings_base.h"
@@ -89,8 +95,15 @@ class SlicingHarness : public ORNL::AbstractSlicingThread {
         standalone_callbacks = 0;
         return writeGCodeFile();
     }
+    bool cancel() {
+        setCancel();
+        return shouldCancel();
+    }
     void writeGCode() override {
         auto settings = ORNL::GSM->getGlobal();
+        if (flip_generation)
+            settings->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile,
+                                 !settings->setting<bool>(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile));
         QTextStream stream(&m_temp_gcode_output_file);
         for (uint layer = 0; layer < 2; ++layer) {
             const float min_z = (layer + 1) * 10.0 * ORNL::mm();
@@ -104,6 +117,7 @@ class SlicingHarness : public ORNL::AbstractSlicingThread {
         stream << m_base->writeAfterPart();
     }
     int standalone_callbacks = 0;
+    bool flip_generation     = false;
 };
 
 struct Program {
@@ -148,10 +162,49 @@ QString readFile(const QString& path) {
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) { return {}; }
     return QString::fromUtf8(file.readAll());
 }
+
+bool exportProgram(ORNL::GcodeExport& dialog, const QString& path) {
+    QEventLoop loop;
+    QTimer driver, timeout;
+    bool selected = false, completed = false, success = false;
+    QObject::connect(&driver, &QTimer::timeout, [&] {
+        for (QWidget* widget : QApplication::topLevelWidgets()) {
+            if (!widget->isVisible()) continue;
+            if (auto* chooser = qobject_cast<QFileDialog*>(widget); chooser && !selected) {
+                chooser->selectFile(path);
+                auto* buttons = chooser->findChild<QDialogButtonBox*>();
+                auto* save    = buttons ? buttons->button(QDialogButtonBox::Save) : nullptr;
+                if (save && save->isEnabled()) {
+                    selected = true;
+                    save->click();
+                }
+            }
+            if (auto* message = qobject_cast<QMessageBox*>(widget)) {
+                success   = message->icon() == QMessageBox::Information;
+                completed = true;
+                message->accept();
+                loop.quit();
+            }
+        }
+    });
+    timeout.setSingleShot(true);
+    QObject::connect(&timeout, &QTimer::timeout, [&] {
+        for (QWidget* widget : QApplication::topLevelWidgets())
+            if (auto* modal = qobject_cast<QDialog*>(widget); modal && modal->isVisible()) modal->reject();
+        loop.quit();
+    });
+    driver.start(10);
+    timeout.start(10000);
+    dialog.show();
+    QTimer::singleShot(0, &dialog, [&] { QMetaObject::invokeMethod(&dialog, "exportGcode", Qt::DirectConnection); });
+    loop.exec();
+    return selected && completed && success;
+}
 }  // namespace
 
 int main(int argc, char* argv[]) {
     qputenv("QT_QPA_PLATFORM", "offscreen");
+    QCoreApplication::setAttribute(Qt::AA_DontUseNativeDialogs);
     QApplication app(argc, argv);
     QStandardPaths::setTestModeEnabled(true);
     Q_INIT_RESOURCE(configs);
@@ -424,6 +477,68 @@ int main(int argc, char* argv[]) {
         expect(main_layer_status && main_layer_status->text().contains("before slicing"),
                "Starting a new slice must invalidate the export snapshot even without a subsequent G-code import.");
     }
+
+    global->setSetting(ORNL::PRS::MachineSetup::kSyntax, ORNL::GcodeSyntax::kArcSpecialties);
+    global->setSetting(ORNL::PS::Slicing::kSlicingMode, 0);
+    global->setSetting(ORNL::PS::Perimeter::kSpeed, 5.0 * ORNL::mm / ORNL::s);
+    global->setSetting(ORNL::PRS::GCode::kArcSpecialtiesG80WeldScheduleFile, QString());
+    global->setSetting(ORNL::PRS::GCode::kStartingLayerNumber, 1);
+    ORNL::GcodeExport arc_export(nullptr);
+    for (bool individual : {false, true}) {
+        for (bool generated : {false, true}) {
+            global->setSetting(export_key, individual);
+            global->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, generated);
+            const QString basename   = QString("arc_%1_%2").arg(individual).arg(generated);
+            const QString input_path = slice_directory.filePath(basename + "_sliced.nc");
+            SlicingHarness arc_slice(input_path);
+            arc_slice.flip_generation = individual && generated;
+            expect(arc_slice.generate(), "Expected a complete ARC slice.");
+            expect(arc_slice.requiresWeldScheduleFile() == generated,
+                   "The completed slice must retain the writer's generation decision.");
+            expect(readFile(input_path).contains("FV.S.SPEED") == generated,
+                   "The sliced motion must reflect its generation setting.");
+            global->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, !generated);
+            arc_export.updateOutputInformation(input_path, ORNL::GcodeMetaList::ArcSpecialtiesMeta,
+                                               arc_slice.layerPrograms(), arc_slice.requiresWeldScheduleFile());
+            if (!individual) arc_export.clearVisualizationInformation();
+            const QString output_path = slice_directory.filePath(basename + ".nc");
+            expect(exportProgram(arc_export, output_path), "ARC GUI export must complete successfully.");
+            expect(QFile::exists(slice_directory.filePath(basename + "_sch.nc")) == generated,
+                   "Companion creation must follow the completed slice, not the current setting.");
+            for (int layer : individual ? QList<int> {1, 2} : QList<int> {0}) {
+                const QString path =
+                    layer == 0 ? output_path : slice_directory.filePath(basename + QString("_layer_%1.nc").arg(layer));
+                const QString saved = readFile(path);
+                expect(!saved.isEmpty(), "Expected every exported ARC program.");
+                if (generated)
+                    expect(saved.contains("FV.S.SPEED") && saved.contains("G80=\"" + basename + "_sch.nc\""),
+                           "Generated motion must retain its patched companion reference after disabling generation.");
+                else
+                    expect(!saved.contains("FV.S.SPEED") && saved.contains("F300.0000"),
+                           "Numeric motion must remain numeric after enabling generation without slicing again.");
+            }
+            if (generated) {
+                expect(arc_slice.cancel() && !arc_slice.requiresWeldScheduleFile(),
+                       "Cancelling must clear unpublished slice export metadata.");
+                arc_slice.setGcodeOutput(input_path);
+                expect(!arc_slice.requiresWeldScheduleFile(), "A new output must not inherit a companion decision.");
+                expect(arc_slice.generate() && !arc_slice.requiresWeldScheduleFile() &&
+                           !readFile(input_path).contains("FV.S.SPEED"),
+                       "A subsequent numeric slice must replace the previous generated-schedule decision.");
+            }
+        }
+    }
+    const QString manual_input = slice_directory.filePath("manual_input.nc");
+    QFile manual_file(manual_input);
+    expect(manual_file.open(QIODevice::WriteOnly), "Expected a reopened ARC program fixture.");
+    manual_file.write("#FILE NAME[ G80=\"external_sch.nc\" ]\nG01 X=1 FV.S.SPEED\n");
+    manual_file.close();
+    global->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, true);
+    arc_export.updateOutputInformation(manual_input, ORNL::GcodeMetaList::ArcSpecialtiesMeta);
+    const QString manual_output = slice_directory.filePath("manual_output.nc");
+    expect(exportProgram(arc_export, manual_output) && readFile(manual_output).contains("G80=\"external_sch.nc\"") &&
+               !QFile::exists(slice_directory.filePath("manual_output_sch.nc")),
+           "Reopened/manual programs must not inherit a previous slice's companion requirement.");
 
     expect(ORNL::isGcodeLayerFileName("part_layer_12.gcode", "part", ".gcode"), "Expected a generated name.");
     expect(ORNL::isGcodeLayerFileName("part[1]_layer_12.gcode", "part[1]", ".gcode"), "Expected literal part names.");

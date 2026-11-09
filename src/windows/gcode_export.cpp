@@ -124,9 +124,11 @@ void GcodeExport::setDefaultName(QString name) {
     m_default_name = removeModelFileExtension(name);
 }
 
-void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta, QVector<GcodeLayer> layers) {
-    m_location         = tempLocation;
-    m_most_recent_meta = meta;
+void GcodeExport::updateOutputInformation(QString tempLocation, GcodeMeta meta, QVector<GcodeLayer> layers,
+                                          bool generateArcSchedule) {
+    m_location              = tempLocation;
+    m_most_recent_meta      = meta;
+    m_generate_arc_schedule = generateArcSchedule;
     clearVisualizationInformation();
     m_layer_programs = std::move(layers);
     m_layer_export_status->setText(
@@ -214,8 +216,7 @@ void GcodeExport::exportGcode() {
         }
         else { gcodeFileName = filepath % '/' % partName % m_most_recent_meta.m_file_suffix; }
         const bool generate_arc_schedule =
-            m_most_recent_meta == GcodeMetaList::ArcSpecialtiesMeta &&
-            GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile);
+            m_most_recent_meta == GcodeMetaList::ArcSpecialtiesMeta && m_generate_arc_schedule;
         if (m_layer_programs.isEmpty() && !generate_arc_schedule && QFile::exists(gcodeFileName)) {
             QFile::remove(gcodeFileName);
         }

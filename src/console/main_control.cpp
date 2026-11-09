@@ -115,9 +115,13 @@ void MainControl::loadComplete() {
 
 void MainControl::sliceComplete(QString filepath, bool alterFile) {
     if (static_cast<SlicingMode>(GSM->getGlobal()->setting<int>(PS::Slicing::kSlicingMode)) != SlicingMode::kImage) {
-        GCodeLoader* loader = new GCodeLoader(filepath, alterFile);
+        GCodeLoader* loader              = new GCodeLoader(filepath, alterFile);
+        const bool generate_arc_schedule = alterFile && CSM->requiresWeldScheduleFile();
         connect(loader, &GCodeLoader::finished, loader, &GCodeLoader::deleteLater);
-        connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this, &MainControl::updateOutputInformation);
+        connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, this,
+                [this, generate_arc_schedule](QString filename, GcodeMeta meta) {
+                    updateOutputInformation(filename, meta, generate_arc_schedule);
+                });
         connect(loader, &GCodeLoader::finished, this, &MainControl::gcodeParseComplete);
         connect(loader, &GCodeLoader::updateDialog, this, &MainControl::displayProgress);
         loader->start();
@@ -125,9 +129,10 @@ void MainControl::sliceComplete(QString filepath, bool alterFile) {
     else { emit finished(); }
 }
 
-void MainControl::updateOutputInformation(QString tempLocation, GcodeMeta meta) {
-    m_temp_location = tempLocation;
-    m_selected_meta = meta;
+void MainControl::updateOutputInformation(QString tempLocation, GcodeMeta meta, bool generateArcSchedule) {
+    m_temp_location         = tempLocation;
+    m_selected_meta         = meta;
+    m_generate_arc_schedule = generateArcSchedule;
 }
 
 void MainControl::gcodeParseComplete() {
@@ -136,8 +141,7 @@ void MainControl::gcodeParseComplete() {
     QString filepath = info.absolutePath();
 
     QString gcodeFileName            = filepath % '/' % partName % m_selected_meta.m_file_suffix;
-    const bool generate_arc_schedule = m_selected_meta == GcodeMetaList::ArcSpecialtiesMeta &&
-                                       GSM->getGlobal()->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile);
+    const bool generate_arc_schedule = m_selected_meta == GcodeMetaList::ArcSpecialtiesMeta && m_generate_arc_schedule;
     if (!generate_arc_schedule && QFile::exists(gcodeFileName)) QFile::remove(gcodeFileName);
 
     QString projectFileName = filepath % '/' % partName % ".s2p";

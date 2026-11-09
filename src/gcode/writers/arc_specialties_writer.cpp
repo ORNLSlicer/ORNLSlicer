@@ -145,7 +145,9 @@ QString helicalRegionComment(RegionType region_type) {
 }  // namespace
 
 ArcSpecialtiesWriter::ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb)
-    : WriterBase(meta, sb) {
+    : WriterBase(meta, sb),
+      m_generate_weld_schedule_file(sb != nullptr && sb->contains(PS::ArcSpecialties::kGenerateWeldScheduleFile) &&
+                                    sb->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile)) {
     m_spiral_layer = sb->setting<bool>(PS::SpecialModes::kEnableSpiralize);
 }
 
@@ -873,8 +875,7 @@ QString ArcSpecialtiesWriter::g80WeldScheduleFile() const {
 }
 
 bool ArcSpecialtiesWriter::shouldGenerateWeldScheduleFile() const {
-    return m_sb != nullptr && m_sb->contains(PS::ArcSpecialties::kGenerateWeldScheduleFile) &&
-           m_sb->setting<bool>(PS::ArcSpecialties::kGenerateWeldScheduleFile);
+    return m_generate_weld_schedule_file;
 }
 
 bool ArcSpecialtiesWriter::usesG80ScheduleSpeedVariable() const {

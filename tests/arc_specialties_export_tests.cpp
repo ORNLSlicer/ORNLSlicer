@@ -104,8 +104,9 @@ int main(int argc, char* argv[]) {
     using ORNL::GcodeMeta;
     expect(
         QMetaObject::invokeMethod(&control, "updateOutputInformation", Qt::DirectConnection, Q_ARG(QString, input_path),
-                                  Q_ARG(GcodeMeta, ORNL::GcodeMetaList::ArcSpecialtiesMeta)),
+                                  Q_ARG(GcodeMeta, ORNL::GcodeMetaList::ArcSpecialtiesMeta), Q_ARG(bool, true)),
         "Could not supply CLI export input.");
+    ORNL::GSM->getGlobal()->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, false);
     expect(QMetaObject::invokeMethod(&control, "gcodeParseComplete", Qt::DirectConnection),
            "Could not invoke CLI export.");
     expect(cli_completions == 1 && exit_code == 0, "CLI export must report success after both files are complete.");
@@ -120,13 +121,17 @@ int main(int argc, char* argv[]) {
     expect(cli_completions == 2 && exit_code != 0 && readFile(directory.filePath("cli.nc")) == previous_cli,
            "CLI companion failure must return a failing exit status and preserve existing output.");
 
-    ORNL::GSM->getGlobal()->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, false);
+    expect(
+        QMetaObject::invokeMethod(&control, "updateOutputInformation", Qt::DirectConnection, Q_ARG(QString, input_path),
+                                  Q_ARG(GcodeMeta, ORNL::GcodeMetaList::ArcSpecialtiesMeta), Q_ARG(bool, false)),
+        "Could not replace CLI export metadata with an ordinary program.");
+    ORNL::GSM->getGlobal()->setSetting(ORNL::PS::ArcSpecialties::kGenerateWeldScheduleFile, true);
     options->setSetting(ORNL::Constants::ConsoleOptionStrings::kOutputLocation, directory.filePath("manual.nc"));
     expect(QMetaObject::invokeMethod(&control, "gcodeParseComplete", Qt::DirectConnection),
            "Could not invoke ordinary CLI export.");
     expect(cli_completions == 3 && exit_code == 0 &&
                readFile(directory.filePath("manual.nc")) == readFile(input_path) &&
                !QFile::exists(directory.filePath("manual_sch.nc")),
-           "Disabling generation must retain the ordinary CLI copy path.");
+           "Enabling generation after output registration must retain the ordinary CLI copy path.");
     return passed ? 0 : 1;
 }

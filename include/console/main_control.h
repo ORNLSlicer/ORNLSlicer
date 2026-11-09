@@ -54,7 +54,7 @@ class MainControl : public QObject {
     //! \brief Update required info for export
     //! \brief tempLocation: location of temp file
     //! \brief meta: selected meta used for tempLocation's generation
-    void updateOutputInformation(QString tempLocation, GcodeMeta meta);
+    void updateOutputInformation(QString tempLocation, GcodeMeta meta, bool generateArcSchedule = false);
 
     //! \brief Display progress on console
     //! \brief type: current step of slicing process
@@ -70,6 +70,7 @@ class MainControl : public QObject {
 
     //! \brief Most recently used meta
     GcodeMeta m_selected_meta;
+    bool m_generate_arc_schedule = false;
 
     //! \brief SettingsBase holding all successfully processed command line options
     QSharedPointer<SettingsBase> m_options;
