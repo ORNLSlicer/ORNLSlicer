@@ -190,4 +190,5 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Verify that grouped-form gaps match the surrounding panel background and that individual sections retain their own fill.
 - Check resolved font family, size, and weight for headings and fields across theme switches.
 - Keep weld schedule Gas Timing settings one per row in every regional form.
-- Always export ARC weld schedule velocities in in/min, independent of UI and G-code unit preferences.
+- Export only ARC weld schedule wire-feed speeds in in/min; export startup travel override and V.S.SPEED in mm/min, and verify resolved metric F matches numeric motion output.
+- Build every selected test executable explicitly; CTest JSON can omit commands for unbuilt executables.

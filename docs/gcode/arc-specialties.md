@@ -13,6 +13,11 @@ The implementation lives in:
 
 Arc Specialties uses the `Arc Specialties` syntax identifier, `.nc` file extension, semicolon comments, millimeter distance units, degree angle units, seconds for dwell time, and millimeters per minute for feedrate output.
 
+Generated weld schedule companions write Startup, Main Weld, and Crater Fill wire-feed speeds in in/min.
+The startup travel-speed override (`V.E.Sch.Start1.TSpd`) and regional `V.S.SPEED` use mm/min, so motion can
+consume `FV.S.SPEED` directly as a metric feedrate. These velocity units are independent of settings UI unit
+preferences; schedule time and voltage values use their captured UI units. Parameter comments identify each unit.
+
 Generated motion uses `KEY=value` fields:
 
 ```gcode
