@@ -861,6 +861,8 @@ install(FILES
     ${CMAKE_CURRENT_LIST_DIR}/docs/ornlslicer-user-guide.md
     DESTINATION ${CMAKE_INSTALL_DOCDIR}
 )
+
 install(FILES ${CMAKE_CURRENT_LIST_DIR}/resources/fonts/OFL.txt
     DESTINATION ${CMAKE_INSTALL_DOCDIR}/licenses RENAME NotoSans-OFL.txt)
+install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/docs/user-guide-images DESTINATION ${CMAKE_INSTALL_DOCDIR})
 install(DIRECTORY ${CMAKE_CURRENT_LIST_DIR}/templates              DESTINATION ${CMAKE_INSTALL_DATADIR}/${PROJECT_NAME})
