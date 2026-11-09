@@ -648,6 +648,10 @@ QVector<GcodeLayer> SessionManager::layerPrograms() const {
     return m_ast ? m_ast->layerPrograms() : QVector<GcodeLayer>();
 }
 
+bool SessionManager::requiresWeldScheduleFile() const {
+    return m_ast && m_ast->requiresWeldScheduleFile();
+}
+
 bool SessionManager::sliceComplete() {
     Diagnostics::logLine(QString("SessionManager slice complete: %1").arg(tempGcodeFile));
     emit forwardSliceComplete(tempGcodeFile, true);

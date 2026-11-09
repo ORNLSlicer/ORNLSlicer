@@ -283,8 +283,9 @@ QSharedPointer<WriterBase> makeWriter(GcodeSyntax syntax, const QSharedPointer<S
 
 void AbstractSlicingThread::setGcodeOutput(QString output) {
     m_layer_programs.clear();
-    m_syntax = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
-    m_base   = makeWriter(m_syntax, GSM->getGlobal());
+    m_requires_weld_schedule_file = false;
+    m_syntax                      = GSM->getGlobal()->setting<GcodeSyntax>(PRS::MachineSetup::kSyntax);
+    m_base                        = makeWriter(m_syntax, GSM->getGlobal());
 
     if (!m_skip_gcode) {
         m_temp_gcode_output_file.setFileName(output);
@@ -304,6 +305,7 @@ bool AbstractSlicingThread::shouldCancel() {
         m_should_cancel = false;
         m_temp_gcode_output_file.close();
         m_layer_programs.clear();
+        m_requires_weld_schedule_file = false;
         return true;
     }
 
@@ -324,10 +326,13 @@ void AbstractSlicingThread::forwardStatus(StatusUpdateStepType type, int complet
 
 bool AbstractSlicingThread::writeGCodeFile() {
     m_layer_programs.clear();
+    m_requires_weld_schedule_file = false;
     try {
         writeGCodeSetup();
         writeGCode();
         writeGCodeShutdown();
+        m_requires_weld_schedule_file = m_syntax == GcodeSyntax::kArcSpecialties &&
+                                        m_base.staticCast<ArcSpecialtiesWriter>()->shouldGenerateWeldScheduleFile();
         return true;
     } catch (const std::invalid_argument& error) {
         m_temp_gcode_output_file.resize(0);
@@ -374,7 +379,13 @@ void AbstractSlicingThread::writeGCodeSetup() {
 
     // Reproduce the state established by the shared header, without inheriting any earlier layer.
     m_layer_export_setup = [=, this]() {
-        auto writer = makeWriter(m_syntax, GSM->getGlobal());
+        auto settings = GSM->getGlobal();
+        if (m_syntax == GcodeSyntax::kArcSpecialties) {
+            settings = QSharedPointer<SettingsBase>::create(*settings);
+            settings->setSetting(PS::ArcSpecialties::kGenerateWeldScheduleFile,
+                                 m_base.staticCast<ArcSpecialtiesWriter>()->shouldGenerateWeldScheduleFile());
+        }
+        auto writer = makeWriter(m_syntax, settings);
         if (has_part_bounds) { writer->setBuildMaximumZ(Distance(maximum_z)); }
         writer->writeInitialSetup(Distance(minimum_x), Distance(minimum_y), Distance(maximum_x), Distance(maximum_y),
                                   m_max_steps);

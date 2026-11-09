@@ -18,6 +18,10 @@ The startup travel-speed override (`V.E.Sch.Start1.TSpd`) and regional `V.S.SPEE
 consume `FV.S.SPEED` directly as a metric feedrate. These velocity units are independent of settings UI unit
 preferences; schedule time and voltage values use their captured UI units. Parameter comments identify each unit.
 
+The completed slice retains whether its program requires a generated companion. Changing Generate Weld Schedule File
+after slicing affects the next slice; exporting an existing slice preserves its original decision for both continuous
+and individual-layer output. Reopened G-code retains its existing schedule reference without generating a new companion.
+
 Generated motion uses `KEY=value` fields:
 
 ```gcode

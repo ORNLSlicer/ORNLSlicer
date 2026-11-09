@@ -1482,9 +1482,10 @@ void MainWindow::importGCodeHelper(QString filepath, bool alterFile) {
     connect(loader, &GCodeLoader::forwardInfoToLayerTimeWindow, m_layertimebar,
             &LayerTimesWindow::updateTimeInformation);
     const QVector<GcodeLayer> layer_programs = alterFile ? CSM->layerPrograms() : QVector<GcodeLayer>();
+    const bool generate_arc_schedule         = alterFile && CSM->requiresWeldScheduleFile();
     connect(loader, &GCodeLoader::forwardInfoToBuildExportWindow, m_export_window,
-            [this, layer_programs](QString filename, GcodeMeta meta) {
-                m_export_window->updateOutputInformation(filename, meta, layer_programs);
+            [this, layer_programs, generate_arc_schedule](QString filename, GcodeMeta meta) {
+                m_export_window->updateOutputInformation(filename, meta, layer_programs, generate_arc_schedule);
             });
     connect(loader, &GCodeLoader::gcodeLoadedVisualization, m_export_window,
             &GcodeExport::updateVisualizationInformation);

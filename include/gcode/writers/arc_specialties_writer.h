@@ -40,6 +40,9 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     ArcSpecialtiesWriter(GcodeMeta meta, const QSharedPointer<SettingsBase>& sb);
 
+    //! @brief Returns the generated-companion decision captured when this writer was created.
+    bool shouldGenerateWeldScheduleFile() const;
+
     /*!
      * @brief Supplies the effective part-local helical Z clip rounding values for the settings header.
      *
@@ -186,12 +189,6 @@ class ArcSpecialtiesWriter : public WriterBase {
      * @return Sanitized schedule file path, or an empty string when unset.
      */
     QString g80WeldScheduleFile() const;
-
-    /*!
-     * @brief Returns whether export will generate an Arc Specialties weld schedule companion file.
-     * @return True when generated weld schedule output is enabled.
-     */
-    bool shouldGenerateWeldScheduleFile() const;
 
     /*!
      * @brief Returns whether print motion feedrates should reference the G80 schedule speed variable.
@@ -417,6 +414,9 @@ class ArcSpecialtiesWriter : public WriterBase {
      */
     QString writeHelicalLayerStart(const Point& start_point, const Point& end_point,
                                    const QSharedPointer<SettingsBase>& params);
+
+    //! @brief Keeps the program's companion requirement stable while settings are edited.
+    const bool m_generate_weld_schedule_file;
 
     //! @brief Tracks whether any travel move has been emitted.
     bool m_first_travel = true;

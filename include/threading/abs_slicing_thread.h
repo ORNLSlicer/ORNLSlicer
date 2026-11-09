@@ -40,6 +40,11 @@ class AbstractSlicingThread : public QObject {
         return m_layer_programs;
     }
 
+    //! \brief Whether the completed program requires a generated ARC weld schedule companion.
+    bool requiresWeldScheduleFile() const {
+        return m_requires_weld_schedule_file;
+    }
+
     //! \brief Sets bounds for min/max layers to slice
     //! \param min: Starting layer
     //! \param max: Ending layer
@@ -152,6 +157,7 @@ class AbstractSlicingThread : public QObject {
     bool m_generate_individual_layers = false;
     QString m_layer_export_header;
     QVector<GcodeLayer> m_layer_programs;
+    bool m_requires_weld_schedule_file = false;
 
     //! \brief Range of steps to compute
     int m_min, m_max;

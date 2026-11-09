@@ -218,6 +218,9 @@ class SessionManager : public QObject {
     //! \brief Standalone layer programs from the completed slice.
     QVector<GcodeLayer> layerPrograms() const;
 
+    //! \brief Whether the completed slice requires a generated ARC weld schedule companion.
+    bool requiresWeldScheduleFile() const;
+
     //! \brief Returns the time elapsed for the current slice.
     qint64 getSliceTimeElapsed();
 
