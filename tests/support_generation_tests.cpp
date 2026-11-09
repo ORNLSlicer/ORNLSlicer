@@ -276,7 +276,55 @@ bool bridgeSuppressionRequiresOpposingAnchors(PlanarSlicer& slicer, bool along_y
     return passed;
 }
 
-bool bridgeSuppressionKeepsAttachedCantilevers(PlanarSlicer& slicer, bool along_y) {
+bool rotatedBridgeSuppression(PlanarSlicer& slicer, Angle rotation) {
+    const auto settings = supportSettings(0 * mm, 0.4 * mm);
+    settings->setSetting(PS::Layer::kLayerHeight, 0.2 * mm);
+    settings->setSetting(PS::Support::kBridgeMaxLength, 12 * mm);
+    bool passed = true;
+    for (int threshold : {0, 40}) {
+        settings->setSetting(PS::Support::kThresholdAngle, threshold * deg);
+        for (int gap : {0, 10, 12, 14}) {
+            const std::string context = " (rotation=" + std::to_string(rotation.to(deg)) +
+                                        ", threshold=" + std::to_string(threshold) + ", gap=" + std::to_string(gap) +
+                                        ").";
+            const auto part           = makePart({20, 26}, settings);
+            PolygonList lower         = rectangle(20, 2);
+            PolygonList upper         = rectangle(26, 2);
+            if (gap > 0) {
+                lower |= rectangle(40 + gap, 2) - rectangle(20 + gap, 2);
+                upper = rectangle(40 + gap, 2);
+            }
+            lower = lower.rotate(rotation);
+            upper = upper.rotate(rotation);
+            part->step(0, StepType::kLayer)->setGeometry(lower, QVector3D(0, 0, 1));
+            part->step(1, StepType::kLayer)->setGeometry(upper, QVector3D(0, 0, 1));
+            for (int layer = 0; layer < 2; ++layer) {
+                const Point center(0, 0, (layer + 0.5) * 0.2 * mm());
+                part->step(layer, StepType::kLayer)
+                    .dynamicCast<Layer>()
+                    ->setOrientation(Plane(center, QVector3D(0, 0, 1)), center);
+            }
+
+            settings->setSetting(PS::Support::kBridgeSuppression, false);
+            slicer.processSupport(part, 2, 0);
+            PolygonList expected = supports(part, 0);
+            passed &= Testing::expect(!expected.isEmpty(),
+                                      "The rotated overhang must require support without suppression" + context);
+            settings->setSetting(PS::Support::kBridgeSuppression, true);
+            slicer.processSupport(part, 2, 0);
+            PolygonList actual = supports(part, 0);
+            if (gap > 0 && gap <= 12)
+                passed &= Testing::expect(actual.isEmpty(),
+                                          "Rotated bridges within the length limit must suppress support" + context);
+            else
+                passed &= Testing::expect((expected - actual).isEmpty() && (actual - expected).isEmpty(),
+                                          "Rotated cantilevers and over-limit spans must retain all support" + context);
+        }
+    }
+    return passed;
+}
+
+bool bridgeSuppressionKeepsAttachedCantilevers(PlanarSlicer& slicer, bool along_y, Angle rotation = 0 * deg) {
     const auto settings = supportSettings(0 * mm, 1 * mm);
     settings->setSetting(PS::Support::kBridgeMaxLength, 12 * mm);
     const auto part = makePart({20, 26}, settings);
@@ -287,6 +335,8 @@ bool bridgeSuppressionKeepsAttachedCantilevers(PlanarSlicer& slicer, bool along_
     lower |= box(50, 10) - box(30, 10);
     PolygonList upper = box(26, 100);
     upper |= box(50, 10);
+    lower = lower.rotate(rotation);
+    upper = upper.rotate(rotation);
     part->step(0, StepType::kLayer)->setGeometry(lower, QVector3D(0, 0, 1));
     part->step(1, StepType::kLayer)->setGeometry(upper, QVector3D(0, 0, 1));
 
@@ -346,6 +396,10 @@ int main(int argc, char* argv[]) {
     passed &= bridgeSuppressionRequiresOpposingAnchors(slicer, true);
     passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, false);
     passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, true);
+    for (int rotation : {0, 30, 45, 90, 137}) {
+        passed &= rotatedBridgeSuppression(slicer, rotation * deg);
+        passed &= bridgeSuppressionKeepsAttachedCantilevers(slicer, false, rotation * deg);
+    }
     passed &= respectsAngleAndLandings(slicer);
     if (!passed) return 1;
     std::cout << "Support generation tests passed\n";
