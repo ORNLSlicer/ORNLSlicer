@@ -1,7 +1,10 @@
 
 #include "threading/slicers/planar_slicer.h"
 
+#include <limits>
+
 #include <QtCore/QDir>
+#include <QtCore/QPointF>
 #include <QtCore/QSharedPointer>
 #include <boost/polygon/polygon.hpp>
 #include <nlohmann/json_fwd.hpp>
@@ -423,41 +426,73 @@ void PlanarSlicer::processSupport(QSharedPointer<Part> part, int layer_count, in
         return result;
     };
 
-    auto makeRectangle = [](double minimum_x, double minimum_y, double maximum_x, double maximum_y) {
-        Polygon rectangle;
-        rectangle << Point(minimum_x, minimum_y) << Point(maximum_x, minimum_y) << Point(maximum_x, maximum_y)
-                  << Point(minimum_x, maximum_y);
-        PolygonList result;
-        result += rectangle;
-        return result;
-    };
-
-    auto isBridgeable = [&makeRectangle](PolygonList component, const PolygonList& model_below, Distance maximum_length,
-                                         Distance anchor_width) {
+    auto isBridgeable = [](const PolygonList& component, const PolygonList& model_below, Distance maximum_length,
+                           Distance anchor_width) {
         if (component.isEmpty() || model_below.isEmpty() || maximum_length <= 0) return false;
 
-        const Point minimum = component.min();
-        const Point maximum = component.max();
-        const double width  = maximum.x() - minimum.x();
-        const double height = maximum.y() - minimum.y();
+        const Point center  = component.boundingRectCenter();
         const double anchor = qMax(anchor_width(), 1.0);
+        // Rotated vertices are clipped on an integer-micron grid.
+        constexpr double tolerance     = 2.0;
+        const PolygonList anchor_model = model_below.offset(Distance(tolerance));
 
-        auto anchoredAcrossSpan = [&model_below](PolygonList band) { return (band - model_below).isEmpty(); };
+        auto anchoredInDirection = [&](double dx, double dy) {
+            double minimum_u = std::numeric_limits<double>::max();
+            double minimum_v = std::numeric_limits<double>::max();
+            double maximum_u = std::numeric_limits<double>::lowest();
+            double maximum_v = std::numeric_limits<double>::lowest();
+            for (const Point& point : component.first()) {
+                const double x = point.x() - center.x();
+                const double y = point.y() - center.y();
+                const double u = x * dx + y * dy;
+                const double v = -x * dy + y * dx;
+                minimum_u      = qMin(minimum_u, u);
+                minimum_v      = qMin(minimum_v, v);
+                maximum_u      = qMax(maximum_u, u);
+                maximum_v      = qMax(maximum_v, v);
+            }
+            if (maximum_u - minimum_u > maximum_length() + tolerance) return false;
 
-        // Anchors must lie beyond opposing edges, within the span's transverse
-        // bounds. Bands that include corners can count the same attached wall
-        // twice and mistake a single-sided cantilever for a bridge. Require
-        // coverage across the whole span so an attached cantilever is retained.
-        if (Distance(width) <= maximum_length) {
-            const PolygonList left  = makeRectangle(minimum.x() - anchor, minimum.y(), minimum.x(), maximum.y());
-            const PolygonList right = makeRectangle(maximum.x(), minimum.y(), maximum.x() + anchor, maximum.y());
-            if (anchoredAcrossSpan(left) && anchoredAcrossSpan(right)) return true;
-        }
+            auto toPoint = [&](double u, double v) {
+                return Point(center.x() + u * dx - v * dy, center.y() + u * dy + v * dx);
+            };
+            auto makeBand = [&](double start, double end) {
+                Polygon band;
+                band << toPoint(start, minimum_v) << toPoint(end, minimum_v) << toPoint(end, maximum_v)
+                     << toPoint(start, maximum_v);
+                PolygonList result;
+                result += band;
+                return result;
+            };
+            const PolygonList first = makeBand(minimum_u - anchor, minimum_u);
+            const PolygonList last  = makeBand(maximum_u, maximum_u + anchor);
+            return (first - anchor_model).isEmpty() && (last - anchor_model).isEmpty();
+        };
 
-        if (Distance(height) <= maximum_length) {
-            const PolygonList bottom = makeRectangle(minimum.x(), minimum.y() - anchor, maximum.x(), minimum.y());
-            const PolygonList top    = makeRectangle(minimum.x(), maximum.y(), maximum.x(), maximum.y() + anchor);
-            if (anchoredAcrossSpan(bottom) && anchoredAcrossSpan(top)) return true;
+        // Require complete opposing anchors in the span's frame, including
+        // diagonal spans. Full transverse coverage retains attached cantilevers.
+        if (anchoredInDirection(1, 0) || anchoredInDirection(0, 1)) return true;
+
+        QVector<QPointF> directions {QPointF(1, 0)};
+        const Polygon& outline = component.first();
+        for (int i = 0; i < outline.size(); ++i) {
+            const Point& first  = outline[i];
+            const Point& last   = outline[(i + 1) % outline.size()];
+            const double length = std::hypot(last.x() - first.x(), last.y() - first.y());
+            if (length == 0) continue;
+            const double dx = (last.x() - first.x()) / length;
+            const double dy = (last.y() - first.y()) / length;
+            bool duplicate  = false;
+            for (const QPointF& direction : directions) {
+                if (std::abs(dx * direction.x() + dy * direction.y()) > 1.0 - 1.0e-12 ||
+                    std::abs(dx * direction.y() - dy * direction.x()) > 1.0 - 1.0e-12) {
+                    duplicate = true;
+                    break;
+                }
+            }
+            if (duplicate) continue;
+            directions.push_back(QPointF(dx, dy));
+            if (anchoredInDirection(dx, dy) || anchoredInDirection(-dy, dx)) return true;
         }
         return false;
     };
