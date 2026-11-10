@@ -6,6 +6,7 @@
 #include <QInputDialog>
 #include <QLayout>
 #include <QMenu>
+#include <QPainter>
 #include <QSignalBlocker>
 #include <QToolButton>
 #include <algorithm>
@@ -50,12 +51,10 @@ bool usesCustomPathOrderLocation(const QSharedPointer<SettingsBase>& sb) {
 MainToolbar::MainToolbar(QWidget* parent) : m_parent(parent), QToolBar(parent) {
     setup();
     setupSubWidgets();
+    setupStyle();
 }
 
 void MainToolbar::setup() {
-    // Load stylesheet
-    this->setupStyle();
-
     // Add drop shadow
     auto* effect = new QGraphicsDropShadowEffect();
     effect->setBlurRadius(Constants::UI::Common::DropShadow::kBlurRadius);
@@ -468,6 +467,28 @@ void MainToolbar::setupStyle() {
     style->open(QIODevice::ReadOnly);
     this->setStyleSheet(style->readAll());
     style->close();
+
+    // Raster silhouettes do not follow stylesheet text colors. Recolor the original
+    // resources on each theme change, leaving the colored information icon intact.
+    const QColor foreground = PreferencesManager::getInstance()->getTheme().getPalette().color(QPalette::ButtonText);
+    const auto set_icon     = [foreground](QAction* action, const QString& resource) {
+        QPixmap pixmap(resource);
+        QPainter painter(&pixmap);
+        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+        painter.fillRect(pixmap.rect(), foreground);
+        painter.end();
+        action->setIcon(QIcon(pixmap));
+    };
+    set_icon(m_add_action, ":/icons/file_black.png");
+    set_icon(m_shape_action, ":/icons/shape_black.png");
+    set_icon(m_slicing_planes_action, ":/icons/slicing_plane.png");
+    set_icon(m_layer_settings_range_action, ":/icons/layers_black.png");
+    set_icon(m_seam_action, ":/icons/map_markers_black.png");
+    set_icon(m_overhang_action, ":/icons/support_overhang.png");
+    set_icon(m_billboarding_action, ":/icons/name_black.png");
+    set_icon(m_2d_gcode_action, ":/icons/2d_black.png");
+    set_icon(m_show_ghosts_action, ":/icons/model_ghosts_black.png");
+    set_icon(m_export_gcode_action, ":/icons/export_black.png");
 }
 
 void MainToolbar::resize(QSize new_size) {
