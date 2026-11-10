@@ -115,6 +115,15 @@ QToolButton {
     margin: 2px 2px;
 }
 
+QToolButton:checked, QToolButton:focus, QToolButton:on,
+QToolButton:selected, QToolButton:pressed {
+    background-color: #405a1e;
+}
+
+QToolButton:hover {
+    background-color: #4d5557;
+}
+
 QToolButton:checked, QToolButton:hover, QToolButton#menuButton:checked, QToolButton#menuButton:hover {
     border-bottom: 0px solid #000000;
     color: #ffffff;
