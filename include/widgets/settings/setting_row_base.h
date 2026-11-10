@@ -103,6 +103,9 @@ class SettingRowBase {
     //! \brief Returns whether this row's widgets should currently be visible.
     bool isShown() const;
 
+    //! \brief Temporarily reveals an overview navigation target without enabling inactive settings.
+    void setNavigationRevealed(bool revealed);
+
     //! \brief Sets dependency logic for this row
     //! \param root: DependencyNode object that contains all dependency information
     void setDependencyLogic(DependencyNode root);
@@ -349,6 +352,8 @@ class SettingRowBase {
 
     //! \brief Whether this row is currently visible.
     bool m_row_visible;
+
+    bool m_navigation_revealed = false;
 
     //! \brief Whether this row is currently enabled.
     bool m_row_enabled;

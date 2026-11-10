@@ -182,6 +182,7 @@ Prefer single-file or single-test runs during iteration. Full suites are for the
 
 When the user corrects your approach, append a one-line rule here before ending the session. Write it concretely ("Always use X for Y"), never abstractly ("be careful with Y"). If an existing line already covers the correction, tighten it instead of adding a new one. Remove lines when the underlying issue goes away (model upgrades, refactors, process changes).
 
+- Finish source edits and formatting before starting a build; do not rewrite files while the compiler may have them memory mapped.
 - Verify hook file-type filters before claiming generated JSON is excluded; keep formatter changes after confirming parsed JSON matches the staged data, then re-stage and rerun pre-commit.
 - Continue tracing unresolved code paths and implementing an authorized change; do not end the task at an intermediate finding.
 - Treat the hand-calculated NC angles supplied with #372 as approximate reference checks; verify the tool-frame geometry independently and do not assume discrepancies are truncation.

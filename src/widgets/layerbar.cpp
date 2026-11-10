@@ -1,5 +1,6 @@
 #include "widgets/layerbar.h"
 
+#include <QScopedValueRollback>
 #include <algorithm>
 #include <tuple>
 
@@ -159,11 +160,11 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
     // if it's a build part, reconstruct the layer dots from the settings_ranges. If same template applied again, return
     // all previous dots.
     if (item != nullptr && item->meshType() == MeshType::kBuild && item->isSelected() &&
-        (item->part()->getCurrentPartTemplate() == GSM->getCurrentTemplate())) {
+        (m_preserve_settings_ranges || item->part()->getCurrentPartTemplate() == GSM->getCurrentTemplate())) {
         m_part = item->part();
 
         // Set template name if no template selected. Otherwise, it's set when layers are added from template.
-        if (GSM->getCurrentTemplate() == "<no template selected>") {
+        if (!m_preserve_settings_ranges && GSM->getCurrentTemplate() == "<no template selected>") {
             m_part->setCurrentPartTemplate("<no template selected>");
         }
         updateLayers();
@@ -256,7 +257,7 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
     }
     // Check if new part selected and if that part's template equals the currently selected template from drop down
     // menu. If need to change part template.
-    if (item != nullptr && item->meshType() == MeshType::kBuild && item->isSelected() &&
+    if (!m_preserve_settings_ranges && item != nullptr && item->meshType() == MeshType::kBuild && item->isSelected() &&
         !(item->part()->getCurrentPartTemplate() == GSM->getCurrentTemplate())) {
         m_part = item->part();
         if (GSM->getCurrentTemplate() == "<no template selected>") {
@@ -278,6 +279,34 @@ void LayerBar::changePart(QSharedPointer<PartMetaItem> item) {
     }
     updateLayerSettingsRangeAvailability();
     update();
+}
+
+bool LayerBar::selectSettingsTarget(const QUuid& part_id, int low, int high) {
+    QSharedPointer<PartMetaItem> target;
+    for (const auto& item : m_model->items()) {
+        if (item->part()->getId() == part_id) {
+            target = item;
+            break;
+        }
+    }
+    if (target.isNull() || target->meshType() == MeshType::kClipping) return false;
+    const bool layer = low >= 0;
+    if (layer && (target->meshType() != MeshType::kBuild || target->part()->getSettingsRange(low, high).isNull()))
+        return false;
+
+    QScopedValueRollback<bool> preserve_ranges(m_preserve_settings_ranges, true);
+    for (const auto& item : m_model->selectedItems()) {
+        if (item != target) item->setSelected(false);
+    }
+    // Re-emitting selection also rebuilds the layer bar when the owner was already selected.
+    target->setSelected(true);
+    if (!m_part.isNull()) clearSelection();
+    if (layer) {
+        if (low >= m_position.size() || m_position[low] == nullptr) return false;
+        selectDot(m_position[low]);
+        changeSelectedSettings();
+    }
+    return true;
 }
 
 void LayerBar::reselectPart() {  // If no part selected
@@ -1356,6 +1385,9 @@ void LayerBar::updateLayers() {
 
     int layer_count =
         BufferedSlicer::computeSliceCount(m_part->rootMesh(), part_settings, m_part->getSettingsRanges(), true);
+    if (m_preserve_settings_ranges) {
+        for (const auto& range : m_part->getSettingsRanges()) layer_count = qMax(layer_count, range->high() + 1);
+    }
     m_layers = layer_count;
     // if the number of layers decreased, remove any dots from
     // layers that don't exist anymore
@@ -1378,7 +1410,7 @@ void LayerBar::updateLayers() {
     int old_size = m_position.size();
     m_position.resize(m_layers);
     if (old_size < m_position.size()) {
-        if (m_deleted_ranges.size() > 0) { returnDeletedLayers(); }
+        if (!m_preserve_settings_ranges && m_deleted_ranges.size() > 0) { returnDeletedLayers(); }
     }
 
     double layers = (m_layers <= 30) ? m_layers : 30;
