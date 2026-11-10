@@ -12,6 +12,8 @@ sources:
     resource: repo://include/gcode/parsers/common_parser.h
   - id: openwiki-source-7d76326440b2af435c042279
     resource: repo://include/gcode/writers/writer_base.h
+  - id: openwiki-source-9fae7231ebcc5dc8b6b1ef2e
+    resource: repo://include/slicing/region_speed.h
   - id: openwiki-source-b682621197d014ee954484a7
     resource: repo://include/utilities/enums.h
   - id: openwiki-source-4b1359988efc6fa24f9c2ef0
@@ -38,22 +40,20 @@ sources:
     resource: repo://src/threading/abs_slicing_thread.cpp
   - id: openwiki-source-eda4b121f1ff16dc092e8f3f
     resource: repo://src/threading/gcode_aml3d_saver.cpp
+  - id: openwiki-source-b8c650ace3deba7ffb95f2c5
+    resource: repo://src/threading/gcode_arc_specialties_saver.cpp
   - id: openwiki-source-4c1d7b6308a78ba9c493ce8a
     resource: repo://src/threading/gcode_loader.cpp
-  - id: openwiki-source-6b09820f6916b4f199cb60a7
-    resource: repo://src/threading/gcode_marlin_saver.cpp
   - id: openwiki-source-74cea8ba6a71c48d8439dfdc
     resource: repo://src/threading/slicers/cylindrical_slicer.cpp
   - id: openwiki-source-23afc284fcae4cee2de94dcb
     resource: repo://src/windows/gcode_export.cpp
   - id: openwiki-source-b89f433e76caa6e1aa00a3e9
     resource: repo://tests/arc_specialties_parser_tests.cpp
-  - id: openwiki-source-e45c507c8771c06c67d1765a
-    resource: repo://tests/gcode_layer_export_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:29:15.258Z" }
+generated: { by: "codex", at: "2026-11-10T18:02:46.284Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:29:15.258Z
+    at: 2026-11-10T18:02:46.284Z
 ---
 
 # Machine Syntax Writers and Parsers
@@ -91,15 +91,17 @@ This sharing is behavioral, not an alias for the entire dialect. JuggerBot, Mach
 
 `WriterBase` defines the emission lifecycle consumed by the slicer data model: slicer/settings headers, initial machine setup, boundaries around layers, parts, islands, regions and paths, motion writers for travel/line/optional scan/arc, shutdown, and a settings footer. It also owns shared state such as feed rate, deposition state, current output position, build maximum Z, comment delimiters, common command tokens, and coordinate-frame helpers. [source](repo://include/gcode/writers/writer_base.h#L23-L114) [source](repo://include/gcode/writers/writer_base.h#L116-L203)
 
-`AbstractSlicingThread::setGcodeOutput()` reads the global syntax setting and delegates to the local `makeWriter()` factory, which constructs the concrete writer with its compatible metadata and the global settings object. The default branch creates a Cincinnati writer, so an enum value that reaches this switch without an explicit case does not fail closed. Cylindrical slicing is stricter: session dispatch only permits Arc Specialties, and `CylindricalSlicer` directly constructs `ArcSpecialtiesWriter`. [source](repo://src/threading/abs_slicing_thread.cpp#L211-L294) [source](repo://src/managers/session_manager.cpp#L47-L49) [source](repo://src/managers/session_manager.cpp#L575-L583) [source](repo://src/threading/slicers/cylindrical_slicer.cpp#L418-L421)
+`AbstractSlicingThread::setGcodeOutput()` reads the global syntax setting and delegates to the local `makeWriter()` factory, which constructs the concrete writer with its compatible metadata and the global settings object. The default branch creates a Cincinnati writer, so an enum value that reaches this switch without an explicit case does not fail closed. Cylindrical slicing is stricter: session dispatch only permits Arc Specialties, and `CylindricalSlicer` directly constructs `ArcSpecialtiesWriter`. [source](repo://src/threading/abs_slicing_thread.cpp#L211-L294) [source](repo://src/managers/session_manager.cpp#L47-L49) [source](repo://src/managers/session_manager.cpp#L601-L607) [source](repo://src/threading/slicers/cylindrical_slicer.cpp#L418-L421)
 
 Use a dedicated writer when controller commands, lifecycle hooks, or motion formatting differ. Reuse metadata or inherit existing behavior when only a narrow exception differs. For example, JuggerBot has its own writer but retains Marlin units and syntax metadata; focused tests require width/height arc bead area to include the extrusion multiplier and require a zero-RPM arc to turn deposition off before motion. [source](repo://src/threading/abs_slicing_thread.cpp#L247-L252) [source](repo://tests/juggerbot_writer_tests.cpp#L47-L77) [source](repo://tests/juggerbot_writer_tests.cpp#L81-L92)
 
 ### Independent layers and connected paths
 
-`WriterBase::writeStandaloneLayer` sets a pending-entry flag, emits the layer through the isolated writer, clears the flag, and emits after-layer, after-part, and shutdown hooks. `writeStandaloneEntry` and `writeLayerTravel` establish the first approach with both travel lifts. `writeShutdownWithLayerMarkers` wraps the continuous shutdown in metadata markers; `finalPositionBlock` wraps positioning text in its own markers without suppressing those commands. Each embedded standalone program already contains its own dialect shutdown. Concrete writers can override standalone entry to establish their machine coordinates and deposition state. `gcode_layer_export_tests` exercises Marlin, Cincinnati, MVP, Haas, and Wolf cases, malformed metadata, and saver cleanup; this coverage does not imply every dialect has an equivalent focused regression. [source](repo://src/gcode/writers/writer_base.cpp#L73-L117) [source](repo://tests/gcode_layer_export_tests.cpp#L127-L294)
+`WriterBase::writeStandaloneLayer` sets a pending-entry flag, emits the layer through the isolated writer, clears the flag, and emits after-layer, after-part and shutdown hooks. `writeStandaloneEntry` and `writeLayerTravel` establish the first approach with both travel lifts. Standalone programs are opt-in in-memory outputs, not embedded comments in continuous G-code. Concrete writers can override standalone entry to establish machine coordinates and deposition state. `gcode_layer_export_tests` covers multiple dialects, snapshot clearing and saver cleanup; this does not imply every dialect has equivalent focused coverage. [source](repo://src/gcode/writers/writer_base.cpp#L75-L103) [source](repo://src/threading/abs_slicing_thread.cpp#L346-L403) [source](repo://tests/gcode_layer_export_tests.cpp#L127-L171)
 
-Connected paths can cross region boundaries without ending the physical path. `writeBeforePathRegionTransition` lets a controller update region-specific state without repeating full path startup; Wolf updates its path type and Arc Specialties updates its region state. Connection identity is appended to motion comments independently of other modifiers. [source](repo://src/gcode/writers/wolf_writer.cpp#L124-L149) [source](repo://src/gcode/writers/arc_specialties_writer.cpp#L557-L560) [source](repo://src/gcode/writers/writer_base.cpp#L119-L143)
+All writers should use `WriterBase::layerNumber` for external layer labels: it adds the zero-based layer index to Starting Layer Number (default 1), rejects nonnumeric/fractional/out-of-range starts, and checks overflow against the generated layer count. Internal indexes remain zero-based. [source](repo://src/gcode/writers/writer_base.cpp#L349-L369)
+
+Connected paths can cross region boundaries without ending the physical path. `writeBeforePathRegionTransition` lets a controller update region-specific state without repeating full path startup; Wolf updates its path type and Arc Specialties updates its region state. Connection identity is appended to motion comments independently of other modifiers. [source](repo://src/gcode/writers/wolf_writer.cpp#L124-L149) [source](repo://src/gcode/writers/arc_specialties_writer.cpp#L560-L563) [source](repo://src/gcode/writers/writer_base.cpp#L119-L143)
 
 Wolf header compatibility is localized: its settings header lowercases selected minimum/maximum labels, and calculated loader headers use the corresponding Wolf spelling. Other syntaxes retain their labels. [source](repo://src/gcode/writers/wolf_writer.cpp#L22-L31) [source](repo://src/threading/gcode_loader.cpp#L514-L541)
 
@@ -117,11 +119,19 @@ Generated output has a second parser-selection site. After writing G-code, `Abst
 
 Arc Specialties demonstrates why a dialect sometimes needs both sides specialized. Its metadata selects semicolon comments, millimeters, seconds, millimeters per minute, and an `.nc` suffix. Its parser strips Beckhoff-style block numbers, normalizes `G00` through `G03`, installs controller-specific handlers, treats `G82`/`G83` as deposition state, strips orientation axes from ordinary motion, retains `CP` as an optional visualization parameter, and rejects duplicate or unknown parameters. [source](repo://include/gcode/gcode_meta.h#L296-L307) [source](repo://src/gcode/parsers/arc_specialties_parser.cpp#L17-L57) [source](repo://src/gcode/parsers/arc_specialties_parser.cpp#L59-L145) [source](repo://src/gcode/parsers/arc_specialties_parser.cpp#L168-L201)
 
-The corresponding integration test is intentionally both parser- and writer-facing. It covers inline arc optional stops, weld-schedule speed selection, retained cylindrical position, block numbering, rotation direction, region comments, tool-frame rotations, physical path finalization, safe startup height, clip-rounding metadata, and configured cylindrical arc density. Those checks are the compatibility boundary for changes to this dialect, not merely syntax smoke tests. [source](repo://tests/arc_specialties_parser_tests.cpp#L837-L909)
+The corresponding integration test is intentionally both parser- and writer-facing. It covers inline arc optional stops, weld-schedule speed selection, retained cylindrical position, block numbering, rotation direction, region comments, tool-frame rotations, physical path finalization, safe startup height, clip-rounding metadata, and configured cylindrical arc density. Those checks are the compatibility boundary for changes to this dialect, not merely syntax smoke tests. [source](repo://tests/arc_specialties_parser_tests.cpp#L948-L1048)
+
+### Generated ARC weld schedules
+
+The generation option is captured by `ArcSpecialtiesWriter` when constructed. Completed slicing exposes whether the program requires its generated `<part>_sch.nc` companion; exports use that captured decision. Reopening G-code retains its reference without generating a companion. Schedule blocks select perimeter 1, inset 2, skeleton 3 and default infill. Helical output omits skeleton and perimeter/inset regions with zero revolutions. `regionPrintSpeed` supplies both segment and schedule speeds: radial uses layer speed (with the existing 10 mm/s fallback), other modes use regional speeds. [source](repo://src/gcode/writers/arc_specialties_writer.cpp#L145-L155) [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L175-L180) [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L362-L375) [source](repo://include/slicing/region_speed.h#L9-L30)
+
+Startup/Main Weld/Crater Fill wire-feed values use **in/min**. Startup travel-speed override and `V.S.SPEED` use **mm/min**, independent of the UI velocity preference; time and voltage use captured UI units. For generated schedules the writer uses `FV.S.SPEED` only when effective motion speed matches the global schedule's region speed, preserving numeric feed rates for local overrides and modifiers. An externally configured schedule keeps its controller-variable behavior. [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L46-L64) [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L97-L117) [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L367-L375) [source](repo://src/gcode/writers/arc_specialties_writer.cpp#L877-L904)
+
+The ARC saver writes the schedule before updating G80 references and committing the continuous program or saving standalone layers. GUI failures are shown through `completed(error)`; the CLI calls `save()` and returns a failing status for errors. See [G-code Export](../architecture/gcode-and-visualization.md#arc-schedule-companion) for write ordering and snapshot ownership. [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L130-L172) [source](repo://src/console/main_control.cpp#L129-L189)
 
 ## Companion outputs are a separate layer
 
-Some machine integrations transform the completed primary G-code into additional files. `GcodeExport` selects a threaded saver from the detected metadata plus an enable setting—for example MELD, Tormach, AML3D, Sandia, Marlin command data, ORNL/AMCM, or Adamantine—and otherwise performs the ordinary file copy. This is downstream of writer/parser selection; a new companion format needs an export branch and lifecycle wiring in addition to its dialect implementation. [source](repo://src/windows/gcode_export.cpp#L337-L405) [source](repo://src/windows/gcode_export.cpp#L406-L415)
+Some machine integrations transform the completed primary G-code into additional files. `GcodeExport` selects a threaded saver from detected metadata and export options (with the ARC generation requirement captured from the slice)—for example MELD, Tormach, AML3D, Sandia, Marlin command data, ORNL/AMCM, or Adamantine—and otherwise performs the ordinary file copy. This is downstream of writer/parser selection; a new companion format needs an export branch and lifecycle wiring in addition to its dialect implementation. [source](repo://src/windows/gcode_export.cpp#L407-L489) [source](repo://src/windows/gcode_export.cpp#L218-L221)
 
 Saver behavior can be materially different from G-code emission. AML3D creates one deposit CSV per layer, ignores controller-computed travels, and numbers bead points; the Marlin saver writes a command-data stream with converted SI coordinates and per-axis feed rates. Treat these as export adapters with their own format tests and failure behavior rather than as writer subclasses. [source](repo://src/threading/gcode_aml3d_saver.cpp#L24-L78) [source](repo://src/threading/gcode_aml3d_saver.cpp#L80-L145) [source](repo://src/threading/gcode_marlin_saver.cpp#L24-L55) [source](repo://src/threading/gcode_marlin_saver.cpp#L57-L140)
 
@@ -132,7 +142,7 @@ Work through every site below; there is no single factory that makes the rest au
 1. **Preserve persisted identity.** Add the `GcodeSyntax` value without silently changing existing ordinals. Add the matching canonical YAML option in the same position, update the public `SyntaxString`, and add a settings migration if stored numeric values move. [source](repo://include/utilities/enums.h#L262-L364) [source](repo://resources/settings/001_printer_machine_setup.yaml#L4-L47) [source](repo://src/utilities/constants.cpp#L153-L187)
 2. **Regenerate settings artifacts.** Edit `resources/settings/*.yaml`, then run the documented generator for both `master.conf` and `setting_inputs.conf`; file and setting order control the generated UI order. [source](repo://resources/settings/README.md#L1-L15)
 3. **Define metadata.** Supply correct delimiters, units, suffix, travel semantics, and layer markers, then insert the syntax into `SyntaxToMetaHash`. Verify any deliberate sharing rather than assuming each enum maps to a unique record. [source](repo://include/gcode/gcode_meta.h#L8-L27) [source](repo://include/gcode/gcode_meta.h#L308-L345)
-4. **Wire generation.** Implement or reuse a `WriterBase` subclass and add the exact writer/metadata pair to the `makeWriter()` factory used by `AbstractSlicingThread::setGcodeOutput()`. Audit capability gates such as cylindrical slicing rather than assuming writer support implies mode support. [source](repo://include/gcode/writers/writer_base.h#L23-L114) [source](repo://src/threading/abs_slicing_thread.cpp#L210-L315) [source](repo://src/managers/session_manager.cpp#L575-L583)
+4. **Wire generation.** Implement or reuse a `WriterBase` subclass and add the exact writer/metadata pair to the `makeWriter()` factory used by `AbstractSlicingThread::setGcodeOutput()`. Audit capability gates such as cylindrical slicing rather than assuming writer support implies mode support. [source](repo://include/gcode/writers/writer_base.h#L23-L114) [source](repo://src/threading/abs_slicing_thread.cpp#L210-L315) [source](repo://src/managers/session_manager.cpp#L601-L607)
 5. **Wire both read paths.** Add loader syntax detection and parser construction, then update `metaForSyntax()` and `makeLayerTimeParser()` if generated layer-time annotation needs the dialect's parser semantics. Decide explicitly whether unknown or missing syntax fallback is acceptable for this format. [source](repo://src/threading/gcode_loader.cpp#L590-L738) [source](repo://src/threading/abs_slicing_thread.cpp#L70-L170)
 6. **Add optional outputs deliberately.** If the machine needs a companion artifact, add its saver and its `GcodeExport` dispatch condition; do not hide that transformation inside the primary writer. [source](repo://src/windows/gcode_export.cpp#L337-L415)
 7. **Pin exceptions with focused tests.** Cover emitted machine text, parser modal behavior, units, comments, deposition/travel classification, layer-time edits, malformed parameters, and round-trip visualization metadata. Register any new executable with CTest. The existing common-parser, Arc Specialties, and JuggerBot targets show the intended pattern. [source](repo://CMakeLists.txt#L353-L384) [source](repo://tests/common_parser_tests.cpp#L295-L315) [source](repo://tests/arc_specialties_parser_tests.cpp#L806-L876)

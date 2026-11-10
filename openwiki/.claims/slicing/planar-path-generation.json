@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:9f25ab08b8065001b66d2841dfccb2b7d264cc9a6a4add8bf028e426c1427170",
+    "pageVersion": "sha256:a70dfa7894a0bb5515ca2925e8fea0e2367bdae3b1c9d54809679349aa4e3fd7",
     "claims": [
         {
             "id": "claim_7c402a4970d54e9688a38f5363e0cd0c",
@@ -8,19 +8,19 @@
                 "Planar slicing preprocesses mesh cross-sections into layers and islands, computes dirty steps in worker threads, then globally orders, modifies, reorients, and writes the resulting paths.",
             "evidence": [
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L43-L190",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L47-L212",
                     "version":
-                        "repo-lines-v1:sha256:2a7a49a5d10ca6bcce70520598000a5b20b1d0c2a6b9265ad66e07b1e354597a:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQ4LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmZDY0ZWZlNjA0Zjc5YzM2NTI5MGE2M2U3NzBlNGRjOWI3ZjU3ZDk5OGZmNjgzMGQ2YWVlYTM2NjZlNjFmM2RmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0MTJjYTM0NWNjZjc1YmY5YzA4MDZiY2U2OTViZThkZTgwOGI3OTk4NDI1MWE3YTU0ZDIwMmNmNjEwMWRkNDUxIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NmVhY2YyMDNiYjUwNGMyNmFiYzk0MzBiMTI0NjFlNzc5MDVjYWFmN2YyY2VkZmNkYjg3OWM3NTdlNGU1ODNlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwNzRjNzhlOTZmMWQwMWVjYmU3ZjZhZTFkNDZiYzU3Nzk4NTEzYzQxY2RlYjhjNmJjMzJlZjgzODhmZjc4M2VkIn0"
+                        "repo-lines-v1:sha256:659db668c66ad65ec8cc1b7edfd6bd9074cf6f2aa57ebc0504983eb8fa9d663f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTY2LCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiJmZDY0ZWZlNjA0Zjc5YzM2NTI5MGE2M2U3NzBlNGRjOWI3ZjU3ZDk5OGZmNjgzMGQ2YWVlYTM2NjZlNjFmM2RmIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiI0ODkzZjQwZTM3ODFlYjg5NmM4MmQwNDZhMDgwNjdhMTFlMzVjZGYyZjFkZmFmMjZmZWE5MGI4ZGI2Njc2NDEzIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiI1NmVhY2YyMDNiYjUwNGMyNmFiYzk0MzBiMTI0NjFlNzc5MDVjYWFmN2YyY2VkZmNkYjg3OWM3NTdlNGU1ODNlIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MywiZm9sbG93aW5nQ29udGV4dEhhc2giOiI0ZmJlY2NlYjAyNzUwMzYxMDA1YWI4OWExMDE2ODEzODZlZjdlMDRmZjcxYmI0YTk1MzY5MGM0MmU3NTNhZDJkIn0"
                 },
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L870-L955",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L967-L1050",
                     "version":
-                        "repo-lines-v1:sha256:8fc3725bbd0c7574f2ffdf0d8676717ba8fe417f7afd230ce6f9b407855cdc12:eyJzZWxlY3RlZExpbmVDb3VudCI6ODYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZTY3YzBlMjMyZjI2YmJiZDI1OWY2ZDBkYzdjNGI1MThmYmQ2MzkxYjkzODY3YTRhY2MwOGQ0YWY0MDAxY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwZGNmZGEyMDFmZWJmYWJiYjZhNDUzYmM0NjIyZTk2MmQ5N2ZmY2Q4YTg1ZTExZWQwNmVkZTcwMDg0YThjYmEifQ"
+                        "repo-lines-v1:sha256:fe0e8469d4122294a34c26ebe4d9e06b3b5e95fbcaeddad3287612e6ee1516a7:eyJzZWxlY3RlZExpbmVDb3VudCI6ODQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZTY3YzBlMjMyZjI2YmJiZDI1OWY2ZDBkYzdjNGI1MThmYmQ2MzkxYjkzODY3YTRhY2MwOGQ0YWY0MDAxY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjgzNGExMTY0ZTVmMjYxMDUwMDBmMWUwYTk0ZTUwYzJiNGMwZTNhZWZjN2M5Njc5MTlhNmU1MjMyYTA4NmM2NzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
                 },
                 {
-                    "resource": "repo://src/threading/traditional_ast.cpp#L42-L109",
+                    "resource": "repo://src/threading/traditional_ast.cpp#L40-L109",
                     "version":
-                        "repo-lines-v1:sha256:7438f54bd4e490836aef06f23cc1d4d9d7012510c48a3115868d7362357fb591:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc5MDVhYWU0Njc3YWZjNTFmMTRlZWRiYTdmOGI1MjE2YTA1NWIzNjBkYmY0YWNiZDQ1OTg0MjJmYjU3ZDA2MTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NWY4ZDkxZmIzMzBhYWNkZjExOWRhZDUwZmRlZDJkOTVhZjUzZjlmMDRiMDYwNmUzNGI5ODczMjFmYjc5ZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4ZThiY2Q0ZWE0MGYyODJmOThkZjZjZGUxOGFkZTNkZTZiNDRiZmJmMTA1MTc4N2YyN2JkODhkZTRhMThiNzIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMjA3MDEzMmQwNmNkZjM3MDYzNjA1OWYyNTJiMDZhOWRlNjRiYmU5NDRjNTYzZGJkODU2YmUzYWU3MTNlZDQifQ"
+                        "repo-lines-v1:sha256:4745a0ec49783cbf91e3b396f4242c99941fcd850523c477ee344f5f660005f6:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFiY2EzOTNhZGQxOGI2M2Q1MDc0MmI4Y2M0MjNiZjEyNTg3ZjVlMTA1NTY3ZGUzZWU0N2EwOTQ4OWIxNmMxNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NWY4ZDkxZmIzMzBhYWNkZjExOWRhZDUwZmRlZDJkOTVhZjUzZjlmMDRiMDYwNmUzNGI5ODczMjFmYjc5ZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE0NzM1ZjFmNjRlYzE5ZWMzM2ZmMjVlZTNiZDI3NGIxMzM0Mjc0MTYxNWJjODUzYmNiMmY4ZTU5MmQ4Y2EwOWEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMjA3MDEzMmQwNmNkZjM3MDYzNjA1OWYyNTJiMDZhOWRlNjRiYmU5NDRjNTYzZGJkODU2YmUzYWU3MTNlZDQifQ"
                 }
             ]
         },
@@ -35,26 +35,26 @@
                         "repo-lines-v1:sha256:d9ab3df53625638ff4a9c941d95c860613d6e065d933095f3b90351c37cd707f:eyJzZWxlY3RlZExpbmVDb3VudCI6MTksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwNjU3MzdlMDcxZjlmYmNkZjU0YjhhZDM4ZTY2ZTRiNmYxZjlmYTFjMDFlZDZhZjlkOTY2NGQyMjJhOTY0MDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImYwNjU3MzdlMDcxZjlmYmNkZjU0YjhhZDM4ZTY2ZTRiNmYxZjlmYTFjMDFlZDZhZjlkOTY2NGQyMjJhOTY0MDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImRjMzY0YmNiODgxMGU2ZGI1N2NjNTM4YjE5MzNmMmQ3ZjQ3ZTE0MTg3NzQ0NWRmY2ZhODEzOWRiYjdiN2Q2NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRlZjlhZTM0NjExNGUwZTdkMTNlZGUyZmQ0MDk0MjBhZjkxZjJkMDA5Zjk2N2ZhZWUxMWE4YmY3OTk3MTJkZTkifQ"
                 },
                 {
-                    "resource": "repo://src/slicing/preprocessor.cpp#L17-L94",
+                    "resource": "repo://src/slicing/preprocessor.cpp#L17-L95",
                     "version":
-                        "repo-lines-v1:sha256:bbaffa8b83780a982eb1cdb4cf8e3ae9096ee1094142b62652eadae5a4c398b2:eyJzZWxlY3RlZExpbmVDb3VudCI6NzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MThlYTQ3ZWZmMTgwNWViNzBiZjcxMjYxZWFjZDUyZTM2M2I0OTYzYzJmMWY5ODRmNDljMjAyYjhhMTk1MmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDFiZTc2MDExZjAwNTMyNmZjZDNmYTZkYzVhZTE4ZTRiM2EwMWQyZjVhOTZmMDMzZjM3MzliODI3NDFkZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1NGRkOTZjZGZjYjVkYWU3YjFlMGNhNWU0YTI4MzgyZjVmYTNlMWQxZjYyYmIzYmE5NDUyYTMwNDc0NjMxYmYifQ"
+                        "repo-lines-v1:sha256:78c06778421a8f58d8c344de642daf1031e1a2389e653f7a2e1cecc8dbcd6a1d:eyJzZWxlY3RlZExpbmVDb3VudCI6NzksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3MThlYTQ3ZWZmMTgwNWViNzBiZjcxMjYxZWFjZDUyZTM2M2I0OTYzYzJmMWY5ODRmNDljMjAyYjhhMTk1MmUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjJhNDFiZTc2MDExZjAwNTMyNmZjZDNmYTZkYzVhZTE4ZTRiM2EwMWQyZjVhOTZmMDMzZjM3MzliODI3NDFkZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjY1NGRkOTZjZGZjYjVkYWU3YjFlMGNhNWU0YTI4MzgyZjVmYTNlMWQxZjYyYmIzYmE5NDUyYTMwNDc0NjMxYmYifQ"
                 }
             ]
         },
         {
             "id": "claim_baa9353abd9a477da54d2756d47fb208",
             "statement":
-                "Planar preprocessing rejects overlapping settings parts, clears prior build steps, clips mesh copies, builds layer additions after cross-sectioning, and finally populates global layers.",
+                "Planar preprocessing rejects overlapping settings masks inside build cross-sections, clears prior build steps, clips copied meshes with target-scoped clippers, adds layer structures and populates global layers.",
             "evidence": [
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L152-L189",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L171-L212",
                     "version":
-                        "repo-lines-v1:sha256:18892ee39be40e2c7bea17dd7fa165e83aa41edfc01181a26b2fa56844bccf06:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZTQ0ZWZmNTQ1YTM4NGViZjhiYTEyZWM0MzNkZDJhYzQzNDU3YTQ0NGUwNWQ2NjA4N2Y4MWIzMTNhMWQ2NDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJjNzI1ZTgzNzExNzY1YWJlZWNjYjc3MjE2NGY0N2RiMTY3MTkyNzVjMjM4M2JkMmI5Njk3NGI0ODZkMTQxZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiMTU4YzY5MGM5NzI4NzU1YmNiNTZjY2M1Y2FhOWRlMjU0Y2VhOGQzZmJlMTM0YjQwYzcxZTAyYmNkMzZlMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmYmVjY2ViMDI3NTAzNjEwMDVhYjg5YTEwMTY4MTM4NmVmN2UwNGZmNzFiYjRhOTUzNjkwYzQyZTc1M2FkMmQifQ"
+                        "repo-lines-v1:sha256:7f6b65bcbeae652cbf43d5a34fdf3e8f34d431b68d84a123ace5c7ec2ce78e5c:eyJzZWxlY3RlZExpbmVDb3VudCI6NDIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI4ZTQ0ZWZmNTQ1YTM4NGViZjhiYTEyZWM0MzNkZDJhYzQzNDU3YTQ0NGUwNWQ2NjA4N2Y4MWIzMTNhMWQ2NDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiMTU4YzY5MGM5NzI4NzU1YmNiNTZjY2M1Y2FhOWRlMjU0Y2VhOGQzZmJlMTM0YjQwYzcxZTAyYmNkMzZlMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjRmYmVjY2ViMDI3NTAzNjEwMDVhYjg5YTEwMTY4MTM4NmVmN2UwNGZmNzFiYjRhOTUzNjkwYzQyZTc1M2FkMmQifQ"
                 },
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L43-L74",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L47-L94",
                     "version":
-                        "repo-lines-v1:sha256:19aa2518d5ac0cfc388a057e015b61a0947efa6c51d8b7854bae6ffa08892e2d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNjRlZmU2MDRmNzljMzY1MjkwYTYzZTc3MGU0ZGM5YjdmNTdkOTk4ZmY2ODMwZDZhZWVhMzY2NmU2MWYzZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjIyZDExY2FmNDNlOTdlZjM2OWU2YmVlZDFhMjY4YmQwNTgzOGYyOWI5ZGQyNTRiZjY5YmE2NDg4NDE0NzIzNGEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2ZWFjZjIwM2JiNTA0YzI2YWJjOTQzMGIxMjQ2MWU3NzkwNWNhYWY3ZjJjZWRmY2RiODc5Yzc1N2U0ZTU4M2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJiNzA5ZmE1M2M0NDUxM2M0NDA4YWQ3OTc3ZWFhYzA3ZWJjMjZiYzBlMjA2ODI0YmI0NWVhMzU1YzM5YTI2MTcifQ"
+                        "repo-lines-v1:sha256:66d258e6138efa8f74c5e822148aa346c9b9c99993f2fe248b0e2706bed7d8f2:eyJzZWxlY3RlZExpbmVDb3VudCI6NDgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZkNjRlZmU2MDRmNzljMzY1MjkwYTYzZTc3MGU0ZGM5YjdmNTdkOTk4ZmY2ODMwZDZhZWVhMzY2NmU2MWYzZGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjNjQ3OWNjMjMwNDQwZmQ0MWU4MjI0MjE4Njc5Njk4NTU5ZDI4OTNiZDY3YjQzODBhZmFiODExYjM4YTU1YWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjU2ZWFjZjIwM2JiNTA0YzI2YWJjOTQzMGIxMjQ2MWU3NzkwNWNhYWY3ZjJjZWRmY2RiODc5Yzc1N2U0ZTU4M2UiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhMDhjOTE3MDViYTk3ZWUxOTM2OTA3MDZhNDcxYzQ4OTYzMmRmMjg4OTI3Nzg5MjNlNzI4YTcwMjhhMzNlMjIifQ"
                 }
             ]
         },
@@ -69,9 +69,9 @@
                         "repo-lines-v1:sha256:dcb10899754f568c7b75f9972268ab78d5b3af12d988fed17800c6d8bab98827:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ5ODJiMmMwM2Y1MmJmNjVmOWUxMzg0YzJkYzg3ZTU1MDM1N2FhZTMyYzQ1NDlkM2FkNWY4MGU5ZDk2MWI2NTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijg5ZGI0MGEwNTE3YzM1Y2U2NTc5MjQ1ZjM2NWZiNjRiMmNjMWMzN2YxYmVjZjU0NmM5MzUwMmE5YzJlMThiOGMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNlZjhkYTYwM2EwM2E2N2VlMzU1ZGRmM2Q0YzM5MDc2ZTE3MjlmMmEyMDEyMjg2ZDE1NjFhMzYyNTA5ZGYyNGQifQ"
                 },
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L76-L150",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L97-L164",
                     "version":
-                        "repo-lines-v1:sha256:4504647f8e88bae0768771888336f195ee93c19ec289d7f64879ecf7be83c59b:eyJzZWxlY3RlZExpbmVDb3VudCI6NzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhNTlmMjQ2ZGYwMDkxM2Q3ZDE4YmRhM2JhNzg1YjkxYzhjODdmZTY0MjBmYmEzYTI3OGI3NzU5ODVlZmU5YTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5YzEzNTkwNjY1NjMyM2QxYzVlYTQxNjU0ZWU2NmFmYjU4NWFjZGNmYWVhY2ExMjFkNWUzMGJmMTkzZWVkZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM3NTc3Y2Q4MzU0ODNmOWU4YmZmZDAyNzJhOGRhNDZkZTQwMTZmMTNjN2I4NDM4MGZhNmRmODhlZDY1MTFiNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgwY2JhYWFmNTlkYTg5ZTc1NDJlYzc4NjQwZDNhYmJkNjJiNmQ2NWFiMjVlNGUwZGE1ZWU2OGEzZjE0Y2MzMzIifQ"
+                        "repo-lines-v1:sha256:638bc425a8670eeee44a5fffffa04ff8e911f67214416d5a6450457d482fe0b5:eyJzZWxlY3RlZExpbmVDb3VudCI6NjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZhMjdkYzVlMzI5ZGY2MWViMWQ3MzRjZWRjZjg0MTJjMGVhZGNkYmYwODllYTFiODhmMWMzYjdlNWIxYTBjNTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1ZGVmNzYyZjBjNDQ2NmQ0MTRkNDNhZmUwNTk5M2M5MDVkZjhjOGEwMjlkYzE4ZTYyN2QzODRmZGExNWZmMDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE3NjFiZjRiZTFiMWZjOTM5NDEyZDdiNjhhY2VkZmUyNjNjMWNiYzIyMjMxMjEyZGYzOTA5YzcyMjljZDE2ZWMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjE3NjFiZjRiZTFiMWZjOTM5NDEyZDdiNjhhY2VkZmUyNjNjMWNiYzIyMjMxMjEyZGYzOTA5YzcyMjljZDE2ZWMifQ"
                 }
             ]
         },
@@ -132,12 +132,12 @@
                 {
                     "resource": "repo://src/slicing/preprocessor.cpp#L29-L48",
                     "version":
-                        "repo-lines-v1:sha256:cf9b473966f7adbc58a423a3dbe72738a21d48f12d7492db849088bce3acc1b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMTczYzAxZDg4ZjNhN2ZjMWIzYzE4N2MzZjc0ZjJjNDA5MGYwNzkwMjVlNmEwZjMxZDAwMzg3OTA5ZTgzODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlOTk0MTE3MGI1NjFlM2IyM2RiZDhhNzQ0YzMwZmE2OTQ5NGY2M2ZlNjZjNWUzYjAwMDdiMmQyYTY1YWFhNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWRlYmQwYmI3Nzk5OTljYWY4OGNjNGE4NDU0MjIxMTMxYzdiMzY1MjgxYjNlYTdhNmZmYTA3ODkwOGM0NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjNmMjJjMDMzY2ExNWVlNjY2NWNjZGQyY2UwNmE5NzEwZGJmNjFmOWEwOTU3MWEwYzcwODJmYjExN2M5ZWM1OWQifQ"
+                        "repo-lines-v1:sha256:cf9b473966f7adbc58a423a3dbe72738a21d48f12d7492db849088bce3acc1b6:eyJzZWxlY3RlZExpbmVDb3VudCI6MjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMzMTczYzAxZDg4ZjNhN2ZjMWIzYzE4N2MzZjc0ZjJjNDA5MGYwNzkwMjVlNmEwZjMxZDAwMzg3OTA5ZTgzODUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJlOTk0MTE3MGI1NjFlM2IyM2RiZDhhNzQ0YzMwZmE2OTQ5NGY2M2ZlNjZjNWUzYjAwMDdiMmQyYTY1YWFhNjEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYxNWRlYmQwYmI3Nzk5OTljYWY4OGNjNGE4NDU0MjIxMTMxYzdiMzY1MjgxYjNlYTdhNmZmYTA3ODkwOGM0NDAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVmNjMwNWViOGY1YmM2MWM1NGU1YjczZWU1ZTIzMTZjMWM4YTc3ZWM2ZWRlZjFjOThlNjYwNTYyMjlkNzUwYmEifQ"
                 },
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L46-L57",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L51-L56",
                     "version":
-                        "repo-lines-v1:sha256:996782d503a33c173147431e9718371a2c487e6c474e170c5efaa5130910e8ea:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE2ZTJlNTQyOTA0ZjAyZjBlMjgyNmQ1NDU0MzA4YjQ1NmM1N2QxOGM1Mjc0M2E0YTVmNjAwMWI1Y2Y2ZWMzMjciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjU5YzEzNTkwNjY1NjMyM2QxYzVlYTQxNjU0ZWU2NmFmYjU4NWFjZGNmYWVhY2ExMjFkNWUzMGJmMTkzZWVkZDciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM5YTkyZmY4MjU4YThlOTI5ZGYzYzRlNDJjMDA2MjM2MDM5ZWI2ZTA5ODcyNDBlMTg1NGRmMzAyMDkwM2U3NWIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJlNGQ0NWRmNDBjYmQ2NmFhM2YxOGRhOTFiZTlhMWVmNjY3YmI0YWIyMmZlOTg0N2VmODA2OGNkYzI3N2NkNzEifQ"
+                        "repo-lines-v1:sha256:ef55e74138a998d9300bd7461e5e2f081dbf6d5400c8f02dfb038033c2ecc631:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTZlMmU1NDI5MDRmMDJmMGUyODI2ZDU0NTQzMDhiNDU2YzU3ZDE4YzUyNzQzYTRhNWY2MDAxYjVjZjZlYzMyNyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTc3YTk0YTYyMTMyMWE5OWQ5ZjdkZWY1MThiYmRhYzBjZTEyY2QwMzk2ZmMwMTY4ZWQwMGQ3OTE3MzU1NDE0OSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMjYxYzViOGFkMDM4NGJlZWFkYjAyMmUxYzYwY2E5NDFmMDIwZDM3YTMwZmJkODRjNjY1NmIzMjkzYTNkYjRkZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMzVkZmM0MTM3OTYxM2Y2NmU0OTNkZTFkYjgxYmE2ODAwYzRmM2NhNzlmOTY1NThlMzdiMWQzYjEwM2VmZTM5MSJ9"
                 }
             ]
         },
@@ -218,14 +218,14 @@
                         "repo-lines-v1:sha256:95306f7a3dd09d6e37e1f8329714391f4af07eb4ee46742103cbaf8c88704b87:eyJzZWxlY3RlZExpbmVDb3VudCI6MjksImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNhNDFiMjBkOWExNjY3MTc3OTBiMWQ5ODU2NmM4ZDZmZjA5Mjc4OGI2NjAzNDQ3MzFhNzI2MWY1YmY1YWI3MWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxMmNhMzQ1Y2NmNzViZjljMDgwNmJjZTY5NWJlOGRlODA4Yjc5OTg0MjUxYTdhNTRkMjAyY2Y2MTAxZGQ0NTEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFlZjQ5MTYzYTU4NTRmZDgwZDAwMDczNWQ5ZDU4NTIzNDhkYzIwZDJlZmJhNjNhMGI4MzBhNDk4YzJiZTRmMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoxLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijk1NTQyOWNiZWZhM2I4OGMxNDU3NmU3NGRlN2I3NDE0NjMzY2RlYzBlNzEwMTVkMThjMmZiZDc2NmY3NWViNWIifQ"
                 },
                 {
-                    "resource": "repo://src/threading/traditional_ast.cpp#L116-L175",
+                    "resource": "repo://src/threading/traditional_ast.cpp#L127-L183",
                     "version":
-                        "repo-lines-v1:sha256:b2662f6559101f264fc3516b3c4f2d0a8faa22a6310de26acd2cfc62065c0d5b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MjcwMDlhY2U4ZTA2ZGVlZDQ4MTg5YTdiODBiY2IxYWZhMDRjMDQ3N2ZkM2IwZGVhMjAyNmQ5OTlkNjdlOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImVhOTVkZjQzMGM3NDJhMjc1MTZlMWU3YTYzZTFhZGM1ZDMxMzUyOTZkNDMxNGUwNjdkMmY4MTMwYzc3NWE3MDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjoyLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6Ijg5YTc1M2U0MmUyNGU1ZGE4OTcwODA3N2ZlZGM1YmE1ZDllNmI3ZmFkZDFmN2E2NDlhM2JlM2ExYjAyZmIwNDYifQ"
+                        "repo-lines-v1:sha256:9936f9e5fea8d7faa9ce83103e3a6b0b93b204d70acf12a523caa4ca52a4bd1c:eyJzZWxlY3RlZExpbmVDb3VudCI6NTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ3MjcwMDlhY2U4ZTA2ZGVlZDQ4MTg5YTdiODBiY2IxYWZhMDRjMDQ3N2ZkM2IwZGVhMjAyNmQ5OTlkNjdlOGYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEzNDhmMmYwN2IwM2IzOWMyYTkxYmRmNjY5ZTUxNDU0MmI3Yzg3Nzk3ZTNkM2M0OGQ2M2RmYTNkNzI5MmNjYTYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjNmYTFlOGU4YWE0YTczODZlNDA1M2FmOGVmZGU5ZDM1ZTY2YmFjMjY5ZjhiMDMyYWQyZjhmODk3Y2E0OGMwOGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQyYzE5Y2Y4ZGM2MmFhOGI0ZDM1MzI0MmFiYWU2MmY0NDM4OWFlNDQ0YjEzNGZjYzlkZTI5NjU1ZDZmOWUyYzMifQ"
                 },
                 {
-                    "resource": "repo://src/threading/traditional_ast.cpp#L46-L109",
+                    "resource": "repo://src/threading/traditional_ast.cpp#L48-L109",
                     "version":
-                        "repo-lines-v1:sha256:22c94569ce3c39bf91418435bbd0d69b52a4d719711f429795ea5f014ad7507c:eyJzZWxlY3RlZExpbmVDb3VudCI6NjQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwMzRkOTI3YTRhZDg0OTI2YjcxNmIzZGU0ZWQ5MWFiODlhMDA0YzAzMDI1MTk3YmE1OWI0YTg3ODI1Yzg2NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NWY4ZDkxZmIzMzBhYWNkZjExOWRhZDUwZmRlZDJkOTVhZjUzZjlmMDRiMDYwNmUzNGI5ODczMjFmYjc5ZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFhYzkyYWRlMDk5NmE2ZjZhZTcwNDdlMTY3OWIyOWZhMDA0ODYzYTM4MmFhMzFjMjkwMzc0ZDk3NGU2NGY3YTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMjA3MDEzMmQwNmNkZjM3MDYzNjA1OWYyNTJiMDZhOWRlNjRiYmU5NDRjNTYzZGJkODU2YmUzYWU3MTNlZDQifQ"
+                        "repo-lines-v1:sha256:c502cc5cf0980b2a78fe599f55a235aff2355b9f4cf8ea617d88ab96036ec388:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwMzRkOTI3YTRhZDg0OTI2YjcxNmIzZGU0ZWQ5MWFiODlhMDA0YzAzMDI1MTk3YmE1OWI0YTg3ODI1Yzg2NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NWY4ZDkxZmIzMzBhYWNkZjExOWRhZDUwZmRlZDJkOTVhZjUzZjlmMDRiMDYwNmUzNGI5ODczMjFmYjc5ZWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNlZTg5YjBjYzMxNGY5MTBmNGY3YjQ3OWE4MmNkNDRlZGQ4ODI1NzFiODExZmI4MDYwOWVlZTNiNjNiYTUzZDQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQzMjA3MDEzMmQwNmNkZjM3MDYzNjA1OWYyNTJiMDZhOWRlNjRiYmU5NDRjNTYzZGJkODU2YmUzYWU3MTNlZDQifQ"
                 }
             ]
         },
@@ -335,7 +335,7 @@
                         "repo-lines-v1:sha256:11428471f5267d165380e64b101ba670fa1c85623f50b7ade616991f4f27e785:eyJzZWxlY3RlZExpbmVDb3VudCI6NzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI1NmIzN2RhYjdmMzE4MzJjNjU0M2Q2ZDIwYzQ2MDRlZGJlNjNhNmQ5NjQzYmM3OTI0ZDc3ZGRlYjFkMWJiMzkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2MmIyZGU2MjM0Nzg0Nzg3ZWNhZmEwNGFlZmQxYWEyNjNkZjA0YmFkNmE3ZjBlYTI5MTAwZTJlOTUwZWY1YjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ0NTE3ZTA4NjUwZDFhOGIyZDFiNWUwNDhjOGVhYTkzNTI0MWZhZTg3NGEyNTJlMDlkZDRlYTgwMzAwMjViZGYifQ"
                 },
                 {
-                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L870-L920",
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L967-L1017",
                     "version":
                         "repo-lines-v1:sha256:bda9809f29dec73a4c01700792e116e5f940a6f0bfab9b7b643109ee268a7e91:eyJzZWxlY3RlZExpbmVDb3VudCI6NTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMyZTY3YzBlMjMyZjI2YmJiZDI1OWY2ZDBkYzdjNGI1MThmYmQ2MzkxYjkzODY3YTRhY2MwOGQ0YWY0MDAxY2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU2YjA0NDkxNDY5NzIyZTgzNjNhOTRlNDA0NDUzOGUwMTNhMmEyMTdlMzZiMWU1NjhiYTYwYWNiN2I0YzhmMmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE5ZTc2MzU1Y2YxMTk5NDgwYzNmOTk4MzZiMTQ4NmM4NDFkODkxZmFhZDkwNGM2MDhlMDkzMDIyZDM3NTdhZWUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMxOTQ1Njg1MWJjOTQzZmJlYjk3YTE4ZmIzZTlhMTdjN2IxMTJmN2U0ZTM1ZmQyMzA2YzQwZTJhMWRiZTdjYzEifQ"
                 }
@@ -401,10 +401,105 @@
                         "repo-lines-v1:sha256:392a01cac286f575c1e3ffc3058f1a987c18cfb5e0a7535ccd3bd2a68a41f130:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMxLCJmaXJzdFNlbGVjdGVkTGluZUhhc2giOiI3ZDEwMzZlNzRjNGQ3YzQ2NjBlZWRlYzA0NjNhODhmOGQwNDA1Y2M1YjQ0MjE5ZTA3OGMwZjQxODBkOTA2ODdjIiwibGFzdFNlbGVjdGVkTGluZUhhc2giOiIwMWJhNDcxOWM4MGI2ZmU5MTFiMDkxYTdjMDUxMjRiNjRlZWVjZTk2NGUwOWMwNThlZjhmOTgwNWRhY2E1NDZiIiwicHJlY2VkaW5nQ29udGV4dExpbmVDb3VudCI6MywicHJlY2VkaW5nQ29udGV4dEhhc2giOiIyNTY5OTcyZWIxNjEzYWY4YTA0NmMxMTI3ZTUwMDEyN2Q3NDFiMTkyMTY3YTI1YmU3NWQ0YWUxMGFhZDdkNzdjIiwiZm9sbG93aW5nQ29udGV4dExpbmVDb3VudCI6MiwiZm9sbG93aW5nQ29udGV4dEhhc2giOiIwMmZiZDk0ZmRkOTlkOTU4MWQyOTI3ZjFlODUyODYwMGU0NjYyYWFkZjY5Y2I0ZjdmNjcxZjY3ZTBjNTg5OGFiIn0"
                 }
             ]
+        },
+        {
+            "id": "claim_bf1ac1b87cc54fe29361257e6116967b",
+            "statement":
+                "Planar settings overlaps are tested in actual sliced build geometry and fail preprocessing explicitly before worker dispatch.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L208-L212",
+                    "version":
+                        "repo-lines-v1:sha256:ad651fcd9207d090219b5611ddac99610129d30d8adf1e0d9190e8e7b2d96165:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMmM3MjVlODM3MTE3NjVhYmVlY2NiNzcyMTY0ZjQ3ZGIxNjcxOTI3NWMyMzgzYmQyYjk2OTc0YjQ4NmQxNDFmYyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNDg5M2Y0MGUzNzgxZWI4OTZjODJkMDQ2YTA4MDY3YTExZTM1Y2RmMmYxZGZhZjI2ZmVhOTBiOGRiNjY3NjQxMyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiY2IxNThjNjkwYzk3Mjg3NTViY2I1NmNjYzVjYWE5ZGUyNTRjZWE4ZDNmYmUxMzRiNDBjNzFlMDJiY2QzNmUzNSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGZiZWNjZWIwMjc1MDM2MTAwNWFiODlhMTAxNjgxMzg2ZWY3ZTA0ZmY3MWJiNGE5NTM2OTBjNDJlNzUzYWQyZCJ9"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L77-L94",
+                    "version":
+                        "repo-lines-v1:sha256:a9a61b8eca97d7e73aca8a474047b9a5d5f7a7999f195a13cbf2c08a00824acd:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhNTlmMjQ2ZGYwMDkxM2Q3ZDE4YmRhM2JhNzg1YjkxYzhjODdmZTY0MjBmYmEzYTI3OGI3NzU5ODVlZmU5YTEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBjNjQ3OWNjMjMwNDQwZmQ0MWU4MjI0MjE4Njc5Njk4NTU5ZDI4OTNiZDY3YjQzODBhZmFiODExYjM4YTU1YWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImNiMTU4YzY5MGM5NzI4NzU1YmNiNTZjY2M1Y2FhOWRlMjU0Y2VhOGQzZmJlMTM0YjQwYzcxZTAyYmNkMzZlMzUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImZhMDhjOTE3MDViYTk3ZWUxOTM2OTA3MDZhNDcxYzQ4OTYzMmRmMjg4OTI3Nzg5MjNlNzI4YTcwMjhhMzNlMjIifQ"
+                },
+                {
+                    "resource": "repo://src/threading/traditional_ast.cpp#L116-L124",
+                    "version":
+                        "repo-lines-v1:sha256:4070f7a22743a26298e61b3393f81e9de8ddf5cbbdcc85c0df838643491f10a1:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTVlZTRjZWY0NDNjYzhmNjAzNTVkYzEzZGY4MzJkMzA2YzJlZTdiMzhjMmRjZWI2NDc4MjA1ZGVhZjQ3ZDM4ZCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiYmEwMWM3ZTE0MzY0ODdjMmYzNTk1MDI5ZjgyMDg4MjM4NjRhNzlhOWM1OWYyZGIyNWEzOGNlZGE2NTJiOWMyZiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZWE5NWRmNDMwYzc0MmEyNzUxNmUxZTdhNjNlMWFkYzVkMzEzNTI5NmQ0MzE0ZTA2N2QyZjgxMzBjNzc1YTcwNCIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYTk4YTljYzc3YzI2MjQ1MjNmZjQ0Y2ZhNDE3ZGZhN2EyYWZhZTdkYjJmNzRmMDNlMWNlYzkzYThlOTliYzRhZiJ9"
+                },
+                {
+                    "resource": "repo://src/threading/traditional_ast.cpp#L40-L45",
+                    "version":
+                        "repo-lines-v1:sha256:82677fbeda0e984e7160ca5f51ff40e9df431cca7f7d1dd87790d8ef370fc66b:eyJzZWxlY3RlZExpbmVDb3VudCI6NiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWJjYTM5M2FkZDE4YjYzZDUwNzQyYjhjYzQyM2JmMTI1ODdmNWUxMDU1NjdkZTNlZTQ3YTA5NDg5YjE2YzE1NSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiY2YxMThmNWNlZmJkZjMxMThjNDc1YTBiZWZiNDkzNjI4NGQxNDhlN2RlZjI3NDU4YTExOGQ2OGQzODA3YmY2MiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYTQ3MzVmMWY2NGVjMTllYzMzZmYyNWVlM2JkMjc0YjEzMzQyNzQxNjE1YmM4NTNiY2IyZjhlNTkyZDhjYTA5YSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNGRkMzc5YmY0Y2NiZGMxNTY3ZTdmNDVhYTMxOGM1MDA5ZDlkYWFlNTU4ZGQ0OTBhODg5MTQ2MjY1OGJhMzhlOCJ9"
+                }
+            ]
+        },
+        {
+            "id": "claim_ea063e53dfe64dac9ae042e8fd812477",
+            "statement":
+                "Planar child settings/clipping scope includes enabled direct children of the target build part alongside enabled root modifiers.",
+            "evidence": [
+                {
+                    "resource": "repo://src/slicing/preprocessor.cpp#L49-L66",
+                    "version":
+                        "repo-lines-v1:sha256:c86a751f075321bf20ab5b52a6f822a8a4109958f1f826777c289440de57fb03:eyJzZWxlY3RlZExpbmVDb3VudCI6MTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImM2MWE0OGM0NjEyY2U1Y2VjOGI1ZWNmMzNlM2FjMmViZGEwMmQyZDlhZDI2NTQyZWU0YmJiOGVlYTM4ZjE2NDYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ1OTZhYWI0MTMxOWNmODZiNDNhMzY4MzU5NTJhMDcyMThmM2ZlZjMzNWU3YzdkODg2NmIwODc4Y2Q2M2RmNTUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIzMDIzMjA0NzFiZjMxMWYyNjExMDVhOThiMTNiZGUxZWY5ZTM0ZGQzYzYxNTY4YjNhZTZiMDJiNWUyMWE2NzQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImFlNDk1MGRkZGZmMWE5MzkxODViMWE2YjNlODE5YmI0ZDRmZWIyMjAzOGQxNzJmYWE1NDYyOTlmMTQ4OTE5ZjQifQ"
+                },
+                {
+                    "resource": "repo://src/slicing/slicing_utilities.cpp#L164-L174",
+                    "version":
+                        "repo-lines-v1:sha256:aa076910bf2630267251084ccf58a87f75bda0e9edb19f123113f6b677c9e536:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBlMjM5ZTU3OTQ1ZjY3OWI4NDIzYjI4MDU4NGFhYjY1YjQyOTZhZDZlYWY2ZDdlZTMwMmRkNDBlM2ZkMzk1NzMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiYTg1NTE0MzU5MTdjYzZjMTVmNjM3OTUzM2M1YWY5Nzk3MzU0ZTY5YTk1ZTBmN2Q3ZGQwZmNlYTYwNGU4MjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1NDY4MmI1MDU5M2FmMjAyNzNmNmRjM2RhM2NmYzhiYmIyMmM4N2I1MDEyYWI4ZTg1ZTI5MjFjMWMxNmE4NTQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImVkODhjMzJlZmZhZDVjNjU4ZmE0MGI1YmRlZWNmMTFhODc4NzcxODcyOWMyYTZiYjM5MjBlNjc0YWEyNTg5OGIifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L68-L72",
+                    "version":
+                        "repo-lines-v1:sha256:b48f1d39d71d5917077548b2b29957a3f411508a905d98bbdee9d22a61e5a9a5:eyJzZWxlY3RlZExpbmVDb3VudCI6NSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiODMwNzA0OTNhYzczOTExOTFlZjQzNGQ1ODM4MWQwYzM5MmI0NGM0OTc3YmVjZTg0MjQ1NTMyMjA3NzBjMmI2YyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMTAzODNiMzkyYTg5MjkyMWRmNTQwMGVkZjYxY2QwOTIwZDFhNGQyMjhhNTY4ZTllZjlmNDQ4OTJiZWY4YzUyMiIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNzZlYjNkOGIyZTkwNjhlMWJhZTY5M2NkMTNkNDNjMDYwYWEwOTNkN2M1MjJkZThlMTFlZTNlYWY1YjI0ODQzYSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiMGJmMWEzOTAxNDNkZmNjNTcwNmFhNzAzZDJhOThlMTI2NjhjMzQ0NmRhMzgxMmZkN2YzNzdiMTc3YmExNTNkMSJ9"
+                }
+            ]
+        },
+        {
+            "id": "claim_09ae86d420fa44c1af42ec7dfe604c05",
+            "statement":
+                "Support contact restoration grows angle-classified contacts inside convex cells of each unsupported component and clips growth to those cells and components, preventing gap-crossing restoration.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L524-L581",
+                    "version":
+                        "repo-lines-v1:sha256:facc6e7e1e047e04fe540763bed6b0a1d04c9ebf37519aa131df062faba6fa50:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRlOGM0NzBkZTQwMjQzMjI0ZTRiM2M0NzAwMjdiZTA3ZmIyYzgxM2FiMDhmN2U2MTdjYWRlYjg4ZTcwYTZhODAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImMwNmRkM2E1MDUxY2E4YjMyNGJjNDAzYzllMzI0MzA3NGMxMWUyMzU2NTA2OTdiNmU4MTNjMzAxNTRkODMxMWUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjIxOTZhNTJmMmM1MGM1NWQ1Y2E5ODljZTU3MDdiZGFlNWE2OTdjNTYxZjU3YmNlMjBmODEwMjNlNGNjNDA0YmIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmZDUyZDMwM2IyZTA0ZGFjMWYxYjI0YjA3YjY2MTZkZjgzNTcwMDRkOWQ3M2QzMDU5ODhhMzIxMTkzMWIxMzMifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_1635b5af5e3e438dbfc1f87389a6d1d0",
+            "statement":
+                "Bridge suppression requires complete opposing exterior anchor bands within the length limit, considering polygon-edge directions and a two-micron tolerance for rotated spans.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L429-L498",
+                    "version":
+                        "repo-lines-v1:sha256:4b7981702e90be7056e0ec9a41984b9924badffc12c940a77e5b9ea1b68aca2f:eyJzZWxlY3RlZExpbmVDb3VudCI6NzAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImEwYjdjZTY3MjFhNDk1YWM2OTE3YmU1OWNkYmE1MDIxNDQzYTZjYTFmODMwZTRjMGVjZjlmYTA0ZmY0NTFkMDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkOWUxMjU0NjQyNTU3NmQzZGVhZThjOWI5ZGJmMTI4ZDVkNmRkYWY1ZDdmZTg1NzkzNDkyN2RlZmZhM2I5ZGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRhMzlkZjQ0MzBlOGVkNjNkMjU5NDU1YWFmNmE5YTNiNjQwMmNhYzU4NjE5N2VjZjZjMDZiMjBmYzkzZjUyOGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU2OWI0YmY1NDUzZTEyZTE4MTdmNDgxMDBkZDA5N2YzYTU1YjRlYzFkYjQ5NTk5ZmM5OTRmOTZkNzc2NjU3YWIifQ"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L583-L592",
+                    "version":
+                        "repo-lines-v1:sha256:8d76cebd972155dd35345dfe82e25bb8f5e8d26ae1ffeb46a1f1cb2c825cdf63:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImIyOWNhOGMzNmVjYmVhNjE3YTA3YzFjMDczYzE3NGEwZjRjZjY2NDRhYjQ0YTA1Yzg4NTMyNTUxY2VmYTFhMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjljMWY4MjA5MDQ3YjQ4MmM2ZmRlMGE5ZWM3Y2I1YWQxMjQwZjA2ZDE0NGUxMWExMjY1YTU5ZTRkYjg4N2M4NTgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYwNTMxZGQ1NTE2MDU0OTcxMWQ0M2Y3MTYxYWQ1MWQ0NjM1OWRjODVjMGRmZTJlNTg3NTI4ZGM3YzY4ZTRlNjciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAxZTc2M2RmODM5ZTc4NTdlYmZhNTdlYzQ0MDA5NDhlMjQyMDZlMGI0Yzg2NTkyMzhmY2U4MmVkMDk1OTcxN2EifQ"
+                }
+            ]
+        },
+        {
+            "id": "claim_a3abfcd4c23d4d7f82c020b701a6f5b7",
+            "statement":
+                "Organic support retains original angle-classified seeds, combines forced contact, clips to surviving demand and falls back inside a restored component only when it has no surviving seed.",
+            "evidence": [
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L539-L540",
+                    "version":
+                        "repo-lines-v1:sha256:e3952c2f0f3e1dd7f9dbb50fb325951f3bc2aeda14005ff48c6a987426b889ec:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiYWM4YmVmY2NlMjUwNjZiMzQxMGQ2N2ZiZGNlNmU2ZDA2MDM2MThmMzM2MTZhYTYzMDNkYmZiMTNkZWM5NWM3ZiIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZjE0ZjBjMzZkNmNlMDM0NGI1ZTRlMjA2ODhlYWMxNDMyODdiZDIwOTE5NmE0MjQ4MWYyZjRlMTg3MTFiZjE4YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiYjgwZDA4N2IxNjZlZjRhNjZiZGE4ZmNjODMzZWZkYzNhMmYwNjA0ZDUwZWI3NmNkNTBmYjY5MGRjMThkMjUzMiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiNDkwNWUxZjNlYjU0YWQ5NzY0NTE3YWRlNjM4YmY1YTBiY2I1MWEyZmYyYTU4NTc4ZTNjMWI3MWIxNTc4YjBkNCJ9"
+                },
+                {
+                    "resource": "repo://src/threading/slicers/planar_slicer.cpp#L622-L659",
+                    "version":
+                        "repo-lines-v1:sha256:40d97e301db7bbf7a6f00109c96d2bf107b41896989543d4b1d63ec948ffd53e:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY3YWQxZTFjNDRmZjg4MmZjZDRmYmUwYmI2YzUyMGQ5ZGM4NTlmZGZiZGQ4ODIwMjFmOTJkMWYzYzQ4ZTdjNWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImI3OGUxNjRmMWVlYjUwNmYwYjc0MmUxNGI0N2I1YjQzOTlkMzZlNDU2ZmU4YTAwOTNlMzNkOGU0M2Y2MjYyMDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiYzcwY2EwMTJhZGY2ZmE2ZDQ2NzQ1NGU3ODk1MTc5OWRjZjlhZTBhMjcyOGM5MGIyZDYyMTlmODY2YTI3MTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJmM2UzN2Y2NzljZDY2NzAyYjcxZjNmOThkN2IyYjYyZTAwMGEzM2FkYjQ4OTE1NDdjNjZhOTJkNDEyNGIxNzkifQ"
+                }
+            ]
         }
     ],
     "verification": {
         "by": "openwiki/0.7.2",
-        "at": "2026-10-20T18:20:49.849Z"
+        "at": "2026-11-10T18:02:46.284Z"
     }
 }

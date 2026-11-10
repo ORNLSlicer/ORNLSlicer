@@ -10,8 +10,12 @@ sources:
     resource: repo://AGENTS.md
   - id: openwiki-source-a60928f26402a7ffadc427b3
     resource: repo://cmake/presets/generic-llvm-ninja.json
+  - id: openwiki-source-c9d11891f93487ed035fc596
+    resource: repo://cmake/validate_resources.cmake
   - id: openwiki-source-d44494ef3e497fea81240ef8
     resource: repo://CMakeLists.txt
+  - id: openwiki-source-f5502ee67e629f24f1284e65
+    resource: repo://docs/contributing/development-setup.md
   - id: openwiki-source-65e4b6e37d34931407f2a93d
     resource: repo://include/geometry/segment_base.h
   - id: openwiki-source-36f64ad30117d774697ab275
@@ -34,23 +38,27 @@ sources:
     resource: repo://src/managers/settings/settings_manager.cpp
   - id: openwiki-source-97f2984c6f7df859b5dac320
     resource: repo://src/managers/settings/settings_version_control.cpp
+  - id: openwiki-source-e6313e383d53e930ab9c33c4
+    resource: repo://src/slicing/slicing_utilities.cpp
   - id: openwiki-source-b1134fc13dd24912e260b947
     resource: repo://src/threading/abs_slicing_thread.cpp
   - id: openwiki-source-4c1d7b6308a78ba9c493ce8a
     resource: repo://src/threading/gcode_loader.cpp
   - id: openwiki-source-c9b49d4d1b98e2ebff97fee2
     resource: repo://src/threading/session_loader.cpp
+  - id: openwiki-source-403d1cb683b233c4f42460d0
+    resource: repo://src/windows/main_window.cpp
   - id: openwiki-source-c104bb75a5f8622243458c6e
     resource: repo://tests/gcode_shading_tests.cpp
-generated: { by: "codex", at: "2026-10-20T18:20:49.849Z" }
+generated: { by: "codex", at: "2026-11-10T17:47:51.624Z" }
 verified:
   - by: openwiki/0.7.2
-    at: 2026-10-20T18:20:49.849Z
+    at: 2026-11-10T17:47:51.624Z
 ---
 
 # ORNLSlicer OpenWiki Quickstart
 
-ORNLSlicer is a Qt/C++ slicing and toolpath-planning application for additive-manufacturing workflows. Its maintainable path is deliberately shared: the GUI and command line converge on the same session, settings, geometry, slicing, writer, and G-code loading subsystems. [source](repo://README.md#L1-L21) [source](repo://src/main.cpp#L69-L121) [source](repo://src/console/main_control.cpp#L26-L40) [source](repo://src/console/main_control.cpp#L60-L120) [source](repo://src/managers/session_manager.cpp#L575-L605) [source](repo://src/threading/abs_slicing_thread.cpp#L210-L320) [source](repo://src/threading/gcode_loader.cpp#L287-L320)
+ORNLSlicer is a Qt/C++ slicing and toolpath-planning application for additive-manufacturing workflows. Its maintainable path is deliberately shared: the GUI and command line converge on the same session, settings, geometry, slicing, writer, and G-code loading subsystems. [source](repo://README.md#L1-L21) [source](repo://src/main.cpp#L72-L129) [source](repo://src/console/main_control.cpp#L26-L40) [source](repo://src/console/main_control.cpp#L60-L120) [source](repo://src/managers/session_manager.cpp#L592-L660) [source](repo://src/threading/abs_slicing_thread.cpp#L210-L320) [source](repo://src/threading/gcode_loader.cpp#L287-L320)
 
 Use this page to choose the owning subsystem, the first production source to inspect, and the smallest relevant validation. Follow the linked page when a change crosses an ownership, threading, data-model, or file-format boundary.
 
@@ -63,14 +71,14 @@ git status --short --branch
 rg -n 'NamedType|setting_key|signalName|command_text' include src resources tests
 ```
 
-Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://AGENTS.md#L159-L162) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L478-L515) [source](repo://CMakeLists.txt#L552-L564)
+Headers and implementations are normally paired beneath `include/` and `src/`; `resources/settings/` owns setting metadata, `templates/` owns installed process/printer templates, and CMake/Nix own build and package topology. [source](repo://AGENTS.md#L159-L162) [source](repo://resources/settings/README.md#L1-L15) [source](repo://CMakeLists.txt#L139-L164) [source](repo://CMakeLists.txt#L763-L801) [source](repo://CMakeLists.txt#L841-L851)
 
-Establish the ordinary development baseline inside the repository's Nix shell:
+Follow [Developer Setup](../docs/contributing/development-setup.md) for platform prerequisites, Git LFS restoration, Nix and optional direnv. Restore LFS assets before configuring each checkout; CMake rejects unresolved pointers in bundled resources. Establish the build baseline inside the repository's Nix shell:
 
 ```bash
 nix develop .#ornlslicerDev -L --command cmake --preset generic-llvm-ninja
 nix develop .#ornlslicerDev -L --command \
-  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer
+  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer -j 32
 ```
 
 The checked-in preset uses Clang, Ninja Multi-Config, and `build/generic-llvm-ninja`. For a compile-only iteration across shared production sources, replace the final target with `ornlslicer_obj`; that object library is linked by both the application and focused test executables. [source](repo://cmake/presets/generic-llvm-ninja.json#L1-L14) [source](repo://CMakeLists.txt#L139-L164) [source](repo://AGENTS.md#L166-L173)
@@ -80,7 +88,7 @@ The checked-in preset uses Clang, Ninja Multi-Config, and `build/generic-llvm-ni
 There is one source entrypoint with a strict branch:
 
 - with no command-line arguments, it creates `QApplication`, initializes GUI resources, obtains the singleton `MainWindow`, and enters the GUI event loop;
-- with any argument, including `--help` or `--version`, it creates `QCoreApplication`, converts options into a `SettingsBase`, and runs `MainControl`. [source](repo://src/main.cpp#L69-L121)
+- with any argument, including `--help` or `--version`, it creates `QCoreApplication`, converts options into a `SettingsBase`, and runs `MainControl`. [source](repo://src/main.cpp#L72-L129)
 
 The CLI converter defines model, support, project, settings, transform, output, export, and slice-bound options. Normal slicing requires exactly one primary input form—model files, a model directory, or a project—and also requires an output location. Inspect the live interface with the built executable's `--help` rather than copying an old invocation. [source](repo://src/console/command_line_processor.cpp#L43-L112) [source](repo://src/console/command_line_processor.cpp#L114-L203)
 
@@ -113,7 +121,7 @@ src/main.cpp
                  preview   statistics   exported output
 ```
 
-`SessionManager::doSlice()` reads the active syntax and slicing mode, enforces the cylindrical/Arc-Specialties gate, selects or reuses `PlanarSlicer`, `ImageSlicer`, or `CylindricalSlicer`, then emits the worker start signal. [source](repo://src/managers/session_manager.cpp#L575-L605) [source](repo://src/managers/session_manager.cpp#L654-L685)
+`SessionManager::doSlice()` reads the active syntax and slicing mode, enforces the cylindrical/Arc-Specialties gate, selects or reuses `PlanarSlicer`, `ImageSlicer`, or `CylindricalSlicer`, then emits the worker start signal. [source](repo://src/managers/session_manager.cpp#L592-L660) [source](repo://src/managers/session_manager.cpp#L717-L750)
 
 Toolpath modes select a concrete writer from the active machine syntax. Generated or imported G-code then passes through `GCodeLoader`, which selects a parser from the header, parses motion and timing metadata, and supplies downstream consumers. [source](repo://src/threading/abs_slicing_thread.cpp#L210-L320) [source](repo://src/threading/gcode_loader.cpp#L287-L328) [source](repo://src/threading/gcode_loader.cpp#L590-L680)
 
@@ -135,11 +143,17 @@ Toolpath modes select a concrete writer from the active machine syntax. Generate
 | Change standalone layer export or preview connection identity | `src/gcode/gcode_layer_export.cpp`, `src/threading/gcode_layer_saver.cpp`, writer hooks and loader comments | [G-code and Visualization](architecture/gcode-and-visualization.md) |
 | Prepare a release, adjust version rules, or maintain release history | `scripts/version.py`, `version.json`, `CHANGELOG.md`, release workflows | [Build and Packaging](operations/build-and-packaging.md#release-preparation-and-changelog) |
 | Change the offline Help changelog viewer | `src/windows/changelog.cpp`, `resources/docs/docs.qrc`, Help-menu wiring | [Application Runtime](architecture/application-runtime.md#runtime-ui-extensions) |
+| Change parent-child edits, transforms, copy/paste or child modifier scope | `src/widgets/part_widget/model/part_meta_model.cpp`, `src/part/part.cpp`, `src/slicing/slicing_utilities.cpp` | [Session Lifecycle](architecture/session-and-project-lifecycle.md#parent-child-objects-and-reversible-edits) |
+| Change support contacts or bridge suppression | `PlanarSlicer::processSupport`, `tests/support_generation_tests.cpp` | [Planar Support](slicing/planar-path-generation.md#support-demand-restored-contacts-and-bridges) |
+| Change ARC weld schedule values, units or companion exports | `src/threading/gcode_arc_specialties_saver.cpp`, `include/slicing/region_speed.h`, ARC writer and export snapshots | [Machine Syntaxes](integrations/machine-syntaxes.md#generated-arc-weld-schedules) |
+| Change themes, fonts or disabled toolbar controls | `src/utilities/theme_tool.cpp`, root/view styles, `MainToolbar::setupStyle` | [Application Runtime](architecture/application-runtime.md#runtime-ui-extensions) |
 | Add or choose regression coverage | the explicit test target block in `CMakeLists.txt` and the matching standalone file under `tests/` | [Test Strategy](testing/strategy.md) |
 
-Project persistence is a zip-backed contract, not merely a file extension. `SessionLoader` embeds active model data and serializes part transforms, global settings, part-local settings, ranges, and a version marker; loading restores those pieces after the settings-version preflight in `SessionManager`. [source](repo://src/threading/session_loader.cpp#L37-L128) [source](repo://src/threading/session_loader.cpp#L131-L216) [source](repo://src/managers/session_manager.cpp#L708-L740)
+Project persistence is a zip-backed contract. `SessionLoader` embeds active model data and serializes part transforms, global settings, part-local settings, ranges, and a version marker; loading restores those pieces after the settings-version preflight in `SessionManager`. [source](repo://src/threading/session_loader.cpp#L37-L128) [source](repo://src/threading/session_loader.cpp#L131-L216) [source](repo://src/managers/session_manager.cpp#L773-L808)
 
 The geometry route is also the output route: `Step` owns settings, slicing-plane orientation, geometry and islands, while concrete steps compute paths, apply modifiers, and write through `WriterBase`. `SegmentBase` is the polymorphic movement unit and also carries metadata used to render loaded G-code. [source](repo://include/step/step.h#L18-L49) [source](repo://include/step/step.h#L75-L121) [source](repo://include/geometry/segment_base.h#L21-L35) [source](repo://include/geometry/segment_base.h#L52-L110)
+
+Recent contracts to preserve: project JSON records parent links, modifier enablement and aligned/current transform state; child modifiers apply only to their direct build parent. Individual Layer Export is opt-in before slicing and stores standalone programs in memory. Generated ARC export retains the slice-time companion decision; wire feed uses in/min while travel override and schedule motion speed use mm/min. Starting Layer Number changes external labels and filenames while indexes remain zero-based. Follow the owning pages for limits and failure paths. [source](repo://src/managers/session_manager.cpp#L442-L468) [source](repo://src/slicing/slicing_utilities.cpp#L164-L174) [source](repo://src/threading/abs_slicing_thread.cpp#L327-L403) [source](repo://src/threading/gcode_arc_specialties_saver.cpp#L46-L64) [source](repo://src/gcode/writers/writer_base.cpp#L349-L369)
 
 ## Settings are a source-to-generated contract
 
@@ -153,7 +167,7 @@ python3 scripts/generate_master_config.py \
 jq empty resources/configs/master.conf resources/configs/setting_inputs.conf
 ```
 
-Both generated files are embedded under the `/configs` Qt resource prefix. `SettingsManager` parses them into the master catalog, composite input metadata, and default-valued active global settings; the CLI converter also reads embedded `master.conf`. A settings change is incomplete if the YAML and both generated artifacts disagree. [source](repo://resources/configs/configs.qrc#L1-L8) [source](repo://src/managers/settings/settings_manager.cpp#L38-L68) [source](repo://src/console/command_line_processor.cpp#L34-L41)
+Both generated files are embedded under the `/configs` Qt resource prefix. `SettingsManager` parses them into the master catalog, composite input metadata, and default-valued active global settings; the CLI converter also reads embedded `master.conf`. A settings change is incomplete if the YAML and both generated artifacts disagree. [source](repo://resources/configs/configs.qrc#L1-L8) [source](repo://src/managers/settings/settings_manager.cpp#L73-L103) [source](repo://src/console/command_line_processor.cpp#L34-L41)
 
 Current persisted settings are schema version 15. Helical tool offsets are signed arc lengths evaluated at each actual radius; legacy angles migrate with first-radius reference geometry. Connected contour keys replace former spiral-connection names while spiralized printing remains separate. [source](repo://src/managers/settings/settings_version_control.cpp#L331-L383) [source](repo://src/managers/settings/settings_version_control.cpp#L424-L474)
 
@@ -165,11 +179,11 @@ For a production-code change, start with the shared compile target, then build a
 
 ```bash
 nix develop .#ornlslicerDev -L --command \
-  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer_obj
+  cmake --build build/generic-llvm-ninja --config Debug --target ornlslicer_obj -j 32
 
 nix develop .#ornlslicerDev -L --command \
   cmake --build build/generic-llvm-ninja --config Debug \
-  --target ornlslicer_preferences_import_tests
+  --target ornlslicer_preferences_import_tests -j 32
 nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug \
   -R '^preferences_import_tests$' --output-on-failure
@@ -179,12 +193,12 @@ Build all configured targets and run full CTest when a change crosses subsystems
 
 ```bash
 nix develop .#ornlslicerDev -L --command \
-  cmake --build build/generic-llvm-ninja --config Debug
+  cmake --build build/generic-llvm-ninja --config Debug -j 32
 nix develop .#ornlslicerDev -L --command \
   ctest --test-dir build/generic-llvm-ninja -C Debug --output-on-failure
 ```
 
-Focused binaries use the `ornlslicer_` build-target prefix while CTest names omit it. The test block declares 28 focused executables and one project-slice regression that appears only when its configured local `.s2p` fixture exists. For the recent settings comparison, template-shape filter, and toolbar-overflow contracts, build `ornlslicer_settings_file_comparator_tests`, `ornlslicer_settings_manager_tests`, and `ornlslicer_main_toolbar_tests`, then filter CTest with their three unprefixed names. [source](repo://CMakeLists.txt#L229-L539) [source](repo://CMakeLists.txt#L541-L553)
+Focused binaries use the `ornlslicer_` build-target prefix while CTest names omit it. The test block declares 45 focused C++ executables plus Python metadata and CMake resource checks (47 unconditional CTest entries), and one project-slice regression when its configured local `.s2p` fixture exists. For settings comparison, template reload and toolbar theme/overflow contracts, build `ornlslicer_settings_file_comparator_tests`, `ornlslicer_settings_manager_tests`, and `ornlslicer_main_toolbar_tests`, then filter CTest with their three unprefixed names. [source](repo://CMakeLists.txt#L239-L746) [source](repo://CMakeLists.txt#L748-L760)
 
 Use these additional checks according to the changed contract:
 
@@ -192,7 +206,7 @@ Use these additional checks according to the changed contract:
 - C++: format changed files with the repository `.clang-format` and compile the affected target;
 - source/header/resource additions or deletions: rerun CMake configure because production inputs are globbed;
 - documentation only: run `git diff --check -- <touched-files>`;
-- GUI, native-dialog, OpenGL, or controller-facing behavior: use the bounded toolbar, changelog, color and shader tests where applicable, then add interactive or external integration evidence for the remaining outcomes. [source](repo://AGENTS.md#L166-L175) [source](repo://CMakeLists.txt#L139-L157) [source](repo://.github/workflows/ci.yml#L83-L87)
+- GUI, native-dialog, OpenGL, or controller-facing behavior: use the bounded toolbar, changelog, color and shader tests where applicable, then add interactive or external integration evidence for the remaining outcomes. [source](repo://AGENTS.md#L166-L175) [source](repo://CMakeLists.txt#L139-L157) [source](repo://.github/workflows/ci.yml#L86-L90)
 
 The exact test-to-risk map, the optional whole-project regression, and the distinction between local CTest and CI packaging evidence are in [Test Strategy and Validation Map](testing/strategy.md).
 

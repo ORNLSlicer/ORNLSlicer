@@ -1,6 +1,6 @@
 {
     "schemaVersion": 1,
-    "pageVersion": "sha256:162a576febf6b3574416cc8e0d560c4ba93c5c88d803ace6f9f911a17b3f2097",
+    "pageVersion": "sha256:4fd9cdcd87b36543507f0ab9380b8a903bac4ff9d20c9fd75d0682d059f10668",
     "claims":
         [
             {
@@ -9,9 +9,9 @@
                     "ORNLSlicer uses CMake for compilation, generated headers and settings, tests, install rules, and platform targets, while Nix provides dependency environments, native and cross packages, and AppImage bundling.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L1-L36",
+                        "resource": "repo://CMakeLists.txt#L1-L41",
                         "version":
-                            "repo-lines-v1:sha256:640d06bb6b4bba274da986831e6a385429148b97e1dbb9f125c2ac5e939972c7:eyJzZWxlY3RlZExpbmVDb3VudCI6MzYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZhZmJhMDUyN2MzOTUzYzRiNmUwZTViNTczOWJhODM2MTJmODA1M2JjZGM5NDY2NzMwMTkzY2QxZDU5MGI0MDgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM4OGUzOGRmYTJkZjEzODc1ODVlNmQzOWUxNjZmYmY5NzQzYmU0OWVlYTUyY2EyZmJhYTY3NzA3YjFiYjhkNTEifQ"
+                            "repo-lines-v1:sha256:b8aa64cdc1b6589277272435475e66544979c819c392ef2d9e590885f60faebf:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYmYzYmM4MjQ4ZTM2ZDg3NDU3Y2Q2NWExNjNjYjM0ZDRkNjc5MzQ1YmE2MGZhZmZmMWQyMGMzODc3YjRkMmYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE4YTcxNTRjZTI4ODg5MjNmOWI2YTg1NWUwODc3MDY1YzBiMTAxYTQ5MjEzNTkwZDQ3OTUyOGNmY2IwZTcyZWUifQ"
                     },
                     {
                         "resource": "repo://flake.nix#L46-L127",
@@ -50,14 +50,14 @@
                     "Production sources, headers, and Qt resources are recursively discovered and compiled into ornlslicer_obj; the GUI application, Windows console target, and focused tests reuse that object library.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L139-L164",
+                        "resource": "repo://CMakeLists.txt#L140-L164",
                         "version":
-                            "repo-lines-v1:sha256:02a01379b1721e86cccfef67b8d81adb35d87321b766cc2fd6de285244720fce:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY4N2M1OWU5Y2M3ODMwZGY4YTlmODk2ODk3OTNjZTQxZmQ1NGJhMmU3NzkyMjNlMWJiZDc3OTkyMWZhMzAzNWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjllMzUwZDE1ZjU2NzJlN2Y3Y2I4MjJkNTY3MDMyMGE2YjQwOTMwNTVjY2UxYjY4MGExMjk1Njc0OGFiZGQ2NmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA2MTYzMDAxZjIyMTk3ODhjNjVmNjM5MTllOTQ4YjRmNjI3MTNkYzU1MWU0N2QwMTdjM2E5OWU0ZmEyOTg2YTMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImM0YTA4NjY4ZDcxYWQ0MjIxNDk5MTI5NGViMTRmZDFmMmQ2OWFiY2QzMDA0ZWFhMjZkZDA0ZjA2MzMyMjUwOGIifQ"
+                            "repo-lines-v1:sha256:cb49877f5acb787a5f57aa62759145412b46835ed469c607577ac381b49c9851:eyJzZWxlY3RlZExpbmVDb3VudCI6MjUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1NzljYjFiNTkxMWM0MTk0NDg3ZjZiMmE1N2YyZTU5Njg0MGQ1MDczMDgyZDk2OGYzZjU3NWI0NmVmYzMxMDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNiMTMwMTg0NTQ2Yzc1ZDNiMTgzYzc5MWQ0MmRjODc4YTk2YTQzOWQyNGUzYzE2ZjIzMTVlYjliZGFiOWNmMDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjFhZGRiMWQ4NmNiNTQ4NTM4OWJhMmNiNzIyNjM2OTFkMjk0ZjM2NzJhZmRjMjVlMDQwYTRmMjUyY2EyMjUxNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ4MzEyNTRmOGIzZDlmODRiOTdmYzViNTllNGNjMjQ4MTI5Mzg3MGJhNTNhN2VkY2EzZDU3ZmQ0MmFmNjgwMWQifQ"
                     },
                     {
-                        "resource": "repo://CMakeLists.txt#L214-L241",
+                        "resource": "repo://CMakeLists.txt#L224-L245",
                         "version":
-                            "repo-lines-v1:sha256:9d64f19acc4c717dc1852d4915eb0035382d20e63623572fadeae7b35fb1f958:eyJzZWxlY3RlZExpbmVDb3VudCI6MjgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiOTM3ZGEyN2JiYWYyYzIxZjYyOTJlODBkZWY5N2U4NzU0ODFiZmJlNmE1YTU2MTE4ZWNhM2FlMjc3ZjEwNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MjY3YmY3ZDgyMDdlZWE4YzkzMWE1MDU1MTVlOWVlNWFjNzY3ODQ5NWQzY2FlYjlkODViMWViMTEzOWJmODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
+                            "repo-lines-v1:sha256:ad30396c86bce0ff48116e53fbe28eb64609d9879da74930413160023f5b742b:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFiOTM3ZGEyN2JiYWYyYzIxZjYyOTJlODBkZWY5N2U4NzU0ODFiZmJlNmE1YTU2MTE4ZWNhM2FlMjc3ZjEwNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImUxMTk4NmQ2ODg1YjE0ZDk4OGE5MDJiZGNlYTVhMTliZmIzMTAzZTAyZjYyZjdmMzM2NjQ5YzIzOTgwYzI2NGQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY5MjY3YmY3ZDgyMDdlZWE4YzkzMWE1MDU1MTVlOWVlNWFjNzY3ODQ5NWQzY2FlYjlkODViMWViMTEzOWJmODciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImQ4NjJjMzg4MmE0NDJmY2Y5ZjAwYjg5MjM5MmUyZDJmMmQxYWY5ODgyYzhkMjhiYTYwNDZlNmFlODc5MmZjMTcifQ"
                     }
                 ]
             },
@@ -67,14 +67,14 @@
                     "ORNLSlicer requires CMake 3.25, C++23, Qt and its declared geometry/data dependencies, requires CGAL Eigen support, and treats OpenMP as an optional optimization.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L1-L26",
+                        "resource": "repo://CMakeLists.txt#L1-L31",
                         "version":
-                            "repo-lines-v1:sha256:299c2980e0a595295e9b2c06e33d732bd8519f60d05ef4736ce5777a4f5f7461:eyJzZWxlY3RlZExpbmVDb3VudCI6MjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlYjI1MWJmYjMyOWJiYmMxNjkzYzNmMjI2YTc5YWU0MWIyNDMzZGIyMTAyZWYzMjU0YzQ2YmFjZmM4NTFmMzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE3ZDNhNWQzNDFkMzRiMGI5ZTYxNzhmYzZhODQ2MDllMjljMTQzM2VmNDIwNWMxZGZmYmY2Njc0ZjA0YjEwYWEifQ"
+                            "repo-lines-v1:sha256:9de2bf298e633f86dbe383886dd5f42c8c24685826e4169c2672f65cf425c77d:eyJzZWxlY3RlZExpbmVDb3VudCI6MzEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg2NGEyOGRmZTEzYTBjNzMyMDZiNjgzODk3N2Q4Y2EwYWNjNWY5ZWM4ZGE1NmY0ZTZmM2FhNzBkYWU0N2VhNDkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjBkNzE2NmVhZDMyZTdhMjg1ZGVkZWI3YTJiYzM0OGEwNjc5MTdlY2Q1MTY5ZjQ3OGI3NjhiNWYwYzlhYjkzNDAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImNiMmVlYjlmN2EyZjI5MzJkYTY0ZjcwNmI3ZDg2ODM1MDAzZWU0NGZhMWZhYTFiMDE0NjMyOTg3OWNlNzJiNWUifQ"
                     },
                     {
-                        "resource": "repo://CMakeLists.txt#L56-L113",
+                        "resource": "repo://CMakeLists.txt#L64-L124",
                         "version":
-                            "repo-lines-v1:sha256:c3c185a088eb52d6de4985b9f36d34ade0151284592aeb7566d651ed6cc97871:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1OGQzMmIwNDk4OGZiOWMwMWU2YzM1ZWMyMDFhMTVkYTFkY2JjYjZjOTYwYmY1NmEyOThhNmM4NjBkZTc0YWYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjMwYzFmMTg4ZjE0MmVkN2E4MjQ2ODBiMjA3MTcyYzU1MTliYzYxNGE0OGZkYTdjZjE2N2VkYjhkZGY3OTk1NmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjA4NjExMTkyZWIwM2RlOWZiNmQ2OGE2YWVlNGY1NjkzODc4YTVlY2RiMjExMzdlNmMwMWE3YjRhNTM1MjY3OWMifQ"
+                            "repo-lines-v1:sha256:a6d21cb194c408971fc92160c44c95ca297d1e2ee18cdf389892d95b0f8a116b:eyJzZWxlY3RlZExpbmVDb3VudCI6NjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJhMzQ1ZjhjZTBiNWU1YWFhY2QwMzVjMGZhMjAxY2RmZWRmM2RjYTY4YTI2ZjE5NWJlODBiNThlMmY3NjFiNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjAxYmE0NzE5YzgwYjZmZTkxMWIwOTFhN2MwNTEyNGI2NGVlZWNlOTY0ZTA5YzA1OGVmOGY5ODA1ZGFjYTU0NmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2OTk0ZDhkODYyOWY0Y2E5OTgxZWE3NzQ0MzVlYzMzYWY3NDU0ZDhmYzQ1MTUzYTg5NjI1ODY4ZmIzMWFjN2YiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImRkNTFlMTQ3YzM0MGM4ZWI5ZjM4OTcyM2Y4Mzg5MzgwMGY5YzRmNGFiODJlYzFlZDFkNGI0MDZkNTZiMGQ2YTkifQ"
                     }
                 ]
             },
@@ -84,14 +84,14 @@
                     "CTest targets are explicitly declared when ORNLSLICER_BUILD_TESTS is enabled, and the new-impact project regression is present only when its configured local fixture exists.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L229-L241",
+                        "resource": "repo://CMakeLists.txt#L239-L245",
                         "version":
-                            "repo-lines-v1:sha256:f894b240f47c7e82fa52d8c4824949f75f10432823e9db27c5b5ddc66bd8cbc4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjEyZDY2MmExNTYxOTIyMTBmZDVkNjM5ODc4OGU2ZGIyOTBkNjUxYjM5OWQyZWU0NTQ0M2FjNGMzZTA5MTU1NTkiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhOTljNzBkZTg1NzhlMzFiOWZlNjc4NmVmY2RkZGJlNjhkYmFmZTJkMzI4ZmU0NjUyZmRjMDEyNzE2ODc4YmUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1ZDZkNjQxNGJiMDE3MDVlZTMzYjAwOGMxMmY3OTQ3ODcxYTc0YjUwZTM1NzU5MjZlODU0ZDM2NDU3OThmNDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImJiODExZDQzZGU3ZTMxZDAxMTM3ZmM0ZTJhNjZkNTE2YjMxMDZlYzIwOThmMzhjZDc3NzQ1YTgzODU0ZGRhNzIifQ"
+                            "repo-lines-v1:sha256:32c10d36fd87e445cae022c4716cb4b3f7207193f9a1d52d4a67c3a1ae5d4f3f:eyJzZWxlY3RlZExpbmVDb3VudCI6NywiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMTJkNjYyYTE1NjE5MjIxMGZkNWQ2Mzk4Nzg4ZTZkYjI5MGQ2NTFiMzk5ZDJlZTQ1NDQzYWM0YzNlMDkxNTU1OSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZTExOTg2ZDY4ODViMTRkOTg4YTkwMmJkY2VhNWExOWJmYjMxMDNlMDJmNjJmN2YzMzY2NDljMjM5ODBjMjY0ZCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiMDVkNmQ2NDE0YmIwMTcwNWVlMzNiMDA4YzEyZjc5NDc4NzFhNzRiNTBlMzU3NTkyNmU4NTRkMzY0NTc5OGY0OSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZDg2MmMzODgyYTQ0MmZjZjlmMDBiODkyMzkyZTJkMmYyZDFhZjk4ODJjOGQyOGJhNjA0NmU2YWU4NzkyZmMxNyJ9"
                     },
                     {
-                        "resource": "repo://CMakeLists.txt#L541-L554",
+                        "resource": "repo://CMakeLists.txt#L748-L760",
                         "version":
-                            "repo-lines-v1:sha256:055aeb3d7e78c039edaeee213c33645a28c0f775e66199059c3e3307acbc054e:eyJzZWxlY3RlZExpbmVDb3VudCI6MTQsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIwZGRlMGQxMDYzMmY3ZDRhODcxZWYxM2JlZTUxODJlZTg1NDJjY2I3YzFjMTQ5ZTZmZTRhZGQwMDM2MjViMTcifQ"
+                            "repo-lines-v1:sha256:bd19590ffae6b4e3ec37a59b536de689f468debfdc62f2c9a5fae7471f4848f4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU3ZmM0M2Q4YjRiMTM0YjYzM2NlZmQ0YWJkM2QxYzRkYTdjNGE1NDg4ZDc2MzY5ZmQyNzkzMWExMjI2YjNiZDMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjOTlkNDc4NmExZTFlOTQzMTczNWJiNGJkNGE1NDE3MGJmOTI5ZTllYzYxMmU2Zjk0NTM0ZDNiMDc0YTE5ZmMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjE2ZDk4NWY1M2VjY2YyYTY3NjA5NTBkMmI0OWM3MTBkZTVhYzQ3MDU0MzRiNTNjZWIxYmQ1MjdjYmMzNTlhMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU4ZmEyZGYyNDU2M2Y4ODI1ODU2YmY3NmQ2MTc1ZGY5MGEzMzk1Nzc1NzM4MzI5YzlhM2FkZTA4Mjk4NmI1ODYifQ"
                     }
                 ]
             },
@@ -101,12 +101,12 @@
                     "Compiler caching is enabled by default and prefers sccache over ccache, falling back to uncached builds if neither is found; PCH is enabled by default and unity builds are optional.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L166-L212",
+                        "resource": "repo://CMakeLists.txt#L176-L222",
                         "version":
                             "repo-lines-v1:sha256:5ffc18488e874039492d6b411cd1d0eaa9116b189d85aa72c47a5da2c064a84f:eyJzZWxlY3RlZExpbmVDb3VudCI6NDcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE2ZjMxMmYwM2U3NDk0NTIwYzZiYmEwMThmODBjYjdkOTI5YzViZmE5ZDc3YTRhN2RkMDhiOTBiM2M5NGM2MDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjA1MmZiYjkzZTU5YzY3YTViN2YxMWViZmFjMGY5MTEwYjkzNmQwNWU1NjVmOTVjY2EyZTg0YmFjYWU2YmVkMDkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImEyMjc3N2U3MTQ2ZTg2MjU1OTE3ZWQ3OTQwOTMyMGM4NjYzOGM2YTcxMDQ4MTg3OGViNTFiNDA4OWU0ZjM1YTgifQ"
                     },
                     {
-                        "resource": "repo://CMakeLists.txt#L38-L54",
+                        "resource": "repo://CMakeLists.txt#L41-L57",
                         "version":
                             "repo-lines-v1:sha256:ad9082a1fcd4f88f5c0f6e5266cad9ab9cc06b1e0bd2bc19994fda3b3a0f5072:eyJzZWxlY3RlZExpbmVDb3VudCI6MTcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQxYmYzYmM4MjQ4ZTM2ZDg3NDU3Y2Q2NWExNjNjYjM0ZDRkNjc5MzQ1YmE2MGZhZmZmMWQyMGMzODc3YjRkMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjlmNmY1ZjE2ZjgwMTcwN2RhNjg3ZGE3Mjg5YzZkZThiZTYzYWU4YTBhYmIxZjg3N2E3ZDZmMzNjMWUwZjE4NDgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImU0ZmIxNWQwY2NjODcyZjcwNzY4ODI1NGE4ZTliOWY2ODNjNmNmNDc5NDdkMTEyNWQwNmEzODRmNWVmMTQzMzIifQ"
                     }
@@ -118,7 +118,7 @@
                     "Canonical settings YAML is generated into master.conf and setting_inputs.conf, and CMake makes the object target depend on that generation; Nix packaging disables automatic generation and therefore consumes checked-in outputs.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L556-L601",
+                        "resource": "repo://CMakeLists.txt#L763-L808",
                         "version":
                             "repo-lines-v1:sha256:a15ae00bcde4781abc16a80f5f551bd609a35d13d8d68c4236e5660e320d2287:eyJzZWxlY3RlZExpbmVDb3VudCI6NDYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZlYjMxMTc2ZGM0M2M2M2MzNTdjZTMzYjVmYjBiNTFhNzdmNThhOGI1Zjk1NzYzNzYyZDBkYWMyNTYzMDNlMTciLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhmZDAxNzIwYjMxYjFkZTQ2MjA5MDBlNjZhOGY1NTY3MjM5NDBhYzE3MGM4MzFmMDQ0YmViZDBkOWEyZDg3MmIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImEzMjg0MmY0YjA0OWJlYjc1NDc5Mjk4MTk1NWQ3M2IzZTJlNzUyNTE1M2Y1MDgwYWIxMWI0ZDIzYTQxZDQ4NDciLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjYwNzhjN2YxNmYyMThjZTA0YTZlNTQ1YTExMTEwYmUxYTYyMmFhNTEyOWQzOTExYzg3MTE2YWMxMzZiM2M0OWQifQ"
                     },
@@ -140,7 +140,7 @@
                     "Configure-time build metadata combines version.json, Git revision plus dirty state, configuration kind, and an overridable package type into a generated header.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L28-L36",
+                        "resource": "repo://CMakeLists.txt#L31-L39",
                         "version":
                             "repo-lines-v1:sha256:1b19fe50162849b416d188f67c432cb241c90e518c1ce4d51582b6bd31529bb9:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMGQ3MTY2ZWFkMzJlN2EyODVkZWRlYjdhMmJjMzQ4YTA2NzkxN2VjZDUxNjlmNDc4Yjc2OGI1ZjBjOWFiOTM0MCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiZmFmYmEwNTI3YzM5NTNjNGI2ZTBlNWI1NzM5YmE4MzYxMmY4MDUzYmNkYzk0NjY3MzAxOTNjZDFkNTkwYjQwOCIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjAzMWJmMWQxMGM0NTEzMTI1ZGMzNzM4NGRlMmUxNTZmNDRlYWRmYjRmNTVlNTQ5MjEzNGZkMjIzNWZiYjliYyIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiYzg4ZTM4ZGZhMmRmMTM4NzU4NWU2ZDM5ZTE2NmZiZjk3NDNiZTQ5ZWVhNTJjYTJmYmFhNjc3MDdiMWJiOGQ1MSJ9"
                     },
@@ -166,9 +166,9 @@
                     "GUI and successful CLI startup log version, Git revision, configuration, package type, and both runtime and compile-time Qt versions from the configured build metadata.",
                 "evidence": [
                     {
-                        "resource": "repo://src/main.cpp#L69-L106",
+                        "resource": "repo://src/main.cpp#L72-L109",
                         "version":
-                            "repo-lines-v1:sha256:0073287af4a7b659bd61a18c7922e45fda3f58b83dad39d68923930ca84488d1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjVhMmQzMjcyNjNiZmE1NWE5MDE3NGYwODRlNjE0M2QyYWFmZGVlZjRlNmFhMzVmZTc3YmVjYTM3ZDE1NDU5ZDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZmFmZmU1Y2M2ZDE1YmUyMmNiZDU4ODg0ZjZhNmQxZWYyZGU5YTkxMzM1Y2JmYTMxOTdjNWJmMGMyZDk2ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjgyZjM3NDY2ZGY1NDkyYjc4MzJiZjllOGI0OGFjOWVlZTIwMWM3OTM2ZjNkNDI3ZDE4NGFhYjc5ZjU2Y2Q4ZmMiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkOTc4MWNmYmFiNTVjZDViOTBkMDlhYjYzMGJmYjE0ZTA1N2MwYmQ4OGRiMzhlOGI4OWVkYmQ0YTkxYWQ2YTQifQ"
+                            "repo-lines-v1:sha256:e4960478a6a1ae4e3582229258815f46db472a5c1630b028a8b0d085074ec435:eyJzZWxlY3RlZExpbmVDb3VudCI6MzgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFkMmNkNTNiN2I2Njg2MzdhOWU1MDE2MDVmNzFmY2I3OGY2ODIxNzE4YmFlZTVkOTIxZmE1NWFhMWQyYTdmODgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijc0ZmFmZmU1Y2M2ZDE1YmUyMmNiZDU4ODg0ZjZhNmQxZWYyZGU5YTkxMzM1Y2JmYTMxOTdjNWJmMGMyZDk2ZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFjN2VmOTc5NmQxMjcyZWRiNWY0OGZjNWQwZTRkODQ5YmEzNDc5NWNjODY0ZjcxM2EyMGFmMjNhZTdkNGVmNTAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjJkOTc4MWNmYmFiNTVjZDViOTBkMDlhYjYzMGJmYjE0ZTA1N2MwYmQ4OGRiMzhlOGI4OWVkYmQ0YTkxYWQ2YTQifQ"
                     },
                     {
                         "resource": "repo://src/utilities/runtime_diagnostics.cpp#L9-L27",
@@ -183,9 +183,9 @@
                     "The Nix package supports native builds and a MinGW Windows package set, supplies platform-specific Qt wrapping or deployment hooks, and installs the app, Windows runtime files, user guide, and templates through CMake.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L632-L642",
+                        "resource": "repo://CMakeLists.txt#L841-L851",
                         "version":
-                            "repo-lines-v1:sha256:c31abaa813d525b4fd66ee4c775311d2c8631378695fb95719c6a5cb15de503d:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExOGViNGI1ZGVhZDYwMGUyZDkwMzU5NDAwMTYxMjY0YWUwOGZiMDcwNWNhZmE2YTc2YWYwNjUyZDdkOGFkMTIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDhiYWE2MDkwNGJkYjNjZDMyOTVhMWI3ODQ1NGNlMWFjZDk3M2Y5YzY0MjJiNjc0MThkODQyODIyZjA1YjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM1NTNlMTAzOGM2ZDI4MTkwNDYyYzUxNGYyNDQ5ZDU0NWNlMzBkMzMxZmJhYWUyMTA0Y2YyNzBiZmM0ZjllNzAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:1f37795f4b194bd0008ed19a3d25f73be871b71fd34c302a671c484d045cb86c:eyJzZWxlY3RlZExpbmVDb3VudCI6MTEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImVkZDhmZGQ5MTFhODcwNTY3MzczNGY3ZTJjMDc4NmNmY2YzOWY5MWQ4ODg2MzIxMmUzYThjNmRjYTJjYmYxM2IiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImE5ZDhiYWE2MDkwNGJkYjNjZDMyOTVhMWI3ODQ1NGNlMWFjZDk3M2Y5YzY0MjJiNjc0MThkODQyODIyZjA1YjAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjYyNWNiNDBmMDA3YWFlMTIwMjEwOWNkNTRmZWQ5MTdhNjcwOTY1NjNlNmRhMWMyYjkxODdkYWI2MzM1NjAyNjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                     },
                     {
                         "resource": "repo://flake.nix#L46-L103",
@@ -205,7 +205,7 @@
                     "The x86-64 Linux AppImage runs the packaged Nix closure through a pinned static PRoot launcher that binds its bundled store at /nix, and CI smoke-tests its --help path as non-root.",
                 "evidence": [
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L73-L87",
+                        "resource": "repo://.github/workflows/ci.yml#L76-L90",
                         "version":
                             "repo-lines-v1:sha256:5c8d41599c3954a042edd11011d25f6452aa3d0bfd40634ce3748ec4ca9c7818:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjYTNiYTBhMDVkMmJkMDE5YzgzNTkwNDQyYmRiNzZlMWJlMjk5MWMzM2JjOGZjMjdkOTBjNjVlYmRhMDA1NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NzMyNzBjMDhlNDk5MGRhN2Q1MGRiMzFhZmMxMzRkOWViYWNhZTRhYjU0NjI1M2Y5NGZiNDQwZDNkNzEwODUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiOTY2NDZkZDNlNWY3MTUxZTQ1MzlkZTc4NjlkMDU2OGYxZDA1NzA0MzYyZGU0N2MwMjUwMGNkMGMxNjI3ZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzY2YwODdhY2U3NDkwMTlmZDE1YWNhYTc1NDljZjk0Nzg1ZDc0ZGJlNDhjZjllODY2MjBhNTRkZmJiOTdkODYifQ"
                     },
@@ -227,9 +227,9 @@
                     "Windows CI builds the portable Windows package and the deterministic windowsInstaller Nix derivation, then uploads both; NSIS installs the tree under Program Files with uninstall metadata and Start Menu shortcuts.",
                 "evidence": [
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L106-L167",
+                        "resource": "repo://.github/workflows/ci.yml#L110-L175",
                         "version":
-                            "repo-lines-v1:sha256:27a96ead839522c38315251ada5f43744a2135cf156a95fdb397388a805871af:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:c12ad3f7bb938eaf4f93e0756f773fd2c0120d466b484a4757b5a97ba58494be:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlZGFmNWYyNTgxMmM3MDViOTA4MzIyNTczOWE1MzFjZmY5NmM4MDE3M2UyMTJmMzAzZWZjYjg5ZWU0MDc3NzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlZjc5M2UyODc0YmI5Mzg4NjExMzlmMDlmOTg2OWIwYTQzMjI0NDIxYmU5ZjFlMzgwMjBkNDJkNDEzM2NiNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzMGI3YjkxOTliNTNmMzMxNGEyNzE2ODY5YTBmMzBkNzY5MTM5NGNhMDU5NjZlNzhmYzNjMGFiOGY2ZDM1M2QifQ"
                     },
                     {
                         "resource": "repo://nix/windows-installer/default.nix#L10-L46",
@@ -249,17 +249,17 @@
                     "CI runs nix flake check --all-systems on Ubuntu and macOS and separately packages Linux and Windows artifacts, but the workflow only declares a command-line smoke test for the Linux AppImage.",
                 "evidence": [
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L1-L40",
+                        "resource": "repo://.github/workflows/ci.yml#L110-L175",
                         "version":
-                            "repo-lines-v1:sha256:287c2c50c30d5be2100c43a6c02803b09b76c8d957bf0b840dc57e1d821f8062:eyJzZWxlY3RlZExpbmVDb3VudCI6NDAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImY1MmQ3MTExMDNkNTBhNDM3ODMwYzZmYmNkMDRmYjRiYWI0OWEwZjgyZjZkMjZkMWM3OTFjNmU4NDg4ZGQwOTAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjJhNTc4Yjc0Nzc4NzhlYjE0ZjJmMDZmOTgxYzA0ZTNhYjVlMTU0MTBjZDdhOGEzNmM4MWQ3YzJlNGM0MmU0NDIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjMyYWM1NGRjZDhmZWIwNTI0OTg5NmM0ZWUwYWY3MDRiZDUyNzg4NDEzYmRkODM3YjNjNDkzODM1MDQyNmI5MjEifQ"
+                            "repo-lines-v1:sha256:c12ad3f7bb938eaf4f93e0756f773fd2c0120d466b484a4757b5a97ba58494be:eyJzZWxlY3RlZExpbmVDb3VudCI6NjYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNlZGFmNWYyNTgxMmM3MDViOTA4MzIyNTczOWE1MzFjZmY5NmM4MDE3M2UyMTJmMzAzZWZjYjg5ZWU0MDc3NzIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImZlZjc5M2UyODc0YmI5Mzg4NjExMzlmMDlmOTg2OWIwYTQzMjI0NDIxYmU5ZjFlMzgwMjBkNDJkNDEzM2NiNTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjEzMGI3YjkxOTliNTNmMzMxNGEyNzE2ODY5YTBmMzBkNzY5MTM5NGNhMDU5NjZlNzhmYzNjMGFiOGY2ZDM1M2QifQ"
                     },
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L106-L167",
+                        "resource": "repo://.github/workflows/ci.yml#L18-L40",
                         "version":
-                            "repo-lines-v1:sha256:27a96ead839522c38315251ada5f43744a2135cf156a95fdb397388a805871af:eyJzZWxlY3RlZExpbmVDb3VudCI6NjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyZjRjYjYzNDM5N2Q1NzQyNDUwNzAxNTJiMDAxM2YzYzAwZmE1MDlmYzlhNmRmOTRjODNjZTU2MGE4NDEwNzgiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFmYjA0M2NhOGViNDMxZWU2OTFiYTAwYWFhNDViNzdkZmY5ZjAzNjAwM2RhNDQ5OGVhOGYxOTlmYTliMWJkZTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImU2ZTE1YzhkOTM1YmM4YjAxMzdkZTlmYjI1YzQ1MTIwZGQ4NDU3OWZhMDc1MGU5OWMzOWE1MTlhOTcxYTc1YjIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:d4bc72cc7ef1e3622a5a7aef009573e8f3dc4a96c28b0358a3a600436c177707:eyJzZWxlY3RlZExpbmVDb3VudCI6MjMsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjA2NDBmZGI5NGM3N2FjZmYzNjFiYjNhZGEzNTJhNGZkZWI4ZjUxM2JlNTA1MWI5YTU3NjlhMjc1YTM4YmQ4ZTUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjlhNTM5NzI2ZTZmYjM0ODViMjYxYmYwNjQ5Njc4NDE4Yjc3Njk1MzRmNGNhMGQyZGExYjY5MDU3ZTdkOGEwMDQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjM4Zjg4ODdhN2FiODI4Yjk3YTVmMGY5NTRiZTUwMzE2MGRlZjg3OGE4ZTIwMzhhNzA3ZDU0YzJiNjBmMTQxYjYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjIwYmY1MDU4YmVjMmYzYWEwYjQwOTQ3MTEyNTY5MThiZDBkZDk5ODM3YTViZTU2NTZiNjBlYjgyMzNhMWNkYWMifQ"
                     },
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L73-L87",
+                        "resource": "repo://.github/workflows/ci.yml#L76-L90",
                         "version":
                             "repo-lines-v1:sha256:5c8d41599c3954a042edd11011d25f6452aa3d0bfd40634ce3748ec4ca9c7818:eyJzZWxlY3RlZExpbmVDb3VudCI6MTUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZjYTNiYTBhMDVkMmJkMDE5YzgzNTkwNDQyYmRiNzZlMWJlMjk5MWMzM2JjOGZjMjdkOTBjNjVlYmRhMDA1NDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjI5NzMyNzBjMDhlNDk5MGRhN2Q1MGRiMzFhZmMxMzRkOWViYWNhZTRhYjU0NjI1M2Y5NGZiNDQwZDNkNzEwODUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImJiOTY2NDZkZDNlNWY3MTUxZTQ1MzlkZTc4NjlkMDU2OGYxZDA1NzA0MzYyZGU0N2MwMjUwMGNkMGMxNjI3ZWYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjAzY2YwODdhY2U3NDkwMTlmZDE1YWNhYTc1NDljZjk0Nzg1ZDc0ZGJlNDhjZjllODY2MjBhNTRkZmJiOTdkODYifQ"
                     }
@@ -309,7 +309,7 @@
                     {
                         "resource": "repo://.github/workflows/openwiki-update.yml#L33-L88",
                         "version":
-                            "repo-lines-v1:sha256:b610b21e789487699ebc9de2d951c099c1503acd5d2984f8334196d1e8b45c49:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwZThmOWZhNDBlN2JkMDQ5OWQxYzBkODNmZDc1OGFhODViMzA4NDJkYmQ2MWYwZWE2YjdhZTEwZWZlYzc2ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1YjMzNmJiNDA5NmY2MTAxMmNjZDBkMThkZjYxMTgzMzJlNzVjZTk4ODhkNmVjYjlmYjZkMjlmYTJjNjdhYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:5449bd9e28ff13e8cf5cfba3e5e2ff2daaf53895cd5d50d3c3c137a30d3959ff:eyJzZWxlY3RlZExpbmVDb3VudCI6NTYsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcwZThmOWZhNDBlN2JkMDQ5OWQxYzBkODNmZDc1OGFhODViMzA4NDJkYmQ2MWYwZWE2YjdhZTEwZWZlYzc2ZDAiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM2NzE4ZjA2N2I1ZTVjMWYwOTkxYTZlNzQ3MjZmZTJhMjNkMjY0MzQ1ZTA4ZTRlYWQwNGZhZjczYzI3ZWQ0NDMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE1YjMzNmJiNDA5NmY2MTAxMmNjZDBkMThkZjYxMTgzMzJlNzVjZTk4ODhkNmVjYjlmYjZkMjlmYTJjNjdhYjAiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                     }
                 ]
             },
@@ -319,12 +319,12 @@
                     "CMake registers settings_file_comparator_tests, settings_manager_tests, and main_toolbar_tests as focused executables linked to ornlslicer_obj and exposes them to CTest under those names.",
                 "evidence": [
                     {
-                        "resource": "repo://CMakeLists.txt#L309-L340",
+                        "resource": "repo://CMakeLists.txt#L349-L380",
                         "version":
                             "repo-lines-v1:sha256:3ebdf0d307acdae0076ad4d621312a30fe81da49e4657320932fb61fd8fd3510:eyJzZWxlY3RlZExpbmVDb3VudCI6MzIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjkxNGQwM2M3ZDc5OWU0ODQwZGJlNGI2YzQ4MjZlZTZlZTg5MjYxYjhkOWNhZjllMDFiZmU3ZTE3ZTJjYTRhMmYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjcyMGJmMjhkNDEzZTBkMTI2NDU0NjFiNzljMGRiNDc0ODBkNjE4YTczMmZiYWQzMDIyMmZhMzQ2YTMzNWU3ZmEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImI5MjY5MmExOTg5NThlNzRhZGJkODA1ZGI4ZDg0OTkwMWMxZmYzZjI4OWE4ZDA1YTFmYjM4YjZkZGI2Yjg1NTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjQ5MGQ4ODk5NzEyMmRiZjA0OWI5NjQ3NzA1ZTJkZTRmNmFhN2U1YzFjN2NhMDEyNWM3N2JhYzU0ZDNiZDlhNjgifQ"
                     },
                     {
-                        "resource": "repo://CMakeLists.txt#L475-L484",
+                        "resource": "repo://CMakeLists.txt#L682-L691",
                         "version":
                             "repo-lines-v1:sha256:3dda81ca81b9b4c2203cefd871f6c00a536a1c6c91bb431d0d4d67ed2f4d0839:eyJzZWxlY3RlZExpbmVDb3VudCI6MTAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM3MzA3NTU5ZTI0NDU4MGY2ZDUxOGNkMWZiM2ExNzY0MWE0Mzc4ZGQyYmZmMTE2NGEyMDJlZjU3MTkyMWNjODIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjliMWE5ZmE2MWIxMGY5MWMxMmI5ODY3ODY0Y2MzNGU2MjU5YmU5MjZiMDFiNjZjODFhZjdjZmI5ODVhNGU3ZTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjY4NzdkZGI1NDNlYzM4Njg4NTQyMWNlZGZhZjE5MjkwMThlZGEyZjdjYzhkMzQ1Yjc5OGQ0OTI1ZjFjMTNlZjEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImMyMTY4Yzg2YzA4YmY0M2QyY2MyNDg3YzM0ZWQwOWJiNmRlODE3NjFkN2MyZjc3OGRmNzg5NzJiMDIxMTY1ZmQifQ"
                     }
@@ -336,12 +336,12 @@
                     "The application fileset includes bundled CHANGELOG.md and excludes workflow/wiki inputs; CI cache writes are limited to develop pushes and published releases, with synchronous pushes before permanent pins for all four release outputs.",
                 "evidence": [
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L123-L157",
+                        "resource": "repo://.github/workflows/ci.yml#L127-L161",
                         "version":
                             "repo-lines-v1:sha256:1dc651956ece4ae10944ee63f66127de77c0978e2b4b9167449f107e841c3284:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhZjkxODA1YjE1MTZkZDllZjQxZTJlMjE5ZjM2NzQ1ZWZhNGJkZjMyYTU5Yjc5NDY1NmYzNWQ0OWZiOWE2NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjZmMmVlMWVkMTNhNWE5YjQyYjFjNTY4YmMxZjU3MTM1YjAzMGE0MjIwNGM0OWZiNTlhZmQ4MzQ5MzlmNWQ2YzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MzgyNjM1OGQxZmRkZGE1NWIxOGM3YzU3ODI1NGFiNTQzYzUzMzFjNjE1ZWIxM2VjNTU3MTIyNzJmZjA5ZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImI1NDhjOGFhNzEyOTA0N2ZlMDBmZmMwMTIwN2UwOTQ4M2JjMjA3ZjU5YmNjYjhmNjE2NWM2ZTBkZTFhNjliZjkifQ"
                     },
                     {
-                        "resource": "repo://.github/workflows/ci.yml#L55-L99",
+                        "resource": "repo://.github/workflows/ci.yml#L58-L102",
                         "version":
                             "repo-lines-v1:sha256:5c2a55a1c74983b94ebbfb22b934e8130b417e41b9adf09940b9854397333430:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhhZjkxODA1YjE1MTZkZDllZjQxZTJlMjE5ZjM2NzQ1ZWZhNGJkZjMyYTU5Yjc5NDY1NmYzNWQ0OWZiOWE2NGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijg1Y2FiMGRiMzdhYWFmNzZmNWFhOGVhNTE1NmJhZDVkNzM5ZGU1OTYzMWY4YmI4MjJjNGIyZGVjZTQ2ZTYyNmQiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImE5MzgyNjM1OGQxZmRkZGE1NWIxOGM3YzU3ODI1NGFiNTQzYzUzMzFjNjE1ZWIxM2VjNTU3MTIyNzJmZjA5ZGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdiYTNlN2Q5ODhlYmQzYjgxNzE4MDQxN2ZhNTI0NTA0MzA3NTNlMTEyZTBlN2RlMDNkYzZkMzlmMzc4NzExNjgifQ"
                     },
@@ -360,7 +360,7 @@
                     {
                         "resource": "repo://scripts/version.py#L167-L211",
                         "version":
-                            "repo-lines-v1:sha256:83ed8b6fd15f287f0527016cda3308484ed4f38019d4fcc1f3688e09dba4cb3b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4M2UzNWIzZWZhZDMxMjFiZjUxYmY1YjlhMGRjYjg4N2Q2ZDQ5MTlkY2ZjMmM4MWE3NTk5MTZmMGRlZDBjNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyMDNhNmE3ZmMwMmYyMTk4YTBjY2FlZDE0MWEwMDQ5NGZmYTFkYmE4OGZmM2IwMzgyODM2Y2UwMzMzMjU2YTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
+                            "repo-lines-v1:sha256:385e832e94d8f1746a5ff87579ba3ee5e74c1801dab092a6658b1fe160ccd95b:eyJzZWxlY3RlZExpbmVDb3VudCI6NDUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjM4M2UzNWIzZWZhZDMxMjFiZjUxYmY1YjlhMGRjYjg4N2Q2ZDQ5MTlkY2ZjMmM4MWE3NTk5MTZmMGRlZDBjNWUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNmNDBlMzc4MWViODk2YzgyZDA0NmEwODA2N2ExMWUzNWNkZjJmMWRmYWYyNmZlYTkwYjhkYjY2NzY0MTMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImQyMDNhNmE3ZmMwMmYyMTk4YTBjY2FlZDE0MWEwMDQ5NGZmYTFkYmE4OGZmM2IwMzgyODM2Y2UwMzMzMjU2YTgiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjU0OGQ3NDgzZDA2MGYxNzIyZTI0NTM2ODg4MzM0MjU2YjU0OTBlOGJiZTg2OTgyMDY3NmNhOWVhZjM1MDljYzkifQ"
                     },
                     {
                         "resource": "repo://scripts/version.py#L214-L254",
@@ -377,12 +377,12 @@
                     {
                         "resource": "repo://.github/workflows/prepare-release.yml#L65-L105",
                         "version":
-                            "repo-lines-v1:sha256:0b45aa08f4b13a39644fd8eba1ab83a3eca8dabd1cfc3117b7e87e3de4190180:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjMGNiMmI1M2I2OTM0ZGNmNjAyNTQyZTM4N2E2OWFkZjVkMTNkODJlMGY0Y2Q5YzQxMGE4YWU3NmY5MDNmM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3NTlhODBlYTQ3YzgzODNhNmZhMDI2OWNmMDRkNGRmYzEwYzhmMTQ3NTY5Y2VlYTMyZTRhOTM5MjdiM2UxYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViMWQzNjM0ZTc2NTNmNzk0ZGUwYjI5N2FkOGY2OTVkNmJjYmIyNWEyMDU3NTE3OGUyMTlkYWJmYzc0YzhjN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:1b672229a448eb5c3f2fa6f87fd952076edc211d996336539ec25f18c4c51796:eyJzZWxlY3RlZExpbmVDb3VudCI6NDEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFjMGNiMmI1M2I2OTM0ZGNmNjAyNTQyZTM4N2E2OWFkZjVkMTNkODJlMGY0Y2Q5YzQxMGE4YWU3NmY5MDNmM2EiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3NTlhODBlYTQ3YzgzODNhNmZhMDI2OWNmMDRkNGRmYzEwYzhmMTQ3NTY5Y2VlYTMyZTRhOTM5MjdiM2UxYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjViMWQzNjM0ZTc2NTNmNzk0ZGUwYjI5N2FkOGY2OTVkNmJjYmIyNWEyMDU3NTE3OGUyMTlkYWJmYzc0YzhjN2IiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
                     },
                     {
-                        "resource": "repo://docs/contributing/versioning.md#L92-L128",
+                        "resource": "repo://docs/contributing/versioning.md#L142-L162",
                         "version":
-                            "repo-lines-v1:sha256:eae4c41da863e0e42c496122fe2b219ec735201ff8b102fa0a9ae770343defd2:eyJzZWxlY3RlZExpbmVDb3VudCI6MzcsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjExNzBiNGJjN2RiNjU2ZmYwYTEyMjc2MzY1OGQ4OWYzZWJkMmU4ZWE5Mzg0OTMzZTg3MzRjM2JiMzQ4NDliMmEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjY1ZGUxZmUxM2MyM2UwZTEzNGY0Yzc0N2Y5N2UxYjNjMzcxYWU0MTM3Mjk4NDcxMTY1NWY2ODgzZTJkYjA1MTAiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjcyNzQzMjIxNmU5OTA4MjU0YmY4YTUwMzM0N2ViY2FlNmFlMGU4NjYwN2QxNGFkZGZkZDY5MTNjMTNiMmRhOGEiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                            "repo-lines-v1:sha256:57eed4588f99eae56e8e3840d2ab42c2c482491469d6e7130062d86b431cd48c:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhlYTBjYjQ2Mjk5ZWUwM2I3MzkxNmQ5ODdkNmJlNTdjNTBjNjhjNjgzODlhNTRmNDIwYmRmZGMyYTUyNzBiNGUiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6ImJjYTM2MzM1ZjliOWU4YzNhYmFlOGExZTlkZTRiOGJlNTAzMmMwMTRhNmExYTBkYjM4NjU0ZWUyNGU2ZjVkMzEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjdjNzk3OGFmZjljY2Q4MWM2OGJlY2Y0NmVlZjYwOTZjNDEyNGFkNjM3MzU5NGI2NmQwNmUxMjgwMDAyNzQzOTkiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImIxMzY1YjkyMjc4ODI4NzhkY2RiYzYzYjVmMzc4MzhhMDFkN2VlZWUyOGQ5NDM2NTU0YWRkMmRiMDM2NjY1ZjQifQ"
                     }
                 ]
             },
@@ -396,10 +396,83 @@
                             "repo-lines-v1:sha256:f53fc5b90653c640374af39674e96543585b99b777871d4418bef3d65093d002:eyJzZWxlY3RlZExpbmVDb3VudCI6NTgsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImNkZmJhOWY2YTNkODdiN2ZhNzcwMTJkYzVmODYxMDc3ZDVlNjBlM2JkYjNiN2I4NTRiMmE4YjQwMGQyMDQ2MjMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjFkOWUwNDk5MGM4NjY5YmIyN2UyZjViY2QzZGY3ZmNiNjM0MzY1NTEyOWUyYTlhMzk2NzE3MmQzYTRlZjdmZjciLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6Ijc2ZDVhYWNhZDcyNGJmNzZmNGJmOTQ2NjBlYzdiOWM0YzZlNjI1MDU4YzIyZTdhYTFjZjhjOTFiMDhkMWJjNmQiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImE5MDBmNDc1ODE4NjE3ZGQ1OTEzZGQxODg4NTcxNmQ4NjUxNjExY2NjMWRkYmQ4YjFiOGVlOWUyNDFjNDZmY2YifQ"
                     }
                 ]
+            },
+            {
+                "id": "claim_b6e18ef0dcfb4f4eb887c656351c1c6f",
+                "statement":
+                    "CMake rejects unresolved LFS pointers referenced by Qt resource collections during configure and through the object-library resource-validation dependency.",
+                "evidence": [
+                    {
+                        "resource": "repo://CMakeLists.txt#L149-L157",
+                        "version":
+                            "repo-lines-v1:sha256:25356dbb52bc0f0ed229ca8add513a2fe82125e192ee17dc5181934a543676d6:eyJzZWxlY3RlZExpbmVDb3VudCI6OSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiZGE5NzcwZDAyNWU1Njg1NGUyZDAzYzczODcwYmEwMjY2NjhmZmY3OTc4N2U0ODdkZDM4NGNmOWViNDkwOWZiOCIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiNmI0ODhhYWFhYmM4MzkyNzQxMDE3NTZhZmZiOTAxZTU5NTdhNjc2YWYwNTZhNmVlY2Q5YjcyYmUzMDlhMzY1MSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiNjQxM2MzMmExMWJhMDNlNDQyMjQyMGY0YzE3MGVjOGFmODQ0NDQ1YWJmY2FkY2FkMGI5YjZhYjRkYWI2ZTZkNiIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTI4ZDVjZDQ0NjhlZTQxNTA5MzAwYzU2ZTEwM2FhYjAzOWU1NWFjMWFiZmI5NDg5MWMyZGZkZTY2ODEzZjlkMyJ9"
+                    },
+                    {
+                        "resource": "repo://CMakeLists.txt#L19-L20",
+                        "version":
+                            "repo-lines-v1:sha256:bcf8fd7284b88943469e8ec56a38628eafa1fd2ef5a3607c6058079fe2088dd1:eyJzZWxlY3RlZExpbmVDb3VudCI6MiwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiNTg4NWU4NjcwYjk5ZjkxMTFkOGIyNGM2NWI3MDhlY2Q1MDI5MmNjZGFiYTVjY2M4MmZiODkxMTliOTI4YTU1MyIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMzgwMWY0ZjYxNDRhZGYyZmMwYTQzYTRmMWZhNzkzMTVhODNmNjNmZDU4ZWIzZjFmYTliNjQxNDRlNzI3N2M2YyIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjMsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiOGFiMDkxNmNlOTI1MThjNTA2MDg2Yjk4YmEzMTFlMDkzMTM4NzA4NDAzMmYzMGQzZjFkMzU3MjY4ODg1ZDUzZSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjMsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZjkyZmM2ZmE5YzkyNTgzNmE0MDZiMGM2ZjRmYTZhYzY0NWIwZWRjZjU4YjlhMzZjMWE4MmJjZTY1NWI5ODdlMyJ9"
+                    },
+                    {
+                        "resource": "repo://cmake/validate_resources.cmake#L1-L35",
+                        "version":
+                            "repo-lines-v1:sha256:036d49d5469714b5adffb249434367d790e05bb54c8be3cbba543702cfbbf2f1:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImZlMzZlOWI1YmJkMWY3Y2ZlOTZjNzYzYTM4OGM1NzFiYWRmOGQ3ODIwOGYwZTdkYjg5Mzg2MjY0N2YzNzNiMGQiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjE1ODBjNjIzMTY4ZWE2YzBhNzg5ZDNiZTAwMDg1MmE1NjlkZjUxOThlZWIzNjUwY2Y1YjJhNzVlODYzZjIxNzgiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjowLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_e4a8a99c135245a6b8b93b3885ec21ee",
+                "statement":
+                    "The canonical developer setup restores LFS assets before configuration and supports direnv use flake with per-checkout authorization and a shared multi-config build tree.",
+                "evidence": [
+                    {
+                        "resource": "repo://.envrc#L1-L1",
+                        "version":
+                            "repo-lines-v1:sha256:1d26c74fd25a4c3dbb09e029fc609588da499fd4af2a41c88f6316c7f8c54cf1:eyJzZWxlY3RlZExpbmVDb3VudCI6MSwiZmlyc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQyNmM3NGZkMjVhNGMzZGJiMDllMDI5ZmM2MDk1ODhkYTQ5OWZkNGFmMmE0MWM4OGY2MzE2YzdmOGM1NGNmMSIsImxhc3RTZWxlY3RlZExpbmVIYXNoIjoiMWQyNmM3NGZkMjVhNGMzZGJiMDllMDI5ZmM2MDk1ODhkYTQ5OWZkNGFmMmE0MWM4OGY2MzE2YzdmOGM1NGNmMSIsInByZWNlZGluZ0NvbnRleHRMaW5lQ291bnQiOjAsInByZWNlZGluZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSIsImZvbGxvd2luZ0NvbnRleHRMaW5lQ291bnQiOjAsImZvbGxvd2luZ0NvbnRleHRIYXNoIjoiZTNiMGM0NDI5OGZjMWMxNDlhZmJmNGM4OTk2ZmI5MjQyN2FlNDFlNDY0OWI5MzRjYTQ5NTk5MWI3ODUyYjg1NSJ9"
+                    },
+                    {
+                        "resource": "repo://docs/contributing/development-setup.md#L158-L217",
+                        "version":
+                            "repo-lines-v1:sha256:9bd0ceb5c5be00cc0ae18d466d40bbd7286c34ede306fe0230d44722f708ba1a:eyJzZWxlY3RlZExpbmVDb3VudCI6NjAsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQyY2FkMWJlZTVjNWQ1NzljNDRhZmE2NDAxNDAxNjk2YmQwZTZjOWY2YmI4NmM0NDIxNzhjMDAwY2RkMjkyMDIiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjQ4OTNiY2M1ZmJmYWRhODJhNDZhYTMzODYyMTAzM2JlMmRiYTBiYjVhYmRiM2VkMGQwZmY1ZGNlZDY4ZGQ2ODIiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjRkNTk4NDNiZjc0MjVjZGMwZWYxOTYyN2JiYmQ2YzVmNTVhODdiYmE3YzUxNzgzMTA4ODA4NTJiOTI3OTc2YzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjgyM2Y3ZTJjMGJiZGM5NzgyOTQ1OTA5MjY5NzUxMjA5OWI2YzM5ZTZiOWQyMDRjNTkxNTAxYjBjYjMwZDY2NDQifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_c916d5b146af41f3a96b1096185720b6",
+                "statement":
+                    "CI runs fork PR events while skipping duplicate same-repository PR runs, and does not cancel published-release runs through concurrency.",
+                "evidence": [
+                    {
+                        "resource": "repo://.github/workflows/ci.yml#L3-L24",
+                        "version":
+                            "repo-lines-v1:sha256:a20a0ee6fa789cee2ef4ffc498f7643ebac01b7735d3bdef0e04912f04084ad5:eyJzZWxlY3RlZExpbmVDb3VudCI6MjIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU5NmRjNDgxNDlmNWE4M2QxZWQ2ZGJiMzliYmM3ZTJiOTAyYWEzZDM0ZDZiZDVhZTRiMjkxYjY4ZGYwY2E3OWEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjNiNzg5MTUyYmMyODMxNDVmMmI4NmVkN2FiNjllMGFmZTFkMjhmOGY5OTNhNzg2MjZmZGNkMWJhZjQ4ODUxMWEiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjoyLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjUwZjc4NTBhNjQ1ZTM3ODY3ZDNiZWJkMmViNjkyZTU5YTgzY2UxYWI1MDdmNTg4NzY1NWYxNjdlOWI0ZjRmZGIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjVjMmU3ZjUzYmQ1M2JmMWI1ZTVjZTJkNzNjMmQ2MWIxNWVhMjE1YzY5NjVhNWM3NzcwZmMzMzBhZDBhYTQxMDkifQ"
+                    }
+                ]
+            },
+            {
+                "id": "claim_e015b7c152414734b39688880762f1ff",
+                "statement":
+                    "Release preparation uses release/<version> branches, promotion to main preserves ancestry with a merge commit, and published CI attaches AppImage, installer and portable ZIP downloads after packaging checks.",
+                "evidence": [
+                    {
+                        "resource": "repo://.github/workflows/ci.yml#L177-L197",
+                        "version":
+                            "repo-lines-v1:sha256:2804b91fd82a8b5f68dca9ab628d05f818800f9026a4dbc86ba6eefe1c9caa17:eyJzZWxlY3RlZExpbmVDb3VudCI6MjEsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImU4MjU0YzkxNmE0NDgxMjNlMmQzZDk1ZWJhYTJlNGIxZGIwZmE3YjU0M2UxMmMzZTFiMTFjZjM2MjE2ZjIwMGEiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjRhYTQyNWIxMjEzY2IzMDY2ZTlhNjdhNGY5YmQyNzA0ODQzY2IyZjIzNmRlZGJiMTVhYTM1NTVkMDNmOWE4NzMiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6IjhmOTFlMmRmNDVmMmJhM2NmNzYzYTA3YTlmZmVkOGU4ZGM4NzdhZTMzYzIzZTc0NTEyYzQ0YzU0ZGQyMTlhMzYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    },
+                    {
+                        "resource": "repo://.github/workflows/prepare-release.yml#L71-L105",
+                        "version":
+                            "repo-lines-v1:sha256:881a8b19e18a0541142247f9c8bfdd65b0bf92ce741bbdd2034496b4609f2c12:eyJzZWxlY3RlZExpbmVDb3VudCI6MzUsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImQ5NGY4ZTgwMGExNGE5YTE0ODM1MGNiN2Y3Y2FjZTkwYmZkMTE5OWU1MGYwZWYzNDAxMTllNTAxOTIwYTBlMTYiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6Ijk3NTlhODBlYTQ3YzgzODNhNmZhMDI2OWNmMDRkNGRmYzEwYzhmMTQ3NTY5Y2VlYTMyZTRhOTM5MjdiM2UxYzYiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImFmNjdiZmFhZTRhZDgzNjJjYWVjZjU4NjdjNjhhMmYzYTMyYTViMjcyM2M2MWU5Y2YzZWIyNjc3Y2Q2ZjExZTIiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjowLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6ImUzYjBjNDQyOThmYzFjMTQ5YWZiZjRjODk5NmZiOTI0MjdhZTQxZTQ2NDliOTM0Y2E0OTU5OTFiNzg1MmI4NTUifQ"
+                    },
+                    {
+                        "resource": "repo://docs/contributing/versioning.md#L98-L109",
+                        "version":
+                            "repo-lines-v1:sha256:5a2411ecaa42cb765318e15898839970c09369d42eb5537ebb8ca0ad92e79dd4:eyJzZWxlY3RlZExpbmVDb3VudCI6MTIsImZpcnN0U2VsZWN0ZWRMaW5lSGFzaCI6ImFmYzE5YjZkMjk0ZGVlMmYxYjVjMjFhZDJmMmRiMWYzMzM0MWIwZTQ3YjY2NGQyYzQ1YWJlODY2NGVlMmEwOTMiLCJsYXN0U2VsZWN0ZWRMaW5lSGFzaCI6IjhkMmY3MmEzMDc0NGU0NjQwNjllMTIzYTU1MzQzNzgyMTZmNWQxYjYwZjY2YWVkZmU4ZjNiNWUxMTM1MWY2MDUiLCJwcmVjZWRpbmdDb250ZXh0TGluZUNvdW50IjozLCJwcmVjZWRpbmdDb250ZXh0SGFzaCI6ImM2ZjRjMjMwZjg1NTZhMzY2MGNlZTFhMTY2MGZmY2ZkMmUwZTBmYWQzZGM3NGQ1Mjc3YTkxOTgzMmM3ZDAzNDYiLCJmb2xsb3dpbmdDb250ZXh0TGluZUNvdW50IjozLCJmb2xsb3dpbmdDb250ZXh0SGFzaCI6IjdkODlmNjk3OWY4ZDMwN2NjYTVlNDIzYmZmOTFmM2ZkNzM2NzMyOGE0MjhhODhhOGY3ZDUzNGI2NGYwMDc3YjEifQ"
+                    }
+                ]
             }
         ],
     "verification": {
         "by": "openwiki/0.7.2",
-        "at": "2026-10-20T18:20:49.849Z"
+        "at": "2026-11-10T17:47:51.624Z"
     }
 }
