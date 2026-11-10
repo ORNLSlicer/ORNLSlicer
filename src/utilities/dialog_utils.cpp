@@ -12,6 +12,17 @@
 namespace ORNL {
 namespace DialogUtils {
 
+QString modelFileFilter() {
+#ifdef Q_OS_LINUX
+    // Native Linux file dialogs can match extension globs case-sensitively.
+    return QObject::tr(
+        "Model File (*.[sS][tT][lL] *.3[mM][fF] *.[oO][bB][jJ] *.[aA][mM][fF] "
+        "*.[sS][tT][eE][pP] *.[sS][tT][pP])");
+#else
+    return QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)");
+#endif
+}
+
 QString promptForName(QWidget* parent, const QString& title, const QString& current_name,
                       QSharedPointer<Part> current_part) {
     bool ok = false;

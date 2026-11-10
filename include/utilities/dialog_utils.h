@@ -23,6 +23,9 @@ namespace DialogUtils {
 QString getText(const QString& title, const QString& label, QLineEdit::EchoMode mode = QLineEdit::Normal,
                 const QString& text = "", bool* ok = nullptr, QWidget* parent = nullptr);
 
+//! \brief Returns the file dialog filter for supported model formats.
+QString modelFileFilter();
+
 //! \brief Prompts the user for a part or mesh name with duplicate validation.
 //!        Re-prompts if the entered name is already used by a different part.
 //! \param parent The parent widget for the modal input dialog.

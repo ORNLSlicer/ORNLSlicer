@@ -58,6 +58,7 @@
 #include "threading/gcode_loader.h"
 #include "threading/session_loader.h"
 #include "utilities/constants.h"
+#include "utilities/dialog_utils.h"
 #include "utilities/enums.h"
 #include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
@@ -1416,7 +1417,7 @@ void MainWindow::doSlice() {
 
 void MainWindow::loadModel(MeshType mt) {
     QStringList filepaths;
-    const QString model_filter = QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)");
+    const QString model_filter = DialogUtils::modelFileFilter();
     if (mt == MeshType::kClipping) {
         filepaths = QFileDialog::getOpenFileNames(nullptr, QObject::tr("Open model clipping file"),
                                                   CSM->getMostRecentModelLocation(), model_filter);

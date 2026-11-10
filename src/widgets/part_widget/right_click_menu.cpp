@@ -272,9 +272,8 @@ void RightClickMenu::setupEvents() {
     });
 
     connect(m_replace_part_action, &QAction::triggered, this, [this]() {
-        QString filepath =
-            QFileDialog::getOpenFileName(nullptr, QObject::tr("Open model file"), CSM->getMostRecentModelLocation(),
-                                         QObject::tr("Model File (*.stl *.3mf *.obj *.amf *.step *.stp)"));
+        QString filepath = QFileDialog::getOpenFileName(
+            nullptr, QObject::tr("Open model file"), CSM->getMostRecentModelLocation(), DialogUtils::modelFileFilter());
 
         if (filepath.isNull()) { return; }
 
