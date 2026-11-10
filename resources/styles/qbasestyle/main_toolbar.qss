@@ -125,6 +125,10 @@ QToolButton:!checked, QToolButton#menuButton:!checked {
     color: #757575;
 }
 
+QToolButton:disabled, QToolButton#menuButton:disabled {
+    background: #eeeeee;
+}
+
 QComboBox{
     background: #eeeeee;
     padding-left: 10px;

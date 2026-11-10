@@ -28,14 +28,19 @@ double luminance(const QColor& color) {
     return 0.2126 * linear(color.redF()) + 0.7152 * linear(color.greenF()) + 0.0722 * linear(color.blueF());
 }
 
+QColor buttonBackground(ORNL::MainToolbar& toolbar, QAction* action) {
+    const QImage button = toolbar.widgetForAction(action)->grab().toImage();
+    return button.pixelColor(button.width() / 2, 2);
+}
+
 bool checkIconContrast(ORNL::MainToolbar& toolbar) {
     bool passed = true;
     int count   = 0;
     for (QAction* action : toolbar.actions()) {
         if (action->icon().isNull() || action->text() == "Show Segment Info") continue;
         ++count;
-        const QImage button     = toolbar.widgetForAction(action)->grab().toImage();
-        const double background = luminance(button.pixelColor(button.width() / 2, 2));
+        const double background = luminance(buttonBackground(toolbar, action));
+        double enabled_contrast = 0.0;
         for (auto mode : {QIcon::Normal, QIcon::Disabled}) {
             const QImage icon =
                 action->icon().pixmap(QSize(24, 24), mode, action->isChecked() ? QIcon::On : QIcon::Off).toImage();
@@ -56,6 +61,14 @@ bool checkIconContrast(ORNL::MainToolbar& toolbar) {
             foreground /= opaque_pixels;
             const double contrast =
                 (std::max(foreground, background) + 0.05) / (std::min(foreground, background) + 0.05);
+            if (mode == QIcon::Normal)
+                enabled_contrast = contrast;
+            else {
+                passed &= ORNL::Testing::expect(contrast <= enabled_contrast * 0.5,
+                                                QString("%1 disabled icon should be clearly muted relative to enabled.")
+                                                    .arg(action->text())
+                                                    .toStdString());
+            }
             passed &= ORNL::Testing::expect(contrast >= (mode == QIcon::Normal ? 4.5 : 1.5),
                                             QString("%1 icon mode %2 has insufficient contrast: %3.")
                                                 .arg(action->text())
@@ -104,8 +117,16 @@ int main(int argc, char* argv[]) {
     startup_parent.show();
     app.processEvents();
     passed &= checkIconContrast(startup_toolbar);
-    for (auto* action : startup_toolbar.actions())
-        if (action->text() == "Show Slicing Geometry") action->setChecked(true);
+    QAction* slicing_action = nullptr;
+    QAction* load_action    = nullptr;
+    for (auto* action : startup_toolbar.actions()) {
+        if (action->text() == "Show Slicing Geometry") slicing_action = action;
+        if (action->text() == "Load Model") load_action = action;
+    }
+    if (!ORNL::Testing::expect(slicing_action != nullptr && load_action != nullptr,
+                               "The toolbar must expose slicing geometry and load commands."))
+        return EXIT_FAILURE;
+    slicing_action->setChecked(true);
     app.processEvents();
     passed &= checkIconContrast(startup_toolbar);
 
@@ -134,6 +155,13 @@ int main(int argc, char* argv[]) {
         for (int view : {0, 1}) {
             startup_toolbar.setView(view);
             app.processEvents();
+            passed &= checkIconContrast(startup_toolbar);
+            passed &= ORNL::Testing::expect(slicing_action->isChecked() && slicing_action->isEnabled() == (view == 0),
+                                            "Switching views must preserve the checked state and update availability.");
+            const bool neutral_background =
+                buttonBackground(startup_toolbar, slicing_action) == buttonBackground(startup_toolbar, load_action);
+            passed &= ORNL::Testing::expect(view == 0 ? !neutral_background : neutral_background,
+                                            "Only enabled checked buttons should retain their active background.");
             if (argc > 1) {
                 passed &= ORNL::Testing::expect(
                     startup_toolbar.grab().save(QString("%1/%2-view-%3.png").arg(argv[1]).arg(iteration).arg(view)),

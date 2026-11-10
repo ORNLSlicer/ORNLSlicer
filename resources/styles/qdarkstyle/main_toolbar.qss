@@ -134,6 +134,14 @@ QToolButton:!checked, QToolButton#menuButton:!checked {
     color: #757575;
 }
 
+QToolButton:disabled, QToolButton#menuButton:disabled {
+    background-color: #3a4143;
+}
+
+QToolButton::menu-indicator:disabled, QToolButton::menu-arrow:disabled {
+    image: url(:/styles/qdarkstyle/rc/down_arrow_disabled.png);
+}
+
 QComboBox{
     padding-left: 10px;
     padding-right: 10px;

@@ -469,15 +469,20 @@ void MainToolbar::setupStyle() {
     style->close();
 
     // Raster silhouettes do not follow stylesheet text colors. Recolor the original
-    // resources on each theme change, leaving the colored information icon intact.
-    const QColor foreground = PreferencesManager::getInstance()->getTheme().getPalette().color(QPalette::ButtonText);
-    const auto set_icon     = [foreground](QAction* action, const QString& resource) {
-        QPixmap pixmap(resource);
-        QPainter painter(&pixmap);
-        painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
-        painter.fillRect(pixmap.rect(), foreground);
-        painter.end();
-        action->setIcon(QIcon(pixmap));
+    // resources for each theme and state, leaving the colored information icon intact.
+    const QPalette icon_palette = PreferencesManager::getInstance()->getTheme().getPalette();
+    const auto set_icon         = [icon_palette](QAction* action, const QString& resource) {
+        QIcon icon;
+        for (auto mode : {QIcon::Normal, QIcon::Disabled}) {
+            const auto group = mode == QIcon::Disabled ? QPalette::Disabled : QPalette::Active;
+            QPixmap pixmap(resource);
+            QPainter painter(&pixmap);
+            painter.setCompositionMode(QPainter::CompositionMode_SourceIn);
+            painter.fillRect(pixmap.rect(), icon_palette.color(group, QPalette::ButtonText));
+            painter.end();
+            icon.addPixmap(pixmap, mode);
+        }
+        action->setIcon(icon);
     };
     set_icon(m_add_action, ":/icons/file_black.png");
     set_icon(m_shape_action, ":/icons/shape_black.png");

@@ -29,7 +29,7 @@ Release versions follow the project's
 
 ### Fixed
 
-- Fixed main-toolbar icons blending into the dark-mode background, including after switching themes.
+- Fixed main-toolbar icon visibility in Dark Mode and distinguished unavailable commands when switching between Part View and G-Code View.
 - Fixed ARC exports using the current generation checkbox instead of the completed slice's companion requirement; cached programs and individual layers now retain their slice-time decision ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed inconsistent light/dark theme heading fonts; regional form headings now use the same font family and size as their controls, with bold reserved for headings ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Fixed dark-mode group-box frames and the continuous background behind regional weld schedule forms so sections remain visually separated ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
