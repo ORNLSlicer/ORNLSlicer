@@ -70,6 +70,9 @@ class LayerBar : public QWidget {
     //! \return an int
     int getLayerCount();
 
+    //! \brief Selects an existing override without applying the current layer template.
+    bool selectSettingsTarget(const QUuid& part_id, int low, int high);
+
    signals:
     //! \brief Signal that the selection has been altered.
     //! \param name_and_bases: Label plus list of ranges currently selected
@@ -284,6 +287,9 @@ class LayerBar : public QWidget {
 
     //! \brief Pointer to current part.
     QSharedPointer<Part> m_part;
+
+    //! \brief Navigation must retain existing ranges, including those from another template.
+    bool m_preserve_settings_ranges = false;
 
     //! \brief the part meta model used for tracking changes
     QSharedPointer<PartMetaModel> m_model;

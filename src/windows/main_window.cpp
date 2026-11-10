@@ -336,6 +336,7 @@ void MainWindow::setupWindows() {
     m_flowrate_calc_window         = new FlowrateCalcWindow(this);
     m_xtrude_calc_window           = new XtrudeCalcWindow(this);
     m_settings_file_compare_window = new SettingsFileCompareDialog(this);
+    m_settings_overrides_window    = new SettingsOverridesDialog(this);
     m_export_window                = new GcodeExport(this);
     m_layertimebar                 = new LayerTimesWindow(this);
     // m_ingersollPostProcessor = new IngersollPostProcessor(this);
@@ -571,8 +572,10 @@ void MainWindow::setupActions() {
     m_actions["gcode_to_s2c"]  = {"G-Code to S2C", ":/icons/settings_save_black.png", false, QKeySequence(), nullptr};
     m_actions["settings_compare"] = {"Compare Settings Files", ":/icons/settings_file_black.png", false, QKeySequence(),
                                      nullptr};
-    m_actions["setting_folder"]   = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
-                                     QKeySequence(), nullptr};
+    m_actions["settings_overrides"] = {"Settings Overrides", ":/icons/settings_file_black.png", false, QKeySequence(),
+                                       nullptr};
+    m_actions["setting_folder"]     = {"Additional Setting Location", ":/icons/settings_folder_black.png", false,
+                                       QKeySequence(), nullptr};
     m_actions["layer_bar_setting_folder"] = {"Additional Layer Bar Setting Location",
                                              ":/icons/settings_folder_black.png", false, QKeySequence(), nullptr};
     m_actions["pref"] = {"Application Preferences", ":/icons/settings_black.png", false, QKeySequence(tr("Ctrl+p")),
@@ -701,6 +704,7 @@ void MainWindow::setupActions() {
     m_menu_settings->addAction(m_actions["template_save"].action);
     m_menu_settings->addAction(m_actions["gcode_to_s2c"].action);
     m_menu_settings->addAction(m_actions["settings_compare"].action);
+    m_menu_settings->addAction(m_actions["settings_overrides"].action);
     m_menu_settings->addSeparator();
     m_menu_settings->addAction(m_actions["setting_folder"].action);
     m_menu_settings->addAction(m_actions["layer_bar_setting_folder"].action);
@@ -895,6 +899,28 @@ void MainWindow::setupEvents() {
         m_settings_file_compare_window->raise();
         m_settings_file_compare_window->activateWindow();
     });
+    connect(m_actions["settings_overrides"].action, &QAction::triggered, m_settings_overrides_window, [this] {
+        if (m_settings_overrides_window->isVisible()) m_settings_overrides_window->refresh();
+        m_settings_overrides_window->showNormal();
+        m_settings_overrides_window->raise();
+        m_settings_overrides_window->activateWindow();
+    });
+    connect(m_settings_overrides_window, &SettingsOverridesDialog::showSettingRequested, this,
+            [this](const QUuid& part_id, int low, int high, const QString& key) {
+                if (!m_layerbar->selectSettingsTarget(part_id, low, high)) {
+                    updateStatus("The selected override no longer exists in the current project.");
+                    m_settings_overrides_window->scheduleRefresh();
+                    return;
+                }
+                if (m_tab_widget->currentWidget() != m_part_widget) switchViews(0);
+                m_main_toolbar->setView(0);
+                m_settingdock->show();
+                m_settingdock->raise();
+                raise();
+                activateWindow();
+                if (!m_settingbar->focusSetting(key))
+                    updateStatus("This setting is unavailable in the local settings editor.");
+            });
     connect(m_actions["setting_folder"].action, &QAction::triggered, this, &MainWindow::setSettingFolder);
     connect(m_actions["layer_bar_setting_folder"].action, &QAction::triggered, this,
             &MainWindow::setLayerBarSettingFolder);
@@ -992,6 +1018,8 @@ void MainWindow::setupEvents() {
             &MainToolbar::setLayerSettingsRangeAbility);
     connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_settingbar,
             &SettingBar::refreshOverrideIndicators);
+    connect(m_layerbar, &LayerBar::layerSettingsRangeAvailabilityChanged, m_settings_overrides_window,
+            &SettingsOverridesDialog::scheduleRefresh);
 
     // Part widget connection
     connect(m_part_widget, &PartWidget::selected, this,
@@ -1059,6 +1087,8 @@ void MainWindow::setupEvents() {
     connect(m_settingbar, &SettingBar::settingModified, m_layerbar, &LayerBar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, m_main_toolbar, &MainToolbar::handleModifiedSetting);
     connect(m_settingbar, &SettingBar::settingModified, this, &MainWindow::handleModifiedSetting);
+    connect(m_settingbar, &SettingBar::settingModified, m_settings_overrides_window,
+            &SettingsOverridesDialog::scheduleRefresh);
     connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_part_widget->view(),
             &PartView::updateOptimizationSettings);
     connect(m_settingbar, &SettingBar::selectedVisualizationSettingsChanged, m_gcode_widget->view(),
@@ -1679,6 +1709,7 @@ void MainWindow::updateSavedProjectState() {
 
 void MainWindow::markProjectModified() {
     m_project_modified = true;
+    m_settings_overrides_window->scheduleRefresh();
 }
 
 bool MainWindow::hasUnsavedProjectChanges() {
@@ -1740,13 +1771,19 @@ void MainWindow::loadSession() {
 
 SessionLoader* MainWindow::loadASession(const QString& filename) {
     m_settingbar->setOverrideIndicatorsSuspended(true);
-    auto resume_indicators = qScopeGuard([this] { m_settingbar->setOverrideIndicatorsSuspended(false); });
+    m_settings_overrides_window->setRefreshSuspended(true);
+    auto resume_indicators = qScopeGuard([this] {
+        m_settingbar->setOverrideIndicatorsSuspended(false);
+        m_settings_overrides_window->setRefreshSuspended(false);
+    });
     m_part_widget->clear();
     SessionLoader* loader = CSM->loadSession(true, filename);
     if (loader != nullptr) {
         connect(loader, &SessionLoader::loadSucceeded, this, &MainWindow::updateSavedProjectState);
-        connect(loader, &SessionLoader::finished, m_settingbar,
-                [this] { m_settingbar->setOverrideIndicatorsSuspended(false); });
+        connect(loader, &SessionLoader::finished, m_settingbar, [this] {
+            m_settingbar->setOverrideIndicatorsSuspended(false);
+            m_settings_overrides_window->setRefreshSuspended(false);
+        });
         if (!loader->isFinished()) resume_indicators.dismiss();
     }
     return loader;

@@ -211,14 +211,20 @@ bool SettingRowBase::isShown() const {
     return rowWidgetsVisible();
 }
 
+void SettingRowBase::setNavigationRevealed(bool revealed) {
+    m_navigation_revealed = revealed;
+    applyBaseWidgetState();
+}
+
 bool SettingRowBase::rowWidgetsVisible() const {
     const bool show_disabled =
         PreferencesManager::getInstance()->getDisabledSettingVisibilityPreference() == DisabledSettingVisibility::kGrey;
-    return m_row_visible && m_visibility_enabled && (m_dependency_enabled || show_disabled);
+    return m_row_visible &&
+           (m_navigation_revealed || (m_visibility_enabled && (m_dependency_enabled || show_disabled)));
 }
 
 bool SettingRowBase::rowWidgetsEnabled() const {
-    return m_row_enabled && m_dependency_enabled;
+    return m_row_enabled && m_dependency_enabled && (!m_navigation_revealed || m_visibility_enabled);
 }
 
 void SettingRowBase::applyWidgetState(QWidget* widget) const {

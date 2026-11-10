@@ -67,6 +67,9 @@ class SessionManager : public QObject {
         return m_parts;
     }
 
+    //! \brief Copy the part list safely while background mesh imports add parts.
+    QMap<QString, QSharedPointer<Part>> partsSnapshot();
+
     //! \brief Returns a Part class associated with a name.
     inline QSharedPointer<Part> getPart(QString name) {
         return m_parts.value(name, nullptr);

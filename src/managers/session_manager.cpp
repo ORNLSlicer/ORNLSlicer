@@ -251,6 +251,11 @@ bool SessionManager::loadModel(QString filename, bool saveLocation, MeshType mt,
     return true;
 }
 
+QMap<QString, QSharedPointer<Part>> SessionManager::partsSnapshot() {
+    const QMutexLocker lock(&m_load_mutex);
+    return m_parts;
+}
+
 void SessionManager::addPart(QSharedPointer<Part> new_part, bool notify) {
     m_load_mutex.lock();
 

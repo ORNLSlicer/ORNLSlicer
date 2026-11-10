@@ -513,6 +513,50 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_setting_override_indicator_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME setting_override_indicator_tests COMMAND ${PROJECT_NAME}_setting_override_indicator_tests)
 
+    add_executable(${PROJECT_NAME}_settings_overrides_tests tests/settings_overrides_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_settings_overrides_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_settings_overrides_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME settings_overrides_tests COMMAND ${PROJECT_NAME}_settings_overrides_tests)
+
+    add_executable(${PROJECT_NAME}_setting_activity_tests tests/setting_activity_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_setting_activity_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_setting_activity_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME setting_activity_tests COMMAND ${PROJECT_NAME}_setting_activity_tests)
+
+    add_executable(${PROJECT_NAME}_settings_overrides_report_tests tests/settings_overrides_report_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_settings_overrides_report_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_settings_overrides_report_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME settings_overrides_report_tests COMMAND ${PROJECT_NAME}_settings_overrides_report_tests)
+
+    add_executable(${PROJECT_NAME}_settings_override_navigation_tests tests/settings_override_navigation_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_settings_override_navigation_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_settings_override_navigation_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME settings_override_navigation_tests COMMAND ${PROJECT_NAME}_settings_override_navigation_tests)
+
     add_executable(${PROJECT_NAME}_arc_specialties_settings_tests tests/arc_specialties_settings_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_arc_specialties_settings_tests
