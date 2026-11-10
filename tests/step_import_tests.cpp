@@ -1,3 +1,8 @@
+// CGAL must be parsed before OpenCASCADE defines its Handle macro.
+// clang-format off
+#include "threading/mesh_loader.h"
+// clang-format on
+
 #include <QCoreApplication>
 #include <QTemporaryDir>
 #include <iostream>
@@ -14,7 +19,6 @@
 
 #include "geometry/mesh/mesh_base.h"
 #include "test_utils.h"
-#include "threading/mesh_loader.h"
 
 namespace {
 bool writeStep(const TopoDS_Shape& shape, const QString& path) {
@@ -62,6 +66,9 @@ int main(int argc, char* argv[]) {
     bool passed = true;
     passed &= importsClosed(touchingBoxes(), dir, "touching_boxes.step");
     passed &= importsClosed(boxWithVoid(), dir, "box_with_void.step");
+    const auto box = BRepPrimAPI_MakeBox(gp_Pnt(0, 0, 0), gp_Pnt(10, 10, 10)).Shape();
+    for (const QString& extension : {"STEP", "StEp", "stp", "STP", "StP"})
+        passed &= importsClosed(box, dir, "box." + extension);
 
     if (!passed) return 1;
     std::cout << "STEP import tests passed\n";

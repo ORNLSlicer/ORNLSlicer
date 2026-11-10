@@ -267,7 +267,7 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
 
     Assimp::Importer importer;
 
-    auto model_type = file_info.suffix();
+    auto model_type = file_info.suffix().toLower();
 
     if (isStepFile(model_type)) {
         auto step_meshes = loadStepMeshes(file_info, mt, transform, unit, file_data, read_from_memory);
@@ -275,25 +275,25 @@ QVector<MeshLoader::MeshData> MeshLoader::LoadMeshes(QString file_path, MeshType
         return step_meshes;
     }
 
-    if (model_type == "stl" || model_type == "STL") {
+    if (model_type == "stl") {
         scene =
             importer.ReadFileFromMemory(file_data.first, file_data.second,
                                         aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType,
                                         "stl");  // Tell assimp we are using STL.
     }
-    else if (model_type == "3mf" || model_type == "3MF") {
+    else if (model_type == "3mf") {
         scene =
             importer.ReadFileFromMemory(file_data.first, file_data.second,
                                         aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_SortByPType,
                                         "3mf");  // Tell assimp we are using 3mf.
     }
-    else if (model_type == "obj" || model_type == "OBJ") {
+    else if (model_type == "obj") {
         scene = importer.ReadFileFromMemory(
             file_data.first, file_data.second,
             aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_SortByPType,
             "obj");  // Tell assimp we are using obj.
     }
-    else if (model_type == "amf" || model_type == "AMF") {
+    else if (model_type == "amf") {
         scene = importer.ReadFileFromMemory(
             file_data.first, file_data.second,
             aiProcess_DropNormals | aiProcess_JoinIdenticalVertices | aiProcess_Triangulate | aiProcess_SortByPType,
