@@ -581,7 +581,7 @@ Settings are grouped by intent:
 | --- | --- |
 | Printer | Controller syntax, machine type, coordinate setup, build volume, auxiliary equipment, speed/acceleration limits, and machine G-code |
 | Material | Density, path start/slowdown/wipe/lift modifiers, purge and extrusion behavior, filament/retraction, temperature/cooling, adhesion, and multi-material behavior |
-| Profile | Slicing mode, layer geometry, path regions, support/travel, local G-code, special modes, ordering/optimization, and scanners |
+| Profile | Slicing mode, layer geometry, path regions, support/travel, local G-code, special modes, ordering/optimization, scanners, and Arc Specialties weld schedules |
 | Experimental | Auto speed ramping, companion-file output, and cross-section stitching controls |
 
 The complete category map is in
@@ -1420,6 +1420,7 @@ every individual setting.
 | Profile | Ordering | Region order and perimeter/inset direction reversal |
 | Profile | Laser Scanner | Scan path, offsets, dimensions/resolution, orientation, bed/global scan, buffering |
 | Profile | Thermal Scanner | Enablement, offsets, temperature cutoff |
+| Profile | Arc Specialties | Companion weld schedule generation and regional timing, start, weld, and crater fill values |
 | Experimental | Auto Speed Ramping | Angle trigger, ramp distances, speeds, extrusion speeds |
 | Experimental | File Output | Syntax-specific companion and simulation outputs |
 | Experimental | Cross-Sectioning | Gap and stitch tolerances |
@@ -1525,7 +1526,7 @@ operate on text; otherwise they operate on selected parts where supported.
 
 ## Appendix E. Detailed settings reference
 
-This generated appendix documents all 571 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 556 visible setting rows across 39 categories.
+This generated appendix documents all 650 scalar manufacturing settings exposed by the canonical catalog. The 9 grouped controls combine related scalar values, producing 635 visible setting rows across 40 categories.
 
 Do not edit this appendix directly. Update `resources/settings/*.yaml` for setting metadata and the documented mappings in `scripts/generate_settings_reference.py` for choice-level or implementation notes, then run the generator. It validates the source catalog and replaces everything between the generated-reference markers.
 
@@ -1557,7 +1558,7 @@ The catalog is organized as follows:
 | [Printer](#e2-printer-settings) | [Auxiliary](#settings-printer-auxiliary) | 2 |
 | [Printer](#e2-printer-settings) | [Machine Speeds](#settings-printer-machine-speeds) | 7 |
 | [Printer](#e2-printer-settings) | [Acceleration](#settings-printer-acceleration) | 8 |
-| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 12 |
+| [Printer](#e2-printer-settings) | [G-Code](#settings-printer-g-code) | 13 |
 | [Material](#e3-material-settings) | [Density](#settings-material-density) | 2 |
 | [Material](#e3-material-settings) | [Start-Up](#settings-material-start-up) | 32 |
 | [Material](#e3-material-settings) | [Slow Down](#settings-material-slow-down) | 32 |
@@ -1573,15 +1574,15 @@ The catalog is organized as follows:
 | [Material](#e3-material-settings) | [Multi-Material](#settings-material-multi-material) | 11 |
 | [Profile](#e4-profile-settings) | [Slicing](#settings-profile-slicing) | 13 |
 | [Profile](#e4-profile-settings) | [Layer](#settings-profile-layer) | 9 |
-| [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 23 |
-| [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 15 |
-| [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 20 |
+| [Profile](#e4-profile-settings) | [Helical](#settings-profile-helical) | 3 |
+| [Profile](#e4-profile-settings) | [Perimeter](#settings-profile-perimeter) | 28 |
+| [Profile](#e4-profile-settings) | [Inset](#settings-profile-inset) | 20 |
+| [Profile](#e4-profile-settings) | [Infill](#settings-profile-infill) | 25 |
 | [Profile](#e4-profile-settings) | [Skeleton](#settings-profile-skeleton) | 23 |
 | [Profile](#e4-profile-settings) | [Skin](#settings-profile-skin) | 18 |
 | [Profile](#e4-profile-settings) | [Support](#settings-profile-support) | 29 |
 | [Profile](#e4-profile-settings) | [Radial](#settings-profile-radial) | 2 |
-| [Profile](#e4-profile-settings) | [Helical](#settings-profile-helical) | 21 |
-| [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 10 |
+| [Profile](#e4-profile-settings) | [Travel](#settings-profile-travel) | 13 |
 | [Profile](#e4-profile-settings) | [Ordering](#settings-profile-ordering) | 3 |
 | [Profile](#e4-profile-settings) | [Optimizations](#settings-profile-optimizations) | 34 |
 | [Profile](#e4-profile-settings) | [G-Code](#settings-profile-g-code) | 12 |
@@ -1590,7 +1591,8 @@ The catalog is organized as follows:
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
 | [Experimental](#e5-experimental-settings) | [Cross-Sectioning](#settings-experimental-cross-sectioning) | 2 |
 | [Experimental](#e5-experimental-settings) | [Auto Speed Ramping](#settings-experimental-auto-speed-ramping) | 8 |
-| [Experimental](#e5-experimental-settings) | [File Output](#settings-experimental-file-output) | 15 |
+| [Experimental](#e5-experimental-settings) | [File Output](#settings-experimental-file-output) | 16 |
+| [Profile](#e4-profile-settings) | [Arc Specialties](#settings-profile-arc-specialties) | 77 |
 
 ### E.2 Printer settings
 
@@ -2421,6 +2423,19 @@ Acceleration value for support.
 Controls machine-level startup, material loading, waits, boundary demonstrations, settings output,
 and custom command blocks.
 
+<a id="setting-starting_layer_number"></a>
+
+##### Starting Layer Number (`starting_layer_number`)
+
+Number assigned to the first generated G-Code layer. Must be a whole number from 1 to 2147483647;
+the final layer must also fit in this range. Changes layer labels and references without changing
+slicing or first-layer behavior.
+
+- **Input:** `positive_int` — Positive integer value; the input control has a minimum of 1.
+- **Master default:** `1`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Always available.
+
 <a id="setting-enable_default_startup_code"></a>
 
 ##### Use Default Startup G-Code (`enable_default_startup_code`)
@@ -2494,8 +2509,7 @@ If selected, each layer marker in the G-Code includes the estimated layer time i
 
 ##### Arc Specialties G2/G3 Optional Stop (`arc_specialties_g2_g3_optional_stop`)
 
-If selected, Arc Specialties G-Code emits a G81 optional stop routine before each non-initial G2/G3
-arc move.
+If selected, Arc Specialties G-Code adds an inline G81 optional stop routine to each G2/G3 arc move.
 
 - **Input:** `boolean` — On/off checkbox.
 - **Master default:** `Disabled` (`false`)
@@ -5309,6 +5323,19 @@ height beyond this radius.
   mode-specific scope limitations still apply.
 - **Available when:** Slicing Mode is `Cylindrical`.
 
+<a id="setting-cylinder_height"></a>
+
+##### Cylinder Height (`cylinder_height`)
+
+Limits cylindrical path generation to this height above the part base. Values less than or equal to
+zero use the part height.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Cylindrical`.
+
 <a id="setting-cylindrical_path_pattern"></a>
 
 ##### Cylindrical Path Pattern (`cylindrical_path_pattern`)
@@ -5473,6 +5500,65 @@ raft, and support paths.
 - **Available when:** Slicing Mode is `Planar`.
 
 
+<a id="settings-profile-helical"></a>
+
+#### Profile > Helical
+
+![Profile > Helical Settings](user-guide-images/settings/profile/helical_options.png)
+
+Controls handedness, tool angle offsets, z-clipping, revolutions, stepovers, and tool orientations
+for helical toolpaths in cylindrical slicing mode.
+
+<a id="setting-helical_path_handedness"></a>
+
+##### Helical Path Handedness (`helical_path_handedness`)
+
+Selects the handedness for generated helical paths. Right Handed uses a counter-clockwise XY sweep
+as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z rise.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Right Handed`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Right Handed`
+  - `Left Handed`
+
+<a id="setting-helical_tool_start_arc_length_offset"></a>
+
+##### Helical Tool Start Arc Length Offset (`helical_tool_start_arc_length_offset`)
+
+Signed physical Arc Specialties tool offset along each generated helical path radius. The writer
+converts this distance to an angle using the actual path radius; CP receives the full signed angle,
+and the configured torch frame is rotated about work-frame Y by the opposite angle to preserve
+surface-normal alignment.
+
+- **Input:** `location` — Signed position or offset in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_path_z_clip_rounding"></a>
+
+##### Helical Z Clip Rounding (`helical_path_z_clip_rounding`)
+
+Controls how helical path z clipping rounds the endpoint at the highest model intersection. Exact
+Intersection stops at the intersection. Complete Revolution continues to the next full revolution.
+Last Full Revolution stops at the previous full revolution.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Exact Intersection`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Exact Intersection`
+  - `Complete Revolution`
+  - `Last Full Revolution`
+
+
 <a id="settings-profile-perimeter"></a>
 
 #### Profile > Perimeter
@@ -5574,13 +5660,16 @@ Maximum bead width allowed when adaptive perimeter bead widths are enabled.
 
 ##### Perimeter Speed (`perimeter_speed`)
 
-Speed for perimeter paths.
+Speed for perimeter paths. Helical slicing requires a positive value for this region when it is
+enabled.
 
 - **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+- **Available when:** ((Slicing Mode is `Planar` and Enable Perimeter is enabled) or ((Slicing Mode
+  is `Cylindrical` and Cylindrical Path Pattern is `Helical`) and Not (Perimeter Revolutions is
+  `0`))).
 
 <a id="setting-perimeter_extruder_speed"></a>
 
@@ -5776,6 +5865,47 @@ the Perimeter settings controls when connections occur for the entire chain.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Perimeter is enabled and (Enable Inset
   is enabled and (Connect Perimeters is enabled and Connect Insets is enabled)))).
 
+<a id="setting-helical_perimeter_revolutions"></a>
+
+##### Perimeter Revolutions (`helical_perimeter_revolutions`)
+
+Number of revolutions for perimeter region.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_perimeter_stepover"></a>
+
+##### Perimeter Stepover (`helical_perimeter_stepover`)
+
+Step over distance for perimeter region.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Perimeter Revolutions is `0`))).
+
+<a id="setting-helical_perimeter_tool_frame_rotation"></a>
+<a id="setting-helical_perimeter_tool_frame_x_rotation"></a>
+<a id="setting-helical_perimeter_tool_frame_y_rotation"></a>
+<a id="setting-helical_perimeter_tool_frame_z_rotation"></a>
+
+##### Perimeter Tool Frame Rotation (`helical_perimeter_tool_frame_rotation`)
+
+Rotation of the tool frame for perimeter region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Perimeter Revolutions is `0`))).
+- **Components and master defaults:**
+  - **X:** `helical_perimeter_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_perimeter_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_perimeter_tool_frame_z_rotation` — `0°`
+
 
 <a id="settings-profile-inset"></a>
 
@@ -5862,13 +5992,14 @@ Maximum bead width allowed when adaptive inset bead widths are enabled.
 
 ##### Inset Speed (`inset_speed`)
 
-Speed for inset paths.
+Speed for inset paths. Helical slicing requires a positive value for this region when it is enabled.
 
 - **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+- **Available when:** ((Slicing Mode is `Planar` and Enable Inset is enabled) or ((Slicing Mode is
+  `Cylindrical` and Cylindrical Path Pattern is `Helical`) and Not (Inset Revolutions is `0`))).
 
 <a id="setting-inset_extruder_speed"></a>
 
@@ -5971,6 +6102,47 @@ is unavailable.
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and (Enable Inset is enabled and (Connect Insets is
   enabled and (Enable Inset Tip Wipe is enabled and Inset Wipe Direction is `WIPE_FORWARD`)))).
+
+<a id="setting-helical_inset_revolutions"></a>
+
+##### Inset Revolutions (`helical_inset_revolutions`)
+
+Number of revolutions for inset region.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_inset_stepover"></a>
+
+##### Inset Stepover (`helical_inset_stepover`)
+
+Step over distance for inset region.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Inset Revolutions is `0`))).
+
+<a id="setting-helical_inset_tool_frame_rotation"></a>
+<a id="setting-helical_inset_tool_frame_x_rotation"></a>
+<a id="setting-helical_inset_tool_frame_y_rotation"></a>
+<a id="setting-helical_inset_tool_frame_z_rotation"></a>
+
+##### Inset Tool Frame Rotation (`helical_inset_tool_frame_rotation`)
+
+Rotation of the tool frame for inset region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
+  Not (Inset Revolutions is `0`))).
+- **Components and master defaults:**
+  - **X:** `helical_inset_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_inset_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_inset_tool_frame_z_rotation` — `0°`
 
 
 <a id="settings-profile-infill"></a>
@@ -6151,13 +6323,15 @@ Width of the bead for the infill print moves.
 
 ##### Infill Speed (`infill_speed`)
 
-Speed for the infill paths.
+Speed for infill paths. Helical slicing requires a positive value for this region when it is
+enabled.
 
 - **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
 - **Master default:** `0 mm/s`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
+- **Available when:** ((Slicing Mode is `Planar` and Enable Infill is enabled) or (Slicing Mode is
+  `Cylindrical` and Cylindrical Path Pattern is `Helical`)).
 
 <a id="setting-infill_extruder_speed"></a>
 
@@ -6246,6 +6420,50 @@ Shift the first starting layer of infill when using combine infill every X layer
 - **Master default:** `0`
 - **Scope:** Global only. Configure it in the active global template or global Settings panel.
 - **Available when:** (Slicing Mode is `Planar` and Enable Infill is enabled).
+
+<a id="setting-helical_infill_revolutions_rounding"></a>
+
+##### Infill Revolutions Rounding Policy (`helical_infill_revolutions_rounding`)
+
+Rounding policy for the number of revolutions for helical infill region. This is used to ensure that
+the number of revolutions is an integer value.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Round`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Choices:**
+  - `Round`
+  - `Floor`
+  - `Ceil`
+
+<a id="setting-helical_infill_stepover"></a>
+
+##### Infill Stepover (`helical_infill_stepover`)
+
+Step over distance for infill region.
+
+- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
+- **Master default:** `0 mm`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+
+<a id="setting-helical_infill_tool_frame_rotation"></a>
+<a id="setting-helical_infill_tool_frame_x_rotation"></a>
+<a id="setting-helical_infill_tool_frame_y_rotation"></a>
+<a id="setting-helical_infill_tool_frame_z_rotation"></a>
+
+##### Infill Tool Frame Rotation (`helical_infill_tool_frame_rotation`)
+
+Rotation of the tool frame for infill region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Components and master defaults:**
+  - **X:** `helical_infill_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_infill_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_infill_tool_frame_z_rotation` — `0°`
 
 
 <a id="settings-profile-skeleton"></a>
@@ -7242,207 +7460,6 @@ starts on +X and 90 degrees starts on +Y.
 - **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Radial`).
 
 
-<a id="settings-profile-helical"></a>
-
-#### Profile > Helical
-
-![Profile > Helical Settings](user-guide-images/settings/profile/helical_options.png)
-
-Controls handedness, tool angle offsets, z-clipping, revolutions, stepovers, and tool orientations
-for helical toolpaths in cylindrical slicing mode.
-
-<a id="setting-helical_path_handedness"></a>
-
-##### Helical Path Handedness (`helical_path_handedness`)
-
-Selects the handedness for generated helical paths. Right Handed uses a counter-clockwise XY sweep
-as Z rises. Left Handed mirrors the sweep clockwise while preserving positive Z rise.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Right Handed`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Choices:**
-  - `Right Handed`
-  - `Left Handed`
-
-<a id="setting-helical_tool_start_arc_length_offset"></a>
-
-##### Helical Tool Start Arc Length Offset (`helical_tool_start_arc_length_offset`)
-
-Signed physical Arc Specialties tool offset along each generated helical path radius. The writer
-converts this distance to an angle using the actual path radius; CP receives the full signed angle
-and XR/YR each receive half.
-
-- **Input:** `location` — Signed position or offset in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-
-<a id="setting-helical_path_z_clip_rounding"></a>
-
-##### Helical Z Clip Rounding (`helical_path_z_clip_rounding`)
-
-Controls how helical path z clipping rounds the endpoint at the highest model intersection. Exact
-Intersection stops at the intersection. Complete Revolution continues to the next full revolution.
-Last Full Revolution stops at the previous full revolution.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Exact Intersection`
-- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
-  mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Choices:**
-  - `Exact Intersection`
-  - `Complete Revolution`
-  - `Last Full Revolution`
-
-<a id="setting-helical_perimeter_revolutions"></a>
-
-##### Perimeter Revolutions (`helical_perimeter_revolutions`)
-
-Number of revolutions for perimeter region.
-
-- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
-- **Master default:** `0`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-
-<a id="setting-helical_inset_revolutions"></a>
-
-##### Inset Revolutions (`helical_inset_revolutions`)
-
-Number of revolutions for inset region.
-
-- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
-- **Master default:** `0`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-
-<a id="setting-helical_infill_revolutions_rounding"></a>
-
-##### Infill Revolutions Rounding Policy (`helical_infill_revolutions_rounding`)
-
-Rounding policy for the number of revolutions for helical infill region. This is used to ensure that
-the number of revolutions is an integer value.
-
-- **Input:** `enumeration` — Choice from the listed values.
-- **Master default:** `Round`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Choices:**
-  - `Round`
-  - `Floor`
-  - `Ceil`
-
-<a id="setting-helical_perimeter_stepover"></a>
-
-##### Perimeter Stepover (`helical_perimeter_stepover`)
-
-Step over distance for perimeter region.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
-  Not (Perimeter Revolutions is `0`))).
-
-<a id="setting-helical_inset_stepover"></a>
-
-##### Inset Stepover (`helical_inset_stepover`)
-
-Step over distance for inset region.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
-  Not (Inset Revolutions is `0`))).
-
-<a id="setting-helical_infill_stepover"></a>
-
-##### Infill Stepover (`helical_infill_stepover`)
-
-Step over distance for infill region.
-
-- **Input:** `distance` — Nonnegative physical distance in the preferred distance unit.
-- **Master default:** `0 mm`
-- **Scope:** Global only. Configure it in the active global template or global Settings panel.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-
-<a id="setting-helical_perimeter_tool_frame_rotation"></a>
-<a id="setting-helical_perimeter_tool_frame_x_rotation"></a>
-<a id="setting-helical_perimeter_tool_frame_y_rotation"></a>
-<a id="setting-helical_perimeter_tool_frame_z_rotation"></a>
-
-##### Perimeter Tool Frame Rotation (`helical_perimeter_tool_frame_rotation`)
-
-Rotation of the tool frame for perimeter region.
-
-- **Input:** `vector3` grouped control with the components listed below.
-- **Scope:** Global only. Configure the grouped value in the active global settings.
-- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
-  Not (Perimeter Revolutions is `0`))).
-- **Components and master defaults:**
-  - **X:** `helical_perimeter_tool_frame_x_rotation` — `0°`
-  - **Y:** `helical_perimeter_tool_frame_y_rotation` — `0°`
-  - **Z:** `helical_perimeter_tool_frame_z_rotation` — `0°`
-
-<a id="setting-helical_inset_tool_frame_rotation"></a>
-<a id="setting-helical_inset_tool_frame_x_rotation"></a>
-<a id="setting-helical_inset_tool_frame_y_rotation"></a>
-<a id="setting-helical_inset_tool_frame_z_rotation"></a>
-
-##### Inset Tool Frame Rotation (`helical_inset_tool_frame_rotation`)
-
-Rotation of the tool frame for inset region.
-
-- **Input:** `vector3` grouped control with the components listed below.
-- **Scope:** Global only. Configure the grouped value in the active global settings.
-- **Available when:** (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and
-  Not (Inset Revolutions is `0`))).
-- **Components and master defaults:**
-  - **X:** `helical_inset_tool_frame_x_rotation` — `0°`
-  - **Y:** `helical_inset_tool_frame_y_rotation` — `0°`
-  - **Z:** `helical_inset_tool_frame_z_rotation` — `0°`
-
-<a id="setting-helical_infill_tool_frame_rotation"></a>
-<a id="setting-helical_infill_tool_frame_x_rotation"></a>
-<a id="setting-helical_infill_tool_frame_y_rotation"></a>
-<a id="setting-helical_infill_tool_frame_z_rotation"></a>
-
-##### Infill Tool Frame Rotation (`helical_infill_tool_frame_rotation`)
-
-Rotation of the tool frame for infill region.
-
-- **Input:** `vector3` grouped control with the components listed below.
-- **Scope:** Global only. Configure the grouped value in the active global settings.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Components and master defaults:**
-  - **X:** `helical_infill_tool_frame_x_rotation` — `0°`
-  - **Y:** `helical_infill_tool_frame_y_rotation` — `0°`
-  - **Z:** `helical_infill_tool_frame_z_rotation` — `0°`
-
-<a id="setting-helical_travel_tool_frame_rotation"></a>
-<a id="setting-helical_travel_tool_frame_x_rotation"></a>
-<a id="setting-helical_travel_tool_frame_y_rotation"></a>
-<a id="setting-helical_travel_tool_frame_z_rotation"></a>
-
-##### Travel Tool Frame Rotation (`helical_travel_tool_frame_rotation`)
-
-Rotation of the tool frame for travel region.
-
-- **Input:** `vector3` grouped control with the components listed below.
-- **Scope:** Global only. Configure the grouped value in the active global settings.
-- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
-- **Components and master defaults:**
-  - **X:** `helical_travel_tool_frame_x_rotation` — `0°`
-  - **Y:** `helical_travel_tool_frame_y_rotation` — `0°`
-  - **Z:** `helical_travel_tool_frame_z_rotation` — `0°`
-
-
 <a id="settings-profile-travel"></a>
 
 #### Profile > Travel
@@ -7572,6 +7589,23 @@ Duration of the pause during travel motion.
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
 - **Available when:** (Slicing Mode is `Planar` and Pause During Travel is enabled).
+
+<a id="setting-helical_travel_tool_frame_rotation"></a>
+<a id="setting-helical_travel_tool_frame_x_rotation"></a>
+<a id="setting-helical_travel_tool_frame_y_rotation"></a>
+<a id="setting-helical_travel_tool_frame_z_rotation"></a>
+
+##### Travel Tool Frame Rotation (`helical_travel_tool_frame_rotation`)
+
+Rotation of the tool frame for travel region.
+
+- **Input:** `vector3` grouped control with the components listed below.
+- **Scope:** Global only. Configure the grouped value in the active global settings.
+- **Available when:** (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`).
+- **Components and master defaults:**
+  - **X:** `helical_travel_tool_frame_x_rotation` — `0°`
+  - **Y:** `helical_travel_tool_frame_y_rotation` — `0°`
+  - **Z:** `helical_travel_tool_frame_z_rotation` — `0°`
 
 
 <a id="settings-profile-ordering"></a>
@@ -7747,6 +7781,81 @@ or a user-defined reference point.
   - `Inside Out` — Traverses contour hierarchy from interior paths toward exterior paths.
   - `Custom Location` — Uses the custom X/Y location as the reference for nearest-path selection.
 
+<a id="setting-cylindrical_path_order_optimization"></a>
+
+##### Cylindrical Path Order Optimization (`cylindrical_path_order_optimization`)
+
+Type of path order optimizer to use for radial and helical cylindrical slicing paths.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Next Closest`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** Slicing Mode is `Cylindrical`.
+- **Choices:**
+  - `Next Closest`
+  - `Next Farthest`
+
+<a id="setting-perimeter_path_order_optimization"></a>
+
+##### Perimeter Path Order Optimization (`perimeter_path_order_optimization`)
+
+Type of order optimizer to use on perimeter paths. Use Global follows Path Order Optimization.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Use Global`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Perimeter is enabled).
+- **Choices:**
+  - `Use Global`
+  - `Next Closest`
+  - `Next Farthest`
+  - `Random`
+  - `Outside In`
+  - `Inside Out`
+  - `Custom Location`
+
+<a id="setting-inset_path_order_optimization"></a>
+
+##### Inset Path Order Optimization (`inset_path_order_optimization`)
+
+Type of order optimizer to use on inset paths. Use Global follows Path Order Optimization.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Use Global`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Inset is enabled).
+- **Choices:**
+  - `Use Global`
+  - `Next Closest`
+  - `Next Farthest`
+  - `Random`
+  - `Outside In`
+  - `Inside Out`
+  - `Custom Location`
+
+<a id="setting-skin_path_order_optimization"></a>
+
+##### Skin Path Order Optimization (`skin_path_order_optimization`)
+
+Type of order optimizer to use on skin paths. Use Global follows Path Order Optimization.
+
+- **Input:** `enumeration` — Choice from the listed values.
+- **Master default:** `Use Global`
+- **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
+  mode-specific scope limitations still apply.
+- **Available when:** (Slicing Mode is `Planar` and Enable Skin is enabled).
+- **Choices:**
+  - `Use Global`
+  - `Next Closest`
+  - `Next Farthest`
+  - `Random`
+  - `Outside In`
+  - `Inside Out`
+  - `Custom Location`
+
 <a id="setting-custom_path_order_x_location"></a>
 
 ##### Custom Path Point X Location (`custom_path_order_x_location`)
@@ -7757,7 +7866,9 @@ X Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Path Order Optimization is `Custom Location` or
+  (Perimeter Path Order Optimization is `Custom Location` or (Inset Path Order Optimization is
+  `Custom Location` or Skin Path Order Optimization is `Custom Location`)))).
 
 <a id="setting-custom_path_order_y_location"></a>
 
@@ -7769,7 +7880,9 @@ Y Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Path Order Optimization is `Custom Location` or
+  (Perimeter Path Order Optimization is `Custom Location` or (Inset Path Order Optimization is
+  `Custom Location` or Skin Path Order Optimization is `Custom Location`)))).
 
 <a id="setting-custom_path_order_z_location"></a>
 
@@ -7781,7 +7894,9 @@ Z Coordinate for Custom Point Optimization Location.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Path Order Optimization is `Custom Location`).
+- **Available when:** (Slicing Mode is `Planar` and (Path Order Optimization is `Custom Location` or
+  (Perimeter Path Order Optimization is `Custom Location` or (Inset Path Order Optimization is
+  `Custom Location` or Skin Path Order Optimization is `Custom Location`)))).
 
 <a id="setting-point_order_optimization"></a>
 
@@ -7794,7 +7909,8 @@ layer-to-layer progression, or a user-defined reference point.
 - **Master default:** `Next Closest`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** Slicing Mode is `Planar`.
+- **Available when:** (Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)).
 - **Choices:**
   - `Next Closest` — Starts at the path point nearest the current tool position.
   - `Next Farthest` — Starts at the path point farthest from the current tool position.
@@ -7879,7 +7995,8 @@ Sets minimum distance to rotate consecutive point layer to layer.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and Point Order Optimization is `Consecutive`).
+- **Available when:** ((Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)) and Point Order Optimization is `Consecutive`).
 
 <a id="setting-custom_point_order_x_location"></a>
 
@@ -7891,8 +8008,9 @@ X Coordinate for Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
-  or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** ((Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)) and (Point Order Optimization is `Custom Location` or Point Order
+  Optimization is `Custom Farthest Location`)).
 
 <a id="setting-custom_point_order_y_location"></a>
 
@@ -7904,8 +8022,9 @@ Y Coordinate for Custom Point for Point Optimization Scheme.
 - **Master default:** `0 mm`
 - **Scope:** Local-capable. It can be overridden at supported part, layer/range, or spatial scopes;
   mode-specific scope limitations still apply.
-- **Available when:** (Slicing Mode is `Planar` and (Point Order Optimization is `Custom Location`
-  or Point Order Optimization is `Custom Farthest Location`)).
+- **Available when:** ((Slicing Mode is `Planar` or (Slicing Mode is `Cylindrical` and Cylindrical
+  Path Pattern is `Radial`)) and (Point Order Optimization is `Custom Location` or Point Order
+  Optimization is `Custom Farthest Location`)).
 
 <a id="setting-custom_point_order_z_location"></a>
 
@@ -8004,9 +8123,11 @@ use the slicing vector automatically.
 - **Input:** `vector3` grouped control with the components listed below.
 - **Scope:** Local-capable. Each component can be overridden through this grouped row at supported
   narrower scopes.
-- **Available when:** (Slicing Mode is `Planar` and ((Island Order Optimization is `Custom Location`
-  or Path Order Optimization is `Custom Location`) or (Point Order Optimization is `Custom Location`
-  or Point Order Optimization is `Custom Farthest Location`))).
+- **Available when:** (Slicing Mode is `Planar` and (Island Order Optimization is `Custom Location`
+  or ((Path Order Optimization is `Custom Location` or (Perimeter Path Order Optimization is `Custom
+  Location` or (Inset Path Order Optimization is `Custom Location` or Skin Path Order Optimization
+  is `Custom Location`))) or (Point Order Optimization is `Custom Location` or Point Order
+  Optimization is `Custom Farthest Location`)))).
 - **Components and master defaults:**
   - **X:** `seam_attractor_vector_x` — `0`
   - **Y:** `seam_attractor_vector_y` — `0`
@@ -8739,6 +8860,993 @@ this value, so it has no effect.
 - **Available when:** Enable Thermal Scanner is enabled.
 
 
+<a id="settings-profile-arc-specialties"></a>
+
+#### Profile > Arc Specialties
+
+![Profile > Arc Specialties Settings](user-guide-images/settings/profile/arc_specialties_options.png)
+
+Configures Arc Specialties weld schedule file generation and regional schedules for gas timing,
+startup, welding, and crater fill.
+
+<a id="setting-arc_specialties_generate_weld_schedule_file"></a>
+
+##### Generate Weld Schedule File (`arc_specialties_generate_weld_schedule_file`)
+
+If selected, G-Code export creates an Arc Specialties weld schedule companion file beside the main
+file.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Syntax is `Arc Specialties`.
+
+<a id="setting-arc_specialties_perimeter_preflow"></a>
+
+##### Perimeter Preflow (`arc_specialties_perimeter_preflow`)
+
+Arc Specialties preflow value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_travel_delay"></a>
+
+##### Perimeter Travel Delay (`arc_specialties_perimeter_travel_delay`)
+
+Arc Specialties travel delay value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_postflow"></a>
+
+##### Perimeter Postflow (`arc_specialties_perimeter_postflow`)
+
+Arc Specialties postflow value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_postpurge"></a>
+
+##### Perimeter Postpurge (`arc_specialties_perimeter_postpurge`)
+
+Arc Specialties postpurge value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_start_program"></a>
+
+##### Perimeter Start Program (`arc_specialties_perimeter_start_program`)
+
+Arc Specialties start program value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_start_wire_feed_speed"></a>
+
+##### Perimeter Start Wire Feed Speed (`arc_specialties_perimeter_start_wire_feed_speed`)
+
+Arc Specialties start wire feed speed value written to the generated weld schedule file for
+perimeter paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_start_voltage"></a>
+
+##### Perimeter Start Voltage (`arc_specialties_perimeter_start_voltage`)
+
+Arc Specialties start voltage value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_start_control"></a>
+
+##### Perimeter Start Control (`arc_specialties_perimeter_start_control`)
+
+Arc Specialties start control value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_start_tspd"></a>
+
+##### Perimeter Start TSpd (`arc_specialties_perimeter_start_tspd`)
+
+Arc Specialties start TSpd value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_start_time"></a>
+
+##### Perimeter Start Time (`arc_specialties_perimeter_start_time`)
+
+Arc Specialties start time value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_weld_program"></a>
+
+##### Perimeter Weld Program (`arc_specialties_perimeter_weld_program`)
+
+Arc Specialties weld program value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_weld_wire_feed_speed"></a>
+
+##### Perimeter Weld Wire Feed Speed (`arc_specialties_perimeter_weld_wire_feed_speed`)
+
+Arc Specialties weld wire feed speed value written to the generated weld schedule file for perimeter
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_weld_voltage"></a>
+
+##### Perimeter Weld Voltage (`arc_specialties_perimeter_weld_voltage`)
+
+Arc Specialties weld voltage value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_weld_control"></a>
+
+##### Perimeter Weld Control (`arc_specialties_perimeter_weld_control`)
+
+Arc Specialties weld control value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_crater_program"></a>
+
+##### Perimeter Crater Program (`arc_specialties_perimeter_crater_program`)
+
+Arc Specialties crater program value written to the generated weld schedule file for perimeter
+paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_crater_wire_feed_speed"></a>
+
+##### Perimeter Crater Wire Feed Speed (`arc_specialties_perimeter_crater_wire_feed_speed`)
+
+Arc Specialties crater wire feed speed value written to the generated weld schedule file for
+perimeter paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_crater_voltage"></a>
+
+##### Perimeter Crater Voltage (`arc_specialties_perimeter_crater_voltage`)
+
+Arc Specialties crater voltage value written to the generated weld schedule file for perimeter
+paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_crater_control"></a>
+
+##### Perimeter Crater Control (`arc_specialties_perimeter_crater_control`)
+
+Arc Specialties crater control value written to the generated weld schedule file for perimeter
+paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_perimeter_crater_time"></a>
+
+##### Perimeter Crater Time (`arc_specialties_perimeter_crater_time`)
+
+Arc Specialties crater time value written to the generated weld schedule file for perimeter paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable
+  Perimeter is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Radial`
+  or (Cylindrical Path Pattern is `Helical` and Not (Perimeter Revolutions is `0`)))))).
+
+<a id="setting-arc_specialties_inset_preflow"></a>
+
+##### Inset Preflow (`arc_specialties_inset_preflow`)
+
+Arc Specialties preflow value written to the generated weld schedule file for inset paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_travel_delay"></a>
+
+##### Inset Travel Delay (`arc_specialties_inset_travel_delay`)
+
+Arc Specialties travel delay value written to the generated weld schedule file for inset paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_postflow"></a>
+
+##### Inset Postflow (`arc_specialties_inset_postflow`)
+
+Arc Specialties postflow value written to the generated weld schedule file for inset paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_postpurge"></a>
+
+##### Inset Postpurge (`arc_specialties_inset_postpurge`)
+
+Arc Specialties postpurge value written to the generated weld schedule file for inset paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_start_program"></a>
+
+##### Inset Start Program (`arc_specialties_inset_start_program`)
+
+Arc Specialties start program value written to the generated weld schedule file for inset paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_start_wire_feed_speed"></a>
+
+##### Inset Start Wire Feed Speed (`arc_specialties_inset_start_wire_feed_speed`)
+
+Arc Specialties start wire feed speed value written to the generated weld schedule file for inset
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_start_voltage"></a>
+
+##### Inset Start Voltage (`arc_specialties_inset_start_voltage`)
+
+Arc Specialties start voltage value written to the generated weld schedule file for inset paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_start_control"></a>
+
+##### Inset Start Control (`arc_specialties_inset_start_control`)
+
+Arc Specialties start control value written to the generated weld schedule file for inset paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_start_tspd"></a>
+
+##### Inset Start TSpd (`arc_specialties_inset_start_tspd`)
+
+Arc Specialties start TSpd value written to the generated weld schedule file for inset paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_start_time"></a>
+
+##### Inset Start Time (`arc_specialties_inset_start_time`)
+
+Arc Specialties start time value written to the generated weld schedule file for inset paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_weld_program"></a>
+
+##### Inset Weld Program (`arc_specialties_inset_weld_program`)
+
+Arc Specialties weld program value written to the generated weld schedule file for inset paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_weld_wire_feed_speed"></a>
+
+##### Inset Weld Wire Feed Speed (`arc_specialties_inset_weld_wire_feed_speed`)
+
+Arc Specialties weld wire feed speed value written to the generated weld schedule file for inset
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_weld_voltage"></a>
+
+##### Inset Weld Voltage (`arc_specialties_inset_weld_voltage`)
+
+Arc Specialties weld voltage value written to the generated weld schedule file for inset paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_weld_control"></a>
+
+##### Inset Weld Control (`arc_specialties_inset_weld_control`)
+
+Arc Specialties weld control value written to the generated weld schedule file for inset paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_crater_program"></a>
+
+##### Inset Crater Program (`arc_specialties_inset_crater_program`)
+
+Arc Specialties crater program value written to the generated weld schedule file for inset paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_crater_wire_feed_speed"></a>
+
+##### Inset Crater Wire Feed Speed (`arc_specialties_inset_crater_wire_feed_speed`)
+
+Arc Specialties crater wire feed speed value written to the generated weld schedule file for inset
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_crater_voltage"></a>
+
+##### Inset Crater Voltage (`arc_specialties_inset_crater_voltage`)
+
+Arc Specialties crater voltage value written to the generated weld schedule file for inset paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_crater_control"></a>
+
+##### Inset Crater Control (`arc_specialties_inset_crater_control`)
+
+Arc Specialties crater control value written to the generated weld schedule file for inset paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_inset_crater_time"></a>
+
+##### Inset Crater Time (`arc_specialties_inset_crater_time`)
+
+Arc Specialties crater time value written to the generated weld schedule file for inset paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Inset
+  is enabled) or (Slicing Mode is `Cylindrical` and (Cylindrical Path Pattern is `Helical` and Not
+  (Inset Revolutions is `0`))))).
+
+<a id="setting-arc_specialties_infill_preflow"></a>
+
+##### Infill Preflow (`arc_specialties_infill_preflow`)
+
+Arc Specialties preflow value written to the generated weld schedule file for infill paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_travel_delay"></a>
+
+##### Infill Travel Delay (`arc_specialties_infill_travel_delay`)
+
+Arc Specialties travel delay value written to the generated weld schedule file for infill paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_postflow"></a>
+
+##### Infill Postflow (`arc_specialties_infill_postflow`)
+
+Arc Specialties postflow value written to the generated weld schedule file for infill paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_postpurge"></a>
+
+##### Infill Postpurge (`arc_specialties_infill_postpurge`)
+
+Arc Specialties postpurge value written to the generated weld schedule file for infill paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_start_program"></a>
+
+##### Infill Start Program (`arc_specialties_infill_start_program`)
+
+Arc Specialties start program value written to the generated weld schedule file for infill paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_start_wire_feed_speed"></a>
+
+##### Infill Start Wire Feed Speed (`arc_specialties_infill_start_wire_feed_speed`)
+
+Arc Specialties start wire feed speed value written to the generated weld schedule file for infill
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_start_voltage"></a>
+
+##### Infill Start Voltage (`arc_specialties_infill_start_voltage`)
+
+Arc Specialties start voltage value written to the generated weld schedule file for infill paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_start_control"></a>
+
+##### Infill Start Control (`arc_specialties_infill_start_control`)
+
+Arc Specialties start control value written to the generated weld schedule file for infill paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_start_tspd"></a>
+
+##### Infill Start TSpd (`arc_specialties_infill_start_tspd`)
+
+Arc Specialties start TSpd value written to the generated weld schedule file for infill paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_start_time"></a>
+
+##### Infill Start Time (`arc_specialties_infill_start_time`)
+
+Arc Specialties start time value written to the generated weld schedule file for infill paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_weld_program"></a>
+
+##### Infill Weld Program (`arc_specialties_infill_weld_program`)
+
+Arc Specialties weld program value written to the generated weld schedule file for infill paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_weld_wire_feed_speed"></a>
+
+##### Infill Weld Wire Feed Speed (`arc_specialties_infill_weld_wire_feed_speed`)
+
+Arc Specialties weld wire feed speed value written to the generated weld schedule file for infill
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_weld_voltage"></a>
+
+##### Infill Weld Voltage (`arc_specialties_infill_weld_voltage`)
+
+Arc Specialties weld voltage value written to the generated weld schedule file for infill paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_weld_control"></a>
+
+##### Infill Weld Control (`arc_specialties_infill_weld_control`)
+
+Arc Specialties weld control value written to the generated weld schedule file for infill paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_crater_program"></a>
+
+##### Infill Crater Program (`arc_specialties_infill_crater_program`)
+
+Arc Specialties crater program value written to the generated weld schedule file for infill paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_crater_wire_feed_speed"></a>
+
+##### Infill Crater Wire Feed Speed (`arc_specialties_infill_crater_wire_feed_speed`)
+
+Arc Specialties crater wire feed speed value written to the generated weld schedule file for infill
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_crater_voltage"></a>
+
+##### Infill Crater Voltage (`arc_specialties_infill_crater_voltage`)
+
+Arc Specialties crater voltage value written to the generated weld schedule file for infill paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_crater_control"></a>
+
+##### Infill Crater Control (`arc_specialties_infill_crater_control`)
+
+Arc Specialties crater control value written to the generated weld schedule file for infill paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_infill_crater_time"></a>
+
+##### Infill Crater Time (`arc_specialties_infill_crater_time`)
+
+Arc Specialties crater time value written to the generated weld schedule file for infill paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and ((Slicing Mode is `Planar` and Enable Infill
+  is enabled) or (Slicing Mode is `Cylindrical` and Cylindrical Path Pattern is `Helical`))).
+
+<a id="setting-arc_specialties_skeleton_preflow"></a>
+
+##### Skeleton Preflow (`arc_specialties_skeleton_preflow`)
+
+Arc Specialties preflow value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_travel_delay"></a>
+
+##### Skeleton Travel Delay (`arc_specialties_skeleton_travel_delay`)
+
+Arc Specialties travel delay value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_postflow"></a>
+
+##### Skeleton Postflow (`arc_specialties_skeleton_postflow`)
+
+Arc Specialties postflow value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_postpurge"></a>
+
+##### Skeleton Postpurge (`arc_specialties_skeleton_postpurge`)
+
+Arc Specialties postpurge value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_start_program"></a>
+
+##### Skeleton Start Program (`arc_specialties_skeleton_start_program`)
+
+Arc Specialties start program value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_start_wire_feed_speed"></a>
+
+##### Skeleton Start Wire Feed Speed (`arc_specialties_skeleton_start_wire_feed_speed`)
+
+Arc Specialties start wire feed speed value written to the generated weld schedule file for skeleton
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_start_voltage"></a>
+
+##### Skeleton Start Voltage (`arc_specialties_skeleton_start_voltage`)
+
+Arc Specialties start voltage value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_start_control"></a>
+
+##### Skeleton Start Control (`arc_specialties_skeleton_start_control`)
+
+Arc Specialties start control value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_start_tspd"></a>
+
+##### Skeleton Start TSpd (`arc_specialties_skeleton_start_tspd`)
+
+Arc Specialties start TSpd value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_start_time"></a>
+
+##### Skeleton Start Time (`arc_specialties_skeleton_start_time`)
+
+Arc Specialties start time value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_weld_program"></a>
+
+##### Skeleton Weld Program (`arc_specialties_skeleton_weld_program`)
+
+Arc Specialties weld program value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_weld_wire_feed_speed"></a>
+
+##### Skeleton Weld Wire Feed Speed (`arc_specialties_skeleton_weld_wire_feed_speed`)
+
+Arc Specialties weld wire feed speed value written to the generated weld schedule file for skeleton
+paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_weld_voltage"></a>
+
+##### Skeleton Weld Voltage (`arc_specialties_skeleton_weld_voltage`)
+
+Arc Specialties weld voltage value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_weld_control"></a>
+
+##### Skeleton Weld Control (`arc_specialties_skeleton_weld_control`)
+
+Arc Specialties weld control value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_crater_program"></a>
+
+##### Skeleton Crater Program (`arc_specialties_skeleton_crater_program`)
+
+Arc Specialties crater program value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_crater_wire_feed_speed"></a>
+
+##### Skeleton Crater Wire Feed Speed (`arc_specialties_skeleton_crater_wire_feed_speed`)
+
+Arc Specialties crater wire feed speed value written to the generated weld schedule file for
+skeleton paths.
+
+- **Input:** `speed` — Linear velocity; displayed in the preferred velocity unit.
+- **Master default:** `0 mm/s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_crater_voltage"></a>
+
+##### Skeleton Crater Voltage (`arc_specialties_skeleton_crater_voltage`)
+
+Arc Specialties crater voltage value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `voltage` — Electrical potential; displayed in the preferred voltage unit.
+- **Master default:** `0 V`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_crater_control"></a>
+
+##### Skeleton Crater Control (`arc_specialties_skeleton_crater_control`)
+
+Arc Specialties crater control value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `non_negative_int` — Nonnegative integer value (0 or greater).
+- **Master default:** `0`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+<a id="setting-arc_specialties_skeleton_crater_time"></a>
+
+##### Skeleton Crater Time (`arc_specialties_skeleton_crater_time`)
+
+Arc Specialties crater time value written to the generated weld schedule file for skeleton paths.
+
+- **Input:** `time` — Duration; displayed in the preferred time unit.
+- **Master default:** `0 s`
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** (Syntax is `Arc Specialties` and (Slicing Mode is `Planar` and Enable
+  Skeletons is enabled)).
+
+
 ### E.5 Experimental settings
 
 ![Experimental Settings Panel](user-guide-images/experimental_settings_panel.png)
@@ -8905,6 +10013,18 @@ threshold.
 ![Experimental > File Output Settings](user-guide-images/settings/experimental/file_output_options.png)
 
 Enables syntax-specific companion, simulation, or auxiliary output files.
+
+<a id="setting-individual_layer_output"></a>
+
+##### Enable Individual Layer Export (`individual_layer_output`)
+
+Enable before slicing to prepare standalone layer programs for saving each layer as a separate
+G-Code file during export.
+
+- **Input:** `boolean` — On/off checkbox.
+- **Master default:** `Disabled` (`false`)
+- **Scope:** Global only. Configure it in the active global template or global Settings panel.
+- **Available when:** Not (Syntax is `Adamantine`).
 
 <a id="setting-additional_meld_output"></a>
 
