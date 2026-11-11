@@ -235,6 +235,7 @@ SettingsOverridesDialog::SettingsOverridesDialog(QWidget* parent) : QDialog(pare
     connect(m_part_filter, &QComboBox::currentIndexChanged, this, &SettingsOverridesDialog::filterRows);
     connect(m_scope_filter, &QComboBox::currentIndexChanged, this, &SettingsOverridesDialog::filterRows);
     connect(m_table, &QTableWidget::itemSelectionChanged, this, &SettingsOverridesDialog::updateNavigation);
+    connect(m_table, &QTableWidget::currentItemChanged, this, &SettingsOverridesDialog::updateNavigation);
     connect(m_table, &QTableWidget::itemDoubleClicked, this, [this](QTableWidgetItem* item) {
         if (m_table->isRowHidden(item->row())) return;
         m_table->clearSelection();
@@ -324,12 +325,46 @@ void SettingsOverridesDialog::refresh() {
     const auto global      = GSM->getGlobal();
     const fifojson& master = GSM->getMaster()->json();
     for (const auto& part : parts) {
+        const auto ranges      = part->getSettingsRanges().values();
+        const auto layer_scope = [](int low, int high) {
+            return low == high ? QString("Layer %1").arg(low + 1) : QString("Layers %1-%2").arg(low + 1).arg(high + 1);
+        };
         const auto add_rows = [&](const QSharedPointer<SettingsBase>& settings, const QString& scope, int low,
                                   int high) {
             if (settings->json().empty()) return;
-            SettingsBase effective(*global);
-            effective.populate(part->getSb());
-            if (low >= 0) effective.populate(settings);
+            struct Context {
+                int low;
+                int high;
+                SettingsBase inherited;
+                SettingsBase effective;
+            };
+            QList<int> boundaries {low, high + 1};
+            if (low >= 0) {
+                for (const auto& range : ranges) {
+                    if (range->low() > high || range->high() < low) continue;
+                    boundaries.append(std::max(low, range->low()));
+                    boundaries.append(std::min(high, range->high()) + 1);
+                }
+                std::sort(boundaries.begin(), boundaries.end());
+                boundaries.erase(std::unique(boundaries.begin(), boundaries.end()), boundaries.end());
+            }
+            QList<Context> contexts;
+            for (int index = 0; index + 1 < boundaries.size(); ++index) {
+                Context context {boundaries.at(index), boundaries.at(index + 1) - 1, *global, *global};
+                context.effective.populate(part->getSb());
+                if (low >= 0) {
+                    context.inherited.populate(part->getSb());
+                    bool before_owner = true;
+                    // Preserve the same QMap order used by BufferedSlicer::layerSettingsForSlice.
+                    for (const auto& range : ranges) {
+                        if (!range->includesIndex(context.low)) continue;
+                        if (range->low() == low && range->high() == high) before_owner = false;
+                        if (before_owner) context.inherited.populate(range->getSb());
+                        context.effective.populate(range->getSb());
+                    }
+                }
+                contexts.append(context);
+            }
             const bool modifier_disabled = !part->modifierEnabled() && (part->getMeshType() == MeshType::kSettings ||
                                                                         part->getMeshType() == MeshType::kClipping);
             for (const auto& entry : settings->json().at(0).items()) {
@@ -339,29 +374,84 @@ void SettingsOverridesDialog::refresh() {
                 const fifojson global_value = global->contains(key)
                                                   ? global->setting<fifojson>(key)
                                                   : metadata.value(Constants::Settings::Master::kDefault, fifojson());
-                const fifojson inherited =
-                    low >= 0 && part->getSb()->contains(key) ? part->getSb()->setting<fifojson>(key) : global_value;
-                // Layer ranges can contain copies of unchanged part settings.
-                if (entry.value() == inherited) continue;
-
-                const QString category = metadataText(metadata, Constants::Settings::Master::kMajor) + " / " +
-                                         metadataText(metadata, Constants::Settings::Master::kMinor);
-                const QString inactive_reason =
-                    modifier_disabled
-                        ? "The owning modifier is disabled."
-                        : SettingActivity::inactiveReason(key, effective, master, GSM->getSettingInput(key));
-                const QString status = !inactive_reason.isEmpty()    ? "Inactive"
-                                       : metadata_it == master.end() ? "Unknown"
-                                                                     : "Active";
                 QVariant global_number;
                 QVariant inherited_number;
                 QVariant override_number;
+                fifojson inherited;
+                QStringList inherited_values;
+                QStringList inherited_details;
+                QStringList activity_details;
+                QString inactive_reason;
+                bool overrides_inherited = false;
+                int inactive_contexts    = 0;
+                for (const auto& context : contexts) {
+                    const fifojson value = context.inherited.contains(key)
+                                               ? context.inherited.setting<fifojson>(key)
+                                               : metadata.value(Constants::Settings::Master::kDefault, fifojson());
+                    overrides_inherited |= entry.value() != value;
+                    QVariant number;
+                    const QString text = valueText(value, metadata, &number);
+                    if (inherited_values.isEmpty()) {
+                        inherited        = value;
+                        inherited_number = number;
+                    }
+                    if (!inherited_values.contains(text)) inherited_values.append(text);
+                    QString source = low >= 0 && part->getSb()->contains(key) ? "Part: " + part->name() : "Global";
+                    QString later_source;
+                    if (low >= 0) {
+                        bool before_owner = true;
+                        for (const auto& range : ranges) {
+                            if (!range->includesIndex(context.low)) continue;
+                            if (range->low() == low && range->high() == high) {
+                                before_owner = false;
+                                continue;
+                            }
+                            if (!range->getSb()->contains(key)) continue;
+                            if (before_owner)
+                                source = layer_scope(range->low(), range->high());
+                            else
+                                later_source = layer_scope(range->low(), range->high());
+                        }
+                    }
+                    const QString context_scope = low < 0 ? "Part" : layer_scope(context.low, context.high);
+                    inherited_details.append((contexts.size() > 1 ? context_scope + ": " : QString()) +
+                                             "Source: " + source + "\nValue: " + text);
+                    QString reason;
+                    if (modifier_disabled)
+                        reason = "The owning modifier is disabled.";
+                    else if (!later_source.isEmpty() && context.effective.setting<fifojson>(key) != entry.value())
+                        reason = "Overridden by " + later_source + ".";
+                    else
+                        reason =
+                            SettingActivity::inactiveReason(key, context.effective, master, GSM->getSettingInput(key));
+                    inactive_contexts += !reason.isEmpty();
+                    inactive_reason = reason;
+                    activity_details.append(
+                        context_scope + ": " +
+                        (reason.isEmpty() ? "The setting's feature conditions are satisfied." : reason));
+                }
+                // Copied values are redundant only when they match every inherited layer context.
+                if (!overrides_inherited) continue;
+                const bool mixed_activity = inactive_contexts > 0 && inactive_contexts < contexts.size();
+                const QString status      = mixed_activity                ? "Unknown"
+                                            : inactive_contexts > 0       ? "Inactive"
+                                            : metadata_it == master.end() ? "Unknown"
+                                                                          : "Active";
+                if (mixed_activity)
+                    inactive_reason = "Activity varies across this range.\n" + activity_details.join('\n');
+                else if (inactive_contexts > 0 && contexts.size() > 1)
+                    inactive_reason = activity_details.join('\n');
+                const QString category = metadataText(metadata, Constants::Settings::Master::kMajor) + " / " +
+                                         metadataText(metadata, Constants::Settings::Master::kMinor);
+                const QString inherited_text =
+                    inherited_values.size() > 1 ? "Varies: " + inherited_values.join("; ") : inherited_values.first();
+                if (inherited_values.size() > 1) inherited_number.clear();
                 const QStringList values {part->name(),
                                           scope,
                                           metadata.empty() ? "Unknown" : category,
                                           metadataText(metadata, Constants::Settings::Master::kDisplay, key),
                                           valueText(global_value, metadata, &global_number),
-                                          valueText(inherited, metadata, &inherited_number),
+                                          inherited_text,
                                           valueText(entry.value(), metadata, &override_number),
                                           status};
                 const int row = m_table->rowCount();
@@ -378,9 +468,10 @@ void SettingsOverridesDialog::refresh() {
                 const QList<fifojson> raw_values {global_value, inherited, entry.value()};
                 for (int index = 0; index < 3; ++index) {
                     auto* item = m_table->item(row, index + 4);
-                    item->setData(SortKindRole, raw_values.at(index).is_null() ? MissingValue
-                                                : numbers.at(index).isValid()  ? NumericValue
-                                                                               : TextValue);
+                    item->setData(SortKindRole, index == 1 && inherited_values.size() > 1 ? TextValue
+                                                : raw_values.at(index).is_null()          ? MissingValue
+                                                : numbers.at(index).isValid()             ? NumericValue
+                                                                                          : TextValue);
                     item->setData(SortNumberRole, numbers.at(index));
                 }
                 m_table->item(row, 3)->setData(Qt::UserRole, key);
@@ -391,8 +482,7 @@ void SettingsOverridesDialog::refresh() {
                 m_table->item(row, 3)->setData(IdentityRole, part->getId().toString() + "/" + QString::number(low) +
                                                                  "/" + QString::number(high) + "/" + key);
                 m_table->item(row, 3)->setToolTip(values.at(3) + "\n" + key);
-                const QString source = low >= 0 && part->getSb()->contains(key) ? "Part: " + part->name() : "Global";
-                m_table->item(row, 5)->setToolTip("Source: " + source + "\nValue: " + values.at(5));
+                m_table->item(row, 5)->setToolTip(inherited_details.join('\n'));
                 m_table->item(row, 7)->setToolTip(
                     inactive_reason.isEmpty() ? status == "Unknown"
                                                     ? "No setting metadata is available to determine activity."
@@ -401,13 +491,12 @@ void SettingsOverridesDialog::refresh() {
             }
         };
         add_rows(part->getSb(), "Part", -1, -1);
-        auto ranges = part->getSettingsRanges().values();
-        std::sort(ranges.begin(), ranges.end(), [](const auto& first, const auto& second) {
+        auto display_ranges = ranges;
+        std::sort(display_ranges.begin(), display_ranges.end(), [](const auto& first, const auto& second) {
             return first->low() == second->low() ? first->high() < second->high() : first->low() < second->low();
         });
-        for (const auto& range : ranges) {
-            QString scope = range->isSingle() ? QString("Layer %1").arg(range->low() + 1)
-                                              : QString("Layers %1-%2").arg(range->low() + 1).arg(range->high() + 1);
+        for (const auto& range : display_ranges) {
+            QString scope = layer_scope(range->low(), range->high());
             if (!range->groupName().isEmpty()) scope += " (" + range->groupName() + ")";
             add_rows(range->getSb(), scope, range->low(), range->high());
         }
@@ -532,6 +621,7 @@ void SettingsOverridesDialog::chooseCsvFile() {
 }
 
 void SettingsOverridesDialog::showSelectedSetting() {
+    updateNavigation();
     if (!m_show_setting_button->isEnabled()) return;
     const auto* item    = m_table->item(m_table->currentRow(), 3);
     const QUuid part_id = item->data(PartIdRole).toUuid();

@@ -180,14 +180,16 @@ int main(int argc, char* argv[]) {
     filter->setText("perimeter_count");
     table->sortItems(0, Qt::AscendingOrder);
     auto rows = tableRows(table);
-    expect(rows.size() == 7 && rows.at(1).at(0) == "Part 2" && rows.last().at(0) == "Part 10",
+    expect(rows.size() == 6 && rows.at(1).at(0) == "Part 2" && rows.last().at(0) == "Part 10",
            "Part names must sort naturally so Part 2 precedes Part 10.");
+    expect(findRow(table, part2->name(), "perimeter_count", "Layer 10") < 0,
+           "A layer value identical to an earlier overlapping override must be omitted as redundant.");
     part_filter->setCurrentIndex(part_filter->findData(part2->getId()));
     table->sortItems(1, Qt::AscendingOrder);
     rows = tableRows(table);
     QStringList scopes;
     for (int row = 1; row < rows.size(); ++row) scopes.append(rows.at(row).at(1));
-    expect(scopes == QStringList {"Part", "Layer 2", "Layers 2-3", "Layers 2-10", "Layer 10"},
+    expect(scopes == QStringList {"Part", "Layer 2", "Layers 2-3", "Layers 2-10"},
            "Scope sorting must compare numeric lower and upper bounds with part overrides first.");
     part_filter->setCurrentIndex(0);
     scope_filter->setCurrentIndex(1);
@@ -469,6 +471,39 @@ int main(int argc, char* argv[]) {
     dialog.refresh();
     expect(status(build->name(), "perimeter_count", "Layer 1") == "Active",
            "Layer visibility must use the layer's effective slicing mode rather than the global mode.");
+
+    ORNL::CSM->clearParts();
+    auto keyboard = addPart("Keyboard navigation");
+    keyboard->getSb()->setSetting("start_code", QString("M117 Keyboard"));
+    keyboard->getSb()->setSetting("extension_unknown", 1);
+    dialog.refresh();
+    table->sortItems(3, Qt::DescendingOrder);
+    const int known_row   = findRow(table, keyboard->name(), "start_code");
+    const int unknown_row = findRow(table, keyboard->name(), "extension_unknown");
+    expect(known_row == 0 && unknown_row == 1,
+           "The keyboard fixture must place a known override directly before an unknown override.");
+    if (known_row >= 0 && unknown_row >= 0) {
+        table->setCurrentCell(known_row, 3, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        expect(show_button->isEnabled(), "Selecting the known override must enable navigation.");
+        const int before_keyboard = navigations;
+        QKeyEvent move_down(QEvent::KeyPress, Qt::Key_Down, Qt::ControlModifier);
+        QApplication::sendEvent(table, &move_down);
+        expect(table->currentRow() == unknown_row && table->item(known_row, 3)->isSelected() &&
+                   !table->item(unknown_row, 3)->isSelected(),
+               "Ctrl+Down must move the current row without changing the selected override.");
+        expect(!show_button->isEnabled(), "An unselected current override must disable navigation.");
+        show_button->click();
+        expect(navigations == before_keyboard,
+               "Keyboard movement must never navigate to an unselected or unknown override.");
+        QKeyEvent move_up(QEvent::KeyPress, Qt::Key_Up, Qt::ControlModifier);
+        QApplication::sendEvent(table, &move_up);
+        expect(table->currentRow() == known_row && show_button->isEnabled(),
+               "Returning to the selected known override must restore navigation.");
+        show_button->click();
+        expect(
+            navigations == before_keyboard + 1 && requested_part == keyboard->getId() && requested_key == "start_code",
+            "Restored navigation must reveal the selected known override.");
+    }
 
     if (!height_hidden) preferences->removeHiddenSetting("Profile", "Layer");
     ORNL::CSM->clearParts();

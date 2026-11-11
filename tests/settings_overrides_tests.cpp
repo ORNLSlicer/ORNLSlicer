@@ -429,6 +429,81 @@ int main(int argc, char* argv[]) {
     expect(table->rowCount() == 0 && !show_setting->isEnabled(),
            "Clearing the project must automatically clear the overview.");
 
+    preferences->setDistanceUnit(ORNL::mm);
+    preferences->setVelocityUnit(ORNL::mm / ORNL::s);
+    global->reset();
+    global->setSetting("slicing_mode", 0);
+    global->setSetting("infill", false);
+    global->setSetting("infill_speed", 100000.0);
+    const auto add_overlap_part = [&](const QString& name) {
+        auto part = QSharedPointer<ORNL::Part>::create();
+        part->setName(name);
+        ORNL::CSM->addPart(part);
+        return part;
+    };
+    auto feature = add_overlap_part("Inherited feature");
+    feature->createSettingsRange(0, 9);
+    feature->getSettingsRange(0, 9)->getSb()->setSetting("infill", true);
+    feature->createSettingsRange(4, 4);
+    feature->getSettingsRange(4, 4)->getSb()->setSetting("infill_speed", 30000.0);
+    dialog.refresh();
+    expect(cell(feature->name(), "infill_speed", "Layer 5", 7) == "Active",
+           "A layer override must inherit feature conditions from every matching range.");
+
+    global->setSetting("infill", true);
+    auto restored = add_overlap_part("Restored global");
+    restored->createSettingsRange(0, 9);
+    restored->getSettingsRange(0, 9)->getSb()->setSetting("infill_speed", 20000.0);
+    restored->createSettingsRange(7, 7);
+    restored->getSettingsRange(7, 7)->getSb()->setSetting("infill_speed", 100000.0);
+    auto partial = add_overlap_part("Partial overlap");
+    partial->createSettingsRange(0, 9);
+    partial->getSettingsRange(0, 9)->getSb()->setSetting("infill_speed", 20000.0);
+    partial->createSettingsRange(7, 12);
+    partial->getSettingsRange(7, 12)->getSb()->setSetting("infill_speed", 30000.0);
+    auto precedence = add_overlap_part("Range precedence");
+    precedence->createSettingsRange(0, 9);
+    precedence->getSettingsRange(0, 9)->getSb()->setSetting("infill", false);
+    precedence->createSettingsRange(4, 4);
+    precedence->getSettingsRange(4, 4)->getSb()->setSetting("infill", true);
+    precedence->getSettingsRange(4, 4)->getSb()->setSetting("infill_speed", 30000.0);
+    const auto overlap_global_before = global->json();
+    const auto overlap_ranges_before = partial->SettingsRangesToJson();
+    dialog.refresh();
+    const QString velocity_suffix = " " + preferences->getVelocityUnitText();
+    expect(cell(restored->name(), "infill_speed", "Layer 8", 4) == "100" + velocity_suffix &&
+               cell(restored->name(), "infill_speed", "Layer 8", 5) == "20" + velocity_suffix &&
+               cell(restored->name(), "infill_speed", "Layer 8", 6) == "100" + velocity_suffix,
+           "Restoring Global over another layer range must retain the override and show the replaced range value.");
+    expect(cell(partial->name(), "infill_speed", "Layers 8-13", 5) ==
+               "Varies: 20" + velocity_suffix + "; 100" + velocity_suffix,
+           "Partially overlapping ranges must report every inherited value instead of sampling one layer.");
+    expect(cell(partial->name(), "infill_speed", "Layers 1-10", 7) == "Unknown" &&
+               cell(partial->name(), "infill_speed", "Layers 8-13", 7) == "Active",
+           "Partial shadowing must report varying activity while the later overriding range remains active.");
+    const int mixed_row = findRow(table, partial->name(), "infill_speed", "Layers 1-10");
+    if (mixed_row >= 0)
+        expect(table->item(mixed_row, 7)->toolTip().contains("Layers 1-7") &&
+                   table->item(mixed_row, 7)->toolTip().contains("Layers 8-10"),
+               "Mixed activity must identify the active and shadowed layer intervals.");
+    expect(cell(precedence->name(), "infill_speed", "Layer 5", 7) == "Inactive",
+           "Effective conditions must follow the slicer's stored range order rather than displayed range order.");
+    select(partial->name(), "infill_speed", "Layers 8-13");
+    show_setting->click();
+    expect(requested_part == partial->getId() && requested_low == 7 && requested_high == 12,
+           "An aggregate overlap row must still navigate to the original stored range.");
+    expect(global->json() == overlap_global_before && partial->SettingsRangesToJson() == overlap_ranges_before,
+           "Evaluating overlapping contexts must not change stored settings or ranges.");
+    for (const auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
+        apply_theme(theme);
+        table->resizeColumnsToContents();
+        if (argc > 1)
+            expect(dialog.grab().save(QString(argv[1]) + (theme == ORNL::ThemeName::kLightMode ? "/overlaps-light.png"
+                                                                                               : "/overlaps-dark.png")),
+                   "Could not save the overlapping-range report screenshot.");
+    }
+    ORNL::CSM->clearParts();
+
     preferences->setDistanceUnit(old_distance);
     preferences->setVelocityUnit(old_velocity);
     preferences->setTheme(old_theme);
