@@ -177,7 +177,7 @@ class CommonParser : public ParserBase {
     //! \brief Completely restes the internal state of this parser. This
     //! includes all command mappings,
     //!        and position values. This does NOT include resetting units.
-    void reset();
+    virtual void reset();
 
     //! \brief Returns the currently calculated times for each layer
     //! \return The time in seconds

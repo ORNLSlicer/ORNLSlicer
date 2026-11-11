@@ -425,6 +425,22 @@ if(ORNLSLICER_BUILD_TESTS)
     add_test(NAME gcode_shading_tests COMMAND ${PROJECT_NAME}_gcode_shading_tests)
     set_tests_properties(gcode_shading_tests PROPERTIES SKIP_RETURN_CODE 77)
 
+    foreach(orientation_test tool_orientation_preview_tests tool_orientation_view_tests)
+        add_executable(${PROJECT_NAME}_${orientation_test} tests/${orientation_test}.cpp)
+        target_include_directories(${PROJECT_NAME}_${orientation_test} PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+        )
+        target_link_libraries(${PROJECT_NAME}_${orientation_test} PRIVATE ${PROJECT_NAME}_obj)
+        add_test(NAME ${orientation_test} COMMAND ${PROJECT_NAME}_${orientation_test})
+        set_tests_properties(${orientation_test} PROPERTIES TIMEOUT 60)
+    endforeach()
+    set_tests_properties(tool_orientation_view_tests PROPERTIES SKIP_RETURN_CODE 77)
+    target_compile_definitions(${PROJECT_NAME}_tool_orientation_view_tests PRIVATE
+        ORNLSLICER_TEST_SOURCE_DIR="${CMAKE_CURRENT_LIST_DIR}/tests"
+    )
+
     add_executable(${PROJECT_NAME}_preferences_import_tests tests/preferences_import_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_preferences_import_tests
@@ -467,6 +483,9 @@ if(ORNLSLICER_BUILD_TESTS)
             ${ORNLSLICER_INCLUDE_DIRS}
     )
     target_link_libraries(${PROJECT_NAME}_arc_specialties_parser_tests PRIVATE ${PROJECT_NAME}_obj)
+    target_compile_definitions(${PROJECT_NAME}_arc_specialties_parser_tests PRIVATE
+        ORNLSLICER_TEST_SOURCE_DIR="${CMAKE_CURRENT_LIST_DIR}/tests"
+    )
     add_test(NAME arc_specialties_parser_tests COMMAND ${PROJECT_NAME}_arc_specialties_parser_tests)
 
     add_executable(${PROJECT_NAME}_juggerbot_writer_tests tests/juggerbot_writer_tests.cpp)

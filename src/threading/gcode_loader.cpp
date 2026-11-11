@@ -484,6 +484,15 @@ void GCodeLoader::run() {
                             command.getParameters(), command.getDepositionActive(), command.getExtruderSpeed(), false,
                             command.getComment(), command.getOptionalParameters());
                     }
+                    if (const auto orientation = command.toolOrientation()) {
+                        QQuaternion view_orientation = *orientation;
+                        if (const auto positioner = command.positionerOrientation()) {
+                            view_orientation = positioner->conjugated() * view_orientation;
+                        }
+                        for (const auto& segment : generated_segments) {
+                            segment->setToolOrientation(view_orientation);
+                        }
+                    }
                     layer.append(generated_segments);
 
                     ++commands_processed;

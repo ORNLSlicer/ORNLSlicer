@@ -23,6 +23,8 @@ GcodeCommand::GcodeCommand(const GcodeCommand& other)
       m_command_id(other.m_command_id),
       m_parameters(other.m_parameters),
       m_optional_parameters(other.m_optional_parameters),
+      m_tool_orientation(other.m_tool_orientation),
+      m_positioner_orientation(other.m_positioner_orientation),
       m_comment(other.m_comment),
       m_is_motion_command(other.m_is_motion_command),
       m_is_end_of_layer(other.m_is_end_of_layer),
@@ -74,6 +76,30 @@ const QMap<char, double>& GcodeCommand::getOptionalParameters() const {
     return m_optional_parameters;
 }
 
+std::optional<QQuaternion> GcodeCommand::toolOrientation() const {
+    return m_tool_orientation;
+}
+
+void GcodeCommand::setToolOrientation(const QQuaternion& orientation) {
+    m_tool_orientation = orientation.normalized();
+}
+
+void GcodeCommand::clearToolOrientation() {
+    m_tool_orientation.reset();
+}
+
+std::optional<QQuaternion> GcodeCommand::positionerOrientation() const {
+    return m_positioner_orientation;
+}
+
+void GcodeCommand::setPositionerOrientation(const QQuaternion& orientation) {
+    m_positioner_orientation = orientation.normalized();
+}
+
+void GcodeCommand::clearPositionerOrientation() {
+    m_positioner_orientation.reset();
+}
+
 //! \brief Retrieves the Comment
 const QString& GcodeCommand::getComment() const {
     return m_comment;
@@ -118,6 +144,8 @@ bool GcodeCommand::removeParameter(const char param_key) {
 void GcodeCommand::clearParameters() {
     m_parameters.clear();
     m_optional_parameters.clear();
+    clearToolOrientation();
+    clearPositionerOrientation();
 }
 
 void GcodeCommand::clearComment() {
@@ -142,16 +170,18 @@ bool GcodeCommand::operator!=(const GcodeCommand& r) {
 }
 
 GcodeCommand& GcodeCommand::operator=(const GcodeCommand& other) {
-    m_line_number         = other.m_line_number;
-    m_command             = other.m_command;
-    m_command_id          = other.m_command_id;
-    m_parameters          = other.m_parameters;
-    m_optional_parameters = other.m_optional_parameters;
-    m_comment             = other.m_comment;
-    m_is_motion_command   = other.m_is_motion_command;
-    m_is_end_of_layer     = other.m_is_end_of_layer;
-    m_deposition_active   = other.m_deposition_active;
-    m_extruder_speed      = other.m_extruder_speed;
+    m_line_number            = other.m_line_number;
+    m_command                = other.m_command;
+    m_command_id             = other.m_command_id;
+    m_parameters             = other.m_parameters;
+    m_optional_parameters    = other.m_optional_parameters;
+    m_tool_orientation       = other.m_tool_orientation;
+    m_positioner_orientation = other.m_positioner_orientation;
+    m_comment                = other.m_comment;
+    m_is_motion_command      = other.m_is_motion_command;
+    m_is_end_of_layer        = other.m_is_end_of_layer;
+    m_deposition_active      = other.m_deposition_active;
+    m_extruder_speed         = other.m_extruder_speed;
     return *this;
 }
 

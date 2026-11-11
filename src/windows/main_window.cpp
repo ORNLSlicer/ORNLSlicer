@@ -974,6 +974,8 @@ void MainWindow::setupEvents() {
     connect(m_gcodebar, &GcodeBar::refreshGCode, this, &MainWindow::importGCodeHelper);
     connect(m_gcodebar, &GcodeBar::forwardVisibilityChange, m_gcode_widget->view(), &GCodeView::hideSegmentType);
     connect(m_gcodebar, &GcodeBar::forwardSegmentWidthChange, m_gcode_widget->view(), &GCodeView::updateSegmentWidths);
+    connect(m_gcodebar, &GcodeBar::forwardToolOrientationChange, m_gcode_widget->view(),
+            &GCodeView::showToolOrientation);
 
     // Update segment slider when layer is changed
     connect(m_gcode_widget->view(), &GCodeView::maxSegmentChanged, m_gcodebar, &GcodeBar::setMaxSegment);

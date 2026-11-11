@@ -161,8 +161,20 @@ The parser accepts:
 - Orientation and positioner fields `XR`, `YR`, `ZR`, `AP`, and `CP`.
 - Both equals form, such as `X=1.0000`, and compact form, such as `X1.0000`; orientation keys use their two-letter prefix in compact form.
 
-For known common and orientation fields, the parser validates that each key appears at most once and that its value is numeric. It strips `XR`, `YR`, `ZR`, `AP`, and `CP` before delegating XYZ motion to `CommonParser`, because the preview only models XYZ geometry. Orientation-only moves are valid machine-positioning commands but do not create visible XYZ preview segments.
+For known common and orientation fields, the parser validates that each key appears at most once and that its value is numeric. It retains modal `XR`, `YR`, and `ZR` values as the programmed tool frame before delegating XYZ motion to `CommonParser`. A frame becomes available once all three angles have been supplied; omitted angles retain their previous values. The positioner fields `AP` and `CP` are also modal. Orientation-only moves update that state for subsequent positional moves but do not create visible XYZ preview segments. Explicit `CP` values remain available separately for cylindrical-axis inference.
 
 Unknown `KEY=value` fields raise an Arc Specialties illegal-parameter error. Non-key tokens without `=` are passed through to the common parser.
 
 When `G161` absolute-center mode is active, the parser converts absolute `I` and `J` values into relative offsets from the current X/Y position before delegating arcs to `CommonParser`. `G162` and `G164` disable that conversion. Comments containing `RADIAL` or `HELICAL`, excluding travel comments, temporarily force print-state handling so cylindrical preview moves are classified as bead motion. The loader recovers the cylinder axis from parsed Arc Specialties motion data so true-width previews and as-printed export can orient the bead cross-section radially, with the flat side toward the cylinder axis, while generated comments stay compact.
+
+## Tool Orientation Preview
+
+Enable **Show Tool Orientation** beside the G-code display controls to draw the tool frame relative to the stationary paths at command endpoints. X is red, Y is green, and Z is blue. The saved preference defaults to off.
+
+The programmed frame is `Rtool = Rz(ZR) * Ry(YR) * Rx(XR)`, including the emitted helical tilt correction. For work-object moves with known `AP` and `CP`, the preview applies the inverse positioner rotation: `Rview = Rz(-CP) * Rx(-AP) * Rtool`. This expresses the complete tool frame in the fixed workpiece coordinates, preserving programmed tilt and roll. For the supplied Donut Ref1827 left-handed helix, the transformed Z axis follows the inward cylinder normal around the path, including the nonzero torch offset and CP wraparound.
+
+`#TRAFO OFF` moves, including the initial world approach, retain their world-frame orientation. `#TRAFO ON` resumes the workpiece conversion. Files without an explicit directive default to work-object mode; until both positioner angles are known, the preview retains the programmed frame. Missing or unsupported tool orientation data produces no marker. The preview does not interpolate orientation within a move or simulate robot joint limits.
+
+Markers follow the visible layer and segment ranges and the **Hide Travel** and **Hide Support** controls. The preview samples at most 200 endpoints evenly in G-code order, retaining the first and last. The most recently selected visible segment receives a double-size triad; without a visible selection, the last visible oriented segment receives it so segment playback advances the active pose. Its ordinary marker is suppressed.
+
+The ordinary axis length is 2% of the loaded oriented-path bounding-box diagonal, clamped to 1–10 mm. This size remains fixed while changing the visible range. Triads render above bead geometry and do not affect segment picking.

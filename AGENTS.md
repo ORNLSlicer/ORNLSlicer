@@ -202,3 +202,4 @@ When the user corrects your approach, append a one-line rule here before ending 
 - For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.
 - Preload archive entries before creating `.s2p` variants with Python; passing the source archive's `ZipInfo` objects to `writestr()` mutates their offsets.
 - Constrain support restoration to paths through the unsupported contact; preserve angle-classified organic branch seeds and keep negative test probes beyond restoration reach of joining contacts.
+- Display tool frames relative to the fixed toolpath using the machine's positioner transform; establish AP/CP axis signs from kinematics or verified poses instead of asking users to choose rotation directions.

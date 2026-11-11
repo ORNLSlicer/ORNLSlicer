@@ -127,6 +127,9 @@ class PreferencesManager : public QObject {
     //! \return if true widths should be used
     bool getUseTrueWidthsPreference();
 
+    //! \brief Gets if programmed tool orientation should be shown in the g-code view.
+    bool getShowToolOrientationPreference();
+
     //! \brief Gets if g-code bead / segment info should be shown by default.
     bool getGCodeInfoVisibleByDefaultPreference();
 
@@ -367,6 +370,9 @@ class PreferencesManager : public QObject {
     //! \param use if true widths should be used
     void setUseTrueWidthsPreference(bool use);
 
+    //! \brief Sets whether programmed tool orientation is shown in the g-code view.
+    void setShowToolOrientationPreference(bool show);
+
     //! \brief Sets if g-code bead / segment info should be shown by default
     //! \param show if the info panel should be shown by default
     void setGCodeInfoVisibleByDefaultPreference(bool show);
@@ -476,6 +482,7 @@ class PreferencesManager : public QObject {
     bool m_hide_travel_preference;
     bool m_hide_support_preference;
     bool m_use_true_widths_preference;
+    bool m_show_tool_orientation_preference;
     bool m_gcode_info_visible_by_default_preference;
     bool m_optimization_points_visible_by_default_preference;
     GCodePreviewMode m_gcode_preview_mode_preference;

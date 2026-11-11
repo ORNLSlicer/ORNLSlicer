@@ -24,6 +24,7 @@
 #include "graphics/objects/printer/cartesian_printer_object.h"
 #include "graphics/objects/printer/cylindrical_printer_object.h"
 #include "graphics/objects/sphere/seam_object.h"
+#include "graphics/objects/tool_orientation_object.h"
 #include "graphics/support/part_picker.h"
 #include "managers/preferences_manager.h"
 #include "utilities/constants.h"
@@ -82,6 +83,7 @@ GCodeView::GCodeView(QSharedPointer<SettingsBase> sb, QSharedPointer<GCodeInfoCo
     m_sb                      = sb;
     m_segment_info_control    = segmentInfoControl;
     m_use_true_segment_widths = PreferencesManager::getInstance()->getUseTrueWidthsPreference();
+    m_show_tool_orientation   = PreferencesManager::getInstance()->getShowToolOrientationPreference();
 }
 
 void GCodeView::zoomIn() {
@@ -140,6 +142,7 @@ void GCodeView::useOrthographic(bool ortho) {
 void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
     clearGhosts();
     clearTrueWidthOverlay();
+    clearToolOrientation();
     if (!m_gcode_object.isNull()) {
         m_printer->orphanChild(m_gcode_object);
         m_gcode_object.reset();
@@ -147,6 +150,7 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
 
     m_true_width_overlay_key_valid = false;
     m_gcode                        = gcode;
+    m_tool_orientation_preview.reset(gcode);
 
     if (m_state.ortho) {
         m_state.zoom_factor = 1.0f;
@@ -167,14 +171,16 @@ void GCodeView::addGCode(QVector<QVector<QSharedPointer<SegmentBase>>> gcode) {
         if (m_state.high_segment != std::numeric_limits<uint>::max()) {
             const uint max_segment = m_gcode_object->visibleSegmentCount();
             if (max_segment > 0) {
-                const uint high_segment = std::min(m_state.high_segment, max_segment - 1);
-                m_gcode_object->showSegments(std::min(m_state.low_segment, high_segment), high_segment);
+                m_state.high_segment = std::min(m_state.high_segment, max_segment - 1);
+                m_state.low_segment  = std::min(m_state.low_segment, m_state.high_segment);
+                m_gcode_object->showSegments(m_state.low_segment, m_state.high_segment);
             }
         }
         m_gcode_object->hideSegmentType(m_state.hidden_type, true);
 
         m_printer->adoptChild(m_gcode_object);
         refreshTrueWidthOverlay();
+        refreshToolOrientation();
     }
     updateHoverTracking();
 
@@ -259,6 +265,7 @@ void GCodeView::hideSegmentType(SegmentDisplayType type, bool hidden) {
 
     m_gcode_object->hideSegmentType(type, hidden);
     if (!m_true_width_overlay_object.isNull()) { m_true_width_overlay_object->hideSegmentType(type, hidden); }
+    refreshToolOrientation();
 
     this->update();
 }
@@ -303,6 +310,53 @@ void GCodeView::clearTrueWidthOverlay() {
         if (!m_gcode_object.isNull()) { m_gcode_object->orphanChild(m_true_width_overlay_object); }
         m_true_width_overlay_object.reset();
     }
+}
+
+void GCodeView::showToolOrientation(bool show) {
+    m_show_tool_orientation = show;
+    refreshToolOrientation();
+    update();
+}
+
+void GCodeView::clearToolOrientation() {
+    for (auto* object : {&m_tool_orientation_object, &m_active_tool_orientation_object}) {
+        if (!object->isNull()) {
+            if (!m_gcode_object.isNull()) { m_gcode_object->orphanChild(*object); }
+            object->reset();
+        }
+    }
+}
+
+void GCodeView::refreshToolOrientation() {
+    clearToolOrientation();
+    if (!m_show_tool_orientation || m_gcode_object.isNull()) { return; }
+
+    m_tool_orientation_preview.refresh(m_gcode, m_state.low_layer, m_state.high_layer, m_state.low_segment,
+                                       m_state.high_segment, m_state.hidden_type);
+    const auto& poses = m_tool_orientation_preview.sampledPoses();
+    if (poses.isEmpty()) { return; }
+    m_tool_orientation_object =
+        QSharedPointer<ToolOrientationObject>::create(this, poses, m_tool_orientation_preview.axisLength());
+    m_gcode_object->adoptChild(m_tool_orientation_object);
+    updateActiveToolOrientation();
+}
+
+void GCodeView::updateActiveToolOrientation() {
+    if (m_tool_orientation_object.isNull()) { return; }
+    const auto active = m_tool_orientation_preview.activePose();
+    if (!active) { return; }
+
+    m_tool_orientation_object->excludeLine(active->line);
+    if (m_active_tool_orientation_object.isNull()) {
+        m_active_tool_orientation_object = QSharedPointer<ToolOrientationObject>::create(
+            this, QVector<ToolOrientationPose> {{0, QVector3D(), QQuaternion()}},
+            m_tool_orientation_preview.axisLength() * 2.0f);
+        m_gcode_object->adoptChild(m_active_tool_orientation_object);
+    }
+    QMatrix4x4 transform;
+    transform.translate(active->position);
+    transform.rotate(active->orientation);
+    m_active_tool_orientation_object->setTransformation(transform);
 }
 
 QVector<QVector<QSharedPointer<SegmentBase>>> GCodeView::visiblePrintableGCodeSubset() const {
@@ -395,10 +449,19 @@ uint GCodeView::pickVisibleSegment(const QPointF& mouse_ndc_pos) {
 }
 
 void GCodeView::updateSegmentWidths(bool use_true_width) {
+    const auto selected_lines = m_tool_orientation_preview.selectedLines();
+    const float zoom_factor   = m_state.zoom_factor;
     clear();
     m_use_true_segment_widths = use_true_width;
 
-    if (!m_gcode.isEmpty()) { addGCode(m_gcode); }
+    if (!m_gcode.isEmpty()) {
+        addGCode(m_gcode);
+        if (m_state.ortho) {
+            m_state.zoom_factor = zoom_factor;
+            resizeGL(width(), height());
+        }
+        updateSegments(selected_lines, {});
+    }
 }
 
 void GCodeView::initView() {
@@ -434,10 +497,12 @@ void GCodeView::handleLeftClick(QPointF mouse_ndc_pos) {
 
     if (picked_line_num == 0) {
         if (!m_true_width_overlay_object.isNull()) { m_true_width_overlay_object->deselectAll(); }
+        m_tool_orientation_preview.clearSelection();
         emit updateSelectedSegments(QList<int>(), m_gcode_object->deselectAll());
     }
     else {
         if (m_gcode_object->isCurrentlySelected(picked_line_num)) {
+            m_tool_orientation_preview.updateSelection({}, {int(picked_line_num) - 1});
             m_gcode_object->deselectSegment(picked_line_num);
             if (!m_true_width_overlay_object.isNull()) {
                 m_true_width_overlay_object->deselectSegment(picked_line_num);
@@ -445,11 +510,13 @@ void GCodeView::handleLeftClick(QPointF mouse_ndc_pos) {
             emit updateSelectedSegments(QList<int>(), QList<int> {(int)picked_line_num - 1});
         }
         else {
+            m_tool_orientation_preview.updateSelection({int(picked_line_num) - 1}, {});
             m_gcode_object->selectSegment(picked_line_num);
             if (!m_true_width_overlay_object.isNull()) { m_true_width_overlay_object->selectSegment(picked_line_num); }
             emit updateSelectedSegments(QList<int> {(int)picked_line_num - 1}, QList<int> {});
         }
     }
+    updateActiveToolOrientation();
     this->update();
 }
 
@@ -678,6 +745,7 @@ void GCodeView::setLowLayer(uint low_layer) {
 
     emit maxSegmentChanged(segment_count == 0 ? 0 : segment_count - 1);
     refreshTrueWidthOverlay();
+    refreshToolOrientation();
 
     this->update();
 }
@@ -693,6 +761,7 @@ void GCodeView::setHighLayer(uint high_layer) {
 
     emit maxSegmentChanged(segment_count == 0 ? 0 : segment_count - 1);
     refreshTrueWidthOverlay();
+    refreshToolOrientation();
 
     this->update();
 }
@@ -705,6 +774,7 @@ void GCodeView::setLowSegment(uint low_segment) {
 
     updateHoverTracking();
     refreshTrueWidthOverlay();
+    refreshToolOrientation();
 
     this->update();
 }
@@ -717,12 +787,15 @@ void GCodeView::setHighSegment(uint high_segment) {
 
     updateHoverTracking();
     refreshTrueWidthOverlay();
+    refreshToolOrientation();
 
     this->update();
 }
 
 void GCodeView::updateSegments(QList<int> linesToAdd, QList<int> linesToRemove) {
     if (m_gcode_object.isNull()) return;
+
+    m_tool_orientation_preview.updateSelection(linesToAdd, linesToRemove);
 
     for (int line_num : linesToAdd) {
         m_gcode_object->selectSegment(line_num + 1);
@@ -734,11 +807,14 @@ void GCodeView::updateSegments(QList<int> linesToAdd, QList<int> linesToRemove) 
         if (!m_true_width_overlay_object.isNull()) { m_true_width_overlay_object->deselectSegment(line_num + 1); }
     }
 
+    updateActiveToolOrientation();
     this->update();
 }
 
 void GCodeView::clear() {
     clearTrueWidthOverlay();
+    clearToolOrientation();
+    m_tool_orientation_preview.reset({});
     m_true_width_overlay_key_valid = false;
 
     if (!m_gcode_object.isNull()) {

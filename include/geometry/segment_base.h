@@ -1,6 +1,7 @@
 #pragma once
 
 #include <cmath>
+#include <optional>
 #include <vector>
 
 #include <qcolor.h>
@@ -67,6 +68,11 @@ class SegmentBase {
 
     //! \brief Sets whether material deposition is active for this segment.
     void setDepositionActive(bool deposition_active);
+
+    //! \brief Tool frame at the segment endpoint in preview coordinates, independent of bead geometry.
+    std::optional<QQuaternion> toolOrientation() const;
+    void setToolOrientation(const QQuaternion& orientation);
+    void clearToolOrientation();
 
     //! \brief Sets the cylindrical axis used to orient true-width bead geometry.
     //! \param center Cylinder axis center in the same coordinate space as the segment.
@@ -233,6 +239,8 @@ class SegmentBase {
 
     //! \brief Whether material deposition is active for this segment.
     bool m_deposition_active;
+
+    std::optional<QQuaternion> m_tool_orientation;
 
     //! \brief Whether true-width bead geometry should use a cylindrical radial frame.
     bool m_has_cylindrical_bead_center = false;

@@ -2,7 +2,9 @@
 
 #include <QMap>
 #include <QObject>
+#include <QQuaternion>
 #include <QString>
+#include <optional>
 
 #include <qcontainerfwd.h>
 #include <qtmetamacros.h>
@@ -46,6 +48,16 @@ class GcodeCommand : public QObject {
     const QMap<char, double>& getParameters() const;
 
     const QMap<char, double>& getOptionalParameters() const;
+
+    //! \brief Programmed tool frame at the command endpoint, when supplied by the syntax.
+    std::optional<QQuaternion> toolOrientation() const;
+    void setToolOrientation(const QQuaternion& orientation);
+    void clearToolOrientation();
+
+    //! \brief Forward positioner frame for work-object motion, when supplied by the syntax.
+    std::optional<QQuaternion> positionerOrientation() const;
+    void setPositionerOrientation(const QQuaternion& orientation);
+    void clearPositionerOrientation();
 
     //! \brief Gets the comment associated with that Gcode command.
     //! \return The Gcode command's comment
@@ -136,6 +148,8 @@ class GcodeCommand : public QObject {
     int m_command_id;
     QMap<char, double> m_parameters;
     QMap<char, double> m_optional_parameters;
+    std::optional<QQuaternion> m_tool_orientation;
+    std::optional<QQuaternion> m_positioner_orientation;
     bool m_deposition_active;
     double m_extruder_speed;
     QString m_comment;

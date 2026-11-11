@@ -16,6 +16,7 @@
 #include "geometry/segment_base.h"
 #include "graphics/base_view.h"
 #include "graphics/objects/gcode_object.h"
+#include "graphics/support/tool_orientation_preview.h"
 #include "utilities/enums.h"
 #include "widgets/gcode_info_control.h"
 #include "widgets/part_widget/model/part_meta_item.h"
@@ -26,6 +27,7 @@ namespace ORNL {
 class GraphicsObject;
 class PrinterObject;
 class SeamObject;
+class ToolOrientationObject;
 
 /*!
  * \brief View that displays generated GCode and provides interactivity with it.
@@ -75,6 +77,9 @@ class GCodeView : public BaseView {
     //! \brief updates segment with regular or reduced width
     //! \param use_true_width if the true width should be used
     void updateSegmentWidths(bool use_true_width);
+
+    //! \brief Shows or hides programmed tool-frame triads at visible command endpoints.
+    void showToolOrientation(bool show);
 
     //! \brief Updates the printer based on changes to the settings.
     //! \param sb: New settings object.
@@ -195,6 +200,11 @@ class GCodeView : public BaseView {
     //! \brief Rebuilds the visible-range true-width overlay when the current range is below the preference threshold.
     void refreshTrueWidthOverlay();
 
+    //! \brief Rebuilds sampled orientation geometry only when the visible path changes.
+    void refreshToolOrientation();
+    void clearToolOrientation();
+    void updateActiveToolOrientation();
+
     //! \brief Returns a printable-segment subset for the currently visible layer and segment range.
     QVector<QVector<QSharedPointer<SegmentBase>>> visiblePrintableGCodeSubset() const;
 
@@ -230,6 +240,11 @@ class GCodeView : public BaseView {
     QSharedPointer<GCodeObject> m_gcode_object;
     //! \brief Optional true-width overlay for the currently visible range when the full preview uses thin lines.
     QSharedPointer<GCodeObject> m_true_width_overlay_object;
+
+    QSharedPointer<ToolOrientationObject> m_tool_orientation_object;
+    QSharedPointer<ToolOrientationObject> m_active_tool_orientation_object;
+    ToolOrientationPreview m_tool_orientation_preview;
+    bool m_show_tool_orientation = false;
 
     //! \brief m_meta_model tracks the states of the parts and their transformations
     QSharedPointer<PartMetaModel> m_meta_model;

@@ -1,8 +1,11 @@
 #include <QCoreApplication>
+#include <QFile>
 #include <QMatrix4x4>
 #include <QRegularExpression>
 #include <QSharedPointer>
+#include <QStandardPaths>
 #include <QStringList>
+#include <QTemporaryFile>
 #include <QVector3D>
 #include <cmath>
 #include <cstdlib>
@@ -18,16 +21,314 @@
 #include "gcode/writers/arc_specialties_writer.h"
 #include "geometry/path.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
 #include "geometry/segments/line.h"
 #include "geometry/segments/travel.h"
 #include "slicing/helical_tool_start_angle.h"
 #include "step/layer/cylindrical_layer.h"
 #include "test_utils.h"
+#include "threading/gcode_loader.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
 
 namespace {
 constexpr float kTolerance = 1.0e-6f;
+
+QList<QList<ORNL::GcodeCommand>> orientationCommands(QStringList lines) {
+    QStringList upper_lines;
+    for (const QString& line : lines) { upper_lines.append(line.toUpper()); }
+    ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, lines, upper_lines);
+    return parser.parseLines();
+}
+
+bool toolFrameMatches(const std::optional<QQuaternion>& frame, double xr, double yr, double zr) {
+    if (!frame) { return false; }
+    const double sx = std::sin(xr * M_PI / 180.0), cx = std::cos(xr * M_PI / 180.0);
+    const double sy = std::sin(yr * M_PI / 180.0), cy = std::cos(yr * M_PI / 180.0);
+    const double sz = std::sin(zr * M_PI / 180.0), cz = std::cos(zr * M_PI / 180.0);
+    // Independent ZYX rotation-matrix columns check tilt and roll, not just one torch vector.
+    const QVector3D expected[] = {{float(cz * cy), float(sz * cy), float(-sy)},
+                                  {float(cz * sy * sx - sz * cx), float(sz * sy * sx + cz * cx), float(cy * sx)},
+                                  {float(cz * sy * cx + sz * sx), float(sz * sy * cx - cz * sx), float(cy * cx)}};
+    const QVector3D basis[]    = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    for (int axis = 0; axis < 3; ++axis) {
+        if ((frame->rotatedVector(basis[axis]) - expected[axis]).length() > 1.0e-5f) { return false; }
+    }
+    return true;
+}
+
+bool positionerFrameMatches(const std::optional<QQuaternion>& frame, double ap, double cp) {
+    if (!frame) { return false; }
+    const double tilt = std::remainder(ap, 360.0) * M_PI / 180.0;
+    const double spin = std::remainder(cp, 360.0) * M_PI / 180.0;
+    const double sa = std::sin(tilt), ca = std::cos(tilt), sc = std::sin(spin), cc = std::cos(spin);
+    // Forward Rx(AP)*Rz(CP) columns, plus the transposed matrix for the inverse work-object transform.
+    const QVector3D forward[] = {{float(cc), float(ca * sc), float(sa * sc)},
+                                 {float(-sc), float(ca * cc), float(sa * cc)},
+                                 {0, float(-sa), float(ca)}};
+    const QVector3D inverse[] = {{float(cc), float(-sc), 0},
+                                 {float(ca * sc), float(ca * cc), float(-sa)},
+                                 {float(sa * sc), float(sa * cc), float(ca)}};
+    const QVector3D basis[]   = {{1, 0, 0}, {0, 1, 0}, {0, 0, 1}};
+    for (int axis = 0; axis < 3; ++axis) {
+        if ((frame->rotatedVector(basis[axis]) - forward[axis]).length() > 1.0e-5f ||
+            (frame->inverted().rotatedVector(basis[axis]) - inverse[axis]).length() > 1.0e-5f) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool retainsModalPositionerFrames() {
+    const auto commands = orientationCommands({"G0 X1 XR180 YR0 ZR-135 AP90", "G0 CP45", "G1 X2 F600", "G1 CP-405",
+                                               "G1 X3 AP-30", "G1 X4 CP1125", "G1 AP60", "G1 X5", "G1 X6 AP0 CP0"});
+    if (commands.size() != 1 || commands.first().size() != 6) { return false; }
+    const auto& layer = commands.first();
+    for (const auto& command : layer) {
+        if (!toolFrameMatches(command.toolOrientation(), 180, 0, -135)) { return false; }
+    }
+    return !layer[0].positionerOrientation() && positionerFrameMatches(layer[1].positionerOrientation(), 90, 45) &&
+           positionerFrameMatches(layer[2].positionerOrientation(), -30, -405) &&
+           positionerFrameMatches(layer[3].positionerOrientation(), -30, 1125) &&
+           positionerFrameMatches(layer[4].positionerOrientation(), 60, 1125) &&
+           positionerFrameMatches(layer[5].positionerOrientation(), 0, 0) &&
+           !layer[1].getOptionalParameters().contains('C') && !layer[2].getOptionalParameters().contains('C') &&
+           layer[3].getOptionalParameters().value('C') == 1125 && !layer[4].getOptionalParameters().contains('C');
+}
+
+bool positionerRequiresBothKnownAxes() {
+    const auto commands = orientationCommands({"G0 X1 CP17", "G1 X2 F600", "G0 AP12", "G1 X3"});
+    if (commands.size() != 1 || commands.first().size() != 3) { return false; }
+    const auto& layer = commands.first();
+    return !layer[0].positionerOrientation() && !layer[1].positionerOrientation() &&
+           positionerFrameMatches(layer[2].positionerOrientation(), 12, 17) && !layer[2].toolOrientation();
+}
+
+bool positionerHandlesSignedAndUnwrappedAngles() {
+    const double poses[][2] = {{0, 0}, {90, -360}, {37, -450}, {450, 1080}, {-45, 7200000180.0}, {1.0e20, -1.0e20}};
+    for (const auto& pose : poses) {
+        const auto commands =
+            orientationCommands({QString("G0 X1 AP=%1 CP=%2").arg(pose[0], 0, 'g', 17).arg(pose[1], 0, 'g', 17)});
+        if (commands.size() != 1 || commands.first().size() != 1 ||
+            !positionerFrameMatches(commands.first().first().positionerOrientation(), pose[0], pose[1])) {
+            return false;
+        }
+    }
+    return true;
+}
+
+bool positionerHonorsTrafoTransitions() {
+    QStringList lines {"N10 #TrAfO oFf ; #TRAFO ON is a comment",
+                       "G0 X1 XR180 YR0 ZR-135 AP90 CP20",
+                       "; #TRAFO ON",
+                       "G0 X2",
+                       "N12 #TRAFO ON ; #TRAFO OFF is a comment",
+                       "G1 X3 F600",
+                       "G0 X4 ;WORLD APPROACH TRAVEL",
+                       "n15 #trafo off",
+                       "G0 CP50",
+                       "G1 X5",
+                       "#TRAFO ONWARD",
+                       "G0 X6",
+                       "#TRAFO ON",
+                       "G1 X7"};
+    QStringList upper_lines;
+    for (const auto& line : lines) { upper_lines.append(line.toUpper()); }
+    ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, lines, upper_lines);
+    const auto commands = parser.parseLines();
+    if (commands.size() != 1 || commands.first().size() != 7) { return false; }
+    const auto& layer = commands.first();
+    if (layer[0].positionerOrientation() || layer[1].positionerOrientation() || layer[3].positionerOrientation() ||
+        layer[4].positionerOrientation() || layer[5].positionerOrientation() ||
+        !positionerFrameMatches(layer[2].positionerOrientation(), 90, 20) ||
+        !positionerFrameMatches(layer[6].positionerOrientation(), 90, 50)) {
+        return false;
+    }
+    for (const auto& command : layer) {
+        if (!toolFrameMatches(command.toolOrientation(), 180, 0, -135)) { return false; }
+    }
+    // Exercise raw-case directives too: parseLines normally supplies uppercase text to parseCommand.
+    parser.parseCommand("n100 #trafo off ; #TRAFO ON", 100);
+    if (parser.parseCommand("G0 X8", 101).positionerOrientation()) { return false; }
+    parser.parseCommand("n[101] #TrAfO On ; #TRAFO OFF", 102);
+    parser.parseCommand("; #TRAFO OFF", 103);
+    return positionerFrameMatches(parser.parseCommand("G0 X9", 104).positionerOrientation(), 90, 50) &&
+           !parser.parseCommand("#TRAFO OFF", 105).positionerOrientation();
+}
+
+bool retainsToolFramesForAllMotionForms() {
+    const auto commands = orientationCommands({"N1 G00 X=1 Y=0 Z=0 XR=0 YR=0 ZR=0 AP=90 CP=10 ;TRAVEL",
+                                               "N2 G01 X2 Y0 Z0 XR30 YR-25 ZR70 AP90 CP20 F600 ;PERIMETER",
+                                               "N3 G02 X=1 Y=1 I=-1 J=0 XR=180 YR=0 ZR=-90 AP=90 CP=30 F600 ;PERIMETER",
+                                               "N4 G03 X0 Y0 I-1 J0 XR180 YR0 ZR-135 AP90 CP40 F600 ;PERIMETER"});
+    if (commands.size() != 1 || commands.first().size() != 4) { return false; }
+    const auto& layer = commands.first();
+    return toolFrameMatches(layer[0].toolOrientation(), 0, 0, 0) &&
+           toolFrameMatches(layer[1].toolOrientation(), 30, -25, 70) &&
+           toolFrameMatches(layer[2].toolOrientation(), 180, 0, -90) &&
+           toolFrameMatches(layer[3].toolOrientation(), 180, 0, -135) &&
+           layer[3].getOptionalParameters().value('C') == 40;
+}
+
+bool retainsPartialAndOrientationOnlyUpdates() {
+    const auto commands = orientationCommands({"G0 X1 XR=0", "G1 X2 YR=0 F600", "G0 ZR=0", "G1 X3", "G1 XR=90", "G1 X4",
+                                               "G1 X5 YR=30", "G1 X6 AP=80 CP=130"});
+    if (commands.size() != 1 || commands.first().size() != 6) { return false; }
+    const auto& layer = commands.first();
+    return !layer[0].toolOrientation() && !layer[1].toolOrientation() &&
+           toolFrameMatches(layer[2].toolOrientation(), 0, 0, 0) &&
+           toolFrameMatches(layer[3].toolOrientation(), 90, 0, 0) &&
+           toolFrameMatches(layer[4].toolOrientation(), 90, 30, 0) &&
+           toolFrameMatches(layer[5].toolOrientation(), 90, 30, 0);
+}
+
+bool copiesAndClearsToolFrames() {
+    const auto commands = orientationCommands({"G0 X1 XR=30 YR=-25 ZR=70 AP=37 CP=-450"});
+    if (commands.size() != 1 || commands.first().size() != 1) { return false; }
+    const ORNL::GcodeCommand source = commands.first().first();
+    if (!source.toolOrientation() || !source.positionerOrientation()) { return false; }
+    ORNL::GcodeCommand copied(source), assigned;
+    assigned = source;
+    ORNL::LineSegment segment(ORNL::Point(), ORNL::Point(1, 0, 0));
+    segment.setToolOrientation(*source.toolOrientation());
+    const auto cloned           = segment.clone();
+    const bool copied_correctly = toolFrameMatches(copied.toolOrientation(), 30, -25, 70) &&
+                                  toolFrameMatches(assigned.toolOrientation(), 30, -25, 70) &&
+                                  positionerFrameMatches(copied.positionerOrientation(), 37, -450) &&
+                                  positionerFrameMatches(assigned.positionerOrientation(), 37, -450) &&
+                                  toolFrameMatches(cloned->toolOrientation(), 30, -25, 70);
+    copied.clearParameters();
+    assigned.clearToolOrientation();
+    const bool clears_independently = positionerFrameMatches(assigned.positionerOrientation(), 37, -450);
+    assigned                        = source;
+    assigned.clearPositionerOrientation();
+    segment.clearToolOrientation();
+    return copied_correctly && clears_independently && !copied.toolOrientation() && !copied.positionerOrientation() &&
+           !assigned.positionerOrientation() && toolFrameMatches(assigned.toolOrientation(), 30, -25, 70) &&
+           !segment.toolOrientation() && source.toolOrientation() && source.positionerOrientation() &&
+           cloned->toolOrientation();
+}
+
+bool clearsToolFramesWhenReconfigured() {
+    QStringList lines {"G0 X1 XR=30 YR=-25 ZR=70 AP=90 CP=37"};
+    QStringList upper_lines {lines.first().toUpper()};
+    ORNL::ArcSpecialtiesParser parser(ORNL::GcodeMetaList::ArcSpecialtiesMeta, false, lines, upper_lines);
+    const auto commands = parser.parseLines();
+    if (commands.size() != 1 || commands.first().size() != 1 || !commands.first().first().toolOrientation()) {
+        return false;
+    }
+    ORNL::CommonParser& base = parser;
+    parser.parseCommand("#TRAFO OFF", 1);
+    base.reset();
+    parser.config();
+    const auto unknown_frame = parser.parseCommand("G0 X2 XR=0 CP=23", 1);
+    const auto completed     = parser.parseCommand("G0 X3 YR=0 ZR=0 AP=0", 2);
+    const auto non_motion    = parser.parseCommand("G83", 3);
+    return !unknown_frame.toolOrientation() && !unknown_frame.positionerOrientation() &&
+           toolFrameMatches(completed.toolOrientation(), 0, 0, 0) &&
+           positionerFrameMatches(completed.positionerOrientation(), 0, 23) && !non_motion.toolOrientation() &&
+           !non_motion.positionerOrientation();
+}
+
+bool ordinarySyntaxHasNoToolFrame() {
+    QStringList lines {"G1 X1 A2 F600", "G1 X2 B3 F600"};
+    QStringList upper_lines = lines;
+    ORNL::CommonParser parser(ORNL::GcodeMetaList::MarlinMeta, false, lines, upper_lines);
+    const auto commands = parser.parseLines();
+    return commands.size() == 1 && commands.first().size() == 2 && !commands.first().first().toolOrientation() &&
+           !commands.first().last().toolOrientation();
+}
+
+bool loaderPreservesToolFrames(const QString& syntax, const QString& moves, bool expect_orientation) {
+    QTemporaryFile file;
+    if (!file.open()) { return false; }
+    file.write((";G-Code Syntax: " + syntax + "\n" + moves).toUtf8());
+    file.flush();
+    file.close();
+    ORNL::GCodeLoader loader(file.fileName(), false);
+    QVector<QSharedPointer<ORNL::SegmentBase>> segments;
+    bool failed = false;
+    QObject::connect(&loader, &ORNL::GCodeLoader::gcodeLoadedVisualization, [&segments](const auto& layers) {
+        for (const auto& layer : layers) { segments.append(layer); }
+    });
+    QObject::connect(&loader, &ORNL::GCodeLoader::error, [&failed](const QString& error) {
+        std::cerr << error.toStdString() << '\n';
+        failed = true;
+    });
+    loader.run();
+    if (failed || segments.size() != 3) { return false; }
+    for (const auto& segment : segments) {
+        if (expect_orientation) {
+            if (!toolFrameMatches(segment->toolOrientation(), 171.4524, -8.4540, -134.3671)) { return false; }
+        }
+        else if (segment->toolOrientation()) { return false; }
+    }
+    return dynamic_cast<ORNL::LineSegment*>(segments[0].data()) &&
+           dynamic_cast<ORNL::LineSegment*>(segments[1].data()) && dynamic_cast<ORNL::ArcSegment*>(segments[2].data());
+}
+
+bool donutReferenceUsesWorkObjectToolFrames(bool perturb_tilt) {
+    const QString fixture = QString::fromUtf8(ORNLSLICER_TEST_SOURCE_DIR) + "/fixtures/arc_specialties_donut1827.nc";
+    const QString manual_reference =
+        perturb_tilt ? QString() : qEnvironmentVariable("ORNLSLICER_ORIENTATION_REFERENCE_GCODE");
+    const QString source_path = manual_reference.isEmpty() ? fixture : manual_reference;
+    QFile source(source_path);
+    if (!source.open(QIODevice::ReadOnly)) {
+        std::cerr << "Could not read orientation reference " << source_path.toStdString() << '\n';
+        return false;
+    }
+    QString text = QString::fromUtf8(source.readAll());
+    if (perturb_tilt) {
+        if (!text.contains("XR=171.5295")) { return false; }
+        text.replace("XR=171.5295", "XR=161.5295");
+    }
+    // The loader can rewrite its input with statistics; always preserve the source NC program.
+    QTemporaryFile copy;
+    if (!copy.open()) { return false; }
+    copy.write(text.toUtf8());
+    copy.flush();
+    copy.close();
+    ORNL::GCodeLoader loader(copy.fileName(), false);
+    bool passed             = true;
+    int print_count         = 0;
+    bool saw_world_approach = false;
+    QObject::connect(&loader, &ORNL::GCodeLoader::error, [&passed](const QString& error) {
+        std::cerr << error.toStdString() << '\n';
+        passed = false;
+    });
+    QObject::connect(&loader, &ORNL::GCodeLoader::gcodeLoadedVisualization, [&](const auto& layers) {
+        for (const auto& layer : layers) {
+            for (const auto& segment : layer) {
+                const auto frame    = segment->toolOrientation();
+                const QString& type = segment->m_segment_info_meta.type;
+                if (type.contains("WORLD APPROACH TRAVEL", Qt::CaseInsensitive)) {
+                    saw_world_approach = true;
+                    passed &=
+                        frame && (frame->rotatedVector(QVector3D(0, 0, 1)) - QVector3D(0, 0, -1)).length() < 1.0e-5f;
+                }
+                const auto* arc = dynamic_cast<ORNL::ArcSegment*>(segment.data());
+                if (!arc || !type.contains("HELICAL", Qt::CaseInsensitive)) { continue; }
+                ++print_count;
+                if (!frame) {
+                    passed = false;
+                    continue;
+                }
+                const QVector3D inward =
+                    QVector3D(arc->center().x() - arc->end().x(), arc->center().y() - arc->end().y(), 0).normalized();
+                const float dot = QVector3D::dotProduct(frame->rotatedVector(QVector3D(0, 0, 1)).normalized(), inward);
+                if (!std::isfinite(dot) || (perturb_tilt ? dot >= 0.99f : dot <= 1.0f - 1.0e-5f)) {
+                    std::cerr << "Unexpected tool-normal dot " << dot << " at reference line " << segment->lineNumber()
+                              << '\n';
+                    passed = false;
+                }
+            }
+        }
+    });
+    loader.run();
+    std::cout << "Checked " << print_count << (perturb_tilt ? " perturbed" : " perpendicular")
+              << " helical tool orientations from " << source_path.toStdString() << '\n';
+    return passed && saw_world_approach && (manual_reference.isEmpty() ? print_count == 30 : print_count > 0);
+}
 
 bool parsesArcLine(const QString& line) {
     QStringList original_lines {line};
@@ -740,6 +1041,12 @@ bool preservesHelicalToolFrameAfterUndoingPositionerOffset() {
             const QString line = lineContaining(
                 writer.writeLine(ORNL::Point(0.0, 1000.0, 0.0), ORNL::Point(0.0, 1000.0, 1000.0), params),
                 ";HELICAL PERIMETER");
+            const auto commands = orientationCommands({line});
+            if (commands.size() != 1 || commands.first().size() != 1 ||
+                !toolFrameMatches(commands.first().first().toolOrientation(), motionField(line, "XR"),
+                                  motionField(line, "YR"), motionField(line, "ZR"))) {
+                return false;
+            }
             QMatrix4x4 configured;
             configured.rotate(frame.zr, 0.0f, 0.0f, 1.0f);
             configured.rotate(frame.yr, 0.0f, 1.0f, 0.0f);
@@ -946,6 +1253,7 @@ bool writesCylindricalTravelWithConfiguredArcDensity() {
 }  // namespace
 
 int main(int argc, char* argv[]) {
+    QStandardPaths::setTestModeEnabled(true);
     QCoreApplication app(argc, argv);
 
     const QString clockwise_arc =
@@ -962,6 +1270,42 @@ int main(int argc, char* argv[]) {
         "I=0.5000 J=0.0000 FV.S.SPEED G81 ;PERIMETER";
 
     bool passed = true;
+    passed &= ORNL::Testing::expect(retainsToolFramesForAllMotionForms(),
+                                    "Arc Specialties G0-G3 did not preserve the programmed ZYX tool frame.");
+    passed &=
+        ORNL::Testing::expect(retainsModalPositionerFrames(),
+                              "Arc Specialties modal AP/CP updates changed the raw tool frame or CP inference data.");
+    passed &= ORNL::Testing::expect(positionerRequiresBothKnownAxes(),
+                                    "Arc Specialties invented a positioner frame before both AP and CP were known.");
+    passed &=
+        ORNL::Testing::expect(positionerHandlesSignedAndUnwrappedAngles(),
+                              "Arc Specialties positioner frame failed signed, wrapped, or unwrapped angle checks.");
+    passed &=
+        ORNL::Testing::expect(positionerHonorsTrafoTransitions(),
+                              "Arc Specialties positioner frames did not respect TRAFO or world-approach motion.");
+    passed &= ORNL::Testing::expect(donutReferenceUsesWorkObjectToolFrames(false),
+                                    "Donut1827 helical tool frames were not perpendicular in work-object coordinates.");
+    passed &= ORNL::Testing::expect(donutReferenceUsesWorkObjectToolFrames(true),
+                                    "Changing the Donut1827 programmed torch tilt did not remain visible.");
+    passed &= ORNL::Testing::expect(retainsPartialAndOrientationOnlyUpdates(),
+                                    "Arc Specialties modal or orientation-only tool-frame updates were lost.");
+    passed &= ORNL::Testing::expect(copiesAndClearsToolFrames(),
+                                    "Tool orientation did not survive copying or clear independently.");
+    passed &= ORNL::Testing::expect(clearsToolFramesWhenReconfigured(),
+                                    "Arc Specialties parser retained a stale tool frame after reset.");
+    passed &= ORNL::Testing::expect(ordinarySyntaxHasNoToolFrame(),
+                                    "Common syntax extrusion axes were incorrectly treated as tool orientation.");
+    passed &= ORNL::Testing::expect(
+        loaderPreservesToolFrames("Arc Specialties",
+                                  "#TRAFO OFF\n"
+                                  "G0 X=1 Y=0 Z=0 XR=171.4524 YR=-8.4540 ZR=-134.3671 AP=90 CP=-12 ;TRAVEL\n"
+                                  "G1 X=1 Y=1 F600 ;HELICAL PERIMETER\n"
+                                  "G3 X=0 Y=0 I=-1 J=0 F600 ;HELICAL PERIMETER\n",
+                                  true),
+        "Arc Specialties loader did not propagate compensated tool frames to line and arc segments.");
+    passed &= ORNL::Testing::expect(
+        loaderPreservesToolFrames("Marlin", "G0 X1 Y0 Z0 ;TRAVEL\nG1 X1 Y1 F600\nG3 X0 Y0 I-1 J0 F600\n", false),
+        "Loader invented a tool frame for an unsupported syntax.");
     passed &= ORNL::Testing::expect(parsesArcLine(clockwise_arc), "Arc Specialties G02 did not ignore inline G81.");
     passed &=
         ORNL::Testing::expect(parsesArcLine(counter_clockwise_arc), "Arc Specialties G03 did not ignore inline G81.");

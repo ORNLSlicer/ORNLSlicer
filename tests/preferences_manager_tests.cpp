@@ -19,6 +19,23 @@ int main(int argc, char* argv[]) {
 
     QSharedPointer<ORNL::PreferencesManager> preferences = ORNL::PreferencesManager::getInstance();
 
+    if (!ORNL::Testing::expect(!preferences->getShowToolOrientationPreference(),
+                               "Tool orientation markers should be disabled by default."))
+        return EXIT_FAILURE;
+    const QString orientation_path = temp_dir.filePath("orientation.preferences");
+    for (bool show : {true, false}) {
+        preferences->setShowToolOrientationPreference(show);
+        if (!ORNL::Testing::expect(preferences->json().at("show_tool_orientation") == show,
+                                   "The tool orientation preference should be exported."))
+            return EXIT_FAILURE;
+        preferences->exportPreferences(orientation_path);
+        preferences->setShowToolOrientationPreference(!show);
+        preferences->importPreferences(orientation_path);
+        if (!ORNL::Testing::expect(preferences->getShowToolOrientationPreference() == show,
+                                   "Both tool orientation states should round-trip through preferences files."))
+            return EXIT_FAILURE;
+    }
+
     const QString theme_path = temp_dir.path() + "/theme.preferences";
     for (int value : {0, 1}) {
         const QString theme_name = value == 0 ? "Light Mode" : "Dark Mode";
@@ -78,6 +95,7 @@ int main(int argc, char* argv[]) {
 
     fifojson legacy_preferences = preferences->json();
     legacy_preferences.erase("prompt_settings_for_all_categories");
+    legacy_preferences.erase("show_tool_orientation");
     QFile legacy_file(temp_dir.filePath("legacy.preferences"));
     if (!ORNL::Testing::expect(legacy_file.open(QIODevice::WriteOnly), "Could not write legacy preferences."))
         return EXIT_FAILURE;
@@ -87,6 +105,9 @@ int main(int argc, char* argv[]) {
     preferences->importPreferences(legacy_file.fileName());
     if (!ORNL::Testing::expect(!preferences->getPromptSettingsForAllCategoriesPreference(),
                                "Importing old preferences should preserve the disabled prompt default."))
+        return EXIT_FAILURE;
+    if (!ORNL::Testing::expect(!preferences->getShowToolOrientationPreference(),
+                               "Importing old preferences should preserve the disabled tool orientation default."))
         return EXIT_FAILURE;
 
     return EXIT_SUCCESS;

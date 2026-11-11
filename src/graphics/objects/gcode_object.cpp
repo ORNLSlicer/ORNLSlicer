@@ -333,14 +333,15 @@ void GCodeObject::populateTravelLineGL(BaseView* view, const std::vector<float>&
 }
 
 void GCodeObject::hideSegmentType(SegmentDisplayType type, bool hide) {
-    m_hidden_type = (hide) ? (m_hidden_type | type) : (m_hidden_type & ~type);
-
-    for (auto& layer : m_segments) {
-        for (auto& segment : layer) {
-            if (static_cast<bool>(segment->type & m_hidden_type))
-                segment->hidden = true;
-            else if (segment->hidden)
-                segment->hidden = false;
+    m_hidden_type      = (hide) ? (m_hidden_type | type) : (m_hidden_type & ~type);
+    uint segment_index = 0;
+    for (uint layer = 0; layer < m_segments.size(); ++layer) {
+        for (auto& segment : m_segments[layer]) {
+            segment->hidden = static_cast<bool>(segment->type & m_hidden_type);
+            if (layer >= m_low_layer && layer <= m_high_layer) {
+                segment->hidden |= segment_index < m_low_segment || segment_index > m_high_segment;
+                ++segment_index;
+            }
         }
     }
 }

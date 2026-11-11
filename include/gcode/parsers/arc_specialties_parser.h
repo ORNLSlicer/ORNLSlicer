@@ -1,5 +1,7 @@
 #pragma once
 
+#include <array>
+
 #include <qcontainerfwd.h>
 #include <qset.h>
 
@@ -11,8 +13,9 @@ namespace ORNL {
  * @class ArcSpecialtiesParser
  * @brief Parser for Arc Specialties gcode with X/Y/Z/XR/YR/ZR/AP/CP motion fields.
  *
- * The visualization path only models XYZ. This parser accepts Arc Specialties `KEY=value` motion fields, validates and
- * strips the orientation-only fields, normalizes X/Y/Z/I/J/K/R/F into the shared parser's single-letter parameter
+ * This parser accepts Arc Specialties `KEY=value` motion fields, retains the modal XR/YR/ZR tool frame and
+ * AP/CP positioner frame while work-object kinematics are enabled,
+ * normalizes X/Y/Z/I/J/K/R/F into the shared parser's single-letter parameter
  * format, accepts known schedule-speed feedrate macros, and delegates motion estimation and visualization command
  * creation to CommonParser.
  */
@@ -37,6 +40,9 @@ class ArcSpecialtiesParser : public CommonParser {
 
     //! @brief Registers Arc Specialties command handlers and modal arc-center commands.
     void config() override;
+
+    //! @brief Clears shared parser state, modal tool/positioner frames, and the TRAFO mode.
+    void reset() override;
 
    protected:
     /*!
@@ -157,5 +163,14 @@ class ArcSpecialtiesParser : public CommonParser {
 
     //! @brief Tracks whether G161 absolute-center mode is active while parsing Arc Specialties G-code.
     bool m_use_absolute_arc_centers = false;
+
+    //! @brief Modal XR/YR/ZR angles in degrees and the axes explicitly supplied by the program.
+    std::array<double, 3> m_tool_angles {};
+    unsigned int m_known_tool_angles = 0;
+
+    //! @brief Modal AP/CP positioner angles in degrees; snippets default to work-object motion.
+    std::array<double, 2> m_positioner_angles {};
+    unsigned int m_known_positioner_angles = 0;
+    bool m_work_object_motion              = true;
 };
 }  // namespace ORNL

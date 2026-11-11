@@ -74,6 +74,18 @@ void SegmentBase::setDepositionActive(bool deposition_active) {
     m_deposition_active = deposition_active;
 }
 
+std::optional<QQuaternion> SegmentBase::toolOrientation() const {
+    return m_tool_orientation;
+}
+
+void SegmentBase::setToolOrientation(const QQuaternion& orientation) {
+    m_tool_orientation = orientation.normalized();
+}
+
+void SegmentBase::clearToolOrientation() {
+    m_tool_orientation.reset();
+}
+
 void SegmentBase::setCylindricalBeadCenter(const Point& center) {
     m_cylindrical_bead_center     = center;
     m_has_cylindrical_bead_center = true;

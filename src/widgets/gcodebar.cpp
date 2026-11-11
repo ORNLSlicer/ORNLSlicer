@@ -300,6 +300,14 @@ void GcodeBar::setupSubWidgets() {
     m_true_width->setText("True Bead Widths");
     m_true_width->setChecked(PreferencesManager::getInstance()->getUseTrueWidthsPreference());
 
+    // Tool Orientation CheckBox
+    m_show_tool_orientation = new QCheckBox("Show Tool Orientation", this);
+    m_show_tool_orientation->setObjectName("show_tool_orientation");
+    m_show_tool_orientation->setToolTip(
+        "Show the tool frame relative to the paths at command endpoints: X red, Y green, Z blue. "
+        "Arc Specialties work-object frames account for AP tilt and CP rotation.");
+    m_show_tool_orientation->setChecked(PreferencesManager::getInstance()->getShowToolOrientationPreference());
+
     // Lower Layer Spinbox
     m_layer_lower = new QSpinBox(this);
     m_layer_lower->setMinimum(0);
@@ -379,27 +387,28 @@ void GcodeBar::setupInsert() {
     m_layout->addWidget(m_hide_travel, 5, 0, 1, 1);
     m_layout->addWidget(m_hide_support, 5, 1, 1, 1);
     m_layout->addWidget(m_true_width, 5, 2, 1, 1);
+    m_layout->addWidget(m_show_tool_orientation, 6, 0, 1, 4);
 
-    m_layout->addWidget(m_lower_label, 6, 0, 1, 1);
-    m_layout->addWidget(m_layer_lower, 6, 1, 1, 1);
-    m_layout->addWidget(m_layer_lower_slider, 6, 2, 1, 2);
+    m_layout->addWidget(m_lower_label, 7, 0, 1, 1);
+    m_layout->addWidget(m_layer_lower, 7, 1, 1, 1);
+    m_layout->addWidget(m_layer_lower_slider, 7, 2, 1, 2);
     m_layout->addWidget(m_lock_layer, 5, 4, 2, 1);
 
-    m_layout->addWidget(m_upper_label, 7, 0, 1, 1);
-    m_layout->addWidget(m_layer_upper, 7, 1, 1, 1);
-    m_layout->addWidget(m_layer_upper_slider, 7, 2, 1, 2);
+    m_layout->addWidget(m_upper_label, 8, 0, 1, 1);
+    m_layout->addWidget(m_layer_upper, 8, 1, 1, 1);
+    m_layout->addWidget(m_layer_upper_slider, 8, 2, 1, 2);
 
-    m_layout->addWidget(m_layer_play_btn, 7, 4, 1, 1);
+    m_layout->addWidget(m_layer_play_btn, 8, 4, 1, 1);
 
-    m_layout->addWidget(m_lower_segment_label, 8, 0, 1, 1);
-    m_layout->addWidget(m_segment_lower, 8, 1, 1, 1);
-    m_layout->addWidget(m_segment_lower_slider, 8, 2, 1, 2);
+    m_layout->addWidget(m_lower_segment_label, 9, 0, 1, 1);
+    m_layout->addWidget(m_segment_lower, 9, 1, 1, 1);
+    m_layout->addWidget(m_segment_lower_slider, 9, 2, 1, 2);
 
-    m_layout->addWidget(m_upper_segment_label, 9, 0, 1, 1);
-    m_layout->addWidget(m_segment_upper, 9, 1, 1, 1);
-    m_layout->addWidget(m_segment_upper_slider, 9, 2, 1, 2);
+    m_layout->addWidget(m_upper_segment_label, 10, 0, 1, 1);
+    m_layout->addWidget(m_segment_upper, 10, 1, 1, 1);
+    m_layout->addWidget(m_segment_upper_slider, 10, 2, 1, 2);
 
-    m_layout->addWidget(m_segment_play_btn, 9, 4, 1, 1);
+    m_layout->addWidget(m_segment_play_btn, 10, 4, 1, 1);
 }
 
 void GcodeBar::setupEvents() {
@@ -434,6 +443,11 @@ void GcodeBar::setupEvents() {
     connect(m_true_width, &QCheckBox::clicked, [this] {
         emit forwardSegmentWidthChange(m_true_width->isChecked());
         PreferencesManager::getInstance()->setUseTrueWidthsPreference(m_true_width->isChecked());
+    });
+
+    connect(m_show_tool_orientation, &QCheckBox::clicked, [this] {
+        emit forwardToolOrientationChange(m_show_tool_orientation->isChecked());
+        PreferencesManager::getInstance()->setShowToolOrientationPreference(m_show_tool_orientation->isChecked());
     });
 
     connect(m_lock_layer, &QCheckBox::clicked, [this] {

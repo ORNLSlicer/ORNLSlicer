@@ -119,6 +119,7 @@ PreferencesManager::PreferencesManager()
       m_hide_travel_preference(false),
       m_hide_support_preference(false),
       m_use_true_widths_preference(true),
+      m_show_tool_orientation_preference(false),
       m_gcode_info_visible_by_default_preference(false),
       m_optimization_points_visible_by_default_preference(false),
       m_gcode_preview_mode_preference(GCodePreviewMode::kAuto),
@@ -296,6 +297,8 @@ void PreferencesManager::importPreferences(QString filepath) {
 
             if (j.contains("use_true_widths")) setUseTrueWidthsPreference(j["use_true_widths"]);
 
+            if (j.contains("show_tool_orientation")) setShowToolOrientationPreference(j["show_tool_orientation"]);
+
             if (j.contains(kStepStlLinearDeflectionKey))
                 setStepStlLinearDeflection(j[kStepStlLinearDeflectionKey].get<Distance>());
 
@@ -382,6 +385,7 @@ fifojson PreferencesManager::json() {
     j["hide_travel"]                            = m_hide_travel_preference;
     j["hide_support"]                           = m_hide_support_preference;
     j["use_true_widths"]                        = m_use_true_widths_preference;
+    j["show_tool_orientation"]                  = m_show_tool_orientation_preference;
     j["gcode_info_visible_by_default"]          = m_gcode_info_visible_by_default_preference;
     j["optimization_points_visible_by_default"] = m_optimization_points_visible_by_default_preference;
     j["gcode_preview_mode"]                     = static_cast<int>(m_gcode_preview_mode_preference);
@@ -513,6 +517,10 @@ bool PreferencesManager::getHideSupportPreference() {
 
 bool PreferencesManager::getUseTrueWidthsPreference() {
     return m_use_true_widths_preference;
+}
+
+bool PreferencesManager::getShowToolOrientationPreference() {
+    return m_show_tool_orientation_preference;
 }
 
 bool PreferencesManager::getGCodeInfoVisibleByDefaultPreference() {
@@ -784,6 +792,11 @@ void PreferencesManager::setHideSupportPreference(bool hide) {
 void PreferencesManager::setUseTrueWidthsPreference(bool use) {
     m_use_true_widths_preference = use;
     m_dirty                      = true;
+}
+
+void PreferencesManager::setShowToolOrientationPreference(bool show) {
+    m_show_tool_orientation_preference = show;
+    m_dirty                            = true;
 }
 
 void PreferencesManager::setGCodeInfoVisibleByDefaultPreference(bool show) {

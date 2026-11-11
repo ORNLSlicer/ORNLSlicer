@@ -2,6 +2,7 @@
 
 #include <QRegularExpression>
 #include <QTextStream>
+#include <cmath>
 #include <functional>
 
 #include <qcontainerfwd.h>
@@ -19,7 +20,9 @@ const QRegularExpression kG01CommandPattern("(^\\s*)G01(?=\\s|;|\\(|$)");
 const QRegularExpression kG02CommandPattern("(^\\s*)G02(?=\\s|;|\\(|$)");
 const QRegularExpression kG03CommandPattern("(^\\s*)G03(?=\\s|;|\\(|$)");
 const QRegularExpression kLeadingBlockNumberPattern(
-    "^\\s*N(?:\\[[^\\]]+\\]|[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))(?=\\s|[A-Z#$;/()\"]|$)\\s*");
+    "^\\s*N(?:\\[[^\\]]+\\]|[+-]?(?:\\d+(?:\\.\\d*)?|\\.\\d+))(?=\\s|[A-Z#$;/()\"]|$)\\s*",
+    QRegularExpression::CaseInsensitiveOption);
+const QRegularExpression kTrafoModePattern("^\\s*#TRAFO\\s+(ON|OFF)\\s*$", QRegularExpression::CaseInsensitiveOption);
 const QString kG80ScheduleSpeedVariable = "V.S.SPEED";
 constexpr char kCpOptionalParameter     = 'C';
 
@@ -36,6 +39,10 @@ ArcSpecialtiesParser::ArcSpecialtiesParser(GcodeMeta meta, bool allowLayerAlter,
 
 GcodeCommand ArcSpecialtiesParser::parseCommand(QString command_string, int line_number) {
     command_string.remove(kLeadingBlockNumberPattern);
+    const auto trafo_mode = kTrafoModePattern.match(command_string.section(';', 0, 0));
+    if (trafo_mode.hasMatch()) {
+        m_work_object_motion = trafo_mode.captured(1).compare("ON", Qt::CaseInsensitive) == 0;
+    }
     command_string.replace(kG00CommandPattern, "\\1G0");
     command_string.replace(kG01CommandPattern, "\\1G1");
     command_string.replace(kG02CommandPattern, "\\1G2");
@@ -54,6 +61,15 @@ void ArcSpecialtiesParser::config() {
     addCommandMapping("G164", std::bind(&ArcSpecialtiesParser::G164Handler, this, std::placeholders::_1));
     addCommandMapping("G82", std::bind(&ArcSpecialtiesParser::G82Handler, this, std::placeholders::_1));
     addCommandMapping("G83", std::bind(&ArcSpecialtiesParser::G83Handler, this, std::placeholders::_1));
+}
+
+void ArcSpecialtiesParser::reset() {
+    CommonParser::reset();
+    m_tool_angles.fill(0.0);
+    m_known_tool_angles = 0;
+    m_positioner_angles.fill(0.0);
+    m_known_positioner_angles = 0;
+    m_work_object_motion      = true;
 }
 
 void ArcSpecialtiesParser::G0Handler(QVector<QString> params) {
@@ -107,6 +123,10 @@ QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<
                                                                         bool ignore_inline_arc_optional_stop) {
     QVector<QString> filtered_params;
     QSet<QString> used_keys;
+    auto tool_angles                     = m_tool_angles;
+    unsigned int known_tool_angles       = m_known_tool_angles;
+    auto positioner_angles               = m_positioner_angles;
+    unsigned int known_positioner_angles = m_known_positioner_angles;
 
     for (const QString& raw_param : params) {
         const QString param = raw_param.trimmed();
@@ -133,13 +153,43 @@ QVector<QString> ArcSpecialtiesParser::normalizeAndStripOrientationAxes(QVector<
         if (isOrientationKey(key)) {
             validateUniqueKey(key, used_keys);
             validateNumericValue(value);
-            if (key == "CP") { m_current_gcode_command.addOptionalParameter(kCpOptionalParameter, value.toDouble()); }
+            if (key == "CP" || key == "AP") {
+                const int axis          = key == "AP" ? 0 : 1;
+                positioner_angles[axis] = value.toDouble();
+                known_positioner_angles |= 1U << axis;
+                if (key == "CP") {
+                    m_current_gcode_command.addOptionalParameter(kCpOptionalParameter, value.toDouble());
+                }
+            }
+            else {
+                const int axis    = key == "XR" ? 0 : (key == "YR" ? 1 : 2);
+                tool_angles[axis] = value.toDouble();
+                known_tool_angles |= 1U << axis;
+            }
             continue;
         }
 
         if (param.contains('=')) { throwIllegalArcSpecialtiesParameter(param); }
 
         filtered_params.push_back(param);
+    }
+
+    m_tool_angles             = tool_angles;
+    m_known_tool_angles       = known_tool_angles;
+    m_positioner_angles       = positioner_angles;
+    m_known_positioner_angles = known_positioner_angles;
+    if (m_known_tool_angles == 7U) {
+        const QQuaternion rx = QQuaternion::fromAxisAndAngle(1, 0, 0, std::remainder(m_tool_angles[0], 360.0));
+        const QQuaternion ry = QQuaternion::fromAxisAndAngle(0, 1, 0, std::remainder(m_tool_angles[1], 360.0));
+        const QQuaternion rz = QQuaternion::fromAxisAndAngle(0, 0, 1, std::remainder(m_tool_angles[2], 360.0));
+        m_current_gcode_command.setToolOrientation(rz * ry * rx);
+    }
+    const bool world_approach =
+        m_current_gcode_command.getComment().compare("WORLD APPROACH TRAVEL", Qt::CaseInsensitive) == 0;
+    if (m_work_object_motion && !world_approach && m_known_positioner_angles == 3U) {
+        const QQuaternion tilt = QQuaternion::fromAxisAndAngle(1, 0, 0, std::remainder(m_positioner_angles[0], 360.0));
+        const QQuaternion spin = QQuaternion::fromAxisAndAngle(0, 0, 1, std::remainder(m_positioner_angles[1], 360.0));
+        m_current_gcode_command.setPositionerOrientation(tilt * spin);
     }
 
     return filtered_params;
@@ -188,9 +238,9 @@ void ArcSpecialtiesParser::validateUniqueKey(const QString& key, QSet<QString>& 
 }
 
 void ArcSpecialtiesParser::validateNumericValue(const QString& value) {
-    bool no_error = false;
-    value.toDouble(&no_error);
-    if (!no_error) { throwFloatConversionErrorException(); }
+    bool no_error       = false;
+    const double number = value.toDouble(&no_error);
+    if (!no_error || !std::isfinite(number)) { throwFloatConversionErrorException(); }
 }
 
 void ArcSpecialtiesParser::throwIllegalArcSpecialtiesParameter(const QString& param) {

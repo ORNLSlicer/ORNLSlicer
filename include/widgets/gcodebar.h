@@ -52,6 +52,9 @@ class GcodeBar : public QWidget {
     //! \param use_true_width: if true segment width should be used
     void forwardSegmentWidthChange(bool use_true_width);
 
+    //! \brief Signals whether programmed tool orientation should be shown.
+    void forwardToolOrientationChange(bool show);
+
     //! \brief signal to refresh GCode view
     //! \param fileName: temporary file name for the modified GCode content
     //! \param needToModifyGCode: indicates if it is necessary to modify GCode based on minimum layer time requirement
@@ -171,6 +174,7 @@ class GcodeBar : public QWidget {
     QCheckBox* m_hide_travel;
     QCheckBox* m_hide_support;
     QCheckBox* m_true_width;
+    QCheckBox* m_show_tool_orientation;
     QCheckBox* m_lock_layer;
     QSpinBox* m_layer_lower;
     QSpinBox* m_layer_upper;
