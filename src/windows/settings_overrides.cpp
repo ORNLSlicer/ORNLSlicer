@@ -39,7 +39,7 @@ enum RowData {
     PartIdRole = Qt::UserRole + 1,
     LowRole,
     HighRole,
-    KnownSettingRole,
+    NavigableSettingRole,
     IdentityRole,
     SortKindRole,
     SortNumberRole
@@ -155,7 +155,9 @@ QString valueText(const fifojson& value, const fifojson& metadata, QVariant* sor
     return QString::number(number, 'g', 12) + (suffix.isEmpty() ? QString() : " " + suffix);
 }
 
-QString escapedCell(QString text, QChar delimiter) {
+QString escapedCell(QString text, QChar delimiter, bool numeric = false) {
+    const QString trimmed = text.trimmed();
+    if (!numeric && !trimmed.isEmpty() && QStringLiteral("=+-@").contains(trimmed.front())) text.prepend('\'');
     if (!text.contains(delimiter) && !text.contains('"') && !text.contains('\r') && !text.contains('\n')) return text;
     text.replace("\"", "\"\"");
     return '"' + text + '"';
@@ -478,7 +480,11 @@ void SettingsOverridesDialog::refresh() {
                 m_table->item(row, 3)->setData(PartIdRole, part->getId());
                 m_table->item(row, 3)->setData(LowRole, low);
                 m_table->item(row, 3)->setData(HighRole, high);
-                m_table->item(row, 3)->setData(KnownSettingRole, metadata_it != master.end());
+                m_table->item(row, 3)->setData(NavigableSettingRole,
+                                               metadata_it != master.end() &&
+                                                   metadata.value(Constants::Settings::Master::kLocal, false) &&
+                                                   part->getMeshType() != MeshType::kClipping &&
+                                                   (low < 0 || part->getMeshType() == MeshType::kBuild));
                 m_table->item(row, 3)->setData(IdentityRole, part->getId().toString() + "/" + QString::number(low) +
                                                                  "/" + QString::number(high) + "/" + key);
                 m_table->item(row, 3)->setToolTip(values.at(3) + "\n" + key);
@@ -564,7 +570,7 @@ void SettingsOverridesDialog::updateNavigation() {
     }
     m_show_setting_button->setEnabled(!m_refresh_suspended && selected_count == 1 && item != nullptr &&
                                       !m_table->isRowHidden(row) && item->isSelected() &&
-                                      item->data(KnownSettingRole).toBool());
+                                      item->data(NavigableSettingRole).toBool());
     m_copy_button->setEnabled(!m_refresh_suspended && selected_count > 0);
     m_export_button->setEnabled(!m_refresh_suspended && visible_rows);
 }
@@ -578,8 +584,10 @@ QString SettingsOverridesDialog::tableText(QChar delimiter, bool selected_only) 
     for (int row = 0; row < m_table->rowCount(); ++row) {
         if (m_table->isRowHidden(row) || (selected_only && !m_table->item(row, 3)->isSelected())) continue;
         QStringList cells;
-        for (int column = 0; column < m_table->columnCount(); ++column)
-            cells.append(escapedCell(m_table->item(row, column)->text(), delimiter));
+        for (int column = 0; column < m_table->columnCount(); ++column) {
+            const auto* item = m_table->item(row, column);
+            cells.append(escapedCell(item->text(), delimiter, item->data(SortKindRole).toInt() == NumericValue));
+        }
         lines.append(cells.join(delimiter));
     }
     return lines.join('\n') + '\n';
