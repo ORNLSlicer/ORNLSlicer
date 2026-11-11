@@ -394,6 +394,37 @@ int main(int argc, char* argv[]) {
            "An empty project must export a header-only report.");
 
     global->reset();
+    const QStringList formula_names {"=1+1", "+1+1", "-1+1", "@SUM(1,1)"};
+    for (const QString& name : formula_names) {
+        auto formula = addPart(name);
+        formula->getSb()->setSetting("perimeter_start_code", name == "=1+1" ? QString(" \t=2+2") : name);
+        if (name == "=1+1") formula->getSb()->setSetting("cylinder_axis_x", -10000.0);
+    }
+    dialog.refresh();
+    expect(dialog.exportCsv(csv_path, &error), "Formula-looking report values must be exportable.");
+    const auto formula_csv = parseRecords(QString::fromUtf8(readFile(csv_path)), ',');
+    for (const QString& name : formula_names) {
+        const int row = findRow(table, name, "perimeter_start_code");
+        expect(row >= 0 && formula_csv.size() > row + 1 && formula_csv.at(row + 1).at(0) == "'" + name &&
+                   formula_csv.at(row + 1).at(6) == "'" + (name == "=1+1" ? QString(" \t=2+2") : name),
+               "CSV must keep formula-looking part names and text overrides as spreadsheet text.");
+    }
+    const int negative_row = findRow(table, "=1+1", "cylinder_axis_x");
+    expect(negative_row >= 0 && formula_csv.size() > negative_row + 1 &&
+               formula_csv.at(negative_row + 1).at(6).startsWith('-'),
+           "CSV must preserve negative numeric overrides as numbers.");
+    const int formula_row = findRow(table, "=1+1", "perimeter_start_code");
+    if (formula_row >= 0) {
+        table->setCurrentCell(formula_row, 3, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        dialog.copySelectedRows();
+        const auto formula_tsv = parseRecords(QApplication::clipboard()->text(), '\t');
+        expect(formula_tsv.size() == 2 && formula_tsv.at(1).at(0) == "'=1+1" && formula_tsv.at(1).at(6) == "' \t=2+2",
+               "Copy must keep formula-looking cells as spreadsheet text.");
+    }
+    else { expect(false, "The formula-looking override must be available for copy."); }
+
+    ORNL::CSM->clearParts();
+    global->reset();
     global->setSetting("slicing_mode", 0);
     global->setSetting("layer_height", 1000.0);
     auto build = addPart("Build object");
@@ -472,13 +503,43 @@ int main(int argc, char* argv[]) {
     expect(status(build->name(), "perimeter_count", "Layer 1") == "Active",
            "Layer visibility must use the layer's effective slicing mode rather than the global mode.");
 
+    apply_theme(ORNL::ThemeName::kLightMode);
+    const int before_blocked_navigation = navigations;
+    const int nonlocal_row              = findRow(table, build->name(), "start_code");
+    expect(nonlocal_row >= 0, "A nonlocal override must remain visible in the report.");
+    if (nonlocal_row >= 0) {
+        table->setCurrentCell(nonlocal_row, 3, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        expect(!show_button->isEnabled(), "Nonlocal overrides must not offer unavailable local navigation.");
+        if (argc > 1)
+            expect(dialog.grab().save(QString(argv[1]) + "/navigation-nonlocal-light.png"),
+                   "Could not capture unavailable nonlocal navigation.");
+        QMetaObject::invokeMethod(table, "itemDoubleClicked", Qt::DirectConnection,
+                                  Q_ARG(QTableWidgetItem*, table->item(nonlocal_row, 3)));
+    }
+    apply_theme(ORNL::ThemeName::kDarkMode);
+    clipper->getSb()->setSetting("layer_height", 2500.0);
+    dialog.refresh();
+    const int clipping_row = findRow(table, clipper->name(), "layer_height");
+    expect(clipping_row >= 0, "A clipping mesh's local override must remain visible in the report.");
+    if (clipping_row >= 0) {
+        table->setCurrentCell(clipping_row, 3, QItemSelectionModel::ClearAndSelect | QItemSelectionModel::Rows);
+        expect(!show_button->isEnabled(), "Clipping mesh overrides must not offer unavailable navigation.");
+        if (argc > 1)
+            expect(dialog.grab().save(QString(argv[1]) + "/navigation-clipping-dark.png"),
+                   "Could not capture unavailable clipping navigation.");
+        QMetaObject::invokeMethod(table, "itemDoubleClicked", Qt::DirectConnection,
+                                  Q_ARG(QTableWidgetItem*, table->item(clipping_row, 3)));
+    }
+    expect(navigations == before_blocked_navigation,
+           "Double-clicking an override without a local editor must not request navigation.");
+
     ORNL::CSM->clearParts();
     auto keyboard = addPart("Keyboard navigation");
-    keyboard->getSb()->setSetting("start_code", QString("M117 Keyboard"));
+    keyboard->getSb()->setSetting("layer_height", 2500.0);
     keyboard->getSb()->setSetting("extension_unknown", 1);
     dialog.refresh();
     table->sortItems(3, Qt::DescendingOrder);
-    const int known_row   = findRow(table, keyboard->name(), "start_code");
+    const int known_row   = findRow(table, keyboard->name(), "layer_height");
     const int unknown_row = findRow(table, keyboard->name(), "extension_unknown");
     expect(known_row == 0 && unknown_row == 1,
            "The keyboard fixture must place a known override directly before an unknown override.");
@@ -500,9 +561,9 @@ int main(int argc, char* argv[]) {
         expect(table->currentRow() == known_row && show_button->isEnabled(),
                "Returning to the selected known override must restore navigation.");
         show_button->click();
-        expect(
-            navigations == before_keyboard + 1 && requested_part == keyboard->getId() && requested_key == "start_code",
-            "Restored navigation must reveal the selected known override.");
+        expect(navigations == before_keyboard + 1 && requested_part == keyboard->getId() &&
+                   requested_key == "layer_height",
+               "Restored navigation must reveal the selected known override.");
     }
 
     if (!height_hidden) preferences->removeHiddenSetting("Profile", "Layer");
