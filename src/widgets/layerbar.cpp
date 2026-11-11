@@ -294,6 +294,9 @@ bool LayerBar::selectSettingsTarget(const QUuid& part_id, int low, int high) {
     if (layer && (target->meshType() != MeshType::kBuild || target->part()->getSettingsRange(low, high).isNull()))
         return false;
 
+    m_last_clicked_dot = nullptr;
+    m_track_change     = false;
+    m_should_deselect  = false;
     QScopedValueRollback<bool> preserve_ranges(m_preserve_settings_ranges, true);
     for (const auto& item : m_model->selectedItems()) {
         if (item != target) item->setSelected(false);
@@ -304,6 +307,7 @@ bool LayerBar::selectSettingsTarget(const QUuid& part_id, int low, int high) {
     if (layer) {
         if (low >= m_position.size() || m_position[low] == nullptr) return false;
         selectDot(m_position[low]);
+        m_last_clicked_dot = m_position[low];
         changeSelectedSettings();
     }
     return true;
@@ -969,14 +973,13 @@ void LayerBar::mousePressEvent(QMouseEvent* event) {
             //    then select multiple dots
             // Otherwise,
             //    select/deselect the dot depending on its current status
-            if (QGuiApplication::queryKeyboardModifiers() == Qt::ShiftModifier && m_selection.size() > 0) {
+            if (event->modifiers() == Qt::ShiftModifier && m_selection.size() > 0) {
                 int min = qMin(m_last_clicked_dot->getLayer(), dot->getLayer());
                 int max = qMax(m_last_clicked_dot->getLayer(), dot->getLayer());
                 selectOnInterval(min, max);
                 m_should_deselect = false;
             }
-            else if (QGuiApplication::queryKeyboardModifiers() == Qt::AltModifier ||
-                     QGuiApplication::queryKeyboardModifiers() == Qt::ControlModifier) {
+            else if (event->modifiers() == Qt::AltModifier || event->modifiers() == Qt::ControlModifier) {
                 if (dot->isSelected()) {
                     deselectDot(dot);
                     changeSelectedSettings();

@@ -198,6 +198,7 @@ When the user corrects your approach, append a one-line rule here before ending 
 - Use focused widgets for offscreen Qt tests; a full MainWindow creates 3D views that require initialized OpenGL contexts and printer objects, including during import and teardown.
 - When using QComboBox::textActivated, preserve manual edits when the active item is reselected unless the user accepts applying it across categories.
 - Use integer, enum, or boolean settings in dropdown test fixtures; physical-value widgets can clamp or round raw values during construction.
+- Set Qt table selections with explicit `QItemSelectionModel` flags after synthetic modified key events; retained modifiers can make `selectRow()` toggle selection.
 - In new SessionManager tests, use `QStandardPaths::setTestModeEnabled(true)`; temporary `XDG_DATA_HOME` directories disappear before singleton history is saved.
 - Snapshot selection before hierarchy edits and restore it after rebuilding parent links; Qt can clear selection while rows move.
 - For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.

@@ -4,6 +4,7 @@
 #include <QFile>
 #include <QLayout>
 #include <QLineEdit>
+#include <QMouseEvent>
 #include <QSpinBox>
 #include <QStandardPaths>
 #include <QStyleFactory>
@@ -16,6 +17,7 @@
 #include "managers/settings/settings_manager.h"
 #include "test_utils.h"
 #include "widgets/layerbar.h"
+#include "widgets/layerdot.h"
 #include "widgets/settings/setting_bar.h"
 
 int main(int argc, char* argv[]) {
@@ -116,6 +118,28 @@ int main(int argc, char* argv[]) {
     expect(layers.selectSettingsTarget(part->getId(), 0, 0) && selected == QList {first_layer} &&
                selected_ranges == QList {qMakePair(0, 0)},
            "The displayed first layer must navigate to the exact stored zero-based single-layer override.");
+    const auto shift_click_layer = [&](int layer) {
+        ORNL::LayerDot* target = nullptr;
+        for (auto* dot : layers.findChildren<ORNL::LayerDot*>())
+            if (dot->getLayer() == layer) target = dot;
+        expect(target != nullptr, "Shift-click navigation must target an existing layer dot.");
+        if (target == nullptr) return;
+        const QPointF position = target->geometry().center();
+        QMouseEvent press(QEvent::MouseButtonPress, position, layers.mapToGlobal(position.toPoint()), Qt::LeftButton,
+                          Qt::LeftButton, Qt::ShiftModifier);
+        QApplication::sendEvent(&layers, &press);
+        QMouseEvent release(QEvent::MouseButtonRelease, position, layers.mapToGlobal(position.toPoint()),
+                            Qt::LeftButton, Qt::NoButton, Qt::ShiftModifier);
+        QApplication::sendEvent(&layers, &release);
+    };
+    shift_click_layer(4);
+    expect(selected_ranges == QList {qMakePair(0, 0), qMakePair(2, 6)},
+           "Shift-click after first navigation must extend selection from the navigation target.");
+    expect(layers.selectSettingsTarget(part->getId(), 8, 8),
+           "Repeated navigation must rebuild the layer dots and select the new target.");
+    shift_click_layer(4);
+    expect(selected_ranges == QList {qMakePair(2, 6), qMakePair(8, 8), qMakePair(10, 10)},
+           "Shift-click after repeated navigation must use the new target and retain its grouped selection.");
     expect(layers.selectSettingsTarget(part->getId(), 2, 6),
            "Navigation must resolve the owner by UUID after renaming.");
     expect(model->selectedItems() == QList {owner} && selected == QList {range},
