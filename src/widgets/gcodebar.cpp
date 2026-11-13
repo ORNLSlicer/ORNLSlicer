@@ -295,6 +295,10 @@ void GcodeBar::setupSubWidgets() {
     m_hide_support->setText("Hide Support");
     m_hide_support->setChecked(PreferencesManager::getInstance()->getHideSupportPreference());
 
+    // Hide Internal Beads CheckBox
+    m_hide_internal = new QCheckBox(this);
+    m_hide_internal->setText("Hide Internal Beads");
+
     // True Bead Widths CheckBox
     m_true_width = new QCheckBox(this);
     m_true_width->setText("True Bead Widths");
@@ -379,6 +383,7 @@ void GcodeBar::setupInsert() {
     m_layout->addWidget(m_hide_travel, 5, 0, 1, 1);
     m_layout->addWidget(m_hide_support, 5, 1, 1, 1);
     m_layout->addWidget(m_true_width, 5, 2, 1, 1);
+    m_layout->addWidget(m_hide_internal, 5, 3, 1, 1);
 
     m_layout->addWidget(m_lower_label, 6, 0, 1, 1);
     m_layout->addWidget(m_layer_lower, 6, 1, 1, 1);
@@ -430,6 +435,9 @@ void GcodeBar::setupEvents() {
         emit forwardVisibilityChange(SegmentDisplayType::kSupport, m_hide_support->isChecked());
         PreferencesManager::getInstance()->setHideSupportPreference(m_hide_support->isChecked());
     });
+
+    connect(m_hide_internal, &QCheckBox::clicked,
+            [this] { emit forwardVisibilityChange(SegmentDisplayType::kInternal, m_hide_internal->isChecked()); });
 
     connect(m_true_width, &QCheckBox::clicked, [this] {
         emit forwardSegmentWidthChange(m_true_width->isChecked());
@@ -510,6 +518,7 @@ void GcodeBar::updateSegmentPlayButton() {
     else {
         if (m_hide_travel->isChecked()) m_hide_travel->click();
         if (m_hide_support->isChecked()) m_hide_support->click();
+        if (m_hide_internal->isChecked()) m_hide_internal->click();
 
         // Delay between drawing segments in milliseconds
         int draw_time = PreferencesManager::getInstance()->getSegmentLag();
