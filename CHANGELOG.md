@@ -9,6 +9,7 @@ Release versions follow the project's
 
 ### Added
 
+- Added opt-in perimeter-crossing avoidance under Profile > Travel, with default-bead-width clearance outside printed beads, simplified detours, and preserved travel endpoints and lift/retraction behavior.
 - Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Added an optional prompt under Preferences > Settings to apply a selected settings file to all categories it contains; the preference is disabled by default.
 - Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets.

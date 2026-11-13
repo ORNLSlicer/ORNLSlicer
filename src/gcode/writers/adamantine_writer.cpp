@@ -64,7 +64,8 @@ QString AdamantineWriter::writeTravel(Point start_location, Point target_locatio
           QString::number(Distance(target_location.y()).to(m_meta.m_distance_unit), 'f', 5) % m_space %
           QString::number(Distance(target_location.z()).to(m_meta.m_distance_unit), 'f', 8) % m_space % "0" % m_space;
 
-    if (getInitialExtruderSpeed(params) > 0) {
+    if (!isLastTravelMove()) { rv += m_newline; }
+    if (isLastTravelMove() && getInitialExtruderSpeed(params) > 0) {
         if (m_region_type == RegionType::kInset) {
             if (m_sb->setting<Time>(MS::Extruder::kOnDelayInset) >= 0)
                 rv += writeDwell(m_sb->setting<Time>(MS::Extruder::kOnDelayInset)) % "\n";

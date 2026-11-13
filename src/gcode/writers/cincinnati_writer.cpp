@@ -330,14 +330,15 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     bool w_active_first_travel = false;
 
     // Determine if travel length is short enough to keep deposition active.
-    Distance travel_distance = start_location.distance(target_location);
-    if (!m_first_travel && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    Distance travel_distance = travelDistance(start_location, target_location);
+    if (isFirstTravelMove() && !m_first_travel &&
+        travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         int rpm = params->contains(SS::kExtruderSpeed) ? params->setting<int>(SS::kExtruderSpeed)
                                                        : m_sb->setting<int>(PS::Perimeter::kExtruderSpeed);
         rv += writeExtruderOn(rType == RegionType::kUnknown ? RegionType::kPerimeter : rType, rpm, params);
     }
 
-    if (m_first_travel) { w_active_first_travel = true; }
+    if (m_first_travel && isLastTravelMove()) { w_active_first_travel = true; }
 
     // Use updated start location if this is the first travel
     if (m_first_travel) { new_start_location = m_start_point; }
@@ -353,7 +354,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -412,9 +413,7 @@ QString CincinnatiWriter::writeTravel(Point start_location, Point target_locatio
 
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel) {        // if this is the first travel
-        m_first_travel = false;  // update for next one
-    }
+    if (isLastTravelMove()) { m_first_travel = false; }
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {

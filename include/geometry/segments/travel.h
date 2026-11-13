@@ -25,6 +25,12 @@ class TravelSegment : public SegmentBase {
     //! \brief Set the travel lift type
     void setLiftType(TravelLiftType newLiftType);
 
+    //! \brief Set intermediate points of one logical travel, excluding its start and end.
+    void setWaypoints(const QVector<Point>& waypoints);
+
+    //! \brief Get the intermediate travel points.
+    const QVector<Point>& waypoints() const;
+
     //! \brief Clone
     QSharedPointer<SegmentBase> clone() const override;
 
@@ -34,8 +40,15 @@ class TravelSegment : public SegmentBase {
     //! \brief returns minimum z-coordinate of the travel
     float getMinZ() override;
 
+    Distance length() override;
+    void reverse() override;
+    void rotate(QQuaternion rotation) override;
+    void shift(Point shift) override;
+
    private:
     //! private type to track what type of lift to apply to this particular travel
     TravelLiftType m_lift_type;
+
+    QVector<Point> m_waypoints;
 };
 }  // namespace ORNL

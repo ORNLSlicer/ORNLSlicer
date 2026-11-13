@@ -721,6 +721,7 @@ const QString Constants::ProfileSettings::Support::kOrganicBranchAngle    = "sup
 
 // Travel
 const QString Constants::ProfileSettings::Travel::kSpeed                    = "travel_speed";
+const QString Constants::ProfileSettings::Travel::kAvoidCrossingPerimeters  = "avoid_crossing_perimeters";
 const QString Constants::ProfileSettings::Travel::kInfillMinLength          = "minimum_infill_travel_length";
 const QString Constants::ProfileSettings::Travel::kMinTravelLength          = "min_travel_length";
 const QString Constants::ProfileSettings::Travel::kMinTravelForLift         = "minimum_travel_for_lift";

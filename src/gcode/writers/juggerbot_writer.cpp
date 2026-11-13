@@ -121,14 +121,15 @@ QString JuggerBotWriter::writeTravel(Point start_location, Point target_location
     QString rv;
     Velocity speed = params->setting<Velocity>(SS::kSpeed);
 
-    m_current_bead_area = 0;
+    if (isFirstTravelMove()) { m_current_bead_area = 0; }
 
     // Determine if travel length is short enough to keep deposition active.
-    Distance travel_distance = start_location.distance(target_location);
-    if (m_deposition_active && travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    Distance travel_distance = travelDistance(start_location, target_location);
+    if (isFirstTravelMove() && m_deposition_active &&
+        travel_distance > m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         rv += writeExtruderOff();
     }
-    else if (travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
+    else if (isFirstTravelMove() && travel_distance < m_sb->setting<Distance>(PS::Travel::kMinTravelLength)) {
         RegionType region_type = params->setting<RegionType>(SS::kRegionType);
         int rpm         = params->contains(SS::kExtruderSpeed) ? params->setting<int>(SS::kExtruderSpeed)
                                                                : m_sb->setting<int>(PS::Perimeter::kExtruderSpeed);
@@ -153,7 +154,7 @@ QString JuggerBotWriter::writeTravel(Point start_location, Point target_location
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -187,8 +188,7 @@ QString JuggerBotWriter::writeTravel(Point start_location, Point target_location
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    if (m_first_travel)          // if this is the first travel
-        m_first_travel = false;  // update for next one
+    if (isLastTravelMove()) { m_first_travel = false; }
 
     return rv;
 }
