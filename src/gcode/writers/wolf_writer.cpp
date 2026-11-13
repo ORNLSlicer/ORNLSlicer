@@ -168,10 +168,10 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
     Distance liftDist;
     liftDist = m_sb->setting<Distance>(PS::Travel::kLiftHeight);
 
-    bool travel_lift_required = liftDist > 0 && lType != TravelLiftType::kNoLift;
+    bool travel_lift_required = liftDist > 0 && travelLiftType(lType) != TravelLiftType::kNoLift;
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -195,8 +195,7 @@ QString WolfWriter::writeTravel(Point start_location, Point target_location, Tra
           writeCoordinates(travel_destination) % commentSpaceLine("TRAVEL");
     setFeedrate(m_sb->setting<Velocity>(PS::Travel::kSpeed));
 
-    if (m_first_travel)          // if this is the first travel
-        m_first_travel = false;  // update for next one
+    if (isLastTravelMove()) { m_first_travel = false; }
 
     // write the travel lower (undo the lift)
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftLowerOnly)) {

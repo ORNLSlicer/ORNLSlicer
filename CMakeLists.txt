@@ -723,6 +723,28 @@ if(ORNLSLICER_BUILD_TESTS)
     target_link_libraries(${PROJECT_NAME}_path_modifier_tests PRIVATE ${PROJECT_NAME}_obj)
     add_test(NAME path_modifier_tests COMMAND ${PROJECT_NAME}_path_modifier_tests)
 
+    add_executable(${PROJECT_NAME}_travel_writer_tests tests/travel_writer_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_travel_writer_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_travel_writer_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME travel_writer_tests COMMAND ${PROJECT_NAME}_travel_writer_tests)
+
+    add_executable(${PROJECT_NAME}_travel_router_tests tests/travel_router_tests.cpp)
+    target_include_directories(
+        ${PROJECT_NAME}_travel_router_tests
+        PRIVATE
+            ${CMAKE_CURRENT_LIST_DIR}/include
+            ${CMAKE_CURRENT_BINARY_DIR}/generated/include
+            ${ORNLSLICER_INCLUDE_DIRS}
+    )
+    target_link_libraries(${PROJECT_NAME}_travel_router_tests PRIVATE ${PROJECT_NAME}_obj)
+    add_test(NAME travel_router_tests COMMAND ${PROJECT_NAME}_travel_router_tests)
+
     add_executable(${PROJECT_NAME}_contour_connection_tests tests/contour_connection_tests.cpp)
     target_include_directories(
         ${PROJECT_NAME}_contour_connection_tests

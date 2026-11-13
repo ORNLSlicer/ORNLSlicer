@@ -1,5 +1,6 @@
 #include "gcode/writers/writer_base.h"
 
+#include <QScopedValueRollback>
 #include <QStringBuilder>
 #include <cmath>
 #include <limits>
@@ -94,11 +95,57 @@ QString WriterBase::writeStandaloneEntry(const Point& start, const QSharedPointe
 }
 
 QString WriterBase::writeLayerTravel(Point start, Point target, TravelLiftType type,
-                                     const QSharedPointer<SettingsBase>& params) {
-    const QString result =
-        writeTravel(start, target, m_standalone_entry_pending ? TravelLiftType::kBoth : type, params);
+                                     const QSharedPointer<SettingsBase>& params, const QVector<Point>& waypoints) {
+    if (m_standalone_entry_pending) { type = TravelLiftType::kBoth; }
+    if (waypoints.isEmpty()) {
+        const QString result       = writeTravel(start, target, type, params);
+        m_standalone_entry_pending = false;
+        return result;
+    }
+
+    Distance distance = 0;
+    Point previous    = start;
+    for (const Point& waypoint : waypoints) {
+        distance += previous.distance(waypoint);
+        previous = waypoint;
+    }
+    distance += previous.distance(target);
+
+    QScopedValueRollback<std::optional<RoutedTravel>> route_guard(m_routed_travel, RoutedTravel {distance, type});
+    QString result;
+    previous = start;
+    for (qsizetype index = 0; index <= waypoints.size(); ++index) {
+        m_routed_travel->first = index == 0;
+        m_routed_travel->last  = index == waypoints.size();
+        const bool lift =
+            m_routed_travel->first && (type == TravelLiftType::kBoth || type == TravelLiftType::kLiftUpOnly);
+        const bool lower =
+            m_routed_travel->last && (type == TravelLiftType::kBoth || type == TravelLiftType::kLiftLowerOnly);
+        const TravelLiftType move_type = lift    ? TravelLiftType::kLiftUpOnly
+                                         : lower ? TravelLiftType::kLiftLowerOnly
+                                                 : TravelLiftType::kNoLift;
+        const Point next               = m_routed_travel->last ? target : waypoints[index];
+        result += writeTravel(previous, next, move_type, params);
+        previous = next;
+    }
     m_standalone_entry_pending = false;
     return result;
+}
+
+Distance WriterBase::travelDistance(const Point& start, const Point& target) const {
+    return m_routed_travel ? m_routed_travel->distance : start.distance(target);
+}
+
+bool WriterBase::isFirstTravelMove() const {
+    return !m_routed_travel || m_routed_travel->first;
+}
+
+bool WriterBase::isLastTravelMove() const {
+    return !m_routed_travel || m_routed_travel->last;
+}
+
+TravelLiftType WriterBase::travelLiftType(TravelLiftType type) const {
+    return m_routed_travel ? m_routed_travel->lift_type : type;
 }
 
 QString WriterBase::regionComment(RegionType region_type, PathModifiers path_modifiers,

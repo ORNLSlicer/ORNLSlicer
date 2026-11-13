@@ -1,6 +1,7 @@
 #include "step/global_layer.h"
 
 #include <algorithm>
+#include <cmath>
 #include <limits>
 #include <optional>
 
@@ -18,8 +19,11 @@
 #include "geometry/path.h"
 #include "geometry/path_modifier.h"
 #include "geometry/point.h"
+#include "geometry/segments/arc.h"
+#include "geometry/segments/travel.h"
 #include "optimizers/island_order_optimizer.h"
 #include "optimizers/optimization_anchor.h"
+#include "optimizers/travel_router.h"
 #include "part/part.h"
 #include "step/layer/layer.h"
 #include "step/layer/regions/region_base.h"
@@ -30,6 +34,69 @@
 
 namespace ORNL {
 namespace {
+void addPerimeterObstacle(TravelRouter& router, const QSharedPointer<SegmentBase>& segment, Distance width) {
+    const auto arc = segment.dynamicCast<ArcSegment>();
+    if (arc.isNull()) {
+        router.addObstacle(segment->start(), segment->end(), width);
+        return;
+    }
+
+    const Point start     = arc->start();
+    const Point center    = arc->center();
+    const double radius   = std::hypot(start.x() - center.x(), start.y() - center.y());
+    const double sweep    = std::abs(arc->angle()());
+    const double error    = std::max(1.0, width() * 0.01);
+    const double max_step = radius > error ? 2.0 * std::acos(1.0 - error / radius) : M_PI / 12.0;
+    const int samples     = std::max(1, static_cast<int>(std::ceil(sweep / std::min(max_step, M_PI / 12.0))));
+    const double step     = sweep / samples;
+    const double sagitta  = radius * (1.0 - std::cos(step / 2.0));
+    const double angle    = std::atan2(start.y() - center.y(), start.x() - center.x());
+    Point previous        = start;
+    for (int sample = 1; sample <= samples; ++sample) {
+        const double fraction = static_cast<double>(sample) / samples;
+        const double theta    = angle + (arc->counterclockwise() ? sweep : -sweep) * fraction;
+        const Point next = sample == samples
+                               ? arc->end()
+                               : Point(center.x() + radius * std::cos(theta), center.y() + radius * std::sin(theta),
+                                       start.z() + (arc->end().z() - start.z()) * fraction);
+        // Expand the chord's obstacle by its maximum deviation from the emitted arc.
+        router.addObstacle(previous, next, width + Distance(2.0 * sagitta));
+        previous = next;
+    }
+}
+
+void routeLayerTravels(const QList<QSharedPointer<IslandBase>>& islands,
+                       const QSharedPointer<SettingsBase>& global_settings) {
+    TravelRouter router;
+    for (const auto& island : islands) {
+        for (const auto& region : island->getRegions()) {
+            const auto settings       = region->getSb();
+            const bool avoid_crossing = settings->contains(PS::Travel::kAvoidCrossingPerimeters)
+                                            ? settings->setting<bool>(PS::Travel::kAvoidCrossingPerimeters)
+                                            : global_settings->setting<bool>(PS::Travel::kAvoidCrossingPerimeters);
+            const Distance standoff   = settings->contains(PS::Layer::kBeadWidth)
+                                            ? settings->setting<Distance>(PS::Layer::kBeadWidth)
+                                            : global_settings->setting<Distance>(PS::Layer::kBeadWidth);
+            for (Path& path : region->getPaths()) {
+                for (const auto& segment : path) {
+                    const auto travel = segment.dynamicCast<TravelSegment>();
+                    if (!travel.isNull()) {
+                        travel->setWaypoints(avoid_crossing ? router.route(travel->start(), travel->end(), standoff)
+                                                            : QVector<Point>());
+                    }
+                    else if (segment->isPrintingSegment() &&
+                             segment->getSb()->setting<RegionType>(SS::kRegionType) == RegionType::kPerimeter) {
+                        const Distance width = segment->getSb()->contains(SS::kWidth)
+                                                   ? segment->getSb()->setting<Distance>(SS::kWidth)
+                                                   : settings->setting<Distance>(PS::Perimeter::kBeadWidth);
+                        addPerimeterObstacle(router, segment, width);
+                    }
+                }
+            }
+        }
+    }
+}
+
 struct IslandOrderSelection {
     QSharedPointer<Layer> settings_layer;
     QSharedPointer<Layer> anchor_layer;
@@ -179,6 +246,8 @@ void GlobalLayer::calculateModifiers(QSharedPointer<SettingsBase> global_sb, Poi
     for (QSharedPointer<IslandBase> island : m_island_order) {
         if (!island.isNull()) island->fitCircularArcs(global_sb);
     }
+
+    routeLayerTravels(m_island_order, global_sb);
 }
 
 void GlobalLayer::connectPaths(QSharedPointer<SettingsBase> global_sb, Point& start, int& start_index,

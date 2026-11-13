@@ -202,3 +202,6 @@ When the user corrects your approach, append a one-line rule here before ending 
 - For CLI export checks, pass an output prefix without a suffix and verify the generated G-code is a non-empty regular file.
 - Preload archive entries before creating `.s2p` variants with Python; passing the source archive's `ZipInfo` objects to `writestr()` mutates their offsets.
 - Constrain support restoration to paths through the unsupported contact; preserve angle-classified organic branch seeds and keep negative test probes beyond restoration reach of joining contacts.
+- Preserve configured Tormach pause-centroid moves when perimeter avoidance is enabled; those explicit centroid travels may cross perimeters.
+- Test travel avoidance after float-interpolated wipes on diagonal walls at machine-scale coordinates; bound endpoint contacts in spatial units, not fractions of travel length.
+- Use joined contour offsets to avoid travel corner jogs; retain segment caps for Clipper's near-reversal cutoff, and measure default-width standoff outside the printed bead edge.

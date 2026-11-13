@@ -167,7 +167,7 @@ QString KraussMaffeiWriter::writeTravel(Point start_location, Point target_locat
     bool travel_lift_required = liftDist > 0;  // && !m_first_travel; //do not write a lift on first travel
 
     // Don't lift for short travel moves
-    if (start_location.distance(target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
+    if (travelDistance(start_location, target_location) < m_sb->setting<Distance>(PS::Travel::kMinTravelForLift)) {
         travel_lift_required = false;
     }
 
@@ -175,7 +175,7 @@ QString KraussMaffeiWriter::writeTravel(Point start_location, Point target_locat
     // with length = lift height as defined in settings
     QVector3D travel_lift = getTravelLift();
 
-    rv += "G102" % commentSpaceLine("CLOSE NOZZLE");
+    if (isFirstTravelMove()) { rv += "G102" % commentSpaceLine("CLOSE NOZZLE"); }
 
     // write the lift
     if (travel_lift_required && (lType == TravelLiftType::kBoth || lType == TravelLiftType::kLiftUpOnly) &&
@@ -203,9 +203,9 @@ QString KraussMaffeiWriter::writeTravel(Point start_location, Point target_locat
         setFeedrate(m_sb->setting<Velocity>(PRS::MachineSpeed::kZSpeed));
     }
 
-    rv += "G101" % commentSpaceLine("OPEN NOZZLE");
+    if (isLastTravelMove()) { rv += "G101" % commentSpaceLine("OPEN NOZZLE"); }
 
-    m_first_travel = false;
+    if (isLastTravelMove()) { m_first_travel = false; }
     return rv;
 }
 
