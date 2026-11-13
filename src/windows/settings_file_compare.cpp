@@ -116,6 +116,13 @@ SettingsFileCompareDialog::SettingsFileCompareDialog(QWidget* parent) : QDialog(
     clearResult();
 }
 
+void SettingsFileCompareDialog::compareDocuments(const QString& first_path, const fifojson& first,
+                                                 const QString& second_path, const fifojson& second) {
+    m_first_file_edit->setText(first_path);
+    m_second_file_edit->setText(second_path);
+    showResult(SettingsFileComparator::compare(first, second));
+}
+
 void SettingsFileCompareDialog::browseFirstFile() {
     browseForFile(m_first_file_edit, "Select First Settings File");
 }
@@ -125,9 +132,10 @@ void SettingsFileCompareDialog::browseSecondFile() {
 }
 
 void SettingsFileCompareDialog::compareSelectedFiles() {
-    const SettingsFileComparator::Result result =
-        SettingsFileComparator::compareFiles(m_first_file_edit->text(), m_second_file_edit->text());
+    showResult(SettingsFileComparator::compareFiles(m_first_file_edit->text(), m_second_file_edit->text()));
+}
 
+void SettingsFileCompareDialog::showResult(const SettingsFileComparator::Result& result) {
     if (!result.errors.isEmpty()) {
         clearResult();
         m_summary_label->setText("The files could not be compared.");

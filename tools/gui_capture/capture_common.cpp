@@ -3,7 +3,6 @@
 #include <QApplication>
 #include <QDir>
 #include <QEventLoop>
-#include <QFile>
 #include <QFileInfo>
 #include <QLabel>
 #include <QLineEdit>
@@ -11,10 +10,8 @@
 #include <QPlainTextEdit>
 #include <QPushButton>
 #include <QRegularExpression>
-#include <QSignalBlocker>
 #include <QTabBar>
 #include <QTabWidget>
-#include <QTemporaryDir>
 #include <QTextEdit>
 #include <QTimer>
 #include <algorithm>
@@ -27,6 +24,7 @@
 #include "managers/session_manager.h"
 #include "units/unit.h"
 #include "utilities/constants.h"
+#include "utilities/qt_json_conversion.h"
 #include "widgets/cmd_widget.h"
 #include "widgets/gcode_widget.h"
 #include "widgets/gcodebar.h"
@@ -71,6 +69,13 @@ QImage captureWidget(QWidget* widget) {
 void saveWidget(QWidget* widget, const QString& filePath) {
     QDir().mkpath(QFileInfo(filePath).path());
     QImage img = captureWidget(widget);
+    if (QFileInfo::exists(filePath)) {
+        QImage existing(filePath);
+        if (!existing.isNull() &&
+            existing.convertToFormat(QImage::Format_ARGB32) == img.convertToFormat(QImage::Format_ARGB32)) {
+            return;
+        }
+    }
     if (!img.save(filePath, "PNG")) {
         throw std::runtime_error(("Failed to save captured image to " + filePath).toStdString());
     }
@@ -227,45 +232,14 @@ QWidget* prepareGcodeToS2CDialog(MainWindow* w) {
 }
 
 QWidget* prepareSettingsFileCompareDialog(MainWindow* w) {
-    static QTemporaryDir tempDir;
-    const QString fileA = tempDir.filePath("BAAM_20in_Baseline.s2c");
-    const QString fileB = tempDir.filePath("BAAM_20in_HighThroughput.s2c");
+    const fifojson first = fifojson::parse(
+        R"({"header":{"created_by":"User","created_on":"2026-01-15","last_modified":"2026-01-15","version":2.0},"settings":[{"syntax":15,"machine_type":0,"layer_height":5080.0,"default_width":10160.0,"default_speed":101600.0,"perimeter_count":1,"inset_count":2,"infill_pattern":0,"infill_density":35.0,"support":false}]})");
+    const fifojson second = fifojson::parse(
+        R"({"header":{"created_by":"User","created_on":"2026-02-01","last_modified":"2026-02-01","version":2.0},"settings":[{"syntax":15,"machine_type":0,"layer_height":6350.0,"default_width":12700.0,"default_speed":152400.0,"perimeter_count":2,"inset_count":2,"infill_pattern":1,"infill_density":50.0,"raft":true,"variable_layer_height":true}]})");
 
-    {
-        QFile f1(fileA);
-        if (!f1.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-            throw std::runtime_error(("Failed to create temp settings file: " + fileA).toStdString());
-        }
-        f1.write(
-            R"({"header":{"created_by":"User","created_on":"2026-01-15","last_modified":"2026-01-15","version":2.0},"settings":[{"syntax":15,"machine_type":0,"layer_height":5080.0,"default_width":10160.0,"default_speed":101600.0,"perimeter_count":1,"inset_count":2,"infill_pattern":0,"infill_density":35.0,"support":false}]})");
-        QFile f2(fileB);
-        if (!f2.open(QIODevice::WriteOnly | QIODevice::Truncate)) {
-            throw std::runtime_error(("Failed to create temp settings file: " + fileB).toStdString());
-        }
-        f2.write(
-            R"({"header":{"created_by":"User","created_on":"2026-02-01","last_modified":"2026-02-01","version":2.0},"settings":[{"syntax":15,"machine_type":0,"layer_height":6350.0,"default_width":12700.0,"default_speed":152400.0,"perimeter_count":2,"inset_count":2,"infill_pattern":1,"infill_density":50.0,"raft":true,"variable_layer_height":true}]})");
-    }
-
-    auto* dlg  = new SettingsFileCompareDialog(w);
-    auto edits = dlg->findChildren<QLineEdit*>();
-    if (edits.size() < 2) { throw std::runtime_error("SettingsFileCompareDialog missing expected QLineEdit fields"); }
-    edits[0]->setText(fileA);
-    edits[1]->setText(fileB);
-
-    bool clickedCompare = false;
-    for (auto* btn : dlg->findChildren<QPushButton*>()) {
-        if (btn->text() == "Compare") {
-            btn->click();
-            clickedCompare = true;
-            break;
-        }
-    }
-    if (!clickedCompare) { throw std::runtime_error("SettingsFileCompareDialog missing 'Compare' button"); }
-
-    const QSignalBlocker b0(edits[0]);
-    const QSignalBlocker b1(edits[1]);
-    edits[0]->setText("/home/user/templates/BAAM_20in_Baseline.s2c");
-    edits[1]->setText("/home/user/templates/BAAM_20in_HighThroughput.s2c");
+    auto* dlg = new SettingsFileCompareDialog(w);
+    dlg->compareDocuments("/home/user/templates/BAAM_20in_Baseline.s2c", first,
+                          "/home/user/templates/BAAM_20in_HighThroughput.s2c", second);
     dlg->resize(980, 420);
     return dlg;
 }
