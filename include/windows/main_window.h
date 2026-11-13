@@ -49,6 +49,7 @@
 #include "windows/layer_times_window.h"
 #include "windows/preferences_window.h"
 #include "windows/settings_file_compare.h"
+#include "windows/settings_overrides.h"
 #include "windows/xtrudecalc.h"
 
 namespace ORNL {
@@ -403,6 +404,7 @@ class MainWindow : public QMainWindow {
     FlowrateCalcWindow* m_flowrate_calc_window;
     XtrudeCalcWindow* m_xtrude_calc_window;
     SettingsFileCompareDialog* m_settings_file_compare_window;
+    SettingsOverridesDialog* m_settings_overrides_window;
     AboutWindow* m_about_window;
     ChangelogWindow* m_changelog_window;
 

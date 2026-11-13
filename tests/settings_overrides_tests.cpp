@@ -1,0 +1,632 @@
+#include <QApplication>
+#include <QComboBox>
+#include <QDir>
+#include <QFile>
+#include <QHeaderView>
+#include <QLabel>
+#include <QLineEdit>
+#include <QPushButton>
+#include <QScrollBar>
+#include <QStandardPaths>
+#include <QStyleFactory>
+#include <QTableWidget>
+#include <cstdlib>
+
+#include "geometry/mesh/closed_mesh.h"
+#include "geometry/mesh/mesh_factory.h"
+#include "managers/preferences_manager.h"
+#include "managers/session_manager.h"
+#include "managers/settings/settings_manager.h"
+#include "slicing/slicing_utilities.h"
+#include "test_utils.h"
+#include "windows/settings_overrides.h"
+
+namespace {
+int findRow(QTableWidget* table, const QString& part, const QString& key, const QString& scope) {
+    for (int row = 0; row < table->rowCount(); ++row)
+        if (table->item(row, 0)->text() == part && table->item(row, 3)->data(Qt::UserRole).toString() == key &&
+            table->item(row, 1)->text().startsWith(scope))
+            return row;
+    return -1;
+}
+
+int visibleRows(QTableWidget* table) {
+    int count = 0;
+    for (int row = 0; row < table->rowCount(); ++row) count += !table->isRowHidden(row);
+    return count;
+}
+}  // namespace
+
+int main(int argc, char* argv[]) {
+    qputenv("QT_QPA_PLATFORM", "offscreen");
+    QStandardPaths::setTestModeEnabled(true);
+    QApplication app(argc, argv);
+    QApplication::setStyle(QStyleFactory::create("fusion"));
+    Q_INIT_RESOURCE(configs);
+    Q_INIT_RESOURCE(icons);
+    Q_INIT_RESOURCE(styles);
+
+    bool passed       = true;
+    const auto expect = [&passed](bool condition, const char* message) {
+        passed &= ORNL::Testing::expect(condition, message);
+    };
+    const auto settle = [&] {
+        app.processEvents();
+        QCoreApplication::sendPostedEvents();
+        app.processEvents();
+    };
+    expect(ORNL::Theme::initializeFonts(), "Could not load the bundled application fonts.");
+    const auto preferences  = ORNL::PreferencesManager::getInstance();
+    const auto old_theme    = preferences->getThemeText();
+    const auto old_distance = preferences->getDistanceUnit();
+    const auto old_velocity = preferences->getVelocityUnit();
+    preferences->setDistanceUnit(ORNL::mm);
+    preferences->setVelocityUnit(ORNL::mm / ORNL::s);
+    QWidget root;
+    const auto apply_theme = [&](ORNL::ThemeName theme) {
+        preferences->setTheme(theme);
+        QFile stylesheet(preferences->getTheme().getFolderPath() + "style.qss");
+        if (!ORNL::Testing::expect(stylesheet.open(QIODevice::ReadOnly), "Could not read the root stylesheet.")) {
+            passed = false;
+            return;
+        }
+        QApplication::setPalette(preferences->getTheme().getPalette());
+        root.setStyleSheet(stylesheet.readAll());
+        app.processEvents();
+    };
+    apply_theme(ORNL::ThemeName::kLightMode);
+    if (argc > 1) expect(QDir().mkpath(argv[1]), "Could not create the screenshot directory.");
+
+    ORNL::CSM->clearParts();
+    const auto global = ORNL::GSM->getGlobal();
+    global->reset();
+    global->setSetting("perimeter_count", 2);
+    global->setSetting("perimeter", false);
+    global->setSetting("perimeter_boundary_selection", 0);
+    global->setSetting("layer_height", 1000.0);
+    global->setSetting("perimeter_speed", 100000.0);
+    global->setSetting("image_pixel_size_y", 1000.0);
+
+    ORNL::SettingsOverridesDialog dialog(&root);
+    dialog.show();
+    app.processEvents();
+    auto* table        = dialog.findChild<QTableWidget*>("settings_overrides_table");
+    auto* filter       = dialog.findChild<QLineEdit*>("settings_overrides_filter");
+    auto* summary      = dialog.findChild<QLabel*>("settings_overrides_summary");
+    auto* part_filter  = dialog.findChild<QComboBox*>("settings_overrides_part_filter");
+    auto* scope_filter = dialog.findChild<QComboBox*>("settings_overrides_scope_filter");
+    auto* show_setting = dialog.findChild<QPushButton*>("settings_overrides_show_setting");
+    if (!ORNL::Testing::expect(table != nullptr && filter != nullptr && summary != nullptr && part_filter != nullptr &&
+                                   scope_filter != nullptr && show_setting != nullptr,
+                               "The overview must expose its table, search, filters, summary, and navigation button."))
+        return EXIT_FAILURE;
+    expect(table->rowCount() == 0 && !summary->text().isEmpty(), "An empty project must have a clear empty state.");
+    expect(table->editTriggers() == QAbstractItemView::NoEditTriggers, "The overview must be read-only.");
+    expect(table->horizontalHeaderItem(5)->text() == "Value Being Replaced",
+           "The replacement column must explain the value an override replaces.");
+    expect(!show_setting->isEnabled(), "Navigation must be disabled without a selected override.");
+    expect(part_filter->count() == 1 && part_filter->currentData().toUuid().isNull() && scope_filter->count() == 3,
+           "Empty projects must retain the all-parts and all/part/layer filters.");
+    if (argc > 1)
+        expect(dialog.grab().save(QString(argv[1]) + "/empty-light.png"), "Could not save the empty screenshot.");
+
+    auto bracket = QSharedPointer<ORNL::Part>::create();
+    bracket->setName("Bracket");
+    bracket->getSb()->setSetting("perimeter_count", 4);
+    bracket->getSb()->setSetting("perimeter", false);
+    bracket->getSb()->setSetting("perimeter_boundary_selection", 2);
+    bracket->getSb()->setSetting("layer_height", 2000.0);
+    bracket->createSettingsRange(0, 2);
+    const auto first_layers = bracket->getSettingsRange(0, 2)->getSb();
+    first_layers->setSetting("perimeter_count", 2);
+    first_layers->setSetting("perimeter", true);
+    first_layers->setSetting("perimeter_speed", 150000.0);
+    bracket->createSettingsRange(6, 6, "Finish");
+    bracket->getSettingsRange(6, 6)->getSb()->setSetting("perimeter_count", 6);
+    bracket->createSettingsRange(9, 11, "Finish");
+    ORNL::CSM->addPart(bracket);
+
+    auto housing = QSharedPointer<ORNL::Part>::create();
+    housing->setName("Housing");
+    housing->getSb()->setSetting("perimeter_count", 3);
+    housing->getSb()->setSetting("variable_layer_height", true);
+    housing->getSb()->setSetting("image_pixel_size_y", 2000.0);
+    housing->getSb()->setSetting("extension_calibration", QString("custom"));
+    ORNL::CSM->addPart(housing);
+    const auto global_before  = global->json();
+    const auto bracket_before = bracket->getSb()->json();
+    const auto range_before   = first_layers->json();
+    settle();
+    expect(table->rowCount() == 12, "Only effective differences across every part and layer range must be listed.");
+    expect(part_filter->count() == 3 && part_filter->findData(bracket->getId()) >= 0 &&
+               part_filter->findData(housing->getId()) >= 0,
+           "The part filter must identify every project part using its persistent UUID.");
+
+    const auto cell = [&](const QString& part, const QString& key, const QString& scope, int column) {
+        const int row = findRow(table, part, key, scope);
+        expect(row >= 0, "An expected override row is missing.");
+        return row < 0 ? QString() : table->item(row, column)->text();
+    };
+    const auto replaced_source = [&](const QString& key, const QString& scope) {
+        const int row = findRow(table, "Bracket", key, scope);
+        expect(row >= 0, "An expected replacement source row is missing.");
+        return row < 0 ? QString() : table->item(row, 5)->toolTip();
+    };
+    expect(cell("Bracket", "perimeter_count", "Part", 4) == "2" &&
+               cell("Bracket", "perimeter_count", "Part", 5) == "2" &&
+               cell("Bracket", "perimeter_count", "Part", 6) == "4",
+           "Part overrides must show the global, inherited, and overriding values.");
+    expect(replaced_source("perimeter_count", "Part").contains("Global") &&
+               replaced_source("perimeter_count", "Layers 1").contains("Bracket") &&
+               replaced_source("perimeter_speed", "Layers 1").contains("Global"),
+           "Replacement tooltips must identify whether the value comes from Global or the owning part.");
+    expect(cell("Bracket", "perimeter_count", "Layers 1", 4) == "2" &&
+               cell("Bracket", "perimeter_count", "Layers 1", 5) == "4" &&
+               cell("Bracket", "perimeter_count", "Layers 1", 6) == "2",
+           "A layer that restores Global must still override its differing part value.");
+    expect(cell("Bracket", "perimeter_count", "Layers 1", 1).contains("3"),
+           "Layer ranges must display their inclusive upper bound using one-based numbers.");
+    expect(findRow(table, "Bracket", "perimeter", "Part") < 0 &&
+               findRow(table, "Bracket", "layer_height", "Layers 1") < 0 &&
+               findRow(table, "Bracket", "perimeter_boundary_selection", "Layers 1") < 0,
+           "Redundant part values and copied layer values must not appear as overrides.");
+    expect(
+        cell("Bracket", "perimeter", "Layers 1", 5) == "false" && cell("Bracket", "perimeter", "Layers 1", 6) == "true",
+        "Boolean values must remain readable.");
+    expect(cell("Bracket", "perimeter_boundary_selection", "Part", 6) == "External Boundaries",
+           "Enumerations must display their option labels.");
+    expect(cell("Bracket", "layer_height", "Part", 4) == "1 mm" &&
+               cell("Bracket", "layer_height", "Part", 6) == "2 mm" &&
+               cell("Bracket", "perimeter_speed", "Layers 1", 5) == "100 " + preferences->getVelocityUnitText() &&
+               cell("Bracket", "perimeter_speed", "Layers 1", 6) == "150 " + preferences->getVelocityUnitText(),
+           "Physical values must use preferred units, including Global fallback for layers without a part value.");
+    expect(cell("Housing", "variable_layer_height", "Part", 5) == "false",
+           "Missing Global values must inherit the master default.");
+    expect(cell("Housing", "extension_calibration", "Part", 3) == "extension_calibration" &&
+               cell("Housing", "extension_calibration", "Part", 5) == "Not set" &&
+               cell("Housing", "extension_calibration", "Part", 6) == "custom",
+           "Unknown settings must retain their key and value without inventing an inherited value.");
+    expect(cell("Housing", "image_pixel_size_y", "Part", 6) == "2 mm",
+           "Secondary components of composite settings must be included.");
+    expect(cell("Bracket", "perimeter_count", "Layer 7", 1).contains("Finish") &&
+               cell("Bracket", "perimeter_count", "Layers 10", 1).contains("Finish") &&
+               cell("Bracket", "perimeter_count", "Layers 10", 1).contains("12"),
+           "Grouped settings must retain every disjoint range and its group name.");
+    for (int row = 0; row < table->rowCount(); ++row)
+        for (int column = 0; column < table->columnCount(); ++column)
+            expect(!(table->item(row, column)->flags() & Qt::ItemIsEditable), "Override cells must not be editable.");
+    expect(global->json() == global_before && bracket->getSb()->json() == bracket_before &&
+               first_layers->json() == range_before,
+           "Building the overview must not materialize defaults or otherwise change project settings.");
+
+    filter->setText("housing");
+    expect(visibleRows(table) == 4, "Search must match part names without case sensitivity.");
+    filter->setText("perimeter_boundary_selection");
+    expect(visibleRows(table) == 1, "Search must include the underlying setting key.");
+    filter->setText("Finish");
+    expect(visibleRows(table) == 2, "Search must include layer group names.");
+    filter->setText("no matching override");
+    expect(visibleRows(table) == 0 && !summary->text().isEmpty(), "Unmatched searches must show a clear empty result.");
+    filter->clear();
+    expect(visibleRows(table) == 12, "Clearing search must restore every override.");
+
+    const auto expect_counts = [&](int parts, int layers) {
+        expect(visibleRows(table) == parts + layers && summary->text().contains(QString("%1 part").arg(parts)) &&
+                   summary->text().contains(QString("%1 layer").arg(layers)),
+               "The summary must count only part and layer overrides matching all active filters.");
+    };
+    struct FilterCase {
+        QUuid part;
+        int scope;
+        int parts;
+        int layers;
+    };
+    for (const auto& test : {FilterCase {{}, 0, 7, 5}, FilterCase {{}, 1, 7, 0}, FilterCase {{}, 2, 0, 5},
+                             FilterCase {bracket->getId(), 0, 3, 5}, FilterCase {bracket->getId(), 1, 3, 0},
+                             FilterCase {bracket->getId(), 2, 0, 5}, FilterCase {housing->getId(), 0, 4, 0},
+                             FilterCase {housing->getId(), 1, 4, 0}, FilterCase {housing->getId(), 2, 0, 0}}) {
+        part_filter->setCurrentIndex(part_filter->findData(test.part));
+        scope_filter->setCurrentIndex(test.scope);
+        expect_counts(test.parts, test.layers);
+    }
+    part_filter->setCurrentIndex(part_filter->findData(bracket->getId()));
+    scope_filter->setCurrentIndex(2);
+    filter->setText("Finish");
+    expect_counts(0, 2);
+    if (argc > 1)
+        expect(dialog.grab().save(QString(argv[1]) + "/filtered-layers.png"), "Could not save filtered layers.");
+    filter->setText("perimeter_boundary_selection");
+    expect_counts(0, 0);
+    filter->clear();
+    part_filter->setCurrentIndex(0);
+    scope_filter->setCurrentIndex(0);
+
+    int requests = 0;
+    QUuid requested_part;
+    int requested_low  = -2;
+    int requested_high = -2;
+    QString requested_key;
+    QObject::connect(&dialog, &ORNL::SettingsOverridesDialog::showSettingRequested,
+                     [&](QUuid part_id, int low, int high, QString key) {
+                         ++requests;
+                         requested_part = part_id;
+                         requested_low  = low;
+                         requested_high = high;
+                         requested_key  = key;
+                     });
+    const auto select = [&](const QString& part, const QString& key, const QString& scope) {
+        const int row = findRow(table, part, key, scope);
+        expect(row >= 0, "The override selected for navigation must exist.");
+        if (row >= 0) {
+            table->setCurrentCell(row, 0);
+            table->selectRow(row);
+        }
+        return row;
+    };
+    select("Bracket", "perimeter_count", "Part");
+    expect(show_setting->isEnabled(), "Known selected part overrides must enable navigation.");
+    show_setting->click();
+    expect(requests == 1 && requested_part == bracket->getId() && requested_low == -1 && requested_high == -1 &&
+               requested_key == "perimeter_count",
+           "The navigation button must request the exact part override and setting.");
+    select("Bracket", "perimeter_count", "Layers 10");
+    show_setting->click();
+    expect(requests == 2 && requested_part == bracket->getId() && requested_low == 9 && requested_high == 11 &&
+               requested_key == "perimeter_count",
+           "Grouped layer navigation must retain the clicked range's exact zero-based bounds.");
+    const int single_layer = select("Bracket", "perimeter_count", "Layer 7");
+    if (single_layer >= 0)
+        expect(QMetaObject::invokeMethod(table, "itemDoubleClicked", Qt::DirectConnection,
+                                         Q_ARG(QTableWidgetItem*, table->item(single_layer, 3))),
+               "The table must expose its double-click activation signal.");
+    expect(requests == 3 && requested_part == bracket->getId() && requested_low == 6 && requested_high == 6,
+           "Double-clicking a layer override must navigate to that exact layer.");
+    bracket->removeSettingsRange(6, 6);
+    show_setting->click();
+    expect(requests == 3, "A range removed before the next refresh must never produce a stale navigation request.");
+    bracket->createSettingsRange(6, 6, "Finish");
+    dialog.scheduleRefresh();
+    settle();
+    select("Housing", "extension_calibration", "Part");
+    expect(!show_setting->isEnabled(), "Unknown metadata must disable navigation to a nonexistent setting row.");
+    show_setting->click();
+    expect(requests == 3, "Unknown setting navigation must not emit a request.");
+    const int filtered_row = select("Bracket", "perimeter_count", "Part");
+    filter->setText("no matching override");
+    expect(!show_setting->isEnabled(), "A selected override hidden by filters must disable navigation.");
+    if (filtered_row >= 0)
+        QMetaObject::invokeMethod(table, "itemDoubleClicked", Qt::DirectConnection,
+                                  Q_ARG(QTableWidgetItem*, table->item(filtered_row, 3)));
+    expect(requests == 3, "Hidden override rows must not emit navigation requests.");
+    filter->clear();
+
+    select("Housing", "perimeter_count", "Part");
+    part_filter->setCurrentIndex(part_filter->findData(housing->getId()));
+    ORNL::CSM->renamePart(housing, "Renamed Housing");
+    dialog.scheduleRefresh();
+    settle();
+    expect(part_filter->currentData().toUuid() == housing->getId() && part_filter->currentText() == "Renamed Housing" &&
+               visibleRows(table) == 4 &&
+               table->currentRow() == findRow(table, "Renamed Housing", "perimeter_count", "Part"),
+           "Renaming a part must retain filter and selected-row identity while updating the displayed name.");
+    ORNL::CSM->renamePart(housing, "Housing");
+    dialog.scheduleRefresh();
+    settle();
+    part_filter->setCurrentIndex(0);
+
+    dialog.resize(850, 400);
+    for (int column = 0; column < table->columnCount(); ++column) table->setColumnWidth(column, 300);
+    table->setColumnWidth(3, 333);
+    table->sortItems(3, Qt::DescendingOrder);
+    select("Bracket", "perimeter_count", "Layer 7");
+    settle();
+    table->horizontalScrollBar()->setValue(100);
+    table->verticalScrollBar()->setValue(1);
+    const int horizontal_position = table->horizontalScrollBar()->value();
+    const int vertical_position   = table->verticalScrollBar()->value();
+    expect(horizontal_position > 0 && vertical_position > 0, "The preservation check must exercise both scrollbars.");
+    int inserted_rows = 0;
+    const auto inserted =
+        QObject::connect(table->model(), &QAbstractItemModel::rowsInserted,
+                         [&](const QModelIndex&, int first, int last) { inserted_rows += last - first + 1; });
+    bracket->getSb()->setSetting("layer_height", 2500.0);
+    // Keep copied layer heights inherited so that this edit changes a value without changing the row count.
+    for (const auto& range : bracket->getSettingsRanges()) range->getSb()->setSetting("layer_height", 2500.0);
+    dialog.scheduleRefresh();
+    dialog.scheduleRefresh();
+    dialog.scheduleRefresh();
+    expect(cell("Bracket", "layer_height", "Part", 6) == "2 mm",
+           "Scheduled refreshes must defer work until the event loop can coalesce them.");
+    settle();
+    expect(inserted_rows == 12 && cell("Bracket", "layer_height", "Part", 6) == "2.5 mm",
+           "Multiple scheduled edits must produce one overview rebuild with the latest values.");
+    QObject::disconnect(inserted);
+    expect(table->columnWidth(3) == 333 && table->horizontalHeader()->sortIndicatorSection() == 3 &&
+               table->horizontalHeader()->sortIndicatorOrder() == Qt::DescendingOrder &&
+               table->currentRow() == findRow(table, "Bracket", "perimeter_count", "Layer 7") &&
+               table->selectionModel()->selectedRows().size() == 1 &&
+               table->horizontalScrollBar()->value() == horizontal_position &&
+               table->verticalScrollBar()->value() == vertical_position,
+           "Live refresh must preserve column widths, sorting, selected override, and scroll positions.");
+    dialog.hide();
+    dialog.show();
+    settle();
+    expect(table->columnWidth(3) == 333 &&
+               table->currentRow() == findRow(table, "Bracket", "perimeter_count", "Layer 7") &&
+               table->horizontalScrollBar()->value() == horizontal_position &&
+               table->verticalScrollBar()->value() == vertical_position,
+           "Reopening must preserve the overview's navigation and layout state.");
+    dialog.resize(1200, 650);
+    table->resizeColumnsToContents();
+    table->horizontalScrollBar()->setValue(0);
+    table->verticalScrollBar()->setValue(0);
+
+    int image_index = 0;
+    for (auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode, ORNL::ThemeName::kLightMode}) {
+        apply_theme(theme);
+        for (QWidget* widget :
+             {static_cast<QWidget*>(table), static_cast<QWidget*>(filter), static_cast<QWidget*>(summary)}) {
+            expect(widget->font().family() == "Noto Sans" && widget->font().pointSize() == 9 &&
+                       widget->font().weight() == QFont::Normal,
+                   "Overview fields and labels must retain the application's font across theme changes.");
+        }
+        const bool dark = theme == ORNL::ThemeName::kDarkMode;
+        expect(dark ? table->palette().color(QPalette::Base).lightness() < 128
+                    : table->palette().color(QPalette::Base).lightness() > 200,
+               "The overview must follow the current application theme.");
+        if (argc > 1)
+            expect(dialog.grab().save(QString(argv[1]) + QString("/overrides-%1.png").arg(image_index++)),
+                   "Could not save the themed overview screenshot.");
+    }
+
+    preferences->setDistanceUnit(ORNL::inch);
+    preferences->setVelocityUnit(ORNL::inch / ORNL::minute);
+    settle();
+    expect(cell("Bracket", "layer_height", "Part", 6).contains(preferences->getDistanceUnitText()) &&
+               cell("Bracket", "layer_height", "Part", 6) != "2 mm" &&
+               cell("Bracket", "perimeter_speed", "Layers 1", 6).contains(preferences->getVelocityUnitText()),
+           "Unit changes must automatically reformat physical values.");
+
+    dialog.setRefreshSuspended(true);
+    dialog.refresh();
+    dialog.scheduleRefresh();
+    auto loading_part = QSharedPointer<ORNL::Part>::create();
+    loading_part->setName("Loading part");
+    loading_part->getSb()->setSetting("perimeter_count", 8);
+    ORNL::CSM->addPart(loading_part);
+    settle();
+    expect(table->rowCount() == 0 && !show_setting->isEnabled(),
+           "Project loading must clear stale rows and suspend scheduled scans and navigation.");
+    show_setting->click();
+    expect(requests == 3, "Project loading must never emit a navigation request.");
+    ORNL::CSM->removePart(loading_part->name());
+    bracket->removeSettingsRange(0, 2);
+    dialog.setRefreshSuspended(false);
+    settle();
+    expect(table->rowCount() == 9, "Resuming refresh must rebuild rows from the completed project state.");
+    global->setSetting("perimeter_count", 4);
+    expect(QMetaObject::invokeMethod(ORNL::GSM.get(), "globalLoaded", Qt::DirectConnection,
+                                     Q_ARG(QString, QString("test global settings"))),
+           "Global settings must expose their load notification.");
+    settle();
+    expect(findRow(table, "Bracket", "perimeter_count", "Part") < 0,
+           "Loading changed Global values must automatically remove newly redundant part overrides.");
+    dialog.hide();
+    housing->getSb()->setSetting("perimeter_count", 5);
+    dialog.scheduleRefresh();
+    settle();
+    expect(cell("Housing", "perimeter_count", "Part", 6) == "3",
+           "Hidden overview windows must defer scheduled scans until they reopen.");
+    dialog.show();
+    settle();
+    expect(cell("Housing", "perimeter_count", "Part", 6) == "5", "Reopening must show the latest project values.");
+    select("Housing", "perimeter_count", "Part");
+    ORNL::CSM->removePart(housing->name());
+    show_setting->click();
+    expect(requests == 3, "A part removed before the next refresh must never produce a stale navigation request.");
+    settle();
+    expect(table->rowCount() == 4 && part_filter->findData(housing->getId()) < 0,
+           "Part removal must automatically discard its rows and filter option.");
+    ORNL::CSM->clearParts();
+    settle();
+    expect(table->rowCount() == 0 && !show_setting->isEnabled(),
+           "Clearing the project must automatically clear the overview.");
+
+    preferences->setDistanceUnit(ORNL::mm);
+    preferences->setVelocityUnit(ORNL::mm / ORNL::s);
+    global->reset();
+    global->setSetting("slicing_mode", 0);
+    global->setSetting("infill", false);
+    global->setSetting("infill_speed", 100000.0);
+    const auto add_overlap_part = [&](const QString& name) {
+        auto part = QSharedPointer<ORNL::Part>::create();
+        part->setName(name);
+        ORNL::CSM->addPart(part);
+        return part;
+    };
+    auto feature = add_overlap_part("Inherited feature");
+    feature->createSettingsRange(0, 9);
+    feature->getSettingsRange(0, 9)->getSb()->setSetting("infill", true);
+    feature->createSettingsRange(4, 4);
+    feature->getSettingsRange(4, 4)->getSb()->setSetting("infill_speed", 30000.0);
+    dialog.refresh();
+    expect(cell(feature->name(), "infill_speed", "Layer 5", 7) == "Active",
+           "A layer override must inherit feature conditions from every matching range.");
+
+    global->setSetting("infill", true);
+    auto restored = add_overlap_part("Restored global");
+    restored->createSettingsRange(0, 9);
+    restored->getSettingsRange(0, 9)->getSb()->setSetting("infill_speed", 20000.0);
+    restored->createSettingsRange(7, 7);
+    restored->getSettingsRange(7, 7)->getSb()->setSetting("infill_speed", 100000.0);
+    auto partial = add_overlap_part("Partial overlap");
+    partial->createSettingsRange(0, 9);
+    partial->getSettingsRange(0, 9)->getSb()->setSetting("infill_speed", 20000.0);
+    partial->createSettingsRange(7, 12);
+    partial->getSettingsRange(7, 12)->getSb()->setSetting("infill_speed", 30000.0);
+    auto precedence = add_overlap_part("Range precedence");
+    precedence->createSettingsRange(0, 9);
+    precedence->getSettingsRange(0, 9)->getSb()->setSetting("infill", false);
+    precedence->createSettingsRange(4, 4);
+    precedence->getSettingsRange(4, 4)->getSb()->setSetting("infill", true);
+    precedence->getSettingsRange(4, 4)->getSb()->setSetting("infill_speed", 30000.0);
+    const auto overlap_global_before = global->json();
+    const auto overlap_ranges_before = partial->SettingsRangesToJson();
+    dialog.refresh();
+    const QString velocity_suffix = " " + preferences->getVelocityUnitText();
+    expect(cell(restored->name(), "infill_speed", "Layer 8", 4) == "100" + velocity_suffix &&
+               cell(restored->name(), "infill_speed", "Layer 8", 5) == "20" + velocity_suffix &&
+               cell(restored->name(), "infill_speed", "Layer 8", 6) == "100" + velocity_suffix,
+           "Restoring Global over another layer range must retain the override and show the replaced range value.");
+    expect(cell(partial->name(), "infill_speed", "Layers 8-13", 5) ==
+               "Varies: 20" + velocity_suffix + "; 100" + velocity_suffix,
+           "Partially overlapping ranges must report every inherited value instead of sampling one layer.");
+    expect(cell(partial->name(), "infill_speed", "Layers 1-10", 7) == "Unknown" &&
+               cell(partial->name(), "infill_speed", "Layers 8-13", 7) == "Active",
+           "Partial shadowing must report varying activity while the later overriding range remains active.");
+    const int mixed_row = findRow(table, partial->name(), "infill_speed", "Layers 1-10");
+    if (mixed_row >= 0)
+        expect(table->item(mixed_row, 7)->toolTip().contains("Layers 1-7") &&
+                   table->item(mixed_row, 7)->toolTip().contains("Layers 8-10"),
+               "Mixed activity must identify the active and shadowed layer intervals.");
+    expect(cell(precedence->name(), "infill_speed", "Layer 5", 7) == "Inactive",
+           "Effective conditions must follow the slicer's stored range order rather than displayed range order.");
+    select(partial->name(), "infill_speed", "Layers 8-13");
+    show_setting->click();
+    expect(requested_part == partial->getId() && requested_low == 7 && requested_high == 12,
+           "An aggregate overlap row must still navigate to the original stored range.");
+    expect(global->json() == overlap_global_before && partial->SettingsRangesToJson() == overlap_ranges_before,
+           "Evaluating overlapping contexts must not change stored settings or ranges.");
+    for (const auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
+        apply_theme(theme);
+        table->resizeColumnsToContents();
+        if (argc > 1)
+            expect(dialog.grab().save(QString(argv[1]) + (theme == ORNL::ThemeName::kLightMode ? "/overlaps-light.png"
+                                                                                               : "/overlaps-dark.png")),
+                   "Could not save the overlapping-range report screenshot.");
+    }
+    ORNL::CSM->clearParts();
+
+    global->reset();
+    global->setSetting("slicing_mode", 0);
+    global->setSetting("perimeter", false);
+    global->setSetting("perimeter_speed", 100000.0);
+    const auto add_modifier_part = [&](const QString& name, ORNL::MeshType type) {
+        auto mesh = QSharedPointer<ORNL::ClosedMesh>::create(ORNL::MeshFactory::CreateBoxMesh(10000, 10000, 10000));
+        mesh->setName(name);
+        mesh->setType(type);
+        auto part = QSharedPointer<ORNL::Part>::create(mesh, QString(), type);
+        ORNL::CSM->addPart(part);
+        return part;
+    };
+    auto target = add_modifier_part("Target build", ORNL::MeshType::kBuild);
+    target->getSb()->setSetting("perimeter", true);
+    target->getSb()->setSetting("perimeter_speed", 200000.0);
+    auto other = add_modifier_part("Other build", ORNL::MeshType::kBuild);
+    other->getSb()->setSetting("perimeter_speed", 400000.0);
+    auto modifier = add_modifier_part("Local modifier", ORNL::MeshType::kSettings);
+    modifier->getSb()->setSetting("perimeter_speed", 100000.0);
+    target->adoptChild(modifier);
+    const auto modifier_source = [&] {
+        const int row = findRow(table, modifier->name(), "perimeter_speed", "Part");
+        expect(row >= 0, "The settings modifier's speed override must exist.");
+        return row < 0 ? QString() : table->item(row, 5)->toolTip();
+    };
+    expect(ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, target)
+                   .contains(modifier) &&
+               !ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, other)
+                    .contains(modifier),
+           "The parented modifier fixture must apply only to its target build object during slicing.");
+    dialog.refresh();
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 4) == "100" + velocity_suffix &&
+               cell(modifier->name(), "perimeter_speed", "Part", 5) == "200" + velocity_suffix &&
+               cell(modifier->name(), "perimeter_speed", "Part", 6) == "100" + velocity_suffix,
+           "A modifier restoring Global must remain visible when it replaces its target's differing value.");
+    expect(modifier_source().contains(target->name()) && !modifier_source().contains(other->name()),
+           "A parented modifier's replacement source must identify only the target build object.");
+    modifier->getSb()->setSetting("perimeter_speed", 200000.0);
+    dialog.refresh();
+    expect(findRow(table, modifier->name(), "perimeter_speed", "Part") < 0,
+           "A parented modifier matching its target must be redundant even when another build has a different value.");
+    modifier->getSb()->setSetting("perimeter_speed", 150000.0);
+    dialog.refresh();
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 5) == "200" + velocity_suffix,
+           "A modifier's replacement value must come from its target rather than Global.");
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 7) == "Active",
+           "Modifier feature conditions must inherit enabled features from the target build object.");
+    const int modifier_row      = select(modifier->name(), "perimeter_speed", "Part");
+    const int modifier_requests = requests;
+    show_setting->click();
+    expect(requests == modifier_requests + 1 && requested_part == modifier->getId() && requested_low == -1 &&
+               requested_high == -1 && requested_key == "perimeter_speed",
+           "A modifier's aggregate replacement context must navigate to the owning modifier's setting.");
+    target->createSettingsRange(1, 2);
+    target->getSettingsRange(1, 2)->getSb()->setSetting("perimeter_speed", 300000.0);
+    dialog.refresh();
+    const QString local_inherited = cell(modifier->name(), "perimeter_speed", "Part", 5);
+    expect(local_inherited.startsWith("Varies:") && local_inherited.contains("200" + velocity_suffix) &&
+               local_inherited.contains("300" + velocity_suffix) && !local_inherited.contains("400" + velocity_suffix),
+           "A parented modifier must report differing part and layer values from its target only.");
+    expect(modifier_source().contains(target->name()) && modifier_source().contains("Layers 2-3") &&
+               !modifier_source().contains(other->name()),
+           "A modifier's replacement sources must identify the target and its affected layer range.");
+    expect(modifier_row >= 0 && table->currentRow() == findRow(table, modifier->name(), "perimeter_speed", "Part") &&
+               table->item(table->currentRow(), 3)->isSelected(),
+           "Aggregating new target layer contexts must preserve the selected modifier override.");
+    modifier->setModifierEnabled(false);
+    dialog.refresh();
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 7) == "Inactive",
+           "A disabled settings modifier must retain its replacement values with an Inactive status.");
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 5) == local_inherited,
+           "Disabling a modifier must retain the values it would replace on its target.");
+    modifier->setModifierEnabled(true);
+    target->orphanChild(modifier);
+    expect(ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, target)
+                   .contains(modifier) &&
+               ORNL::SlicingUtilities::GetPartsByType(ORNL::CSM->partsSnapshot(), ORNL::MeshType::kSettings, other)
+                   .contains(modifier),
+           "The unparented modifier fixture must apply to both build objects during slicing.");
+    const auto modifier_global_before = global->json();
+    const auto target_before          = target->getSb()->json();
+    const auto target_ranges_before   = target->SettingsRangesToJson();
+    const auto other_before           = other->getSb()->json();
+    const auto modifier_before        = modifier->getSb()->json();
+    dialog.refresh();
+    const QString global_inherited = cell(modifier->name(), "perimeter_speed", "Part", 5);
+    expect(global_inherited.startsWith("Varies:") && global_inherited.contains("200" + velocity_suffix) &&
+               global_inherited.contains("300" + velocity_suffix) && global_inherited.contains("400" + velocity_suffix),
+           "An unparented modifier must aggregate every target build object's part and layer values.");
+    expect(modifier_source().contains(target->name()) && modifier_source().contains(other->name()) &&
+               modifier_source().contains("Layers 2-3"),
+           "An unparented modifier's replacement tooltip must identify every target and layer source.");
+    expect(cell(modifier->name(), "perimeter_speed", "Part", 7) == "Unknown",
+           "Modifier activity must vary when one target enables its feature and another disables it.");
+    expect(global->json() == modifier_global_before && target->getSb()->json() == target_before &&
+               target->SettingsRangesToJson() == target_ranges_before && other->getSb()->json() == other_before &&
+               modifier->getSb()->json() == modifier_before && modifier->parent().isNull(),
+           "Evaluating modifier targets must not change Global, target, modifier, layer, or parent settings.");
+    filter->setText(modifier->name());
+    for (const auto theme : {ORNL::ThemeName::kLightMode, ORNL::ThemeName::kDarkMode}) {
+        apply_theme(theme);
+        table->resizeColumnsToContents();
+        if (argc > 1)
+            expect(
+                dialog.grab().save(QString(argv[1]) + (theme == ORNL::ThemeName::kLightMode ? "/modifiers-light.png"
+                                                                                            : "/modifiers-dark.png")),
+                "Could not save the modifier inheritance report screenshot.");
+    }
+    filter->clear();
+    target->clearSettingsRanges();
+    target->getSb()->setSetting("perimeter_speed", 100000.0);
+    other->getSb()->setSetting("perimeter_speed", 100000.0);
+    modifier->getSb()->setSetting("perimeter_speed", 100000.0);
+    dialog.refresh();
+    expect(findRow(table, modifier->name(), "perimeter_speed", "Part") < 0,
+           "A modifier matching every target's inherited value must remain redundant.");
+    ORNL::CSM->clearParts();
+
+    preferences->setDistanceUnit(old_distance);
+    preferences->setVelocityUnit(old_velocity);
+    preferences->setTheme(old_theme);
+    return passed ? EXIT_SUCCESS : EXIT_FAILURE;
+}

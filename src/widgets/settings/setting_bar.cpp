@@ -1,5 +1,11 @@
 #include "widgets/settings/setting_bar.h"
 
+#include <QAbstractSpinBox>
+#include <QLineEdit>
+#include <QPointer>
+#include <QScopedValueRollback>
+#include <QSignalBlocker>
+#include <QTimer>
 #include <algorithm>
 
 #include <qabstractitemview.h>
@@ -105,6 +111,7 @@ SettingTab* SettingBar::getTab(QString major, QString minor) {
 }
 
 void SettingBar::filter(QString str) {
+    if (!m_navigation_row.isNull() && str != m_navigation_search) clearNavigationFocus();
     // If the string is empty, ensure all tabs can be seen.
     if (str.isEmpty()) {
         for (SettingPane* cur_pane : m_panes) {
@@ -157,6 +164,8 @@ void SettingBar::filter(QString str) {
 
 void SettingBar::settingsBasesSelected(QPair<QString, QList<QSharedPointer<SettingsBase>>> name_and_bases,
                                        QList<QSharedPointer<SettingsBase>> inherited_bases) {
+    QScopedValueRollback<bool> restoring(m_restoring_settings, true);
+    clearNavigationFocus();
     auto settings_bases                 = name_and_bases.second;
     m_selected_settings_bases           = settings_bases;
     m_selected_inherited_settings_bases = inherited_bases;
@@ -598,6 +607,98 @@ void SettingBar::hideSetting(QString panel, QString category) {
 
 void SettingBar::setCurrentFolder(QString path) {
     m_current_folder->setText("Currently searching in: " % path % " for additional setting files");
+}
+
+void SettingBar::clearNavigationFocus() {
+    if (!m_navigation_row.isNull()) m_navigation_row->setNavigationRevealed(false);
+    m_navigation_row.clear();
+    if (m_navigation_hidden_pane != nullptr) {
+        if (PreferencesManager::getInstance()->isSettingHidden(m_panes.key(m_navigation_hidden_pane),
+                                                               m_navigation_hidden_category)) {
+            const QSignalBlocker blocker(m_navigation_hidden_pane);
+            auto* tab = m_navigation_hidden_pane->getTab(m_navigation_hidden_category);
+            m_navigation_hidden_pane->hideTab(m_navigation_hidden_category);
+            tab->shrinkTab();
+            tab->findChild<SettingHeader*>()->hide();
+            tab->hide();
+        }
+        m_navigation_hidden_pane = nullptr;
+    }
+    m_navigation_search.clear();
+}
+
+bool SettingBar::focusSetting(const QString& key) {
+    const fifojson& master = GSM->getMaster()->json();
+    const auto metadata    = master.find(key.toStdString());
+    if (metadata == master.end()) return false;
+    const QString major = metadata->at(Constants::Settings::Master::kMajor).get<QString>();
+    const QString minor = metadata->at(Constants::Settings::Master::kMinor).get<QString>();
+    auto* pane          = m_panes.value(major, nullptr);
+    auto* tab           = pane == nullptr ? nullptr : pane->getTab(minor);
+    const auto row      = tab == nullptr ? QSharedPointer<SettingRowBase>() : tab->getRow(key);
+    if (row.isNull() || (!m_selected_settings_bases.isEmpty() && !row->isLocal())) return false;
+
+    clearNavigationFocus();
+    m_navigation_row    = row;
+    m_navigation_search = row->getSearchText();
+    row->setNavigationRevealed(true);
+    if (PreferencesManager::getInstance()->isSettingHidden(major, minor)) {
+        pane->showTab(minor);
+        m_navigation_hidden_pane     = pane;
+        m_navigation_hidden_category = minor;
+    }
+    {
+        QScopedValueRollback<bool> restoring(m_restoring_settings, true);
+        tab->settingsBasesSelected(m_selected_settings_bases, m_selected_inherited_settings_bases);
+        for (const auto& current_row : tab->getRows()) current_row->checkDependencies();
+    }
+    m_filter_bar->setText(m_navigation_search);
+    filter(m_navigation_search);
+    m_tab_widget->setCurrentWidget(pane);
+    tab->expandTab();
+
+    auto* editor = dynamic_cast<QWidget*>(row.get());
+    auto* scroll = pane->findChild<QScrollArea*>();
+    if (editor == nullptr || scroll == nullptr) return false;
+    int component_index = 0;
+    const auto input    = GSM->getSettingInput(key);
+    if (!input.is_null()) {
+        const auto& components = input.at(Constants::Settings::Input::kComponents);
+        for (std::size_t index = 0; index < components.size(); ++index)
+            if (components.at(index).at(Constants::Settings::Input::kSetting).get<QString>() == key)
+                component_index = static_cast<int>(index);
+    }
+    const auto focus_editor = [this, editor = QPointer<QWidget>(editor), scroll = QPointer<QScrollArea>(scroll),
+                               component_index] {
+        if (editor.isNull() || scroll.isNull() || m_navigation_row.isNull() ||
+            dynamic_cast<QWidget*>(m_navigation_row.get()) != editor.data())
+            return;
+        scroll->ensureWidgetVisible(editor, 20, 40);
+        if (!editor->isEnabled()) return;
+        editor->setFocus(Qt::OtherFocusReason);
+        if (auto* spin = qobject_cast<QAbstractSpinBox*>(editor.data()))
+            spin->selectAll();
+        else if (auto* line = qobject_cast<QLineEdit*>(editor.data()))
+            line->selectAll();
+        else {
+            const auto components = editor->findChildren<QAbstractSpinBox*>(QString(), Qt::FindDirectChildrenOnly);
+            if (component_index < components.size()) {
+                components.at(component_index)->setFocus(Qt::OtherFocusReason);
+                components.at(component_index)->selectAll();
+                return;
+            }
+            for (auto* child : editor->findChildren<QWidget*>()) {
+                if (child->isEnabled() && child->focusPolicy() != Qt::NoFocus) {
+                    child->setFocus(Qt::OtherFocusReason);
+                    if (auto* spin = qobject_cast<QAbstractSpinBox*>(child)) spin->selectAll();
+                    break;
+                }
+            }
+        }
+    };
+    focus_editor();
+    QTimer::singleShot(0, this, focus_editor);
+    return true;
 }
 
 void SettingBar::setupStyle() {

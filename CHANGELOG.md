@@ -9,6 +9,7 @@ Release versions follow the project's
 
 ### Added
 
+- Added a live Settings Overrides window to inspect, filter, navigate, copy, and export project part and layer overrides, with inherited values and inactive-feature explanations.
 - Added optional Arc Specialties weld schedule generation with collapsible regional forms for gas timing, startup, welding, and crater fill ([#350](https://github.com/ORNLSlicer/ORNLSlicer/pull/350)).
 - Added an optional prompt under Preferences > Settings to apply a selected settings file to all categories it contains; the preference is disabled by default.
 - Added parent assignment, detachment, modifier activation, and undoable hierarchy controls, with an Applies to column showing modifier targets.

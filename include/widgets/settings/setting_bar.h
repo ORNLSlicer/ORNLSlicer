@@ -63,6 +63,9 @@ class SettingBar : public QWidget {
     //! \param path Path of current folder
     void setCurrentFolder(QString path);
 
+    //! \brief Reveals and focuses an existing row without changing settings or visibility preferences.
+    bool focusSetting(const QString& key);
+
    signals:
     /*!
      * \brief Signals that a setting is about to be modified.
@@ -228,6 +231,8 @@ class SettingBar : public QWidget {
     //! \brief Reloads rows after unit changes and refreshes dynamic warnings once.
     void reloadRowsForUnitChange();
 
+    void clearNavigationFocus();
+
     //! \brief Setup the static widgets and their layouts.
     void setupWidget();
 
@@ -300,5 +305,10 @@ class SettingBar : public QWidget {
 
     //! \brief Prevents indicator scans while project data is being loaded on a worker thread.
     bool m_override_indicators_suspended = false;
+
+    QSharedPointer<SettingRowBase> m_navigation_row;
+    SettingPane* m_navigation_hidden_pane = nullptr;
+    QString m_navigation_hidden_category;
+    QString m_navigation_search;
 };
 }  // Namespace ORNL
