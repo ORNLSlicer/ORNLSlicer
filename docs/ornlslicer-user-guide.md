@@ -152,7 +152,7 @@ settings, and preferences state so both the GUI and command-line paths use the
 same slicing implementation.
 
 For implementation-level ownership and extension points, see the
-[architecture overview](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/ARCHITECTURE.md).
+[OpenWiki architecture quickstart](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/openwiki/quickstart.md).
 
 > **Diagram placeholder — Structure:** Add a component diagram showing GUI and
 > CLI entry points sharing session, settings, and slicers, with a toolpath
@@ -195,7 +195,7 @@ chmod +x ORNLSlicer-*.AppImage
 
 Package names change between releases, so substitute the downloaded filename.
 Developers building from source should follow the
-[development environment guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/wiki/Getting-Started.md)
+[developer setup guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/contributing/development-setup.md)
 instead of the release steps.
 
 > **Diagram placeholder — Installation:** Add one Windows package-selection
@@ -345,7 +345,8 @@ as the overhead orthographic projection toggle:
 
 G-Code View renders generated or imported motion. It supports:
 
-- adjustable lower and upper layer limits;
+- adjustable lower and upper layer limits, with a **Lock Layer Range** toggle to
+  preserve the visible layer span while scrubbing;
 - adjustable first and last segment limits;
 - layer and segment playback;
 - lightweight line or true-bead-width rendering;
@@ -382,30 +383,42 @@ The main menus are:
 
 | Menu | Common uses |
 | --- | --- |
-| File | Load models or point clouds, restore the last session, slice, take a screenshot, exit |
-| Edit | Undo/redo, copy/paste, reload, delete |
+| File | Load models or point clouds, open recent projects and models, restore the last session, slice, take a screenshot, exit |
+| Edit | Undo/redo part transforms, hierarchy edits, and setting changes; copy/paste; reload; delete hierarchy |
 | View | Switch views, reset camera, zoom, restore hidden settings, show/hide toolbars |
-| Settings | Load/save templates, add settings locations, open preferences |
+| Settings | Load/save templates, compare settings files, convert G-code to S2C, add settings locations, open preferences |
 | Project | Create/load/save a project, import G-code, export G-code |
-| Tools | Open the Flowrate and Xtrude process calculators |
+| Tools | Open the Flowrate and Xtrude process calculators and remote connectivity |
 | Scripts | Reserved integration menu; scripting is disabled in the standard application |
-| Help | Open this manual, the repository, issue reporting, and version information |
-| Debug | Developer diagnostics; not required for normal operation |
+| Help | Open this manual (or the built-in searchable viewer), the changelog, the repository, issue reporting, and version information |
+| Debug | Developer diagnostics such as Cross-section Viewer; not required for normal operation |
 
 See [Appendix C](#appendix-c-shortcut-reference) for the current application
 shortcuts.
 
 ![Main menu bar](user-guide-images/menu_bar_menus.png)
 
+| File Menu | Edit Menu | View Menu |
+| :---: | :---: | :---: |
+| ![File menu](user-guide-images/menu_bar/file_menu.png) | ![Edit menu](user-guide-images/menu_bar/edit_menu.png) | ![View menu](user-guide-images/menu_bar/view_menu.png) |
+
+| Settings Menu | Project Menu | Tools Menu |
+| :---: | :---: | :---: |
+| ![Settings menu](user-guide-images/menu_bar/settings_menu.png) | ![Project menu](user-guide-images/menu_bar/project_menu.png) | ![Tools menu](user-guide-images/menu_bar/tools_menu.png) |
+
+| Scripts Menu | Help Menu | Debug Menu |
+| :---: | :---: | :---: |
+| ![Scripts menu](user-guide-images/menu_bar/scripts_menu.png) | ![Help menu](user-guide-images/menu_bar/help_menu.png) | ![Debug menu](user-guide-images/menu_bar/debug_menu.png) |
+
 Developer diagnostic utilities under the **Debug** menu, such as
-**Debug > Cross Section Debug View**, allow inspecting slice planes and
+**Debug > Cross-section Viewer**, allow inspecting slice planes and
 individual cross-section polygons:
 
 ![Cross section debug dialog](user-guide-images/cs_debug_dialog.png)
 
 ### 4.7 Customize the workspace
 
-The Settings, G-Code Editor, Layer Times, and Status panels are Qt dock widgets.
+The Settings, G-Code Editor, Layer Times, and Status panels are dockable panels.
 Depending on platform, they can be resized, moved, floated, tabbed together, or
 hidden. Use **View > Toolbars** to restore a hidden dock. Use
 **View > Hidden Settings** to restore settings categories hidden from the
@@ -438,13 +451,15 @@ Every scene object has a role:
 | Role | Behavior |
 | --- | --- |
 | Build | Printable geometry. The slicer creates output for it and can apply local settings. |
-| Clipping | Subtractive geometry. Intersections are removed from build geometry; the clipping object does not create its own output. |
-| Settings | Spatial override geometry. Local settings apply where it overlaps build geometry in planar slicing. |
+| Clipping | Subtractive modifier geometry (Planar and Cylindrical modes). Intersections are removed from targeted build geometry; the clipping object does not create its own output. |
+| Settings | Spatial override modifier geometry (Planar mode). Local settings apply where it overlaps targeted build geometry. |
 | Support | Support input geometry consumed by Image mode, where it is rasterized with the reserved support ID instead of as an ordinary build part. |
 
 Right-click selected objects and choose **Switch to Build**, **Switch to
 Clipper**, or **Switch to Setting** to change the role. The same model can serve
-different purposes without being re-imported.
+different purposes without being re-imported. Enabled unparented Clipping and
+Settings modifiers apply to all build objects; parenting a modifier directly to
+a Build object restricts its effect to that parent part.
 
 | Build, Clipping, and Settings Roles in Part View | Resulting Sliced Toolpath (Void & Dense Override) |
 | :---: | :---: |
@@ -474,27 +489,35 @@ created with the Settings role.
 
 Select parts in the 3-D view or object tree. Double-click a part in the 3-D
 view to toggle its selection. In the object tree, use Ctrl-click or the
-platform's extended-selection gestures to select more than one. The object-tree
-context menu supports:
+platform's extended-selection gestures to select more than one. The object tree
+displays **Object** and **Applies to** columns: for Clipping and Settings
+modifiers, **Applies to** reports the targeted parent build part, `All build
+objects`, or `Inactive` when the modifier is disabled, parented to a non-build
+object, or unsupported by the active slicing mode.
 
-- role changes;
-- lock/unlock;
-- reset transformation;
-- replace model;
-- reload from the original file;
-- delete;
-- transparency;
-- wireframe; and
-- solid wireframe.
+The object-tree and Part View context menu supports:
+
+- **Info** (mesh role, file type, triangle count, current and original mesh
+  dimensions, and source path);
+- **Switch to Build**, **Switch to Clipper**, and **Switch to Setting**;
+- **Assign Parent** and **Detach from Parent**;
+- **Enable Modifier(s)** and **Disable Modifier(s)**;
+- **Set Number of Instances** (creates or removes `_copy` instances);
+- **Lock/Unlock** and **Reset Transformation**;
+- **Rename Part**, **Replace Part**, and **Reload Part**;
+- **Delete Hierarchy** and **Delete Object(s), Keep Children** (which preserves
+  descendants and leaves modifiers whose target changes inactive); and
+- **Transparency**, **Wireframe**, and **Solid Wireframe**.
 
 The object tree also marks open geometry, floating parts, and objects outside
 the configured build volume. Resolve these warnings before slicing unless they
 are deliberate for the selected process.
 
-Drag one object onto another in the object tree to make it a child. Translating
-or rotating the parent also affects its children, which is useful for keeping
-build, clipping, and settings geometry registered as a group. Drag the child
-back to the top level to remove the relationship.
+Drag one object onto another in the object tree (or use **Assign Parent**) to
+make it a child. Translating or rotating the parent also affects its children,
+and parenting a Clipping or Settings mesh to a Build part scopes the modifier to
+that parent. Drag the child back to the top level or choose **Detach from
+Parent** to remove the relationship.
 
 Copy and paste duplicate selected parts. Reload keeps the scene object but
 re-reads its source geometry; replace selects a different source file.
@@ -502,8 +525,9 @@ re-reads its source geometry; replace selects a different source file.
 ![Part organization object tree](user-guide-images/part_control.png)
 
 Right-clicking any object in the Part View or object tree opens the part context
-menu to change model roles, lock geometry, duplicate instances, reset transforms,
-rename or reload source files, and toggle wireframe or transparency rendering:
+menu to inspect part details, change model roles, assign parents, toggle
+modifiers, lock geometry, manage instances, reset transforms, rename parts,
+replace or reload source files, and toggle wireframe or transparency rendering:
 
 ![Part context menu](user-guide-images/part_context_menu.png)
 
@@ -517,6 +541,7 @@ The Part View transform toolbar provides:
 | Rotation | Enter rotations about X, Y, and Z. Applying rotation commits any pending scale into the current transform and resets scale factors. |
 | Scale | Apply independent X, Y, and Z scale factors. Values must be greater than zero. |
 | Align | Choose a face/direction to align with the build surface. |
+| Measure Object Distances | Click two points on any visible part in the scene to measure point-to-point distance without requiring an active selection. |
 | Center | Center selected geometry in the configured build volume. |
 | Drop to floor | Move selected geometry onto the build surface. |
 
@@ -581,7 +606,7 @@ Settings are grouped by intent:
 | --- | --- |
 | Printer | Controller syntax, machine type, coordinate setup, build volume, auxiliary equipment, speed/acceleration limits, and machine G-code |
 | Material | Density, path start/slowdown/wipe/lift modifiers, purge and extrusion behavior, filament/retraction, temperature/cooling, adhesion, and multi-material behavior |
-| Profile | Slicing mode, layer geometry, path regions, support/travel, local G-code, special modes, ordering/optimization, scanners, and Arc Specialties weld schedules |
+| Profile | Slicing mode, layer geometry, helical/radial cylindrical controls, path regions, support/travel, local G-code, special modes, ordering/optimization, scanners, and Arc Specialties weld schedules |
 | Experimental | Auto speed ramping, companion-file output, and cross-section stitching controls |
 
 The complete category map is in
@@ -600,6 +625,14 @@ control. Use the settings search to locate a display name across categories,
 and hover over a setting for its description. Composite inputs, such as the
 slice-plane normal or custom cylinder axis, group independently stored
 components into one row.
+
+When viewing global settings, rows whose values are overridden by a narrower
+scope display indicator icons beside the label: a cube icon when overridden on
+one or more parts, a stacked-layers icon when overridden on a layer or layer
+range, or both icons when both scopes override the setting. When editing a
+part, layer, layer range, or spatial settings region, any locally overridden
+setting highlights its label in bold accent text and enables the row's reset
+button so the local override can be cleared back to the inherited value.
 
 Dependencies prevent invalid or irrelevant combinations. For example, image
 pixel size is shown only in Image mode and cylindrical boundary policies are
@@ -620,10 +653,17 @@ Hidden categories can be restored through the View menu:
 
 ### 6.4 Load and save templates
 
-Use **Settings > Load from Template** or **Ctrl+T** to load a `.s2c` global
-template. Use **Settings > Save as Template** or **Ctrl+Shift+T** to save the
-current values under a new name. The save dialog can choose which settings
-and categories are included and can search the available values.
+Select a packaged or saved `.s2c` template from the **Template** selector at the
+bottom of the Settings panel to apply it to the active major category, or enable
+**Application Preferences > Settings > Prompt to apply settings files to all
+categories** to be asked whether a selected template should apply across
+Printer, Material, Profile, and Experimental at once. Use **Settings > Load
+from Template** or **Ctrl+T** to load one or more `.s2c` files from disk, and
+use **Settings > Save as Template** or **Ctrl+Shift+T** to save the current
+values under a new name. The save dialog can choose which settings and
+categories are included and can search the available values. Use **Settings >
+Compare Settings Files** to inspect differences between two `.s2c` templates
+side by side.
 
 Packaged templates provide starting points and may be refreshed by updates.
 Save site-, machine-, material-, or process-specific changes as a separate user
@@ -659,15 +699,20 @@ configuration global unless the UI explicitly permits a local override.
 
 ### 6.6 Layer and layer-range settings
 
-Selecting a build part populates the layer bar from the current layer height.
-Add and select a marker to edit one layer. Select and pair two markers to edit a
-continuous range. The toolbar's layer-range overlay displays the selected
-height interval in Part View.
+Selecting a build part populates the layer bar from the current **Layer Height**
+and any active **Variable Layer Height** settings. Add and select a marker to
+edit one layer. Select and pair two markers to edit a continuous range. The
+toolbar's layer-range overlay displays the selected height interval in Part
+View.
 
-Marker context actions allow the layer number to be changed, local values to be
-cleared, or the marker/range to be deleted. The layer bar also supports
-multi-selection and range grouping, pairing, splitting, and unpairing where
-applicable. Recheck layer markers after changing layer height or geometry
+Marker context actions allow the layer or range numbers to be changed (**Move
+Layer** or **Set Range Layer Numbers**), local values to be cleared, or the
+marker/range to be deleted. You can also create recurring layer groups with
+**Add a Group of Layer Settings** (odd layers, even layers, or a custom interval
+between start and end layers) and combine or separate selections with **Group
+Selected Layer Settings** and **Ungroup Selected Layer Settings**. The layer bar
+also supports pairing, splitting, and unpairing ranges where applicable. Recheck
+layer markers after changing layer height, variable layer height, or geometry
 because the physical layer positions may change.
 
 Reusable layer-bar templates use `.s2l`. Place site-provided templates in an
@@ -717,7 +762,10 @@ before slicing.
 
 Planar mode intersects each build model with a sequence of planes. The
 **Slice Plane Normal** sets their orientation; `{0, 0, 1}` creates ordinary
-horizontal XY layers. **Layer Height** sets the plane spacing.
+horizontal XY layers. **Layer Height** sets the plane spacing. When **Syntax**
+is set to **ORNL Metric**, enabling **Variable Layer Height** in **Profile >
+Layer** adapts layer spacing between **Minimum Layer Height** and **Layer
+Height** according to **Target Surface Error**.
 
 For each cross-section, Planar mode can create printable islands and enabled
 regions, combine compatible layers across multiple parts, order the resulting
@@ -740,8 +788,8 @@ Planar layers support these primary region types:
 
 | Region | Purpose |
 | --- | --- |
-| Perimeter | Exterior boundary contours, with optional lead-in, flying start, reversal, and spiral behavior |
-| Inset | Additional inward contours with configurable count, overlap, width, speed, and spiral behavior |
+| Perimeter | Exterior boundary contours, with optional connected contour loops (**Connect Perimeters**, **Connect to insets**, **Complete loop before connecting**, **Connect after forward tip wipe**), lead-in, flying start, reversal, and spiral behavior |
+| Inset | Additional inward contours with configurable count, overlap, width, speed, optional connected contour loops (**Connect Insets**), and spiral behavior |
 | Skeleton | Centerline-style paths from segment or point input, with cleaning, adaptive bead-width, and prestart options |
 | Skin | Solid top/bottom coverage and optional gradual-infill transitions |
 | Infill | Interior sparse or dense fill with density/spacing, pattern, angle, overlap, and combine-layer controls |
@@ -890,23 +938,36 @@ Cylindrical mode creates paths around a vertical axis through each part's XY
 centroid or a configured custom XY location. It requires **Arc Specialties**
 syntax.
 
-Choose a path pattern:
+Choose a path pattern in **Profile > Slicing > Cylindrical Path Pattern**:
 
 - **Radial** creates concentric rings or retained arcs. **Layer Height** is the
-  radial spacing and **Default Bead Width** is the vertical bead spacing.
-- **Helical** creates rising paths. **Layer Height** is the radial spacing and
-  **Default Bead Width** is the rise per revolution.
+  radial spacing and **Default Bead Width** is the vertical bead spacing. In
+  **Profile > Radial**, **Radial Path Boundary Policy** (**Clip**, **Keep**, or
+  **Discard**) and **Radial Path Start Angle** control how boundary
+  intersections are handled and where full rings begin.
+- **Helical** creates continuous rising paths across radial shells, with each
+  printable interval partitioned into an ordered region profile (**1.
+  Perimeter** → **2. Inset** → **3. Infill** → **4. Inset** → **5. Perimeter**).
+  **Layer Height** is the radial spacing between cylindrical shells. Regional
+  stepover settings (**Perimeter Stepover**, **Inset Stepover**, and **Infill
+  Stepover** in their respective **Profile** categories) control vertical rise
+  per revolution and fall back to **Default Bead Width** when set to `0`.
+  **Perimeter Revolutions**, **Inset Revolutions**, and **Infill Revolutions
+  Rounding Policy** (**Round**, **Floor**, or **Ceil**) govern turn counts,
+  while regional speeds and **Tool Frame Rotation** (`X/Y/Z` in **Profile >
+  Perimeter**, **Inset**, **Infill**, and **Travel**) control motion speed and
+  `AP`/`CP` torch angles. In **Profile > Helical**, **Helical Path Handedness**,
+  **Helical Tool Start Arc Length Offset**, and **Helical Z Clip Rounding**
+  (**Exact Intersection**, **Complete Revolution**, or **Last Full Revolution**)
+  control spiral direction, start offset, and boundary rounding.
 
-Boundary policies control whether intersections are clipped, kept, discarded,
-or retained through the highest Z intersection. **Arcs per Revolution** controls
-G2/G3 subdivision when arc output is enabled. Helical paths can be split by
-maximum path length.
+**Arcs per Revolution** controls `G2`/`G3` subdivision when arc output is
+enabled.
 
-Cylindrical mode does not generate the ordinary planar perimeter, inset, skin,
-infill, support, or raft regions. Review axis placement, radial bounds, AP/CP
-orientation fields, travel lifts, and active work coordinates carefully. See
-the dedicated
-[Cylindrical Slicing guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/cylindrical-slicing.md)
+Cylindrical mode does not generate planar skin, skeleton, support, or raft
+regions. Review axis placement, radial bounds, `AP`/`CP` orientation fields,
+travel lifts, and active work coordinates carefully. See the dedicated
+[Cylindrical Slicing guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/slicing/cylindrical-slicing.md)
 for settings, boundary policies, output fields, limitations, and checks.
 
 > **Diagram placeholder — Cylindrical slicing:** Add axis/radius notation and
@@ -997,10 +1058,9 @@ The G-Code Editor displays colorized source and links motion lines to preview
 segments. Use the search field to find text. Selecting a compatible line
 highlights its segment; picking a segment highlights its source line.
 
-The editor is editable. After changing text, select **Refresh** to write the
-edited document to a temporary file, parse it again, and update visualization
-and statistics. Refresh does not rerun slicing and cannot validate arbitrary
-controller macros.
+The editor is editable. After changing text, select **Refresh** to re-parse the
+edited G-code and update visualization and statistics. Refresh does not rerun
+slicing and cannot validate arbitrary controller macros.
 
 Keep an external, reviewed copy of important manual edits. Reslicing replaces
 the current generated text.
@@ -1042,11 +1102,20 @@ dialog can:
 - add operator and description lines to the header;
 - save the main G-code file;
 - save applicable auxiliary files;
-- save an `.s2p` project beside the output; and
+- save an `.s2p` project beside the output;
+- save an as-printed STL mesh (`<name>_as_printed.stl`) or centerline geometry
+  mesh (`<name>_as_printed_centerline.stl` when **Use Centerline Geometry for
+  As-Printed STL** is enabled); and
 - create a named subdirectory that bundles the selected files.
 
-The selected syntax determines the normal extension. Experimental file-output
-settings can create syntax-specific companion files for supported systems.
+The selected syntax determines the normal extension. **Experimental > File
+Output** settings can generate syntax-specific companion files (such as **Meld**
+or **Adamantine** simulation files) or split layers into separate files when
+**Individual Layer Export** is enabled before slicing. For **Arc Specialties**
+syntax, enabling **Profile > Arc Specialties > Generate Weld Schedule File**
+before slicing produces a companion weld schedule program (`<name>_weld.txt`)
+exported alongside the motion file (`<name>.txt`); see the
+[Arc Specialties G-code guide](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/gcode/arc-specialties.md).
 Sensor workflows may create numbered `.dat` files. Inspect every file in a
 bundle and preserve their relative naming when the controller workflow depends
 on it.
@@ -1106,15 +1175,15 @@ Open **Settings > Application Preferences** or press **Ctrl+P**. Preferences are
 workstation/user choices rather than manufacturing settings. ORNLSlicer stores
 the normal preference file as `app.preferences` in its application-data
 directory. Use the Preferences window's **File > Import Preferences** and
-**File > Export Preferences** actions to exchange `.preferences` files; those
-dialogs initially open on the desktop.
+**File > Export Preferences** actions to exchange `.preferences` files.
+
+![Preferences dialog](user-guide-images/preferences_window.png)
 
 #### Theme
 
-**Current Theme** appears above the preference tabs. Choose **System
-(default)** for the packaged default light styling or **Dark Mode** for the
-packaged dark theme. Restart ORNLSlicer if a theme does not update every open
-window immediately.
+**Current Theme** appears above the preference tabs. Choose **Light Mode** for
+the packaged light styling or **Dark Mode** for the packaged dark theme. Restart
+ORNLSlicer if a theme does not update every open window immediately.
 
 #### Units
 
@@ -1131,7 +1200,7 @@ small rounding differences in displayed values.
 | Angle | Display/input unit for angular values. | **deg**, rad, rev |
 | Time | Display/input unit for durations. | **sec**, ms, min |
 | Temperature | Display/input unit for thermal setpoints. | °C, °F, **°K** |
-| Voltage | Display/input unit for voltage settings. The current selector contains two identical µV entries. | µV, µV, mV, **V** |
+| Voltage | Display/input unit for voltage settings. | µV, mV, **V** |
 | Mass | Display unit for material-mass estimates and Xtrude Calculator values. | **kg**, g, mg, lbm |
 | Rotation | Labels used for orientation components. | **Pitch/Roll/Yaw**, X/Y/Z |
 | Density | Display/input unit for density values. | lbm/in³, **g/cm³** |
@@ -1139,6 +1208,8 @@ small rounding differences in displayed values.
 **Imported Model Unit** is separate from **Distance Unit**: the first affects
 the size assigned during import, while the second changes only the unit used to
 show and edit distances.
+
+![Units preferences tab](user-guide-images/preferences/units_tab.png)
 
 #### Notifications
 
@@ -1152,9 +1223,7 @@ automatically**, or **Don't ask - skip automatically** behavior.
 | Load Part – File Shift | Don't ask - shift automatically | For a newly loaded identity-transform part, center/drop it and optionally shift it to avoid collisions with existing parts. |
 | Warn before closing unsaved projects | Enabled | Prompts when closing the application with unsaved project changes. It does not protect **Project > New Project**, which clears parts without a prompt. |
 
-The first three rows are presented in the UI as radio-button groups. Their
-complete labels use “shift automatically” or “don't shift” for shift choices,
-and “align automatically” or “don't align” for alignment choices.
+![Notifications preferences tab](user-guide-images/preferences/notifications_tab.png)
 
 #### Camera, parts, and settings display
 
@@ -1163,7 +1232,13 @@ and “align automatically” or “don't align” for alignment choices.
 | Invert Camera | Disabled | Reverses the camera-drag direction in Part View and G-Code View. |
 | Use implicit transforms | Disabled | When a model has no supplied transform, preserve its original centroid as a translation after mesh data is internally centered. |
 | Always drop parts to bed | Disabled | Drops newly transformed parts to the build surface when their transform changes. |
+| STEP STL tolerance | 0.100 mm | Linear deflection tolerance used when tessellating imported STEP/IGES CAD models into triangle meshes; allowed range 0.001–10.000 mm. |
 | Disabled Settings | Grey | **Grey** keeps dependency-unavailable manufacturing settings visible but disabled; **Hide** removes them until their dependencies are met. This is separate from manually hiding entire category tabs, which **View > Hidden Settings** restores. |
+| Prompt to apply settings files to all categories | Disabled | When enabled, selecting a template in the Settings panel prompts whether to apply that `.s2c` file across all four major setting panels or only the active panel. |
+
+| Parts Tab | Settings Tab | Camera Tab |
+| :---: | :---: | :---: |
+| ![Parts preferences tab](user-guide-images/preferences/parts_tab.png) | ![Settings preferences tab](user-guide-images/preferences/settings_tab.png) | ![Camera preferences tab](user-guide-images/preferences/camera_tab.png) |
 
 #### Visualization and playback
 
@@ -1171,6 +1246,8 @@ and “align automatically” or “don't align” for alignment choices.
 | --- | --- | --- |
 | G-code preview mode | Auto | **Auto** uses the true-width vertex threshold; **True Bead Widths** permits width meshes without that automatic cutoff when requested; **Thin Lines** disables true-width meshes. |
 | True-width vertex threshold | 5,000,000 | Auto-mode vertex limit; allowed range 0–50,000,000 in steps of 100,000. Lower it to reduce preview construction cost. |
+| Show optimization points by default | Disabled | Automatically displays start/seam optimization points when entering Part View or G-Code View. |
+| Show bead / segment info by default | Disabled | Automatically opens the segment-information overlay in G-Code View. |
 | Lag between layers | 100 ms | Delay used by layer playback; allowed range 1–5,000 ms. |
 | Lag between segments | 10 ms | Delay used by segment playback; allowed range 1–5,000 ms. |
 
@@ -1185,6 +1262,10 @@ The G-Code Editor separately persists **Hide Travel** (disabled by default),
 segment playback automatically reveals travel and support so the full motion
 sequence can be shown.
 
+| Lag Tab | Visualization Tab |
+| :---: | :---: |
+| ![Lag preferences tab](user-guide-images/preferences/lag_tab.png) | ![Visualization preferences tab](user-guide-images/preferences/visualization_tab.png) |
+
 #### Visualization colors
 
 Each color preference opens a color picker and has a reset action. Defaults are
@@ -1194,10 +1275,13 @@ listed as 8-bit RGB values.
 | --- | --- | --- | --- |
 | Brim | 200, 113, 55 | Coasting | 211, 95, 141 |
 | Infill | 0, 255, 0 | Initial Startup | 135, 222, 205 |
-| Inset | 0, 204, 255 | Laser Scan | 90, 255, 90 |
-| Lead In | 255, 153, 51 | Flying Start | 120, 150, 250 |
-| Perimeter | 0, 0, 255 | Prestart | 204, 0, 255 |
+| Inset | 0, 204, 255 | Inset Arc | 0, 184, 255 |
+| Laser Scan | 90, 255, 90 | Lead In | 255, 153, 51 |
+| Flying Start | 120, 150, 250 | Perimeter | 0, 0, 255 |
+| Perimeter Arc | 32, 64, 255 | Prestart | 204, 0, 255 |
 | Raft | 102, 102, 102 | Radial | 47, 82, 102 |
+| Helical | 127, 0, 255 | Helical Perimeter | 0, 0, 255 |
+| Helical Inset | 0, 204, 255 | Helical Infill | 0, 255, 0 |
 | Ramping Down | 22, 99, 137 | Ramping Up | 99, 22, 137 |
 | Skeleton | 160, 44, 44 | Skin | 0, 128, 0 |
 | Skirt | 211, 188, 95 | Slow Down | 44, 160, 137 |
@@ -1205,9 +1289,9 @@ listed as 8-bit RGB values.
 | Support Roof | 255, 179, 128 | Thermal Scan | 240, 130, 130 |
 | Tip Wipe Angled | 179, 128, 255 | Tip Wipe Forward | 179, 128, 255 |
 | Tip Wipe Reverse | 179, 128, 255 | Travel | 233, 175, 198 |
-| Unknown | 0, 0, 0 |  |  |
+| Connection | 0, 250, 154 | Unknown | 0, 0, 0 |
 
-![Preferences dialog](user-guide-images/preferences_window.png)
+![Visualization Colors preferences tab](user-guide-images/preferences/visualization_colors_tab.png)
 
 ### 10.2 Flowrate Calculator
 
@@ -1231,6 +1315,18 @@ The calculator uses the preferred units. Confirm units before copying a result
 to a template or machine program.
 
 ![Xtrude Calculator](user-guide-images/xtrude_calculator.png)
+
+### 10.4 Compare Settings Files
+
+Open **Settings > Compare Settings Files** to inspect differences between two
+`.s2c` templates. Use **Browse...** to select the **First settings file** and
+**Second settings file**, then select **Compare**. The dialog summarizes the
+differences and separates them into **Different Values** (listing `Setting`,
+`Key`, `Settings Set`, and each file's value) and **Only in One File** (listing
+`Setting`, `Key`, `Settings Set`, `Present In`, and `Value`) so process and
+machine changes can be audited before slicing.
+
+![Compare Settings Files window](user-guide-images/settings_file_compare.png)
 
 ## 11. Command-line workflow
 
@@ -1359,12 +1455,12 @@ output, or explicit slice bounds are required.
 | Preview is slow or uses thin lines | Reduce the visible layer/segment range or review the preview mode and true-width vertex threshold. |
 | Imported G-code has missing or incorrect geometry | Check the syntax header, units, supported commands, arcs, layer markers, and parser warnings. |
 | Edited G-code is not reflected in the preview | Select **Refresh** in the G-Code Editor. |
-| Export lacks an expected companion file | Check the syntax, **Experimental > File Output** settings, auxiliary-file checkbox, and whether the workflow generated the source data. |
+| Export lacks an expected companion file | Check the syntax, **Experimental > File Output** or **Profile > Arc Specialties > Generate Weld Schedule File** settings, auxiliary-file checkbox, and whether the workflow generated the source data during slicing. |
 | Old project behaves differently | Review migrated settings, template version, part transforms, and every locally overridden scope before reslicing. |
 | Application closed before a named save | Try **File > Restore Last Session**. |
 
 For development-environment problems, see
-[Troubleshooting](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/wiki/Troubleshooting.md).
+[Troubleshooting](https://github.com/ORNLSlicer/ORNLSlicer/blob/develop/docs/contributing/development-setup.md#troubleshooting).
 For behavior not covered here,
 search or open an issue in the
 [ORNLSlicer issue tracker](https://github.com/ORNLSlicer/ORNLSlicer/issues).
@@ -1405,15 +1501,17 @@ every individual setting.
 | Material | Cooling | Fan range, layer-time controls, extrusion scaling, pre/post pause G-code |
 | Material | Platform Adhesion | Raft, brim, and skirt geometry |
 | Material | Multi-Material | Region material assignment, transition distances, controller command |
-| Profile | Slicing | Planar/cylindrical/image mode, plane normal, cylinder axis/pattern/policies, image pixels |
-| Profile | Layer | Layer height, nozzle and bead width, print/extruder speed, minimum extrusion length |
-| Profile | Perimeter | Count/boundaries, width/speed/extrusion, minimum length, lead-in/flying start/spiral |
-| Profile | Inset | Enable/count, width/speed/extrusion, minimum length, overlap, spiral |
+| Profile | Slicing | Planar/cylindrical/image mode, plane normal, cylinder axis/pattern/arc discretization, image pixels |
+| Profile | Layer | Layer height, variable layer height, nozzle and bead width, print/extruder speed, minimum extrusion length |
+| Profile | Helical | Helical path handedness, start arc-length offset, and Z-clip rounding policy |
+| Profile | Perimeter | Count/boundaries, connected loops, width/speed/extrusion, minimum length, lead-in/flying start/spiral, helical revolutions/stepover/speed/tool-frame rotation |
+| Profile | Inset | Enable/count, connected loops, width/speed/extrusion, minimum length, overlap, spiral, helical revolutions/stepover/speed/tool-frame rotation |
+| Profile | Infill | Density/spacing, patterns/angles, ordering, overlap, width/speed/extrusion, path limits, layer combining, helical stepover/rounding/speed/tool-frame rotation |
 | Profile | Skeleton | Input/cleaning, adaptive width, speed/extrusion, minimum length, prestart |
 | Profile | Skin | Top/bottom count, patterns/angles, overlap, width/speed/extrusion, gradual infill |
-| Profile | Infill | Density/spacing, patterns/angles, ordering, overlap, width/speed/extrusion, path limits, layer combining |
 | Profile | Support | Grid/organic structure, placement, thresholds, fill/walls/interfaces/base, tapering, bridges/connectivity |
-| Profile | Travel | Speeds/thresholds, lift/final lift, optional pause and centroid move |
+| Profile | Radial | Radial boundary intersection policy and full-ring start angle |
+| Profile | Travel | Speeds/thresholds, lift/final lift, optional pause and centroid move, helical travel speed/tool-frame rotation |
 | Profile | G-Code | Region-specific start and end snippets |
 | Profile | Special Modes | Smoothing, spiralize, model repair, oversize geometry, bead width/height HMI output |
 | Profile | Optimizations | Layer/island/path/point ordering, grouping, custom points, distance/randomness rules |
@@ -1422,7 +1520,7 @@ every individual setting.
 | Profile | Thermal Scanner | Enablement, offsets, temperature cutoff |
 | Profile | Arc Specialties | Companion weld schedule generation and regional timing, start, weld, and crater fill values |
 | Experimental | Auto Speed Ramping | Angle trigger, ramp distances, speeds, extrusion speeds |
-| Experimental | File Output | Syntax-specific companion and simulation outputs |
+| Experimental | File Output | Syntax-specific companion, simulation, and individual-layer outputs |
 | Experimental | Cross-Sectioning | Gap and stitch tolerances |
 
 > **Diagram placeholder — Settings map:** Add a foldout-style map of the four
@@ -1430,44 +1528,44 @@ every individual setting.
 
 ## Appendix B. Controller syntaxes
 
-The current **Syntax** setting offers:
+The current **Syntax** setting offers 32 selectable controller integrations.
+Confirm units, suffix, comments, arcs, axes, startup/shutdown behavior, parser
+support, and companion outputs for the chosen machine.
 
-- AeroBasic
-- Adamantine
-- AML3D
-- Arc Specialties
-- Beam
-- Cincinnati
-- Common
-- Dmg Dmu
-- Gudel
-- Haas Inch
-- Haas Metric
-- Haas Metric No Comments
-- Hurco
-- Ingersoll
-- JuggerBot3D
-- KraussMaffei
-- Mach4
-- Marlin
-- Mazak
-- Meld
-- Meltio
-- MVP
-- Okuma
-- ORNL
-- ORNL Metric
-- RepRap
-- RomiFanuc
-- Sandia
-- Siemens
-- Thermwood
-- Tormach
-- Wolf
-
-This list indicates selectable output integrations, not identical feature
-support. Confirm units, suffix, comments, arcs, axes, startup/shutdown behavior,
-parser support, and companion outputs for the chosen machine.
+| Syntax | Distance / Velocity Units | Angle / Time Units | Comment Delimiters | File Suffix | Arc Output (`G2`/`G3`) | Companion / Auxiliary Outputs |
+| --- | --- | --- | --- | --- | --- | --- |
+| AeroBasic | mm, mm/s | deg, s | `'` | `.pgm` | `G2`/`G3` when enabled | — |
+| Adamantine | m, m/s | deg, s | `( )` | `.txt` | `G2`/`G3` when enabled | `_scan_path.txt` (when **Output Companion File for Adamantine** is enabled) |
+| AML3D | mm, mm/min | deg, s | `( )` | `.mpf` | `G2`/`G3` when enabled | — |
+| Arc Specialties | mm, mm/min | deg, s | `;` | `.txt` | `G2`/`G3` when enabled (Planar & Cylindrical) | `<name>_weld.txt` (when **Generate Weld Schedule File** is enabled) |
+| Beam | mm, mm/min | deg, s | `( )` | `.mpf` | `G2`/`G3` when enabled | — |
+| Cincinnati | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | Laser/thermal scan `.dat` files where configured |
+| Common | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| Dmg Dmu | mm, mm/min | deg, s | `;` | `.mpf` | `G2`/`G3` when enabled | — |
+| Gudel | mm, mm/min | deg, s | `;` | `.mpf` | `G2`/`G3` when enabled | — |
+| Haas Inch | in, in/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| Haas Metric | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| Haas Metric No Comments | mm, mm/min | deg, s | `( )` (omitted) | `.nc` | `G2`/`G3` when enabled | — |
+| Hurco | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| Ingersoll | mm, mm/min | deg, s | `;` | `.mpf` | `G2`/`G3` when enabled | `;CHA` header metadata |
+| JuggerBot3D | mm, mm/min | deg, s | `;` | `.gcode` | `G2`/`G3` when enabled | — |
+| KraussMaffei | mm, mm/min | deg, s | `;` | `.mpf` | `G2`/`G3` when enabled | — |
+| Mach4 | mm, mm/min | deg, s | `( )` | `.tap` | `G2`/`G3` when enabled | — |
+| Marlin | mm, mm/min | deg, s | `;` | `.gcode` | `G2`/`G3` when enabled | — |
+| Mazak | mm, mm/min | deg, s | `( )` | `.eia` | `G2`/`G3` when enabled | — |
+| Meld | in, in/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | `.csv` companion file (when **Output Auxiliary File for Meld** is enabled) |
+| Meltio | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| MVP | mm, mm/min | deg, ms | `;` | `.mpf` | `G2`/`G3` when enabled | — |
+| Okuma | mm, mm/min | deg, s | `( )` | `.min` | `G2`/`G3` when enabled | — |
+| ORNL | in, in/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| ORNL Metric | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | Supports **Variable Layer Height** in Planar mode |
+| RepRap | mm, mm/min | deg, s | `;` | `.gcode` | `G2`/`G3` when enabled | — |
+| RomiFanuc | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| Sandia | mm, mm/min | deg, s | `;` | `.mpf` | `G2`/`G3` when enabled | — |
+| Siemens | mm, mm/min | deg, s | `;` | `.mpf` | `G2`/`G3` when enabled | — |
+| Thermwood | mm, mm/min | deg, s | `( )` | `.nc` | `G2`/`G3` when enabled | — |
+| Tormach | mm, mm/min | deg, s | `;` | `.nc` | `G2`/`G3` when enabled | — |
+| Wolf | mm, mm/min | deg, ms | `;` | `.gcode` | `G2`/`G3` when enabled | — |
 
 > **Diagram placeholder — Syntaxes:** Add a compatibility matrix grouping
 > syntaxes by controller/machine family, normal units, suffix, arc support, and
@@ -1589,10 +1687,10 @@ The catalog is organized as follows:
 | [Profile](#e4-profile-settings) | [Special Modes](#settings-profile-special-modes) | 16 |
 | [Profile](#e4-profile-settings) | [Laser Scanner](#settings-profile-laser-scanner) | 23 |
 | [Profile](#e4-profile-settings) | [Thermal Scanner](#settings-profile-thermal-scanner) | 4 |
+| [Profile](#e4-profile-settings) | [Arc Specialties](#settings-profile-arc-specialties) | 77 |
 | [Experimental](#e5-experimental-settings) | [Cross-Sectioning](#settings-experimental-cross-sectioning) | 2 |
 | [Experimental](#e5-experimental-settings) | [Auto Speed Ramping](#settings-experimental-auto-speed-ramping) | 8 |
 | [Experimental](#e5-experimental-settings) | [File Output](#settings-experimental-file-output) | 16 |
-| [Profile](#e4-profile-settings) | [Arc Specialties](#settings-profile-arc-specialties) | 77 |
 
 ### E.2 Printer settings
 
@@ -5385,7 +5483,8 @@ Defines the physical X and Y size of pixels in generated image slices.
 
 ![Profile > Layer Settings](user-guide-images/settings/profile/layer_options.png)
 
-Defines layer thickness and baseline bead, nozzle, speed, and extrusion values.
+Defines layer thickness, variable layer height limits, and baseline bead, nozzle, speed, and
+extrusion values.
 
 <a id="setting-layer_height"></a>
 
@@ -5506,8 +5605,8 @@ raft, and support paths.
 
 ![Profile > Helical Settings](user-guide-images/settings/profile/helical_options.png)
 
-Controls handedness, tool angle offsets, z-clipping, revolutions, stepovers, and tool orientations
-for helical toolpaths in cylindrical slicing mode.
+Controls path handedness, tool start arc-length offset, and Z-clip rounding for helical toolpaths in
+cylindrical slicing mode.
 
 <a id="setting-helical_path_handedness"></a>
 
@@ -5565,7 +5664,8 @@ Last Full Revolution stops at the previous full revolution.
 
 ![Profile > Perimeter Settings](user-guide-images/settings/profile/perimeter_options.png)
 
-Controls exterior contours, their process values, and perimeter-specific start and spiral behavior.
+Controls exterior contours, loop connections, process values, perimeter-specific start and spiral
+behavior, and helical perimeter revolutions, stepover, and tool-frame rotation.
 
 <a id="setting-perimeter"></a>
 
@@ -5913,7 +6013,8 @@ Rotation of the tool frame for perimeter region.
 
 ![Profile > Inset Settings](user-guide-images/settings/profile/inset_options.png)
 
-Controls additional inward contours, including count, overlap, process values, and spiral behavior.
+Controls additional inward contours, loop connections, overlap, process values, spiral behavior, and
+helical inset revolutions, stepover, and tool-frame rotation.
 
 <a id="setting-inset"></a>
 
@@ -6151,8 +6252,8 @@ Rotation of the tool frame for inset region.
 
 ![Profile > Infill Settings](user-guide-images/settings/profile/infill_options.png)
 
-Controls interior fill density, spacing, pattern, orientation, ordering, combining, and process
-values.
+Controls interior fill density, spacing, pattern, orientation, ordering, combining, process values,
+and helical infill rounding, stepover, and tool-frame rotation.
 
 <a id="setting-infill"></a>
 
@@ -7466,7 +7567,8 @@ starts on +X and 90 degrees starts on +Y.
 
 ![Profile > Travel Settings](user-guide-images/settings/profile/travel_options.png)
 
-Controls non-print motion, minimum travel thresholds, lift behavior, pauses, and centroid moves.
+Controls non-print motion, minimum travel thresholds, lift behavior, pauses, centroid moves, and
+helical travel tool-frame rotation.
 
 <a id="setting-travel_speed"></a>
 

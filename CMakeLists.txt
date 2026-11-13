@@ -236,10 +236,17 @@ if(WIN32)
     target_link_libraries(${PROJECT_NAME}_cli ${PROJECT_NAME}_obj)
 endif()
 
-add_executable(${PROJECT_NAME}_gui_capture EXCLUDE_FROM_ALL tools/gui_capture.cpp)
+add_executable(${PROJECT_NAME}_gui_capture EXCLUDE_FROM_ALL
+    tools/gui_capture.cpp
+    tools/gui_capture/capture_common.cpp
+    tools/gui_capture/capture_demos.cpp
+    tools/gui_capture/capture_gui.cpp
+    tools/gui_capture/capture_settings_menus.cpp
+)
 target_include_directories(
     ${PROJECT_NAME}_gui_capture
     PRIVATE
+        ${CMAKE_CURRENT_LIST_DIR}/tools/gui_capture
         ${CMAKE_CURRENT_LIST_DIR}/include
         ${CMAKE_CURRENT_BINARY_DIR}/generated/include
         ${ORNLSLICER_INCLUDE_DIRS}

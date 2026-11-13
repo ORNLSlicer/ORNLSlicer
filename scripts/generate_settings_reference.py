@@ -62,16 +62,16 @@ CATEGORY_DESCRIPTIONS = {
     ("Material", "Platform Adhesion"): "Adds and configures raft, brim, or skirt geometry around the first layers.",
     ("Material", "Multi-Material"): "Assigns materials to regions and controls material transitions and controller selection commands.",
     ("Profile", "Slicing"): "Selects planar, cylindrical, or image slicing and configures slice orientation and mode-specific geometry.",
-    ("Profile", "Layer"): "Defines layer thickness and baseline bead, nozzle, speed, and extrusion values.",
-    ("Profile", "Perimeter"): "Controls exterior contours, their process values, and perimeter-specific start and spiral behavior.",
-    ("Profile", "Inset"): "Controls additional inward contours, including count, overlap, process values, and spiral behavior.",
+    ("Profile", "Layer"): "Defines layer thickness, variable layer height limits, and baseline bead, nozzle, speed, and extrusion values.",
+    ("Profile", "Perimeter"): "Controls exterior contours, loop connections, process values, perimeter-specific start and spiral behavior, and helical perimeter revolutions, stepover, and tool-frame rotation.",
+    ("Profile", "Inset"): "Controls additional inward contours, loop connections, overlap, process values, spiral behavior, and helical inset revolutions, stepover, and tool-frame rotation.",
     ("Profile", "Skeleton"): "Controls centerline input, cleanup, adaptive bead width, process values, and skeleton prestart behavior.",
     ("Profile", "Skin"): "Controls solid top/bottom coverage, pattern orientation, overlap, process values, and gradual infill.",
-    ("Profile", "Infill"): "Controls interior fill density, spacing, pattern, orientation, ordering, combining, and process values.",
+    ("Profile", "Infill"): "Controls interior fill density, spacing, pattern, orientation, ordering, combining, process values, and helical infill rounding, stepover, and tool-frame rotation.",
     ("Profile", "Support"): "Controls generated grid or organic support, interfaces, bases, spacing, tapering, and connectivity.",
     ("Profile", "Radial"): "Configures boundary clipping policies and angular start positions for radial toolpaths in cylindrical slicing mode.",
-    ("Profile", "Helical"): "Controls handedness, tool angle offsets, z-clipping, revolutions, stepovers, and tool orientations for helical toolpaths in cylindrical slicing mode.",
-    ("Profile", "Travel"): "Controls non-print motion, minimum travel thresholds, lift behavior, pauses, and centroid moves.",
+    ("Profile", "Helical"): "Controls path handedness, tool start arc-length offset, and Z-clip rounding for helical toolpaths in cylindrical slicing mode.",
+    ("Profile", "Travel"): "Controls non-print motion, minimum travel thresholds, lift behavior, pauses, centroid moves, and helical travel tool-frame rotation.",
     ("Profile", "G-Code"): "Adds region-specific command blocks before and after generated paths.",
     ("Profile", "Special Modes"): "Enables geometry repair and transformations such as smoothing, spiralize, and oversizing, plus bead-geometry output for a compatible HMI.",
     ("Profile", "Optimizations"): "Controls ordering at layer, island, path, and point levels, including custom points and randomness.",
@@ -756,10 +756,13 @@ def build_reference(settings: OrderedDict[str, OrderedDict[str, Any]],
         "| Panel | Category | Scalar settings |",
         "| --- | --- | ---: |",
     ]
-    for (major, minor), keys in categories.items():
-        major_anchor = f"#{MAJOR_NUMBERS[major].replace('.', '').casefold()}-{major.casefold()}-settings"
-        category_anchor = f"#settings-{slug(major)}-{slug(minor)}"
-        lines.append(f"| [{major}]({major_anchor}) | [{minor}]({category_anchor}) | {len(keys)} |")
+    for major in major_order:
+        for (category_major, minor), keys in categories.items():
+            if category_major != major:
+                continue
+            major_anchor = f"#{MAJOR_NUMBERS[major].replace('.', '').casefold()}-{major.casefold()}-settings"
+            category_anchor = f"#settings-{slug(major)}-{slug(minor)}"
+            lines.append(f"| [{major}]({major_anchor}) | [{minor}]({category_anchor}) | {len(keys)} |")
     lines.append("")
 
     documented: set[str] = set()

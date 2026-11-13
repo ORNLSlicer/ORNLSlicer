@@ -132,8 +132,13 @@ void PartControl::modelParentingUpdate(QSharedPointer<PartMetaItem> pm) {
 
         if (!tlc.empty()) {
             auto* child_item = static_cast<PartControlTreeItem*>(tlc.at(0));
-            m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(child_item));
-            tree_item->addChild(child_item);
+            if (child_item->parent() != tree_item) {
+                if (child_item->parent())
+                    child_item->parent()->takeChild(child_item->parent()->indexOfChild(child_item));
+                else
+                    m_tree_widget->takeTopLevelItem(m_tree_widget->indexOfTopLevelItem(child_item));
+                tree_item->addChild(child_item);
+            }
             child_item->addContainer(m_tree_widget, 0);
         }
     }
